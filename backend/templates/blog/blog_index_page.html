@@ -1,0 +1,173 @@
+{% extends "blog/base.html" %}
+{% load wagtailcore_tags static %}
+{% load i18n %}
+
+
+
+
+
+{% block content %} 
+
+
+  {% if category %}
+                <h2>{{ category }}</h2>
+                {% endif %}
+                {% if tag %}
+                <h2>Wpisy z tagiem: '{{ tag }}'</h2>
+    {% endif %}
+
+                    {% for rl in self.related_links.all %}
+                    <p>{{ rl.title }}: <a href='{{ rl.link_page.url }}'>{{ rl.link_page }}</a></p>
+                {% endfor %}
+
+
+
+
+    <!-- ======= Blog Section ======= -->
+    <section id="blog" class="blog">
+      <div class="container" data-aos="fade-up">
+        <div class="row">
+          <!-- Blog entries list -->
+          <div class="col-lg-8 entries">
+          
+            <h1> {{ paginator}}</h1>
+         
+
+          {% block posts %}
+                <ul class="list-unstyled the-loop">
+                {% for blog in blogs %}
+                
+                    <li class="blog-post-item{% if forloop.first and not category and not tag %} first-reset{% endif %}">
+                        {% include 'blog/blog_post.html' with include_context="index_page" %}
+                    </li>
+                    {% if forloop.counter == 3 %}
+                    <div>
+                      <h1>Banner  Here </h1> <h1>with register link  <a href="{% url 'account_signup' %}?role=P">Dołącz jako piłkarz</a></h1> <h1> @todo finish this {{ request.GET.urlencode }}</h1>
+                    </div>
+                    {% endif %}
+                    
+                {% empty %}
+                  <h2>{% trans 'Obecnie nie ma żadnych wpisów.' %}</h2>
+                {% endfor %}
+                </ul>
+     
+
+           {% endblock %}
+
+            <div class="blog-pagination">
+              <ul class="justify-content-center">
+
+                {% if blogs.has_previous %}  
+                  <li class="previous"><a href="?page={{ blogs.previous_page_number }}{% for key,value in request.GET.items %}{% ifnotequal key 'page' %}&amp;{{ key }}={{ value }}{% endifnotequal %}{% endfor %}"><i class="icofont-rounded-left"></i></a></li>
+                  <li class="previous"><a href="?page=1{% for key,value in request.GET.items %}{% ifnotequal key 'page' %}&amp;{{ key }}={{ value }}{% endifnotequal %}{% endfor %}">1</a></li>
+               
+                {% else %}
+                  <li class="disabled"><i class="icofont-rounded-left"></i></li>
+                {% endif %}
+
+                
+                <li class="active"><a href=""?page={{ blogs.number }}{% for key,value in request.GET.items %}{% ifnotequal key 'page' %}&amp;{{ key }}={{ value }}{% endifnotequal %}{% endfor %}"">{{ blogs.number }}</a></li>
+
+                {% if blogs.has_next %}
+                  <li class="last"><a href="?page={{ blogs.paginator.num_pages }}{% for key,value in request.GET.items %}{% ifnotequal key 'page' %}&amp;{{ key }}={{ value }}{% endifnotequal %}{% endfor %}">{{ blogs.paginator.num_pages }}</i></a></li>
+                  <li class="next"><a href="?page={{ blogs.next_page_number }}{% for key,value in request.GET.items %}{% ifnotequal key 'page' %}&amp;{{ key }}={{ value }}{% endifnotequal %}{% endfor %}"><i class="icofont-rounded-right"></i></a></li>
+                {% else %}
+                <li class="disabled"><a href="#"><i class="icofont-rounded-right"></i></a></li>
+                {% endif %}
+              </ul>
+            </div>
+          </div><!-- End blog entries list -->
+
+
+
+          <div class="col-lg-4">
+
+            <div class="sidebar">
+
+              <h3 class="sidebar-title">Search</h3>
+              <div class="sidebar-item search-form">
+                <form action="">
+                  <input type="text">
+                  <button type="submit"><i class="icofont-search"></i></button>
+                </form>
+              </div><!-- End sidebar search formn-->
+
+              <h3 class="sidebar-title">Categories</h3>
+              <div class="sidebar-item categories">
+                <ul>
+                  <li><a href="#">General <span>(25)</span></a></li>
+                  <li><a href="#">Lifestyle <span>(12)</span></a></li>
+                  <li><a href="#">Travel <span>(5)</span></a></li>
+                  <li><a href="#">Design <span>(22)</span></a></li>
+                  <li><a href="#">Creative <span>(8)</span></a></li>
+                  <li><a href="#">Educaion <span>(14)</span></a></li>
+                </ul>
+              </div><!-- End sidebar categories-->
+
+              <h3 class="sidebar-title">Recent Posts</h3>
+              <div class="sidebar-item recent-posts">
+                <div class="post-item clearfix">
+                  <img src="assets/img/blog/blog-recent-1.jpg" alt="">
+                  <h4><a href="blog-single.html">Nihil blanditiis at in nihil autem</a></h4>
+                  <time datetime="2020-01-01">Jan 1, 2020</time>
+                </div>
+
+                <div class="post-item clearfix">
+                  <img src="assets/img/blog/blog-recent-2.jpg" alt="">
+                  <h4><a href="blog-single.html">Quidem autem et impedit</a></h4>
+                  <time datetime="2020-01-01">Jan 1, 2020</time>
+                </div>
+
+                <div class="post-item clearfix">
+                  <img src="assets/img/blog/blog-recent-3.jpg" alt="">
+                  <h4><a href="blog-single.html">Id quia et et ut maxime similique occaecati ut</a></h4>
+                  <time datetime="2020-01-01">Jan 1, 2020</time>
+                </div>
+
+                <div class="post-item clearfix">
+                  <img src="assets/img/blog/blog-recent-4.jpg" alt="">
+                  <h4><a href="blog-single.html">Laborum corporis quo dara net para</a></h4>
+                  <time datetime="2020-01-01">Jan 1, 2020</time>
+                </div>
+
+                <div class="post-item clearfix">
+                  <img src="assets/img/blog/blog-recent-5.jpg" alt="">
+                  <h4><a href="blog-single.html">Et dolores corrupti quae illo quod dolor</a></h4>
+                  <time datetime="2020-01-01">Jan 1, 2020</time>
+                </div>
+
+              </div><!-- End sidebar recent posts-->
+
+              <h3 class="sidebar-title">Tags</h3>
+              <div class="sidebar-item tags">
+                <ul>
+                  <li><a href="#">App</a></li>
+                  <li><a href="#">IT</a></li>
+                  <li><a href="#">Business</a></li>
+                  <li><a href="#">Mac</a></li>
+                  <li><a href="#">Design</a></li>
+                  <li><a href="#">Office</a></li>
+                  <li><a href="#">Creative</a></li>
+                  <li><a href="#">Studio</a></li>
+                  <li><a href="#">Smart</a></li>
+                  <li><a href="#">Tips</a></li>
+                  <li><a href="#">Marketing</a></li>
+                </ul>
+              </div><!-- End sidebar tags-->
+
+            </div><!-- End sidebar -->
+
+          </div><!-- End blog sidebar -->
+
+        </div>
+
+      </div>
+    </section><!-- End Blog Section -->
+{% endblock %}
+
+
+
+
+
+
+

@@ -1,0 +1,24 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+
+{% block head_title %}{% trans "Signup" %}{% endblock %} {# @todo do someting with this tag... more generic one# }
+
+{# Standalone subpage: only footer + content tabs and navigation to main page present. #}
+
+{% block content %}
+<main id="main">
+  <!-- ======= Signup subpage ======= -->
+  <section id="signup" class="signup">
+    <div class="container">
+      <div  class="section-title">
+          <h2 class="mb-3 text-center">DOŁĄCZ JUŻ TERAZ</h2>
+          <p>DO SPOŁECZNOŚCI PIŁKARSKIEJ</p>
+      </div>
+      <div class="row d-flex justify-content-center">
+        {% include "account/_signup.html" %}
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}
