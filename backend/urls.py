@@ -27,7 +27,7 @@ urlpatterns = [
     path('search/', search_views.search, name='search'),
 
     path('tables/players/', players_base, name='players'),
-    path("users/", include(profiles.urls), name="profiles"),
+    path('users/', include(profiles.urls), name="profiles"),
     path('blog/', include('blog.urls', namespace="blog")),
     path('api/v2/', api_router.urls),
     path('', include('allauth.urls')),

@@ -1,14 +1,14 @@
 from django.utils.html import format_html
 
 from wagtail.contrib.modeladmin.options import ModelAdmin, ModelAdminGroup, modeladmin_register
-
-from .models import Profile, PlayerProfile, CoachProfile, CoachProfile, RoleChangeRequest
+from django.urls import reverse
+from .models import StandardProfile, PlayerProfile, CoachProfile, CoachProfile, RoleChangeRequest
 
 
 class ProfileAdminBase(ModelAdmin):
     """Profile base admin."""
 
-    model = Profile
+    model = StandardProfile
     menu_label = "Profiles"
     menu_icon = "placeholder"
     menu_order = 290
@@ -19,23 +19,23 @@ class ProfileAdminBase(ModelAdmin):
     search_fields = ("bio", "user",)
 
     def permalink(self, obj):
-        url =  ' dummy link to profile' #reverse("profiles:show", kwargs={"slug": obj.profile.slug})  @todo - set proper link to profile show
+        url = reverse("profiles:show", kwargs={"slug": obj.slug})
         # Unicode hex b6 is the Pilcrow sign
         return format_html('<a href="{}">{}</a>'.format(url, "\xb6"))
 
 
 class RegularProfileAdmin(ProfileAdminBase):
-    model = Profile
+    model = StandardProfile
     menu_label = 'regulars'
-    
 
-class PlayerProfileAdmin(ProfileAdminBase): 
+
+class PlayerProfileAdmin(ProfileAdminBase):
     model = PlayerProfile
     menu_label = 'players'
     menu_order = 100
 
 
-class CoachProfileAdmin(ProfileAdminBase): 
+class CoachProfileAdmin(ProfileAdminBase):
     model = CoachProfile
     menu_label = 'coaches'
     menu_order = 200
@@ -56,6 +56,7 @@ class ProfilesAdminGroup(ModelAdminGroup):
     menu_icon = 'folder-open-inverse'  # change as required
     menu_order = 200  # will put in 3rd place (000 being 1st, 100 2nd)
     items = (RegularProfileAdmin, PlayerProfileAdmin, CoachProfileAdmin, RoleChangeAdmin)
+
 
 # When using a ModelAdminGroup class to group several ModelAdmin classes together,
 # you only need to register the ModelAdminGroup class with Wagtail:

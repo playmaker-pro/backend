@@ -8,6 +8,7 @@ from . import models
 
 User = get_user_model()
 
+
 class ChangeRoleForm(forms.ModelForm):
     pass
     # def __init
@@ -37,5 +38,5 @@ class ProfileForm(forms.ModelForm):
         )
 
     class Meta:
-        model = models.Profile
+        model = models.StandardProfile
         fields = ["picture", "bio"]

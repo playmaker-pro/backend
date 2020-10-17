@@ -18,18 +18,17 @@ from allauth.account.utils import (
     user_username,
 )
 
+
 # allauth custom forms
 class CustomSignupForm(SignupForm):
-
 
     first_name = forms.CharField(max_length=20, label='First Name')
     last_name = forms.CharField(max_length=20, label='Last Name')
     role = forms.ChoiceField(choices=User.ROLE_CHOICES)
     rodo = forms.BooleanField(required=True)
-    rules =  forms.BooleanField(required=True)
+    rules = forms.BooleanField(required=True)
     # club = forms.CharField(max_length=355, label='Club')
-    
-   
+
     def save(self, request):
         adapter = get_adapter(request)
         user = adapter.new_user(request)
@@ -56,7 +55,7 @@ class CustomSignupForm(SignupForm):
         user = super(CustomSignupForm, self).save(request)
 
         user.declared_role = self.cleaned_data['role']
-        
+
         #if self.cleaned_data['club']:
         #    user.declared_club = self.cleaned_data['club']
         #user.username = self.cleaned_data['email']

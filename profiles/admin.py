@@ -2,10 +2,21 @@
 
 from django.contrib import admin
 
-from .models import Profile, PlayerProfile, RoleChangeRequest
+from .models import StandardProfile, PlayerProfile, RoleChangeRequest, CoachProfile
+
+
+@admin.register(StandardProfile)
+class StandardProfileAdmin(admin.ModelAdmin):
+    pass
+
 
 @admin.register(PlayerProfile)
 class PlayerProfileAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(CoachProfile)
+class CoachProfileAdmin(admin.ModelAdmin):
     pass
 
 

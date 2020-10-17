@@ -8,6 +8,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 
+
 class CustomUserManager(BaseUserManager):
     """
     Custom user model manager where email is the unique identifiers
@@ -39,36 +40,71 @@ class CustomUserManager(BaseUserManager):
             raise ValueError(_('Superuser must have is_superuser=True.'))
         return self.create_user(email, password, **extra_fields)
 
+
 BEFORE_FIRST_LOGIN = 'before_first_login'
 FIRST_LOGIN = 'first_login'
 
+ACCOUNT_ROLES = (
+        ('P', 'Piłkarz'),
+        ('T', 'Trener')
+)
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+
 
 class User(AbstractUser):
+    class Meta:
+        verbose_name = "User"
+        verbose_name_plural = "Users"
 
-    #ACCOUNT_STATE = {
+    # ACCOUNT_STATE = {
     #    BEFORE_FIRST_LOGIN: BEFORE_FIRST_LOGIN,
     #   FIRST_LOGIN: FIRST_LOGIN,
-        
-    #}
 
-    #@transition
-    #def firstly_logged(self):
+    # }
+
+    # @transition
+    # def firstly_logged(self):
     #    pass
 
-    ROLE_CHOICES = (
-        ('P', 'Piłkarz'), 
-        ('T', 'Trener')
-    )
-    #account_state = FSMField(default='new')
+    ROLE_CHOICES = ACCOUNT_ROLES
+    # account_state = FSMField(default='new')
     initial_setup = models.BooleanField(_('Skip full setup'), default=None, null=True, help_text="Flag ")
 
     email = models.EmailField(_('email address'), unique=True)
 
-    country = models.CharField(verbose_name='country', max_length=255) # @todo remove or replace with more miningfull data
+    # country = models.CharField(verbose_name='country', max_length=255, null=True, blank=True, default='A')  # @todo remove or replace with more miningfull data
     # status = models.ForeignKey(MembershipStatus, on_delete=models.SET_NULL, null=True, default=1)
 
-    declared_club = models.CharField(_('declared club'),  max_length=355, help_text="Users declaration in which club he plays.")
-    declared_role = models.CharField(_('declared club'), choices=ROLE_CHOICES, max_length=355, null=True, blank=True, help_text="Users declaration in which role he has")
+    # content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    # object_id = models.PositiveIntegerField()
+    # content_object = GenericForeignKey('content_type', 'object_id')   
+
+    @property
+    def profile(self):
+        if self.declared_role == 'T':  # @todo unified access to this T P and other types.
+            return self.coachprofile
+
+        elif self.declared_role == 'P':
+            return self.playerprofile
+
+        else:
+            return None
+
+    declared_club = models.CharField(
+        _('declared club'),
+        max_length=355,
+        null=True,
+        blank=True,
+        help_text="Users declaration in which club he plays.")
+
+    declared_role = models.CharField(
+        _('declared club'),
+        choices=ROLE_CHOICES,
+        max_length=355,
+        null=True,
+        blank=True,
+        help_text="Users declaration in which role he has")
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -82,8 +118,6 @@ class User(AbstractUser):
     @property
     def display_name(self):
         return self.email_username
-    
+
     def __str__(self):
         return self.email
-
-    

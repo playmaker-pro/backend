@@ -5,3 +5,4 @@ django-allauth==0.42.0
 django-crispy-forms==1.9.2
 wagtail-blog==2.3.5
 easy-thumbnails==2.7
+django-fsm
