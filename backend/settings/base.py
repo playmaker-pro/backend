@@ -7,6 +7,7 @@ from django.urls import reverse_lazy
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
 
+MANAGERS = [('Rafal', 'rafal.kesik@gmail.com'), ]
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -20,10 +21,17 @@ INSTALLED_APPS = [
     'search',
     'news',
     'profiles',
+    'transfers',
     'contact',
+    'followers',
+    'inquiries',
+    'clubs',
+    'soccerbase',
 
+    'django_countries',
     'crispy_forms',
     'easy_thumbnails',
+    'djcelery',
 
     'wagtail.contrib.forms',
     'wagtail.contrib.modeladmin',
@@ -44,6 +52,7 @@ INSTALLED_APPS = [
     'taggit',
     'blog',
     'django_fsm',
+    'phonenumber_field',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -53,13 +62,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'rest_framework',
-    'corsheaders',    
+    'corsheaders',
 
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'allauth.socialaccount.providers.facebook',
+    # 'allauth.socialaccount.providers.facebook',
 ]
 
 
@@ -97,7 +106,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                
             ],
         },
     },
@@ -109,8 +117,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 WSGI_APPLICATION = 'backend.wsgi.application'
- 
-# import allauth.account.views  # @todo remove this line 
+
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
@@ -189,29 +196,38 @@ WAGTAIL_USER_CREATION_FORM = 'users.forms.CustomUserCreationForm'
 WAGTAIL_USER_CUSTOM_FIELDS = []  # ['country',]
 
 
-
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 BASE_URL = 'http://example.com'
 
-CORS_ORIGIN_ALLOW_ALL = True  #  to be replaces  with CORS_ORIGIN_WHITELIST
+CORS_ORIGIN_ALLOW_ALL = True  # to be replaces  with CORS_ORIGIN_WHITELIST
 
 # easy-thumbnail
 THUMBNAIL_EXTENSION = "png"  # Or any extn for your thumbnails
 
-# Crispy Form Theme - Bootstrap 3
-CRISPY_TEMPLATE_PACK = "bootstrap3"
+# Crispy Form Theme - Bootstrap 4
+CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 # For Bootstrap 3, change error alert to 'danger'
 MESSAGE_TAGS = {messages.ERROR: "danger"}
 
 
+# messages
+MESSAGE_TAGS = {
+    messages.DEBUG: 'alert-info',
+    messages.INFO: 'alert-info',
+    messages.SUCCESS: 'alert-success',
+    messages.WARNING: 'alert-warning',
+    messages.ERROR: 'alert-danger',
+}
+
+
 # Authentication settings
 LOGIN_URL = reverse_lazy("account_login")
-LOGIN_REDIRECT_URL =  reverse_lazy("profiles:show_self")
+LOGIN_REDIRECT_URL = reverse_lazy("profiles:show_self")
 
 # Allauth-settings
-#ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+# ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
@@ -221,7 +237,7 @@ ACCOUNT_LOGOUT_REDIRECT_URL = '/login/'
 ACCOUNT_PRESERVE_USERNAME_CASING = False
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
-ACCOUNT_USERNAME_BLACKLIST = [] # @todo
+ACCOUNT_USERNAME_BLACKLIST = []  # @todo
 ACCOUNT_USERNAME_MIN_LENGTH = 3
 
 
@@ -252,8 +268,7 @@ ACCOUNT_FORMS = {'signup': 'users.forms.CustomSignupForm'}
 
 
 # Blog settingss
-BLOG_PAGINATION_PER_PAGE =  4
-
+BLOG_PAGINATION_PER_PAGE = 4
 
 
 from os.path import join
@@ -343,3 +358,18 @@ def get_logging_structure(LOGFILE_ROOT):
 LOGGING_CONFIG = None
 LOGGING = get_logging_structure('_logs')
 logging.config.dictConfig(LOGGING)
+
+CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
+CELERY_ALWAYS_EAGER = True
+CELERY_TASK_SERIALIZER = 'pickle'
+import djcelery
+djcelery.setup_loader()
+# Redis & stream activity
+STREAM_REDIS_CONFIG = {
+    'default': {
+        'host': '127.0.0.1',
+        'port': 6379,
+        'db': 0,
+        'password': None
+    },
+}

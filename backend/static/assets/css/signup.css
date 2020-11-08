@@ -16,6 +16,11 @@
   color: #9f9f9f;
 }
 
+#main {
+  background: url("../img/8208.png")  top center no-repeat;
+  background-position: right bottom; /*Positioning*/
+  background-repeat: no-repeat; /*Prevent showing multiple background images*/
+}
 
 
 #signup .terms {
@@ -28,8 +33,59 @@
 }
 
 
+.signup .signup-form, .login .login-form, .socialaccount_ballot {
+  opacity:.98;
+  background-color:#fff;
+}
 
+.socialaccount_ballot {
+  list-style-type: none;
+  box-shadow: 0 0 30px rgba(214, 215, 216, 0.6);
+  border-radius: 4px;
+  padding:10px 30px;
+}
 
+  .socialaccount_ballot ul {
+    padding-inline-start: 0px;
+      width: 100%;
+      display: flex;
+      align-items: stretch; /* Default */
+      justify-content: space-between;
+  }
+
+  .socialaccount_providers li {
+    list-style-type: none;
+    display:inline;
+    width: 50%;
+    flex: 0 1 auto; /* Default */
+  }
+
+  .socialaccount_providers li a {
+    padding: 10px 20px;
+    border: .5px solid rgba(214, 215, 216, 0.6);
+    border-radius: 10px;
+  }
+
+  .socialaccount_providers li a:hover {
+    background-color: rgba(214, 215, 216, 0.6);
+    border-radius: 10px;
+  }
+  .socialaccount_provider {
+    color:#444441;
+  }
+  .socialaccount_provider img {
+    padding-right: 5px;
+  }
+
+#signup .small p {
+  font-size: .8rem;
+  
+}
+
+#signup ps {
+  text-align: center;
+
+}
 
 #signup form button[type="submit"] {
         background: #e03a3c;
@@ -75,8 +131,15 @@
         box-shadow: 0 0 30px rgba(214, 215, 216, 0.6);
         padding: 30px;
         border-radius: 4px;
+
       }
-      
+
+      .signup .signup-form, .login .login-form {
+        box-shadow: 0 0 30px rgba(214, 215, 216, 0.6);
+        padding: 30px;
+        border-radius: 4px;
+      }
+
       .signup .signup-form .validate, .login .login-form .validate  {
         display: none;
         color: red;
@@ -174,5 +237,7 @@
       
       .signup .signup-form button[type="submit"]:hover, .login .login-form button[type="submit"]:hover  {
         background: #e35052;
+        background-color:#fff;
+        
       }
       

@@ -1,7 +1,7 @@
 {% load i18n %}
-  <div class="col-md-6 order-md-1">
+
     {% with request.GET.role as role %}      
-      <form id="signup_form" class="signup-form needs-validation" method="post" action="{% url 'account_signup' %}{% if role %}?role={{role}}{% endif %}">  
+      <form id="signup_form{{form_type}}" class="signup-form needs-validation" method="post" action="{% url 'account_signup' %}{% if role %}?role={{role}}{% endif %}">  
       {% csrf_token %}
       <div class="row">
           <div class="mb-3">
@@ -75,4 +75,4 @@
        
         {{ form.errors }} {# @todo to be removed #}
       </form>
-    </div>
+    

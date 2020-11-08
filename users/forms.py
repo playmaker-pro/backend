@@ -42,7 +42,7 @@ class CustomSignupForm(SignupForm):
         self.custom_signup(request, user)
         # TODO: Move into adapter `save_user` ?
         setup_user_email(request, user, [])  # this will trigger pre-mature Fk relation assign (if User model is not saved before)
-  
+
         #if self.cleaned_data['club']:
         #    user.declared_club = self.cleaned_data['club']
         #user.username = self.cleaned_data['email']
@@ -56,9 +56,9 @@ class CustomSignupForm(SignupForm):
 
         user.declared_role = self.cleaned_data['role']
 
-        #if self.cleaned_data['club']:
+        # if self.cleaned_data['club']:
         #    user.declared_club = self.cleaned_data['club']
-        #user.username = self.cleaned_data['email']
+        # user.username = self.cleaned_data['email']
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
         user.save()
@@ -68,9 +68,9 @@ class CustomSignupForm(SignupForm):
 # wagtail custom user
 class CustomUserEditForm(UserEditForm):
     declared_role = forms.ChoiceField(required=True, label=_("Declared Role"), choices=User.ROLE_CHOICES)
-    #status = forms.ModelChoiceField(queryset=MembershipStatus.objects, required=True, label=_("Status"))
+    # status = forms.ModelChoiceField(queryset=MembershipStatus.objects, required=True, label=_("Status"))
 
 
 class CustomUserCreationForm(UserCreationForm):
     declared_role = forms.ChoiceField(required=True, label=_("Declared Role"), choices=User.ROLE_CHOICES)
-    #status = forms.ModelChoiceField(queryset=MembershipStatus.objects, required=True, label=_("Status"))
+    # status = forms.ModelChoiceField(queryset=MembershipStatus.objects, required=True, label=_("Status"))

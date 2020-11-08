@@ -9,14 +9,16 @@ from wagtail.documents import urls as wagtaildocs_urls
 from search import views as search_views
 from .api import api_router
 
-
-from home.views import players_base   # @todo shoudl be temporaty
-
-
+import soccerbase.urls
+import clubs.urls
 import profiles.urls
 import allauth.account.urls
+import followers.urls  # @to be removed 
+
+
 admin.site.site_header = 'PlayMaker.pro - development'
 admin.site.site_title = 'PlayMaker.pro - Admin site'
+
 
 urlpatterns = [
     path('django-admin/', admin.site.urls),
@@ -25,12 +27,15 @@ urlpatterns = [
     path('documents/', include(wagtaildocs_urls)),
 
     path('search/', search_views.search, name='search'),
-
-    path('tables/players/', players_base, name='players'),
+    path('tables/', include(soccerbase.urls), name='soccerbase'),
+    path('clubs/', include(clubs.urls), name="clubs"),
     path('users/', include(profiles.urls), name="profiles"),
+    path('feeds/', include(followers.urls), name="feeds"),
+
     path('blog/', include('blog.urls', namespace="blog")),
     path('api/v2/', api_router.urls),
     path('', include('allauth.urls')),
+
 
 ]
 

@@ -1,0 +1,24 @@
+
+{% extends 'soccerbase/base.html' %}
+
+{% block content %}
+<section style="padding:60px;"> 
+    <div class="container">
+    <ul>
+    
+        {% for object in objects %}
+            {% if type == 'P' %}
+                {% include 'soccerbase/_players.html' with object=object %}
+            {% elif type == 'T' %}
+                {% include 'soccerbase/_coaches.html' with object=object %}
+            {% elif type == 'C' %}
+                {% include 'soccerbase/_teams.html' with object=object %}
+            {% endif %}
+        
+        {% empty %}
+            <h2>brak elemntów</h2>
+        {% endfor %}
+    </ul>
+    </div>
+</section>
+{% endblock content %}

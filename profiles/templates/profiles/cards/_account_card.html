@@ -1,0 +1,88 @@
+{% load static %}
+{% load thumbnail %}
+
+<div class="card">
+  <div class="card-body">
+    
+    
+
+  
+    <div class="card-text row">
+      <div class='col-md-3'>
+        <img title="profile picture" class="rounded-circle img-responsive" src="{% thumbnail show_user.picture|default:'default_profile.png' 140x140 crop %}">
+      </div>
+      
+      <div class='col-md-9'>
+
+
+          <h1 class="card-title">{{ show_user.get_full_name|upper }}</h1>
+
+
+
+          <ul class="list-group">
+
+            <li class="list-group-item text-left border-0">
+              <span class="pull-left text-muted">          
+              
+            {% if editable and user.is_pending_role_change %}
+           
+            <div class="alert alert-danger" style="padding:5px;font-size:.9em">
+              Oczekujesz na akceptacje zmiany typu konta z <strong>{{user.pending_role_change.current_pretty|upper}}</strong> na <strong>{{user.pending_role_change.new_pretty|upper}}</strong> 
+            </div>
+              {% else %}
+              <h4 class="card-subtitle mb-2 text-muted">{{ show_user.get_declared_role_display|upper }}</h4>
+              {% endif %}
+            </li>
+
+
+            {% if user == show_user %}
+            <li class="list-group-item text-left border-0">
+              <span class="pull-left text-muted">
+              <div class="progress" data-toggle="tooltip" data-placement="top" title="Określa w jakim stopniu Twoje konto ma uzupełnione dane.">
+                  <div class="progress-bar bg-success" style="width:{{user.profile.percentage_completion}}%">{{user.profile.percentage_completion}}%</div>
+              </div>
+            </li>
+            {% endif %}
+
+                          
+            <!--li class="list-group-item text-left border-0">
+              <span class="pull-left text-muted"><strong>Imię i nazwisko:</strong></span> {{ show_user.get_full_name }}
+            </li-->
+
+            <li class="list-group-item text-left border-0">
+              <span class="pull-left text-muted"><strong>Użytkownik:</strong></span>  {% if show_user.is_verified %} <i class="text-success icofont-verification-check"></i> zwerifikowany{% else %} oczekuje na werifikacje {% endif %}  
+            </li> 
+            <li class="list-group-item text-left border-0">
+              <span class="pull-left text-muted"><strong>Noga:</strong></span> {{ show_user.profile.get_prefered_leg_display }}
+            </li>
+            <li class="list-group-item text-left border-0">
+              <span class="pull-left text-muted"><strong>Pozycja:</strong></span> {{ show_user.profile.get_position_raw_display }}
+            </li>
+            <li class="list-group-item text-left border-0">
+              <span class="pull-left text-muted"><strong>Data urodzenia:</strong></span> {{ show_user.profile.birth_date }}
+            </li>
+            <li class="list-group-item text-left border-0">
+              <span class="pull-left text-muted"><strong>23</strong></span>  wizyt <span class="pull-left text-muted"><strong>1 </strong></span> obserwujących
+            </li>
+          </ul>
+      </div>  <!-- end of col-md-9 -->
+    </div>  <!-- end of row -->
+  </div>  <!-- end of card body -->
+  <div class="card-footer ">
+    <!--hr-->
+    <div class="stats">
+      <i class="fa fa-refresh"></i>
+          {% if editable %}
+            <a href="{% url 'profiles:edit_self' %}" class="btn btn-info">Edytuj swoje dane</a>
+          {% else %}
+            {% if user.is_authenticated %}
+                <a href="#" class="card-link" >Obserwuj</a>
+                <a href="#" class="card-link">{% if user.is_coach and show_user.is_player %} Zaproś na testy {% elif user.is_player and show_user.is_coach %} Zapytaj o testy{% endif %}</a>
+            {% else %}
+                <a href="#" class="card-link" data-toggle="modal" data-target="#registerModal">Obserwuj</a>
+                <a href="#" class="card-link" data-toggle="modal" data-target="#registerModal">{% if show_user.is_player %}Zaproś na testy {% elif show_user.is_coach%}Zapytaj o testy{% endif %}</a>
+            {% endif %}
+          {% endif %}
+    </div>
+  </div>
+</div>  <!--end of card -->

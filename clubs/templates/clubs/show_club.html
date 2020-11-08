@@ -1,0 +1,16 @@
+{% extends 'clubs/base.html' %}
+
+
+
+{% block content %}
+<h1 class="first-section last-section"> hello clubs  {{club.name}} </h1> 
+
+
+<div style="border:1px;">
+    {% for team in club.teams_set %}
+        <li> {{ team.name }} {% url 'clubs:team_show' %} </li>
+    {% empty %}
+        <h2> Club nie ma przypietych zespolow.</h2>
+    {% endfor %}
+</div>
+{% endblock content %}

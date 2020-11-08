@@ -1,53 +1,81 @@
-import datetime
-import uuid
 
+from datetime import datetime
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from users.models import ACCOUNT_ROLES
+from django.core.validators import MinValueValidator, MaxValueValidator
+from phonenumber_field.modelfields import PhoneNumberField
+from django.urls import reverse
+from .utils import unique_slugify
+from collections import Counter
+from django_countries.fields import CountryField
 
 
-# @todo clean up with PEP8
 class RoleChangeRequest(models.Model):
     """Keeps track on requested changes made by users."""
 
-    user = models.OneToOneField(
+    user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        primary_key=True, related_name='requestor',
+        related_name='changerolerequestor',
         help_text='User who requested change')
+
+    approver = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        help_text='Admin who verified.')
 
     approved = models.BooleanField(
         default=False,
         help_text='Defines if admin approved change')
 
     request_date = models.DateTimeField(auto_now_add=True)
+
     accepted_date = models.DateTimeField(auto_now=True)
-    current = models.CharField(max_length=100)
-    new = models.CharField(max_length=100)
+
+    new = models.CharField(max_length=100, choices=ACCOUNT_ROLES)
+
+    class Meta:
+        unique_together = ('user', 'request_date')
+
+    @property
+    def current(self):
+        return self.user.get_declared_role_display()
+
+    @property
+    def current_pretty(self):
+        return self.user.get_declared_role_display()
+
+    @property
+    def new_pretty(self):
+        return self.get_new_display()
 
     def __str__(self):
         return f"{self.user}'s request to change profile from {self.current} to {self.new}"
 
+    def save(self, *args, **kwargs):
+        if self.approved:
+            self.accepted_date = datetime.now()
+        super().save(*args, **kwargs)
+
+    def get_admin_url(self):
+        return reverse(f"admin:{self._meta.app_label}_{self._meta.model_name}_change", args=(self.id,))
+
 
 class BaseProfile(models.Model):
-    """Base profile model"""
-    profile_type = None
+    """Base profile model to held most common profile elements"""
+    PROFILE_TYPE = None
+    COMPLETE_FIELDS = []
+    VERIFICATION_FIELDS = []
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         primary_key=True)
 
-    slug = models.UUIDField(
-        default=uuid.uuid4,
-        blank=True,
-        editable=False)
-
-    picture = models.ImageField(
-        _("Profile picture"),
-        upload_to="profile_pics/%Y-%m-%d/",
-        null=True, 
-        blank=True)
+    slug = models.CharField(max_length=255, blank=True, editable=False)
 
     bio = models.CharField(
         _("Short Bio"),
@@ -65,24 +93,81 @@ class BaseProfile(models.Model):
         default=False,
         help_text="Manually confirmed by Admin. This means that user is participant of soocer community.")
 
-    def __str__(self):
-        return f"{self.user}'s {self.profile_type} profile"
+    @property
+    def is_complete(self):
+        for field_name in self.COMPLETE_FIELDS:
+            if getattr(self, field_name) is None:
+                return False
+        return True
 
+    @property
+    def percentage_completion(self):
+
+        total = len(self.COMPLETE_FIELDS)
+
+        if total == 0:
+            return int(100)
+        field_values = [getattr(self, field_name) for field_name in self.COMPLETE_FIELDS]
+        part = total - Counter(field_values).get(None, 0)
+
+        completion_percentage = 100 * float(part)/float(total)
+
+        return int(completion_percentage)
+
+    def __str__(self):
+        return f"{self.user}'s {self.PROFILE_TYPE} profile"
+
+    def save(self, *args, **kwargs):
+        slug_str = "%s %s %s" % (self.PROFILE_TYPE, self.user.first_name, self.user.last_name)
+        unique_slugify(self, slug_str)
+
+        # check if fields has changed
+        old_object = type(self).objects.get(pk=self.pk) if self.pk else None
+
+        ver_old = []
+        if old_object:
+            ver_old = self._get_verification_field_values(old_object)
+
+        # Queen of the show
+        super().save(*args, **kwargs)
+
+        ver_new = self._get_verification_field_values(self)
+
+        if self._verification_fileds_changed(ver_old, ver_new):
+            self.user.unverify()
+            self.user.save()
+
+    def _verification_fileds_changed(self, old, new):
+        return old != new
+
+    def _get_verification_field_values(self, obj):
+        return [getattr(obj, field) for field in self.VERIFICATION_FIELDS]
+  
     class Meta:
         abstract = True
         verbose_name = "Profile"
         verbose_name_plural = "Profiles"
 
 
-class StandardProfile(BaseProfile):
-    '''Regular base profile'''
-    profile_type = 'standard'
-
-
 class PlayerProfile(BaseProfile):
     '''Player specific profile'''
+    PROFILE_TYPE = 'player'
 
-    profile_type = 'player'
+    VERIFICATION_FIELDS = [
+        'birth_date',
+        'country',
+        'club_raw',
+    ]
+
+    COMPLETE_FIELDS = [
+        'height',
+        'weight',
+        'formation',
+        'prefered_leg',
+        'card',
+        'transfer_status',
+        'phone',
+    ]
 
     GOALKEEER = 'GK'
     DEFENDER_LEFT = 'DL'
@@ -91,20 +176,112 @@ class PlayerProfile(BaseProfile):
         (DEFENDER_LEFT, 'Obrońca Lewy'),
     ]
 
-    birth_date = models.DateField(_('birth date'), blank=True, null=True)
-    height = models.PositiveIntegerField(_('Height'), blank=True, null=True, help_text='Height (cm)')
-    weight = models.PositiveIntegerField(_('Weight'), blank=True, null=True, help_text='Weight (kg)')
-    club_raw = models.CharField(_('Club name'), max_length=68, blank=True, null=True)
-    league_raw = models.CharField(_('League name'), max_length=68, blank=True, null=True)
-    voivodeship_raw = models.CharField(_('Voivodeship name'), max_length=68, blank=True, null=True)
+    LEG_CHOICES = (
+        ('Lewa', 'Lewa'),
+        ('Prawa', 'Prawa')
+    )
+    TRANSFER_STATUS_CHOICES = (
+        ('SC', 'Szukam klubu'),
+        ('RO', 'Rozważę wszelkie oferty'),
+        ('NC', 'Nie szukam klubu')
+    )
+    CARD_CHOICES = (
+        ('MKN', 'Mam kartę na ręku'),
+        ('NCMKN', 'Nie wiem czy mam kartę na ręku'),
+        ('NKN', 'Nie mam karty na ręku')
+    )
+    FORMATION_CHOICES = (
+        ('5-3-2', '5-3-2'),
+        ('5-4-1', '5-4-1'),
+        ('4-4-2', '4-4-2'),
+        ('4-5-1', '4-5-1'),
+        ('4-3-3', '4-3-3'),
+        ('4-2-3-1', '4-2-3-1'),
+        ('4-1-4-1', '4-1-4-1'),
+        ('4-3-2-1', '4-3-2-1'),
+        ('3-5-2', '3-5-2'),
+        ('3-4-3', '3-4-3')
+    )
+
+    GOAL_CHOICES = (
+        (0, 'Ekstraklasa'),
+        (1, '1 liga'),
+        (2, '2 liga'),
+        (3, '3 liga'),
+        (4, '4 liga'),
+        (5, '5 liga'),
+        (6, 'A klasa'),
+        (7, 'B klasa')
+    )
+    birth_date = models.DateField(
+        _('Birth date'),
+        blank=True,
+        null=True)
+
+    height = models.PositiveIntegerField(
+        _('Height'),
+        blank=True,
+        null=True,
+        help_text='Height (cm)',
+        validators=[MinValueValidator(130), MaxValueValidator(210)])
+
+    weight = models.PositiveIntegerField(
+        _('Weight'),
+        blank=True,
+        null=True,
+        help_text='Weight (kg)',
+        validators=[MinValueValidator(40), MaxValueValidator(140)])
+
+    country = CountryField(
+        _('Country'),
+        blank=True,
+        null=True,
+        blank_label='(select country)'
+    )
+
+    club_raw = models.CharField(
+        _('Club name'),
+        max_length=68,
+        blank=True,
+        null=True)
+
+    team_raw = models.CharField(
+        _('Team name'), max_length=68, blank=True, null=True)
+    league_raw = models.CharField(
+        _('League name'), max_length=68, blank=True, null=True)
+    voivodeship_raw = models.CharField(
+        _('Voivodeship name'), max_length=68, blank=True, null=True)
+
     position_raw = models.CharField(_('Position name'), max_length=30, choices=POSITION_CHOICES, blank=True, null=True)
+    formation = models.CharField(_('Formation'), choices=FORMATION_CHOICES, max_length=11, null=True, blank=True)
+    alt_formation = models.CharField(_('Formation'), choices=FORMATION_CHOICES, max_length=11, null=True, blank=True)
+    prefered_leg = models.CharField(_('prefered leg'), choices=LEG_CHOICES, max_length=30, null=True, blank=True)
+
+    transfer_status = models.CharField(_('transfer status'), choices=TRANSFER_STATUS_CHOICES, max_length=45, null=True, blank=True)
     # about_me = models.TextField(_('about me'), blank=True)
+    card = models.CharField(_('karta na ręku'), choices=CARD_CHOICES, max_length=60, null=True, blank=True)
+
+    soccer_goal = models.CharField(_('karta na ręku'), choices=GOAL_CHOICES, max_length=60, null=True, blank=True)
+
+    phone = PhoneNumberField(blank=True, null=True)
+    facebook_url = models.URLField(blank=True, null=True)
+    lnp_url = models.URLField(blank=True, null=True)
+    min90_url = models.URLField(blank=True, null=True)
+    transfermarket_url = models.URLField(blank=True, null=True)
+
+    practice_distance = models.PositiveIntegerField(
+        _('max practice distance'),
+        blank=True,
+        null=True,
+        help_text='max practice distance',
+        validators=[MinValueValidator(10), MaxValueValidator(500)])
 
     @property
     def age(self):  # @todo it is taken from external source need to chcek this.... 
         if not self.birth_date:
             return False
         else:
+            import datetime
             today = datetime.date.today()
             # Raised when birth date is February 29 and the current year is not a
             # leap year.
@@ -123,24 +300,82 @@ class PlayerProfile(BaseProfile):
 
 
 class ClubProfile(BaseProfile):
-    profile_type = 'club'
+    PROFILE_TYPE = 'club'
+
+    phone = PhoneNumberField(blank=True, null=True)
 
     class Meta:
-        verbose_name = "Coach Profile"
-        verbose_name_plural = "Coach Profiles"
+        verbose_name = "Club Profile"
+        verbose_name_plural = "Club Profiles"
 
 
 class CoachProfile(BaseProfile):
-    profile_type = 'coach'
+    PROFILE_TYPE = 'coach'
+    COMPLETE_FIELDS = ['birth_date', 'phone']
+
+    GOALS_CHOICES = (
+        ('Profesjonalna kariera', 'Profesjonalna kariera'),
+        ('Kariera regionalna', 'Kariera regionalna'),
+        ('Trenerka jako hobby', 'Trenerka jako hobby'),
+    )
+
+    phone = PhoneNumberField(blank=True, null=True)
+    facebook_url = models.URLField(blank=True, null=True)
+    soccer_goal = models.CharField(_('soccer goal'), choices=GOALS_CHOICES, max_length=60, null=True, blank=True)
+    birth_date = models.DateField(
+        _('birth date'),
+        blank=True,
+        null=True)
 
     class Meta:
         verbose_name = "Coach Profile"
-        verbose_name_plural = "Coach Profiles"
+        verbose_name_plural = "Coaches Profiles"
 
 
-class GuestProfile(BaseProfile):
-    profile_type = 'guest'
+class StandardProfile(BaseProfile):  # @todo to be removed
+    '''Regular base profile'''
+    PROFILE_TYPE = 'standard'
+
+    class Meta:
+        verbose_name = "Standard Profile"
+        verbose_name_plural = "Standard Profiles"
+
+
+class GuestProfile(BaseProfile):   # @todo to be removed
+    PROFILE_TYPE = 'guest'
 
     class Meta:
         verbose_name = "Guest Profile"
-        verbose_name_plural = "Guest Profiles"
+        verbose_name_plural = "Guests Profiles"
+
+
+class ManagerProfile(BaseProfile):
+    PROFILE_TYPE = 'manager'
+
+    class Meta:
+        verbose_name = "Manager Profile"
+        verbose_name_plural = "Managers Profiles"
+
+
+class FanProfile(BaseProfile):
+    PROFILE_TYPE = 'fan'
+
+    class Meta:
+        verbose_name = "Fan Profile"
+        verbose_name_plural = "Fans Profiles"
+
+
+class ParentProfile(BaseProfile):
+    PROFILE_TYPE = 'parent'
+
+    class Meta:
+        verbose_name = "Parent Profile"
+        verbose_name_plural = "Parents Profiles"
+
+
+class ScoutProfile(BaseProfile):
+    PROFILE_TYPE = 'scout'
+
+    class Meta:
+        verbose_name = "Scout Profile"
+        verbose_name_plural = "Scouts Profiles"

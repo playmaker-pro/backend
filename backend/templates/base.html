@@ -9,7 +9,7 @@
 
   <title>
     {% block title %}
-      {% if self.seo_title %}{{ self.seo_title }}{% else %}{{ self.title }}{% endif %}
+      {% if self.seo_title %}{{ self.seo_title }}{% else %}{{ self.title|default:"PlayMaker.pro" }}{% endif %}
     {% endblock %}
     
     {% block title_suffix %}
@@ -55,69 +55,14 @@
 
 <body>
   {% block header %}
-  <!-- ======= Header ======= -->
-  <header id="header" class="fixed-top">
-    <div class="container d-flex align-items-center">
-      <h1 class="logo mr-auto"><a href="/">Play<span>Maker</span><small>.pro</small></a></h1>
-      <!-- Uncomment below if you prefer to use an image logo -->
-      <!--a href="/" class="logo mr-auto"><img src="{% static 'assets/img/logo.png' %}" alt=""></a-->
-
-      <nav class="nav-menu d-none d-lg-block">
-        <ul>
-          <!--li class="active"><a href="#header">Home</a></li-->
-          <li><a href="#about">O projekcie</a></li>
-          <li><a href="#services">Fantasy</a></li>
-          <li><a href="#portfolio">Rozgrywki</a></li>
-          <li class="drop-down"><a href="">Bazy</a>
-            <ul>
-              <li><a href="@todo">Piłkarzy</a></li>
-              <li><a href="@todo">Trenerów</a></li>
-              <li><a href="@todo">Klubów</a></li>
-            </ul>
-          </li>
-          <li><a href="#team">Produkty</a></li>
-          <li><a href="#team">Skauting</a></li>
-          <li><a href="/blog">Blog</a></li>
-          <li><a href="#contact">Contact</a></li>
-          {% if request.user.is_authenticated %}
-          <li class="drop-down"><a href=""><i class="icofont-user-alt-7"></i> {{ request.user.display_name }}</a>
-            <ul>  
-              <!--li><a href="#">Drop Down 1</a></li-->
-              <!-- li class="drop-down"><a href="#">Deep Drop Down</a>
-                <ul>
-                  <li><a href="#">Deep Drop Down 1</a></li>
-                  <li><a href="#">Deep Drop Down 2</a></li>
-                  <li><a href="#">Deep Drop Down 3</a></li>
-                  
-                  
-                </ul>
-              </li -->
-              <li><a href="{% url 'profiles:show_self' %}">Profil</a></li>
-              <li><a href="{% url 'account_logout' %}">Wyloguj</a></li>
-              {% if request.user.is_superuser %}
-              <li><a href="{% url 'wagtailadmin_home' %}">Admin</a></li>
-              {% endif %}
-            </ul>
-          </li>
-          {% else %}
-            <li><a href="{% url 'account_login' %}">Zaloguj</a></li>
-          {% endif %}
-          
-        </ul>
-      </nav><!-- .nav-menu -->
-      {% if request.user.is_authenticated %}
-        {# @todo - maybe to put someting insted....  #}
-      {% else %}
-        <a href="{% url 'account_signup' %}" class="get-started-btn scrollto">Dołącz za darmo</a>
-      {% endif %}
-    </div>
-  </header><!-- End Header -->
+    {% include 'partials/navigation.html' %}
   {% endblock header %}
 
-
+{% include 'partials/toasts.html' %}
 
 
   <main id="main">
+  {% include 'partials/messages.html' %}
   {% block content_header %}
   {% endblock content_header %}
   
@@ -228,6 +173,14 @@
   <!-- Template Main JS File -->
   <script src="{% static 'assets/js/main.js' %}"></script>
 
+
+<script>
+$(document).ready(function(){
+    $(".toast").toast('show', {
+            delay: 35000
+        });
+});
+</script>
   {% block extra_js %}
     {# Override this in templates to add extra javascript #}
   {% endblock %}

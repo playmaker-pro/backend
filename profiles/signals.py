@@ -3,6 +3,7 @@ import logging
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from notifications.mail import mail_role_change_request
 
 from . import models
 
@@ -13,16 +14,20 @@ logger = logging.getLogger(__name__)
 def set_and_create_user_profile(user):
 
     if user.declared_role == 'T':
-        profile = models.CoachProfile(user=user)
+        profile_model = models.CoachProfile
     elif user.declared_role == 'P':
-        profile = models.PlayerProfile(user=user)
+        profile_model = models.PlayerProfile
     elif user.declared_role == 'C':
-        profile = models.ClubProfile(user=user)
+        profile_model = models.ClubProfile
+    elif user.declared_role == 'G':
+        profile_model = models.GuestProfile
+    elif user.declared_role == 'S':
+        profile_model = models.StandardProfile
     else:
-        profile = models.StandardProfile(user=user)
-    profile.save()
+        profile_model = models.StandardProfile
 
-    user.current_profile = profile
+    profile_model.objects.get_or_create(user=user)
+    # profile.save()
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -44,15 +49,16 @@ def create_profile_handler(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=models.RoleChangeRequest)
 def change_profile_approved_handler(sender, instance, created, **kwargs):
+    '''users.User.declared_role is central point to navigate with role changes.
+    admin can alter somees role just changing User.declared_role
+    '''
     if created:  # we assume that when object is created RoleChangedRequest only admin shold recieve notifiaction.
-        return  # @todo add admin notification here in case of new change request....
+        mail_role_change_request(instance)
+        return
 
     if instance.approved:
-        if instance.new == 'player':  # @todo - for sure this need to be unified (one source of names.... )
-            profile = models.PlayerProfile(user=instance.user)
-        elif instance.new == 'coach':  # @todo - for sure this need to be unified (one source of names.... )
-            profile = models.CoachProfile(user=instance.user)
-            # @todo add more variants to addd (maybe more generic way)
-        profile.save()
-        #  @todo - reattach current_profile to user account
-        logger.info(f"User {instance.user} profile changed to {instance.new} sucessfully")
+        user = instance.user
+        user.declared_role = instance.new
+        user.save()  # this should invoke create_profile_handler signal
+        # set_and_create_user_profile(user)
+        logger.info(f"User {user} profile changed to {instance.new} sucessfully due to: accepted RoleChangeRequest")

@@ -1,0 +1,35 @@
+
+
+<div class="card">
+    <div class="card-body">
+        <h2 class="card-title">O sobie</h2>
+
+        <h6 class="card-subtitle mb-2 text-muted"></h6>
+
+        <div class="card-text">
+
+            <ul class="list-group">
+                <li class="list-group-item text-left border-0">
+                    <span class="pull-left text-muted"><strong>Pozycja (alternatywna) / Formacja (alternatywna):</strong></span> {{ show_user.profile.position_raw }}(@todo post_alt) / {{ show_user.profile.formation }}({{show_user.profile.alt_formation}})
+                </li>
+                <li class="list-group-item text-left border-0">
+                    <span class="pull-left text-muted"><strong>Adres:</strong></span> {{ show_user.profile.address }} @todo
+                </li>
+                <li class="list-group-item text-left border-0">
+                    <span class="pull-left text-muted"><strong>Maksymalna odległość na treningi / Oczekiwana liczba treningów w tygodniu:</strong></span> {{ show_user.profile.practice_distance }} /  @todo
+                </li>
+                <li class="list-group-item text-left border-0">
+                    <span class="pull-left text-muted"><strong>Dodatkowe informacje:</strong></span> @todo checkboxy
+                </li>
+            </ul>
+            <h2> Wspólpraca </h2>
+            <ul class="list-group">
+                <li class="list-group-item text-left border-0">
+                    <span class="pull-left text-muted"><strong>Imie nazwisko / trenera @todo:</strong></span> {{ show_user.profile.height }}cm / {{ show_user.profile.weight }}kg
+                </li>
+
+            </ul>
+
+        </div>  <!-- end of card-text-->
+    </div>
+</div>

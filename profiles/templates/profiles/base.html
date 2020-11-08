@@ -1,0 +1,16 @@
+{% extends 'base_inner.html' %}
+
+{% load static %}
+
+
+{% block title %}{{ block.super }}:: Profile{% endblock %}  {# @todo someting with this block to better utalize #}
+
+
+{% block extra_css %}
+    <link href="{% static 'assets/css/profiles.css' %}" rel="stylesheet">
+{% endblock extra_css%}
+
+
+{% block content_header %}
+{% endblock content_header %}
+
