@@ -171,8 +171,8 @@ class BaseProfile(models.Model):
             if self._verification_fileds_changed(ver_old, ver_new) and (self.user.is_verified or self.user.is_waiting_for_verification):
                 self.user.unverify(extra={'reason': f'[verification-params-changed] params:{self.VERIFICATION_FIELDS})  Old:{ver_old} -> New:{ver_new}'})
                 self.user.save()
-        
-        if self.is_ready_for_verification():
+
+        if self.is_ready_for_verification() and self._verification_fileds_changed(ver_old, ver_new):
             self.user.unverify(extra={'reason': f'[verification-params-ready] params:{self.VERIFICATION_FIELDS})  values:{self._get_verification_field_values(self)}'})
             self.user.save()
 
