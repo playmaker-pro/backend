@@ -1,0 +1,13 @@
+{% if editable and show_user.profile.is_not_complete %}
+<div class="notification-banner">
+  <div class="alert alert-danger" role="alert" style="padding:5px 40px;">
+
+  <strong>Twój profil jest gotowy w {{user.profile.percentage_completion}}%</strong>. Uzupełnij swoje CV by móc korzystać z wszelkich funkcjonalności platformy. Stań się bardziej widoczny i zwiększ swoje szanse na znalezienie klubu na który zasługujesz! <a href="{% url 'profiles:edit_self' %}">edytuj CV</a>
+   <!-- <strong>Twój profil nie jest kompletny.</strong> by korzystać z pełnych mozliwości darmowego konta uzupełnij swój piłkarski profil. -->
+    {% if editable %}
+      
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+

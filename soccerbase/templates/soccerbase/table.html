@@ -3,22 +3,54 @@
 
 {% block content %}
 <section style="padding:60px;"> 
-    <div class="container">
-    <ul>
-    
-        {% for object in objects %}
-            {% if type == 'P' %}
-                {% include 'soccerbase/_players.html' with object=object %}
-            {% elif type == 'T' %}
-                {% include 'soccerbase/_coaches.html' with object=object %}
-            {% elif type == 'C' %}
-                {% include 'soccerbase/_teams.html' with object=object %}
-            {% endif %}
-        
-        {% empty %}
-            <h2>brak elemntów</h2>
-        {% endfor %}
-    </ul>
+
+
+
+    <div class="content">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-header">
+                <h4 class="card-title">{{ table_title }}</h4>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table">
+                    <thead class=" text-primary">
+                            {% if type == 'P' %}
+                                {% include 'soccerbase/_player_header.html' with object=object %}
+                            {% elif type == 'T' %}
+                                {% include 'soccerbase/_coach_header.html' with object=object %}
+                            {% elif type == 'C' %}
+                                {% include 'soccerbase/_team_header.html' with object=object %}
+                            {% endif %}
+                    </thead>
+                    <tbody>
+                        
+                            {% for object in objects %}
+                                <tr>
+                                {% if type == 'P' %}
+                                    {% include 'soccerbase/_player.html' with object=object %}
+                                {% elif type == 'T' %}
+                                    {% include 'soccerbase/_coache.html' with object=object %}
+                                {% elif type == 'C' %}
+                                    {% include 'soccerbase/_team.html' with object=object %}
+                                {% endif %}
+                                </tr>
+                            {% empty %}
+                                Brak elemntów
+                            {% endfor %}
+                        
+                    </thbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
     </div>
 </section>
 {% endblock content %}
+
+
+

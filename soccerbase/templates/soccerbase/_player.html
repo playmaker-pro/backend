@@ -1,0 +1,6 @@
+<td>{{ object.first_name }} {{ object.last_name }} {% if object.is_verified %}<i class="text-success icofont-verification-check">{% endif %}</td>
+<td>{{ object.profile.birth_date.year }}</td>
+<td>{{ object.profile.position_raw }}</td>
+<td>{{ object.profile.voivodeship_raw }}</td>
+<td>{{ object.profile.voivodeship_raw }}</td>
+<td class="text-right"><div class="btn"><a herf="{{ object.get_absolute_url }}">profil gracza</a></td>

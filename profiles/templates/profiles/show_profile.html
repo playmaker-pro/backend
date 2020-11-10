@@ -5,7 +5,7 @@
 
 {% block content %}  <!-- @todo frontend to be renovated to adjust template-->
 
-{% include 'profiles/_banner.html' with show_user=show_user %}
+{% include 'profiles/banners/_unfinished_account.html' with show_user=show_user %}
 
 <section id="profile" class="profile">
   <div class="container" data-aos="fade-up">
@@ -56,8 +56,8 @@
       {#% include 'profiles/_verification_modal.html'%#}
   {#% endif %#}
 
-  {% if editable and user.declared_role is None %}
-      {% include 'profiles/_new_account_modal.html'%}
+  {% if editable and user.is_roleless %}
+      {% include 'profiles/_new_account_role_modal.html'%}
   {% endif %}
 
   {% if not user.is_authenticated %}

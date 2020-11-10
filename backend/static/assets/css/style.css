@@ -129,6 +129,11 @@ main > :first-child{
 /*--------------------------------------------------------------
 # Navigation Menu
 --------------------------------------------------------------*/
+
+.navigation-avatar { 
+    border:1px solid red;
+}
+
 /* Desktop Navigation */
 .nav-menu ul {
   margin: 0;

@@ -4,6 +4,8 @@ import os
 from django.contrib import messages
 from django.urls import reverse_lazy
 
+DOMAIN_ADDRESS = 'http://localhost:8000'
+
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
 
@@ -27,6 +29,8 @@ INSTALLED_APPS = [
     'inquiries',
     'clubs',
     'soccerbase',
+
+    'data',  # external repo
 
     'django_countries',
     'crispy_forms',
@@ -68,7 +72,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    # 'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.facebook',
 ]
 
 
@@ -121,12 +125,43 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+
+DATABASE_ROUTERS = ['data.routers.DataRouter', 'data.routers.DefaultDBRouter']
+
+# DB_ITERATOR = '11'
 DATABASES = {
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    # },
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'local_pm',
+        'USER': 'arsen',
+        'PASSWORD': 'postgres',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    },
+    'datadb': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'local_data',
+        'USER': 'arsen',
+        'PASSWORD': 'postgres',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
+    
 }
+
+
+# DATABASES['datadb'] = {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'p1390_pm1',
+#         'USER': 'p1390_pm1',
+#         'PASSWORD': 'H6ZBRHlEKe5ILtvCalaa',
+#         'HOST': 'localhost',
+#         'PORT': '8543 '  # '9543',  # ssh -f jacekplaymaker@s38.mydevil.net -L 8543:pgsql38.mydevil.net:5432 -N
+# }
 
 
 # Password validation
@@ -204,11 +239,17 @@ CORS_ORIGIN_ALLOW_ALL = True  # to be replaces  with CORS_ORIGIN_WHITELIST
 
 # easy-thumbnail
 THUMBNAIL_EXTENSION = "png"  # Or any extn for your thumbnails
-
+THUMBNAIL_ALIASES = {
+    '': {
+        'profile_avatar_show': {'size': (140, 140), 'crop': True},
+        'profile_avatar_table': {'size': (25, 25), 'crop': True},
+        'nav_avatar': {'size': (25, 25), 'crop': True},
+    },
+}
 # Crispy Form Theme - Bootstrap 4
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
-# For Bootstrap 3, change error alert to 'danger'
+# For Bootstrap 4, change error alert to 'danger'
 MESSAGE_TAGS = {messages.ERROR: "danger"}
 
 
@@ -265,7 +306,28 @@ ACCOUNT_FORMS = {'signup': 'users.forms.CustomSignupForm'}
 #         }
 #     }
 # }
-
+# SOCIALACCOUNT_PROVIDERS = \
+#     {'facebook':
+#        {'METHOD': 'oauth2',
+#         'SCOPE': ['email','public_profile', 'user_friends'],
+#         'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+#         'FIELDS': [
+#             'id',
+#             'email',
+#             'name',
+#             'first_name',
+#             'last_name',
+#             'verified',
+#             'locale',
+#             'timezone',
+#             'link',
+#             'gender',
+#             'updated_time'],
+#         'EXCHANGE_TOKEN': True,
+#         'LOCALE_FUNC': lambda request: 'kr_KR',
+#         'VERIFIED_EMAIL': False,
+#         'VERSION': 'v2.4'}
+# }
 
 # Blog settingss
 BLOG_PAGINATION_PER_PAGE = 4
@@ -373,3 +435,10 @@ STREAM_REDIS_CONFIG = {
         'password': None
     },
 }
+
+
+
+try:
+    from backend.settings._local import *
+except Exception as e:
+    print(f'No local settings. {e}')

@@ -1,0 +1,43 @@
+{% load crispy_forms_tags %}
+{% load static %}
+{% load thumbnail %}
+<!-- Modal -->
+<div class="modal fade" id="missingBasicAccountModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="exampleModalLabel">Jeszcze pare kroków do końca i zaczynamy!</h2>
+
+      </div>
+      <div class="modal-body">
+      
+        Do uruchomienia konta należy wybrać role.
+
+        W każdej chwili będziesz mogł dokonać zmiany.
+
+        <form enctype="multipart/form-data" method="post">
+        {% if role_form %}
+          {% crispy role_form %}
+        {% else %}
+          Coś poszło nie tak... (brak forularza)
+        {% endif %}
+        </form>
+      </div>
+      <div class="modal-footer">
+        <hidden img width="30%" src="{% static 'assets/img/Soccer-amico.png' %}" alt="image_to_choice_role">
+        <button hidden type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>  <!-- @todo remove hiddens  -->
+        <button hidden type="button" class="btn btn-primary">Save changes</button>  <!-- @todo remove hiddens  -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+    $(window).on('load',function(){
+        $('#missingBasicAccountModal')
+          .modal({
+            backdrop: 'static',
+            keyboard: false})
+          .modal('show');
+    });
+</script>

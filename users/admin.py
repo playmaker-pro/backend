@@ -1,6 +1,8 @@
 from django.contrib import admin
 
 from .models import User, UserVerification
+from django.utils.html import format_html
+from django.urls import reverse
 
 
 from utils import linkify 

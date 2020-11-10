@@ -23,5 +23,6 @@ INTERNAL_IPS = ("127.0.0.1", "172.17.0.1")
 
 try:
     from .local import *
+    print('loaded local settings. from local.py')
 except ImportError:
     pass

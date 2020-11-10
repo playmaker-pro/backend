@@ -72,8 +72,8 @@ class ShowProfile(generic.TemplateView):
         # what happend when user is seeing his own profile.
         if user == self.request.user:
             kwargs["editable"] = True
-            # if user.declared_role is None:
-            #    kwargs["role_form"] = self.get_role_declaration_form()
+            if user.declared_role is None:  # @todo - this is  not pretty.
+                kwargs["role_form"] = self.get_role_declaration_form()
         kwargs["show_user"] = user
 
         return super().get(request, *args, **kwargs)

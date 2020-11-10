@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.urls import include, path
 from django.contrib import admin
+from django.views.generic import TemplateView
 
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.core import urls as wagtail_urls
@@ -31,7 +32,8 @@ urlpatterns = [
     path('clubs/', include(clubs.urls), name="clubs"),
     path('users/', include(profiles.urls), name="profiles"),
     path('feeds/', include(followers.urls), name="feeds"),
-
+    path('policy/', TemplateView.as_view(template_name='subpgaes/policy.html')),
+    path('terms/', TemplateView.as_view(template_name='subpgaes/terms.html')),
     path('blog/', include('blog.urls', namespace="blog")),
     path('api/v2/', api_router.urls),
     path('', include('allauth.urls')),
@@ -53,7 +55,7 @@ if settings.DEBUG:
         path('__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns
 
-    
+
 urlpatterns = urlpatterns + [
     # For anything not caught by a more specific rule above, hand over to
     # Wagtail's page serving mechanism. This should be the last pattern in

@@ -9,7 +9,7 @@
   
     <div class="card-text row">
       <div class='col-md-3'>
-        <img title="profile picture" class="rounded-circle img-responsive" src="{% thumbnail show_user.picture|default:'default_profile.png' 140x140 crop %}">
+        <img title="profile picture" class="rounded-circle img-responsive" src="{% thumbnail show_user.picture|default:'default_profile.png' 'profile_avatar_show' %}">
       </div>
       
       <div class='col-md-9'>
@@ -30,12 +30,24 @@
               Oczekujesz na akceptacje zmiany typu konta z <strong>{{user.pending_role_change.current_pretty|upper}}</strong> na <strong>{{user.pending_role_change.new_pretty|upper}}</strong> 
             </div>
               {% else %}
-              <h4 class="card-subtitle mb-2 text-muted">{{ show_user.get_declared_role_display|upper }}</h4>
+              <h4 class="card-subtitle mb-2 text-muted">{{ show_user.get_declared_role_display|upper }} </h4>
+              
+              <h4 class="card-subtitle mb-2 text-muted">
+                             {% if show_user.is_verified %} 
+                  <i class="text-success icofont-verification-check"></i> zwerifikowane
+                {% elif show_user.is_waiting_for_verification and show_user.profile.is_ready_for_verification %}
+                    <i class="text-warning icofont-ui-clock"></i> oczekuje na werifikacje 
+                {% else %} 
+                    <i class="text-danger icofont-adjust"></i> brakuje danych do werifikacji konta
+                {% endif %}  
+              
+              
+              </h4>
               {% endif %}
             </li>
 
 
-            {% if user == show_user %}
+            {% if editable %}
             <li class="list-group-item text-left border-0">
               <span class="pull-left text-muted">
               <div class="progress" data-toggle="tooltip" data-placement="top" title="Określa w jakim stopniu Twoje konto ma uzupełnione dane.">
@@ -50,7 +62,15 @@
             </li-->
 
             <li class="list-group-item text-left border-0">
-              <span class="pull-left text-muted"><strong>Użytkownik:</strong></span>  {% if show_user.is_verified %} <i class="text-success icofont-verification-check"></i> zwerifikowany{% else %} oczekuje na werifikacje {% endif %}  
+              <span class="pull-left text-muted"><strong></strong>
+                {% if show_user.is_verified %} 
+                  <i class="text-success icofont-verification-check"></i> zwerifikowane
+                {% elif show_user.is_waiting_for_verification and show_user.profile.is_ready_for_verification %}
+                    <i class="text-warning icofont-ui-clock"></i> oczekuje na werifikacje 
+                {% else %} 
+                    <i class="text-danger icofont-adjust"></i> brakuje danych do werifikacji konta
+                {% endif %}  
+              </span>  
             </li> 
             <li class="list-group-item text-left border-0">
               <span class="pull-left text-muted"><strong>Noga:</strong></span> {{ show_user.profile.get_prefered_leg_display }}
