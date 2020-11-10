@@ -1,0 +1,31 @@
+
+
+#verificationModal { 
+    
+}
+
+.modal-title {
+    text-align: center;
+    padding-bottom: 30px;
+    position: relative;
+  }
+  
+  .modal-title h2 {
+    font-size: 32px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    position: relative;
+  }
+  
+  .modal-title h2::after {
+    content: '';
+    position: absolute;
+    display: block;
+    width: 70px;
+    height: 3px;
+    background: #e03a3c;
+    bottom: 0;
+    left: calc(50% - 35px);
+  }

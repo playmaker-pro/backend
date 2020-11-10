@@ -13,7 +13,7 @@
         <div class="col-xl-6 ">
           <h1>Znajdź i bądź znalezionym w świecie piłki nożnej! </h1>
           <h1>Szukaj <span id="word" >piłkarzy</span><span class="main-color"></span></h1>
-          <a href="#about" class="btn-get-started scrollto btn-lg"><h2>ZAŁÓŻ DARMOWE KONTO</h2></a>
+          <a href="/signup/?role=P" class="btn-get-started scrollto btn-lg"><h2>ZAŁÓŻ DARMOWE KONTO</h2></a>
         </div>
       </div>
     </div>
@@ -56,8 +56,10 @@
               <p>Korzystaj z produktów dodatkowych. Dietetyk, Trener motoryczny, Trener bramkarzy, Trener techniki, Trener mentalny. Raport skautingowy z Twojej gry.</p>
             </div>
           </div>
-
+          
         </div>
+
+        <a href="/signup/?role=P" class="btn-get-started scrollto btn-lg"><h2>Stwórz piłkarskie CV</h2></a>
 
       </div>
     </section><!-- End Player Service Section -->
@@ -66,79 +68,174 @@
     <section id="clients" class="clients">
       <div class="container" data-aos="zoom-in">
         <div class="owl-carousel clients-carousel">
-          <img src="{% static 'assets/img/clients/client-1.png' %}" alt="">
-          <img src="{% static 'assets/img/clients/client-2.png' %}" alt="">
-          <img src="{% static 'assets/img/clients/client-3.png' %}" alt="">
-          <img src="{% static 'assets/img/clients/client-4.png' %}" alt="">
-          <img src="{% static 'assets/img/clients/client-5.png' %}" alt="">
-          <img src="{% static 'assets/img/clients/client-6.png' %}" alt="">
-          <img src="{% static 'assets/img/clients/client-7.png' %}" alt="">
-          <img src="{% static 'assets/img/clients/client-8.png' %}" alt="">
-          <img src="{% static 'assets/img/clients/client-4.png' %}" alt="">
-          <img src="{% static 'assets/img/clients/client-5.png' %}" alt="">
-          <img src="{% static 'assets/img/clients/client-6.png' %}" alt="">
-          <img src="{% static 'assets/img/clients/client-7.png' %}" alt="">
-          <img src="{% static 'assets/img/clients/client-8.png' %}" alt="">
+          <img src="{% static 'assets/img/clubs/club_1.png' %}" alt="club_1">   <!--@todo to z bazy wyciagac i alt dac jako name-->
+          <img src="{% static 'assets/img/clubs/club_2.png' %}" alt="club_2">   <!--@todo to z bazy wyciagac i alt dac jako name-->
+          <img src="{% static 'assets/img/clubs/club_3.png' %}" alt="club_3">   <!--@todo to z bazy wyciagac i alt dac jako name-->
+          <img src="{% static 'assets/img/clubs/club_4.png' %}" alt="club_4">   <!--@todo to z bazy wyciagac i alt dac jako name-->
+          <img src="{% static 'assets/img/clubs/club_5.png' %}" alt="club_5">   <!--@todo to z bazy wyciagac i alt dac jako name-->
+          <img src="{% static 'assets/img/clubs/club_6.png' %}" alt="club_6">   <!--@todo to z bazy wyciagac i alt dac jako name-->
         </div>
       </div>
     </section><!-- End Clients Section -->
 
-    <!-- ======= About Section ======= -->
-    <section id="about" class="about section-bg">
+
+    <!-- ======= Tabs Section ======= -->
+    <section id="tabs" class="tabs">
+      <div class="container" data-aos="fade-up">
+        
+        <div class="section-title">
+          <h2><span style="color:grey"> Klub | Szkółka piłkarska | Trener </span></h2> <h1>Szukaj piłkarzy i buduj swoją kadrę</h1>
+        </div>
+        <div class="row">
+          <div class="col-lg-6 order-2 order-lg-1 mt-3 mt-lg-0" data-aos="fade-up" data-aos-delay="100">
+            <h3></h3>
+            <p class="font-italic">
+          
+            </p>
+            <ul>
+              <li><i class="ri-check-double-line"></i>Chcesz wzmocnić lub poszerzyć swój skład? Szukasz talentów? Skorzystaj z darmowej bazy PlayMaker.Pro, filtruj według własnych upodobań i zapraszaj piłkarzy na testy. <a href="/signup/?role=P" class="btn-get-started scrollto btn-lg"><h4>Zobacz bazę piłkarzy</h4></a></li>
+              <li><i class="ri-check-double-line"></i>Brak zawodników spełniających Twoje wymagania? Zleć nam poszukiwania poza bazą. Przeprowadzimy dla Ciebie nabór do szkółki. Znajdziemy zawodników o konkretnych cechach niezależnie od poziomu rozgrywkowego. A dla klubów profesjonalnych monitorujemy region jako skauci. <a href="/signup/?role=P" class="btn-get-started scrollto btn-lg"><h4>Zobacz ofertę</h4></a></li>
+            </ul>
+            <p>
+              
+            </p>
+          </div>
+          <div class="col-lg-6 order-1 order-lg-2 text-center" data-aos="fade-up" data-aos-delay="200">
+            <img src="{% static 'assets/img/tabs-1.jpg' %}" alt="" class="img-fluid">
+          </div>
+        </div>
+      </div>
+    </section><!-- End Tabs Section -->
+
+ <!-- ======= Pricing Section ======= -->
+    <section id="pricing" class="pricing section-bg">
       <div class="container" data-aos="fade-up">
 
-        <div class="row no-gutters">
-          <div class="content col-xl-5 d-flex align-items-stretch">
-            <div class="content">
-              <h3>Voluptatem dignissimos provident quasi</h3>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Duis aute irure dolor in reprehenderit
-              </p>
-              <a href="#" class="about-btn"><span>About us</span> <i class="bx bx-chevron-right"></i></a>
+        <div class="section-title">
+          <h2>Skauting PlayMaker.Pro</h2>
+          <p>Sprawdź produkty skautingowe dedykowane zarządzającym klubami. Rozwiążemy Twoje kadrowe problemy, po szukamy talentów w określonym regionie, przeprowadzimy dla Ciebie nabór do szkółki piłkarskiej.</p>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-4 col-md-6">
+            <div class="box" data-aos="fade-up" data-aos-delay="100">
+              <h3>Kluby profesjonalne</h3>
+              <h2>Dedykowane klubom od Ekstraklasy do III ligi</h2>
+              <p>(Współpraca długoterminowa: minimum runda)</p>
+              <ul>
+                <li>Spisujemy wymagania obserwacji</li>
+                <li>Filtrujemy wskazany region</li>
+                <li>Szukamy danych o piłkarzach</li>
+                <li>Wyznaczamy ich potencjał</li>
+                <li>Sprawdzamy opinie na ich temat</li>
+                <li>Obserwujemy na video</li>
+                <li>Obserwujemy na żywo</li>
+                <li>Raportujemy wyróżniających się piłkarzy </li>
+              </ul>
+              <div hidden class="btn-wrap">
+                <a href="#" class="btn-buy">Buy Now</a>
+              </div>
             </div>
           </div>
-          <div class="col-xl-7 d-flex align-items-stretch">
-            <div class="icon-boxes d-flex flex-column justify-content-center">
-              <div class="row">
-                <div class="col-md-6 icon-box" data-aos="fade-up" data-aos-delay="100">
-                  <i class="bx bx-receipt"></i>
-                  <h4>Corporis voluptates sit</h4>
-                  <p>Consequuntur sunt aut quasi enim aliquam quae harum pariatur laboris nisi ut aliquip</p>
-                </div>
-                <div class="col-md-6 icon-box" data-aos="fade-up" data-aos-delay="200">
-                  <i class="bx bx-cube-alt"></i>
-                  <h4>Ullamco laboris nisi</h4>
-                  <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt</p>
-                </div>
-                <div class="col-md-6 icon-box" data-aos="fade-up" data-aos-delay="300">
-                  <i class="bx bx-images"></i>
-                  <h4>Labore consequatur</h4>
-                  <p>Aut suscipit aut cum nemo deleniti aut omnis. Doloribus ut maiores omnis facere</p>
-                </div>
-                <div class="col-md-6 icon-box" data-aos="fade-up" data-aos-delay="400">
-                  <i class="bx bx-shield"></i>
-                  <h4>Beatae veritatis</h4>
-                  <p>Expedita veritatis consequuntur nihil tempore laudantium vitae denat pacta</p>
-                </div>
+
+          <div class="col-lg-4 col-md-6 mt-4 mt-md-0">
+            <div class="box featured" data-aos="fade-up" data-aos-delay="200">
+              <h3>Kluby półprofesjonalne</h3>
+              <h2>Dedykowane klubom od III ligi do B klasy</h2>
+              <p>(Współpraca krótkoterminowa: okienko transferowe)</p>
+              <ul>
+                <li>Definiujemy szczegóły zlecenia</li>
+                <li>Filtrujemy wskazany region</li>
+                <li>Wykorzystujemy oprogramowanie informatyczne</li>
+                <li>Lista piłkarzy powstaje w godzinę</li>
+                <li>Kontaktujemy się z nimi</li>
+                <li>Rozliczenie od efektu: testów i transferu</li>
+                <li>Klub oszczędza czas i minimalizuje koszty</li>
+              </ul>
+              <div hidden class="btn-wrap">
+                <a href="#" class="btn-buy">Buy Now</a>
               </div>
-            </div><!-- End .content-->
+            </div>
           </div>
+
+          <div class="col-lg-4 col-md-6 mt-4 mt-lg-0">
+            <div class="box" data-aos="fade-up" data-aos-delay="300">
+              <h3>Szkółki piłkarskie</h3>
+              <h2>Dedykowane dla szkółek i drużyn młodzieżowych</h2>
+              <p>(Współpraca krótkoterminowa: wsparcie przy naborach)</p>
+              <ul>
+                <li>Ustalamy wymagania oraz termin</li>
+                <li>Filtrujemy wskazany region</li>
+                <li>Wykorzystujemy oprogramowanie informatyczne</li>
+                <li>Lista talentów powstaje w godzinę</li>
+                <li>Kontaktujemy się z ich rodzicami*</li>
+                <li>Klub oszczędza czas i minimalizuje koszty</li>
+                <li>Rozliczamy się od listy kontaktów lub testowanych piłkarzy</li>
+              </ul>
+              <div hidden class="btn-wrap">
+                <a href="#" class="btn-buy">Buy Now</a>
+              </div>
+            </div>
+          </div>
+
         </div>
 
       </div>
-    </section><!-- End About Section -->
+    </section><!-- End Pricing Section -->
 
+    <!-- ======= Tabs Section 2 ======= -->
+    <section id="tabs" class="tabs">
+      <div class="container" data-aos="fade-up">
+        
+        <div class="section-title">
+          <h1><span style="color:grey"></span> </span></h1> <h2>Cele projektu PlayMaker.Pro/h2>
+        </div>
+        <div class="row">
+          <div class="col-lg-6 order-2 order-lg-1 mt-3 mt-lg-0" data-aos="fade-up" data-aos-delay="100">
+            <h3></h3>
+            <p class="font-italic">
+          
+            </p>
+            <ul>
+              <li>
+                <i class="ri-check-double-line"></i>Platforma piłkarsko-społecznościowa <p>Miejsce w sieci zrzeszające społeczność piłkarską ma na celu rozwój regionalnych lig. Kluby, trenerzy oraz piłkarze mogą wzajemnie się wyszukiwać za pomocą prostego filtrowania. Moduły obserwacji oraz wysyłania zaproszeń na testy pomagają w nawiązywaniu kontaktów i przeprowadzaniu transferów za pomocą kilku kliknięć.</p>
+              </li>
+              
+              <li>
+                <i class="ri-check-double-line"></i>Wsparcie transferowe<p>MPlayMaker pomaga w znajdowaniu klubu dostosowanego do potrzeb i umiejętności piłkarzy, a także ułatwia pracę prezesom oraz trenerom wyszukując piłkarzy na zlecenie w bazie oraz poza nią. PlayMaker wykorzystując zaawansowane oprogramowanie jest w stanie dotrzeć do 90% piłkarzy w Polsce. </p>
+              </li>
+              <li>
+                <i class="ri-check-double-line"></i>Monitoring utalentowanych piłkarzy<p>bserwujemy niższe ligi oraz rozwijamy nowoczesne technologie monitoringu, by mieć pod lupą wszystkich utalentowanych piłkarzy. Naszym równorzędnym celem jest odwrócenie proporcji w ilości przepłacanych zagranicznych piłkarzy do obiecujących Polaków na poziomie profesjonalnym. </p>
+              </li>
+              <li><i class="ri-check-double-line"></i>czytaj więcej....    załóż piłkarski profil</li>
+            </ul>
+            <p>
+              
+            </p>
+          </div>
+          <div class="col-lg-6 order-1 order-lg-2 text-center" data-aos="fade-up" data-aos-delay="200">
+           
+            <iframe height="480" width="500" src="https://www.youtube.com/embed/-uzTdKJEBIY" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+        </div>
+      </div>
+    </section><!-- End Tabs Section 2 -->
+
+
+    
     <!-- ======= Counts Section ======= -->
     <section id="counts" class="counts">
       <div class="container" data-aos="fade-up">
-
+        <div class="section-title">
+          <h1><span style="color:grey"></span> </span></h1> <h2>Liczby i opinie PlayMakera</h2>
+        </div>
         <div class="row">
 
           <div class="col-lg-3 col-md-6">
             <div class="count-box">
               <i class="icofont-simple-smile"></i>
               <span data-toggle="counter-up">232</span>
-              <p>Happy Clients</p>
+              <p>Liczba piłkarzy z pełnym CV</p>
             </div>
           </div>
 
@@ -146,7 +243,7 @@
             <div class="count-box">
               <i class="icofont-document-folder"></i>
               <span data-toggle="counter-up">521</span>
-              <p>Projects</p>
+              <p>Liczba zarejestrowanych klubów i trenerów</p>
             </div>
           </div>
 
@@ -154,7 +251,7 @@
             <div class="count-box">
               <i class="icofont-live-support"></i>
               <span data-toggle="counter-up">1,463</span>
-              <p>Hours Of Support</p>
+              <p>Liczba wysłanych piłkarzy na testy</p>
             </div>
           </div>
 
@@ -162,7 +259,7 @@
             <div class="count-box">
               <i class="icofont-users-alt-5"></i>
               <span data-toggle="counter-up">15</span>
-              <p>Hard Workers</p>
+              <p>Liczba przeprowadzonych naborów do szkółek</p>
             </div>
           </div>
 
@@ -171,356 +268,13 @@
       </div>
     </section><!-- End Counts Section -->
 
-    <!-- ======= Tabs Section ======= -->
-    <section id="tabs" class="tabs">
-      <div class="container" data-aos="fade-up">
 
-        <ul class="nav nav-tabs row d-flex">
-          <li class="nav-item col-3">
-            <a class="nav-link active show" data-toggle="tab" href="#tab-1">
-              <i class="ri-gps-line"></i>
-              <h4 class="d-none d-lg-block">Modi sit est dela pireda nest</h4>
-            </a>
-          </li>
-          <li class="nav-item col-3">
-            <a class="nav-link" data-toggle="tab" href="#tab-2">
-              <i class="ri-body-scan-line"></i>
-              <h4 class="d-none d-lg-block">Unde praesenti mara setra le</h4>
-            </a>
-          </li>
-          <li class="nav-item col-3">
-            <a class="nav-link" data-toggle="tab" href="#tab-3">
-              <i class="ri-sun-line"></i>
-              <h4 class="d-none d-lg-block">Pariatur explica nitro dela</h4>
-            </a>
-          </li>
-          <li class="nav-item col-3">
-            <a class="nav-link" data-toggle="tab" href="#tab-4">
-              <i class="ri-store-line"></i>
-              <h4 class="d-none d-lg-block">Nostrum qui dile node</h4>
-            </a>
-          </li>
-        </ul>
-
-        <div class="tab-content">
-          <div class="tab-pane active show" id="tab-1">
-            <div class="row">
-              <div class="col-lg-6 order-2 order-lg-1 mt-3 mt-lg-0" data-aos="fade-up" data-aos-delay="100">
-                <h3>Voluptatem dignissimos provident quasi corporis voluptates sit assumenda.</h3>
-                <p class="font-italic">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-                  magna aliqua.
-                </p>
-                <ul>
-                  <li><i class="ri-check-double-line"></i> Ullamco laboris nisi ut aliquip ex ea commodo consequat.</li>
-                  <li><i class="ri-check-double-line"></i> Duis aute irure dolor in reprehenderit in voluptate velit.</li>
-                  <li><i class="ri-check-double-line"></i> Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate trideta storacalaperda mastiro dolore eu fugiat nulla pariatur.</li>
-                </ul>
-                <p>
-                  Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-                  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-                  culpa qui officia deserunt mollit anim id est laborum
-                </p>
-              </div>
-              <div class="col-lg-6 order-1 order-lg-2 text-center" data-aos="fade-up" data-aos-delay="200">
-                <img src="{% static 'assets/img/tabs-1.jpg' %}" alt="" class="img-fluid">
-              </div>
-            </div>
-          </div>
-          <div class="tab-pane" id="tab-2">
-            <div class="row">
-              <div class="col-lg-6 order-2 order-lg-1 mt-3 mt-lg-0">
-                <h3>Neque exercitationem debitis soluta quos debitis quo mollitia officia est</h3>
-                <p>
-                  Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-                  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-                  culpa qui officia deserunt mollit anim id est laborum
-                </p>
-                <p class="font-italic">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-                  magna aliqua.
-                </p>
-                <ul>
-                  <li><i class="ri-check-double-line"></i> Ullamco laboris nisi ut aliquip ex ea commodo consequat.</li>
-                  <li><i class="ri-check-double-line"></i> Duis aute irure dolor in reprehenderit in voluptate velit.</li>
-                  <li><i class="ri-check-double-line"></i> Provident mollitia neque rerum asperiores dolores quos qui a. Ipsum neque dolor voluptate nisi sed.</li>
-                  <li><i class="ri-check-double-line"></i> Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate trideta storacalaperda mastiro dolore eu fugiat nulla pariatur.</li>
-                </ul>
-              </div>
-              <div class="col-lg-6 order-1 order-lg-2 text-center">
-                <img src="{% static 'assets/img/tabs-2.jpg' %}" alt="" class="img-fluid">
-              </div>
-            </div>
-          </div>
-          <div class="tab-pane" id="tab-3">
-            <div class="row">
-              <div class="col-lg-6 order-2 order-lg-1 mt-3 mt-lg-0">
-                <h3>Voluptatibus commodi ut accusamus ea repudiandae ut autem dolor ut assumenda</h3>
-                <p>
-                  Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-                  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-                  culpa qui officia deserunt mollit anim id est laborum
-                </p>
-                <ul>
-                  <li><i class="ri-check-double-line"></i> Ullamco laboris nisi ut aliquip ex ea commodo consequat.</li>
-                  <li><i class="ri-check-double-line"></i> Duis aute irure dolor in reprehenderit in voluptate velit.</li>
-                  <li><i class="ri-check-double-line"></i> Provident mollitia neque rerum asperiores dolores quos qui a. Ipsum neque dolor voluptate nisi sed.</li>
-                </ul>
-                <p class="font-italic">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-                  magna aliqua.
-                </p>
-              </div>
-              <div class="col-lg-6 order-1 order-lg-2 text-center">
-                <img src="{% static 'assets/img/tabs-3.jpg' %}" alt="" class="img-fluid">
-              </div>
-            </div>
-          </div>
-          <div class="tab-pane" id="tab-4">
-            <div class="row">
-              <div class="col-lg-6 order-2 order-lg-1 mt-3 mt-lg-0">
-                <h3>Omnis fugiat ea explicabo sunt dolorum asperiores sequi inventore rerum</h3>
-                <p>
-                  Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-                  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-                  culpa qui officia deserunt mollit anim id est laborum
-                </p>
-                <p class="font-italic">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-                  magna aliqua.
-                </p>
-                <ul>
-                  <li><i class="ri-check-double-line"></i> Ullamco laboris nisi ut aliquip ex ea commodo consequat.</li>
-                  <li><i class="ri-check-double-line"></i> Duis aute irure dolor in reprehenderit in voluptate velit.</li>
-                  <li><i class="ri-check-double-line"></i> Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate trideta storacalaperda mastiro dolore eu fugiat nulla pariatur.</li>
-                </ul>
-              </div>
-              <div class="col-lg-6 order-1 order-lg-2 text-center">
-                <img src="{% static 'assets/img/tabs-4.jpg' %}" alt="" class="img-fluid">
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </section><!-- End Tabs Section -->
-
-    <!-- ======= Services Section ======= -->
-    <section id="services" class="services section-bg ">
-      <div class="container" data-aos="fade-up">
-
-        <div class="section-title">
-          <h2>Services</h2>
-          <p>Magnam dolores commodi suscipit. Necessitatibus eius consequatur ex aliquid fuga eum quidem. Sit sint consectetur velit. Quisquam quos quisquam cupiditate. Et nemo qui impedit suscipit alias ea.</p>
-        </div>
-
-        <div class="row">
-          <div class="col-md-6">
-            <div class="icon-box" data-aos="fade-up" data-aos-delay="100">
-              <i class="icofont-computer"></i>
-              <h4><a href="#">Lorem Ipsum</a></h4>
-              <p>Voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident</p>
-            </div>
-          </div>
-          <div class="col-md-6 mt-4 mt-md-0">
-            <div class="icon-box" data-aos="fade-up" data-aos-delay="200">
-              <i class="icofont-chart-bar-graph"></i>
-              <h4><a href="#">Dolor Sitema</a></h4>
-              <p>Minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat tarad limino ata</p>
-            </div>
-          </div>
-          <div class="col-md-6 mt-4 mt-md-0">
-            <div class="icon-box" data-aos="fade-up" data-aos-delay="300">
-              <i class="icofont-image"></i>
-              <h4><a href="#">Sed ut perspiciatis</a></h4>
-              <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur</p>
-            </div>
-          </div>
-          <div class="col-md-6 mt-4 mt-md-0">
-            <div class="icon-box" data-aos="fade-up" data-aos-delay="400">
-              <i class="icofont-settings"></i>
-              <h4><a href="#">Nemo Enim</a></h4>
-              <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum</p>
-            </div>
-          </div>
-          <div class="col-md-6 mt-4 mt-md-0">
-            <div class="icon-box" data-aos="fade-up" data-aos-delay="500">
-              <i class="icofont-earth"></i>
-              <h4><a href="#">Magni Dolore</a></h4>
-              <p>At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque</p>
-            </div>
-          </div>
-          <div class="col-md-6 mt-4 mt-md-0">
-            <div class="icon-box" data-aos="fade-up" data-aos-delay="600">
-              <i class="icofont-tasks-alt"></i>
-              <h4><a href="#">Eiusmod Tempor</a></h4>
-              <p>Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi</p>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </section><!-- End Services Section -->
-
-    <!-- ======= Portfolio Section ======= -->
-    <section id="portfolio" class="portfolio">
-      <div class="container" data-aos="fade-up">
-
-        <div class="section-title">
-          <h2>Portfolio</h2>
-          <p>Magnam dolores commodi suscipit. Necessitatibus eius consequatur ex aliquid fuga eum quidem. Sit sint consectetur velit. Quisquam quos quisquam cupiditate. Et nemo qui impedit suscipit alias ea.</p>
-        </div>
-
-        <div class="row" data-aos="fade-up" data-aos-delay="100">
-          <div class="col-lg-12 d-flex justify-content-center">
-            <ul id="portfolio-flters">
-              <li data-filter="*" class="filter-active">All</li>
-              <li data-filter=".filter-app">App</li>
-              <li data-filter=".filter-card">Card</li>
-              <li data-filter=".filter-web">Web</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="row portfolio-container" data-aos="fade-up" data-aos-delay="200">
-
-          <div class="col-lg-4 col-md-6 portfolio-item filter-app">
-            <div class="portfolio-wrap">
-              <img src="{% static 'assets/img/portfolio/portfolio-1.jpg' %}" class="img-fluid" alt="">
-              <div class="portfolio-info">
-                <h4>App 1</h4>
-                <p>App</p>
-                <div class="portfolio-links">
-                  <a href="{% static 'assets/img/portfolio/portfolio-1.jpg' %}" data-gall="portfolioGallery" class="venobox" title="App 1"><i class="bx bx-plus"></i></a>
-                  <a href="portfolio-details.html" title="More Details"><i class="bx bx-link"></i></a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-4 col-md-6 portfolio-item filter-web">
-            <div class="portfolio-wrap">
-              <img src="assets/img/portfolio/portfolio-2.jpg" class="img-fluid" alt="">
-              <div class="portfolio-info">
-                <h4>Web 3</h4>
-                <p>Web</p>
-                <div class="portfolio-links">
-                  <a href="{% static 'assets/img/portfolio/portfolio-2.jpg' %}" data-gall="portfolioGallery" class="venobox" title="Web 3"><i class="bx bx-plus"></i></a>
-                  <a href="portfolio-details.html" title="More Details"><i class="bx bx-link"></i></a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-4 col-md-6 portfolio-item filter-app">
-            <div class="portfolio-wrap">
-              <img src="{% static 'assets/img/portfolio/portfolio-3.jpg' %}" class="img-fluid" alt="">
-              <div class="portfolio-info">
-                <h4>App 2</h4>
-                <p>App</p>
-                <div class="portfolio-links">
-                  <a href="{% static 'assets/img/portfolio/portfolio-3.jpg' %}" data-gall="portfolioGallery" class="venobox" title="App 2"><i class="bx bx-plus"></i></a>
-                  <a href="portfolio-details.html" title="More Details"><i class="bx bx-link"></i></a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-4 col-md-6 portfolio-item filter-card">
-            <div class="portfolio-wrap">
-              <img src="{% static 'assets/img/portfolio/portfolio-4.jpg' %}" class="img-fluid" alt="">
-              <div class="portfolio-info">
-                <h4>Card 2</h4>
-                <p>Card</p>
-                <div class="portfolio-links">
-                  <a href="{% static 'assets/img/portfolio/portfolio-4.jpg' %}" data-gall="portfolioGallery" class="venobox" title="Card 2"><i class="bx bx-plus"></i></a>
-                  <a href="portfolio-details.html" title="More Details"><i class="bx bx-link"></i></a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-4 col-md-6 portfolio-item filter-web">
-            <div class="portfolio-wrap">
-              <img src="{% static 'assets/img/portfolio/portfolio-5.jpg' %}" class="img-fluid" alt="">
-              <div class="portfolio-info">
-                <h4>Web 2</h4>
-                <p>Web</p>
-                <div class="portfolio-links">
-                  <a href="{% static 'assets/img/portfolio/portfolio-5.jpg' %}" data-gall="portfolioGallery" class="venobox" title="Web 2"><i class="bx bx-plus"></i></a>
-                  <a href="portfolio-details.html" title="More Details"><i class="bx bx-link"></i></a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-4 col-md-6 portfolio-item filter-app">
-            <div class="portfolio-wrap">
-              <img src="{% static 'assets/img/portfolio/portfolio-6.jpg' %}" class="img-fluid" alt="">
-              <div class="portfolio-info">
-                <h4>App 3</h4>
-                <p>App</p>
-                <div class="portfolio-links">
-                  <a href="{% static 'assets/img/portfolio/portfolio-6.jpg' %}" data-gall="portfolioGallery" class="venobox" title="App 3"><i class="bx bx-plus"></i></a>
-                  <a href="portfolio-details.html" title="More Details"><i class="bx bx-link"></i></a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-4 col-md-6 portfolio-item filter-card">
-            <div class="portfolio-wrap">
-              <img src="{% static 'assets/img/portfolio/portfolio-7.jpg' %}" class="img-fluid" alt="">
-              <div class="portfolio-info">
-                <h4>Card 1</h4>
-                <p>Card</p>
-                <div class="portfolio-links">
-                  <a href="{% static 'assets/img/portfolio/portfolio-7.jpg' %}" data-gall="portfolioGallery" class="venobox" title="Card 1"><i class="bx bx-plus"></i></a>
-                  <a href="portfolio-details.html" title="More Details"><i class="bx bx-link"></i></a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-4 col-md-6 portfolio-item filter-card">
-            <div class="portfolio-wrap">
-              <img src="{% static 'assets/img/portfolio/portfolio-8.jpg' %}" class="img-fluid" alt="">
-              <div class="portfolio-info">
-                <h4>Card 3</h4>
-                <p>Card</p>
-                <div class="portfolio-links">
-                  <a href="{% static 'assets/img/portfolio/portfolio-8.jpg' %}" data-gall="portfolioGallery" class="venobox" title="Card 3"><i class="bx bx-plus"></i></a>
-                  <a href="portfolio-details.html" title="More Details"><i class="bx bx-link"></i></a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-4 col-md-6 portfolio-item filter-web">
-            <div class="portfolio-wrap">
-              <img src="{% static 'assets/img/portfolio/portfolio-9.jpg' %}" class="img-fluid" alt="">
-              <div class="portfolio-info">
-                <h4>Web 3</h4>
-                <p>Web</p>
-                <div class="portfolio-links">
-                  <a href="{% static 'assets/img/portfolio/portfolio-9.jpg' %}" data-gall="portfolioGallery" class="venobox" title="Web 3"><i class="bx bx-plus"></i></a>
-                  <a href="portfolio-details.html" title="More Details"><i class="bx bx-link"></i></a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-    </section><!-- End Portfolio Section -->
-
-    <!-- ======= Testimonials Section ======= -->
+<!-- ======= Testimonials Section ======= -->
     <section id="testimonials" class="testimonials">
       <div class="container" data-aos="fade-up">
         <div class="section-title">
-          <h2>Testimonials</h2>
-          <p>Magnam dolores commodi suscipit. Necessitatibus eius consequatur ex aliquid fuga eum quidem. Sit sint consectetur velit. Quisquam quos quisquam cupiditate. Et nemo qui impedit suscipit alias ea.</p>
+          <h1><span style="color:grey"></span> </span></h1> <h2>Opinie</h2>
+          <p></p>
         </div>
 
         <div class="owl-carousel testimonials-carousel">
@@ -595,229 +349,52 @@
       </div>
     </section><!-- End Testimonials Section -->
 
-    <!-- ======= Pricing Section ======= -->
-    <section id="pricing" class="pricing section-bg">
+
+
+    <!-- ======= About Section ======= -->
+    <section id="about" class="about section-bg">
       <div class="container" data-aos="fade-up">
 
-        <div class="section-title">
-          <h2>Pricing</h2>
-          <p>Magnam dolores commodi suscipit. Necessitatibus eius consequatur ex aliquid fuga eum quidem. Sit sint consectetur velit. Quisquam quos quisquam cupiditate. Et nemo qui impedit suscipit alias ea.</p>
-        </div>
-
-        <div class="row">
-
-          <div class="col-lg-4 col-md-6">
-            <div class="box" data-aos="fade-up" data-aos-delay="100">
-              <h3>Free</h3>
-              <h4><sup>$</sup>0<span> / month</span></h4>
-              <ul>
-                <li>Aida dere</li>
-                <li>Nec feugiat nisl</li>
-                <li>Nulla at volutpat dola</li>
-                <li class="na">Pharetra massa</li>
-                <li class="na">Massa ultricies mi</li>
-              </ul>
-              <div class="btn-wrap">
-                <a href="#" class="btn-buy">Buy Now</a>
-              </div>
+        <div class="row no-gutters">
+          <div class="content col-xl-5 d-flex align-items-stretch">
+            <div class="content">
+              <h3>Kto jeszcze może korzystać z platformy?</h3>
+              <p>
+                Niezależnie czy jesteś skautem, menadżerem,  dyrektorem sportowym, obserwatorem, kibicem czy też rodzicem młodego adepta – możesz korzystać z PlayMaker.Pro. Zarejestruj się i zyskaj szereg możliwości dostępnych w serwisie.
+              </p>
+              <a href="/signup/" class="about-btn"><span>załóż konto </span> <i class="bx bx-chevron-right"></i></a>
             </div>
           </div>
-
-          <div class="col-lg-4 col-md-6 mt-4 mt-md-0">
-            <div class="box featured" data-aos="fade-up" data-aos-delay="200">
-              <h3>Business</h3>
-              <h4><sup>$</sup>19<span> / month</span></h4>
-              <ul>
-                <li>Aida dere</li>
-                <li>Nec feugiat nisl</li>
-                <li>Nulla at volutpat dola</li>
-                <li>Pharetra massa</li>
-                <li class="na">Massa ultricies mi</li>
-              </ul>
-              <div class="btn-wrap">
-                <a href="#" class="btn-buy">Buy Now</a>
+          <div class="col-xl-7 d-flex align-items-stretch">
+            <div class="icon-boxes d-flex flex-column justify-content-center">
+              <div class="row">
+                <div class="col-md-6 icon-box" data-aos="fade-up" data-aos-delay="100">
+                  <i class="bx bx-receipt"></i>
+                  <h4>Moduł obserwacji</h4>
+                  <p>Dodawaj kluby, trenerów i piłkarzy i śledź ich rozwój. Otrzymuj regularne powiadomienia o ich rezultatach. Wszystko pod jednym przyciskiem. Nie musisz otwierać setek stron.</p>
+                </div>
+                <div class="col-md-6 icon-box" data-aos="fade-up" data-aos-delay="200">
+                  <i class="bx bx-cube-alt"></i>
+                  <h4>Moduł wyników</h4>
+                  <p>rzeglądaj w przejrzysty i elegancki sposób rozgrywki niższych lig. Znajdziesz tam wyniki, tabele oraz terminarze rozgrywek seniorskich, juniorskich, a także kobiecych.</p>
+                </div>
+                <div class="col-md-6 icon-box" data-aos="fade-up" data-aos-delay="300">
+                  <i class="bx bx-images"></i>
+                  <h4>Produkty piłkarskie</h4>
+                  <p>Dostęp do zniżek ze sprzętem sportowym, konsultacji dietetycznych, trenerów przygotowania motorycznego, siłowego, piłkarskiego oraz mentalnego.</p>
+                </div>
+                <div class="col-md-6 icon-box" data-aos="fade-up" data-aos-delay="400">
+                  <i class="bx bx-shield"></i>
+                  <h4>Skauting</h4>
+                  <p>Korzystaj z naszej aplikacji skautingowej dla własnych potrzeb lub zostań przy jej pomocy skautem PlayMaker.Pro.</p>
+                </div>
               </div>
-            </div>
+            </div><!-- End .content-->
           </div>
-
-          <div class="col-lg-4 col-md-6 mt-4 mt-lg-0">
-            <div class="box" data-aos="fade-up" data-aos-delay="300">
-              <h3>Developer</h3>
-              <h4><sup>$</sup>29<span> / month</span></h4>
-              <ul>
-                <li>Aida dere</li>
-                <li>Nec feugiat nisl</li>
-                <li>Nulla at volutpat dola</li>
-                <li>Pharetra massa</li>
-                <li>Massa ultricies mi</li>
-              </ul>
-              <div class="btn-wrap">
-                <a href="#" class="btn-buy">Buy Now</a>
-              </div>
-            </div>
-          </div>
-
         </div>
 
       </div>
-    </section><!-- End Pricing Section -->
-
-    <!-- ======= Frequently Asked Questions Section ======= -->
-    <section id="faq" class="faq">
-      <div class="container" data-aos="fade-up">
-
-        <div class="section-title">
-          <h2>Frequently Asked Questions</h2>
-        </div>
-
-        <ul class="faq-list" data-aos="fade-up">
-
-          <li>
-            <a data-toggle="collapse" class="collapsed" href="#faq1">Non consectetur a erat nam at lectus urna duis? <i class="bx bx-chevron-down icon-show"></i><i class="bx bx-x icon-close"></i></a>
-            <div id="faq1" class="collapse" data-parent=".faq-list">
-              <p>
-                Feugiat pretium nibh ipsum consequat. Tempus iaculis urna id volutpat lacus laoreet non curabitur gravida. Venenatis lectus magna fringilla urna porttitor rhoncus dolor purus non.
-              </p>
-            </div>
-          </li>
-
-          <li>
-            <a data-toggle="collapse" href="#faq2" class="collapsed">Feugiat scelerisque varius morbi enim nunc faucibus a pellentesque? <i class="bx bx-chevron-down icon-show"></i><i class="bx bx-x icon-close"></i></a>
-            <div id="faq2" class="collapse" data-parent=".faq-list">
-              <p>
-                Dolor sit amet consectetur adipiscing elit pellentesque habitant morbi. Id interdum velit laoreet id donec ultrices. Fringilla phasellus faucibus scelerisque eleifend donec pretium. Est pellentesque elit ullamcorper dignissim. Mauris ultrices eros in cursus turpis massa tincidunt dui.
-              </p>
-            </div>
-          </li>
-
-          <li>
-            <a data-toggle="collapse" href="#faq3" class="collapsed">Dolor sit amet consectetur adipiscing elit pellentesque habitant morbi? <i class="bx bx-chevron-down icon-show"></i><i class="bx bx-x icon-close"></i></a>
-            <div id="faq3" class="collapse" data-parent=".faq-list">
-              <p>
-                Eleifend mi in nulla posuere sollicitudin aliquam ultrices sagittis orci. Faucibus pulvinar elementum integer enim. Sem nulla pharetra diam sit amet nisl suscipit. Rutrum tellus pellentesque eu tincidunt. Lectus urna duis convallis convallis tellus. Urna molestie at elementum eu facilisis sed odio morbi quis
-              </p>
-            </div>
-          </li>
-
-          <li>
-            <a data-toggle="collapse" href="#faq4" class="collapsed">Ac odio tempor orci dapibus. Aliquam eleifend mi in nulla? <i class="bx bx-chevron-down icon-show"></i><i class="bx bx-x icon-close"></i></a>
-            <div id="faq4" class="collapse" data-parent=".faq-list">
-              <p>
-                Dolor sit amet consectetur adipiscing elit pellentesque habitant morbi. Id interdum velit laoreet id donec ultrices. Fringilla phasellus faucibus scelerisque eleifend donec pretium. Est pellentesque elit ullamcorper dignissim. Mauris ultrices eros in cursus turpis massa tincidunt dui.
-              </p>
-            </div>
-          </li>
-
-          <li>
-            <a data-toggle="collapse" href="#faq5" class="collapsed">Tempus quam pellentesque nec nam aliquam sem et tortor consequat? <i class="bx bx-chevron-down icon-show"></i><i class="bx bx-x icon-close"></i></a>
-            <div id="faq5" class="collapse" data-parent=".faq-list">
-              <p>
-                Molestie a iaculis at erat pellentesque adipiscing commodo. Dignissim suspendisse in est ante in. Nunc vel risus commodo viverra maecenas accumsan. Sit amet nisl suscipit adipiscing bibendum est. Purus gravida quis blandit turpis cursus in
-              </p>
-            </div>
-          </li>
-
-          <li>
-            <a data-toggle="collapse" href="#faq6" class="collapsed">Tortor vitae purus faucibus ornare. Varius vel pharetra vel turpis nunc eget lorem dolor? <i class="bx bx-chevron-down icon-show"></i><i class="bx bx-x icon-close"></i></a>
-            <div id="faq6" class="collapse" data-parent=".faq-list">
-              <p>
-                Laoreet sit amet cursus sit amet dictum sit amet justo. Mauris vitae ultricies leo integer malesuada nunc vel. Tincidunt eget nullam non nisi est sit amet. Turpis nunc eget lorem dolor sed. Ut venenatis tellus in metus vulputate eu scelerisque. Pellentesque diam volutpat commodo sed egestas egestas fringilla phasellus faucibus. Nibh tellus molestie nunc non blandit massa enim nec.
-              </p>
-            </div>
-          </li>
-
-        </ul>
-
-      </div>
-    </section><!-- End Frequently Asked Questions Section -->
-
-    <!-- ======= Team Section ======= -->
-    <section id="team" class="team section-bg">
-      <div class="container" data-aos="fade-up">
-
-        <div class="section-title">
-          <h2>Team</h2>
-          <p>Magnam dolores commodi suscipit. Necessitatibus eius consequatur ex aliquid fuga eum quidem. Sit sint consectetur velit. Quisquam quos quisquam cupiditate. Et nemo qui impedit suscipit alias ea.</p>
-        </div>
-
-        <div class="row">
-
-          <div class="col-lg-3 col-md-6 d-flex align-items-stretch">
-            <div class="member" data-aos="fade-up" data-aos-delay="100">
-              <div class="member-img">
-                <img src="{% static 'assets/img/team/team-1.jpg' %}" class="img-fluid" alt="">
-                <div class="social">
-                  <a href=""><i class="icofont-twitter"></i></a>
-                  <a href=""><i class="icofont-facebook"></i></a>
-                  <a href=""><i class="icofont-instagram"></i></a>
-                  <a href=""><i class="icofont-linkedin"></i></a>
-                </div>
-              </div>
-              <div class="member-info">
-                <h4>Walter White</h4>
-                <span>Chief Executive Officer</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-md-6 d-flex align-items-stretch">
-            <div class="member" data-aos="fade-up" data-aos-delay="200">
-              <div class="member-img">
-                <img src="{% static 'assets/img/team/team-2.jpg' %}" class="img-fluid" alt="">
-                <div class="social">
-                  <a href=""><i class="icofont-twitter"></i></a>
-                  <a href=""><i class="icofont-facebook"></i></a>
-                  <a href=""><i class="icofont-instagram"></i></a>
-                  <a href=""><i class="icofont-linkedin"></i></a>
-                </div>
-              </div>
-              <div class="member-info">
-                <h4>Sarah Jhonson</h4>
-                <span>Product Manager</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-md-6 d-flex align-items-stretch">
-            <div class="member" data-aos="fade-up" data-aos-delay="300">
-              <div class="member-img">
-                <img src="{% static 'assets/img/team/team-3.jpg' %}" class="img-fluid" alt="">
-                <div class="social">
-                  <a href=""><i class="icofont-twitter"></i></a>
-                  <a href=""><i class="icofont-facebook"></i></a>
-                  <a href=""><i class="icofont-instagram"></i></a>
-                  <a href=""><i class="icofont-linkedin"></i></a>
-                </div>
-              </div>
-              <div class="member-info">
-                <h4>William Anderson</h4>
-                <span>CTO</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-md-6 d-flex align-items-stretch">
-            <div class="member" data-aos="fade-up" data-aos-delay="400">
-              <div class="member-img">
-                <img src="{% static 'assets/img/team/team-4.jpg' %}" class="img-fluid" alt="">
-                <div class="social">
-                  <a href=""><i class="icofont-twitter"></i></a>
-                  <a href=""><i class="icofont-facebook"></i></a>
-                  <a href=""><i class="icofont-instagram"></i></a>
-                  <a href=""><i class="icofont-linkedin"></i></a>
-                </div>
-              </div>
-              <div class="member-info">
-                <h4>Amanda Jepson</h4>
-                <span>Accountant</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-    </section><!-- End Team Section -->
+    </section><!-- End About Section -->
 
     <!-- ======= Contact Section ======= -->
     <section id="contact" class="contact">
@@ -891,8 +468,6 @@
 
       </div>
     </section><!-- End Contact Section -->
-    
-
 {% endblock content %}
 
 

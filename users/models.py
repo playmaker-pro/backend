@@ -7,6 +7,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 from notifications.mail import mail_user_waiting_for_verification
+from django.urls import reverse
 
 
 class CustomUserManager(BaseUserManager):
@@ -120,6 +121,9 @@ class UserRoleMixin:
     def is_standard(self):
         return self.role == 'S'
 
+    def get_admin_url(self):
+        return reverse(f"admin:{self._meta.app_label}_{self._meta.model_name}_change", args=(self.id,))
+
 
 class User(AbstractUser, UserRoleMixin):
 
@@ -127,20 +131,21 @@ class User(AbstractUser, UserRoleMixin):
 
     STATE_NEW = 'New'
     STATE_AUTH_VERIFIED = 'Authentication Verified'
+    STATE_ACCOUNT_WAITING_FOR_VERIFICATION = "Account Waiting For Verification"
     STATE_ACCOUNT_VERIFIED = 'Account Verified'
-    STATE_MIGRATED = 'Migrated'
-    STATE_ACTIVATED = 'Activated'
-    STATE_LOCKED = 'Locked'
-    STATE_BANNED = 'Banned'
+    STATE_MIGRATED_VERIFIED = 'Migrated Verified'
+    STATE_MIGRATED_NEW = 'Migrated New'
 
     STATES = (
         STATE_NEW,
         STATE_AUTH_VERIFIED,
+        STATE_ACCOUNT_WAITING_FOR_VERIFICATION,
         STATE_ACCOUNT_VERIFIED,
-        STATE_MIGRATED,
-        STATE_ACTIVATED,
-        STATE_LOCKED,
-        STATE_BANNED
+        STATE_MIGRATED_VERIFIED,
+        STATE_MIGRATED_NEW,
+        # STATE_ACTIVATED,
+        # STATE_LOCKED,
+        # STATE_BANNED
     )
 
     STATES = list(zip(STATES, STATES))
@@ -148,34 +153,36 @@ class User(AbstractUser, UserRoleMixin):
 
     state = FSMField(default=STATE_NEW, choices=STATES)
 
-    @transition(field=state,  source=[STATE_NEW, STATE_MIGRATED], target=STATE_AUTH_VERIFIED)
+    @transition(field=state,  source=[STATE_NEW, STATE_MIGRATED_NEW, STATE_MIGRATED_VERIFIED], target=STATE_AUTH_VERIFIED)
     def verify_email(self):
         """Account's email has been verified by user"""
-        mail_user_waiting_for_verification(self)
 
-    @transition(field=state, source=[STATE_AUTH_VERIFIED], target=STATE_ACCOUNT_VERIFIED)
+    @transition(field=state, source=[STATE_AUTH_VERIFIED, STATE_MIGRATED_VERIFIED], target=STATE_ACCOUNT_VERIFIED)
     def verify(self):
         """Account is verified by admins/site managers."""
 
-    @transition(field=state, source=[STATE_ACCOUNT_VERIFIED], target=STATE_AUTH_VERIFIED)
-    def unverify(self):
+    @transition(field=state, source='*', target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION)
+    def unverify(self, extra=None):
         """Account is verified by admins/site managers."""
+        if extra:
+            reason = extra.get('reason')
+        mail_user_waiting_for_verification(self, extra_body=reason)
 
-    @transition(field=state, source=[STATE_ACCOUNT_VERIFIED], target=STATE_ACTIVATED)
-    def active(self):
-        """Fully unlocked account"""
+    @property
+    def is_migrated(self):
+        return self.state in [self.STATE_MIGRATED_NEW, self.STATE_MIGRATED_VERIFIED]
 
-    @transition(field=state, source=[STATE_ACCOUNT_VERIFIED, STATE_ACTIVATED], target=STATE_LOCKED)
-    def lock(self):
-        """Account locked"""
-
-    @transition(field=state, source='*', target=STATE_BANNED)
-    def ban(self):
-        """Banned account"""
+    @property
+    def is_auth_verified(self):
+        return self.state == self.STATE_AUTH_VERIFIED
 
     @property
     def is_new_state(self):
         return self.state == self.STATE_NEW
+
+    @property
+    def is_waiting_for_verification(self):
+        return self.state == self.STATE_ACCOUNT_WAITING_FOR_VERIFICATION
 
     @property
     def is_verified(self):
@@ -187,6 +194,10 @@ class User(AbstractUser, UserRoleMixin):
 
     def pending_role_change(self):
         return self.changerolerequestor.filter(approved=False).last()
+
+    @property
+    def is_roleless(self):
+        return self.declared_role is None
 
     finish_account_initial_setup = models.BooleanField(
         _('Skip full setup'),

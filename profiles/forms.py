@@ -36,10 +36,9 @@ class DeclareRoleForm(forms.ModelForm):
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Fieldset(
-                'Zmien role w serwisie',
-                # Field("current"),
+                None,
                 Field("new")),
-                Submit("Zgloś zmiane", "Zgloś zmiane profilu", css_class="btn-success"),
+                Submit("Wybierz role", "Wybierz role", css_class="btn-success"),
         )
 
     class Meta:
@@ -132,7 +131,6 @@ class PlayerProfileForm(forms.ModelForm):
                 'Dane biometryczne',
                 Field('bio'),
                 Field("height"),
-                Field("birth_date"),
                 Field("weight"),
             ),
             Field("league_raw"),

@@ -11,6 +11,19 @@ from .utils import unique_slugify
 from collections import Counter
 from django_countries.fields import CountryField
 
+PROFILE_TYPE_TO_DATA_MODELS = {
+    'player': 'Player',
+    'coach': 'Coach',
+    'team': 'Teamn',
+    'club': 'Club',
+}
+
+
+from django.contrib.auth import get_user_model
+
+
+User = get_user_model()
+
 
 class RoleChangeRequest(models.Model):
     """Keeps track on requested changes made by users."""
@@ -67,15 +80,27 @@ class RoleChangeRequest(models.Model):
 class BaseProfile(models.Model):
     """Base profile model to held most common profile elements"""
     PROFILE_TYPE = None
-    COMPLETE_FIELDS = []
-    VERIFICATION_FIELDS = []
+
+    COMPLETE_FIELDS = []  # this is definition of profile fields which will be threaded as mandatory for full profile.
+
+    VERIFICATION_FIELDS = []  # this is definition of profile fields which will be threaded as must-have params.
+
+    DATA_ITEM_MODEL = PROFILE_TYPE_TO_DATA_MODELS.get(PROFILE_TYPE)  # Player or League
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         primary_key=True)
 
-    slug = models.CharField(max_length=255, blank=True, editable=False)
+    data_mapper_id = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=f'ID of object placed in data_ database. It should alwayes reflect scheme which represents.')
+
+    slug = models.CharField(
+        max_length=255,
+        blank=True,
+        editable=False)
 
     bio = models.CharField(
         _("Short Bio"),
@@ -101,6 +126,10 @@ class BaseProfile(models.Model):
         return True
 
     @property
+    def is_not_complete(self):
+        return not self.is_complete
+
+    @property
     def percentage_completion(self):
 
         total = len(self.COMPLETE_FIELDS)
@@ -122,27 +151,43 @@ class BaseProfile(models.Model):
         unique_slugify(self, slug_str)
 
         # check if fields has changed
-        old_object = type(self).objects.get(pk=self.pk) if self.pk else None
+        try:
+            old_object = type(self).objects.get(pk=self.pk) if self.pk else None
+            fresh_object = False
+        except type(self).DoesNotExist:
+            # it means first creation of object.
+            fresh_object = True
 
-        ver_old = []
-        if old_object:
-            ver_old = self._get_verification_field_values(old_object)
+        if not fresh_object:
+            ver_old = []
+            if old_object:
+                ver_old = self._get_verification_field_values(old_object)
 
         # Queen of the show
         super().save(*args, **kwargs)
+        if not fresh_object:
+            ver_new = self._get_verification_field_values(self)
 
-        ver_new = self._get_verification_field_values(self)
-
-        if self._verification_fileds_changed(ver_old, ver_new):
-            self.user.unverify()
+            if self._verification_fileds_changed(ver_old, ver_new) and (self.user.is_verified or self.user.is_waiting_for_verification):
+                self.user.unverify(extra={'reason': f'[verification-params-changed] params:{self.VERIFICATION_FIELDS})  Old:{ver_old} -> New:{ver_new}'})
+                self.user.save()
+        
+        if self.is_ready_for_verification():
+            self.user.unverify(extra={'reason': f'[verification-params-ready] params:{self.VERIFICATION_FIELDS})  values:{self._get_verification_field_values(self)}'})
             self.user.save()
+
+    def is_ready_for_verification(self):
+        return not self.user.is_verified and self._is_verification_fields_filled()
+
+    def _is_verification_fields_filled(self):
+        return all(self._get_verification_field_values(self))
 
     def _verification_fileds_changed(self, old, new):
         return old != new
 
     def _get_verification_field_values(self, obj):
         return [getattr(obj, field) for field in self.VERIFICATION_FIELDS]
-  
+
     class Meta:
         abstract = True
         verbose_name = "Profile"
@@ -312,6 +357,7 @@ class ClubProfile(BaseProfile):
 class CoachProfile(BaseProfile):
     PROFILE_TYPE = 'coach'
     COMPLETE_FIELDS = ['birth_date', 'phone']
+    VERIFICATION_FIELDS = ['birth_date']
 
     GOALS_CHOICES = (
         ('Profesjonalna kariera', 'Profesjonalna kariera'),
