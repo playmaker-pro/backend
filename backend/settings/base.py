@@ -153,17 +153,6 @@ DATABASES = {
     
 }
 
-
-# DATABASES['datadb'] = {
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': 'p1390_pm1',
-#         'USER': 'p1390_pm1',
-#         'PASSWORD': 'H6ZBRHlEKe5ILtvCalaa',
-#         'HOST': 'localhost',
-#         'PORT': '8543 '  # '9543',  # ssh -f jacekplaymaker@s38.mydevil.net -L 8543:pgsql38.mydevil.net:5432 -N
-# }
-
-
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
