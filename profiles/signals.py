@@ -12,20 +12,18 @@ logger = logging.getLogger(__name__)
 
 
 def set_and_create_user_profile(user):
-
-    if user.declared_role == 'T':
-        profile_model = models.CoachProfile
-    elif user.declared_role == 'P':
-        profile_model = models.PlayerProfile
-    elif user.declared_role == 'C':
-        profile_model = models.ClubProfile
-    elif user.declared_role == 'G':
-        profile_model = models.GuestProfile
-    elif user.declared_role == 'S':
-        profile_model = models.StandardProfile
-    else:
-        profile_model = models.StandardProfile
-
+    model_map = {
+        'T': models.CoachProfile,
+        'P': models.PlayerProfile,
+        'C': models.ClubProfile,
+        'G': models.GuestProfile,
+        'SK': models.ScoutProfile,
+        'R': models.ParentProfile,
+        'M': models.ManagerProfile,
+        'K': models.FanProfile,
+        'S': models.StandardProfile,
+    }
+    profile_model = model_map.get(user.declared_role, models.StandardProfile)
     profile_model.objects.get_or_create(user=user)
     # profile.save()
 

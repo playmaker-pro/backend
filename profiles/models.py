@@ -162,16 +162,20 @@ class BaseProfile(models.Model):
             ver_old = []
             if old_object:
                 ver_old = self._get_verification_field_values(old_object)
-
+        
         # Queen of the show
         super().save(*args, **kwargs)
-        if not fresh_object:
-            ver_new = self._get_verification_field_values(self)
 
+        # we are updating existing model (not first occurence)
+        ver_new = self._get_verification_field_values(self)
+        if not fresh_object:
             if self._verification_fileds_changed(ver_old, ver_new) and (self.user.is_verified or self.user.is_waiting_for_verification):
                 self.user.unverify(extra={'reason': f'[verification-params-changed] params:{self.VERIFICATION_FIELDS})  Old:{ver_old} -> New:{ver_new}'})
                 self.user.save()
-
+        else:
+            ver_old = ver_new
+        # If User is not yet verified and have all needed params set for verification.
+        # if those params didint changed during wairing for veritication
         if self.is_ready_for_verification() and self._verification_fileds_changed(ver_old, ver_new):
             self.user.unverify(extra={'reason': f'[verification-params-ready] params:{self.VERIFICATION_FIELDS})  values:{self._get_verification_field_values(self)}'})
             self.user.save()

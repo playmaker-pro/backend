@@ -45,18 +45,8 @@ class CustomUserManager(BaseUserManager):
 BEFORE_FIRST_LOGIN = 'before_first_login'
 FIRST_LOGIN = 'first_login'
 
-PLAYER_SHORT, PLAYER_FULL = 'P', 'Piłkarz'
-COACH_SHORT, COACH_FULL = 'T', 'Trener'
-CLUB_SHORT, CLUB_FULL = 'C', 'Klub / Szkółka'
-GUEST_SHORT, GUEST_FULL = 'G', 'Kibic / Rodzic'
 
 
-ACCOUNT_ROLES = (
-        ('P', 'Piłkarz'),
-        ('T', 'Trener'),
-        ('G', 'Gość'),
-        ('C', 'Klub'),
-)
 
 
 class UserVerification(models.Model):  # @todo: to be removed - deprecated due to FSM state on User model
@@ -89,17 +79,36 @@ class UserVerification(models.Model):  # @todo: to be removed - deprecated due t
         return f"{self.user}'s request to change profile from {self.current} to {self.new}"
 
 
+PLAYER_SHORT, PLAYER_FULL = 'P', 'Piłkarz'
+COACH_SHORT, COACH_FULL = 'T', 'Trener'
+CLUB_SHORT, CLUB_FULL = 'C', 'Klub / Szkółka'
+GUEST_SHORT, GUEST_FULL = 'G', 'Kibic / Rodzic'
 
 
+ACCOUNT_ROLES = (
+        ('P', 'Piłkarz'),
+        ('T', 'Trener'),
+        ('G', 'Gość'),  # deprecated
+        ('C', 'Klub / Szkółka'),
+        ('SK', 'Scout'),
+        ('R', 'Rodzic'),
+        ('K', 'Kibic'),
+        ('M', 'Manadżer'),
+        ('S', 'Standardowe'),
+)
 
 class UserRoleMixin:
+    @property
+    def is_player(self):
+        return self.role == 'P'
+
     @property
     def is_coach(self):
         return self.role == 'T'
 
     @property
-    def is_player(self):
-        return self.role == 'P'
+    def is_guest(self):
+        return self.role == 'G'
 
     @property
     def is_club(self):
@@ -110,17 +119,44 @@ class UserRoleMixin:
         return self.role == 'SK'
 
     @property
-    def is_manager(self):
-        return self.role == 'M'
+    def is_parent(self):
+        return self.role == 'R'
 
     @property
-    def is_guest(self):
-        return self.role == 'G'
+    def is_fan(self):
+        return self.role == 'K'
+
+    @property
+    def is_manager(self):
+        return self.role == 'M'
 
     @property
     def is_standard(self):
         return self.role == 'S'
 
+    @property
+    def profile(self):
+        if self.is_player:
+            return self.playerprofile
+        elif self.is_coach:  # @todo unified access to this T P... and other types.
+            return self.coachprofile
+        elif self.is_guest:
+            return self.guestprofile
+        elif self.is_club:
+            return self.clubprofile
+        elif self.is_scout:
+            return self.scoutprofile
+        elif self.is_parent:
+            return self.parentprofile
+        elif self.is_fan:
+            return self.fanprofile
+        elif self.is_manager:
+            return self.managerprofile
+
+        elif self.role is None or self.is_standard:
+            return self.standardprofile
+        else:
+            return None
     def get_admin_url(self):
         return reverse(f"admin:{self._meta.app_label}_{self._meta.model_name}_change", args=(self.id,))
 
@@ -217,24 +253,7 @@ class User(AbstractUser, UserRoleMixin):
     def role(self):
         return self.declared_role
 
-    @property
-    def profile(self):
-        if self.is_coach:  # @todo unified access to this T P... and other types.
-            return self.coachprofile
-
-        elif self.is_player:
-            return self.playerprofile
-
-        elif self.is_club:
-            return self.clubprofile
-
-        elif self.is_guest:
-            return self.guestprofile
-
-        elif self.role is None or self.is_standard:
-            return self.standardprofile
-        else:
-            return None
+   
 
     declared_club = models.CharField(
         _('declared club'),
