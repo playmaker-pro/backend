@@ -145,6 +145,7 @@ class ProfileGames(generic.TemplateView, PaginateMixin):
 
     def get(self, request, *args, **kwargs):
         games = self.get_data_or_calculate()
+        games = games or []
         kwargs['page_obj'] = self.paginate(games)
         return super().get(request, *args, **kwargs)
 
