@@ -109,7 +109,7 @@ class ProfileFantasy(generic.TemplateView):
         season_name = get_current_season()
         user = self.request.user
         _id = user.profile.data_mapper_id
-        if self.request.user.profile.playermetrics.how_old_days(fantasy=True) >= 7 and self.request.user.has_data_id:
+        if self.request.user.profile.playermetrics.how_old_days(fantasy=True) >= 7 and self.request.user.profile.has_data_id:
             fantasy = adapters.PlayerFantasyDataAdapter(_id).get(season=season_name, full=True)
             user.profile.playermetrics.update_fantasy(fantasy)
         return user.profile.playermetrics.fantasy
@@ -130,7 +130,7 @@ class ProfileCarrier(generic.TemplateView):
     def get_data_or_calculate(self):
         user = self.request.user
         _id = user.profile.data_mapper_id
-        if self.request.user.profile.playermetrics.how_old_days(season=True) >= 7 and self.request.user.has_data_id:
+        if self.request.user.profile.playermetrics.how_old_days(season=True) >= 7 and self.request.user.profile.has_data_id:
             season = adapters.PlayerStatsSeasonAdapter(_id).get(groupped=True)
             user.profile.playermetrics.update_season(season)
         user.profile.playermetrics.refresh_from_db()
@@ -151,7 +151,7 @@ class ProfileGames(generic.TemplateView, PaginateMixin):
     def get_data_or_calculate(self):
         user = self.request.user
         _id = user.profile.data_mapper_id
-        if self.request.user.profile.playermetrics.how_old_days(games=True) >= 7 and self.request.user.has_data_id:
+        if self.request.user.profile.playermetrics.how_old_days(games=True) >= 7 and self.request.user.profile.has_data_id:
             games = adapters.PlayerLastGamesAdapter(_id).get()
             user.profile.playermetrics.update_games(games)
 
