@@ -9,7 +9,9 @@
 # General
 --------------------------------------------------------------*/
 body {
-  font-family: "Open Sans", sans-serif;
+  /* font-family: "Open Sans", sans-serif;*/
+  font-family: 'Asap', sans-serif;
+  /* font-family: 'Roboto', sans-serif; */
   color: #444444;
 }
 
@@ -26,13 +28,81 @@ a:hover {
 h1, h2, h3, h4, h5, h6 {
   /*font-family: "Raleway", sans-serif;*/
   /*font-family: 'PT Sans', sans-serif;*/
-  font-family: 'Dosis', sans-serif;
+  font-family: 'Asap', sans-serif;
 }
 
 .main-color {
   color: #e03a3c;
 }
+/*  ----- forms -----
+.form-group {
+  margin-bottom: 25px;
+}
 
+input, textarea {
+  box-shadow: none;
+  font-size: 14px;
+  border-radius: 4px;
+}
+
+input:focus, textarea:focus {
+  border-color: #111111;
+}
+
+input {
+  padding: 10px 15px;
+}
+
+textarea {
+  padding: 12px 15px;
+}
+
+button[type="submit"], input[type="button"]{
+  background: #e03a3c;
+  border: 0;
+  padding: 10px 32px;
+  color: #fff;
+  transition: 0.4s;
+  border-radius: 4px;
+}
+
+button[type="submit"]:hover, input[type="button"]:hover{
+  background: #e35052;
+}
+*/
+
+
+
+/* ---------
+# Buttons
+-----------*/
+
+
+.btn-pm {
+  background: #e03a3c;
+  border: 0;
+  padding: 10px 32px;
+  color: #fff;
+  transition: 0.4s;
+  border-radius: 4px;
+}
+
+.btn-pm :hover{
+  background: #e35052;
+}
+
+
+
+.btn-pm-sm {
+  padding: .25rem .5rem;
+}
+
+@media all and (max-width: 768px) {
+
+  .btn-pm { 
+    padding: .25rem .5rem;
+  }
+ }
 
 /*--------------------------------------------------------------
 # Back to top button
@@ -72,11 +142,30 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+
+/*--------------------------------------------------------------
+# Control cards visibility on moblies
+--------------------------------------------------------------*/
+@media all and (max-width: 768px) {   /* @todo to better understand 768px*/
+  .card {
+    border-right: none;
+    border-left: none;
+    border-radius: 0px;
+  }
+}
+
 /*--------------------------------------------------------------
 # Main
 --------------------------------------------------------------*/
 main > :first-child{ 
   margin-top: 82px;
+}
+
+@media all and (max-width: 992px) {   /* @todo to better understand */
+  main > :first-child{ 
+      margin-top: 53px;
+  }
+  
 }
 
 /*--------------------------------------------------------------

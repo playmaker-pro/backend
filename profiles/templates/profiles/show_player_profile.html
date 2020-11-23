@@ -1,0 +1,45 @@
+{% extends "profiles/base.html" %}
+
+{% load static %}
+{% load thumbnail %}
+
+
+{% block extra_css %}
+    {{ block.super }}
+    <link href="{% static 'assets/css/circle.css' %}" rel="stylesheet">
+{% endblock extra_css %}
+
+
+{% block header %}
+    {% with menuitems_template="profiles/partials/_nav_player.html" %}
+        {{ block.super }}
+    {% endwith %}
+{% endblock %}
+
+
+{% block content %}  <!-- @todo frontend to be renovated to adjust template-->
+<section id="profile" class="profile">
+  <div class="container profile-container" data-aos="fade-up">
+    <div class="container profile-head">
+      <div class="row">
+        <div class="col-sm-6">{% include 'profiles/cards/_player_account_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/_player_primary_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/_player_about_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/_player_latest_games_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/_player_season_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/_player_fantasy_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/_player_playmaker_score_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/_player_video_card.html' %}</div>
+      </div>  <!-- end row -->
+    </div> <!-- end container -->
+  </div>
+</section>
+{% endblock content %}
+
+
+{% block extra_js %}
+  {{ block.super }}
+  <script src="{% static 'assets/js/progress.js' %}"></script>
+
+{% endblock extra_js %}
+

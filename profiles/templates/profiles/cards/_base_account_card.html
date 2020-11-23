@@ -1,0 +1,103 @@
+{% load i18n %}
+{% load static %}
+{% load thumbnail %}
+
+
+<div class="card profile-card account-card">
+  <div class="card-body">
+    <div class="row card-text">
+      <div class="col-md-3 text-center">
+          <img title="profile picture" class="avatar rounded-circle img-responsive" src="{% thumbnail show_user.picture|default:'default_profile.png' 'profile_avatar_show' %}">
+      </div>
+      
+      <div class='col-md-9'>
+
+          <h1 class="card-title">{{ show_user.get_full_name|upper }}</h1>
+          <!--span class="pull-left text-muted"-->          
+              
+          {% if editable and user.is_pending_role_change %} 
+            <div class="alert alert-danger" style="padding:5px;font-size:.9em">
+              {% trans 'Oczekujesz na akceptacje zmiany typu konta z' %} <strong>{{user.pending_role_change.current_pretty|upper}}</strong> {% trans 'na' %} <strong>{{user.pending_role_change.new_pretty|upper}}</strong> 
+            </div>
+          {% else %}
+            <h4 class="d-inline card-subtitle mb-2 text-muted"><i class="icofont-boot-alt-2"></i> {{ show_user.get_declared_role_display|upper }}  </h4>
+          {% endif %}
+            
+
+
+          {% if editable %}
+          <h4 class="small font-weight-bold">
+                {% if show_user.is_verified %} 
+                  <i class="text-success icofont-verification-check"></i> {% trans 'zwerifikowane' %}
+                {% elif show_user.is_waiting_for_verification %}
+                    <i class="text-warning icofont-ui-clock"></i> {% trans 'oczekuje na werifikacje' %}
+                {% else %} 
+                    <i class="text-danger icofont-adjust"></i> {% trans 'brakuje danych do werifikacji konta' %}
+                {% endif %} 
+            
+            <span class="float-right">{{user.profile.percentage_completion}}%</span></h4>
+            <div class="progress mb-4">
+              <div class="progress-bar bg-success " role="progressbar" style="width: {{user.profile.percentage_completion}}%" 
+                  aria-valuenow="{{user.profile.percentage_completion}}" 
+                  aria-valuemin="0" 
+                  aria-valuemax="100"></div>
+              <div class="progress-bar progress-bar-striped bg-danger progress-verification" role="progressbar" style="width: {{user.profile.percentage_left_verified}}%" 
+                  aria-valuenow="{{user.profile.percentage_left_verified}}" 
+                  aria-valuemin="0" 
+                  aria-valuemax="100"></div>
+            </div>
+
+
+
+
+          <ul class="list-group">
+
+            <li class="list-group-item text-left border-0"></li><!-- @tood remove hiddens-->
+            <li hidden class="list-group-item text-left border-0">  <!-- @tood remove hiddens-->
+              <span class="pull-left text-muted">
+              <div class="progress" data-toggle="tooltip" data-placement="top" title="Określa w jakim stopniu Twoje konto ma uzupełnione dane.">
+                  <div class="progress-bar bg-success" style="width:{{user.profile.percentage_completion}}%">{{user.profile.percentage_completion}}%</div>
+              </div>
+            </li>
+            </ul>
+            {% endif %}
+            </ul> 
+            {% block body %}
+              
+            {% endblock body %}    
+            <!--
+            <li class="list-group-item text-left border-0">
+              <span class="pull-left text-muted"><strong>Noga:</strong></span> {{ show_user.profile.get_prefered_leg_display }}
+            </li>
+            <li class="list-group-item text-left border-0">
+              <span class="pull-left text-muted"><strong>Pozycja:</strong></span> {{ show_user.profile.get_position_raw_display }}
+            </li>
+            <li class="list-group-item text-left border-0">
+              <span class="pull-left text-muted"><strong>Data urodzenia:</strong></span> {{ show_user.profile.birth_date }}
+            </li>
+            <li class="list-group-item text-left border-0">
+              <span class="pull-left text-muted"><strong>{{ show_user.profile.history.counter }}</strong></span>  {% trans 'wizyt' %} <span class="pull-left text-muted"><strong>X </strong></span> obserwujących
+            </li>
+          </ul> -->
+          <span class="pull-left text-muted"><strong>{{ show_user.profile.history.counter }}</strong></span>  {% trans 'wizyt' %} <span class="pull-left text-muted"><strong>X </strong></span> obserwujących
+
+      </div>  <!-- end of col-md-9 -->
+    </div>  <!-- end of row -->
+  </div>  <!-- end of card body -->
+  <div class="card-footer ">
+    <!--hr-->
+    <div class="stats actions">
+
+      <div class="btn-group" role="group" aria-label="action buttons">
+
+          {% if editable %}
+              {% include 'profiles/buttons/edit.html' %}
+          {% else %}
+              {% csrf_token %}
+              {% include 'profiles/buttons/observe.html' %}       
+              {% include 'profiles/buttons/invite.html' %}
+          {% endif %}
+      </div>
+    </div>
+  </div>
+</div>  <!--end of card -->

@@ -1,0 +1,24 @@
+
+{% extends 'soccerbase/base.html' %}
+
+{% block content %}
+<section style="padding:60px;"> 
+
+{% load i18n %}
+
+{% if type == 'P' %}
+    {% include 'soccerbase/tables/players.html' with objects=page_obj %}
+{% elif type == 'T' %}
+    {% include 'soccerbase/tables/coaches.html' with objects=page_obj %}
+{% elif type == 'C' %}
+    {% include 'soccerbase/tables/clubs.html' with objects=page_obj %}
+{% endif %}
+    
+{% include 'soccerbase/_pagination.html'%}
+
+
+</section>
+{% endblock content %}
+
+
+

@@ -1,0 +1,7 @@
+{% load i18n %}
+{% load static %}
+
+{% if user.is_authenticated %}
+    <li><a href="{% url 'profiles:show_self'%}">{% trans 'Twój zespół' %}</a></li>
+    <li><a href="{% url 'profiles:player_carrier'%}">{% trans 'Club' %}</a></li>
+{% endif %}

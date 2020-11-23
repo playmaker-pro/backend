@@ -8,40 +8,46 @@ from django.views import View, generic
 
 from clubs.models import Club, Team
 from users.models import User
+from django.core.paginator import Paginator
 
 
-class PlayersTable(generic.TemplateView):
-    template_name = "soccerbase/table.html"
+class TableView(generic.TemplateView):
+    template_name = "soccerbase/tables/table.html"
     http_method_names = ["get"]
+    paginate_limit = 15
+    table_type = None
+
+    def get_data(self):
+        return []
 
     def get(self, request, *args, **kwargs):
-        players = User.objects.filter(declared_role='P')
-
-        kwargs["objects"] = players
-        kwargs["type"] = 'P'
+        data = self.get_data()
+        paginator = Paginator(data, self.paginate_limit)
+        page_number = request.GET.get('page') or 1
+        page_obj = paginator.get_page(page_number)
+        kwargs['page_obj'] = page_obj
+        # kwargs["objects"] = players
+        kwargs["type"] = self.table_type
         return super().get(request, *args, **kwargs)
+
+
+class PlayersTable(TableView):
+    table_type = 'P'
+
+    def get_data(self):
+        return User.objects.filter(declared_role='P')
 
 
 class TeamsTable(generic.TemplateView):
-    template_name = "soccerbase/table.html"
-    http_method_names = ["get"]
+    table_type = 'T'
 
-    def get(self, request, *args, **kwargs):
-        clubs = Club.objects.all()
-        user = self.request.user
-
-        kwargs["objects"] = clubs
-        kwargs["type"] = 'C'
-
-        return super().get(request, *args, **kwargs)
+    def get_data(self):
+        return Club.objects.all()
 
 
 class CoachesTable(generic.TemplateView):
-    template_name = "soccerbase/table.html"
-    http_method_names = ["get"]
+    table_type = 'T'
 
-    def get(self, request, *args, **kwargs):
-        coaches = User.objects.filter(declared_role='T')
-        kwargs["objects"] = coaches
-        kwargs["type"] = 'T'
-        return super().get(request, *args, **kwargs)
+    def get_data(self):
+        return User.objects.filter(declared_role='T')
+

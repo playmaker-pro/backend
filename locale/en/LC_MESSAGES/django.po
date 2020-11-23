@@ -1,0 +1,395 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-11-12 13:33+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: backend/settings/base.py:206
+msgid "Polski"
+msgstr ""
+
+#: backend/settings/base.py:207
+msgid "Angielski"
+msgstr ""
+
+#: backend/templates/blog/blog_index_page.html:50
+msgid "Obecnie nie ma żadnych wpisów."
+msgstr ""
+
+#: clubs/models.py:18 profiles/models.py:300
+msgid "Club name"
+msgstr ""
+
+#: clubs/models.py:23
+msgid "Club"
+msgstr ""
+
+#: clubs/models.py:24
+msgid "Clubs"
+msgstr ""
+
+#: clubs/models.py:39 profiles/models.py:306
+msgid "Team name"
+msgstr ""
+
+#: clubs/models.py:44
+msgid "Team"
+msgstr ""
+
+#: clubs/models.py:45
+msgid "Teams"
+msgstr ""
+
+#: home/templates/home/welcome_page.html:6
+msgid "Visit the Wagtail website"
+msgstr ""
+
+#: home/templates/home/welcome_page.html:15
+msgid "View the release notes"
+msgstr ""
+
+#: home/templates/home/welcome_page.html:27
+msgid "Welcome to your new Wagtail site!"
+msgstr ""
+
+#: home/templates/home/welcome_page.html:28
+msgid ""
+"Please feel free to <a href=\"https://github.com/wagtail/wagtail/wiki/Slack"
+"\">join our community on Slack</a>, or get started with one of the links "
+"below."
+msgstr ""
+
+#: home/templates/home/welcome_page.html:35
+msgid "Wagtail Documentation"
+msgstr ""
+
+#: home/templates/home/welcome_page.html:36
+msgid "Topics, references, & how-tos"
+msgstr ""
+
+#: home/templates/home/welcome_page.html:42
+msgid "Tutorial"
+msgstr ""
+
+#: home/templates/home/welcome_page.html:43
+msgid "Build your first Wagtail site"
+msgstr ""
+
+#: home/templates/home/welcome_page.html:49
+msgid "Admin Interface"
+msgstr ""
+
+#: home/templates/home/welcome_page.html:50
+msgid "Create your superuser first!"
+msgstr ""
+
+#: inquiries/models.py:22
+msgid "Plan Name"
+msgstr ""
+
+#: inquiries/models.py:24
+msgid "Plan name"
+msgstr ""
+
+#: inquiries/models.py:27
+msgid "Plan limit"
+msgstr ""
+
+#: inquiries/models.py:28
+msgid "Limit how many actions are allowed"
+msgstr ""
+
+#: inquiries/models.py:33
+msgid ""
+"Used to sort plans low numbers threaded as lowest plans. Default=0 which "
+"means this is not set."
+msgstr ""
+
+#: inquiries/models.py:36
+msgid "Description"
+msgstr ""
+
+#: inquiries/models.py:39
+msgid ""
+"Short description what is rationale behind plan. Used only for internal "
+"purpose."
+msgstr ""
+
+#: inquiries/models.py:42
+msgid "Default Plan"
+msgstr ""
+
+#: inquiries/models.py:44
+msgid "Defines if this is default plan selected during account creation."
+msgstr ""
+
+#: inquiries/models.py:65
+msgid "Current counter"
+msgstr ""
+
+#: inquiries/models.py:67
+msgid "Current number of used inquiries."
+msgstr ""
+
+#: profiles/models.py:107
+msgid "Short Bio"
+msgstr ""
+
+#: profiles/models.py:113
+msgid "Email verified"
+msgstr ""
+
+#: profiles/models.py:118
+msgid "Account verified"
+msgstr ""
+
+#: profiles/models.py:243
+msgid "Lewa"
+msgstr "Left"
+
+#: profiles/models.py:244
+msgid "Prawa"
+msgstr "Right"
+
+#: profiles/models.py:281
+msgid "Birth date"
+msgstr ""
+
+#: profiles/models.py:286
+msgid "Height"
+msgstr ""
+
+#: profiles/models.py:293
+msgid "Weight"
+msgstr ""
+
+#: profiles/models.py:312
+msgid "League name"
+msgstr ""
+
+#: profiles/models.py:318
+msgid "Voivodeship name"
+msgstr ""
+
+#: profiles/models.py:324
+msgid "Position name"
+msgstr ""
+
+#: profiles/models.py:331
+msgid "Pozycja alternat"
+msgstr ""
+
+#: profiles/models.py:338
+msgid "Pozycja Fantasy"
+msgstr ""
+
+#: profiles/models.py:345
+msgid "Formacja"
+msgstr ""
+
+#: profiles/models.py:352
+msgid "Alternatywna formacja"
+msgstr "Alternative formation"
+
+#: profiles/models.py:359
+msgid "Noga"
+msgstr "Leg"
+
+#: profiles/models.py:366
+msgid "Status transferowy"
+msgstr ""
+
+#: profiles/models.py:372 profiles/models.py:374
+msgid "Karta na ręku"
+msgstr ""
+
+#: profiles/models.py:383
+msgid "max practice distance"
+msgstr ""
+
+#: profiles/models.py:389
+msgid "Country"
+msgstr ""
+
+#: profiles/models.py:440
+msgid "soccer goal"
+msgstr ""
+
+#: profiles/models.py:442
+msgid "birth date"
+msgstr ""
+
+#: profiles/templates/profiles/cards/_account_card.html:44
+msgid "Account filled"
+msgstr ""
+
+#: profiles/templates/profiles/cards/_player_fantasy_general_card.html:7
+msgid "FANTASY"
+msgstr ""
+
+#: profiles/templates/profiles/cards/_player_games_shortcut_card.html:7
+msgid "Last games"
+msgstr ""
+
+#: profiles/templates/profiles/cards/_player_games_shortcut_card.html:11
+msgid "See more your games"
+msgstr ""
+
+#: profiles/templates/profiles/cards/_player_games_shortcut_card.html:14
+msgid "Host"
+msgstr ""
+
+#: profiles/templates/profiles/cards/_player_games_shortcut_card.html:15
+msgid "Guest"
+msgstr ""
+
+#: profiles/templates/profiles/cards/_player_games_shortcut_card.html:16
+msgid "Score"
+msgstr ""
+
+#: profiles/templates/profiles/cards/_player_games_shortcut_card.html:17
+msgid "Minutes played"
+msgstr ""
+
+#: profiles/templates/profiles/cards/_player_games_shortcut_card.html:18
+msgid "Goals"
+msgstr ""
+
+#: soccerbase/templates/soccerbase/_player_header.html:3
+msgid "Name and surename"
+msgstr ""
+
+#: soccerbase/templates/soccerbase/_player_header.html:4
+msgid "Age"
+msgstr ""
+
+#: soccerbase/templates/soccerbase/_player_header.html:5
+msgid "Position"
+msgstr ""
+
+#: soccerbase/templates/soccerbase/_player_header.html:6
+msgid "Current team"
+msgstr ""
+
+#: soccerbase/templates/soccerbase/_player_header.html:7
+msgid "Vodeship"
+msgstr ""
+
+#: soccerbase/templates/soccerbase/_player_header.html:8
+msgid "Check player CV"
+msgstr ""
+
+#: users/forms.py:70 users/forms.py:75
+msgid "Declared Role"
+msgstr ""
+
+#: users/models.py:23
+msgid "The Email must be set"
+msgstr ""
+
+#: users/models.py:39
+msgid "Superuser must have is_staff=True."
+msgstr ""
+
+#: users/models.py:41
+msgid "Superuser must have is_superuser=True."
+msgstr ""
+
+#: users/models.py:239
+msgid "Skip full setup"
+msgstr ""
+
+#: users/models.py:244
+msgid "email address"
+msgstr ""
+
+#: users/models.py:247
+msgid "Profile picture"
+msgstr ""
+
+#: users/models.py:257
+msgid "declared club"
+msgstr ""
+
+#: users/models.py:264
+msgid "declared role"
+msgstr ""
+
+#: users/templates/account/email/base_message.txt:1
+msgid "<h1>Witaj na platformie PlayMaker.pro!</h1>"
+msgstr ""
+
+#: users/templates/account/email/base_message.txt:5
+#, python-format
+msgid ""
+"Pozdrawiamy PlayMaker.pro!\n"
+"%(site_domain)s"
+msgstr ""
+
+#: users/templates/account/email/email_confirmation_message.txt:5
+#, python-format
+msgid ""
+"You're receiving this e-mail because user %(user_display)s has given your e-"
+"mail address to register an account on %(site_domain)s.\n"
+"\n"
+"To confirm this is correct, go to %(activate_url)s"
+msgstr ""
+
+#: users/templates/account/email_confirm.html:6
+#: users/templates/account/email_confirm.html:10
+msgid "Confirm E-mail Address"
+msgstr ""
+
+#: users/templates/account/email_confirm.html:16
+#, python-format
+msgid ""
+"Please confirm that <a href=\"mailto:%(email)s\">%(email)s</a> is an e-mail "
+"address for user %(user_display)s."
+msgstr ""
+
+#: users/templates/account/email_confirm.html:20
+msgid "Confirm"
+msgstr ""
+
+#: users/templates/account/email_confirm.html:27
+#, python-format
+msgid ""
+"This e-mail confirmation link expired or is invalid. Please <a href="
+"\"%(email_url)s\">issue a new e-mail confirmation request</a>."
+msgstr ""
+
+#: users/templates/account/password_reset.html:6
+msgid "Password Reset"
+msgstr ""
+
+#: users/templates/account/password_reset.html:24
+msgid ""
+"Forgotten your password? Enter your e-mail address below, and we'll send you "
+"an e-mail allowing you to reset it."
+msgstr ""
+
+#: users/templates/account/password_reset.html:29
+msgid "Reset My Password"
+msgstr ""
+
+#: users/templates/account/password_reset.html:32
+msgid "Please contact us if you have any trouble resetting your password."
+msgstr ""
+
+#: users/templates/account/signup.html:5
+msgid "Signup"
+msgstr ""

@@ -62,9 +62,21 @@ class UserInquiry(models.Model):
     )
 
     counter = models.PositiveIntegerField(
-        _('Current counter'),
+        _('Obecna ilość zapytań'),
         default=0,
         help_text=_('Current number of used inquiries.'))
+
+    @property
+    def can_make_request(self):
+        return self.limit >= self.counter
+
+    @property
+    def left(self):
+        return self.plan.limit - self.counter
+
+    @property
+    def limit(self):
+        return self.plan.limit
 
     def reset(self):
         '''Reset current counter'''
@@ -84,13 +96,17 @@ class InquiryRequest(models.Model):
     STATUS_NEW = 'NEW'
     STATUS_SENT = 'SENT'
     STATUS_RECEIVED = 'RECEIVED'
+    # STATUS_READED = 'READED'
     STATUS_ACCEPTED = 'ACCEPTED'
     STATUS_REJECTED = 'REJECTED'
 
     STATUS_CHOICES = (
         (STATUS_NEW, STATUS_NEW),
         (STATUS_SENT, STATUS_SENT),
-        (STATUS_RECEIVED, STATUS_RECEIVED)
+        (STATUS_RECEIVED, STATUS_RECEIVED),
+        # (STATUS_READED, STATUS_READED),
+        (STATUS_ACCEPTED, STATUS_ACCEPTED),
+        (STATUS_REJECTED, STATUS_REJECTED),
     )
 
     status = FSMField(

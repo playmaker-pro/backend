@@ -1,3 +1,7 @@
 [submodule "data"]
 	path = data
 	url = https://gitlab.com/playmaker1/data.git
+
+[submodule "stats"]
+	path = stats
+	url = https://gitlab.com/playmaker1/packages/pm-stats.git

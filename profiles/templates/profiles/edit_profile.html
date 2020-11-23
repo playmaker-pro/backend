@@ -1,41 +1,53 @@
-{% extends "base_inner.html" %}
+{% extends "profiles/base.html" %}
 
+{% load i18n %}
 {% load static %}
 {% load crispy_forms_tags %}
 {% load thumbnail %}
 
-{% block title %}{{ block.super }}Profile{% endblock %}
+{% block title %}{{ block.super }} {% trans 'Edycja profilu' %} {% endblock %}
 
 <!-- Benefits of the Django application -->
 {% block content %}
-
-<div class="container">
-  <div class="container profile-head">
-  <h1 class="text-primary">Edit Profile</h1>
-  </div>
-  <br>
-  <div class="row">
-    <!-- left column -->
-    <div class="col-md-3">
-      <div class="text-center">
-        <img title="profile picture" class="img-circle img-responsive" src="{% thumbnail user.picture|default:'default_profile.png' 'profile_avatar_show' %}">
-      </div>
+<section id="profile" class="profile">
+  <div class="container" data-aos="fade-up">
+    <div class="container profile-head">
+      <h1>{% trans 'Edycja profilu' %}</h1>
     </div>
-      
-    <!-- edit form column -->
-    <div class="col-md-6">
-      
-      <form enctype="multipart/form-data" method="post">
-        {% crispy user_form %}
-        <hr>
-            <a class="btn btn-default pull-right" href="{% url 'account_reset_password' %}">Zmień hasło</a>
-        <hr>
-        <h1>Twoje CV</h1>
-        {% crispy profile_form %}
+   
+      <form class='profile-edit-form' enctype="multipart/form-data" method="post">
+        <div class="row">
+            <div class="col-md-6">
+              <h2 class='form-section-title'>Ustawienia konta</h2>
+
+
+
+              {% crispy user_form %}
+
+
+
+
+
+
+
+
+
+              <a class="btn btn-default pull-right" href="{% url 'account_reset_password' %}">Zmień hasło</a>
+            </div>
+            <div class="col-md-3">
+            <div class="text-center">
+              <img title="profile picture" class="img-circle img-responsive" src="{% thumbnail user.picture|default:'default_profile.png' 'profile_avatar_show' %}">
+            </div>
+          </div>
+          <div class="col-md-12">
+            <hr>
+            <h1>Twoje CV</h1>
+            {% crispy profile_form %}
+          </div> 
+        </div>
+        <button type="submit" name="update" value="Update" id="submit-id-update">Aktualizuj</button>
       </form>
-      <hr>
-      <a class="btn btn-default pull-right" href="{% url 'account_reset_password' %}">Change Password</a>
-      <hr>
+
 
       <div> 
         {% if user.is_pending_role_change %}
@@ -65,6 +77,8 @@
     </div>
   </div>
 </div-->
+</section>
 {% endblock content %}
+
 
 

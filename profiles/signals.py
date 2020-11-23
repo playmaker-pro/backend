@@ -24,8 +24,35 @@ def set_and_create_user_profile(user):
         'S': models.StandardProfile,
     }
     profile_model = model_map.get(user.declared_role, models.StandardProfile)
-    profile_model.objects.get_or_create(user=user)
+    profile, _ = profile_model.objects.get_or_create(user=user)
+
+    if user.declared_role == 'P':
+        models.PlayerMetrics.objects.get_or_create(player=profile)
     # profile.save()
+
+
+from inquiries.models import UserInquiry
+from inquiries.models import InquiryPlan
+
+
+def create_default_basic_plan_if_not_present():
+    ''' In case when there is no Default plan we would like to create it at first time'''
+
+    args = settings.INQUIRIES_INITAL_PLAN
+    try:
+        default = InquiryPlan.objects.get(default=True)
+    except InquiryPlan.DoesNotExist:
+        default = InquiryPlan.objects.create(**args)
+    return default
+
+
+def set_user_inquiry_plan(user):
+    try:
+        UserInquiry.objects.get(user=user)
+    except UserInquiry.DoesNotExist:
+        default = create_default_basic_plan_if_not_present()
+        UserInquiry.objects.create(plan=default, user=user)
+        logger.info(f'User {user.id} plan created.')
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -41,7 +68,7 @@ def create_profile_handler(sender, instance, created, **kwargs):
 
     msgprefix = 'New'
     set_and_create_user_profile(instance)
-
+    set_user_inquiry_plan(instance)
     logger.info(f"{msgprefix} user profile for {instance} created with declared role {instance.declared_role}")
 
 

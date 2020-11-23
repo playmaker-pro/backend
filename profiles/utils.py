@@ -70,3 +70,36 @@ def _slug_strip(value, separator='-'):
             re_sep = re.escape(separator)
         value = re.sub(r'^%s+|%s+$' % (re_sep, re_sep), '', value)
     return value
+
+def get_current_season():
+    return '2020/2021'
+    
+    
+PARAMETERS_MAPPING = {
+    'game__host_team_name': 'host_name',
+    'host_team_name': 'host_name',
+    'game__guest_team_name': 'guest_name',
+    'guest_team_name': 'guest_name',
+    'minutes_played': 'minutes',
+    'host_score': 'host_score',
+    'guest_score': 'guest_score',
+    'game__host_score': 'host_score',
+    'game__guest_score': 'guest_score',
+    'team_goals': 'team_goals',
+    'goals': 'goals',
+    'yellow_cards': 'yellow_cards',
+    'red_cards': 'red_cards',
+    'date': 'date',
+    'league_name': 'league_name',
+}
+
+
+def list_item_adapter(items: list) -> list:
+    outcome = []
+    for item in items:
+        outcome.append(dict((PARAMETERS_MAPPING[key], value) for (key, value) in item.items()))
+    return outcome
+
+
+def item_adapter(item: dict) -> dict:
+    return dict((PARAMETERS_MAPPING[key], value) for (key, value) in item.items())

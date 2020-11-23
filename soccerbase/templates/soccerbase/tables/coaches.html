@@ -1,0 +1,21 @@
+{% load i18n %}
+
+  <table class="table w-auto">
+    <thead>
+        <tr> 
+            <!-- d-md-none  aggregatpr -->
+            <!-- mobile off d-none d-md-table-cell -->
+            <th scope="col" class="d-md-none">{% trans 'Piłkarz' %}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for object in objects %}
+            <tr>
+                <td class="d-md-none">{{ object.first_name|upper }} </td>
+            </tr>
+        {% endfor %}
+
+    </tbody>
+</table>
+
+

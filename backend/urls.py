@@ -15,7 +15,7 @@ import clubs.urls
 import profiles.urls
 import allauth.account.urls
 import followers.urls  # @to be removed 
-
+from django.views.generic import TemplateView
 
 admin.site.site_header = 'PlayMaker.pro - development'
 admin.site.site_title = 'PlayMaker.pro - Admin site'
@@ -31,6 +31,7 @@ urlpatterns = [
     path('tables/', include(soccerbase.urls), name='soccerbase'),
     path('clubs/', include(clubs.urls), name="clubs"),
     path('users/', include(profiles.urls), name="profiles"),
+
     path('feeds/', include(followers.urls), name="feeds"),
     path('policy/', TemplateView.as_view(template_name='subpgaes/policy.html')),
     path('terms/', TemplateView.as_view(template_name='subpgaes/terms.html')),

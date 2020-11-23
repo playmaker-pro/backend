@@ -1,17 +1,67 @@
-{% extends 'base_inner.html' %}
+{% extends 'base.html' %}
 
 {% load static %}
+{% load i18n %}
 
-
-{% block title %}{{ block.super }}:: Profile{% endblock %}  {# @todo someting with this block to better utalize #}
-
+{% block title %}{{ block.super }}:: {% trans 'Profil' %}{% endblock %}  {# @todo someting with this block to better utalize #}
 
 {% block extra_css %}
     <link href="{% static 'assets/css/profiles.css' %}" rel="stylesheet">
     <link href="{% static 'assets/css/modals.css' %}" rel="stylesheet">
+    <!-- test out -->
+    <link rel="stylesheet/less" type="text/css" href="{% static 'assets/css/table1.less' %}" />
 {% endblock extra_css%}
 
 
+
+{% block header %}
+    {% if user.is_authenticated %}
+        {% if user.is_coach %}
+
+            {% with menuitems_template="profiles/partials/_nav_coach.html" %}
+                {{ block.super }}
+            {% endwith %}
+
+        {% elif user.is_player %}
+
+            {% with menuitems_template="profiles/partials/_nav_player.html" %}
+                {{ block.super }}
+            {% endwith %}
+
+        {% elif user.is_club %}
+
+            {% with menuitems_template="profiles/partials/_nav_club.html" %}
+                {{ block.super }}
+            {% endwith %}
+
+        {% else %}
+            {{ block.super }}
+        {% endif %}
+        
+    {% else %}
+          {{ block.super }}
+    {% endif %}
+
+{% endblock %}
+
+
+
 {% block content_header %}
+    {% include 'profiles/banners/_banner.html' with show_user=show_user %}
+    
+
 {% endblock content_header %}
 
+
+
+{% block extra_js %}
+
+  <script src="{% static 'assets/js/observers.js' %}"></script>
+
+  <!--extra modals-->
+  {% include 'profiles/modals/load_modals.html' with load_all=True %}
+
+  <!--testout-->
+  <script src="//cdn.jsdelivr.net/npm/less" ></script>
+
+{% endblock extra_js%}

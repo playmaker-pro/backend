@@ -46,9 +46,6 @@ BEFORE_FIRST_LOGIN = 'before_first_login'
 FIRST_LOGIN = 'first_login'
 
 
-
-
-
 class UserVerification(models.Model):  # @todo: to be removed - deprecated due to FSM state on User model
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -96,6 +93,7 @@ ACCOUNT_ROLES = (
         ('M', 'Manadżer'),
         ('S', 'Standardowe'),
 )
+
 
 class UserRoleMixin:
     @property
@@ -157,6 +155,7 @@ class UserRoleMixin:
             return self.standardprofile
         else:
             return None
+
     def get_admin_url(self):
         return reverse(f"admin:{self._meta.app_label}_{self._meta.model_name}_change", args=(self.id,))
 
@@ -167,6 +166,7 @@ class User(AbstractUser, UserRoleMixin):
 
     STATE_NEW = 'New'
     STATE_AUTH_VERIFIED = 'Authentication Verified'
+    STATE_ACCOUNT_WAITING_FOR_VERIFICATION_DATA = 'Awaiting for user\'s verification input'
     STATE_ACCOUNT_WAITING_FOR_VERIFICATION = "Account Waiting For Verification"
     STATE_ACCOUNT_VERIFIED = 'Account Verified'
     STATE_MIGRATED_VERIFIED = 'Migrated Verified'
@@ -175,6 +175,7 @@ class User(AbstractUser, UserRoleMixin):
     STATES = (
         STATE_NEW,
         STATE_AUTH_VERIFIED,
+        STATE_ACCOUNT_WAITING_FOR_VERIFICATION_DATA,
         STATE_ACCOUNT_WAITING_FOR_VERIFICATION,
         STATE_ACCOUNT_VERIFIED,
         STATE_MIGRATED_VERIFIED,
@@ -190,19 +191,64 @@ class User(AbstractUser, UserRoleMixin):
     state = FSMField(default=STATE_NEW, choices=STATES)
 
     @transition(field=state,  source=[STATE_NEW, STATE_MIGRATED_NEW, STATE_MIGRATED_VERIFIED], target=STATE_AUTH_VERIFIED)
-    def verify_email(self):
-        """Account's email has been verified by user"""
+    def verify_email(self, extra: dict = None):
+        '''Account's email has been verified by user
+
+        :param: extra dict where additional information can be putted by entity changing state.
+        example:
+            extra['reason'] = 'User removed field1'
+        '''
 
     @transition(field=state, source=[STATE_AUTH_VERIFIED, STATE_MIGRATED_VERIFIED], target=STATE_ACCOUNT_VERIFIED)
-    def verify(self):
-        """Account is verified by admins/site managers."""
+    def verify(self, extra: dict = None):
+        '''Account is verified by admins/site managers.
+
+        :param: extra - dict where additional information can be putted by entity changing state.
+        example:
+            extra['reason'] = 'User removed field1'
+        '''
+
+    @transition(field=state, source='*', target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION_DATA)
+    def missing_verification_data(self, extra: dict = None):
+        '''In case when user remove or alter verification fields in his account transition to this state should occure.
+        Which means that account has missing verification fields in profile.
+
+        :param: extra - dict where additional information can be putted by entity changing state.
+               example:
+                    extra['reason'] = 'User removed field1'
+        '''
 
     @transition(field=state, source='*', target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION)
-    def unverify(self, extra=None):
-        """Account is verified by admins/site managers."""
+    def waiting_for_verification(self, extra: dict = None):
+        '''Account is verified by admins/site managers.
+
+        :param: extra  - dict where additional information can be putted by entity changing state.
+        example:
+            extra['reason'] = 'User removed field1'
+        '''
         if extra:
             reason = extra.get('reason')
+        else:
+            reason = None
         mail_user_waiting_for_verification(self, extra_body=reason)
+
+    @transition(field=state, source='*', target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION)
+    def unverify(self, extra: dict = None):
+        '''Account is verified by admins/site managers.
+
+        :param: extra  - dict where additional information can be putted by entity changing state.
+        example:
+            extra['reason'] = 'User removed field1'
+        '''
+        if extra:
+            reason = extra.get('reason')
+        else:
+            reason = None
+        mail_user_waiting_for_verification(self, extra_body=reason)
+
+    @property
+    def is_missing_verification_data(self):
+        return self.state == self.STATE_ACCOUNT_WAITING_FOR_VERIFICATION_DATA
 
     @property
     def is_migrated(self):
@@ -235,16 +281,18 @@ class User(AbstractUser, UserRoleMixin):
     def is_roleless(self):
         return self.declared_role is None
 
-    finish_account_initial_setup = models.BooleanField(
+    finish_account_initial_setup = models.BooleanField(  # @todo - remove this, it is deprecated.
         _('Skip full setup'),
         null=True,
         blank=True,
     )
 
-    email = models.EmailField(_('email address'), unique=True)
+    email = models.EmailField(
+        _('Adres email'), 
+        unique=True)
 
     picture = models.ImageField(
-        _("Profile picture"),
+        _("Zdjęcie"),
         upload_to="profile_pics/%Y-%m-%d/",
         null=True,
         blank=True)
@@ -253,17 +301,15 @@ class User(AbstractUser, UserRoleMixin):
     def role(self):
         return self.declared_role
 
-   
-
     declared_club = models.CharField(
-        _('declared club'),
+        _('Deklaracja klubu'),
         max_length=355,
         null=True,
         blank=True,
         help_text="Users declaration in which club he plays.")
 
     declared_role = models.CharField(
-        _('declared role'),
+        _('Deklaracja roli'),
         choices=ROLE_CHOICES,
         max_length=355,
         null=True,

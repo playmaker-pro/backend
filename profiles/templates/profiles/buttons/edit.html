@@ -1,0 +1,7 @@
+
+   
+{% with icon='edit'  text=_('Edytuj profil')%}
+    <a href="{% url 'profiles:edit_self' %}" class="card-link btn-pm btn-pm-sm">
+        <i class="icofont-{{icon}}"></i> {{ text }} 
+    </a>
+{% endwith %}

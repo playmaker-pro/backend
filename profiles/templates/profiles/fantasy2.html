@@ -1,0 +1,53 @@
+{% extends "profiles/base.html" %}
+
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load thumbnail %}
+
+{% block title %}{{ block.super }} {% trans 'Moje Fantasy' %} {% endblock %}
+
+
+{% block header %}
+    {% with menuitems_template="profiles/partials/_nav_player.html" %}
+        {{ block.super }}
+    {% endwith %}
+{% endblock %}
+
+
+<!-- Benefits of the Django application -->
+{% block content %}
+
+
+<section id="profile-fantasy" class="profile">
+
+  <div class="container" data-aos="fade-up"> 
+
+<div class="row">
+            <div class="col-lg-7 mx-auto">
+                {% for game in fantasy.data %}
+                <!-- Timeline -->
+                <ul class="timeline">
+                    {{game.game_header}}
+                    {% for score in game.scores %}
+
+                    <li class="timeline-item bg-white rounded ml-3 p-4 shadow">
+                        <div class="timeline-arrow"></div>
+                        <h2 class="h5 mb-0"></h2>
+                        <p class="text-small mt-2 font-weight-light">+{{ score.score }}ptk {{ score.reason}}</p>
+                    </li>
+                    {% endfor %}
+                  
+                </ul><!-- End -->
+                {% endfor %}    
+            </div>
+        </div>
+  </div>
+
+<div class="debug">
+{{fantasy}}
+ </div> 
+</section>
+{% endblock content %}
+
+

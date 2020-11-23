@@ -1,0 +1,45 @@
+{% load i18n %}
+
+<div class="container profile-body">
+<div class="row">
+    <h1>Debug Info</h1>
+    <div class="col-sm-4">
+    <ul class="list-group">
+        <li class="list-group-item text-muted">Profile</li>
+        <li class="list-group-item text-right"><span class="pull-left"><strong>Name:</strong></span> {{ show_user.first_name }}</li>
+        <li class="list-group-item text-right"><span class="pull-left"><strong>Last Name:</strong></span> {{ show_user.last_name }}</li>
+        <li class="list-group-item text-right"><span class="pull-left"><strong>Current profile type:</strong></span> {{ show_user.profile.PROFILE_TYPE }}</li>
+        <li class="list-group-item text-right"><span class="pull-left"><strong>Full name:</strong></span> {{ show_user.get_full_name }}</li>
+        <li class="list-group-item text-right"><span class="pull-left"><strong>Declared Role:</strong></span> {{ show_user.declared_role }}</li>
+        <li class="list-group-item text-right"><span class="pull-left"><strong>Username:</strong></span> {{ show_user.username }}</li>
+        <li class="list-group-item text-muted">Meta data</li>
+        <li class="list-group-item text-right"><span class="pull-left"><strong>Slug:</strong></span> {{ show_user.profile.slug }}</li>
+        <li class="list-group-item text-right"><span class="pull-left"><strong>Email:</strong></span> {{ show_user.email|default:"missing" }}
+        {% if show_user.profile.email_verified %}
+            <span class="glyphicon glyphicon-ok-circle" aria-hidden="true" title="This email address has been verified"></span>
+            <span class="sr-only">Verified</span>
+        {% else %}
+            <span class="glyphicon glyphicon-warning-sign" aria-hidden="true" title="This email address is not verified"></span>
+            <span class="sr-only">Not Verified</span>
+        {% endif %}
+        </li>
+        <li class="list-group-item text-right"><span class="pull-left"><strong>Joined</strong></span> {{ show_user.date_joined }}</li>
+        <li class="list-group-item text-right"><span class="pull-left"><strong>Last seen</strong></span> {{ show_user.last_login }}</li>
+    </ul>
+    </div> <!-- end of col sm 4-->
+    <div class="col-sm-8">
+    <div class="panel panel-default">
+        <div class="panel-heading">{{ show_user.get_full_name }}'s Profile
+        <a href="{% url 'profiles:show' show_user.profile.slug %}">
+            <span class="glyphicon glyphicon-link" aria-hidden="true" title="Profile permalink">link</span>
+            <span class="sr-only">Permalink</span>{{ show_user.profile.get_absolute_url }}
+        </a>
+
+        </div>
+        <div class="panel-body">
+        <strong>Bio</strong>: {{ show_user.profile.bio }}
+        </div>
+    </div>
+    </div> <!-- end of col sm 8-->
+</div>  <!-- row -->
+</div>   <!-- container-->

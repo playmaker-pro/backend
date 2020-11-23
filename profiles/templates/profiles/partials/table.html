@@ -1,0 +1,55 @@
+{% load i18n %}
+
+<table class="table w-auto">
+
+{% if caption %}
+    <caption><a href="{% url 'profiles:player_games' %}" >{% trans 'Zobacz więcej' %}</a></caption>
+    {% endif %}
+<thead>
+    <tr>
+    {% for header in table_headers %}
+        <th scope="col"  class="
+        {% if header in mobiles %}d-md-table-cell 
+            {% if header.aggregator %}d-md-none {% else %}
+            d-none
+            {% endif %}
+        {% endif %}">{{ header.name }}
+        </th>
+    {% endfor %}
+    </tr>
+</thead>
+{% include 'profiles/partials/table.html' with={1: {'name': 'Date', ]%}
+<tbody>
+    
+    {% for item in table_items %}
+        <tr style="font-size:0.9em;">
+            <td class="d-md-none">
+                {{ game.date }} <br>
+                {{ game.host_team_name|truncatechars:18 }} <br>
+                {{ game.guest_team_name|truncatechars:18 }}<Br>
+            </td>
+
+            {% if not short %}
+            <td class="d-none d-md-table-cell">{{ game.date }}</td>
+            {% endif %}
+            <td class="d-none d-md-table-cell">{{ game.host_team_name|truncatechars:18 }}</td>
+            <td class="d-none d-md-table-cell">{{ game.guest_team_name|truncatechars:18 }}</td>
+            <td class="">{{ game.host_score }}:{{ game.guest_score}}</td>
+            <td>{{ game.minutes_played }}'</td>
+            {% if user.profile.is_goalkeeper %}
+                <td>{% if game.clear_goal == None %} - {% elif game.clear_goal %} <i class="text-success icofont-goal-keeper"></i> {% else %}<i class="text-warning icofont-goal-keeper"></i> {% endif %}</td>
+            {% else %}
+            <td>{{ game.team_goals }}</td>
+            {% endif %}
+
+            {% if not short %}
+            <td>{{ game.yellow_cards }}</td>
+            <td>{{ game.red_cards }}</td>
+            
+            <td><span class="p-1 text-white rounded bg-{% if game.result.type == 'won' %}success{% elif game.result.type == 'lost' %}danger{% else %}secondary{% endif %}">{{ game.result.name }}</span></td>
+            {% endif %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+

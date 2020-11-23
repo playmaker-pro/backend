@@ -3,10 +3,15 @@ import os
 
 from django.contrib import messages
 from django.urls import reverse_lazy
+from django.utils.translation import ugettext_lazy as _
+
 
 DOMAIN_ADDRESS = 'http://localhost:8000'
 
+
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
 BASE_DIR = os.path.dirname(PROJECT_DIR)
 
 MANAGERS = [('Rafal', 'rafal.kesik@gmail.com'), ]
@@ -31,6 +36,7 @@ INSTALLED_APPS = [
     'soccerbase',
 
     'data',  # external repo
+    'stats',  # external repo
 
     'django_countries',
     'crispy_forms',
@@ -57,6 +63,7 @@ INSTALLED_APPS = [
     'blog',
     'django_fsm',
     'phonenumber_field',
+    'address',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -76,7 +83,8 @@ INSTALLED_APPS = [
 ]
 
 
-SITE_ID = 1 
+SITE_ID = 1
+
 
 # Reference to custom User model
 AUTH_USER_MODEL = 'users.User'
@@ -84,6 +92,7 @@ AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -91,6 +100,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+
 
     'wagtail.contrib.redirects.middleware.RedirectMiddleware',
 ]
@@ -110,6 +120,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.i18n',
             ],
         },
     },
@@ -152,6 +163,9 @@ DATABASES = {
     }
 }
 
+
+
+
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
@@ -175,6 +189,16 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
 LANGUAGE_CODE = 'pl'  # https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+
+
+LOCALE_PATHS = (
+    os.path.join(BASE_DIR, 'locale'),
+)
+
+LANGUAGES = (
+    ('pl', _('Polski')),
+    ('en-us', _('Angielski')),
+)
 
 TIME_ZONE = 'Europe/Warsaw'
 
@@ -236,10 +260,19 @@ THUMBNAIL_ALIASES = {
 }
 # Crispy Form Theme - Bootstrap 4
 CRISPY_TEMPLATE_PACK = "bootstrap4"
+CRISPY_FAIL_SILENTLY = False
 
 # For Bootstrap 4, change error alert to 'danger'
 MESSAGE_TAGS = {messages.ERROR: "danger"}
 
+# Inquiries app
+INQUIRIES_INITAL_PLAN = {
+        'default': True,
+        'limit': 10,
+        'name': 'Basic Inital',
+        'description': 'Default inital plan, need to be created if we wont ' \
+            'to add to each user UserInquery. In future can be alterd'
+}
 
 # messages
 MESSAGE_TAGS = {
@@ -268,7 +301,6 @@ ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
 ACCOUNT_USERNAME_BLACKLIST = []  # @todo
 ACCOUNT_USERNAME_MIN_LENGTH = 3
-
 
 # To enable email as indedifier
 # ACCOUNT_USER_MODEL_USERNAME_FIELD = None
@@ -424,6 +456,14 @@ STREAM_REDIS_CONFIG = {
     },
 }
 
+# https://pypi.org/project/django-address/
+
+GOOGLE_API_KEY = 'AIzaSyAwISspDEfhVel-fTYm18Dh1EKtrD0xDH0'
+
+
+# Django-countries
+
+COUNTRIES_FIRST = ['PL', 'GER', 'CZ', 'UA', 'GB']
 
 
 try:

@@ -1,0 +1,36 @@
+{% load i18n %}
+<!-- Button trigger modal 
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+  Launch demo modalinquiryModal
+</button>
+-->
+<!-- Modal -->
+
+{% with id='inquiryModal' title='Ilosc zapytań' %}
+<div class="modal fade" id="{{ id }}" tabindex="-1" role="dialog" aria-labelledby="{{ id }}Label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="{{ id }}Label">{{ title }}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Pozostało Ci jeszcze <strong>{{user.userinquiry.left}}</strong> możliwych zapytań. 
+        
+        Jeśli jesteś zainteresowaniem rozszerzeniem pakietu {link tu}
+      </div>
+      <div class="modal-footer">
+         {% include 'profiles/buttons/ajax.html' with button_text=_('Wyślij') button_ajax='inquiry' button_ajax_param=show_user.profile.slug %}
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Zamknij' %}</button> 
+      </div>
+    </div>
+  </div>
+</div>
+{% endwith %}
+
+
+{% if trigger %}
+
+{% endif %}

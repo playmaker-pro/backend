@@ -1,0 +1,29 @@
+{# Loading proper modals #}
+
+{# basic modals if not auth ask to register #}
+
+{% if load_all %}
+    {% include 'profiles/modals/_new_account_role_modal.html' with trigger=False %}
+    {% include 'profiles/modals/_verification_modal.html' with trigger=False %}
+    {% include 'profiles/modals/_inquiry_modal.html' with trigger=False %}
+    {% include 'profiles/modals/_register_modal.html' with trigger=False %}
+{% else %}
+    {% if user.is_authenticated %}
+
+        {# If user has no role, which might occure when somehow it is not assign durign registration #}
+        {% if user.is_roleless %}
+            {% include 'profiles/modals/_new_account_role_modal.html' %}
+        {% elif user.is_missing_verification_data %}
+
+            {% include 'profiles/modals/_verification_modal.html' %}
+        {% else %}
+
+            {% include 'profiles/modals/_inquiry_modal.html' %}
+        {% endif %}
+
+    {% else %}
+        {% include 'profiles/modals/_register_modal.html' %}
+
+    {% endif %}
+{% endif %}
+

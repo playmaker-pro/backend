@@ -1,0 +1,38 @@
+{% extends "profiles/base.html" %}
+
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load thumbnail %}
+
+{% block title %}{{ block.super }} {% trans 'Moje zapytania' %} {% endblock %}
+
+
+
+{% block header %}
+    {% with menuitems_template="profiles/partials/_nav_player.html" %}
+        {{ block.super }}
+    {% endwith %}
+{% endblock %}
+
+
+
+<!-- Benefits of the Django application -->
+{% block content %}
+<section id="profile-games" class="profile">
+
+<div class="container" data-aos="fade-up"> 
+    <div class='row justify-content-center'>
+        <div class='col-md-12'>
+            {% include 'profiles/partials/_game_table.html' with games=page_obj %}       
+        </div>   
+        <div class='col-md-12'>
+            {% include 'profiles/partials/_pagination.html' %}
+        </div>
+    </div> <!-- 'row' -->
+</div>
+
+</section>
+{% endblock content %}
+
+

@@ -1,0 +1,27 @@
+{% load i18n %}
+
+
+{% with text_ask=_('Zapytaj o testy') text_invite=_('Zaproś na testy') icon='kick' %}
+
+    {% if user.is_coach and show_user.is_player %} 
+        <a href="#" class="card-link btn-pm btn-pm-sm" onclick="inquiry('{{ show_user.profile.slug }}')">
+            <i class="icofont-{{icon}}"></i> {% if pending_request %} Wysłano  {% else %} {{ text_invite }} {% endif %} 
+        </a>
+
+
+    {% elif user.is_player and show_user.is_coach %} 
+        <a href="#" class="card-link btn-pm btn-pm-sm" onclick="inquiry('{{ show_user.profile.slug }}')">
+            <i class="icofont-{{icon}}"></i> {% if pending_request %} Wysłano  {% else %} {{ text_ask }} {% endif %} 
+        </a>
+    {% else %}
+        {# No such a buttons for other roles #}
+    {% endif %}
+            <button  id="inquiry"
+                
+               href="#" 
+               class="card-link btn-pm btn-pm-sm" 
+               data-toggle="modal" 
+               data-target="#inquiryModal">
+               <i class="icofont-{{icon}}"></i> {% if pending_request %} Wysłano  {% else %} {{ text_ask }} {% endif %} 
+            </button>
+{% endwith %}

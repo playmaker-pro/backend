@@ -2,39 +2,49 @@
 
 from django.contrib import admin
 
-from .models import StandardProfile, PlayerProfile, RoleChangeRequest, CoachProfile, GuestProfile, ClubProfile
+from . import models
+
+
+@admin.register(models.ProfileVisitHistory)
+class ProfileVisitHistoryAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.PlayerMetrics)
+class PlayerMetricsAdmin(admin.ModelAdmin):
+    pass
 
 
 class ProfileAdminBase(admin.ModelAdmin):
     pass
 
 
-@admin.register(StandardProfile)
+@admin.register(models.StandardProfile)
 class StandardProfileAdmin(ProfileAdminBase):
     pass
 
 
-@admin.register(GuestProfile)
+@admin.register(models.GuestProfile)
 class GuestProfileAdmin(ProfileAdminBase):
     pass
 
 
-@admin.register(ClubProfile)
+@admin.register(models.ClubProfile)
 class ClubProfileAdmin(ProfileAdminBase):
     pass
 
 
-@admin.register(PlayerProfile)
+@admin.register(models.PlayerProfile)
 class PlayerProfileAdmin(ProfileAdminBase):
     list_display = ('pk', 'user', 'weight')
 
 
-@admin.register(CoachProfile)
+@admin.register(models.CoachProfile)
 class CoachProfileAdmin(ProfileAdminBase):
     pass
 
 
-@admin.register(RoleChangeRequest)
+@admin.register(models.RoleChangeRequest)
 class RoleChangeRequestAdmin(admin.ModelAdmin):
     readonly_fields = ('current', 'approver')
     list_display = ('pk', 'user', 'approved', 'current', 'new', 'request_date', 'accepted_date')

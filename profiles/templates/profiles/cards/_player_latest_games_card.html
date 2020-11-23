@@ -1,0 +1,14 @@
+{% load i18n %}
+
+<div class="card">
+    <div class="card-body">
+        <h2 class="card-title">{% trans "Ostanie mecze"%}</h2>
+        <h6 class="card-subtitle mb-2 text-muted"></h6>
+        <div class="card-text table-responsive-sm">
+            {% include 'profiles/partials/_game_table.html' with short=True games=last_games user=show_user %}
+        </div>  <!-- end of card-text-->
+        <div >
+            <a class="btn-pm btn-pm-sm" href="{% url 'profiles:player_games' %}" alt='games'>zobacz więcej</a>
+        </div>
+    </div>
+</div>

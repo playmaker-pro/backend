@@ -1,42 +1,21 @@
+{% load i18n %}
 <div class="card">
 <div class="card-body">
-    <h2 class="card-title">Podstawowe informacje</h2>
+    <h2 class="card-title">{% trans 'Podstawowe informacje' %}</h2>
 
     <h6 class="card-subtitle mb-2 text-muted"></h6>
 
     <div class="card-text">
-
-    <ul class="list-group">
-        <li class="list-group-item text-left border-0">
-        <span class="pull-left text-muted"><strong>Obecny klub:</strong></span> {{ show_user.profile.club_raw }}
-        </li>
-        <li class="list-group-item text-left border-0">
-        <span class="pull-left text-muted"><strong>Poziom rozgrywkowy:</strong></span> {{ show_user.profile.league_raw }}
-        </li>
-        {% if show_user.group %}
-        <li class="list-group-item text-left border-0">
-        <span class="pull-left text-muted"><strong>Grupa:</strong></span> {{ show_user.profile.group }}
-        </li>
-        {% endif %}
-        {% if show_user.voivodeship_raw %}
-        <li class="list-group-item text-left border-0">
-        <span class="pull-left text-muted"><strong>Wojewódzctwo:</strong></span> {{ show_user.profile.voivodeship_raw }}
-        </li>
-        {% endif %}
-        <li class="list-group-item text-left border-0">
-        <span class="pull-left text-muted"><strong>Wzrost/Waga:</strong></span> {{ show_user.profile.height }}cm / {{ show_user.profile.weight }}kg
-        </li>
-        <li class="list-group-item text-left border-0">
-        <span class="pull-left text-muted"><strong>Status transferowy:</strong></span> {{ show_user.profile.transfer_status }}
-        </li>
-        <li class="list-group-item text-left border-0">
-        <span class="pull-left text-muted"><strong>Karta:</strong></span> {{ show_user.profile.card}}
-        </li>
-        <li class="list-group-item text-left border-0">
-        <span class="pull-left text-muted"><strong>Piłkarski cel:</strong></span> {{ show_user.profile.soccer_goal}}
-        </li>
-    </ul>
-
+    {% with profile=show_user.profile template='profiles/partials/_two_table.html' %}
+         {% include template with key=_('Obecna drużyna')        value=profile.team|default:'-'           %}
+         {% include template with key=_('Poziom rozgrywkowy') value=profile.league|default:'-'         %}
+         {% include template with key=_('Grupa')              value=profile.group|default:'-'              %}
+         {% include template with key=_('Wojewódzctwo')       value=profile.voivodeship|default:'-'    %}
+         {% include template with key=_('Wzrost/Waga')        value=profile.height|default:'-' value_suffix='cm' separator='/' value2=profile.weight|default:'-' value2_suffix='kg'%}
+         {% include template with key=_('Status transferowy') value=profile.get_transfer_status_display|default:'-'  %}
+         {% include template with key=_('Karta')              value=profile.get_card_display|default:'-' %}
+         {% include template with key=_('Piłkarski cel')      value=profile.get_soccer_goal_display|default:'-'  %}
+    {% endwith %}
     </div>  <!-- end of card-text-->
 
 </div>

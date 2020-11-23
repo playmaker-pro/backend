@@ -1,0 +1,27 @@
+{% load i18n %}
+
+
+
+<div class="card">
+    <div class="card-body">
+        <h2 class="card-title">{% trans "FANTASY"%}</h2>
+        <h6 class="card-subtitle mb-2 text-muted"></h6>
+        <div class="card-text">
+
+   <div class='row'>
+
+                          <!-- Demo info-->
+                          <div class="row text-center mt-4">
+                            <div class="col-3 border-right">
+                              <div class="h4 font-weight-bold mb-0">{{ fantasy.score}}ptk.</div><span class="small text-gray">{{ fantasy.position }}</span>
+                            </div>
+                          </div>
+                          <!-- END -->
+                  </div>
+
+        </div>  <!-- end of card-text-->
+        <div >
+            <a class="btn-pm btn-pm-sm" href="{% url 'profiles:player_fantasy' %}" alt='games'>zobacz więcej</a>
+        </div>
+    </div>
+</div>
