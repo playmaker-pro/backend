@@ -7,11 +7,13 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
+from django.http.response import HttpResponse
 from stats import adapters
 from inquiries.models import InquiryRequest
-
+from django.urls import reverse
 from . import forms, models
 from .utils import get_current_season
+from django.http import JsonResponse
 
 
 def get_profile_form_model(user):
@@ -198,38 +200,36 @@ class ShowProfile(generic.TemplateView):
                 fantasy_summary = metrics.fantasy_summary
                 season_summary = metrics.season_summary
 
-            verification_form_errors = self.request.session.get('verification_form_errors')
-
-            if verification_form_errors is not None:
-                self.request.session['verification_form_errors'] = None
-                verification_form_errors = convert_form_names(verification_form_errors)
-                kwargs["verification_form_errors"] = verification_form_errors
             kwargs["last_games"] = games_summary
             kwargs["fantasy"] = fantasy_summary
             kwargs["season_stat"] = season_summary
 
             season_stat = kwargs["season_stat"]
             # kwargs["fantasy_more"] = adapters.PlayersGameficationAdapter().get(filters={'player_id': _id, 'season': '2020/2021', 'position': 'pomocnik'})
-            kwargs['season_circle_stats'] = [
-                {
-                    'title': _('Pierwszy skład'),
-                    'bs4_css': 'success',
-                    'value': math.ceil(season_stat['first_percent']),
-                    'shift': math.ceil(season_stat['from_bench_percent'] + season_stat['bench_percent'])
-                },
-                {
-                    'title': _('Z ławki'),
-                    'bs4_css': 'danger',
-                    'value': math.floor(season_stat['from_bench_percent']),
-                    'shift': math.floor(season_stat['bench_percent'])
-                },
-                {
-                    'title': _('Ławka'),
-                    'bs4_css': 'secondary',
-                    'value': math.floor(season_stat['bench_percent']), 
-                    'shift': 0
-                }
-            ]
+            if season_stat is not None:
+                kwargs['season_circle_stats'] = [
+                    {
+                        'title': _('Pierwszy skład'),
+                        'bs4_css': 'success',
+                        'value': math.ceil(season_stat['first_percent']),
+                        'shift': math.ceil(season_stat['from_bench_percent'] + season_stat['bench_percent'])
+                    },
+                    {
+                        'title': _('Z ławki'),
+                        'bs4_css': 'danger',
+                        'value': math.floor(season_stat['from_bench_percent']),
+                        'shift': math.floor(season_stat['bench_percent'])
+                    },
+                    {
+                        'title': _('Ławka'),
+                        'bs4_css': 'secondary',
+                        'value': math.floor(season_stat['bench_percent']), 
+                        'shift': 0
+                    }
+                ]
+            else:
+                kwargs['season_circle_stats'] = []
+
         if not self._is_owner(user):
             if InquiryRequest.objects.filter(
                     sender=self.request.user, recipient=user).exclude(
@@ -275,24 +275,6 @@ class ShowProfile(generic.TemplateView):
         return user
 
 
-class AccountVerification(View):
-
-    http_method_names = ['post']
-
-    def post(self, request, *args, **kwargs):
-        user = self.request.user
-        profile = user.profile
-        verification_form = forms.VerificationForm(request.POST, instance=profile)  # @todo how to add Current user role as a TextField.
-        if verification_form.is_valid():
-            verification_form.save()
-            user.unverify()
-            user.save()
-            messages.success(request, _("Przyjęto zgłoszenie werifikacje konta."))
-        else:
-            messages.success(request, _("Błędnie wprowadzone dane."))
-            request.session['verification_form_errors'] = verification_form.errors
-            redirect('profiles:show_self')
-        return redirect("profiles:show_self")
 
 
 class RequestRoleChange(LoginRequiredMixin, View):
@@ -317,6 +299,37 @@ class RequestRoleChange(LoginRequiredMixin, View):
         qs = models.RoleChangeRequest.objects.filter(user=user, approved=False)
         for q in qs:
             q.delete()
+
+
+class EditAccountSettings(LoginRequiredMixin, generic.TemplateView):
+    template_name = "profiles/edit_account_settings.html"
+    http_method_names = ["get", "post"]
+
+    def get(self, request, *args, **kwargs):
+        user = self.request.user
+        if "user_form" not in kwargs:
+            kwargs["user_form"] = forms.UserForm(instance=user)
+
+        if "role_form" not in kwargs:
+            kwargs["role_form"] = forms.ChangeRoleForm()
+
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        user = self.request.user
+
+        user_form = forms.UserForm(
+            request.POST,
+            request.FILES,
+            instance=user)
+
+        if not (user_form.is_valid()):
+            messages.error(request, _("Wystąpiły błąd podczas wysyłania formularza"))
+            return super().get(request, user_form=user_form, role_form=forms.ChangeRoleForm())
+
+        user_form.save()
+        messages.success(request, "Profile details saved!")
+        return redirect("profiles:show_self")
 
 
 class EditProfile(LoginRequiredMixin, generic.TemplateView):
@@ -371,7 +384,6 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView):
         return redirect("profiles:show_self")
 
 
-from django.http import JsonResponse
 
 
 def get_modal_action(user):
@@ -419,6 +431,44 @@ def inquiry(request):
         response_data['open_modal'] = action_modal
         return JsonResponse(response_data)
 
+from django.views import View
+
+from crispy_forms.utils import render_crispy_form
+
+class AccountVerification(View):
+
+    http_method_names = ['post', 'get']
+
+    def get(self, request, *args, **kwargs):
+        form = forms.VerificationForm()
+        data = {}
+        data['form'] = render_crispy_form(form)
+        return JsonResponse(data)
+
+    def post(self, request, *args, **kwargs):
+        user = self.request.user
+        profile = user.profile
+        verification_form = forms.VerificationForm(request.POST, instance=profile)  # @todo how to add Current user role as a TextField.
+
+        data = {'success': False, 'url': None, 'form': None}
+
+        if verification_form.is_valid():
+            verification_form.save()
+            user.unverify()
+            user.save()
+            messages.success(request, _("Przyjęto zgłoszenie werifikacje konta."))
+
+            data['success'] = True
+            data['url'] = reverse("profiles:show_self")
+            return JsonResponse(data)
+            # return redirect(reverse("profiles:show_self"))
+        else:
+            # response_data = {} d
+            # messages.success(request, _("Błędnie wprowadzone dane."))
+            # request.session['verification_form_errors'] = verification_form.errors
+            data['form'] = render_crispy_form(verification_form)
+            return JsonResponse(data)
+            # redirect('profiles:show_self')
 
 def observe(request):
     response_data = {}

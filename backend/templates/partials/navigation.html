@@ -1,5 +1,7 @@
 {% load static %}
 {% load thumbnail %}
+{% load i18n %}
+
 
 <!-- ======= Header ======= -->
   <header id="header" class="fixed-top">
@@ -17,11 +19,13 @@
           <li class="drop-down"><a href=""><!--i class="icofont-user-alt-7"></i--><img class="navigation-avatar rounded-circle img-responsive"  src="{% thumbnail user.picture|default:'default_profile.png' 'nav_avatar' %}"> {{ request.user.display_name }}</a>
             <ul>
               <li><a href="{% url 'profiles:show_self' %}">Profil</a></li>
-              <li><a href="{% url 'profiles:edit_self' %}">Edytuj
+              <li><a href="{% url 'profiles:edit_self' %}">Edytuj CV
                 <div class="progress">
                   <div class="progress-bar bg-success" style="width:{{user.profile.percentage_completion}}%">{{user.profile.percentage_completion}}%</div>
                 </div>
                 </a></li>
+                
+              <li><a href="{% url 'profiles:edit_settings' %}">Ustawienia konta</a></li>
               <li><a href="{% url 'account_logout' %}">Wyloguj <i class="icofont-logout"></i></a></li>
               {% if request.user.is_superuser %}
               <li><a href="{% url 'wagtailadmin_home' %}">Admin</a></li>
@@ -29,7 +33,7 @@
             </ul>
           </li>
           {% else %}
-            <li><a href="{% url 'account_login' %}">Zaloguj</a></li>
+            <li><a href="{% url 'account_login' %}">{% trans 'Zaloguj' %}</a></li>
           {% endif %}
           
         </ul>

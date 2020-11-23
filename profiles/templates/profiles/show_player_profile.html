@@ -11,7 +11,7 @@
 
 
 {% block header %}
-    {% with menuitems_template="profiles/partials/_nav_player.html" %}
+    {% with menuitems_template="profiles/partials/navigation.html" %}
         {{ block.super }}
     {% endwith %}
 {% endblock %}
@@ -20,18 +20,17 @@
 {% block content %}  <!-- @todo frontend to be renovated to adjust template-->
 <section id="profile" class="profile">
   <div class="container profile-container" data-aos="fade-up">
-    <div class="container profile-head">
+    
       <div class="row">
-        <div class="col-sm-6">{% include 'profiles/cards/_player_account_card.html' %}</div>
-        <div class="col-sm-6">{% include 'profiles/cards/_player_primary_card.html' %}</div>
-        <div class="col-sm-6">{% include 'profiles/cards/_player_about_card.html' %}</div>
-        <div class="col-sm-6">{% include 'profiles/cards/_player_latest_games_card.html' %}</div>
-        <div class="col-sm-6">{% include 'profiles/cards/_player_season_card.html' %}</div>
-        <div class="col-sm-6">{% include 'profiles/cards/_player_fantasy_card.html' %}</div>
-        <div class="col-sm-6">{% include 'profiles/cards/_player_playmaker_score_card.html' %}</div>
-        <div class="col-sm-6">{% include 'profiles/cards/_player_video_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/player/account_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/player/primary_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/player/about_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/player/latest_games_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/player/season_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/player/fantasy_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/player/video_card.html' %}</div>
       </div>  <!-- end row -->
-    </div> <!-- end container -->
+
   </div>
 </section>
 {% endblock content %}

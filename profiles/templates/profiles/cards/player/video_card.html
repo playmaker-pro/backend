@@ -11,9 +11,10 @@
             {{ show_user.description }}
             {{ show_user.video_url }}
             {% if 1 == 1 %}
-                <span class='heading'>Jeszcze nie dodałeś filmu. Zrób to zwiększyć swoją widoczność </span>
-                <h1 style="font-size:65px;"class="icofont-video-alt"></h1>
-               
+                <span class="heading text-muted"> 
+                  {% trans 'Jeszcze nie dodałeś filmu. Zrób to zwiększyć swoją widoczność' %}
+                  <h1 style="font-size:75px;"><i class="icofont-video-alt"></i></h1>
+                </span>
             {% endif %}
                 <!--iframe height="480" width="500" src="https://www.youtube.com/embed/il_t1WVLNxk"> </iframe>  @todo dodac link do profilu....
 

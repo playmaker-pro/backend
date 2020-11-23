@@ -7,7 +7,10 @@
 
     <div class="card-text">
     {% with profile=show_user.profile template='profiles/partials/_two_table.html' %}
-         {% include template with key=_('Obecna drużyna')        value=profile.team|default:'-'           %}
+         {% include template with key=_('Noga')               value=profile.get_prefered_leg_display|default:'-'  %}
+         {% include template with key=_('Pozycja')            value=profile.get_position_raw_display|default:'-'  %}
+         {% include template with key=_('Wiek')               value=profile.age|default:'-'           %}   
+         {% include template with key=_('Obecna drużyna')     value=profile.team|default:'-'           %}
          {% include template with key=_('Poziom rozgrywkowy') value=profile.league|default:'-'         %}
          {% include template with key=_('Grupa')              value=profile.group|default:'-'              %}
          {% include template with key=_('Wojewódzctwo')       value=profile.voivodeship|default:'-'    %}

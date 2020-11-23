@@ -8,7 +8,10 @@
         <h2 class="card-title">{% trans 'Sezon' %} {{ season_stat.season_name }}</h2>
         <h6 class="card-subtitle mb-2 text-muted"></h6>
 
-        <div class="card-text">
+        <div class="card-text text-center">
+
+
+            {% if season_circle_stats %}
                   <div class='row'>
                     {% for circle_stat in season_circle_stats %}
                       <!-- progress bar holder 1-->
@@ -55,10 +58,19 @@
                           </div>
                           <!-- END -->
                   </div>
+            {% else %}
+                <span class="heading text-muted"> 
+                  {% trans 'Brak danych dla obecnego sezonu' %}  
+                  <h1 style="font-size:75px;"><i class="icofont-chart-pie"></i></h1>
+                </span>
+           
+              
+            {% endif %}
 
 
         </div>  <!-- end of card-text-->
-          <div class="mt-2">
+        
+          <div class="mt-4 text-center">
             <a class="btn-pm btn-pm-sm" href="{% url 'profiles:player_fantasy' %}" alt='games'>zobacz więcej</a>
         </div>
     </div>

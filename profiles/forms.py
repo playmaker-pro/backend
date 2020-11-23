@@ -142,16 +142,23 @@ class VerificationForm(forms.ModelForm):
         self.helper.form_tag = False
         self.helper.error_text_inline = True
         self.helper.labels_uppercase = True
+        
+        self.helper.label_class = 'col-md-4'
+        self.helper.field_class = 'col-md-6'
+
         self.fields['birth_date'].required = True
         self.fields['country'].required = True
+        self.fields['country'].initial = 'PL'
         self.fields['position_raw'].required = True
         self.fields['team_club_league_voivodeship_ver'].required = True
+        self.fields['team_club_league_voivodeship_ver'].label = 'Gdzie grasz'
+
         self.helper.layout = Fieldset(
             '',
-            Field("birth_date",),
-            Field("country",),
-            Field("position_raw",),
-            Field("team_club_league_voivodeship_ver",),
+            Field("birth_date", wrapper_class='row', placeholder='1998-09-24'),
+            Field("country", wrapper_class='row'),
+            Field("position_raw", wrapper_class='row'),
+            Field("team_club_league_voivodeship_ver", wrapper_class='row'),
         )
 
     class Meta:
@@ -169,7 +176,7 @@ class PlayerProfileForm(forms.ModelForm):
         self.helper.error_text_inline = True
         self.helper.labels_uppercase = True
         self.helper.wrapper_class = 'row'
-        self.helper.label_class = 'col-md-2'
+        self.helper.label_class = 'col-md-3 text-md-right text-muted upper'
         self.helper.field_class = 'col-md-6'
         self.helper.layout = Layout(
             Div(
@@ -207,6 +214,16 @@ class PlayerProfileForm(forms.ModelForm):
                     css_class='row',
                 ),
                 Div(
+                     Fieldset(
+                        _('<h2 class="form-section-title">Piłkarski status</h2>'),
+                        Div(
+                            Field('transfer_status', wrapper_class='row'),
+                            Field("card", wrapper_class='row'),
+                            Field("soccer_goal", wrapper_class='row'),
+                            Field("training_ready", wrapper_class='row'),
+                        ),
+                        css_class='col-md-6',
+                    ),
                     Fieldset(
                         _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
                         Div(
@@ -218,16 +235,7 @@ class PlayerProfileForm(forms.ModelForm):
                         ),
                         css_class='col-md-6',
                     ),
-                    Fieldset(
-                        _('<h2 class="form-section-title">Piłkarski status</h2>'),
-                        Div(
-                            Field('transfer_status', wrapper_class='row'),
-                            Field("card", wrapper_class='row'),
-                            Field("soccer_goal", wrapper_class='row'),
-                            Field("training_ready", wrapper_class='row'),
-                        ),
-                        css_class='col-md-6',
-                    ),  # fieldset
+                     # fieldset
                     css_class='row'
                 ),  # div
                 # css_class='card',

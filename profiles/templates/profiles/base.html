@@ -9,7 +9,7 @@
     <link href="{% static 'assets/css/profiles.css' %}" rel="stylesheet">
     <link href="{% static 'assets/css/modals.css' %}" rel="stylesheet">
     <!-- test out -->
-    <link rel="stylesheet/less" type="text/css" href="{% static 'assets/css/table1.less' %}" />
+    <!-- link rel="stylesheet/less" type="text/css" href="{% static 'assets/css/table1.less' %}" /-->
 {% endblock extra_css%}
 
 
@@ -55,13 +55,13 @@
 
 
 {% block extra_js %}
-
+  <script src="{% static 'assets/js/profiles.js' %}"></script>
   <script src="{% static 'assets/js/observers.js' %}"></script>
 
   <!--extra modals-->
   {% include 'profiles/modals/load_modals.html' with load_all=True %}
 
   <!--testout-->
-  <script src="//cdn.jsdelivr.net/npm/less" ></script>
+  <!--script src="//cdn.jsdelivr.net/npm/less" ></script-->
 
 {% endblock extra_js%}
