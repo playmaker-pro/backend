@@ -190,7 +190,7 @@ class User(AbstractUser, UserRoleMixin):
 
     state = FSMField(default=STATE_NEW, choices=STATES)
 
-    @transition(field=state,  source=[STATE_NEW, STATE_MIGRATED_NEW, STATE_MIGRATED_VERIFIED], target=STATE_AUTH_VERIFIED)
+    @transition(field=state,  source=[STATE_NEW, STATE_MIGRATED_NEW, STATE_MIGRATED_VERIFIED, STATE_ACCOUNT_WAITING_FOR_VERIFICATION_DATA], target=STATE_AUTH_VERIFIED)
     def verify_email(self, extra: dict = None):
         '''Account's email has been verified by user
 
