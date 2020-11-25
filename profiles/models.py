@@ -93,7 +93,7 @@ class ProfileVisitHistory(models.Model):
     def increment(self):
         self.counter += 1
         self.save()
-
+    
 
 class BaseProfile(models.Model):
     """Base profile model to held most common profile elements"""
@@ -386,14 +386,14 @@ class PlayerProfile(BaseProfile):
     )
 
     GOAL_CHOICES = (
-        (0, 'Ekstraklasa'),
-        (1, '1 liga'),
-        (2, '2 liga'),
-        (3, '3 liga'),
-        (4, '4 liga'),
-        (5, '5 liga'),
-        (6, 'A klasa'),
-        (7, 'B klasa')
+        (1, 'Poziom profesjonalny'),
+        (2, 'Poziom półprofesjonalny'),
+        (3, 'Poziom regionalny'),
+        # (3, '3 liga'),
+        # (4, '4 liga'),
+        # (5, '5 liga'),
+        # (6, 'A klasa'),
+        # (7, 'B klasa')
     )
 
     AGENT_STATUS_CHOICES = (
@@ -768,15 +768,23 @@ class CoachProfile(BaseProfile):
     COMPLETE_FIELDS = ['birth_date', 'phone']
     VERIFICATION_FIELDS = ['birth_date']
 
-    GOALS_CHOICES = (
+    GOAL_CHOICES = (
         ('Profesjonalna kariera', 'Profesjonalna kariera'),
-        ('Kariera regionalna', 'Kariera regionalna'),
-        ('Trenerka jako hobby', 'Trenerka jako hobby'),
+        ('Profesjonalna kariera', 'Kariera regionalna'),
+        ('Profesjonalna kariera', 'Trenerka jako hobby'),
     )
 
     phone = PhoneNumberField(blank=True, null=True)
     facebook_url = models.URLField(blank=True, null=True)
-    soccer_goal = models.CharField(_('soccer goal'), choices=make_choices(GOALS_CHOICES), max_length=60, null=True, blank=True)
+
+    # soccer_goal = models.IntegerField(
+    #     _('Piłkarski cel'),
+    #     choices=make_choices(GOAL_CHOICES),
+    #     # max_length=60,
+    #     null=True,
+    #     blank=True)
+    
+    soccer_goal = models.CharField(_('soccer goal'), choices=make_choices(GOAL_CHOICES), max_length=60, null=True, blank=True)
     birth_date = models.DateField(
         _('birth date'),
         blank=True,
@@ -830,6 +838,12 @@ class ParentProfile(BaseProfile):
 
 class ScoutProfile(BaseProfile):
     PROFILE_TYPE = 'scout'
+    GOALS_CHOICES = (
+        (1, 'Profesjonalna kariera'),
+        (2, 'Kariera regionalna'),
+        (3, 'Skauting jako hobby'),
+    )
+
 
     class Meta:
         verbose_name = "Scout Profile"

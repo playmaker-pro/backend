@@ -25,9 +25,14 @@ build
 *.log
 
 # Environment variables
-local.env
 _local.py
+local.env
+
 local.py
+*_wix_dump.csv
+
+misc
+_misc
 
 # Django stuff:
 *.mo

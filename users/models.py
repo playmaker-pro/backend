@@ -191,7 +191,7 @@ class User(AbstractUser, UserRoleMixin):
     state = FSMField(default=STATE_NEW, choices=STATES)
 
     @transition(field=state,  source=[STATE_NEW, STATE_MIGRATED_NEW, STATE_MIGRATED_VERIFIED, STATE_ACCOUNT_WAITING_FOR_VERIFICATION_DATA], target=STATE_AUTH_VERIFIED)
-    def verify_email(self, extra: dict = None):
+    def verify_email(self, silent: bool = False, extra: dict = None):
         '''Account's email has been verified by user
 
         :param: extra dict where additional information can be putted by entity changing state.
@@ -199,8 +199,10 @@ class User(AbstractUser, UserRoleMixin):
             extra['reason'] = 'User removed field1'
         '''
 
-    @transition(field=state, source=[STATE_AUTH_VERIFIED, STATE_MIGRATED_VERIFIED], target=STATE_ACCOUNT_VERIFIED)
-    def verify(self, extra: dict = None):
+    @transition(
+        field=state, source=[STATE_ACCOUNT_WAITING_FOR_VERIFICATION_DATA, STATE_ACCOUNT_WAITING_FOR_VERIFICATION, STATE_AUTH_VERIFIED, STATE_MIGRATED_VERIFIED], 
+        target=STATE_ACCOUNT_VERIFIED)
+    def verify(self, silent: bool = False, extra: dict = None):
         '''Account is verified by admins/site managers.
 
         :param: extra - dict where additional information can be putted by entity changing state.
@@ -209,7 +211,7 @@ class User(AbstractUser, UserRoleMixin):
         '''
 
     @transition(field=state, source='*', target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION_DATA)
-    def missing_verification_data(self, extra: dict = None):
+    def missing_verification_data(self, silent: bool = False,  extra: dict = None):
         '''In case when user remove or alter verification fields in his account transition to this state should occure.
         Which means that account has missing verification fields in profile.
 
@@ -219,7 +221,7 @@ class User(AbstractUser, UserRoleMixin):
         '''
 
     @transition(field=state, source='*', target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION)
-    def waiting_for_verification(self, extra: dict = None):
+    def waiting_for_verification(self, silent: bool = False,  extra: dict = None):
         '''Account is verified by admins/site managers.
 
         :param: extra  - dict where additional information can be putted by entity changing state.
@@ -233,7 +235,7 @@ class User(AbstractUser, UserRoleMixin):
         mail_user_waiting_for_verification(self, extra_body=reason)
 
     @transition(field=state, source='*', target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION)
-    def unverify(self, extra: dict = None):
+    def unverify(self, silent: bool = False, extra: dict = None):
         '''Account is verified by admins/site managers.
 
         :param: extra  - dict where additional information can be putted by entity changing state.

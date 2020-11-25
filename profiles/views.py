@@ -275,8 +275,6 @@ class ShowProfile(generic.TemplateView):
         return user
 
 
-
-
 class RequestRoleChange(LoginRequiredMixin, View):
     http_method_names = ['post']
 
@@ -353,18 +351,13 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView):
     def post(self, request, *args, **kwargs):
         user = self.request.user
 
-        user_form = forms.UserForm(
-            request.POST,
-            request.FILES,
-            instance=user)
-
         profile_form = get_profile_form_model(user)(
             request.POST,
             request.FILES,
             instance=user.profile
         )
 
-        if not (user_form.is_valid() and profile_form.is_valid()):
+        if not profile_form.is_valid():
             messages.error(
                 request,
                 _("Wystąpiły błąd podczas wysyłania formularza")
@@ -373,13 +366,11 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView):
             
             # user_form = forms.UserForm(instance=user)
             # profile_form = get_profile_form_model(user)(instance=user.profile)
-            return super().get(request, user_form=user_form, profile_form=profile_form, role_form=forms.ChangeRoleForm())
+            return super().get(request, profile_form=profile_form)
 
         # Both forms are fine. Time to save!
-        user_form.save()
-        profile = profile_form.save(commit=False)
-        profile.user = user
-        profile.save()
+        
+        profile = profile_form.save()
         messages.success(request, "Profile details saved!")
         return redirect("profiles:show_self")
 

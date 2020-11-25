@@ -61,6 +61,8 @@ INSTALLED_APPS = [
     'modelcluster',
     'taggit',
     'blog',
+    'flex',
+    'streams',
     'django_fsm',
     'phonenumber_field',
     'address',
