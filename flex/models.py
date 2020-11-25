@@ -3,15 +3,15 @@ from wagtail.core.models import Page
 from wagtail.admin.edit_handlers import FieldPanel, StreamFieldPanel
 from wagtail.core.fields import StreamField
 from streams import blocks
-
+from wagtail.core.blocks import RawHTMLBlock
 
 class FlexPage(Page):
     '''Flexibile page class'''
     template = 'flex/flex_page.html'
     # content = StreamField()
     subtitle = models.CharField(max_length=100, null=True, blank=True)
-    content = StreamField(
-        [
+    content = StreamField([ 
+            ('html', RawHTMLBlock()),
             ("title_and_text", blocks.TitleAndTextBlock()),
             ("full_richtext", blocks.RichtextBlock()),
             ("simple_richtext", blocks.SimpleRichtextBlock()),

@@ -92,6 +92,10 @@ class UserInquiry(models.Model):
         return f'{self.user}: {self.counter}/{self.plan.limit}'
 
 
+class RequestType(models.Model):
+    name = models.CharField(max_length=240)
+
+    
 class InquiryRequest(models.Model):
     STATUS_NEW = 'NEW'
     STATUS_SENT = 'SENT'
