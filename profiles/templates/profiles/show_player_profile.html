@@ -16,6 +16,10 @@
     {% endwith %}
 {% endblock %}
 
+{% comment %} {% block content_header %}
+  {{ block.super }}
+  {% include 'profiles/partials/_header_with_picture.html' with image=show_user.picture %}
+{% endblock content_header %} {% endcomment %}
 
 {% block content %}  <!-- @todo frontend to be renovated to adjust template-->
 <section id="profile" class="profile">

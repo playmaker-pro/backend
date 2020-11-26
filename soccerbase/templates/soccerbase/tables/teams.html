@@ -1,0 +1,27 @@
+{% load i18n %}
+
+  <table class="table w-auto">
+    <thead>
+        <tr> 
+            <!-- d-md-none  aggregatpr -->
+            <!-- mobile off d-none d-md-table-cell -->
+            <th scope="col" class="">{% trans 'Nazwa' %}</th>
+
+            <th scope="col" class="">{% trans '??' %}</th>
+                <th scope="col" class=""><i class="icofont-link-alt"></i></th>
+
+        </tr>
+    </thead>
+    <tbody>
+        {% for object in objects %}
+            <tr>
+                <td class="">{{ object.name|upper }}</td>
+                <td>{{ object.name|upper }} </td>
+                <td class="text-right"><a class="btn-pm btn-pm-sm" href="{{ object.get_permalink }}"><i class="icofont-link"></i></a></td>
+            </tr>
+        {% endfor %}
+
+    </tbody>
+</table>
+
+

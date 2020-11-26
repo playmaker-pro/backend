@@ -2,10 +2,73 @@ import pytest
 from django.test import TestCase
 from profiles import models
 from users.models import User
+from roles import definitions
+import logging
+
+logger = logging.getLogger('django.db.backends.schema')
+logger.propagate = False
 
 
-class ProfileMethodsTests(TestCase):
-    pass
+class ChangeRoleTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(email='username', declared_role=definitions.PLAYER_SHORT)
+        self.user.profile.VERIFICATION_FIELDS = ['bio']
+        self.user.profile.COMPLETE_FIELDS = ['team_raw']  # , 'club_raw']
+        self.user.profile.bio = 'Lubie Herbate'
+
+        self.user.profile.save()
+        self.user.verify(silent=True)
+        assert self.user.is_verified is True
+        print(f'----> setUp {self.user.state}')
+
+    def test__1__changing_role_to_coach_from_player_cause_user_sate_to_missing_verification_data(self):
+        assert self.user.is_verified is True
+        print(f'----> before  {self.user.state}')
+    
+        change = models.RoleChangeRequest.objects.create(user=self.user, new=definitions.COACH_SHORT)
+        
+        assert self.user.is_verified is True
+        
+        change.approved = True
+        change.save()
+        self.user.refresh_from_db()
+        print(f'----> after {self.user.state}')
+        assert self.user.is_verified is False
+        assert self.user.is_missing_verification_data is True
+
+
+    def test_changing_role_to_geust_from_player_cause_user_to_be_still_verified(self):
+        assert self.user.is_verified is True
+        change = models.RoleChangeRequest.objects.create(user=self.user, new=definitions.GUEST_SHORT)
+        assert self.user.is_verified is True
+        change.approved = True
+        change.save()
+        self.user.refresh_from_db()
+        print(f'---->  {self.user.state}')
+        assert self.user.is_verified is True
+        
+
+    def test_changing_role_to_geust_from_unverifed_player_cause_user_to_be_auto_verified(self):
+        assert self.user.is_verified is True
+        self.user.profile.bio = None
+        self.user.profile.save()
+        assert self.user.is_verified is False
+        assert self.user.is_missing_verification_data is True
+        print(f'---->  before {self.user.state}')
+        change = models.RoleChangeRequest.objects.create(user=self.user, new=definitions.GUEST_SHORT)
+
+        # statuses should remain
+        assert self.user.is_verified is False
+        assert self.user.is_missing_verification_data is True
+
+        change.approved = True
+        change.save()
+        self.user.refresh_from_db()
+
+        print(f'---->  after {self.user.state}')
+        assert self.user.is_verified is True
+        assert self.user.is_missing_verification_data is False
+        
 
 
 class TestProfilePercentageTests(TestCase):
@@ -68,15 +131,13 @@ class ProfileAssigmentDuringUserCreationTests(TestCase):
 
     def test_users_profile_assigment(self):
         model_map = {
-            'T': (models.CoachProfile, 'is_coach'),
-            'P': (models.PlayerProfile, 'is_player'),
-            'C': (models.ClubProfile, 'is_club'),
-            'G': (models.GuestProfile, 'is_guest'),
-            'SK': (models.ScoutProfile, 'is_scout'),
-            'R': (models.ParentProfile, 'is_parent'),
-            'M': (models.ManagerProfile, 'is_manager'),
-            'K': (models.FanProfile, 'is_fan'),
-            'S': (models.StandardProfile, 'is_standard'),
+            definitions.COACH_SHORT: (models.CoachProfile, 'is_coach'),
+            definitions.PLAYER_SHORT: (models.PlayerProfile, 'is_player'),
+            definitions.CLUB_SHORT: (models.ClubProfile, 'is_club'),
+            definitions.GUEST_SHORT: (models.GuestProfile, 'is_guest'),
+            definitions.SCOUT_SHORT: (models.ScoutProfile, 'is_scout'),
+            definitions.PARENT_SHORT: (models.ParentProfile, 'is_parent'),
+            definitions.MANAGER_SHORT: (models.ManagerProfile, 'is_manager'),
         }
 
         for role, (expected_model, is_method) in model_map.items():
@@ -130,7 +191,6 @@ class InitalPlayerProfileCreationTests(TestCase):
 class ProfileVerificationExistingProfileWithReadyForVerificationTests(TestCase):
     '''Freshly created user is modifing profile fields which are Verification fields.
     '''
-
     def setUp(self):
         self.user = User.objects.create(email='username', declared_role='T')
         self.user.profile.VERIFICATION_FIELDS = ['bio']
@@ -138,7 +198,6 @@ class ProfileVerificationExistingProfileWithReadyForVerificationTests(TestCase):
         self.user.profile.save()
 
     def test_user_and_profile_statuses_should_indicate_ready_for_verification(self):
-        
         assert self.user.is_waiting_for_verification is True
         print(f'--> user role {self.user.state}')
         # assert self.user.profile.is_ready_for_verification() is True

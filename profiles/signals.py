@@ -4,33 +4,14 @@ from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from notifications.mail import mail_role_change_request
-
+from roles import definitions
 from . import models
 
 
 logger = logging.getLogger(__name__)
 
 
-def set_and_create_user_profile(user):
-    model_map = {
-        'T': models.CoachProfile,
-        'P': models.PlayerProfile,
-        'C': models.ClubProfile,
-        'G': models.GuestProfile,
-        'SK': models.ScoutProfile,
-        'R': models.ParentProfile,
-        'M': models.ManagerProfile,
-        'K': models.FanProfile,
-        'S': models.StandardProfile,
-    }
-    profile_model = model_map.get(user.declared_role, models.StandardProfile)
-    profile, _ = profile_model.objects.get_or_create(user=user)
-
-    if user.declared_role == 'P':
-        models.PlayerMetrics.objects.get_or_create(player=profile)
-    # profile.save()
-
-
+# @todo this shoudl be moved to another place (inquires)
 from inquiries.models import UserInquiry
 from inquiries.models import InquiryPlan
 
@@ -55,13 +36,33 @@ def set_user_inquiry_plan(user):
         logger.info(f'User {user.id} plan created.')
 
 
+def set_and_create_user_profile(user):
+    model_map = {
+        definitions.PLAYER_SHORT: models.PlayerProfile,
+        definitions.COACH_SHORT: models.CoachProfile,
+        definitions.CLUB_SHORT: models.ClubProfile,
+        definitions.SCOUT_SHORT: models.ScoutProfile,
+        definitions.MANAGER_SHORT: models.ManagerProfile,
+        definitions.PARENT_SHORT: models.ParentProfile,
+        definitions.GUEST_SHORT: models.GuestProfile,
+    }
+    profile_model = model_map.get(user.role, models.GuestProfile)
+    profile, _ = profile_model.objects.get_or_create(user=user)
+
+    # custom things for player accout
+    # we need to attach metrics to PLayer's profile
+    if user.is_player:
+        models.PlayerMetrics.objects.get_or_create(player=profile)
+    # profile.save()
+
+
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_profile_handler(sender, instance, created, **kwargs):
     '''Signal reponsible for creating and attaching proper profile to user during creation process.
 
     Based on declared role append proper role (profile)
     '''
-    if not created:  # this place is point where we decide if we wont to update user's profile each time.
+    if not created:  # this place is point where we decide if we want to update user's profile each time.
         # mechanism to prevent double db queries would be to detect if role has been requested to update.
         msgprefix = 'Updated'
         set_and_create_user_profile(instance)
@@ -84,6 +85,7 @@ def change_profile_approved_handler(sender, instance, created, **kwargs):
     if instance.approved:
         user = instance.user
         user.declared_role = instance.new
+        user.unverify(silent=True)
         user.save()  # this should invoke create_profile_handler signal
         # set_and_create_user_profile(user)
         logger.info(f"User {user} profile changed to {instance.new} sucessfully due to: accepted RoleChangeRequest")

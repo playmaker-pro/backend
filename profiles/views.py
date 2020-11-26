@@ -14,24 +14,24 @@ from django.urls import reverse
 from . import forms, models
 from .utils import get_current_season
 from django.http import JsonResponse
+from roles import definitions
 
 
 def get_profile_form_model(user):
-    if user.declared_role == 'P':
+    if user.is_player:
         return forms.PlayerProfileForm
 
-    elif user.declared_role == 'T':
+    elif user.is_coach:
         return forms.CoachProfileForm
 
-    elif user.declared_role == 'G':
-        return forms.GuestProfileForm
+    # elif user.is_guest:
+    #     return forms.GuestProfileForm
 
-    elif user.declared_role == 'C':
+    elif user.is_club:
         return forms.ClubProfileForm
 
-    elif user.declared_role == 'S':
-        return forms.StandardProfileForm
-
+    elif user.is_scout:
+        return forms.ScoutProfileForm
     else:
         return forms.ProfileForm
 
@@ -45,6 +45,8 @@ def get_profile_model(user):
         return models.GuestProfile
     elif user.declared_role == 'C':
         return models.ClubProfile
+    elif user.declared_role == 'SK':
+        return models.ScoutProfile
     elif user.declared_rol == 'S':
         return models.StandardProfile
     else:
@@ -58,6 +60,8 @@ def get_profile_model_from_slug(slug):
         return models.CoachProfile
     elif slug.startswith('club'):
         return models.ClubProfile
+    elif slug.startswith('scout'):
+        return models.ScoutProfile
     elif slug.startswith('guest'):
         return models.GuestProfile
     elif slug.startswith('standard'):
@@ -336,14 +340,14 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView):
 
     def get(self, request, *args, **kwargs):
         user = self.request.user
-        if "user_form" not in kwargs:
+        if "user_form" not in kwargs:  # @todo do wywalenia
             kwargs["user_form"] = forms.UserForm(instance=user)
 
-        if "profile_form" not in kwargs:
+        if "profile_form" not in kwargs: 
             profile_form = get_profile_form_model(user)
             kwargs["profile_form"] = profile_form(instance=user.profile)
 
-        if "role_form" not in kwargs:
+        if "role_form" not in kwargs: # @todo do wywalenia
             kwargs["role_form"] = forms.ChangeRoleForm()
 
         return super().get(request, *args, **kwargs)

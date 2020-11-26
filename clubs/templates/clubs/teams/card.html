@@ -1,0 +1,15 @@
+{% load i18n %}
+{% load static %}
+{% load thumbnail %}
+
+<div class="card" style="width: 18rem;">
+
+  <img title="profile picture" class="avatar img-responsive" src="{% thumbnail team.picture|default:'default_team.png' 'profile_avatar_show' %}">
+
+  
+  <div class="card-body">
+    <h5 class="card-title">{{ team.name }}</h5>
+    <p class="card-text">{{ team.about }}.</p>
+    <a href="{{ team.get_permalink }}" class="btn btn-primary">{% trans 'odwiedź stronę' %}</a>
+  </div>
+</div>

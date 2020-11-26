@@ -33,16 +33,16 @@
 }
 
 
-.signup .signup-form, .login .login-form, .socialaccount_ballot {
+.signup .signup-form, .login .login-form, .socialaccount_ballot, .account-content {
   opacity:.98;
   background-color:#fff;
 }
 
 .socialaccount_ballot {
   list-style-type: none;
-  box-shadow: 0 0 30px rgba(214, 215, 216, 0.6);
+  /* box-shadow: 0 0 30px rgba(214, 215, 216, 0.6); */
   border-radius: 4px;
-  padding:10px 30px;
+  /* padding:10px 30px; */
 }
 
   .socialaccount_ballot ul {
@@ -198,32 +198,32 @@
         margin-bottom: 25px;
       }
 
-      .signup .signup-form input, .signup  .signup-form textarea {
+      .signup .signup-form input, .signup .signup-form textarea, .signup .signup-form select {
         box-shadow: none;
         font-size: 14px;
         border-radius: 4px;
       }
 
-      .login .login-form  input, .login .login-form  textarea {
+      .login .login-form  input, .login .login-form  textarea , .login .login-form select {
         box-shadow: none;
         font-size: 14px;
         border-radius: 4px;
       }
 
-      .login .login-form input:focus, .login .login-form  textarea:focus {
+      .login .login-form input:focus, .login .login-form  textarea:focus, .login .login-form select:focus  {
         border-color: #111111;
       }
 
-      .signup .signup-form input:focus, .signup .signup-form textarea:focus {
+      .signup .signup-form input:focus, .signup .signup-form textarea:focus, .signup .signup-form select:focus {
         border-color: #111111;
       }
 
-      .signup .signup-form input, .login .login-form input {
-        padding: 10px 15px;
+      .signup .signup-form input, .login .login-form input, .login .login-form select {
+        padding: 5px 15px;
       }
       
       .signup .signup-form textarea, .login .login-form textarea {
-        padding: 12px 15px;
+        padding: 12px 10px;
       }
       
       .signup .signup-form button[type="submit"], .login .login-form button[type="submit"]  {

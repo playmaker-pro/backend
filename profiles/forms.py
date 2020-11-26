@@ -85,6 +85,8 @@ class UserForm(forms.ModelForm):
 
 
 class ProfileForm(forms.ModelForm):
+    '''Basic profile account which covers basic setup off account
+    '''
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
@@ -95,12 +97,8 @@ class ProfileForm(forms.ModelForm):
         )
 
     class Meta:
-        model = models.StandardProfile
+        model = models.GuestProfile
         fields = ["bio"]
-
-
-class GuestProfileForm(ProfileForm):
-    pass
 
 
 phone_number_format = "+[0-9] [0-9]{3}-[0-9]{3}-[0-9]{3}"
@@ -112,23 +110,47 @@ class CoachProfileForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = Layout(
-            Fieldset(
-                'Podstawowe informacje',
-                Field("bio"),
-                Field("birth_date")
-            ),
-            Fieldset(
-                'Informacje dodatkowe',
-                Field("facebook_url"),
-                Field("soccer_goal"),
-                Field("phone")
-            ),
-            Submit("update", "Update"),
-        )
+            Div(
+                Div(
+                    Fieldset(
+                        _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
+                        Div(
+                            Field('birth_date', wrapper_class='row'),
+                            Field('league', wrapper_class='row', readonly=True),
+                            # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
+                            Field('voivodeship', wrapper_class='row', readonly=True),
+                            Field('team', wrapper_class='row', readonly=True),
+                            Field('country', wrapper_class='row'),
+                            Field("address", wrapper_class='row'),
+                            Field("about", wrapper_class='row'),
+
+                        ),
+                        css_class='col-md-6',
+                    ),
+
+                    css_class='row',
+                ),
+                Div(
+                    Fieldset(
+                        _('<h2 class="form-section-title">Piłkarski status</h2>'),
+                        Div(
+                            Field('phone', placeholder='+48 111 222 333', wrapper_class='row'),
+                            Field('facebook_url', wrapper_class='row'),
+                            Field("soccer_goal", wrapper_class='row'),
+                            Field("practice_distance", wrapper_class='row'),
+                        ),
+                        css_class='col-md-6',
+                    ),
+                    # fieldset
+                    css_class='row'
+                ),  # div
+                # css_class='card',
+            )  # div master div
+        )  # layo
 
     class Meta:
         model = models.CoachProfile
-        fields = ["bio", "birth_date", "facebook_url", "soccer_goal", "phone"]
+        fields = ["league", "voivodeship", "team", "country", "address", "about", "birth_date", "facebook_url", "soccer_goal", "phone", "practice_distance"]
 
 
 class ClubProfileForm(ProfileForm):
@@ -142,7 +164,7 @@ class VerificationForm(forms.ModelForm):
         self.helper.form_tag = False
         self.helper.error_text_inline = True
         self.helper.labels_uppercase = True
-        
+
         self.helper.label_class = 'col-md-4'
         self.helper.field_class = 'col-md-6'
 
@@ -167,7 +189,7 @@ class VerificationForm(forms.ModelForm):
         fields = models.PlayerProfile.VERIFICATION_FIELDS + ['position_raw']
 
 
-class PlayerProfileForm(forms.ModelForm):
+class BaseProfileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -178,6 +200,11 @@ class PlayerProfileForm(forms.ModelForm):
         self.helper.wrapper_class = 'row'
         self.helper.label_class = 'col-md-3 text-md-right text-muted upper'
         self.helper.field_class = 'col-md-6'
+
+
+class PlayerProfileForm(BaseProfileForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.helper.layout = Layout(
             Div(
                 Div(
@@ -190,8 +217,8 @@ class PlayerProfileForm(forms.ModelForm):
                             Field('voivodeship', wrapper_class='row', readonly=True),
                             Field('team', wrapper_class='row', readonly=True),
                             Field('country', wrapper_class='row'),
-                            Field("height", wrapper_class='row'),
-                            Field("weight", wrapper_class='row'),
+                            Field("height", wrapper_class='row', placeholder='130 - 210 cm'),
+                            Field("weight", wrapper_class='row', placeholder='40 - 140 kg'),
                             Field("address", wrapper_class='row'),
                             Field("about", wrapper_class='row'),
 
@@ -214,13 +241,22 @@ class PlayerProfileForm(forms.ModelForm):
                     css_class='row',
                 ),
                 Div(
-                     Fieldset(
+                    Fieldset(
                         _('<h2 class="form-section-title">Piłkarski status</h2>'),
                         Div(
                             Field('transfer_status', wrapper_class='row'),
                             Field("card", wrapper_class='row'),
                             Field("soccer_goal", wrapper_class='row'),
                             Field("training_ready", wrapper_class='row'),
+                        ),
+                        css_class='col-md-6',
+                    ),
+                    Fieldset(
+                        _('<h2 class="form-section-title">Współpraca</h2>'),
+                        Div(
+                            Field('agent_status', wrapper_class='row'),
+                            Field("agent_name", wrapper_class='row'),
+                            Field("agent_phone", wrapper_class='row'),
                         ),
                         css_class='col-md-6',
                     ),
@@ -235,7 +271,16 @@ class PlayerProfileForm(forms.ModelForm):
                         ),
                         css_class='col-md-6',
                     ),
-                     # fieldset
+                    Fieldset(
+                        _('<h2 class="form-section-title">Promo Video</h2>'),
+                        Div(
+                            Field('video_url', wrapper_class='row'),
+                            Field('video_title', wrapper_class='row'),
+                            Field("video_description", wrapper_class='row'),
+                        ),
+                        css_class='col-md-6',
+                    ),
+                    # fieldset
                     css_class='row'
                 ),  # div
                 # css_class='card',
@@ -246,3 +291,50 @@ class PlayerProfileForm(forms.ModelForm):
         model = models.PlayerProfile
         widgets = {'country': CountrySelectWidget()}
         fields = models.PlayerProfile.COMPLETE_FIELDS + models.PlayerProfile.OPTIONAL_FIELDS + ['country', 'birth_date']
+
+
+class ScoutProfileForm(BaseProfileForm):
+    '''
+    COMPLETE_FIELDS = ['soccer_goal']
+
+    OPTIONAL_FIELDS = [
+        'country',
+        'facebook_url',
+        'address',
+        'practice_distance',
+        'club',
+        'league',
+        'voivodeship',
+        ]
+    '''
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    Fieldset(
+                        _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
+                        Div(
+                            Field('soccer_goal', wrapper_class='row'),
+                            Field('facebook_url', wrapper_class='row'),
+                            Field('league', wrapper_class='row',),
+                            Field('club', wrapper_class='row'),  
+                            Field('voivodeship', wrapper_class='row',),
+                            Field('country', wrapper_class='row'),
+                            Field("address", wrapper_class='row'),
+                            Field("practice_distance", wrapper_class='row'),
+
+                        ),
+                        css_class='col-md-6',
+                    ),
+                    css_class='row',
+                ),
+
+                # css_class='card',
+            )  # div master div
+        )  # layout
+
+    class Meta:
+        model = models.ScoutProfile
+        widgets = {'country': CountrySelectWidget()}
+        fields = model.COMPLETE_FIELDS + model.OPTIONAL_FIELDS

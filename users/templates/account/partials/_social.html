@@ -1,0 +1,19 @@
+
+
+{% load account socialaccount %}
+{% load i18n %}
+
+{% get_providers as socialaccount_providers %}
+
+{% if socialaccount_providers %}
+   
+    <div class="socialaccount_ballot">
+    <p class='small'>{% trans 'Zaloguj się za pomocą konta społecznościowego:' %}</p>
+        <ul class="socialaccount_providers">
+            {% include "socialaccount/snippets/provider_list.html" with process="login" %}
+        </ul>
+    </div>
+
+    {% include "socialaccount/snippets/login_extra.html" %}
+
+{% endif %}

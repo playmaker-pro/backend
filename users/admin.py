@@ -2,15 +2,10 @@ from django.contrib import admin
 from django.utils.html import format_html
 from utils import linkify
 
-from .models import User, UserVerification
+from . import models
 
 
-@admin.register(UserVerification)
-class UserVerificationAdmin(admin.ModelAdmin):
-    list_display = ('user', 'approver', 'approved', 'accepted_date', 'request_date')
-
-
-@admin.register(User)
+@admin.register(models.User)
 class UserAdmin(admin.ModelAdmin):
     list_display = ('username', 'state', 'is_active', 'get_profile', 'get_profile_permalink', linkify('profile'), 'get_profile_percentage', 'declared_role')
     list_filter = ('state',)

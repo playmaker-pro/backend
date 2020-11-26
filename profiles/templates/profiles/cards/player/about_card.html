@@ -1,28 +1,32 @@
 {% load i18n %}
 
-<div class="card">
-    <div class="card-body">
-        <h2 class="card-title">{% trans 'O sobie' %}</h2>
 
-        <h6 class="card-subtitle mb-2 text-muted"></h6>
+{% with template='profiles/partials/_two_table.html'  profile=show_user.profile %}
 
-        <div class="card-text">
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title">{% trans 'O sobie' %}</h2>
+
+            <h6 class="card-subtitle mb-2 text-muted"></h6>
+
+            <div class="card-text">
 
 
-                                                {% include 'profiles/partials/_two_table.html' with key=_('Pozycja')                            value=show_user.profile.get_position_raw_display|default:'-'      %}
-    {% if  show_user.profile.position_raw_alt %}{% include 'profiles/partials/_two_table.html' with key=_('Pozycja alternatywna')               value=show_user.profile.get_position_raw_alt_display|default:'-'  %} {% endif %}
-                                                {% include 'profiles/partials/_two_table.html' with key=_('Formacja')                           value=show_user.profile.get_formation_display|default:'-'         %}
-    {% if  show_user.profile.formation_alt_ %}  {% include 'profiles/partials/_two_table.html' with key=_('Formacja alternatywna')              value=show_user.profile.get_formation_alt_display|default:'-'     %} {% endif %}
-                                                {% include 'profiles/partials/_two_table.html' with key=_('Adres')                              value=show_user.profile.address|default:'-'                        %}
-                                                {% include 'profiles/partials/_two_table.html' with key=_('Oczekiwana liczba treningów')        value=show_user.profile.get_training_ready_display|default:'-' value_suffix=_('/tydzień')         %}
-                                                {% include 'profiles/partials/_two_table.html' with key=_('Maksymalna odległość na treningi')   value=show_user.profile.practice_distance|default:'-' value_suffix=_('km')         %}
-    
+                                                    {% include template with key=_('Pozycja')                            value=profile.get_position_raw_display|default:'-'      %}
+                {% if  profile.position_raw_alt %}  {% include template with key=_('Pozycja alternatywna')               value=profile.get_position_raw_alt_display|default:'-'  %} {% endif %}
+                                                    {% include template with key=_('Formacja')                           value=profile.get_formation_display|default:'-'         %}
+                {% if  profile.formation_alt_ %}    {% include template with key=_('Formacja alternatywna')              value=profile.get_formation_alt_display|default:'-'     %} {% endif %}
+                                                    {% include template with key=_('Adres')                              value=profile.address|default:'-'                        %}
+                                                    {% include template with key=_('Oczekiwana liczba treningów')        value=profile.get_training_ready_display|default:'-' value_suffix=_('/tydzień')  %}
+                                                    {% include template with key=_('Maksymalna odległość na treningi')   value=profile.practice_distance|default:'-' value_suffix=_('km')         %}
+            </div>
+
+            <div class="card-text">
+            <h2 class="mt-3 card-title">{% trans 'Wspólpraca' %} </h2>
+                {% include template with key=_('Imie i nazwisko trenera')  value=profile.address|default:'-'         %}
+                {% include template with key=_('Adres ')                   value=profile.address|default:'-'         %}
+            </div>  <!-- end of card-text-->
+        </div>
     </div>
-    <div class="card-text">
-    <h2 class="mt-3 card-title">{% trans 'Wspólpraca' %} </h2>
-                                                {% include 'profiles/partials/_two_table.html' with key=_('Imie i nazwisko trenera')                   value=show_user.profile.address|default:'-'         %}
-                                                {% include 'profiles/partials/_two_table.html' with key=_('Adres ')                   value=show_user.profile.address|default:'-'         %}
 
-        </div>  <!-- end of card-text-->
-    </div>
-</div>
+{% endwith %}

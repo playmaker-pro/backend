@@ -22,8 +22,10 @@
           {% else %}
             <h4 class="d-inline card-subtitle mb-2 text-muted"><i class="icofont-boot-alt-2"></i> {{ show_user.get_declared_role_display|upper }}  </h4>
           {% endif %}
-            
 
+          {% if editable %}
+              <a href={{ user.profile.get_permalink }}><i class="icofont-link" onclick="copyToClipBoard()"></i> </a>
+          {% endif %}
 
           {% if editable %}
           <h4 class="small font-weight-bold">

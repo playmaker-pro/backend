@@ -3,5 +3,17 @@
 
 
 {% block content %}
-    <h1 class="first-section last-section"> hello clubs  {{team.name}} </h1> 
+<section>
+    <div class="container">
+        <h1> {{ team.name }} </h2>
+            {% if editable %}
+                {% url 'clubs:edit_team' slug=team.slug as button_url%}
+                {% include 'clubs/buttons/edit.html' with button_url=button_url %}
+            {% endif %}
+            
+        {% include 'clubs/teams/card.html' with team=team %}
+        Klub:
+        <a href="{{ team.club.get_permalink }}"> {{ team.club.name }} </a>
+    </div>
+</section>
 {% endblock content %}

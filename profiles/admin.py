@@ -19,8 +19,8 @@ class ProfileAdminBase(admin.ModelAdmin):
     pass
 
 
-@admin.register(models.StandardProfile)
-class StandardProfileAdmin(ProfileAdminBase):
+@admin.register(models.ScoutProfile)
+class ScoutProfileAdmin(ProfileAdminBase):
     pass
 
 

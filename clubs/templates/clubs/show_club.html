@@ -1,16 +1,38 @@
 {% extends 'clubs/base.html' %}
+{% load i18n %}
 
 
+{% block content_header %}
+    {{ block.super }}
+    {% include '_header_with_picture.html' with image=club.picture %}
+{% endblock content_header %}
 
 {% block content %}
-<h1 class="first-section last-section"> hello clubs  {{club.name}} </h1> 
 
 
-<div style="border:1px;">
-    {% for team in club.teams_set %}
-        <li> {{ team.name }} {% url 'clubs:team_show' %} </li>
-    {% empty %}
-        <h2> Club nie ma przypietych zespolow.</h2>
-    {% endfor %}
-</div>
+
+<section id="clubs" class="club">
+  <div class="container profile-container" data-aos="fade-up">
+
+      <div class="row">
+          <h1 class="card-title">{{ club.name|upper }}</h1>
+            {% if editable %}
+                {% include 'clubs/buttons/edit.html' %}
+            {% endif %}
+           
+                {% for team in teams%}
+                <div class="col-md-4">
+                    {% include 'clubs/teams/card.html' with team=team %}        
+                </div>
+                {% empty %}
+                <div class="col-md-12">
+                    <h2> {% trans 'Club nie ma przypietych zespolow.' %}</h2>  {{ editable }}
+                </div>
+                {% endfor %}
+          
+
+    </div>
+</section>
+
+
 {% endblock content %}

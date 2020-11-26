@@ -1,10 +1,35 @@
-{% extends "inner_standalone_page_base.html" %}
+{% extends "base_outer.html" %}
 
 
 {% load static %}
+
 
 
 {% block extra_css %}
     {{ block.super }}
     <link href="{% static 'assets/css/signup.css' %}" rel="stylesheet">
 {% endblock extra_css%}
+
+
+
+
+{% block content %}
+<main id="main">
+    <!-- ======= Login subpage ======= -->
+    <section id="{% block account_section_id %}login{% endblock %}" class="{% block account_section_class %}login{% endblock %} last-section">
+      <div class="container">
+        <div>
+            <div  class="section-title">
+                <h2 class="mb-3 text-center">{% block account_title %} {# title of page#} {% endblock %}</h2>
+                <p>{% block account_subtitle %}{% endblock %}</p>
+            </div>
+            <div class="row d-flex justify-content-center">
+                {% block account_content %}
+                    {#  body of account pages #}
+                {% endblock account_content %}
+            </div>
+        </div>
+      </div>
+    </section>
+</main>
+{% endblock content %}

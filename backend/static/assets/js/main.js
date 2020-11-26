@@ -223,6 +223,7 @@
       once: true
     });
   }
+  // $("#wrapper").is(':visible', function(){   aos_init();});
   $(window).on('load', function() {
     aos_init();
   });

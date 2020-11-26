@@ -28,6 +28,14 @@ function get_verification_form(slug)
             }
         })
   }
+
+  function copyToClipboard() {
+    var copyText = document.getElementById("copyToClipBoard");
+    copyText.select(); 
+    copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+    document.execCommand("copy");
+  }
+
   $(document).on('submit', '#verification-form', function(e){
 
     e.preventDefault(); // avoid to execute the actual submit of the form.

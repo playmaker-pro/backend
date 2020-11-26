@@ -8,30 +8,28 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
-from users.models import ACCOUNT_ROLES
-from django.utils import timezone
-from django.urls import reverse
-from .utils import unique_slugify
+from roles import definitions
 from stats.adapters import PlayerAdapter
+from .utils import make_choices
+from .utils import unique_slugify
 import utils as utilites
 
 
-PROFILE_TYPE_TO_DATA_MODELS = {
-    'player': 'Player',
-    'coach': 'Coach',
-    'team': 'Team',
-    'club': 'Club',
-}
+User = get_user_model()
+
+
+GLOBAL_TRAINING_READY_CHOCIES = (
+        (1, '1-2 treningi'),
+        (2, '3-4 treningi'),
+        (3, '5-6 treningi'))
 
 
 class VerificationCompletionFieldsWrongSetup(Exception):
     pass
-
-
-User = get_user_model()
 
 
 class RoleChangeRequest(models.Model):
@@ -57,10 +55,14 @@ class RoleChangeRequest(models.Model):
 
     accepted_date = models.DateTimeField(auto_now=True)
 
-    new = models.CharField(max_length=100, choices=ACCOUNT_ROLES)
+    new = models.CharField(max_length=100, choices=definitions.ACCOUNT_ROLES)
 
     class Meta:
         unique_together = ('user', 'request_date')
+
+    def approve(self):
+        self.approved = True
+        self.save()
 
     @property
     def current(self):
@@ -93,19 +95,19 @@ class ProfileVisitHistory(models.Model):
     def increment(self):
         self.counter += 1
         self.save()
-    
+
 
 class BaseProfile(models.Model):
     """Base profile model to held most common profile elements"""
     PROFILE_TYPE = None
 
+    AUTO_VERIFY = False  # flag to perform auto verification of User based on profile. If true - User.state will be switched to Verified
+
     VERIFICATION_FIELDS = []  # this is definition of profile fields which will be threaded as must-have params.
 
-    COMPLETE_FIELDS = VERIFICATION_FIELDS + []  # this is definition of profile fields which will be threaded as mandatory for full profile.
+    COMPLETE_FIELDS = []  # this is definition of profile fields which will be threaded as mandatory for full profile.
 
-    OPTIONAL_FIELDS = []
-
-    DATA_ITEM_MODEL = PROFILE_TYPE_TO_DATA_MODELS.get(PROFILE_TYPE)  # Player or League
+    OPTIONAL_FIELDS = []  # this is definition of profile fields which will be threaded optional
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -146,7 +148,6 @@ class BaseProfile(models.Model):
 
     def get_permalink(self):
         return reverse("profiles:show", kwargs={"slug": self.slug})
-
 
     @property
     def is_complete(self):
@@ -262,14 +263,6 @@ class BaseProfile(models.Model):
         verbose_name_plural = "Profiles"
 
 
-def make_choices(choices):
-    """
-    Returns tuples of localized choices based on the dict choices parameter.
-    Uses lazy translation for choices names.
-    """
-    return tuple([(k, _(v)) for k, v in choices])
-
-
 class TrainerContact(models.Model):
     # @todo to be connected
     first_name = models.CharField(_('Imię'), max_length=255)
@@ -281,7 +274,7 @@ class TrainerContact(models.Model):
 
 class PlayerProfile(BaseProfile):
     '''Player specific profile'''
-    PROFILE_TYPE = 'player'
+    PROFILE_TYPE = definitions.PROFILE_TYPE_PLAYER
 
     VERIFICATION_FIELDS = [
         'country',
@@ -324,6 +317,9 @@ class PlayerProfile(BaseProfile):
         'agent_name',
         'agent_phone',
         'agent_name',
+        'video_url',
+        'video_title',
+        'video_description',
     ]
 
     POSITION_CHOICES = [
@@ -344,33 +340,29 @@ class PlayerProfile(BaseProfile):
     FANTASY_ATTAKER = 'napastnik'
 
     FANTASY_MAPPING = {
-            1: FANTASY_GOAL_KEEPER,
-            2: FANTASY_DEFENDER,
-            3: FANTASY_DEFENDER,
-            4: FANTASY_DEFENDER,
-            5: FANTASY_HELPER,
-            6: FANTASY_HELPER,
-            7: FANTASY_HELPER,
-            8: FANTASY_HELPER,
-            9: FANTASY_ATTAKER,
-    }
+        1: FANTASY_GOAL_KEEPER,
+        2: FANTASY_DEFENDER,
+        3: FANTASY_DEFENDER,
+        4: FANTASY_DEFENDER,
+        5: FANTASY_HELPER,
+        6: FANTASY_HELPER,
+        7: FANTASY_HELPER,
+        8: FANTASY_HELPER,
+        9: FANTASY_ATTAKER,}
 
     LEG_CHOICES = (
         (1, 'Lewa'),
-        (2, 'Prawa')
-    )
+        (2, 'Prawa'),)
 
     TRANSFER_STATUS_CHOICES = (
         (1, 'Szukam klubu'),
         (2, 'Rozważę wszelkie oferty'),
-        (3, 'Nie szukam klubu')
-    )
+        (3, 'Nie szukam klubu'))
 
     CARD_CHOICES = (
         (1, 'Mam kartę na ręku'),
         (2, 'Nie wiem czy mam kartę na ręku'),
-        (3, 'Nie mam karty na ręku')
-    )
+        (3, 'Nie mam karty na ręku'))
 
     FORMATION_CHOICES = (
         ('5-3-2', '5-3-2'),
@@ -382,31 +374,19 @@ class PlayerProfile(BaseProfile):
         ('4-1-4-1', '4-1-4-1'),
         ('4-3-2-1', '4-3-2-1'),
         ('3-5-2', '3-5-2'),
-        ('3-4-3', '3-4-3')
-    )
+        ('3-4-3', '3-4-3'))
 
     GOAL_CHOICES = (
         (1, 'Poziom profesjonalny'),
         (2, 'Poziom półprofesjonalny'),
-        (3, 'Poziom regionalny'),
-        # (3, '3 liga'),
-        # (4, '4 liga'),
-        # (5, '5 liga'),
-        # (6, 'A klasa'),
-        # (7, 'B klasa')
-    )
+        (3, 'Poziom regionalny'),)
 
     AGENT_STATUS_CHOICES = (
         (1, 'Mam agenta'),
         (2, 'Szukam agenta'),
-        (3, 'Nie szukam agenta')
-    )
+        (3, 'Nie szukam agenta'))
 
-    TRAINING_READY_CHOCIES = (
-        (1, '1-2 treningi'),
-        (2, '3-4 treningi'),
-        (3, '5-6 treningi')
-    )
+    TRAINING_READY_CHOCIES = GLOBAL_TRAINING_READY_CHOCIES
 
     team_club_league_voivodeship_ver = models.CharField(
         _('team_club_league_voivodeship_ver'),
@@ -617,6 +597,18 @@ class PlayerProfile(BaseProfile):
     agent_phone = PhoneNumberField(_('Numer telefonu do agenta / agencji'), blank=True, null=True)
     agent_name = models.BooleanField(_('Otwarty na propozycje zagraniczne'), blank=True, null=True)
 
+    video_url = models.URLField(
+        _('Youtube url'),
+        blank=True,
+        null=True)
+    video_title = models.CharField(
+        _('Tytuł nagrania'), max_length=235, blank=True, null=True)
+
+    video_description = models.TextField(
+        _('Temat i opis'),
+        null=True,
+        blank=True)
+
     @property
     def age(self):
         if self.birth_date:
@@ -632,10 +624,11 @@ class PlayerProfile(BaseProfile):
     def calculate_data_from_data_models(self):
         if self.attached:
             adpt = PlayerAdapter(self.data_mapper_id)
-            self.league = adpt.get_current_league()
-            self.voivodeship = adpt.get_current_voivodeship()
-            # self.club = adpt.get_current_club()  # not yet implemented. Maybe after 1.12
-            self.team = adpt.get_current_team()
+            if adpt.has_player:
+                self.league = adpt.get_current_league()
+                self.voivodeship = adpt.get_current_voivodeship()
+                # self.club = adpt.get_current_club()  # not yet implemented. Maybe after 1.12
+                self.team = adpt.get_current_team()
 
     def save(self, *args, **kwargs):
         ''''Nie jest wyświetlana na profilu.
@@ -754,9 +747,139 @@ class PlayerMetrics(models.Model):
 
 
 class ClubProfile(BaseProfile):
-    PROFILE_TYPE = 'club'
+    PROFILE_TYPE = definitions.PROFILE_TYPE_CLUB
 
-    phone = PhoneNumberField(blank=True, null=True)
+    VERIFICATION_FIELDS = [
+        'team_club_league_voivodeship_ver',
+    ]
+
+    phone = PhoneNumberField(
+        _('Telefon'),
+        blank=True,
+        null=True)
+
+    team_club_league_voivodeship_ver = models.CharField(
+        _('team_club_league_voivodeship_ver'),
+        max_length=355,
+        help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'),
+        blank=True,
+        null=True,)
+
+    club = models.CharField(
+        _('Klub'),
+        max_length=68,
+        help_text=_('Klub w którym obecnie reprezentuejsz'),
+        blank=True,
+        null=True,)
+
+    club_raw = models.CharField(
+        _('Deklarowany Klub'),
+        max_length=68,
+        help_text=_('Klub w którym deklarujesz że obecnie reprezentuejsz'),
+        blank=True,
+        null=True,)
+
+    team = models.CharField(
+        _('Drużyna'),
+        max_length=68,
+        help_text=_('Drużyna w której obecnie grasz'),
+        blank=True,
+        null=True)
+
+    team_raw = models.CharField(
+        _('Deklarowana Drużyna'),
+        max_length=68,
+        help_text=_('Drużyna w której deklarujesz że obecnie grasz'),
+        blank=True,
+        null=True)
+
+    league = models.CharField(
+        _('Rozgrywki'),
+        max_length=68,
+        help_text=_('Poziom rozgrywkowy'),
+        blank=True,
+        null=True)
+
+    league_raw = models.CharField(
+        _('Rozgrywki'),
+        max_length=68,
+        help_text=_('Poziom rozgrywkowy który deklarujesz że grasz.'),
+        blank=True,
+        null=True)
+
+    voivodeship = models.CharField(
+        _('Wojewódźtwo'),
+        help_text=_('Wojewódźtwo'),
+        max_length=68,
+        blank=True,
+        null=True)
+
+    voivodeship_raw = models.CharField(
+        _('Wojewódźtwo'),
+        help_text=_('Wojewódźtwo w którym grasz.'),
+        max_length=68,
+        blank=True,
+        null=True)
+
+    # club & coach specific attrs.
+    club_phone = PhoneNumberField(
+        _('Telefon'),
+        blank=True,
+        null=True)
+
+    club_email = models.EmailField(null=True, blank=True)
+
+    stadion_address = AddressField(
+        related_name='club_stadion_address',
+        help_text=_('Adres'),
+        blank=True,
+        null=True)
+    practice_stadion_address = AddressField(
+        related_name='club_practice_stadion_address',
+        help_text=_('Adres'),
+        blank=True,
+        null=True)
+
+    club_role = models.IntegerField(
+        null=True, blank=True,
+        help_text='Defines if admin approved change')
+
+# Prezes / Kierownik / Członek zarządu / Sztab szkoleniowy / Inne. Po kliknięciu inne użytkownik może wprowadzić ręcznie nazwę posady
+    travel_refunds = models.BooleanField(
+        default=False,
+        help_text='travel_refunds')
+
+    game_bonus = models.BooleanField(
+        default=False,
+        help_text='game_bonus')
+
+    scolarships = models.BooleanField(
+        default=False,
+        help_text='scolarships')
+
+    gloves_shoes_refunds = models.BooleanField(
+        default=False,
+        help_text='gloves_shoes_refunds')
+
+    traning_gear = models.BooleanField(
+        default=False,
+        help_text='traning_gear')
+
+    regular_gear = models.BooleanField(
+        default=False,
+        help_text='regular_gear')
+
+    secondary_trainer = models.BooleanField(
+        default=False,
+        help_text='secondary_trainer')
+
+    fizo = models.BooleanField(
+        default=False,
+        help_text='fizo')
+
+    diet_suplements = models.BooleanField(
+        default=False,
+        help_text='diet_suplements')
 
     class Meta:
         verbose_name = "Club Profile"
@@ -764,48 +887,191 @@ class ClubProfile(BaseProfile):
 
 
 class CoachProfile(BaseProfile):
-    PROFILE_TYPE = 'coach'
-    COMPLETE_FIELDS = ['birth_date', 'phone']
-    VERIFICATION_FIELDS = ['birth_date']
+    PROFILE_TYPE = definitions.PROFILE_TYPE_COACH
+    
+    COMPLETE_FIELDS = ['phone']
+    
+    VERIFICATION_FIELDS = [
+        'country',
+        'birth_date',
+        'team_club_league_voivodeship_ver',]
 
     GOAL_CHOICES = (
-        ('Profesjonalna kariera', 'Profesjonalna kariera'),
-        ('Profesjonalna kariera', 'Kariera regionalna'),
-        ('Profesjonalna kariera', 'Trenerka jako hobby'),
-    )
+        (1, 'Profesjonalna kariera'),
+        (2, 'Kariera regionalna'),
+        (3, 'Trenerka jako hobby'),)
+    # fields = ["league", "voivodeship", "team", "country", "address", "about", "birth_date", "facebook_url", "soccer_goal", "phone", "practice_distance"]
 
-    phone = PhoneNumberField(blank=True, null=True)
-    facebook_url = models.URLField(blank=True, null=True)
+    TRAINING_READY_CHOCIES = GLOBAL_TRAINING_READY_CHOCIES
 
-    # soccer_goal = models.IntegerField(
-    #     _('Piłkarski cel'),
-    #     choices=make_choices(GOAL_CHOICES),
-    #     # max_length=60,
-    #     null=True,
-    #     blank=True)
-    
-    soccer_goal = models.CharField(_('soccer goal'), choices=make_choices(GOAL_CHOICES), max_length=60, null=True, blank=True)
-    birth_date = models.DateField(
-        _('birth date'),
+    team_club_league_voivodeship_ver = models.CharField(
+        _('team_club_league_voivodeship_ver'),
+        max_length=355,
+        help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'),
+        blank=True,
+        null=True,)
+    club = models.CharField(
+        _('Klub'),
+        max_length=68,
+        help_text=_('Klub w którym obecnie reprezentuejsz'),
+        blank=True,
+        null=True,)
+    club_raw = models.CharField(
+        _('Deklarowany Klub'),
+        max_length=68,
+        help_text=_('Klub w którym deklarujesz że obecnie reprezentuejsz'),
+        blank=True,
+        null=True,)
+    team = models.CharField(
+        _('Drużyna'),
+        max_length=68,
+        help_text=_('Drużyna w której obecnie grasz'),
         blank=True,
         null=True)
+    team_raw = models.CharField(
+        _('Deklarowana Drużyna'),
+        max_length=68,
+        help_text=_('Drużyna w której deklarujesz że obecnie grasz'),
+        blank=True,
+        null=True)
+    league = models.CharField(
+        _('Rozgrywki'),
+        max_length=68,
+        help_text=_('Poziom rozgrywkowy'),
+        blank=True,
+        null=True)
+    league_raw = models.CharField(
+        _('Rozgrywki'),
+        max_length=68,
+        help_text=_('Poziom rozgrywkowy który deklarujesz że grasz.'),
+        blank=True,
+        null=True)
+    voivodeship = models.CharField(
+        _('Wojewódźtwo'),
+        help_text=_('Wojewódźtwo'),
+        max_length=68,
+        blank=True,
+        null=True)
+    voivodeship_raw = models.CharField(
+        _('Wojewódźtwo'),
+        help_text=_('Wojewódźtwo w którym grasz.'),
+        max_length=68,
+        blank=True,
+        null=True)
+    birth_date = models.DateField(
+        _('Data urodzenia'),
+        blank=True,
+        null=True)
+    soccer_goal = models.IntegerField(
+        _('Piłkarski cel'),
+        choices=make_choices(GOAL_CHOICES),
+        # max_length=60,
+        null=True,
+        blank=True)
+    phone = PhoneNumberField(
+        _('Telefon'),
+        blank=True,
+        null=True)
+    facebook_url = models.URLField(
+        _('Facebook'),
+        blank=True,
+        null=True)
+    country = CountryField(
+        _('Country'),
+        blank=True,
+        null=True,
+        blank_label=_('Wybierz kraj'),)
+    practice_distance = models.PositiveIntegerField(
+        _('Maksymalna odległość na trening'),
+        blank=True,
+        null=True,
+        help_text=_('Maksymalna odległośc na trening'),
+        validators=[MinValueValidator(10), MaxValueValidator(500)])
+    about = models.TextField(
+        _('O sobie'),
+        null=True,
+        blank=True)
+    training_ready = models.IntegerField(
+        _('Gotowość do treningu'),
+        choices=make_choices(TRAINING_READY_CHOCIES),
+        null=True,
+        blank=True)
+    address = AddressField(
+        help_text=_('Adres'),
+        blank=True,
+        null=True)
+    # club & coach specific attrs.
+    club_phone = PhoneNumberField(
+        _('Telefon'),
+        blank=True,
+        null=True)
+
+    club_email = models.EmailField(null=True, blank=True)
+
+    stadion_address = AddressField(
+        related_name='coach_stadion_address',
+        help_text=_('Adres'),
+        blank=True,
+        null=True)
+    practice_stadion_address = AddressField(
+        related_name='coach_practice_stadion_address',
+        help_text=_('Adres'),
+        blank=True,
+        null=True)
+
+    club_role = models.IntegerField(
+        null=True, blank=True,
+        help_text='Defines if admin approved change')
+
+# Prezes / Kierownik / Członek zarządu / Sztab szkoleniowy / Inne. Po kliknięciu inne użytkownik może wprowadzić ręcznie nazwę posady
+    travel_refunds = models.BooleanField(
+        default=False,
+        help_text='travel_refunds')
+
+    game_bonus = models.BooleanField(
+        default=False,
+        help_text='game_bonus')
+
+    scolarships = models.BooleanField(
+        default=False,
+        help_text='scolarships')
+
+    gloves_shoes_refunds = models.BooleanField(
+        default=False,
+        help_text='gloves_shoes_refunds')
+
+    traning_gear = models.BooleanField(
+        default=False,
+        help_text='traning_gear')
+
+    regular_gear = models.BooleanField(
+        default=False,
+        help_text='regular_gear')
+
+    secondary_trainer = models.BooleanField(
+        default=False,
+        help_text='secondary_trainer')
+
+    fizo = models.BooleanField(
+        default=False,
+        help_text='fizo')
+
+    diet_suplements = models.BooleanField(
+        default=False,
+        help_text='diet_suplements')
 
     class Meta:
         verbose_name = "Coach Profile"
         verbose_name_plural = "Coaches Profiles"
 
 
-class StandardProfile(BaseProfile):  # @todo to be removed
-    '''Regular base profile'''
-    PROFILE_TYPE = 'standard'
-
-    class Meta:
-        verbose_name = "Standard Profile"
-        verbose_name_plural = "Standard Profiles"
-
-
 class GuestProfile(BaseProfile):   # @todo to be removed
-    PROFILE_TYPE = 'guest'
+    PROFILE_TYPE = definitions.PROFILE_TYPE_GUEST
+    AUTO_VERIFY = True
+    facebook_url = models.URLField(
+        _('Facebook'),
+        blank=True,
+        null=True)
 
     class Meta:
         verbose_name = "Guest Profile"
@@ -813,23 +1079,25 @@ class GuestProfile(BaseProfile):   # @todo to be removed
 
 
 class ManagerProfile(BaseProfile):
-    PROFILE_TYPE = 'manager'
+    PROFILE_TYPE = definitions.PROFILE_TYPE_MANAGER
+    AUTO_VERIFY = True
+    facebook_url = models.URLField(
+        _('Facebook'),
+        blank=True,
+        null=True)
 
     class Meta:
         verbose_name = "Manager Profile"
         verbose_name_plural = "Managers Profiles"
 
 
-class FanProfile(BaseProfile):
-    PROFILE_TYPE = 'fan'
-
-    class Meta:
-        verbose_name = "Fan Profile"
-        verbose_name_plural = "Fans Profiles"
-
-
 class ParentProfile(BaseProfile):
-    PROFILE_TYPE = 'parent'
+    PROFILE_TYPE = definitions.PROFILE_TYPE_PARENT
+    AUTO_VERIFY = True
+    facebook_url = models.URLField(
+        _('Facebook'),
+        blank=True,
+        null=True)
 
     class Meta:
         verbose_name = "Parent Profile"
@@ -837,13 +1105,70 @@ class ParentProfile(BaseProfile):
 
 
 class ScoutProfile(BaseProfile):
-    PROFILE_TYPE = 'scout'
-    GOALS_CHOICES = (
+    PROFILE_TYPE = definitions.PROFILE_TYPE_SCOUT
+    AUTO_VERIFY = True
+    VERIFICATION_FIELDS = []
+
+    COMPLETE_FIELDS = ['soccer_goal']
+
+    OPTIONAL_FIELDS = [
+        'country',
+        'facebook_url',
+        'address',
+        'practice_distance',
+        'club',
+        'league',
+        'voivodeship',
+        ]
+
+    GOAL_CHOICES = (
         (1, 'Profesjonalna kariera'),
         (2, 'Kariera regionalna'),
-        (3, 'Skauting jako hobby'),
-    )
+        (3, 'Skauting jako hobby'))
 
+    soccer_goal = models.IntegerField(
+        _('Piłkarski cel'),
+        choices=make_choices(GOAL_CHOICES),
+        # max_length=60,
+        null=True,
+        blank=True)
+    country = CountryField(
+        _('Country'),
+        blank=True,
+        null=True,
+        blank_label=_('Wybierz kraj'),)
+    facebook_url = models.URLField(
+        _('Facebook'),
+        blank=True,
+        null=True)
+    address = AddressField(
+        help_text=_('Adres'),
+        blank=True,
+        null=True)
+    practice_distance = models.PositiveIntegerField(
+        _('Maksymalna odległość na trening'),
+        blank=True,
+        null=True,
+        help_text=_('Maksymalna odległośc na trening'),
+        validators=[MinValueValidator(10), MaxValueValidator(500)])
+    club = models.CharField(
+        _('Klub'),
+        max_length=68,
+        help_text=_('Klub w którym obecnie reprezentuejsz'),
+        blank=True,
+        null=True,)
+    league = models.CharField(
+        _('Rozgrywki'),
+        max_length=68,
+        help_text=_('Poziom rozgrywkowy'),
+        blank=True,
+        null=True)
+    voivodeship = models.CharField(
+        _('Wojewódźtwo'),
+        help_text=_('Wojewódźtwo'),
+        max_length=68,
+        blank=True,
+        null=True)
 
     class Meta:
         verbose_name = "Scout Profile"

@@ -1,0 +1,11 @@
+{% load thumbnail %}
+
+<div class="row">
+    <div class="col-md-12"> 
+        <div class="mb-3" style="height:150px;">
+            <div class="text-center" style="height:75px; background-color:#1b1b1b;">
+                <img style="background: #fff; border:3px solid #e03a3c;" title="profile picture" class="mt-3 rounded-circle img-circle img-responsive" src="{% thumbnail image|default:'default_profile.png' 'profile_avatar_show' %}">
+            </div>
+        <div class="text-center" style="position:relative; top:-35px;  z-index:-1;height:55px; background-color:#1b1b1b;transform: skewY(-1.8deg);"></div>
+    </div>
+</div> <!-- row -->

@@ -2,13 +2,13 @@ from django.utils.html import format_html
 
 from wagtail.contrib.modeladmin.options import ModelAdmin, ModelAdminGroup, modeladmin_register
 from django.urls import reverse
-from .models import StandardProfile, PlayerProfile, CoachProfile, CoachProfile, RoleChangeRequest
+from . import models
 
 
 class ProfileAdminBase(ModelAdmin):
     """Profile base admin."""
 
-    model = StandardProfile
+    model = models.GuestProfile
     menu_label = "Profiles"
     menu_icon = "placeholder"
     menu_order = 290
@@ -25,24 +25,23 @@ class ProfileAdminBase(ModelAdmin):
 
 
 class RegularProfileAdmin(ProfileAdminBase):
-    model = StandardProfile
-    menu_label = 'regulars'
+    menu_label = 'guests'
 
 
 class PlayerProfileAdmin(ProfileAdminBase):
-    model = PlayerProfile
+    model = models.PlayerProfile
     menu_label = 'players'
     menu_order = 100
 
 
 class CoachProfileAdmin(ProfileAdminBase):
-    model = CoachProfile
+    model = models.CoachProfile
     menu_label = 'coaches'
     menu_order = 200
 
 
 class RoleChangeAdmin(ModelAdmin): 
-    model = RoleChangeRequest
+    model = models.RoleChangeRequest
     menu_label = "Role Change Requests"
     menu_icon = "placeholder"
     menu_order = 600

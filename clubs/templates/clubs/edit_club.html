@@ -1,0 +1,39 @@
+{% extends "clubs/base.html" %}
+
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load thumbnail %}
+
+{% block title %}{{ block.super }} {% trans 'Edycja klubu' %} {% endblock %}
+
+<!-- Benefits of the Django application -->
+
+{% block content_header %}
+  {{ block.super }}
+  {% include '_header_with_picture.html' with image=club.picture %}
+{% endblock content_header %}
+
+
+{% block content %}
+<section id="profile" class="profile">
+  <div class="container" data-aos="fade-up">
+        <div class="row">
+          <div class="col-md-12">
+               <form class='profile-edit-form' enctype="multipart/form-data" method="post">
+                  {% crispy club_form %}
+                <button type="submit" name="update" value="Update" id="submit-id-update">{% trans 'Aktualizuj klubowe dane' %}</button>
+               </form>
+         </div> 
+        </div>
+      <div>         
+      </div>
+    </div>
+  </div>
+</div>
+
+</section>
+{% endblock content %}
+
+
+

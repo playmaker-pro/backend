@@ -1,5 +1,7 @@
 import re
+
 from django.template.defaultfilters import slugify
+from django.utils.translation import gettext_lazy as _
 
 
 def unique_slugify(instance, value, slug_field_name='slug', queryset=None,
@@ -70,6 +72,15 @@ def _slug_strip(value, separator='-'):
             re_sep = re.escape(separator)
         value = re.sub(r'^%s+|%s+$' % (re_sep, re_sep), '', value)
     return value
+
+
+def make_choices(choices):
+    """
+    Returns tuples of localized choices based on the dict choices parameter.
+    Uses lazy translation for choices names.
+    """
+    return tuple([(k, _(v)) for k, v in choices])
+
 
 def get_current_season():
     return '2020/2021'
