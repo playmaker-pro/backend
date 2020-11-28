@@ -11,6 +11,7 @@
 
 #profile .card { 
     margin-bottom: .8em;
+    box-shadow: 2px 5px 5px #e2e8f0;
 }
 
 #profile .card-footer { 
@@ -138,12 +139,13 @@ section.profile {
 
     #profile .account-card {
         border-top:none;
+
     }
     #profile {
         font-size:.9em;
     }
     #profile .card {
-        margin-bottom: 0px;
+        margin-bottom: 2px;
     }
     
     #profile .card img.avatar {

@@ -11,15 +11,16 @@
     <div class="container" data-aos="zoom-out" data-aos-delay="100">
       <div class="row">
         <div class="col-xl-6 ">
-          <h1>Znajdź i bądź znalezionym w świecie piłki nożnej! </h1>
-          <h1>Szukaj <span id="word" >piłkarzy</span><span class="main-color"></span></h1>
-          <a href="/signup/?role=P" class="btn-get-started scrollto btn-lg"><h2>ZAŁÓŻ DARMOWE KONTO</h2></a>
+          <h1 class="mb-5">Znajdź i bądź znalezionym w świecie piłki nożnej! </h1>
+          <h2>Szukaj <span id="word" >piłkarzy</span><span class="main-color"></span></h2>
+          <a href="/signup/" class="btn-get-started scrollto btn-lg"><h2>ZAŁÓŻ DARMOWE KONTO</h2></a>
         </div>
       </div>
     </div>
 
   </section><!-- End Hero -->
 
+<div class="text-center" style="position:relative; top:-50px;  z-index:666;height:85px; background-color:#fff;transform: skewY(-2.1deg);"></div>
 
     <!-- ======= Player Service Section ======= -->
     <section id="players" class="players">
@@ -30,98 +31,80 @@
         <div class="row">
           <div class="col-lg-3 col-md-6">
             <div class="player-box">
-              <i class="icofont-users-social"></i>
+              <i class="icofont-users"></i>
               <p>Zaprezentuj się trenerom, skautom oraz klubom. Złóż swoje piłkarskie CV, a my dołączymy do niego zweryfikowane statystyki</p>
+             <a href="{{example_player_cv}}" class="btn-owl" alt="clubs-base">Zobacz przykład</a>
             </div>
           </div>
 
           <div class="col-lg-3 col-md-6 mt-5 mt-md-0">
             <div class="player-box">
-              <i class="icofont-field"></i>
+              <i class="icofont-spinner-alt-3"></i>
               <p>Szukaj klubu. Szukaj testów. Szukaj szkółki. Brak ofert o Twoich wymaganiach? Pomożemy Ci w transferze w Polsce i za granicą. </p>
+               <a href="/tables/teams/" class="btn-owl" alt="clubs-base">Szukaj klubu</a>
             </div>
           </div>
 
           <div class="col-lg-3 col-md-6 mt-5 mt-lg-0">
             <div class="player-box">
-              <i class="icofont-live-support"></i>
-              
+              <i class="icofont-star"></i>
               <p>Obserwuj piłkarzy, trenerów oraz kluby. Otrzymuj powiadomienia o ich wynikach. Zapraszaj znajomych i rywalizuj z nimi w Fantasy dla niższych lig.</p>
+              <a href="/fantasy/" class="btn-owl" alt="clubs-base">Graj w fantasy</a>
             </div>
           </div>
 
           <div class="col-lg-3 col-md-6 mt-5 mt-lg-0">
             <div class="player-box">
-              <i class="icofont-users-alt-5"></i>
+              <i class="icofont-listine-dots"></i>
               <p>Korzystaj z produktów dodatkowych. Dietetyk, Trener motoryczny, Trener bramkarzy, Trener techniki, Trener mentalny. Raport skautingowy z Twojej gry.</p>
+                <a href="/products/" class="btn-owl" alt="clubs-base">Skorzystaj z produktów</a>
             </div>
-          </div>
           
         </div>
-
-        <a href="/signup/?role=P" class="btn-get-started scrollto btn-lg"><h2>Stwórz piłkarskie CV</h2></a>
-
+        <div class="text-center">
+        <a href="/signup/" class="btn-owl btn-lg"><h2>Dołącz za darmo</h2></a>
+        </div>
       </div>
     </section><!-- End Player Service Section -->
 
-    <!-- ======= Clients Section ======= -->
-    <section id="clients" class="clients">
-      <div class="container" data-aos="zoom-in">
-        <div class="owl-carousel clients-carousel">
-          <img src="{% static 'assets/img/clubs/club_1.png' %}" alt="club_1">   <!--@todo to z bazy wyciagac i alt dac jako name-->
-          <img src="{% static 'assets/img/clubs/club_2.png' %}" alt="club_2">   <!--@todo to z bazy wyciagac i alt dac jako name-->
-          <img src="{% static 'assets/img/clubs/club_3.png' %}" alt="club_3">   <!--@todo to z bazy wyciagac i alt dac jako name-->
-          <img src="{% static 'assets/img/clubs/club_4.png' %}" alt="club_4">   <!--@todo to z bazy wyciagac i alt dac jako name-->
-          <img src="{% static 'assets/img/clubs/club_5.png' %}" alt="club_5">   <!--@todo to z bazy wyciagac i alt dac jako name-->
-          <img src="{% static 'assets/img/clubs/club_6.png' %}" alt="club_6">   <!--@todo to z bazy wyciagac i alt dac jako name-->
-        </div>
-      </div>
-    </section><!-- End Clients Section -->
-
-
-    <!-- ======= Tabs Section ======= -->
-    <section id="tabs" class="tabs">
-      <div class="container" data-aos="fade-up">
-        
-        <div class="section-title">
-          <h2><span style="color:grey"> Klub | Szkółka piłkarska | Trener </span></h2> <h1>Szukaj piłkarzy i buduj swoją kadrę</h1>
-        </div>
-        <div class="row">
-          <div class="col-lg-6 order-2 order-lg-1 mt-3 mt-lg-0" data-aos="fade-up" data-aos-delay="100">
-            <h3></h3>
-            <p class="font-italic">
-          
-            </p>
-            <ul>
-              <li><i class="ri-check-double-line"></i>Chcesz wzmocnić lub poszerzyć swój skład? Szukasz talentów? Skorzystaj z darmowej bazy PlayMaker.Pro, filtruj według własnych upodobań i zapraszaj piłkarzy na testy. <a href="/signup/?role=P" class="btn-get-started scrollto btn-lg"><h4>Zobacz bazę piłkarzy</h4></a></li>
-              <li><i class="ri-check-double-line"></i>Brak zawodników spełniających Twoje wymagania? Zleć nam poszukiwania poza bazą. Przeprowadzimy dla Ciebie nabór do szkółki. Znajdziemy zawodników o konkretnych cechach niezależnie od poziomu rozgrywkowego. A dla klubów profesjonalnych monitorujemy region jako skauci. <a href="/signup/?role=P" class="btn-get-started scrollto btn-lg"><h4>Zobacz ofertę</h4></a></li>
-            </ul>
-            <p>
-              
-            </p>
-          </div>
-          <div class="col-lg-6 order-1 order-lg-2 text-center" data-aos="fade-up" data-aos-delay="200">
-            <img src="{% static 'assets/img/tabs-1.jpg' %}" alt="" class="img-fluid">
-          </div>
-        </div>
-      </div>
-    </section><!-- End Tabs Section -->
 
  <!-- ======= Pricing Section ======= -->
     <section id="pricing" class="pricing section-bg">
       <div class="container" data-aos="fade-up">
 
         <div class="section-title">
-          <h2>Skauting PlayMaker.Pro</h2>
+          <h2>Skauting Play<span class="main-color">Maker</span>.Pro</h2>
           <p>Sprawdź produkty skautingowe dedykowane zarządzającym klubami. Rozwiążemy Twoje kadrowe problemy, po szukamy talentów w określonym regionie, przeprowadzimy dla Ciebie nabór do szkółki piłkarskiej.</p>
         </div>
 
         <div class="row">
+
+          <div class="col-lg-4 col-md-6 mt-4 mt-md-0">
+            <div class="box" data-aos="fade-up" data-aos-delay="200">
+              <h3>Kluby półprofesjonalne</h3>
+              <h2>Dedykowane klubom od III ligi do B klasy</h2>
+              <p></p>
+              <hr>
+              <ul>
+                <li>Definiujemy szczegóły zlecenia</li>
+                <li>Filtrujemy wskazany region</li>
+                <li>Wykorzystujemy oprogramowanie informatyczne</li>
+                <li>Lista piłkarzy powstaje w godzinę</li>
+                <li>Kontaktujemy się z nimi</li>
+                <li>Rozliczenie od efektu: testów i transferu</li>
+                <li>Klub oszczędza czas i minimalizuje koszty</li>
+              </ul>
+              <div class="btn-wrap">
+                <a href="www.playmaker.pro/scouting/semi-pro" class="btn-buy">zobacz więcej</a>
+              </div>
+            </div>
+          </div>
           <div class="col-lg-4 col-md-6">
-            <div class="box" data-aos="fade-up" data-aos-delay="100">
+            <div class="box featured" data-aos="fade-up" data-aos-delay="100">
               <h3>Kluby profesjonalne</h3>
               <h2>Dedykowane klubom od Ekstraklasy do III ligi</h2>
-              <p>(Współpraca długoterminowa: minimum runda)</p>
+              <p></p>
+              <hr>
               <ul>
                 <li>Spisujemy wymagania obserwacji</li>
                 <li>Filtrujemy wskazany region</li>
@@ -132,37 +115,20 @@
                 <li>Obserwujemy na żywo</li>
                 <li>Raportujemy wyróżniających się piłkarzy </li>
               </ul>
-              <div hidden class="btn-wrap">
-                <a href="#" class="btn-buy">Buy Now</a>
+              <div class="btn-wrap">
+                <a href="/scouting/pro/" class="btn-buy">Zobacz więcej</a>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-4 col-md-6 mt-4 mt-md-0">
-            <div class="box featured" data-aos="fade-up" data-aos-delay="200">
-              <h3>Kluby półprofesjonalne</h3>
-              <h2>Dedykowane klubom od III ligi do B klasy</h2>
-              <p>(Współpraca krótkoterminowa: okienko transferowe)</p>
-              <ul>
-                <li>Definiujemy szczegóły zlecenia</li>
-                <li>Filtrujemy wskazany region</li>
-                <li>Wykorzystujemy oprogramowanie informatyczne</li>
-                <li>Lista piłkarzy powstaje w godzinę</li>
-                <li>Kontaktujemy się z nimi</li>
-                <li>Rozliczenie od efektu: testów i transferu</li>
-                <li>Klub oszczędza czas i minimalizuje koszty</li>
-              </ul>
-              <div hidden class="btn-wrap">
-                <a href="#" class="btn-buy">Buy Now</a>
-              </div>
-            </div>
-          </div>
+
 
           <div class="col-lg-4 col-md-6 mt-4 mt-lg-0">
             <div class="box" data-aos="fade-up" data-aos-delay="300">
               <h3>Szkółki piłkarskie</h3>
               <h2>Dedykowane dla szkółek i drużyn młodzieżowych</h2>
-              <p>(Współpraca krótkoterminowa: wsparcie przy naborach)</p>
+              <p></p>
+              <hr>
               <ul>
                 <li>Ustalamy wymagania oraz termin</li>
                 <li>Filtrujemy wskazany region</li>
@@ -172,8 +138,8 @@
                 <li>Klub oszczędza czas i minimalizuje koszty</li>
                 <li>Rozliczamy się od listy kontaktów lub testowanych piłkarzy</li>
               </ul>
-              <div hidden class="btn-wrap">
-                <a href="#" class="btn-buy">Buy Now</a>
+              <div class="btn-wrap">
+                <a href="www.playmaker.pro/scouting/semi-pro" class="btn-buy">zobacz więcej</a>
               </div>
             </div>
           </div>
@@ -183,12 +149,14 @@
       </div>
     </section><!-- End Pricing Section -->
 
-    <!-- ======= Tabs Section 2 ======= -->
+
+
+    <!-- ======= Tabs Section ======= -->
     <section id="tabs" class="tabs">
       <div class="container" data-aos="fade-up">
         
         <div class="section-title">
-          <h1><span style="color:grey"></span> </span></h1> <h2>Cele projektu PlayMaker.Pro/h2>
+          <h2><span style="color:grey"> Klub | Trener | Szkółka piłkarska </span></h2> <h1>Szukaj piłkarzy i buduj swoją kadrę</h1>
         </div>
         <div class="row">
           <div class="col-lg-6 order-2 order-lg-1 mt-3 mt-lg-0" data-aos="fade-up" data-aos-delay="100">
@@ -197,161 +165,54 @@
           
             </p>
             <ul>
-              <li>
-                <i class="ri-check-double-line"></i>Platforma piłkarsko-społecznościowa <p>Miejsce w sieci zrzeszające społeczność piłkarską ma na celu rozwój regionalnych lig. Kluby, trenerzy oraz piłkarze mogą wzajemnie się wyszukiwać za pomocą prostego filtrowania. Moduły obserwacji oraz wysyłania zaproszeń na testy pomagają w nawiązywaniu kontaktów i przeprowadzaniu transferów za pomocą kilku kliknięć.</p>
-              </li>
-              
-              <li>
-                <i class="ri-check-double-line"></i>Wsparcie transferowe<p>MPlayMaker pomaga w znajdowaniu klubu dostosowanego do potrzeb i umiejętności piłkarzy, a także ułatwia pracę prezesom oraz trenerom wyszukując piłkarzy na zlecenie w bazie oraz poza nią. PlayMaker wykorzystując zaawansowane oprogramowanie jest w stanie dotrzeć do 90% piłkarzy w Polsce. </p>
-              </li>
-              <li>
-                <i class="ri-check-double-line"></i>Monitoring utalentowanych piłkarzy<p>bserwujemy niższe ligi oraz rozwijamy nowoczesne technologie monitoringu, by mieć pod lupą wszystkich utalentowanych piłkarzy. Naszym równorzędnym celem jest odwrócenie proporcji w ilości przepłacanych zagranicznych piłkarzy do obiecujących Polaków na poziomie profesjonalnym. </p>
-              </li>
-              <li><i class="ri-check-double-line"></i>czytaj więcej....    załóż piłkarski profil</li>
+              <li><i class="ri-check-double-line"></i>Chcesz wzmocnić lub poszerzyć swój skład? Szukasz talentów? Skorzystaj z darmowej bazy PlayMaker.Pro, filtruj według własnych upodobań i zapraszaj piłkarzy na testy. 
+                      </li>
+                      <a href="/tables/players/" class="btn-owl mb-5">Zobacz bazę piłkarzy</a>
+              <li><i class="ri-check-double-line"></i>Brak zawodników spełniających Twoje wymagania? Zleć nam poszukiwania poza bazą. Przeprowadzimy dla Ciebie nabór do szkółki. Znajdziemy zawodników o konkretnych cechach niezależnie od poziomu rozgrywkowego. A dla klubów profesjonalnych monitorujemy region jako skauci. 
+                      </li>
+                      <a href="/products/" class="btn-owl scrollto">Zobacz ofertę</a>
             </ul>
             <p>
               
             </p>
           </div>
           <div class="col-lg-6 order-1 order-lg-2 text-center" data-aos="fade-up" data-aos-delay="200">
-           
-            <iframe height="480" width="500" src="https://www.youtube.com/embed/-uzTdKJEBIY" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <img src="{% static 'assets/img/screenshots/pm1.png' %}" alt="" class="img-fluid">
           </div>
         </div>
       </div>
-    </section><!-- End Tabs Section 2 -->
+    </section><!-- End Tabs Section -->
 
 
-    
-    <!-- ======= Counts Section ======= -->
-    <section id="counts" class="counts">
-      <div class="container" data-aos="fade-up">
+
+
+    <!-- ======= Clients Section ======= -->
+    <section id="clients" class="clients">
+      <div class="container" data-aos="zoom-in">
         <div class="section-title">
-          <h1><span style="color:grey"></span> </span></h1> <h2>Liczby i opinie PlayMakera</h2>
+          <h1><span style="color:grey"> </span> </span></h1> <h2> Zaufali nam</h2>
         </div>
-        <div class="row">
-
-          <div class="col-lg-3 col-md-6">
-            <div class="count-box">
-              <i class="icofont-simple-smile"></i>
-              <span data-toggle="counter-up">232</span>
-              <p>Liczba piłkarzy z pełnym CV</p>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-md-6 mt-5 mt-md-0">
-            <div class="count-box">
-              <i class="icofont-document-folder"></i>
-              <span data-toggle="counter-up">521</span>
-              <p>Liczba zarejestrowanych klubów i trenerów</p>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-md-6 mt-5 mt-lg-0">
-            <div class="count-box">
-              <i class="icofont-live-support"></i>
-              <span data-toggle="counter-up">1,463</span>
-              <p>Liczba wysłanych piłkarzy na testy</p>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-md-6 mt-5 mt-lg-0">
-            <div class="count-box">
-              <i class="icofont-users-alt-5"></i>
-              <span data-toggle="counter-up">15</span>
-              <p>Liczba przeprowadzonych naborów do szkółek</p>
-            </div>
-          </div>
-
+        <div class="owl-carousel main-clients-carousel mb-4">
+          <img src="{% static 'assets/img/clubs/club_none.png' %}" alt="club_none">
+          <img src="{% static 'assets/img/clubs/club_none.png' %}" alt="club_none">
+          <img src="{% static 'assets/img/clubs/club_4.png' %}" alt="club_4">   <!--@todo to z bazy wyciagac i alt dac jako name-->
+          <img src="{% static 'assets/img/clubs/club_4.png' %}" alt="club_4"> 
+          <img src="{% static 'assets/img/clubs/club_none.png' %}" alt="club_none">
+          <img src="{% static 'assets/img/clubs/club_none.png' %}" alt="club_none">
         </div>
-
+        <div class="owl-carousel clients-carousel">
+          <img src="{% static 'assets/img/clubs/club_1.png' %}" alt="club_1">   <!--@todo to z bazy wyciagac i alt dac jako name-->
+          <img src="{% static 'assets/img/clubs/club_2.png' %}" alt="club_2">   <!--@todo to z bazy wyciagac i alt dac jako name-->
+          <img src="{% static 'assets/img/clubs/club_3.png' %}" alt="club_3">   <!--@todo to z bazy wyciagac i alt dac jako name-->
+          <img src="{% static 'assets/img/clubs/club_5.png' %}" alt="club_5">   <!--@todo to z bazy wyciagac i alt dac jako name-->
+          <img src="{% static 'assets/img/clubs/club_6.png' %}" alt="club_6">   <!--@todo to z bazy wyciagac i alt dac jako name-->
+        </div>
       </div>
-    </section><!-- End Counts Section -->
-
-
-<!-- ======= Testimonials Section ======= -->
-    <section id="testimonials" class="testimonials">
-      <div class="container" data-aos="fade-up">
-        <div class="section-title">
-          <h1><span style="color:grey"></span> </span></h1> <h2>Opinie</h2>
-          <p></p>
-        </div>
-
-        <div class="owl-carousel testimonials-carousel">
-
-          <div class="testimonial-wrap">
-            <div class="testimonial-item">
-              <img src="{% static 'assets/img/testimonials/testimonials-1.jpg' %}" class="testimonial-img" alt="">
-              <h3>Saul Goodman</h3>
-              <h4>Ceo &amp; Founder</h4>
-              <p>
-                <i class="bx bxs-quote-alt-left quote-icon-left"></i>
-                Proin iaculis purus consequat sem cure digni ssim donec porttitora entum suscipit rhoncus. Accusantium quam, ultricies eget id, aliquam eget nibh et. Maecen aliquam, risus at semper.
-                <i class="bx bxs-quote-alt-right quote-icon-right"></i>
-              </p>
-            </div>
-          </div>
-
-          <div class="testimonial-wrap">
-            <div class="testimonial-item">
-              <img src="{% static 'assets/img/testimonials/testimonials-2.jpg' %}" class="testimonial-img" alt="">
-              <h3>Sara Wilsson</h3>
-              <h4>Designer</h4>
-              <p>
-                <i class="bx bxs-quote-alt-left quote-icon-left"></i>
-                Export tempor illum tamen malis malis eram quae irure esse labore quem cillum quid cillum eram malis quorum velit fore eram velit sunt aliqua noster fugiat irure amet legam anim culpa.
-                <i class="bx bxs-quote-alt-right quote-icon-right"></i>
-              </p>
-            </div>
-          </div>
-
-          <div class="testimonial-wrap">
-            <div class="testimonial-item">
-              <img src="{% static 'assets/img/testimonials/testimonials-3.jpg' %}" class="testimonial-img" alt="">
-              <h3>Jena Karlis</h3>
-              <h4>Store Owner</h4>
-              <p>
-                <i class="bx bxs-quote-alt-left quote-icon-left"></i>
-                Enim nisi quem export duis labore cillum quae magna enim sint quorum nulla quem veniam duis minim tempor labore quem eram duis noster aute amet eram fore quis sint minim.
-                <i class="bx bxs-quote-alt-right quote-icon-right"></i>
-              </p>
-            </div>
-          </div>
-
-          <div class="testimonial-wrap">
-            <div class="testimonial-item">
-              <img src="{% static 'assets/img/testimonials/testimonials-4.jpg' %}" class="testimonial-img" alt="">
-              <h3>Matt Brandon</h3>
-              <h4>Freelancer</h4>
-              <p>
-                <i class="bx bxs-quote-alt-left quote-icon-left"></i>
-                Fugiat enim eram quae cillum dolore dolor amet nulla culpa multos export minim fugiat minim velit minim dolor enim duis veniam ipsum anim magna sunt elit fore quem dolore labore illum veniam.
-                <i class="bx bxs-quote-alt-right quote-icon-right"></i>
-              </p>
-            </div>
-          </div>
-
-          <div class="testimonial-wrap">
-            <div class="testimonial-item">
-              <img src="{% static 'assets/img/testimonials/testimonials-5.jpg' %}" class="testimonial-img" alt="">
-              <h3>John Larson</h3>
-              <h4>Entrepreneur</h4>
-              <p>
-                <i class="bx bxs-quote-alt-left quote-icon-left"></i>
-                Quis quorum aliqua sint quem legam fore sunt eram irure aliqua veniam tempor noster veniam enim culpa labore duis sunt culpa nulla illum cillum fugiat esse veniam culpa fore nisi cillum quid.
-                <i class="bx bxs-quote-alt-right quote-icon-right"></i>
-              </p>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-    </section><!-- End Testimonials Section -->
+    </section><!-- End Clients Section -->
 
 
 
-    <!-- ======= About Section ======= -->
+<!-- ======= About Section ======= -->
     <section id="about" class="about section-bg">
       <div class="container" data-aos="fade-up">
 
@@ -369,23 +230,23 @@
             <div class="icon-boxes d-flex flex-column justify-content-center">
               <div class="row">
                 <div class="col-md-6 icon-box" data-aos="fade-up" data-aos-delay="100">
-                  <i class="bx bx-receipt"></i>
+                  <i class="icofont-search-user"></i>
                   <h4>Moduł obserwacji</h4>
                   <p>Dodawaj kluby, trenerów i piłkarzy i śledź ich rozwój. Otrzymuj regularne powiadomienia o ich rezultatach. Wszystko pod jednym przyciskiem. Nie musisz otwierać setek stron.</p>
                 </div>
                 <div class="col-md-6 icon-box" data-aos="fade-up" data-aos-delay="200">
-                  <i class="bx bx-cube-alt"></i>
+                  <i class="icofont-score-board"></i>
                   <h4>Moduł wyników</h4>
                   <p>rzeglądaj w przejrzysty i elegancki sposób rozgrywki niższych lig. Znajdziesz tam wyniki, tabele oraz terminarze rozgrywek seniorskich, juniorskich, a także kobiecych.</p>
                 </div>
                 <div class="col-md-6 icon-box" data-aos="fade-up" data-aos-delay="300">
-                  <i class="bx bx-images"></i>
-                  <h4>Produkty piłkarskie</h4>
+                  <i class="icofont-listine-dots"></i>
+                  <h4>Produkty PlayMaker</h4>
                   <p>Dostęp do zniżek ze sprzętem sportowym, konsultacji dietetycznych, trenerów przygotowania motorycznego, siłowego, piłkarskiego oraz mentalnego.</p>
                 </div>
                 <div class="col-md-6 icon-box" data-aos="fade-up" data-aos-delay="400">
                   <i class="bx bx-shield"></i>
-                  <h4>Skauting</h4>
+                  <h4>Zostań skautem</h4>
                   <p>Korzystaj z naszej aplikacji skautingowej dla własnych potrzeb lub zostań przy jej pomocy skautem PlayMaker.Pro.</p>
                 </div>
               </div>
@@ -396,13 +257,68 @@
       </div>
     </section><!-- End About Section -->
 
+
+
+
+    
+    <!-- ======= Counts Section ======= -->
+    <section id="counts" class="counts">
+      <div class="container" data-aos="fade-up">
+        <div class="section-title">
+          <h1><span style="color:grey"></span> </span></h1> <h2>Liczby PlayMakera</h2>
+        </div>
+        <div class="row">
+
+          <div class="col-lg-3 col-md-6">
+            <div class="count-box">
+              <i class="icofont-team"></i>
+              <span data-toggle="counter-up">232</span>
+              <p>Liczba piłkarzy z pełnym CV</p>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6 mt-5 mt-md-0">
+            <div class="count-box">
+              <i class="icofont-users"></i>
+              <span data-toggle="counter-up">521</span>
+              <p>Liczba zarejestrowanych klubów i trenerów</p>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6 mt-5 mt-lg-0">
+            <div class="count-box">
+              <i class="icofont-field"></i>
+              <span data-toggle="counter-up">1,463</span>
+              <p>Liczba wysłanych piłkarzy na testy</p>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6 mt-5 mt-lg-0">
+            <div class="count-box">
+              <i class="icofont-search-user"></i>
+              <span data-toggle="counter-up">15</span>
+              <p>Liczba przeprowadzonych naborów do szkółek</p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section><!-- End Counts Section -->
+
+
+
+
+
+    
+
     <!-- ======= Contact Section ======= -->
     <section id="contact" class="contact">
       <div class="container" data-aos="fade-up">
 
         <div class="section-title">
-          <h2>Contact</h2>
-          <p>Magnam dolores commodi suscipit. Necessitatibus eius consequatur ex aliquid fuga eum quidem. Sit sint consectetur velit. Quisquam quos quisquam cupiditate. Et nemo qui impedit suscipit alias ea.</p>
+          <h2>Kontakt</h2>
+          <p></p>
         </div>
 
         <div class="row" data-aos="fade-up" data-aos-delay="100">
@@ -413,21 +329,21 @@
               <div class="col-md-12">
                 <div class="info-box">
                   <i class="bx bx-map"></i>
-                  <h3>Our Address</h3>
-                  <p>A108 Adam Street, New York, NY 535022</p>
+                  <h3>Grupa z testami piłkarskimi na facebook</h3>
+                  <p><a href="https://www.facebook.com/groups/267711464603689/">Dołącz do grupy</a></p>
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="info-box mt-4">
                   <i class="bx bx-envelope"></i>
-                  <h3>Email Us</h3>
-                  <p>info@example.com<br>contact@example.com</p>
+                  <h3>Napisz do nas</h3>
+                  <p>info@playmaker.pro<br>contact@example.com</p>
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="info-box mt-4">
                   <i class="bx bx-phone-call"></i>
-                  <h3>Call Us</h3>
+                  <h3>Zadzwoń</h3>
                   <p>+1 5589 55488 55<br>+1 6678 254445 41</p>
                 </div>
               </div>
@@ -436,7 +352,8 @@
           </div>
 
           <div class="col-lg-6">
-            <form action="forms/contact.php" method="post" role="form" class="php-email-form">
+            <form action="/contact/" method="post" role="form" class="php-email-form">
+             {% csrf_token %}
               <div class="row">
                 <div class="col form-group">
                   <input type="text" name="name" class="form-control" id="name" placeholder="Your Name" data-rule="minlen:4" data-msg="Please enter at least 4 chars" />
@@ -460,7 +377,7 @@
                 <div class="error-message"></div>
                 <div class="sent-message">Your message has been sent. Thank you!</div>
               </div>
-              <div class="text-center"><button type="submit">Send Message</button></div>
+              <div class="text-center"><button type="submit">Wyślij zapytanie</button></div>
             </form>
           </div>
 
@@ -475,8 +392,7 @@
 <script>
   $(function () {
     count = 0;
-
-    wordsArray = ["piłkarzy", "testów", "talentów", "trenera"];
+    wordsArray = ["testów", "piłkarzy", "klubu", "talentów", "trenera"];
     setInterval(function () {
       count++;
       $("#word").fadeOut(400, function () {

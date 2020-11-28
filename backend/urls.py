@@ -26,7 +26,7 @@ urlpatterns = [
 
     path('admin/', include(wagtailadmin_urls)),
     path('documents/', include(wagtaildocs_urls)),
-
+    path('project/', TemplateView.as_view(template_name='project_goals.html'), name="home_goals"),
     path('search/', search_views.search, name='search'),
     path('tables/', include(soccerbase.urls), name='soccerbase'),
     path('clubs/', include(clubs.urls), name="clubs"),

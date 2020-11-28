@@ -3,6 +3,15 @@
 {% load static %}
 {% load thumbnail %}
 
+
+
+{% block content_header %}
+    {% include 'profiles/_header_title.html' with header_title=editable|yesno:"," %}
+    {{ block.super }}
+{% endblock %}
+
+
+
 {% block content %}  <!-- @todo frontend to be renovated to adjust template-->
 <section id="profile" class="profile">
   <div class="container profile-container" data-aos="fade-up">

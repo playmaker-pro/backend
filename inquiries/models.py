@@ -95,7 +95,7 @@ class UserInquiry(models.Model):
 class RequestType(models.Model):
     name = models.CharField(max_length=240)
 
-    
+  
 class InquiryRequest(models.Model):
     STATUS_NEW = 'NEW'
     STATUS_SENT = 'SENT'

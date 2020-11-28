@@ -91,11 +91,17 @@ class RoleChangeRequest(models.Model):
 class ProfileVisitHistory(models.Model):
 
     counter = models.PositiveIntegerField(default=0)
+    counter_coach = models.PositiveIntegerField(default=0)
 
-    def increment(self):
+    def increment(self, commit=True):
         self.counter += 1
-        self.save()
+        if commit:
+            self.save()
 
+    def increment_coach(self, commit=True):
+        self.counter += 1
+        if commit:
+            self.save()
 
 class BaseProfile(models.Model):
     """Base profile model to held most common profile elements"""
@@ -660,7 +666,7 @@ class PlayerProfile(BaseProfile):
 
 
 class PlayerMetrics(models.Model):
-
+    # @todo tu powinna isc metoda    u.profile.playermetrics.refresh()
     player = models.OneToOneField(
         PlayerProfile,
         on_delete=models.CASCADE,
@@ -888,9 +894,9 @@ class ClubProfile(BaseProfile):
 
 class CoachProfile(BaseProfile):
     PROFILE_TYPE = definitions.PROFILE_TYPE_COACH
-    
+
     COMPLETE_FIELDS = ['phone']
-    
+
     VERIFICATION_FIELDS = [
         'country',
         'birth_date',

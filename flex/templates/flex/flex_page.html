@@ -4,9 +4,23 @@
 
 
 {% block content %}
+<main id="main">
+    <!-- ======= Login subpage ======= -->
+    <section id="subpage" class="subpage last-section">
+      <div class="container">
+        <div>
+            <div  class="section-title">
+                <h2 class="mb-3 text-center">{{ self.subtitle }}</h2>
+            </div>
+            <div class="row d-flex justify-content-center">
+               {#{ self.subtitle }#} 
+               {% for block in page.content %}
+                  {% include_block block %}
+               {% endfor %}
+            </div>
+        </div>
+      </div>
+    </section>
+</main>
 
- {{ self.subtitle }} 
-{% for block in page.content %}
-   {% include_block block %}
-{% endfor %}
 {% endblock content %}

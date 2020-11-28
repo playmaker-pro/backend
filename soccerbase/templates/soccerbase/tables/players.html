@@ -1,8 +1,7 @@
 {% load i18n %}
 
   <table class="table w-auto">
-
-    {% if caption %}
+  {% if caption %}
     <caption><a href="{% url 'profiles:player_games' %}" >{% trans 'Zobacz więcej' %}</a></caption>
     {% endif %}
     <thead>
@@ -12,10 +11,15 @@
             <th scope="col" class="d-md-none">{% trans 'Piłkarz' %}</th>
                 <th scope="col" class="d-none d-md-table-cell">{% trans 'Imię i nazwisko' %}</th>
                 <th scope="col" class="d-none d-md-table-cell">{% trans 'Wiek' %}</th>
-                <th scope="col" class="">{% trans 'Pozycja' %}</th>
+                <th scope="col" class="d-none d-md-table-cell">{% trans 'Pozycja' %}</th>
             <th scope="col" class="d-md-none">{% trans 'Rozgrywki' %}</th>
+                <th scope="col" class="d-none d-md-table-cell">{% trans 'Rozgrywki' %}</th>
                 <th scope="col" class="d-none d-md-table-cell">{% trans 'Obecny zespół' %}</th>
                 <th scope="col" class="d-none d-md-table-cell">{% trans 'Wojewódźtwo' %}</th>
+                <th scope="col" class="">{% trans 'Strzelone gole' %}</th>
+                <th scope="col" class="">{% trans 'Pierwszy skład' %}</th>
+                <th scope="col" class="">{% trans 'Rozegrane mecze' %}</th>
+                <th scope="col" class="">{% trans 'Rozegrane minuty' %}</th>
                 <th scope="col" class=""><i class="icofont-link-alt"></i></th>
 
         </tr>
@@ -23,21 +27,27 @@
     <tbody>
         {% for object in objects %}
             <tr>
-                <td class="d-md-none">
-                    {{ object.first_name|upper }} {{ object.last_name|upper }} {% if object.is_verified %}<i class="text-success icofont-verification-check">{% endif %}
-                    <br>{{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}
+                <td class="d-md-none"> {# aggregated fieldX #}
+                    {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %} {{ object.first_name|upper }} {{ object.last_name|upper }} {{ object.profile.get_position_raw_display|default:'-' }}
+                    {{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}
                 </td>
-                    <td class="d-none d-md-table-cell">{{ object.first_name|upper }} {{ object.last_name|upper }} {% if object.is_verified %}<i class="text-success icofont-verification-check">{% endif %}</td>
-                    <td class="d-none d-md-table-cell">{{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}</td>
-                    
-                <td>{{ object.profile.get_position_raw_display|default:'-' }}</td>
+                 {# aggregated field1 into filedX #}   <td class="d-none d-md-table-cell">{{ object.first_name|upper }} {{ object.last_name|upper }} {% if object.is_verified %}<i class="text-success icofont-verification-check">{% endif %}</td>
+                 {# aggregated field2 into filedX #}   <td class="d-none d-md-table-cell">{{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}</td>  
+                {# aggregated field2 into filedX #}    <td class="d-none d-md-table-cell">{{ object.profile.get_position_raw_display|default:'-' }}</td>
                 
-                <td class="d-md-none">
+                <td class="d-md-none"> {# aggregated fieldX #}
+                    {{ object.profile.league|upper|default:'-'  }}<br>
                     {{ object.profile.team|upper|default:'-'  }}<br>
                     {{ object.profile.voivodeship|upper|default:'-' }}<br>
                 </td>
-                    <td class="d-none d-md-table-cell">{{ object.profile.team|default:'-'  }}</td>
-                    <td class="d-none d-md-table-cell">{{ object.profile.voivodeship|default:'-' }}</td>
+                    {# aggregated field1 into filedX #} <td class="d-none d-md-table-cell">{{ object.profile.league|default:'-'  }}</td>
+                    {# aggregated field1 into filedX #} <td class="d-none d-md-table-cell">{{ object.profile.team|default:'-'  }}</td>
+                    {# aggregated field2 into filedX #} <td class="d-none d-md-table-cell">{{ object.profile.voivodeship|default:'-' }}</td>
+
+                <td class="">{{ object.profile.playermetrics.season_summary.team_goals|default:'-' }}</td>
+                <td class="">{{ object.profile.playermetrics.season_summary.first_squad_games_played|default:'-' }}</td>
+                <td class="">{{ object.profile.playermetrics.season_summary.games_played|default:'-' }}</td>
+                <td class="">{{ object.profile.playermetrics.season_summary.minutes_played |default:'-' }}</td>
                 <td class="text-right"><a class="btn-pm btn-pm-sm" href="{{ object.profile.get_permalink }}"><i class="icofont-user"></i></a></td>
             </tr>
             {% endfor %}

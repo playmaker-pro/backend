@@ -2,6 +2,27 @@ import re
 
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
+
+from . import models
+from users.models import User
+from stats import adapters
+
+from roles import definitions
+
+
+def calculate_player_metrics():
+
+    qs = User.objects.filter(declared_role=definitions.PLAYER_SHORT, state=User.STATE_ACCOUNT_VERIFIED)
+    for user in qs:
+        if user.profile.has_data_id:
+            
+            season_name = get_current_season()
+            _id = user.profile.data_mapper_id
+            games_summary = adapters.PlayerLastGamesAdapter(_id).get(season=season_name, limit=3)  # should be profile.playermetrics.refresh_games_summary() and putted to celery.
+            fantasy_summary = adapters.PlayerFantasyDataAdapter(_id).get(season=season_name)
+            season_summary = adapters.PlayerStatsSeasonAdapter(_id).get(season=season_name)
+            user.profile.playermetrics.update_summaries(games_summary, season_summary, fantasy_summary)
 
 
 def unique_slugify(instance, value, slug_field_name='slug', queryset=None,
@@ -82,10 +103,27 @@ def make_choices(choices):
     return tuple([(k, _(v)) for k, v in choices])
 
 
-def get_current_season():
-    return '2020/2021'
-    
-    
+def get_current_season(date=None) -> str:
+    '''
+    JJ:
+    Definicja aktualnego sezonu
+    (wyznaczamy go za pomocą:
+        jeśli miesiąc daty systemowej jest >= 7 to pokaż sezon (aktualny rok/ aktualny rok + 1). 
+        Jeśli < 7 th (aktualny rok - 1 / aktualny rok)
+    '''
+    if date is None:
+        date = timezone.now()
+
+    if date.month >= 7:
+        season = f'{date.year}/{date.year + 1}'
+    else:
+        season = f'{date.year - 1}/{date.year}'
+    return season
+
+
+get_season_string = get_current_season
+
+
 PARAMETERS_MAPPING = {
     'game__host_team_name': 'host_name',
     'host_team_name': 'host_name',

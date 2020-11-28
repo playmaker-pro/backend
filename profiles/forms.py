@@ -274,9 +274,9 @@ class PlayerProfileForm(BaseProfileForm):
                     Fieldset(
                         _('<h2 class="form-section-title">Promo Video</h2>'),
                         Div(
-                            Field('video_url', wrapper_class='row'),
-                            Field('video_title', wrapper_class='row'),
-                            Field("video_description", wrapper_class='row'),
+                            Field('video_url', wrapper_class='row', placeholder=_('youtube url')),
+                            Field('video_title', wrapper_class='row', placeholder=_('Tytuł')),
+                            Field("video_description", wrapper_class='row', placeholder=_('Opisz w której minucie dzieją się istotne rzeczy')),
                         ),
                         css_class='col-md-6',
                     ),

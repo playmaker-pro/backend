@@ -15,6 +15,7 @@ from . import forms, models
 from .utils import get_current_season
 from django.http import JsonResponse
 from roles import definitions
+from . import mixins
 
 
 def get_profile_form_model(user):
@@ -173,7 +174,32 @@ def convert_form_names(data: dict):
     return {translate.get(param, param): msgs for param, msgs in data.items()}
 
 
-class ShowProfile(generic.TemplateView):
+class AdaptSeasonPlayerDataToCirclePresentation:
+    @classmethod
+    def adapt(cls, season_stat):
+        return [
+            {
+                'title': _('Pierwszy skład'),
+                'bs4_css': 'success',
+                'value': math.ceil(season_stat['first_percent']),
+                'shift': math.ceil(season_stat['from_bench_percent'] + season_stat['bench_percent'])
+            },
+            {
+                'title': _('Z ławki'),
+                'bs4_css': 'danger',
+                'value': math.floor(season_stat['from_bench_percent']),
+                'shift': math.floor(season_stat['bench_percent'])
+            },
+            {
+                'title': _('Ławka'),
+                'bs4_css': 'secondary',
+                'value': math.floor(season_stat['bench_percent']), 
+                'shift': 0
+            }
+        ]
+
+
+class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "profiles/show_default_profile.html"
     http_method_names = ["get", "post"]
 
@@ -186,8 +212,9 @@ class ShowProfile(generic.TemplateView):
                 kwargs["role_form"] = self.get_role_declaration_form()
 
         kwargs["show_user"] = user
+        kwargs['modals'] = self.modal_activity(user)
 
-        # to dotyczy tylko playera!!!!
+        # To dotyczy tylko playera!!!!
         if user.profile.has_data_id and user.profile.PROFILE_TYPE == 'player':
             _id = user.profile.data_mapper_id
             # kwargs["last_games"] = adapters.PlayerAdapter._get_user_last_games(_id)
@@ -208,29 +235,13 @@ class ShowProfile(generic.TemplateView):
             kwargs["fantasy"] = fantasy_summary
             kwargs["season_stat"] = season_summary
 
-            season_stat = kwargs["season_stat"]
+            # bigger query.
             # kwargs["fantasy_more"] = adapters.PlayersGameficationAdapter().get(filters={'player_id': _id, 'season': '2020/2021', 'position': 'pomocnik'})
+            season_stat = kwargs["season_stat"]
+
+            # Convert seasons statistics into circle % represetntationd data
             if season_stat is not None:
-                kwargs['season_circle_stats'] = [
-                    {
-                        'title': _('Pierwszy skład'),
-                        'bs4_css': 'success',
-                        'value': math.ceil(season_stat['first_percent']),
-                        'shift': math.ceil(season_stat['from_bench_percent'] + season_stat['bench_percent'])
-                    },
-                    {
-                        'title': _('Z ławki'),
-                        'bs4_css': 'danger',
-                        'value': math.floor(season_stat['from_bench_percent']),
-                        'shift': math.floor(season_stat['bench_percent'])
-                    },
-                    {
-                        'title': _('Ławka'),
-                        'bs4_css': 'secondary',
-                        'value': math.floor(season_stat['bench_percent']), 
-                        'shift': 0
-                    }
-                ]
+                kwargs['season_circle_stats'] = AdaptSeasonPlayerDataToCirclePresentation.adapt(season_stat)
             else:
                 kwargs['season_circle_stats'] = []
 
@@ -272,7 +283,9 @@ class ShowProfile(generic.TemplateView):
         if slug:
             profile_model = get_profile_model_from_slug(slug)
             profile = get_object_or_404(profile_model, slug=slug)
-            profile.history.increment()
+            profile.history.increment()  # @todo 1 coomit to dabatabse
+            if self.request.user.is_coach:
+                profile.history.increment_coach()
             user = profile.user
         else:
             user = self.request.user
@@ -367,7 +380,6 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView):
                 _("Wystąpiły błąd podczas wysyłania formularza")
                 # f"Wystąpiły błąd podczas wysyłania formularza" f". {user_form.errors} {profile_form.errors}"
             )
-            
             # user_form = forms.UserForm(instance=user)
             # profile_form = get_profile_form_model(user)(instance=user.profile)
             return super().get(request, profile_form=profile_form)

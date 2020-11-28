@@ -18,7 +18,7 @@
                     <p>DO SPOŁECZNOŚCI PIŁKARSKIEJ</p>
                 </div>
                 <div class="row d-flex justify-content-center">
-                    {% include "account/_login.html" with next=request.path %}
+                    {% include "account/partials/_login.html" with next=request.path %}
                 </div>
             </div>
         </section>
@@ -29,7 +29,7 @@
   </div>
 </div>
 
-{% if trigger%}
+{% if trigger %}
 <script type="text/javascript">
     $(window).on('load',function(){
         $('#registerModal').modal('show');

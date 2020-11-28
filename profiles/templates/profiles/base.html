@@ -48,8 +48,6 @@
 
 {% block content_header %}
     {% include 'profiles/banners/_banner.html' with show_user=show_user %}
-    
-
 {% endblock content_header %}
 
 
@@ -58,8 +56,20 @@
   <script src="{% static 'assets/js/profiles.js' %}"></script>
   <script src="{% static 'assets/js/observers.js' %}"></script>
 
-  <!--extra modals-->
-  {% include 'profiles/modals/load_modals.html' with load_all=True %}
+    <!--extra modals-->
+    {# Loading proper modals #}
+    {% for _, modal in modals.items %}
+        {% if modal.load %}
+            {% include modal.template with trigger=modal.auto %}
+            {% if modal.async %}
+                <script>
+                    $(window).on('load',function(){
+                        {{ modal.async }}();
+                    });
+                </script>
+            {% endif%}
+        {% endif %}
+    {% endfor %}
 
   <!--testout-->
   <!--script src="//cdn.jsdelivr.net/npm/less" ></script-->

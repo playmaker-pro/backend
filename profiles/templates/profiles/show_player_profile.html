@@ -2,7 +2,7 @@
 
 {% load static %}
 {% load thumbnail %}
-
+{% load i18n %}
 
 {% block extra_css %}
     {{ block.super }}
@@ -21,10 +21,19 @@
   {% include 'profiles/partials/_header_with_picture.html' with image=show_user.picture %}
 {% endblock content_header %} {% endcomment %}
 
+
+{% block content_header %}
+    {% include 'profiles/_header_title.html' with header_title=editable|yesno:"TWOJE PIŁKARSKIE CV, PIŁKARSKIE CV" %}
+    {{ block.super }}
+{% endblock %}
+
+
 {% block content %}  <!-- @todo frontend to be renovated to adjust template-->
-<section id="profile" class="profile">
+
+
+<section id="profile" class="profile  mt-5 mt-md-0">
   <div class="container profile-container" data-aos="fade-up">
-    
+
       <div class="row">
         <div class="col-sm-6">{% include 'profiles/cards/player/account_card.html' %}</div>
         <div class="col-sm-6">{% include 'profiles/cards/player/primary_card.html' %}</div>
@@ -32,7 +41,7 @@
         <div class="col-sm-6">{% include 'profiles/cards/player/latest_games_card.html' %}</div>
         <div class="col-sm-6">{% include 'profiles/cards/player/season_card.html' %}</div>
         <div class="col-sm-6">{% include 'profiles/cards/player/fantasy_card.html' %}</div>
-        <div class="col-sm-6">{% include 'profiles/cards/player/video_card.html' %}</div>
+        <div class="col-sm-12">{% include 'profiles/cards/player/video_card.html' %}</div>
       </div>  <!-- end row -->
 
   </div>

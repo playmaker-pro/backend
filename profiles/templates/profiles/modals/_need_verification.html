@@ -1,0 +1,37 @@
+
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="verificationNeededModal" tabindex="-1" aria-labelledby="verificationNeededModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="verificationNeededModalLabel">{% trans 'Wymagana werifikacja konta' %}</h3>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+
+      <div class="modal-body">
+        <div>
+            By w pełni korzystać z platformy <strong>{% include 'profiles/partials/brandname.html' %}</strong> należy zwerifikować konto uzupełniając poniższe dane.
+
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+
+{% if trigger %}
+<script type="text/javascript">
+    $(window).on('load',function(){
+        $('#verificationNeededModal').modal('show');
+    });
+</script>
+{% endif %}

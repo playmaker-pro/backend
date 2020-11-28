@@ -206,7 +206,7 @@ class Command(BaseCommand):
                 facebook_url = self.get_param_or_none(row, 'contact_facebook')
                 height = self.get_param_or_none(row, 'high')
                 weight = self.get_param_or_none(row, 'weight')
-                wix_id = self.get_param_or_none(row, 'wix_id')
+                123!@#qweQWE = self.get_param_or_none(row, 'wix_id')
                 prefered_leg = self.get_param_or_none(row, 'foot')
                 birth_date = self.get_param_or_none(row, 'birth')
                 about = self.get_param_or_none(row, 'about_me')
@@ -225,7 +225,7 @@ class Command(BaseCommand):
                 active_pznpn = self.get_param_or_none(row, 'active_PZPN')
                 idlnp = self.get_param_or_none(row, 'ID_LNP')
                 region = self.get_param_or_none(row, 'region')
-                team_club_league_voivodeship_ver = f'{club} activePZPN:{active_pznpn} IDLNP:{idlnp} {region}'
+                team_club_league_voivodeship_ver = f'{club} activePZPN:{active_pznpn} IDLNP:{idlnp} {region}  {wix_id}'
   
 
                 try:

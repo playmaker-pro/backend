@@ -19,8 +19,8 @@
             
         </div>
         <div class="mt-4 text-center">
-           
-            <a class="btn-pm btn-pm-sm" href="{% url 'profiles:player_games' %}" alt='games'>zobacz więcej</a>
+            {% url 'profiles:player_games' as button_url %}
+            {% include 'profiles/buttons/see_more.html' with button_url=button_url %}
         </div>
     </div>
 </div>

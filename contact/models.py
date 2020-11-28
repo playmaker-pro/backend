@@ -4,6 +4,7 @@ from wagtail.admin.edit_handlers import (FieldPanel, FieldRowPanel,
                                          InlinePanel, MultiFieldPanel)
 from wagtail.contrib.forms.models import AbstractEmailForm, AbstractFormField
 from wagtail.core.fields import RichTextField
+from django.shortcuts import redirect
 
 
 class FormField(AbstractFormField):
@@ -36,3 +37,7 @@ class ContactPage(AbstractEmailForm):
             FieldPanel("subject"),
         ], heading="Email Settings"),
     ]
+    
+    # def render_landing_page(self, request, form_submission=None, *args, **kwargs):
+    #     raise RuntimeError('xxxxxxxx')
+    #     return redirect('/', permanent=False)

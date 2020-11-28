@@ -2,7 +2,7 @@ PLAYER_SHORT, PLAYER_FULL = 'P', 'Piłkarz'
 COACH_SHORT, COACH_FULL = 'T', 'Trener'
 CLUB_SHORT, CLUB_FULL = 'C', 'Klub / Szkółka piłkarska'
 MANAGER_SHORT, MANAGER_FULL = 'M', 'Agent piłkarski'
-SCOUT_SHORT, SCOUT_FULL = 'S', 'Skout'
+SCOUT_SHORT, SCOUT_FULL = 'S', 'Skaut'
 PARENT_SHORT, PARENT_FULL = 'R', 'Rodzic małego piłkarza'
 GUEST_SHORT, GUEST_FULL = 'G', 'Kibic / Rodzic'
 
