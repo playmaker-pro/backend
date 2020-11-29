@@ -268,7 +268,8 @@ class User(AbstractUser, UserRoleMixin):
 
     def save(self, *args, **kwargs):
         if self.role in [definitions.GUEST_SHORT, definitions.SCOUT_SHORT, definitions.PARENT_SHORT, definitions.MANAGER_SHORT]:
-            self.state = self.STATE_ACCOUNT_VERIFIED
+            if self.state != self.STATE_ACCOUNT_VERIFIED:
+                self.state = self.STATE_ACCOUNT_VERIFIED
         super().save(*args, **kwargs)
 
     class Meta:

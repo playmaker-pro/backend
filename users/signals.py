@@ -13,12 +13,12 @@ logger = logging.getLogger("project")
 User = get_user_model()
 
 
-@receiver(email_confirmed)
-def email_confirmed_(request, email_address, **kwargs):
-    '''Set User.state to email verified'''
-    user = User.objects.get(email=email_address.email)
-    user.verify_email()
-    user.save()
+# @receiver(email_confirmed)
+# def email_confirmed_(request, email_address, **kwargs):
+#     '''Set User.state to email verified'''
+#     user = User.objects.get(email=email_address.email)
+#     user.verify_email()
+#     user.save()
 
 
 @receiver(pre_save, sender=settings.AUTH_USER_MODEL)

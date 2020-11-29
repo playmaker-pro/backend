@@ -1,11 +1,15 @@
 
-{% extends 'base_inner.html' %}
+{% extends 'base.html' %}
 {% load wagtailcore_tags %}
 
 
+{% block extra_css %}
+   {{ block.super }}
+   {{ self.extra_css }}
+{% endblock %}
+
+
 {% block content %}
-<main id="main">
-    <!-- ======= Login subpage ======= -->
     <section id="subpage" class="subpage last-section">
       <div class="container">
         <div>
@@ -21,6 +25,9 @@
         </div>
       </div>
     </section>
-</main>
-
 {% endblock content %}
+
+{% block extra_js %}
+   {{ block.super }}
+   {{ self.extra_js }}
+{% endblock %}

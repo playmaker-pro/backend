@@ -103,6 +103,7 @@ class ProfileVisitHistory(models.Model):
         if commit:
             self.save()
 
+
 class BaseProfile(models.Model):
     """Base profile model to held most common profile elements"""
     PROFILE_TYPE = None
