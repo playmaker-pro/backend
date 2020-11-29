@@ -4,11 +4,26 @@ from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 
-from . import models
+# from . import models
+# from profiles import forms  # todo teog importu tu nie moze być bo sie robi rekurencja
 from users.models import User
 from stats import adapters
 
 from roles import definitions
+
+
+def calculate_age_from_date(date):
+    if date:
+        now = timezone.now()
+        return now.year - date.year - ((now.month, now.day) < (date.month, date.day))
+    return None
+
+
+def get_datetime_from_age(age):
+    if age is not None:
+        now = timezone.now()
+        return timezone.datetime(now.year - age, 1, 1)
+    return None
 
 
 def calculate_player_metrics():

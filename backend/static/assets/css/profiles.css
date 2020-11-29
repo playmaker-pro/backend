@@ -103,11 +103,6 @@ section.profile {
   }
 */
 
-
-.mobile { 
-  display: none;
-}
-
 @media all and (max-width: 768px) {   /* @todo to better understand 768px*/
 
     .mobile {
@@ -147,7 +142,7 @@ section.profile {
     #profile .card {
         margin-bottom: 2px;
     }
-    
+
     #profile .card img.avatar {
         display:block;
         margin:auto;

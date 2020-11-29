@@ -2,20 +2,88 @@
 {% extends 'soccerbase/base.html' %}
 {% load i18n %}
 
-{% block content %}
-<section style="padding:60px;"> 
 
+{% block content_header %}
 
-{% if type == 'P' %}
-    {% include 'soccerbase/tables/players.html' with objects=page_obj %}
-{% elif type == 'T' %}
-    {% include 'soccerbase/tables/coaches.html' with objects=page_obj %}
-{% elif type == 'C' %}
-    {% include 'soccerbase/tables/teams.html' with objects=page_obj %}
-{% endif %}
+    {% if type == 'P' %}
+        {% url 'tables:players' as url %}
+    {% elif type == 'T' %}
+        {% url 'tables:coaches' as url %}
+    {% elif type == 'C' %}
+       {% url 'tables:teams' as url %}
+    {% endif %}
     
-{% include 'soccerbase/_pagination.html'%}
+    {% if type == 'P' %}
+        {% include 'partials/breadcrumbs.html' with breadcrumb_url=url breadcrumb_name='Baza piłkarzy'%}
+    {% elif type == 'T' %}
+        {% include 'partials/breadcrumbs.html' with breadcrumb_url=url breadcrumb_name='Baza trenerów'%}
+    {% elif type == 'C' %}
+        {% include 'partials/breadcrumbs.html' with breadcrumb_url=url breadcrumb_name='Baza klubów'%}
+    {% endif %}
+   
+   
+{% endblock %}
 
+{% block content %}
+<div class="container">
+    <div class="row"> 
+        <div>Filtry</div>
+        <div class="col">
+
+            <form method="get" class="form-inline ">
+                <div class="row">
+                    <div class="col-4"> 
+                            <select name="leg" class="form-control col-4">
+                                <option value="----">----</option>
+                                <option {% if request.GET.leg == 'dominująca lewa' %} selected {% endif %}value="dominująca lewa">dominująca lewa</option>
+                                <option {% if request.GET.leg == 'dominująca lewa' %} selected {% endif %}value="dominująca prawa">dominująca prawa</option>
+
+                            </select>
+                    </div>
+                    
+                    <div class="col-4"> 
+                            <select name="age_range" class="form-control col-4">
+                                <option value="----">----</option>
+                                <option {% if request.GET.age_range == 'do 20 lat' %} selected {% endif %}value="do 20 lat">do 20 lat</option>
+                                <option {% if request.GET.age_range == 'od 21 do 26' %} selected {% endif %}value="od 21 do 26">od 21 do 26</option>
+                                <option {% if request.GET.age_range == 'od 27 do 34' %} selected {% endif %}value="od 27 do 34">od 27 do 34</option>
+                                <option {% if request.GET.age_range == 'powyżej 35' %} selected {% endif %}value="powyżej 35">powyżej 35</option>
+                            </select>
+                    </div>
+                    <div class="col-4"> 
+                            <select name="position" class="form-control col-4">
+                                <option value="----">----</option>
+                                <option {% if request.GET.position == 'Bramkarz' %} selected {% endif %}value="Bramkarz">Bramkarz</option>
+                                <option {% if request.GET.position == 'Obrońca Lewy' %} selected {% endif %}value="Obrońca Lewy">Obrońca Lewy</option>
+                                <option {% if request.GET.position == 'Obrońca Prawy' %} selected {% endif %}value="Obrońca Prawy">Obrońca Prawy</option>
+                                <option {% if request.GET.position == 'Obrońca Środkowy' %} selected {% endif %}value="Obrońca Środkowy">Obrońca Środkowy</option>
+                                <option {% if request.GET.position == 'Pomocnik defensywny (6)' %} selected {% endif %}value="Pomocnik defensywny (6)">Pomocnik defensywny (6)</option>
+                                <option {% if request.GET.position == 'Pomocnik środkowy (8)' %} selected {% endif %}value="Pomocnik środkowy (8)">Pomocnik środkowy (8)</option>
+                                <option {% if request.GET.position == 'Pomocnik ofensywny (10)' %} selected {% endif %}value="Pomocnik ofensywny (10)">Pomocnik ofensywny (10)</option>
+                                <option {% if request.GET.position == 'Skrzydłowy' %} selected {% endif %}value="Skrzydłowy">Skrzydłowy</option>
+                                <option {% if request.GET.position == 'Napastnik' %} selected {% endif %}value="Napastnik">Napastnik</option>
+                            </select>
+                    </div>    
+                </div>
+                <input class="btn-pm btn-pm-sm" type="submit" value="Search" class="btn btn-default">
+            </form>
+        
+        </div>
+    </div>
+</div>
+<section id="tables" class="tables"> 
+<div class="container">
+
+    {% if type == 'P' %}
+        {% include 'soccerbase/tables/players_card.html' with objects=page_obj %}
+    {% elif type == 'T' %}
+        {% include 'soccerbase/tables/coaches.html' with objects=page_obj %}
+    {% elif type == 'C' %}
+        {% include 'soccerbase/tables/teams.html' with objects=page_obj %}
+    {% endif %}
+     <span></span>   
+    {% include 'soccerbase/_pagination.html'%}
+</div>
 
 </section>
 {% endblock content %}

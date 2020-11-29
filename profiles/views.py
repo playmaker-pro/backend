@@ -13,62 +13,10 @@ from inquiries.models import InquiryRequest
 from django.urls import reverse
 from . import forms, models
 from .utils import get_current_season
+from .model_utils import get_profile_form_model, get_profile_model, get_profile_model_from_slug
 from django.http import JsonResponse
 from roles import definitions
 from . import mixins
-
-
-def get_profile_form_model(user):
-    if user.is_player:
-        return forms.PlayerProfileForm
-
-    elif user.is_coach:
-        return forms.CoachProfileForm
-
-    # elif user.is_guest:
-    #     return forms.GuestProfileForm
-
-    elif user.is_club:
-        return forms.ClubProfileForm
-
-    elif user.is_scout:
-        return forms.ScoutProfileForm
-    else:
-        return forms.ProfileForm
-
-
-def get_profile_model(user):
-    if user.declared_role == 'P':
-        return models.PlayerProfile
-    elif user.declared_role == 'T':
-        return models.CoachProfile
-    elif user.declared_role == 'G':
-        return models.GuestProfile
-    elif user.declared_role == 'C':
-        return models.ClubProfile
-    elif user.declared_role == 'SK':
-        return models.ScoutProfile
-    elif user.declared_rol == 'S':
-        return models.StandardProfile
-    else:
-        return models.StandardProfile
-
-
-def get_profile_model_from_slug(slug):
-    if slug.startswith('player'):
-        return models.PlayerProfile
-    elif slug.startswith('coach'):
-        return models.CoachProfile
-    elif slug.startswith('club'):
-        return models.ClubProfile
-    elif slug.startswith('scout'):
-        return models.ScoutProfile
-    elif slug.startswith('guest'):
-        return models.GuestProfile
-    elif slug.startswith('standard'):
-        return models.StandardProfile
-    else:
-        return models.StandardProfile
 
 
 class PaginateMixin:
@@ -209,9 +157,9 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
         if self._is_owner(user):
             kwargs["editable"] = True
             if user.declared_role is None:  # @todo - this is  not pretty.
-                kwargs["role_form"] = self.get_role_declaration_form()
+                kwargs["role_form"] = self.get_role_declaration_form()  # @todo this mechanism can be replaced with ajax call
 
-        kwargs["show_user"] = user
+        kwargs['show_user'] = user
         kwargs['modals'] = self.modal_activity(user)
 
         # To dotyczy tylko playera!!!!
@@ -283,9 +231,14 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
         if slug:
             profile_model = get_profile_model_from_slug(slug)
             profile = get_object_or_404(profile_model, slug=slug)
-            profile.history.increment()  # @todo 1 coomit to dabatabse
+            profile.history.increment()  # @todo 1 coomit to
+
             if self.request.user.is_coach:
                 profile.history.increment_coach()
+
+            # if self.request.user.is_scout:  @todo
+            #     profile.history.increment_coach()
+
             user = profile.user
         else:
             user = self.request.user
@@ -316,7 +269,7 @@ class RequestRoleChange(LoginRequiredMixin, View):
             q.delete()
 
 
-class EditAccountSettings(LoginRequiredMixin, generic.TemplateView):
+class EditAccountSettings(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "profiles/edit_account_settings.html"
     http_method_names = ["get", "post"]
 
@@ -327,7 +280,7 @@ class EditAccountSettings(LoginRequiredMixin, generic.TemplateView):
 
         if "role_form" not in kwargs:
             kwargs["role_form"] = forms.ChangeRoleForm()
-
+        kwargs['modals'] = self.modal_activity(user)
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
@@ -347,7 +300,7 @@ class EditAccountSettings(LoginRequiredMixin, generic.TemplateView):
         return redirect("profiles:show_self")
 
 
-class EditProfile(LoginRequiredMixin, generic.TemplateView):
+class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "profiles/edit_profile.html"
     http_method_names = ["get", "post"]
 
@@ -360,9 +313,9 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView):
             profile_form = get_profile_form_model(user)
             kwargs["profile_form"] = profile_form(instance=user.profile)
 
-        if "role_form" not in kwargs: # @todo do wywalenia
+        if "role_form" not in kwargs:  # @todo do wywalenia
             kwargs["role_form"] = forms.ChangeRoleForm()
-
+        kwargs['modals'] = self.modal_activity(user)
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
@@ -385,12 +338,9 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView):
             return super().get(request, profile_form=profile_form)
 
         # Both forms are fine. Time to save!
-        
         profile = profile_form.save()
         messages.success(request, "Profile details saved!")
         return redirect("profiles:show_self")
-
-
 
 
 def get_modal_action(user):

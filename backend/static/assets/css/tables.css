@@ -1,0 +1,104 @@
+
+#tables {
+    padding-top: 15px;
+}
+
+#tables {
+    font-size:.9em;
+}
+
+.tables .container { 
+    padding-left: 0px;
+    padding-right: 0px;
+}
+#tables .card { 
+        
+    box-shadow: 2px 5px 5px #e2e8f0;
+    margin: 3px 0px;
+}
+
+#tables .row { 
+        
+    padding-left:0px;
+}
+
+#tables .card .card-footer{ 
+    background-color:#fff;
+    /*border-top: 1px dashed #e2e8f0;*/
+}
+
+#tables .card .header{ 
+
+}
+
+#tables .card img.flag  {
+
+    padding:2px;
+    padding-right:3px;
+    position: relative;
+    top:-2px;
+}
+
+#tables .card img.avatar {
+
+}
+section.tables {
+    padding-top: 10px;
+}
+
+@media all and (max-width: 768px) {   /* @todo to better understand 768px*/
+    #tables .card .stats  {
+        margin-top:4px;
+    }
+    #tables .container .table {
+        padding: .3rem .3rem;
+    }
+    #tables { 
+        background-color:#2b2b2b
+    }
+    #tables li {
+        padding: 0px;
+    }
+    .tables .container { 
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+    .tables .container { 
+      padding-left: 0px;
+      padding-right: 0px;
+  }
+    #tables { 
+        padding-top: 0px;
+    }
+
+    .banner {
+        margin-bottom: 0px;
+    }
+
+    .banner {
+        font-size:.9em;
+    }
+
+    #tables .account-card {
+        border-top:none;
+
+    }
+    #tables {
+        font-size:.7em;
+    }
+    #tables .card {
+        margin-bottom: 2px;
+        box-shadow: 0px 0px 0px #e2e8f0;
+        margin: 5px 3px;
+        border-radius: .25rem;
+    }
+
+    #tables .card img.avatar {
+        position: relative;
+        top:-7px;
+        display:block;
+        margin:auto;
+    }
+  }
+
+

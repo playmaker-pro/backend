@@ -1,21 +1,69 @@
 {% load i18n %}
+{% load i18n %}
 
   <table class="table w-auto">
+    {% if caption %}
+    <caption><a href="{% url 'tables:coaches' %}" >{% trans 'Zobacz więcej' %}</a></caption>
+    {% endif %}
     <thead>
         <tr> 
             <!-- d-md-none  aggregatpr -->
             <!-- mobile off d-none d-md-table-cell -->
             <th scope="col" class="d-md-none">{% trans 'Piłkarz' %}</th>
+                <th scope="col" class="d-none d-md-table-cell">{% trans 'Imię i nazwisko' %}</th>
+                <th scope="col" class="d-none d-md-table-cell">{% trans 'Wiek' %}</th>
+                <th scope="col" class="d-none d-md-table-cell">{% trans 'Pozycja' %}</th>
+            <th scope="col" class="d-md-none">{% trans 'Rozgrywki' %}</th>
+                <th scope="col" class="d-none d-md-table-cell">{% trans 'Rozgrywki' %}</th>
+                <th scope="col" class="d-none d-md-table-cell">{% trans 'Obecny zespół' %}</th>
+                <th scope="col" class="d-none d-md-table-cell">{% trans 'Wojewódźtwo' %}</th>
+            <th scope="col" class="d-md-none">{% trans 'Statystyki' %}</th>
+                <th scope="col" class="d-none d-md-table-cell">{% trans 'Strzelone gole' %}</th>
+                <th scope="col" class="d-none d-md-table-cell">{% trans 'Pierwszy skład' %}</th>
+                <th scope="col" class="d-none d-md-table-cell">{% trans 'Rozegrane mecze' %}</th>
+                <th scope="col" class="d-none d-md-table-cell">{% trans 'Rozegrane minuty' %}</th>
+                
+            <th scope="col" class=""><i class="icofont-link-alt"></i></th>
+
         </tr>
     </thead>
     <tbody>
         {% for object in objects %}
             <tr>
-                <td class="d-md-none">{{ object.first_name|upper }} </td>
+                <td class="d-md-none"> {# aggregated fieldX #}
+                    {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %} {{ object.first_name|upper }} {{ object.last_name|upper }} {{ object.profile.get_position_raw_display|default:'-' }}
+                    {{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}
+                </td>
+                    <td class="d-none d-md-table-cell"><a href="{{ object.profile.get_permalink }}"><i class="btn-pm btn-pm-sm icofont-user"></i> {{ object.first_name|upper }} {{ object.last_name|upper }}</a> {% if object.is_verified %}<i class="text-success icofont-verification-check">{% endif %}</td>
+                    <td class="d-none d-md-table-cell">{{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}</td>  
+                    <td class="d-none d-md-table-cell">{{ object.profile.get_position_raw_display|default:'-' }}</td>
+                
+                <td class="d-md-none"> {# aggregated fieldX #}
+                    {{ object.profile.league|default:'-'|upper  }}<br>
+                    {{ object.profile.team|default:'-'|upper  }}<br>
+                    {{ object.profile.voivodeship|default:'-'|upper|truncatechars:10 }}<br>
+                </td>
+                    <td class="d-none d-md-table-cell">{{ object.profile.league|default:'-'|upper  }}</td>
+                    <td class="d-none d-md-table-cell">{{ object.profile.team|default:'-'|upper  }}</td>
+                    <td class="d-none d-md-table-cell">{{ object.profile.voivodeship|default:'-'|upper|truncatechars:10 }}</td>
+
+                <td class="d-md-none"> {# aggregated fieldX #}
+                    <div> <span class="main-color">{{ object.profile.playermetrics.season_summary.team_goals|default:'0' }}</span> gole</div>
+                    <div> <span class="main-color">{{ object.profile.playermetrics.season_summary.first_squad_games_played|default:'0' }}</span>  w pierwszn składzie </div>
+                    <div> <span class="main-color">{{ object.profile.playermetrics.season_summary.games_played|default:'0' }}</span>  mecze </div>
+                    <div> <span class="main-color">{{ object.profile.playermetrics.season_summary.minutes_played |default:'0' }}</span>  minuty </div>
+                </td>
+                <td class="d-none d-md-table-cell">{{ object.profile.playermetrics.season_summary.team_goals|default:'0' }}</td>
+                <td class="d-none d-md-table-cell">{{ object.profile.playermetrics.season_summary.first_squad_games_played|default:'0' }}</td>
+                <td class="d-none d-md-table-cell">{{ object.profile.playermetrics.season_summary.games_played|default:'0' }}</td>
+                <td class="d-none d-md-table-cell">{{ object.profile.playermetrics.season_summary.minutes_played |default:'0' }}</td>
+
+                <td class="text-right"></td>
             </tr>
-        {% endfor %}
+            {% endfor %}
 
     </tbody>
 </table>
+
 
 

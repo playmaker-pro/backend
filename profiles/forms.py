@@ -4,7 +4,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, Div, Submit, HTML, Button, Row, Field, MultiField
 from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions, Tab, TabHolder, Alert
 from django.contrib.auth import get_user_model
-from . import models
+from profiles import models
 from django_countries.widgets import CountrySelectWidget
 from django.utils.translation import gettext_lazy as _
 
@@ -18,24 +18,25 @@ class ChangeRoleForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.wrapper_class = 'row'
-        self.helper.label_class = 'col-md-2'
+        self.helper.label_class = 'col-md-6'
         self.helper.field_class = 'col-md-6'
 
         self.helper.layout = Layout(
             Div(
                 Div(
                     Fieldset(
-                        _('<h2 class="form-section-title">Zmien role w serwisie</h2>'),
+                        '',  #_('<h2 class="form-section-title">Zmien role w serwisie</h2>'),
                         Div(
                             Field('new', wrapper_class='row', selected='T'),
                         ),
-                        css_class='col-md-6',
+                        css_class='',
                     ),  # fieldset
-                    css_class='row'
+                    css_class=''
                 ),  # div
                 #css_class='card',
             )  # div master div
         )  # layout
+
     class Meta:
         model = models.RoleChangeRequest
         fields = ["new", "user"]
@@ -68,10 +69,10 @@ class UserForm(forms.ModelForm):
                 '',
                 Div(             
                     Div(
-                        Div('first_name', css_class="col-sm-6"),
-                        Div('last_name', css_class="col-sm-6"),
-                        Div('email', css_class="col-sm-6"),
-                        Div('picture', css_class="col-sm-6", ),
+                        Field('first_name', css_class="col-sm-6"),
+                        Field('last_name', css_class="col-sm-6"),
+                        Field('email', css_class="col-sm-6", readonly=True),
+                        Field('picture', css_class="col-sm-6", ),
                         css_class='row',
                     ),
                     #css_class='card',

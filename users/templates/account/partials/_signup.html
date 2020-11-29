@@ -7,7 +7,8 @@
           <div class="mb-3">
             {% if role %}
                 <input type="hidden" class="form-control" name="role" id="id_role" value="{{ form.role.value|default_if_none:role }}" required>
-                <h4 class="text-center" style="text-transform: uppercase;">jako   {% if role == 'P'%}Piłkarz
+                <h4 class="text-center" style="text-transform: uppercase;">jako   
+                             {% if role == 'P'%}Piłkarz
                           {% elif role == 'T' %}Trener
                           {% elif role == 'C' %}Klub / Szkółka piłkarska
                           {% elif role == 'M' %}Agent piłkarski

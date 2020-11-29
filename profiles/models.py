@@ -617,7 +617,7 @@ class PlayerProfile(BaseProfile):
         blank=True)
 
     @property
-    def age(self):
+    def age(self): # todo przeniesc to do uzywania z profile.utils.
         if self.birth_date:
             now = timezone.now()
             return now.year - self.birth_date.year - ((now.month, now.day) < (self.birth_date.month, self.birth_date.day))

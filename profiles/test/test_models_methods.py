@@ -127,27 +127,6 @@ class TestProfilePercentageTests(TestCase):
         assert self.profile.percentage_completion + self.profile.percentage_left_verified == 100
 
 
-class ProfileAssigmentDuringUserCreationTests(TestCase):
-
-    def test_users_profile_assigment(self):
-        model_map = {
-            definitions.COACH_SHORT: (models.CoachProfile, 'is_coach'),
-            definitions.PLAYER_SHORT: (models.PlayerProfile, 'is_player'),
-            definitions.CLUB_SHORT: (models.ClubProfile, 'is_club'),
-            definitions.GUEST_SHORT: (models.GuestProfile, 'is_guest'),
-            definitions.SCOUT_SHORT: (models.ScoutProfile, 'is_scout'),
-            definitions.PARENT_SHORT: (models.ParentProfile, 'is_parent'),
-            definitions.MANAGER_SHORT: (models.ManagerProfile, 'is_manager'),
-        }
-
-        for role, (expected_model, is_method) in model_map.items():
-            print(role, expected_model, is_method)
-            username = f'michal{role}'
-            user = User.objects.create(email=username, declared_role=role)
-            assert getattr(user, is_method) is True
-            assert isinstance(user.profile, expected_model)
-
-
 class InitialBaseProfileCreationTests(TestCase):
     '''Idea is to create any profile and check if statuses are corectly behaved
     '''

@@ -5,8 +5,9 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 
-
-DOMAIN_ADDRESS = 'http://localhost:8000'
+# Base URL to use when referring to full URLs within the Wagtail admin backend -
+# e.g. in notification emails. Don't include '/admin' or a trailing slash
+BASE_URL = 'http://localhost:8000'
 
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -238,16 +239,11 @@ MEDIA_URL = '/media/'
 # Wagtail settings
 
 WAGTAIL_SITE_NAME = "backend"
-# Wagtail customization 
 
+# Wagtail customization
 WAGTAIL_USER_EDIT_FORM = 'users.forms.CustomUserEditForm'
 WAGTAIL_USER_CREATION_FORM = 'users.forms.CustomUserCreationForm'
 WAGTAIL_USER_CUSTOM_FIELDS = []  # ['country',]
-
-
-# Base URL to use when referring to full URLs within the Wagtail admin backend -
-# e.g. in notification emails. Don't include '/admin' or a trailing slash
-BASE_URL = 'http://example.com'
 
 CORS_ORIGIN_ALLOW_ALL = True  # to be replaces  with CORS_ORIGIN_WHITELIST
 
@@ -256,6 +252,8 @@ THUMBNAIL_EXTENSION = "png"  # Or any extn for your thumbnails
 THUMBNAIL_ALIASES = {
     '': {
         'profile_avatar_show': {'size': (140, 140), 'crop': True},
+        'tables_avatar_show': {'size': (64, 64), 'crop': True},
+        'tables_avatar_show_small': {'size': (34, 34), 'crop': True},
         'profile_avatar_table': {'size': (25, 25), 'crop': True},
         'nav_avatar': {'size': (25, 25), 'crop': True},
     },
@@ -290,7 +288,7 @@ MESSAGE_TAGS = {
 LOGIN_URL = reverse_lazy("account_login")
 LOGIN_REDIRECT_URL = reverse_lazy("profiles:show_self")
 
-# Allauth-settings
+# allauth-settings
 # ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'

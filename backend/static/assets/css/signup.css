@@ -17,10 +17,11 @@
 }
 
 #main {
-  background: url("../img/8208.png")  top center no-repeat;
+  /* background: url("../img/8208.png")  top center no-repeat; */ 
   background-position: right bottom; /*Positioning*/
   background-repeat: no-repeat; /*Prevent showing multiple background images*/
 }
+
 
 
 #signup .terms {

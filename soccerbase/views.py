@@ -10,10 +10,14 @@ from clubs.models import Club, Team
 from users.models import User
 from django.core.paginator import Paginator
 
+from roles import definitions
+from profiles.utils import get_datetime_from_age
 
-TABLE_TYPE_PLAYER = 'P'
-TABLE_TYPE_TEAM = 'C'
-TABLE_TYPE_COACH = 'T'
+
+TABLE_TYPE_PLAYER = definitions.PLAYER_SHORT
+TABLE_TYPE_TEAM = definitions.CLUB_SHORT
+TABLE_TYPE_COACH = definitions.COACH_SHORT
+
 
 
 class TableView(generic.TemplateView):
@@ -22,24 +26,97 @@ class TableView(generic.TemplateView):
     paginate_limit = 15
     table_type = None
 
+    def filter_queryset(self, queryset):
+        return queryset
+
     def get_queryset(self):
         return []
 
     def get(self, request, *args, **kwargs):
-        data = self.get_queryset()
-        paginator = Paginator(data, self.paginate_limit)
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        paginator = Paginator(queryset, self.paginate_limit)
         page_number = request.GET.get('page') or 1
         page_obj = paginator.get_page(page_number)
         kwargs['page_obj'] = page_obj
-        kwargs["type"] = self.table_type
+        kwargs['type'] = self.table_type
+        page_obj.elements = page_obj.end_index() - page_obj.start_index() + 1
+        # kwargs['ammount'] = page_obj.count()
         return super().get(request, *args, **kwargs)
 
 
 class PlayersTable(TableView):
     table_type = TABLE_TYPE_PLAYER
 
+    @property
+    def filter_age_range(self):
+        value = self.request.GET.get('age_range')
+        if isinstance(value, str) and value != '' and value is not None:
+            if value == '----':
+                return None
+            elif value == 'do 20 lat':
+                return (0, 20)
+            elif value == 'od 21 do 26':
+                return (21, 26)
+            elif value == 'od 27 do 34':
+                return (27, 34)
+            elif value == 'powyżej 35':
+                return (35, 199)
+            else:
+                return None
+    @property
+    def filter_position(self):
+        
+        POSITION_CHOICES = [
+            (1, 'Bramkarz'),
+            (2, 'Obrońca Lewy'),
+            (3, 'Obrońca Prawy'),
+            (4, 'Obrońca Środkowy'),
+            (5, 'Pomocnik defensywny (6)'),
+            (6, 'Pomocnik środkowy (8)'),
+            (7, 'Pomocnik ofensywny (10)'),
+            (8, 'Skrzydłowy'),
+            (9, 'Napastnik'),
+        ]
+
+        value = self.request.GET.get('position')
+        # return value
+        if value == '----':
+            return None
+        for number, txt in POSITION_CHOICES:
+            if txt == value:
+                return number
+        return None
+
+    @property
+    def filter_leg(self):
+        '''
+        LEG_CHOICES = (
+        (1, 'Lewa'),
+        (2, 'Prawa'),)
+        '''
+        value = self.request.GET.get('leg')
+        if value == '----':
+            return None
+        elif value == 'dominująca lewa':
+            return 1
+        elif value == 'dominująca prawa':
+            return 2
+
+    def filter_queryset(self, queryset):
+        if self.filter_leg is not None:
+            queryset = queryset.filter(playerprofile__prefered_leg=self.filter_leg)
+   
+        if self.filter_age_range is not None:
+            mindate = get_datetime_from_age(self.filter_age_range[0])
+            maxdate = get_datetime_from_age(self.filter_age_range[1])
+            queryset = queryset.filter(playerprofile__birth_date__range=[maxdate, mindate])  # bo 0,20   to data urodzin 2000-09-01----2020-09-01
+        if self.filter_position is not None:
+            queryset = queryset.filter(playerprofile__position_raw=self.filter_position)
+        return queryset
+        
     def get_queryset(self):
-        return User.objects.filter(declared_role='P')
+        return User.objects.filter(declared_role='P', state=User.STATE_ACCOUNT_VERIFIED)
 
 
 class TeamsTable(TableView):
@@ -48,9 +125,8 @@ class TeamsTable(TableView):
     def get_queryset(self):
         return Team.objects.all()
 
-
 class CoachesTable(TableView):
     table_type = TABLE_TYPE_COACH
 
     def get_queryset(self):
-        return User.objects.filter(declared_role='T')
+        return User.objects.filter(declared_role='T', state=User.STATE_ACCOUNT_VERIFIED)

@@ -5,14 +5,5 @@
 {% load wagtailcore_tags static %}
 
 {% block content_header %}
-<!-- ======= Breadcrumbs ======= -->
-<section class="breadcrumbs">
-  <div class="container">
-    <ol>
-      <li><a href="/">Strona Główna</a></li>
-        {% block breadcrumbs_items %}<li>Inner Page</li>{% endblock %}
-      </ol>
-      <h2>{% block breadcrumbs_header %}{% endblock %}</h2>
-    </div>
-</section><!-- End Breadcrumbs -->
+    {% include 'partials/breadcrumbs.html' %}
 {% endblock content_header %}
