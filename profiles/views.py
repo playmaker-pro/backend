@@ -392,12 +392,18 @@ from django.views import View
 
 from crispy_forms.utils import render_crispy_form
 
+
 class AccountVerification(View):
 
     http_method_names = ['post', 'get']
 
     def get(self, request, *args, **kwargs):
-        form = forms.VerificationForm()
+        if request.user.is_coach:
+            form = forms.CoachVerificationForm()
+        if request.user.is_club:
+            form = forms.ClubVerificationForm()
+        if request.user.is_player:
+            form = forms.PlayerVerificationForm()
         data = {}
         data['form'] = render_crispy_form(form)
         return JsonResponse(data)
@@ -405,7 +411,15 @@ class AccountVerification(View):
     def post(self, request, *args, **kwargs):
         user = self.request.user
         profile = user.profile
-        verification_form = forms.VerificationForm(request.POST, instance=profile)  # @todo how to add Current user role as a TextField.
+
+        if request.user.is_coach:
+            verification_form = forms.CoachVerificationForm(request.POST, instance=profile)  # @todo how to add Current user role as a TextField.
+
+        if request.user.is_club:
+            verification_form = forms.ClubVerificationForm(request.POST, instance=profile)  # @todo how to add Current user role as a TextField.
+
+        if request.user.is_player:
+            verification_form = forms.PlayerVerificationForm(request.POST, instance=profile)  # @todo how to add Current user role as a TextField.
 
         data = {'success': False, 'url': None, 'form': None}
 

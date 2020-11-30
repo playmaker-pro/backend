@@ -165,15 +165,78 @@ class VerificationForm(forms.ModelForm):
         self.helper.form_tag = False
         self.helper.error_text_inline = True
         self.helper.labels_uppercase = True
-
         self.helper.label_class = 'col-md-4'
         self.helper.field_class = 'col-md-6'
+        self.fields['team_club_league_voivodeship_ver'].required = True
 
+
+class ClubVerificationForm(VerificationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['team_club_league_voivodeship_ver'].required = True
+        self.fields['team_club_league_voivodeship_ver'].label = 'Który klub reprezentujesz'
+
+        self.helper.layout = Fieldset(
+            '',
+            Field("team_club_league_voivodeship_ver", wrapper_class='row'),
+        )
+
+    class Meta:
+        model = models.PlayerProfile
+        widgets = {'country': CountrySelectWidget()}
+        fields = models.ClubProfile.VERIFICATION_FIELDS
+
+from django.forms import DateTimeInput
+
+
+class BootstrapDateTimePickerInput(DateTimeInput):
+    template_name = 'profiles/widgets/bootstrap_datetimepicker.html'
+
+    def get_context(self, name, value, attrs):
+        datetimepicker_id = 'datetimepicker_{name}'.format(name=name)
+        if attrs is None:
+            attrs = dict()
+        attrs['data-target'] = '#{id}'.format(id=datetimepicker_id)
+        attrs['class'] = 'form-control datetimepicker-input'
+        context = super().get_context(name, value, attrs)
+        context['widget']['datetimepicker_id'] = datetimepicker_id
+        return context
+
+class CoachVerificationForm(VerificationForm):
+    birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=BootstrapDateTimePickerInput())
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['birth_date'].required = True
+        self.fields['country'].required = True
+        self.fields['country'].initial = 'PL'
+        self.fields['team_club_league_voivodeship_ver'].label = 'Który klub/drużynę reprezentujesz'
+        self.helper.layout = Fieldset(
+            '',
+            Div(
+                Field("birth_date", wrapper_class='row', placeholder='1998-09-24', id="datetimepicker1"),
+                css_class="input-group date",
+            ),
+            
+            Field("country", wrapper_class='row'),
+            Field("team_club_league_voivodeship_ver", wrapper_class='row'),
+        )
+
+    class Meta:
+        model = models.PlayerProfile
+        widgets = {'country': CountrySelectWidget()}
+        fields = models.CoachProfile.VERIFICATION_FIELDS
+
+
+class PlayerVerificationForm(VerificationForm):
+    birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=BootstrapDateTimePickerInput())
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.fields['birth_date'].required = True
         self.fields['country'].required = True
         self.fields['country'].initial = 'PL'
         self.fields['position_raw'].required = True
-        self.fields['team_club_league_voivodeship_ver'].required = True
+
         self.fields['team_club_league_voivodeship_ver'].label = 'Gdzie grasz'
 
         self.helper.layout = Fieldset(
