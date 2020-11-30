@@ -1,12 +1,29 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from utils import linkify
-
+from django.contrib.auth.admin import UserAdmin #as BaseUserAdmin
 from . import models
+from django import forms
+from django.utils.translation import gettext_lazy as _
 
 
 @admin.register(models.User)
-class UserAdmin(admin.ModelAdmin):
+class UserAdminPanel(UserAdmin):
+    fieldsets = (
+        (None, {'fields': ('password',)}),#'username',
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
+        (_('Piłkarskie fakty'), {'fields': ('declared_role', 'state', 'picture', 'declared_club')}),
+        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+        (_('Permissions'), {
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
+        }),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'password1', 'password2'),
+        }),
+    )
     list_display = ('username', 'state', 'is_active', 'get_profile', 'get_profile_permalink', linkify('profile'), 'get_profile_percentage', 'declared_role')
     list_filter = ('state',)
     search_fields = ('username',)
