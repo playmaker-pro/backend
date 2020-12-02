@@ -1,0 +1,58 @@
+{% load i18n %}
+{% load thumbnail %}
+  <div id="table-filters" class="table-filters">
+    <div class="container">
+      <div class="row"> 
+        <div class="col">
+
+            <form id="filter-form" method="get" class="form-inline">
+                <div class="row">
+                    <div class="col filter-button"> 
+                        <input class="btn-pm btn-pm-sm" type="submit" value="{% trans 'Filtruj' %}">
+                    </div>
+                    <div class="col filter"> 
+                            <select name="leg" class="form-control">
+                                <option value="Silniejsza noga" disabled selected>wybierz nogę</option>
+                                <option value="----">----</option>
+                                <option {% if request.GET.leg == 'dominująca lewa' %} selected {% endif %}value="dominująca lewa">dominująca lewa</option>
+                                <option {% if request.GET.leg == 'dominująca lewa' %} selected {% endif %}value="dominująca prawa">dominująca prawa</option>
+
+                            </select>
+                    </div>
+                    
+                    <div class="col filter"> 
+                        {% include 'soccerbase/tables/filters/_age_range.html' %}
+                    </div>
+                    <div class="col filter"> 
+                            <select name="position" class="form-control">
+                                <option value="Pozycja" disabled selected>wybierz pozycja</option>
+                                <option value="----">----</option>
+                                <option {% if request.GET.position == 'Bramkarz' %} selected {% endif %}value="Bramkarz">Bramkarz</option>
+                                <option {% if request.GET.position == 'Obrońca Lewy' %} selected {% endif %}value="Obrońca Lewy">Obrońca Lewy</option>
+                                <option {% if request.GET.position == 'Obrońca Prawy' %} selected {% endif %}value="Obrońca Prawy">Obrońca Prawy</option>
+                                <option {% if request.GET.position == 'Obrońca Środkowy' %} selected {% endif %}value="Obrońca Środkowy">Obrońca Środkowy</option>
+                                <option {% if request.GET.position == 'Pomocnik defensywny (6)' %} selected {% endif %}value="Pomocnik defensywny (6)">Pomocnik defensywny (6)</option>
+                                <option {% if request.GET.position == 'Pomocnik środkowy (8)' %} selected {% endif %}value="Pomocnik środkowy (8)">Pomocnik środkowy (8)</option>
+                                <option {% if request.GET.position == 'Pomocnik ofensywny (10)' %} selected {% endif %}value="Pomocnik ofensywny (10)">Pomocnik ofensywny (10)</option>
+                                <option {% if request.GET.position == 'Skrzydłowy' %} selected {% endif %}value="Skrzydłowy">Skrzydłowy</option>
+                                <option {% if request.GET.position == 'Napastnik' %} selected {% endif %}value="Napastnik">Napastnik</option>
+                            </select>
+                    </div>    
+                </div>
+                
+            </form>
+        
+        </div>
+    </div>
+
+
+
+
+
+     </div>
+
+
+
+
+</div>
+

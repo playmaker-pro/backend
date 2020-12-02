@@ -74,7 +74,14 @@ class TeamForm(forms.ModelForm):
                         _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
                         Div(
                             Field('name', wrapper_class='row'),
-                            Field('picture', wrapper_class='row'),
+                            Field('travel_refunds', wrapper_class='row'),
+                            Field('game_bonus', wrapper_class='row'),
+                            Field('scolarships', wrapper_class='row'),
+                            Field('gloves_shoes_refunds', wrapper_class='row'),
+                            Field('regular_gear', wrapper_class='row'),
+                            Field('secondary_trainer', wrapper_class='row'),
+                            Field('diet_suplements', wrapper_class='row'),
+                            Field('fizo', wrapper_class='row'),
                         ),
                         css_class='col-md-6',
                     ),
@@ -88,4 +95,16 @@ class TeamForm(forms.ModelForm):
     class Meta:
         model = models.Team
 
-        fields = ['name', 'picture']
+        fields = models.Team.EDITABLE_FIELDS
+#  [
+#         'picture',
+#         'travel_refunds',
+#         'game_bonus',
+#         'scolarships',
+#         'gloves_shoes_refunds',
+#         'traning_gear',
+#         'regular_gear',
+#         'secondary_trainer',
+#         'fizo',
+#         'diet_suplements'
+#     ]

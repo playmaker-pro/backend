@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from profiles import models
 from django_countries.widgets import CountrySelectWidget
 from django.utils.translation import gettext_lazy as _
-
+from profiles import widgets
 
 User = get_user_model()
 
@@ -17,24 +17,13 @@ class ChangeRoleForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_tag = False
-        self.helper.wrapper_class = 'row'
-        self.helper.label_class = 'col-md-6'
-        self.helper.field_class = 'col-md-6'
-
+        # self.helper.wrapper_class = 'row'
+        # self.helper.label_class = 'col-md-6'
+        # self.helper.field_class = 'col-md-6'
+        self.fields['new'].label = False
         self.helper.layout = Layout(
-            Div(
-                Div(
-                    Fieldset(
-                        '',  #_('<h2 class="form-section-title">Zmien role w serwisie</h2>'),
-                        Div(
-                            Field('new', wrapper_class='row', selected='T'),
-                        ),
-                        css_class='',
-                    ),  # fieldset
-                    css_class=''
-                ),  # div
-                #css_class='card',
-            )  # div master div
+                            Field('new'),
+
         )  # layout
 
     class Meta:
@@ -85,6 +74,8 @@ class UserForm(forms.ModelForm):
         fields = ['first_name', 'last_name', "email", "picture"]
 
 
+
+
 class ProfileForm(forms.ModelForm):
     '''Basic profile account which covers basic setup off account
     '''
@@ -105,55 +96,6 @@ class ProfileForm(forms.ModelForm):
 phone_number_format = "+[0-9] [0-9]{3}-[0-9]{3}-[0-9]{3}"
 
 
-class CoachProfileForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_tag = False
-        self.helper.layout = Layout(
-            Div(
-                Div(
-                    Fieldset(
-                        _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
-                        Div(
-                            Field('birth_date', wrapper_class='row'),
-                            Field('league', wrapper_class='row', readonly=True),
-                            # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
-                            Field('voivodeship', wrapper_class='row', readonly=True),
-                            Field('team', wrapper_class='row', readonly=True),
-                            Field('country', wrapper_class='row'),
-                            Field("address", wrapper_class='row'),
-                            Field("about", wrapper_class='row'),
-
-                        ),
-                        css_class='col-md-6',
-                    ),
-
-                    css_class='row',
-                ),
-                Div(
-                    Fieldset(
-                        _('<h2 class="form-section-title">Piłkarski status</h2>'),
-                        Div(
-                            Field('phone', placeholder='+48 111 222 333', wrapper_class='row'),
-                            Field('facebook_url', wrapper_class='row'),
-                            Field("soccer_goal", wrapper_class='row'),
-                            Field("practice_distance", wrapper_class='row'),
-                        ),
-                        css_class='col-md-6',
-                    ),
-                    # fieldset
-                    css_class='row'
-                ),  # div
-                # css_class='card',
-            )  # div master div
-        )  # layo
-
-    class Meta:
-        model = models.CoachProfile
-        fields = ["league", "voivodeship", "team", "country", "address", "about", "birth_date", "facebook_url", "soccer_goal", "phone", "practice_distance"]
-
-
 class ClubProfileForm(ProfileForm):
     pass
 
@@ -165,70 +107,63 @@ class VerificationForm(forms.ModelForm):
         self.helper.form_tag = False
         self.helper.error_text_inline = True
         self.helper.labels_uppercase = True
-        self.helper.label_class = 'col-md-4'
-        self.helper.field_class = 'col-md-6'
+        self.helper.label_class = 'col-md-3'
+        self.helper.field_class = 'col-md-9'
         self.fields['team_club_league_voivodeship_ver'].required = True
+        self.fields['team_club_league_voivodeship_ver'].label = False  # '<i class="icofont-ui-user-group"></i>'
+        self.fields['team_club_league_voivodeship_ver'].help_text = None
 
 
 class ClubVerificationForm(VerificationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['team_club_league_voivodeship_ver'].required = True
-        self.fields['team_club_league_voivodeship_ver'].label = 'Który klub reprezentujesz'
-
+        self.fields['club_role'].required = True
+        self.fields['birth_date'].required = True
+        self.fields['country'].required = True
         self.helper.layout = Fieldset(
             '',
-            Field("team_club_league_voivodeship_ver", wrapper_class='row'),
+            Field("team_club_league_voivodeship_ver", wrapper_class='row', placeholder='wpisz klub, drużynę, etc.'),
+            Field("club_role", wrapper_class='row')
         )
 
     class Meta:
-        model = models.PlayerProfile
+        model = models.ClubProfile
         widgets = {'country': CountrySelectWidget()}
         fields = models.ClubProfile.VERIFICATION_FIELDS
 
-from django.forms import DateTimeInput
-
-
-class BootstrapDateTimePickerInput(DateTimeInput):
-    template_name = 'profiles/widgets/bootstrap_datetimepicker.html'
-
-    def get_context(self, name, value, attrs):
-        datetimepicker_id = 'datetimepicker_{name}'.format(name=name)
-        if attrs is None:
-            attrs = dict()
-        attrs['data-target'] = '#{id}'.format(id=datetimepicker_id)
-        attrs['class'] = 'form-control datetimepicker-input'
-        context = super().get_context(name, value, attrs)
-        context['widget']['datetimepicker_id'] = datetimepicker_id
-        return context
 
 class CoachVerificationForm(VerificationForm):
-    birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=BootstrapDateTimePickerInput())
+    birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['birth_date'].required = True
+        
         self.fields['country'].required = True
         self.fields['country'].initial = 'PL'
-        self.fields['team_club_league_voivodeship_ver'].label = 'Który klub/drużynę reprezentujesz'
+        
+        self.fields['club_role'].required = True
+        self.fields['club_role'].label = False
+        self.fields['club_role'].help_text = 'Jaka rolę pełnisz w klubie'
+
+        self.fields['team_club_league_voivodeship_ver'].help_text = 'Który klub reprezentujesz'
+
         self.helper.layout = Fieldset(
             '',
-            Div(
-                Field("birth_date", wrapper_class='row', placeholder='1998-09-24', id="datetimepicker1"),
-                css_class="input-group date",
-            ),
-            
+            Field("birth_date", wrapper_class='row', placeholder='1998-09-24',),
             Field("country", wrapper_class='row'),
-            Field("team_club_league_voivodeship_ver", wrapper_class='row'),
+            Field("team_club_league_voivodeship_ver", wrapper_class='row', placeholder='wpisz nazwę zespołu, województwo etc.'),
+            Field("club_role", wrapper_class='row')
         )
 
     class Meta:
-        model = models.PlayerProfile
+        model = models.CoachProfile
         widgets = {'country': CountrySelectWidget()}
         fields = models.CoachProfile.VERIFICATION_FIELDS
 
 
 class PlayerVerificationForm(VerificationForm):
-    birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=BootstrapDateTimePickerInput())
+    birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -237,14 +172,12 @@ class PlayerVerificationForm(VerificationForm):
         self.fields['country'].initial = 'PL'
         self.fields['position_raw'].required = True
 
-        self.fields['team_club_league_voivodeship_ver'].label = 'Gdzie grasz'
-
         self.helper.layout = Fieldset(
             '',
             Field("birth_date", wrapper_class='row', placeholder='1998-09-24'),
             Field("country", wrapper_class='row'),
             Field("position_raw", wrapper_class='row'),
-            Field("team_club_league_voivodeship_ver", wrapper_class='row'),
+            Field("team_club_league_voivodeship_ver", wrapper_class='row', placeholder='W którym klubie grasz / lub nie posiadam klubu'),
         )
 
     class Meta:
@@ -264,6 +197,82 @@ class BaseProfileForm(forms.ModelForm):
         self.helper.wrapper_class = 'row'
         self.helper.label_class = 'col-md-3 text-md-right text-muted upper'
         self.helper.field_class = 'col-md-6'
+
+
+class UserBasicForm(BaseProfileForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    Fieldset(
+                        _('<h2 class="form-section-title">Dane osobowe</h2>'),
+                        Div(
+                            Field('first_name', wrapper_class='row'),
+                            Field('last_name', wrapper_class='row'),
+                            Field('picture', wrapper_class='row'),
+                        ),
+                        css_class='col-md-6',
+                    ),
+                    css_class='row',
+                ),
+            )
+        )
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'picture']
+
+
+class CoachProfileForm(BaseProfileForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for fieldname in ['club_role', 'league', 'team']:
+            self.fields[fieldname].help_text = None
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    Fieldset(
+                        _('<h2 class="form-section-title">Klub</h2>'),
+                        Div(
+                            Field('club_role', wrapper_class='row', placeholder='Jaką role pełnisz w klubie'),
+                        ),
+                        css_class='col-md-6',
+                    ),
+                    Fieldset(
+                        _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
+                        Div(
+                            Field('birth_date', wrapper_class='row'),
+                            Field('league', wrapper_class='row', readonly=True),
+                            # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
+                            Field('voivodeship', wrapper_class='row', readonly=True),
+                            Field('team', wrapper_class='row', readonly=True),
+                            Field('country', wrapper_class='row'),
+                            Field("address", wrapper_class='row'),
+                            Field("about", wrapper_class='row'),
+
+                        ),
+                        css_class='col-md-6',
+                    ),
+                    Fieldset(
+                        _('<h2 class="form-section-title">Piłkarski status</h2>'),
+                        Div(
+                            Field('phone', placeholder='+48 111 222 333', wrapper_class='row'),
+                            Field('facebook_url', wrapper_class='row'),
+                            Field("soccer_goal", wrapper_class='row'),
+                            Field("practice_distance", wrapper_class='row'),
+                        ),
+                        css_class='col-md-6',
+                    ),
+                    css_class='row',
+                ),
+                # css_class='card',
+            )  # div master div
+        )  # layo
+
+    class Meta:
+        model = models.CoachProfile
+        fields = ['club_role', 'league', 'voivodeship', 'team', 'country', 'address', 'about', 'birth_date', 'facebook_url', 'soccer_goal', 'phone', 'practice_distance']
 
 
 class PlayerProfileForm(BaseProfileForm):

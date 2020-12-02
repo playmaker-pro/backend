@@ -23,7 +23,7 @@ TABLE_TYPE_COACH = definitions.COACH_SHORT
 class TableView(generic.TemplateView):
     template_name = "soccerbase/tables/table.html"
     http_method_names = ["get"]
-    paginate_limit = 15
+    paginate_limit = 5
     table_type = None
 
     def filter_queryset(self, queryset):

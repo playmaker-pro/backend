@@ -10,27 +10,13 @@
 {% endblock extra_css %}
 
 
-{% block header %}
-    {% with menuitems_template="profiles/partials/navigation.html" %}
-        {{ block.super }}
-    {% endwith %}
-{% endblock %}
-
-{% comment %} {% block content_header %}
-  {{ block.super }}
-  {% include 'profiles/partials/_header_with_picture.html' with image=show_user.picture %}
-{% endblock content_header %} {% endcomment %}
-
-
 {% block content_header %}
-    {% include 'profiles/_header_title.html' with header_title=editable|yesno:"TWOJE PIŁKARSKIE CV, PIŁKARSKIE CV" %}
+    {% include '_page_heading.html' with heading_title=page_title size=4 %}
     {{ block.super }}
 {% endblock %}
 
 
 {% block content %}  <!-- @todo frontend to be renovated to adjust template-->
-
-
 <section id="profile" class="profile  mt-5 mt-md-0">
   <div class="container profile-container" data-aos="fade-up">
 

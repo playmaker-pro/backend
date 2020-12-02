@@ -5,106 +5,89 @@
 {% load crispy_forms_tags %}
 {% load thumbnail %}
 
-{% block title %}{{ block.super }} {% trans 'Edycja profilu' %} {% endblock %}
 
-<!-- Benefits of the Django application -->
+
+{% block title %}{{ block.super }} {{ page_title }} {% endblock %}
+
+
+{% block header %}
+    {% with menus_heading_title=page_title %}
+        {{ block.super }}
+    {% endwith %}
+{% endblock %}
+
+
+{% block content_header %}
+    {% include '_page_heading.html' with heading_title=page_title size=4 %}
+    {{ block.super }}
+{% endblock %}
+
+
+
 {% block content %}
 <section id="profile" class="profile">
   <div class="container" data-aos="fade-up">
-    <div class="profile-head mb-3">
-      <h1>{% trans 'Edycja ustawień konta' %}</h1>
-    </div>
-   
-      <form class='profile-edit-form' enctype="multipart/form-data" method="post">
         <div class="row">
-            <div class="col-md-6">
-                <h2 class='form-section-title'>{% trans 'Ustawienia konta' %}</h2>
-                {% crispy user_form %}
-            </div>
-
-             
-            <div class="col-md-3">
-              <div class="text-center">
-                <img title="profile picture" class="img-circle img-responsive" src="{% thumbnail user.picture|default:'default_profile.png' 'profile_avatar_show' %}">
-              </div>
-            </div>
+          <div class="col-md-12">
+              <h2 class='form-section-title'>{% trans 'Ustawienia konta' %}</h2>
+          </div>
         </div>
 
-        <div class="col-md-12 ">
-            <div class="row p-2">
-                  <div class="col-md-6"> 
-                    {% trans 'Połącz konta społecznościowe' %}
-                  </div>
-                  <div class="col-md-4">
-                    <a class="btn-pm btn-pm-sm" href="{% url 'socialaccount_connections' %}">
-                    wybierz konta
-                    </a>
-                  </div> 
-            </div>
-            <div class="row p-2">
-
-                  <div class="col-md-6">
-                    {% trans 'polacz konta' %}
-                  </div>
-
-                  <div class="col-md-4">
-                    <a class="btn-pm btn-pm-sm pull-right" href="{% url 'account_reset_password' %}">{% trans 'Zmień hasło' %}</a>
-                  </div>
-            </div>    
-            <div class="row p-2">
-                  <div class="col-md-6">
-                    {% trans 'zmien email' %}
-                  </div>
-
-                  <div class="col-md-4">
-                    <a class="btn-pm btn-pm-sm" href="{% url 'account_email' %}">Zmień email </a>
-                  </div>
-             </div>
+        <div class="row p-3 mb-4">
+          <div class="col-sm-3"> 
+            {% trans 'Połącz konta społecznościowe. Dzięki temu będziesz mogł logować się za pomocą nich' %}
+          </div>
+          <div class="col-sm-6">
+            <a class="btn-pm btn-pm-sm" href="{% url 'socialaccount_connections' %}">{% trans 'Połącz konta'%}</a>
+          </div> 
+        </div>
+ 
+        <div class="row p-3 mb-4">
+          <div class="col-sm-3">
+            <span class="">{% trans 'Ustaw nowe hasło' %}</span>
           </div>
 
+          <div class="col-sm-6">
+            <a class="btn-pm btn-pm-sm" href="{% url 'account_reset_password' %}">{% trans 'Dodaj/Resetuj' %}</a>
+          </div>
+        </div>   
+ 
+        <div class="row p-3 mb-4">
+          <div class="col-sm-3">
+            {% trans 'Ustaw nowy adres e-mail bądź dodaj nowy adres z którego będziesz chiał się logować' %}
+          </div>
 
-  
-          <button class="btn-pm btn-pm-sm" type="submit" name="update" value="Update" id="submit-id-update">{% trans 'Aktualizuj' %}</button>
+          <div class="col-sm-6">
+            <a class="btn-pm btn-pm-sm" href="{% url 'account_email' %}">{% trans 'Dodaj/Zmień'%} </a>
+          </div>
+        </div>
 
-
-      </form>
-
-
-      
-          <div class="row p-2">
-            
-              <div class="col-md-12"> 
-                    {% if user.is_pending_role_change %}
-                    <div class="alert alert-danger">
-                      Oczekujesz na akceptacje zmiany konta z <strong>{{user.pending_role_change.current_pretty}}</strong> na <strong>{{user.pending_role_change.new_pretty}}</strong> 
-                      <form enctype="multipart/form-data" method="post" action="{% url 'profiles:rolechange_self' %}">{% csrf_token %}
-                        <input type="submit" name="cancel" value="Cofnij prośbę" class="btn btn-primary" id="submit-id-cancel">
-                        <input type="hidden" name="cancel" value="True"> 
-                      </form>
-                    </div>
-                    {% else %}
-                    <div class="row">
-                      <form enctype="multipart/form-data" method="post" action="{% url 'profiles:rolechange_self' %}">
-                        <div class="col-md-4">  
-                          Wybierz role
-                        </div>
-                        <div class="col-md-4"> 
-                          {% crispy role_form %}
-                        </div>
-                        <div class="col-md-4"> 
-                          <button class="btn-pm btn-pm-sm" type="submit" name="update" value="Update" id="submit-id-update">{% trans 'Chcę zmienić role' %}</button>
-                        </div>
-                      </form>
-                    </div>
-                    {% endif %}
+        <div class="row p-3 mb-4">
+          {% if user.is_pending_role_change %}
+            <div class="col-sm-12"> 
+              <div class="alert alert-danger">
+                Oczekujesz na akceptacje zmiany konta z <strong>{{user.pending_role_change.current_pretty}}</strong> na <strong>{{user.pending_role_change.new_pretty}}</strong> 
+                <form enctype="multipart/form-data" method="post" action="{% url 'profiles:rolechange_self' %}">{% csrf_token %}
+                  <input type="submit" name="cancel" value="Cofnij prośbę" class="btn btn-primary" id="submit-id-cancel">
+                  <input type="hidden" name="cancel" value="True"> 
+                </form>
               </div>
-          </div>
+            </div>
+          {% else %}
 
-
-      </div>
-    </div>
+            <div class="col-sm-3">  
+              {% trans 'Wybierz nowa rolę (obecna:' %} {{ user.get_declared_role_display }})
+            </div> 
+            <div class="col-sm-9"> 
+              <form class="form-inline" enctype="multipart/form-data" method="post" action="{% url 'profiles:rolechange_self' %}">
+        
+                  <button class="btn-pm btn-pm-sm" type="submit" name="update" value="Update" id="submit-id-update">{% trans 'Chcę zmienić role' %}</button>
+                {% crispy role_form %}
+                </form>
+            </div>
+        </div>
+        {% endif %}
   </div>
-</div>
 </section>
 {% endblock content %}
 

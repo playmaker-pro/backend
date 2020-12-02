@@ -2,6 +2,13 @@
 {% load static %}
 
 {% if user.is_authenticated %}
+    <li class="drop-down"><a href="">Bazy</a>
+        <ul>
+            <li><a href="{% url 'soccerbase:players' %}">Piłkarzy</a></li>
+            <li><a href="{% url 'soccerbase:coaches' %}">Trenerów</a></li>
+            <li><a href="{% url 'soccerbase:teams' %}">Klubów</a></li>
+        </ul>
+    </li>
     <li><a href="{% url 'profiles:show_self'%}">{% trans 'Twój zespół' %}</a></li>
     <li><a href="{% url 'profiles:player_carrier'%}">{% trans 'Club' %}</a></li>
 {% endif %}

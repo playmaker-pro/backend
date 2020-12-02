@@ -1,9 +1,24 @@
 
+
+.table-filters { 
+    background-color: #2b2b2b;
+    z-index: 996;
+    padding:6px;
+}
+
+
+.sticky-top { top: 63px; }
+#table-filters form  option:not(:checked){ color: green; }
+select.form-control option:checked { color: #0AD; }
+#filter-form option:not(:checked) { color: green; }
 #tables {
     padding-top: 15px;
 }
+#table-filters select {
+    padding:2px 6px;
+}
 
-#tables {
+#tables, #table-filters select {
     font-size:.9em;
 }
 
@@ -46,15 +61,37 @@ section.tables {
     padding-top: 10px;
 }
 
+
+
+/* .table-item {
+    background-color: #fff;
+}
+
+.table-item:hover {
+    background-color: #e2e8f0;
+    -webkit-transition: background-color 430ms linear;
+    -ms-transition: background-color 430ms linear;
+    transition: background-color 430ms linear;
+    
+} */
+
 @media all and (max-width: 768px) {   /* @todo to better understand 768px*/
     #tables .card .stats  {
         margin-top:4px;
+    }
+    #tables .pagination {
+        color:#fff;
+    }
+    #tables .container > :last-child{ 
+        margin-bottom: 55px;
     }
     #tables .container .table {
         padding: .3rem .3rem;
     }
     #tables { 
-        background-color:#2b2b2b
+        background-color:#2b2b2b;
+        margin-top: 63px;
+        
     }
     #tables li {
         padding: 0px;
@@ -73,18 +110,23 @@ section.tables {
 
     .banner {
         margin-bottom: 0px;
-    }
-
-    .banner {
         font-size:.9em;
     }
+
 
     #tables .account-card {
         border-top:none;
 
     }
-    #tables {
+    #table-filters {
+        padding:10px 2px;
+    }
+    #table-filters .filter{
+        padding:2px 2px;
+    }
+    #tables, #table-filters select{
         font-size:.7em;
+        padding:.2rem;
     }
     #tables .card {
         margin-bottom: 2px;

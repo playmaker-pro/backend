@@ -3,6 +3,14 @@
 {% load static %}
 {% load thumbnail %}
 
+{% block content_header %}
+    {% include '_page_heading.html' with heading_title=page_title size=4  %}
+    {{ block.super }}
+{% endblock %}
+
+
+
+
 {% block content %}  <!-- @todo frontend to be renovated to adjust template-->
 <section id="profile" class="profile" style="padding-top:10px;">
   <div class="container profile-container" data-aos="fade-up">

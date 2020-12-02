@@ -6,7 +6,7 @@
 
 
 {% block content_header %}
-    {% include 'profiles/_header_title.html' with header_title=editable|yesno:"," %}
+    {% include '_page_heading.html' with heading_title=page_title size=4 %}
     {{ block.super }}
 {% endblock %}
 

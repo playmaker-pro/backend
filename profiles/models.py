@@ -755,9 +755,15 @@ class PlayerMetrics(models.Model):
 
 class ClubProfile(BaseProfile):
     PROFILE_TYPE = definitions.PROFILE_TYPE_CLUB
-
+    CLUB_ROLE = (
+        (1, 'Prezes'),
+        (2, 'Kierownik'),
+        (3, 'Członek zarządu'),
+        (4, 'Sztab szkoleniowy'),
+        (5, 'Inne'))
     VERIFICATION_FIELDS = [
         'team_club_league_voivodeship_ver',
+        'club_role',
     ]
 
     phone = PhoneNumberField(
@@ -828,65 +834,10 @@ class ClubProfile(BaseProfile):
         blank=True,
         null=True)
 
-    # club & coach specific attrs.
-    club_phone = PhoneNumberField(
-        _('Telefon'),
-        blank=True,
-        null=True)
-
-    club_email = models.EmailField(null=True, blank=True)
-
-    stadion_address = AddressField(
-        related_name='club_stadion_address',
-        help_text=_('Adres'),
-        blank=True,
-        null=True)
-    practice_stadion_address = AddressField(
-        related_name='club_practice_stadion_address',
-        help_text=_('Adres'),
-        blank=True,
-        null=True)
-
     club_role = models.IntegerField(
+        choices=CLUB_ROLE,
         null=True, blank=True,
-        help_text='Defines if admin approved change')
-
-# Prezes / Kierownik / Członek zarządu / Sztab szkoleniowy / Inne. Po kliknięciu inne użytkownik może wprowadzić ręcznie nazwę posady
-    travel_refunds = models.BooleanField(
-        default=False,
-        help_text='travel_refunds')
-
-    game_bonus = models.BooleanField(
-        default=False,
-        help_text='game_bonus')
-
-    scolarships = models.BooleanField(
-        default=False,
-        help_text='scolarships')
-
-    gloves_shoes_refunds = models.BooleanField(
-        default=False,
-        help_text='gloves_shoes_refunds')
-
-    traning_gear = models.BooleanField(
-        default=False,
-        help_text='traning_gear')
-
-    regular_gear = models.BooleanField(
-        default=False,
-        help_text='regular_gear')
-
-    secondary_trainer = models.BooleanField(
-        default=False,
-        help_text='secondary_trainer')
-
-    fizo = models.BooleanField(
-        default=False,
-        help_text='fizo')
-
-    diet_suplements = models.BooleanField(
-        default=False,
-        help_text='diet_suplements')
+        help_text='Defines if admin approved change')   
 
     class Meta:
         verbose_name = "Club Profile"
@@ -898,10 +849,19 @@ class CoachProfile(BaseProfile):
 
     COMPLETE_FIELDS = ['phone']
 
+    CLUB_ROLE = (
+        (1, 'Prezes'),
+        (2, 'Kierownik'),
+        (3, 'Członek zarządu'),
+        (4, 'Sztab szkoleniowy'),
+        (5, 'Inne')
+    )
+
     VERIFICATION_FIELDS = [
         'country',
         'birth_date',
-        'team_club_league_voivodeship_ver',]
+        'team_club_league_voivodeship_ver',
+        'club_role']
 
     GOAL_CHOICES = (
         (1, 'Profesjonalna kariera'),
@@ -1008,65 +968,12 @@ class CoachProfile(BaseProfile):
         blank=True,
         null=True)
     # club & coach specific attrs.
-    club_phone = PhoneNumberField(
-        _('Telefon'),
-        blank=True,
-        null=True)
-
-    club_email = models.EmailField(null=True, blank=True)
-
-    stadion_address = AddressField(
-        related_name='coach_stadion_address',
-        help_text=_('Adres'),
-        blank=True,
-        null=True)
-    practice_stadion_address = AddressField(
-        related_name='coach_practice_stadion_address',
-        help_text=_('Adres'),
-        blank=True,
-        null=True)
-
     club_role = models.IntegerField(
+        choices=CLUB_ROLE,
         null=True, blank=True,
         help_text='Defines if admin approved change')
 
-# Prezes / Kierownik / Członek zarządu / Sztab szkoleniowy / Inne. Po kliknięciu inne użytkownik może wprowadzić ręcznie nazwę posady
-    travel_refunds = models.BooleanField(
-        default=False,
-        help_text='travel_refunds')
-
-    game_bonus = models.BooleanField(
-        default=False,
-        help_text='game_bonus')
-
-    scolarships = models.BooleanField(
-        default=False,
-        help_text='scolarships')
-
-    gloves_shoes_refunds = models.BooleanField(
-        default=False,
-        help_text='gloves_shoes_refunds')
-
-    traning_gear = models.BooleanField(
-        default=False,
-        help_text='traning_gear')
-
-    regular_gear = models.BooleanField(
-        default=False,
-        help_text='regular_gear')
-
-    secondary_trainer = models.BooleanField(
-        default=False,
-        help_text='secondary_trainer')
-
-    fizo = models.BooleanField(
-        default=False,
-        help_text='fizo')
-
-    diet_suplements = models.BooleanField(
-        default=False,
-        help_text='diet_suplements')
-
+    
     class Meta:
         verbose_name = "Coach Profile"
         verbose_name_plural = "Coaches Profiles"

@@ -4,6 +4,9 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.urls import reverse
+from django_countries.fields import CountryField
+from phonenumber_field.modelfields import PhoneNumberField
+from address.models import AddressField
 
 
 class Club(models.Model):
@@ -41,10 +44,41 @@ class Club(models.Model):
     def __str__(self):
         return f'{self.name}# '
 
+    club_phone = PhoneNumberField(
+        _('Telefon'),
+        blank=True,
+        null=True)
+
+    club_email = models.EmailField(null=True, blank=True)
+
+    stadion_address = AddressField(
+        related_name='coach_stadion_address',
+        help_text=_('Adres'),
+        blank=True,
+        null=True)
+    
+    practice_stadion_address = AddressField(
+        related_name='coach_practice_stadion_address',
+        help_text=_('Adres'),
+        blank=True,
+        null=True)
+
 
 class Team(models.Model):
     # editors = models.OneToOneField(
     #     settings.AUTH_USER_MODEL)
+    EDITABLE_FIELDS = [
+        'picture',
+        'travel_refunds',
+        'game_bonus',
+        'scolarships',
+        'gloves_shoes_refunds',
+        'traning_gear',
+        'regular_gear',
+        'secondary_trainer',
+        'fizo',
+        'diet_suplements'
+    ]
 
     picture = models.ImageField(
         _("Zdjęcie"),
@@ -83,3 +117,40 @@ class Team(models.Model):
 
     def __str__(self):
         return f'{self.club.name}:{self.name}'
+
+    # common  team fileds
+    travel_refunds = models.BooleanField(
+        default=False,
+        help_text='travel_refunds')
+
+    game_bonus = models.BooleanField(
+        default=False,
+        help_text='game_bonus')
+
+    scolarships = models.BooleanField(
+        default=False,
+        help_text='scolarships')
+
+    gloves_shoes_refunds = models.BooleanField(
+        default=False,
+        help_text='gloves_shoes_refunds')
+
+    traning_gear = models.BooleanField(
+        default=False,
+        help_text='traning_gear')
+
+    regular_gear = models.BooleanField(
+        default=False,
+        help_text='regular_gear')
+
+    secondary_trainer = models.BooleanField(
+        default=False,
+        help_text='secondary_trainer')
+
+    fizo = models.BooleanField(
+        default=False,
+        help_text='fizo')
+
+    diet_suplements = models.BooleanField(
+        default=False,
+        help_text='diet_suplements')

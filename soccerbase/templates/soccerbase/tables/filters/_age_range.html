@@ -1,0 +1,8 @@
+<select name="age_range" class="form-control">
+    <option value="Wiek" disabled selected >wybierz wiek</option>
+    <option value="----">----</option>
+    <option {% if request.GET.age_range == 'do 20 lat' %} selected {% endif %}value="do 20 lat">do 20 lat</option>
+    <option {% if request.GET.age_range == 'od 21 do 26' %} selected {% endif %}value="od 21 do 26">od 21 do 26</option>
+    <option {% if request.GET.age_range == 'od 27 do 34' %} selected {% endif %}value="od 27 do 34">od 27 do 34</option>
+    <option {% if request.GET.age_range == 'powyżej 35' %} selected {% endif %}value="powyżej 35">powyżej 35</option>
+</select>

@@ -179,19 +179,26 @@ button[type="submit"]:hover, input[type="button"]:hover{
     border-radius: 0px;
   }
 }
-
+.asteriskField {
+  display: none;
+}
 /*--------------------------------------------------------------
 # Main
 --------------------------------------------------------------*/
-main > :first-child{ 
+/* main > :first-child{ 
+  margin-top: 74px;
+} */
+main { 
   margin-top: 74px;
 }
 
 @media all and (max-width: 992px) {   /* @todo to better understand */
-  main > :first-child{ 
-      margin-top: 53px;
+  /* main > :first-child{ 
+      margin-top: 63px;
+  } */
+  main { 
+    margin-top: 63px;
   }
-  
 }
 
 /*--------------------------------------------------------------
@@ -280,12 +287,13 @@ main > :first-child{
   color: #e03a3c;
 }
 
+
 .nav-menu .drop-down ul {
   display: block;
   position: absolute;
   left: 14px;
   top: calc(100% + 30px);
-  z-index: 99;
+  z-index: 999;
   opacity: 0;
   visibility: hidden;
   padding: 10px 0;

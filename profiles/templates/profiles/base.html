@@ -25,28 +25,31 @@
 
 
 
+
 {% block header %}
     {% if user.is_authenticated %}
         {% if user.is_coach %}
 
-            {% with menuitems_template="profiles/partials/_nav_coach.html" %}
+            {% with menuitems_template="profiles/partials/_nav_coach.html" menus_heading_title=page_title %}
                 {{ block.super }}
             {% endwith %}
 
         {% elif user.is_player %}
 
-            {% with menuitems_template="profiles/partials/_nav_player.html" %}
+            {% with menuitems_template="profiles/partials/_nav_player.html" menus_heading_title=page_title%}
                 {{ block.super }}
             {% endwith %}
 
         {% elif user.is_club %}
 
-            {% with menuitems_template="profiles/partials/_nav_club.html" %}
+            {% with menuitems_template="profiles/partials/_nav_club.html" menus_heading_title=page_title%}
                 {{ block.super }}
             {% endwith %}
 
         {% else %}
-            {{ block.super }}
+            {% with menus_heading_title=page_title%}
+                {{ block.super }}
+            {% endwith %}
         {% endif %}
         
     {% else %}
@@ -61,6 +64,8 @@
     {% include 'profiles/banners/_banner.html' with show_user=show_user %}
 {% endblock content_header %}
 
+{% block footer %}
+{% endblock %}
 
 
 {% block extra_js %}

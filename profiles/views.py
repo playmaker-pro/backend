@@ -151,16 +151,38 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "profiles/show_default_profile.html"
     http_method_names = ["get", "post"]
 
-    def get(self, request, *args, **kwargs):
-        user = self._select_user_to_show()
+    def set_show_profile_page_title(self):
+        if self.user.is_coach:
+            if self.editable:
+                return "TWÓJ TRENERSKI PROFIL"
+            else:
+                return "PROFIL TRENERSKI"
+        if self.user.is_player:
+            if self.editable:
+                return "TWOJE CV"
+            else:
+                return "CV PIŁKARZA"
+        if self.user.is_club:
+            if self.editable:
+                return "PROFIL TWOJEGO KLUBU"
+            else:
+                return "PROFIL KLUBU"
+        if self.editable:
+            return "TWÓJ PROFIL"
+        return "PROFIL"
 
+    def get(self, request, *args, **kwargs):
+        self.user = user = self._select_user_to_show()
+        self.editable = False
         if self._is_owner(user):
-            kwargs["editable"] = True
+            self.editable = True
+            kwargs["editable"] = self.editable
             if user.declared_role is None:  # @todo - this is  not pretty.
                 kwargs["role_form"] = self.get_role_declaration_form()  # @todo this mechanism can be replaced with ajax call
 
         kwargs['show_user'] = user
         kwargs['modals'] = self.modal_activity(user)
+        kwargs['page_title'] = self.set_show_profile_page_title()
 
         # To dotyczy tylko playera!!!!
         if user.profile.has_data_id and user.profile.PROFILE_TYPE == 'player':
@@ -281,22 +303,24 @@ class EditAccountSettings(LoginRequiredMixin, generic.TemplateView, mixins.ViewM
         if "role_form" not in kwargs:
             kwargs["role_form"] = forms.ChangeRoleForm()
         kwargs['modals'] = self.modal_activity(user)
+        kwargs['page_title'] = _('Edycja ustawień konta')
+
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         user = self.request.user
 
-        user_form = forms.UserForm(
-            request.POST,
-            request.FILES,
-            instance=user)
+        # user_form = forms.UserForm(
+        #     request.POST,
+        #     request.FILES,
+        #     instance=user)
 
-        if not (user_form.is_valid()):
-            messages.error(request, _("Wystąpiły błąd podczas wysyłania formularza"))
-            return super().get(request, user_form=user_form, role_form=forms.ChangeRoleForm())
+        # if not (user_form.is_valid()):
+        #     messages.error(request, _("Wystąpiły błąd podczas wysyłania formularza"))
+        #     return super().get(request, user_form=user_form, role_form=forms.ChangeRoleForm())
 
-        user_form.save()
-        messages.success(request, "Profile details saved!")
+        # user_form.save()
+        # messages.success(request, "Profile details saved!")
         return redirect("profiles:show_self")
 
 
@@ -304,17 +328,29 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
     template_name = "profiles/edit_profile.html"
     http_method_names = ["get", "post"]
 
+    def set_edit_profile_page_title(self):
+        if self.user.is_coach or self.user.is_club:
+            return 'Edycja Profilu'
+        if self.user.is_player:
+            return "Edycja CV"
+        return "Edycja profilu"
+
     def get(self, request, *args, **kwargs):
-        user = self.request.user
+        self.user = user = self.request.user
         if "user_form" not in kwargs:  # @todo do wywalenia
             kwargs["user_form"] = forms.UserForm(instance=user)
 
-        if "profile_form" not in kwargs: 
+        if "user_basic_form" not in kwargs:
+            kwargs['user_basic_form'] = forms.UserBasicForm(instance=user)
+
+        if "profile_form" not in kwargs:
             profile_form = get_profile_form_model(user)
             kwargs["profile_form"] = profile_form(instance=user.profile)
 
         if "role_form" not in kwargs:  # @todo do wywalenia
             kwargs["role_form"] = forms.ChangeRoleForm()
+
+        kwargs['page_title'] = self.set_edit_profile_page_title()
         kwargs['modals'] = self.modal_activity(user)
         return super().get(request, *args, **kwargs)
 
@@ -327,7 +363,12 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
             instance=user.profile
         )
 
-        if not profile_form.is_valid():
+        user_basic_form = forms.UserBasicForm(
+            request.POST,
+            request.FILES,
+            instance=user)
+
+        if not profile_form.is_valid() or not user_basic_form.is_valid():
             messages.error(
                 request,
                 _("Wystąpiły błąd podczas wysyłania formularza")
@@ -335,10 +376,13 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
             )
             # user_form = forms.UserForm(instance=user)
             # profile_form = get_profile_form_model(user)(instance=user.profile)
-            return super().get(request, profile_form=profile_form)
+            return super().get(request, profile_form=profile_form, user_basic_form=user_basic_form)
 
         # Both forms are fine. Time to save!
-        profile = profile_form.save()
+        user_basic_form.save()
+        profile = profile_form.save(commit=False)
+        profile.user = user
+        profile.save()
         messages.success(request, "Profile details saved!")
         return redirect("profiles:show_self")
 
@@ -393,17 +437,18 @@ from django.views import View
 from crispy_forms.utils import render_crispy_form
 
 
-class AccountVerification(View):
+class AccountVerification(LoginRequiredMixin, View):
 
     http_method_names = ['post', 'get']
 
     def get(self, request, *args, **kwargs):
+        user = request.user
         if request.user.is_coach:
-            form = forms.CoachVerificationForm()
+            form = forms.CoachVerificationForm(instance=user.profile)
         if request.user.is_club:
-            form = forms.ClubVerificationForm()
+            form = forms.ClubVerificationForm(instance=user.profile)
         if request.user.is_player:
-            form = forms.PlayerVerificationForm()
+            form = forms.PlayerVerificationForm(instance=user.profile)
         data = {}
         data['form'] = render_crispy_form(form)
         return JsonResponse(data)

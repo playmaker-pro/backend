@@ -2,7 +2,7 @@
 {% extends 'soccerbase/base.html' %}
 {% load i18n %}
 
-
+{% comment %} 
 {% block content_header %}
 
     {% if type == 'P' %}
@@ -20,73 +20,129 @@
     {% elif type == 'C' %}
         {% include 'partials/breadcrumbs.html' with breadcrumb_url=url breadcrumb_name='Baza klubów'%}
     {% endif %}
-   
+{% endblock %} {% endcomment %}
+
+{% block header %}
+    {% if type == 'P' %}
+        {% with menus_heading_title='Baza piłkarzy' %}
+            {{ block.super }}
+        {% endwith %}
+        
+    {% elif type == 'T' %}
+         {% with menus_heading_title='Baza Trenerów' %}
+            {{ block.super }}
+        {% endwith %}
+    {% elif type == 'C' %}
+         {% with menus_heading_title='Baza Drużyn' %}
+            {{ block.super }}
+        {% endwith %}
+    {% endif %}
+{% endblock %}
+
+
+
+{% block content_header %}
+    {% if type == 'P' %}
+         {% include '_page_heading.html' with heading_title='Baza piłkarzy' size=4 %}
+    {% elif type == 'T' %}
+         {% include '_page_heading.html' with heading_title='Baza trenerów' size=4 %}
+    {% elif type == 'C' %}
+         {% include '_page_heading.html' with heading_title='Baza Drużyn' size=4 %}
+    {% endif %}
+
    
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row"> 
-        <div>Filtry</div>
-        <div class="col">
 
-            <form method="get" class="form-inline ">
-                <div class="row">
-                    <div class="col-4"> 
-                            <select name="leg" class="form-control col-4">
-                                <option value="----">----</option>
-                                <option {% if request.GET.leg == 'dominująca lewa' %} selected {% endif %}value="dominująca lewa">dominująca lewa</option>
-                                <option {% if request.GET.leg == 'dominująca lewa' %} selected {% endif %}value="dominująca prawa">dominująca prawa</option>
 
-                            </select>
-                    </div>
-                    
-                    <div class="col-4"> 
-                            <select name="age_range" class="form-control col-4">
-                                <option value="----">----</option>
-                                <option {% if request.GET.age_range == 'do 20 lat' %} selected {% endif %}value="do 20 lat">do 20 lat</option>
-                                <option {% if request.GET.age_range == 'od 21 do 26' %} selected {% endif %}value="od 21 do 26">od 21 do 26</option>
-                                <option {% if request.GET.age_range == 'od 27 do 34' %} selected {% endif %}value="od 27 do 34">od 27 do 34</option>
-                                <option {% if request.GET.age_range == 'powyżej 35' %} selected {% endif %}value="powyżej 35">powyżej 35</option>
-                            </select>
-                    </div>
-                    <div class="col-4"> 
-                            <select name="position" class="form-control col-4">
-                                <option value="----">----</option>
-                                <option {% if request.GET.position == 'Bramkarz' %} selected {% endif %}value="Bramkarz">Bramkarz</option>
-                                <option {% if request.GET.position == 'Obrońca Lewy' %} selected {% endif %}value="Obrońca Lewy">Obrońca Lewy</option>
-                                <option {% if request.GET.position == 'Obrońca Prawy' %} selected {% endif %}value="Obrońca Prawy">Obrońca Prawy</option>
-                                <option {% if request.GET.position == 'Obrońca Środkowy' %} selected {% endif %}value="Obrońca Środkowy">Obrońca Środkowy</option>
-                                <option {% if request.GET.position == 'Pomocnik defensywny (6)' %} selected {% endif %}value="Pomocnik defensywny (6)">Pomocnik defensywny (6)</option>
-                                <option {% if request.GET.position == 'Pomocnik środkowy (8)' %} selected {% endif %}value="Pomocnik środkowy (8)">Pomocnik środkowy (8)</option>
-                                <option {% if request.GET.position == 'Pomocnik ofensywny (10)' %} selected {% endif %}value="Pomocnik ofensywny (10)">Pomocnik ofensywny (10)</option>
-                                <option {% if request.GET.position == 'Skrzydłowy' %} selected {% endif %}value="Skrzydłowy">Skrzydłowy</option>
-                                <option {% if request.GET.position == 'Napastnik' %} selected {% endif %}value="Napastnik">Napastnik</option>
-                            </select>
-                    </div>    
-                </div>
-                <input class="btn-pm btn-pm-sm" type="submit" value="Search" class="btn btn-default">
-            </form>
-        
-        </div>
-    </div>
-</div>
+{% if type == 'P' %}
+    {% include 'soccerbase/tables/filters/player.html' %}
+{% elif type == 'T' %}
+    {% include 'soccerbase/tables/filters/coaches.html' %}
+{% elif type == 'C' %}
+    {% include 'soccerbase/tables/filters/teams.html' %}
+{% endif %}
+
+
 <section id="tables" class="tables"> 
-<div class="container">
-
-    {% if type == 'P' %}
-        {% include 'soccerbase/tables/players_card.html' with objects=page_obj %}
-    {% elif type == 'T' %}
-        {% include 'soccerbase/tables/coaches.html' with objects=page_obj %}
-    {% elif type == 'C' %}
-        {% include 'soccerbase/tables/teams.html' with objects=page_obj %}
-    {% endif %}
-     <span></span>   
-    {% include 'soccerbase/_pagination.html'%}
-</div>
+    <div class="container">
+        {% if page_obj.paginator.count == 0 %}
+            {% include '_empty_data.html' %}
+        {% else %}
+        {% if type == 'P' %}
+            {% include 'soccerbase/tables/players_card.html' with objects=page_obj %}
+        {% elif type == 'T' %}
+            {% include 'soccerbase/tables/coaches_card.html' with objects=page_obj %}
+        {% elif type == 'C' %}
+            {% include 'soccerbase/tables/teams_card.html' with objects=page_obj %}
+        {% endif %}
+        <span></span>   
+        {% include 'soccerbase/_pagination.html'%}
+        {% endif %}
+    </div>
 
 </section>
+
+ 
+
 {% endblock content %}
 
 
 
+{% block extra_js %}
+<script>
+function checkWindowSize() {  
+
+    if ( $(window).width() > 786 ) {  
+        console.log('low low')
+        $('#table-filters').addClass('sticky-top'); 
+        $('#table-filters').removeClass('fixed-bottom');   
+    }  
+    else {  
+        $('#table-filters').addClass('fixed-bottom'); 
+        $('#table-filters').removeClass('sticky-top');    
+        
+    }  
+
+}  
+
+$(document).ready(function() {
+
+    // Executes when the HTML document is loaded and the DOM is ready
+    checkWindowSize();
+});
+
+
+$(window).resize(checkWindowSize);  
+
+{% comment %} $("#emailme").mouseover(function(){
+    $(this).animate({
+        paddingTop: "15px"
+    }, 100);
+}).mouseout(function(){
+    $(this).animate({
+        paddingTop: "10px"
+    }, 100);
+}); {% endcomment %}
+{% comment %} $(document).ready(function () {
+    $(".table-item").hover(function () {
+        $(this).css("background", "#e2e8f0");
+    },
+        function () {
+            $(this).css("background", "#fff");
+        });
+}); {% endcomment %}
+{% comment %} $( ".table-item" ).hover(function() {
+
+  $( this ).fadeOut( 100 );
+  $( this ).fadeIn( 500 );
+}); {% endcomment %}
+
+{% comment %} $(".table-item").mouseover(function(){
+    $(this).animate({
+        paddingTop: "35px"
+    }, 100);
+}); {% endcomment %}
+</script>
+{% endblock %}

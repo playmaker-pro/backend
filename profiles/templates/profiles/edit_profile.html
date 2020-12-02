@@ -11,8 +11,9 @@
 
 {% block content_header %}
   {{ block.super }}
-  {% include '_header_with_picture.html' with image=user.picture %}
+  {% include '_page_heading_with_picture.html' with image=user.picture %}
 {% endblock content_header %}
+
 
 
 {% block content %}
@@ -23,6 +24,7 @@
           <div class="col-md-12">
       
                <form class='profile-edit-form' enctype="multipart/form-data" method="post">
+               {% crispy user_basic_form %}
                   {% crispy profile_form %}
                 <button type="submit" name="update" value="Update" id="submit-id-update">{% trans 'Aktualizuj CV' %}</button>
                </form>
