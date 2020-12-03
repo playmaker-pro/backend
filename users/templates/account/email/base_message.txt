@@ -1,4 +1,4 @@
-{% load i18n %}{% autoescape off %}{% blocktrans with site_name=current_site.name %}<h1>Witaj na platformie PlayMaker.pro!</h1>{% endblocktrans %}
+{% load i18n %}{% autoescape off %}{% blocktrans with site_name=current_site.name %}Witaj na platformie PlayMaker.pro!{% endblocktrans %}
 
 {% block content %}{% endblock %}
 
