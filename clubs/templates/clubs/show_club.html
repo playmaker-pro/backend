@@ -4,12 +4,12 @@
 
 {% block content_header %}
     {{ block.super }}
-    {% include '_header_with_picture.html' with image=club.picture %}
+    {% include '_page_heading_with_picture.html' with image=club.picture %}
 {% endblock content_header %}
 
+
+
 {% block content %}
-
-
 
 <section id="clubs" class="club">
   <div class="container profile-container" data-aos="fade-up">
@@ -36,3 +36,5 @@
 
 
 {% endblock content %}
+
+

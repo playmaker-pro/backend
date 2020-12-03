@@ -64,24 +64,23 @@ class TeamForm(forms.ModelForm):
         # self.helper.form_show_errors = True
         self.helper.error_text_inline = True
         self.helper.labels_uppercase = True
-        self.helper.wrapper_class = 'row'
-        self.helper.label_class = 'col-md-3 text-md-right text-muted upper'
+        self.helper.label_class = 'col-md-3 text-muted upper'
         self.helper.field_class = 'col-md-6'
+        
         self.helper.layout = Layout(
-            Div(
                 Div(
                     Fieldset(
                         _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
                         Div(
                             Field('name', wrapper_class='row'),
-                            Field('travel_refunds', wrapper_class='row'),
-                            Field('game_bonus', wrapper_class='row'),
-                            Field('scolarships', wrapper_class='row'),
-                            Field('gloves_shoes_refunds', wrapper_class='row'),
-                            Field('regular_gear', wrapper_class='row'),
-                            Field('secondary_trainer', wrapper_class='row'),
-                            Field('diet_suplements', wrapper_class='row'),
-                            Field('fizo', wrapper_class='row'),
+                            Field('travel_refunds'),
+                            Field('game_bonus'),
+                            Field('scolarships'),
+                            Field('gloves_shoes_refunds'),
+                            Field('regular_gear'),
+                            Field('secondary_trainer'),
+                            Field('diet_suplements'),
+                            Field('fizo'),
                         ),
                         css_class='col-md-6',
                     ),
@@ -89,7 +88,7 @@ class TeamForm(forms.ModelForm):
                 ),
 
                 # css_class='card',
-            )  # div master div
+              # div master div
         )  # layout
 
     class Meta:

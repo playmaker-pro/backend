@@ -1,0 +1,31 @@
+{% load i18n %}
+
+
+
+
+
+{% with button_class="btn-pm btn-pm-sm" %}
+
+    {% if modals.register.load %}
+        <a href="#" class="{{ button_class }}" data-toggle="modal" data-target="#{{ modals.register.name }}">
+        {% if button_icon %}<i class="icofont-{{ button_icon }}"></i>{% endif %} {{ button_prefix }} {{ button_text }} {{ button_suffix }}
+        </a>
+    {% elif modals.need_role.load %}
+        <a href="#" class="{{ button_class }}" data-toggle="modal" data-target="#{{ modals.need_rol.name }}">
+            {% if button_icon %}<i class="icofont-{{ button_icon }}"></i>{% endif %} {{ button_prefix }} {{ button_text }} {{ button_suffix }}
+        </a>
+    {% elif modals.verification.load %}
+        <a href="#" class="{{ button_class }}" data-toggle="modal" data-target="#{{ modals.verification.name }}">
+            {% if button_icon %}<i class="icofont-{{ button_icon }}"></i>{% endif %} {{ button_prefix }} {{ button_text }} {{ button_suffix }}
+        </a>
+    {% elif modals.need_verification.load %}
+        <a href="#" class="{{ button_class }}" data-toggle="modal" data-target="#{{ modals.need_verification.name }}">
+            <i class="icofont-{{ icon }}"></i> {{ button_prefix }} {{ button_text }} {{ button_suffix }}
+        </a>
+    {% else %}
+        <a href="{{ button_url }}" class="{{ button_class }}">
+            {% if button_icon %}<i class="icofont-{{ button_icon }}"></i>{% endif %} {{ button_prefix }} {{ button_text }} {{ button_suffix }}
+        </a>
+    {% endif %}
+
+{% endwith %}

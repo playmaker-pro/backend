@@ -2,10 +2,11 @@
 {% load static %}
 {% load thumbnail %}
 
-<div class="card" style="width: 18rem;">
+<div class="card" >
+  <div>
 
-  <img title="profile picture" class="avatar img-responsive" src="{% thumbnail team.picture|default:'default_team.png' 'profile_avatar_show' %}">
-
+    <img title="" class="avatar" src="{% thumbnail team.picture|default:'default_team.png' 'profile_avatar_show' %}">
+  </div>
   
   <div class="card-body">
     <h5 class="card-title">{{ team.name }}</h5>

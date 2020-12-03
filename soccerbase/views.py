@@ -19,8 +19,10 @@ TABLE_TYPE_TEAM = definitions.CLUB_SHORT
 TABLE_TYPE_COACH = definitions.COACH_SHORT
 
 
+from profiles import mixins  # @todo move this to platfrom app
 
-class TableView(generic.TemplateView):
+
+class TableView(generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "soccerbase/tables/table.html"
     http_method_names = ["get"]
     paginate_limit = 5
@@ -40,6 +42,7 @@ class TableView(generic.TemplateView):
         page_obj = paginator.get_page(page_number)
         kwargs['page_obj'] = page_obj
         kwargs['type'] = self.table_type
+        kwargs['modals'] = self.modal_activity(request.user, register_auto=False)
         page_obj.elements = page_obj.end_index() - page_obj.start_index() + 1
         # kwargs['ammount'] = page_obj.count()
         return super().get(request, *args, **kwargs)

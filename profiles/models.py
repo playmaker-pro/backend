@@ -136,7 +136,12 @@ class BaseProfile(models.Model):
         max_length=255,
         blank=True,
         editable=False)
-
+         
+    bio = models.CharField(
+        _("Short Bio"),
+        max_length=200,
+        blank=True,
+        null=True)
     bio = models.CharField(
         _("Short Bio"),
         max_length=200,

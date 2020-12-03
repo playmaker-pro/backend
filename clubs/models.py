@@ -7,9 +7,11 @@ from django.urls import reverse
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
 from address.models import AddressField
+from profiles.utils import unique_slugify
 
 
 class Club(models.Model):
+    PROFILE_TYPE = 'klub'
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL)
 
@@ -24,10 +26,10 @@ class Club(models.Model):
         blank=True,
         help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.')
 
-    slug = models.UUIDField(
-       default=uuid.uuid4,
-       blank=True,
-       editable=False)
+    slug = models.CharField(
+        max_length=255,
+        blank=True,
+        editable=False)
 
     name = models.CharField(
         _('Club name'),
@@ -56,18 +58,24 @@ class Club(models.Model):
         help_text=_('Adres'),
         blank=True,
         null=True)
-    
+
     practice_stadion_address = AddressField(
         related_name='coach_practice_stadion_address',
         help_text=_('Adres'),
         blank=True,
         null=True)
 
+    def save(self, *args, **kwargs):
+        slug_str = "%s %s" % (self.PROFILE_TYPE, self.name)
+        unique_slugify(self, slug_str)
+        super().save(*args, **kwargs)
 
 class Team(models.Model):
     # editors = models.OneToOneField(
     #     settings.AUTH_USER_MODEL)
+    PROFILE_TYPE = 'team'
     EDITABLE_FIELDS = [
+        'name',
         'picture',
         'travel_refunds',
         'game_bonus',
@@ -79,6 +87,14 @@ class Team(models.Model):
         'fizo',
         'diet_suplements'
     ]
+
+    slug = models.CharField(
+        max_length=255,
+        blank=True,
+        editable=False)
+
+    editors = models.ManyToManyField(
+        settings.AUTH_USER_MODEL)
 
     picture = models.ImageField(
         _("Zdjęcie"),
@@ -98,11 +114,6 @@ class Team(models.Model):
         blank=True,
         help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.')
 
-    slug = models.UUIDField(
-       default=uuid.uuid4,
-       blank=True,
-       editable=False)
-
     name = models.CharField(
         _('Team name'),
         max_length=255,
@@ -111,46 +122,59 @@ class Team(models.Model):
     def get_permalink(self):
         return reverse("clubs:show_team", kwargs={"slug": self.slug})
 
+    def save(self, *args, **kwargs):
+        slug_str = "%s %s %s" % (self.PROFILE_TYPE, self.name, self.club.name)
+        unique_slugify(self, slug_str)
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = _('Team')
         verbose_name_plural = _("Teams")
+        unique_together = ('name', 'club')
 
     def __str__(self):
         return f'{self.club.name}:{self.name}'
 
     # common  team fileds
     travel_refunds = models.BooleanField(
-        default=False,
-        help_text='travel_refunds')
+        _('Zwrot za dojazdy'),
+        default=False)
 
     game_bonus = models.BooleanField(
-        default=False,
-        help_text='game_bonus')
+        _('Premie za mecze'),
+        default=False,)
 
     scolarships = models.BooleanField(
+        _('Stypendia'),
         default=False,
-        help_text='scolarships')
+        )
 
     gloves_shoes_refunds = models.BooleanField(
+        _('Zwroty za buty/rękawice'),
         default=False,
-        help_text='gloves_shoes_refunds')
+        )
 
     traning_gear = models.BooleanField(
+        _('Sprzęt treningowy'),
         default=False,
-        help_text='traning_gear')
+        )
 
     regular_gear = models.BooleanField(
+        _('Sprzęt wyjściowy'),
         default=False,
-        help_text='regular_gear')
+        )
 
     secondary_trainer = models.BooleanField(
+        _('Drugi trener'),
         default=False,
-        help_text='secondary_trainer')
+        )
 
     fizo = models.BooleanField(
+        _('Fizjoterapeuta'),
         default=False,
-        help_text='fizo')
+        )
 
     diet_suplements = models.BooleanField(
+        _('Suplemnety / odżywki'),
         default=False,
-        help_text='diet_suplements')
+        )

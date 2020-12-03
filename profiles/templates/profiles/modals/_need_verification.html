@@ -9,17 +9,21 @@
   <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 class="modal-title" id="verificationNeededModalLabel">{% trans 'Wymagana werifikacja konta' %}</h3>
+        <h3 class="modal-title" id="verificationNeededModalLabel">{% trans 'Oczekiwanie na werifikacje konta' %}</h3>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+          <span aria-hidden="true"><i class="icofont-close-circled main-color"></i></span>
         </button>
       </div>
 
 
       <div class="modal-body">
         <div>
-            By w pełni korzystać z platformy <strong>{% include 'profiles/partials/brandname.html' %}</strong> należy zwerifikować konto uzupełniając poniższe dane.
-
+             Twoje konto jest w tym momencie werifikowane by w pełni korzystać z platformy <strong>{% include 'platform/partials/brandname.html' %}</strong> 
+             
+        </div>
+        <div>
+          Jeśli długo czekasz  skontaktuj się z nami:
+          <span class="text-muted">{% include 'platform/partials/contact_mail.html' %}</span>
         </div>
       </div>
       

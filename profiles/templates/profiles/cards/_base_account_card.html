@@ -11,14 +11,23 @@
       </div>
       
       <div class='col-md-9'>
+          
 
           <h1 class="card-title">{{ show_user.get_full_name|upper }}</h1>
           <!--span class="pull-left text-muted"-->          
               
           {% if editable and user.is_pending_role_change %} 
-            <div class="alert alert-danger" style="padding:5px;font-size:.9em">
-              {% trans 'Oczekujesz na akceptacje zmiany typu konta z' %} <strong>{{user.pending_role_change.current_pretty|upper}}</strong> {% trans 'na' %} <strong>{{user.pending_role_change.new_pretty|upper}}</strong> 
+            
+            <div class="d-inline"> 
+              {% include 'platform/buttons/helper.html' with tooltip_title="Twoje zgłoszenie trafiło do adminów. Zwykle trwa to kilka chwil." tooltip_position="top" %}
+
+              <div class="alert alert-danger" style="padding:5px;font-size:.9em">
+
+
+                {% trans 'Oczekujesz na akceptacje zmiany typu konta z' %} <strong>{{user.pending_role_change.current_pretty|upper}}</strong> {% trans 'na' %} <strong>{{user.pending_role_change.new_pretty|upper}}</strong> 
+              </div>
             </div>
+
           {% else %}
             <h4 class="d-inline card-subtitle mb-2 text-muted"><i class="icofont-boot-alt-2"></i> {{ show_user.get_declared_role_display|upper }}  </h4>
           {% endif %}

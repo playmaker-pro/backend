@@ -11,18 +11,21 @@
 
 {% block content_header %}
   {{ block.super }}
-  {% include '_header_with_picture.html' with image=team.picture %}
+  {% include '_page_heading_with_picture.html' with image=team.picture %}
 {% endblock content_header %}
 
 
 {% block content %}
+
+
+
 <section id="profile" class="profile">
   <div class="container" data-aos="fade-up">
         <div class="row">
           <div class="col-md-12">
                <form class='profile-edit-form' enctype="multipart/form-data" method="post">
                   {% crispy team_form %}
-                <button type="submit" name="update" value="Update" id="submit-id-update">{% trans 'Aktualizuj klubowe dane' %}</button>
+                <button  class="btn-pm btn-pm-sm" type="submit" name="update" value="Update" id="submit-id-update">{% trans 'Aktualizuj klubowe dane' %}</button>
                </form>
          </div> 
         </div>

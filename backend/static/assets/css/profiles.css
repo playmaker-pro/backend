@@ -1,10 +1,6 @@
 
 .page-heading { }
 
-.banner {
-    padding:5px 40px;
-    margin-bottom: 0px;
-}
 
 #profile {
     padding-top: 15px;
@@ -125,13 +121,6 @@ section.profile {
         padding-top: 0px;
     }
 
-    .banner {
-        margin-bottom: 0px;
-    }
-
-    .banner {
-        font-size:.9em;
-    }
 
     #profile .account-card {
         border-top:none;

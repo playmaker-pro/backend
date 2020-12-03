@@ -1,0 +1,42 @@
+    
+{% load i18n %}
+
+<div class="pagination d-block">
+    <span class="float-center">
+        <span class="step-links text-center ">
+            {% if page_obj.has_previous %}
+
+
+                {% with "?page=1" as button_url %}
+                    {% include 'platform/buttons/action_button.html' with button_text=_('pierwsza') button_url=button_url button_prefix='&laquo;' %}
+                {% endwith %}
+
+                {% with "?page="|add:page_obj.previous_page_number as button_url %}
+                    {% include 'platform/buttons/action_button.html' with button_text=_('poprzednia') button_url=button_url button_suffix='&raquo;'%}
+                {% endwith %}
+            {% endif %}
+
+            <span class="current">
+                {% trans 'Strona' %} {{ page_obj.number }} {% trans 'z' %} {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+                {% with "?page="|add:page_obj.next_page_number as button_url %}
+                    {% include 'platform/buttons/action_button.html' with button_text=_('następna') button_url=button_url %}
+                {% endwith %}
+
+                {% with "?page="|add:page_obj.paginator.num_pages as button_url %}
+                    {% include 'platform/buttons/action_button.html' with button_text=_('ostatnia') button_url=button_url button_suffix='&raquo;'%}
+                {% endwith %}
+            {% endif %}
+        </span>
+    </span>
+
+
+    <div class="float-right">  
+ 
+            <span class="main-color "> {{ page_obj.elements }}</span> /  <span class="main-color">{{ page_obj.paginator.count }} </span>wszystkich wpisów
+
+    </div>
+
+</div>

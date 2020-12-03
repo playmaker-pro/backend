@@ -2,18 +2,33 @@
 
 
 
+{% block content_header %}
+    {% include '_page_heading.html' with heading_title=page_title size=4 %}
+    {{ block.super }}
+{% endblock %}
+
+
+
 {% block content %}
 <section>
     <div class="container">
         <h1> {{ team.name }} </h2>
             {% if editable %}
                 {% url 'clubs:edit_team' slug=team.slug as button_url%}
-                {% include 'clubs/buttons/edit.html' with button_url=button_url %}
+                {% include 'platform/buttons/action_button.html' with button_text=_('Edytuj') button_url=button_url %}
             {% endif %}
-            
-        {% include 'clubs/teams/card.html' with team=team %}
+        <div class="row">
+            <div class="col-sm-6">{% include 'clubs/teams/card.html' with team=team %}</div>
+            <div class="col-sm-6">{% include 'clubs/teams/data.html' with object=team %}</div>
+        </div>
+        
+       
         Klub:
         <a href="{{ team.club.get_permalink }}"> {{ team.club.name }} </a>
     </div>
 </section>
 {% endblock content %}
+
+
+
+

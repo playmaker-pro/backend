@@ -1,0 +1,10 @@
+{% load i18n %}
+<li><a href="{% url 'profiles:inquiry_me'%}">{% trans 'Zapytania' %}</a></li>
+<li><a href="{% url 'profiles:observe_me'%}">{% trans 'Obserwowani' %}</a></li>
+<li class="drop-down"><a href="">Bazy</a>
+    <ul>
+        <li><a href="{% url 'soccerbase:players' %}">Piłkarzy</a></li>
+        <li><a href="{% url 'soccerbase:coaches' %}">Trenerów</a></li>
+        <li><a href="{% url 'soccerbase:teams' %}">Klubów</a></li>
+    </ul>
+</li>

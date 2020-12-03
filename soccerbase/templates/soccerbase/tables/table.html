@@ -78,7 +78,7 @@
             {% include 'soccerbase/tables/teams_card.html' with objects=page_obj %}
         {% endif %}
         <span></span>   
-        {% include 'soccerbase/_pagination.html'%}
+        {% include 'platform/partials/_pagination.html'%}
         {% endif %}
     </div>
 
@@ -91,6 +91,7 @@
 
 
 {% block extra_js %}
+    {{ block.super }}
 <script>
 function checkWindowSize() {  
 

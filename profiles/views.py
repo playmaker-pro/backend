@@ -110,7 +110,7 @@ class ProfileGames(generic.TemplateView, PaginateMixin):
         if self.request.user.profile.playermetrics.how_old_days(games=True) >= 7 and self.request.user.profile.has_data_id:
             games = adapters.PlayerLastGamesAdapter(_id).get()
             user.profile.playermetrics.update_games(games)
-
+           
         return user.profile.playermetrics.games
 
 

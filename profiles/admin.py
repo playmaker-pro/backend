@@ -1,6 +1,7 @@
 
 
 from django.contrib import admin
+from utils import linkify
 
 from . import models
 
@@ -13,7 +14,6 @@ class ProfileVisitHistoryAdmin(admin.ModelAdmin):
 @admin.register(models.PlayerMetrics)
 class PlayerMetricsAdmin(admin.ModelAdmin):
     pass
-
 
 class ProfileAdminBase(admin.ModelAdmin):
     pass
@@ -36,7 +36,7 @@ class ClubProfileAdmin(ProfileAdminBase):
 
 @admin.register(models.PlayerProfile)
 class PlayerProfileAdmin(ProfileAdminBase):
-    list_display = ('pk', 'user', 'weight')
+    list_display = ('pk', 'user', 'weight', linkify('playermetrics'))
 
 
 @admin.register(models.CoachProfile)

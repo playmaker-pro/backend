@@ -1,0 +1,29 @@
+{% load i18n %}
+{% load static %}
+{% with template='profiles/partials/_two_table_true_false.html'  object=object %}
+
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title">{% trans 'Drużyna' %}</h2>
+
+            <h6 class="card-subtitle mb-2 text-muted"></h6>
+
+            <div class="card-text">
+
+
+                {% include template with key=_('Zwrot za dojazdy') value=object.travel_refunds      %}
+                {% include template with key=_('Premie za mecze') value=object.game_bonus      %}
+                {% include template with key=_('Stypendia') value=object.scolarships      %}
+                {% include template with key=_('Zwroty za buty/rękawice') value=object.gloves_shoes_refunds     %}
+                {% include template with key=_('Sprzęt treningowy') value=object.traning_gear      %}
+                {% include template with key=_('Sprzęt wyjściowy') value=object.regular_gear      %}
+                {% include template with key=_('Drugi trener') value=object.secondary_trainer      %}
+                {% include template with key=_('Fizjoterapeuta') value=object.fizo     %}
+                {% include template with key=_('Suplemnety / odżywki') value=object.diet_suplements      %}
+
+            </div>
+        </div>
+    </div>
+
+{% endwith %}
+

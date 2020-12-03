@@ -10,8 +10,8 @@
 <!-- Benefits of the Django application -->
 
 {% block content_header %}
-  {{ block.super }}
-  {% include '_header_with_picture.html' with image=club.picture %}
+    {{ block.super }}
+    {% include '_page_heading_with_picture.html'  with image=club.picture %}
 {% endblock content_header %}
 
 

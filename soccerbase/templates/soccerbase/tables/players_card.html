@@ -60,12 +60,16 @@
         </div>
 
         <div class="d-none d-md-inline col-md-1">
-              <span class="float-right"> <a href="{{ object.profile.get_permalink }}"><i class="btn-pm btn-pm-sm icofont-user"></i></a></span>
+              <span class="float-right"> 
+                {% include 'platform/buttons/action_button.html' with button_icon='user' button_url=object.profile.get_permalink %}
+
         </div>
     </div>
   </div>
   <div class="card-footer  d-md-none">
-    <span class="float-right"> <a href="{{ object.profile.get_permalink }}"><i class="btn-pm btn-pm-sm icofont-user"></i> zobacz profil</a></span>
+    <span class="float-right"> 
+    {% include 'platform/buttons/action_button.html' with button_icon='user' button_url=object.profile.get_permalink %}
+   
   </div>
 </div>
 {% endfor %}

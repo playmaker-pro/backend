@@ -1,0 +1,35 @@
+
+
+
+/* ---------------------- */
+/* ------- Banner -------#e03a3c; */
+/* ---------------------- */
+
+.helper {
+    position:relative;
+    top:10px;
+    left:-5px;
+    z-index:995;
+    font-size: .65rem;
+    padding:3px;
+    font-weight: 700;
+    color:#e03a3c;
+    background: #ccc;
+    border-radius: 50%;
+}
+
+
+.banner {
+    padding: 6px 40px;
+    margin-bottom: 0px;
+    font-size: .85rem;
+}
+
+@media all and (max-width: 768px) {
+    .banner {
+        margin-bottom: 0px;
+    }
+
+    .banner {
+        font-size:.9em;
+    }

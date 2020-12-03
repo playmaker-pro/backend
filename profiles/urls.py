@@ -6,8 +6,8 @@ app_name = "profiles"
 
 urlpatterns = [
     path("me/", views.ShowProfile.as_view(), name="show_self"),
-    path("me/query/", views.inquiry, name="inquiry"),
-    path("me/observe/", views.observe, name="inquiry"),
+    path("me/query/", views.inquiry, name="inquiry_me"),
+    path("me/observe/", views.observe, name="observe_me"),
     path('me/verification/', views.AccountVerification.as_view(), name='account_verification'),
     path("me/edit/", views.EditProfile.as_view(), name="edit_self"),
     path("me/edit/settings/", views.EditAccountSettings.as_view(), name="edit_settings"),

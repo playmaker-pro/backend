@@ -10,9 +10,10 @@ from django.http.response import HttpResponse
 from django.http import JsonResponse
 from django.urls import reverse
 from . import models, forms
+from profiles.mixins import ViewModalLoadingMixin
 
 
-class ClubShow(generic.TemplateView):
+class ClubShow(generic.TemplateView, ViewModalLoadingMixin):
     template_name = "clubs/show_club.html"
     http_method_names = ["get"]
 
@@ -24,13 +25,16 @@ class ClubShow(generic.TemplateView):
             kwargs['teams'] = teams
             user = self.request.user
             if user in club.editors.all():
-                kwargs['editable'] = True
+                self.editable = True
+                kwargs['editable'] = self.editable
         kwargs["club"] = club
+        kwargs["modals"] = self.modal_activity(request.user)
+        kwargs["page_title"] = 'PROFIL KLUBU'
 
         return super().get(request, *args, **kwargs)
 
 
-class ClubEdit(LoginRequiredMixin, generic.TemplateView):
+class ClubEdit(LoginRequiredMixin, generic.TemplateView, ViewModalLoadingMixin):
     template_name = "clubs/edit_club.html"
     http_method_names = ["get", "post"]
 
@@ -42,6 +46,8 @@ class ClubEdit(LoginRequiredMixin, generic.TemplateView):
 
         if "club_form" not in kwargs:
             kwargs["club_form"] = forms.ClubForm(instance=club)
+        kwargs["modals"] = self.modal_activity(request.user)
+        kwargs["page_title"] = 'EDYCJA KLUBU'
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
@@ -64,29 +70,33 @@ class ClubEdit(LoginRequiredMixin, generic.TemplateView):
             )
             # user_form = forms.UserForm(instance=user)
             # profile_form = get_profile_form_model(user)(instance=user.profile)
-            return super().get(request, club_form=club_form)
+            return super().get(request, slug=club.slug, club_form=club_form)
 
         club = club_form.save()
         messages.success(request, "Club details saved!")
-        return redirect("clubs:show_club", {'slug': club.slug})
+        return redirect("clubs:show_club", slug=club.slug)
 
 
-class TeamShow(generic.TemplateView):
+class TeamShow(generic.TemplateView, ViewModalLoadingMixin):
     template_name = "clubs/show_team.html"
     http_method_names = ["get"]
 
     def get(self, request, *args, **kwargs):
         slug = self.kwargs.get('slug')
-        if slug:
+        if slug:  # @todo bez sluga nie mozna wejsc...
             team = get_object_or_404(models.Team, slug=slug)
             user = self.request.user
-
+        if user in team.editors.all():
+            self.editable = True
+            kwargs['editable'] = self.editable
         kwargs["team"] = team
+        kwargs["modals"] = self.modal_activity(request.user)
+        kwargs["page_title"] = 'PROFIL DRUŻYNY'
 
         return super().get(request, *args, **kwargs)
 
 
-class TeamEdit(LoginRequiredMixin, generic.TemplateView):
+class TeamEdit(LoginRequiredMixin, generic.TemplateView, ViewModalLoadingMixin):
     template_name = "clubs/edit_team.html"
     http_method_names = ["get", "post"]
 
@@ -98,6 +108,8 @@ class TeamEdit(LoginRequiredMixin, generic.TemplateView):
         # @todo team jest opcjonalny -> grozi to wywaleniem sie gdy ktos wiedjze na /clubs/team/
         if "team_form" not in kwargs:
             kwargs["team_form"] = forms.TeamForm(instance=team)
+        kwargs["modals"] = self.modal_activity(request.user)
+        kwargs["page_title"] = 'EDYCJA DRUŻYNY'
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
@@ -120,8 +132,9 @@ class TeamEdit(LoginRequiredMixin, generic.TemplateView):
             )
             # user_form = forms.UserForm(instance=user)
             # profile_form = get_profile_form_model(user)(instance=user.profile)
-            return super().get(request, club_form=team_form)
+            return super().get(request, slug=team.slug, team_form=team_form)
 
-        club = team_form.save()
-        messages.success(request, "Club details saved!")
-        return redirect("clubs:show_club", {'slug': club.slug})
+        team = team_form.save()
+        messages.success(request, "Team details saved!")
+                
+        return redirect("clubs:show_team", slug=team.slug)

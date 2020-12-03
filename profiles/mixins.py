@@ -1,7 +1,7 @@
 
 class ViewModalLoadingMixin:
 
-    def modal_activity(self, user):
+    def modal_activity(self, user, register_auto=True):
         modals = {
             'register': {
                 'name': 'registerModal',
@@ -41,7 +41,7 @@ class ViewModalLoadingMixin:
         }
         if not user.is_authenticated:
             modals['register']['load'] = True
-            modals['register']['auto'] = True
+            modals['register']['auto'] = register_auto
 
         elif user.is_missing_verification_data:
             modals['verification']['load'] = True

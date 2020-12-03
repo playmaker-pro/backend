@@ -1,20 +1,21 @@
-{% extends "base_outer.html" %}
+{% extends "platform/base.html" %}
 
 
 {% load static %}
 
 
+{% block header %}
+    {% with menuitems_template="partials/_menuitems_empty.html" menus_logo_url=porfile_url menus_heading_title=page_title %}
+        {{ block.super }}
+    {% endwith %}
+{% endblock %}
 
-{% block extra_css %}
-    {{ block.super }}
-    <link href="{% static 'assets/css/signup.css' %}" rel="stylesheet">
-{% endblock extra_css%}
 
 
 
 
 {% block content %}
-<main id="main">
+
     <!-- ======= Login subpage ======= -->
     <section id="{% block account_section_id %}login{% endblock %}" class="{% block account_section_class %}login{% endblock %} last-section">
       <div class="container">
@@ -33,5 +34,5 @@
         </div>
       </div>
     </section>
-</main>
+
 {% endblock content %}

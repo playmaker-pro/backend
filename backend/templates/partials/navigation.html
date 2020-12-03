@@ -10,7 +10,8 @@
       <!-- Uncomment below if you prefer to use an image logo -->
       <!--  PlayMaker - logo (jasne) - NotoSans _ medium.svg  -->
       <!--PlayMaker - logo (jasne) - NotoSans _ medium.png -->
-      <a href="/" class="logo mr-auto"><img src="{% static 'assets/img/playmaker_logo_light.png' %}" alt="logo"></a>
+      <a href="{% if menus_logo_url %}{{ menus_logo_url }}{% else %}/{% endif %}" class="logo mr-auto"><img src="{% static 'assets/img/playmaker_logo_light.png' %}" alt="logo"></a>
+      
       {% if menus_heading_title %}
         <span class="mr-auto d-block d-md-none"> <i class="main-color icofont-hand-drawn-right"></i> {{ menus_heading_title }} </span> 
       {% endif %}

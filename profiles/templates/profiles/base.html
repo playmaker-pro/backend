@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'platform/base.html' %}
 
 {% load static %}
 {% load i18n %}
@@ -6,89 +6,22 @@
 {% block title %}{{ block.super }}:: {% trans 'Profil' %}{% endblock %}  {# @todo someting with this block to better utalize #}
 
 {% block extra_css %}
+    {{ block.super }}
     <link href="{% static 'assets/css/profiles.css' %}" rel="stylesheet">
     <link href="{% static 'assets/css/modals.css' %}" rel="stylesheet">
     <!-- test out -->
     <!-- link rel="stylesheet/less" type="text/css" href="{% static 'assets/css/table1.less' %}" /-->
 
 
-     <!-- Font Awesome -->
-    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
-
-    <!-- Moment.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.min.js" integrity="sha256-VBLiveTKyUZMEzJd6z2mhfxIqz3ZATCuVMawPZGzIfA=" crossorigin="anonymous"></script>
-
-    <!-- Tempus Dominus Bootstrap 4 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.2/css/tempusdominus-bootstrap-4.min.css" integrity="sha256-XPTBwC3SBoWHSmKasAk01c08M6sIA5gF5+sRxqak2Qs=" crossorigin="anonymous" />
-  
 {% endblock extra_css%}
 
 
 
-
-{% block header %}
-    {% if user.is_authenticated %}
-        {% if user.is_coach %}
-
-            {% with menuitems_template="profiles/partials/_nav_coach.html" menus_heading_title=page_title %}
-                {{ block.super }}
-            {% endwith %}
-
-        {% elif user.is_player %}
-
-            {% with menuitems_template="profiles/partials/_nav_player.html" menus_heading_title=page_title%}
-                {{ block.super }}
-            {% endwith %}
-
-        {% elif user.is_club %}
-
-            {% with menuitems_template="profiles/partials/_nav_club.html" menus_heading_title=page_title%}
-                {{ block.super }}
-            {% endwith %}
-
-        {% else %}
-            {% with menus_heading_title=page_title%}
-                {{ block.super }}
-            {% endwith %}
-        {% endif %}
-        
-    {% else %}
-          {{ block.super }}
-    {% endif %}
-
-{% endblock %}
-
-
-
-{% block content_header %}
-    {% include 'profiles/banners/_banner.html' with show_user=show_user %}
-{% endblock content_header %}
-
-{% block footer %}
-{% endblock %}
-
-
 {% block extra_js %}
-  <script src="{% static 'assets/js/profiles.js' %}"></script>
+
+  {{ block.super }}
+  
   <script src="{% static 'assets/js/observers.js' %}"></script>
 
-    <!--extra modals-->
-    {# Loading proper modals #}
-    {% for _, modal in modals.items %}
-        {% if modal.load %}
-            {% include modal.template with trigger=modal.auto %}
-            {% if modal.async %}
-                <script>
-                    $(window).on('load',function(){
-                        {{ modal.async }}();
-                    });
-                </script>
-            {% endif%}
-        {% endif %}
-    {% endfor %}
-
-  <!--testout-->
-  <!--script src="//cdn.jsdelivr.net/npm/less" ></script-->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.2/js/tempusdominus-bootstrap-4.min.js" integrity="sha256-z0oKYg6xiLq3yJGsp/LsY9XykbweQlHl42jHv2XTBz4=" crossorigin="anonymous"></script>
 
 {% endblock extra_js%} 

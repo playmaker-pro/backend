@@ -138,10 +138,10 @@ class CoachVerificationForm(VerificationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['birth_date'].required = True
-        
+
         self.fields['country'].required = True
         self.fields['country'].initial = 'PL'
-        
+
         self.fields['club_role'].required = True
         self.fields['club_role'].label = False
         self.fields['club_role'].help_text = 'Jaka rolę pełnisz w klubie'
@@ -150,7 +150,7 @@ class CoachVerificationForm(VerificationForm):
 
         self.helper.layout = Fieldset(
             '',
-            Field("birth_date", wrapper_class='row', placeholder='1998-09-24',),
+            Field("birth_date", wrapper_class='row',  placeholder='1998-09-24',),
             Field("country", wrapper_class='row'),
             Field("team_club_league_voivodeship_ver", wrapper_class='row', placeholder='wpisz nazwę zespołu, województwo etc.'),
             Field("club_role", wrapper_class='row')
@@ -160,6 +160,7 @@ class CoachVerificationForm(VerificationForm):
         model = models.CoachProfile
         widgets = {'country': CountrySelectWidget()}
         fields = models.CoachProfile.VERIFICATION_FIELDS
+
 
 
 class PlayerVerificationForm(VerificationForm):
@@ -242,7 +243,7 @@ class CoachProfileForm(BaseProfileForm):
                     Fieldset(
                         _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
                         Div(
-                            Field('birth_date', wrapper_class='row'),
+                            Field('birth_date', wrapper_class='row', css_class=self.get_mandatory_field_class("birth_date"),),
                             Field('league', wrapper_class='row', readonly=True),
                             # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
                             Field('voivodeship', wrapper_class='row', readonly=True),
@@ -273,6 +274,10 @@ class CoachProfileForm(BaseProfileForm):
     class Meta:
         model = models.CoachProfile
         fields = ['club_role', 'league', 'voivodeship', 'team', 'country', 'address', 'about', 'birth_date', 'facebook_url', 'soccer_goal', 'phone', 'practice_distance']
+    
+    def get_mandatory_field_class(self, field_name):
+        if field_name in models.CoachProfile.VERIFICATION_FIELDS:
+            return 'mandatory-field'
 
 
 class PlayerProfileForm(BaseProfileForm):
