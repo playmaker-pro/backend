@@ -68,5 +68,10 @@ Desktop.ini
 
 # Project settings
 ./site/
-
+media/original_images/
+media/team_pics/
+media/club_pics/
+media/profile_pics/
+media/documents/
+media/images/
 
