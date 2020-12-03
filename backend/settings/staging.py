@@ -9,7 +9,11 @@ DOMAIN_ADDRESS = 'https://staging.playmakerpro.usermd.net'
 MANAGERS = [('Rafal', 'rafal.kesik@gmail.com'), ('Jacek', 'jjasinski.playmaker@gmail.com')]
 
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'public')
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'public', 'static')
+
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'public', 'media')
 
 
 try:
