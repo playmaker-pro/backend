@@ -20,6 +20,8 @@
         <form enctype="multipart/form-data" method="post">
         {% if role_form %}
           {% crispy role_form %}
+          <button class="btn-pm btn-pm-sm" type="submit" name="update" value="Update" id="submit-id-update">{% trans 'Chcę zmienić role' %}</button>
+       
         {% else %}
           Coś poszło nie tak... (brak forularza)
         {% endif %}
