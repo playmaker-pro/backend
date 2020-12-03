@@ -246,13 +246,13 @@ class BaseProfile(models.Model):
         if self._is_verification_fields_filled():
             if not self.user.is_waiting_for_verification and not self.user.is_verified:
                 reason_text = 'Parametry weryfikacyjne są uzupełnione, a użytkownik nie miał wcześniej statusu "zwerfikowany" ani że "czeka na werifikacje"'
-                reason = f'[verification-params-ready]: \n {reason_text} \n params:{self.VERIFICATION_FIELDS})  \n Old:{ver_old} -> New:{ver_new} \n'
+                reason = f'[verification-params-ready]: \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS})  \n Old:{ver_old} -> New:{ver_new} \n'
                 self.user.waiting_for_verification(extra={'reason': reason})
                 self.user.save()
             else:
                 if self._verification_fileds_has_changed_and_was_filled(ver_old, ver_new):
                     reason_text = 'Parametry weryfikacyjne zostały zmienione i są wszyskie pola uzupełnione.'
-                    reason = f'[verification-params-changed] \n {reason_text} \n params:{self.VERIFICATION_FIELDS}) \n Old:{ver_old} -> New:{ver_new} \n'
+                    reason = f'[verification-params-changed] \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS}) \n Old:{ver_old} -> New:{ver_new} \n'
                     self.user.unverify(extra={'reason': reason})
                     self.user.save()
         else:

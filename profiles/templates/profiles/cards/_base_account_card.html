@@ -19,7 +19,7 @@
           {% if editable and user.is_pending_role_change %} 
             
             <div class="d-inline"> 
-              {% include 'platform/buttons/helper.html' with tooltip_title="Twoje zgłoszenie trafiło do adminów. Zwykle trwa to kilka chwil." tooltip_position="top" %}
+              {% include 'platform/buttons/helper.html' with tooltip_title="Twoje zgłoszenie trafiło do adminów. Zwykle trwa to do 24h." tooltip_position="top" %}
 
               <div class="alert alert-danger" style="padding:5px;font-size:.9em">
 
@@ -33,7 +33,7 @@
           {% endif %}
 
           {% if editable %}
-              <a href={{ user.profile.get_permalink }}><i class="icofont-link" onclick="copyToClipBoard()"></i> </a>
+            <i class="icofont-link" onclick="copyToClipBoard()" data-value="{{ user.profile.get_permalink }}"></i>
           {% endif %}
 
           {% if editable %}
