@@ -2,7 +2,7 @@ from .base import *  # noqa
 
 DEBUG = False
 
-DOMAIN_ADDRESS = 'http://suumyx.usermd.net'
+BASE_URL = 'http://suumyx.usermd.net'
 
 
 try:

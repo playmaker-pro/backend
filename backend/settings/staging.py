@@ -3,7 +3,7 @@ import os
 
 DEBUG = False
 
-DOMAIN_ADDRESS = 'https://staging.playmakerpro.usermd.net'
+BASE_URL = 'https://staging.playmakerpro.usermd.net'
 
 
 MANAGERS = [('Rafal', 'rafal.kesik@gmail.com'), ('Jacek', 'jjasinski.playmaker@gmail.com')]
