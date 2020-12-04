@@ -8,7 +8,7 @@ BASE_URL = 'https://staging.playmakerpro.usermd.net'
 
 MANAGERS = [('Rafal', 'rafal.kesik@gmail.com'), ('Jacek', 'jjasinski.playmaker@gmail.com')]
 
-
+MIDDLEWARE = ['django.middleware.common.BrokenLinkEmailsMiddleware'] + MIDDLEWARE 
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'public', 'static')
 
