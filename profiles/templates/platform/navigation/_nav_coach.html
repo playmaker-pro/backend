@@ -4,5 +4,5 @@
 {% if user.is_authenticated %}
     {% include 'platform/navigation/_nav.html'%}
     <li><a href="{% url 'profiles:show_self'%}">{% trans 'Twój zespół' %}</a></li>
-    <!--li><a href="{% url 'profiles:player_carrier'%}">{% trans 'Club' %}</a></li -->
+    {% comment %} <!--li><a href="{% url 'profiles:player_carrier'%}">{% trans 'Club' %}</a></li --> {% endcomment %}
 {% endif %}

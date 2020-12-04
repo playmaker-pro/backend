@@ -4,7 +4,7 @@
 {% if user.is_authenticated %}
     {% include 'platform/navigation/_nav.html'%}
 
-    <li><a href="{% url 'profiles:player_carrier'%}">{% trans 'Kariera' %}</a></li>
-    <li><a href="{% url 'profiles:player_fantasy'%}">{% trans 'Fantasy' %}</a></li>
-    <li><a href="{% url 'profiles:player_games'%}">{% trans 'Mecze' %}</a></li>
+    <li><a href="{% url 'profiles:my_carrier'%}">{% trans 'Kariera' %}</a></li>
+    <li><a href="{% url 'profiles:my_fantasy'%}">{% trans 'Fantasy' %}</a></li>
+    <li><a href="{% url 'profiles:my_games'%}">{% trans 'Mecze' %}</a></li>
 {% endif %}

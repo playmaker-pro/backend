@@ -104,7 +104,38 @@ button[type="submit"]:hover, input[type="button"]:hover{
       padding: 6px 18px;
     }
 }
-  
+
+.btn-obs {
+  margin:2px;
+  padding: 5px 5px;
+  background-color: #fff;
+  color:#e03a3c;
+  border: 1px solid #e03a3c;
+  border-radius: 5px;
+}
+
+.observed {
+  background: #e03a3c;
+  color: #fff;
+  transition: 0.5s;
+}
+
+.btn-request {
+  margin:2px;
+  padding: 5px 5px;
+  background-color: #fff;
+  color:#e03a3c;
+  border: 1px solid #e03a3c;
+  border-radius: 5px;
+}
+
+.btn-requested {
+  background: #e03a3c;
+  color: #fff;
+  transition: 0.5s;
+}
+
+
 
 .btn-pm {
   background: #e03a3c;

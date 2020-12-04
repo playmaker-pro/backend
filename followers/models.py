@@ -44,7 +44,7 @@ class Pin(models.Model):
 class Follow(models.Model):
 
     '''
-    A simple table mapping who a user is following. 
+    A simple table mapping who a user is following.
     For example, if user is Kyle and Kyle is following Alex,
     the target would be Alex.
     '''
@@ -55,7 +55,7 @@ class Follow(models.Model):
         related_name='following_set')
 
     target = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='follower_set')
 

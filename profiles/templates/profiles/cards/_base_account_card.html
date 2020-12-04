@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load static %}
 {% load thumbnail %}
-
+{% load playmaker %}
 
 <div class="card profile-card account-card">
   <div class="card-body">
@@ -19,7 +19,7 @@
           {% if editable and user.is_pending_role_change %} 
             
             <div class="d-inline"> 
-              {% include 'platform/buttons/helper.html' with tooltip_title="Twoje zgłoszenie trafiło do adminów. Zwykle trwa to do 24h." tooltip_position="top" %}
+              {% include 'platform/buttons/helper.html' with tooltip_title=_("Twoje zgłoszenie trafiło do adminów. Zwykle trwa to do 24h.") tooltip_position="top" %}
 
               <div class="alert alert-danger" style="padding:5px;font-size:.9em">
 
@@ -76,21 +76,16 @@
             {% block body %}
               
             {% endblock body %}    
-            <!--
-            <li class="list-group-item text-left border-0">
-              <span class="pull-left text-muted"><strong>Noga:</strong></span> {{ show_user.profile.get_prefered_leg_display }}
-            </li>
-            <li class="list-group-item text-left border-0">
-              <span class="pull-left text-muted"><strong>Pozycja:</strong></span> {{ show_user.profile.get_position_raw_display }}
-            </li>
-            <li class="list-group-item text-left border-0">
-              <span class="pull-left text-muted"><strong>Data urodzenia:</strong></span> {{ show_user.profile.birth_date }}
-            </li>
-            <li class="list-group-item text-left border-0">
-              <span class="pull-left text-muted"><strong>{{ show_user.profile.history.counter }}</strong></span>  {% trans 'wizyt' %} <span class="pull-left text-muted"><strong>X </strong></span> obserwujących
-            </li>
-          </ul> -->
-          <span class="pull-left text-muted"><strong>{{ show_user.profile.history.counter }}</strong></span>  {% trans 'wizyt' %} <span class="pull-left text-muted"><strong>X </strong></span> obserwujących
+
+          <div class="text-muted">
+            <strong> {{ show_user.profile.history.counter }} </strong> 
+            {% trans 'wizyt' %}
+
+          </div>  
+          <div class="text-muted">
+            <strong> {{ show_user.follower_set.count }} </strong> 
+            obserwujących
+          </div> 
 
       </div>  <!-- end of col-md-9 -->
     </div>  <!-- end of row -->
@@ -105,8 +100,8 @@
               {% include 'profiles/buttons/edit.html' %}
           {% else %}
               {% csrf_token %}
-              {% include 'profiles/buttons/observe.html' %}       
-              {% include 'profiles/buttons/invite.html' %}
+              {% observed_link user show_user text=True %}
+              {% request_link user show_user %}
           {% endif %}
       </div>
     </div>

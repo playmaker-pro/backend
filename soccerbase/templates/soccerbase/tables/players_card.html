@@ -1,14 +1,14 @@
 {% load i18n %}
 {% load static %}
 {% load thumbnail %}
-
+{% load playmaker %}
 
 
 {% for object in objects %}
 <div class="card item-card" style="">
   <div class="card-header d-md-none">
     <span> <img class="flag" src="{{ object.profile.country.flag }}" alt="flag">{{object.first_name|upper}} {{ object.last_name|upper}} {{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %} {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
-    <span class="float-right"> <a href="#" class="">Obserwój</a> </span>
+    <span class="float-right"> <a href="#" class="">Obserwuj</a> </span>
   </div>
   <div class="d-md-none">
     <img class="avatar rounded-circle img-responsive" title="profile picture"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_small' %}">
@@ -61,17 +61,18 @@
 
         <div class="d-none d-md-inline col-md-1">
               <span class="float-right"> 
-                {% include 'platform/buttons/action_button.html' with button_icon='user' button_url=object.profile.get_permalink %}
+               {% profile_link object %}
 
         </div>
     </div>
   </div>
   <div class="card-footer  d-md-none">
     <span class="float-right"> 
-    {% include 'platform/buttons/action_button.html' with button_icon='user' button_url=object.profile.get_permalink %}
+        {% profile_link object %}
+   
    
   </div>
-</div>
+</div> 
 {% endfor %}
 
 

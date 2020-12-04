@@ -1,5 +1,5 @@
 {% load i18n %}
-
+{% load playmaker %}
 <div class="card">
     <!--img class="card-img-top" src="img_avatar1.png" alt="Card image"-->
     <div class="card-body">
@@ -71,8 +71,12 @@
         </div>  <!-- end of card-text-->
         
           <div class="mt-4 text-center">
-            {% url 'profiles:player_fantasy' as button_url %}
-            {% include 'profiles/buttons/see_more.html' with button_url=button_url %}
+            {% if editable %}
+                {% url 'profiles:my_carrier' as button_url %}
+            {% else %}
+                {% url 'profiles:player_carrier' slug=show_user.profile.slug as button_url %}
+            {% endif %}
+            {% seemore_link button_url %}
         </div>
     </div>
 </div>

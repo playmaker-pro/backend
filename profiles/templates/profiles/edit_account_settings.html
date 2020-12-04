@@ -35,7 +35,7 @@
 
         <div class="row p-3 mb-4">
           <div class="col-sm-3"> 
-            {% trans 'Połącz konta społecznościowe. Dzięki temu będziesz mogł logować się za pomocą nich' %}
+            <i class="ri-check-double-line"></i> {% trans 'Połącz konta społecznościowe. Dzięki temu będziesz mogł logować się za pomocą nich' %}
           </div>
           <div class="col-sm-6">
             <a class="btn-pm btn-pm-sm" href="{% url 'socialaccount_connections' %}">{% trans 'Połącz konta'%}</a>
@@ -44,7 +44,7 @@
  
         <div class="row p-3 mb-4">
           <div class="col-sm-3">
-            <span class="">{% trans 'Ustaw nowe hasło' %}</span>
+            <span class=""><i class="ri-check-double-line"></i> {% trans 'Ustaw nowe hasło' %}</span>
           </div>
 
           <div class="col-sm-6">
@@ -54,7 +54,7 @@
  
         <div class="row p-3 mb-4">
           <div class="col-sm-3">
-            {% trans 'Ustaw nowy adres e-mail bądź dodaj nowy adres z którego będziesz chiał się logować' %}
+            <i class="ri-check-double-line"></i> {% trans 'Ustaw nowy adres e-mail bądź dodaj nowy adres z którego będziesz chiał się logować' %}
           </div>
 
           <div class="col-sm-6">
@@ -67,8 +67,9 @@
             <div class="col-sm-12"> 
               <div class="alert alert-danger">
                 Oczekujesz na akceptacje zmiany konta z <strong>{{user.pending_role_change.current_pretty}}</strong> na <strong>{{user.pending_role_change.new_pretty}}</strong> 
-                <form enctype="multipart/form-data" method="post" action="{% url 'profiles:rolechange_self' %}">{% csrf_token %}
-                  <input type="submit" name="cancel" value="Cofnij prośbę" class="btn btn-primary" id="submit-id-cancel">
+                <form enctype="multipart/form-data" method="post" action="{% url 'profiles:rolechange_self' %}">
+                  {% csrf_token %}
+                  <input type="submit" class="btn-pm btn-pm-sm" name="cancel" value="{% trans 'Cofnij prośbę' %}"  id="submit-id-cancel">
                   <input type="hidden" name="cancel" value="True"> 
                 </form>
               </div>
@@ -76,7 +77,7 @@
           {% else %}
 
             <div class="col-sm-3">  
-              {% trans 'Wybierz nowa rolę (obecna:' %} {{ user.get_declared_role_display }})
+              <i class="ri-check-double-line"></i> {% trans 'Wybierz nowa rolę (obecna:' %} {{ user.get_declared_role_display }})
             </div> 
             <div class="col-sm-9"> 
               <form class="form-inline" enctype="multipart/form-data" method="post" action="{% url 'profiles:rolechange_self' %}">

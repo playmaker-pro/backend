@@ -4,6 +4,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
 {% load thumbnail %}
+{% load playmaker %}
 
 {% block title %}{{ block.super }} {% trans 'Moje zapytania' %} {% endblock %}
 
@@ -22,17 +23,25 @@
 <section id="profile-games" class="profile">
 
 <div class="container" data-aos="fade-up"> 
-    <div class='row justify-content-center'>
+    <div class='row w-auto m-auto'>
         <div class='col-md-12'>
-            {% include 'profiles/partials/_game_table.html' with games=page_obj %}       
+        <h1>Wysłane</h1>
+
+            {% include 'profiles/tables/_requests_table.html' with requests=page_obj_sender on_empty='nie wysłałeś jeszcze żadnego zaproszenia' %}
+
+
         </div>   
         <div class='col-md-12'>
-            {% include 'profiles/partials/_pagination.html' %}
+        <h1>Otrzymane</h1>
+            {% include 'profiles/tables/_requests_table.html' with requests=page_obj_recipient on_empty='nie dostałeś jeszcze żadnego zaproszenia' %} 
+
         </div>
+        {% comment %} <div class='col-md-12'>
+            {% include 'profiles/partials/_pagination.html' %}
+        </div> {% endcomment %}
     </div> <!-- 'row' -->
 </div>
 
 </section>
 {% endblock content %}
-
 

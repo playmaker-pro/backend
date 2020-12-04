@@ -1,4 +1,6 @@
 {% load i18n %}
+{% load playmaker %}
+
 
 <div class="card">
     <div class="card-body ">
@@ -19,8 +21,12 @@
             
         </div>
         <div class="mt-4 text-center">
-            {% url 'profiles:player_games' as button_url %}
-            {% include 'profiles/buttons/see_more.html' with button_url=button_url %}
+            {% if editable %}
+                {% url 'profiles:my_games' as button_url %}
+            {% else %}
+                {% url 'profiles:player_games' slug=show_user.profile.slug as button_url %}
+            {% endif %}
+            {% seemore_link button_url %}
         </div>
     </div>
 </div>

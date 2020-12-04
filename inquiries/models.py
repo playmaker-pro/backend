@@ -92,10 +92,29 @@ class UserInquiry(models.Model):
         return f'{self.user}: {self.counter}/{self.plan.limit}'
 
 
-class RequestType(models.Model):
+class RequestType(models.Model):  # @todo not tested 
     name = models.CharField(max_length=240)
 
-  
+
+class InquiryRequestQuerySet(models.QuerySet):
+    def resolved(self):
+        return self.filter(status=self.model.RESOLVED_STATES)
+
+    def active(self):
+        return self.filter(status=self.model.ACTIVE_STATES)
+
+
+class InquiryRequestManager(models.Manager):  # @todo not tested 
+    def get_queryset(self):
+        return InquiryRequestQuerySet(self.model, using=self._db)
+
+    def resolved(self):
+        return self.get_queryset().resolved()
+
+    def active(self):
+        return self.get_queryset().active()
+
+
 class InquiryRequest(models.Model):
     STATUS_NEW = 'NEW'
     STATUS_SENT = 'SENT'
@@ -103,6 +122,9 @@ class InquiryRequest(models.Model):
     # STATUS_READED = 'READED'
     STATUS_ACCEPTED = 'ACCEPTED'
     STATUS_REJECTED = 'REJECTED'
+
+    ACTIVE_STATES = [STATUS_NEW, STATUS_SENT, STATUS_RECEIVED]
+    RESOLVED_STATES = [STATUS_ACCEPTED, STATUS_REJECTED]
 
     STATUS_CHOICES = (
         (STATUS_NEW, STATUS_NEW),
@@ -113,9 +135,14 @@ class InquiryRequest(models.Model):
         (STATUS_REJECTED, STATUS_REJECTED),
     )
 
+    # state = InquiryRequestManager()
+
     status = FSMField(
         default=STATUS_NEW
     )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    updated_at = models.DateTimeField(auto_now=True)
 
     sender = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -128,6 +155,12 @@ class InquiryRequest(models.Model):
         related_name='inquiry_request_recipient',
         on_delete=models.CASCADE
     )
+
+    def is_active(self):
+        return self.status in self.ACTIVE_STATES
+
+    def is_resolved(self):
+        return self.status in self.RESOLVED_STATES
 
     @transition(field=status, source=[STATUS_NEW], target=STATUS_SENT)
     def send(self):

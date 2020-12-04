@@ -16,17 +16,23 @@ function modalHide(openmodal) {
     }
 }
 
-function observe(slug) {
+function observe(event, slug) {
+    var button = $(event.target);
     $.ajax({
         type:'POST',
         url:'/users/me/observe/',
         data:{
             csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
-            slug:slug,
+            slug: slug,
             action: 'post'
         },
-        success:function(json){
-            modalShow(json.open_modal);
+        success: function(json){
+            button.toggleClass("observed")
+            
+            showToastMessage(json.message.body);
+
+            //console.log('ssss', button);
+            //modalShow(json.open_modal);
         },
         error : function(xhr, errmsg, err) {
         console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
@@ -35,21 +41,20 @@ function observe(slug) {
 };
 
 
-function inquiry(slug) {
+function inquiry(event, slug) {
     $.ajax({
         type:'POST',
         url:'/users/me/query/',
         data:{
             csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
-            slug:slug,
+            slug: slug,
             action: 'post'
         },
-        success:function(json){
-            if (json.status == true ) {
-                $("#inquiry").text("Wysłano zaproszenie");  
-            }
+        success:function(json){         
+            $('#requestButton').toggleClass("btn-requested")   
             modalHide('inquiryModal');
-            modalShow(json.open_modal);
+            showToastMessage(json.message.body);
+            
         },
         error : function(xhr, errmsg, err) {
         console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console

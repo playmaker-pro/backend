@@ -77,7 +77,7 @@ onReady(function() {
 </head>
 
 <body>
-  <div id="loading">
+  {% comment %} <div id="loading">
     <a href="#" class="intro-banner-vdo-play-btn pinkBg" target="_blank">
         <i class="glyphicon glyphicon-play whiteText" aria-hidden="true"></i>
         <span class="ripple pinkBg"></span>
@@ -85,16 +85,17 @@ onReady(function() {
         <span class="ripple pinkBg"></span>
     </a>
   </div>
-<div class='wrapper'>
+<div class='wrapper'> {% endcomment %}
+  {% include 'partials/action_messages.html' %}
 
   {% block header %}
       {% include 'partials/navigation.html' %}
   {% endblock header %}
 
+
   {% include 'partials/toasts.html' %}
 
   <main id="main">
-  {% include 'partials/messages.html' %}
 
   {% block content_header %}
     {# content header of a document #}
@@ -141,7 +142,18 @@ onReady(function() {
 
 
 <script>
+
+function showToastMessage(body) {
+    $('#micro-messages').empty();
+    $('#micro-messages').append(
+        '<div class="alert alert-success micro-message" data-aos-anchor-placement="top-center" data-aos-delay="800" data-aos="slide-down" data-delay="2000" role="alert" style=" border-radius:16px; padding:4px 8px; font-size: .8rem;">' + body + '</div>');
+    $(".micro-message").toast('show', function() {}, {delay: 3000});
+}
+
 $(document).ready(function(){
+    $(".micro-message").toast('show', {
+            delay: 2000
+        });
     $(".toast").toast('show', {
             delay: 35000
         });
@@ -150,7 +162,10 @@ $(document).ready(function(){
   {% block extra_js %}
     {# Override this in templates to add extra javascript #}
   {% endblock %}
-</div>
+{% comment %} </div> {% endcomment %}
+
+
+
 </body>
 
 </html>

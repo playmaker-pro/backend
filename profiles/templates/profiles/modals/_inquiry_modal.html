@@ -1,5 +1,5 @@
 {% load i18n %}
-
+{% load playmaker %}
 {% with id="inquiryModal" title='Ilosc zapytań' %}
   <div class="modal fade" id="{{ id }}" tabindex="-1" role="dialog" aria-labelledby="{{ id }}Label" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -16,19 +16,14 @@
           Wykorzystałeś cały swój plan. 
           
         {% else %}
-          Pozostało Ci jeszcze <strong class="btn-pm">{{user.userinquiry.left}}</strong> możliwych zapytań do wykorzystania.
+          Pozostało Ci jeszcze <strong class="btn-pm btn-pm-sm">{{user.userinquiry.left}}</strong> możliwych zapytań do wykorzystania.
 
         {% endif %}
         <br> Jeśli jesteś zainteresowaniem rozszerzeniem pakietu {link tu}
 
         </div>
         <div class="modal-footer">
-            {% if user.userinquiry.left <= 0 %}
-
-                {% include 'profiles/buttons/ajax.html' with disabled=True button_text=_('Wyślij') button_icon='ban' button_ajax='inquiry' button_ajax_param=show_user.profile.slug %}
-            {% else %}
-                {% include 'profiles/buttons/ajax.html' with               button_text=_('Wyślij')                   button_ajax='inquiry' button_ajax_param=show_user.profile.slug %}
-            {% endif %}
+              {% send_request user show_user %}
           <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Zamknij' %}</button> 
         </div>
       </div>

@@ -12,13 +12,13 @@
 
     {% if user.is_player %}
         <li><a href="{% url 'profiles:show_self'%}">{% trans 'Profil' %}</a></li>
-        <li><a href="{% url 'profiles:player_carrier'%}">{% trans 'Kariera' %}</a></li>
-        <li><a href="{% url 'profiles:player_fantasy'%}">{% trans 'Fantasy' %}</a></li>
-        <li><a href="{% url 'profiles:player_games'%}">{% trans 'Mecze' %}</a></li>
+        <li><a href="{% url 'profiles:my_carrier'%}">{% trans 'Kariera' %}</a></li>
+        <li><a href="{% url 'profiles:my_fantasy'%}">{% trans 'Fantasy' %}</a></li>
+        <li><a href="{% url 'profiles:my_games'%}">{% trans 'Mecze' %}</a></li>
     
     {% elif user.is_coach %}
         <li><a href="{% url 'profiles:show_self'%}">{% trans 'Twój zespół' %}</a></li>
-        <li><a href="{% url 'profiles:player_carrier'%}">{% trans 'Club' %}</a></li>
+        <li><a href="{% url 'profiles:my_carrier'%}">{% trans 'Club' %}</a></li>
     {% else %}
 
     {% endif %}

@@ -1,9 +1,0 @@
-{% load i18n %}
-
-{% with text=_('Obserwuj') icon='eye' %}
-
-    <a href="#" class="card-link btn-pm btn-pm-sm" onclick="observe('{{show_user.profile.slug}}')">
-        <i class="icofont-{{ icon }}"></i> 
-    </a>
-
-{% endwith %}

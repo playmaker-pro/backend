@@ -1,8 +1,16 @@
 
+
 class ViewModalLoadingMixin:
 
-    def modal_activity(self, user, register_auto=True):
+    def modal_activity(self, user, register_auto=True, verification_auto=True):
         modals = {
+            'action_limit_exceeded': {
+                'name': 'actionLimitExceedModal',
+                'template': 'profiles/modals/_limit_exceeded_modal.html',
+                'auto': False,
+                'load': False,
+                'async': False,
+            },
             'register': {
                 'name': 'registerModal',
                 'template': 'profiles/modals/_register_modal.html',
@@ -31,7 +39,7 @@ class ViewModalLoadingMixin:
                 'load': False,
                 'async': False
             },
-            'incquiry': {
+            'inquiry': {
                 'name': 'inquiryModal',
                 'template': 'profiles/modals/_inquiry_modal.html',
                 'auto': False,
@@ -45,7 +53,7 @@ class ViewModalLoadingMixin:
 
         elif user.is_missing_verification_data:
             modals['verification']['load'] = True
-            modals['verification']['auto'] = True
+            modals['verification']['auto'] = verification_auto
 
         elif user.is_roleless:
             modals['need_role']['load'] = True
@@ -53,6 +61,10 @@ class ViewModalLoadingMixin:
 
         elif user.is_waiting_for_verification:
             modals['need_verification']['load'] = True
-        else:
-            modals['incquiry']['load'] = True
+        else:  # here is case when we can perfom action, so here are the action that we can perform 
+            modals['inquiry']['load'] = True
+
+            if user.userinquiry.counter == user.userinquiry.limit:
+                modals['action_limit_exceeded']['load'] = True
+            
         return modals

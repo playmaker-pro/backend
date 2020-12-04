@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load static %}
 {% load thumbnail %}
-
+{% load playmaker %}
 
 {% for object in objects %}
 <div class="card" style="">
@@ -59,12 +59,14 @@
         </div>
 
         <div class="d-none d-md-inline col-md-1">
-             <a href="#" class="">profil</a> 
+           {% profile_link object %}
         </div>
     </div>
   </div>
   <div class="card-footer  d-md-none">
-    <span class="float-right"> <a href="{{ object.profile.get_permalink }}"><i class="btn-pm btn-pm-sm icofont-user"></i> zobacz profil</a></span>
+  {% profile_link object %}
+    <span class="float-right"> {% profile_link object %}
+    </span>
   </div>
 </div>
 {% endfor %}

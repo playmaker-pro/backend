@@ -1,6 +1,6 @@
 # external dependencies
 import math
-
+import json
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
@@ -18,8 +18,12 @@ from django.http import JsonResponse
 from roles import definitions
 from . import mixins
 
+from followers.models import Follow
+
+
 
 class PaginateMixin:
+    paginate_limit = 30
     @property
     def page(self):
         return self.request.GET.get('page') or 1
@@ -30,87 +34,111 @@ class PaginateMixin:
         return paginator.get_page(page_number)
 
 
-class ProfileObservers(generic.TemplateView):
+class MyObservers(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixins.ViewModalLoadingMixin):
     template_name = "profiles/observers.html"
     http_method_names = ["get"]
 
     def get(self, request, *args, **kwargs):
-        kwargs["data"] = ['obserowany x', 'obserwowany y']
+        qs = Follow.objects.filter(user=request.user)
+        kwargs['modals'] = self.modal_activity(request.user)
+        kwargs['page_title'] = 'Obserwowani'
+        kwargs['page_obj'] = self.paginate(qs)
         return super().get(request, *args, **kwargs)
 
 
-class ProfileRequests(generic.TemplateView):
+class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixins.ViewModalLoadingMixin):
     template_name = "profiles/requests.html"
     http_method_names = ["get"]
+    paginate_limit = 100
 
     def get(self, request, *args, **kwargs):
-        kwargs["data"] = ['kots X kogos Y', 'ktos Z kogos Y']
+        qs_recipient = InquiryRequest.objects.filter(recipient=request.user)
+        qs_sender = InquiryRequest.objects.filter(sender=request.user)
+        
+        kwargs['modals'] = self.modal_activity(request.user)
+        kwargs['page_title'] = 'Obserwowani'
+        kwargs['page_obj_recipient'] = self.paginate(qs_recipient)
+        kwargs['page_obj_sender'] = self.paginate(qs_sender)
         return super().get(request, *args, **kwargs)
 
 
-class ProfileFantasy(generic.TemplateView):
+class SlugyViewMixin:
+    def select_user_to_show(self):
+        slug = self.kwargs.get('slug')
+        if slug:
+            profile_model = get_profile_model_from_slug(slug)
+            profile = get_object_or_404(profile_model, slug=slug)
+            user = profile.user
+        else:
+            user = self.request.user
+        return user
+
+
+class ProfileFantasy(generic.TemplateView, SlugyViewMixin):
     template_name = "profiles/fantasy2.html"
     http_method_names = ["get"]
 
     def get(self, request, *args, **kwargs):
+        user_to_present = self.select_user_to_show()
         user = self.request.user
         _id = user.profile.data_mapper_id
         season_name = get_current_season()
         kwargs['season_name'] = season_name
-        kwargs["fantasy"] = self.get_data_or_calculate()
+        kwargs["fantasy"] = self.get_data_or_calculate(user_to_present)
         return super().get(request, *args, **kwargs)
 
-    def get_data_or_calculate(self):
+    def get_data_or_calculate(self, user):
         season_name = get_current_season()
-        user = self.request.user
         _id = user.profile.data_mapper_id
-        if self.request.user.profile.playermetrics.how_old_days(fantasy=True) >= 7 and self.request.user.profile.has_data_id:
+        if user.profile.playermetrics.how_old_days(fantasy=True) >= 7 and user.profile.has_data_id:
             fantasy = adapters.PlayerFantasyDataAdapter(_id).get(season=season_name, full=True)
             user.profile.playermetrics.update_fantasy(fantasy)
         return user.profile.playermetrics.fantasy
 
 
-class ProfileCarrier(generic.TemplateView):
+class ProfileCarrier(generic.TemplateView, SlugyViewMixin):
     template_name = "profiles/carrier.html"
     http_method_names = ["get"]
 
     def get(self, request, *args, **kwargs):
         user = self.request.user
+        user_to_present = self.select_user_to_show()
         _id = user.profile.data_mapper_id
-        import json
+        
 
-        kwargs["carrier"] = self.get_data_or_calculate()
+        kwargs["carrier"] = self.get_data_or_calculate(user_to_present)
         return super().get(request, *args, **kwargs)
 
-    def get_data_or_calculate(self):
-        user = self.request.user
+    def get_data_or_calculate(self, user):
+      
         _id = user.profile.data_mapper_id
-        if self.request.user.profile.playermetrics.how_old_days(season=True) >= 7 and self.request.user.profile.has_data_id:
+        if user.profile.playermetrics.how_old_days(season=True) >= 7 and user.profile.has_data_id:
             season = adapters.PlayerStatsSeasonAdapter(_id).get(groupped=True)
             user.profile.playermetrics.update_season(season)
         user.profile.playermetrics.refresh_from_db()
         return user.profile.playermetrics.season
 
 
-class ProfileGames(generic.TemplateView, PaginateMixin):
+class ProfileGames(generic.TemplateView, PaginateMixin, SlugyViewMixin):
     # @todo: add limit handling for futhure unknown usage.
     template_name = "profiles/games.html"
     http_method_names = ["get"]
     paginate_limit = 15
 
     def get(self, request, *args, **kwargs):
-        games = self.get_data_or_calculate()
+
+        user_to_present = self.select_user_to_show()
+
+        games = self.get_data_or_calculate(user_to_present)
         games = games or []
         kwargs['page_obj'] = self.paginate(games)
         return super().get(request, *args, **kwargs)
 
-    def get_data_or_calculate(self):
-        user = self.request.user
+    def get_data_or_calculate(self, user):
         _id = user.profile.data_mapper_id
-        if self.request.user.profile.playermetrics.how_old_days(games=True) >= 7 and self.request.user.profile.has_data_id:
+        if user.profile.playermetrics.how_old_days(games=True) >= 7 and user.profile.has_data_id:
             games = adapters.PlayerLastGamesAdapter(_id).get()
             user.profile.playermetrics.update_games(games)
-           
         return user.profile.playermetrics.games
 
 
@@ -171,17 +199,27 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
             return "TWÓJ PROFIL"
         return "PROFIL"
 
+    def is_profile_observed(self, user, target):
+        try:
+            Follow.objects.get(user=user, target=target)
+            return True
+        except Follow.DoesNotExist:
+            return False
+
     def get(self, request, *args, **kwargs):
         self.user = user = self._select_user_to_show()
         self.editable = False
         if self._is_owner(user):
             self.editable = True
-            kwargs["editable"] = self.editable
             if user.declared_role is None:  # @todo - this is  not pretty.
                 kwargs["role_form"] = self.get_role_declaration_form()  # @todo this mechanism can be replaced with ajax call
 
+        kwargs["editable"] = self.editable
+
+        kwargs['observed'] = self.is_profile_observed(request.user, user)
+        
         kwargs['show_user'] = user
-        kwargs['modals'] = self.modal_activity(user)
+        kwargs['modals'] = self.modal_activity(request.user)
         kwargs['page_title'] = self.set_show_profile_page_title()
 
         # To dotyczy tylko playera!!!!
@@ -387,54 +425,12 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
         return redirect("profiles:show_self")
 
 
-def get_modal_action(user):
-    if not user.is_authenticated:
-        action_modal = 'registerModal'
-    elif user.is_roleless:
-        action_modal = 'missingBasicAccountModal'
-    elif user.is_missing_verification_data:
-        action_modal = 'verificationModal'
-    elif user.userinquiry.counter == user.userinquiry.limit:
-        action_modal = 'actionLimitExceedModal'
-    else:
-        action_modal = None
-    return action_modal
 
-
-def inquiry(request):
-    response_data = {'status': False}
-    user = request.user
-
-
-    if request.POST.get('action') == 'post':
-        slug = request.POST.get('slug')
-        action_modal = get_modal_action(user)
-
-        if slug:
-            profile_model = get_profile_model_from_slug(slug)
-            profile = get_object_or_404(profile_model, slug=slug)
-            recipient = profile.user
-
-        if user.userinquiry.can_make_request and action_modal is None:
-
-            if InquiryRequest.objects.filter(
-                sender=user, recipient=recipient).exclude(
-                    status__in=[InquiryRequest.STATUS_REJECTED, InquiryRequest.STATUS_ACCEPTED]).count() > 0:
-                    response_data['status'] = False
-                    response_data['messages'] = 'Już jest takie zgłoszenie.'
-            else:
-                InquiryRequest.objects.create(sender=user, recipient=recipient)
-                user.userinquiry.increment()
-                response_data['status'] = True
-
-                response_data['messages'] = 'Powiadomienie wyslane.'
-
-        response_data['open_modal'] = action_modal
-        return JsonResponse(response_data)
 
 from django.views import View
 
 from crispy_forms.utils import render_crispy_form
+
 
 
 class AccountVerification(LoginRequiredMixin, View):
@@ -485,14 +481,3 @@ class AccountVerification(LoginRequiredMixin, View):
             data['form'] = render_crispy_form(verification_form)
             return JsonResponse(data)
             # redirect('profiles:show_self')
-
-def observe(request):
-    response_data = {}
-
-    if request.POST.get('action') == 'post':
-        slug = request.POST.get('slug')
-        action_modal = get_modal_action(request.user)
-
-        response_data['title'] = slug + 'ssss'
-        response_data['open_modal'] = action_modal
-        return JsonResponse(response_data)

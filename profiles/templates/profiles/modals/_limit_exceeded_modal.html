@@ -6,7 +6,7 @@
 -->
 <!-- Modal -->
 
-{% with id='inquiryModal' title='Ilosc zapytań' %}
+{% with id='inquiryModal' title='Ilosc zapytań osiągnięty' %}
 <div class="modal fade" id="{{ id }}" tabindex="-1" role="dialog" aria-labelledby="{{ id }}Label" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -17,12 +17,12 @@
         </button>
       </div>
       <div class="modal-body">
-        Pozostało Ci jeszcze <strong>{{user.userinquiry.left}}</strong> możliwych zapytań. 
-        
+        Wyczerpałeś darmową ilość zapytań które możesz zrealizować w sezonie.
+         <br><br>
         Jeśli jesteś zainteresowaniem rozszerzeniem pakietu {link tu}
       </div>
       <div class="modal-footer">
-         {% include 'profiles/buttons/ajax.html' with button_text=_('Wyślij') button_ajax='inquiry' button_ajax_param=show_user.profile.slug %}
+        
         <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Zamknij' %}</button> 
       </div>
     </div>

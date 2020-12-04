@@ -284,7 +284,7 @@ class TrainerContact(models.Model):
     last_name = models.CharField(_('Nazwisko'), max_length=255)
     season = models.CharField(_('Sezon'), max_length=255, null=True, blank=True)
     email = models.CharField(_('adres e-mail'), max_length=255, null=True, blank=True)
-    phone = PhoneNumberField(_('Telefon'), blank=True, null=True)
+    phone = PhoneNumberField(_('Telefon'), region='PL', blank=True, null=True)
 
 
 class PlayerProfile(BaseProfile):
@@ -554,6 +554,7 @@ class PlayerProfile(BaseProfile):
 
     phone = PhoneNumberField(
         _('Telefon'),
+        region='PL',
         blank=True,
         null=True)
 
@@ -609,7 +610,7 @@ class PlayerProfile(BaseProfile):
 
     agent_status = models.IntegerField(_('Czy Agent'), choices=make_choices(AGENT_STATUS_CHOICES), blank=True, null=True)
     agent_name = models.CharField(_('Imię i nazwisko agenta / Nazwa agencji'), max_length=45, choices=make_choices(AGENT_STATUS_CHOICES), blank=True, null=True)
-    agent_phone = PhoneNumberField(_('Numer telefonu do agenta / agencji'), blank=True, null=True)
+    agent_phone = PhoneNumberField(_('Numer telefonu do agenta / agencji'), region='PL', blank=True, null=True)
     agent_name = models.BooleanField(_('Otwarty na propozycje zagraniczne'), blank=True, null=True)
 
     video_url = models.URLField(
@@ -776,6 +777,7 @@ class ClubProfile(BaseProfile):
 
     phone = PhoneNumberField(
         _('Telefon'),
+        region='PL',
         blank=True,
         null=True)
 
@@ -945,6 +947,7 @@ class CoachProfile(BaseProfile):
         blank=True)
     phone = PhoneNumberField(
         _('Telefon'),
+        region='PL',
         blank=True,
         null=True)
     facebook_url = models.URLField(
