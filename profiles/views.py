@@ -17,10 +17,10 @@ from .model_utils import get_profile_form_model, get_profile_model, get_profile_
 from django.http import JsonResponse
 from roles import definitions
 from . import mixins
-
+import logging
 from followers.models import Follow
 
-
+logger = logging.getLogger(__name__)
 
 class PaginateMixin:
     paginate_limit = 30
@@ -292,12 +292,12 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
             profile_model = get_profile_model_from_slug(slug)
             profile = get_object_or_404(profile_model, slug=slug)
             profile.history.increment()  # @todo 1 coomit to
+            if not self.request.user.is_anonymous:
+                if self.request.user.is_coach:
+                    profile.history.increment_coach()
 
-            if self.request.user.is_coach:
-                profile.history.increment_coach()
-
-            # if self.request.user.is_scout:  @todo
-            #     profile.history.increment_coach()
+                # if self.request.user.is_scout:  @todo
+                #     profile.history.increment_coach()
 
             user = profile.user
         else:
