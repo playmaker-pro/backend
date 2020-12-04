@@ -15,9 +15,19 @@ class ProfileVisitHistoryAdmin(admin.ModelAdmin):
 class PlayerMetricsAdmin(admin.ModelAdmin):
     pass
 
+
 class ProfileAdminBase(admin.ModelAdmin):
     pass
 
+
+@admin.register(models.ParentProfile)
+class ParentProfileAdmin(ProfileAdminBase):
+    pass
+
+
+@admin.register(models.ManagerProfile)
+class ManagerProfileAdmin(ProfileAdminBase):
+    pass
 
 @admin.register(models.ScoutProfile)
 class ScoutProfileAdmin(ProfileAdminBase):

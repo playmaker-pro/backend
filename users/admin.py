@@ -24,7 +24,7 @@ class UserAdminPanel(UserAdmin):
             'fields': ('username', 'password1', 'password2'),
         }),
     )
-    list_display = ('username', 'state', 'is_active', 'get_profile', 'get_profile_permalink', 'profile', 'get_profile_percentage', 'declared_role')
+    list_display = ('username', 'state', 'is_active', 'get_profile', 'get_profile_permalink', linkify('profile'), 'get_profile_percentage', 'declared_role')
     list_filter = ('state',)
     search_fields = ('username',)
 
