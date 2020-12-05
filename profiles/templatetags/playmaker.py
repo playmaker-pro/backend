@@ -114,8 +114,7 @@ def observed_link(context, user, showed_user, text=False):
 
 @register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
 def seemore_link(context, link):
-    if not user.is_authenticated:
-        return {'off': True}
+
     return {
         'button_icon': None,
         'button_text': 'zobacz więcej',
