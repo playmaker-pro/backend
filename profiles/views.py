@@ -200,6 +200,8 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
         return "PROFIL"
 
     def is_profile_observed(self, user, target):
+        if user.is_anonymous:
+            return False
         try:
             Follow.objects.get(user=user, target=target)
             return True
@@ -292,7 +294,7 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
             profile_model = get_profile_model_from_slug(slug)
             profile = get_object_or_404(profile_model, slug=slug)
             profile.history.increment()  # @todo 1 coomit to
-            if not self.request.user.is_anonymous:
+            if not self.request.user.is_anonymous::
                 if self.request.user.is_coach:
                     profile.history.increment_coach()
 
