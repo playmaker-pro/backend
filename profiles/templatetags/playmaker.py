@@ -9,7 +9,8 @@ register = template.Library()
 
 @register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
 def profile_link(context, user):
-
+    if not user.is_authenticated:
+        return {'off': True}
     return {
         'button_url': user.profile.get_permalink(),
         'button_icon': 'user',
@@ -28,7 +29,8 @@ def is_profile_requested(user, target):  # @todo to be placed in inquireis utils
 @register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
 def request_link(context, user, showed_user):
 
-        
+    if not user.is_authenticated:
+        return {'off': True}
     if user.is_coach and showed_user.is_player:
         button_text = 'Zaproś na testy'
     elif user.is_player and showed_user.is_coach:
@@ -87,6 +89,8 @@ def send_request(context, user, showed_user):
    
 @register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
 def observed_link(context, user, showed_user, text=False):
+    if not user.is_authenticated:
+        return {'off': True}
     active_class = None
     if context['observed']:
         active_class = 'observed'
@@ -110,7 +114,8 @@ def observed_link(context, user, showed_user, text=False):
 
 @register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
 def seemore_link(context, link):
-
+    if not user.is_authenticated:
+        return {'off': True}
     return {
         'button_icon': None,
         'button_text': 'zobacz więcej',
