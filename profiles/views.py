@@ -200,7 +200,7 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
         return "PROFIL"
 
     def is_profile_observed(self, user, target):
-        if user.is_authenticated():
+        if user.is_authenticated:
             return False
         try:
             Follow.objects.get(user=user, target=target)
@@ -255,7 +255,7 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
             else:
                 kwargs['season_circle_stats'] = []
 
-        if not self._is_owner(user) and request.user.is_authenticated():
+        if not self._is_owner(user) and request.user.is_authenticated:
             if InquiryRequest.objects.filter(
                     sender=self.request.user, recipient=user).exclude(
                         status__in=[InquiryRequest.STATUS_REJECTED, InquiryRequest.STATUS_ACCEPTED]).count() > 0:
@@ -294,7 +294,7 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
             profile_model = get_profile_model_from_slug(slug)
             profile = get_object_or_404(profile_model, slug=slug)
             profile.history.increment()  # @todo 1 coomit to
-            if not self.request.user.is_authenticated():
+            if not self.request.user.is_authenticated:
                 if self.request.user.is_coach:
                     profile.history.increment_coach()
 
