@@ -13,6 +13,10 @@ def get_profile_model(user):
         return models.ClubProfile
     elif user.is_scout:
         return models.ScoutProfile
+    elif user.is_manager:
+        return models.ManagerProfile
+    elif user.is_parent:
+        return models.ParentProfile
     else:
         return models.GuestProfile
 
@@ -25,6 +29,8 @@ def get_profile_model_from_slug(slug):
         'club': models.ClubProfile,
         'scout': models.ScoutProfile,
         'guest': models.GuestProfile,
+        'parent': models.ParentProfile,
+        'manager': models.ManagerProfile,
     }
 
     for key, model in mapper.items():
@@ -39,10 +45,12 @@ def get_profile_form_model(user):
 
     elif user.is_coach:
         return forms.CoachProfileForm
-
-    # elif user.is_guest:
-    #     return forms.GuestProfileForm
-
+    elif user.is_manager:
+        return forms.ManagerProfileForm
+    elif user.is_guest:
+        return forms.GuestProfileForm
+    elif user.is_parent:
+        return forms.ParentProfileForm
     elif user.is_club:
         return forms.ClubProfileForm
 

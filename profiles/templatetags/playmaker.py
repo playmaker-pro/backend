@@ -2,6 +2,8 @@ from django import template
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from inquiries.models import InquiryRequest
+import logging
+logger = logging.getLogger(__name__)
 
 
 register = template.Library()
@@ -16,8 +18,8 @@ def profile_link(context, user):
         'button_icon': 'user',
         'modals': context['modals']
     }
-    
-    
+
+
 def is_profile_requested(user, target):  # @todo to be placed in inquireis utils
     try:
         InquiryRequest.objects.get(sender=user, recipient=target, status__in=InquiryRequest.ACTIVE_STATES)
@@ -120,4 +122,55 @@ def seemore_link(context, link):
         'button_text': 'zobacz więcej',
         'button_url': link,
         'modals': context['modals'],
+    }
+
+@register.inclusion_tag('platform/buttons/action_link.html', takes_context=True)
+def get_my_team_link(context, text=None, css_class=None):
+    if text:
+        link_body = text
+    else:
+        link_body = 'Moja Drużyna'
+    user = context['user']
+
+    if not user.is_authenticated or not user.is_verified:
+        link = '#'
+    else:
+        try:
+            link = user.managed_club.get_permalink  
+        except Exception as e:
+            logger.error(e)
+            link = '#'
+
+    link_class = css_class or ''
+    link_attrs = ''
+
+    return {
+        'link_attrs': link_attrs,
+        'link_class': link_class,
+        'link_href': link,
+        'link_body': link_body,
+    }
+
+
+@register.inclusion_tag('platform/buttons/action_link.html', takes_context=True)
+def get_my_club_link(context, text=None, css_class=None):
+    if text:
+        link_body = text
+    else:
+        link_body = 'Mój klub'
+    user = context['user']
+
+    if not user.is_authenticated or not user.is_verified:
+        link = '#'
+    else:
+        try:
+            link = user.managed_club.get_permalink  
+        except Exception as e:
+            logger.error(e)
+            link = '#'
+    link_class = css_class or ''
+    return {
+        'link_href': link,
+        'link_body': link_body,
+        'link_class': link_class,
     }

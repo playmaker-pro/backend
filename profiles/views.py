@@ -1,26 +1,30 @@
 # external dependencies
-import math
 import json
+import logging
+import math
+
+from crispy_forms.utils import render_crispy_form
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
-from django.http.response import HttpResponse
-from stats import adapters
-from inquiries.models import InquiryRequest
-from django.urls import reverse
-from . import forms, models
-from .utils import get_current_season
-from .model_utils import get_profile_form_model, get_profile_model, get_profile_model_from_slug
-from django.http import JsonResponse
-from roles import definitions
-from . import mixins
-import logging
 from followers.models import Follow
+from inquiries.models import InquiryRequest
+from roles import definitions
+from stats import adapters
+
+from . import forms, mixins, models
+from .model_utils import (get_profile_form_model, get_profile_model,
+                          get_profile_model_from_slug)
+from .utils import get_current_season
 
 logger = logging.getLogger(__name__)
+
 
 class PaginateMixin:
     paginate_limit = 30
@@ -39,10 +43,11 @@ class MyObservers(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixi
     http_method_names = ["get"]
 
     def get(self, request, *args, **kwargs):
-        qs = Follow.objects.filter(user=request.user)
-        kwargs['modals'] = self.modal_activity(request.user)
+        user = request.user
+        qs = Follow.objects.filter(user=user)
         kwargs['page_title'] = 'Obserwowani'
         kwargs['page_obj'] = self.paginate(qs)
+        kwargs['modals'] = self.modal_activity(user, verification_auto=False)
         return super().get(request, *args, **kwargs)
 
 
@@ -52,10 +57,11 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
     paginate_limit = 100
 
     def get(self, request, *args, **kwargs):
-        qs_recipient = InquiryRequest.objects.filter(recipient=request.user)
-        qs_sender = InquiryRequest.objects.filter(sender=request.user)
-        
-        kwargs['modals'] = self.modal_activity(request.user)
+
+        user = request.user
+        qs_recipient = InquiryRequest.objects.filter(recipient=user)
+        qs_sender = InquiryRequest.objects.filter(sender=user)
+        kwargs['modals'] = self.modal_activity(user, verification_auto=False)
         kwargs['page_title'] = 'Obserwowani'
         kwargs['page_obj_recipient'] = self.paginate(qs_recipient)
         kwargs['page_obj_sender'] = self.paginate(qs_sender)
@@ -180,24 +186,26 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
     http_method_names = ["get", "post"]
 
     def set_show_profile_page_title(self):
+        
+        default_my_profile = 'Mój profil'
         if self.user.is_coach:
             if self.editable:
-                return "TWÓJ TRENERSKI PROFIL"
+                return default_my_profile  # "TWÓJ TRENERSKI PROFIL"
             else:
-                return "PROFIL TRENERSKI"
+                return "Profil Trenera"
         if self.user.is_player:
             if self.editable:
-                return "TWOJE CV"
+                return default_my_profile  # "TWOJE CV"
             else:
-                return "CV PIŁKARZA"
+                return "Profil Piłkarza"
         if self.user.is_club:
             if self.editable:
-                return "PROFIL TWOJEGO KLUBU"
+                return default_my_profile  # "PROFIL TWOJEGO KLUBU"
             else:
-                return "PROFIL KLUBU"
+                return "Profil Klubu"
         if self.editable:
-            return "TWÓJ PROFIL"
-        return "PROFIL"
+            return default_my_profile
+        return "Profil użytkownika"
 
     def is_profile_observed(self, user, target):
         if not user.is_authenticated:
@@ -342,7 +350,7 @@ class EditAccountSettings(LoginRequiredMixin, generic.TemplateView, mixins.ViewM
 
         if "role_form" not in kwargs:
             kwargs["role_form"] = forms.ChangeRoleForm()
-        kwargs['modals'] = self.modal_activity(user)
+        kwargs['modals'] = self.modal_activity(user, verification_auto=False)
         kwargs['page_title'] = _('Edycja ustawień konta')
 
         return super().get(request, *args, **kwargs)
@@ -391,7 +399,7 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
             kwargs["role_form"] = forms.ChangeRoleForm()
 
         kwargs['page_title'] = self.set_edit_profile_page_title()
-        kwargs['modals'] = self.modal_activity(user)
+        kwargs['modals'] = self.modal_activity(user, verification_auto=False)
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
@@ -425,14 +433,6 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
         profile.save()
         messages.success(request, "Profile details saved!")
         return redirect("profiles:show_self")
-
-
-
-
-from django.views import View
-
-from crispy_forms.utils import render_crispy_form
-
 
 
 class AccountVerification(LoginRequiredMixin, View):
@@ -470,7 +470,7 @@ class AccountVerification(LoginRequiredMixin, View):
             verification_form.save()
             user.unverify()
             user.save()
-            messages.success(request, _("Przyjęto zgłoszenie werifikacje konta."))
+            messages.success(request, _("Przyjęto zgłoszenie weryfikacje konta."))
 
             data['success'] = True
             data['url'] = reverse("profiles:show_self")

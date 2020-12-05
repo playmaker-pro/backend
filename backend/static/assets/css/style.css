@@ -72,11 +72,86 @@ button[type="submit"]:hover, input[type="button"]:hover{
 */
 
 
+/* ---------
+# global forms
+-----------*/
+
+
+input.mandatory::-webkit-input-placeholder {
+  color: #de6868 !important;
+  font-style: italic;
+}
+
+input.mandatory:-moz-placeholder {
+  /* Firefox 18- */
+  color: #de6868 !important;
+  font-style: italic;
+}
+
+input.mandatory::-moz-placeholder {
+  /* Firefox 19+ */
+  color: #de6868 !important;
+  font-style: italic;
+}
+
+input.mandatory:-ms-input-placeholder {
+  color: #de6868 !important;
+  font-style: italic;
+}
+
+textarea.mandatory::-webkit-input-placeholder {
+  color: #de6868;
+  font-style: italic;
+}
+
+textarea.select::-webkit-input-placeholder {
+  color: #de6868;
+  font-style: italic;
+}
+
+input::-webkit-input-placeholder {
+  color: #ccc !important;
+  font-style: italic;
+}
+
+input:-moz-placeholder {
+  /* Firefox 18- */
+  color: #ccc !important;
+  font-style: italic;
+}
+
+input::-moz-placeholder {
+  /* Firefox 19+ */
+  color: #ccc !important;
+  font-style: italic;
+}
+
+input:-ms-input-placeholder {
+  color: #ccc !important;
+  font-style: italic;
+}
+
+textarea::-webkit-input-placeholder {
+  color: #ccc;
+  font-style: italic;
+}
+
+/* .mandatory {
+  border: 1px dashed #e03a3c;
+  
+}
+.mandatory {
+  border: 1px dashed #e03a3c;
+  
+} */
 
 /* ---------
 # Buttons
 -----------*/
-
+a.disabled {
+  pointer-events: none;
+  cursor: default;
+}
 
 
 .btn-owl {
@@ -104,6 +179,26 @@ button[type="submit"]:hover, input[type="button"]:hover{
       padding: 6px 18px;
     }
 }
+
+.btn-act {
+  background: #e03a3c;
+  border: 0;
+  padding: 5px 5px;
+  color: #fff;
+  transition: 0.4s;
+  border-radius: 4px;
+  margin: 2px;
+}
+  .btn-act :hover{
+    background: #e35052;
+}
+
+@media (max-width: 768px) {
+  .btn-act {
+    padding: 4px 4px;
+  }
+}
+
 
 .btn-obs {
   margin:2px;

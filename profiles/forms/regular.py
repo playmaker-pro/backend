@@ -9,43 +9,8 @@ from django_countries.widgets import CountrySelectWidget
 from django.utils.translation import gettext_lazy as _
 from profiles import widgets
 
+
 User = get_user_model()
-
-
-class ChangeRoleForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_tag = False
-        # self.helper.wrapper_class = 'row'
-        # self.helper.label_class = 'col-md-6'
-        # self.helper.field_class = 'col-md-6'
-        self.fields['new'].label = False
-        self.helper.layout = Layout(
-                            Field('new'),
-
-        )  # layout
-
-    class Meta:
-        model = models.RoleChangeRequest
-        fields = ["new", "user"]
-
-
-class DeclareRoleForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_tag = False
-        self.helper.layout = Layout(
-            Fieldset(
-                None,
-                Field("new")),
-                Submit("Wybierz role", "Wybierz role"),
-        )
-
-    class Meta:
-        model = models.RoleChangeRequest
-        fields = ["new"]
 
 
 class UserForm(forms.ModelForm):
@@ -74,8 +39,6 @@ class UserForm(forms.ModelForm):
         fields = ['first_name', 'last_name', "email", "picture"]
 
 
-
-
 class ProfileForm(forms.ModelForm):
     '''Basic profile account which covers basic setup off account
     '''
@@ -96,97 +59,6 @@ class ProfileForm(forms.ModelForm):
 phone_number_format = "+[0-9] [0-9]{3}-[0-9]{3}-[0-9]{3}"
 
 
-class ClubProfileForm(ProfileForm):
-    pass
-
-
-class VerificationForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper(self)
-        self.helper.form_tag = False
-        self.helper.error_text_inline = True
-        self.helper.labels_uppercase = True
-        self.helper.label_class = 'col-md-3'
-        self.helper.field_class = 'col-md-9'
-        self.fields['team_club_league_voivodeship_ver'].required = True
-        self.fields['team_club_league_voivodeship_ver'].label = False  # '<i class="icofont-ui-user-group"></i>'
-        self.fields['team_club_league_voivodeship_ver'].help_text = None
-
-
-class ClubVerificationForm(VerificationForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['club_role'].required = True
-        self.fields['birth_date'].required = True
-        self.fields['country'].required = True
-        self.helper.layout = Fieldset(
-            '',
-            Field("team_club_league_voivodeship_ver", wrapper_class='row', placeholder='wpisz klub, drużynę, etc.'),
-            Field("club_role", wrapper_class='row')
-        )
-
-    class Meta:
-        model = models.ClubProfile
-        widgets = {'country': CountrySelectWidget()}
-        fields = models.ClubProfile.VERIFICATION_FIELDS
-
-
-class CoachVerificationForm(VerificationForm):
-    birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['birth_date'].required = True
-
-        self.fields['country'].required = True
-        self.fields['country'].initial = 'PL'
-
-        self.fields['club_role'].required = True
-        self.fields['club_role'].label = False
-        self.fields['club_role'].help_text = 'Jaka rolę pełnisz w klubie'
-
-        self.fields['team_club_league_voivodeship_ver'].help_text = 'Który klub reprezentujesz'
-
-        self.helper.layout = Fieldset(
-            '',
-            Field("birth_date", wrapper_class='row',  placeholder='1998-09-24',),
-            Field("country", wrapper_class='row'),
-            Field("team_club_league_voivodeship_ver", wrapper_class='row', placeholder='wpisz nazwę zespołu, województwo etc.'),
-            Field("club_role", wrapper_class='row')
-        )
-
-    class Meta:
-        model = models.CoachProfile
-        widgets = {'country': CountrySelectWidget()}
-        fields = models.CoachProfile.VERIFICATION_FIELDS
-
-
-
-class PlayerVerificationForm(VerificationForm):
-    birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['birth_date'].required = True
-        self.fields['country'].required = True
-        self.fields['country'].initial = 'PL'
-        self.fields['position_raw'].required = True
-
-        self.helper.layout = Fieldset(
-            '',
-            Field("birth_date", wrapper_class='row', placeholder='1998-09-24'),
-            Field("country", wrapper_class='row'),
-            Field("position_raw", wrapper_class='row'),
-            Field("team_club_league_voivodeship_ver", wrapper_class='row', placeholder='W którym klubie grasz / lub nie posiadam klubu'),
-        )
-
-    class Meta:
-        model = models.PlayerProfile
-        widgets = {'country': CountrySelectWidget()}
-        fields = models.PlayerProfile.VERIFICATION_FIELDS + ['position_raw']
-
-
 class BaseProfileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -196,7 +68,7 @@ class BaseProfileForm(forms.ModelForm):
         self.helper.error_text_inline = True
         self.helper.labels_uppercase = True
         self.helper.wrapper_class = 'row'
-        self.helper.label_class = 'col-md-3 text-md-right text-muted upper'
+        self.helper.label_class = 'col-md-4 text-md-right text-muted upper form-label'
         self.helper.field_class = 'col-md-6'
 
 
@@ -209,8 +81,8 @@ class UserBasicForm(BaseProfileForm):
                     Fieldset(
                         _('<h2 class="form-section-title">Dane osobowe</h2>'),
                         Div(
-                            Field('first_name', wrapper_class='row'),
-                            Field('last_name', wrapper_class='row'),
+                            Field('first_name', wrapper_class='row', placeholder='imię'),
+                            Field('last_name', wrapper_class='row', placeholder='nazwisko'),
                             Field('picture', wrapper_class='row'),
                         ),
                         css_class='col-md-6',
@@ -225,6 +97,12 @@ class UserBasicForm(BaseProfileForm):
         fields = ['first_name', 'last_name', 'picture']
 
 
+class ClubProfileForm(BaseProfileForm):
+    class Meta:
+        model = models.ClubProfile
+        fields = ['club_role']
+
+
 class CoachProfileForm(BaseProfileForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -233,13 +111,13 @@ class CoachProfileForm(BaseProfileForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Fieldset(
-                        _('<h2 class="form-section-title">Klub</h2>'),
-                        Div(
-                            Field('club_role', wrapper_class='row', placeholder='Jaką role pełnisz w klubie'),
-                        ),
-                        css_class='col-md-6',
-                    ),
+                    # Fieldset(
+                    #     _('<h2 class="form-section-title">Klub</h2>'),
+                    #     Div(
+                    #         Field('club_role', wrapper_class='row', placeholder='Jaką role pełnisz w klubie'),
+                    #     ),
+                    #     css_class='col-md-6',
+                    # ),
                     Fieldset(
                         _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
                         Div(
@@ -256,7 +134,7 @@ class CoachProfileForm(BaseProfileForm):
                         css_class='col-md-6',
                     ),
                     Fieldset(
-                        _('<h2 class="form-section-title">Piłkarski status</h2>'),
+                        _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
                         Div(
                             Field('phone', placeholder='+48 111 222 333', wrapper_class='row'),
                             Field('facebook_url', wrapper_class='row'),
@@ -387,21 +265,45 @@ class ScoutProfileForm(BaseProfileForm):
     '''
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # self.fields['team_club_league_voivodeship_ver'].required = True
+        # self.fields['league_raw'].label = False  # '<i class="icofont-ui-user-group"></i>'
+        self.fields['country'].help_text = None
+        self.fields['club_raw'].help_text = None
+        self.fields['league_raw'].label = 'Klub'
+        self.fields['league_raw'].help_text = None
+        self.fields['league_raw'].label = 'Poziom rozgrywkowy'
+        self.fields['voivodeship_raw'].help_text = None
+        self.fields['voivodeship_raw'].label = 'Wojewódźtwo'
+        self.fields['practice_distance'].help_text = None
+        self.fields['practice_distance'].label = 'Odległość na treningi'
+
+        self.fields['bio'].help_text = None
+        self.fields['bio'].label = 'Krótko o sobie'
+
+        self.fields['address'].help_text = None
+        self.fields['facebook_url'].help_text = None
+
         self.helper.layout = Layout(
             Div(
                 Div(
                     Fieldset(
                         _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
                         Div(
-                            Field('soccer_goal', wrapper_class='row'),
-                            Field('facebook_url', wrapper_class='row'),
-                            Field('league', wrapper_class='row',),
-                            Field('club', wrapper_class='row'),  
-                            Field('voivodeship', wrapper_class='row',),
+                            Field('bio', wrapper_class='row',),
+                            Field('soccer_goal', wrapper_class='row', css_class='mandatory'),
+                            Field('league_raw', wrapper_class='row', placeholder='deklarowany'),
+                            Field('club_raw', wrapper_class='row', placeholder='reprezentowany'),
+                            Field('voivodeship_raw', wrapper_class='row', placeholder='deklarowane'),
                             Field('country', wrapper_class='row'),
-                            Field("address", wrapper_class='row'),
-                            Field("practice_distance", wrapper_class='row'),
-
+                            Field("practice_distance", wrapper_class='row', placeholder='maksymalna w km'),
+                        ),
+                        css_class='col-md-6',
+                    ),
+                    Fieldset(
+                        _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
+                        Div(
+                            Field("address", wrapper_class='row', placeholder='np. Dolnyśląsk, Wrocław'),
+                            Field('facebook_url', wrapper_class='row', placeholder='https://facebook..'),
                         ),
                         css_class='col-md-6',
                     ),
@@ -415,4 +317,41 @@ class ScoutProfileForm(BaseProfileForm):
     class Meta:
         model = models.ScoutProfile
         widgets = {'country': CountrySelectWidget()}
-        fields = model.COMPLETE_FIELDS + model.OPTIONAL_FIELDS
+        fields = model.COMPLETE_FIELDS + model.OPTIONAL_FIELDS + ['bio']
+
+
+class GuestProfileForm(BaseProfileForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['bio'].help_text = None
+        self.fields['bio'].label = 'Krótko o sobie'
+
+        self.helper.layout = Layout(
+                Div(
+                    Div(
+                        Fieldset(
+                            _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
+                            Div(
+                                Field('facebook_url', wrapper_class='row', placeholder='https://facebook...'),
+                                Field('bio', wrapper_class='row',),
+                            ),
+                            css_class='col-md-6',
+                        ),
+                    )
+                )
+            )
+
+    class Meta:
+        model = models.GuestProfile
+        fields = ['facebook_url', 'bio']
+
+
+class ParentProfileForm(GuestProfileForm):
+    class Meta:
+        model = models.ManagerProfile
+        fields = ['facebook_url', 'bio']
+
+class ManagerProfileForm(GuestProfileForm):
+    class Meta:
+        model = models.ManagerProfile
+        fields = ['facebook_url', 'bio']

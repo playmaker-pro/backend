@@ -2,7 +2,7 @@
 
 class ViewModalLoadingMixin:
 
-    def modal_activity(self, user, register_auto=True, verification_auto=True):
+    def modal_activity(self, user, register_auto=None, verification_auto=None):
         modals = {
             'action_limit_exceeded': {
                 'name': 'actionLimitExceedModal',
@@ -47,13 +47,19 @@ class ViewModalLoadingMixin:
                 'async': False
             }
         }
+        # Loading account specific modals (mandatory)
         if not user.is_authenticated:
             modals['register']['load'] = True
-            modals['register']['auto'] = register_auto
+            modals['register']['auto'] = register_auto or True
 
         elif user.is_missing_verification_data:
             modals['verification']['load'] = True
-            modals['verification']['auto'] = verification_auto
+            # When user is pending role change
+
+            if user.is_pending_role_change and verification_auto is None:
+                modals['verification']['auto'] = False
+            else:
+                modals['verification']['auto'] = verification_auto if verification_auto is not None else True
 
         elif user.is_roleless:
             modals['need_role']['load'] = True
@@ -61,10 +67,13 @@ class ViewModalLoadingMixin:
 
         elif user.is_waiting_for_verification:
             modals['need_verification']['load'] = True
-        else:  # here is case when we can perfom action, so here are the action that we can perform 
+
+        # Loading action specific modals
+        # here is case when we can perfom action, so here are the action that we can perform
+        else:
             modals['inquiry']['load'] = True
 
             if user.userinquiry.counter == user.userinquiry.limit:
                 modals['action_limit_exceeded']['load'] = True
-            
+
         return modals

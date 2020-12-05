@@ -4,9 +4,9 @@
 {% if user.is_authenticated and user.is_missing_verification_data %}
 <div class="notification-banner">
   <div class="banner alert alert-danger" role="alert">
-    <strong>{% trans 'Twój profil wymaga werifikacji' %}.</strong>
+    <strong>{% trans 'Twój profil wymaga weryfikacji' %}.</strong>
     <button type="button" class="btn-pm btn-pm-sm" data-toggle="modal" data-target="#verificationModal">
-      {% trans 'Zwerifikuj swoje konto' %}
+      {% trans 'Zweryfikuj swoje konto' %}
     </button>
 
   </div>

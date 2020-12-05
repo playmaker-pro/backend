@@ -42,7 +42,7 @@ class TableView(generic.TemplateView, mixins.ViewModalLoadingMixin):
         page_obj = paginator.get_page(page_number)
         kwargs['page_obj'] = page_obj
         kwargs['type'] = self.table_type
-        kwargs['modals'] = self.modal_activity(request.user, register_auto=False)
+        kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
         page_obj.elements = page_obj.end_index() - page_obj.start_index() + 1
         # kwargs['ammount'] = page_obj.count()
         return super().get(request, *args, **kwargs)

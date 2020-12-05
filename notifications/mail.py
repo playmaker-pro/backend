@@ -24,7 +24,7 @@ def mail_user_waiting_for_verification(instance, extra_body=None):
     if extra_body is None:
         extra_body = ''
 
-    subject = f'[Oczekuje na werifikacje] Użytkownik {instance.username} cheka na werifikacje tożsamości'
+    subject = f'[Oczekuje na weryfikacje] Użytkownik {instance.username} cheka na weryfikacje tożsamości'
     message = f'Użytkownik {instance.username} zmienił swoje dane. \n ' \
         f'Link do admina: {settings.BASE_URL}{instance.get_admin_url()}. \n' \
         f'{extra_body}'

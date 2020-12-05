@@ -39,11 +39,11 @@
           {% if editable %}
           <h4 class="small font-weight-bold">
                 {% if show_user.is_verified %} 
-                  <i class="text-success icofont-verification-check"></i> {% trans 'zwerifikowane' %}
+                  <i class="text-success icofont-verification-check"></i> {% trans 'zweryfikowany' %}
                 {% elif show_user.is_waiting_for_verification %}
-                    <i class="text-warning icofont-ui-clock"></i> {% trans 'oczekuje na werifikacje' %}
+                    <i class="text-warning icofont-ui-clock"></i> {% trans 'oczekuje na weryfikacje' %}
                 {% else %} 
-                    <i class="text-danger icofont-adjust"></i> {% trans 'brakuje danych do werifikacji konta' %}
+                    <i class="text-danger icofont-adjust"></i> {% trans 'brakuje danych do weryfikacji konta' %}
                 {% endif %} 
             
             <span class="float-right">{{user.profile.percentage_completion}}%</span></h4>
@@ -98,10 +98,18 @@
 
           {% if editable %}
               {% include 'profiles/buttons/edit.html' %}
+
+              {% if user.is_club %}
+                  {% get_my_club_link text="Edytuj mój klub" css_class="btn-act" %}
+              {% elif user.is_coach %}
+                  {% get_my_team_link text="Edytuj mój zespół" css_class="btn-act" %}
+              {% endif %}
+
           {% else %}
               {% csrf_token %}
               {% observed_link user show_user text=True %}
               {% request_link user show_user %}
+              
           {% endif %}
       </div>
     </div>

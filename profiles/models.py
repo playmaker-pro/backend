@@ -136,27 +136,12 @@ class BaseProfile(models.Model):
         max_length=255,
         blank=True,
         editable=False)
-         
+
     bio = models.CharField(
-        _("Short Bio"),
-        max_length=200,
+        _("Krótki opis o sobie"),
+        max_length=455,
         blank=True,
         null=True)
-    bio = models.CharField(
-        _("Short Bio"),
-        max_length=200,
-        blank=True,
-        null=True)
-
-    email_verified = models.BooleanField(
-        _("Email verified"),
-        default=False,
-        help_text="When user recieve confiramion and confirm it.")
-
-    account_verified = models.BooleanField(
-        _("Account verified"),
-        default=False,
-        help_text="Manually confirmed by Admin. This means that user is participant of soocer community.")
 
     def get_permalink(self):
         return reverse("profiles:show", kwargs={"slug": self.slug})
@@ -245,7 +230,7 @@ class BaseProfile(models.Model):
         # Cases when one of verification fields is None
         if self._is_verification_fields_filled():
             if not self.user.is_waiting_for_verification and not self.user.is_verified:
-                reason_text = 'Parametry weryfikacyjne są uzupełnione, a użytkownik nie miał wcześniej statusu "zwerfikowany" ani że "czeka na werifikacje"'
+                reason_text = 'Parametry weryfikacyjne są uzupełnione, a użytkownik nie miał wcześniej statusu "zwerfikowany" ani że "czeka na weryfikacje"'
                 reason = f'[verification-params-ready]: \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS})  \n Old:{ver_old} -> New:{ver_new} \n'
                 self.user.waiting_for_verification(extra={'reason': reason})
                 self.user.save()
@@ -603,7 +588,8 @@ class PlayerProfile(BaseProfile):
 
     country = CountryField(
         _('Country'),
-        blank=True,
+        # blank=True,
+        default='PL',
         null=True,
         blank_label=_('Wybierz kraj'),
     )
@@ -764,12 +750,14 @@ class PlayerMetrics(models.Model):
 
 class ClubProfile(BaseProfile):
     PROFILE_TYPE = definitions.PROFILE_TYPE_CLUB
+
     CLUB_ROLE = (
         (1, 'Prezes'),
         (2, 'Kierownik'),
         (3, 'Członek zarządu'),
         (4, 'Sztab szkoleniowy'),
         (5, 'Inne'))
+
     VERIFICATION_FIELDS = [
         'team_club_league_voivodeship_ver',
         'club_role',
@@ -796,7 +784,7 @@ class ClubProfile(BaseProfile):
         null=True,)
 
     club_raw = models.CharField(
-        _('Deklarowany Klub'),
+        _('Deklarowany klub'),
         max_length=68,
         help_text=_('Klub w którym deklarujesz że obecnie reprezentuejsz'),
         blank=True,
@@ -810,21 +798,21 @@ class ClubProfile(BaseProfile):
         null=True)
 
     team_raw = models.CharField(
-        _('Deklarowana Drużyna'),
+        _('Deklarowana drużyna'),
         max_length=68,
         help_text=_('Drużyna w której deklarujesz że obecnie grasz'),
         blank=True,
         null=True)
 
     league = models.CharField(
-        _('Rozgrywki'),
+        _('Poziom rozgrywkowy'),
         max_length=68,
         help_text=_('Poziom rozgrywkowy'),
         blank=True,
         null=True)
 
     league_raw = models.CharField(
-        _('Rozgrywki'),
+        _('Deklarowany poziom rozgrywkowy'),
         max_length=68,
         help_text=_('Poziom rozgrywkowy który deklarujesz że grasz.'),
         blank=True,
@@ -838,7 +826,7 @@ class ClubProfile(BaseProfile):
         null=True)
 
     voivodeship_raw = models.CharField(
-        _('Wojewódźtwo'),
+        _('Deklarowane wojewódźtwo'),
         help_text=_('Wojewódźtwo w którym grasz.'),
         max_length=68,
         blank=True,
@@ -860,18 +848,18 @@ class CoachProfile(BaseProfile):
     COMPLETE_FIELDS = ['phone']
 
     CLUB_ROLE = (
-        (1, 'Prezes'),
-        (2, 'Kierownik'),
-        (3, 'Członek zarządu'),
-        (4, 'Sztab szkoleniowy'),
-        (5, 'Inne')
+        (1, 'Trener'),
+        (2, 'Prezes'),
+        (3, 'Kierownik'),
+        (4, 'Członek zarządu'),
+        (5, 'Sztab szkoleniowy'),
+        (6, 'Inne')
     )
 
     VERIFICATION_FIELDS = [
         'country',
         'birth_date',
-        'team_club_league_voivodeship_ver',
-        'club_role']
+        'team_club_league_voivodeship_ver']
 
     GOAL_CHOICES = (
         (1, 'Profesjonalna kariera'),
@@ -957,6 +945,7 @@ class CoachProfile(BaseProfile):
     country = CountryField(
         _('Country'),
         blank=True,
+        default='PL',
         null=True,
         blank_label=_('Wybierz kraj'),)
     practice_distance = models.PositiveIntegerField(
@@ -981,10 +970,10 @@ class CoachProfile(BaseProfile):
     # club & coach specific attrs.
     club_role = models.IntegerField(
         choices=CLUB_ROLE,
+        default=1,  # trener
         null=True, blank=True,
         help_text='Defines if admin approved change')
 
-    
     class Meta:
         verbose_name = "Coach Profile"
         verbose_name_plural = "Coaches Profiles"
@@ -1034,16 +1023,17 @@ class ScoutProfile(BaseProfile):
     AUTO_VERIFY = True
     VERIFICATION_FIELDS = []
 
-    COMPLETE_FIELDS = ['soccer_goal']
+    COMPLETE_FIELDS = [
+        'soccer_goal']
 
     OPTIONAL_FIELDS = [
         'country',
         'facebook_url',
         'address',
         'practice_distance',
-        'club',
-        'league',
-        'voivodeship',
+        'club_raw',
+        'league_raw',
+        'voivodeship_raw',
         ]
 
     GOAL_CHOICES = (
@@ -1059,6 +1049,7 @@ class ScoutProfile(BaseProfile):
         blank=True)
     country = CountryField(
         _('Country'),
+        default='PL',
         blank=True,
         null=True,
         blank_label=_('Wybierz kraj'),)
@@ -1066,31 +1057,57 @@ class ScoutProfile(BaseProfile):
         _('Facebook'),
         blank=True,
         null=True)
+
     address = AddressField(
         help_text=_('Adres'),
         blank=True,
         null=True)
+
     practice_distance = models.PositiveIntegerField(
         _('Maksymalna odległość na trening'),
         blank=True,
         null=True,
         help_text=_('Maksymalna odległośc na trening'),
         validators=[MinValueValidator(10), MaxValueValidator(500)])
+
     club = models.CharField(
         _('Klub'),
+        max_length=68,
+        help_text=_('Klub, który obecnie reprezentuejsz'),
+        blank=True,
+        null=True,)
+
+    club_raw = models.CharField(
+        _('Deklarowany klub'),
         max_length=68,
         help_text=_('Klub w którym obecnie reprezentuejsz'),
         blank=True,
         null=True,)
+
     league = models.CharField(
         _('Rozgrywki'),
         max_length=68,
         help_text=_('Poziom rozgrywkowy'),
         blank=True,
         null=True)
+
+    league_raw = models.CharField(
+        _('Deklarowany poziom rozgrywkowy'),
+        max_length=68,
+        help_text=_('Poziom rozgrywkowy'),
+        blank=True,
+        null=True)
+
     voivodeship = models.CharField(
         _('Wojewódźtwo'),
         help_text=_('Wojewódźtwo'),
+        max_length=68,
+        blank=True,
+        null=True)
+
+    voivodeship_raw = models.CharField(
+        _('Deklarowane wojewódźtwo'),
+        help_text=_('Wojewódźtwo w którym grasz.'),
         max_length=68,
         blank=True,
         null=True)
