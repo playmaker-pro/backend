@@ -13,7 +13,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
-from followers.models import Follow
+from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from roles import definitions
 from stats import adapters
@@ -44,9 +44,11 @@ class MyObservers(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixi
 
     def get(self, request, *args, **kwargs):
         user = request.user
-        qs = Follow.objects.filter(user=user)
+        qs_profiles = Follow.objects.filter(user=user)
+        qs_teams = FollowTeam.objects.filter(user=user)
         kwargs['page_title'] = 'Obserwowani'
-        kwargs['page_obj'] = self.paginate(qs)
+        kwargs['page_obj_teams'] = self.paginate(qs_teams)
+        kwargs['page_obj'] = self.paginate(qs_profiles)
         kwargs['modals'] = self.modal_activity(user, verification_auto=False)
         return super().get(request, *args, **kwargs)
 

@@ -1,22 +1,22 @@
 {% load i18n %}
 {% load static %}
 {% load thumbnail %}
-
+{% load playmaker %}
 
 
 {% for object in objects %}
 <div class="card item-card" style="">
   <div class="card-header d-md-none">
     <span>{{ object.name|upper }}
-    <span class="float-right"> <a href="#" class="">Observe</a> </span>
+    <span class="float-right"> {% observed_link user object otype='team'%}</span>
   </div>
   <div class="d-md-none">
-    <img class="avatar rounded-circle img-responsive" title="profile picture"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_small' %}">
+    <img class="avatar rounded img-responsive" src="{% thumbnail object.picture|default:'default_team.png' 'tables_avatar_show_small' %}">
   </div>
   <div class="card-body table-item"> 
-  <div class="row no-gutters ">
+  <div class="row no-gutters">
         <div class="d-none d-md-inline col-md-1">
-            <img class="avatar rounded-circle img-responsive" title="profile picture"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_small' %}">
+            <img class="avatar rounded img-responsive" src="{% thumbnail object.picture|default:'default_team.png' 'tables_avatar_show_medium' %}">
         </div>
 
         <div class="d-none d-md-inline col-md-1">
@@ -26,38 +26,44 @@
         <div class="col-3 col-md">
             {{ object.league|default:'-'|upper  }}
         </div >
-
+        {% comment %} <div class="col-3 col-md-1"> 
+            {{ object.voivodeship|default:'-'|upper  }}
+        </div> {% endcomment %}
         <div class="col-3 col-md-1"> 
-            {{ object.team|default:'-'|upper  }}
+            {{ object.voivodeship|default:'-'|upper|truncatechars:10 }}
         </div>
 
         <div class="col-3 col-md-1">
-             {{ object.profile.voivodeship|default:'-'|upper|truncatechars:10 }}
+             {{ object.group|default:'-'|upper|truncatechars:10 }}
         </div>
 
-        <div class="col-3 col-md-1 stats">  
-            <span class="main-color">{{ object.profile.playermetrics.season_summary.team_goals|default:'0' }}</span> gole
+        <div class="col-3 col-md-1">
+             {{ object.manager|default:'-'|upper }}
+        </div>
+        
+        <div class="col-3 col-md-1">
+             {{ object.address|default:'-'|upper }}
         </div>
 
-        <div class="col-3 col-md-1 stats"> 
-            <span class="main-color stats">{{ object.profile.playermetrics.season_summary.first_squad_games_played|default:'0' }}</span>  w pierwszym składzie 
+        <div class="col-3 col-md-1">
+             {{ object.address|default:'0-0-0'|upper }}
         </div>
 
-        <div class="col-3 col-md-1 stats">
-            <span class="main-color">{{ object.profile.playermetrics.season_summary.games_played|default:'0' }}</span>  mecze     
+        <div class="col-3 col-md-1">
+             {{ object.address|default:'0śr'|upper }}
         </div>
 
-        <div class="col-3 col-md-1 stats">
-            <span class="main-color">{{ object.profile.playermetrics.season_summary.minutes_played |default:'0' }}</span>  minuty
-        </div>
-
-        <div class="d-none d-md-inline col-md-1">
-              <span class="float-right"> <a href="{{ object.get_permalink }}"><i class="btn-pm btn-pm-sm icofont-user"></i></a></span>
+        <div class="d-none d-md-inline col-md-2">
+          {% get_team_link object text='profil' %}
+          {% observed_link user object otype='team'%}
+    
         </div>
     </div>
   </div>
   <div class="card-footer  d-md-none">
-    <span class="float-right"> <a href="{{ object.get_permalink }}"><i class="btn-pm btn-pm-sm icofont-user"></i> zobacz profil</a></span>
+    <span class="float-right">
+    {% get_team_link object text='' %}
+    </span>
   </div>
 </div>
 {% endfor %}

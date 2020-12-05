@@ -16,6 +16,32 @@ function modalHide(openmodal) {
     }
 }
 
+
+function observeTeam(event, slug) {
+    var button = $(event.target);
+    $.ajax({
+        type:'POST',
+        url:'/users/me/observe/team/',
+        data:{
+            csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+            slug: slug,
+            action: 'post',
+        },
+        success: function(json){
+            button.toggleClass("observed")
+            
+            showToastMessage(json.message.body);
+
+            //console.log('ssss', button);
+            //modalShow(json.open_modal);
+        },
+        error : function(xhr, errmsg, err) {
+        console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+    }
+    });
+};
+
+
 function observe(event, slug) {
     var button = $(event.target);
     $.ajax({
@@ -24,7 +50,7 @@ function observe(event, slug) {
         data:{
             csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
             slug: slug,
-            action: 'post'
+            action: 'post',
         },
         success: function(json){
             button.toggleClass("observed")

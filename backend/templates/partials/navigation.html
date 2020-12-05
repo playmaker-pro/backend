@@ -23,7 +23,7 @@
           {% include menuitems_template|default:"partials/_menuitems.html" %}
 
           {% if request.user.is_authenticated %}
-          <li class="drop-down"><a href=""><!--i class="icofont-user-alt-7"></i--><img class="navigation-avatar rounded-circle img-responsive"  src="{% thumbnail user.picture|default:'default_profile.png' 'nav_avatar' %}"> {{ request.user.display_name }}</a>
+          <li class="drop-down"><a href="{% url 'profiles:show_self' %}"><!--i class="icofont-user-alt-7"></i--><img class="navigation-avatar rounded-circle img-responsive"  src="{% thumbnail user.picture|default:'default_profile.png' 'nav_avatar' %}"> {{ request.user.display_name }}</a>
             <ul>
               <li><a href="{% url 'profiles:show_self' %}">Profil</a></li>
               <li><a href="{% url 'profiles:edit_self' %}">Edytuj CV

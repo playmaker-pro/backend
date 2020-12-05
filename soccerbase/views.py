@@ -52,6 +52,18 @@ class PlayersTable(TableView):
     table_type = TABLE_TYPE_PLAYER
 
     @property
+    def filter_age_max(self):
+        value = self.request.GET.get('age_max')
+        if value:
+            return int(value)
+
+    @property
+    def filter_age_min(self):
+        value = self.request.GET.get('age_min')
+        if value:
+            return int(value)
+
+    @property
     def filter_age_range(self):
         value = self.request.GET.get('age_range')
         if isinstance(value, str) and value != '' and value is not None:
@@ -69,7 +81,6 @@ class PlayersTable(TableView):
                 return None
     @property
     def filter_position(self):
-        
         POSITION_CHOICES = [
             (1, 'Bramkarz'),
             (2, 'Obrońca Lewy'),
@@ -109,15 +120,23 @@ class PlayersTable(TableView):
     def filter_queryset(self, queryset):
         if self.filter_leg is not None:
             queryset = queryset.filter(playerprofile__prefered_leg=self.filter_leg)
-   
-        if self.filter_age_range is not None:
-            mindate = get_datetime_from_age(self.filter_age_range[0])
-            maxdate = get_datetime_from_age(self.filter_age_range[1])
-            queryset = queryset.filter(playerprofile__birth_date__range=[maxdate, mindate])  # bo 0,20   to data urodzin 2000-09-01----2020-09-01
+
+        if self.filter_age_min is not None:
+            mindate = get_datetime_from_age(self.filter_age_min)
+            queryset = queryset.filter(playerprofile__birth_date__lte=mindate)
+
+        if self.filter_age_max is not None:
+            maxdate = get_datetime_from_age(self.filter_age_max)
+            queryset = queryset.filter(playerprofile__birth_date__gte=maxdate)
+
+        # if self.filter_age_range is not None:
+        #     mindate = get_datetime_from_age(self.filter_age_range[0])
+        #     maxdate = get_datetime_from_age(self.filter_age_range[1])
+        #     queryset = queryset.filter(playerprofile__birth_date__range=[maxdate, mindate])  # bo 0,20   to data urodzin 2000-09-01----2020-09-01
         if self.filter_position is not None:
             queryset = queryset.filter(playerprofile__position_raw=self.filter_position)
         return queryset
-        
+
     def get_queryset(self):
         return User.objects.filter(declared_role='P', state=User.STATE_ACCOUNT_VERIFIED)
 
@@ -128,8 +147,33 @@ class TeamsTable(TableView):
     def get_queryset(self):
         return Team.objects.all()
 
+
 class CoachesTable(TableView):
     table_type = TABLE_TYPE_COACH
 
+    @property
+    def filter_age_range(self):
+        value = self.request.GET.get('age_range')
+        if isinstance(value, str) and value != '' and value is not None:
+            if value == '----':
+                return None
+            elif value == 'do 20 lat':
+                return (0, 20)
+            elif value == 'od 21 do 26':
+                return (21, 26)
+            elif value == 'od 27 do 34':
+                return (27, 34)
+            elif value == 'powyżej 35':
+                return (35, 199)
+            else:
+                return None
+
     def get_queryset(self):
         return User.objects.filter(declared_role='T', state=User.STATE_ACCOUNT_VERIFIED)
+
+    def filter_queryset(self, queryset):
+        if self.filter_age_range is not None:
+            mindate = get_datetime_from_age(self.filter_age_range[0])
+            maxdate = get_datetime_from_age(self.filter_age_range[1])
+            queryset = queryset.filter(playerprofile__birth_date__range=[maxdate, mindate])  # bo 0,20   to data urodzin 2000-09-01----2020-09-01
+        return queryset

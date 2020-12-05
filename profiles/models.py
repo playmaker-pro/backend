@@ -348,7 +348,7 @@ class PlayerProfile(BaseProfile):
         6: FANTASY_HELPER,
         7: FANTASY_HELPER,
         8: FANTASY_HELPER,
-        9: FANTASY_ATTAKER,}
+        9: FANTASY_ATTAKER}
 
     LEG_CHOICES = (
         (1, 'Lewa'),
@@ -394,6 +394,30 @@ class PlayerProfile(BaseProfile):
         help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'),
         blank=True,
         null=True,)
+
+    @property
+    def display_club(self):
+        if self.club is None:
+            return self.club_raw
+        return self.club
+
+    @property
+    def display_team(self):
+        if self.team is None:
+            return self.team_raw
+        return self.team
+
+    @property
+    def display_league(self):
+        if self.league is None:
+            return self.league_raw
+        return self.league
+
+    @property
+    def display_voivodeship(self):
+        if self.voivodeship is None:
+            self.voivodeship_raw
+        return self.voivodeship
 
     club = models.CharField(
         _('Klub'),
@@ -612,7 +636,7 @@ class PlayerProfile(BaseProfile):
         blank=True)
 
     @property
-    def age(self): # todo przeniesc to do uzywania z profile.utils.
+    def age(self):  # todo przeniesc to do uzywania z profile.utils.
         if self.birth_date:
             now = timezone.now()
             return now.year - self.birth_date.year - ((now.month, now.day) < (self.birth_date.month, self.birth_date.day))
@@ -776,6 +800,30 @@ class ClubProfile(BaseProfile):
         blank=True,
         null=True,)
 
+    @property
+    def display_club(self):
+        if self.club is None:
+            return self.club_raw
+        return self.club
+
+    @property
+    def display_team(self):
+        if self.team is None:
+            return self.team_raw
+        return self.team
+
+    @property
+    def display_league(self):
+        if self.league is None:
+            return self.league_raw
+        return self.league
+
+    @property
+    def display_voivodeship(self):
+        if self.voivodeship is None:
+            self.voivodeship_raw
+        return self.voivodeship
+
     club = models.CharField(
         _('Klub'),
         max_length=68,
@@ -875,6 +923,31 @@ class CoachProfile(BaseProfile):
         help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'),
         blank=True,
         null=True,)
+
+    @property
+    def display_club(self):
+        if self.club is None:
+            return self.club_raw
+        return self.club
+
+    @property
+    def display_team(self):
+        if self.team is None:
+            return self.team_raw
+        return self.team
+
+    @property
+    def display_league(self):
+        if self.league is None:
+            return self.league_raw
+        return self.league
+
+    @property
+    def display_voivodeship(self):
+        if self.voivodeship is None:
+            self.voivodeship_raw
+        return self.voivodeship
+
     club = models.CharField(
         _('Klub'),
         max_length=68,
@@ -887,6 +960,7 @@ class CoachProfile(BaseProfile):
         help_text=_('Klub w którym deklarujesz że obecnie reprezentuejsz'),
         blank=True,
         null=True,)
+
     team = models.CharField(
         _('Drużyna'),
         max_length=68,
@@ -899,30 +973,35 @@ class CoachProfile(BaseProfile):
         help_text=_('Drużyna w której deklarujesz że obecnie grasz'),
         blank=True,
         null=True)
+
     league = models.CharField(
         _('Rozgrywki'),
         max_length=68,
         help_text=_('Poziom rozgrywkowy'),
         blank=True,
         null=True)
+
     league_raw = models.CharField(
         _('Rozgrywki'),
         max_length=68,
         help_text=_('Poziom rozgrywkowy który deklarujesz że grasz.'),
         blank=True,
         null=True)
+
     voivodeship = models.CharField(
         _('Wojewódźtwo'),
         help_text=_('Wojewódźtwo'),
         max_length=68,
         blank=True,
         null=True)
+
     voivodeship_raw = models.CharField(
         _('Wojewódźtwo'),
         help_text=_('Wojewódźtwo w którym grasz.'),
         max_length=68,
         blank=True,
         null=True)
+
     birth_date = models.DateField(
         _('Data urodzenia'),
         blank=True,
@@ -973,6 +1052,14 @@ class CoachProfile(BaseProfile):
         default=1,  # trener
         null=True, blank=True,
         help_text='Defines if admin approved change')
+
+    @property
+    def age(self):  # todo przeniesc to do uzywania z profile.utils.
+        if self.birth_date:
+            now = timezone.now()
+            return now.year - self.birth_date.year - ((now.month, now.day) < (self.birth_date.month, self.birth_date.day))
+        else:
+            return None
 
     class Meta:
         verbose_name = "Coach Profile"

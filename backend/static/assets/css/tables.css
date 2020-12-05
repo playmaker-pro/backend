@@ -41,6 +41,9 @@ select.form-control option:checked { color: #0AD; }
     background-color:#fff;
     /*border-top: 1px dashed #e2e8f0;*/
 }
+#tables .card .card-body {
+    padding: .5rem .5rem;
+}
 
 #tables .card .header{ 
 

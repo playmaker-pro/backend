@@ -67,8 +67,9 @@
 
 <section id="tables" class="tables"> 
     <div class="container">
+    {% csrf_token %}
         {% if page_obj.paginator.count == 0 %}
-            {% include '_empty_data.html' %}
+            {% include 'platform/partials/_empty.html' %}
         {% else %}
         {% if type == 'P' %}
             {% include 'soccerbase/tables/players_card.html' with objects=page_obj %}

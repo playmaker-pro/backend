@@ -13,21 +13,37 @@
 
 <!-- Benefits of the Django application -->
 {% block content %}
+{% csrf_token %}
 <section id="profile-games" class="profile">
 
 <div class="container" data-aos="fade-up"> 
     <div class='row justify-content-center'>
-        <div class='col-md-12'>
+        <div class='text-center col-md-12'>
+        <h3>Osoby</h3>
         {% for item in page_obj %}
-            {% include 'profiles/partials/_two_table.html' with key=item.target.first_name|add:' '|add:item.target.last_name value='obserwowany' %} {% profile_link item.target %}
+            {% include 'profiles/partials/_two_table.html' with key=item.target.first_name|add:' '|add:item.target.last_name value='obserwowany' %} {% profile_link item.target %} {% observed_link user item.target %}
 
         {% empty %}
             nikogo nie obserwujesz
         {% endfor %} 
-        </div>   
-        <div class='col-md-12'>
-            {% include 'platform/partials/_pagination.html' %}
         </div>
+    </div>  
+    <hr>
+    <div class='row justify-content-center'>
+
+        <div class='text-center col-md-12'>
+        <h3>Drużyny</h3>
+        {% for item in page_obj_teams %}
+            {% include 'profiles/partials/_two_table.html' with key=item.target.name value='obserwowany' %}  {% get_team_link item.target text='profil' %}{% observed_link user item.target otype='team'%}
+
+        {% empty %}
+            nie obserwujesz żadnych drużyn
+        {% endfor %} 
+
+        </div>   
+        {% comment %} <div class='col-md-12'>
+            {% include 'platform/partials/_pagination.html' %}
+        </div> {% endcomment %}
     </div> <!-- 'row' -->
 </div>
 

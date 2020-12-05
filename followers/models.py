@@ -63,4 +63,29 @@ class Follow(models.Model):
         auto_now_add=True)
 
 
+from clubs.models import Team
+
+
+class FollowTeam(models.Model):
+
+    '''
+    A simple table mapping who a user is following.
+    For example, if user is Kyle and Kyle is following Alex,
+    the target would be Alex.
+    '''
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='following_team_set')
+
+    target = models.ForeignKey(
+        Team,
+        on_delete=models.CASCADE,
+        related_name='follower_team_set')
+
+    created_at = models.DateTimeField(
+        auto_now_add=True)
+
+
 from . import verbs

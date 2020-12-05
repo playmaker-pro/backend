@@ -254,6 +254,7 @@ THUMBNAIL_ALIASES = {
         'profile_avatar_show': {'size': (140, 140), 'crop': True},
         'tables_avatar_show': {'size': (64, 64), 'crop': True},
         'tables_avatar_show_small': {'size': (34, 34), 'crop': True},
+        'tables_avatar_show_medium': {'size': (54, 54), 'crop': True},
         'profile_avatar_table': {'size': (25, 25), 'crop': True},
         'nav_avatar': {'size': (25, 25), 'crop': True},
     },

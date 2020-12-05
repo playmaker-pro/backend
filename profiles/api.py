@@ -5,6 +5,10 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext_lazy as _
 from inquiries.models import InquiryRequest
 from django.contrib.auth.decorators import login_required
+from followers.models import FollowTeam
+from clubs.models import Team
+from followers.models import Follow
+
 
 def get_modal_action(user):
     if not user.is_authenticated:
@@ -48,12 +52,30 @@ def inquiry(request):
                 user.userinquiry.increment()
                 response_data['status'] = True
                 message['body'] = 'Powiadomienie wyslane.'
-                
         else:
             message['body'] = 'Osiągnięto limit zgłoszeń.'
-            
         response_data['message'] = message
         response_data['open_modal'] = action_modal
+        return JsonResponse(response_data)
+
+
+@login_required
+def observe_team(request):
+    response_data = {}
+    message = {'body': ''}
+
+    if request.POST.get('action') == 'post':
+        slug = request.POST.get('slug')
+        if slug:
+            team = get_object_or_404(Team, slug=slug)
+        f, created = FollowTeam.objects.get_or_create(user=request.user, target=team)
+        if not created:  # simple scenario - if pair user-slug is the same delete following.
+            message_body = f"przestałeś obserwować drużynę"
+            f.delete()
+        else:
+            message_body = f"obserwujesz drużynę"
+        message['body'] = message_body
+        response_data['message'] = message
         return JsonResponse(response_data)
 
 
@@ -70,7 +92,6 @@ def observe(request):
             profile = get_object_or_404(profile_model, slug=slug)
             recipient = profile.user
 
-        from followers.models import Follow
 
         f, created = Follow.objects.get_or_create(user=request.user, target=recipient)
         if not created:  # simple scenario - if pair user-slug is the same delete following.

@@ -10,6 +10,7 @@ urlpatterns = [
     path("me/", views.ShowProfile.as_view(), name="show_self"),
     path("me/query/", api.inquiry, name="inquiry_me"),
     path("me/observe/", api.observe, name="observe_me"),
+    path("me/observe/team/", api.observe_team, name="observe_team"),
     path('me/verification/', views.AccountVerification.as_view(), name='account_verification'),
     path("me/edit/", views.EditProfile.as_view(), name="edit_self"),
     path("me/edit/settings/", views.EditAccountSettings.as_view(), name="edit_settings"),
