@@ -42,15 +42,7 @@
 
 
 {% block content_header %}
-    {% if type == 'P' %}
-         {% include '_page_heading.html' with heading_title='Baza piłkarzy' size=4 %}
-    {% elif type == 'T' %}
-         {% include '_page_heading.html' with heading_title='Baza trenerów' size=4 %}
-    {% elif type == 'C' %}
-         {% include '_page_heading.html' with heading_title='Baza Drużyn' size=4 %}
-    {% endif %}
-
-   
+    {% include '_page_heading.html' with heading_title=page_title size=4 %}   
 {% endblock %}
 
 {% block content %}

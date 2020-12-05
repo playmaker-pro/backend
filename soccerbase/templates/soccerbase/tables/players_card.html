@@ -11,12 +11,12 @@
     <span class="float-right"> {% observed_link user object %} </span>
   </div>
   <div class="d-md-none">
-    <img class="avatar rounded-circle img-responsive" title="profile picture"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_small' %}">
+    <img class="avatar rounded-circle img-responsive" src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_small' %}">
   </div>
   <div class="card-body table-item"> 
-  <div class="row no-gutters ">
+  <div class="row no-gutters">
         <div class="d-none d-md-inline col-md-1">
-            <img class="avatar rounded-circle img-responsive" title="profile picture"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_small' %}">
+            <img class="avatar rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
         </div>
 
         <div class="d-none d-md-inline col-md-1">

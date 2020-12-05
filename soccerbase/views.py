@@ -25,8 +25,9 @@ from profiles import mixins  # @todo move this to platfrom app
 class TableView(generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "soccerbase/tables/table.html"
     http_method_names = ["get"]
-    paginate_limit = 5
+    paginate_limit = 15
     table_type = None
+    page_title = 'Baza piłkarska'
 
     def filter_queryset(self, queryset):
         return queryset
@@ -41,6 +42,7 @@ class TableView(generic.TemplateView, mixins.ViewModalLoadingMixin):
         page_number = request.GET.get('page') or 1
         page_obj = paginator.get_page(page_number)
         kwargs['page_obj'] = page_obj
+        kwargs['page_title'] = self.page_title
         kwargs['type'] = self.table_type
         kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
         page_obj.elements = page_obj.end_index() - page_obj.start_index() + 1
@@ -50,7 +52,7 @@ class TableView(generic.TemplateView, mixins.ViewModalLoadingMixin):
 
 class PlayersTable(TableView):
     table_type = TABLE_TYPE_PLAYER
-
+    page_title = 'Baza piłkarzy'
     @property
     def filter_age_max(self):
         value = self.request.GET.get('age_max')
@@ -143,6 +145,7 @@ class PlayersTable(TableView):
 
 class TeamsTable(TableView):
     table_type = TABLE_TYPE_TEAM
+    page_title = 'Baza drużyn'
 
     def get_queryset(self):
         return Team.objects.all()
@@ -150,6 +153,7 @@ class TeamsTable(TableView):
 
 class CoachesTable(TableView):
     table_type = TABLE_TYPE_COACH
+    page_title = 'Baza trenerów'
 
     @property
     def filter_age_range(self):

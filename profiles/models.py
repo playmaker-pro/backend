@@ -397,25 +397,25 @@ class PlayerProfile(BaseProfile):
 
     @property
     def display_club(self):
-        if self.club is None:
+        if self.club_raw is not None or self.club_raw != '':
             return self.club_raw
         return self.club
 
     @property
     def display_team(self):
-        if self.team is None:
+        if self.team_raw is not None or self.team_raw != '':
             return self.team_raw
         return self.team
 
     @property
     def display_league(self):
-        if self.league is None:
+        if self.league_raw is not None or self.league_raw != '':
             return self.league_raw
         return self.league
 
     @property
     def display_voivodeship(self):
-        if self.voivodeship is None:
+        if self.voivodeship_raw is not None or self.voivodeship_raw != '':
             self.voivodeship_raw
         return self.voivodeship
 
@@ -802,25 +802,25 @@ class ClubProfile(BaseProfile):
 
     @property
     def display_club(self):
-        if self.club is None:
+        if self.club_raw is not None or self.club_raw != '':
             return self.club_raw
         return self.club
 
     @property
     def display_team(self):
-        if self.team is None:
+        if self.team_raw is not None or self.team_raw != '':
             return self.team_raw
         return self.team
 
     @property
     def display_league(self):
-        if self.league is None:
+        if self.league_raw is not None or self.league_raw != '':
             return self.league_raw
         return self.league
 
     @property
     def display_voivodeship(self):
-        if self.voivodeship is None:
+        if self.voivodeship_raw is not None or self.voivodeship_raw != '':
             self.voivodeship_raw
         return self.voivodeship
 
@@ -926,25 +926,25 @@ class CoachProfile(BaseProfile):
 
     @property
     def display_club(self):
-        if self.club is None:
+        if self.club_raw is not None or self.club_raw != '':
             return self.club_raw
         return self.club
 
     @property
     def display_team(self):
-        if self.team is None:
+        if self.team_raw is not None or self.team_raw != '':
             return self.team_raw
         return self.team
 
     @property
     def display_league(self):
-        if self.league is None:
+        if self.league_raw is not None or self.league_raw != '':
             return self.league_raw
         return self.league
 
     @property
     def display_voivodeship(self):
-        if self.voivodeship is None:
+        if self.voivodeship_raw is not None or self.voivodeship_raw != '':
             self.voivodeship_raw
         return self.voivodeship
 

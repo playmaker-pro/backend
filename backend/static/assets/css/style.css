@@ -104,7 +104,8 @@ textarea.mandatory::-webkit-input-placeholder {
   font-style: italic;
 }
 
-textarea.select::-webkit-input-placeholder {
+/* this seems to not working */
+select.mandatory::-webkit-input-placeholder {
   color: #de6868;
   font-style: italic;
 }
