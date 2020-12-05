@@ -200,7 +200,7 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
         return "PROFIL"
 
     def is_profile_observed(self, user, target):
-        if user.is_anonymous:
+        if user.is_anonymous():
             return False
         try:
             Follow.objects.get(user=user, target=target)
@@ -255,7 +255,7 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
             else:
                 kwargs['season_circle_stats'] = []
 
-        if not self._is_owner(user):
+        if not self._is_owner(user) and user.is_anonymous():
             if InquiryRequest.objects.filter(
                     sender=self.request.user, recipient=user).exclude(
                         status__in=[InquiryRequest.STATUS_REJECTED, InquiryRequest.STATUS_ACCEPTED]).count() > 0:
