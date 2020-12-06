@@ -184,9 +184,11 @@ def observed_link(context, user, showed_user, text=False, otype='user'):
 
 
 @register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
-def seemore_link(context, link):
-
+def seemore_link(context, link, checks=True):
+    if not context['user'].is_authenticated:
+        pass
     return {
+        'checks': checks,
         'button_icon': None,
         'button_text': 'zobacz więcej',
         'button_url': link,
@@ -195,11 +197,12 @@ def seemore_link(context, link):
 
 
 @register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
-def get_team_link(context, team, text=None, css_class=None):
+def get_team_link(context, team, text=None, css_class=None, checks=True):
 
     css_class = css_class or ''
 
     return {
+        'checks': checks,
         'button_icon': 'shield',
         'button_url': team.get_permalink,
         'button_text': text,
