@@ -34,7 +34,6 @@
 <div class="tab-content mt-4" id="myTabContent">
   <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
 
-            
             {% for object in page_obj %}
             <div class="card item-card" style="">
                 <div class="card-header d-md-none">
@@ -58,7 +57,7 @@
                     <div class="row no-gutters">
 
                         <div class="d-none d-md-inline col-md-6">
-                            <a href={{object.profile.get_permalink }}>
+                            <a href={{object.target.profile.get_permalink }}>
                                 <img class="avatar rounded img-responsive" src="{% thumbnail object.target.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
                                 <img class="flag" src="{{ object.target.profile.country.flag }}" alt="flag">
                                 {{object.target.first_name|upper}} {{ object.target.last_name|upper}} 
@@ -120,7 +119,7 @@
                     <div class="row no-gutters">
 
                         <div class="d-none d-md-inline col-md-6">
-                            <a href={{object.profile.get_permalink }}>
+                            <a href={{object.target.get_permalink }}>
                                 <img class="avatar rounded img-responsive" src="{% thumbnail object.target.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
                                 {% comment %} <img class="flag" src="{{ object.target.profile.country.flag }}" alt="flag">{% endcomment %}
                                 {{object.target.name|upper}} / {{ object.target.club.name|upper}}  

@@ -21,3 +21,16 @@ def linkify(field_name):
 
     _linkify.short_description = field_name  # Sets column name
     return _linkify
+
+
+def generate_map(filename):
+    d = []
+    import csv
+    with open(filename, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            d.append(dict(row))
+    
+    with open('league_filter_map.py', 'w+') as filterfile:
+  
+        filterfile.write(f'LEAGUE_MAP = {d}')

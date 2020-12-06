@@ -22,6 +22,8 @@
     {% endif %}
 {% endblock %} {% endcomment %}
 
+
+
 {% block header %}
     {% if type == 'P' %}
         {% with menus_heading_title='Baza piłkarzy' %}
@@ -58,7 +60,7 @@
 
 
 <section id="tables" class="tables"> 
-    <div class="container">
+    <div class="container-fluid">
     {% csrf_token %}
         {% if page_obj.paginator.count == 0 %}
             {% include 'platform/partials/_empty.html' %}
@@ -85,7 +87,13 @@
 
 {% block extra_js %}
     {{ block.super }}
+
+
+
+
 <script>
+
+ 
 function checkWindowSize() {  
 
     if ( $(window).width() > 786 ) {  

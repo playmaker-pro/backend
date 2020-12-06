@@ -114,9 +114,9 @@ class PlayersTable(TableView):
         value = self.request.GET.get('leg')
         if value == '----':
             return None
-        elif value == 'dominująca lewa':
+        elif value == 'lewa':
             return 1
-        elif value == 'dominująca prawa':
+        elif value == 'prawa':
             return 2
 
     def filter_queryset(self, queryset):

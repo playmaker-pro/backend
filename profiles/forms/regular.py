@@ -76,20 +76,14 @@ class UserBasicForm(BaseProfileForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper.layout = Layout(
-            Div(
-                Div(
-                    Fieldset(
-                        _('<h2 class="form-section-title">Dane osobowe</h2>'),
-                        Div(
-                            Field('first_name', wrapper_class='row', placeholder='imię'),
-                            Field('last_name', wrapper_class='row', placeholder='nazwisko'),
-                            Field('picture', wrapper_class='row'),
-                        ),
-                        css_class='col-md-6',
-                    ),
-                    css_class='row',
-                ),
-            )
+            Fieldset(
+                _('<h2 class="form-section-title">Dane osobowe</h2>'),
+
+                Field('first_name', wrapper_class='row', placeholder='imię'),
+                Field('last_name', wrapper_class='row', placeholder='nazwisko'),
+                Field('picture', wrapper_class='row'),
+                css_class='col',
+            ),
         )
 
     class Meta:
@@ -162,85 +156,62 @@ class PlayerProfileForm(BaseProfileForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper.layout = Layout(
-            Div(
-                Div(
-                    Fieldset(
-                        _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
-                        Div(
-                            Field('birth_date', wrapper_class='row'),
-                            Field('league', wrapper_class='row', readonly=True),
-                            # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
-                            Field('voivodeship', wrapper_class='row', readonly=True),
-                            Field('team', wrapper_class='row', readonly=True),
-                            Field('country', wrapper_class='row'),
-                            Field("height", wrapper_class='row', placeholder='130 - 210 cm'),
-                            Field("weight", wrapper_class='row', placeholder='40 - 140 kg'),
-                            Field("address", wrapper_class='row'),
-                            Field("about", wrapper_class='row'),
+            Fieldset(
+                _('<h2 class="form-section-title">Piłkarski status</h2>'),
+                Field('transfer_status', wrapper_class='row'),
+                Field("card", wrapper_class='row'),
+                Field("soccer_goal", wrapper_class='row'),
+                Field("training_ready", wrapper_class='row'),
+                css_class='col-md-6',
+            ),
+            Fieldset(
+                _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
+                Field('birth_date', wrapper_class='row'),
+                Field('league', wrapper_class='row', readonly=True),
+                # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
+                Field('voivodeship', wrapper_class='row', readonly=True),
+                Field('team', wrapper_class='row', readonly=True),
+                Field('country', wrapper_class='row'),
+                Field("height", wrapper_class='row', placeholder='130 - 210 cm'),
+                Field("weight", wrapper_class='row', placeholder='40 - 140 kg'),
+                Field("address", wrapper_class='row'),
+                Field("about", wrapper_class='row'),
+                css_class='col-md-6',
+            ),
+            Fieldset(
+                _('<h2 class="form-section-title">Piłkarskie szczegóły</h2>'), 
+                Field('position_raw', wrapper_class='row'),
+                Field("position_raw_alt", wrapper_class='row'),
+                Field("formation", wrapper_class='row'),
+                Field("formation_alt", wrapper_class='row'),
+                Field("prefered_leg", wrapper_class='row'),
+                Field("practice_distance", wrapper_class='row'),
+                css_class='col-md-6',
+            ),
 
-                        ),
-                        css_class='col-md-6',
-                    ),
-                    Fieldset(
-                        _('<h2 class="form-section-title">Piłkarskie szczegóły</h2>'),
-                        Div(
-                            Field('position_raw', wrapper_class='row'),
-                            Field("position_raw_alt", wrapper_class='row'),
-                            Field("formation", wrapper_class='row'),
-                            Field("formation_alt", wrapper_class='row'),
-                            Field("prefered_leg", wrapper_class='row'),
-                            Field("practice_distance", wrapper_class='row'),
-
-                            ),
-                        css_class='col-md-6',
-                    ),
-                    css_class='row',
-                ),
-                Div(
-                    Fieldset(
-                        _('<h2 class="form-section-title">Piłkarski status</h2>'),
-                        Div(
-                            Field('transfer_status', wrapper_class='row'),
-                            Field("card", wrapper_class='row'),
-                            Field("soccer_goal", wrapper_class='row'),
-                            Field("training_ready", wrapper_class='row'),
-                        ),
-                        css_class='col-md-6',
-                    ),
-                    Fieldset(
-                        _('<h2 class="form-section-title">Współpraca</h2>'),
-                        Div(
-                            Field('agent_status', wrapper_class='row'),
-                            Field("agent_name", wrapper_class='row'),
-                            Field("agent_phone", wrapper_class='row'),
-                        ),
-                        css_class='col-md-6',
-                    ),
-                    Fieldset(
-                        _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
-                        Div(
-                            Field('phone', placeholder='+48 111 222 333', wrapper_class='row'),
-                            Field('facebook_url', wrapper_class='row'),
-                            Field("laczynaspilka_url", wrapper_class='row'),
-                            Field("min90_url", wrapper_class='row'),
-                            Field("transfermarket_url", wrapper_class='row'),
-                        ),
-                        css_class='col-md-6',
-                    ),
-                    Fieldset(
-                        _('<h2 class="form-section-title">Promo Video</h2>'),
-                        Div(
-                            Field('video_url', wrapper_class='row', placeholder=_('youtube url')),
-                            Field('video_title', wrapper_class='row', placeholder=_('Tytuł')),
-                            Field("video_description", wrapper_class='row', placeholder=_('Opisz w której minucie dzieją się istotne rzeczy')),
-                        ),
-                        css_class='col-md-6',
-                    ),
-                    # fieldset
-                    css_class='row'
-                ),  # div
-                # css_class='card',
-            )  # div master div
+            Fieldset(
+                _('<h2 class="form-section-title">Współpraca</h2>'),
+                Field('agent_status', wrapper_class='row'),
+                Field("agent_name", wrapper_class='row'),
+                Field("agent_phone", wrapper_class='row'),
+                css_class='col-md-6',
+            ),
+            Fieldset(
+                _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
+                Field('phone', placeholder='+48 111 222 333', wrapper_class='row'),
+                Field('facebook_url', wrapper_class='row'),
+                Field("laczynaspilka_url", wrapper_class='row'),
+                Field("min90_url", wrapper_class='row'),
+                Field("transfermarket_url", wrapper_class='row'),
+                css_class='col-md-6',
+            ),
+            Fieldset(
+                _('<h2 class="form-section-title">Promo Video</h2>'),
+                Field('video_url', wrapper_class='row', placeholder=_('youtube url')),
+                Field('video_title', wrapper_class='row', placeholder=_('Tytuł')),
+                Field("video_description", wrapper_class='row', placeholder=_('Opisz w której minucie dzieją się istotne rzeczy')),
+                css_class='col-md-6',
+            ),
         )  # layout
 
     class Meta:
@@ -284,34 +255,23 @@ class ScoutProfileForm(BaseProfileForm):
         self.fields['facebook_url'].help_text = None
 
         self.helper.layout = Layout(
-            Div(
-                Div(
-                    Fieldset(
-                        _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
-                        Div(
-                            Field('bio', wrapper_class='row',),
-                            Field('soccer_goal', wrapper_class='row', css_class='mandatory'),
-                            Field('league_raw', wrapper_class='row', placeholder='deklarowany'),
-                            Field('club_raw', wrapper_class='row', placeholder='reprezentowany'),
-                            Field('voivodeship_raw', wrapper_class='row', placeholder='deklarowane'),
-                            Field('country', wrapper_class='row'),
-                            Field("practice_distance", wrapper_class='row', placeholder='maksymalna w km'),
-                        ),
-                        css_class='col-md-6',
-                    ),
-                    Fieldset(
-                        _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
-                        Div(
-                            Field("address", wrapper_class='row', placeholder='np. Dolnyśląsk, Wrocław'),
-                            Field('facebook_url', wrapper_class='row', placeholder='https://facebook..'),
-                        ),
-                        css_class='col-md-6',
-                    ),
-                    css_class='row',
-                ),
-
-                # css_class='card',
-            )  # div master div
+            Fieldset(
+                _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
+                Field('bio', wrapper_class='row',),
+                Field('soccer_goal', wrapper_class='row', css_class='mandatory'),
+                Field('league_raw', wrapper_class='row', placeholder='deklarowany'),
+                Field('club_raw', wrapper_class='row', placeholder='reprezentowany'),
+                Field('voivodeship_raw', wrapper_class='row', placeholder='deklarowane'),
+                Field('country', wrapper_class='row'),
+                Field("practice_distance", wrapper_class='row', placeholder='maksymalna w km'),
+                css_class='col-md-6',
+            ),
+            Fieldset(
+                _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
+                Field("address", wrapper_class='row', placeholder='np. Dolnyśląsk, Wrocław'),
+                Field('facebook_url', wrapper_class='row', placeholder='https://facebook..'),
+                css_class='col-md-6',
+            ),
         )  # layout
 
     class Meta:
@@ -327,19 +287,13 @@ class GuestProfileForm(BaseProfileForm):
         self.fields['bio'].label = 'Krótko o sobie'
 
         self.helper.layout = Layout(
-                Div(
-                    Div(
-                        Fieldset(
-                            _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
-                            Div(
-                                Field('facebook_url', wrapper_class='row', placeholder='https://facebook...'),
-                                Field('bio', wrapper_class='row',),
-                            ),
-                            css_class='col-md-6',
-                        ),
-                    )
-                )
+            Fieldset(
+                _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
+                Field('facebook_url', wrapper_class='row', placeholder='https://facebook...'),
+                Field('bio', wrapper_class='row',),
+                css_class='col-md-6',
             )
+        )
 
     class Meta:
         model = models.GuestProfile
@@ -350,6 +304,7 @@ class ParentProfileForm(GuestProfileForm):
     class Meta:
         model = models.ManagerProfile
         fields = ['facebook_url', 'bio']
+
 
 class ManagerProfileForm(GuestProfileForm):
     class Meta:

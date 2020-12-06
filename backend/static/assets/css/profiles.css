@@ -9,6 +9,8 @@
 
 #profile {
     padding-top: 15px;
+    margin-left:25px;
+    margin-right:25px;
 }
 
 #profile .card { 
@@ -124,6 +126,8 @@ section.profile {
   }
     #profile { 
         padding-top: 0px;
+        margin-left:10px;
+        margin-right:10px;
     }
 
 

@@ -52,7 +52,7 @@
             {{form.password.errors}}
         </div>
         <button class="btn-block" type="submit">{% trans 'ZAKŁADAM DARMOWE KONTO' %}</button>
-        <p class="text-right"><small>{% trans 'lub jeżeli masz już konto'%} <a href="{{ login_url }}">{% trans 'zaloguj się' %}</a></small></p>
+        <p class="text-right"><small>{% trans 'lub jeżeli masz już konto'%} <a href="{% url account_login %}">{% trans 'zaloguj się' %}</a></small></p>
 
         <hr class="mb-4">
 

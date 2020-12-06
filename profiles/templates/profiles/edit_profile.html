@@ -18,19 +18,20 @@
 
 {% block content %}
 <section id="profile" class="profile">
-  <div class="container" data-aos="fade-up">
+  <div class="container-fluid m-2 p-4" data-aos="fade-up">
         <h1> KONTO {{ user.get_declared_role_display|upper }} </h1>
-        <div class="row">
-          <div class="col-md-12">
-      
-               <form class='profile-edit-form' enctype="multipart/form-data" method="post">
-               {% crispy user_basic_form %}
+
+               <form class='profile-edit-form row' enctype="multipart/form-data" method="post">
+                  {% crispy user_basic_form %}
                   {% crispy profile_form %}
+                  
+                <div class="col-12">
                 <button type="submit" name="update" value="Update" id="submit-id-update">{% trans 'Aktualizuj CV' %}</button>
+                </div>
                </form>
 
-         </div> 
-        </div>
+
+
       <div>         
       </div>
     </div>
