@@ -10,6 +10,12 @@
 {% block title %}{{ block.super }} {% trans 'Obserwowani' %} {% endblock %}
 
 
+{% block content_header %}
+    {% include '_page_heading.html' with heading_title=page_title size=4 %}
+    {{ block.super }}
+{% endblock %}
+
+
 
 <!-- Benefits of the Django application -->
 {% block content %}
@@ -85,7 +91,25 @@
                 </div>
             </div> 
             {% empty %}
-                {% include 'platform/partials/_empty.html' with position='left' %}
+                
+                <div class="col text-center">
+                {% include 'platform/partials/_empty.html' with position='center' %}
+
+                {% if user.is_player %}
+                <h4>Jeszcze nie obserwujesz żadnych użytkowników platformy</h4>
+                
+                <p></p>
+                {% elif  user.is_coach %}
+                <h4>Jeszcze nie obserwujesz żadnych użytkowników platformy</h4>
+                
+                <p></p>
+                {% else %}
+                <h4>Jeszcze nie obserwujesz żadnych użytkowników platformy</h4>
+                
+                <p></p>
+         
+                {% endif %}
+                </div>
             {% endfor %}
 
 
@@ -147,7 +171,29 @@
                 </div>
             </div> 
             {% empty %}
-                {% include 'platform/partials/_empty.html' with position='left' %}
+         
+                
+                
+                <div class="col text-center">
+                {% include 'platform/partials/_empty.html' with position='center' %}
+
+                {% if user.is_player %}
+                <h4>Jeszcze nie obserwujesz żadnych drużyn</h4>
+                
+                <p></p>
+                {% elif  user.is_coach %}
+                <h4>Jeszcze nie obserwujesz żadnych drużyn</h4>
+                
+                <p></p>
+                {% else %}
+                <h4>Jeszcze nie obserwujesz żadnych drużyn</h4>
+                
+                <p></p>
+         
+                {% endif %}
+                </div>
+
+
             {% endfor %}
 
   </div><!-- end of tabs-->

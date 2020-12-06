@@ -9,12 +9,11 @@
 {% block title %}{{ block.super }} {% trans 'Moje zapytania' %} {% endblock %}
 
 
-
-{% block header %}
-    {% with menuitems_template="profiles/partials/_nav_player.html" %}
-        {{ block.super }}
-    {% endwith %}
+{% block content_header %}
+    {% include '_page_heading.html' with heading_title=page_title size=4 %}
+    {{ block.super }}
 {% endblock %}
+
 
 
 {% block content %}
@@ -156,7 +155,27 @@
             </div>
         </div> 
         {% empty %}
-            {% include 'platform/partials/_empty.html' with position='left' %}
+
+            <div class="col text-center">
+                {% include 'platform/partials/_empty.html' with position='center' %}
+
+                {% if user.is_player %}
+                <h4>Jeszcze nie otrzymałeś żadnego zaproszenia na testy</h4>
+                
+                <p>Trenerzy w na platformie maja możliwość wysłać Ci zaproszenie na testy. Powjawią się one tutaj.</p>
+                {% elif  user.is_coach %}
+                <h4>Jeszcze nie otrzymałeś żadnego zapytania o testy od piłkarzy</h4>
+                
+                <p>Piłkarze na naszej platformie mogą wysłać zapytanie o możliwość odbycia testów wraz ze swoimi danymi kontaktowymi.</p>
+                {% else %}
+                <h4>Jeszcze nie otrzymałeś żadnego zapytania</h4>
+                
+                <p></p>
+         
+                {% endif %}
+            </div>
+
+
         {% endfor %}
 
 </div> <!-- tab end -->
@@ -247,7 +266,31 @@
             </div>
         </div> 
         {% empty %}
-            {% include 'platform/partials/_empty.html' with position='left' %}
+
+
+
+            <div class="col text-center">
+                
+                {% include 'platform/partials/_empty.html' with position='center' %}
+
+                {% if user.is_player %}
+                <h4>Jeszcze nie wysłałęś żadnego zapytania</h4>
+                
+                <p>Będąc zweryfikowanym użytkownikiem platformy możesz wysyłać zapytania o testy do wybranych przez Ciebie trenerów. 
+                Uzupełniony profil w raz z pełnymi danymi kontaktowymi pozwoli na sprawny kontakt z Trenerem. </p>
+                {% elif  user.is_coach %}
+                <h4>Jeszcze nie zaprosiłeś żadnego piłkarza na testy</h4>
+                
+                <p>Będąc zweryfikowanym użytkownikiem platformy możesz zapraszać piłkarzy na testy. 
+                By ułatwić kontakt zapraz po wysłaniu takiego zapytania piłkarz otrzyma kontakt do Ciebie. </p>
+                
+                {% else %}
+                <h4>Jeszcze nie wysłałeś żadnego zapytania</h4>
+                
+                <p></p>
+         
+                {% endif %}
+            </div>
         {% endfor %}
 
   </div><!-- end of tabs-->

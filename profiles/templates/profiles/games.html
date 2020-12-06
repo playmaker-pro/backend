@@ -8,10 +8,10 @@
 {% block title %}{{ block.super }} {% trans 'Moje mecze' %} {% endblock %}
 
 
-{% block header %}
-    {% with menuitems_template="profiles/partials/_nav_player.html" %}
-        {{ block.super }}
-    {% endwith %}
+
+{% block content_header %}
+    {% include '_page_heading.html' with heading_title=page_title size=4 %}
+    {{ block.super }}
 {% endblock %}
 
 
@@ -20,13 +20,28 @@
 <section id="profile-games" class="profile">
 
 <div class="container" data-aos="fade-up"> 
-    <div class='row justify-content-center'>
-        <div class='col-md-12'>
-            {% include 'profiles/tables/_game_table.html' with games=page_obj %}       
-        </div>   
-        <div class='col-md-12'>
-            {% include 'profiles/partials/_pagination.html' %}
-        </div>
+
+    <div class='row mx-auto' >
+
+
+        {% if page_obj.paginator.count == 0 %}
+        <div class='col-md-12 text-center'>
+                   {% include 'platform/partials/_empty.html' %}
+                           
+                        <h4>Przygotwoujemy statystyki dla Twojego konta.</h4>
+                        <p>Uzupełnienie w całości Twojego piłkarskiego profilu pozwoli nam sporządzić odpowiednie metryki.</p>
+           </div>
+        {% else %}
+
+
+                  <div class='col-md-12'>
+                {% include 'profiles/tables/_game_table.html' with games=page_obj %}       
+            </div>   
+            <div class='col-md-12'>
+                {% include 'profiles/partials/_pagination.html' %}
+            </div>       
+
+        {% endif %}
     </div> <!-- 'row' -->
 </div>
 

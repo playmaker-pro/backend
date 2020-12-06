@@ -25,8 +25,8 @@ class CustomSignupForm(SignupForm):
     first_name = forms.CharField(max_length=20, label='First Name')
     last_name = forms.CharField(max_length=20, label='Last Name')
     role = forms.ChoiceField(choices=User.ROLE_CHOICES)
-    rodo = forms.BooleanField(required=True)
-    rules = forms.BooleanField(required=True)
+    # rodo = forms.BooleanField(required=True)
+    # rules = forms.BooleanField(required=True)
     # club = forms.CharField(max_length=355, label='Club')
 
     def save(self, request):

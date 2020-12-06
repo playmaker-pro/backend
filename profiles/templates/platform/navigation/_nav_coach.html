@@ -3,6 +3,7 @@
 {% load playmaker %}
 
 {% if user.is_authenticated %}
+    <li><a href="{% url 'profiles:my_requests'%}">{% trans 'Zapytania' %}</a></li>
     {% include 'platform/navigation/_nav.html'%}
     <li>{% get_my_team_link %}</li>
 {% endif %}

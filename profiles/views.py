@@ -64,7 +64,7 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
         qs_recipient = InquiryRequest.objects.filter(recipient=user).order_by('-created_at')
         qs_sender = InquiryRequest.objects.filter(sender=user).order_by('-created_at')
         kwargs['modals'] = self.modal_activity(user, verification_auto=False)
-        kwargs['page_title'] = 'Obserwowani'
+        kwargs['page_title'] = 'Zapytania'
 
         kwargs['send_active'] = qs_sender.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
         kwargs['rec_active'] = qs_recipient.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
@@ -96,6 +96,7 @@ class ProfileFantasy(generic.TemplateView, SlugyViewMixin):
         season_name = get_current_season()
         kwargs['season_name'] = season_name
         kwargs["fantasy"] = self.get_data_or_calculate(user_to_present)
+        kwargs['page_title'] = 'Twoje fantasy'
         return super().get(request, *args, **kwargs)
 
     def get_data_or_calculate(self, user):
@@ -116,6 +117,7 @@ class ProfileCarrier(generic.TemplateView, SlugyViewMixin):
         user_to_present = self.select_user_to_show()
         _id = user.profile.data_mapper_id
         kwargs["carrier"] = self.get_data_or_calculate(user_to_present)
+        kwargs['page_title'] = 'Twoja kariera'
         return super().get(request, *args, **kwargs)
 
     def get_data_or_calculate(self, user):
@@ -140,6 +142,7 @@ class ProfileGames(generic.TemplateView, PaginateMixin, SlugyViewMixin):
         games = self.get_data_or_calculate(user_to_present)
         games = games or []
         kwargs['page_obj'] = self.paginate(games)
+        kwargs['page_title'] = 'Twoje mecze'
         return super().get(request, *args, **kwargs)
 
     def get_data_or_calculate(self, user):

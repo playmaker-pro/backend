@@ -60,13 +60,13 @@ def is_profile_observed(user, target):
 @register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
 def request_link(context, user, showed_user):
 
-    if not user.is_authenticated: 
+    if not user.is_authenticated:
         return {'off': True}
 
-    if not user.is_player and not user.is_coach:
+    if not user.is_player and not user.is_coach and not user.is_club:
         return {'off': True}
 
-    if user.is_coach and showed_user.is_player:
+    if (user.is_coach or user.is_club) and showed_user.is_player:
         button_text = 'Zaproś na testy'
     elif user.is_player and showed_user.is_coach:
         button_text = 'Zapytaj o testy'

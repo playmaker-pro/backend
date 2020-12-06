@@ -100,9 +100,9 @@
               {% include 'profiles/buttons/edit.html' %}
 
               {% if user.is_club %}
-                  {% get_my_club_link text="Edytuj mój klub" css_class="btn-act" %}
+                  {% get_my_club_link text="Zarządzaj klubem" css_class="btn-act" %}
               {% elif user.is_coach %}
-                  {% get_my_team_link text="Edytuj mój zespół" css_class="btn-act" %}
+                  {% get_my_team_link text="Zarządzaj drużyną" css_class="btn-act" %}
               {% endif %}
 
           {% else %}

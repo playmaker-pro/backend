@@ -8,11 +8,12 @@
 {% block title %}{{ block.super }} {% trans 'Moje Fantasy' %} {% endblock %}
 
 
-{% block header %}
-    {% with menuitems_template="profiles/partials/_nav_player.html" %}
-        {{ block.super }}
-    {% endwith %}
+
+{% block content_header %}
+    {% include '_page_heading.html' with heading_title=page_title size=4 %}
+    {{ block.super }}
 {% endblock %}
+
 
 
 <!-- Benefits of the Django application -->
@@ -25,19 +26,30 @@
 
 <div class="row">
             <div class="col-lg-7 mx-auto">
+                    {% if fantasy is None or not fantasy.data  %}
+                     
+                        {% include 'platform/partials/_empty.html' %}
+                           
+                        <h4>Przygotwoujemy statystyki dla Twojego konta.</h4>
+                        <p>Uzupełnienie w całości Twojego piłkarskiego profilu pozwoli nam sporządzić odpowiednie metryki.</p>
+                    {% endif%}
+
                 {% for game in fantasy.data %}
                 <!-- Timeline -->
                 <ul class="timeline">
-                    {{game.game_header}}
+                    <h5> {{game.game_header}}</h5>
                     {% for score in game.scores %}
 
-                    <li class="timeline-item bg-white rounded ml-3 p-4 shadow">
+                    <li class="timeline-item bg-white rounded m-2 p-3 shadow">
                         <div class="timeline-arrow"></div>
                         <h2 class="h5 mb-0"></h2>
-                        <p class="text-small mt-2 font-weight-light">+{{ score.score }}ptk {{ score.reason}}</p>
+                        <span class="badge badge-success">+{{ score.score }}ptk</span> {{ score.reason}}
+         
                     </li>
+
                     {% endfor %}
-                  
+
+
                 </ul><!-- End -->
                 {% endfor %}    
             </div>
@@ -45,7 +57,7 @@
   </div>
 
 <div class="debug">
-{{fantasy}}
+  
  </div> 
 </section>
 {% endblock content %}
