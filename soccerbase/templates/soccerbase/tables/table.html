@@ -59,7 +59,7 @@
 {% endif %}
 
 
-<section id="tables" class="tables"> 
+<section id="tables" class="tables" style="padding-top:0px"> 
     <div class="container-fluid">
     {% csrf_token %}
         {% if page_obj.paginator.count == 0 %}

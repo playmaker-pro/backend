@@ -202,6 +202,7 @@ a.disabled {
 
 
 .btn-obs {
+  font-family: 'Roboto', sans-serif;
   margin:2px;
   padding: 5px 5px;
   background-color: #fff;
@@ -211,12 +212,14 @@ a.disabled {
 }
 
 .observed {
+  font-family: 'Roboto', sans-serif;
   background: #e03a3c;
   color: #fff;
   transition: 0.5s;
 }
 
 .btn-request {
+  font-family: 'Roboto', sans-serif;
   margin:2px;
   padding: 5px 5px;
   background-color: #fff;
@@ -226,6 +229,7 @@ a.disabled {
 }
 
 .btn-requested {
+  font-family: 'Roboto', sans-serif;
   background: #e03a3c;
   color: #fff;
   transition: 0.5s;

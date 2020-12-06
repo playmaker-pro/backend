@@ -1,8 +1,3 @@
-
-
-<select name="league" title="rozgrywki" class="selectpicker" multiple data-live-search="true" data-selected-text-format="count > 3">
-
-
 <option {% if request.GET.league == 'Trampkarz C2' %} selected {% endif %}>Trampkarz C2</option>
 <option {% if request.GET.league == '3 liga' %} selected {% endif %}>3 liga</option>
 <option {% if request.GET.league == 'Junior Młodszy B1' %} selected {% endif %}>Junior Młodszy B1</option>
@@ -20,7 +15,3 @@
 <option {% if request.GET.league == 'Junior Młodszy B2' %} selected {% endif %}>Junior Młodszy B2</option>
 <option {% if request.GET.league == 'Junior A2' %} selected {% endif %}>Junior A2</option>
 <option {% if request.GET.league == 'B klasa' %} selected {% endif %}>B klasa</option>
-
-</select>
-
-

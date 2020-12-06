@@ -53,6 +53,13 @@ class TableView(generic.TemplateView, mixins.ViewModalLoadingMixin):
 class PlayersTable(TableView):
     table_type = TABLE_TYPE_PLAYER
     page_title = 'Baza piłkarzy'
+
+    @property
+    def filter_league(self):
+        value = self.request.GET.get('league')
+        if value:
+            return value
+
     @property
     def filter_age_max(self):
         value = self.request.GET.get('age_max')
@@ -123,13 +130,16 @@ class PlayersTable(TableView):
         if self.filter_leg is not None:
             queryset = queryset.filter(playerprofile__prefered_leg=self.filter_leg)
 
+        if self.filter_league is not None:
+            queryset = queryset.filter(playerprofile__league=self.filter_league)
+
         if self.filter_age_min is not None:
             mindate = get_datetime_from_age(self.filter_age_min)
-            queryset = queryset.filter(playerprofile__birth_date__lte=mindate)
+            queryset = queryset.filter(playerprofile__birth_date__year__lte=mindate.year)
 
         if self.filter_age_max is not None:
             maxdate = get_datetime_from_age(self.filter_age_max)
-            queryset = queryset.filter(playerprofile__birth_date__gte=maxdate)
+            queryset = queryset.filter(playerprofile__birth_date__year__gte=maxdate.year)
 
         # if self.filter_age_range is not None:
         #     mindate = get_datetime_from_age(self.filter_age_range[0])

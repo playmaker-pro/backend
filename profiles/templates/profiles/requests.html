@@ -60,14 +60,14 @@
   <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
 
 
-{% comment %} 
-        <h3>
-        {% if user.is_player %}
-            Otrzymane zaproszenia na testy
-        {% else %}
-            Otrzymane zapytanie o testy
-        {% endif %}
-        </h3> {% endcomment %}
+            {% comment %} 
+            <h3>
+            {% if user.is_player %}
+                Otrzymane zaproszenia na testy
+            {% else %}
+                Otrzymane zapytanie o testy
+            {% endif %}
+            </h3> {% endcomment %}
 
         {% for object in page_obj_recipient %}
         <div class="card item-card" style="">
@@ -81,9 +81,11 @@
                     {% profile_link object.sender checks=False text='profil' %}
                 </span>
             </div>
+            
             <div class="d-md-none">
                 <img class="avatar rounded-circle img-responsive" src="{% thumbnail object.sender.picture|default:'default_profile.png' 'tables_avatar_show_small' %}">
             </div>
+
             <div class="card-body table-item"> 
             <div class="row no-gutters">
                     <div class="d-none d-md-inline col-md-3">

@@ -34,3 +34,24 @@ def generate_map(filename):
     with open('league_filter_map.py', 'w+') as filterfile:
   
         filterfile.write(f'LEAGUE_MAP = {d}')
+        
+def generate_league_options():
+    
+    from league_filter_map import LEAGUE_MAP
+    out = ''
+    lgs = []
+    for item in LEAGUE_MAP:
+        if item['seniority'] == 'seniorskie':
+            league_name = item.get('poziom_rozgrywkowy')
+        else:
+            league_name = item.get('rocznik')
+        if league_name:
+            name = league_name.split(' U')[0]
+            lgs.append(name)
+        
+    for lgn in set(lgs):
+        out += "<option {% if request.GET.league == '" + lgn + "' %} selected {% endif %}>" + lgn + "</option>\n"
+   
+    with open('filteroptions', 'w+') as filterfile:
+        filterfile.write(out)
+

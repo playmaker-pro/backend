@@ -5,74 +5,151 @@
 {% spaceless %}
 
 
+<div class="card player-header-card d-none d-md-inline item-card" style="">
+  
+  <div class="card-body  table-item"> 
+  <div class="row">
+        <div class="d-none d-md-inline col-md-3">
+        Imię / nazwisko / wiek
+        </div>
+
+
+        <div class="col-5 col-md-1 text-center">
+            Pozycja
+        </div >
+        
+        <div class="col-6 col-md-1 text-center">
+           Poziom rozgrywkowy
+        </div >
+
+        <div class="col-5 col-md-1  text-center">
+             Wojewódźtwo
+        </div>
+        
+        <div class="col-6 col-md-1 text-center"> 
+            Drużyna
+        </div>
+
+
+
+        <div class="d-none d-md-inline  col-4 col-md-1 stats  text-center">  
+            Zdobyte bramki / czyste konto
+        </div>
+
+        {% comment %} <div class="d-none d-md-inline  col-3 col-md-1 stats"> 
+            <span class="main-color stats">{{ object.profile.playermetrics.season_summary.first_squad_games_played|default:'0' }}</span>  w pierwszym składzie 
+        </div> {% endcomment %}
+
+        <div class="col-4 col-md-1 stats">
+          Ilość meczy
+        </div>
+
+        <div class="col-md-1 stats">
+           Minuty na boisku
+        </div>
+        <div class="d-none d-md-inline col-md-1">
+
+        </div>
+    </div>
+  </div>
+
+</div> 
+
+
 
 {% for object in objects %}
 <div class="card item-card" style="">
   <div class="card-header d-md-none">
-    <span> <img class="flag" src="{{ object.profile.country.flag }}" alt="flag">{{object.first_name|upper}} {{ object.last_name|upper}} {{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %} {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
-    <span class="float-right"> {% observed_link user object %} </span>
+    <span> 
+        <img class="flag" src="{{ object.profile.country.flag }}" alt="flag">
+        {{object.first_name|upper}} {{ object.last_name|upper}} {{ object.profile.age|default:'-' }} 
+        {% if object.profile.age %}{% trans 'l.' %} {% endif %} 
+        {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
+    </span>
+    <span class="float-right"> 
+        {% observed_link user object text="obserwuj" %}
+        {% profile_link object checks=False text="profil" %}
+    </span>
   </div>
-  <div class="d-md-none">
-    <img class="avatar rounded-circle img-responsive" src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_small' %}">
-  </div>
+
+
+
+  
   <div class="card-body table-item"> 
   <div class="row no-gutters">
-        <div class="d-none d-md-inline col-md-1">
-            <img class="avatar rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
+        <div class="d-none d-md-inline col-md-3">
+            <a href="{{ object.profile.get_permalink }}">
+                <img class="avatar rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
+
+                <img class="flag" src="{{ object.profile.country.flag }}" alt="flag">
+                {{object.first_name|upper}} {{ object.last_name|upper}} 
+                {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
+
+                
+            </a>
+           
         </div>
 
-        <div class="d-none d-md-inline col-md-1">
-            <img class="flag" src="{{ object.profile.country.flag }}" alt="flag">{{object.first_name|upper}} {{ object.last_name|upper}} {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
+        <div class="d-none d-md-inline col-1 col-md-1 text-center" style="width:10%">
+             {{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}
+        </div >
+        
+        <div class="d-md-none col-1 col-md-1 text-center"> <!-- -->
+            <img class="rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
         </div>
 
-        <div class="d-none d-md-inline col-md-1">
-            {{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}
+        <div class="col-5 col-md-1 text-center">
+            {{ object.profile.get_position_raw_display|default:'-'|upper }}
         </div >
         
-        <div class="col-3 col-md-1">
-            {{ object.profile.get_position_raw_display|default:'-' }}
-        </div >
-        
-        <div class="col-3 col-md-1">
+        <div class="col-6 col-md-1 text-center">
             {{ object.profile.league|default:'-'|upper  }}
         </div >
 
-        <div class="col-3 col-md-1"> 
+        <div class="d-md-none col-1 col-md-1 text-center"> <!-- -->
+        </div>
+
+        <div class="col-5 col-md-1  text-center">
+             {{ object.profile.voivodeship|default:'-'|upper|truncatechars:18 }}
+        </div>
+        
+        <div class="col-6 col-md-1 text-center"> 
             {{ object.profile.team|default:'-'|upper  }}
         </div>
 
-        <div class="col-3 col-md-1">
-             {{ object.profile.voivodeship|default:'-'|upper|truncatechars:10 }}
-        </div>
 
-        <div class="col-3 col-md-1 stats">  
+
+        <div class="d-none d-md-inline  col-4 col-md-1 stats  text-center">  
             <span class="main-color">{{ object.profile.playermetrics.season_summary.team_goals|default:'0' }}</span> gole
         </div>
 
-        <div class="col-3 col-md-1 stats"> 
+        {% comment %} <div class="d-none d-md-inline  col-3 col-md-1 stats"> 
             <span class="main-color stats">{{ object.profile.playermetrics.season_summary.first_squad_games_played|default:'0' }}</span>  w pierwszym składzie 
-        </div>
+        </div> {% endcomment %}
 
-        <div class="col-3 col-md-1 stats">
+        <div class="d-none d-md-inline  col-4 col-md-1 stats">
             <span class="main-color">{{ object.profile.playermetrics.season_summary.games_played|default:'0' }}</span>  mecze     
         </div>
 
-        <div class="col-3 col-md-1 stats">
+        <div class="d-none d-md-inline  col-4 col-md-1 stats">
             <span class="main-color">{{ object.profile.playermetrics.season_summary.minutes_played |default:'0' }}</span>  minuty
         </div>
 
         <div class="d-none d-md-inline col-md-1">
             <span class="float-right"> 
-                {% profile_link object checks=False text='profil' %}
                 {% observed_link user object text=True %}
             </span>
 
         </div>
     </div>
   </div>
-  <div class="card-footer  d-md-none">
-    <span class="float-right"> 
-        {% profile_link object checks=False %}
+  <div class="card-footer  d-md-none"> <!-- -->
+        <span class="main-color">{{ object.profile.playermetrics.season_summary.games_played|default:'0' }}</span>  mecze     
+        <span class="main-color">{{ object.profile.playermetrics.season_summary.minutes_played |default:'0' }}</span>  minuty
+        <span class="main-color">{{ object.profile.playermetrics.season_summary.team_goals|default:'0' }}</span> gole
+      
+    <span class="float-right"> </span>
+        
    
    
   </div>

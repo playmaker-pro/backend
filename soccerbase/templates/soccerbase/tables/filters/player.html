@@ -3,32 +3,24 @@
   <div id="table-filters" class="table-filters">
     <div class="container-fluid">
       
-            <form id="filter-form" method="get" class="form-inline row">
+            <form id="filter-form" method="get" class="form-inline row no-gutters">
            
-                    <div class="col filter-button"> 
-                        <input class="btn-pm btn-pm-sm" type="submit" value="{% trans 'Filtruj' %}">
+                    <div class="col-2 col-md-1 filter-button"> 
+                        <button class="btn-pm" type="submit" value="{% trans 'Filtruj' %}">Filtruj</button>
                     </div>
-                    <div class="col-2 filter"> 
-                            <select name="leg" class="form-control selectpicker" title="noga">
 
-                                <option value="----">----</option>
-                                <option {% if request.GET.leg == 'prawa' %} selected {% endif %} value="prawa">preferowana prawa</option>
-                                <option {% if request.GET.leg == 'lewa' %} selected {% endif %} value="lewa">preferowana lewa</option>
-
-                            </select>
-                    </div>
                     
-                    <div class="col filter"> 
+                    <div class="col-8 col-md-2 filter"> 
                         {% include 'soccerbase/tables/filters/ms_league.html' %}
                     </div>
 
-                    <div class="col filter"> 
+                    <div class="col-3  col-md-2 filter"> 
                         <input class="form-control" type="number" value="{{ request.GET.age_min }}" name="age_min" placeholder="wiek od">
                     </div>
-                    <div class="col filter"> 
+                    <div class="col-3  col-md-2 filter"> 
                         <input class="form-control" type="number" value="{{ request.GET.age_max }}" name="age_max" placeholder="wiek do">
                     </div>
-                    <div class="col filter"> 
+                    <div class="col-3 col-md-2 filter"> 
                             <select name="position" class="form-control" title="pozycja">
                                 <option value="----">----</option>
                                 <option {% if request.GET.position == 'Bramkarz' %} selected {% endif %}value="Bramkarz">Bramkarz</option>
@@ -42,7 +34,15 @@
                                 <option {% if request.GET.position == 'Napastnik' %} selected {% endif %}value="Napastnik">Napastnik</option>
                             </select>
                     </div>    
-                
+                    <div class="col-3  col-md-2 filter"> 
+                            <select name="leg" class="form-control selectpicker" title="noga">
+
+                                <option value="----">----</option>
+                                <option {% if request.GET.leg == 'prawa' %} selected {% endif %} value="prawa">preferowana prawa</option>
+                                <option {% if request.GET.leg == 'lewa' %} selected {% endif %} value="lewa">preferowana lewa</option>
+
+                            </select>
+                    </div>
                 
             </form>
         
