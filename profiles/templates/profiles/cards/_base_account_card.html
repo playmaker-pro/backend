@@ -106,9 +106,13 @@
               {% endif %}
 
           {% else %}
-              {% csrf_token %}
+            {% csrf_token %}
+            
+             
               {% observed_link user show_user text=True %}
-              {% request_link user show_user %}
+              {% if user.is_club or user.is_player or user.is_coach %}
+                 {% request_link user show_user %}
+              {% endif %}
               
           {% endif %}
       </div>

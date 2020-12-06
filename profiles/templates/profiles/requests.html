@@ -5,7 +5,7 @@
 {% load crispy_forms_tags %}
 {% load thumbnail %}
 {% load playmaker %}
-
+{% spaceless %}
 {% block title %}{{ block.super }} {% trans 'Moje zapytania' %} {% endblock %}
 
 
@@ -17,31 +17,240 @@
 {% endblock %}
 
 
-
-<!-- Benefits of the Django application -->
 {% block content %}
-<section id="profile-games" class="profile">
-
+<section id="tables" class="tables" style="background-color:#fff;margin-top:5px">
+{% csrf_token %}
 <div class="container" data-aos="fade-up"> 
-    <div class='row w-auto m-auto'>
-        <div class='col-md-12'>
-        <h1>Wysłane</h1>
-
-            {% include 'profiles/tables/_requests_table.html' with requests=page_obj_sender on_empty='nie wysłałeś jeszcze żadnego zaproszenia' %}
 
 
-        </div>   
-        <div class='col-md-12'>
-        <h1>Otrzymane</h1>
-            {% include 'profiles/tables/_requests_table.html' with requests=page_obj_recipient on_empty='nie dostałeś jeszcze żadnego zaproszenia' %} 
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">
+                    
+                    {% if user.is_player %}
+                        Otrzymane zaproszenia na testy
+                    {% else %}
+                        Otrzymane zapytania
+                    {% endif %}
 
-        </div>
-        {% comment %} <div class='col-md-12'>
-            {% include 'profiles/partials/_pagination.html' %}
-        </div> {% endcomment %}
-    </div> <!-- 'row' -->
-</div>
 
+                    {% if rec_active %} <span class="badge bg-info  badge-info">{{ rec_active }}</span> {% endif %} 
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">
+                    
+                    {% if user.is_player %}
+                        Wysłane zapytanie o testy do klubu
+                    {% else %}
+                        Wysłane zaproszenia
+                    {% endif %}
+                    {% if send_active %} <span class="badge bg-info  badge-info">{{ send_active }}</span> {% endif %} 
+                    
+                    </a>
+                </li>
+
+            </ul>
+            {% comment %} <h3>
+                Obserwowani użytkownicy
+            </h3> {% endcomment %}
+
+            
+<div class="tab-content mt-4" id="myTabContent">
+  <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+
+
+{% comment %} 
+        <h3>
+        {% if user.is_player %}
+            Otrzymane zaproszenia na testy
+        {% else %}
+            Otrzymane zapytanie o testy
+        {% endif %}
+        </h3> {% endcomment %}
+
+        {% for object in page_obj_recipient %}
+        <div class="card item-card" style="">
+            <div class="card-header d-md-none">
+                <span> 
+                    <img class="flag" src="{{ object.sender.profile.country.flag }}" alt="flag">
+                    {{object.sender.first_name|upper}} {{ object.sender.last_name|upper}} 
+                </span>
+                
+                <span class="float-right"> 
+                    {% profile_link object.sender checks=False text='profil' %}
+                </span>
+            </div>
+            <div class="d-md-none">
+                <img class="avatar rounded-circle img-responsive" src="{% thumbnail object.sender.picture|default:'default_profile.png' 'tables_avatar_show_small' %}">
+            </div>
+            <div class="card-body table-item"> 
+            <div class="row no-gutters">
+                    <div class="d-none d-md-inline col-md-3">
+                        <a href={{object.sender.profile.get_permalink }}>
+                            <img class="avatar rounded img-responsive" src="{% thumbnail object.sender.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
+                            <img class="flag" src="{{ object.sender.profile.country.flag }}" alt="flag">
+                            {{object.sender.first_name|upper}} {{ object.sender.last_name|upper}} 
+                        </a>
+                    </div>
+
+                    <div class="d-none d-md-inline col-md">
+                             
+                        <button disabled  
+                        {% if object.is_active %}
+                        class="btn btn-sm btn-warning"
+                        {% elif object.status == object.STATUS_ACCEPTED %}
+                        class="btn btn-sm btn-success"
+                        {% elif object.status == object.STATUS_REJECTED %}
+                        class="btn btn-sm btn-danger "
+                        {% endif %}>
+                            {{ object.status|default:'-'|upper  }}
+                        </button>
+                        
+
+                    </div >
+
+                    <div class="col-12 col-md-3"> 
+               
+                        {{ object.body|default:''  }}
+                     
+                    </div>
+
+                    <div class="col-3 col-md"> 
+                        {{ object.created_at|date:'Y-m-d H:i'  }}
+                    </div>
+
+                    <div class="d-none d-md-inline col-md">
+                        <span class="float-right"> 
+                            {% comment %} {% profile_link object.sender checks=False text='profil' %} {% endcomment %}
+                             {% if object.is_active %}
+                                {% update_request_button object accept=True %}
+                                {% update_request_button object accept=False %}
+                            {% endif %}
+                        </span>
+
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer  d-md-none">
+                <span class="float-right"> 
+
+
+                        <button disabled  
+                        {% if object.is_active %}
+                        class="btn btn-sm btn-warning"
+                        {% elif object.status == object.STATUS_ACCEPTED %}
+                        class="btn btn-sm btn-success"
+                        {% elif object.status == object.STATUS_REJECTED %}
+                        class="btn btn-sm btn-danger "
+                        {% endif %}>
+                            {{ object.status|default:'-'|upper  }}
+                        </button>
+                    
+                    {% if object.is_active %}
+                        {% update_request_button object accept=True %}
+                        {% update_request_button object accept=False %}
+                    {% endif %}
+            </div>
+        </div> 
+        {% empty %}
+            {% include 'platform/partials/_empty.html' with position='left' %}
+        {% endfor %}
+
+</div> <!-- tab end -->
+<div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+
+
+
+        {% comment %} <h3 class="mt-4">
+            {% if user.is_player %}
+                Wysłane zapytanie o testy do klubu
+            {% else %}
+                Wysłane zaproszenia na testy do piłkarzy
+            {% endif %}
+        </h3> {% endcomment %}
+  
+        {% for object in page_obj_sender %}
+        <div class="card item-card" style="">
+            <div class="card-header d-md-none">
+                <span> 
+                    <img class="flag" src="{{ object.recipient.profile.country.flag }}" alt="flag"> 
+                    {{object.recipient.first_name|upper}} {{ object.recipient.last_name|upper}}
+                </span>
+                <span class="float-right"> 
+                 {% profile_link object.recipient checks=False text='profil' %}
+                 </span>
+            </div>
+            <div class="d-md-none">
+                <img class="avatar rounded-circle img-responsive" src="{% thumbnail object.recipient.picture|default:'default_profile.png' 'tables_avatar_show_small' %}">
+            </div>
+            <div class="card-body table-item"> 
+            <div class="row no-gutters">
+                    <div class="d-none d-md-inline col-md-3">
+                        <a href={{object.recipient.profile.get_permalink }}>
+                            <img class="avatar rounded img-responsive"  src="{% thumbnail object.recipient.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
+                            <img class="flag" src="{{ object.recipient.profile.country.flag }}" alt="flag"> 
+                            {{object.recipient.first_name|upper}} {{ object.recipient.last_name|upper}} 
+                        </a>
+                    </div>
+
+                    <div class="d-none d-md-inline col-md">
+                             
+                        <button disabled  
+                        {% if object.is_active %}
+                        class="btn btn-sm btn-warning"
+                        {% elif object.status == object.STATUS_ACCEPTED %}
+                        class="btn btn-sm btn-success"
+                        {% elif object.status == object.STATUS_REJECTED %}
+                        class="btn btn-sm btn-danger "
+                        {% endif %}>
+                            {{ object.status|default:'-'|upper  }}
+                        </button>
+                        
+
+                    </div >
+
+                    <div class="col-12 col-md-3"> 
+                        
+                        {{ object.body|default:''  }}
+                        
+                    </div>
+
+                    <div class="col-3 col-md"> 
+                        {{ object.created_at|date:'Y-m-d H:i'  }}
+                    </div>
+ 
+                    <div class="d-none d-md-inline col-md">
+                        <span class="float-right"> 
+                            {% profile_link object.recipient checks=False text='profil' %}
+                        </span>
+
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer  d-md-none">
+                <span class="float-right"> 
+                     <button disabled  
+                        {% if object.is_active %}
+                        class="btn btn-sm btn-warning"
+                        {% elif object.status == object.STATUS_ACCEPTED %}
+                        class="btn btn-sm btn-success"
+                        {% elif object.status == object.STATUS_REJECTED %}
+                        class="btn btn-sm btn-danger "
+                        {% endif %}>
+                            {{ object.status|default:'-'|upper  }}
+                        </button>
+
+            
+            </div>
+        </div> 
+        {% empty %}
+            {% include 'platform/partials/_empty.html' with position='left' %}
+        {% endfor %}
+
+  </div><!-- end of tabs-->
+</div>  <!-- end of tabs-->
 </section>
 {% endblock content %}
 
+{% endspaceless %}

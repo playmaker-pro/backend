@@ -1,3 +1,10 @@
-        <div class="p-4 m-4 text-center" ><i class="icofont-table" style="font-size:89px;"></i>
-           <h2>brak danych</h2>
-        </div>
+
+
+
+{% with text=text position=position %}
+<div class="p-4 m-4 text-{% if position %}{{ position }}{% else %}center{% endif %}" ><i class="icofont-table" style="font-size:89px;"></i>
+    
+    {% if text %} <h3> {{ text }}</h3>  {% endif %}
+    
+</div>
+{% endwith %}

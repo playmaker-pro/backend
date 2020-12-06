@@ -116,12 +116,12 @@ class InquiryRequestManager(models.Manager):  # @todo not tested
 
 
 class InquiryRequest(models.Model):
-    STATUS_NEW = 'NEW'
-    STATUS_SENT = 'SENT'
-    STATUS_RECEIVED = 'RECEIVED'
+    STATUS_NEW = 'NOWE'
+    STATUS_SENT = 'WYSŁANO'
+    STATUS_RECEIVED = 'PRZECZYTANE'
     # STATUS_READED = 'READED'
-    STATUS_ACCEPTED = 'ACCEPTED'
-    STATUS_REJECTED = 'REJECTED'
+    STATUS_ACCEPTED = 'ZAAKCEPTOWANE'
+    STATUS_REJECTED = 'ODRZUCONE'
 
     ACTIVE_STATES = [STATUS_NEW, STATUS_SENT, STATUS_RECEIVED]
     RESOLVED_STATES = [STATUS_ACCEPTED, STATUS_REJECTED]
@@ -137,9 +137,13 @@ class InquiryRequest(models.Model):
 
     # state = InquiryRequestManager()
 
+    body = models.TextField(null=True, blank=True)
+
     status = FSMField(
-        default=STATUS_NEW
+        default=STATUS_NEW,
+        choices=STATUS_CHOICES,
     )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     updated_at = models.DateTimeField(auto_now=True)
@@ -180,3 +184,21 @@ class InquiryRequest(models.Model):
 
     def __str__(self):
         return f'{self.sender} --({self.status})-> {self.recipient}'
+
+    def save(self, *args, **kwargs):
+        self.body = ContactBodySnippet.generate(self.sender)
+        super().save(*args, **kwargs)
+
+
+class ContactBodySnippet:
+    @classmethod
+    def generate(cls, user):
+
+        body = ''
+        if user.profile.phone:
+            body += f'{user.profile.phone} / \n'
+
+        body += f'{user.email}\n'
+        # if user.profile.facebook_url:
+        #     body += f'FB: {user.profile.facebook_url}\n'
+        return body

@@ -25,6 +25,34 @@ def get_modal_action(user):
 
 
 @login_required
+def inquiry_update(request):
+    response_data = {'status': False}
+    message = {'body': ''}
+
+    if request.POST.get('action') == 'post':
+        tick = request.POST.get('tick')
+        _id, action = tick.split('---')
+
+        request = get_object_or_404(InquiryRequest, id=_id)
+
+        if int(action) == 1:
+            request.accept()
+            request.save()
+            message['body'] = 'zaakceptowałeś zapytanie'
+
+        elif int(action) == 0:
+            request.reject()
+            request.save()
+            message['body'] = 'odrzuciłeś zapytanie'
+
+        else:
+            message['body'] = 'nie oczekiwany błąd'
+
+        response_data['message'] = message
+        return JsonResponse(response_data)
+
+
+@login_required
 def inquiry(request):
     response_data = {'status': False}
     message = {'body': ''}

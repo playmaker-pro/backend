@@ -61,10 +61,13 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
     def get(self, request, *args, **kwargs):
 
         user = request.user
-        qs_recipient = InquiryRequest.objects.filter(recipient=user)
-        qs_sender = InquiryRequest.objects.filter(sender=user)
+        qs_recipient = InquiryRequest.objects.filter(recipient=user).order_by('-created_at')
+        qs_sender = InquiryRequest.objects.filter(sender=user).order_by('-created_at')
         kwargs['modals'] = self.modal_activity(user, verification_auto=False)
         kwargs['page_title'] = 'Obserwowani'
+
+        kwargs['send_active'] = qs_sender.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+        kwargs['rec_active'] = qs_recipient.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
         kwargs['page_obj_recipient'] = self.paginate(qs_recipient)
         kwargs['page_obj_sender'] = self.paginate(qs_sender)
         return super().get(request, *args, **kwargs)
@@ -112,13 +115,10 @@ class ProfileCarrier(generic.TemplateView, SlugyViewMixin):
         user = self.request.user
         user_to_present = self.select_user_to_show()
         _id = user.profile.data_mapper_id
-        
-
         kwargs["carrier"] = self.get_data_or_calculate(user_to_present)
         return super().get(request, *args, **kwargs)
 
     def get_data_or_calculate(self, user):
-      
         _id = user.profile.data_mapper_id
         if user.profile.playermetrics.how_old_days(season=True) >= 7 and user.profile.has_data_id:
             season = adapters.PlayerStatsSeasonAdapter(_id).get(groupped=True)

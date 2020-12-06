@@ -10,12 +10,14 @@ register = template.Library()
 
 
 @register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
-def profile_link(context, user, checks=True):
+def profile_link(context, user, checks=True, text=None):
     if not user.is_authenticated:
         return {'off': True}
+    button_text = text or ''
     return {
         'button_url': user.profile.get_permalink(),
         'button_icon': 'user',
+        'button_text': button_text,
         'modals': context['modals'],
         'checks': checks,
     }
@@ -111,6 +113,22 @@ def send_request(context, user, showed_user):
 
 
 @register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
+def update_request_button(context, request, accept=False):
+
+    button_text = 'Ackceptuj' if accept else 'Odrzuć'
+    param = f'{request.id}---1' if accept else f'{request.id}---0'
+    button_class = 'btn-request btn-requested inquiryAnswerButtons'
+    if accept:
+        button_class += ' bg-success'
+    return {
+        'button_text': button_text,
+        'button_class': button_class,
+        'button_action': {'onclick': True, 'name': 'inquiryUpdate', 'param': param},
+        'modals': context['modals'],
+    }
+
+
+@register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
 def observed_link(context, user, showed_user, text=False, otype='user'):
     if not user.is_authenticated:
         return {'off': True}
@@ -191,7 +209,7 @@ def get_my_team_link(context, text=None, css_class=None):
         link = '#'
     else:
         try:
-            link = user.managed_club.get_permalink  
+            link = user.managed_club.get_permalink
         except Exception as e:
             logger.error(e)
             link = '#'

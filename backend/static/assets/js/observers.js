@@ -67,6 +67,29 @@ function observe(event, slug) {
 };
 
 
+function inquiryUpdate(event, idTick) {
+    var button = $(event.target);
+    $.ajax({
+        type:'POST',
+        url:'/users/me/query/update/',
+        data:{
+            csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+            tick: idTick,
+            action: 'post'
+        },
+        success:function(json){ 
+            $(".inquiryAnswerButtons").remove();  
+            showToastMessage(json.message.body);
+            window.setTimeout(location.reload(), 500);
+            
+        },
+        error : function(xhr, errmsg, err) {
+        console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+    }
+    });
+};
+
+
 function inquiry(event, slug) {
     $.ajax({
         type:'POST',

@@ -1,7 +1,7 @@
 
 from collections import Counter
 from datetime import datetime
-
+from stats import adapters
 from address.models import AddressField
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -17,6 +17,7 @@ from stats.adapters import PlayerAdapter
 from .utils import make_choices
 from .utils import unique_slugify
 import utils as utilites
+from .utils import get_current_season
 
 
 User = get_user_model()
@@ -676,9 +677,15 @@ class PlayerProfile(BaseProfile):
         '''
         self.calculate_data_from_data_models()
 
+        before_datamapper = self.data_mapper_id
+
         if self.position_raw is not None:
             self.position_fantasy = self.FANTASY_MAPPING.get(self.position_raw, None)
         super().save(*args, **kwargs)
+
+        after_datamapper = self.data_mapper_id
+        if before_datamapper is None and after_datamapper is not None:
+            self.playermetrics.refresh_metrics()
 
     class Meta:
         verbose_name = "Player Profile"
@@ -715,6 +722,27 @@ class PlayerMetrics(models.Model):
         setattr(self, f'{attr}_updated', datetime.now())
         if commit:
             self.save()
+
+    def refresh_metrics(self):
+        if not self.player.has_data_id:
+            return
+        season_name = get_current_season()
+        _id = self.player.data_mapper_id
+
+        fantasy = adapters.PlayerFantasyDataAdapter(_id).get(season=season_name, full=True)
+        self.update_fantasy(fantasy)
+
+        season = adapters.PlayerStatsSeasonAdapter(_id).get(groupped=True)
+        self.update_season(season)
+
+        games = adapters.PlayerLastGamesAdapter(_id).get()
+        self.update_games(games)
+
+        games_summary = adapters.PlayerLastGamesAdapter(_id).get(season=season_name, limit=3)  # should be profile.playermetrics.refresh_games_summary() and putted to celery.
+        fantasy_summary = adapters.PlayerFantasyDataAdapter(_id).get(season=season_name)
+        season_summary = adapters.PlayerStatsSeasonAdapter(_id).get(season=season_name)
+        self.update_summaries(games_summary, season_summary, fantasy_summary)
+        self.save()
 
     def update_summaries(self, games, season, fantasy):
         self.update_games_summary(games, commit=False)

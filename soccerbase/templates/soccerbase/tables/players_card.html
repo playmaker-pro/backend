@@ -60,10 +60,10 @@
         </div>
 
         <div class="d-none d-md-inline col-md-1">
-              <span class="float-right"> 
-                {% profile_link object checks=False %}
-                {% observed_link user object %}
-               </span>
+            <span class="float-right"> 
+                {% profile_link object checks=False text='profil' %}
+                {% observed_link user object text=True %}
+            </span>
 
         </div>
     </div>
