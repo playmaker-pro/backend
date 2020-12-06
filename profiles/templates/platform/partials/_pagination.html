@@ -8,14 +8,14 @@
 
                 <span class="p-1">
                 {% with "?page=1" as button_url %}
-                    {% include 'platform/buttons/action_button.html' with button_text=_('pierwsza') button_url=button_url %}
+                    {% include 'platform/buttons/action_button.html' with button_text=_('pierwsza') checks=True button_url=button_url %}
                 {% endwith %}
                 
                 </span>
                 <span class="p-1">
                 
                 {% with "?page="|addstr:page_obj.previous_page_number as button_url %}
-                    {% include 'platform/buttons/action_button.html' with button_text=_('poprzednia') button_url=button_url button_prefix='&laquo;'%}
+                    {% include 'platform/buttons/action_button.html' with button_text=_('poprzednia') button_url=button_url checks=True button_prefix='&laquo;'%}
                 {% endwith %}
                 </span>
             {% endif %}
@@ -28,12 +28,12 @@
                <span class="p-1">
                 {% with "?page="|addstr:page_obj.next_page_number as button_url %}
                    
-                    {% include 'platform/buttons/action_button.html' with button_text=_('następna') button_url=button_url %}
+                    {% include 'platform/buttons/action_button.html' with button_text=_('następna') button_url=button_url checks=True %}
                 {% endwith %}
                 </span>
                 <span class="p-1">
                 {% with "?page="|addstr:page_obj.paginator.num_pages as button_url %}
-                    {% include 'platform/buttons/action_button.html' with button_text=_('ostatnia') button_url=button_url button_suffix='&raquo;'%}
+                    {% include 'platform/buttons/action_button.html' with button_text=_('ostatnia') button_url=button_url checks=True button_suffix='&raquo;'%}
                 {% endwith %}
                 </span>
             {% endif %}
