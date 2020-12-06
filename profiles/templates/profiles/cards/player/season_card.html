@@ -39,7 +39,7 @@
 
 
                   <div class='row'>
-
+                      <div class="col">
                           <!-- Demo info-->
                           <div class="row text-center mt-4">
                             <div class="col-3 border-right">
@@ -57,6 +57,7 @@
                             </div>
                           </div>
                           <!-- END -->
+                      </div>
                   </div>
             {% else %}
                 <span class="heading text-muted"> 
@@ -76,6 +77,7 @@
             {% else %}
                 {% url 'profiles:player_carrier' slug=show_user.profile.slug as button_url %}
             {% endif %}
+
             {% seemore_link button_url %}
         </div>
     </div>
