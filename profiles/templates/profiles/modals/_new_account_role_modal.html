@@ -1,8 +1,9 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load thumbnail %}
+{% load i18n %}
 
-
+{% spaceless %}
 <!-- Modal -->
 <div class="modal fade" id="missingBasicAccountModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
@@ -13,14 +14,16 @@
       </div>
       <div class="modal-body">
       
-        Do uruchomienia konta należy wybrać role.
+        Do uruchomienia konta należy wybrać rolę.
 
         W każdej chwili będziesz mogł dokonać zmiany.
+
+
 
         <form enctype="multipart/form-data" method="post">
         {% if role_form %}
           {% crispy role_form %}
-          <button class="btn-pm btn-pm-sm" type="submit" name="update" value="Update" id="submit-id-update">{% trans 'Chcę zmienić role' %}</button>
+          <button class="btn-pm btn-pm-sm" type="submit" name="update" value="Update" id="submit-id-update">{% trans 'Wybieram role.' %}</button>
        
         {% else %}
           Coś poszło nie tak... (brak forularza)
@@ -46,3 +49,6 @@
     });
 </script>
 {% endif %}
+
+
+{% endspaceless %}

@@ -27,7 +27,7 @@ class VerificationForm(forms.ModelForm):
         self.helper.error_text_inline = True
         self.helper.labels_uppercase = True
         self.helper.label_class = 'col-md-2 p-1'
-        self.helper.field_class = 'col-md-9 p-1'
+        self.helper.field_class = 'col-12 p-1'
         self.set_fields_rules()
 
         self.helper.layout = self.build_verification_form()
@@ -39,15 +39,15 @@ class VerificationForm(forms.ModelForm):
 
     def build_verification_form(self):
 
-        fds = [''] + [Field(fn, warpper_class='row', placeholder=fp) for fn, fp in self.building_fields]
+        fds = [''] + [Field(fn, warpper_class='row', placeholder=fp, css_class=fc) for fn, fp, fc in self.building_fields]
         return Fieldset(*fds)
 
 
 class ClubVerificationForm(VerificationForm):
     building_fields = [
 
-        ('team_club_league_voivodeship_ver', 'np. MKS Zbyszkowo, we Wrocławiu'),
-        ('club_role', None),
+        ('team_club_league_voivodeship_ver', 'np. MKS Zbyszkowo, we Wrocławiu', None),
+        ('club_role', None, None),
     ]
 
     def set_fields_rules(self):
@@ -67,9 +67,9 @@ class ClubVerificationForm(VerificationForm):
 class CoachVerificationForm(VerificationForm):
     birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
     building_fields = [
-        ('birth_date', '1998-09-24'),
-        ('team_club_league_voivodeship_ver', 'np. MKS Zbyszkowo, we Wrocławiu'),
-        ('country', None),
+        ('birth_date', '1998-09-24', None),
+        ('team_club_league_voivodeship_ver', 'np. MKS Zbyszkowo, we Wrocławiu', None),
+        ('country', None, None),
     ]
 
     def set_fields_rules(self):
@@ -94,10 +94,10 @@ class CoachVerificationForm(VerificationForm):
 class PlayerVerificationForm(VerificationForm):
     birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
     building_fields = [
-            ('birth_date', '1998-09-24'),
-            ('position_raw', None),
-            ('team_club_league_voivodeship_ver', 'np. MKS Zbyszkowo, we Wrocławiu'),
-            ('country', None),
+            ('birth_date', '1998-09-24', None),
+            ('position_raw', None, None),
+            ('team_club_league_voivodeship_ver', 'np. MKS Zbyszkowo, we Wrocławiu', None),
+            ('country', None, None),
         ]
 
     def set_fields_rules(self):

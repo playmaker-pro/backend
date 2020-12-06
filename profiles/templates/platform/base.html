@@ -6,6 +6,8 @@
 {% block extra_css %}
 
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.css" />
+
      <!-- Font Awesome -->
     <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 
@@ -17,9 +19,7 @@
   
     <link href="{% static 'assets/css/platfrom.css' %}" rel="stylesheet">
     <link href="{% static 'assets/css/signup.css' %}" rel="stylesheet">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.css" />
-
+    <link href="{% static 'assets/css/tables.css' %}" rel="stylesheet">
 
 
 {% endblock %}
@@ -87,15 +87,9 @@
 
     <script src="{% static 'assets/js/profiles.js' %}"></script>
     <script src="{% static 'assets/js/observers.js' %}"></script>
-    <link href="{% static 'assets/css/tables.css' %}" rel="stylesheet">
-    <script>
-    $('select').selectpicker();
-
-
-    $(function () {
-        $('[data-toggle="tooltip"]').tooltip()
-    })
-    </script>
+    
+  
+ 
 
     <!--extra modals-->
     {# Loading proper modals #}
@@ -111,4 +105,15 @@
             {% endif%}
         {% endif %}
     {% endfor %}
+
+ <script>
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    })
+
+    $('select').selectpicker();
+</script>
+
 {% endblock %}
+
+

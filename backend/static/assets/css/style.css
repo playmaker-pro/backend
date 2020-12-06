@@ -236,7 +236,8 @@ a.disabled {
 .btn-pm {
   background: #e03a3c;
   border: 0;
-  padding: 10px 32px;
+  padding: .375rem .375rem;
+  /* padding: 10px 32px; */
   color: #fff;
   transition: 0.4s;
   border-radius: 4px;

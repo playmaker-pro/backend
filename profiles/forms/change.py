@@ -23,6 +23,7 @@ class ChangeRoleForm(forms.ModelForm):
         # self.helper.label_class = 'col-md-6'
         # self.helper.field_class = 'col-md-6'
         self.fields['new'].label = False
+    
         self.helper.layout = Layout(
                             Field('new'),
 
@@ -38,11 +39,11 @@ class DeclareRoleForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_tag = False
+        self.fields['new'].label = False
         self.helper.layout = Layout(
             Fieldset(
                 None,
                 Field("new")),
-                Submit("Wybierz role", "Wybierz role"),
         )
 
     class Meta:
