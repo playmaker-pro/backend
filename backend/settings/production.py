@@ -2,7 +2,6 @@ from .base import *  # noqa
 
 import os
 
-
 DEBUG = False
 
 BASE_URL = 'https://playmaker.pro'

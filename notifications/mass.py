@@ -31,7 +31,7 @@ def send_mass_basic():
     for i in ['jacek.jasinski8@gmail.com', 'jjasinski.playmaker@gmail.com', 'rafal.kesik@gmail.com']:
         
         message = ('PlayMaker.pro nowa platforma',
-                   'Witaj, \n dziękujemy za dołączenie do społęczności PlayMaker.pro\n Przenieśliśmy Twoje konto na ziepłnie nową platformę. Wejdź i sprawdź nowe możliwości klikając w link. https://playmaker.pro/password/reset/?email={i} \n\n\n Pozdrawiamy zespół PlayMaker.pro',
+                   f'Witaj, \n\n Dziękujemy za dołączenie do społęczności PlayMaker.pro\n Przenieśliśmy Twoje konto na zupełnie nową platformę. Wejdź i sprawdź nowe możliwości klikając w link. https://playmaker.pro/password/reset/?email={i} \n\n\n Pozdrawiamy zespół PlayMaker.pro',
                    
                    'powiadomienia@playmaker.pro', [i])
         msgs.append(message)
