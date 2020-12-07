@@ -2,6 +2,13 @@
 {% load account %}
 {% load i18n %}
 
-{% block content %}{% autoescape off %}{% user_display user as user_display %}{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}You're receiving this e-mail because user {{ user_display }} has given your e-mail address to register an account on {{ site_domain }}.
+{% block content %}{% autoescape off %}{% user_display user as user_display %}{% blocktrans with site_name=current_site.name site_domain=current_site.domain %} Dziękujemy za dołączenie do społeczności PlayMaker.pro. Kliknij w poniższy link aktywacyjny, aby potwierdzić rejestrację.
 
-Aby aktywować konto na platformie kliknij w link {{ activate_url }}{% endblocktrans %}{% endautoescape %}{% endblock %}
+ {{ activate_url }}  eżeli po kliknięciu link się nie otworzy, skopiuj go, wklej w pole adresu przeglądarki i przejdź do wskazanej strony. \n\n
+
+ Link będzie aktywny przez 24h. Jeśli nie uda Ci się potwierdzić rejestracji w podanym okresie, rozpocznij rejestrację od nowa. \n\n
+
+ Wiadomość została wygenerowana automatycznie. Prosimy na nią nie odpowiadać. \n\n
+ W przypadku pytań, jesteśmy dostępni pod adresem: biuro@playmaker.pro \n\n
+
+ {% endblocktrans %}{% endautoescape %}{% endblock %}

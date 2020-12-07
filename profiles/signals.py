@@ -27,11 +27,23 @@ def create_default_basic_plan_if_not_present():
     return default
 
 
+def create_default_basic_plan_for_coach_if_not_present():
+    args = settings.INQUIRIES_INITAL_PLAN_COACH
+    try:
+        plan = InquiryPlan.objects.get(limit=args['limit'], name=args['name'])
+    except InquiryPlan.DoesNotExist:
+        plan = InquiryPlan.objects.create(**args)
+    return plan
+
+
 def set_user_inquiry_plan(user):
     try:
         UserInquiry.objects.get(user=user)
     except UserInquiry.DoesNotExist:
-        default = create_default_basic_plan_if_not_present()
+        if user.is_coach or user.is_club:
+            default = create_default_basic_plan_for_coach_if_not_present()
+        else:
+            default = create_default_basic_plan_if_not_present()
         UserInquiry.objects.create(plan=default, user=user)
         logger.info(f'User {user.id} plan created.')
 

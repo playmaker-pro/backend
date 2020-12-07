@@ -271,8 +271,16 @@ MESSAGE_TAGS = {messages.ERROR: "danger"}
 # Inquiries app
 INQUIRIES_INITAL_PLAN = {
         'default': True,
-        'limit': 10,
+        'limit': 3,
         'name': 'Basic Inital',
+        'description': 'Default inital plan, need to be created if we wont ' \
+            'to add to each user UserInquery. In future can be alterd'
+}
+
+INQUIRIES_INITAL_PLAN_COACH = {
+        'default': False,
+        'limit': 5,
+        'name': 'Basic Inital for coaches',
         'description': 'Default inital plan, need to be created if we wont ' \
             'to add to each user UserInquery. In future can be alterd'
 }
