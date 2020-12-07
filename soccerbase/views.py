@@ -12,8 +12,9 @@ from django.core.paginator import Paginator
 
 from roles import definitions
 from profiles.utils import get_datetime_from_age
-
-
+from django.db.models import Q
+import operator
+from functools  import reduce
 TABLE_TYPE_PLAYER = definitions.PLAYER_SHORT
 TABLE_TYPE_TEAM = definitions.CLUB_SHORT
 TABLE_TYPE_COACH = definitions.COACH_SHORT
@@ -56,7 +57,15 @@ class PlayersTable(TableView):
 
     @property
     def filter_league(self):
-        value = self.request.GET.get('league')
+        # value = self.request.GET.get('league')
+        value = self.request.GET.getlist('league')
+        if value:
+            return value
+        
+    @property
+    def filter_vivo(self):
+        # value = self.request.GET.get('league')
+        value = self.request.GET.getlist('vivo')
         if value:
             return value
 
@@ -131,8 +140,15 @@ class PlayersTable(TableView):
             queryset = queryset.filter(playerprofile__prefered_leg=self.filter_leg)
 
         if self.filter_league is not None:
-            queryset = queryset.filter(playerprofile__league=self.filter_league)
-
+            queryset = queryset.filter(playerprofile__league__in=self.filter_league)
+            
+        if self.filter_vivo is not None:
+            vivo = [i[:-1].upper() for i in self.filter_vivo]
+            # queryset = queryset.filter(playerprofile__voivodeship__in=vivo)
+            clauses = (Q(playerprofile__voivodeship__icontains=p) for p in vivo)
+            query = reduce(operator.or_, clauses)
+            queryset = queryset.filter(query)
+            
         if self.filter_age_min is not None:
             mindate = get_datetime_from_age(self.filter_age_min)
             queryset = queryset.filter(playerprofile__birth_date__year__lte=mindate.year)

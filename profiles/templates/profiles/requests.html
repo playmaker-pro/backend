@@ -163,7 +163,7 @@
                 <h4>Jeszcze nie otrzymałeś żadnego zaproszenia na testy</h4>
                 
                 <p>Trenerzy w na platformie maja możliwość wysłać Ci zaproszenie na testy. Powjawią się one tutaj.</p>
-                {% elif  user.is_coach %}
+                {% elif  user.is_coach or user.is_club %}
                 <h4>Jeszcze nie otrzymałeś żadnego zapytania o testy od piłkarzy</h4>
                 
                 <p>Piłkarze na naszej platformie mogą wysłać zapytanie o możliwość odbycia testów wraz ze swoimi danymi kontaktowymi.</p>
@@ -278,7 +278,7 @@
                 
                 <p>Będąc zweryfikowanym użytkownikiem platformy możesz wysyłać zapytania o testy do wybranych przez Ciebie trenerów. 
                 Uzupełniony profil w raz z pełnymi danymi kontaktowymi pozwoli na sprawny kontakt z Trenerem. </p>
-                {% elif  user.is_coach %}
+                {% elif  user.is_coach or user.is_club %}
                 <h4>Jeszcze nie zaprosiłeś żadnego piłkarza na testy</h4>
                 
                 <p>Będąc zweryfikowanym użytkownikiem platformy możesz zapraszać piłkarzy na testy. 

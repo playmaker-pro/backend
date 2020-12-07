@@ -14,12 +14,12 @@
 <section id="clubs" class="club">
   <div class="container profile-container" data-aos="fade-up">
 
-      <div class="row">
+      
           <h1 class="card-title">{{ club.name|upper }}</h1>
             {% if editable %}
                 {% include 'clubs/buttons/edit.html' %}
             {% endif %}
-           
+           <div class="row">
                 {% for team in teams%}
                 <div class="col-md-4">
                     {% include 'clubs/teams/card.html' with team=team %}        
@@ -29,7 +29,7 @@
                     <h2> {% trans 'Club nie ma przypietych zespolow.' %}</h2>  {{ editable }}
                 </div>
                 {% endfor %}
-          
+            </div>
 
     </div>
 </section>

@@ -50,8 +50,25 @@ def generate_league_options():
             lgs.append(name)
         
     for lgn in set(lgs):
-        out += "<option {% if request.GET.league == '" + lgn + "' %} selected {% endif %}>" + lgn + "</option>\n"
+        out += '<option {% if "' + lgn + '" in request.GET|get_list:"league" %} selected="selected" {% endif %}>' + lgn + '</option>\n'
    
-    with open('filteroptions', 'w+') as filterfile:
+    with open('filteroptions_league', 'w+') as filterfile:
         filterfile.write(out)
 
+
+def generate_vivo_options():
+    
+    from league_filter_map import LEAGUE_MAP
+    out = ''
+    lgs = []
+    for item in LEAGUE_MAP:
+
+        vivo_name = item.get('województwo')
+
+        lgs.append(vivo_name)
+        
+    for lgn in set(lgs):
+        out += '<option {% if "' + lgn + '" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>' + lgn + '</option>\n'
+   
+    with open('filteroptions_vivo', 'w+') as filterfile:
+        filterfile.write(out)

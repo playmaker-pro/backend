@@ -1,0 +1,27 @@
+
+{% load playmaker %}
+<select name="vivo" data-width="120px" title="region" class="selectpicker" data-actions-box="true" multiple data-live-search="true" data-selected-text-format="count > 3">
+
+<option {% if "śląskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>śląskie</option>
+{% comment %} <option {% if "łódzkie/mazowieckie/warmińskomazurskie/podlaskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>łódzkie/mazowieckie/warmińskomazurskie/podlaskie</option> {% endcomment %}
+<option {% if "wielkopolskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>wielkopolskie</option>
+<option {% if "dolnośląskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>dolnośląskie</option>
+<option {% if "łódzkie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>łódzkie</option>
+<option {% if "lubelskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>lubelskie</option>
+{% comment %} <option {% if "świętokrzyskie/lubelskie/podkarpackie/małopolskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>świętokrzyskie/lubelskie/podkarpackie/małopolskie</option> {% endcomment %}
+<option {% if "podlaskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>podlaskie</option>
+<option {% if "opolskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>opolskie</option>
+<option {% if "zachodniopomorskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>zachodniopomorskie</option>
+<option {% if "warmińskomazurskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>warmińskomazurskie</option>
+{% comment %} <option {% if "pomorskie/wielkopolskie/zachodniopomorskie/kujawskopomorskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>pomorskie/wielkopolskie/zachodniopomorskie/kujawskopomorskie</option> {% endcomment %}
+<option {% if "małopolskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>małopolskie</option>
+{% comment %} <option {% if "opolskie/śląskie/lubuskie/dolnośląskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>opolskie/śląskie/lubuskie/dolnośląskie</option> {% endcomment %}
+<option {% if "podkarpackie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>podkarpackie</option>
+<option {% if "pomorskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>pomorskie</option>
+<option {% if "mazowieckie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>mazowieckie</option>
+<option {% if "świętokrzyskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>świętokrzyskie</option>
+<option {% if "kujawskopomorskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>kujawskopomorskie</option>
+<option {% if "lubuskie" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>lubuskie</option>
+
+
+</select>

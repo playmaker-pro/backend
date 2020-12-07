@@ -15,12 +15,11 @@
   </div>
   <div class="card-body table-item"> 
   <div class="row no-gutters">
-        <div class="d-none d-md-inline col-md-1">
+        <div class="d-none d-md-inline col-md-3">
+          <a href="{{ object.get_permalink }}"> 
             <img class="avatar rounded img-responsive" src="{% thumbnail object.picture|default:'default_team.png' 'tables_avatar_show_medium' %}">
-        </div>
-
-        <div class="d-none d-md-inline col-md-1">
-           {{ object.name|upper}}
+            {{ object.name|upper}}
+          </a>
         </div>
         
         <div class="col-3 col-md">
@@ -54,7 +53,7 @@
         </div>
 
         <div class="d-none d-md-inline col-md-2">
-          {% get_team_link object text='profil' %}
+          {% get_team_link object text='profil' checks=False %}
           {% observed_link user object otype='team'%}
     
         </div>
@@ -62,7 +61,7 @@
   </div>
   <div class="card-footer  d-md-none">
     <span class="float-right">
-    {% get_team_link object text='' %}
+    {% get_team_link object text='' checks=False %}
     </span>
   </div>
 </div>

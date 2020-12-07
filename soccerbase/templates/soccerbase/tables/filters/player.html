@@ -1,27 +1,24 @@
 {% load i18n %}
 {% load thumbnail %}
+{% load playmaker %}
   <div id="table-filters" class="table-filters">
     <div class="container-fluid">
       
             <form id="filter-form" method="get" class="form-inline row no-gutters">
            
                     <div class="col-2 col-md-1 filter-button"> 
-                        <button class="btn-pm" type="submit" value="{% trans 'Filtruj' %}">Filtruj</button>
+                        <button class="btn-pm" type="submit" value="{% trans 'Filtruj' %}">{% trans 'Filtruj' %}</button>
                     </div>
 
                     
-                    <div class="col-8 col-md-2 filter"> 
+                    <div class="col-4 col-md-1 filter "> 
                         {% include 'soccerbase/tables/filters/ms_league.html' %}
                     </div>
-
-                    <div class="col-3  col-md-2 filter"> 
-                        <input class="form-control" type="number" value="{{ request.GET.age_min }}" name="age_min" placeholder="wiek od">
+                    <div class="col-4 col-md-1 filter ml-1"> 
+                        {% include 'soccerbase/tables/filters/ms_vivo.html' %}
                     </div>
-                    <div class="col-3  col-md-2 filter"> 
-                        <input class="form-control" type="number" value="{{ request.GET.age_max }}" name="age_max" placeholder="wiek do">
-                    </div>
-                    <div class="col-3 col-md-2 filter"> 
-                            <select name="position" class="form-control" title="pozycja">
+                    <div class="col-4 col-md-1 filter ml-1"> 
+                            <select name="position" data-width="120px" class="form-control" title="pozycja">
                                 <option value="----">----</option>
                                 <option {% if request.GET.position == 'Bramkarz' %} selected {% endif %}value="Bramkarz">Bramkarz</option>
                                 <option {% if request.GET.position == 'Obrońca Lewy' %} selected {% endif %}value="Obrońca Lewy">Obrońca Lewy</option>
@@ -33,16 +30,24 @@
                                 <option {% if request.GET.position == 'Skrzydłowy' %} selected {% endif %}value="Skrzydłowy">Skrzydłowy</option>
                                 <option {% if request.GET.position == 'Napastnik' %} selected {% endif %}value="Napastnik">Napastnik</option>
                             </select>
-                    </div>    
-                    <div class="col-3  col-md-2 filter"> 
-                            <select name="leg" class="form-control selectpicker" title="noga">
+                    </div>   
+                      <div class="col-4  col-md-1 filter ml-1"> 
+                            <select name="leg"  data-width="120px" class="form-control selectpicker" title="noga">
 
                                 <option value="----">----</option>
-                                <option {% if request.GET.leg == 'prawa' %} selected {% endif %} value="prawa">preferowana prawa</option>
-                                <option {% if request.GET.leg == 'lewa' %} selected {% endif %} value="lewa">preferowana lewa</option>
+                                <option {% if request.GET.leg == 'prawa' %} selected {% endif %} value="prawa">prawa</option>
+                                <option {% if request.GET.leg == 'lewa' %} selected {% endif %} value="lewa">lewa</option>
 
                             </select>
                     </div>
+                    <div class="col-4  col-md-1 filter ml-1"> 
+                        <input class="form-control" type="number" value="{{ request.GET.age_min }}" name="age_min" placeholder="wiek od">
+                    </div>
+                    <div class="col-4  col-md-1 filter ml-1"> 
+                        <input class="form-control" type="number" value="{{ request.GET.age_max }}" name="age_max" placeholder="wiek do">
+                    </div>
+ 
+
                 
             </form>
         

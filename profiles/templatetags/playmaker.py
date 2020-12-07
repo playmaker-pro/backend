@@ -196,15 +196,46 @@ def seemore_link(context, link, checks=True):
     }
 
 
+
+class ActionButton:
+    def __init__(self, context=None, url=None, checks=True, icon='', text='', css_class=''):
+        self.checks = checks
+        self.context = context
+        self.text = text
+        self.url = url
+        self.css_class = css_class
+        self.icon = icon
+
+    def get_json(self):
+        return {
+            'checks': self.checks,
+            'button_icon': self.icon,
+            'button_url': self.url,
+            'button_text': self.text,
+            'modals': self.context['modals'],
+        }
+
+@register.filter
+def get_list(dictionary, key):
+    return dictionary.getlist(key)
+
+
 @register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
 def get_team_link(context, team, text=None, css_class=None, checks=True):
+    button = ActionButton(url=team.get_permalink, text=text, context=context, css_class=css_class, icon='shield', checks=checks)
+    return button.get_json()
+
+
+
+@register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
+def get_club_link(context, object, text=None, css_class=None, checks=True):
 
     css_class = css_class or ''
 
     return {
         'checks': checks,
         'button_icon': 'shield',
-        'button_url': team.get_permalink,
+        'button_url': object.get_permalink,
         'button_text': text,
         'modals': context['modals'],
     }
