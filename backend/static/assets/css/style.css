@@ -155,6 +155,7 @@ a.disabled {
 }
 
 
+.btn-owl-big { font-size:1.5rem;}
 .btn-owl {
     font-family: "Asap", sans-serif;
     /*margin-left: 25px; */
@@ -162,6 +163,7 @@ a.disabled {
     color: #fff;
     border-radius: 4px;
     padding: 4px 10px;
+
     white-space: nowrap;
     transition: 0.3s;
     /* font-size: 14px;* /
@@ -674,6 +676,8 @@ font-family: "Asap", sans-serif;
   margin: 10px 0 0 0;
   font-size: 24px;
 }
+
+
 
 #hero .btn-get-started {
   font-family: "Asap", sans-serif;
@@ -1440,6 +1444,7 @@ section {
   text-align: center;
   line-height: 20px;
   font-size: 14px;
+  min-height:310px;
 }
 
 .pricing .box ul li {

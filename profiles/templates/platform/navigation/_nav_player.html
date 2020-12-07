@@ -2,6 +2,7 @@
 {% load static %}
 
 {% if user.is_authenticated %}
+    <li><a href="/transfer/">Transfer</a></li>
     <li><a href="{% url 'profiles:my_requests'%}">{% trans 'Zapytania' %}</a></li>
     {% include 'platform/navigation/_nav.html'%}
     <li><a href="{% url 'profiles:my_carrier'%}">{% trans 'Kariera' %}</a></li>

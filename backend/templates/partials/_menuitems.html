@@ -1,6 +1,6 @@
  <li><a href="{% url 'home_goals' %}">O projekcie</a></li>
-<li><a href="#services">Fantasy</a></li>
-<li><a href="#portfolio">Rozgrywki</a></li>
+{% comment %} <li><a href="#services">Fantasy</a></li>
+<li><a href="#portfolio">Rozgrywki</a></li> {% endcomment %}
 <li class="drop-down"><a href="">Bazy</a>
 <ul>
     <li><a href="{% url 'soccerbase:players' %}">Piłkarzy</a></li>
@@ -8,7 +8,8 @@
     <li><a href="{% url 'soccerbase:teams' %}">Klubów</a></li>
 </ul>
 </li>
-<li><a href="/products/">Produkty</a></li>
+{% comment %} <li><a href="/products/">Produkty</a></li> {% endcomment %}
+<li><a href="/transfer/">Transfer</a></li>
 <li><a href="/scouting/">Skauting</a></li>
-<li><a href="/blog">Blog</a></li>
-<li><a href="#contact">Kontakt</a></li>
+{% comment %} <li><a href="/blog">Blog</a></li> {% endcomment %}
+{% comment %} <li><a href="#contact">Kontakt</a></li> {% endcomment %}
