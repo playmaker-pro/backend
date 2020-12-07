@@ -46,7 +46,8 @@ def set_and_create_user_profile(user):
         definitions.PARENT_SHORT: models.ParentProfile,
         definitions.GUEST_SHORT: models.GuestProfile,
     }
-    profile_model = model_map.get(user.role, models.GuestProfile)
+    profile_model = model_map.get(user.role, None)
+    
     profile, _ = profile_model.objects.get_or_create(user=user)
 
     # custom things for player accout

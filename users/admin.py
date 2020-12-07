@@ -25,8 +25,8 @@ class UserAdminPanel(UserAdmin):
         }),
     )
     list_display = ('username', 'first_name', 'last_name', 'state', 'is_active', 'get_profile', 'get_profile_permalink', linkify('profile'), 'get_profile_percentage', 'declared_role')
-    list_filter = ('state',)
-    search_fields = ('username',)
+    list_filter = ('state', 'declared_role')
+    search_fields = ('username', 'first_name', 'last_name', 'declared_role')
 
     def get_profile_percentage(self, obj):
         percentage = obj.profile.percentage_completion

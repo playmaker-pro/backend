@@ -23,7 +23,7 @@ class Command(BaseCommand):
             return 2
         else:
             return None
-        
+
     def player_soccer_goals_map(self, param):
         '''     
         Mapowanie
@@ -100,9 +100,142 @@ class Command(BaseCommand):
         "100/" => 100
         "100 km / 200" => 100
         '''
-        if param is None:
+        if param == 'Wszystko do uzgodnienia, jestem otwarty na propozycje :D':
+            return 500
+        if param =="50-60":
+            return 60
+        if param == '999':
+            return 500
+        if param =='100km':
+            return 100
+        if param =='15km' or param =="Max 15km":
+            return 15
+        if param =="61a":
+            return 61
+        if param =="50, przy lepszej lidze więcej":
+            return 50
+        if param =='0-20 Max':
+            return 20
+        if param =='100km+':
+            return 100
+        if param =='Możliwa przeprowadzka' or param =="Nawet przeprowadzka":
+            return 500
+        if param =="---":
             return None
-
+        if param == "1000":
+            return 500
+        if param == "Zależnie od poziomu klubu":
+            return None
+        if param =="10000" or param =="10000" or param =="1000km" or param =="Dowolnie ":
+            return 500
+        if param =='15-35':
+            return 35
+        if param =='200km' or param =='200 km':
+            return 200
+        if param =='50-150':
+            return 150
+        if param =="6 kilometrów":
+            return 6
+        if param == "100/120":
+            return 120
+        if param =='400 km' or param == '400km':
+            return 400
+        if param =="20-30km" or param =="20-30 km":
+            return 30
+        if param == "10-20 km":
+            return 20
+        if param =="15-20":
+            return 20
+        if param =="Do 50 km":
+            return 50
+        if param =="30km od miejsca zamieszkania":
+            return 30
+        if param == "30/40":
+            return 40
+        if param == "Odległość nieokreślona":
+            return None
+        if param =="1111":
+            return 500
+        if param =="30-35":
+            return 35
+        if param =="obojętnie" or param == "Nie gra roli" or param =="Dowolna" or param =="Nie ma znaczenia" or param =="Bez limitu" or param =="500+" or param =="Cała Polska" or param =="Dowolnie" or param =="niema ruznicy":
+            return 500
+        if param =="Aksamitna 20" or param =="Nie wiem" or param =="Opatówko 28" or param =="Kętrzyńskiego 107/8" or param == "Osiedle Robotnicze 85/2" or param =="Dębieczna 58" or param =="Autobusy w obrębie okolic Poznania":
+            return None
+        if param == "5-6":
+            return 6
+        if param =="30,40":
+            return 40
+        if param == "50km (możliwość zmiany miejsca zamieszkania na terenie 2 grupy III ligi)":
+            return 50
+        if param == "Nowa 25/1" or param =="Nagietkowa 3" or param == "Skarbka 2/45" or param =="Skalista 20" or param =="Sokoła 40" or param == "Ul. Akacjowa 8D/3":
+            return None
+        if param =="50/60 km":
+            return 60
+        if param =="50a":
+            return 50
+        if param =="1k":
+            return 1
+        if param =="100 km (Bez problemowa możliwość zmiany miejsca zamieszkania z pomocą klubu)" or param =="100km, możliwość przeprowadzki":
+            return 100
+        if param =="do 30km":
+            return 30
+        if param == "50-60":
+            return 60
+        if param =="80km":
+            return 80
+        if param =="Zależy":
+            return None
+        if param == "Nie chce":
+            return 0
+        if param =="Zbąszyńska 1" or param == "Andersa 178" or param =="Kornela Makuszyńskiego 21" or param =="Chorzowska  11" or param =="Mickiewicza 70" or param == "Ul.plac 1-go Maja 3/1" or param == "11-Go Listopada 2 /28" or param =="Plac Grunwaldzki" or param =="Bohaterów Modlina 22/15" or param =="Szaflika 10": 
+            return None
+        if param =="Bez różnicy wszędzie dojadę " or param =="nieokreślone" or param =="Nie ma różnicy" or param == "jestem otwarty na propozycje" or param =="odległość nie ma dla mnie znaczenia" or param =="bez znaczenia" or param =="w razie potrzeby moge zmienci miejsce zamieszkania" or param =="Bez ograniczeń" or param =="bez różnicy" or param == "Jestem w stanie zmienić miejsce zamieszkania" or param =="600 (możliwa przeprowadzka)":
+            return 500
+        if param =="Koszalińska 64E/5" or param == "Turkusowa 26" or param =="Aleksandry Śląskiej" or param =='W zależności od klubu' or param == 'Słopnice 1050'  or param =='Kamienna 5/1' or param == "Nie jestem w stanie określić" or param == "Mickiewicza 95/6" or param =="Brzozowa 1":
+            return None
+        if param =="70km" or param == "70 km":
+            return 70
+        if param =='30 km' or param =='30km':
+            return 30
+        if param =="300km" or param =='300 km':
+            return 300
+        if param =='100km' or param =='100 km' or param =="100 /możliwość przeprowadzki":
+            return 100
+        if param == "130km":
+            return 130
+        if param == '60km' or param =='60 km':
+            return 60
+        if param =='Os. Zachód B1D 15':
+            return None
+        if param is None or param == '' or param == '-':
+            return None
+        if param =='250 km maks':
+            return 250
+        if param =="70-100km, w zależności od oferty jestem w stanie rozważyć dalsze wyjazdy lub przeprowadzkę":
+            return 100
+        if param =='100-150km':
+            return 150
+        if param =="Bez różnicy" or param == 'Wszędzie' or param == 'obojętnie' or param == 'Odległość nieokreślona ' or param == 'bez znaczenia' or param =='nie ma znaczenia' or param =='dowolna odległość km':
+            return 500
+        if param == "Internat?":
+            return None
+        if param == "Centrum":
+            return None
+        if param == '100+':
+            return 100
+        if param == '5km':
+            return 5
+        if (param.startswith('50 ') and param.endswith('ie')) or param =='50 km' or param == '50km': #== '50 bądź mieszkać w bursie' or param  =='50 bądź mieszkać w bursie':
+            return 50
+        if param =='Błogosław 8 ' or param == 'Horbaczewskiego 25':
+            return 8
+        if param =='cała polska':
+            return 500
+        if param == "Mölnesjön gatan 35":
+            return None
+        if param == 'O':
+            return 0
         try:
             pram_int = int(param)
             return param_int
@@ -115,6 +248,7 @@ class Command(BaseCommand):
                 return param_int
             except:
                 return None
+
         
     def birth_map(self, param):
         '''
@@ -180,33 +314,48 @@ class Command(BaseCommand):
         role = options['type']
         with open(options['path'], newline='') as csvfile:
             reader = csv.DictReader(csvfile)
-            for row in reader:
+            
+            for i, row in enumerate(reader):
+                # if i < 335:
+                #     continue
+                # print(row['address2'])
+                # continue
                 self.stdout.write(self.style.SUCCESS(pprint.pprint(row)))
                 email = row['wix_id']
+                if email == '':
+                    continue
                 first_name = row['name']
                 last_name = row['surname']
                 initial_password = '123!@#qweQWE'
                 try:
                     user = User.objects.get(email=email)
                 except User.DoesNotExist:
-                    user = User.objects.create_user(
-                        email=email,
-                        first_name=first_name,
-                        last_name=last_name,
-                        password=initial_password,
-                        declared_role=role,
-                    )
-        
+                    try:
+                        user = User.objects.create_user(
+                            email=email.lower(),
+                            first_name=first_name,
+                            last_name=last_name,
+                            password=initial_password,
+                            declared_role=role,
+                        )
+                    except ValueError as e:
+                        print(e , email, first_name, last_name, initial_password)
+                        raise RuntimeError()
+               
                 practice_distance = self.get_param_or_none(row, 'address2')
+                if isinstance(practice_distance, str):
+                    practice_distance = None
+                    
                 phone = self.get_param_or_none(row, 'contact_telephone')
                 card = self.get_param_or_none(row, 'club_card')
                 formation = self.get_param_or_none(row, 'formation')
                 formation_alt = self.get_param_or_none(row, 'alternative_formation')
                 laczynaspilka_url = self.get_param_or_none(row, 'LNP_profile')
+          
                 facebook_url = self.get_param_or_none(row, 'contact_facebook')
                 height = self.get_param_or_none(row, 'high')
                 weight = self.get_param_or_none(row, 'weight')
-                123!@#qweQWE = self.get_param_or_none(row, 'wix_id')
+                wix_id = self.get_param_or_none(row, 'wix_id')
                 prefered_leg = self.get_param_or_none(row, 'foot')
                 birth_date = self.get_param_or_none(row, 'birth')
                 about = self.get_param_or_none(row, 'about_me')
@@ -219,7 +368,7 @@ class Command(BaseCommand):
                 motivation2 = self.get_param_or_none(row, 'motivation2')
                 motivation3 = self.get_param_or_none(row, 'motivation3')
                 motivation_other = self.get_param_or_none(row, 'motivation_other')
-                self.stdout.write(self.style.SUCCESS(f'{user} added.'))
+                self.stdout.write(self.style.SUCCESS(f'{i} {user} added.'))
                 
                 club = self.get_param_or_none(row, 'club')
                 active_pznpn = self.get_param_or_none(row, 'active_PZPN')
@@ -258,6 +407,10 @@ class Command(BaseCommand):
                 profile.country = 'PL'
                 profile.training_ready = self.transfer_status_map(training_ready)
                 profile.practice_distance = self.practice_distance_map(practice_distance)
+                
+                if facebook_url == "https://m.facebook.com/profile.php?id=100015687040622&refid=46&ref=content_filter&__xts__[0]=12.%7B%22browse_result_type%22%3A%22browse_type_user%22%2C%22click_type%22%3A%22result%22%2C%22module_result_position%22%3A0%2C%22module_role%22%3A%22ENTITY_USER%22%2C%22result_id%22%3A100015687040622%2C%22session_id%22%3A%2255713dafe5b6a705fdcec78840e5620b%22%2C%22unit_id%22%3A%22mtouch_bem_res%3A0d224600db7d2aedff02d0043ee08578%22%2C%22unit_id_click_type%22%3A%22graph_search_results_item_in_module_tapped%22%2C%22unit_id_result_id%22%3A100015687040622%7D":
+                    facebook_url = "https://m.facebook.com/profile.php?id=100015687040622"
+                
                 profile.facebook_url = facebook_url
                 profile.phone = self.phone_map(phone)
                 profile.formation = formation
@@ -267,6 +420,8 @@ class Command(BaseCommand):
                 profile.about = about
                 profile.transfer_status = self.transfer_status_map(transfer_status)
                 profile.prefered_leg = self.prefered_leg_map(prefered_leg)
+                if weight == '-':
+                    weight = None
                 profile.weight = weight
                 profile.birth_date = self.birth_map(birth_date)
                 profile.position_raw = self.position_map(position_raw, prefered_leg)
@@ -278,7 +433,7 @@ class Command(BaseCommand):
                     user.verify(silent=True)
                     user.save()
                     # profile.save()
-                self.stdout.write(self.style.SUCCESS(f'{user.profile} updated.'))
+                self.stdout.write(self.style.SUCCESS(f'{i} {user.profile} updated.'))
                 # print(row)
                 
                 

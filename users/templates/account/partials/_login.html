@@ -20,6 +20,14 @@
         <input class="form-control" type="password" name="password" placeholder="Hasło" required="" id="id_password">
     </div>
     
+    {% if form.errors %}
+    <div class="alert alert-danger" role="alert">
+        {% for error, msg in form.errors.items %}
+            {{ msg}}
+        {% endfor %}
+    </div>
+    {% endif %}
+    
     {% if redirect_field_value %}
     <input class="form-control" type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
     {% endif %}

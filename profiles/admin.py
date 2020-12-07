@@ -17,7 +17,7 @@ class PlayerMetricsAdmin(admin.ModelAdmin):
 
 
 class ProfileAdminBase(admin.ModelAdmin):
-    pass
+    search_fields = ['user__first_name', 'user__last_name']
 
 
 @admin.register(models.ParentProfile)
@@ -60,7 +60,7 @@ class RoleChangeRequestAdmin(admin.ModelAdmin):
     list_display = ('pk', 'user', 'approved', 'current', 'new', 'request_date', 'accepted_date')
     list_filter = ('approved',)
     actions = ['approve_requests', ]
-
+    
     def approve_requests(self, request, queryset):
         queryset.update(approved=True)
 

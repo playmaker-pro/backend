@@ -56,11 +56,15 @@ class Club(models.Model):
     def __str__(self):
         return f'{self.name}# '
 
-    club_phone = PhoneNumberField(
+    # club_phone = PhoneNumberField(
+    #     _('Telefon'),
+    #     blank=True,
+    #     null=True)
+    club_phone = models.CharField(
         _('Telefon'),
+        max_length=15,
         blank=True,
         null=True)
-
     club_email = models.EmailField(null=True, blank=True)
 
     stadion_address = AddressField(

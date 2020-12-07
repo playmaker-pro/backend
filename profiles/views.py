@@ -424,8 +424,8 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
         if not profile_form.is_valid() or not user_basic_form.is_valid():
             messages.error(
                 request,
-                _("Wystąpiły błąd podczas wysyłania formularza")
-                # f"Wystąpiły błąd podczas wysyłania formularza" f". {user_form.errors} {profile_form.errors}"
+                #_("Wystąpiły błąd podczas wysyłania formularza")
+                f"Wystąpiły błąd podczas wysyłania formularza" f". {user_basic_form.errors} {profile_form.errors}"
             )
             # user_form = forms.UserForm(instance=user)
             # profile_form = get_profile_form_model(user)(instance=user.profile)

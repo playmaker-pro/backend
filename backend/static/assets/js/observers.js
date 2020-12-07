@@ -103,6 +103,7 @@ function inquiry(event, slug) {
             $('#requestButton').toggleClass("btn-requested")   
             modalHide('inquiryModal');
             showToastMessage(json.message.body);
+            window.setTimeout(location.reload(), 500);
             
         },
         error : function(xhr, errmsg, err) {

@@ -98,6 +98,7 @@ class ClubProfileForm(BaseProfileForm):
 
 
 class CoachProfileForm(BaseProfileForm):
+    # birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for fieldname in ['club_role', 'league', 'team']:
@@ -130,7 +131,7 @@ class CoachProfileForm(BaseProfileForm):
                     Fieldset(
                         _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
                         Div(
-                            Field('phone', placeholder='+48 111 222 333', wrapper_class='row'),
+                            Field('phone', placeholder='+48 111 222 333', wrapper_class='row', css_class='mandatory'),
                             Field('facebook_url', wrapper_class='row'),
                             Field("soccer_goal", wrapper_class='row'),
                             Field("practice_distance", wrapper_class='row'),
@@ -153,6 +154,7 @@ class CoachProfileForm(BaseProfileForm):
 
 
 class PlayerProfileForm(BaseProfileForm):
+    # birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper.layout = Layout(
@@ -166,26 +168,26 @@ class PlayerProfileForm(BaseProfileForm):
             ),
             Fieldset(
                 _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
-                Field('birth_date', wrapper_class='row'),
+                Field('birth_date', wrapper_class='row', css_class='mandatory'),
                 Field('league', wrapper_class='row', readonly=True),
                 # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
                 Field('voivodeship', wrapper_class='row', readonly=True),
                 Field('team', wrapper_class='row', readonly=True),
-                Field('country', wrapper_class='row'),
-                Field("height", wrapper_class='row', placeholder='130 - 210 cm'),
-                Field("weight", wrapper_class='row', placeholder='40 - 140 kg'),
+                Field('country', wrapper_class='row', css_class='mandatory'),
+                Field("height", wrapper_class='row', placeholder='130 - 210 cm', css_class='mandatory'),
+                Field("weight", wrapper_class='row', placeholder='40 - 140 kg', css_class='mandatory'),
                 Field("address", wrapper_class='row'),
                 Field("about", wrapper_class='row'),
                 css_class='col-md-6',
             ),
             Fieldset(
                 _('<h2 class="form-section-title">Piłkarskie szczegóły</h2>'), 
-                Field('position_raw', wrapper_class='row'),
+                Field('position_raw', wrapper_class='row', css_class='mandatory'),
                 Field("position_raw_alt", wrapper_class='row'),
-                Field("formation", wrapper_class='row'),
+                Field("formation", wrapper_class='row', css_class='mandatory'),
                 Field("formation_alt", wrapper_class='row'),
-                Field("prefered_leg", wrapper_class='row'),
-                Field("practice_distance", wrapper_class='row'),
+                Field("prefered_leg", wrapper_class='row', css_class='mandatory'),
+                Field("practice_distance", wrapper_class='row', css_class='mandatory'),
                 css_class='col-md-6',
             ),
 
@@ -198,7 +200,7 @@ class PlayerProfileForm(BaseProfileForm):
             ),
             Fieldset(
                 _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
-                Field('phone', placeholder='+48 111 222 333', wrapper_class='row'),
+                Field('phone', placeholder='+48 111 222 333', wrapper_class='row', css_class='mandatory'),
                 Field('facebook_url', wrapper_class='row'),
                 Field("laczynaspilka_url", wrapper_class='row'),
                 Field("min90_url", wrapper_class='row'),

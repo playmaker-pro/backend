@@ -423,6 +423,7 @@ class PlayerProfile(BaseProfile):
     club = models.CharField(
         _('Klub'),
         max_length=68,
+        db_index=True,
         help_text=_('Klub w którym obecnie reprezentuejsz'),
         blank=True,
         null=True,)
@@ -436,6 +437,7 @@ class PlayerProfile(BaseProfile):
 
     team = models.CharField(
         _('Drużyna'),
+        db_index=True,
         max_length=68,
         help_text=_('Drużyna w której obecnie grasz'),
         blank=True,
@@ -451,6 +453,7 @@ class PlayerProfile(BaseProfile):
     league = models.CharField(
         _('Rozgrywki'),
         max_length=68,
+        db_index=True,
         help_text=_('Poziom rozgrywkowy'),
         blank=True,
         null=True)
@@ -466,6 +469,7 @@ class PlayerProfile(BaseProfile):
         _('Wojewódźtwo'),
         help_text=_('Wojewódźtwo'),
         max_length=68,
+        db_index=True,
         blank=True,
         null=True)
 
@@ -503,6 +507,7 @@ class PlayerProfile(BaseProfile):
 
     position_raw = models.IntegerField(
         _('Pozycja'),
+        db_index=True,
         choices=make_choices(POSITION_CHOICES),
         blank=True,
         null=True)
@@ -562,24 +567,33 @@ class PlayerProfile(BaseProfile):
         null=True,
         blank=True)
 
-    phone = PhoneNumberField(
+    # phone = PhoneNumberField(
+    #     _('Telefon'),
+    #     region='PL',
+    #     blank=True,
+    #     null=True)
+
+    phone = models.CharField(
         _('Telefon'),
-        region='PL',
+        max_length=15,
         blank=True,
         null=True)
 
     facebook_url = models.URLField(
         _('Facebook'),
+        max_length=500,
         blank=True,
         null=True)
 
     laczynaspilka_url = models.URLField(
         _('LNP'),
+        max_length=500,
         blank=True,
         null=True)
 
     min90_url = models.URLField(
         _('90min portal'),
+        max_length=500,
         blank=True,
         null=True)
 
@@ -621,7 +635,14 @@ class PlayerProfile(BaseProfile):
 
     agent_status = models.IntegerField(_('Czy Agent'), choices=make_choices(AGENT_STATUS_CHOICES), blank=True, null=True)
     agent_name = models.CharField(_('Imię i nazwisko agenta / Nazwa agencji'), max_length=45, choices=make_choices(AGENT_STATUS_CHOICES), blank=True, null=True)
-    agent_phone = PhoneNumberField(_('Numer telefonu do agenta / agencji'), region='PL', blank=True, null=True)
+    # agent_phone = PhoneNumberField(_('Numer telefonu do agenta / agencji'), region='PL', blank=True, null=True)
+    
+    agent_phone = models.CharField(
+        _('Numer telefonu do agenta / agencji'),
+        max_length=15,
+        blank=True,
+        null=True)
+    
     agent_name = models.BooleanField(_('Otwarty na propozycje zagraniczne'), blank=True, null=True)
 
     video_url = models.URLField(
@@ -815,9 +836,15 @@ class ClubProfile(BaseProfile):
         'club_role',
     ]
 
-    phone = PhoneNumberField(
+    # phone = PhoneNumberField(
+    #     _('Telefon'),
+    #     region='PL',
+    #     blank=True,
+    #     null=True)
+
+    phone = models.CharField(
         _('Telefon'),
-        region='PL',
+        max_length=15,
         blank=True,
         null=True)
 
@@ -1040,13 +1067,19 @@ class CoachProfile(BaseProfile):
         # max_length=60,
         null=True,
         blank=True)
-    phone = PhoneNumberField(
+    # phone = PhoneNumberField(
+    #     _('Telefon'),
+    #     region='PL',
+    #     blank=True,
+    #     null=True)
+    phone = models.CharField(
         _('Telefon'),
-        region='PL',
+        max_length=15,
         blank=True,
         null=True)
     facebook_url = models.URLField(
         _('Facebook'),
+        max_length=500,
         blank=True,
         null=True)
     country = CountryField(
@@ -1099,6 +1132,7 @@ class GuestProfile(BaseProfile):   # @todo to be removed
     AUTO_VERIFY = True
     facebook_url = models.URLField(
         _('Facebook'),
+        max_length=500,
         blank=True,
         null=True)
 
@@ -1112,6 +1146,7 @@ class ManagerProfile(BaseProfile):
     AUTO_VERIFY = True
     facebook_url = models.URLField(
         _('Facebook'),
+        max_length=500,
         blank=True,
         null=True)
 
@@ -1125,6 +1160,7 @@ class ParentProfile(BaseProfile):
     AUTO_VERIFY = True
     facebook_url = models.URLField(
         _('Facebook'),
+        max_length=500,
         blank=True,
         null=True)
 
@@ -1170,6 +1206,7 @@ class ScoutProfile(BaseProfile):
         blank_label=_('Wybierz kraj'),)
     facebook_url = models.URLField(
         _('Facebook'),
+        max_length=500,
         blank=True,
         null=True)
 
