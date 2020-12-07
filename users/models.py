@@ -9,6 +9,7 @@ from django_fsm import FSMField, transition
 from notifications.mail import mail_user_waiting_for_verification
 from django.urls import reverse
 from roles import definitions
+from notifications.mail import verification_notification
 
 
 class CustomUserManager(BaseUserManager):
@@ -141,6 +142,8 @@ class User(AbstractUser, UserRoleMixin):
         example:
             extra['reason'] = 'User removed field1'
         '''
+        if not silent:
+            verification_notification(self)
 
     @transition(field=state, source='*', target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION_DATA)
     def missing_verification_data(self, silent: bool = False,  extra: dict = None):

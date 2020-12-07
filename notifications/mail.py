@@ -1,5 +1,56 @@
-from django.core.mail import mail_managers
+from django.core.mail import mail_managers, send_mail
 from django.conf import settings
+from django.urls import reverse
+
+
+def request_new(instance, extra_body=''):
+    ''' inquiry request instance'''
+
+    if instance.sender.is_player:
+        from_who = 'piłkarza'
+    elif instance.sender.is_coach:
+        from_who = 'trenera'
+    elif instance.sender.is_club:
+        from_who = 'klubu'
+    else:
+        from_who = ''
+
+    if (instance.sender.is_coach or instance.sender.is_club) and instance.recipient.is_player:
+        subject = f"Otrzymałeś zaproszenie od {from_who}"
+        body = 'Witaj,\n'
+        body += 'Gratulujemy! Otrzymałeś zaproszenie na testy!\n\n'
+        body += 'Odwiedź swój profil na PlayMaker.pro lub kliknij w poniższy link \n\n'
+        body += f'{reverse("profiles:my_requests")}\n\n'
+        body += 'Nie zwlekaj i zobacz, kto chce się z Tobą skontaktować!\n\n'
+        body += 'Do zobaczenia na PlayMaker.pro!\n'
+        body += 'Zespół PlayMaker.pro'
+    elif instance.sender.is_player and (instance.recipient.is_club or instance.recipient.is_coach):
+        subject = f"Otrzymałeś zapytanie o testy od {from_who}"
+        body = 'Witaj,\n'
+        body += 'Zawodnik wysłał zapytanie o testy w Twoim klubie! \n\n'
+        body += 'Odwiedź swój klubowy profil na PlayMaker.pro lub kliknij w poniższy link \n\n'
+        body += f'{reverse("profiles:my_requests")}\n\n'
+        body += 'Nie zwlekaj i sprawdź profil zawodnika, który może okazać się potencjalnym wzmocnieniem Twojej kadry!\n\n'
+        body += 'Pozdrawiamy\n'
+        body += 'Zespół PlayMaker.pro'
+
+    send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [instance.recipient.email], fail_silently=True)
+
+
+def verification_notification(instance, extra_body=''):
+
+    subject = 'Twój profil został zweryfikowany'
+    message = ''
+    message += 'Cześć, z tej strony Zespół PlayMaker.pro!\n\n'
+    message += 'Otrzymaliśmy powiadomienie, że chcesz zaktualizować hasło swojego konta.\n\n'
+    message += 'W celu dokończenia zmian, prosimy kliknąć w poniższy link:\n\n'
+    message += f'{instance.get_permalink()}\n\n'
+    message += 'Uwaga: Jeśli wiadomość nie dotyczy Twojego konta, zignoruj ją! \n\n'
+    message += 'W przypadku pytań prosimy o kontakt.\n\n'
+    message += 'Do zobaczenia na PlayMaker.pro!\n'
+    message += 'Zespół PlayMaker.pro\n'
+
+    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [instance.email], fail_silently=True)
 
 
 def mail_role_change_request(instance, extra_body=''):

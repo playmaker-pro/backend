@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 # Create your models here.
 from django.conf import settings
 from django_fsm import FSMField, transition
-
+from notifications.mail import request_new
 # This can be extracted to models.User.
 
 # class DefaultPlan(models.Model):
@@ -186,8 +186,17 @@ class InquiryRequest(models.Model):
         return f'{self.sender} --({self.status})-> {self.recipient}'
 
     def save(self, *args, **kwargs):
+        flag = None
+
+        if self.status is None:
+            flag = True
+
         self.body = ContactBodySnippet.generate(self.sender)
         super().save(*args, **kwargs)
+
+        if self.status is not None and flag:
+            
+            request_new(self)
 
 
 class ContactBodySnippet:
