@@ -169,6 +169,7 @@ class InquiryRequest(models.Model):
     @transition(field=status, source=[STATUS_NEW], target=STATUS_SENT)
     def send(self):
         '''Should be appeared when message was distributed to recipient'''
+        request_new(self)
 
     @transition(field=status, source=[STATUS_SENT], target=STATUS_RECEIVED)
     def read(self):
@@ -186,17 +187,14 @@ class InquiryRequest(models.Model):
         return f'{self.sender} --({self.status})-> {self.recipient}'
 
     def save(self, *args, **kwargs):
-        flag = None
 
-        if self.status is None:
-            flag = True
 
         self.body = ContactBodySnippet.generate(self.sender)
-        super().save(*args, **kwargs)
-
-        if self.status is not None and flag:
+        
+        if self.status == self.STATUS_NEW:
+            self.send()
             
-            request_new(self)
+        super().save(*args, **kwargs)
 
 
 class ContactBodySnippet:

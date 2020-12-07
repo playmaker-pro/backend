@@ -7,6 +7,13 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 
 
+
+def verify_one(modeladmin, request, queryset):
+    f = queryset.first()
+    f.verify()
+    f.save()
+
+
 @admin.register(models.User)
 class UserAdminPanel(UserAdmin):
     fieldsets = (
@@ -27,7 +34,9 @@ class UserAdminPanel(UserAdmin):
     list_display = ('username', 'first_name', 'last_name', 'state', 'is_active', 'get_profile', 'get_profile_permalink', linkify('profile'), 'get_profile_percentage', 'declared_role')
     list_filter = ('state', 'declared_role')
     search_fields = ('username', 'first_name', 'last_name', 'declared_role')
-
+    
+    actions = [verify_one]
+    
     def get_profile_percentage(self, obj):
         percentage = obj.profile.percentage_completion
         return format_html(

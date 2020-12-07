@@ -34,7 +34,7 @@ def request_new(instance, extra_body=''):
         body += 'Pozdrawiamy\n'
         body += 'Zespół PlayMaker.pro'
 
-    send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [instance.recipient.email], fail_silently=True)
+    send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [instance.recipient.email])
 
 
 def verification_notification(instance, extra_body=''):
