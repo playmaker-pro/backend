@@ -270,10 +270,19 @@ class User(AbstractUser, UserRoleMixin):
         return self.email
 
     def save(self, *args, **kwargs):
+        
+        state_before = self.state
+        
         if self.role in [definitions.GUEST_SHORT, definitions.SCOUT_SHORT, definitions.PARENT_SHORT, definitions.MANAGER_SHORT]:
             if self.state != self.STATE_ACCOUNT_VERIFIED:
                 self.state = self.STATE_ACCOUNT_VERIFIED
         super().save(*args, **kwargs)
+
+        state_after = self.state
+       
+        if state_before != self.STATE_ACCOUNT_VERIFIED and state_after == self.STATE_ACCOUNT_VERIFIED:
+            verification_notification(self)
+ 
 
     class Meta:
         verbose_name = "User"
