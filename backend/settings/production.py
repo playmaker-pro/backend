@@ -2,7 +2,20 @@ from .base import *  # noqa
 
 DEBUG = False
 
-BASE_URL = 'http://suumyx.usermd.net'
+BASE_URL = 'https://playmaker.pro'
+
+
+MANAGERS = [
+    ('Rafal', 'rafal.kesik@gmail.com'), 
+    ('Jacek', 'jjasinski.playmaker@gmail.com')]
+
+
+ADMINS = MANAGERS
+
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'public', 'static')
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'public', 'media')
 
 
 try:
