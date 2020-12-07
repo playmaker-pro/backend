@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'django_fsm',
     'phonenumber_field',
     'address',
+    'compressor',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -211,13 +212,14 @@ USE_L10N = True
 
 USE_TZ = True
 
-
+COMPRESS_ENABLED = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'compressor.finders.CompressorFinder',
 ]
 
 STATICFILES_DIRS = [

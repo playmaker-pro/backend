@@ -1,5 +1,6 @@
 {% load static %}
 {% load wagtailcore_tags %}
+{% load compress %}
 <!DOCTYPE html>
 <html lang="en">
 {% spaceless %}
@@ -28,12 +29,14 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.gstatic.com"> 
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=PT+Sans&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@200&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Asap&display=swap" rel="stylesheet">
+  {% comment %} <link href="https://fonts.googleapis.com/css2?family=PT+Sans&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@200&display=swap" rel="stylesheet"> {% endcomment %}
+  {% comment %} <link href="https://fonts.googleapis.com/css2?family=Asap&display=swap" rel="stylesheet"> {% endcomment %}
   <link href="https://fonts.googleapis.com/css2?family=Asap&family=Roboto&display=swap" rel="stylesheet">
   <!-- Vendor CSS Files -->
 
+  
+  {% compress css %}
   <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
   <link href="{% static 'assets/vendor/icofont/icofont.min.css' %}" rel="stylesheet">
   <link href="{% static 'assets/vendor/boxicons/css/boxicons.min.css' %}" rel="stylesheet">
@@ -41,10 +44,13 @@
   <link href="{% static 'assets/vendor/remixicon/remixicon.css' %}" rel="stylesheet">
   <link href="{% static 'assets/vendor/venobox/venobox.css' %}" rel="stylesheet">
   <link href="{% static 'assets/vendor/aos/aos.css' %}" rel="stylesheet">
-
+  
   <!-- Template Main CSS File -->
   <link href="{% static 'assets/css/style.css' %}" rel="stylesheet">
   <link href="{% static 'assets/css/loading.css' %}" rel="stylesheet">
+  {% endcompress %}
+
+  
   {% block extra_css %}
       {# Override this in templates to add extra stylesheets #}
   {% endblock extra_css %}
@@ -126,6 +132,8 @@ onReady(function() {
   <a href="#" class="back-to-top"><i class="icofont-simple-up"></i></a>
   
   {# Global javascript #}
+
+  {% compress js %}
   <!-- Vendor JS Files -->
   <script src="{% static 'assets/vendor/jquery/jquery.min.js' %}"></script>
 
@@ -141,7 +149,7 @@ onReady(function() {
 
   <!-- Template Main JS File -->
   <script src="{% static 'assets/js/main.js' %}"></script>
-
+  {% endcompress %}
 
 <script>
 

@@ -12,7 +12,7 @@ MANAGERS = [
 
 ADMINS = MANAGERS
 
-
+COMPRESS_OFFLINE = True
 STATIC_ROOT = os.path.join(BASE_DIR, 'public', 'static')
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'public', 'media')

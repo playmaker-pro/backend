@@ -16,3 +16,4 @@ django_phonenumbers
 django-phonenumber-field==5.0.0
 django-address==0.2.5
 djangorestframework==3.12.1
+django_compressor==2.4
