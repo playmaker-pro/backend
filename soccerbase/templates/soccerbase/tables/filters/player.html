@@ -1,26 +1,26 @@
 {% load i18n %}
 {% load thumbnail %}
 {% load playmaker %}
-  <div id="table-filters" class="table-filters">
+  <div id="table-filters" style="background-color:#2b2b2b;" class="d-none d-md-inline table-filters">
     <div class="container-fluid">
       
-            <form id="filter-form" method="get" class="form-inline row no-gutters">
+            <form id="filter-form" method="get" class="form-inline row ">
            
                     <div class="col-2 col-md-1 filter-button"> 
                         <button class="btn-pm" type="submit" value="{% trans 'Filtruj' %}">{% trans 'Filtruj' %}</button>
                     </div>
                     <div class="col-4 col-md-1 filter "> 
-                        {% include 'soccerbase/tables/filters/filter_first_last_name.html' %}
+                        {% include 'soccerbase/tables/filters/filter_first_last_name.html' with size=100  %}
                     </div>
                     
                     <div class="col-4 col-md-1 filter "> 
-                        {% include 'soccerbase/tables/filters/ms_league.html' %}
+                        {% include 'soccerbase/tables/filters/ms_league.html' with size=120 %}
                     </div>
                     <div class="col-4 col-md-1 filter ml-1"> 
-                        {% include 'soccerbase/tables/filters/ms_vivo.html' %}
+                        {% include 'soccerbase/tables/filters/ms_vivo.html'  with size=120  %}
                     </div>
                     <div class="col-4 col-md-1 filter ml-1"> 
-                            <select name="position" data-width="120px" class="form-control" title="pozycja">
+                            <select name="position" class="form-control selectpicker" title="pozycja">
                                 <option value="----">----</option>
                                 <option {% if request.GET.position == 'Bramkarz' %} selected {% endif %}value="Bramkarz">Bramkarz</option>
                                 <option {% if request.GET.position == 'Obrońca Lewy' %} selected {% endif %}value="Obrońca Lewy">Obrońca Lewy</option>
@@ -34,7 +34,7 @@
                             </select>
                     </div>   
                       <div class="col-4  col-md-1 filter ml-1"> 
-                            <select name="leg"  data-width="120px" class="form-control selectpicker" title="noga">
+                            <select name="leg"   class="form-control selectpicker" title="noga">
 
                                 <option value="----">----</option>
                                 <option {% if request.GET.leg == 'prawa' %} selected {% endif %} value="prawa">prawa</option>
@@ -42,24 +42,27 @@
 
                             </select>
                     </div>
-                    <div class="col-4  col-md-1 filter ml-1"> 
-                        <input class="form-control" type="number" value="{{ request.GET.age_min }}" name="age_min" placeholder="wiek od">
+                    <div class="col-1 filter"> 
+                        <input style="width:100px;" type="number" value="{{ request.GET.age_min }}" name="age_min" placeholder="wiek od">
                     </div>
-                    <div class="col-4  col-md-1 filter ml-1" width="100"> 
-                        <input class="form-control" type="number" value="{{ request.GET.age_max }}" name="age_max" placeholder="wiek do">
+                    <div class="col-1 filter"> 
+                        <input style="width:100px;" width="50px" type="number" value="{{ request.GET.age_max }}" name="age_max" placeholder="wiek do">
                     </div>
- 
-
-                
             </form>
-        
-  
+     </div>
+</div>
 
+
+
+<div style="background-color:#2b2b2b;"id="table-filterss" class="p-4 d-md-none fixed-bottom">
+    <div class="container-fluid text-center">
+     
+        <button type="button" class="btn-pm" data-toggle="modal" data-target="#filterModal">
+        Filtruj wyniki
+        </button>
 
      </div>
-
-
-
-
 </div>
+
+
 
