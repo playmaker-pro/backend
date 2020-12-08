@@ -17,7 +17,7 @@ from stats.adapters import PlayerAdapter
 from .utils import make_choices
 from .utils import unique_slugify
 import utils as utilites
-from .utils import get_current_season
+from .utils import get_current_season, conver_vivo_for_api
 
 
 User = get_user_model()
@@ -417,8 +417,8 @@ class PlayerProfile(BaseProfile):
     @property
     def display_voivodeship(self):
         if self.voivodeship_raw is not None or self.voivodeship_raw != '':
-            self.voivodeship_raw
-        return self.voivodeship
+            return conver_vivo_for_api(self.voivodeship_raw)
+        return conver_vivo_for_api(self.voivodeship)
 
     club = models.CharField(
         _('Klub'),
@@ -636,13 +636,13 @@ class PlayerProfile(BaseProfile):
     agent_status = models.IntegerField(_('Czy Agent'), choices=make_choices(AGENT_STATUS_CHOICES), blank=True, null=True)
     agent_name = models.CharField(_('Imię i nazwisko agenta / Nazwa agencji'), max_length=45, choices=make_choices(AGENT_STATUS_CHOICES), blank=True, null=True)
     # agent_phone = PhoneNumberField(_('Numer telefonu do agenta / agencji'), region='PL', blank=True, null=True)
-    
+
     agent_phone = models.CharField(
         _('Numer telefonu do agenta / agencji'),
         max_length=15,
         blank=True,
         null=True)
-    
+
     agent_name = models.BooleanField(_('Otwarty na propozycje zagraniczne'), blank=True, null=True)
 
     video_url = models.URLField(

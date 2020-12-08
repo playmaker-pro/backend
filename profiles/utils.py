@@ -12,6 +12,15 @@ from stats import adapters
 from roles import definitions
 
 
+def conver_vivo_for_api(zpn):
+    if zpn is None:
+        return None
+    if '/' in zpn:
+        return None
+    else:
+        return zpn
+
+
 def calculate_age_from_date(date):
     if date:
         now = timezone.now()

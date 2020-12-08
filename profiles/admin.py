@@ -13,7 +13,7 @@ class ProfileVisitHistoryAdmin(admin.ModelAdmin):
 
 @admin.register(models.PlayerMetrics)
 class PlayerMetricsAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['player', 'games_updated', 'games_summary_updated', 'fantasy_updated', 'fantasy_summary_updated', 'season_updated', 'season_summary_updated']
 
 
 class ProfileAdminBase(admin.ModelAdmin):

@@ -6,9 +6,9 @@
 <span class="pull-left text-muted"><strong>Grupa:</strong></span> {{ show_user.profile.group }}
 </li>
 {% endif %}
-{% if show_user.voivodeship_raw %}
+{% if show_user.display_voivodeship %}
 <li class="list-group-item text-left border-0">
-<span class="pull-left text-muted"><strong>Wojewódzctwo:</strong></span> {{ show_user.profile.voivodeship_raw }}
+<span class="pull-left text-muted"><strong>Wojewódzctwo:</strong></span> {{ show_user.profile.display_voivodeship }}
 </li>
 {% endif %}
 <li class="list-group-item text-left border-0">

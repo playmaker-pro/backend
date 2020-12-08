@@ -29,7 +29,7 @@
             {{ object.voivodeship|default:'-'|upper  }}
         </div> {% endcomment %}
         <div class="col-3 col-md-1"> 
-            {{ object.voivodeship|default:'-'|upper|truncatechars:10 }}
+            {{ object.display_voivodeship|default:'-'|upper|truncatechars:10 }}
         </div>
 
         <div class="col-3 col-md-1">

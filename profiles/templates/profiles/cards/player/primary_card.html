@@ -13,7 +13,7 @@
          {% include template with key=_('Obecna drużyna')     value=profile.team|default:'-'|upper           %}
          {% include template with key=_('Poziom rozgrywkowy') value=profile.league|default:'-'|upper         %}
          {% include template with key=_('Grupa')              value=profile.group|default:'-'|upper              %}
-         {% include template with key=_('Wojewódzctwo')       value=profile.voivodeship|default:'-'|upper    %}
+         {% include template with key=_('Wojewódzctwo')       value=profile.display_voivodeship|default:'-'|upper    %}
          {% include template with key=_('Wzrost/Waga')        value=profile.height|default:'-' value_suffix='cm' separator='/' value2=profile.weight|default:'-' value2_suffix='kg'%}
          {% include template with key=_('Status transferowy') value=profile.get_transfer_status_display|default:'-'  %}
          {% include template with key=_('Karta')              value=profile.get_card_display|default:'-' %}
