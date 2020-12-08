@@ -9,7 +9,9 @@
                     <div class="col-2 col-md-1 filter-button"> 
                         <button class="btn-pm" type="submit" value="{% trans 'Filtruj' %}">{% trans 'Filtruj' %}</button>
                     </div>
-
+                    <div class="col-4 col-md-1 filter "> 
+                        {% include 'soccerbase/tables/filters/filter_first_last_name.html' %}
+                    </div>
                     
                     <div class="col-4 col-md-1 filter "> 
                         {% include 'soccerbase/tables/filters/ms_league.html' %}

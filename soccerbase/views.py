@@ -80,6 +80,10 @@ class PlayersTable(TableView):
         value = self.request.GET.get('age_min')
         if value:
             return int(value)
+    @property
+    def filter_first_last(self):
+        value = self.request.GET.get('first_last')
+        return value
 
     @property
     def filter_age_range(self):
@@ -141,7 +145,10 @@ class PlayersTable(TableView):
 
         if self.filter_league is not None:
             queryset = queryset.filter(playerprofile__league__in=self.filter_league)
-            
+
+        if self.filter_first_last is not None:
+            queryset = queryset.filter(Q(first_name__icontains=self.filter_first_last) | Q(last_name__icontains=self.filter_first_last))
+
         if self.filter_vivo is not None:
             vivo = [i[:-1].upper() for i in self.filter_vivo]
             # queryset = queryset.filter(playerprofile__voivodeship__in=vivo)
