@@ -43,7 +43,7 @@ class Command(BaseCommand):
             return 2
         elif param.lower() == 'obrońca boczny' and leg == 'Prawa':
             return 3
-        elif param.lower() == 'brońca - wahadłowy' and leg == 'Prawa':
+        elif param.lower() == 'obrońca - wahadłowy' and leg == 'Prawa':
             return 3
         elif param.lower() == 'obrońca - środkowy':
             return 4
@@ -59,6 +59,8 @@ class Command(BaseCommand):
             return 8
         elif param.lower() == 'npastnik':
             return 9
+        elif param.lower() == 'obrońca - wahadłowy':
+            return 3
         else:
             return None
 
