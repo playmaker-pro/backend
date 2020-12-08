@@ -37,6 +37,22 @@ def request_new(instance, extra_body=''):
     send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [instance.recipient.email])
 
 
+def resetpassword(instance, extra_body=''):
+
+    subject = 'Twój profil został zweryfikowany'
+    message = ''
+    message += 'Cześć, z tej strony Zespół PlayMaker.pro!\n\n'
+    message += ''
+    message += 'Przejdź do platformy i bądź znaleziony w świecie piłki nożnej:\n\n'
+    message += f'https://playmaker.pro{instance.profile.get_permalink()}\n\n'
+    message += ''
+    message += ''
+    message += 'Do zobaczenia na PlayMaker.pro!\n'
+    message += 'Zespół PlayMaker.pro\n'
+
+    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [instance.email], fail_silently=True)
+
+
 def verification_notification(instance, extra_body=''):
 
     subject = 'Twój profil został zweryfikowany'

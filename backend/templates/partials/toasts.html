@@ -12,9 +12,9 @@
   </div>
 {% endfor %}
 </div-->
-{% for message in messages %}
+{% comment %} {% for message in messages %}
     <!-- Then put toasts-messages -->
     {% include 'partials/_toast.html' with message=message %}
-{% endfor %}
+{% endfor %} {% endcomment %}
   </div>
 </div>

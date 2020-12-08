@@ -25,15 +25,16 @@ def send_mass():
 from django.core.mail import send_mass_mail
 
 
-def send_mass_basic():
+def send_mass_basic(emails=None):
     msgs = []
-
-    for i in ['jacek.jasinski8@gmail.com', 'jjasinski.playmaker@gmail.com', 'rafal.kesik@gmail.com']:
+    if not emails:
+        emails = ['jacek.jasinski8@gmail.com', 'jjasinski.playmaker@gmail.com', 'rafal.kesik@gmail.com']
+    for i in emails:
         
         message = ('PlayMaker.pro nowa platforma',
-                   f'Witaj, \n\n Dziękujemy za dołączenie do społęczności PlayMaker.pro\n Przenieśliśmy Twoje konto na zupełnie nową platformę. Wejdź i sprawdź nowe możliwości klikając w link. https://playmaker.pro/password/reset/?email={i} \n\n\n Pozdrawiamy zespół PlayMaker.pro',
+                   f'Witaj, \n\n Dziękujemy za dołączenie do społeczności PlayMaker.pro\n\n Przenieśliśmy Twoje konto na zupełnie nową platformę. Wejdź i sprawdź nowe możliwości klikając w poniższy link. \n\n https://playmaker.pro/password/reset/?email={i} \n\n\n Pozdrawiamy zespół PlayMaker.pro',
                    
-                   'powiadomienia@playmaker.pro', [i])
+                   'playmaker.pro@playmaker.pro', [i])
         msgs.append(message)
 
     send_mass_mail(msgs, fail_silently=False)
