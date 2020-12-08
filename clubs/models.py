@@ -46,6 +46,61 @@ class Club(models.Model):
         max_length=255,
         help_text='Displayed Name of club')
 
+    club = models.CharField(
+        _('Klub'),
+        max_length=255,
+        help_text=_('Klub w którym obecnie reprezentuejsz'),
+        blank=True,
+        null=True,)
+
+    club_raw = models.CharField(
+        _('Deklarowany Klub'),
+        max_length=255,
+        help_text=_('Klub w którym deklarujesz że obecnie reprezentuejsz'),
+        blank=True,
+        null=True,)
+
+    team = models.CharField(
+        _('Drużyna'),
+        max_length=255,
+        help_text=_('Drużyna w której obecnie grasz'),
+        blank=True,
+        null=True)
+    team_raw = models.CharField(
+        _('Deklarowana Drużyna'),
+        max_length=255,
+        help_text=_('Drużyna w której deklarujesz że obecnie grasz'),
+        blank=True,
+        null=True)
+
+    league = models.CharField(
+        _('Rozgrywki'),
+        max_length=255,
+        help_text=_('Poziom rozgrywkowy'),
+        blank=True,
+        null=True)
+
+    league_raw = models.CharField(
+        _('Rozgrywki'),
+        max_length=255,
+        help_text=_('Poziom rozgrywkowy który deklarujesz że grasz.'),
+        blank=True,
+        null=True)
+
+    voivodeship = models.CharField(
+        _('Wojewódźtwo'),
+        help_text=_('Wojewódźtwo'),
+        max_length=255,
+        blank=True,
+        null=True)
+
+    voivodeship_raw = models.CharField(
+        _('Wojewódźtwo'),
+        help_text=_('Wojewódźtwo w którym grasz.'),
+        max_length=255,
+        blank=True,
+        null=True)
+
     def get_permalink(self):
         return reverse("clubs:show_club", kwargs={"slug": self.slug})
 

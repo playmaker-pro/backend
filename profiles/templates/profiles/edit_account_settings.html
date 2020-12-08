@@ -32,7 +32,21 @@
               <h2 class='form-section-title'>{% trans 'Ustawienia konta' %}</h2>
           </div>
         </div>
-
+        {% if user.is_player or user.is_coach or user.is_club  %}
+        <div class="row p-3 mb-4">
+          <div class="col-sm-3"> 
+            <i class="ri-check-double-line"></i> 
+            {% if user.is_player  %}
+            Możesz wysłać <strong>{{ user.userinquiry.left }}</strong> zapytań o testy do 30.06.2021. 
+            {% elif user.is_coach or user.is_club %}
+            Możesz wysłać <strong>{{ user.userinquiry.left }}</strong> zaproszeń na testy do 30.06.2021.
+            {% endif %}
+          </div>
+          <div class="col-sm-6">
+            <a class="btn-pm btn-pm-sm" href="https://playmaker.pro/limit/">zwiększ limit</a>
+          </div> 
+        </div>
+        {% endif %}
         <div class="row p-3 mb-4">
           <div class="col-sm-3"> 
             <i class="ri-check-double-line"></i> {% trans 'Połącz konta społecznościowe. Dzięki temu będziesz mogł logować się za pomocą nich' %}
@@ -41,7 +55,7 @@
             <a class="btn-pm btn-pm-sm" href="{% url 'socialaccount_connections' %}">{% trans 'Połącz konta'%}</a>
           </div> 
         </div>
- 
+
         <div class="row p-3 mb-4">
           <div class="col-sm-3">
             <span class=""><i class="ri-check-double-line"></i> {% trans 'Ustaw nowe hasło' %}</span>

@@ -273,7 +273,33 @@ class TrainerContact(models.Model):
     phone = PhoneNumberField(_('Telefon'), region='PL', blank=True, null=True)
 
 
-class PlayerProfile(BaseProfile):
+class SoccerDisplayMixin:
+    @property
+    def display_club(self):
+        if self.club_raw:
+            return self.club_raw
+        return self.club
+
+    @property
+    def display_team(self):
+        if self.team_raw:
+            return self.team_raw
+        return self.team
+
+    @property
+    def display_league(self):
+        if self.league_raw:
+            return self.league_raw
+        return self.league
+
+    @property
+    def display_voivodeship(self):
+        if self.voivodeship_raw:
+            return conver_vivo_for_api(self.voivodeship_raw)
+        return conver_vivo_for_api(self.voivodeship)
+
+
+class PlayerProfile(BaseProfile, SoccerDisplayMixin):
     '''Player specific profile'''
     PROFILE_TYPE = definitions.PROFILE_TYPE_PLAYER
 
@@ -396,29 +422,7 @@ class PlayerProfile(BaseProfile):
         blank=True,
         null=True,)
 
-    @property
-    def display_club(self):
-        if self.club_raw is not None or self.club_raw != '':
-            return self.club_raw
-        return self.club
 
-    @property
-    def display_team(self):
-        if self.team_raw is not None or self.team_raw != '':
-            return self.team_raw
-        return self.team
-
-    @property
-    def display_league(self):
-        if self.league_raw is not None or self.league_raw != '':
-            return self.league_raw
-        return self.league
-
-    @property
-    def display_voivodeship(self):
-        if self.voivodeship_raw:
-            return conver_vivo_for_api(self.voivodeship_raw)
-        return conver_vivo_for_api(self.voivodeship)
 
     club = models.CharField(
         _('Klub'),
@@ -821,7 +825,7 @@ class PlayerMetrics(models.Model):
         verbose_name_plural = _("Metryki graczy")
 
 
-class ClubProfile(BaseProfile):
+class ClubProfile(BaseProfile, SoccerDisplayMixin):
     PROFILE_TYPE = definitions.PROFILE_TYPE_CLUB
 
     CLUB_ROLE = (
@@ -854,30 +858,6 @@ class ClubProfile(BaseProfile):
         help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'),
         blank=True,
         null=True,)
-
-    @property
-    def display_club(self):
-        if self.club_raw:
-            return self.club_raw
-        return self.club
-
-    @property
-    def display_team(self):
-        if self.team_raw:
-            return self.team_raw
-        return self.team
-
-    @property
-    def display_league(self):
-        if self.league_raw:
-            return self.league_raw
-        return self.league
-
-    @property
-    def display_voivodeship(self):
-        if self.voivodeship_raw:
-            return conver_vivo_for_api(self.voivodeship_raw)
-        return conver_vivo_for_api(self.voivodeship)
 
     club = models.CharField(
         _('Klub'),
@@ -945,7 +925,7 @@ class ClubProfile(BaseProfile):
         verbose_name_plural = "Club Profiles"
 
 
-class CoachProfile(BaseProfile):
+class CoachProfile(BaseProfile, SoccerDisplayMixin):
     PROFILE_TYPE = definitions.PROFILE_TYPE_COACH
 
     COMPLETE_FIELDS = ['phone']
@@ -979,36 +959,13 @@ class CoachProfile(BaseProfile):
         blank=True,
         null=True,)
 
-    @property
-    def display_club(self):
-        if self.club_raw:
-            return self.club_raw
-        return self.club
-
-    @property
-    def display_team(self):
-        if self.team_raw:
-            return self.team_raw
-        return self.team
-
-    @property
-    def display_league(self):
-        if self.league_raw:
-            return self.league_raw
-        return self.league
-
-    @property
-    def display_voivodeship(self):
-        if self.voivodeship_raw:
-            return conver_vivo_for_api(self.voivodeship_raw)
-        return conver_vivo_for_api(self.voivodeship)
-
     club = models.CharField(
         _('Klub'),
         max_length=68,
         help_text=_('Klub w którym obecnie reprezentuejsz'),
         blank=True,
         null=True,)
+
     club_raw = models.CharField(
         _('Deklarowany Klub'),
         max_length=68,

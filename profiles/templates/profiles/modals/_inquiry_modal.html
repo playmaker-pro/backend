@@ -1,11 +1,11 @@
 {% load i18n %}
 {% load playmaker %}
-{% with id="inquiryModal" title='Ilosc zapytań' %}
+{% with id="inquiryModal" title='Czy na pewno chcesz wysłać' %}
   <div class="modal fade" id="{{ id }}" tabindex="-1" role="dialog" aria-labelledby="{{ id }}Label" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="{{ id }}Label">{{ title }}</h5>
+          <h5 class="modal-title" id="{{ id }}Label">{{ title }}{% if user.is_coach or user.is_club %} zaproszenie?{% else %} zapytanie? {% endif %}</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true"><i class="icofont-close-circled main-color"></i></span>
           </button>
@@ -19,7 +19,9 @@
           Pozostało Ci jeszcze <strong class="btn-pm btn-pm-sm">{{user.userinquiry.left}}</strong> możliwych zapytań do wykorzystania.
 
         {% endif %}
-        <br> Jeśli jesteś zainteresowaniem rozszerzeniem pakietu {link tu}
+        <br><br>
+        <div class="text-muted"> Jeśli jesteś zainteresowaniem rozszerzeniem pakietu <a class="" href="https://playmaker.pro/limit/">zwiększ limit</a>
+        </div>
 
         </div>
         <div class="modal-footer">

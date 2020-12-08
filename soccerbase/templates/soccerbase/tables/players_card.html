@@ -64,7 +64,7 @@
 <div class="card item-card" style="">
   <div class="card-header d-md-none">
     <span> 
-        <img class="flag" src="{{ object.profile.country.flag }}" alt="flag">
+        
         {{object.first_name|upper}} {{ object.last_name|upper}} {{ object.profile.age|default:'-' }} 
         {% if object.profile.age %}{% trans 'l.' %} {% endif %} 
         {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
@@ -93,28 +93,42 @@
            
         </div>
         
-        <div class="d-md-none col-1 col-md-1 text-center"> <!-- -->
+        <div class="d-md-none text-center"> <!-- -->
             <img class="rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
         </div>
 
-        <div class="col-5 col-md-1 text-center">
-            {{ object.profile.get_position_raw_display|default:'-'|upper }}
-        </div >
-        
-        <div class="col-6 col-md-1 text-center">
-            {{ object.profile.league|default:'-'|upper  }}
-        </div >
 
-        <div class="d-md-none col-1 col-md-1 text-center"> <!-- -->
+        <div class="d-md-none col text-left ml-2">
+    
+            <div class="">
+                <strong>{{ object.profile.get_position_raw_display|default:''|upper }}</strong> 
+            </div>
+             <div class="">
+               {{ object.profile.display_team|default:''|upper  }} 
+            </div>
+            <div class=""> 
+                {{ object.profile.display_voivodeship|default:''|upper|truncatechars:24 }} {{ object.profile.display_league|default:'-'|upper  }}
+            </div>
         </div>
 
-        <div class="col-5 col-md-2  text-center">
-             {{ object.profile.display_voivodeship|default:'-'|upper|truncatechars:24 }}
-        </div>
-        
-        <div class="col-6 col-md-2 text-center"> 
-            {{ object.profile.team|default:'-'|upper  }}
-        </div>
+                <div class="d-none d-md-inline col-5 col-md-1 text-center">
+                    {{ object.profile.get_position_raw_display|default:''|upper }}
+                </div >
+                
+                <div class="d-none d-md-inline col-6 col-md-1 text-center">
+                    {{ object.profile.display_league|default:''|upper  }}
+                </div >
+
+                <div class="d-md-none col-1 col-md-1 text-center"> <!-- -->
+                </div>
+
+                <div class="d-none d-md-inline col-5 col-md-2  text-center">
+                    {{ object.profile.display_voivodeship|default:''|upper|truncatechars:24 }}
+                </div>
+                
+                <div class="d-none d-md-inline col-6 col-md-2 text-center"> 
+                    {{ object.profile.display_team|default:''|upper  }}
+                </div>
 
 
         <div class="d-none d-md-inline col-2 text-center">
@@ -149,11 +163,16 @@
         </div>
     </div>
   </div>
-  <div class="card-footer  d-md-none"> <!-- -->
+  <div class="card-footer row no-gutters d-md-none"> <!-- -->
+    <div class="col-1">
+     <img class="flag" src="{{ object.profile.country.flag }}" alt="flag">
+    </div>
+    <div class="col">
         <span class="main-color">{{ object.profile.playermetrics.season_summary.games_played|default:'0' }}</span>  mecze     
         <span class="main-color">{{ object.profile.playermetrics.season_summary.minutes_played |default:'0' }}</span>  minuty
         <span class="main-color">{{ object.profile.playermetrics.season_summary.team_goals|default:'0' }}</span> gole
-      
+    </div>
+    
     <span class="float-right"> </span>
         
    
