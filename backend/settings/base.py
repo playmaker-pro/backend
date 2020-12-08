@@ -296,7 +296,7 @@ MESSAGE_TAGS = {
 
 
 # Authentication settings
-LOGIN_URL = reverse_lazy("account_login")
+LOGIN_URL = '/aaaaaaaa/' #reverse_lazy("account_login")
 LOGIN_REDIRECT_URL = reverse_lazy("profiles:show_self")
 
 # allauth-settings
