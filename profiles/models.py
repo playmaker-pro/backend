@@ -876,8 +876,8 @@ class ClubProfile(BaseProfile):
     @property
     def display_voivodeship(self):
         if self.voivodeship_raw is not None or self.voivodeship_raw != '':
-            self.voivodeship_raw
-        return self.voivodeship
+            return conver_vivo_for_api(self.voivodeship_raw)
+        return conver_vivo_for_api(self.voivodeship)
 
     club = models.CharField(
         _('Klub'),
@@ -1000,8 +1000,8 @@ class CoachProfile(BaseProfile):
     @property
     def display_voivodeship(self):
         if self.voivodeship_raw is not None or self.voivodeship_raw != '':
-            self.voivodeship_raw
-        return self.voivodeship
+            return conver_vivo_for_api(self.voivodeship_raw)
+        return conver_vivo_for_api(self.voivodeship)
 
     club = models.CharField(
         _('Klub'),
