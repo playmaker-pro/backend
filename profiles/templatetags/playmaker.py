@@ -214,6 +214,16 @@ class ActionButton:
             'button_text': self.text,
             'modals': self.context['modals'],
         }
+        
+        
+@register.filter
+def get_urls_with_no_page(value):
+    if 'page=' in value:
+        
+        return value.replace("page", "non_falue")
+    else:
+        return value
+
 
 @register.filter
 def get_list(dictionary, key):

@@ -213,6 +213,10 @@ class BaseProfile(models.Model):
             self.history = ProfileVisitHistory.objects.create()
 
     def save(self, *args, **kwargs):
+        
+        silent_param = kwargs.get('silent', False)
+        if silent_param is not None:
+            kwargs.pop('silent')
         self._save_make_profile_history()
 
         slug_str = "%s %s %s" % (self.PROFILE_TYPE, self.user.first_name, self.user.last_name)
@@ -228,23 +232,24 @@ class BaseProfile(models.Model):
         if not object_exists:
             ver_old = ver_new
 
-        # Cases when one of verification fields is None
-        if self._is_verification_fields_filled():
-            if not self.user.is_waiting_for_verification and not self.user.is_verified:
-                reason_text = 'Parametry weryfikacyjne są uzupełnione, a użytkownik nie miał wcześniej statusu "zwerfikowany" ani że "czeka na weryfikacje"'
-                reason = f'[verification-params-ready]: \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS})  \n Old:{ver_old} -> New:{ver_new} \n'
-                self.user.waiting_for_verification(extra={'reason': reason})
-                self.user.save()
-            else:
-                if self._verification_fileds_has_changed_and_was_filled(ver_old, ver_new):
-                    reason_text = 'Parametry weryfikacyjne zostały zmienione i są wszyskie pola uzupełnione.'
-                    reason = f'[verification-params-changed] \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS}) \n Old:{ver_old} -> New:{ver_new} \n'
-                    self.user.unverify(extra={'reason': reason})
+        if not silent_param:
+            # Cases when one of verification fields is None
+            if self._is_verification_fields_filled():
+                if not self.user.is_waiting_for_verification and not self.user.is_verified:
+                    reason_text = 'Parametry weryfikacyjne są uzupełnione, a użytkownik nie miał wcześniej statusu "zwerfikowany" ani że "czeka na weryfikacje"'
+                    reason = f'[verification-params-ready]: \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS})  \n Old:{ver_old} -> New:{ver_new} \n'
+                    self.user.waiting_for_verification(extra={'reason': reason})
                     self.user.save()
-        else:
-            if not self.user.is_missing_verification_data:
-                self.user.missing_verification_data()  # -> change state to missing ver data
-                self.user.save()
+                else:
+                    if self._verification_fileds_has_changed_and_was_filled(ver_old, ver_new):
+                        reason_text = 'Parametry weryfikacyjne zostały zmienione i są wszyskie pola uzupełnione.'
+                        reason = f'[verification-params-changed] \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS}) \n Old:{ver_old} -> New:{ver_new} \n'
+                        self.user.unverify(extra={'reason': reason})
+                        self.user.save()
+            else:
+                if not self.user.is_missing_verification_data:
+                    self.user.missing_verification_data()  # -> change state to missing ver data
+                    self.user.save()
 
     def _is_verification_fields_filled(self):
         return all(self._get_verification_field_values(self))

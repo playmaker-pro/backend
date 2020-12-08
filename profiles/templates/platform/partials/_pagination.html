@@ -1,20 +1,22 @@
     
 {% load i18n %}
 {% load playmaker %}
+
+{% with request.GET.urlencode|get_urls_with_no_page as get_params %}
 <div class="pagination d-block mt-2">
     <span class="float-center">
         <span class="step-links text-center">
             {% if page_obj.has_previous %}
 
                 <span class="p-1">
-                {% with "?page=1" as button_url %}
+                {% with "?page=1"|addstr:"&"|addstr:get_params as button_url %}
                     {% include 'platform/buttons/action_button.html' with button_text=_('pierwsza') checks=True button_url=button_url %}
                 {% endwith %}
                 
                 </span>
                 <span class="p-1">
                 
-                {% with "?page="|addstr:page_obj.previous_page_number as button_url %}
+                {% with "?page="|addstr:page_obj.previous_page_number|addstr:"&"|addstr:get_params as button_url %}
                     {% include 'platform/buttons/action_button.html' with button_text=_('poprzednia') button_url=button_url checks=True button_prefix='&laquo;'%}
                 {% endwith %}
                 </span>
@@ -26,13 +28,13 @@
 
             {% if page_obj.has_next %}
                <span class="p-1">
-                {% with "?page="|addstr:page_obj.next_page_number as button_url %}
+                {% with "?page="|addstr:page_obj.next_page_number|addstr:"&"|addstr:get_params as button_url %}
                    
                     {% include 'platform/buttons/action_button.html' with button_text=_('następna') button_url=button_url checks=True %}
                 {% endwith %}
                 </span>
                 <span class="p-1">
-                {% with "?page="|addstr:page_obj.paginator.num_pages as button_url %}
+                {% with "?page="|addstr:page_obj.paginator.num_pages|addstr:"&"|addstr:get_params as button_url %}
                     {% include 'platform/buttons/action_button.html' with button_text=_('ostatnia') button_url=button_url checks=True button_suffix='&raquo;'%}
                 {% endwith %}
                 </span>
@@ -48,3 +50,4 @@
     </div>
 
 </div>
+{% endwith %}

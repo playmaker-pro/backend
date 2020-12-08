@@ -286,11 +286,11 @@ class Command(BaseCommand):
             return 4
         elif param.lower() == 'bramkarz':
             return 1
-        elif param.lower() == 'pomocnik defensywny (6)':
+        elif param.lower() == 'pomocnik - defensywny (6)':
             return 5
-        elif param.lower() == 'pomocnik środkowy (8)':
+        elif param.lower() == 'pomocnik - środkowy (8)':
             return 6
-        elif param.lower() == 'pomocnik ofensywny (10)':
+        elif param.lower() == 'pomocnik - ofensywny (10)':
             return 7
         elif param.lower() == 'skrzydłowy':
             return 8
