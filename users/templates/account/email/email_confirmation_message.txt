@@ -4,7 +4,7 @@
 
 {% block content %}{% autoescape off %}{% user_display user as user_display %}{% blocktrans with site_name=current_site.name site_domain=current_site.domain %} Dziękujemy za dołączenie do społeczności PlayMaker.pro. Kliknij w poniższy link aktywacyjny, aby potwierdzić rejestrację.
 
- {{ activate_url }}  eżeli po kliknięciu link się nie otworzy, skopiuj go, wklej w pole adresu przeglądarki i przejdź do wskazanej strony. 
+ {{ activate_url }}  Jeżeli po kliknięciu link się nie otworzy, skopiuj go, wklej w pole adresu przeglądarki i przejdź do wskazanej strony. 
 
  Link będzie aktywny przez 24h. Jeśli nie uda Ci się potwierdzić rejestracji w podanym okresie, rozpocznij rejestrację od nowa. 
 
