@@ -342,7 +342,7 @@ class Command(BaseCommand):
                             first_name=first_name,
                             last_name=last_name,
                             password=initial_password,
-                            declared_role='T',
+                            declared_role='C',
                         )
                         
                 t, _ = Club.objects.get_or_create(name=row['Nazwa_druzyny'])
