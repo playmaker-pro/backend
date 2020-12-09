@@ -36,9 +36,9 @@
              {{ object.group|default:'-'|upper|truncatechars:10 }}
         </div>
 
-        <div class="col-3 col-md-1">
+        {% comment %} <div class="col-3 col-md-1">
              {{ object.manager|default:'-'|upper }}
-        </div>
+        </div> {% endcomment %}
         
         <div class="col-3 col-md-1">
              {{ object.address|default:'-'|upper }}
