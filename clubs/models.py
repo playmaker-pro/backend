@@ -7,11 +7,34 @@ from django.urls import reverse
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
 from address.models import AddressField
-from profiles.utils import unique_slugify
+from profiles.utils import unique_slugify, conver_vivo_for_api
 
 
 class Club(models.Model):
     PROFILE_TYPE = 'klub'
+    @property
+    def display_club(self):
+        if self.club_raw:
+            return self.club_raw
+        return self.club
+
+    @property
+    def display_team(self):
+        if self.team_raw:
+            return self.team_raw
+        return self.team
+
+    @property
+    def display_league(self):
+        if self.league_raw:
+            return self.league_raw
+        return self.league
+
+    @property
+    def display_voivodeship(self):
+        if self.voivodeship_raw:
+            return conver_vivo_for_api(self.voivodeship_raw)
+        return conver_vivo_for_api(self.voivodeship)
 
     manager = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -127,7 +150,10 @@ class Club(models.Model):
         help_text=_('Adres'),
         blank=True,
         null=True)
-
+    
+    @property
+    def display_name(self):
+        return name
     practice_stadion_address = AddressField(
         related_name='coach_practice_stadion_address',
         help_text=_('Adres'),
@@ -191,7 +217,9 @@ class Team(models.Model):
         null=True,
         blank=True,
         help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.')
-
+    @property
+    def display_name(self):
+        return name
     name = models.CharField(
         _('Team name'),
         max_length=255,
