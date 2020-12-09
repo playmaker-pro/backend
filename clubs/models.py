@@ -40,6 +40,8 @@ class Club(models.Model):
         settings.AUTH_USER_MODEL,
         related_name='managed_club',
         on_delete=models.SET_NULL,
+        null=True,
+        blank=True
         )
 
     editors = models.ManyToManyField(
@@ -182,6 +184,8 @@ class Team(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         related_name='managed_team',
+        null=True,
+        blank=True
     )
 
     EDITABLE_FIELDS = [
