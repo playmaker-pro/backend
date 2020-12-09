@@ -40,12 +40,13 @@ class Club(models.Model):
         settings.AUTH_USER_MODEL,
         related_name='managed_club',
         on_delete=models.SET_NULL,
-        null=True,
-        blank=True)
+        )
 
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='club_managers',
+        null=True,
+        blank=True
         )
 
     picture = models.ImageField(
@@ -173,14 +174,15 @@ class Team(models.Model):
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='teammanagers',
-        )
-
+        null=True,
+        blank=True
+    )
+        
     manager = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         related_name='managed_team',
-        null=True,
-        blank=True)
+    )
 
     EDITABLE_FIELDS = [
         'name',

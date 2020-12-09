@@ -263,7 +263,7 @@ def get_my_team_link(context, text=None, css_class=None):
         link = '#'
     else:
         try:
-            link = user.managed_club.get_permalink
+            link = user.managed_team.get_permalink
         except Exception as e:
             logger.error(e)
             link = '#'
