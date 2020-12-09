@@ -150,10 +150,11 @@ class Club(models.Model):
         help_text=_('Adres'),
         blank=True,
         null=True)
-    
+
     @property
     def display_name(self):
-        return name
+        return self.name
+    
     practice_stadion_address = AddressField(
         related_name='coach_practice_stadion_address',
         help_text=_('Adres'),
@@ -219,7 +220,7 @@ class Team(models.Model):
         help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.')
     @property
     def display_name(self):
-        return name
+        return self.name
     name = models.CharField(
         _('Team name'),
         max_length=255,
