@@ -326,11 +326,11 @@ class Command(BaseCommand):
                 first_name = row['Imie_wprowadzajacego']
                 last_name = row['Nazwisko_wprowadzajacego']
                 
-                email = 'matiszumi94@gmail.com'
-                # email = row['Email_wprowadzajacego']
-                # if email == '':
-                #     print(f'>>>>> skip: {first_name}, {last_name}')
-                #     continue
+                # email = 'matiszumi94@gmail.com'
+                email = row['Email_wprowadzajacego']
+                if email == '':
+                    print(f'>>>>> skip: {first_name}, {last_name}')
+                    continue
                 
                 initial_password = 'amd!0s#k4d9ciasd'
 
@@ -353,7 +353,7 @@ class Command(BaseCommand):
                 profile = user.profile
                 profile.phone = phone
                 profile.save()
-                break
+                #break
              
         # user = User.objects.create_user(username='john',
         #                          email='jlennon@beatles.com',
