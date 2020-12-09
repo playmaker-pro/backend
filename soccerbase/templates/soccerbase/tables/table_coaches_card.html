@@ -21,7 +21,7 @@
     <div class="row no-gutters">
                <div class="d-none d-md-inline col-md-3">
                   <a href="{{ object.profile.get_permalink }}"> 
-                    <img  class="avatar rounded img-responsive" src="{% thumbnail object.picture|default:'default_team.png' 'tables_avatar_show_medium' %}">
+                    <img  class="rounded img-responsive" src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
                     <img style="padding-left:15px;" class="flag" src="{{ object.profile.country.flag }}" alt="flag">
                     <strong >{{ object.first_name|upper}} {{ object.last_name|upper}} </strong>
                   </a>
