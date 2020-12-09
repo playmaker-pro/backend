@@ -37,11 +37,11 @@
                 <strong>{{ object.profile.team_object.display_name|default:''|upper }}</strong> 
             </div>
              <div class="">
-               {{ object.profile.team.team_object.club.display_name|default:''|upper  }} 
+               {{ object.profile.team_object.club.display_name|default:''|upper  }} 
             </div>
             <div class=""> 
-                {{ object.profile.team.team_object.club.display_voivodeship|default:''|upper|truncatechars:24 }} 
-                {{ object.profile.team.team_object.club.display_league|default:''|upper  }}
+                {{ object.profile.team_object.club.display_voivodeship|default:''|upper|truncatechars:24 }} 
+                {{ object.profile.team_object.club.display_league|default:''|upper  }}
             </div>
         </div>
 
@@ -49,13 +49,15 @@
             <div class="d-none d-md-inline  col-md-1">
                 {{ object.profile.age|default:'' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}
             </div >
-            
+            <div class="d-none d-md-inline  col-md-1">
+                 {{ object.profile.team_object.club.display_league|default:''|upper  }}
+            </div >
             <div class=" d-none d-md-inline  col-3 col-md-1  text-center" >
-                {{ object.profile.display_team|default:'' }}
+                {{ object.profile.team_object.display_name|default:'' }}
             </div >
             
             <div class="d-none d-md-inline  col-3 col-md-1  text-center">
-                {{ object.profile.display_voivodeship|default:''|upper  }}
+                {{ object.profile.team_object.club.display_voivodeship|default:''|upper  }}
             </div >
 
             
