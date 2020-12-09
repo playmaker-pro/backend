@@ -203,7 +203,7 @@ class TeamsTable(TableView):
             queryset = queryset.filter(query)
 
         if self.filter_name_of_club is not None:
-            queryset = queryset.filter(club__name__icontains=self.filter_name_of_club)
+            queryset = queryset.filter(team__club__name__icontains=self.filter_name_of_club)
 
         if self.filter_name_of_team is not None:
             queryset = queryset.filter(name__icontains=self.filter_name_of_team)
