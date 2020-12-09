@@ -1,0 +1,45 @@
+{% load static %}
+{% load playmaker %}
+{% load i18n %}
+
+{% with id="filterModal" title='Odfiltruj baze' %}
+  <div class="modal fade" id="{{ id }}" tabindex="-1" role="dialog" aria-labelledby="{{ id }}Label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="{{ id }}Label">{{ title }}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true"><i class="icofont-close-circled main-color"></i></span>
+          </button>
+        </div>
+
+        <form id="filter-form-mobile" method="get" class="form-inline ">
+          <div class="modal-body row no-gutters">
+
+              {% block modal_body %}
+                      
+              {% endblock modal_body %}
+
+          </div>
+          <div class="modal-footer">
+              {% block modal_footer %}
+           
+                  <button id="filter-button-mobile" class="btn-pm" type="submit" value="{% trans 'Filtruj' %}">{% trans 'Szukaj' %}</button>
+            
+              {% endblock modal_footer %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  {% if trigger %}
+  <script type="text/javascript">
+      $(window).on('load',function(){
+          $('#{{ id }}').modal('show');
+      });
+  </script>
+  {% endif %}
+
+{% endwith %}

@@ -1,4 +1,4 @@
-<select name="age_range" class="form-control">
+<select name="age_range" data-width="{{ size }}"  class="form-control">
     <option value="Wiek" disabled selected >wybierz wiek</option>
     <option value="----">----</option>
     <option {% if request.GET.age_range == 'do 20 lat' %} selected {% endif %}value="do 20 lat">do 20 lat</option>

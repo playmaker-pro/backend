@@ -14,21 +14,19 @@
         </button>
       </div>
 
-
       <div class="modal-body">
       <div>
         By w pełni korzystać z platformy <strong>{% include 'platform/partials/brandname.html' %}</strong> należy zweryfikować konto uzupełniając poniższe dane.
-
       </div>
     
       <form id="verification-form" class="mt-3" enctype="multipart/form-data" action={% url 'profiles:account_verification' %} method="post">
-        {% csrf_token %}
-        <span id="verification-form-body"> </span>
+          {% csrf_token %}
+          <span id="verification-form-body"> </span>
 
-        <div class="modal-footer">
-                <button class="btn-pm" type="submit" name="update" value="Update" id="submit-id-update">{% trans 'ZWERYFIKUJ KONTO' %}</button>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'PÓŹNIEJ' %}</button>
-              </div>
+          <div class="modal-footer">
+            <button class="btn-pm" type="submit" name="update" value="Update" id="submit-id-update">{% trans 'ZWERYFIKUJ KONTO' %}</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'PÓŹNIEJ' %}</button>
+          </div>
       </form>
 
 

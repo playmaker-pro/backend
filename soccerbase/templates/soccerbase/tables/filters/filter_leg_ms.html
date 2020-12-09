@@ -1,0 +1,5 @@
+<select name="leg"  data-width="{{ size }}"   class="form-control selectpicker" title="noga">
+    <option value="----">----</option>
+    <option {% if request.GET.leg == 'prawa' %} selected {% endif %} value="prawa">prawa</option>
+    <option {% if request.GET.leg == 'lewa' %} selected {% endif %} value="lewa">lewa</option>
+</select>

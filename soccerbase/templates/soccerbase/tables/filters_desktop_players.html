@@ -1,0 +1,36 @@
+{% extends 'soccerbase/tables/base_desktop_filters.html' %}
+{% load static %}
+{% load playmaker %}
+{% load i18n %}
+
+{% block desktop_filters_body %}
+
+    <div class="col-4 col-md-1 filter "> 
+        {% include 'soccerbase/tables/filters/filter_firstlastname_input.html' with size=100  %}
+    </div>
+    
+    <div class="col-4 col-md-1 filter"> 
+        {% include 'soccerbase/tables/filters/filter_league_ms.html' with size=120 %}
+    </div>
+    <div class="col-4 col-md-1 filter ml-1"> 
+        {% include 'soccerbase/tables/filters/filter_vivo_ms.html'  with size=120  %}
+    </div>
+    <div class="col-4 col-md-1 filter ml-1"> 
+        
+        {% include 'soccerbase/tables/filters/filter_position_ms.html'%}
+        
+        
+    </div>   
+        <div class="col-4  col-md-1 filter ml-1"> 
+        {% include 'soccerbase/tables/filters/filter_leg_ms.html'%}
+
+    </div>
+    <div class="col-1 filter"> 
+        {% include 'soccerbase/tables/filters/filter_age_min_input.html' %}
+    </div>
+    <div class="col-1 filter"> 
+        {% include 'soccerbase/tables/filters/filter_age_max_input.html' %}
+    </div>
+
+
+{% endblock desktop_filters_body %}

@@ -135,7 +135,9 @@ section.tables {
     #tables .container-fluid > :last-child{ 
         padding-bottom: 105px;
     }
-
+    #tables .object-title a {
+        
+    }
     #tables .container-fluid .table {
         padding: .3rem .3rem;
     }

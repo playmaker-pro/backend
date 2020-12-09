@@ -1,6 +1,6 @@
 
 {% load playmaker %}
-<select name="league" data-width="120px" title="rozgrywki" class="selectpicker" data-actions-box="true" multiple data-live-search="true" data-selected-text-format="count > 3">
+<select name="league" data-width="{{ size }}"  title="rozgrywki" class="selectpicker" data-actions-box="true" multiple data-live-search="true" data-selected-text-format="count > 3">
 
 <option {% if 'Ekstraklasa' in request.GET|get_list:'league' %} selected="selected" {% endif %}>Ekstraklasa</option>
 <option {% if '1 liga' in request.GET|get_list:'league' %} selected="selected" {% endif %}>1 liga</option>

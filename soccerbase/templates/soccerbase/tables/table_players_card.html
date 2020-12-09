@@ -65,7 +65,7 @@
   <div class="card-header d-md-none">
     <span> 
         
-        {{object.first_name|upper}} {{ object.last_name|upper}} {{ object.profile.age|default:'-' }} 
+        {{ object.first_name|upper}} {{ object.last_name|upper}} {{ object.profile.age|default:'' }} 
         {% if object.profile.age %}{% trans 'l.' %} {% endif %} 
         {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
     </span>
@@ -119,8 +119,7 @@
                     {{ object.profile.display_league|default:''|upper  }}
                 </div >
 
-                <div class="d-md-none col-1 col-md-1 text-center"> <!-- -->
-                </div>
+             
 
                 <div class="d-none d-md-inline col-5 col-md-2  text-center">
                     {{ object.profile.display_voivodeship|default:''|upper|truncatechars:24 }}

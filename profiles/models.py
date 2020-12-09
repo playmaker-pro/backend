@@ -18,6 +18,7 @@ from .utils import make_choices
 from .utils import unique_slugify
 import utils as utilites
 from .utils import get_current_season, conver_vivo_for_api
+from clubs import models as clubs_models
 
 
 User = get_user_model()
@@ -845,6 +846,14 @@ class ClubProfile(BaseProfile, SoccerDisplayMixin):
         'club_role',
     ]
 
+    club_object = models.ForeignKey(
+        clubs_models.Club,
+        on_delete=models.SET_NULL,
+        related_name='clubowners',
+        null=True,
+        blank=True
+    )
+
     # phone = PhoneNumberField(
     #     _('Telefon'),
     #     region='PL',
@@ -956,6 +965,14 @@ class CoachProfile(BaseProfile, SoccerDisplayMixin):
     # fields = ["league", "voivodeship", "team", "country", "address", "about", "birth_date", "facebook_url", "soccer_goal", "phone", "practice_distance"]
 
     TRAINING_READY_CHOCIES = GLOBAL_TRAINING_READY_CHOCIES
+
+    team_object = models.ForeignKey(
+        clubs_models.Team,
+        on_delete=models.SET_NULL,
+        related_name='coaches',
+        null=True,
+        blank=True
+    )
 
     team_club_league_voivodeship_ver = models.CharField(
         _('team_club_league_voivodeship_ver'),
