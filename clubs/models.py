@@ -211,7 +211,7 @@ class Team(models.Model):
         unique_together = ('name', 'club')
 
     def __str__(self):
-        return f'{self.club.name}:{self.name}'
+        return f'tu bedzie nazwa klubu :{self.name}'
 
     # common  team fileds
     travel_refunds = models.BooleanField(
