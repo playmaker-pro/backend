@@ -84,6 +84,11 @@ def mail_role_change_request(instance, extra_body=''):
     mail_managers(subject, message)
 
 
+def build_absolute_url(uri: str) -> str:
+    url = f'{settings.BASE_URL}{uri}'
+    return url
+
+
 def mail_user_waiting_for_verification(instance, extra_body=None):
     ''' Instance -> users.models.User
     '''
@@ -91,8 +96,14 @@ def mail_user_waiting_for_verification(instance, extra_body=None):
     if extra_body is None:
         extra_body = ''
 
+    if instance.declared_role is not None:
+        role = instance.get_declared_role_display()
+    else:
+        role = instance.declared_role
+
     subject = f'[Oczekuje na weryfikacje] Użytkownik {instance.username} cheka na weryfikacje tożsamości'
-    message = f'Użytkownik {instance.username} zmienił swoje dane. \n ' \
-        f'Link do admina: {settings.BASE_URL}{instance.get_admin_url()}. \n' \
+    message = f'Użytkownik {instance.username} ({role}) zmienił swoje dane. \n\n ' \
+        f'Link do admina: {build_absolute_url(instance.get_admin_url())}. \n' \
+        f'Link do profilu: {build_absolute_url(instance.profile.get_permalink())} \n\n' \
         f'{extra_body}'
     mail_managers(subject, message)
