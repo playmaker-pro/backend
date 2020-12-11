@@ -10,31 +10,15 @@ from address.models import AddressField
 from profiles.utils import unique_slugify, conver_vivo_for_api
 
 
-class Club(models.Model):
-    PROFILE_TYPE = 'klub'
-    @property
-    def display_club(self):
-        if self.club_raw:
-            return self.club_raw
-        return self.club
-
-    @property
-    def display_team(self):
-        if self.team_raw:
-            return self.team_raw
-        return self.team
-
-    @property
-    def display_league(self):
-        if self.league_raw:
-            return self.league_raw
-        return self.league
-
+class Voivodeship(models.Model):
+    name = models.CharField(max_length=455, unique=True)
     @property
     def display_voivodeship(self):
-        if self.voivodeship_raw:
-            return conver_vivo_for_api(self.voivodeship_raw)
-        return conver_vivo_for_api(self.voivodeship)
+        return self.name
+
+
+class Club(models.Model):
+    PROFILE_TYPE = 'klub'
 
     manager = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -47,9 +31,27 @@ class Club(models.Model):
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='club_managers',
-        null=True,
         blank=True
         )
+
+    voivodeship = models.ForeignKey(
+        Voivodeship,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    @property
+    def display_club(self):
+        if self.club_raw:
+            return self.club_raw
+        return self.name
+
+    @property
+    def display_voivodeship(self):
+        if self.voivodeship_raw:
+            return conver_vivo_for_api(self.voivodeship_raw)
+        return conver_vivo_for_api(self.voivodeship.name)
 
     picture = models.ImageField(
         _("Zdjęcie"),
@@ -72,53 +74,12 @@ class Club(models.Model):
         max_length=255,
         help_text='Displayed Name of club')
 
-    club = models.CharField(
-        _('Klub'),
-        max_length=255,
-        help_text=_('Klub w którym obecnie reprezentuejsz'),
-        blank=True,
-        null=True,)
-
     club_raw = models.CharField(
         _('Deklarowany Klub'),
         max_length=255,
         help_text=_('Klub w którym deklarujesz że obecnie reprezentuejsz'),
         blank=True,
         null=True,)
-
-    team = models.CharField(
-        _('Drużyna'),
-        max_length=255,
-        help_text=_('Drużyna w której obecnie grasz'),
-        blank=True,
-        null=True)
-    team_raw = models.CharField(
-        _('Deklarowana Drużyna'),
-        max_length=255,
-        help_text=_('Drużyna w której deklarujesz że obecnie grasz'),
-        blank=True,
-        null=True)
-
-    league = models.CharField(
-        _('Rozgrywki'),
-        max_length=255,
-        help_text=_('Poziom rozgrywkowy'),
-        blank=True,
-        null=True)
-
-    league_raw = models.CharField(
-        _('Rozgrywki'),
-        max_length=255,
-        help_text=_('Poziom rozgrywkowy który deklarujesz że grasz.'),
-        blank=True,
-        null=True)
-
-    voivodeship = models.CharField(
-        _('Wojewódźtwo'),
-        help_text=_('Wojewódźtwo'),
-        max_length=255,
-        blank=True,
-        null=True)
 
     voivodeship_raw = models.CharField(
         _('Wojewódźtwo'),
@@ -141,11 +102,13 @@ class Club(models.Model):
     #     _('Telefon'),
     #     blank=True,
     #     null=True)
+
     club_phone = models.CharField(
         _('Telefon'),
         max_length=15,
         blank=True,
         null=True)
+
     club_email = models.EmailField(null=True, blank=True)
 
     stadion_address = AddressField(
@@ -154,10 +117,6 @@ class Club(models.Model):
         blank=True,
         null=True)
 
-    @property
-    def display_name(self):
-        return self.name
-    
     practice_stadion_address = AddressField(
         related_name='coach_practice_stadion_address',
         help_text=_('Adres'),
@@ -170,16 +129,53 @@ class Club(models.Model):
         super().save(*args, **kwargs)
 
 
+class League(models.Model):
+    name = models.CharField(max_length=355, unique=True)
+
+    @property
+    def display_league(self):
+        return self.name
+class Seniority(models.Model):
+    name = models.CharField(max_length=355, unique=True)
+    @property
+    def display_seniority(self):
+        return self.name
+
+
+class Gender(models.Model):
+    name = models.CharField(max_length=355, unique=True)
+    @property
+    def display_gender(self):
+        return self.name
+
+
 class Team(models.Model):
     PROFILE_TYPE = 'team'
+
+    gender = models.ForeignKey(
+        Gender,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True)
+
+    league = models.ForeignKey(
+        League,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True)
+
+    seniority = models.ForeignKey(
+        Seniority,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True)
 
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='teammanagers',
-        null=True,
         blank=True
     )
-        
+
     manager = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -224,9 +220,23 @@ class Team(models.Model):
         null=True,
         blank=True,
         help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.')
+
     @property
-    def display_name(self):
+    def display_team(self):
         return self.name
+
+    @property
+    def display_voivodeship(self):
+        return self.club.display_voivodeship
+
+    @property
+    def display_league(self):
+        return self.league.display_league
+
+    @property
+    def display_club(self):
+        return self.club.display_club
+
     name = models.CharField(
         _('Team name'),
         max_length=255,

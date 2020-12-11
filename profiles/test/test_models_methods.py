@@ -46,9 +46,29 @@ class ChangeRoleTests(TestCase):
         self.user.refresh_from_db()
         print(f'---->  {self.user.state}')
         assert self.user.is_verified is True
-        
+     
+    def test_changing_role_to_scout_from_unverifed_player_cause_user_to_be_auto_verified(self):
+        assert self.user.is_verified is True
+        self.user.profile.bio = None
+        self.user.profile.save()
+        assert self.user.is_verified is False
+        assert self.user.is_missing_verification_data is True
+        print(f'---->  before {self.user.state}')
+        change = models.RoleChangeRequest.objects.create(user=self.user, new=definitions.SCOUT_SHORT)
 
-    def test_changing_role_to_geust_from_unverifed_player_cause_user_to_be_auto_verified(self):
+        # statuses should remain
+        assert self.user.is_verified is False
+        assert self.user.is_missing_verification_data is True
+
+        change.approved = True
+        change.save()
+        self.user.refresh_from_db()
+
+        print(f'---->  after {self.user.state}')
+        assert self.user.is_verified is True
+        assert self.user.is_missing_verification_data is False   
+
+    def test_changing_role_to_guest_from_unverifed_player_cause_user_to_be_auto_verified(self):
         assert self.user.is_verified is True
         self.user.profile.bio = None
         self.user.profile.save()

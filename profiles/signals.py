@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from notifications.mail import mail_role_change_request
+from notifications.mail import mail_role_change_request, mail_admins_about_new_user
 from roles import definitions
 from . import models
 
@@ -81,8 +81,10 @@ def create_profile_handler(sender, instance, created, **kwargs):
         set_and_create_user_profile(instance)
 
     msgprefix = 'New'
+    
     set_and_create_user_profile(instance)
     set_user_inquiry_plan(instance)
+    mail_admins_about_new_user(instance)
     logger.info(f"{msgprefix} user profile for {instance} created with declared role {instance.declared_role}")
 
 

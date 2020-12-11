@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 BASE_URL = 'http://localhost:8000'
 
 
-VERSION = '1.1'
+VERSION = '1.1.1'
 
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

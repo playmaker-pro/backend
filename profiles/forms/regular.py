@@ -101,8 +101,8 @@ class CoachProfileForm(BaseProfileForm):
     # birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for fieldname in ['club_role', 'league', 'team']:
-            self.fields[fieldname].help_text = None
+        # for fieldname in ['club_role', 'league', 'team']:
+        #     self.fields[fieldname].help_text = None
         self.helper.layout = Layout(
             Div(
                 Div(
@@ -117,11 +117,11 @@ class CoachProfileForm(BaseProfileForm):
                         _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
                         Div(
                             Field('birth_date', wrapper_class='row', css_class=self.get_mandatory_field_class("birth_date"),),
-                            Field('league', wrapper_class='row', readonly=True),
-                            # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
-                            Field('voivodeship', wrapper_class='row', readonly=True),
-                            Field('team', wrapper_class='row', readonly=True),
-                            Field('country', wrapper_class='row'),
+                            # Field('league', wrapper_class='row', readonly=True),
+                            # # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
+                            # Field('voivodeship', wrapper_class='row', readonly=True),
+                            # Field('team', wrapper_class='row', readonly=True),
+                            # Field('country', wrapper_class='row'),
                             Field("address", wrapper_class='row'),
                             Field("about", wrapper_class='row'),
 
@@ -146,7 +146,7 @@ class CoachProfileForm(BaseProfileForm):
 
     class Meta:
         model = models.CoachProfile
-        fields = ['club_role', 'league', 'voivodeship', 'team', 'country', 'address', 'about', 'birth_date', 'facebook_url', 'soccer_goal', 'phone', 'practice_distance']
+        fields = ['club_role', 'country', 'address', 'about', 'birth_date', 'facebook_url', 'soccer_goal', 'phone', 'practice_distance'] #'league', 'voivodeship', 'team',
     
     def get_mandatory_field_class(self, field_name):
         if field_name in models.CoachProfile.VERIFICATION_FIELDS:
@@ -169,11 +169,11 @@ class PlayerProfileForm(BaseProfileForm):
             Fieldset(
                 _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
                 Field('birth_date', wrapper_class='row', css_class='mandatory'),
-                Field('league', wrapper_class='row', readonly=True),
-                # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
-                Field('voivodeship', wrapper_class='row', readonly=True),
-                Field('team', wrapper_class='row', readonly=True),
-                Field('country', wrapper_class='row', css_class='mandatory'),
+                # Field('league', wrapper_class='row', readonly=True),
+                # # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
+                # Field('voivodeship', wrapper_class='row', readonly=True),
+                # Field('team', wrapper_class='row', readonly=True),
+                # Field('country', wrapper_class='row', css_class='mandatory'),
                 Field("height", wrapper_class='row', placeholder='130 - 210 cm', css_class='mandatory'),
                 Field("weight", wrapper_class='row', placeholder='40 - 140 kg', css_class='mandatory'),
                 Field("address", wrapper_class='row'),

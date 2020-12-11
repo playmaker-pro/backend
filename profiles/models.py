@@ -846,10 +846,19 @@ class ClubProfile(BaseProfile, SoccerDisplayMixin):
         'club_role',
     ]
 
+    @property
+    def display_club(self):
+        return self.club_object.display_club
+
+    @property
+    def display_voivodeship(self):
+        return self.club_object.display_voivodeship
+
     club_object = models.ForeignKey(
         clubs_models.Club,
         on_delete=models.SET_NULL,
         related_name='clubowners',
+        db_index=True,
         null=True,
         blank=True
     )
@@ -872,62 +881,6 @@ class ClubProfile(BaseProfile, SoccerDisplayMixin):
         help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'),
         blank=True,
         null=True,)
-
-    club = models.CharField(
-        _('Klub'),
-        max_length=68,
-        help_text=_('Klub w którym obecnie reprezentuejsz'),
-        blank=True,
-        null=True,)
-
-    club_raw = models.CharField(
-        _('Deklarowany klub'),
-        max_length=68,
-        help_text=_('Klub w którym deklarujesz że obecnie reprezentuejsz'),
-        blank=True,
-        null=True,)
-
-    team = models.CharField(
-        _('Drużyna'),
-        max_length=68,
-        help_text=_('Drużyna w której obecnie grasz'),
-        blank=True,
-        null=True)
-
-    team_raw = models.CharField(
-        _('Deklarowana drużyna'),
-        max_length=68,
-        help_text=_('Drużyna w której deklarujesz że obecnie grasz'),
-        blank=True,
-        null=True)
-
-    league = models.CharField(
-        _('Poziom rozgrywkowy'),
-        max_length=68,
-        help_text=_('Poziom rozgrywkowy'),
-        blank=True,
-        null=True)
-
-    league_raw = models.CharField(
-        _('Deklarowany poziom rozgrywkowy'),
-        max_length=68,
-        help_text=_('Poziom rozgrywkowy który deklarujesz że grasz.'),
-        blank=True,
-        null=True)
-
-    voivodeship = models.CharField(
-        _('Wojewódźtwo'),
-        help_text=_('Wojewódźtwo'),
-        max_length=68,
-        blank=True,
-        null=True)
-
-    voivodeship_raw = models.CharField(
-        _('Deklarowane wojewódźtwo'),
-        help_text=_('Wojewódźtwo w którym grasz.'),
-        max_length=68,
-        blank=True,
-        null=True)
 
     club_role = models.IntegerField(
         choices=CLUB_ROLE,
@@ -966,13 +919,21 @@ class CoachProfile(BaseProfile, SoccerDisplayMixin):
 
     TRAINING_READY_CHOCIES = GLOBAL_TRAINING_READY_CHOCIES
 
-    team_object = models.ForeignKey(
-        clubs_models.Team,
-        on_delete=models.SET_NULL,
-        related_name='coaches',
-        null=True,
-        blank=True
-    )
+    @property
+    def display_club(self):
+        return self.team_object.club.display_club
+
+    @property
+    def display_team(self):
+        return self.team_object.display_team
+
+    @property
+    def display_voivodeship(self):
+        return self.team_object.club.display_voivodeship
+
+    @property
+    def display_league(self):
+        return self.team_object.display_league
 
     team_club_league_voivodeship_ver = models.CharField(
         _('team_club_league_voivodeship_ver'),
@@ -981,65 +942,19 @@ class CoachProfile(BaseProfile, SoccerDisplayMixin):
         blank=True,
         null=True,)
 
-    club = models.CharField(
-        _('Klub'),
-        max_length=68,
-        help_text=_('Klub w którym obecnie reprezentuejsz'),
-        blank=True,
-        null=True,)
-
-    club_raw = models.CharField(
-        _('Deklarowany Klub'),
-        max_length=68,
-        help_text=_('Klub w którym deklarujesz że obecnie reprezentuejsz'),
-        blank=True,
-        null=True,)
-
-    team = models.CharField(
-        _('Drużyna'),
-        max_length=68,
-        help_text=_('Drużyna w której obecnie grasz'),
-        blank=True,
-        null=True)
-    team_raw = models.CharField(
-        _('Deklarowana Drużyna'),
-        max_length=68,
-        help_text=_('Drużyna w której deklarujesz że obecnie grasz'),
-        blank=True,
-        null=True)
-
-    league = models.CharField(
-        _('Rozgrywki'),
-        max_length=68,
-        help_text=_('Poziom rozgrywkowy'),
-        blank=True,
-        null=True)
-
-    league_raw = models.CharField(
-        _('Rozgrywki'),
-        max_length=68,
-        help_text=_('Poziom rozgrywkowy który deklarujesz że grasz.'),
-        blank=True,
-        null=True)
-
-    voivodeship = models.CharField(
-        _('Wojewódźtwo'),
-        help_text=_('Wojewódźtwo'),
-        max_length=68,
-        blank=True,
-        null=True)
-
-    voivodeship_raw = models.CharField(
-        _('Wojewódźtwo'),
-        help_text=_('Wojewódźtwo w którym grasz.'),
-        max_length=68,
-        blank=True,
-        null=True)
+    team_object = models.ForeignKey(
+        clubs_models.Team,
+        on_delete=models.SET_NULL,
+        related_name='coaches',
+        null=True,
+        blank=True
+    )
 
     birth_date = models.DateField(
         _('Data urodzenia'),
         blank=True,
         null=True)
+
     soccer_goal = models.IntegerField(
         _('Piłkarski cel'),
         choices=make_choices(GOAL_CHOICES),
@@ -1067,26 +982,31 @@ class CoachProfile(BaseProfile, SoccerDisplayMixin):
         default='PL',
         null=True,
         blank_label=_('Wybierz kraj'),)
+
     practice_distance = models.PositiveIntegerField(
         _('Maksymalna odległość na trening'),
         blank=True,
         null=True,
         help_text=_('Maksymalna odległośc na trening'),
         validators=[MinValueValidator(10), MaxValueValidator(500)])
+
     about = models.TextField(
         _('O sobie'),
         null=True,
         blank=True)
+
     training_ready = models.IntegerField(
         _('Gotowość do treningu'),
         choices=make_choices(TRAINING_READY_CHOCIES),
         null=True,
         blank=True)
+
     address = AddressField(
         help_text=_('Adres'),
         blank=True,
         null=True)
     # club & coach specific attrs.
+
     club_role = models.IntegerField(
         choices=CLUB_ROLE,
         default=1,  # trener
