@@ -34,14 +34,14 @@
         <div class="d-md-none col text-left ml-2">
     
             <div class="">
-                <strong>{{ object.profile.team_object.display_name|default:''|upper }}</strong> 
+                <strong>{{ object.profile.display_team|default:''|upper }}</strong> 
             </div>
              <div class="">
-               {{ object.profile.team_object.club.display_name|default:''|upper  }} 
+               {{ object.profile.profile.display_club|default:''|upper  }} 
             </div>
             <div class=""> 
-                {{ object.profile.team_object.club.display_voivodeship|default:''|upper|truncatechars:24 }} 
-                {{ object.profile.team_object.club.display_league|default:''|upper  }}
+                {{ object.profile.display_voivodeship|default:''|upper|truncatechars:24 }} 
+                {{ object.profile.display_league|default:''|upper  }}
             </div>
         </div>
 
@@ -50,14 +50,14 @@
                 {{ object.profile.age|default:'' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}
             </div >
             <div class="d-none d-md-inline  col-md-1">
-                 {{ object.profile.team_object.club.display_league|default:''|upper  }}
+                 {{ object.profile.display_league|default:''|upper  }}
             </div >
             <div class=" d-none d-md-inline  col-3 col-md-1  text-center" >
-                {{ object.profile.team_object.display_name|default:'' }}
+                {{ object.profile.display_team|default:'' }}
             </div >
             
             <div class="d-none d-md-inline  col-3 col-md-1  text-center">
-                {{ object.profile.team_object.club.display_voivodeship|default:''|upper  }}
+                {{ object.profile.display_voivodeship|default:''|upper  }}
             </div >
 
             
