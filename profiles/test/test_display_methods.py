@@ -13,7 +13,7 @@ utils.silence_explamation_mark()
 
 class ClubTeamDisplays(TestCase):
     def setUp(self):
-        self.team = utils.get_club()
+        self.team = utils.get_team()
 
     def test_team_level_displays(self):
         assert self.team.display_team == 'TEAMX'
@@ -25,8 +25,8 @@ class ClubTeamDisplays(TestCase):
 
     def test_club_level_displays(self):
         # assert self.team.club.display_team == 'TEAMX'
-        assert self.team.club.club.display_club == 'CLUBX'
-        assert self.team.club.club.display_voivodeship == 'VIVOX'
+        assert self.team.club.display_club == 'CLUBX'
+        assert self.team.club.display_voivodeship == 'VIVOX'
 
 
 class ProfileLevelDisplay(TestCase):

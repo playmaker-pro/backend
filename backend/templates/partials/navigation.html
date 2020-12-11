@@ -36,6 +36,7 @@
               <li><a href="{% url 'account_logout' %}">Wyloguj <i class="icofont-logout"></i></a></li>
               {% if request.user.is_superuser %}
               <li><a href="{% url 'wagtailadmin_home' %}">Admin</a></li>
+              <li><a href="{% url 'django_admin' %}">Data Admin</a></li>
               {% endif %}
             </ul>
           </li>

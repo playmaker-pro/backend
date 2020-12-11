@@ -10,6 +10,26 @@ from users.models import User
 from stats import adapters
 
 from roles import definitions
+import functools
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+
+def supress_exception(func):
+    """
+    A function wrapper for catching all exceptions and logging them
+    """
+    @functools.wraps(func)
+    def inner(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as ex:
+            logger.exception(ex)
+            return None
+            
+    return inner
 
 
 def conver_vivo_for_api(zpn):

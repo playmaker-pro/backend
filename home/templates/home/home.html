@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load i18n %}
 
 {% block body_class %}template-homepage{% endblock %}
 
@@ -26,7 +27,7 @@
     <section id="players" class="players">
       <div class="container">
         <div class="section-title">
-          <h1><span style="color:grey"> PIŁKARZ </span> </span></h1> <h2> STAŃ SIĘ WIDOCZNY W ŚWIECIE PIŁKI NOŻNEJ</h2>
+          <h1><span style="color:grey"> {% trans 'PIŁKARZ' %} </span> </span></h1> <h2> {% trans 'STAŃ SIĘ WIDOCZNY W ŚWIECIE PIŁKI NOŻNEJ' %}</h2>
         </div>
         <div class="row">
           <div class="col-lg-3 col-md-6">

@@ -7,14 +7,18 @@ from django.urls import reverse
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
 from address.models import AddressField
-from profiles.utils import unique_slugify, conver_vivo_for_api
+from profiles.utils import unique_slugify, conver_vivo_for_api, supress_exception
 
 
 class Voivodeship(models.Model):
     name = models.CharField(max_length=455, unique=True)
+
     @property
     def display_voivodeship(self):
         return self.name
+
+    def __str__(self):
+        return f'{self.name}'
 
 
 class Club(models.Model):
@@ -42,12 +46,14 @@ class Club(models.Model):
     )
 
     @property
+    @supress_exception
     def display_club(self):
         if self.club_raw:
             return self.club_raw
         return self.name
 
     @property
+    @supress_exception
     def display_voivodeship(self):
         if self.voivodeship_raw:
             return conver_vivo_for_api(self.voivodeship_raw)
@@ -135,18 +141,31 @@ class League(models.Model):
     @property
     def display_league(self):
         return self.name
+
+    def __str__(self):
+        return f'{self.name}'
+
+
 class Seniority(models.Model):
     name = models.CharField(max_length=355, unique=True)
+
     @property
     def display_seniority(self):
         return self.name
 
+    def __str__(self):
+        return f'{self.name}'
+
 
 class Gender(models.Model):
     name = models.CharField(max_length=355, unique=True)
+
     @property
     def display_gender(self):
         return self.name
+
+    def __str__(self):
+        return f'{self.name}'
 
 
 class Team(models.Model):
@@ -226,14 +245,27 @@ class Team(models.Model):
         return self.name
 
     @property
+    @supress_exception
     def display_voivodeship(self):
         return self.club.display_voivodeship
 
     @property
+    @supress_exception
     def display_league(self):
         return self.league.display_league
 
     @property
+    @supress_exception
+    def display_seniority(self):
+        return self.seniority.display_seniority
+
+    @property
+    @supress_exception
+    def display_gender(self):
+        return self.gender.display_gender
+
+    @property
+    @supress_exception
     def display_club(self):
         return self.club.display_club
 

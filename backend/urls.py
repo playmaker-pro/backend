@@ -22,7 +22,7 @@ admin.site.site_title = 'PlayMaker.pro - Admin site'
 
 
 urlpatterns = [
-    path('django-admin/', admin.site.urls),
+    path('django-admin/', admin.site.urls, name='django_admin'),
 
     path('admin/', include(wagtailadmin_urls)),
     path('documents/', include(wagtaildocs_urls)),

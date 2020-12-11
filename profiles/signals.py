@@ -80,11 +80,15 @@ def create_profile_handler(sender, instance, created, **kwargs):
         msgprefix = 'Updated'
         set_and_create_user_profile(instance)
 
-    msgprefix = 'New'
-    
+    if created:
+        logger.info(f'Sending email to admins about new user {instance.username}')
+        mail_admins_about_new_user(instance)
+
+        msgprefix = 'New'
+
     set_and_create_user_profile(instance)
     set_user_inquiry_plan(instance)
-    mail_admins_about_new_user(instance)
+
     logger.info(f"{msgprefix} user profile for {instance} created with declared role {instance.declared_role}")
 
 
