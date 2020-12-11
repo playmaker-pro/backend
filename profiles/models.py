@@ -353,6 +353,12 @@ class PlayerProfile(BaseProfile, SoccerDisplayMixin):
         'video_url',
         'video_title',
         'video_description',
+        'video_url_second',
+        'video_title_second',
+        'video_description_second',
+        'video_url_third',
+        'video_title_third',
+        'video_description_third',
     ]
 
     POSITION_CHOICES = [
@@ -427,8 +433,6 @@ class PlayerProfile(BaseProfile, SoccerDisplayMixin):
         help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'),
         blank=True,
         null=True,)
-
-
 
     club = models.CharField(
         _('Klub'),
@@ -664,6 +668,32 @@ class PlayerProfile(BaseProfile, SoccerDisplayMixin):
 
     video_description = models.TextField(
         _('Temat i opis'),
+        null=True,
+        blank=True)
+
+    video_url_second = models.URLField(
+        _('Youtube url nr 2'),
+        blank=True,
+        null=True)
+
+    video_title_second = models.CharField(
+        _('Tytuł nagrania nr 2'), max_length=235, blank=True, null=True)
+
+    video_description_second = models.TextField(
+        _('Temat i opis nr 2'),
+        null=True,
+        blank=True)
+
+    video_url_third = models.URLField(
+        _('Youtube url nr 3'),
+        blank=True,
+        null=True)
+
+    video_title_third = models.CharField(
+        _('Tytuł nagrania nr 3'), max_length=235, blank=True, null=True)
+
+    video_description_third = models.TextField(
+        _('Temat i opis nagrania nr 3'),
         null=True,
         blank=True)
 

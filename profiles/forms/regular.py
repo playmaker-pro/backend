@@ -173,7 +173,7 @@ class PlayerProfileForm(BaseProfileForm):
                 # # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
                 # Field('voivodeship', wrapper_class='row', readonly=True),
                 # Field('team', wrapper_class='row', readonly=True),
-                # Field('country', wrapper_class='row', css_class='mandatory'),
+                Field('country', wrapper_class='row', css_class='mandatory'),
                 Field("height", wrapper_class='row', placeholder='130 - 210 cm', css_class='mandatory'),
                 Field("weight", wrapper_class='row', placeholder='40 - 140 kg', css_class='mandatory'),
                 Field("address", wrapper_class='row'),
@@ -212,6 +212,13 @@ class PlayerProfileForm(BaseProfileForm):
                 Field('video_url', wrapper_class='row', placeholder=_('youtube url')),
                 Field('video_title', wrapper_class='row', placeholder=_('Tytuł')),
                 Field("video_description", wrapper_class='row', placeholder=_('Opisz w której minucie dzieją się istotne rzeczy')),
+                Field('video_url_second', wrapper_class='row', placeholder=_('youtube url nr 2')),
+                Field('video_title_second', wrapper_class='row', placeholder=_('Tytuł nr 2')),
+                Field("video_description_second", wrapper_class='row', placeholder=_('Nr 2 Opisz w której minucie dzieją się istotne rzeczy')),
+                Field('video_url_third', wrapper_class='row', placeholder=_('youtube url nr 3')),
+                Field('video_title_third', wrapper_class='row', placeholder=_('Tytuł nr 3')),
+                Field("video_description_third", wrapper_class='row', placeholder=_('Nr 3 Opisz w której minucie dzieją się istotne rzeczy')),
+                
                 css_class='col-md-6',
             ),
         )  # layout

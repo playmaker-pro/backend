@@ -5,9 +5,16 @@ from inquiries.models import InquiryRequest
 import logging
 logger = logging.getLogger(__name__)
 from followers.models import Follow, FollowTeam
+from profiles.utils import extract_video_id
+
 
 register = template.Library()
 
+
+@register.filter
+def convert_to_embeded(url):
+    """concatenate arg1 & arg2"""
+    return f'https://www.youtube.com/embed/{extract_video_id(url)}' 
 
 @register.filter
 def addstr(arg1, arg2):
