@@ -276,7 +276,12 @@ class TrainerContact(models.Model):
     last_name = models.CharField(_('Nazwisko'), max_length=255)
     season = models.CharField(_('Sezon'), max_length=255, null=True, blank=True)
     email = models.CharField(_('adres e-mail'), max_length=255, null=True, blank=True)
-    phone = PhoneNumberField(_('Telefon'), region='PL', blank=True, null=True)
+    phone = models.CharField(
+        _('Telefon'),
+        max_length=15,
+        blank=True,
+        null=True)
+    # phone = PhoneNumberField(_('Telefon'), region='PL', blank=True, null=True)
 
 
 class SoccerDisplayMixin:

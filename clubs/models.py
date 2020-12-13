@@ -137,7 +137,6 @@ class Club(models.Model):
 
 class League(models.Model):
     name = models.CharField(max_length=355, unique=True)
-
     @property
     def display_league(self):
         return self.name

@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 # Create your models here.
 from django.conf import settings
 from django_fsm import FSMField, transition
-from notifications.mail import request_new
+from notifications.mail import request_new, request_accepted, request_declined
 # This can be extracted to models.User.
 
 # class DefaultPlan(models.Model):
@@ -178,22 +178,20 @@ class InquiryRequest(models.Model):
     @transition(field=status, source=[STATUS_NEW, STATUS_SENT], target=STATUS_ACCEPTED)
     def accept(self):
         '''Should be appeared when message was accepted by recipient'''
+        request_accepted(self)
 
     @transition(field=status, source=[STATUS_NEW, STATUS_SENT], target=STATUS_REJECTED)
     def reject(self):
         '''Should be appeared when message was rejected by recipient'''
+        request_declined(self)
 
     def __str__(self):
         return f'{self.sender} --({self.status})-> {self.recipient}'
 
     def save(self, *args, **kwargs):
-
-
         self.body = ContactBodySnippet.generate(self.sender)
-        
         if self.status == self.STATUS_NEW:
             self.send()
-            
         super().save(*args, **kwargs)
 
 
