@@ -38,7 +38,8 @@ def request_accepted(instance, extra_body=''):
 
     body += f'\t{instance.recipient.first_name} {instance.recipient.last_name}\n'
     body += f'\t{build_absolute_url(instance.recipient.profile.get_permalink())}\n'
-    body += f'\t{instance.recipient.profile.phone}\n'
+    phone = instance.recipient.profile.phone or 'brak'
+    body += f'\t{phone}\n'
     body += f'\t{instance.recipient.email}\n\n'
     body += 'Pozdrawiamy, \n'
     body += 'Zespół PlayMaker.pro'
