@@ -16,6 +16,7 @@ def convert_to_embeded(url):
     """concatenate arg1 & arg2"""
     return f'https://www.youtube.com/embed/{extract_video_id(url)}' 
 
+
 @register.filter
 def addstr(arg1, arg2):
     """concatenate arg1 & arg2"""
@@ -77,6 +78,10 @@ def request_link(context, user, showed_user):
         button_text = 'Zaproś na testy'
     elif user.is_player and showed_user.is_coach:
         button_text = 'Zapytaj o testy'
+    elif user.is_club and showed_user.is_coach:
+        button_text = 'Zaproś na rozmowę'
+    elif user.is_coach and showed_user.is_club:
+        button_text = 'Zapytaj o rozmowę'
     else:
         return {'off': True}
     try:

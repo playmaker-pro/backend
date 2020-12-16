@@ -16,7 +16,21 @@ function outFunc() {
   var tooltip = document.getElementById("myTooltip");
   tooltip.innerHTML = "Copy to clipboard";
 }
+function get_missingname_form(slug)
+{
+        $.ajax({
+            url: "/users/me/missingname/",
+            type: "get",
+            data: {slug: slug},
+            success: function(json) {
+              // console.log(response);
+              // response is form in html format
+                $("#missingname-form-body").html(json.form);
 
+
+            }
+        })
+  }
 
 function get_verification_form(slug)
 {
@@ -49,20 +63,44 @@ function get_verification_form(slug)
         })
   }
 
-  function copyToClipboard() {
+function copyToClipboard() {
     var copyText = document.getElementById("copyToClipBoard");
     copyText.select(); 
     copyText.setSelectionRange(0, 99999); /*For mobile devices*/
     document.execCommand("copy");
   }
 
-  $(document).on('submit', '#verification-form', function(e){
+
+
+$(document).on('submit', '#missingname-form', function(e){
 
     e.preventDefault(); // avoid to execute the actual submit of the form.
 
     var form = $(this);
     var url = form.attr('action');
-    console.log('sssssss')
+
+    $.ajax({
+           type: "POST",
+           url: url,
+           data: form.serialize(), // serializes the form's elements.
+           success: function(json)
+           {
+                if (json.success == true ) {
+                    location.reload();
+                } else { 
+                        $("#missingname-form-body").html(json.form);
+                }
+           }
+         });
+
+    
+});
+$(document).on('submit', '#verification-form', function(e){
+
+    e.preventDefault(); // avoid to execute the actual submit of the form.
+
+    var form = $(this);
+    var url = form.attr('action');
     $.ajax({
            type: "POST",
            url: url,

@@ -59,17 +59,157 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
     paginate_limit = 100
 
     def get(self, request, *args, **kwargs):
-
+        tabs = []
         user = request.user
+
         qs_recipient = InquiryRequest.objects.filter(recipient=user).order_by('-created_at')
         qs_sender = InquiryRequest.objects.filter(sender=user).order_by('-created_at')
+
+        if user.is_club or user.is_coach:
+            qs = qs_recipient.filter(sender__declared_role=definitions.PLAYER_SHORT)
+            tabs.append({
+                'name': 'player-from',
+                'title': 'Otrzymane zapytania od piłkarzy',
+                'objects': qs,
+                'empty': {
+                    'text_body': 'Piłkarze na naszej platformie mogą wysłać zapytanie o możliwość odbycia testów wraz ze swoimi danymi kontaktowymi.',
+                    'text_header': 'Jeszcze nie otrzymałeś żadnego zapytania o testy od piłkarzy',    
+                },
+                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+            })
+
+            qs = qs_sender.filter(recipient__declared_role=definitions.PLAYER_SHORT)
+            tabs.append({
+                'name': 'player-to',
+                'title': 'Wysłane zapytania do piłkarzy',
+                'objects': qs,
+                'empty': {
+                    'text_body': '',
+                    'text_header': 'Jeszcze wysłałeś żadnego zapytania o testy od piłkarzy',   
+                },
+                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count()})
+
+        if user.is_player:
+            qs = qs_recipient.filter(sender__declared_role__in=[definitions.COACH_SHORT, definitions.CLUB_SHORT])
+            tabs.append({
+                'name': 'player-from',
+                'title': 'Otrzymane zapytania od klubów',
+                'objects': qs,
+                'empty': {
+                    'text_body': 'Trenerzy i Kluby w na platformie maja możliwość wysłać Ci zaproszenie na testy. Powjawią się one tutaj.',
+                    'text_header': 'Jeszcze nie otrzymałeś żadnego zaproszenia na testy',  
+                },
+                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+            })
+
+            qs = qs_sender.filter(recipient__declared_role__in=[definitions.COACH_SHORT, definitions.CLUB_SHORT])
+            tabs.append({
+                'name': 'player-to',
+                'title': 'Wysłane zapytania do klubów',
+                'objects': qs,
+                'empty': {
+                    'text_header': 'Jeszcze nie wysłałeś żadnego zapytania o testy',
+                    'text_body': 'Będąc na platformie możesz wysyłać zaproszenia do klubów i trenerów.',
+                },
+                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+            })
+
+        if user.is_coach:
+            qs = qs_recipient.filter(sender__declared_role=definitions.CLUB_SHORT)
+            tabs.append({
+                'name': 'club-from',
+                'title': 'Otrzymane zapytania od klubów',
+                'objects': qs,
+                'empty': {
+                    'text_header': 'Jeszcze nie otrzymałeś zaproszenie od żadnego klubu',   
+                    'text_body': '',
+                },
+                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+            })
+
+            qs = qs_sender.filter(recipient__declared_role=definitions.CLUB_SHORT)
+            tabs.append({
+                'name': 'club-to',
+                'title': 'Wysłane zapytania do klubów',
+                'objects': qs,
+                'empty': {
+                    'text_header': 'Jeszcze nie wysłałeś zapytania do żadnego klubu.',
+                    'text_body': '',
+                },
+                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+            })
+
+        if user.is_club:
+            qs = qs_recipient.filter(sender__declared_role=definitions.COACH_SHORT)
+            tabs.append({
+                'name': 'club-from',
+                'title': 'Otrzymane zapytania od trenerów',
+                'objects': qs,
+                'empty': {
+                    'text_body': '',
+                    'text_header': 'Jeszcze nie otrzymałeś żadnego zapytania od trenerów',    
+                },
+                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+            })
+
+            qs = qs_sender.filter(recipient__declared_role=definitions.COACH_SHORT)
+            tabs.append({
+                'name': 'club-to',
+                'title': 'Wysłane zapytania do trenerów',
+                'objects': qs,
+                'empty': {
+                    'text_body': '',
+                    'text_header': 'Jeszcze nie wysłałeś żadnego zapytania',    
+                },
+                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+            })
+            
+        
+
+        # qs_recipient_from_coach = qs_recipient.filter(sender__declared_role=definitions.COACH_SHORT)
+        # qs_recipient_from_club= qs_recipient.filter(sender__declared_role=definitions.CLUB_SHORT)
+    
+        
+        # qs_sender_to_player = 
+        # qs_sender_to_coach = qs_sender.filter(recipient__declared_role=definitions.COACH_SHORT)
+        # qs_sender_to_club = 
+    
         kwargs['modals'] = self.modal_activity(user, verification_auto=False)
+
         kwargs['page_title'] = 'Zapytania'
 
-        kwargs['send_active'] = qs_sender.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
-        kwargs['rec_active'] = qs_recipient.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
-        kwargs['page_obj_recipient'] = self.paginate(qs_recipient)
-        kwargs['page_obj_sender'] = self.paginate(qs_sender)
+
+        # kwargs['active_from_coach'] = qs_recipient_from_coach.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+        # kwargs['active_from_club'] = qs_recipient_from_club.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+
+
+        # kwargs['active_to_coach'] = qs_sender_to_coach.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+        # kwargs['active_to_club'] = qs_sender_to_club.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+
+        # kwargs['page_obj_from_player'] = self.paginate(qs_recipient_from_player)
+        # kwargs['active_from_player'] = qs_recipient_from_player.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+
+        # if request.user.is_club:
+        #     kwargs['page_obj_from_club'] = self.paginate(qs_recipient_from_coach)
+        #     kwargs['active_from_club'] = qs_recipient_from_coach.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+        # elif request.user.is_coach:
+        #     kwargs['page_obj_from_club'] = self.paginate(qs_recipient_from_club)
+        #     kwargs['active_from_club'] = qs_recipient_from_club.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+        # else:
+        #     kwargs['page_obj_from_club'] = None
+
+        # kwargs['page_obj_to_player'] = self.paginate(qs_sender_to_player)
+        # kwargs['active_to_player'] = qs_sender_to_player.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+
+        # if request.user.is_club:
+        #     kwargs['page_obj_to_club'] = self.paginate(qs_sender_to_coach)
+        #     kwargs['active_to_club'] = qs_sender_to_coach.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+        # elif request.user.is_coach:
+        #     kwargs['page_obj_to_club'] = self.paginate(qs_sender_to_club)
+        #     kwargs['active_to_club'] = qs_sender_to_club.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+
+        kwargs['tabs'] = tabs
+
         return super().get(request, *args, **kwargs)
 
 
@@ -350,11 +490,13 @@ class EditAccountSettings(LoginRequiredMixin, generic.TemplateView, mixins.ViewM
 
     def get(self, request, *args, **kwargs):
         user = self.request.user
-        if "user_form" not in kwargs:
+
+        if 'user_form' not in kwargs:
             kwargs["user_form"] = forms.UserForm(instance=user)
 
-        if "role_form" not in kwargs:
-            kwargs["role_form"] = forms.ChangeRoleForm()
+        if 'role_form' not in kwargs:
+            kwargs['role_form'] = forms.ChangeRoleForm()
+
         kwargs['modals'] = self.modal_activity(user, verification_auto=False)
         kwargs['page_title'] = _('Edycja ustawień konta')
 
@@ -438,6 +580,33 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
         profile.save()
         messages.success(request, "Profile details saved!")
         return redirect("profiles:show_self")
+
+
+class AccountMissingFirstLastName(LoginRequiredMixin, View):
+
+    http_method_names = ['post', 'get']
+
+    def get(self, request, *args, **kwargs):
+        # user = request.user
+        form = forms.UserMissingNameForm()
+        data = {}
+        data['form'] = render_crispy_form(form)
+        return JsonResponse(data)
+
+    def post(self, request, *args, **kwargs):
+        user = self.request.user
+        form = forms.UserMissingNameForm(request.POST, instance=user)  # @todo how to add Current user role as a TextField.
+        data = {'success': False, 'url': None, 'form': None}
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Przyjęto zgłoszenie brakujacych paramterów konta."))
+            data['success'] = True
+            data['url'] = reverse("profiles:show_self")
+            return JsonResponse(data)
+        else:
+            data['form'] = render_crispy_form(form)
+            return JsonResponse(data)
 
 
 class AccountVerification(LoginRequiredMixin, View):

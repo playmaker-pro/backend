@@ -37,8 +37,8 @@ def request_accepted(instance, extra_body=''):
         body += f'Trener {instance.recipient.username}  zaakceptował Twoje zapytanie o testy. Poniżej prezentujemy jego dane kontaktowe:\n\n'    
 
     body += f'\t{instance.recipient.username}\n'
-    body += f'\t{build_absolute_url(instance.recipient.profile.get_permalink)}\n'
-    body += f'\t{instance.recipient.phone}\n'
+    body += f'\t{build_absolute_url(instance.recipient.profile.get_permalink())}\n'
+    body += f'\t{instance.recipient.profile.phone}\n'
     body += f'\t{instance.recipient.email}\n\n'
     body += 'Pozdrawiamy, \n'
     body += 'Zespół PlayMaker.pro'
@@ -46,6 +46,37 @@ def request_accepted(instance, extra_body=''):
     send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [instance.sender.email])
 
 
+def weekly_account_report(instance, extra_body=''):
+    ''' Instance users.User
+
+    generates weekly report 
+    '''
+    
+    # text = textwrap.dedent(f'''
+    subject = 'Cotygodniowy raport'
+    body = '''
+    Witaj, z tej strony Zespół PlayMaker.pro!
+
+    Wiele działo się na profilu Twojego klubu w zeszłym tygodniu. Oto kilka powiadomień, które mogą zwrócić Twoją uwagę: 
+
+    Zaobserwowało Cię : [count] użytkowników
+    Wizyty na profilu klubu:  [count] użytkowników
+    Zapytania o testy: [count] zawodników
+    Twoje zaproszenia na testy: [count]
+
+    Aktualnie pozostało Ci [count] zaproszeń do [date]. Jeśli chcesz zwiększyć swoje limity, kliknij w poniższy link
+
+    <link>
+
+    Nie zwlekaj, odwiedź swój klubowy profil na www.playmaker.pro
+
+    Pozdrawiamy!
+    Zespół PlayMaker.pro
+    '''
+    send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [instance.email])
+
+
+    
 def request_declined(instance, extra_body=''):
     ''' inquiry request instance'''
     subject = 'Użytkownik odrzucił Twoje zaproszenie'
@@ -75,7 +106,6 @@ def request_declined(instance, extra_body=''):
     send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [instance.sender.email])
 
 
-    
 def request_new(instance, extra_body=''):
     ''' inquiry request instance'''
 
@@ -104,6 +134,26 @@ def request_new(instance, extra_body=''):
         body += 'Odwiedź swój klubowy profil na PlayMaker.pro lub kliknij w poniższy link \n\n'
         body += f'https://playmaker.pro{reverse("profiles:my_requests")}\n\n'
         body += 'Nie zwlekaj i sprawdź profil zawodnika, który może okazać się potencjalnym wzmocnieniem Twojej kadry!\n\n'
+        body += 'Pozdrawiamy\n'
+        body += 'Zespół PlayMaker.pro'
+
+    elif instance.sender.is_club and instance.recipient.is_coach:
+        subject = f"Otrzymałeś zapytanie od klubu"
+        body = 'Witaj,\n'
+        body += 'Otrzymałeś zapytanie od klubu!  \n\n'
+        body += 'Odwiedź swój trenerski profil na www.playmaker.pro lub kliknij w poniższy link \n\n'
+        body += f'{build_absolute_url(reverse("profiles:my_requests"))}\n\n'
+        body += 'Nie zwlekaj i przejrzyj profil klubu, który jest zainteresowany Twoim trenerskim profilem! \n\n'
+        body += 'Pozdrawiamy\n'
+        body += 'Zespół PlayMaker.pro'
+
+    elif instance.sender.is_coach and instance.recipient.is_club:
+        subject = f"Otrzymałeś zapytanie od trenera"
+        body = 'Witaj,\n'
+        body += 'Otrzymałeś zapytanie od trenera!  \n\n'
+        body += 'Odwiedź swój klubowy profil na www.playmaker.pro lub kliknij w poniższy link \n\n'
+        body += f'{build_absolute_url(reverse("profiles:my_requests"))}\n\n'
+        body += 'Nie zwlekaj i przejrzyj profil Trenera, który może poprawić wyniki Twojej drużyny! \n\n'
         body += 'Pozdrawiamy\n'
         body += 'Zespół PlayMaker.pro'
 

@@ -11,6 +11,13 @@ class ViewModalLoadingMixin:
                 'load': False,
                 'async': False,
             },
+            'missing_name': {
+                'name': 'missingNameModal',
+                'template': 'profiles/modals/_missing_name_modal.html',
+                'auto': False,
+                'load': False,
+                'async': 'get_missingname_form',
+            },
             'register': {
                 'name': 'registerModal',
                 'template': 'profiles/modals/_register_modal.html',
@@ -51,6 +58,10 @@ class ViewModalLoadingMixin:
         if not user.is_authenticated:
             modals['register']['load'] = True
             modals['register']['auto'] = register_auto or True
+
+        elif user.first_name == user.email.split('@')[0] and user.last_name == user.email.split('@')[0]:
+            modals['missing_name']['load'] = True
+            modals['missing_name']['auto'] = True
 
         elif user.is_missing_verification_data:
             modals['verification']['load'] = True

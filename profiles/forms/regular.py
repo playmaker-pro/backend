@@ -13,6 +13,34 @@ from profiles import widgets
 User = get_user_model()
 
 
+class UserMissingNameForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.fields['first_name'].required = True
+        self.fields['last_name'].required = True  # '<i class="icofont-map"></i>'
+        self.helper.label_class = 'col-md-2 p-1'
+        self.helper.field_class = 'col-12 p-1'
+        self.helper.layout = Layout(
+            Fieldset(
+                '',
+                Div(             
+                    Div(
+                        Field('first_name', css_class="row"),
+                        Field('last_name', css_class="row"),
+
+                    ),
+                    # css_class='card',
+                ),
+            )
+        )
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name']
+
+
 class UserForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -29,7 +57,7 @@ class UserForm(forms.ModelForm):
                         Field('picture', css_class="col-sm-6", ),
                         css_class='row',
                     ),
-                    #css_class='card',
+                    # css_class='card',
                 ),
             )
         )
