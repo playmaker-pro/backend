@@ -30,11 +30,11 @@ def generate_map(filename):
         reader = csv.DictReader(csvfile)
         for row in reader:
             d.append(dict(row))
-    
+
     with open('league_filter_map.py', 'w+') as filterfile:
-  
         filterfile.write(f'LEAGUE_MAP = {d}')
-        
+
+
 def generate_league_options():
     
     from league_filter_map import LEAGUE_MAP

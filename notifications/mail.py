@@ -50,9 +50,8 @@ def request_accepted(instance, extra_body=''):
 def weekly_account_report(instance, extra_body=''):
     ''' Instance users.User
 
-    generates weekly report 
+    generates weekly raport
     '''
-    
     # text = textwrap.dedent(f'''
     subject = 'Cotygodniowy raport'
     body = '''
@@ -77,29 +76,34 @@ def weekly_account_report(instance, extra_body=''):
     send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [instance.email])
 
 
-    
 def request_declined(instance, extra_body=''):
     ''' inquiry request instance'''
-    subject = 'Użytkownik odrzucił Twoje zaproszenie'
 
-    body = 'Gratulujemy!\n\n'
-    # [player -> klub]
+    body = ''
+
+    # [player -> klub / coach]
     if (instance.sender.is_club or instance.sender.is_coach) and instance.recipient.is_player:
-        body += f'{instance.recipient.username} odrzucił Twoje zaproszenie na testy.\n\n'
+        subject = 'Piłkarz odrzucił Twoje zaproszenie'
+        body += f'Piłkarz {instance.recipient.first_name} {instance.recipient.last_name} odrzucił Twoje zaproszenie na testy.\n\n'
         body += f'Jeśli nadal masz problem ze skompletowaniem kadry, sprawdź usługi skautingowe PlayMaker.pro. Więcej informacji znajdziesz w poniższym linku:\n\n'
-        body += 'https://www.playmaker.pro/scouting/\n\n'
+        body += 'https://playmaker.pro/scouting/\n\n'
 
     # [trener -> klub]
-    if instance.sender.is_player and instance.recipient.is_coach:
-        body += f'Trener {instance.recipient.username} odrzucił Twoje zapytanie o testy.\n\n'
+    if (instance.sender.is_player or instance.sender.is_club) and instance.recipient.is_coach:
+        subject = 'Trener odrzucił Twoje zaproszenie'
+        body += f'Trener {instance.recipient.first_name} {instance.recipient.last_name} odrzucił Twoje zapytanie o testy.\n\n'
         body += f'Jeśli nadal masz problem ze skompletowaniem kadry, sprawdź usługi skautingowe PlayMaker.pro. Więcej informacji znajdziesz w poniższym linku:\n\n'
-        body += 'https://www.playmaker.pro/scouting/\n\n'
+        body += 'https://playmaker.pro/transfer/\n\n'
 
     # [klub -> trener]
-    if instance.sender.is_player and instance.recipient.is_club:
-        body += f'Klub {instance.recipient.username}  odrzucił Twoje zapytanie o testy.\n\n'
+    if (instance.sender.is_player or instance.sender.is_coach) and instance.recipient.is_club:
+        subject = 'Klub odrzucił Twoje zapytanie'
+        suffix = ''
+        if instance.sender.is_player:
+            suffix = ' o testy'
+        body += f'Klub {instance.recipient.profile.display_club} odrzucił Twoje zapytanie{suffix}.\n\n'
         body += f'Jeśli nadal masz problemem ze znalezieniem klubu, zaktualizuj swoje CV i uzyskaj wsparcie transferowe od PlayMaker.pro! Więcej informacji znajdziesz w poniższym linku: \n\n'
-        body += 'https://www.playmaker.pro/transfer/\n\n'
+        body += 'https://playmaker.pro/transfer/\n\n'
 
     body += 'Pozdrawiamy, \n'
     body += 'Zespół PlayMaker.pro'
@@ -128,6 +132,7 @@ def request_new(instance, extra_body=''):
         body += 'Nie zwlekaj i zobacz, kto chce się z Tobą skontaktować!\n\n'
         body += 'Do zobaczenia na PlayMaker.pro!\n'
         body += 'Zespół PlayMaker.pro'
+
     elif instance.sender.is_player and (instance.recipient.is_club or instance.recipient.is_coach):
         subject = f"Otrzymałeś zapytanie o testy od {from_who}"
         body = 'Witaj,\n'

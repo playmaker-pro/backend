@@ -5,19 +5,19 @@ from profiles import models
 from profiles.views import get_profile_model   # @todo this shoudl goes to utilities, views and commands are using this utility
 from django.contrib.auth import get_user_model
 import pprint
-
+from notifications.mail import weekly_account_report
 
 User = get_user_model()
 
 
 class Command(BaseCommand):
-    help = 'Load dumped profiles from csv file.'
+    help = 'Command line to send requests to users.'
 
     def add_arguments(self, parser):
-        parser.add_argument('path', type=str)
-        parser.add_argument('type', type=str)
+        parser.add_argument('test_mail', type=str)
 
     def handle(self, *args, **options):
-        role = options['type']
-        self.stdout.write(self.style.SUCCESS(pprint.pprint(row)))
-        
+        email = options['test_mail']
+        u = User.objects.get(email=email)
+        weekly_account_report(u)
+        self.stdout.write(self.style.SUCCESS('Message sended.'))

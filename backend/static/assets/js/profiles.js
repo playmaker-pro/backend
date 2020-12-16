@@ -16,6 +16,8 @@ function outFunc() {
   var tooltip = document.getElementById("myTooltip");
   tooltip.innerHTML = "Copy to clipboard";
 }
+
+
 function get_missingname_form(slug)
 {
         $.ajax({
@@ -23,14 +25,11 @@ function get_missingname_form(slug)
             type: "get",
             data: {slug: slug},
             success: function(json) {
-              // console.log(response);
-              // response is form in html format
                 $("#missingname-form-body").html(json.form);
-
-
             }
         })
   }
+
 
 function get_verification_form(slug)
 {
@@ -39,26 +38,7 @@ function get_verification_form(slug)
             type: "get",
             data: {slug: slug},
             success: function(json) {
-              // console.log(response);
-              // response is form in html format
                 $("#verification-form-body").html(json.form);
-
-                // if (response['errors'] != null ) {
-
-                //     let field;
-                //     let txt = "<div class='error-message banner alert alert-danger'>";
-                //     for (field in response['errors']) {
-                //         txt += '<div><strong>'+error['field']+'</strong>'
-                //         let error;
-                //         for (error of response['errors'][field]) {
-                //             txt += '<div>' + error+'</div>'
-                //         }
-                //         txt += '</div>'
-                //     }
-
-                //     $("#needVerificationFormErrors").html = txt;
-                // }
-
             }
         })
   }
@@ -69,6 +49,18 @@ function copyToClipboard() {
     copyText.setSelectionRange(0, 99999); /*For mobile devices*/
     document.execCommand("copy");
   }
+
+
+function updateSettings(event) {
+    $.ajax({
+      url: "/users/me/updatesettings/",
+      type: "get",
+      success: function(json) {
+        showToastMessage('Ustawienia zmienione');
+          
+      }
+  })
+}
 
 
 

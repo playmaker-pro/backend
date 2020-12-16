@@ -14,3 +14,6 @@ class NotificationSetting(models.Model):
         primary_key=True)
 
     weekly_report = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f'{self.user} notification settings'

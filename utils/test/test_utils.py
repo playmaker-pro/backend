@@ -1,16 +1,15 @@
 import logging
+from datetime import datetime
 
 import mock
 import pytest
 from django.test import TestCase
+from django.utils import timezone
 from profiles import models
+from profiles.utils import get_current_season
 from roles import definitions
 from users.models import User
-from . import utils
-from django.utils import timezone
-from datetime import datetime
-
-from profiles.utils import get_current_season
+from utils import testutils as utils
 
 
 utils.silence_explamation_mark()

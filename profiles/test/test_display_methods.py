@@ -3,9 +3,8 @@ from django.test import TestCase
 from profiles import models
 from users.models import User
 from roles import definitions
-import logging
 from clubs.models import Team, Club
-from profiles.test import utils
+from utils import testutils as utils
 
 
 utils.silence_explamation_mark()

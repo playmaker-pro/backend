@@ -75,7 +75,8 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
                     'text_body': 'Piłkarze na naszej platformie mogą wysłać zapytanie o możliwość odbycia testów wraz ze swoimi danymi kontaktowymi.',
                     'text_header': 'Jeszcze nie otrzymałeś żadnego zapytania o testy od piłkarzy',    
                 },
-                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                'actions': True,
             })
 
             qs = qs_sender.filter(recipient__declared_role=definitions.PLAYER_SHORT)
@@ -87,7 +88,9 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
                     'text_body': '',
                     'text_header': 'Jeszcze wysłałeś żadnego zapytania o testy od piłkarzy',   
                 },
-                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count()})
+                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                'actions': False,
+            })
 
         if user.is_player:
             qs = qs_recipient.filter(sender__declared_role__in=[definitions.COACH_SHORT, definitions.CLUB_SHORT])
@@ -99,7 +102,8 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
                     'text_body': 'Trenerzy i Kluby w na platformie maja możliwość wysłać Ci zaproszenie na testy. Powjawią się one tutaj.',
                     'text_header': 'Jeszcze nie otrzymałeś żadnego zaproszenia na testy',  
                 },
-                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                'actions': True,
             })
 
             qs = qs_sender.filter(recipient__declared_role__in=[definitions.COACH_SHORT, definitions.CLUB_SHORT])
@@ -111,7 +115,8 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
                     'text_header': 'Jeszcze nie wysłałeś żadnego zapytania o testy',
                     'text_body': 'Będąc na platformie możesz wysyłać zaproszenia do klubów i trenerów.',
                 },
-                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                'actions': False,
             })
 
         if user.is_coach:
@@ -124,7 +129,8 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
                     'text_header': 'Jeszcze nie otrzymałeś zaproszenie od żadnego klubu',   
                     'text_body': '',
                 },
-                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                'actions': True,
             })
 
             qs = qs_sender.filter(recipient__declared_role=definitions.CLUB_SHORT)
@@ -136,7 +142,8 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
                     'text_header': 'Jeszcze nie wysłałeś zapytania do żadnego klubu.',
                     'text_body': '',
                 },
-                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                'actions': False,
             })
 
         if user.is_club:
@@ -149,7 +156,8 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
                     'text_body': '',
                     'text_header': 'Jeszcze nie otrzymałeś żadnego zapytania od trenerów',    
                 },
-                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                'actions': True,
             })
 
             qs = qs_sender.filter(recipient__declared_role=definitions.COACH_SHORT)
@@ -161,7 +169,8 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
                     'text_body': '',
                     'text_header': 'Jeszcze nie wysłałeś żadnego zapytania',    
                 },
-                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count()
+                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                'actions': False,
             })
             
         
@@ -607,6 +616,16 @@ class AccountMissingFirstLastName(LoginRequiredMixin, View):
         else:
             data['form'] = render_crispy_form(form)
             return JsonResponse(data)
+
+
+class AccountSettings(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        usersettings = request.user.notificationsetting
+        toggled = not usersettings.weekly_report
+        usersettings.weekly_report = toggled
+        usersettings.save()
+        data = {}
+        return JsonResponse(data)
 
 
 class AccountVerification(LoginRequiredMixin, View):

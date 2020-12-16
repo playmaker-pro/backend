@@ -32,6 +32,8 @@
               <h2 class='form-section-title'>{% trans 'Ustawienia konta' %}</h2>
           </div>
         </div>
+
+
         {% if user.is_player or user.is_coach or user.is_club  %}
         <div class="row p-3 mb-4">
           <div class="col-sm-3"> 
@@ -47,6 +49,13 @@
           </div> 
         </div>
         {% endif %}
+
+
+
+
+
+
+
         <div class="row p-3 mb-4">
           <div class="col-sm-3"> 
             <i class="ri-check-double-line"></i> {% trans 'Połącz konta społecznościowe. Dzięki temu będziesz mogł logować się za pomocą nich' %}
@@ -67,15 +76,15 @@
         </div>   
  
         <div class="row p-3 mb-4">
-          <div class="col-sm-3">
-            <i class="ri-check-double-line"></i> 
-            {% trans 'Ustaw nowy adres e-mail bądź dodaj nowy adres z którego będziesz chciał się logować' %} 
-            <div class='text-muted'>(obecny: {{ user.email }})</div>
-          </div>
+            <div class="col-sm-3">
+              <i class="ri-check-double-line"></i> 
+              {% trans 'Ustaw nowy adres e-mail bądź dodaj nowy adres z którego będziesz chciał się logować' %} 
+              <div class='text-muted'>(obecny: {{ user.email }})</div>
+            </div>
 
-          <div class="col-sm-6">
-            <a class="btn-pm btn-pm-sm" href="{% url 'account_email' %}">{% trans 'Dodaj/Zmień'%} </a>
-          </div>
+            <div class="col-sm-6">
+              <a class="btn-pm btn-pm-sm" href="{% url 'account_email' %}">{% trans 'Dodaj/Zmień'%} </a>
+            </div>
         </div>
 
         <div class="row p-3 mb-4">
@@ -102,9 +111,20 @@
                 {% crispy role_form %}
                 </form>
             </div>
-        </div>
         {% endif %}
-  </div>
+        </div>
+        
+        
+        <div class="row p-3 mb-4">
+          <div class="col-sm-3"> 
+            <i class="ri-check-double-line"></i> {% trans 'Chcę otrzymywać co tygodniowy raport aktywności mojego konta.' %}
+          </div>
+          <div class="col-sm-6">
+             <input type="checkbox" onclick="updateSettings(event)" {% if user.notificationsetting.weekly_report %} checked {% endif %}>
+          </div> 
+        </div>
+        
+    </div>
 </section>
 {% endblock content %}
 

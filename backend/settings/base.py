@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'inquiries',
     'clubs',
     'soccerbase',
+    'notifications',
 
     'data',  # external repo
     'stats',  # external repo

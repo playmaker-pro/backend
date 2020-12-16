@@ -1,12 +1,14 @@
+import logging
+
 import pytest
 from django.test import TestCase
 from profiles import models
-from users.models import User
 from roles import definitions
-import logging
+from users.models import User
+from utils import testutils as utils
 
-logger = logging.getLogger('django.db.backends.schema')
-logger.propagate = False
+
+utils.silence_explamation_mark()
 
 
 class ChangeRoleTests(TestCase):
@@ -24,11 +26,11 @@ class ChangeRoleTests(TestCase):
     def test__1__changing_role_to_coach_from_player_cause_user_sate_to_missing_verification_data(self):
         assert self.user.is_verified is True
         print(f'----> before  {self.user.state}')
-    
+
         change = models.RoleChangeRequest.objects.create(user=self.user, new=definitions.COACH_SHORT)
-        
+
         assert self.user.is_verified is True
-        
+
         change.approved = True
         change.save()
         self.user.refresh_from_db()
@@ -46,7 +48,7 @@ class ChangeRoleTests(TestCase):
         self.user.refresh_from_db()
         print(f'---->  {self.user.state}')
         assert self.user.is_verified is True
-     
+
     def test_changing_role_to_scout_from_unverifed_player_cause_user_to_be_auto_verified(self):
         assert self.user.is_verified is True
         self.user.profile.bio = None
@@ -88,7 +90,6 @@ class ChangeRoleTests(TestCase):
         print(f'---->  after {self.user.state}')
         assert self.user.is_verified is True
         assert self.user.is_missing_verification_data is False
-        
 
 
 class TestProfilePercentageTests(TestCase):

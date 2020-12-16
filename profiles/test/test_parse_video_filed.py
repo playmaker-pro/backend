@@ -1,17 +1,17 @@
 
 
+import logging
+
 import pytest
 from django.test import TestCase
 from profiles import models
-from users.models import User
-from roles import definitions
-import logging
 from profiles.utils import extract_video_id
+from roles import definitions
+from users.models import User
+from utils import testutils as utils
 
 
-logger = logging.getLogger('django.db.backends.schema')
-logger.propagate = False
-
+utils.silence_explamation_mark()
 
 
 class ParseVideoUrl(TestCase):

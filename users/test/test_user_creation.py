@@ -2,14 +2,13 @@ import logging
 
 import pytest
 from django.test import TestCase
+from inquiries import models as inquiries_models
 from profiles import models as pfs_models
 from roles import definitions
 from users.models import User
-from inquiries import models as inquiries_models
-from profiles.test import utils as test_utils
+from utils import testutils as utils
 
-
-test_utils.silence_explamation_mark()
+utils.silence_explamation_mark()
 
 
 SKAUT_DECLARED_ROLE = definitions.SCOUT_SHORT

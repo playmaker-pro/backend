@@ -1,16 +1,11 @@
 import logging
 
 import pytest
+from clubs.models import Club, Gender, League, Seniority, Team, Voivodeship
 from django.test import TestCase
 from profiles import models
-from users.models import User
 from roles import definitions
-import logging
-from clubs.models import Team, Club, Voivodeship, Gender, Seniority, League
-
-
-logger = logging.getLogger('django.db.backends.schema')
-logger.propagate = False
+from users.models import User
 
 
 def get_team():

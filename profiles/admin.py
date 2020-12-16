@@ -29,6 +29,7 @@ class ParentProfileAdmin(ProfileAdminBase):
 class ManagerProfileAdmin(ProfileAdminBase):
     pass
 
+
 @admin.register(models.ScoutProfile)
 class ScoutProfileAdmin(ProfileAdminBase):
     pass
