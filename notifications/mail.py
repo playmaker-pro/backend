@@ -36,7 +36,7 @@ def request_accepted(instance, extra_body=''):
     if instance.sender.is_player and instance.recipient.is_coach:
         body += f'Trener {instance.recipient.username}  zaakceptował Twoje zapytanie o testy. Poniżej prezentujemy jego dane kontaktowe:\n\n'    
 
-    body += f'\t{instance.recipient.username}\n'
+    body += f'\t{instance.recipient.first_name} {instance.recipient.last_name}\n'
     body += f'\t{build_absolute_url(instance.recipient.profile.get_permalink())}\n'
     body += f'\t{instance.recipient.profile.phone}\n'
     body += f'\t{instance.recipient.email}\n\n'
