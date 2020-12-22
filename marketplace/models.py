@@ -5,7 +5,7 @@ from django.conf import settings
 from django_fsm import FSMField, transition
 from notifications.mail import request_new, request_accepted, request_declined
 # This can be extracted to models.User.
-
+from django_countries.fields import CountryField
 # class DefaultPlan(models.Model):
 #     # role_type = models.
 #     user_type = models.CharField()
@@ -13,6 +13,9 @@ from notifications.mail import request_new, request_accepted, request_declined
 #         settings.AUTH_USER_MODEL,
 #         on_delete=models.CASCADE,
 #         primary_key=True)
+from address.models import AddressField
+
+from profiles.models import PlayerPosition
 
 
 class AnnouncementPlan(models.Model):
@@ -92,6 +95,9 @@ class AnnouncementUserQuota(models.Model):
         return f'{self.user}: {self.counter}/{self.plan.limit}'
 
 
+from clubs.models import League, Voivodeship, Seniority, Gender, Club
+
+
 class Announcement(models.Model):
     STATUS_NEW = 'NOWE'
     STATUS_SENT = 'WYSŁANO'
@@ -114,10 +120,6 @@ class Announcement(models.Model):
 
     # state = InquiryRequestManager()
 
-    body = models.TextField(
-        null=True, 
-        blank=True)
-
     status = FSMField(
         default=STATUS_NEW,
         choices=STATUS_CHOICES,
@@ -127,8 +129,51 @@ class Announcement(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
+    positions = models.ManyToManyField(PlayerPosition)
+
     creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='announcement_creator',
         on_delete=models.CASCADE
     )
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE
+    )
+
+    country = CountryField(
+        _('Country'),
+        # blank=True,
+        default='PL',
+        null=True,
+        blank_label=_('Wybierz kraj'),
+    )
+
+    league = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE
+    )
+
+    seniority = models.ForeignKey(
+        Seniority,
+        on_delete=models.CASCADE
+    )
+
+    gender = models.ForeignKey(
+        Gender,
+        on_delete=models.CASCADE
+    )
+
+    voivodeship = models.ForeignKey(
+        Voivodeship,
+        on_delete=models.CASCADE
+    )
+
+    body = models.TextField()
+
+    www = models.URLField(null=True, blank=True)
+
+    address = AddressField(
+        help_text=_('Adres'),
+        blank=True,
+        null=True)

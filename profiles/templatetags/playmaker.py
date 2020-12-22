@@ -88,6 +88,50 @@ def add_announcement(context):
 
 
 @register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
+def announcement_response(context, ann):
+    user = context['user']
+
+    if not user.is_authenticated:
+        return {'off': True}
+    if not user.is_player:
+        return {'off': True}
+
+    return {
+        'active_class': None,
+        # 'button_script': 'inquiry',
+        'button_id': 'approveAnnoucementButton',
+        'button_attrs': f'data-ann={ann.id}',
+        'button_class': 'btn-request',
+        'button_action': {'modal': True, 'name': 'approveAnnouncementModal'},
+        'button_icon': '',
+        'button_text': 'Zgłaszam się na testy',
+        'modals': context['modals'],
+    }
+
+
+@register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
+def announcement_yes(context):
+    user = context['user']
+
+    if not user.is_authenticated:
+        return {'off': True}
+    if not user.is_player:
+        return {'off': True}
+
+    return {
+        'active_class': None,
+        # 'button_script': 'inquiry',
+        'button_id': 'approveAnnoucementButton',
+        'button_attrs': None,
+        'button_class': 'btn-request',
+        'button_action': {'onclick': True, 'name': 'approve_annoucement', 'param': user.id},
+        'button_icon': '',
+        'button_text': 'Tak, Zgłaszam się na testy',
+        'modals': context['modals'],
+    }
+
+
+@register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
 def request_link(context, user, showed_user):
 
     if not user.is_authenticated:

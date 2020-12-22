@@ -16,6 +16,11 @@ class PlayerMetricsAdmin(admin.ModelAdmin):
     list_display = ['player', 'games_updated', 'games_summary_updated', 'fantasy_updated', 'fantasy_summary_updated', 'season_updated', 'season_summary_updated']
 
 
+@admin.register(models.PlayerPosition)
+class PositionAdmin(admin.ModelAdmin):
+    pass
+
+
 class ProfileAdminBase(admin.ModelAdmin):
     search_fields = ['user__first_name', 'user__last_name']
 

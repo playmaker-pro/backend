@@ -45,6 +45,7 @@ def supress_exception(func):
         try:
             return func(*args, **kwargs)
         except Exception as ex:
+            # logger.error(f'Following exception occured:  {ex}')
             logger.exception(ex)
             return None
             

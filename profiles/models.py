@@ -310,6 +310,13 @@ class SoccerDisplayMixin:
         return conver_vivo_for_api(self.voivodeship)
 
 
+class PlayerPosition(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f'{self.name}'
+
+
 class PlayerProfile(BaseProfile, SoccerDisplayMixin):
     '''Player specific profile'''
     PROFILE_TYPE = definitions.PROFILE_TYPE_PLAYER

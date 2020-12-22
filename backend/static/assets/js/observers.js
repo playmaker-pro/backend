@@ -100,6 +100,27 @@ function inquiryUpdate(event, idTick) {
     });
 };
 
+function approve_annoucement(event, slug) {
+    $.ajax({
+        type:'POST',
+        url:'/marketplace/approve/',
+        data:{
+            csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+            id: $('#ann-numner').val(),
+            action: 'post'
+        },
+        success:function(json){         
+            $('#requestButton').toggleClass("btn-requested")   
+            modalHide('inquiryModal');
+            showToastMessage(json.message.body);
+            window.setTimeout(location.reload(), 500);
+            
+        },
+        error : function(xhr, errmsg, err) {
+        console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+    }
+    });
+};
 
 function inquiry(event, slug) {
     $.ajax({

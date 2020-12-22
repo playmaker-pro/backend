@@ -1,0 +1,40 @@
+
+
+
+{% load i18n %}
+{% load playmaker %}
+{% with id="approveAnnouncementModal" title='Czy na pewno chcesz się zglosić na testy? ' %}
+  <div class="modal fade" id="{{ id }}" tabindex="-1" role="dialog" aria-labelledby="{{ id }}Label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="{{ id }}Label">{{ title }}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true"><i class="icofont-close-circled main-color"></i></span>
+          </button>
+        </div>
+        <div class="modal-body">
+
+        </div>
+        <input id="ann-numner" name="ann-numner" type="hidden" value>
+        <div class="ann-number">
+
+        </div>
+        <div class="modal-footer">
+          {% announcement_yes %}
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Zamknij' %}</button> 
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  {% if trigger %}
+  <script type="text/javascript">
+      $(window).on('load',function(){
+          $('#{{ id }}').modal('show');
+      });
+  </script>
+  {% endif %}
+
+{% endwith %}

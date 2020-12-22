@@ -16,11 +16,23 @@
 <div class="container">
 
        {% include 'marketplace/add.html' %} {% include 'marketplace/filters.html' %}
-        <div class="card-deck">
+        <div class="row p-1">
             {% for object in page_obj %}
-                {% include 'marketplace/announcement.html' %}
+                {% include 'marketplace/announcement.html' with object=object %}
             {% endfor %}
         </div>
  </div>
 </section>
+{% endblock %}
+
+
+{% block extra_js %}
+    {{ block.super }}
+    <script>
+            $('#approveAnnouncementModal').on('show.bs.modal', function (event) {
+        var id = $(event.relatedTarget).data('ann');
+        $(this).find('#ann-numner').val(id);
+        $(this).find(".ann-number").text(id);
+        });
+    </script>
 {% endblock %}

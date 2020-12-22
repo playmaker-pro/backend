@@ -4,7 +4,7 @@ CLUB_SHORT, CLUB_FULL = 'C', 'Klub / Szkółka piłkarska'
 MANAGER_SHORT, MANAGER_FULL = 'M', 'Agent piłkarski'
 SCOUT_SHORT, SCOUT_FULL = 'S', 'Skaut'
 PARENT_SHORT, PARENT_FULL = 'R', 'Rodzic małego piłkarza'
-GUEST_SHORT, GUEST_FULL = 'G', 'Kibic / Rodzic'
+GUEST_SHORT, GUEST_FULL = 'G', 'Kibic'
 
 
 PROFILE_TYPE_PLAYER = 'player'

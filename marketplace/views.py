@@ -31,12 +31,10 @@ from .forms import AnnouncementForm
 from .models import Announcement
 
 
-
 User = get_user_model()
 
 
 logger = logging.getLogger(__name__)
-
 
 
 class AddAnnouncementView(LoginRequiredMixin, View):
@@ -46,7 +44,20 @@ class AddAnnouncementView(LoginRequiredMixin, View):
         user = request.user
 
         if user.is_coach or user.is_club:
-            form = AnnouncementForm()
+            if user.is_coach:
+                form = AnnouncementForm(initial={
+                    'club': user.profile.team_object.club,
+                    'league': user.profile.team_object.league,
+                    'voivodeship': user.profile.team_object.club.voivodeship,
+                    'seniority': user.profile.team_object.seniority,
+                    'gender': user.profile.team_object.gender,
+                })
+            elif user.is_club:
+                form = AnnouncementForm(initial={
+                    'club': user.profile.club_object,
+                    'voivodeship': user.profile.club_object.club.voivodeship,
+                })
+            # form.instance.league = request.user.profile.display_league
         else:
             return JsonResponse({})
         data = {}
@@ -55,6 +66,8 @@ class AddAnnouncementView(LoginRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         user = self.request.user
+        if not user.announcementuserquota.can_make_request:
+            return JsonResponse({'message': 'Limit ogłoszeń przekroczony.'})
 
         if user.is_coach or user.is_club:
             form = AnnouncementForm(request.POST)
@@ -62,7 +75,11 @@ class AddAnnouncementView(LoginRequiredMixin, View):
         data = {'success': False, 'redirection_url': None, 'form': None}
 
         if form.is_valid():
-            form.save()
+            ann = form.save(commit=False)
+            ann.creator = request.user
+            ann.save()
+            user.announcementuserquota.increment()
+            user.announcementuserquota.save()
             messages.success(request, _("Przyjęto ogłoszenia."))
 
             data['success'] = True

@@ -1,8 +1,14 @@
-
-<div class="card">
+{% load playmaker %}
+<div class="card m-2">
     <div class="card-body">
-      <h5 class="card-title">Klub name</h5>
-      <p class="card-text">This is a longer card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>
+      <h5 class="card-title">{{ object.club }}</h5>
+      <p class="card-text">{{ object.body }}</p>
       <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
     </div>
+
+    {% if user.is_player %}
+    <div class="card-footer">
+        {% announcement_response object %}
+    </div>
+    {% endif %}
   </div>

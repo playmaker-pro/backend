@@ -16,7 +16,7 @@
                           {% elif role == 'M' %}Agent piłkarski
                           {% elif role == 'S' %}Skout
                           {% elif role == 'R' %}Rodzic małego piłkarza
-                          {% elif role == 'G' %}Kibic / Rodzic
+                          {% elif role == 'G' %}Kibic
                           {% endif %}
                          </h4>
             {% else %} 
@@ -28,7 +28,7 @@
                   <option value="M" {% if role == 'M'%} selected {% endif %}>Agent piłkarski</option>
                   <option value="S" {% if role == 'S'%} selected {% endif %}>Skaut</option>
                   <option value="R" {% if role == 'R'%} selected {% endif %}>Rodzic małego piłkarza</option>
-                  <option value="G" {% if role == 'G'%} selected {% endif %}>Kibic / Rodzic</option>
+                  <option value="G" {% if role == 'G'%} selected {% endif %}>Kibic</option>
                 </select>
                 {{ form.role.errors }}
             {% endif %}

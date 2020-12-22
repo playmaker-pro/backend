@@ -10,7 +10,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="{{ id }}Label">{{ title }}</h5>
+          <h5 class="modal-title" id="{{ id }}Label"><i class="icofont-contact-add"></i> {{ title }}</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true"><i class="icofont-close-circled main-color"></i></span>
           </button>
@@ -21,21 +21,21 @@
             {% if user.announcementuserquota.left <= 0 %}
                 Wykorzystałeś cały swój plan na oddawanie ogłoszeń w tym sezonie. 
             {% else %}
-                Pozostało Ci jeszcze <strong class="btn-pm btn-pm-sm">{{user.userinquiry.left}}</strong> możliwych zapytań do wykorzystania.
+                Możesz jeszcze dodać <strong class="btn-pm btn-pm-sm">{{user.announcementuserquota.left}}</strong> ogłoszeń.
             {% endif %}
 
             <br><br>
             <div class="text-muted"> Jeśli jesteś zainteresowaniem rozszerzeniem pakietu 
                 <a class="" href="https://playmaker.pro/limit/">zwiększ limit</a>
             </div>
-
+               
           <form id="add-announcement-form" class="mt-3" enctype="multipart/form-data" action={% url 'marketplace:add_announcement' %} method="post">
               {% csrf_token %}
               <span id="add-announcement-form-body"> </span>
 
               <div class="modal-footer">
-                <button class="btn-pm" type="submit" name="update" value="Update" id="submit-id-update">{% trans 'DDODAJ' %}</button>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'PÓŹNIEJ' %}</button>
+                <button class="btn-pm" type="submit" name="update" value="Update" id="submit-id-update">{% trans 'Dodaj ogłoszenie o testach' %}</button>
+                <!--button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'PÓŹNIEJ' %}</button-->
               </div>
           </form>
 
