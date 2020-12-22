@@ -1,6 +1,7 @@
 
 
 {% if not off %}
+
   {% with button_attrs=button_attrs button_class=button_class button_text=button_text button_icon=button_icon button_script=button_script button_id=button_id button_text_prefix=button_text_prefix button_text_suffix=button_text_suffix  %}
 
     {% if modals.register.load %}
@@ -10,7 +11,9 @@
             class="{{ button_class }} {% if active_class %}{{ active_class }}{% endif %} {% if button_icon %} icofont-{{ button_icon }} {% endif %}" 
             data-toggle="modal" 
             data-target="#{{ modals.register.name }}"
-        >{{ button_text_prefix }} {{ button_text }} {{ button_text_suffix}}</button>
+        >
+            {{ button_text_prefix }} {{ button_text }} {{ button_text_suffix}}
+        </button>
 
     {% elif modals.need_role.load %}
         <button 
@@ -19,7 +22,9 @@
             class="{{ button_class }} {% if active_class %}{{ active_class }}{% endif %} {% if button_icon %} icofont-{{ button_icon }} {% endif %}" 
             data-toggle="modal" 
             data-target="#{{ modals.need_role.name }}"
-        >{{ button_text_prefix }} {{ button_text }} {{ button_text_suffix}}</button>
+        >
+            {{ button_text_prefix }} {{ button_text }} {{ button_text_suffix}}
+        </button>
 
     {% elif modals.verification.load %}    
         <button 
@@ -37,13 +42,15 @@
             class="{{ button_class }} {% if active_class %}{{ active_class }}{% endif %} {% if button_icon %} icofont-{{ button_icon }} {% endif %}" 
             data-toggle="modal" 
             data-target="#{{ modals.need_verification.name}}" 
-        >{{ button_text_prefix }} {{ button_text }} {{ button_text_suffix}}</button>
+        >
+            {{ button_text_prefix }} {{ button_text }} {{ button_text_suffix}}
+        </button>
 
     {% else %}
         <button 
             {{ button_attrs }} 
             {% if button_id %} id="{{ button_id }}" {% endif %}  
-            class="{{ button_class }} {% if active_class %}{{ active_class }}{% endif %} {% if button_icon %} icofont-{{ button_icon }} {% endif %}" 
+            class="{{ button_class }} {% if active_class %}{{ active_class }}{% endif %} " 
         
             {% if button_action.onclick %}
             onclick="{{ button_action.name }}(event, '{{ button_action.param }}')"
@@ -54,7 +61,14 @@
             {% else %}
                 {% comment %} {%  %}  {% endcomment %}
             {% endif %}
-        >{{ button_text_prefix }} {{ button_text }} {{ button_text_suffix}}</button>
+        >   
+            
+            {% if button_icon %}
+                <i class="icofont-{{ button_icon }}"></i>
+            {% endif %}
+            {{ button_text_prefix }} {{ button_text }} {{ button_text_suffix}}
+            
+        </button>
         
     {% endif %}
 

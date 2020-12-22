@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'clubs',
     'soccerbase',
     'notifications',
+    'app',
+    'marketplace',
 
     'data',  # external repo
     'stats',  # external repo
@@ -217,7 +219,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-COMPRESS_ENABLED = True
+COMPRESS_ENABLED = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
@@ -272,6 +274,17 @@ CRISPY_FAIL_SILENTLY = False
 
 # For Bootstrap 4, change error alert to 'danger'
 MESSAGE_TAGS = {messages.ERROR: "danger"}
+
+
+# Announcement app
+ANNOUNCEMENT_INITAL_PLAN = {
+        'default': True,
+        'limit': 3,
+        'name': 'Basic Inital',
+        'description': 'Default inital plan, need to be created if we wont ' \
+                       'to add to each user UserInquery. In future can be alterd'
+}
+
 
 # Inquiries app
 INQUIRIES_INITAL_PLAN = {

@@ -1,26 +1,22 @@
-from django.shortcuts import render
+import operator
+from functools import reduce
 
-# Create your views here.
+from app import mixins
+from clubs.models import Club, Team
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404, redirect
-from django.views import View, generic
-
-from clubs.models import Club, Team
-from users.models import User
 from django.core.paginator import Paginator
-
-from roles import definitions
-from profiles.utils import get_datetime_from_age
 from django.db.models import Q
-import operator
-from functools  import reduce
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views import View, generic
+from profiles.utils import get_datetime_from_age
+from roles import definitions
+from users.models import User
+
 TABLE_TYPE_PLAYER = definitions.PLAYER_SHORT
 TABLE_TYPE_TEAM = definitions.CLUB_SHORT
 TABLE_TYPE_COACH = definitions.COACH_SHORT
-
-
-from profiles import mixins  # @todo move this to platfrom app
 
 
 class TableView(generic.TemplateView, mixins.ViewModalLoadingMixin):
@@ -193,7 +189,7 @@ class TeamsTable(TableView):
     def filter_queryset(self, queryset):
 
         if self.filter_league is not None:
-            queryset = queryset.filter(club__league__in=self.filter_league)
+            queryset = queryset.filter(league__name__in=self.filter_league)
 
         if self.filter_vivo is not None:
             vivo = [i[:-1].upper() for i in self.filter_vivo]
@@ -203,7 +199,7 @@ class TeamsTable(TableView):
             queryset = queryset.filter(query)
 
         if self.filter_name_of_club is not None:
-            queryset = queryset.filter(team__club__name__icontains=self.filter_name_of_club)
+            queryset = queryset.filter(club__name__icontains=self.filter_name_of_club)
 
         if self.filter_name_of_team is not None:
             queryset = queryset.filter(name__icontains=self.filter_name_of_team)

@@ -1,6 +1,5 @@
-
 {% extends "profiles/base.html" %}
-
+{% spaceless %}
 {% load playmaker %}
 {% load i18n %}
 {% load static %}
@@ -17,189 +16,48 @@
 
 
 
-<!-- Benefits of the Django application -->
+
 {% block content %}
-{% csrf_token %}
-<section id="tables" class="tables" style="background-color:#fff;margin-top:5px;">
+<section id="tables" class="tables" style="background-color:#fff;margin-top:5px">
+  {% csrf_token %}
+  <div class="container-fluid" data-aos="fade-up"> 
 
-<div class="container" data-aos="fade-up"> 
-            <ul class="nav nav-tabs" id="myTab" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Obserwowani użytkownicy</a>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Obserwowane drużyny</a>
-                </li>
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            {% for tab in tabs %}
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if forloop.first %} active {% endif %}" id="{{ tab.name }}-tab" data-toggle="tab" href="#{{ tab.name }}" role="tab" aria-controls="{{ tab.name }}" aria-selected="true">
+                    {{ tab.title }}
 
-            </ul>
-            {% comment %} <h3>
-                Obserwowani użytkownicy
-            </h3> {% endcomment %}
-
-
-<div class="tab-content mt-4" id="myTabContent">
-  <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
-
-            {% for object in page_obj %}
-            <div class="card item-card" style="">
-                <div class="card-header d-md-none">
-                    <span> 
-                        <img class="flag" src="{{ object.target.profile.country.flag }}" alt="flag">
-                        {{ object.target.first_name|upper }} {{ object.target.last_name|upper}} 
-                    </span>
-                    
-                    <span class="float-right"> 
-                        {% profile_link object.target checks=False text='profil' %}
-                    </span>
-                </div>
-
-
-                <div class="d-md-none">
-                    <img class="avatar rounded-circle img-responsive" src="{% thumbnail object.target.picture|default:'default_profile.png' 'tables_avatar_show_small' %}">
-                </div>
-
-
-                <div class="card-body table-item"> 
-                    <div class="row no-gutters">
-
-                        <div class="d-none d-md-inline col-md-6">
-                            <a href={{object.target.profile.get_permalink }}>
-                                <img class="avatar rounded img-responsive" src="{% thumbnail object.target.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
-                                <img class="flag" src="{{ object.target.profile.country.flag }}" alt="flag">
-                                {{object.target.first_name|upper}} {{ object.target.last_name|upper}} 
-                            </a>
-                        </div>
-
-                        <div class="col col-md"> 
-                            {{ object.created_at|date:'Y-m-d'  }}
-                        </div>
-
-                        <div class="d-none d-md-inline col-md">
-                            <span class="float-right"> 
-                                {% observed_link object.user object.target text='obserwuj' %}
-                                {% profile_link object.target checks=False text='profil' %}
-                            </span>
-
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer  d-md-none">
-                    <span class="float-right"> 
-                        {% observed_link object.user object.target text='obserwuj' %}
-                    </span>
-                    
-                </div>
-            </div> 
-            {% empty %}
-                
-                <div class="col text-center">
-                {% include 'platform/partials/_empty.html' with position='center' %}
-
-                {% if user.is_player %}
-                <h4>Jeszcze nie obserwujesz żadnych użytkowników platformy</h4>
-                
-                <p></p>
-                {% elif  user.is_coach %}
-                <h4>Jeszcze nie obserwujesz żadnych użytkowników platformy</h4>
-                
-                <p></p>
-                {% else %}
-                <h4>Jeszcze nie obserwujesz żadnych użytkowników platformy</h4>
-                
-                <p></p>
-         
-                {% endif %}
-                </div>
+                {% if tab.badge %} 
+                    <span class="badge bg-info  {{ tab.badge.class }}">{{ tab.badge.number }}</span> 
+                {% endif %} 
+                </a>
+            </li>
             {% endfor %}
+        </ul>
 
+        <div class="tab-content mt-4" id="myTabContent">    
+            {% for tab in tabs %}
+                <div class="tab-pane fade show {% if forloop.first %} active {% endif %}" id="{{ tab.name }}" role="tabpanel" aria-labelledby="{{ tab.name }}-tab">
+                    {% if  tab.objects.counter != 0 %}
+                        {% if tab.name == 'players' %}
+                            {% include 'soccerbase/tables/table_players_card.html' with objects=tab.objects %}
+                        {% elif tab.name == 'teams' %}
+                            {% include 'soccerbase/tables/table_teams_card.html' with objects=tab.objects %}
+                        {% elif tab.name == 'coaches' %}
+                            {% include 'soccerbase/tables/table_coaches_card.html' with objects=tab.objects %}
+                        {% endif %}
+                    {% else  %}
 
-</div> <!-- tab end -->
-<div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-
-            {% comment %} <h3>
-                Obserwowane drużyny
-            </h3> {% endcomment %}
-
-            {% for object in page_obj_teams %}
-            <div class="card item-card" style="">
-                <div class="card-header d-md-none">
-                    <span> 
-                        {% comment %} <img class="flag" src="{{ object.target.profile.country.flag }}" alt="flag"> {% endcomment %}
-                        {{ object.target.name|upper }}  {{ object.club.name|upper }} 
-                    </span>
-                    
-                    <span class="float-right"> 
-                        {% get_team_link object.target text='profil' %}
-                    </span>
-                </div>
-
-
-                <div class="d-md-none">
-                    <img class="avatar rounded-circle img-responsive" src="{% thumbnail object.target.picture|default:'default_profile.png' 'tables_avatar_show_small' %}">
-                </div>
-
-
-                <div class="card-body table-item"> 
-                    <div class="row no-gutters">
-
-                        <div class="d-none d-md-inline col-md-6">
-                            <a href={{object.target.get_permalink }}>
-                                <img class="avatar rounded img-responsive" src="{% thumbnail object.target.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
-                                {% comment %} <img class="flag" src="{{ object.target.profile.country.flag }}" alt="flag">{% endcomment %}
-                                {{object.target.name|upper}} / {{ object.target.club.name|upper}}  
-                            </a>
+                        <div class="col text-center">
+                            {% include 'platform/partials/_empty.html' with position='center' text_header=tab.empty.text_header text_body=tab.empty.text_body %}
                         </div>
-
-                        <div class="col col-md"> 
-                            {{ object.created_at|date:'Y-m-d' }}
-                        </div>
-
-                        <div class="d-none d-md-inline col-md">
-                            <span class="float-right"> 
-                                {% observed_link object.user object.target text='obserwuj' otype='team' %}
-                               {% get_team_link object.target text='profil' %}
-                            </span>
-
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer  d-md-none">
-                    <span class="float-right"> 
-                        {% observed_link object.user object.target text='obserwuj' otype='team' %}
-                    </span>
-                    
-                </div>
-            </div> 
-            {% empty %}
-         
-                
-                
-                <div class="col text-center">
-                {% include 'platform/partials/_empty.html' with position='center' %}
-
-                {% if user.is_player %}
-                <h4>Jeszcze nie obserwujesz żadnych drużyn</h4>
-                
-                <p></p>
-                {% elif  user.is_coach %}
-                <h4>Jeszcze nie obserwujesz żadnych drużyn</h4>
-                
-                <p></p>
-                {% else %}
-                <h4>Jeszcze nie obserwujesz żadnych drużyn</h4>
-                
-                <p></p>
-         
-                {% endif %}
-                </div>
-
-
+                    {% endif  %}
+                </div> <!-- tab end 1 -->
             {% endfor %}
+        </div>
 
-  </div><!-- end of tabs-->
-</div>  <!-- end of tabs-->
-
+    </div>  <!-- end of conatiner-->
 </section>
 {% endblock content %}
-
-
+{% endspaceless %}

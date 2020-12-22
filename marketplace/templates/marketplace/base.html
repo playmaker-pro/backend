@@ -1,0 +1,26 @@
+{% extends 'platform/base.html' %}
+
+
+{% block title %}{{ block.super }} {{ page_title }} {% endblock %}
+
+
+{% block content_header %}
+    {% include '_page_heading.html' with heading_title=page_title size=4 %}
+    {{ block.super }}
+{% endblock %}
+
+
+{% block content %}
+
+<section id="marketplace" class="marketplace"> 
+<div class="container">
+
+       {% include 'marketplace/add.html' %} {% include 'marketplace/filters.html' %}
+        <div class="card-deck">
+            {% for object in page_obj %}
+                {% include 'marketplace/announcement.html' %}
+            {% endfor %}
+        </div>
+ </div>
+</section>
+{% endblock %}

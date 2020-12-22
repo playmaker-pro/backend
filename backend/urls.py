@@ -13,6 +13,7 @@ from .api import api_router
 import soccerbase.urls
 import clubs.urls
 import profiles.urls
+import marketplace.urls
 import allauth.account.urls
 import followers.urls  # @to be removed 
 from django.views.generic import TemplateView
@@ -31,6 +32,7 @@ urlpatterns = [
     path('tables/', include(soccerbase.urls), name='soccerbase'),
     path('clubs/', include(clubs.urls), name="clubs"),
     path('users/', include(profiles.urls), name="profiles"),
+    path('marketplace/', include(marketplace.urls), name="marketplace"),
 
     path('feeds/', include(followers.urls), name="feeds"),
     path('policy/', TemplateView.as_view(template_name='subpgaes/policy.html')),

@@ -5,7 +5,7 @@ DEBUG = False
 
 BASE_URL = 'https://staging.playmakerpro.usermd.net'
 
-
+COMPRESS_ENABLED = True
 MANAGERS = [('Rafal', 'rafal.kesik@gmail.com'), ('Jacek', 'jjasinski.playmaker@gmail.com')]
 
 MIDDLEWARE = ['django.middleware.common.BrokenLinkEmailsMiddleware'] + MIDDLEWARE 

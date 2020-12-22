@@ -15,6 +15,7 @@ body {
   color: #444444;
 }
 
+button { font-family: inherit }
 a {
   color: #e03a3c;
   text-decoration: none;
@@ -156,6 +157,7 @@ a.disabled {
 
 
 .btn-owl-big { font-size:1.5rem;}
+
 .btn-owl {
     font-family: "Asap", sans-serif;
     /*margin-left: 25px; */
@@ -186,11 +188,13 @@ a.disabled {
 .btn-act {
   background: #e03a3c;
   border: 0;
-  padding: 5px 5px;
+  margin: 2px;
+  padding: .375rem .375rem;
   color: #fff;
   transition: 0.4s;
   border-radius: 4px;
-  margin: 2px;
+  cursor: pointer;
+  
 }
   .btn-act :hover{
     background: #e35052;
@@ -204,25 +208,32 @@ a.disabled {
 
 
 .btn-obs {
-  font-family: 'Roboto', sans-serif;
-  margin:2px;
+  cursor: pointer;
+  margin:1px;
   padding: 5px 5px;
   background-color: #fff;
   color:#e03a3c;
   border: 1px solid #e03a3c;
   border-radius: 5px;
-}
+  transition: 0.4s;
 
+}
+.btn-obs:hover{
+  background: #e35052;
+  color:#fff;
+}
 .observed {
-  font-family: 'Roboto', sans-serif;
+  
   background: #e03a3c;
   color: #fff;
   transition: 0.5s;
+  font-size: inherit;
 }
 
+
 .btn-request {
-  font-family: 'Roboto', sans-serif;
-  margin:2px;
+
+  margin:1px;
   padding: 5px 5px;
   background-color: #fff;
   color:#e03a3c;
@@ -231,7 +242,7 @@ a.disabled {
 }
 
 .btn-requested {
-  font-family: 'Roboto', sans-serif;
+
   background: #e03a3c;
   color: #fff;
   transition: 0.5s;
@@ -239,26 +250,28 @@ a.disabled {
 
 .btn-pm {
   background: #e03a3c;
-  border: 0;
+  border: 1px solid #e03a3c;
   padding: .375rem .375rem;
   /* padding: 10px 32px; */
   color: #fff;
   transition: 0.4s;
-  border-radius: 4px;
+  border-radius: 5px;
 }
 
-.btn-pm :hover{
+.btn-pm:hover{
   background: #e35052;
 }
 
 .btn-pm-sm {
-  padding: .25rem .5rem;
+  margin:1px;
+  padding: 5px 5px;
 }
 
 @media all and (max-width: 768px) {
 
   .btn-pm { 
-    padding: .25rem .5rem;
+    margin:1px;
+    padding: 2px 2px;
   }
  }
 

@@ -66,6 +66,28 @@ def is_profile_observed(user, target):
 
 
 @register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
+def add_announcement(context):
+    user = context['user']
+
+    if not user.is_authenticated:
+        return {'off': True}
+    if not user.is_club and not user.is_coach:
+        return {'off': True}
+
+    return {
+        'active_class': None,
+        # 'button_script': 'inquiry',
+        'button_id': 'addAnnoucementButton',
+        'button_attrs': None,
+        'button_class': 'btn-request',
+        'button_action': {'modal': True, 'name': 'addAnnouncementModal'},
+        'button_icon': 'plus',
+        'button_text': 'Dodaj ogłoszenie',
+        'modals': context['modals'],
+    }
+
+
+@register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
 def request_link(context, user, showed_user):
 
     if not user.is_authenticated:
@@ -137,7 +159,7 @@ def send_request(context, user, showed_user):
 @register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
 def update_request_button(context, request, accept=False):
 
-    button_text = 'Ackceptuj' if accept else 'Odrzuć'
+    button_text = 'Akceptuj' if accept else 'Odrzuć'
     param = f'{request.id}---1' if accept else f'{request.id}---0'
     button_class = 'btn-request btn-requested inquiryAnswerButtons'
     if accept:
@@ -155,16 +177,21 @@ def observed_link(context, user, showed_user, text=False, otype='user'):
     if not user.is_authenticated:
         return {'off': True}
     active_class = None
+    
+    button_text = 'obserwuj'
 
     if context.get('observed'):
         active_class = 'observed'
+        button_text = 'obserwujesz'
     else:
         if otype == 'user':
             if is_profile_observed(user, showed_user):
                 active_class = 'observed'
+                button_text = 'obserwujesz'
         if otype == 'team':
             if is_team_observed(user, showed_user):
                 active_class = 'observed'
+                button_text = 'obserwujesz'
 
     if otype == 'user':
         param = showed_user.profile.slug
@@ -180,17 +207,13 @@ def observed_link(context, user, showed_user, text=False, otype='user'):
     else:
         script_func = ''
 
-    if text:
-        button_text = 'obserwuj'
-    else:
-        button_text = ''
     return {
 
         'active_class': active_class,
         'button_text': button_text,
         'button_class': 'btn-obs',
         'button_action': {'onclick': True, 'name': script_func, 'param': param},
-        'button_icon': 'eye',
+        'button_icon': None,  # 'eye',
         'modals': context['modals'],
     }
 
@@ -226,8 +249,7 @@ class ActionButton:
             'button_text': self.text,
             'modals': self.context['modals'],
         }
-        
-        
+
 @register.filter
 def get_urls_with_no_page(value):
     if 'page=' in value:

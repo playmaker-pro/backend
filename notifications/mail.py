@@ -10,37 +10,52 @@ def build_absolute_url(uri: str) -> str:
 
 def request_accepted(instance, extra_body=''):
     ''' inquiry request instance'''
-    subject = 'Użytkownik zaakceptował zaproszenie od Ciebie'  
+      
 
     body = 'Gratulujemy!\n\n'
     # [player -> klub]
     if instance.sender.is_club and instance.recipient.is_player:
+        subject = 'Piłkarz zaakceptował Twoje zaproszenie na testy'
         body += f'Piłkarz {instance.recipient.username} zaakceptował Twoje zaproszenie na testy. Poniżej prezentujemy jego dane kontaktowe:\n\n'
 
     # [trener -> klub]
     if instance.sender.is_club and instance.recipient.is_coach:
+        subject = 'Trener zaakceptował Twoje zaproszenie na testy'
         body += f'Trener {instance.recipient.username} zaakceptował Twoje zaproszenie. Poniżej prezentujemy jego dane kontaktowe:\n\n'
     # [klub -> trener]
     if instance.sender.is_coach and instance.recipient.is_club:
-        body += f'Klub {instance.recipient.username} zaakceptował Twoje zaproszenie. Poniżej prezentujemy jego dane kontaktowe:\n\n'
+        subject = 'Klub zaakceptował Twoje zapytanie'
+        body += f'Klub {instance.recipient.profile.display_club} zaakceptował Twoje zapytanie. Poniżej prezentujemy jego dane kontaktowe:\n\n'
 
     # [piłkarz -> trener]
     if instance.sender.is_coach and instance.recipient.is_player:
-        body += f'Piłkarz {instance.recipient.username} zaakceptował Twoje zaproszenie. Poniżej prezentujemy jego dane kontaktowe:\n\n'
+        subject = 'Piłkarz zaakceptował Twoje zaproszenie na testy'
+        body += f'Piłkarz {instance.recipient.username} zaakceptował Twoje zaproszenie na testy. Poniżej prezentujemy jego dane kontaktowe:\n\n'
 
     # [klub -> piłkarz]
     if instance.sender.is_player and instance.recipient.is_club:
-        body += f'Klub {instance.recipient.username} zaakceptował Twoje zapytanie o testy. Poniżej prezentujemy jego dane kontaktowe:\n\n'
+        subject = 'Klub zaakceptował Twoje zaproszenie na testy'
+        body += f'Klub {instance.recipient.profile.display_club} zaakceptował Twoje zapytanie o testy. Poniżej prezentujemy jego dane kontaktowe:\n\n'
 
     # [trener-> piłkarz]
     if instance.sender.is_player and instance.recipient.is_coach:
-        body += f'Trener {instance.recipient.username}  zaakceptował Twoje zapytanie o testy. Poniżej prezentujemy jego dane kontaktowe:\n\n'    
+        subject = 'Trener zaakceptował Twoje zaproszenie na testy'
+        body += f'Trener {instance.recipient.username}  zaakceptował Twoje zapytanie o testy. Poniżej prezentujemy jego dane kontaktowe:\n\n'
 
-    body += f'\t{instance.recipient.first_name} {instance.recipient.last_name}\n'
-    body += f'\t{build_absolute_url(instance.recipient.profile.get_permalink())}\n'
+    if instance.sender.is_player or instance.recipient.is_coach:
+        body += f'\t{instance.recipient.first_name} {instance.recipient.last_name}\n'
+
+    if instance.sender.is_club:
+        body += f'\t{instance.recipient.profile.display_club}\n'
+
+    if instance.sender.is_player or instance.recipient.is_coach:
+        body += f'\t{build_absolute_url(instance.recipient.profile.get_permalink())}\n'
+    else:
+        body += f'\t{build_absolute_url({instance.recipient.profile.club.get_permalink()})}\n'
+
     phone = instance.recipient.profile.phone or 'brak'
-    body += f'\t{phone}\n'
-    body += f'\t{instance.recipient.email}\n\n'
+    body += f'\tTelefon: {phone}\n'
+    body += f'\tEmail: {instance.recipient.email}\n\n'
     body += 'Pozdrawiamy, \n'
     body += 'Zespół PlayMaker.pro'
 
@@ -89,11 +104,17 @@ def request_declined(instance, extra_body=''):
         body += 'https://playmaker.pro/scouting/\n\n'
 
     # [trener -> klub]
-    if (instance.sender.is_player or instance.sender.is_club) and instance.recipient.is_coach:
-        subject = 'Trener odrzucił Twoje zaproszenie'
+    if instance.sender.is_player and instance.recipient.is_coach:
+        subject = 'Trener odrzucił Twoje zapytanie'
         body += f'Trener {instance.recipient.first_name} {instance.recipient.last_name} odrzucił Twoje zapytanie o testy.\n\n'
-        body += f'Jeśli nadal masz problem ze skompletowaniem kadry, sprawdź usługi skautingowe PlayMaker.pro. Więcej informacji znajdziesz w poniższym linku:\n\n'
+        body += f'Jeśli nadal masz problem ze znalezieniem klubu, sprawdź nasze wsparcie transferowe PkayMaker.pro. Więcej informacji znajdziesz w poniższym linku:\n\n'
         body += 'https://playmaker.pro/transfer/\n\n'
+
+    if instance.sender.is_club and instance.recipient.is_coach:
+        subject = 'Trener odrzucił Twoje zapytanie'
+        body += f'Trener {instance.recipient.first_name} {instance.recipient.last_name} odrzucił Twoje zapytanie o testy.\n\n'
+        body += f'Jeśli nadal masz problem ze znalezieniem trenera do swojego klubu sprawdź naszą bazę trenerów pod poniższym linkiem lub napisz do nas na email na biuro@playmaker.pro\n\n'
+        body += 'https://playmaker.pro/tables/coaches/\n\n'
 
     # [klub -> trener]
     if (instance.sender.is_player or instance.sender.is_coach) and instance.recipient.is_club:

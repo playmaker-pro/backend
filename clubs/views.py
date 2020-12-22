@@ -10,10 +10,10 @@ from django.http.response import HttpResponse
 from django.http import JsonResponse
 from django.urls import reverse
 from . import models, forms
-from profiles.mixins import ViewModalLoadingMixin
+from app import mixins
 
 
-class ClubShow(generic.TemplateView, ViewModalLoadingMixin):
+class ClubShow(generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "clubs/show_club.html"
     http_method_names = ["get"]
 
@@ -34,7 +34,7 @@ class ClubShow(generic.TemplateView, ViewModalLoadingMixin):
         return super().get(request, *args, **kwargs)
 
 
-class ClubEdit(LoginRequiredMixin, generic.TemplateView, ViewModalLoadingMixin):
+class ClubEdit(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "clubs/edit_club.html"
     http_method_names = ["get", "post"]
 
@@ -77,7 +77,7 @@ class ClubEdit(LoginRequiredMixin, generic.TemplateView, ViewModalLoadingMixin):
         return redirect("clubs:show_club", slug=club.slug)
 
 
-class TeamShow(generic.TemplateView, ViewModalLoadingMixin):
+class TeamShow(generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "clubs/show_team.html"
     http_method_names = ["get"]
 
@@ -96,7 +96,7 @@ class TeamShow(generic.TemplateView, ViewModalLoadingMixin):
         return super().get(request, *args, **kwargs)
 
 
-class TeamEdit(LoginRequiredMixin, generic.TemplateView, ViewModalLoadingMixin):
+class TeamEdit(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "clubs/edit_team.html"
     http_method_names = ["get", "post"]
 

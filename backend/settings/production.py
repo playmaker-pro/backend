@@ -6,7 +6,7 @@ DEBUG = False
 
 BASE_URL = 'https://playmaker.pro'
 
-
+COMPRESS_ENABLED = True
 MANAGERS = [
     ('Rafal', 'rafal.kesik@gmail.com'), 
     ('Jacek', 'jjasinski.playmaker@gmail.com')]

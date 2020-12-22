@@ -18,6 +18,21 @@ function outFunc() {
 }
 
 
+
+function get_add_announcement_form()
+{
+        $.ajax({
+            url: "/marketplace/add/",
+            type: "get",
+            /*data: {slug: slug},*/
+            success: function(json) {
+                $("#add-announcement-form-body").html(json.form);
+            }
+        })
+  }
+
+
+
 function get_missingname_form(slug)
 {
         $.ajax({

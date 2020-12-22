@@ -67,13 +67,16 @@
         {% else %}
         {% if type == 'P' %}
             {% include 'soccerbase/tables/table_players_card.html' with objects=page_obj %}
+            {% include 'platform/partials/_pagination.html' with object_type='piłkarzy' %}
         {% elif type == 'T' %}
             {% include 'soccerbase/tables/table_coaches_card.html' with objects=page_obj %}
+            {% include 'platform/partials/_pagination.html' with object_type='trenerów' %}
         {% elif type == 'C' %}
             {% include 'soccerbase/tables/table_teams_card.html' with objects=page_obj %}
+            {% include 'platform/partials/_pagination.html' with object_type='klubów' %}
         {% endif %}
         <span></span>   
-        {% include 'platform/partials/_pagination.html'%}
+        
         {% endif %}
     </div>
 

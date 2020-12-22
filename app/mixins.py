@@ -52,6 +52,13 @@ class ViewModalLoadingMixin:
                 'auto': False,
                 'load': False,
                 'async': False
+            },
+            'add_announcement': {
+                'name': 'inquiryModal',
+                'template': 'profiles/modals/_add_announcement_modal.html',
+                'auto': False,
+                'load': False,
+                'async': 'get_add_announcement_form'
             }
         }
         # Loading account specific modals (mandatory)
@@ -83,6 +90,7 @@ class ViewModalLoadingMixin:
         # here is case when we can perfom action, so here are the action that we can perform
         else:
             modals['inquiry']['load'] = True
+            modals['add_announcement']['load'] = True
 
             if user.userinquiry.counter == user.userinquiry.limit:
                 modals['action_limit_exceeded']['load'] = True

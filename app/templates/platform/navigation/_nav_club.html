@@ -4,6 +4,7 @@
 
 
 {% if user.is_authenticated %}
+    <li><a href="{% url 'marketplace:announcements'%}">{% trans 'Ogłoszenia' %}</a></li>
     <li><a href="{% url 'profiles:my_requests'%}">{% trans 'Zapytania' %}</a></li>
     {% include 'platform/navigation/_nav.html'%}            
     <li>{% get_my_club_link %}</li>

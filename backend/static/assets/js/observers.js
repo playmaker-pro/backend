@@ -18,7 +18,7 @@ function modalHide(openmodal) {
 
 
 function observeTeam(event, slug) {
-    var button = $(event.target);
+    var button = $(event.target) /* .parent('.btn-obs'); */
     $.ajax({
         type:'POST',
         url:'/users/me/observe/team/',
@@ -29,7 +29,12 @@ function observeTeam(event, slug) {
         },
         success: function(json){
             button.toggleClass("observed")
-            
+            if (button.hasClass("observed")) {
+                button.text('obserwujesz')
+            } else {
+                button.text('obserwuj')         
+
+            }
             showToastMessage(json.message.body);
 
             //console.log('ssss', button);
@@ -43,7 +48,7 @@ function observeTeam(event, slug) {
 
 
 function observe(event, slug) {
-    var button = $(event.target);
+    var button = $(event.target); /*.parent('.btn-obs');*/
     $.ajax({
         type:'POST',
         url:'/users/me/observe/',
@@ -54,7 +59,13 @@ function observe(event, slug) {
         },
         success: function(json){
             button.toggleClass("observed")
-            
+            if (button.hasClass("observed")) {
+                button.text('obserwujesz')
+            } else {
+                button.text('obserwuj')         
+
+            }
+   
             showToastMessage(json.message.body);
 
             //console.log('ssss', button);

@@ -18,12 +18,17 @@ from inquiries.models import InquiryRequest
 from roles import definitions
 from stats import adapters
 
-from . import forms, mixins, models
+from . import forms, models
 from .model_utils import (get_profile_form_model, get_profile_model,
                           get_profile_model_from_slug)
 from .utils import get_current_season
-
+from django.contrib.auth import get_user_model
+User = get_user_model()
+from clubs.models import Team
 logger = logging.getLogger(__name__)
+
+
+from app import mixins
 
 
 class PaginateMixin:
@@ -44,13 +49,93 @@ class MyObservers(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixi
 
     def get(self, request, *args, **kwargs):
         user = request.user
-        qs_profiles = Follow.objects.filter(user=user)
-        qs_teams = FollowTeam.objects.filter(user=user)
+        tabs = []
+
+        qs_players_ids = list(Follow.objects.filter(user=user, target__declared_role=definitions.PLAYER_SHORT).values_list('target__id', flat=True))
+        qs_players = User.objects.filter(id__in=qs_players_ids)
+        
+        qs_teams_ids = FollowTeam.objects.filter(user=user).values_list('target__id', flat=True)
+        qs_teams = Team.objects.filter(id__in=qs_teams_ids)
+        qs_coaches_ids = list(Follow.objects.filter(user=user, target__declared_role=definitions.COACH_SHORT).values_list('target__id', flat=True))
+        qs_coaches = User.objects.filter(id__in=qs_coaches_ids)
+
+        tabs.append(
+            {
+                'name': 'players',
+                'title': 'Obserwowani pilkarze',
+                'objects': qs_players,
+                'empty': {
+                    'text_body': '',
+                    'text_header': 'Jeszcze nie obserwujesz żadnego piłkarza',
+                },
+                'badge': {
+                    'class': 'badge-info',
+                    'number': qs_players.count(),
+                },
+                'actions': True,
+            }
+        )
+
+        tabs.append(
+            {
+                'name': 'coaches',
+                'title': 'Obserwowani trenerzy',
+                'objects': qs_coaches,
+                'empty': {
+                    'text_body': '',
+                    'text_header': 'Jeszcze nie obserwujesz żadnego trenera',
+                },
+                'badge': {
+                    'class': 'badge-info',
+                    'number': qs_coaches.count(),
+                },
+                'actions': True,
+            }
+        )
+
+        tabs.append(
+            {
+                'name': 'teams',
+                'title': 'Obserwowane kluby',
+                'objects': qs_teams,
+                'empty': {
+                    'text_body': '',
+                    'text_header': 'Jeszcze nie obserwujesz żadnego klubu',
+                },
+                'badge': {
+                    'class': 'badge-info',
+                    'number': qs_teams.count(),
+                },
+                'actions': True,
+            }
+        )
         kwargs['page_title'] = 'Obserwowani'
-        kwargs['page_obj_teams'] = self.paginate(qs_teams)
-        kwargs['page_obj'] = self.paginate(qs_profiles)
+        kwargs['tabs'] = tabs
         kwargs['modals'] = self.modal_activity(user, verification_auto=False)
         return super().get(request, *args, **kwargs)
+
+
+class TabStructure:
+    def __init__(self, name=None, title=None, data=None, actions=False):
+        self.output = {
+                'name': name,
+                'title': title,
+                'objects': data,
+                'empty': None,
+                'badge': None,
+                'actions': actions,
+            }
+
+    def add_badge(self, number, klass='badge-info'):
+        self.output['badge'] = {'class': klass, 'number': number}
+        return self
+
+    def add_empty(self, header='', text=''):
+        self.output['empty'] = {'text_body': text, 'text_header': header}
+        return self
+
+    def get(self):
+        return self.output
 
 
 class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixins.ViewModalLoadingMixin):
@@ -67,44 +152,37 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
 
         if user.is_club or user.is_coach:
             qs = qs_recipient.filter(sender__declared_role=definitions.PLAYER_SHORT)
-            tabs.append({
-                'name': 'player-from',
-                'title': 'Otrzymane zapytania od piłkarzy',
-                'objects': qs,
-                'empty': {
-                    'text_body': 'Piłkarze na naszej platformie mogą wysłać zapytanie o możliwość odbycia testów wraz ze swoimi danymi kontaktowymi.',
-                    'text_header': 'Jeszcze nie otrzymałeś żadnego zapytania o testy od piłkarzy',    
-                },
-                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
-                'actions': True,
-            })
+            tab = TabStructure(
+                    name='player-from', title='Otrzymane zapytania od piłkarzy', data=qs, actions=True
+                ).add_badge(
+                    qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                ).add_empty(
+                    text='Piłkarze na naszej platformie mogą wysłać zapytanie o możliwość odbycia testów wraz ze swoimi danymi kontaktowymi.',
+                    header='Jeszcze nie otrzymałeś żadnego zapytania o testy od piłkarzy',
+                )
+            tabs.append(tab.get())
 
             qs = qs_sender.filter(recipient__declared_role=definitions.PLAYER_SHORT)
-            tabs.append({
-                'name': 'player-to',
-                'title': 'Wysłane zapytania do piłkarzy',
-                'objects': qs,
-                'empty': {
-                    'text_body': '',
-                    'text_header': 'Jeszcze wysłałeś żadnego zapytania o testy od piłkarzy',   
-                },
-                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
-                'actions': False,
-            })
+            tab = TabStructure(
+                    name='player-to', title='Wysłane zapytania do piłkarzy', data=qs, actions=False
+                ).add_badge(
+                    qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                ).add_empty(
+                    header='Jeszcze wysłałeś żadnego zapytania o testy od piłkarzy',
+                )
+            tabs.append(tab.get())
 
         if user.is_player:
             qs = qs_recipient.filter(sender__declared_role__in=[definitions.COACH_SHORT, definitions.CLUB_SHORT])
-            tabs.append({
-                'name': 'player-from',
-                'title': 'Otrzymane zapytania od klubów',
-                'objects': qs,
-                'empty': {
-                    'text_body': 'Trenerzy i Kluby w na platformie maja możliwość wysłać Ci zaproszenie na testy. Powjawią się one tutaj.',
-                    'text_header': 'Jeszcze nie otrzymałeś żadnego zaproszenia na testy',  
-                },
-                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
-                'actions': True,
-            })
+            tab = TabStructure(
+                    name='player-from', title='Otrzymane zapytania od klubów', data=qs, actions=True
+                ).add_badge(
+                    qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                ).add_empty(
+                    text='Trenerzy i Kluby w na platformie maja możliwość wysłać Ci zaproszenie na testy. Powjawią się one tutaj.',
+                    header='Jeszcze nie otrzymałeś żadnego zaproszenia na testy',
+                )
+            tabs.append(tab.get())
 
             qs = qs_sender.filter(recipient__declared_role__in=[definitions.COACH_SHORT, definitions.CLUB_SHORT])
             tabs.append({
@@ -115,36 +193,33 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
                     'text_header': 'Jeszcze nie wysłałeś żadnego zapytania o testy',
                     'text_body': 'Będąc na platformie możesz wysyłać zaproszenia do klubów i trenerów.',
                 },
-                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                'badge': {
+                    'class': 'badge-info',
+                    'number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                },
                 'actions': False,
             })
 
         if user.is_coach:
             qs = qs_recipient.filter(sender__declared_role=definitions.CLUB_SHORT)
-            tabs.append({
-                'name': 'club-from',
-                'title': 'Otrzymane zapytania od klubów',
-                'objects': qs,
-                'empty': {
-                    'text_header': 'Jeszcze nie otrzymałeś zaproszenie od żadnego klubu',   
-                    'text_body': '',
-                },
-                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
-                'actions': True,
-            })
+            tab = TabStructure(
+                    name='club-from', title='Otrzymane zapytania od klubów', data=qs, actions=True
+                ).add_badge(
+                    qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                ).add_empty(
+                    header='Jeszcze nie otrzymałeś zaproszenie od żadnego klubu',
+                )
+            tabs.append(tab.get())
 
             qs = qs_sender.filter(recipient__declared_role=definitions.CLUB_SHORT)
-            tabs.append({
-                'name': 'club-to',
-                'title': 'Wysłane zapytania do klubów',
-                'objects': qs,
-                'empty': {
-                    'text_header': 'Jeszcze nie wysłałeś zapytania do żadnego klubu.',
-                    'text_body': '',
-                },
-                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
-                'actions': False,
-            })
+            tab = TabStructure(
+                    name='club-to', title='Wysłane zapytania do klubów', data=qs, actions=False
+                ).add_badge(
+                    qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                ).add_empty(
+                    header='Jeszcze nie wysłałeś zapytania do żadnego klubu.',
+                )
+            tabs.append(tab.get())
 
         if user.is_club:
             qs = qs_recipient.filter(sender__declared_role=definitions.COACH_SHORT)
@@ -156,7 +231,10 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
                     'text_body': '',
                     'text_header': 'Jeszcze nie otrzymałeś żadnego zapytania od trenerów',    
                 },
-                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                'badge': {
+                    'class': 'badge-info',
+                    'number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                },
                 'actions': True,
             })
 
@@ -169,7 +247,10 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
                     'text_body': '',
                     'text_header': 'Jeszcze nie wysłałeś żadnego zapytania',    
                 },
-                'active_number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                'badge': {
+                    'class': 'badge-info',
+                    'number': qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
+                },
                 'actions': False,
             })
             

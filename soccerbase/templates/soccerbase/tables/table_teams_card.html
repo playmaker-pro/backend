@@ -21,13 +21,13 @@
     <div class="row no-gutters">
 
 
-                <div class="d-none d-md-inline col-md-3">
-                  <a href="{{ object.get_permalink }}"> 
-                    <img class="avatar rounded img-responsive" src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
-                    <strong style="padding-left:15px;">{{ object.name|upper}}</strong>
-                  </a>
-                </div>
-          
+                          <div class="d-none d-md-inline col-md-3">
+                            <a href="{{ object.get_permalink }}"> 
+                              <img class="avatar rounded img-responsive" src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
+                              <strong style="padding-left:15px;">{{ object.name|upper}}</strong>
+                            </a>
+                          </div>
+                    
         
         <div class="d-md-none text-center"> <!-- -->
             <img class="rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
@@ -36,40 +36,40 @@
         <div class="d-md-none col text-left ml-2">
     
             <div class="">
-                <strong>{{ object.profile.display_league|default:''|upper  }}</strong> 
+                <strong>{{ object.display_league|default:''|upper  }}</strong> 
             </div>
              <div class="">
-               {{ object.profile.display_team|default:''|upper  }} 
+               {{ object.display_team|default:''|upper  }} 
             </div>
             <div class=""> 
-                {{ object.profile.display_voivodeship|default:''|upper|truncatechars:24 }}
+                {{ object.display_voivodeship|default:''|upper|truncatechars:24 }}
                 {{ object.group|default:'-'|upper|truncatechars:10 }}
             </div>
         </div>
                   
-                  <div class="d-none d-md-inline col-6 col-md-1 text-center">
-                      {{ object.profile.display_league|default:''|upper  }}
-                  </div >
+                              <div class="d-none d-md-inline col-6 col-md-1 text-center">
+                                  {{ object.display_league|default:''|upper  }}
+                              </div >
 
-                  <div class="d-none d-md-inline col-5 col-md-2  text-center">
-                      {{ object.profile.display_voivodeship|default:''|upper|truncatechars:24 }}
-                  </div>
-                  
-                  <div class="d-none d-md-inline col-6 col-md-2 text-center"> 
-                      {{ object.profile.display_team|default:''|upper  }}
-                  </div>
+                              <div class="d-none d-md-inline col-5 col-md-2  text-center">
+                                  {{ object.display_voivodeship|default:''|upper|truncatechars:24 }}
+                              </div>
+                              
+                              <div class="d-none d-md-inline col-6 col-md-2 text-center"> 
+                                  {{ object.display_team|default:''|upper  }}
+                              </div>
 
-                <div class="d-none d-md-inline col-6 col-md-1">
-                    {{ object.group|default:'-'|upper|truncatechars:10 }}
-                </div>
+                            <div class="d-none d-md-inline col-6 col-md-1">
+                                {{ object.group|default:'-'|upper|truncatechars:10 }}
+                            </div>
 
         {% comment %} <div class="col-3 col-md-1">
              {{ object.manager|default:'-'|upper }}
         </div> {% endcomment %}
         
-        <div class="d-none d-md-inline col-3 col-md-1">
-             {{ object.address|default:''|upper }}
-        </div>
+                            <div class="d-none d-md-inline col-3 col-md-1">
+                                {{ object.address|default:''|upper }}
+                            </div>
 
 
 

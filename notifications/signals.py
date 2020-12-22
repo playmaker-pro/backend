@@ -19,7 +19,7 @@ def create_if_not_exist_user_account_settings(user):
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_profile_handler(sender, instance, created, **kwargs):
+def create_notification_settings_handler(sender, instance, created, **kwargs):
     '''Signal reponsible for creating and attaching proper profile to user during creation process.
 
     Based on declared role append proper role (profile)

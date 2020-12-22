@@ -19,7 +19,7 @@
 {% block content %}
 <section id="tables" class="tables" style="background-color:#fff;margin-top:5px">
   {% csrf_token %}
-  <div class="container" data-aos="fade-up"> 
+  <div class="container-fluid" data-aos="fade-up"> 
 
         <ul class="nav nav-tabs" id="myTab" role="tablist">
             {% for tab in tabs %}
@@ -27,8 +27,8 @@
                 <a class="nav-link {% if forloop.first %} active {% endif %}" id="{{ tab.name }}-tab" data-toggle="tab" href="#{{ tab.name }}" role="tab" aria-controls="{{ tab.name }}" aria-selected="true">
                     {{ tab.title }}
 
-                {% if tab.active_number != 0 %} 
-                    <span class="badge bg-info  badge-info">{{ tab.active_number }}</span> 
+                {% if tab.badge %} 
+                    <span class="badge bg-info  {{ tab.badge.class }}">{{ tab.badge.number }}</span> 
                 {% endif %} 
                 </a>
             </li>
