@@ -6,16 +6,13 @@ from django_fsm import FSMField, transition
 from notifications.mail import request_new, request_accepted, request_declined
 # This can be extracted to models.User.
 from django_countries.fields import CountryField
-# class DefaultPlan(models.Model):
-#     # role_type = models.
-#     user_type = models.CharField()
-#     plan = models.OneToOneField(
-#         settings.AUTH_USER_MODEL,
-#         on_delete=models.CASCADE,
-#         primary_key=True)
+from django.utils import timezone
 from address.models import AddressField
 
 from profiles.models import PlayerPosition
+
+from clubs.models import League, Voivodeship, Seniority, Gender, Club
+from datetime import timedelta
 
 
 class AnnouncementPlan(models.Model):
@@ -29,6 +26,10 @@ class AnnouncementPlan(models.Model):
     limit = models.PositiveIntegerField(
         _('Plan limit'),
         help_text=_('Limit how many actions are allowed'))
+
+    days = models.DurationField(
+        default=timedelta,
+        help_text=_('Number of days to set after which plan expires.'))
 
     sort = models.PositiveIntegerField(
         ('Soring'),
@@ -95,10 +96,21 @@ class AnnouncementUserQuota(models.Model):
         return f'{self.user}: {self.counter}/{self.plan.limit}'
 
 
-from clubs.models import League, Voivodeship, Seniority, Gender, Club
+class ActiveAnnouncementManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            status__in=Announcement.ACTIVE_STATES,
+        )
+# from django.db.models import F, ExpressionWrapper, DateTimeField
+# from django.utils import timezone
+
+# Post.objects.annotate(target_date=ExpressionWrapper(timezone.now() - F('plan__days'), output_field=DateTimeField())).filter(createdAt__lte=F('target_date'))
 
 
 class Announcement(models.Model):
+    active = ActiveAnnouncementManager()
+    objects = models.Manager()
+
     STATUS_NEW = 'NOWE'
     STATUS_SENT = 'WYSŁANO'
     STATUS_RECEIVED = 'PRZECZYTANE'
@@ -118,8 +130,6 @@ class Announcement(models.Model):
         (STATUS_REJECTED, STATUS_REJECTED),
     )
 
-    # state = InquiryRequestManager()
-
     status = FSMField(
         default=STATUS_NEW,
         choices=STATUS_CHOICES,
@@ -130,6 +140,10 @@ class Announcement(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     positions = models.ManyToManyField(PlayerPosition)
+
+    subscribers = models.ManyToManyField(
+            settings.AUTH_USER_MODEL
+    )
 
     creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,

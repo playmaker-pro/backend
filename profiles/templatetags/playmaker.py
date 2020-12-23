@@ -95,16 +95,22 @@ def announcement_response(context, ann):
         return {'off': True}
     if not user.is_player:
         return {'off': True}
+    button_class = 'btn-request'
+    button_text = 'Zgłaszam się na testy'
+
+    if user in ann.subscribers.all():
+        button_text = 'Już się zgłosiłeś'
+        button_class = 'btn-requested'
 
     return {
         'active_class': None,
         # 'button_script': 'inquiry',
         'button_id': 'approveAnnoucementButton',
-        'button_attrs': f'data-ann={ann.id}',
-        'button_class': 'btn-request',
+        'button_attrs': f'data-ann={ann.id} disabled',
+        'button_class': button_class,
         'button_action': {'modal': True, 'name': 'approveAnnouncementModal'},
         'button_icon': '',
-        'button_text': 'Zgłaszam się na testy',
+        'button_text': button_text,
         'modals': context['modals'],
     }
 

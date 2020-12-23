@@ -26,11 +26,10 @@ def approve_announcement(request):
 
             ann = get_object_or_404(Announcement, id=int(_id))
   
-           #  ann.history.increment()  # @todo 1 coomit to  @ todo zwieszkyc ilosc odwiedzajcych ogloszeniee
-            
+            #  ann.history.increment()  # @todo 1 coomit to  @ todo zwieszkyc ilosc odwiedzajcych ogloszeniee
+            ann.subscribers.add(user)
             annoucement_notify_author(ann, user)
             annoucement_notify_player(ann, user)
             message = 'Zgłoszenie na testy wyłane'
             response_data['message'] = message
-      
             return JsonResponse(response_data)

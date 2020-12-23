@@ -277,13 +277,27 @@ MESSAGE_TAGS = {messages.ERROR: "danger"}
 
 
 # Announcement app
-ANNOUNCEMENT_INITAL_PLAN = {
+ANNOUNCEMENT_DEFAULT_PLANS = [
+    {
         'default': True,
+        'limit': 1,
+        'days': 14,
+        'name': 'Podstawowe',
+        'description': 'Możesz dodać jedno 14-dniowe ogłoszenie w ramach jednego półrocza. ' \
+                       'Po zakupie konta premium będziesz mógł podpiąć 3 ogłoszenia na stałe.' \
+                       'Pozwoli to na prowadzenie naboru np. dla seniorów, drugiej drużyny oraz grup młodzieżowych.' \
+    },
+    {
+        'default': False,
         'limit': 3,
-        'name': 'Basic Inital',
+        'days': 365,
+        'name': 'Premium',
         'description': 'Default inital plan, need to be created if we wont ' \
-                       'to add to each user UserInquery. In future can be alterd'
-}
+                        'to add to each user UserInquery. In future can be alterd'
+    }
+]
+
+ANNOUNCEMENT_INITAL_PLAN = ANNOUNCEMENT_DEFAULT_PLANS[0]
 
 
 # Inquiries app

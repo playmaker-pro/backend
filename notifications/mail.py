@@ -3,6 +3,10 @@ from django.conf import settings
 from django.urls import reverse
 
 
+def notify_error_admins(subject='Wystąpił błąd', message=''):
+    mail_managers(subject, message)
+
+
 def build_absolute_url(uri: str) -> str:
     url = f'{settings.BASE_URL}{uri}'
     return url
