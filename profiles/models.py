@@ -214,7 +214,6 @@ class BaseProfile(models.Model):
             self.history = ProfileVisitHistory.objects.create()
 
     def save(self, *args, **kwargs):
-        
         # silent_param = kwargs.get('silent', False)
         # if silent_param is not None:
         #     kwargs.pop('silent')

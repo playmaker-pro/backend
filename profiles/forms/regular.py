@@ -120,9 +120,27 @@ class UserBasicForm(BaseProfileForm):
 
 
 class ClubProfileForm(BaseProfileForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    Fieldset(
+                        _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
+                        Div(
+                            Field('phone', placeholder='+48 111 222 333', wrapper_class='row', css_class='mandatory'),
+                        ),
+                        css_class='col-md-6',
+                    ),
+                    css_class='row',
+                ),
+                # css_class='card',
+            )  # div master div
+        )  # layo
+
     class Meta:
         model = models.ClubProfile
-        fields = ['club_role']
+        fields = ['club_role', 'phone']
 
 
 class CoachProfileForm(BaseProfileForm):
@@ -134,13 +152,6 @@ class CoachProfileForm(BaseProfileForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    # Fieldset(
-                    #     _('<h2 class="form-section-title">Klub</h2>'),
-                    #     Div(
-                    #         Field('club_role', wrapper_class='row', placeholder='Jaką role pełnisz w klubie'),
-                    #     ),
-                    #     css_class='col-md-6',
-                    # ),
                     Fieldset(
                         _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
                         Div(

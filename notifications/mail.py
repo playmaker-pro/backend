@@ -77,7 +77,7 @@ def request_accepted(instance, extra_body=''):
     if instance.sender.is_player or instance.recipient.is_coach:
         body += f'\t{build_absolute_url(instance.recipient.profile.get_permalink())}\n'
     else:
-        body += f'\t{build_absolute_url({instance.recipient.profile.club.get_permalink()})}\n'
+        body += f'\t{build_absolute_url({instance.recipient.profile.club_object.get_permalink()})}\n'
 
     phone = instance.recipient.profile.phone or 'brak'
     body += f'\tTelefon: {phone}\n'
