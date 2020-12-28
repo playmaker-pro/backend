@@ -42,7 +42,9 @@
                     <div class="card item-card">
                         <div class="card-header d-md-none">
                             <span> 
+                                {% if not object.sender.is_club %}
                                 <img class="flag" src="{{ object.sender.profile.country.flag }}" alt="flag">
+                                {% endif %}
                                 {{object.sender.first_name|upper}} {{ object.sender.last_name|upper}} 
                             </span>
                             
@@ -60,7 +62,9 @@
                                 <div class="d-none d-md-inline col-md-3">
                                     <a href={{object.sender.profile.get_permalink }}>
                                         <img class="avatar rounded img-responsive" src="{% thumbnail object.sender.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
+                                        {% if not object.sender.is_club %}
                                         <img class="flag" src="{{ object.sender.profile.country.flag }}" alt="flag">
+                                        {% endif %}
                                         {{object.sender.first_name|upper}} {{ object.sender.last_name|upper}} 
                                     </a>
                                 </div>

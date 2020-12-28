@@ -68,13 +68,14 @@ def request_accepted(instance, extra_body=''):
         subject = 'Trener zaakceptował Twoje zaproszenie na testy'
         body += f'Trener {instance.recipient.username}  zaakceptował Twoje zapytanie o testy. Poniżej prezentujemy jego dane kontaktowe:\n\n'
 
-    if instance.sender.is_player or instance.recipient.is_coach:
+    # @todo extract this to separate logic...
+    if instance.recipient.is_player or instance.recipient.is_coach:
         body += f'\t{instance.recipient.first_name} {instance.recipient.last_name}\n'
 
-    if instance.sender.is_club:
+    if instance.recipient.is_club:
         body += f'\t{instance.recipient.profile.display_club}\n'
 
-    if instance.sender.is_player or instance.recipient.is_coach:
+    if instance.recipient.is_player or instance.recipient.is_coach:
         body += f'\t{build_absolute_url(instance.recipient.profile.get_permalink())}\n'
     else:
         body += f'\t{build_absolute_url({instance.recipient.profile.club_object.get_permalink()})}\n'
