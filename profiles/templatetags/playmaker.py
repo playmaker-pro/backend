@@ -3,12 +3,46 @@ from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from inquiries.models import InquiryRequest
 import logging
-logger = logging.getLogger(__name__)
+from datetime import date, datetime
+
 from followers.models import Follow, FollowTeam
 from profiles.utils import extract_video_id
+from django.utils.translation import (
+    gettext as _, gettext_lazy, ngettext, ngettext_lazy, npgettext_lazy,
+    pgettext, round_away_from_one,
+)
+
+
+logger = logging.getLogger(__name__)
 
 
 register = template.Library()
+
+
+@register.filter(expects_localtime=True)
+def days_since(value, arg=None):
+    try:
+        tzinfo = getattr(value, 'tzinfo', None)
+        value = date(value.year, value.month, value.day)
+    except AttributeError:
+        # Passed value wasn't a date object
+        return value
+    except ValueError:
+        # Date arguments out of range
+        return value
+    today = datetime.now(tzinfo).date()
+    delta = value - today
+    if abs(delta.days) == 1:
+        day_str = _("dzień")
+    else:
+        day_str = _("dni")
+
+    # if delta.days < 1:
+    #     fa_str = _("temu")
+    # else:
+    #     fa_str = _("od teraz")
+
+    return "%s %s" % (abs(delta.days), day_str)  # , fa_str)
 
 
 @register.filter
@@ -97,16 +131,18 @@ def announcement_response(context, ann):
         return {'off': True}
     button_class = 'btn-request'
     button_text = 'Zgłaszam się na testy'
+    button_attrs = f'data-ann={ann.id}'
 
     if user in ann.subscribers.all():
         button_text = 'Już się zgłosiłeś'
         button_class = 'btn-requested'
+        button_attrs += ' disabled'
 
     return {
         'active_class': None,
         # 'button_script': 'inquiry',
         'button_id': 'approveAnnoucementButton',
-        'button_attrs': f'data-ann={ann.id} disabled',
+        'button_attrs':  button_attrs,
         'button_class': button_class,
         'button_action': {'modal': True, 'name': 'approveAnnouncementModal'},
         'button_icon': '',

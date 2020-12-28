@@ -19,7 +19,7 @@ TABLE_TYPE_TEAM = definitions.CLUB_SHORT
 TABLE_TYPE_COACH = definitions.COACH_SHORT
 
 
-class TableView(generic.TemplateView, mixins.ViewModalLoadingMixin):
+class TableView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixins.ViewFilterMixin):
     template_name = "soccerbase/table.html"
     http_method_names = ["get"]
     paginate_limit = 15
@@ -45,100 +45,6 @@ class TableView(generic.TemplateView, mixins.ViewModalLoadingMixin):
         page_obj.elements = page_obj.end_index() - page_obj.start_index() + 1
         # kwargs['ammount'] = page_obj.count()
         return super().get(request, *args, **kwargs)
-
-    @property
-    def filter_league(self):
-        value = self.request.GET.getlist('league')
-        if value:
-            return value
-
-    @property
-    def filter_name_of_team(self):
-        value = self.request.GET.getlist('team_name')
-        if value:
-            return value
-
-    @property
-    def filter_name_of_club(self):
-        value = self.request.GET.getlist('club_name')
-        if value:
-            return value
-
-    @property
-    def filter_vivo(self):
-        value = self.request.GET.getlist('vivo')
-        if value:
-            return value
-
-    @property
-    def filter_age_max(self):
-        value = self.request.GET.get('age_max')
-        if value:
-            return int(value)
-
-    @property
-    def filter_age_min(self):
-        value = self.request.GET.get('age_min')
-        if value:
-            return int(value)
-    @property
-    def filter_first_last(self):
-        value = self.request.GET.get('first_last')
-        return value
-
-    @property
-    def filter_age_range(self):
-        value = self.request.GET.get('age_range')
-        if isinstance(value, str) and value != '' and value is not None:
-            if value == '----':
-                return None
-            elif value == 'do 20 lat':
-                return (0, 20)
-            elif value == 'od 21 do 26':
-                return (21, 26)
-            elif value == 'od 27 do 34':
-                return (27, 34)
-            elif value == 'powyżej 35':
-                return (35, 199)
-            else:
-                return None
-    @property
-    def filter_position(self):
-        POSITION_CHOICES = [
-            (1, 'Bramkarz'),
-            (2, 'Obrońca Lewy'),
-            (3, 'Obrońca Prawy'),
-            (4, 'Obrońca Środkowy'),
-            (5, 'Pomocnik defensywny (6)'),
-            (6, 'Pomocnik środkowy (8)'),
-            (7, 'Pomocnik ofensywny (10)'),
-            (8, 'Skrzydłowy'),
-            (9, 'Napastnik'),
-        ]
-
-        value = self.request.GET.get('position')
-        # return value
-        if value == '----':
-            return None
-        for number, txt in POSITION_CHOICES:
-            if txt == value:
-                return number
-        return None
-
-    @property
-    def filter_leg(self):
-        '''
-        LEG_CHOICES = (
-        (1, 'Lewa'),
-        (2, 'Prawa'),)
-        '''
-        value = self.request.GET.get('leg')
-        if value == '----':
-            return None
-        elif value == 'lewa':
-            return 1
-        elif value == 'prawa':
-            return 2
 
 
 class PlayersTable(TableView):

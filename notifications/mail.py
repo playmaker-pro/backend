@@ -38,7 +38,6 @@ def annoucement_notify_player(annoucemenet, player):
 
 def request_accepted(instance, extra_body=''):
     ''' inquiry request instance'''
-      
 
     body = 'Gratulujemy!\n\n'
     # [player -> klub]
@@ -135,7 +134,7 @@ def request_declined(instance, extra_body=''):
     if instance.sender.is_player and instance.recipient.is_coach:
         subject = 'Trener odrzucił Twoje zapytanie'
         body += f'Trener {instance.recipient.first_name} {instance.recipient.last_name} odrzucił Twoje zapytanie o testy.\n\n'
-        body += f'Jeśli nadal masz problem ze znalezieniem klubu, sprawdź nasze wsparcie transferowe PkayMaker.pro. Więcej informacji znajdziesz w poniższym linku:\n\n'
+        body += f'Jeśli nadal masz problem ze znalezieniem klubu, sprawdź nasze wsparcie transferowe PlayMaker.pro. Więcej informacji znajdziesz w poniższym linku:\n\n'
         body += 'https://playmaker.pro/transfer/\n\n'
 
     if instance.sender.is_club and instance.recipient.is_coach:

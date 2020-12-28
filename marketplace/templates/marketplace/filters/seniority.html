@@ -1,0 +1,13 @@
+
+
+
+    {% for option in options %}
+    <div class="form-check form-check-inline" style="display:inline-flex;">
+        <input class="form-check-input" type="radio" name="{{ filter_name }}" id="inlineRadio{{ forloop.counter }}" {% if request.GET.seniority == option %} checked {% endif %} value="{{ option }}">
+        <label class="form-check-label" for="inlineRadio{{ forloop.counter }}"><small>{{ option }}</small></label>
+    </div>
+    {% endfor %}
+    <div class="form-check form-check-inline" style="display:inline-flex;">
+        <input class="form-check-input" type="radio" name="{{ filter_name }}" id="inlineRadio0"  {% if request.GET.seniority == 'dowolne' %} checked {% endif %} value="dowolne">
+        <label class="form-check-label" for="inlineRadio0"><small>dowolne</small></label>
+    </div>

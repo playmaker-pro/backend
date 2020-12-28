@@ -1,11 +1,11 @@
-from django.contrib import admin
-from django.utils.html import format_html
-from utils import linkify
-from django.contrib.auth.admin import UserAdmin #as BaseUserAdmin
-from . import models
 from django import forms
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin  # as BaseUserAdmin
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+from utils import linkify
 
+from . import models
 
 
 def verify_one(modeladmin, request, queryset):
@@ -17,7 +17,7 @@ def verify_one(modeladmin, request, queryset):
 @admin.register(models.User)
 class UserAdminPanel(UserAdmin):
     fieldsets = (
-        (None, {'fields': ('password',)}),#'username',
+        (None, {'fields': ('password',)}),  # 'username',
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
         (_('Piłkarskie fakty'), {'fields': ('declared_role', 'state', 'picture', 'declared_club')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
@@ -34,9 +34,9 @@ class UserAdminPanel(UserAdmin):
     list_display = ('username', 'first_name', 'last_name', 'state', 'is_active', 'get_profile', 'get_profile_permalink', linkify('profile'), 'get_profile_percentage', 'declared_role')
     list_filter = ('state', 'declared_role')
     search_fields = ('username', 'first_name', 'last_name', 'declared_role')
-    
+
     actions = [verify_one]
-    
+
     def get_profile_percentage(self, obj):
         percentage = obj.profile.percentage_completion
         return format_html(

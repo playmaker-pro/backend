@@ -8,6 +8,7 @@
 /*--------------------------------------------------------------
 # General
 --------------------------------------------------------------*/
+
 body {
   /* font-family: "Open Sans", sans-serif;*/
   /*font-family: 'Asap', sans-serif; */
@@ -16,6 +17,7 @@ body {
 }
 
 button { font-family: inherit }
+
 a {
   color: #e03a3c;
   text-decoration: none;
@@ -155,6 +157,9 @@ a.disabled {
   cursor: default;
 }
 
+button[disabled=disabled], button:disabled {
+   border:0px;
+}
 
 .btn-owl-big { font-size:1.5rem;}
 

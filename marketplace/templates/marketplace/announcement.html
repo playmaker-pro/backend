@@ -1,15 +1,79 @@
 {% load playmaker %}
-<div class="card m-2">
-    <div class="card-body">
-      <h5 class="card-title">{{ object.club }}</h5>
-      <p class="card-text">{{ object.body }}</p>
-      <p class="card-text"><small class="text-muted">Odpowiedzi: {{ object.subscribers.count }}</small></p>
-       <p class="card-text"><small class="text-muted">{{ object.created_at|timesince }}</small></p>
+{% load thumbnail %}
+
+<div class="card announcement-card m-1 serv-section-2">
+                <div class="serv-section-2-icon"> <img class="avatar rounded img-responsive"  src="{% thumbnail object.club.picture|default:'default_club.png' 'club_small' %}">
+                </div>
+                    <div class="serv-section-desc">
+                        <h4><a  href="{{ object.club.get_permalink }}">{{ object.club.name }}</a></h4>
+                        <h5>{{ object.league }}</h5> 
+                </div>
+                    <div class="section-heading-line-left"></div>
+
+
+    <div class="card-body row no-gutters">
+        {% comment %} <div class="col-12 card-title"> 
+            <span class="pull-left">
+                <a  href="{{ object.club.get_permalink }}">
+                   <h5>
+                    <img class="avatar rounded img-responsive"  src="{% thumbnail object.club.picture|default:'default_club.png' 'club_small' %}">
+                    {{ object.club.name }}
+                   </h5>
+                </a>
+            </span>
+            <small class="pull-right" style="top:3px; position:relative;">
+                {{ object.league }}
+            </small>
+        </div> {% endcomment %}
+
+
+        <div class="col-12 card-text text-muted"> 
+            <small class="row no-gutters"> 
+                <div class="col-6 col-md-3 text-center">
+                    <h4 class="icofont-match-review"></h4>
+                    {% for position in  object.positions.all %} 
+                        {{ position }}<br>
+                    {% endfor %}
+                </div>
+                <div class="col-6 col-md-3 text-center">
+                    <h4 class="icofont-ui-calendar"></h4>
+                    {{ object.age_range }}
+                </div>
+                <div class="col-6 col-md-3 text-center">
+                    <h4 class="icofont-users-alt-5"></h4>
+                    {{ object.gender }}/{{ object.seniority }}
+                </div>
+
+                <div class="col-6 col-md-3 text-center">
+                    <h4 class="icofont-map-pins"></h4> 
+                    {{ object.address }}
+                </div>
+            </small>
+        </div>
+
     </div>
 
-    {% if user.is_player %} 
-        <div class="card-footer">
-            {% announcement_response object %}
+    <div class="card-footer row no-gutters">
+        <div class="card-text col-md-12">
+            <small> {{ object.body }} </small>
         </div>
-    {% endif %}
-  </div>
+
+        <div class="card-text text-center col-md-12">
+            <span class="card-text">
+                <i class="icofont-list"></i>
+                <small class="text-muted"> {{ object.subscribers.count }} odpowiedzi </small>
+            </span>
+            
+            <span class="card-text">
+                <i class="icofont-wall-clock"></i>
+                <small class="text-muted"> {{ object.created_at|days_since }}</small>
+            </span>
+            
+            <span class="card-text pull-right">
+                {% if user.is_player %} 
+                    {% announcement_response object %}
+                {% endif %} 
+            </span>
+        </div>
+    </div>
+</div>

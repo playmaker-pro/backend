@@ -29,7 +29,9 @@ class AnnouncementPlan(models.Model):
 
     days = models.DurationField(
         default=timedelta,
-        help_text=_('Number of days to set after which plan expires.'))
+        null=True,
+        blank=True,
+        help_text=_('Number of days to set after which plan expires. Can be null which means is not activated.'))
 
     sort = models.PositiveIntegerField(
         ('Soring'),
@@ -93,7 +95,7 @@ class AnnouncementUserQuota(models.Model):
         self.save()
 
     def __str__(self):
-        return f'{self.user}: {self.counter}/{self.plan.limit}'
+        return f'{self.user}: {self.plan.name}({self.counter}/{self.plan.limit})'
 
 
 class ActiveAnnouncementManager(models.Manager):
@@ -135,6 +137,10 @@ class Announcement(models.Model):
         choices=STATUS_CHOICES,
     )
 
+    disabled = models.BooleanField(default=False)
+
+    expire = models.DateTimeField()
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     updated_at = models.DateTimeField(auto_now=True)
@@ -142,7 +148,8 @@ class Announcement(models.Model):
     positions = models.ManyToManyField(PlayerPosition)
 
     subscribers = models.ManyToManyField(
-            settings.AUTH_USER_MODEL
+            settings.AUTH_USER_MODEL,
+            null=True, blank=True
     )
 
     creator = models.ForeignKey(
@@ -150,6 +157,7 @@ class Announcement(models.Model):
         related_name='announcement_creator',
         on_delete=models.CASCADE
     )
+
     club = models.ForeignKey(
         Club,
         on_delete=models.CASCADE
@@ -191,3 +199,14 @@ class Announcement(models.Model):
         help_text=_('Adres'),
         blank=True,
         null=True)
+
+    def set_expiration_date(self):
+        if self.expire is None:
+            self.expire = timezone.now() + self.creator.announcementuserquota.plan.days
+
+    def save(self, *args, **kwargs):
+        self.set_expiration_date()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.creator} #nr {self.id}'

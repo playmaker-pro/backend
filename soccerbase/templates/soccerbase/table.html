@@ -1,5 +1,5 @@
 {% extends 'platform/base.html' %}
-
+{% load static %}
 {% load i18n %}
 
 {% comment %} 
@@ -98,30 +98,11 @@
     {% elif type == 'C' %}
         {% include 'soccerbase/tables/filters_modal_teams.html' %}
     {% endif %}
+    
+    <script src="{% static 'assets/js/filters.js' %}"></script>
 
 <script>
 
-
-$("#filter-button").click(function(){
-    $("input").each(function(){
-        if($(this).val() == '') {
-            console.log('asdasdas');
-            $(this).remove();
-        }
-    });
-    $("#filter-button").submit();
-});
-
-
-$("#filter-button-mobile").click(function(){
-    $("input").each(function(){
-        if($(this).val() == '') {
-            console.log('asdasdas');
-            $(this).remove();
-        }
-    });
-    $("#filter-button-mobile").submit();
-});
 
 $(document).ready(function($){
   

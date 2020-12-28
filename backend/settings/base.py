@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'django.contrib.humanize',
     'rest_framework',
     'corsheaders',
 
@@ -266,6 +267,7 @@ THUMBNAIL_ALIASES = {
         'tables_avatar_show_medium': {'size': (54, 54), 'crop': True},
         'profile_avatar_table': {'size': (25, 25), 'crop': True},
         'nav_avatar': {'size': (25, 25), 'crop': True},
+        'club_small': {'size': (44, 44), 'crop': True},
     },
 }
 # Crispy Form Theme - Bootstrap 4

@@ -1,0 +1,16 @@
+
+{% load playmaker %}
+<select name="league" 
+    class="selectpicker" 
+    multiple 
+    data-width="{{ size }}"  
+    title="rozgrywki" 
+    data-actions-box="true" 
+    data-live-search="true" 
+    data-selected-text-format="count > 3"
+>
+
+{% for option in options %}
+    <option {% if option in request.GET|get_list:'league' %} selected="selected" {% endif %}>{{ option }}</option>
+{% endfor %}
+</select>

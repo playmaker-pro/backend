@@ -20,4 +20,4 @@ def create_and_attach_announcement_plans_handler(sender, instance, created, **kw
     '''
     service = services.MarketPlaceService()
     if created:
-        service.set_user_announcement_plan(instance)
+        service.set_user_plan(instance)

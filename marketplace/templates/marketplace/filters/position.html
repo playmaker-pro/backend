@@ -1,0 +1,10 @@
+
+{% load playmaker %}
+<select name="position" data-width="{{ size }}"  class="form-control selectpicker" data-allow-clear="true" title="pozycja">
+
+{% for option in options %}
+    <option {% if request.GET.position == option %} selected {% endif %} value="{{ option }}">{{ option }}</option>
+{% endfor %}
+
+</select>
+

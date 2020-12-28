@@ -1,0 +1,22 @@
+
+
+
+{% with size=size %}
+    <div class="col-12 col-md-1 filter "> 
+            {% include 'marketplace/filters/league.html' with size=size options=filters.league %}
+    </div>
+    <div class="col-12 col-md-1 filter "> 
+            {% include 'marketplace/filters/position.html' with size=size options=filters.position %}
+    </div>
+    <div class="col-12 col-md-1 filter "> 
+            {% include 'marketplace/filters/voivodeship.html' with size=size options=filters.voivodeship %}
+    </div>
+
+    <div class="col-12 col-md-2 filter "> 
+            {% include 'marketplace/filters/gender.html' with filter_name='gender' options=filters.gender %}
+    </div>
+    <div class="col-12 col-md-2 filter "> 
+            {% include 'marketplace/filters/seniority.html' with filter_name='seniority' options=filters.seniority %}
+    </div>
+
+{% endwith %}
