@@ -294,8 +294,8 @@ ANNOUNCEMENT_DEFAULT_PLANS = [
         'limit': 3,
         'days': 365,
         'name': 'Premium',
-        'description': 'Default inital plan, need to be created if we wont ' \
-                        'to add to each user UserInquery. In future can be alterd'
+        'description': 'Możesz dodać trzy ogłoszenie w ramach jednego półrocza. ' \
+                       'Możesz jednocześnie prowadzić nabór np. dla seniorów, drugiej drużyny oraz grup młodzieżowych.' \
     }
 ]
 

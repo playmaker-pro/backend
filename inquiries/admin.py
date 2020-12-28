@@ -1,17 +1,17 @@
 from django.contrib import admin
-from . import models 
+from . import models
 
 
 @admin.register(models.InquiryPlan)
 class InquiryPlanAdmin(admin.ModelAdmin):
-    pass 
+    list_display = ('name', 'default', 'limit')
 
 
 @admin.register(models.UserInquiry)
 class UserInquiryAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ('user__email',)
 
 
 @admin.register(models.InquiryRequest)
 class InquiryRequestAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ('recipient__email', 'sender__email',)

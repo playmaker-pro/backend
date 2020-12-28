@@ -14,5 +14,5 @@ class AnnouncementUserQuotaAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.AnnouncementPlan)
-class AnnouncementPlanAdmin(admin.ModelAdmin):       
+class AnnouncementPlanAdmin(admin.ModelAdmin):
     list_display = ('name', 'default', 'limit', 'days')

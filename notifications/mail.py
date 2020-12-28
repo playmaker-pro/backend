@@ -35,7 +35,6 @@ def annoucement_notify_player(annoucemenet, player):
     send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [player.email])
 
 
-
 def request_accepted(instance, extra_body=''):
     ''' inquiry request instance'''
 

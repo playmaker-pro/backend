@@ -15,9 +15,11 @@ class MarketPlaceService:
 
     def create_default_plans(self):
         for plan_opts in settings.ANNOUNCEMENT_DEFAULT_PLANS:
-            days = int(plan_opts['days'])
-            plan_opts['days'] = timedelta(days=days)
-            AnnouncementPlan.objects.get_or_create(**plan_opts)
+            logger.info(f'marketplace plan: {plan_opts}')
+            opts = plan_opts.copy()
+            days = int(opts['days'])
+            opts['days'] = timedelta(days=days)
+            AnnouncementPlan.objects.get_or_create(**opts)
 
     def set_user_plan(self, user):
         plan = self.get_plan()
@@ -33,10 +35,15 @@ class MarketPlaceService:
     def get_plan(self):
         return self._get_default_plan()
 
-    def _get_default_plan(self):
+    def _get_default_plan(self, retry=True):
         try:
             return AnnouncementPlan.objects.get(default=True)
+        except AnnouncementPlan.DoesNotExist:
+            logger.debug('AnnouncementPlan.DoesNotExist so we are creating default plans form settings.')
+            self.create_default_plans()
+            if retry:
+                self._get_default_plan(retry=False)  # this prevent any infinitve loop if there is no plans defined in settings.
         except AnnouncementPlan.MultipleObjectsReturned:
             # Only one default plan can be present
-            
+            logger.error('AnnouncementPlan.MultipleObjectsReturned - there can be only one Default AnnouncementPlan')
             return None
