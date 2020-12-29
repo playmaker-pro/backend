@@ -102,7 +102,7 @@ class Club(models.Model):
         verbose_name_plural = _('Kluby')
 
     def __str__(self):
-        return f'{self.name}# '
+        return f'{self.name}'
 
     # club_phone = PhoneNumberField(
     #     _('Telefon'),
@@ -137,6 +137,7 @@ class Club(models.Model):
 
 class League(models.Model):
     name = models.CharField(max_length=355, unique=True)
+
     @property
     def display_league(self):
         return self.name

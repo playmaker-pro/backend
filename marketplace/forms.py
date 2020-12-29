@@ -47,8 +47,9 @@ class AnnouncementForm(forms.ModelForm):
         self.helper.form_tag = False
         self.helper.error_text_inline = True
         self.helper.labels_uppercase = True
-        self.helper.label_class = 'col-md-12 p-1'
-        self.helper.field_class = 'col-12'
+        self.helper.label_class = 'col-12 col-md-4 text-md-right text-muted upper form-label'
+        self.helper.field_class = 'col-12 col-md-8'
+        self.helper.wrapper_class = 'row'
 
         self.fields['year_from'] = forms.ChoiceField(choices=year_choices())
         self.fields['year_to'] = forms.ChoiceField(choices=year_choices())
@@ -90,7 +91,7 @@ class AnnouncementForm(forms.ModelForm):
         self.fields['gender'].help_text = False
 
         self.fields['address'].required = True
-        self.fields['address'].label = 'Adres testów np. Wrocław, Polska'
+        self.fields['address'].label = 'Adres testów'
         self.fields['address'].help_text = False
 
         self.fields['www'].required = False
@@ -106,8 +107,8 @@ class AnnouncementForm(forms.ModelForm):
         self.fields['positions'].help_text = False
 
     def build_verification_form(self):
-
-        fds = [''] + [Field(fn, warpper_class='row', placeholder=fp, title=fp, css_class=fc, **kwargs) for fn, fp, fc, kwargs in self.building_fields]
+                               
+        fds = [''] + [Field(fn, wrapper_class='row', placeholder=fp, title=fp, css_class=fc, **kwargs) for fn, fp, fc, kwargs in self.building_fields]
         return Fieldset(*fds)
 
     class Meta:
