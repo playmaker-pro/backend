@@ -136,6 +136,13 @@ class InquiryRequest(models.Model):
     )
 
     # state = InquiryRequestManager()
+    def status_display_for(self, user):
+        status_map = {}
+        if user == self.recipient:
+            status_map = {
+                'WYSŁANO': 'OTRZYMANO'
+            }
+        return status_map.get(self.status, self.status)
 
     body = models.TextField(null=True, blank=True)
 

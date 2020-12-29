@@ -303,21 +303,27 @@ ANNOUNCEMENT_INITAL_PLAN = ANNOUNCEMENT_DEFAULT_PLANS[0]
 
 
 # Inquiries app
-INQUIRIES_INITAL_PLAN = {
+INQUIRIES_INITAL_PLANS = [
+    {
         'default': True,
         'limit': 3,
         'name': 'Basic Inital',
         'description': 'Default inital plan, need to be created if we wont ' \
             'to add to each user UserInquery. In future can be alterd'
-}
-
-INQUIRIES_INITAL_PLAN_COACH = {
+    },
+    {
         'default': False,
         'limit': 5,
         'name': 'Basic Inital for coaches',
         'description': 'Default inital plan, need to be created if we wont ' \
             'to add to each user UserInquery. In future can be alterd'
-}
+    }
+]
+
+INQUIRIES_INITAL_PLAN = INQUIRIES_INITAL_PLANS[0]
+
+INQUIRIES_INITAL_PLAN_COACH = INQUIRIES_INITAL_PLANS[1]
+
 
 # messages
 MESSAGE_TAGS = {
@@ -503,8 +509,8 @@ STREAM_REDIS_CONFIG = {
 
 # https://pypi.org/project/django-address/
 
-GOOGLE_API_KEY = 'AIzaSyAwISspDEfhVel-fTYm18Dh1EKtrD0xDH0'
-
+GOOGLE_API_KEY = 'AIzaSyAwISspDEfhVel-fTYm18Dh1EKtrD0xDH0xxxxx'
+JQUERY_URL = False
 
 # Django-countries
 

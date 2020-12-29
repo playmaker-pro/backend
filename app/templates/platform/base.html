@@ -85,10 +85,7 @@
     <script src="{% static 'assets/js/profiles.js' %}"></script>
     <script src="{% static 'assets/js/observers.js' %}"></script>
     
-  
- 
-
-    <!--extra modals-->
+    <!-- extra modals -->
     {# Loading proper modals #}
     {% for _, modal in modals.items %}
         {% if modal.load %}
@@ -97,21 +94,19 @@
                 <script>
                     $(window).on('load',function(){
                         {{ modal.async }}();
-                        
                     });
                 </script>
             {% endif%}
         {% endif %}
     {% endfor %}
 
- <script>
- 
-    $(function () {
-        $('[data-toggle="tooltip"]').tooltip()
-    })
+    <script>
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
 
-    $('select').selectpicker();
-</script>
+        $('select').selectpicker();
+    </script>
 
 {% endblock %}
 

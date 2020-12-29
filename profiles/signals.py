@@ -31,7 +31,9 @@ def create_default_basic_plan_for_coach_if_not_present():
     args = settings.INQUIRIES_INITAL_PLAN_COACH
     try:
         plan = InquiryPlan.objects.get(limit=args['limit'], name=args['name'])
+        
     except InquiryPlan.DoesNotExist:
+        logger.info('Initial InquiryPlan for coaches does not exists. Creating new one.')
         plan = InquiryPlan.objects.create(**args)
     return plan
 

@@ -66,7 +66,9 @@ class AddAnnouncementView(LoginRequiredMixin, View):
         else:
             return JsonResponse({})
         data = {}
-        data['form'] = render_crispy_form(form)
+        form_raw_data = render_crispy_form(form)
+        # form_raw_data = form_raw_data.replace('<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>', '')
+        data['form'] = form_raw_data
         return JsonResponse(data)
 
     def post(self, request, *args, **kwargs):

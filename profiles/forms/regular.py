@@ -123,20 +123,12 @@ class ClubProfileForm(BaseProfileForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper.layout = Layout(
-            Div(
-                Div(
-                    Fieldset(
-                        _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
-                        Div(
-                            Field('phone', placeholder='+48 111 222 333', wrapper_class='row', css_class='mandatory'),
-                        ),
-                        css_class='col-md-6',
-                    ),
-                    css_class='row',
-                ),
-                # css_class='card',
-            )  # div master div
-        )  # layo
+            Fieldset(
+                _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
+                Field('phone', placeholder='+48 111 222 333', wrapper_class='row', css_class='mandatory'),
+                css_class='col-md-6',
+            )
+        )
 
     class Meta:
         model = models.ClubProfile
@@ -147,46 +139,33 @@ class CoachProfileForm(BaseProfileForm):
     # birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # for fieldname in ['club_role', 'league', 'team']:
-        #     self.fields[fieldname].help_text = None
         self.helper.layout = Layout(
-            Div(
-                Div(
-                    Fieldset(
-                        _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
-                        Div(
-                            Field('birth_date', wrapper_class='row', css_class=self.get_mandatory_field_class("birth_date"),),
-                            # Field('league', wrapper_class='row', readonly=True),
-                            # # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
-                            # Field('voivodeship', wrapper_class='row', readonly=True),
-                            # Field('team', wrapper_class='row', readonly=True),
-                            # Field('country', wrapper_class='row'),
-                            Field("address", wrapper_class='row'),
-                            Field("about", wrapper_class='row'),
-
-                        ),
-                        css_class='col-md-6',
-                    ),
-                    Fieldset(
-                        _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
-                        Div(
-                            Field('phone', placeholder='+48 111 222 333', wrapper_class='row', css_class='mandatory'),
-                            Field('facebook_url', wrapper_class='row'),
-                            Field("soccer_goal", wrapper_class='row'),
-                            Field("practice_distance", wrapper_class='row'),
-                        ),
-                        css_class='col-md-6',
-                    ),
-                    css_class='row',
-                ),
-                # css_class='card',
-            )  # div master div
-        )  # layo
+            Fieldset(
+                _('<h2 class="form-section-title">Podstawowe Informacje</h2>'),
+                Field('birth_date', wrapper_class='row', css_class=self.get_mandatory_field_class("birth_date"),),
+                # Field('league', wrapper_class='row', readonly=True),
+                # # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
+                # Field('voivodeship', wrapper_class='row', readonly=True),
+                # Field('team', wrapper_class='row', readonly=True),
+                # Field('country', wrapper_class='row'),
+                Field("address", wrapper_class='row'),
+                Field("about", wrapper_class='row'),
+                css_class='col-md-6',
+            ),
+            Fieldset(
+                _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
+                Field('phone', placeholder='+48 111 222 333', wrapper_class='row', css_class='mandatory'),
+                Field('facebook_url', wrapper_class='row'),
+                Field("soccer_goal", wrapper_class='row'),
+                Field("practice_distance", wrapper_class='row'),
+                css_class='col-md-6',
+            )
+        )
 
     class Meta:
         model = models.CoachProfile
         fields = ['club_role', 'country', 'address', 'about', 'birth_date', 'facebook_url', 'soccer_goal', 'phone', 'practice_distance'] #'league', 'voivodeship', 'team',
-    
+
     def get_mandatory_field_class(self, field_name):
         if field_name in models.CoachProfile.VERIFICATION_FIELDS:
             return 'mandatory-field'
@@ -256,8 +235,7 @@ class PlayerProfileForm(BaseProfileForm):
                 Field("video_description_second", wrapper_class='row', placeholder=_('Nr 2 Opisz w której minucie dzieją się istotne rzeczy')),
                 Field('video_url_third', wrapper_class='row', placeholder=_('youtube url nr 3')),
                 Field('video_title_third', wrapper_class='row', placeholder=_('Tytuł nr 3')),
-                Field("video_description_third", wrapper_class='row', placeholder=_('Nr 3 Opisz w której minucie dzieją się istotne rzeczy')),
-                
+                Field("video_description_third", wrapper_class='row', placeholder=_('Nr 3 Opisz w której minucie dzieją się istotne rzeczy')),   
                 css_class='col-md-6',
             ),
         )  # layout

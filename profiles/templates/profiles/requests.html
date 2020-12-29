@@ -42,24 +42,41 @@
                     <div class="card item-card">
                         <div class="card-header d-md-none">
                             <span> 
+                            {% if object.sender != user %}
                                 {% if not object.sender.is_club %}
                                 <img class="flag" src="{{ object.sender.profile.country.flag }}" alt="flag">
                                 {% endif %}
                                 {{object.sender.first_name|upper}} {{ object.sender.last_name|upper}} 
+                            {% else %}
+                                {% if not object.recipient.is_club %}
+                                <img class="flag" src="{{ object.recipient.profile.country.flag }}" alt="flag">
+                                {% endif %}
+                                {{object.recipient.first_name|upper}} {{ object.recipient.last_name|upper}} 
+                            {% endif %}
                             </span>
                             
                             <span class="float-right"> 
+                            {% if object.sender != user %}
                                 {% profile_link object.sender checks=False text='profil' %}
+                            {% else %}
+                                {% profile_link object.recipient checks=False text='profil' %}
+                            {% endif %}
                             </span>
                         </div>
                         
                         <div class="d-md-none">
+                            {% if object.sender != user %}
                             <img class="avatar rounded-circle img-responsive" src="{% thumbnail object.sender.picture|default:'default_profile.png' 'tables_avatar_show_small' %}">
+                            {% else %}
+                            <img class="avatar rounded-circle img-responsive" src="{% thumbnail object.recipient.picture|default:'default_profile.png' 'tables_avatar_show_small' %}">
+                            {% endif %}
                         </div>
 
                         <div class="card-body table-item"> 
                             <div class="row no-gutters">
                                 <div class="d-none d-md-inline col-md-3">
+
+                                {% if object.sender != user %}
                                     <a href={{object.sender.profile.get_permalink }}>
                                         <img class="avatar rounded img-responsive" src="{% thumbnail object.sender.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
                                         {% if not object.sender.is_club %}
@@ -67,6 +84,15 @@
                                         {% endif %}
                                         {{object.sender.first_name|upper}} {{ object.sender.last_name|upper}} 
                                     </a>
+                                {% else %}
+                                    <a href={{object.recipient.profile.get_permalink }}>
+                                        <img class="avatar rounded img-responsive" src="{% thumbnail object.recipient.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
+                                        {% if not object.recipient.is_club %}
+                                        <img class="flag" src="{{ object.recipient.profile.country.flag }}" alt="flag">
+                                        {% endif %}
+                                        {{object.recipient.first_name|upper}} {{ object.recipient.last_name|upper}} 
+                                    </a>
+                                {% endif %}
                                 </div>
 
                                 <div class="d-none d-md-inline col-md">
@@ -79,15 +105,18 @@
                                     {% elif object.status == object.STATUS_REJECTED %}
                                     class="btn btn-sm btn-danger "
                                     {% endif %}>
-                                        {{ object.status|default:'-'|upper  }}
+                                        {{ object|status_display_for:user|upper }}
                                     </button>
                                     
 
                                 </div>
 
                                 <div class="col-12 col-md-3"> 
-                        
-                                    {{ object.body|default:''  }}
+                                    {% if object.sender != user %}
+                                        {% if object.status == object.STATUS_ACCEPTED %}
+                                            {{ object.body|default:''  }}
+                                        {% endif %}
+                                    {% endif %}
                                 
                                 </div>
 
@@ -119,7 +148,7 @@
                                     {% elif object.status == object.STATUS_REJECTED %}
                                     class="btn btn-sm btn-danger "
                                     {% endif %}>
-                                        {{ object.status|default:'-'|upper  }}
+                                        {{ object|status_display_for:user|upper  }}
                                     </button>
                                 
                                 {% if object.is_active %}

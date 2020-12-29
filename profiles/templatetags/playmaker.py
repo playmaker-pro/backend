@@ -52,6 +52,12 @@ def convert_to_embeded(url):
 
 
 @register.filter
+def status_display_for(inquiryrequest, user):
+    """Display status"""
+    return inquiryrequest.status_display_for(user)
+
+
+@register.filter
 def addstr(arg1, arg2):
     """concatenate arg1 & arg2"""
     return str(arg1) + str(arg2)
