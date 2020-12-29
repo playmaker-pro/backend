@@ -58,7 +58,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
             elif user.is_club:
                 form = AnnouncementForm(initial={
                     'club': user.profile.club_object,
-                    'voivodeship': user.profile.club_object.club.voivodeship,
+                    'voivodeship': user.profile.club_object.voivodeship
                 })
                 form.fields['club'].queryset = Club.objects.filter(name=user.profile.club_object.name)
 

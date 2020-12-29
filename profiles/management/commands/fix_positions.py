@@ -13,10 +13,9 @@ class Command(BaseCommand):
     help = 'Load dumped profiles from csv file.'
 
     def add_arguments(self, parser):
-        
         parser.add_argument('path', type=str)
         parser.add_argument('off', type=str)
-    
+
     def position_map(self, param, leg):
         '''
         W bazie wix jest Obrońca - boczny. Dopasowanie prawy / lewy jest w przypadku

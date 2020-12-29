@@ -37,7 +37,7 @@ class AnnouncementForm(forms.ModelForm):
         self.helper.form_tag = False
         self.helper.error_text_inline = True
         self.helper.labels_uppercase = True
-        self.helper.label_class = 'col-md-2 p-1'
+        self.helper.label_class = 'col-md-12 p-1'
         self.helper.field_class = 'col-12'
         self.set_fields_rules()
 
@@ -45,7 +45,7 @@ class AnnouncementForm(forms.ModelForm):
 
     def set_fields_rules(self):
         self.fields['league'].required = True
-        self.fields['league'].label = False  # '<i class="icofont-ui-user-group"></i>'
+        self.fields['league'].label = 'Poziom rozgrywkowy'  # '<i class="icofont-ui-user-group"></i>'
         self.fields['league'].help_text = 'Poziom rozgrywkowy'
 
         self.fields['club'].required = True

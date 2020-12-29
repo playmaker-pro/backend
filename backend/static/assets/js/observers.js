@@ -111,7 +111,7 @@ function approve_annoucement(event, slug) {
         },
         success:function(json){         
             $('#requestButton').toggleClass("btn-requested")   
-            modalHide('inquiryModal');
+            /*modalHide('inquiryModal');*/
             showToastMessage(json.message.body);
             window.setTimeout(location.reload(), 500);
             
@@ -132,7 +132,7 @@ function inquiry(event, slug) {
             action: 'post'
         },
         success:function(json){         
-            $('#requestButton').toggleClass("btn-requested")   
+            $('#requestButton').toggleClass("btn-requested");
             modalHide('inquiryModal');
             showToastMessage(json.message.body);
             window.setTimeout(location.reload(), 500);
