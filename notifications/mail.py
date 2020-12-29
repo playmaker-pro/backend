@@ -38,49 +38,62 @@ def annoucement_notify_player(annoucemenet, player):
 def request_accepted(instance, extra_body=''):
     ''' inquiry request instance'''
 
-    body = 'Gratulujemy!\n\n'
+    greetings = 'Gratulujemy!'
+
+    # setting object name
+    if instance.recipient.is_player or instance.recipient.is_coach:
+        name = f'{instance.recipient.first_name} {instance.recipient.last_name}'
+    elif instance.recipient.is_club:
+        name = f'{instance.recipient.profile.display_club}'
+    else:
+        name = ''
+
+    # setting profile link
+    profile_link = ''
+    if instance.recipient.is_player or instance.recipient.is_coach:
+        profile_link f'\t{build_absolute_url(instance.recipient.profile.get_permalink())}\n'
+    else:
+        profile_link f'\t{build_absolute_url(instance.recipient.profile.club_object.get_permalink())}\n'
+
+    # setting phone
+    phone = instance.recipient.profile.phone or 'brak'
+    message = ''
+
     # [player -> klub]
     if instance.sender.is_club and instance.recipient.is_player:
         subject = 'Piłkarz zaakceptował Twoje zaproszenie na testy'
-        body += f'Piłkarz {instance.recipient.username} zaakceptował Twoje zaproszenie na testy. Poniżej prezentujemy jego dane kontaktowe:\n\n'
+        message = f'Piłkarz {name} zaakceptował Twoje zaproszenie na testy. Poniżej prezentujemy jego dane kontaktowe:'
 
     # [trener -> klub]
     if instance.sender.is_club and instance.recipient.is_coach:
         subject = 'Trener zaakceptował Twoje zaproszenie na testy'
-        body += f'Trener {instance.recipient.username} zaakceptował Twoje zaproszenie. Poniżej prezentujemy jego dane kontaktowe:\n\n'
+        message = f'Trener {name}  zaakceptował Twoje zaproszenie. Poniżej prezentujemy jego dane kontaktowe:'
+
     # [klub -> trener]
     if instance.sender.is_coach and instance.recipient.is_club:
         subject = 'Klub zaakceptował Twoje zapytanie'
-        body += f'Klub {instance.recipient.profile.display_club} zaakceptował Twoje zapytanie. Poniżej prezentujemy jego dane kontaktowe:\n\n'
+        message = f'Klub {name} zaakceptował Twoje zapytanie. Poniżej prezentujemy jego dane kontaktowe:'
 
     # [piłkarz -> trener]
     if instance.sender.is_coach and instance.recipient.is_player:
         subject = 'Piłkarz zaakceptował Twoje zaproszenie na testy'
-        body += f'Piłkarz {instance.recipient.username} zaakceptował Twoje zaproszenie na testy. Poniżej prezentujemy jego dane kontaktowe:\n\n'
+        message = f'Piłkarz {name} zaakceptował Twoje zaproszenie na testy. Poniżej prezentujemy jego dane kontaktowe:'
 
     # [klub -> piłkarz]
     if instance.sender.is_player and instance.recipient.is_club:
         subject = 'Klub zaakceptował Twoje zaproszenie na testy'
-        body += f'Klub {instance.recipient.profile.display_club} zaakceptował Twoje zapytanie o testy. Poniżej prezentujemy jego dane kontaktowe:\n\n'
+        message = f'Klub {name} zaakceptował Twoje zapytanie o testy. Poniżej prezentujemy jego dane kontaktowe:'
 
     # [trener-> piłkarz]
     if instance.sender.is_player and instance.recipient.is_coach:
         subject = 'Trener zaakceptował Twoje zaproszenie na testy'
-        body += f'Trener {instance.recipient.username}  zaakceptował Twoje zapytanie o testy. Poniżej prezentujemy jego dane kontaktowe:\n\n'
+        message = f'Trener {name} zaakceptował Twoje zapytanie o testy. Poniżej prezentujemy jego dane kontaktowe:'
 
-    # @todo extract this to separate logic...
-    if instance.recipient.is_player or instance.recipient.is_coach:
-        body += f'\t{instance.recipient.first_name} {instance.recipient.last_name}\n'
-
-    if instance.recipient.is_club:
-        body += f'\t{instance.recipient.profile.display_club}\n'
-
-    if instance.recipient.is_player or instance.recipient.is_coach:
-        body += f'\t{build_absolute_url(instance.recipient.profile.get_permalink())}\n'
-    else:
-        body += f'\t{build_absolute_url({instance.recipient.profile.club_object.get_permalink()})}\n'
-
-    phone = instance.recipient.profile.phone or 'brak'
+    body = f'{greetings}\n\n'
+    body += f'{message}\n\n'
+    body += f'\t{name}\n'
+    body += f'\t----------\n'
+    body += f'\tProfil: {profile_link}\n'
     body += f'\tTelefon: {phone}\n'
     body += f'\tEmail: {instance.recipient.email}\n\n'
     body += 'Pozdrawiamy, \n'
