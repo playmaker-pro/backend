@@ -223,7 +223,8 @@ class ViewModalLoadingMixin:
         else:
             modals['inquiry']['load'] = True
             modals['approve_announcement_modal']['load'] = True
-            modals['add_announcement']['load'] = True
+            if user.is_club or user.is_coach:
+                modals['add_announcement']['load'] = True
 
             if user.userinquiry.counter == user.userinquiry.limit:
                 modals['action_limit_exceeded']['load'] = True

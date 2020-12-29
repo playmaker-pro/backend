@@ -103,10 +103,6 @@ class ActiveAnnouncementManager(models.Manager):
         return super().get_queryset().filter(
             status__in=Announcement.ACTIVE_STATES,
         )
-# from django.db.models import F, ExpressionWrapper, DateTimeField
-# from django.utils import timezone
-
-# Post.objects.annotate(target_date=ExpressionWrapper(timezone.now() - F('plan__days'), output_field=DateTimeField())).filter(createdAt__lte=F('target_date'))
 
 
 class Announcement(models.Model):
@@ -169,6 +165,14 @@ class Announcement(models.Model):
         default='PL',
         null=True,
         blank_label=_('Wybierz kraj'),
+    )
+
+    year_from = models.PositiveIntegerField(
+        help_text=_('Rocznik piłkarza od.. np. 1986'),
+    )
+
+    year_to = models.PositiveIntegerField(
+        help_text=_('Rocznik piłkarza ..do np. 1986'),
     )
 
     league = models.ForeignKey(

@@ -11,9 +11,16 @@ from django_countries.widgets import CountrySelectWidget
 from django.utils.translation import gettext_lazy as _
 from profiles import widgets
 from django_countries.widgets import CountrySelectWidget
+from django.utils import timezone
 
 
 User = get_user_model()
+
+
+def year_choices():
+    now = timezone.now().year - 10
+    start = now - 40
+    return [(i, i) for i in list(range(start, now + 1))]
 
 
 class AnnouncementForm(forms.ModelForm):
@@ -24,6 +31,8 @@ class AnnouncementForm(forms.ModelForm):
         ('league', 'Poziom rozgrywkowy', None, {}),
         ('positions', 'Pozycje(3)', 'multiple', {'data-actions-box': "true", 'data-max-options': "2"}),
         ('voivodeship', 'Województwo',  None, {}),
+        ('year_from', 'Rocznik od',  None, {}),
+        ('year_to', 'Rocznik do',  None, {}),
         ('address', 'np. Wroclaw, Polska', None, {}),
         ('seniority', 'Rozgrywki młodzieżowe / Rozgrywki seniorskie', None,  {}),
         ('gender', 'Mężczyźni / Kobiety', None, {}),
@@ -32,6 +41,7 @@ class AnnouncementForm(forms.ModelForm):
     ]
 
     def __init__(self, *args, **kwargs):
+        print(year_choices())
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -39,50 +49,61 @@ class AnnouncementForm(forms.ModelForm):
         self.helper.labels_uppercase = True
         self.helper.label_class = 'col-md-12 p-1'
         self.helper.field_class = 'col-12'
-        self.set_fields_rules()
 
+        self.fields['year_from'] = forms.ChoiceField(choices=year_choices())
+        self.fields['year_to'] = forms.ChoiceField(choices=year_choices())
+        self.set_fields_rules()
         self.helper.layout = self.build_verification_form()
 
     def set_fields_rules(self):
+
+        self.fields['year_from'].required = True
+        self.fields['year_from'].label = 'Rocznik od'  # '<i class="icofont-ui-user-group"></i>'
+        self.fields['year_from'].help_text = False
+
+        self.fields['year_to'].required = True
+        self.fields['year_to'].label = 'Rocznik do'  # '<i class="icofont-ui-user-group"></i>'
+        self.fields['year_to'].help_text = False
+
         self.fields['league'].required = True
         self.fields['league'].label = 'Poziom rozgrywkowy'  # '<i class="icofont-ui-user-group"></i>'
-        self.fields['league'].help_text = 'Poziom rozgrywkowy'
+        self.fields['league'].help_text = False
 
         self.fields['club'].required = True
-        self.fields['club'].label = False  # '<i class="icofont-ui-user-group"></i>'
-        self.fields['club'].help_text = 'Klub'
+        self.fields['club'].label = 'Klub'
+        self.fields['club'].help_text = False
 
         self.fields['country'].required = True
-        self.fields['country'].label = False  # '<i class="icofont-ui-user-group"></i>'
-        self.fields['country'].help_text = 'Kraj'
+        self.fields['country'].label = 'Kraj'
+        self.fields['country'].help_text = False
 
         self.fields['voivodeship'].required = True
-        self.fields['voivodeship'].label = False  # '<i class="icofont-ui-user-group"></i>'
-        self.fields['voivodeship'].help_text = 'Województwo'
+        self.fields['voivodeship'].label = 'Województwo'
+        self.fields['voivodeship'].help_text = False
 
         self.fields['seniority'].required = True
-        self.fields['seniority'].label = False  # '<i class="icofont-ui-user-group"></i>'
-        self.fields['seniority'].help_text = 'Rozgrywki młodzieżowe / Rozgrywki seniorskie'
+        self.fields['seniority'].label = 'Rozgrywki młodzieżowe / Rozgrywki seniorskie'
+        self.fields['seniority'].help_text = False
 
         self.fields['gender'].required = True
-        self.fields['gender'].label = False  # '<i class="icofont-ui-user-group"></i>'
-        self.fields['gender'].help_text = 'Mężczyźni / Kobiety'
+        self.fields['gender'].label = 'Mężczyźni / Kobiety'
+        self.fields['gender'].help_text = False
 
         self.fields['address'].required = True
-        self.fields['address'].label = False  # '<i class="icofont-ui-user-group"></i>'
-        self.fields['address'].help_text = 'np. Wroclaw, Polska'
+        self.fields['address'].label = 'Adres testów np. Wrocław, Polska'
+        self.fields['address'].help_text = False
 
         self.fields['www'].required = False
-        self.fields['www'].label = False  # '<i class="icofont-ui-user-group"></i>'
-        self.fields['www'].help_text = 'Link www ogłoszenia / strony internetowej klubu (opcjonalnie)'
+        self.fields['www'].label = 'Link www ogłoszenia / strony internetowej klubu (opcjonalnie)'  # '<i class="icofont-ui-user-group"></i>'
+        self.fields['www'].help_text = False
 
         self.fields['body'].required = True
-        self.fields['body'].label = False  # '<i class="icofont-ui-user-group"></i>'
-        self.fields['body'].help_text = 'Informacje o klubie / testach'
+        self.fields['body'].label = 'Informacje o klubie / testach'
+        self.fields['body'].help_text = False
 
         self.fields['positions'].required = True
-        self.fields['positions'].label = False  # '<i class="icofont-ui-user-group"></i>'
-        self.fields['positions'].help_text = 'Pozycje'
+        self.fields['positions'].label = 'Pozycje'
+        self.fields['positions'].help_text = False
 
     def build_verification_form(self):
 
@@ -92,5 +113,5 @@ class AnnouncementForm(forms.ModelForm):
     class Meta:
         widgets = {'country': CountrySelectWidget(layout='{widget}')}
         model = models.Announcement
-        fields = ['country', 'club', 'league', 'voivodeship', 'seniority', 'gender', 'www', 'body', 'address', 'positions']
+        fields = ['country', 'club', 'league', 'voivodeship', 'seniority', 'gender', 'www', 'body', 'address', 'positions', 'year_from', 'year_to']
         exclude = ['creator']

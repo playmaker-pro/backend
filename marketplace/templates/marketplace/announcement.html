@@ -28,7 +28,7 @@
 
 
         <div class="col-12 card-text text-muted"> 
-            <small class="row no-gutters"> 
+            <small class="row no-gutters">
                 <div class="col-6 col-md-3 text-center">
                     <h4 class="icofont-match-review"></h4>
                     {% for position in  object.positions.all %} 
@@ -37,7 +37,7 @@
                 </div>
                 <div class="col-6 col-md-3 text-center">
                     <h4 class="icofont-ui-calendar"></h4>
-                    {{ object.age_range }}
+                    {{ object.year_from }} - {{ object.year_to }}
                 </div>
                 <div class="col-6 col-md-3 text-center">
                     <h4 class="icofont-users-alt-5"></h4>

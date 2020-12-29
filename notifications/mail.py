@@ -16,7 +16,7 @@ def annoucement_notify_author(annoucemenet, player):
     subject = 'Dostałeś odpowiedź na Twoje ogłoszenie'
     body = f'Piłkarz {player.first_name} {player.last_name} jest zainteresowany testami w Twoim klubie.\n'
     body += f'Jeśli jego CV jest dla Ciebie interesujące, skontaktuj się z nim\n\n'
-    body += f'Eamil: {player.email}\n'
+    body += f'Email: {player.email}\n'
     if player.profile.phone:
         body += f'Telefon: {player.profile.phone}:\n'
     body += f'Link do profilu: {build_absolute_url(player.profile.get_permalink())}\n\n'
