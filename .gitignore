@@ -67,6 +67,7 @@ Thumbs.db
 Desktop.ini
 
 # Project settings
+./static/
 ./site/
 media/original_images/
 media/team_pics/
