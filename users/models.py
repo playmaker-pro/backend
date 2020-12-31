@@ -184,6 +184,10 @@ class User(AbstractUser, UserRoleMixin):
         mail_user_waiting_for_verification(self, extra_body=reason)
 
     @property
+    def role(self):
+        return self.declared_role
+
+    @property
     def is_missing_verification_data(self):
         return self.state == self.STATE_ACCOUNT_WAITING_FOR_VERIFICATION_DATA
 
@@ -233,10 +237,6 @@ class User(AbstractUser, UserRoleMixin):
         upload_to="profile_pics/%Y-%m-%d/",
         null=True,
         blank=True)
-
-    @property
-    def role(self):
-        return self.declared_role
 
     declared_club = models.CharField(
         _('Deklaracja klubu'),

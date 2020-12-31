@@ -6,7 +6,7 @@
     <h6 class="card-subtitle mb-2 text-muted"></h6>
 
     <div class="card-text">
-    {% with profile=show_user.profile template='profiles/partials/_two_table.html' %}
+    {% with profile=show_user.profile template='platform/tables/two_table.html' %}
          {% include template with key=_('Noga')               value=profile.get_prefered_leg_display|default:'-'  %}
          {% include template with key=_('Pozycja')            value=profile.get_position_raw_display|default:'-'  %}
          {% include template with key=_('Wiek')               value=profile.age|default:'-'|upper           %}   

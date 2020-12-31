@@ -1,18 +1,12 @@
+import logging
+
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-# Create your models here.
-from django.conf import settings
 from django_fsm import FSMField, transition
-from notifications.mail import request_new, request_accepted, request_declined
-# This can be extracted to models.User.
+from notifications.mail import request_accepted, request_declined, request_new
 
-# class DefaultPlan(models.Model):
-#     # role_type = models.
-#     user_type = models.CharField()
-#     plan = models.OneToOneField(
-#         settings.AUTH_USER_MODEL,
-#         on_delete=models.CASCADE,
-#         primary_key=True)
+logger = logging.getLogger(__name__)
 
 
 class InquiryPlan(models.Model):
@@ -92,7 +86,7 @@ class UserInquiry(models.Model):
         return f'{self.user}: {self.counter}/{self.plan.limit}'
 
 
-class RequestType(models.Model):  # @todo not tested 
+class RequestType(models.Model):
     name = models.CharField(max_length=240)
 
 
@@ -104,7 +98,7 @@ class InquiryRequestQuerySet(models.QuerySet):
         return self.filter(status=self.model.ACTIVE_STATES)
 
 
-class InquiryRequestManager(models.Manager):  # @todo not tested 
+class InquiryRequestManager(models.Manager):
     def get_queryset(self):
         return InquiryRequestQuerySet(self.model, using=self._db)
 
@@ -119,7 +113,6 @@ class InquiryRequest(models.Model):
     STATUS_NEW = 'NOWE'
     STATUS_SENT = 'WYSŁANO'
     STATUS_RECEIVED = 'PRZECZYTANE'
-    # STATUS_READED = 'READED'
     STATUS_ACCEPTED = 'ZAAKCEPTOWANE'
     STATUS_REJECTED = 'ODRZUCONE'
 
@@ -130,12 +123,38 @@ class InquiryRequest(models.Model):
         (STATUS_NEW, STATUS_NEW),
         (STATUS_SENT, STATUS_SENT),
         (STATUS_RECEIVED, STATUS_RECEIVED),
-        # (STATUS_READED, STATUS_READED),
         (STATUS_ACCEPTED, STATUS_ACCEPTED),
         (STATUS_REJECTED, STATUS_REJECTED),
     )
 
-    # state = InquiryRequestManager()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    body = models.TextField(null=True, blank=True)
+
+    body_recipient = models.TextField(null=True, blank=True)
+
+    status = FSMField(
+        default=STATUS_NEW,
+        choices=STATUS_CHOICES)
+
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='sender_request_recipient',
+        on_delete=models.CASCADE)
+
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='inquiry_request_recipient',
+        on_delete=models.CASCADE)
+
+    def is_active(self):
+        return self.status in self.ACTIVE_STATES
+
+    def is_resolved(self):
+        return self.status in self.RESOLVED_STATES
+
     def status_display_for(self, user):
         status_map = {}
         if user == self.recipient:
@@ -143,35 +162,6 @@ class InquiryRequest(models.Model):
                 'WYSŁANO': 'OTRZYMANO'
             }
         return status_map.get(self.status, self.status)
-
-    body = models.TextField(null=True, blank=True)
-
-    status = FSMField(
-        default=STATUS_NEW,
-        choices=STATUS_CHOICES,
-    )
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    updated_at = models.DateTimeField(auto_now=True)
-
-    sender = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        related_name='sender_request_recipient',
-        on_delete=models.CASCADE
-    )
-
-    recipient = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        related_name='inquiry_request_recipient',
-        on_delete=models.CASCADE
-    )
-
-    def is_active(self):
-        return self.status in self.ACTIVE_STATES
-
-    def is_resolved(self):
-        return self.status in self.RESOLVED_STATES
 
     @transition(field=status, source=[STATUS_NEW], target=STATUS_SENT)
     def send(self):
@@ -185,6 +175,9 @@ class InquiryRequest(models.Model):
     @transition(field=status, source=[STATUS_NEW, STATUS_SENT], target=STATUS_ACCEPTED)
     def accept(self):
         '''Should be appeared when message was accepted by recipient'''
+        logger.debug(f'#{self.pk} reuqest accepted creating sender and recipient contanct body')
+        self.body = ContactBodySnippet.generate(self.sender)
+        self.body_recipient = ContactBodySnippet.generate(self.recipient)
         request_accepted(self)
 
     @transition(field=status, source=[STATUS_NEW, STATUS_SENT], target=STATUS_REJECTED)
@@ -192,14 +185,13 @@ class InquiryRequest(models.Model):
         '''Should be appeared when message was rejected by recipient'''
         request_declined(self)
 
+    def save(self, *args, **kwargs):
+        if self.status == self.STATUS_NEW:
+            self.send() # @todo due to problem with detecting changes of paramters here is hax to alter status to send, durgin which message is sedn via mail
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f'{self.sender} --({self.status})-> {self.recipient}'
-
-    def save(self, *args, **kwargs):
-        self.body = ContactBodySnippet.generate(self.sender)
-        if self.status == self.STATUS_NEW:
-            self.send()
-        super().save(*args, **kwargs)
 
 
 class ContactBodySnippet:

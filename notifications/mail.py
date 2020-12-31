@@ -1,6 +1,10 @@
 from django.core.mail import mail_managers, send_mail
 from django.conf import settings
 from django.urls import reverse
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def notify_error_admins(subject='Wystąpił błąd', message=''):
@@ -183,6 +187,11 @@ def request_new(instance, extra_body=''):
         from_who = 'klubu'
     else:
         from_who = ''
+
+    subject = 'Otrzymane zaproszenie'
+    body = 'Gratulujemy! Otrzymałeś zaproszenie od innego użytkownika\n\n'
+
+    logger.info(f'New request instance:{instance}')
 
     if (instance.sender.is_coach or instance.sender.is_club) and instance.recipient.is_player:
         subject = f"Otrzymałeś zaproszenie od {from_who}"

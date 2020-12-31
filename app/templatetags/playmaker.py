@@ -3,8 +3,9 @@ from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from inquiries.models import InquiryRequest
 import logging
+from clubs.models import Club, Team
 from datetime import date, datetime
-
+from django.urls import reverse
 from followers.models import Follow, FollowTeam
 from profiles.utils import extract_video_id
 from django.utils.translation import (
@@ -181,16 +182,27 @@ def announcement_yes(context):
 
 @register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
 def request_link(context, user, showed_user):
-
+    '''Creates button to open inquiry'''
     if not user.is_authenticated:
         return {'off': True}
 
     if not user.is_player and not user.is_coach and not user.is_club:
         return {'off': True}
 
+    if isinstance(showed_user, Team) or isinstance(showed_user, Club):
+        if isinstance(showed_user, Team):
+            if showed_user.manager is not None:
+                showed_user = showed_user.manager
+            else:
+                showed_user = showed_user.club.manager
+                print(f'heererereer -->{showed_user} {user.is_player} {showed_user.is_club}')
+        else:
+            showed_user = showed_user.manager
+            logger.info(f'Appending new show_user {showed_user}')
+
     if (user.is_coach or user.is_club) and showed_user.is_player:
         button_text = 'Zaproś na testy'
-    elif user.is_player and showed_user.is_coach:
+    elif user.is_player and (showed_user.is_coach or showed_user.is_club):
         button_text = 'Zapytaj o testy'
     elif user.is_club and showed_user.is_coach:
         button_text = 'Zaproś na rozmowę'
@@ -233,11 +245,23 @@ def request_link(context, user, showed_user):
 @register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
 def send_request(context, user, showed_user):
     if not showed_user:
+        logger.info('showed user not defined.')
         showed_user = user  # @todo this should be erased
     if user.userinquiry.left <= 0:
         attrs = 'disabled'
     else:
         attrs = ''
+
+    if isinstance(showed_user, Team) or isinstance(showed_user, Club):
+        if isinstance(showed_user, Team):
+            if showed_user.manager is not None:
+                showed_user = showed_user.manager
+            else:
+                showed_user = showed_user.club.manager
+        else:
+            showed_user = showed_user.manager
+            logger.info(f'Appending new show_user {showed_user}')
+
     return {
         'show_user': showed_user,
         'button_attrs': attrs,
@@ -269,7 +293,7 @@ def observed_link(context, user, showed_user, text=False, otype='user'):
     if not user.is_authenticated:
         return {'off': True}
     active_class = None
-    
+
     button_text = 'obserwuj'
 
     if context.get('observed'):
@@ -323,7 +347,6 @@ def seemore_link(context, link, checks=True):
     }
 
 
-
 class ActionButton:
     def __init__(self, context=None, url=None, checks=True, icon='', text='', css_class=''):
         self.checks = checks
@@ -342,10 +365,10 @@ class ActionButton:
             'modals': self.context['modals'],
         }
 
+
 @register.filter
 def get_urls_with_no_page(value):
     if 'page=' in value:
-        
         return value.replace("page", "non_falue")
     else:
         return value
@@ -361,6 +384,49 @@ def get_team_link(context, team, text=None, css_class=None, checks=True):
     button = ActionButton(url=team.get_permalink, text=text, context=context, css_class=css_class, icon='shield', checks=checks)
     return button.get_json()
 
+
+@register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
+def get_team_edit_link(context, team, text=None, css_class=None, checks=True):
+    payload_off = {'off': True}
+    user = context['user']
+    if not user.is_authenticated:
+        payload_off
+    editable = team.is_editor(user)
+    if not editable:
+        return payload_off
+
+    link = reverse('clubs:edit_team', kwargs={'slug': team.slug})
+
+    button = ActionButton(
+        url=link,
+        text='Edytuj',
+        context=context,
+        css_class=css_class,
+        icon='edit',
+        checks=checks)
+    return button.get_json()
+
+
+@register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
+def get_club_edit_link(context, club, text=None, css_class=None, checks=True):
+    payload_off = {'off': True}
+    user = context['user']
+    if not user.is_authenticated:
+        payload_off
+    editable = club.is_editor(user)
+    if not editable:
+        return payload_off
+
+    link = reverse('clubs:edit_club', kwargs={'slug': club.slug})
+
+    button = ActionButton(
+        url=link,
+        text='Edytuj',
+        context=context,
+        css_class=css_class,
+        icon='edit',
+        checks=checks)
+    return button.get_json()
 
 
 @register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)

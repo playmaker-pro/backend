@@ -4,17 +4,35 @@
 {% load playmaker %}
 
 
-<div class="card p-2 m-1">
-  <div class="text-center">
-    <img title="" class="avatar" src="{% thumbnail team.picture|default:'default_team.png' 'profile_avatar_show' %}">
-  </div>
+{% with template='platform/tables/two_table.html'  object=object %}
+<div class="card m-2">
+    <div class="card-body">
+      <div class="card-title text-center">
+        <img title="" class="avatar" src="{% thumbnail object.picture|default:'default_team.png' 'profile_avatar_show' %}">
+      </div>
+      <h6 class="card-subtitle mb-2 text-muted"></h6>  
   
-  <div class="card-body">
-    <h5 class="card-title">{{ team.name }}</h5>
-    <p class="card-text">{{ team.about }}.</p>
-   
-    {% get_club_link team.club text='Klub'%}
+      <div class="card-text">
+        {% include template with key=_('Nazwa')              value=object.display_team %}
+        {% include template with key=_('Klub')               value=object.display_club  link=object.club.get_permalink %}
+        {% include template with key=_('Poziom Rozgrywkowy') value=object.display_league                          %}
+        {% include template with key=_('Wojewodztwo')        value=object.display_voivodeship      %}
+        {% include template with key=_('Mężczyzni/Kobiety')  value=object.display_gender      %}
+        {% include template with key=_('Senior/Junior')      value=object.display_seniority      %}
+        
+        {% if see_club %}
+          {% get_club_link object.club text='Zobacz Klub'%}
+        {% endif %}
+
+        {% if see_team %}
+          {% get_team_link object text='Zobacz Drużynę'%}
+        {% endif %} 
+        {% csrf_token %}
+        {% request_link user object %}
+        {% get_team_edit_link object %}
 
 
+      </div>
   </div>
 </div>
+{% endwith %}

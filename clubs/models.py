@@ -45,6 +45,17 @@ class Club(models.Model):
         blank=True
     )
 
+    def is_editor(self, user):
+        if user == self.manager or user in self.editors.all():
+            return True
+        else:
+            return False
+
+    @property
+    @supress_exception
+    def display_manager(self):
+        return self.manager.get_full_name()
+
     @property
     @supress_exception
     def display_club(self):
@@ -171,6 +182,19 @@ class Gender(models.Model):
 class Team(models.Model):
     PROFILE_TYPE = 'team'
 
+    EDITABLE_FIELDS = [
+        'name',
+        'picture',
+        'travel_refunds',
+        'game_bonus',
+        'scolarships',
+        'gloves_shoes_refunds',
+        'traning_gear',
+        'regular_gear',
+        'secondary_trainer',
+        'fizo',
+        'diet_suplements'
+    ]
     gender = models.ForeignKey(
         Gender,
         on_delete=models.SET_NULL,
@@ -203,20 +227,6 @@ class Team(models.Model):
         blank=True
     )
 
-    EDITABLE_FIELDS = [
-        'name',
-        'picture',
-        'travel_refunds',
-        'game_bonus',
-        'scolarships',
-        'gloves_shoes_refunds',
-        'traning_gear',
-        'regular_gear',
-        'secondary_trainer',
-        'fizo',
-        'diet_suplements'
-    ]
-
     slug = models.CharField(
         max_length=255,
         blank=True,
@@ -240,9 +250,25 @@ class Team(models.Model):
         blank=True,
         help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.')
 
+    def is_editor(self, user):
+        if user == self.manager or user in self.editors.all():
+            return True
+        else:
+            return False
+    
     @property
     def display_team(self):
         return self.name
+
+    @property
+    @supress_exception
+    def display_coach(self):
+        return self.manager.get_full_name()
+
+    @property
+    @supress_exception
+    def display_club(self):
+        return self.club.display_club
 
     @property
     @supress_exception
@@ -264,11 +290,6 @@ class Team(models.Model):
     def display_gender(self):
         return self.gender.display_gender
 
-    @property
-    @supress_exception
-    def display_club(self):
-        return self.club.display_club
-
     name = models.CharField(
         _('Team name'),
         max_length=255,
@@ -287,8 +308,6 @@ class Team(models.Model):
         verbose_name_plural = _("Teams")
         unique_together = ('name', 'club')
 
-    def __str__(self):
-        return f'tu bedzie nazwa klubu :{self.name}'
 
     # common  team fileds
     travel_refunds = models.BooleanField(
@@ -333,3 +352,6 @@ class Team(models.Model):
         _('Suplemnety / odżywki'),
         default=False,
         )
+
+    def __str__(self):
+        return f'{self.name}'

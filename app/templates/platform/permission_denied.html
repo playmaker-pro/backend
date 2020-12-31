@@ -1,0 +1,26 @@
+{% extends 'platform/base.html' %}
+
+{% load i18n %}
+{% load static %}
+
+
+{% block content %}
+
+<section id="permission" class="permission">
+    <div class="container">
+        <div>
+            <h1 class="float-left"> {% trans 'Nie masz uprawnień' %} </h1>
+            <small> 
+               
+            </small>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                Nie masz uprawnień do zasobu.
+            </div>
+            
+        </div>
+    </div>
+</section>
+
+{% endblock content %}

@@ -1,0 +1,21 @@
+{% load i18n %}
+{% load static %}
+
+
+{% with template='platform/tables/two_table.html'  object=object %}
+    <div class="card m-2">
+        <div class="card-body">
+            <h2 class="card-title"></h2>
+
+            <h6 class="card-subtitle mb-2 text-muted"></h6>
+
+            <div class="card-text">
+                {% include template with key=_('Trener')             value=object.display_coach|default:'brak przypisanej osoby'  link=object.manager.profile.get_permalink  %}
+                {% include 'clubs/_partials/editors.html' with template=template object=object %}
+                
+               
+            </div>
+        </div>
+    </div>
+
+{% endwith %}

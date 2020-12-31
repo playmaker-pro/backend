@@ -1,8 +1,14 @@
+
+
+
+
 <div class="row">
     <div class="col-sm-6 col-md-6 col-6">
         <label class="small float-right">{{ key_prefix }} {{ key }} </label>
     </div>
     <div class="col-md-6 col-6 border-left">
-        {{ value_prefix }}{{ value }}{{ value_suffix }} {{ separator }} {{ value2 }}{{ value2_suffix }}
+        {% if link %}<a href="{{ link }}"> {% endif %}
+            {{ value_prefix }}{{ value }}{{ value_suffix }} {{ separator }} {{ value2 }}{{ value2_suffix }}
+        {% if link %}</a>{% endif %}    
     </div>
 </div>

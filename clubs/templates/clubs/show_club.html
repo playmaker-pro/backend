@@ -10,27 +10,35 @@
 
 
 {% block content %}
-
 <section id="clubs" class="club">
-  <div class="container profile-container" data-aos="fade-up">
-
-      
-          <h1 class="card-title">{{ club.name|upper }}</h1>
-            {% if editable %}
-                {% include 'clubs/buttons/edit.html' %}
-            {% endif %}
-           <div class="row">
-                {% for team in teams%}
-                <div class="col-md-4">
-                    {% include 'clubs/teams/card.html' with team=team %}        
-                </div>
+    <div class="container">
+        <div>
+            <h1 class="float-left"> {{ club.name|upper }}  </h1>
+            <small> 
+                {% if editable %}
+                    {% include 'clubs/buttons/edit.html' %}
+                {% endif %}
+            </small>
+        </div>
+        <div class="row">
+            <div class="col-sm-6">
+                {% include 'clubs/clubs/card.html' with object=club %}  
+            </div>
+                {% for team in teams %}
+                    {% if forloop.first %}
+                    <div class="col-sm-12">
+                        <h3>{% trans 'Drużyny' %}</h3>
+                    </div>                       
+                    {% endif %}
+                    <div class="col-md-4">
+                        {% include 'clubs/teams/card.html' with object=team  see_team=True %}        
+                    </div>
                 {% empty %}
                 <div class="col-md-12">
-                    <h2> {% trans 'Club nie ma przypietych zespolow.' %}</h2>  {{ editable }}
+                    <h2> {% trans 'Club nie ma przypietych zespolow.' %}</h2>
                 </div>
                 {% endfor %}
-            </div>
-
+        </div>
     </div>
 </section>
 

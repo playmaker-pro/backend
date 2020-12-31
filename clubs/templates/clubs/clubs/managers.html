@@ -1,0 +1,30 @@
+{% load i18n %}
+{% load static %}
+
+
+{% with template='platform/tables/two_table.html'  object=object %}
+    <div class="card m-2">
+        <div class="card-body">
+            <h2 class="card-title">{% trans 'Osoby w klubie' %}</h2>
+
+            <h6 class="card-subtitle mb-2 text-muted"></h6>
+
+            <div class="card-text">
+                {% include template with key=_('Zarządca')             value=object.display_manager|default:'brak przypisanej osoby'      %}
+
+
+                {% for editor in object.editors.all %}
+                    {% if editor.is_club %}
+                        {% include template with key=editor.profile.get_club_role_display  value=editor.get_full_name    %}
+                    {% else %}
+                        {% include template with key=editor.get_declared_role_display  value=editor.get_full_name    %}
+                    {% endif %}
+                    
+                {% endfor %}
+                
+               
+            </div>
+        </div>
+    </div>
+
+{% endwith %}

@@ -44,14 +44,18 @@
                             <span> 
                             {% if object.sender != user %}
                                 {% if not object.sender.is_club %}
-                                <img class="flag" src="{{ object.sender.profile.country.flag }}" alt="flag">
+                                    <img class="flag" src="{{ object.sender.profile.country.flag }}" alt="flag">
+                                    {{ object.sender.first_name|upper }} {{ object.sender.last_name|upper }} 
+                                {% else %}
+                                    {{ object.sender.profile.display_club|upper }}
                                 {% endif %}
-                                {{object.sender.first_name|upper}} {{ object.sender.last_name|upper}} 
                             {% else %}
                                 {% if not object.recipient.is_club %}
-                                <img class="flag" src="{{ object.recipient.profile.country.flag }}" alt="flag">
+                                    <img class="flag" src="{{ object.recipient.profile.country.flag }}" alt="flag">
+                                    {{object.recipient.first_name|upper}} {{ object.recipient.last_name|upper }} 
+                                {% else %}
+                                    {{object.recipient.profile.display_club|upper}}
                                 {% endif %}
-                                {{object.recipient.first_name|upper}} {{ object.recipient.last_name|upper}} 
                             {% endif %}
                             </span>
                             
@@ -77,21 +81,35 @@
                                 <div class="d-none d-md-inline col-md-3">
 
                                 {% if object.sender != user %}
-                                    <a href={{object.sender.profile.get_permalink }}>
-                                        <img class="avatar rounded img-responsive" src="{% thumbnail object.sender.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
-                                        {% if not object.sender.is_club %}
-                                        <img class="flag" src="{{ object.sender.profile.country.flag }}" alt="flag">
-                                        {% endif %}
-                                        {{object.sender.first_name|upper}} {{ object.sender.last_name|upper}} 
-                                    </a>
+                                    
+                                    {% if not object.sender.is_club %}
+                                        <a href={{ object.sender.profile.get_permalink }}>
+                                            <img class="avatar rounded img-responsive" src="{% thumbnail object.sender.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
+                                            <img class="flag" src="{{ object.sender.profile.country.flag }}" alt="flag">
+                                            {{ object.sender.first_name|upper }} {{ object.sender.last_name|upper }}
+                                        </a>
+                                    {% else %}
+                                        <a href={{ object.sender.profile.club.get_permalink }}>
+                                            <img class="avatar rounded img-responsive" src="{% thumbnail object.sender.profile.club_object.picture|default:'default_club.png' 'tables_avatar_show_medium' %}">
+                                            {{ object.sender.profile.display_club|upper }}
+                                        </a>
+                                    {% endif %}
+
                                 {% else %}
-                                    <a href={{object.recipient.profile.get_permalink }}>
-                                        <img class="avatar rounded img-responsive" src="{% thumbnail object.recipient.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
-                                        {% if not object.recipient.is_club %}
-                                        <img class="flag" src="{{ object.recipient.profile.country.flag }}" alt="flag">
-                                        {% endif %}
-                                        {{object.recipient.first_name|upper}} {{ object.recipient.last_name|upper}} 
-                                    </a>
+                                    {% if not object.recipient.is_club %}
+                                        <a href={{object.recipient.profile.get_permalink }}>
+                                            <img class="avatar rounded img-responsive" src="{% thumbnail object.recipient.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
+                                            <img class="flag" src="{{ object.recipient.profile.country.flag }}" alt="flag">
+                                            {{ object.recipient.first_name|upper }} {{ object.recipient.last_name|upper }}
+                                        </a>
+                                    {% else %}
+            
+                                        <a href={{object.recipient.profile.get_permalink }}>
+                                            <img class="avatar rounded img-responsive" src="{% thumbnail object.recipient.profile.club_object.picture|default:'default_club.png' 'tables_avatar_show_medium' %}">
+                                            {{ object.recipient.profile.display_club|upper }}
+                                        </a>
+                                    {% endif %}
+                                    
                                 {% endif %}
                                 </div>
 

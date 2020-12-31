@@ -10,6 +10,7 @@ from wagtail.documents import urls as wagtaildocs_urls
 from search import views as search_views
 from .api import api_router
 
+import app.urls
 import soccerbase.urls
 import clubs.urls
 import profiles.urls
@@ -24,7 +25,7 @@ admin.site.site_title = 'PlayMaker.pro - Admin site'
 
 urlpatterns = [
     path('django-admin/', admin.site.urls, name='django_admin'),
-
+    path('app/', include(app.urls), name='app'),
     path('admin/', include(wagtailadmin_urls)),
     path('documents/', include(wagtaildocs_urls)),
     path('project/', TemplateView.as_view(template_name='subpages/project_goals.html'), name="home_goals"),

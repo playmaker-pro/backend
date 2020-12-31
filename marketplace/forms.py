@@ -41,7 +41,6 @@ class AnnouncementForm(forms.ModelForm):
     ]
 
     def __init__(self, *args, **kwargs):
-        print(year_choices())
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -106,8 +105,7 @@ class AnnouncementForm(forms.ModelForm):
         self.fields['positions'].label = 'Pozycje'
         self.fields['positions'].help_text = False
 
-    def build_verification_form(self):
-                               
+    def build_verification_form(self):                      
         fds = [''] + [Field(fn, wrapper_class='row', placeholder=fp, title=fp, css_class=fc, **kwargs) for fn, fp, fc, kwargs in self.building_fields]
         return Fieldset(*fds)
 

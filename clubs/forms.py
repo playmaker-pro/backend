@@ -35,7 +35,7 @@ class ClubForm(forms.ModelForm):
                         css_class='col-md-6',
                     ),
                     Fieldset(
-                        _('<h2 class="form-section-title">Zespoły</h2>'),
+                        _('<h2 class="form-section-title">Moderatorzy</h2>'),
                         Div(
                             Field('editors', wrapper_class='row'),
 
@@ -55,7 +55,6 @@ class ClubForm(forms.ModelForm):
         fields = ['name', 'picture', 'editors']
 
 
-
 class TeamForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -66,7 +65,6 @@ class TeamForm(forms.ModelForm):
         self.helper.labels_uppercase = True
         self.helper.label_class = 'col-md-3 text-muted upper'
         self.helper.field_class = 'col-md-6'
-        
         self.helper.layout = Layout(
                 Div(
                     Fieldset(
