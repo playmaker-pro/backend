@@ -8,6 +8,7 @@ from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
 from address.models import AddressField
 from profiles.utils import unique_slugify, conver_vivo_for_api, supress_exception
+from django_countries.fields import CountryField
 
 
 class Voivodeship(models.Model):
@@ -104,6 +105,14 @@ class Club(models.Model):
         max_length=255,
         blank=True,
         null=True)
+
+    country = CountryField(
+        _('Kraj'),
+        # blank=True,
+        default='PL',
+        null=True,
+        blank_label=_('Wybierz kraj'),
+    )
 
     def get_permalink(self):
         return reverse("clubs:show_club", kwargs={"slug": self.slug})

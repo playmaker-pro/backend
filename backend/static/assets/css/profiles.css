@@ -6,6 +6,11 @@
 
 }
 
+#profile .about-field { 
+  border: 1px solid #ccc;
+  padding: .5rem;
+
+}
 
 #profile {
     padding-top: 15px;

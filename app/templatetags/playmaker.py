@@ -64,6 +64,53 @@ def addstr(arg1, arg2):
     return str(arg1) + str(arg2)
 
 
+@register.inclusion_tag('inquiries/partials/name.html', takes_context=True)
+def inquiry_display_name(context, inquiry):
+    user = context['user']
+    name = ''
+    flag = None
+    picture = None
+
+    if inquiry.sender != user:
+        obj = inquiry.sender
+    else:
+        obj = inquiry.recipient
+
+    if inquiry.is_user_type:
+        name = obj.get_full_name()
+        link = obj.profile.get_permalink
+        picture = obj.picture
+        if inquiry.sender.is_club:
+            name = obj.profile.display_club
+            link = obj.profile.club_object.get_permalink
+            picture = obj.profile.club_object.picture
+        # flag = obj.profile.country.flag
+
+    elif inquiry.is_team_type:
+        if obj.is_coach:
+            name = obj.profile.display_team
+            link = obj.profile.team_object.get_permalink
+            picture = obj.profile.team_object.picture
+
+        elif obj.is_club:
+            name = obj.profile.display_club
+            link = obj.profile.club_object.get_permalink
+            picture = obj.profile.club_object.picture
+
+    elif inquiry.is_club_type:
+        if obj.is_coach:
+            name = obj.profile.display_club
+            link = obj.profile.team_object.club.get_permalink
+            picture = obj.profile.team_object.club.picture
+
+        elif obj.is_club:
+            name = obj.profile.display_club
+            link = obj.profile.club_object.get_permalink
+            picture = obj.profile.club_object.picture
+
+    return {'name': name, 'link': link, 'flag': flag, 'picture': picture}
+
+
 @register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
 def profile_link(context, user, checks=True, text=None):
     if not user.is_authenticated:
@@ -243,7 +290,7 @@ def request_link(context, user, showed_user):
 
 
 @register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
-def send_request(context, user, showed_user):
+def send_request(context, user, showed_user, category='user'):
     if not showed_user:
         logger.info('showed user not defined.')
         showed_user = user  # @todo this should be erased
@@ -254,11 +301,13 @@ def send_request(context, user, showed_user):
 
     if isinstance(showed_user, Team) or isinstance(showed_user, Club):
         if isinstance(showed_user, Team):
+            category = 'team'
             if showed_user.manager is not None:
                 showed_user = showed_user.manager
             else:
                 showed_user = showed_user.club.manager
         else:
+            category = 'club'
             showed_user = showed_user.manager
             logger.info(f'Appending new show_user {showed_user}')
 
@@ -267,7 +316,7 @@ def send_request(context, user, showed_user):
         'button_attrs': attrs,
         'button_text': 'Tak, wyślij',
         'button_class': 'btn btn-success',
-        'button_action': {'onclick': True, 'name': 'inquiry', 'param': showed_user.profile.slug},
+        'button_action': {'onclick': True, 'name': 'inquiry', 'param': showed_user.profile.slug, 'param2': category},
         'modals': context['modals'],
     }
 

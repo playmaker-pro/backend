@@ -119,6 +119,16 @@ class InquiryRequest(models.Model):
     ACTIVE_STATES = [STATUS_NEW, STATUS_SENT, STATUS_RECEIVED]
     RESOLVED_STATES = [STATUS_ACCEPTED, STATUS_REJECTED]
 
+    CATEGORY_CLUB = 'club'
+    CATEGORY_TEAM = 'team'
+    CATEGORY_USER = 'user'
+
+    CATEGORY_CHOICES = (
+        (CATEGORY_USER, CATEGORY_USER),
+        (CATEGORY_TEAM, CATEGORY_TEAM),
+        (CATEGORY_CLUB, CATEGORY_CLUB),
+    )
+
     STATUS_CHOICES = (
         (STATUS_NEW, STATUS_NEW),
         (STATUS_SENT, STATUS_SENT),
@@ -130,6 +140,8 @@ class InquiryRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     updated_at = models.DateTimeField(auto_now=True)
+
+    # content = models.JSONField(null=True, blank=True)
 
     body = models.TextField(null=True, blank=True)
 
@@ -148,6 +160,23 @@ class InquiryRequest(models.Model):
         settings.AUTH_USER_MODEL,
         related_name='inquiry_request_recipient',
         on_delete=models.CASCADE)
+
+    category = models.CharField(
+        default=CATEGORY_USER,
+        choices=CATEGORY_CHOICES,
+        max_length=255)
+
+    @property
+    def is_user_type(self):
+        return self.category == self.CATEGORY_USER
+
+    @property
+    def is_club_type(self):
+        return self.category == self.CATEGORY_CLUB
+
+    @property
+    def is_team_type(self):
+        return self.category == self.CATEGORY_TEAM
 
     def is_active(self):
         return self.status in self.ACTIVE_STATES
@@ -187,7 +216,7 @@ class InquiryRequest(models.Model):
 
     def save(self, *args, **kwargs):
         if self.status == self.STATUS_NEW:
-            self.send() # @todo due to problem with detecting changes of paramters here is hax to alter status to send, durgin which message is sedn via mail
+            self.send()  # @todo due to problem with detecting changes of paramters here is hax to alter status to send, durgin which message is sedn via mail
         super().save(*args, **kwargs)
 
     def __str__(self):

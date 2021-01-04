@@ -24,11 +24,21 @@
       <div class="row">
         <div class="col-sm-6">{% include 'profiles/cards/player/account_card.html' %}</div>
         <div class="col-sm-6">{% include 'profiles/cards/player/primary_card.html' %}</div>
-        <div class="col-sm-6">{% include 'profiles/cards/player/about_card.html' %}</div>
-        <div class="col-sm-6">{% include 'profiles/cards/player/latest_games_card.html' %}</div>
         <div class="col-sm-6">{% include 'profiles/cards/player/season_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/player/additional_info_card.html' %}</div>  
+        <div class="col-sm-6">{% include 'profiles/cards/player/latest_games_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/player/about_card.html' %}</div>
         <div class="col-sm-6">{% include 'profiles/cards/player/fantasy_card.html' %}</div>
-        <div class="col-sm-12">{% include 'profiles/cards/player/video_card.html' %}</div>
+        <div class="col-sm-6">{% include 'profiles/cards/player/video_1_card.html' %}</div>
+        {% if show_user.profile.video_url %}
+          {% if show_user.profile.video_url_second %}
+            <div class="col-sm-6">{% include 'profiles/cards/player/video_2_card.html' %}</div>
+          {% endif %}
+
+          {% if show_user.profile.video_url_third %}
+            <div class="col-sm-6">{% include 'profiles/cards/player/video_3_card.html' %}</div>
+          {% endif %}
+        {% endif %}
       </div>  <!-- end row -->
 
   </div>

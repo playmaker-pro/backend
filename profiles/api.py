@@ -70,13 +70,14 @@ def inquiry(request):
         if user.userinquiry.can_make_request and action_modal is None:
 
             if InquiryRequest.objects.filter(
-                sender=user, recipient=recipient).exclude(
+                sender=user,
+                recipient=recipient).exclude(
                 status__in=[InquiryRequest.STATUS_REJECTED, InquiryRequest.STATUS_ACCEPTED]).count() > 0:
                 response_data['status'] = False
                 message['body'] = 'Już jest takie zgłoszenie.'
                 response_data['message'] = message
             else:
-                InquiryRequest.objects.create(sender=user, recipient=recipient)
+                InquiryRequest.objects.create(sender=user, recipient=recipient, category=request.POST.get('category'))
                 user.userinquiry.increment()
                 response_data['status'] = True
                 message['body'] = 'Powiadomienie wyslane.'

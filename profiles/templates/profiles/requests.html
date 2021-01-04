@@ -42,21 +42,9 @@
                     <div class="card item-card">
                         <div class="card-header d-md-none">
                             <span> 
-                            {% if object.sender != user %}
-                                {% if not object.sender.is_club %}
-                                    <img class="flag" src="{{ object.sender.profile.country.flag }}" alt="flag">
-                                    {{ object.sender.first_name|upper }} {{ object.sender.last_name|upper }} 
-                                {% else %}
-                                    {{ object.sender.profile.display_club|upper }}
-                                {% endif %}
-                            {% else %}
-                                {% if not object.recipient.is_club %}
-                                    <img class="flag" src="{{ object.recipient.profile.country.flag }}" alt="flag">
-                                    {{object.recipient.first_name|upper}} {{ object.recipient.last_name|upper }} 
-                                {% else %}
-                                    {{object.recipient.profile.display_club|upper}}
-                                {% endif %}
-                            {% endif %}
+
+                            {% inquiry_display_name object %}
+
                             </span>
                             
                             <span class="float-right"> 
@@ -80,70 +68,29 @@
                             <div class="row no-gutters">
                                 <div class="d-none d-md-inline col-md-3">
 
-                                {% if object.sender != user %}
-                                    
-                                    {% if not object.sender.is_club %}
-                                        <a href={{ object.sender.profile.get_permalink }}>
-                                            <img class="avatar rounded img-responsive" src="{% thumbnail object.sender.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
-                                            <img class="flag" src="{{ object.sender.profile.country.flag }}" alt="flag">
-                                            {{ object.sender.first_name|upper }} {{ object.sender.last_name|upper }}
-                                        </a>
-                                    {% else %}
-                                        <a href={{ object.sender.profile.club.get_permalink }}>
-                                            <img class="avatar rounded img-responsive" src="{% thumbnail object.sender.profile.club_object.picture|default:'default_club.png' 'tables_avatar_show_medium' %}">
-                                            {{ object.sender.profile.display_club|upper }}
-                                        </a>
-                                    {% endif %}
+                                    {% inquiry_display_name object %}
 
-                                {% else %}
-                                    {% if not object.recipient.is_club %}
-                                        <a href={{object.recipient.profile.get_permalink }}>
-                                            <img class="avatar rounded img-responsive" src="{% thumbnail object.recipient.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
-                                            <img class="flag" src="{{ object.recipient.profile.country.flag }}" alt="flag">
-                                            {{ object.recipient.first_name|upper }} {{ object.recipient.last_name|upper }}
-                                        </a>
-                                    {% else %}
-            
-                                        <a href={{object.recipient.profile.get_permalink }}>
-                                            <img class="avatar rounded img-responsive" src="{% thumbnail object.recipient.profile.club_object.picture|default:'default_club.png' 'tables_avatar_show_medium' %}">
-                                            {{ object.recipient.profile.display_club|upper }}
-                                        </a>
-                                    {% endif %}
-                                    
-                                {% endif %}
                                 </div>
 
                                 <div class="d-none d-md-inline col-md">
-                                        
-                                    <button disabled  
-                                    {% if object.is_active %}
-                                    class="btn btn-sm btn-warning"
-                                    {% elif object.status == object.STATUS_ACCEPTED %}
-                                    class="btn btn-sm btn-success"
-                                    {% elif object.status == object.STATUS_REJECTED %}
-                                    class="btn btn-sm btn-danger "
-                                    {% endif %}>
-                                        {{ object|status_display_for:user|upper }}
-                                    </button>
-                                    
-
+                                     {% include 'inquiries/partials/status.html' with object=object%}    
                                 </div>
 
                                 <div class="col-12 col-md-3"> 
                                     {% if object.sender != user %}
-                                        {% if object.status == object.STATUS_ACCEPTED %}
-                                            {{ object.body|default:''  }}
-                                        {% endif %}
+                                        {{ object.body|default:''  }}
+                                    {% else %}
+                                        {{ object.body_recipient|default:''  }}
                                     {% endif %}
                                 </div>
 
                                 <div class="col-3 col-md"> 
                                     {{ object.created_at|date:'Y-m-d H:i'  }}
                                 </div>
+
                                 {% if tab.actions %}
                                 <div class="d-none d-md-inline col-md">
                                     <span class="float-right"> 
-                                        {% comment %} {% profile_link object.sender checks=False text='profil' %} {% endcomment %}
                                         {% if object.is_active %}
                                             {% update_request_button object accept=True %}
                                             {% update_request_button object accept=False %}
@@ -154,27 +101,18 @@
                                 {% endif %}
                             </div>
                         </div>
-                        {% if tab.actions %}
-                        <div class="card-footer  d-md-none">
+                       
+<!--   mobile       --> <div class="card-footer d-md-none">
                             <span class="float-right"> 
-                                    <button disabled  
-                                    {% if object.is_active %}
-                                    class="btn btn-sm btn-warning"
-                                    {% elif object.status == object.STATUS_ACCEPTED %}
-                                    class="btn btn-sm btn-success"
-                                    {% elif object.status == object.STATUS_REJECTED %}
-                                    class="btn btn-sm btn-danger "
-                                    {% endif %}>
-                                        {{ object|status_display_for:user|upper  }}
-                                    </button>
+                                {% include 'inquiries/partials/status.html' with object=object%}
                                 
-                                {% if object.is_active %}
+                                {% if object.is_active and tab.actions %}
                                     {% update_request_button object accept=True %}
                                     {% update_request_button object accept=False %}
                                 {% endif %}
                             </span>
                         </div>
-                        {% endif %}
+                      
                     </div> 
                     {% empty %}
 

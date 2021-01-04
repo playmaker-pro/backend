@@ -29,14 +29,26 @@ class ViewFilterMixin:
             return value
 
     @property
+    def filter_names_of_team(self):
+        value = self.request.GET.getlist('team_names')
+        if value:
+            return value
+
+    @property
+    def filter_names_of_club(self):
+        value = self.request.GET.getlist('club_names')
+        if value:
+            return value
+
+    @property
     def filter_name_of_team(self):
-        value = self.request.GET.getlist('team_name')
+        value = self.request.GET.get('team_name')
         if value:
             return value
 
     @property
     def filter_name_of_club(self):
-        value = self.request.GET.getlist('club_name')
+        value = self.request.GET.get('club_name')
         if value:
             return value
 

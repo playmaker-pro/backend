@@ -658,12 +658,12 @@ class PlayerProfile(BaseProfile, SoccerDisplayMixin):
         blank_label=_('Wybierz kraj'),
     )
 
-    agent_status = models.IntegerField(_('Czy Agent'), choices=make_choices(AGENT_STATUS_CHOICES), blank=True, null=True)
+    agent_status = models.IntegerField(_('Czy posiadasz agenta'), choices=make_choices(AGENT_STATUS_CHOICES), blank=True, null=True)
     agent_name = models.CharField(_('Imię i nazwisko agenta / Nazwa agencji'), max_length=45, choices=make_choices(AGENT_STATUS_CHOICES), blank=True, null=True)
     # agent_phone = PhoneNumberField(_('Numer telefonu do agenta / agencji'), region='PL', blank=True, null=True)
 
     agent_phone = models.CharField(
-        _('Numer telefonu do agenta / agencji'),
+        _('Telefon do agenta'),
         max_length=15,
         blank=True,
         null=True)

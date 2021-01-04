@@ -32,7 +32,7 @@
 
 {% block header %}
     {% if user.is_authenticated %}
-        {% url 'profiles:show_self' as porfile_url %}
+        {% url 'profiles:show' slug=user.profile.slug as porfile_url %}
 
         {% if user.is_coach %}
 

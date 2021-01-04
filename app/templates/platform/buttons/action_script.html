@@ -53,7 +53,7 @@
             class="{{ button_class }} {% if active_class %}{{ active_class }}{% endif %} " 
         
             {% if button_action.onclick %}
-            onclick="{{ button_action.name }}(event, '{{ button_action.param }}')"
+            onclick="{{ button_action.name }}(event, '{{ button_action.param }}' {% if button_action.param2 %}, '{{ button_action.param2 }}' {% endif %})"
             
             {% elif button_action.modal %}
             data-toggle="modal" 

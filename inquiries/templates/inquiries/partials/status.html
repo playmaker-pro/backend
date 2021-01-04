@@ -1,0 +1,12 @@
+
+{% load playmaker %}
+<button disabled  
+    {% if object.is_active %}
+    class="btn btn-sm btn-warning"
+    {% elif object.status == object.STATUS_ACCEPTED %}
+    class="btn btn-sm btn-success"
+    {% elif object.status == object.STATUS_REJECTED %}
+    class="btn btn-sm btn-danger "
+    {% endif %}>
+        {{ object|status_display_for:user|upper  }}
+    </button>

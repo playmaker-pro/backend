@@ -14,20 +14,6 @@
                 <h3>{{ show_user.profile.video_title }}</h3>
                 <p>{{ show_user.profile.video_description }}</p>
 
-                {% if show_user.profile.video_url_second %}
-
-                    <iframe  style="min-height:400px;" height="100%" width="100%" src="{{ show_user.profile.video_url_second|convert_to_embeded }}"> </iframe>
-                    <h3>{{ show_user.profile.video_title_second }}</h3>
-                    <p>{{ show_user.profile.video_description_second }}</p>
-
-                {% endif %}
-                {% if show_user.profile.video_url_third %}
-
-                    <iframe  style="min-height:400px;" height="100%" width="100%" src="{{ show_user.profile.video_url_third|convert_to_embeded }}"> </iframe>
-                    <h3>{{ show_user.profile.video_title_third  }}</h3>
-                    <p>{{ show_user.profile.video_description_third  }}</p>
-
-                {% endif %}
             {% else %}
                 <span class="heading text-muted"> 
                   {% trans 'Jeszcze nie dodałeś filmu. Zrób to zwiększyć swoją widoczność' %}

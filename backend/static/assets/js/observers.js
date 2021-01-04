@@ -122,13 +122,14 @@ function approve_annoucement(event, slug) {
     });
 };
 
-function inquiry(event, slug) {
+function inquiry(event, slug, category) {
     $.ajax({
         type:'POST',
         url:'/users/me/query/',
         data:{
             csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
             slug: slug,
+            category: category,
             action: 'post'
         },
         success:function(json){         

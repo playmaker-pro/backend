@@ -99,7 +99,7 @@ class TeamsTable(TableView):
 
         if self.filter_vivo is not None:
             vivo = [i[:-1].upper() for i in self.filter_vivo]
-   
+
             clauses = (Q(club__voivodeship__name=p) for p in vivo)
             query = reduce(operator.or_, clauses)
             queryset = queryset.filter(query)

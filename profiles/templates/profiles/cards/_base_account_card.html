@@ -32,7 +32,7 @@
             <h4 class="d-inline card-subtitle mb-2 text-muted"><i class="icofont-boot-alt-2"></i> {{ show_user.get_declared_role_display|upper }}  </h4>
           {% endif %}
 
-          {% if editable %}
+          {% if editablesssssssssssss %}
             <i class="icofont-link" onclick="copyToClipBoard()" data-value="{{ user.profile.get_permalink }}"></i>
           {% endif %}
 
@@ -67,7 +67,7 @@
             <li hidden class="list-group-item text-left border-0">  <!-- @tood remove hiddens-->
               <span class="pull-left text-muted">
               <div class="progress" data-toggle="tooltip" data-placement="top" title="Określa w jakim stopniu Twoje konto ma uzupełnione dane.">
-                  <div class="progress-bar bg-success" style="width:{{user.profile.percentage_completion}}%">{{user.profile.percentage_completion}}%</div>
+                  <div class="progress-bar bg-success" style="width:{{ user.profile.percentage_completion }}%">{{user.profile.percentage_completion}}%</div>
               </div>
             </li>
             </ul>

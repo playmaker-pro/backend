@@ -53,7 +53,7 @@ class MyObservers(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixi
 
         qs_players_ids = list(Follow.objects.filter(user=user, target__declared_role=definitions.PLAYER_SHORT).values_list('target__id', flat=True))
         qs_players = User.objects.filter(id__in=qs_players_ids)
-        
+
         qs_teams_ids = FollowTeam.objects.filter(user=user).values_list('target__id', flat=True)
         qs_teams = Team.objects.filter(id__in=qs_teams_ids)
         qs_coaches_ids = list(Follow.objects.filter(user=user, target__declared_role=definitions.COACH_SHORT).values_list('target__id', flat=True))
@@ -146,9 +146,19 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
     def get(self, request, *args, **kwargs):
         tabs = []
         user = request.user
+        related_queries = (
+            'sender',
+            'recipient',
+            'sender__clubprofile',
+            'sender__playerprofile',
+            'sender__coachprofile',
+            'recipient__clubprofile',
+            'recipient__playerprofile',
+            'recipient__coachprofile'
+        ) 
+        qs_recipient = InquiryRequest.objects.select_related(*related_queries).filter(recipient=user).order_by('-created_at')
 
-        qs_recipient = InquiryRequest.objects.filter(recipient=user).order_by('-created_at')
-        qs_sender = InquiryRequest.objects.filter(sender=user).order_by('-created_at')
+        qs_sender = InquiryRequest.objects.select_related(*related_queries).filter(sender=user).order_by('-created_at')
 
         if user.is_club or user.is_coach:
             qs = qs_recipient.filter(sender__declared_role=definitions.PLAYER_SHORT)

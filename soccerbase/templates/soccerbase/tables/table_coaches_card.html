@@ -7,7 +7,10 @@
 <div class="card" style="">
   <div class="card-header d-md-none">
     <span> 
+      <a href="{{ object.profile.get_permalink }}">
         {{object.first_name|upper}} {{ object.last_name|upper}} {{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %} {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
+      </a>
+    </span>
     <span class="float-right">
       {% observed_link user object text='obserwuj' %}
       {% profile_link object text='profil' checks=False %}
