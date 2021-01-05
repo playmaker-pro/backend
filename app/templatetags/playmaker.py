@@ -83,7 +83,7 @@ def inquiry_display_name(context, inquiry):
     if inquiry.is_user_type:
         name, link, picture = user_data(obj)
 
-        if inquiry.sender.is_club or inquiry.recipient.is_club:
+        if obj.is_club:
             name = obj.profile.display_club
             link = obj.profile.club_object.get_permalink
             picture = obj.profile.club_object.picture
