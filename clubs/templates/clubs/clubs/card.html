@@ -13,10 +13,10 @@
       <h6 class="card-subtitle mb-2 text-muted"></h6>  
   
       <div class="card-text">
-        {% include template with key=_('Nazwa')              value=object.display_club %}
-        {% include template with key=_('Wojewodztwo')        value=object.display_voivodeship      %}
+        {% include template with key=_('Nazwa')                                            value=object.display_club %}
+        {% include template with key=_('Wojewodztwo')                                      value=object.display_voivodeship      %}
         <h5>Osoby w klubie</h5>
-        {% include template with key=_('Zarządca')             value=object.display_manager|default:'brak przypisanej osoby'      %}
+        {% include template with key=_('Zarządzający klubem na playmaker.pro')             value=object.display_manager|default:'brak przypisanej osoby'  link=object.manager.profile.get_permalink   %}
         {% include 'clubs/_partials/editors.html' with template=template object=object %}
 
         {% request_link user object %}

@@ -181,6 +181,10 @@
                     <img class="img-responsive" src="{% static 'assets/img/panga_1.png' %}">
                 </div>
             {% endfor %}
+            
+        </div>
+        <div class="row">
+            {% include 'platform/partials/_pagination.html' with object_type='ogłoszeń' %}
         </div>
  </div>
 </section>
@@ -196,7 +200,7 @@
             $('#approveAnnouncementModal').on('show.bs.modal', function (event) {
         var id = $(event.relatedTarget).data('ann');
         $(this).find('#ann-numner').val(id);
-        $(this).find(".ann-number").text(id);
+        //$(this).find(".ann-number").text(id);
         });
 
 

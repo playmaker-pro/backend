@@ -82,20 +82,7 @@
 
   <div class="card-body table-item"> 
     <div class="row no-gutters">
-                                                
-                                                    <div class="d-none d-md-inline col-md-3">
-                                                        <a href="{{ object.profile.get_permalink }}">
-                                                            <img class="avatar rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
-
-                                                            <img class="flag pl-3" src="{{ object.profile.country.flag }}" alt="flag">
-                                                            {{object.first_name|upper}} {{ object.last_name|upper}} 
-                                                            {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
-                                                            {{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}
-                                                            
-                                                        </a>
-                                                    
-                                                    </div>
-        
+                                                     
         <div class="d-md-none text-center"> <!-- -->
             <img class="rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
         </div>
@@ -110,9 +97,22 @@
                {{ object.profile.display_team|default:''|upper  }} 
             </div>
             <div class=""> 
-                {{ object.profile.display_league|default:'-'|title }} {{ object.profile.display_voivodeship|default:''|lower|truncatechars:25 }}
+                {{ object.profile.display_league|default:'-'|title }}, {{ object.profile.display_voivodeship|default:''|lower|truncatechars:25 }}
             </div>
-        </div>
+        </div>   
+                                                    <div class="d-none d-md-inline col-md-3">
+                                                        <a href="{{ object.profile.get_permalink }}">
+                                                            <img class="avatar rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
+
+                                                            <img class="flag pl-3" src="{{ object.profile.country.flag }}" alt="flag">
+                                                            {{object.first_name|upper}} {{ object.last_name|upper}} 
+                                                            {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
+                                                            {{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}
+                                                            
+                                                        </a>
+                                                    
+                                                    </div>
+
 
                                                         <div class="d-none d-md-inline col-5 col-md-1 text-left">
                                                             {{ object.profile.get_position_raw_display|default:''|title }}

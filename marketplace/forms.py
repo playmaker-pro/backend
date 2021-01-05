@@ -37,7 +37,7 @@ class AnnouncementForm(forms.ModelForm):
         ('seniority', 'Rozgrywki młodzieżowe / Rozgrywki seniorskie', None,  {}),
         ('gender', 'Mężczyźni / Kobiety', None, {}),
         ('body', 'Wprowadź najważniejsze informacje na temat Twojego klubu oraz testów', None, {}),
-        ('www', 'Możesz dodać link do ogłoszenia naboru na stronie lub facebooku, lub dodaj adres www klubu', None, {}),
+        ('www', "http://stronaklubu.pl", None, {}),
     ]
 
     def __init__(self, *args, **kwargs):

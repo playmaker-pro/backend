@@ -4,6 +4,41 @@
 {% load playmaker %}
 
 
+<div class="card player-header-card d-none d-md-inline item-card" style="">
+  
+  <div class="card-body  table-item"> 
+    <div class="row no-gutters">
+        <div class="d-none d-md-inline col-md-3  text-left">
+          Nazwa drużyny
+        </div>
+
+        <div class="col-5 col-md-2 text-left">
+           Poziom rozgrywkowy
+        </div >
+        
+        <div class="col-6 col-md-2 text-left">
+            Województwo
+        </div >
+
+        <div class="col-5 col-md-1 text-left">
+             Klub
+        </div>
+
+        <div class="col-5 col-md-1 text-left">
+             Trener
+        </div>
+
+        <div class="d-none d-md-inline col-md-2">
+
+        </div>
+    </div>
+  </div>
+
+</div> 
+
+
+
+
 {% for object in objects %}
 <div class="card item-card" style="">
   <div class="card-header d-md-none">
@@ -21,13 +56,7 @@
     <div class="row no-gutters">
 
 
-                          <div class="d-none d-md-inline col-md-3">
-                            <a href="{{ object.get_permalink }}"> 
-                              <img class="avatar rounded img-responsive" src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
-                              <strong style="padding-left:15px;">{{ object.name|upper}}</strong>
-                            </a>
-                          </div>
-                    
+
         
         <div class="d-md-none text-center"> <!-- -->
             <img class="rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
@@ -39,38 +68,43 @@
                 <strong>{{ object.display_league|default:''|upper  }}</strong> 
             </div>
              <div class="">
-               {{ object.display_team|default:''|upper  }} 
+               {{ object.display_club|default:''|upper  }} 
             </div>
             <div class=""> 
                 {{ object.display_voivodeship|default:''|upper|truncatechars:24 }}
-                {{ object.group|default:'-'|upper|truncatechars:10 }}
             </div>
+            {% if object.manager %}
+            <div>
+              <small class="text-muted">trener </small>{{ object.manager.get_full_name|default:'brak'|upper }}
+            </div>
+            {% endif %}
         </div>
+
+
+                           <div class="d-none d-md-inline col-md-3">
+                            <a href="{{ object.get_permalink }}"> 
+                              <img class="avatar rounded img-responsive" src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
+                              <strong style="padding-left:15px;">{{ object.name|upper}}</strong>
+                            </a>
+                          </div>
+                    
                   
-                              <div class="d-none d-md-inline col-6 col-md-1 text-center">
+                              <div class="d-none d-md-inline col-6 col-md-2  text-left">
                                   {{ object.display_league|default:''|upper  }}
                               </div >
 
-                              <div class="d-none d-md-inline col-5 col-md-2  text-center">
+                    
+                              <div class="d-none d-md-inline col-5 col-md-2   text-left">
                                   {{ object.display_voivodeship|default:''|upper|truncatechars:24 }}
                               </div>
-                              
-                              <div class="d-none d-md-inline col-6 col-md-2 text-center"> 
-                                  {{ object.display_team|default:''|upper  }}
+
+                              <div class="d-none d-md-inline col-6 col-md-1  text-left">
+                                  {{ object.display_club|default:''|upper  }}
                               </div>
-
-                            <div class="d-none d-md-inline col-6 col-md-1">
-                                {{ object.group|default:'-'|upper|truncatechars:10 }}
-                            </div>
-
-        {% comment %} <div class="col-3 col-md-1">
-             {{ object.manager|default:'-'|upper }}
-        </div> {% endcomment %}
-        
-                            <div class="d-none d-md-inline col-3 col-md-1">
-                                {{ object.address|default:''|upper }}
-                            </div>
-
+                              <div class="d-none d-md-inline col-6 col-md-1  text-left">
+                                  <a href="{{ object.manager.profile.get_permalink }} ">{{ object.manager.get_full_name|default:''|upper }}</a>
+                              </div >
+                      
 
 
         <div class="d-none d-md-inline col-md-2">
@@ -80,14 +114,14 @@
         </div>
     </div>
   </div>
-  <div class="card-footer row no-gutters   d-md-none">
+  <div hidden  class="card-footer row no-gutters   d-md-none">
   
        
-            <div class="col-3 col-md-1">
+            <div hidden class="col-3 col-md-1">
                 {{ object.stats|default:'0-0-0'|upper }}
             </div>
 
-            <div class="col-3 col-md-1">
+            <div hidden class="col-3 col-md-1">
                 {{ object.stats.avg|default:'0 śr'|upper }}
             </div>
     <span class="float-right"></span>

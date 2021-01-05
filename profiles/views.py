@@ -17,7 +17,7 @@ from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from roles import definitions
 from stats import adapters
-
+from django.conf import settings
 from . import forms, models
 from .model_utils import (get_profile_form_model, get_profile_model,
                           get_profile_model_from_slug)
@@ -144,6 +144,8 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
     paginate_limit = 100
 
     def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect(settings.LOGIN_URL)
         tabs = []
         user = request.user
         related_queries = (

@@ -113,13 +113,13 @@ def weekly_account_report(instance, extra_body=''):
     '''
     # text = textwrap.dedent(f'''
     subject = 'Cotygodniowy raport'
-    body = '''
+    body = f'''
     Witaj, z tej strony Zespół PlayMaker.pro!
 
     Wiele działo się na profilu Twojego klubu w zeszłym tygodniu. Oto kilka powiadomień, które mogą zwrócić Twoją uwagę: 
 
-    Zaobserwowało Cię : [count] użytkowników
-    Wizyty na profilu klubu:  [count] użytkowników
+    Zaobserwowało Cię: {instance.following_set.count()}  użytkowników
+    Wizyt na profilu:  {instance.profile.history.counter} użytkowników
     Zapytania o testy: [count] zawodników
     Twoje zaproszenia na testy: [count]
 

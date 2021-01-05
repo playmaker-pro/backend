@@ -3,6 +3,55 @@
 {% load thumbnail %}
 {% load playmaker %}
 
+
+
+
+
+<div class="card player-header-card d-none d-md-inline item-card" style="">
+  
+  <div class="card-body  table-item"> 
+    <div class="row no-gutters">
+        <div class="d-none d-md-inline col-md-3">
+          Imię i nazwisko / Wiek
+        </div>
+
+        <div class="col-6 col-md-2 text-left"> 
+            Drużyna
+        </div>
+        <div class="col-6 col-md-2 text-left">
+           Poziom rozgrywkowy
+        </div >
+
+        <div class="col-5 col-md-1  text-left">
+             Województwo
+        </div>
+
+        <div class="col-5 col-md-1  text-left">
+             Klub
+        </div>
+
+        <div class="col-6 col-md-1 text-left"> 
+           Licencja
+        </div>
+
+
+        <div class="d-none d-md-inline col-md-1">
+
+        </div>
+        <div class="d-none d-md-inline col-md-1">
+
+        </div>
+    </div>
+  </div>
+
+</div> 
+
+
+
+
+
+
+
 {% for object in objects %}
 <div class="card" style="">
   <div class="card-header d-md-none">
@@ -15,59 +64,63 @@
       {% observed_link user object text='obserwuj' %}
       {% profile_link object text='profil' checks=False %}
     </span>
-  
-  
-  
   </div>
 
   <div class="card-body table-item"> 
     <div class="row no-gutters">
-               <div class="d-none d-md-inline col-md-3">
-                  <a href="{{ object.profile.get_permalink }}"> 
-                    <img  class="rounded img-responsive" src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
-                    <img style="padding-left:15px;" class="flag" src="{{ object.profile.country.flag }}" alt="flag">
-                    <strong >{{ object.first_name|upper}} {{ object.last_name|upper}} </strong>
-                  </a>
-                </div>
 
-        <div class="d-md-none text-center"> <!-- -->
-            <img class="rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
-        </div>
 
-        <div class="d-md-none col text-left ml-2">
-    
-            <div class="">
-                <strong>{{ object.profile.display_team|default:''|upper }}</strong> 
+                        <div class="d-md-none text-center"> <!-- -->
+                            <img class="rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
+                        </div>
+
+                        <div class="d-md-none col text-left ml-2">
+                    
+                            <div class="">
+                                <strong>{{ object.profile.display_team|default:''|upper }}</strong> 
+                            </div>
+                            <div class="">
+                              {{ object.profile.display_league|default:''|upper  }}
+                            </div>
+                            <div class=""> 
+                                {{ object.profile.display_voivodeship|default:''|upper|truncatechars:24 }} 
+                                {{ object.profile.profile.display_club|default:''|upper  }} 
+                                
+                            </div>
+                            <div class="">
+                                {{ object.profile.get_licence_display|default:''|upper }}
+                            </div>
+                        </div>
+
+            <div class="d-none d-md-inline col-md-3">
+              <a href="{{ object.profile.get_permalink }}"> 
+                <img  class="rounded img-responsive" src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
+                <img style="padding-left:15px;" class="flag" src="{{ object.profile.country.flag }}" alt="flag">
+                <strong >{{ object.get_full_name|upper}} {{ object.profile.age|default:'' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}
+                
+                </strong>
+              </a>
             </div>
-             <div class="">
-               {{ object.profile.profile.display_club|default:''|upper  }} 
-            </div>
-            <div class=""> 
-                {{ object.profile.display_voivodeship|default:''|upper|truncatechars:24 }} 
-                {{ object.profile.display_league|default:''|upper  }}
-            </div>
-        </div>
 
-
-            <div class="d-none d-md-inline  col-md-1">
-                {{ object.profile.age|default:'' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}
-            </div >
-            <div class="d-none d-md-inline  col-md-1">
-                 {{ object.profile.display_league|default:''|upper  }}
-            </div >
-            <div class=" d-none d-md-inline  col-3 col-md-1  text-center" >
+            <div class=" d-none d-md-inline  col-3 col-md-2  text-left" >
                 {{ object.profile.display_team|default:'' }}
             </div >
-            
-            <div class="d-none d-md-inline  col-3 col-md-1  text-center">
-                {{ object.profile.display_voivodeship|default:''|upper  }}
+            <div class="d-none d-md-inline  col-md-2 text-left">
+                 {{ object.profile.display_league|default:''|upper  }}
             </div >
 
             
-            <div class="d-none d-md-inline  col-3 col-md-1  text-center">
-              <span class="main-color">{{ object.profile.team.stats|default:'0-0-0'|upper}}</span> 
+            <div class="d-none d-md-inline  col-3 col-md-1  text-left">
+                {{ object.profile.display_voivodeship|default:''|upper  }}
+            </div>
+  
+            <div class="d-none d-md-inline  col-3 col-md-1  text-left">
+                {{ object.profile.display_club|default:''|upper  }}
+            </div>
 
-              {{ object.profile.team.stats.avg|default:'0'|upper }}
+            
+            <div class="d-none d-md-inline  col-3 col-md-1  text-left">
+              {{ object.profile.get_licence_display|default:''|upper }}
             </div>
 
         <div class="d-none d-md-inline col-md-1">
@@ -85,9 +138,7 @@
     <div class="col-1">
      <img class="flag" src="{{ object.profile.country.flag }}" alt="flag">
     </div>
-    <div class="col">
-       <span class="main-color">{{ object.profile.team.stats|default:'0-0-0'|upper}}</span> drużynowe statystyki  
-  </div>
+
     
     <span class="float-right"> 
     </span>

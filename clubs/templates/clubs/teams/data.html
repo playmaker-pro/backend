@@ -9,18 +9,15 @@
             <h6 class="card-subtitle mb-2 text-muted"></h6>
 
             <div class="card-text">
-
-
-                {% include template with key=_('Zwrot za dojazdy') value=object.travel_refunds      %}
-                {% include template with key=_('Premie za mecze') value=object.game_bonus      %}
-                {% include template with key=_('Stypendia') value=object.scolarships      %}
-                {% include template with key=_('Zwroty za buty/rękawice') value=object.gloves_shoes_refunds     %}
-                {% include template with key=_('Sprzęt treningowy') value=object.traning_gear      %}
-                {% include template with key=_('Sprzęt wyjściowy') value=object.regular_gear      %}
-                {% include template with key=_('Drugi trener') value=object.secondary_trainer      %}
-                {% include template with key=_('Fizjoterapeuta') value=object.fizo     %}
-                {% include template with key=_('Suplemnety / odżywki') value=object.diet_suplements      %}
-
+                {% if object.travel_refunds %} {% include template with key=_('Zwrot za dojazdy') value=object.travel_refunds      %} {% endif %}
+                {% if object.game_bonus %} {% include template with key=_('Premie za mecze') value=object.game_bonus      %} {% endif %}
+                {% if object.scolarships %} {% include template with key=_('Stypendia') value=object.scolarships      %} {% endif %}
+                {% if object.gloves_shoes_refunds %} {% include template with key=_('Zwroty za buty/rękawice') value=object.gloves_shoes_refunds     %} {% endif %}
+                {% if object.traning_gear %} {% include template with key=_('Sprzęt treningowy') value=object.traning_gear      %} {% endif %}
+                {% if object.regular_gear %} {% include template with key=_('Sprzęt wyjściowy') value=object.regular_gear      %} {% endif %}
+                {% if object.secondary_trainer %} {% include template with key=_('Drugi trener') value=object.secondary_trainer      %} {% endif %}
+                {% if object.fizo %} {% include template with key=_('Fizjoterapeuta') value=object.fizo     %} {% endif %}
+                {% if object.diet_suplements %} {% include template with key=_('Suplemnety / odżywki') value=object.diet_suplements      %} {% endif %}
             </div>
         </div>
     </div>

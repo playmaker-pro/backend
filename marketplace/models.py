@@ -166,7 +166,7 @@ class Announcement(models.Model):
         null=True,
         blank_label=_('Wybierz kraj'),
     )
-   
+
     year_from = models.PositiveIntegerField(
         help_text=_('Rocznik piłkarza od.. np. 1986'),
     )

@@ -8,5 +8,5 @@
     {% elif object.status == object.STATUS_REJECTED %}
     class="btn btn-sm btn-danger "
     {% endif %}>
-        {{ object|status_display_for:user|upper  }}
+        <small> {{ object|status_display_for:user|upper  }}</small>
     </button>

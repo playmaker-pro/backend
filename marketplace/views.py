@@ -101,7 +101,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
 class AnnouncementsView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixins.ViewFilterMixin):
     template_name = "marketplace/base.html"
     http_method_names = ["get"]
-    paginate_limit = 15
+    paginate_limit = 9
     table_type = None
     page_title = 'Ogłoszenia piłkarskie'
 

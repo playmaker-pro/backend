@@ -20,7 +20,8 @@
         <div class="ann-number">
 
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer" style="border-top:0px;">
+          {% csrf_token %}
           {% announcement_yes %}
           <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Zamknij' %}</button> 
         </div>

@@ -23,7 +23,7 @@ from clubs import models as clubs_models
 
 User = get_user_model()
 
-    
+
 GLOBAL_TRAINING_READY_CHOCIES = (
         (1, '1-2 treningi'),
         (2, '3-4 treningi'),
@@ -94,6 +94,7 @@ class ProfileVisitHistory(models.Model):
 
     counter = models.PositiveIntegerField(default=0)
     counter_coach = models.PositiveIntegerField(default=0)
+    counter_scout = models.PositiveIntegerField(default=0)
 
     def increment(self, commit=True):
         self.counter += 1
@@ -101,7 +102,12 @@ class ProfileVisitHistory(models.Model):
             self.save()
 
     def increment_coach(self, commit=True):
-        self.counter += 1
+        self.counter_coach += 1
+        if commit:
+            self.save()
+
+    def increment_scout(self, commit=True):
+        self.counter_scout += 1
         if commit:
             self.save()
 
@@ -628,12 +634,12 @@ class PlayerProfile(BaseProfile, SoccerDisplayMixin):
         null=True)
 
     address = AddressField(
-        help_text=_('Adres'),
+        help_text=_('Miasto z którego dojeżdżam na trening'),
         blank=True,
         null=True)
 
     practice_distance = models.PositiveIntegerField(
-        _('Maksymalna odległość na trening'),
+        _('Odległość na trening'),
         blank=True,
         null=True,
         help_text=_('Maksymalna odległośc na trening'),
@@ -659,7 +665,7 @@ class PlayerProfile(BaseProfile, SoccerDisplayMixin):
     )
 
     agent_status = models.IntegerField(_('Czy posiadasz agenta'), choices=make_choices(AGENT_STATUS_CHOICES), blank=True, null=True)
-    agent_name = models.CharField(_('Imię i nazwisko agenta / Nazwa agencji'), max_length=45, blank=True, null=True)
+    agent_name = models.CharField(_('Nazwa agenta'), max_length=45, blank=True, null=True)
 
     agent_phone = models.CharField(
         _('Telefon do agenta'),
@@ -953,6 +959,8 @@ class CoachProfile(BaseProfile, SoccerDisplayMixin):
         'birth_date',
         'team_club_league_voivodeship_ver']
 
+    OPTIONAL_FIELDS = ['licence']
+
     GOAL_CHOICES = (
         (1, 'Profesjonalna kariera'),
         (2, 'Kariera regionalna'),
@@ -990,6 +998,25 @@ class CoachProfile(BaseProfile, SoccerDisplayMixin):
     @supress_exception
     def display_league(self):
         return self.team_object.display_league
+
+    LICENCE_CHOICES = (
+        (1, 'UEFA PRO'),
+        (2, 'UEFA A'),
+        (3, 'UEFA EY A'),
+        (4, 'UEFA B'),
+        (5, 'UEFA C'),
+        (5, 'GRASS C'),
+        (5, 'GRASS D'),
+        (5, 'UEFA Futsal B'),
+        (5, 'PZPN A'),
+        (5, 'PZPN B'),
+    )
+
+    licence = models.IntegerField(
+        _("Licencja"),
+        choices=LICENCE_CHOICES,
+        blank=True,
+        null=True)
 
     team_club_league_voivodeship_ver = models.CharField(
         _('team_club_league_voivodeship_ver'),

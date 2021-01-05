@@ -149,6 +149,7 @@ class CoachProfileForm(BaseProfileForm):
                 # Field('team', wrapper_class='row', readonly=True),
                 # Field('country', wrapper_class='row'),
                 Field("address", wrapper_class='row'),
+                Field('licence', wrapper_class='row'),
                 Field("about", wrapper_class='row'),
                 css_class='col-md-6',
             ),
@@ -164,7 +165,7 @@ class CoachProfileForm(BaseProfileForm):
 
     class Meta:
         model = models.CoachProfile
-        fields = ['club_role', 'country', 'address', 'about', 'birth_date', 'facebook_url', 'soccer_goal', 'phone', 'practice_distance'] #'league', 'voivodeship', 'team',
+        fields = ['club_role', 'country', 'address', 'about', 'birth_date', 'facebook_url', 'soccer_goal', 'phone', 'practice_distance', 'licence']
 
     def get_mandatory_field_class(self, field_name):
         if field_name in models.CoachProfile.VERIFICATION_FIELDS:
@@ -172,9 +173,22 @@ class CoachProfileForm(BaseProfileForm):
 
 
 class PlayerProfileForm(BaseProfileForm):
+    settings = (
+        ('address', False),
+        ('weight', False),
+        ('height', False),
+        ('practice_distance', False),
+        ('agent_name', False),
+    )
+
+    def setup_fields(self):
+        for field, help_text in self.settings:
+            self.fields[field].help_text = help_text
+
     # birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setup_fields()
         self.helper.layout = Layout(
             Fieldset(
                 _('<h2 class="form-section-title">Piłkarski status</h2>'),
@@ -194,32 +208,32 @@ class PlayerProfileForm(BaseProfileForm):
                 Field('country', wrapper_class='row', css_class='mandatory'),
                 Field("height", wrapper_class='row', placeholder='130 - 210 cm', css_class='mandatory'),
                 Field("weight", wrapper_class='row', placeholder='40 - 140 kg', css_class='mandatory'),
-                Field("address", wrapper_class='row'),
+                Field("address", wrapper_class='row', placeholder='Miasto z którego dojeżdżam na trening'),
                 Field("about", wrapper_class='row'),
                 css_class='col-md-6',
             ),
             Fieldset(
-                _('<h2 class="form-section-title">Piłkarskie szczegóły</h2>'), 
+                _('<h2 class="form-section-title">Piłkarskie szczegóły</h2>'),
                 Field('position_raw', wrapper_class='row', css_class='mandatory'),
                 Field("position_raw_alt", wrapper_class='row'),
                 Field("formation", wrapper_class='row', css_class='mandatory'),
                 Field("formation_alt", wrapper_class='row'),
                 Field("prefered_leg", wrapper_class='row', css_class='mandatory'),
-                Field("practice_distance", wrapper_class='row', css_class='mandatory'),
+                Field("practice_distance", wrapper_class='row', css_class='mandatory', placeholder='Maksymalna odległośc na trening'),
                 css_class='col-md-6',
             ),
 
             Fieldset(
                 _('<h2 class="form-section-title">Współpraca</h2>'),
                 Field('agent_status', wrapper_class='row'),
-                Field("agent_name", wrapper_class='row'),
-                Field("agent_phone", wrapper_class='row'),
+                Field("agent_name", wrapper_class='row', placeholder='Imię i nazwisko / nazwa agencji'),
+                Field("agent_phone", wrapper_class='row', placeholder='+48 111 222 333'),
                 Field("agent_foreign", wrapper_class='row'),
                 css_class='col-md-6',
             ),
             Fieldset(
                 _('<h2 class="form-section-title">Dane kontaktowe</h2>'),
-                Field('phone', placeholder='+48 111 222 333', wrapper_class='row', css_class='mandatory'),
+                Field('phone', wrapper_class='row', css_class='mandatory', placeholder='+48 111 222 333'),
                 Field('facebook_url', wrapper_class='row'),
                 Field("laczynaspilka_url", wrapper_class='row'),
                 Field("min90_url", wrapper_class='row'),
@@ -243,7 +257,7 @@ class PlayerProfileForm(BaseProfileForm):
 
     class Meta:
         model = models.PlayerProfile
-        widgets = {'country': CountrySelectWidget()}
+        widgets = {'country': CountrySelectWidget(layout='{widget}')}
         fields = models.PlayerProfile.COMPLETE_FIELDS + models.PlayerProfile.OPTIONAL_FIELDS + ['country', 'birth_date']
 
 

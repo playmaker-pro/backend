@@ -12,6 +12,34 @@ function copy() {
   tooltip.innerHTML = "Copied: " + copyText.value;
 }
 
+$(document).ready(function() {
+
+ 
+  if ($('#id_agent_status').val() == '1') {
+    
+    $('#div_id_agent_name').show();
+    $('#div_id_agent_phone').show();
+  } else {
+    $('#div_id_agent_name').hide();
+    $('#div_id_agent_phone').hide();
+  }
+
+
+  $('#id_agent_status').change(function() {
+    console.log('ssssssssssss', $('#id_agent_status').val())
+    if ($(this).val() == '1') {
+      $('#div_id_agent_name').show();
+      $('#div_id_agent_phone').show();
+    } else {
+      $('#div_id_agent_name').hide();
+      $('#div_id_agent_phone').hide();
+    }
+    /* $.each($.viewMap, function() { this.hide(); }); */
+    // show current
+    /* $.viewMap[$(this).val()].show();  */
+  });
+});
+
 function outFunc() {
   var tooltip = document.getElementById("myTooltip");
   tooltip.innerHTML = "Copy to clipboard";
