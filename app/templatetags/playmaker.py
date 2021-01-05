@@ -70,27 +70,32 @@ def inquiry_display_name(context, inquiry):
     name = ''
     flag = None
     picture = None
+    link = None
 
     if inquiry.sender != user:
         obj = inquiry.sender
     else:
         obj = inquiry.recipient
 
+    def user_data(obj):
+        return obj.get_full_name(), obj.profile.get_permalink, obj.picture
+
     if inquiry.is_user_type:
-        name = obj.get_full_name()
-        link = obj.profile.get_permalink
-        picture = obj.picture
-        if inquiry.sender.is_club:
+        name, link, picture = user_data(obj)
+
+        if inquiry.sender.is_club or inquiry.recipient.is_club:
             name = obj.profile.display_club
             link = obj.profile.club_object.get_permalink
             picture = obj.profile.club_object.picture
         # flag = obj.profile.country.flag
 
-    elif inquiry.is_team_type:
+    elif inquiry.is_team_type:  # X -> sends to Team (shoudl be player)
         if obj.is_coach:
             name = obj.profile.display_team
             link = obj.profile.team_object.get_permalink
             picture = obj.profile.team_object.picture
+        elif obj.is_player:
+            name, link, picture = user_data(obj)
 
         elif obj.is_club:
             name = obj.profile.display_club
@@ -102,7 +107,8 @@ def inquiry_display_name(context, inquiry):
             name = obj.profile.display_club
             link = obj.profile.team_object.club.get_permalink
             picture = obj.profile.team_object.club.picture
-
+        elif obj.is_player:
+            name, link, picture = user_data(obj)
         elif obj.is_club:
             name = obj.profile.display_club
             link = obj.profile.club_object.get_permalink

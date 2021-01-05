@@ -40,36 +40,29 @@
                 <div class="tab-pane fade show {% if forloop.first %} active {% endif %}" id="{{ tab.name }}" role="tabpanel" aria-labelledby="{{ tab.name }}-tab">
                     {% for object in tab.objects %}
                     <div class="card item-card">
-                        <div class="card-header d-md-none">
-                            <span> 
-
-                            {% inquiry_display_name object %}
-
-                            </span>
-                            
-                            <span class="float-right"> 
-                            {% if object.sender != user %}
-                                {% profile_link object.sender checks=False text='profil' %}
-                            {% else %}
-                                {% profile_link object.recipient checks=False text='profil' %}
-                            {% endif %}
-                            </span>
-                        </div>
-                        
-                        <div class="d-md-none">
-                            {% if object.sender != user %}
-                            <img class="avatar rounded-circle img-responsive" src="{% thumbnail object.sender.picture|default:'default_profile.png' 'tables_avatar_show_small' %}">
-                            {% else %}
-                            <img class="avatar rounded-circle img-responsive" src="{% thumbnail object.recipient.picture|default:'default_profile.png' 'tables_avatar_show_small' %}">
-                            {% endif %}
-                        </div>
-
+              
                         <div class="card-body table-item"> 
                             <div class="row no-gutters">
-                                <div class="d-none d-md-inline col-md-3">
 
+                                <div class="col-9 col-md-3">
                                     {% inquiry_display_name object %}
+                                </div>
 
+                                <div class="d-md-none pull-right"> 
+                                    {% if object.sender != user %}
+                                        {% profile_link object.sender checks=False text='profil' %}
+                                    {% else %}
+                                        {% profile_link object.recipient checks=False text='profil' %}
+                                    {% endif %}
+                                </div>
+
+                                
+                                <div class="col-12 col-md-3"> 
+                                    {% if object.sender != user %}
+                                        {{ object.sender.display_club }}
+                                    {% else %}
+                                        {{ object.recipient.display_club }}
+                                    {% endif %}
                                 </div>
 
                                 <div class="d-none d-md-inline col-md">

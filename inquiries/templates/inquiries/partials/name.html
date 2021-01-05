@@ -1,7 +1,7 @@
 {% load thumbnail %}
 
 <a href={{ link }}>
-    <img class="avatar rounded img-responsive" src="{% thumbnail picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
+    <img class="rounded img-responsive" src="{% thumbnail picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
     {% if flag %}
         <img class="flag" src="{{ flag }}" alt="flag">
     {% endif %}
