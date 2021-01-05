@@ -214,6 +214,7 @@ class PlayerProfileForm(BaseProfileForm):
                 Field('agent_status', wrapper_class='row'),
                 Field("agent_name", wrapper_class='row'),
                 Field("agent_phone", wrapper_class='row'),
+                Field("agent_foreign", wrapper_class='row'),
                 css_class='col-md-6',
             ),
             Fieldset(

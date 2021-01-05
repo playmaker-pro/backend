@@ -360,7 +360,7 @@ class PlayerProfile(BaseProfile, SoccerDisplayMixin):
         'agent_status',
         'agent_name',
         'agent_phone',
-        'agent_name',
+        'agent_foreign',
         'video_url',
         'video_title',
         'video_description',
@@ -659,8 +659,7 @@ class PlayerProfile(BaseProfile, SoccerDisplayMixin):
     )
 
     agent_status = models.IntegerField(_('Czy posiadasz agenta'), choices=make_choices(AGENT_STATUS_CHOICES), blank=True, null=True)
-    agent_name = models.CharField(_('Imię i nazwisko agenta / Nazwa agencji'), max_length=45, choices=make_choices(AGENT_STATUS_CHOICES), blank=True, null=True)
-    # agent_phone = PhoneNumberField(_('Numer telefonu do agenta / agencji'), region='PL', blank=True, null=True)
+    agent_name = models.CharField(_('Imię i nazwisko agenta / Nazwa agencji'), max_length=45, blank=True, null=True)
 
     agent_phone = models.CharField(
         _('Telefon do agenta'),
@@ -668,7 +667,7 @@ class PlayerProfile(BaseProfile, SoccerDisplayMixin):
         blank=True,
         null=True)
 
-    agent_name = models.BooleanField(_('Otwarty na propozycje zagraniczne'), blank=True, null=True)
+    agent_foreign = models.BooleanField(_('Otwarty na propozycje zagraniczne'), blank=True, null=True)
 
     video_url = models.URLField(
         _('Youtube url'),
