@@ -22,25 +22,20 @@
            Poziom rozgrywkowy
         </div >
 
-        <div class="col-5 col-md-1  text-left">
+        <div class="col-5 col-md-2  text-left">
              Województwo
         </div>
 
-        <div class="col-5 col-md-1  text-left">
-             Klub
-        </div>
 
         <div class="col-6 col-md-1 text-left"> 
            Licencja
         </div>
 
 
-        <div class="d-none d-md-inline col-md-1">
+        <div class="d-none d-md-inline col-md-2">
 
         </div>
-        <div class="d-none d-md-inline col-md-1">
 
-        </div>
     </div>
   </div>
 
@@ -56,9 +51,11 @@
 <div class="card" style="">
   <div class="card-header d-md-none">
     <span> 
-      <a href="{{ object.profile.get_permalink }}">
-        {{object.first_name|upper}} {{ object.last_name|upper}} {{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %} {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
-      </a>
+      <strong> 
+        <a href="{{ object.profile.get_permalink }}">
+          <img class="flag" src="{{ object.profile.country.flag }}" alt="flag"> {{object.first_name|upper}} {{ object.last_name|upper}} {{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %} {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
+        </a>
+      </strong> 
     </span>
     <span class="float-right">
       {% observed_link user object text='obserwuj' %}
@@ -75,21 +72,16 @@
                         </div>
 
                         <div class="d-md-none col text-left ml-2">
-                    
                             <div class="">
-                                <strong>{{ object.profile.display_team|default:''|upper }}</strong> 
+                                <strong>{{ object.profile.get_licence_display|default:''|upper }}</strong> 
                             </div>
                             <div class="">
-                              {{ object.profile.display_league|default:''|upper  }}
+                                {{ object.profile.display_team|default:''|upper }}
                             </div>
                             <div class=""> 
-                                {{ object.profile.display_voivodeship|default:''|upper|truncatechars:24 }} 
-                                {{ object.profile.profile.display_club|default:''|upper  }} 
-                                
+                                {{ object.profile.display_league|default:''|title  }}, {{ object.profile.display_voivodeship|default:''|lower|truncatechars:24 }} 
                             </div>
-                            <div class="">
-                                {{ object.profile.get_licence_display|default:''|upper }}
-                            </div>
+             
                         </div>
 
             <div class="d-none d-md-inline col-md-3">
@@ -97,7 +89,7 @@
                 <img  class="rounded img-responsive" src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
                 <img style="padding-left:15px;" class="flag" src="{{ object.profile.country.flag }}" alt="flag">
                 <strong >{{ object.get_full_name|upper}} {{ object.profile.age|default:'' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}
-                
+                        {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
                 </strong>
               </a>
             </div>
@@ -106,16 +98,12 @@
                 {{ object.profile.display_team|default:'' }}
             </div >
             <div class="d-none d-md-inline  col-md-2 text-left">
-                 {{ object.profile.display_league|default:''|upper  }}
+                 {{ object.profile.display_league|default:''|title  }}
             </div >
 
             
-            <div class="d-none d-md-inline  col-3 col-md-1  text-left">
-                {{ object.profile.display_voivodeship|default:''|upper  }}
-            </div>
-  
-            <div class="d-none d-md-inline  col-3 col-md-1  text-left">
-                {{ object.profile.display_club|default:''|upper  }}
+            <div class="d-none d-md-inline  col-3 col-md-2  text-left">
+                {{ object.profile.display_voivodeship|default:''|lower  }}
             </div>
 
             
@@ -123,20 +111,18 @@
               {{ object.profile.get_licence_display|default:''|upper }}
             </div>
 
-        <div class="d-none d-md-inline col-md-1">
-           {% profile_link object text='profil' checks=False %}
-          
-        </div>
-        <div class="d-none d-md-inline col-md-1">
-          {% observed_link user object text='obserwuj'  %}
-          
+        <div class="d-none d-md-inline col-md-2">
+          <span class="float-right">
+              {% profile_link object text='profil' checks=False %}
+            {% observed_link user object text='obserwuj'  %}
+            </span>
         </div>
          
     </div>
   </div>
-  <div class="card-footer row no-gutters d-md-none">
+  <div hidden class="card-footer row no-gutters d-md-none ">
     <div class="col-1">
-     <img class="flag" src="{{ object.profile.country.flag }}" alt="flag">
+     
     </div>
 
     

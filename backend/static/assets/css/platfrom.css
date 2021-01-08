@@ -25,6 +25,44 @@
     font-size: .85rem;
 }
 
+
+
+
+.card-title {
+    text-align: center;
+    padding-bottom: 5px;
+    position: relative;
+}
+
+    h2.card-title, h2.form-section-title {
+        font-size: 20px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+        padding-bottom: 5px;
+        position: relative;
+    }
+
+    h2.card-title::after, h2.form-section-title::after {
+        content: '';
+        position: absolute;
+        display: block;
+        width: 60px;
+        height: 3px;
+        background: #e03a3c;
+        bottom: 0;
+        left: calc(50% - 30px);
+    }
+
+    h2.form-section-title::after {
+        left: 0px;
+    }
+
+
+
+
+
+    
 @media all and (max-width: 768px) {
     .banner {
         margin-bottom: 0px;
@@ -33,3 +71,5 @@
     .banner {
         font-size:.9em;
     }
+}
+

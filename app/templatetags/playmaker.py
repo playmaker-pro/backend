@@ -104,9 +104,10 @@ def inquiry_display_name(context, inquiry):
 
     elif inquiry.is_club_type:
         if obj.is_coach:
-            name = obj.profile.display_club
-            link = obj.profile.team_object.club.get_permalink
-            picture = obj.profile.team_object.club.picture
+            name, link, picture = user_data(obj)
+            # name = obj.profile.display_club
+            # link = obj.profile.team_object.club.get_permalink
+            # picture = obj.profile.team_object.club.picture
         elif obj.is_player:
             name, link, picture = user_data(obj)
         elif obj.is_club:
@@ -229,6 +230,28 @@ def announcement_yes(context):
         'button_action': {'onclick': True, 'name': 'approve_annoucement', 'param': user.id},
         'button_icon': '',
         'button_text': 'Tak, Zgłaszam się na testy',
+        'modals': context['modals'],
+    }
+
+
+@register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
+def filter_button(context, user, mobile=False):
+    '''Creates button to open inquiry'''
+    button_attrs = 'type="submit"'
+    if mobile:
+        button_id = 'filter-button-mobile'
+    else:
+        button_id = 'filter-button'
+    button_class = 'btn-pm'
+    button_text = 'Filtruj'
+    if not user.is_verified:
+        button_attrs += ' disabled'
+    return {
+        'button_id': button_id,
+        'button_attrs': button_attrs,
+        'button_class': button_class,
+        'button_icon': None,
+        'button_text': button_text,
         'modals': context['modals'],
     }
 

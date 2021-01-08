@@ -219,7 +219,7 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixin
                 ).add_badge(
                     qs.filter(status__in=InquiryRequest.ACTIVE_STATES).count(),
                 ).add_empty(
-                    header='Jeszcze nie otrzymałeś zaproszenie od żadnego klubu',
+                    header='Jeszcze nie otrzymałeś zaproszenia od żadnego klubu',
                 )
             tabs.append(tab.get())
 

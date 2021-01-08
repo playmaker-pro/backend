@@ -17,7 +17,8 @@
                 {% block desktop_filters_body %}
                 {% endblock desktop_filters_body %}
               <div class="col-2 col-md-1 filter-button"> 
-                  <button id="filter-button" class="btn-pm" type="submit" value="{% trans 'Filtruj' %}">{% trans 'Filtruj' %}</button>
+                  {% filter_button user %}
+                  
               </div>
 
             </form>

@@ -4,31 +4,46 @@
 {% load playmaker %}
 
 
-{% with template='platform/tables/two_table.html'  object=object %}
+{% with template='platform/tables/two_table.html'  object=object  %}
 <div class="card m-2">
     <div class="card-body">
       <div class="card-title text-center">
+      {% if picture_size %}
+        <img title="" class="avatar" src="{% thumbnail object.picture|default:'default_team.png' 'tables_avatar_show' %}">
+      {% else %}
         <img title="" class="avatar" src="{% thumbnail object.picture|default:'default_team.png' 'profile_avatar_show' %}">
+      {%  endif %}
       </div>
       <h6 class="card-subtitle mb-2 text-muted"></h6>  
   
       <div class="card-text">
-        {% include template with key=_('Nazwa')              value=object.display_team %}
-        {% include template with key=_('Klub')               value=object.display_club  link=object.club.get_permalink %}
-        {% include template with key=_('Poziom Rozgrywkowy') value=object.display_league                          %}
-        {% include template with key=_('Wojewodztwo')        value=object.display_voivodeship      %}
-        {% include template with key=_('Mężczyzni/Kobiety')  value=object.display_gender      %}
-        {% include template with key=_('Senior/Junior')      value=object.display_seniority      %}
+       {% if see_team %}
+        {% include template with key=_('Nazwa')            value=object.display_team %}
+       {% endif %}
+        {% if see_club %}
+          {% include template with key=_('Klub')             value=object.display_club  link=object.club.get_permalink %}
+        {% endif %}
+
+        {% include template with key=_('Poziom Rozgrywkowy') value=object.display_league|default:'-'                          %}
         
         {% if see_club %}
-          {% get_club_link object.club text='Zobacz Klub'%}
+        {% include template with key=_('Województwo')        value=object.display_voivodeship|default:'-'      %}
+        {% endif %}
+        {% include template with key=_('Mężczyzni/Kobiety')  value=object.display_gender|default:'-'      %}
+        {% include template with key=_('Senior/Junior')      value=object.display_seniority|default:'-'      %}
+        
+        {% if see_club %}
+          {% get_club_link object.club text='Zobacz Klub' checks=False %}
         {% endif %}
 
         {% if see_team %}
-          {% get_team_link object text='Zobacz Drużynę'%}
+          {% get_team_link object text='Zobacz Drużynę' checks=False %}
         {% endif %} 
         {% csrf_token %}
+
+        {% if not user.is_club %}
         {% request_link user object %}
+        {% endif %}
         {% get_team_edit_link object %}
 
 

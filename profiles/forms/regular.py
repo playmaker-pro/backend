@@ -184,8 +184,9 @@ class PlayerProfileForm(BaseProfileForm):
     def setup_fields(self):
         for field, help_text in self.settings:
             self.fields[field].help_text = help_text
-
+        self.fields['address'].label = 'Adres'
     # birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setup_fields()
@@ -208,7 +209,7 @@ class PlayerProfileForm(BaseProfileForm):
                 Field('country', wrapper_class='row', css_class='mandatory'),
                 Field("height", wrapper_class='row', placeholder='130 - 210 cm', css_class='mandatory'),
                 Field("weight", wrapper_class='row', placeholder='40 - 140 kg', css_class='mandatory'),
-                Field("address", wrapper_class='row', placeholder='Miasto z którego dojeżdżam na trening'),
+                Field("address", wrapper_class='row', placeholder='Miasto z którego dojeżdżam na trening', css_class='mandatory'),
                 Field("about", wrapper_class='row'),
                 css_class='col-md-6',
             ),

@@ -59,9 +59,11 @@
         </div>
 
         <div class="card-text text-center col-md-12">
-            <span class="card-text">
-                <small class="text-muted"><a href="{{ object.www }}">{{ object.wwww }}</a> </small>
+            {% if object.www  %}
+            <span class="card-text pull-left">
+                <small class="text-muted"><a href="{{ object.www }}">{{ object.www }}</a> </small>
             </span>
+            {% endif %}
 
             <span class="card-text">
                 <i class="icofont-list"></i>

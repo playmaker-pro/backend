@@ -2,11 +2,11 @@
 {% load playmaker %}
 <button disabled  
     {% if object.is_active %}
-    class="btn btn-sm btn-warning"
+    class="req-status btn btn-sm btn-warning"
     {% elif object.status == object.STATUS_ACCEPTED %}
-    class="btn btn-sm btn-success"
+    class="req-status btn btn-sm btn-success"
     {% elif object.status == object.STATUS_REJECTED %}
-    class="btn btn-sm btn-danger "
+    class="req-status btn btn-sm btn-danger "
     {% endif %}>
-        <small> {{ object|status_display_for:user|upper  }}</small>
-    </button>
+    <small>{{ object|status_display_for:user|upper }}</small>
+</button>

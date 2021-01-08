@@ -10,19 +10,10 @@
             <h6 class="card-subtitle mb-2 text-muted"></h6>
 
             <div class="card-text">
-                {% include template with key=_('Zarządca')             value=object.display_manager|default:'brak przypisanej osoby'      %}
 
-
-                {% for editor in object.editors.all %}
-                    {% if editor.is_club %}
-                        {% include template with key=editor.profile.get_club_role_display  value=editor.get_full_name    %}
-                    {% else %}
-                        {% include template with key=editor.get_declared_role_display  value=editor.get_full_name    %}
-                    {% endif %}
-                    
-                {% endfor %}
-                
-               
+            {% include template with key=_('Zarządzający klubem na playmaker.pro')             value=object.display_manager|default:'brak przypisanej osoby'  link=object.manager.profile.get_permalink   %}
+            {% include 'clubs/_partials/editors.html' with template=template object=object %}
+                                
             </div>
         </div>
     </div>

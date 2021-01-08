@@ -23,8 +23,8 @@
           </div>
           <div class="modal-footer">
               {% block modal_footer %}
-           
-                  <button id="filter-button-mobile" class="btn-pm" type="submit" value="{% trans 'Filtruj' %}">{% trans 'Szukaj' %}</button>
+                  {% filter_button user mobile=True%}
+                  <button id="" class="btn-pm" type="submit" value="{% trans 'Filtruj' %}">{% trans 'Szukaj' %}</button>
             
               {% endblock modal_footer %}
           </div>

@@ -16,6 +16,9 @@ def build_absolute_url(uri: str) -> str:
     return url
 
 
+absurl = build_absolute_url
+
+
 def annoucement_notify_author(annoucemenet, player):
     subject = 'Dostałeś odpowiedź na Twoje ogłoszenie'
     body = f'Piłkarz {player.first_name} {player.last_name} jest zainteresowany testami w Twoim klubie.\n'
@@ -23,7 +26,7 @@ def annoucement_notify_author(annoucemenet, player):
     body += f'Email: {player.email}\n'
     if player.profile.phone:
         body += f'Telefon: {player.profile.phone}:\n'
-    body += f'Link do profilu: {build_absolute_url(player.profile.get_permalink())}\n\n'
+    body += f'Link do profilu: {absurl(player.profile.get_permalink())}\n\n'
     body += 'Pozdrawiamy, \n'
     body += 'Zespół PlayMaker.pro'
 
@@ -55,9 +58,9 @@ def request_accepted(instance, extra_body=''):
     # setting profile link
     profile_link = ''
     if instance.recipient.is_player or instance.recipient.is_coach:
-        profile_link = build_absolute_url(instance.recipient.profile.get_permalink())
+        profile_link = absurl(instance.recipient.profile.get_permalink())
     else:
-        profile_link = build_absolute_url(instance.recipient.profile.club_object.get_permalink())
+        profile_link = absurl(instance.recipient.profile.club_object.get_permalink())
 
     # setting phone
     phone = instance.recipient.profile.phone or 'brak'
@@ -116,18 +119,16 @@ def weekly_account_report(instance, extra_body=''):
     body = f'''
     Witaj, z tej strony Zespół PlayMaker.pro!
 
-    Wiele działo się na profilu Twojego klubu w zeszłym tygodniu. Oto kilka powiadomień, które mogą zwrócić Twoją uwagę: 
+    Wiele działo się na Twoim profilu w zeszłym tygodniu
 
-    Zaobserwowało Cię: {instance.following_set.count()}  użytkowników
-    Wizyt na profilu:  {instance.profile.history.counter} użytkowników
-    Zapytania o testy: [count] zawodników
-    Twoje zaproszenia na testy: [count]
+    Otrzymane zapytania: {instance.sender_request_recipient.count()}
+    Wysłane zapytania: {instance.inquiry_request_recipient.count()}
 
-    Aktualnie pozostało Ci [count] zaproszeń do [date]. Jeśli chcesz zwiększyć swoje limity, kliknij w poniższy link
+    Aktualnie pozostało Ci {instance.userinquiry.left} zaproszeń. Jeśli chcesz zwiększyć swoje limity, kliknij w poniższy 
 
-    <link>
+    Zwieksz limity: {absurl(settings.CUSTOM_URL_ENDPOINTS['limits'])}
 
-    Nie zwlekaj, odwiedź swój klubowy profil na www.playmaker.pro
+    Odwiedź swój profil: {absurl(instance.profile.get_permalink())}
 
     Pozdrawiamy!
     Zespół PlayMaker.pro
@@ -218,7 +219,7 @@ def request_new(instance, extra_body=''):
         body = 'Witaj,\n'
         body += 'Otrzymałeś zapytanie od klubu!  \n\n'
         body += 'Odwiedź swój trenerski profil na www.playmaker.pro lub kliknij w poniższy link \n\n'
-        body += f'{build_absolute_url(reverse("profiles:my_requests"))}\n\n'
+        body += f'{absurl(reverse("profiles:my_requests"))}\n\n'
         body += 'Nie zwlekaj i przejrzyj profil klubu, który jest zainteresowany Twoim trenerskim profilem! \n\n'
         body += 'Pozdrawiamy\n'
         body += 'Zespół PlayMaker.pro'
@@ -228,7 +229,7 @@ def request_new(instance, extra_body=''):
         body = 'Witaj,\n'
         body += 'Otrzymałeś zapytanie od trenera!  \n\n'
         body += 'Odwiedź swój klubowy profil na www.playmaker.pro lub kliknij w poniższy link \n\n'
-        body += f'{build_absolute_url(reverse("profiles:my_requests"))}\n\n'
+        body += f'{absurl(reverse("profiles:my_requests"))}\n\n'
         body += 'Nie zwlekaj i przejrzyj profil Trenera, który może poprawić wyniki Twojej drużyny! \n\n'
         body += 'Pozdrawiamy\n'
         body += 'Zespół PlayMaker.pro'

@@ -277,7 +277,9 @@ CRISPY_FAIL_SILENTLY = False
 # For Bootstrap 4, change error alert to 'danger'
 MESSAGE_TAGS = {messages.ERROR: "danger"}
 
-
+CUSTOM_URL_ENDPOINTS = {
+    'limits': 'limits'
+}
 # Announcement app
 ANNOUNCEMENT_DEFAULT_PLANS = [
     {

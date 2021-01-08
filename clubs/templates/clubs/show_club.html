@@ -13,25 +13,31 @@
 <section id="clubs" class="club">
     <div class="container">
         <div class="row">
-            <h1 class="float-left"> {{ club.name|upper }}  </h1>
+            <div class="col ml-2">
+                <h1 class="float-left"> {{ club.name|upper }}  </h1>
+            </div>
             <small> 
                 {% if editable %}
                     {% include 'clubs/buttons/edit.html' %}
                 {% endif %}
             </small>
         </div>
+
         <div class="row">
             <div class="col-sm-6">
                 {% include 'clubs/clubs/card.html' with object=club %}  
             </div>
+            <div class="col-sm-6">
+                {% include 'clubs/clubs/managers.html' with object=club %}  
+            </div>
                 {% for team in teams %}
                     {% if forloop.first %}
-                    <div class="col-sm-12">
+                    <div class="col-sm-12 ml-2">
                         <h3>{% trans 'Drużyny' %}</h3>
                     </div>                       
                     {% endif %}
                     <div class="col-md-4">
-                        {% include 'clubs/teams/card.html' with object=team  see_team=True %}        
+                        {% include 'clubs/teams/card.html' with object=team  see_team=True picture_size=True %}        
                     </div>
                 {% empty %}
                 <div class="col-md-12">

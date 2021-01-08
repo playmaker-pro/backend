@@ -1005,11 +1005,12 @@ class CoachProfile(BaseProfile, SoccerDisplayMixin):
         (3, 'UEFA EY A'),
         (4, 'UEFA B'),
         (5, 'UEFA C'),
-        (5, 'GRASS C'),
-        (5, 'GRASS D'),
-        (5, 'UEFA Futsal B'),
-        (5, 'PZPN A'),
-        (5, 'PZPN B'),
+        (6, 'GRASS C'),
+        (7, 'GRASS D'),
+        (8, 'UEFA Futsal B'),
+        (9, 'PZPN A'),
+        (10, 'PZPN B'),
+        (11, 'W trakcie kursu'),
     )
 
     licence = models.IntegerField(

@@ -55,18 +55,15 @@
                                     {% endif %}
                                 </div>
 
-
-          
-
                                 {% if object.sender != user %}
-                                <div class="col-6 col-md-2">
                                     {% if object.sender.is_club %}
+                                    <div class="col-6 col-md-2">
+                                    
                                         <small class="text-muted">{{ object.sender.profile.get_club_role_display }}</small>
                                     
                                         {{ object.sender.get_full_name }}
-                                    {% endif %}  
-                                    
-                                </div>
+                                    </div>
+                                 {% endif %}  
                                 {% endif %}
 
                                 <div class="d-none d-md-inline col-md-2">
@@ -94,11 +91,13 @@
 
                                
                                 <div class="d-none d-md-inline col-md-2">
-                                   {% if tab.actions and object.is_active %}
-                                    {% update_request_button object accept=True %}
- 
-                                    {% update_request_button object accept=False %}
-                                 {% endif %}
+                                    <span class="pull-right"> 
+                                    {% if tab.actions and object.is_active %}
+                                        {% update_request_button object accept=True %}
+    
+                                        {% update_request_button object accept=False %}
+                                    {% endif %}
+                                    </span>
                                 </div>
                                 
                             </div>

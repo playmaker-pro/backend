@@ -8,7 +8,7 @@
   
   <div class="card-body  table-item"> 
     <div class="row no-gutters">
-        <div class="d-none d-md-inline col-md-3  text-left">
+        <div class="d-none d-md-inline col-md-4 text-left">
           Nazwa drużyny
         </div>
 
@@ -20,11 +20,7 @@
             Województwo
         </div >
 
-        <div class="col-5 col-md-1 text-left">
-             Klub
-        </div>
-
-        <div class="col-5 col-md-1 text-left">
+        <div class="col-5 col-md-2 text-left">
              Trener
         </div>
 
@@ -33,10 +29,7 @@
         </div>
     </div>
   </div>
-
 </div> 
-
-
 
 
 {% for object in objects %}
@@ -50,38 +43,24 @@
         {% get_team_link object text='profil' checks=False %}
     </span>
   </div>
-
   <div class="card-body table-item"> 
-
     <div class="row no-gutters">
 
-
-
-        
         <div class="d-md-none text-center"> <!-- -->
             <img class="rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
         </div>
 
         <div class="d-md-none col text-left ml-2">
-    
-            <div class="">
-                <strong>{{ object.display_league|default:''|upper  }}</strong> 
-            </div>
-             <div class="">
-               {{ object.display_club|default:''|upper  }} 
-            </div>
-            <div class=""> 
-                {{ object.display_voivodeship|default:''|upper|truncatechars:24 }}
-            </div>
             {% if object.manager %}
             <div>
-              <small class="text-muted">trener </small>{{ object.manager.get_full_name|default:'brak'|upper }}
+              <strong> <small class="text-muted">trener </small><a href="{{ object.manager.profile.get_permalink }}">{{ object.manager.get_full_name|default:'brak'|upper }}</a></strong>
             </div>
             {% endif %}
+            <div class="">
+               {{ object.display_league|default:''|title  }}, {{ object.display_voivodeship|default:''|lower|truncatechars:24 }}
+            </div>
         </div>
-
-
-                           <div class="d-none d-md-inline col-md-3">
+                           <div class="d-none d-md-inline col-md-4">
                             <a href="{{ object.get_permalink }}"> 
                               <img class="avatar rounded img-responsive" src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
                               <strong style="padding-left:15px;">{{ object.name|upper}}</strong>
@@ -90,27 +69,25 @@
                     
                   
                               <div class="d-none d-md-inline col-6 col-md-2  text-left">
-                                  {{ object.display_league|default:''|upper  }}
+                                  {{ object.display_league|default:''|title  }}
                               </div >
 
                     
                               <div class="d-none d-md-inline col-5 col-md-2   text-left">
-                                  {{ object.display_voivodeship|default:''|upper|truncatechars:24 }}
+                                  {{ object.display_voivodeship|default:''|lower|truncatechars:24 }}
                               </div>
 
-                              <div class="d-none d-md-inline col-6 col-md-1  text-left">
-                                  {{ object.display_club|default:''|upper  }}
-                              </div>
-                              <div class="d-none d-md-inline col-6 col-md-1  text-left">
+                              <div class="d-none d-md-inline col-6 col-md-2  text-left">
                                   <a href="{{ object.manager.profile.get_permalink }} ">{{ object.manager.get_full_name|default:''|upper }}</a>
                               </div >
                       
 
 
         <div class="d-none d-md-inline col-md-2">
-          {% get_team_link object text='profil' checks=False %}
-          {% observed_link user object otype='team'%}
-    
+          <span class="float-right"> 
+            {% get_team_link object text='profil' checks=False %}
+            {% observed_link user object otype='team'%}
+          </span>
         </div>
     </div>
   </div>

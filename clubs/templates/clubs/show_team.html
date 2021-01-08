@@ -53,8 +53,9 @@
 <section id="team" class="team">
     <div class="container">
         <div class="row">
-            <h1 class="float-left"> {{ team.name }}   </h1>
-            
+            <div class="col ml-2">
+                <h1 class="float-left"> {{ team.name }}   </h1>
+            </div>
             <small> {% if editablexxx %}
                 {% url 'clubs:edit_team' slug=team.slug as button_url%}
                 {% include 'platform/buttons/action_button.html' with button_text=_('Edytuj') button_url=button_url %}
@@ -65,7 +66,7 @@
         <div class="row">
             <div class="col-sm-6">{% include 'clubs/teams/card.html'      with object=team  see_club=True %}</div>
             <div class="col-sm-6">{% include 'clubs/teams/data.html'      with object=team %}</div>
-            <div class="col-sm-6">{% include 'clubs/teams/managers.html'  with object=team %}</div>
+          
         </div>
         
        
