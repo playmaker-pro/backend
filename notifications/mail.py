@@ -117,21 +117,21 @@ def weekly_account_report(instance, extra_body=''):
     # text = textwrap.dedent(f'''
     subject = 'Cotygodniowy raport'
     body = f'''
-    Witaj, z tej strony Zespół PlayMaker.pro!
+Witaj, z tej strony Zespół PlayMaker.pro!
 
-    Wiele działo się na Twoim profilu w zeszłym tygodniu
+Wiele działo się na Twoim profilu w zeszłym tygodniu
 
-    Otrzymane zapytania: {instance.sender_request_recipient.count()}
-    Wysłane zapytania: {instance.inquiry_request_recipient.count()}
+Otrzymane zapytania: {instance.sender_request_recipient.count()}
+Wysłane zapytania: {instance.inquiry_request_recipient.count()}
 
-    Aktualnie pozostało Ci {instance.userinquiry.left} zaproszeń. Jeśli chcesz zwiększyć swoje limity, kliknij w poniższy 
+Aktualnie pozostało Ci {instance.userinquiry.left} zaproszeń. Jeśli chcesz zwiększyć swoje limity, kliknij w poniższy 
 
-    Zwieksz limity: {absurl(settings.CUSTOM_URL_ENDPOINTS['limits'])}
+Zwieksz limity: {absurl('/' + settings.CUSTOM_URL_ENDPOINTS['limits'])}
 
-    Odwiedź swój profil: {absurl(instance.profile.get_permalink())}
+Odwiedź swój profil: {absurl(instance.profile.get_permalink())}
 
-    Pozdrawiamy!
-    Zespół PlayMaker.pro
+Pozdrawiamy!
+Zespół PlayMaker.pro
     '''
     send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [instance.email])
 
