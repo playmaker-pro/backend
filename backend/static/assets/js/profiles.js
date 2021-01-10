@@ -26,7 +26,7 @@ $(document).ready(function() {
 
 
   $('#id_agent_status').change(function() {
-    console.log('ssssssssssss', $('#id_agent_status').val())
+    //console.log('ssssssssssss', $('#id_agent_status').val())
     if ($(this).val() == '1') {
       $('#div_id_agent_name').show();
       $('#div_id_agent_phone').show();
@@ -47,13 +47,17 @@ function outFunc() {
 
 
 
-function get_add_announcement_form(){
+function get_add_announcement_form(event, id = null){
+ 
         $.ajax({
             url: "/marketplace/add/",
             type: "get",
+            data: {'id': id},
             /*data: {slug: slug},*/
             success: function(json) {
                 $("#add-announcement-form-body").html(json.form);
+                $('#addAnnouncementModalLabel').html(json.title);
+                $('#add-announcement-submit').html(json.button.name);
                 $('#add-announcement-form-body select').addClass("selectpicker").selectpicker('refresh'); 
 
             },
@@ -178,10 +182,13 @@ $(document).on('submit', '#add-announcement-form', function(e){
 
   var form = $(this);
   var url = form.attr('action');
+  var data = form.serialize() + '&id=' + $('#add-ann-number').val();
+
+  console.log('x>>>>>>>>>>>>>', data)
   $.ajax({
          type: "POST",
          url: url,
-         data: form.serialize(), // serializes the form's elements.
+         data:  data, // serializes the form's elements.
          success: function(json)
          {
               if (json.success == true ) {

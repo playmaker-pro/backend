@@ -27,7 +27,6 @@
             </small>
         </div> {% endcomment %}
 
-
         <div class="col-12 card-text text-muted"> 
             <small class="row no-gutters">
                 <div class="col-6 col-md-3 text-center">
@@ -77,8 +76,11 @@
             </span>
             
             <span class="card-text pull-right">
+            
                 {% if user.is_player %} 
                     {% announcement_response object %}
+                {% elif user.is_club or user.is_coach %}
+                    {% announcement_edit object %}
                 {% endif %} 
             </span>
         </div>

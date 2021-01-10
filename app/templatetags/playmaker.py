@@ -160,7 +160,9 @@ def is_profile_observed(user, target):
         return False
 
 
-@register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
+TEMPLATE_ACTION_SCRIPT = 'platform/buttons/action_script.html'
+
+@register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def add_announcement(context):
     user = context['user']
 
@@ -182,7 +184,33 @@ def add_announcement(context):
     }
 
 
-@register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
+@register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
+def announcement_edit(context, ann):
+    user = context['user']
+
+    if not user.is_authenticated or ann.creator != user:
+        return {'off': True}
+
+    if not user.is_club and not user.is_coach:
+        return {'off': True}
+
+    return {
+        'active_class': None,
+        # 'button_script': 'inquiry',
+        'button_id': 'addAnnoucementButton',
+        'button_attrs': f'data-ann={ann.id}',
+        'button_class': 'btn-request',
+        'button_action': {
+            'modal': True,
+            'name': 'addAnnouncementModal'
+        },
+        'button_action_onlick': {'onclick': True, 'name': 'get_add_announcement_form', 'param': f'{ann.id}'},
+        'button_icon': 'ui-edit',
+        'button_text': 'Edytuj',
+        'modals': context['modals'],
+    }
+
+@register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def announcement_response(context, ann):
     user = context['user']
 

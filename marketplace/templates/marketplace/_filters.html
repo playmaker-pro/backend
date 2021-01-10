@@ -2,8 +2,13 @@
 
 
 {% with size=size %}
+    {% if user.is_club or user.is_coach %}
     <div class="col-12 col-md-1 filter "> 
-            {% include 'marketplace/filters/league.html' with size=size options=filters.league %}
+        {% include 'marketplace/filters/my.html' with size=size %}
+    </div>
+    {% endif %}
+    <div class="col-12 col-md-1 filter "> 
+        {% include 'marketplace/filters/league.html' with size=size options=filters.league %}
     </div>
     <div class="col-12 col-md-1 filter "> 
             {% include 'marketplace/filters/position.html' with size=size options=filters.position %}

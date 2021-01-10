@@ -26,6 +26,7 @@ def year_choices():
 class AnnouncementForm(forms.ModelForm):
 
     building_fields = [
+        
         ('country', 'Kraj', None, {}),
         ('club', 'Klub', None, {}),
         ('league', 'Poziom rozgrywkowy', None, {}),

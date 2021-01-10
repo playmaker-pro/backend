@@ -34,8 +34,8 @@ def annoucement_notify_author(annoucemenet, player):
 
 
 def annoucement_notify_player(annoucemenet, player):
-    subject = 'Dostałeś odpowiedź na Twoje ogłoszenie'
-    body = f'Twoje zgłoszenie na testy zostało wysłane do {annoucemenet.creator.profile.display_club}. Reszta pozostaje w rękach trenera, prezesa lub dyrektora sportowego. To oni decydują czy otrzymasz zaproszenie na testy.\n'
+    subject = 'Twoje zgłoszenie na testy zostało wysłane'
+    body = f'Twoje zgłoszenie na testy zostało wysłane do {annoucemenet.creator.profile.display_club}. Reszta pozostaje w rękach trenera, prezesa lub dyrektora sportowego. To oni decydują czy otrzymasz zaproszenie na testy.\n\n'
     body += 'Pozdrawiamy, \n'
     body += 'Zespół PlayMaker.pro'
 

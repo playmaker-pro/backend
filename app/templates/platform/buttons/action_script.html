@@ -51,7 +51,11 @@
             {{ button_attrs }} 
             {% if button_id %} id="{{ button_id }}" {% endif %}  
             class="{{ button_class }} {% if active_class %}{{ active_class }}{% endif %} " 
-        
+
+            {% if button_action_onlick.onclick %}
+                 onclick="{{ button_action_onlick.name }}(event, '{{ button_action_onlick.param }}' {% if button_action_onlick.param2 %}, '{{ button_action_onlick.param2 }}' {% endif %})"
+            {% endif %}
+
             {% if button_action.onclick %}
             onclick="{{ button_action.name }}(event, '{{ button_action.param }}' {% if button_action.param2 %}, '{{ button_action.param2 }}' {% endif %})"
             

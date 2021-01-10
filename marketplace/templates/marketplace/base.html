@@ -203,6 +203,13 @@
         //$(this).find(".ann-number").text(id);
         });
 
+ 
+            $('#addAnnouncementModal').on('show.bs.modal', function (event) {
+        var id = $(event.relatedTarget).data('ann');
+        $(this).find('#add-ann-number').val(id);
+        //$(this).find(".ann-number").text(id);
+        });
+
 
     </script>
 {% endblock %}

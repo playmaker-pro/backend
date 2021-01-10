@@ -101,12 +101,13 @@ function inquiryUpdate(event, idTick) {
 };
 
 function approve_annoucement(event, slug) {
+
     $.ajax({
         type:'POST',
         url:'/marketplace/approve/',
         data:{
             csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
-            id: $('#ann-numner').val(),
+            id: $('#add-ann-number').val(),
             action: 'post'
         },
         success:function(json){         
