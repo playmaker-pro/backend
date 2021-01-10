@@ -244,8 +244,8 @@ def filter_button(context, user, mobile=False):
         button_id = 'filter-button'
     button_class = 'btn-pm'
     button_text = 'Filtruj'
-    if not user.is_verified:
-        button_attrs += ' disabled'
+    if not user.is_authenticated:
+        button_attrs = 'type=button'
     return {
         'button_id': button_id,
         'button_attrs': button_attrs,

@@ -278,7 +278,7 @@ CRISPY_FAIL_SILENTLY = False
 MESSAGE_TAGS = {messages.ERROR: "danger"}
 
 CUSTOM_URL_ENDPOINTS = {
-    'limits': 'limits'
+    'limits': 'limit'
 }
 # Announcement app
 ANNOUNCEMENT_DEFAULT_PLANS = [
