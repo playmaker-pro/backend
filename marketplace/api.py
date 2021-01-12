@@ -33,3 +33,5 @@ def approve_announcement(request):
             message = 'Zgłoszenie na testy wyłane'
             response_data['message'] = message
             return JsonResponse(response_data)
+        # else:
+        #     return JsonResponse({'message': 'missing id'})

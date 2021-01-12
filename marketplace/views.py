@@ -49,19 +49,33 @@ class AnnouncementFilterMixn:
 
 
 class AddAnnouncementView(LoginRequiredMixin, View):
+    '''Fetch form for annoucments'''
     http_method_names = ['post', 'get']
 
     def get(self, request, *args, **kwargs):
+
         user = request.user
+
         data = {
-            'button': {}
+            'modal': {
+                'body': None,
+                'title': 'Dodaj nowe ogłoszenie',
+                'button': {
+                    'name': 'Dodaj ogłoszenie o testach'
+                }
+            },
+            'form': None,
+            'messages': [],
         }
+
         _id = request.GET.get('id')
-        if _id:
+        if user.announcementuserquota.left <= 0 and not _id:
+            return JsonResponse(data)
+        elif _id:
             _id = int(_id)
             ann = Announcement.objects.get(id=_id)
-            data['title'] = "Edytuj ogłoszenie"
-            data['button']['name'] = 'Edytuj'
+            data['modal']['title'] = "Edytuj ogłoszenie"
+            data['modal']['button']['name'] = 'Aktualizuj'
             if user != ann.creator:
                 return JsonResponse({})
             else:
@@ -74,8 +88,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 else:
                     return JsonResponse({})
         else:
-            data['title'] = 'Dodaj nowe ogłoszenie'
-            data['button']['name'] = 'Dodaj ogłoszenie o testach'
+            
             if user.is_coach or user.is_club:
                 
                 if user.is_coach:
@@ -107,10 +120,23 @@ class AddAnnouncementView(LoginRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         user = self.request.user
-        data = {'success': False, 'redirection_url': None, 'form': None}
-
+        data = {
+            'redirection_url': None,
+            'success': False,
+            'modal': {
+                'body': None,
+                'title': 'Dodaj nowe ogłoszenie',
+                'button': {
+                    'name': 'Dodaj ogłoszenie o testach'
+                }
+            },
+            'form': None,
+            'messages': [],
+        }
         _id = request.POST.get('id')
-
+        
+        if user.announcementuserquota.left <= 0 and not _id:
+            return JsonResponse(data)
         if _id:
             a = Announcement.objects.get(id=int(_id))
             form = AnnouncementForm(request.POST, instance=a)

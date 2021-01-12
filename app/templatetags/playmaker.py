@@ -20,6 +20,19 @@ logger = logging.getLogger(__name__)
 register = template.Library()
 
 
+@register.filter
+def get_urls_with_no_page(value):
+    if 'page=' in value:
+        return value.replace("page", "non_falue")
+    else:
+        return value
+
+
+@register.filter
+def get_list(dictionary, key):
+    return dictionary.getlist(key)
+
+
 @register.filter(expects_localtime=True)
 def days_since(value, arg=None):
     try:
@@ -49,7 +62,7 @@ def days_since(value, arg=None):
 @register.filter
 def convert_to_embeded(url):
     """concatenate arg1 & arg2"""
-    return f'https://www.youtube.com/embed/{extract_video_id(url)}' 
+    return f'https://www.youtube.com/embed/{extract_video_id(url)}'
 
 
 @register.filter
@@ -161,6 +174,9 @@ def is_profile_observed(user, target):
 
 
 TEMPLATE_ACTION_SCRIPT = 'platform/buttons/action_script.html'
+TEMPLATE_ACTION_LINK = 'platform/buttons/action_link.html'
+TEMPLATE_ACTION_BUTTON = 'platform/buttons/action_button.html'
+
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def add_announcement(context):
@@ -177,11 +193,44 @@ def add_announcement(context):
         'button_id': 'addAnnoucementButton',
         'button_attrs': None,
         'button_class': 'btn-request',
+        'button_actions': {
+            'modal': {'name': 'addAnnouncementModal'},
+            'onclick': {'name': 'get_add_announcement_form'},
+        },
         'button_action': {'modal': True, 'name': 'addAnnouncementModal'},
+        'button_action_onlick': {'onclick': True, 'name': 'get_add_announcement_form'},
         'button_icon': 'plus',
         'button_text': 'Dodaj ogłoszenie',
         'modals': context['modals'],
     }
+
+
+class Button:
+    def __init__(self, context=None, url=None, checks=True, icon='', text='', css_class=''):
+        self.checks = checks
+        self.context = context
+        self.text = text
+        self.css_class = css_class
+        self.icon = icon
+
+    def get_json(self):
+        return {
+            'checks': self.checks,
+            'button_icon': self.icon,
+            'button_text': self.text,
+            'modals': self.context['modals'],
+        }
+
+
+class ActionButton(Button):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.url = kwargs['url']
+
+    def get_json(self):
+        data = super().get_json()
+        data['button_url'] = self.url
+        return data
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
@@ -200,15 +249,19 @@ def announcement_edit(context, ann):
         'button_id': 'addAnnoucementButton',
         'button_attrs': f'data-ann={ann.id}',
         'button_class': 'btn-request',
+        'button_actions': {
+            'modal': {'name': 'addAnnouncementModal'},
+            'onclick': {'name': 'get_add_announcement_form', 'param': f'{ann.id}'},
+        },
         'button_action': {
             'modal': True,
             'name': 'addAnnouncementModal'
         },
-        'button_action_onlick': {'onclick': True, 'name': 'get_add_announcement_form', 'param': f'{ann.id}'},
         'button_icon': 'ui-edit',
         'button_text': 'Edytuj',
         'modals': context['modals'],
     }
+
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def announcement_response(context, ann):
@@ -240,7 +293,7 @@ def announcement_response(context, ann):
     }
 
 
-@register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
+@register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def announcement_yes(context):
     user = context['user']
 
@@ -262,7 +315,7 @@ def announcement_yes(context):
     }
 
 
-@register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
+@register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def filter_button(context, user, mobile=False):
     '''Creates button to open inquiry'''
     button_attrs = 'type="submit"'
@@ -284,7 +337,7 @@ def filter_button(context, user, mobile=False):
     }
 
 
-@register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
+@register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def request_link(context, user, showed_user):
     '''Creates button to open inquiry'''
     if not user.is_authenticated:
@@ -346,7 +399,7 @@ def request_link(context, user, showed_user):
     }
 
 
-@register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
+@register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def send_request(context, user, showed_user, category='user'):
     if not showed_user:
         logger.info('showed user not defined.')
@@ -378,7 +431,7 @@ def send_request(context, user, showed_user, category='user'):
     }
 
 
-@register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
+@register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def update_request_button(context, request, accept=False):
 
     button_text = 'Akceptuj' if accept else 'Odrzuć'
@@ -394,7 +447,7 @@ def update_request_button(context, request, accept=False):
     }
 
 
-@register.inclusion_tag('platform/buttons/action_script.html', takes_context=True)
+@register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def observed_link(context, user, showed_user, text=False, otype='user'):
     if not user.is_authenticated:
         return {'off': True}
@@ -440,7 +493,7 @@ def observed_link(context, user, showed_user, text=False, otype='user'):
     }
 
 
-@register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
+@register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def seemore_link(context, link, checks=True):
     if not context['user'].is_authenticated:
         pass
@@ -453,45 +506,13 @@ def seemore_link(context, link, checks=True):
     }
 
 
-class ActionButton:
-    def __init__(self, context=None, url=None, checks=True, icon='', text='', css_class=''):
-        self.checks = checks
-        self.context = context
-        self.text = text
-        self.url = url
-        self.css_class = css_class
-        self.icon = icon
-
-    def get_json(self):
-        return {
-            'checks': self.checks,
-            'button_icon': self.icon,
-            'button_url': self.url,
-            'button_text': self.text,
-            'modals': self.context['modals'],
-        }
-
-
-@register.filter
-def get_urls_with_no_page(value):
-    if 'page=' in value:
-        return value.replace("page", "non_falue")
-    else:
-        return value
-
-
-@register.filter
-def get_list(dictionary, key):
-    return dictionary.getlist(key)
-
-
-@register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
+@register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def get_team_link(context, team, text=None, css_class=None, checks=True):
     button = ActionButton(url=team.get_permalink, text=text, context=context, css_class=css_class, icon='shield', checks=checks)
     return button.get_json()
 
 
-@register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
+@register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def get_team_edit_link(context, team, text=None, css_class=None, checks=True):
     payload_off = {'off': True}
     user = context['user']
@@ -513,7 +534,7 @@ def get_team_edit_link(context, team, text=None, css_class=None, checks=True):
     return button.get_json()
 
 
-@register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
+@register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def get_club_edit_link(context, club, text=None, css_class=None, checks=True):
     payload_off = {'off': True}
     user = context['user']
@@ -535,7 +556,7 @@ def get_club_edit_link(context, club, text=None, css_class=None, checks=True):
     return button.get_json()
 
 
-@register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
+@register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def get_club_link(context, object, text=None, css_class=None, checks=True):
 
     css_class = css_class or ''
@@ -549,7 +570,7 @@ def get_club_link(context, object, text=None, css_class=None, checks=True):
     }
 
 
-@register.inclusion_tag('platform/buttons/action_link.html', takes_context=True)
+@register.inclusion_tag(TEMPLATE_ACTION_LINK, takes_context=True)
 def get_my_team_link(context, text=None, css_class=None):
     if text:
         link_body = text
@@ -577,7 +598,7 @@ def get_my_team_link(context, text=None, css_class=None):
     }
 
 
-@register.inclusion_tag('platform/buttons/action_link.html', takes_context=True)
+@register.inclusion_tag(TEMPLATE_ACTION_LINK, takes_context=True)
 def get_my_club_link(context, text=None, css_class=None):
     if text:
         link_body = text

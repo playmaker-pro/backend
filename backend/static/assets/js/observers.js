@@ -107,7 +107,7 @@ function approve_annoucement(event, slug) {
         url:'/marketplace/approve/',
         data:{
             csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
-            id: $('#add-ann-number').val(),
+            id: $('#ann-numner').val(),
             action: 'post'
         },
         success:function(json){         

@@ -1,10 +1,11 @@
 {% load i18n %}
 
-<li><a href="{% url 'profiles:my_observers'%}">{% trans 'Obserwowani' %}</a></li>
-<li class="drop-down"><a href="">Bazy</a>
-    <ul>
-        <li><a href="{% url 'soccerbase:players' %}">Piłkarzy</a></li>
-        <li><a href="{% url 'soccerbase:coaches' %}">Trenerów</a></li>
-        <li><a href="{% url 'soccerbase:teams' %}">Klubów</a></li>
-    </ul>
+<li class="nav-item"><a class="nav-link" href="{% url 'profiles:my_observers'%}">{% trans 'Obserwowani' %}</a></li>
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle"  href="" data-toggle="dropdown">Bazy</a>
+    <div class="dropdown-menu">
+        <a class="dropdown-item" href="{% url 'soccerbase:players' %}">Piłkarzy</a>
+        <a class="dropdown-item" href="{% url 'soccerbase:coaches' %}">Trenerów</a>
+        <a class="dropdown-item" href="{% url 'soccerbase:teams' %}">Klubów</a>
+    </div>
 </li>

@@ -48,23 +48,31 @@ function outFunc() {
 
 
 function get_add_announcement_form(event, id = null){
- 
-        $.ajax({
-            url: "/marketplace/add/",
-            type: "get",
-            data: {'id': id},
-            /*data: {slug: slug},*/
-            success: function(json) {
-                $("#add-announcement-form-body").html(json.form);
-                $('#addAnnouncementModalLabel').html(json.title);
-                $('#add-announcement-submit').html(json.button.name);
-                $('#add-announcement-form-body select').addClass("selectpicker").selectpicker('refresh'); 
-
-            },
-            error: function (xhr, ajaxOptions, thrownError) {
-              $("#add-announcement-form-body select").addClass("selectpicker").selectpicker('refresh'); 
-           }
-        })
+  $("#add-announcement-form-body").empty();
+  $.ajax({
+      url: "/marketplace/add/",
+      type: "get",
+      data: {'id': id},
+      /*data: {slug: slug},*/
+      success: function(json) {
+        if (json.form === null) {
+          $('#add-ann-out').show();
+          $('#add-ann-left').hide();
+          $("#add-announcement-form-body").empty();
+        } else {
+          $('#add-ann-out').hide();
+          $('#add-ann-left').show();
+          $("#add-announcement-form-body").html(json.form);
+          $('#addAnnouncementModalLabel').html(json.modal.title);
+          $('#add-announcement-submit').html(json.modal.button.name);
+          $('#add-announcement-form-body select').addClass("selectpicker").selectpicker('refresh'); 
+        }
+      
+      },
+      error: function (xhr, ajaxOptions, thrownError) {
+        $("#add-announcement-form-body select").addClass("selectpicker").selectpicker('refresh'); 
+      }
+  })
   }
 
   function get_filters_form(){

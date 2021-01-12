@@ -339,7 +339,7 @@ button[disabled=disabled], button:disabled {
   margin-top: 74px;
 } */
 main { 
-  margin-top: 65px;
+  margin-top: 52px;
 }
 
 @media all and (max-width: 992px) {   /* @todo to better understand */
@@ -367,15 +367,7 @@ main {
   box-shadow: 0px 2px 15px rgba(0, 0, 0, 0.1);
 }
 
-#header .logo {
-  font-size: 32px;
-  margin: 0;
-  padding: 0;
-  line-height: 1;
-  font-weight: 600;
-  /* font-family: "Poppins", sans-serif; */
-  font-family: 'PT Sans', sans-serif;
-}
+
 
 #header .logo a {
   color: #111111;
@@ -405,6 +397,22 @@ main {
 .navigation-avatar { 
     /* border:1px solid red; */
 }
+.navbar { 
+  padding-right:6rem;
+  padding-left:6rem;
+  z-index: 997;
+  padding: 5px 0;
+  border-bottom:1px solid #e03a3c;
+}
+nav .logo a{
+  font-size: 30px;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+  font-weight: 600;
+  /* font-family: "Poppins", sans-serif; */
+  font-family: 'PT Sans', sans-serif;
+}
 
 /* Desktop Navigation */
 .nav-menu ul {
@@ -413,19 +421,18 @@ main {
   list-style: none;
 }
 
-.nav-menu > ul {
+
+.nav-menu> ul {
   display: flex;
 }
 
-.nav-menu > ul > li {
+.nav-menu> ul > li {
   position: relative;
   white-space: nowrap;
-  padding: 12px 0 10px 12px;
-
+  padding: 5px 0 5px 10px;
 }
 
-
-.nav-menu a {
+.navbar a {
   display: block;
   position: relative;
   color: #111111;
@@ -435,11 +442,10 @@ main {
   font-family: "Raleway", sans-serif;
 }
 
-.nav-menu a:hover, .nav-menu .active > a, .nav-menu li:hover > a {
+.navbar-nav a:hover, .nav-menu .active > a, .navbar-navli:hover > a {
   color: #e03a3c;
   
 }
-
 
 .nav-menu .drop-down ul {
   display: block;
@@ -504,7 +510,30 @@ main {
   right: 15px;
 }
 
+.navbar { 
+  padding-right:6rem;
+  padding-left:6rem;
+}
+@media all and (max-width: 768px) {
+  .navbar { 
+    padding-right:1rem;
+    padding-left:1rem;
+  }
+  nav .logo a{
+    font-size: 1.5rem;
+    margin: 0;
+    padding: 10 0 0 0;
+    line-height: 1;
+    font-weight: 600;
+    /* font-family: "Poppins", sans-serif; */
+    font-family: 'PT Sans', sans-serif;
+  }
+}
+
+
 @media (max-width: 1366px) {
+
+  
   .nav-menu .drop-down .drop-down ul {
     left: -90%;
   }
