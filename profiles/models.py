@@ -154,6 +154,16 @@ class BaseProfile(models.Model):
     def get_permalink(self):
         return reverse("profiles:show", kwargs={"slug": self.slug})
 
+    def get_club_object(self):
+        if self.PROFILE_TYPE in [definitions.PROFILE_TYPE_CLUB, definitions.PROFILE_TYPE_COACH]:
+            if self.PROFILE_TYPE == definitions.PROFILE_TYPE_CLUB:
+                return self.club_object
+            elif self.PROFILE_TYPE == definitions.PROFILE_TYPE_COACH:
+                return self.team_object.club
+            # @todo: here player profile need to be added.
+        else:
+            return None
+
     @property
     def is_complete(self):
         for field_name in self.COMPLETE_FIELDS + self.VERIFICATION_FIELDS:

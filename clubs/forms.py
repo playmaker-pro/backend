@@ -37,7 +37,7 @@ class ClubForm(forms.ModelForm):
                     Fieldset(
                         _('<h2 class="form-section-title">Moderatorzy</h2>'),
                         Div(
-                            Field('editors', wrapper_class='row'),
+                            Field('editors', wrapper_class='row', ),
 
                             ),
                         css_class='col-md-6',

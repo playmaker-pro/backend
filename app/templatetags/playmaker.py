@@ -337,25 +337,42 @@ def filter_button(context, user, mobile=False):
     }
 
 
+def is_same_club(user, showed_user):
+    club = None
+    showed_club = None
+    if user is not None:
+        club = user.profile.get_club_object()
+    if showed_user is not None:
+        showed_club = showed_user.profile.get_club_object()
+    if club is not None and showed_club is not None:
+        print(f'debug: {club} {showed_club}')
+        return showed_club == club
+    else:
+        return None
+
+
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def request_link(context, user, showed_user):
     '''Creates button to open inquiry'''
+    off = {'off': True}
     if not user.is_authenticated:
-        return {'off': True}
+        return off
 
     if not user.is_player and not user.is_coach and not user.is_club:
-        return {'off': True}
+        return off
 
+    
     if isinstance(showed_user, Team) or isinstance(showed_user, Club):
         if isinstance(showed_user, Team):
             if showed_user.manager is not None:
                 showed_user = showed_user.manager
             else:
                 showed_user = showed_user.club.manager
-                print(f'heererereer -->{showed_user} {user.is_player} {showed_user.is_club}')
         else:
             showed_user = showed_user.manager
-            logger.info(f'Appending new show_user {showed_user}')
+            logger.info(f'Appending new show_user {showed_user}')    
+    if is_same_club(user, showed_user):
+        return off
 
     if (user.is_coach or user.is_club) and showed_user.is_player:
         button_text = 'Zaproś na testy'
@@ -366,7 +383,7 @@ def request_link(context, user, showed_user):
     elif user.is_coach and showed_user.is_club:
         button_text = 'Zapytaj o rozmowę'
     else:
-        return {'off': True}
+        return off
     try:
         request = InquiryRequest.objects.get(sender=user, recipient=showed_user, status__in=InquiryRequest.ACTIVE_STATES)
         requested = True

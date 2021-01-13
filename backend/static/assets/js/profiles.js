@@ -49,6 +49,8 @@ function outFunc() {
 
 function get_add_announcement_form(event, id = null){
   $("#add-announcement-form-body").empty();
+  $('#add-ann-out').hide();
+  $('#add-ann-left').hide();
   $.ajax({
       url: "/marketplace/add/",
       type: "get",
