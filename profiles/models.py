@@ -159,7 +159,10 @@ class BaseProfile(models.Model):
             if self.PROFILE_TYPE == definitions.PROFILE_TYPE_CLUB:
                 return self.club_object
             elif self.PROFILE_TYPE == definitions.PROFILE_TYPE_COACH:
-                return self.team_object.club
+                if self.team_object is None:
+                    return None
+                else:
+                    return self.team_object.club
             # @todo: here player profile need to be added.
         else:
             return None
