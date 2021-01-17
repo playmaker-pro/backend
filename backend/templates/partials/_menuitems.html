@@ -1,7 +1,8 @@
  <li class="nav-item" ><a class="nav-link" href="/about-project/">O projekcie</a></li>
 {% comment %} <li><a href="#services">Fantasy</a></li>
 <li><a href="#portfolio">Rozgrywki</a></li> {% endcomment %}
-<li class="drop-down"><a class="nav-link dropdown-toggle" data-toggle="dropdown" href="">Bazy</a>
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="">Bazy</a>
     <div class="dropdown-menu">
         <a class="dropdown-item" href="{% url 'soccerbase:players' %}">Piłkarzy</a>
         <a class="dropdown-item" href="{% url 'soccerbase:coaches' %}">Trenerów</a>
@@ -13,3 +14,4 @@
 <li class="nav-item"><a class="nav-link" href="/scouting/">Skauting</a></li>
 {% comment %} <li><a href="/blog">Blog</a></li> {% endcomment %}
 {% comment %} <li><a href="#contact">Kontakt</a></li> {% endcomment %}
+
