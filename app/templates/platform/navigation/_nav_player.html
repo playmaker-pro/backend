@@ -6,7 +6,7 @@
     <li class="nav-item"><a class="nav-link" href="{% url 'marketplace:announcements'%}">{% trans 'Ogłoszenia' %}</a></li>
     <li class="nav-item"><a class="nav-link" href="{% url 'profiles:my_requests'%}">{% trans 'Zapytania' %}</a></li>
     {% include 'platform/navigation/_nav.html'%}
-    <li class="nav-item"><a class="nav-link" href="{% url 'profiles:my_carrier'%}">{% trans 'Kariera' %}</a></li>
+    {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'profiles:my_carrier'%}">{% trans 'Kariera' %}</a></li>
     <li class="nav-item"><a class="nav-link" href="{% url 'profiles:my_fantasy'%}">{% trans 'Fantasy' %}</a></li>
-    <li class="nav-item"><a class="nav-link" href="{% url 'profiles:my_games'%}">{% trans 'Mecze' %}</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'profiles:my_games'%}">{% trans 'Mecze' %}</a></li> {% endcomment %}
 {% endif %}
