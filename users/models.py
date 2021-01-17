@@ -232,9 +232,13 @@ class User(AbstractUser, UserRoleMixin):
         _('Adres email'),
         unique=True)
 
+    def get_file_path(instance, filename):
+        filename = filename.replace('ł', 'l').replace('ą', 'a').replace('ó', 'o').replace('ż', 'z').replace('ź', 'z').replace('ń', 'n').replace('ę', 'e').replace('ś', 's')
+        return f"profile_pics/%Y-%m-%d/{filename}"
+
     picture = models.ImageField(
         _("Zdjęcie"),
-        upload_to="profile_pics/%Y-%m-%d/",
+        upload_to=get_file_path,
         null=True,
         blank=True)
 
