@@ -71,9 +71,13 @@ class Club(models.Model):
             return conver_vivo_for_api(self.voivodeship_raw)
         return conver_vivo_for_api(self.voivodeship.name)
 
+    def get_file_path(instance, filename):
+        filename = filename.replace('ł', 'l').replace('ą', 'a').replace('ó', 'o').replace('ż', 'z').replace('ź', 'z').replace('ń', 'n').replace('ę', 'e').replace('ś', 's')
+        return f"club_pics/%Y-%m-%d/{filename}"
+
     picture = models.ImageField(
         _("Zdjęcie"),
-        upload_to="club_pics/%Y-%m-%d/",
+        upload_to=get_file_path,
         null=True,
         blank=True)
 
@@ -240,10 +244,13 @@ class Team(models.Model):
         max_length=255,
         blank=True,
         editable=False)
+    def get_file_path(instance, filename):
+        filename = filename.replace('ł', 'l').replace('ą', 'a').replace('ó', 'o').replace('ż', 'z').replace('ź', 'z').replace('ń', 'n').replace('ę', 'e').replace('ś', 's')
+        return f"team_pics/%Y-%m-%d/{filename}"
 
     picture = models.ImageField(
         _("Zdjęcie"),
-        upload_to="team_pics/%Y-%m-%d/",
+        upload_to=get_file_path,
         null=True,
         blank=True)
 
