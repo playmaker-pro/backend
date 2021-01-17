@@ -1,1 +1,3 @@
+{% if user.is_club or user.is_coach %}
 {{ user.announcementuserquota.plan.description }}
+{% endif %}
