@@ -104,12 +104,14 @@ section.tables {
     #tables .card-header {
         padding: .4rem;
     }
+
     #tables{
         font-size:.7em;
-        padding:.2rem;
+        padding:.2rem .2rem 77px .2rem;
         padding-top: 0px;
         background-color:#2b2b2b;
         margin-top: 63px;
+       
     }
 
     #tables
