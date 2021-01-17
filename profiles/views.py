@@ -331,7 +331,7 @@ class SlugyViewMixin:
         return user == self.request.user
 
 
-class ProfileFantasy(generic.TemplateView, SlugyViewMixin):
+class ProfileFantasy(generic.TemplateView, SlugyViewMixin,  mixins.ViewModalLoadingMixin):
     template_name = "profiles/fantasy2.html"
     http_method_names = ["get"]
 
@@ -346,6 +346,7 @@ class ProfileFantasy(generic.TemplateView, SlugyViewMixin):
         kwargs['show_user'] = user
         kwargs["fantasy"] = self.get_data_or_calculate(user)
         kwargs['page_title'] = 'Twoje fantasy'
+        kwargs['modals'] = self.modal_activity(request.user)
         return super().get(request, *args, **kwargs)
 
     def get_data_or_calculate(self, user):
@@ -357,7 +358,7 @@ class ProfileFantasy(generic.TemplateView, SlugyViewMixin):
         return user.profile.playermetrics.fantasy
 
 
-class ProfileCarrier(generic.TemplateView, SlugyViewMixin):
+class ProfileCarrier(generic.TemplateView, SlugyViewMixin, mixins.ViewModalLoadingMixin):
     template_name = "profiles/carrier.html"
     http_method_names = ["get"]
 
@@ -368,6 +369,7 @@ class ProfileCarrier(generic.TemplateView, SlugyViewMixin):
 
         if self._is_owner(user):
             kwargs["editable"] = True
+        kwargs['modals'] = self.modal_activity(request.user)
         kwargs['show_user'] = user
         kwargs["carrier"] = self.get_data_or_calculate(user)
         kwargs['page_title'] = 'Twoja kariera'
@@ -382,7 +384,7 @@ class ProfileCarrier(generic.TemplateView, SlugyViewMixin):
         return user.profile.playermetrics.season
 
 
-class ProfileGames(generic.TemplateView, PaginateMixin, SlugyViewMixin):
+class ProfileGames(generic.TemplateView, PaginateMixin, SlugyViewMixin, mixins.ViewModalLoadingMixin):
     # @todo: add limit handling for futhure unknown usage.
     template_name = "profiles/games.html"
     http_method_names = ["get"]
@@ -396,6 +398,7 @@ class ProfileGames(generic.TemplateView, PaginateMixin, SlugyViewMixin):
         games = games or []
         if self._is_owner(user):
             kwargs["editable"] = True
+        kwargs['modals'] = self.modal_activity(request.user)
         kwargs['show_user'] = user
         kwargs['page_obj'] = self.paginate(games)
         kwargs['page_title'] = 'Twoje mecze'
