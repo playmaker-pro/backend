@@ -1,0 +1,90 @@
+{% load i18n %}
+{% load thumbnail %}
+
+<div class="page-heading " style="background-color:#2b2b2b; box-shadow: 0px 5px 5px #aaaaaa;">
+        <div class="container pt-2"ata-aos="fade-up">
+            <div class="row">
+
+
+                <div class="col-md-5">
+                    <div class="row no-gutters">
+                        <div class="d-none d-md-block col-md-4">
+                            <img class=" avatar rounded-circle img-responsive" title="profile picture" src="{% thumbnail show_user.picture|default:'default_profile.png' 'profile_avatar_show_mobile' %}">
+                        </div>
+                        <div class="d-md-none col-5 pull-right">
+                            <img class="d-md-none avatar rounded-circle img-responsive" title="profile picture" src="{% thumbnail show_user.picture|default:'default_profile.png' 'profile_avatar_show_mobile' %}">
+                        </div>
+
+                        <div class="col-6">
+                            <h1 class="d-none d-md-block" style="color:#fff;">{{ show_user.get_full_name.upper }}</h1>
+                            <div class="text-muted" >
+                                <strong style="color:#fff;"> {{ show_user.profile.history.counter }} </strong> {% trans 'wizyt' %}
+                            </div>  
+                            <div class="text-muted">
+                                <strong style="color:#fff;"> {{ show_user.follower_set.count }} </strong> {% trans 'obserwujących' %}
+                            </div> 
+                            {% if not editable %}
+                            <h4 class="d-md-none d-inline card-subtitle mb-2 text-muted"><i class="icofont-boot-alt-2" style="color:#fff;"></i> {{ show_user.get_declared_role_display|upper }}  </h4>
+                            {% endif %}
+                            <span class="d-md-none d-block"> {% include 'profiles/partials/_progress_bar.html' %} </span>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="col-md-7">
+                    <div class="row">
+                         <h1 class=" d-md-none pl-3" style="color:#fff;">{{ show_user.get_full_name.upper }}</h1>
+                        
+                        
+      
+ 
+                        <div class="col-12">
+                            {% include 'profiles/partials/_inquire_message.html' %}
+                            
+                            
+                        </div>
+                        <div class="col-md-12 d-none d-md-block" style="color:#fff;">
+                            <div class="row">
+                                <div class="col-6"> 
+                                    {% include 'profiles/partials/_progress_bar.html' %}
+                                </div>
+                                <div class="col-6"> 
+                                    {% include 'profiles/partials/_profile_role.html' %}
+                                </div>   
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+            
+            
+            <div class="row p-2">
+            
+                <div class="d-flex align-items-center">
+                    
+
+                    {% include 'profiles/partials/_nav_buttons.html' %}
+                    
+                </div>
+                <div class="d-flex align-items-center">
+                    
+                    {% include 'profiles/partials/_profiles_buttons.html' %}
+                    
+                </div>
+               
+                
+            </div>
+
+
+        </div>
+
+
+
+
+</div>

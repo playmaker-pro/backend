@@ -264,7 +264,7 @@ class Team(models.Model):
             return True
         else:
             return False
-    
+
     @property
     def display_team(self):
         return self.name

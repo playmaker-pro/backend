@@ -21,12 +21,7 @@
             
         </div>
         <div class="mt-4 text-center">
-            {% if editable %}
-                {% url 'profiles:my_games' as button_url %}
-            {% else %}
-                {% url 'profiles:player_games' slug=show_user.profile.slug as button_url %}
-            {% endif %}
-            {% seemore_link button_url %}
+            {% include 'profiles/partials/_see_more_games.html' %}
         </div>
     </div>
 </div>

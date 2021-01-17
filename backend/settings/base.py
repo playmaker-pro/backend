@@ -262,6 +262,7 @@ THUMBNAIL_EXTENSION = "png"  # Or any extn for your thumbnails
 THUMBNAIL_ALIASES = {
     '': {
         'profile_avatar_show': {'size': (140, 140), 'crop': True},
+        'profile_avatar_show_mobile': {'size': (100, 100), 'crop': True},
         'tables_avatar_show': {'size': (64, 64), 'crop': True},
         'tables_avatar_show_small': {'size': (44, 44), 'crop': True},
         'tables_avatar_show_medium': {'size': (54, 54), 'crop': True},

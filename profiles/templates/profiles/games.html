@@ -9,17 +9,20 @@
 
 
 
-{% block content_header %}
+{% comment %} {% block content_header %}
     {% include '_page_heading.html' with heading_title=page_title size=4 %}
     {{ block.super }}
-{% endblock %}
+{% endblock %} {% endcomment %}
 
 
 <!-- Benefits of the Django application -->
 {% block content %}
+
+ {% include 'profiles/player_subpage_header_black.html' %}
 <section id="profile-games" class="profile">
 
 <div class="container" data-aos="fade-up"> 
+   
 
     <div class='row mx-auto' >
 

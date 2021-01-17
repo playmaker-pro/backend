@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 from app import mixins
 
 
+
 class PaginateMixin:
     paginate_limit = 30
     @property
@@ -326,18 +327,24 @@ class SlugyViewMixin:
             user = self.request.user
         return user
 
+    def _is_owner(self, user):
+        return user == self.request.user
+
 
 class ProfileFantasy(generic.TemplateView, SlugyViewMixin):
     template_name = "profiles/fantasy2.html"
     http_method_names = ["get"]
 
     def get(self, request, *args, **kwargs):
-        user_to_present = self.select_user_to_show()
-        user = self.request.user
+        user = self.select_user_to_show()
+        if self._is_owner(user):
+            kwargs["editable"] = True
+
         _id = user.profile.data_mapper_id
         season_name = get_current_season()
         kwargs['season_name'] = season_name
-        kwargs["fantasy"] = self.get_data_or_calculate(user_to_present)
+        kwargs['show_user'] = user
+        kwargs["fantasy"] = self.get_data_or_calculate(user)
         kwargs['page_title'] = 'Twoje fantasy'
         return super().get(request, *args, **kwargs)
 
@@ -355,10 +362,14 @@ class ProfileCarrier(generic.TemplateView, SlugyViewMixin):
     http_method_names = ["get"]
 
     def get(self, request, *args, **kwargs):
-        user = self.request.user
-        user_to_present = self.select_user_to_show()
+        # user = self.request.user
+        user = self.select_user_to_show()
         _id = user.profile.data_mapper_id
-        kwargs["carrier"] = self.get_data_or_calculate(user_to_present)
+
+        if self._is_owner(user):
+            kwargs["editable"] = True
+        kwargs['show_user'] = user
+        kwargs["carrier"] = self.get_data_or_calculate(user)
         kwargs['page_title'] = 'Twoja kariera'
         return super().get(request, *args, **kwargs)
 
@@ -379,10 +390,13 @@ class ProfileGames(generic.TemplateView, PaginateMixin, SlugyViewMixin):
 
     def get(self, request, *args, **kwargs):
 
-        user_to_present = self.select_user_to_show()
+        user = self.select_user_to_show()
 
-        games = self.get_data_or_calculate(user_to_present)
+        games = self.get_data_or_calculate(user)
         games = games or []
+        if self._is_owner(user):
+            kwargs["editable"] = True
+        kwargs['show_user'] = user
         kwargs['page_obj'] = self.paginate(games)
         kwargs['page_title'] = 'Twoje mecze'
         return super().get(request, *args, **kwargs)
@@ -433,7 +447,6 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
     http_method_names = ["get", "post"]
 
     def set_show_profile_page_title(self):
-        
         default_my_profile = 'Mój profil'
         if self.user.is_coach:
             if self.editable:

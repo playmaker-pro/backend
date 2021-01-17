@@ -23,6 +23,15 @@ class ClubForm(forms.ModelForm):
         self.helper.wrapper_class = 'row'
         self.helper.label_class = 'col-md-3 text-md-right text-muted upper'
         self.helper.field_class = 'col-md-6'
+
+        self.fields['practice_stadion_address'].label = 'Adres stadionu treningowy'
+        self.fields['practice_stadion_address'].help_text = False
+        self.fields['stadion_address'].label = 'Adres stadionu'
+        self.fields['stadion_address'].help_text = False
+        self.fields['editors'].label = 'Edytorzy'
+        self.fields['editors'].help_text = False
+        self.fields['name'].label = 'Nazwa klubu'
+        self.fields['name'].help_text = False
         self.helper.layout = Layout(
             Div(
                 Div(
@@ -31,6 +40,8 @@ class ClubForm(forms.ModelForm):
                         Div(
                             Field('name', wrapper_class='row'),
                             Field('picture', wrapper_class='row'),
+                            Field('practice_stadion_address', wrapper_class='row'),
+                            Field('stadion_address', wrapper_class='row'),
                         ),
                         css_class='col-md-6',
                     ),
@@ -52,7 +63,7 @@ class ClubForm(forms.ModelForm):
     class Meta:
         model = models.Club
 
-        fields = ['name', 'picture', 'editors']
+        fields = ['name', 'picture', 'editors', 'practice_stadion_address', 'stadion_address']
 
 
 class TeamForm(forms.ModelForm):

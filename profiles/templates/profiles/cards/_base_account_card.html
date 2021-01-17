@@ -11,94 +11,26 @@
       </div>
       
       <div class='col-md-9'>
-          
-
-          <h1 class="card-title">{{ show_user.get_full_name|upper }}</h1>
-          <!--span class="pull-left text-muted"-->          
+          <h1 class="card-title">{{ show_user.get_full_name|upper }}</h1>       
               
-          {% if editable and user.is_pending_role_change %} 
-            
-            <div class="d-inline"> 
-              {% include 'platform/buttons/helper.html' with tooltip_title=_("Twoje zgłoszenie trafiło do adminów. Zwykle trwa to do 24h.") tooltip_position="top" %}
-
-              <div class="alert alert-danger" style="padding:5px;font-size:.9em">
+          {% include 'profiles/partials/_profile_role.html' %}
 
 
-                {% trans 'Oczekujesz na akceptacje zmiany typu konta z' %} <strong>{{user.pending_role_change.current_pretty|upper}}</strong> {% trans 'na' %} <strong>{{user.pending_role_change.new_pretty|upper}}</strong> 
-              </div>
-            </div>
-
-          {% else %}
-            <h4 class="d-inline card-subtitle mb-2 text-muted"><i class="icofont-boot-alt-2"></i> {{ show_user.get_declared_role_display|upper }}  </h4>
-          {% endif %}
-
-          {% if editablesssssssssssss %}
-            <i class="icofont-link" onclick="copyToClipBoard()" data-value="{{ user.profile.get_permalink }}"></i>
-          {% endif %}
-
-          {% if editable %}
-          <h4 class="small font-weight-bold">
-                {% if show_user.is_verified %} 
-                  <i class="text-success icofont-verification-check"></i> {% trans 'zweryfikowany' %}
-                {% elif show_user.is_waiting_for_verification %}
-                    <i class="text-warning icofont-ui-clock"></i> {% trans 'oczekuje na weryfikacje' %}
-                {% else %} 
-                    <i class="text-danger icofont-adjust"></i> {% trans 'brakuje danych do weryfikacji konta' %}
-                {% endif %} 
-            
-            <span class="float-right">{{user.profile.percentage_completion}}%</span></h4>
-            <div class="progress mb-4">
-              <div class="progress-bar bg-success " role="progressbar" style="width: {{user.profile.percentage_completion}}%" 
-                  aria-valuenow="{{user.profile.percentage_completion}}" 
-                  aria-valuemin="0" 
-                  aria-valuemax="100"></div>
-              <div class="progress-bar progress-bar-striped bg-danger progress-verification" role="progressbar" style="width: {{user.profile.percentage_left_verified}}%" 
-                  aria-valuenow="{{user.profile.percentage_left_verified}}" 
-                  aria-valuemin="0" 
-                  aria-valuemax="100"></div>
-            </div>
+          {% include 'profiles/partials/_progress_bar.html' %}
 
 
-
-
-          <ul class="list-group">
-
-            <li class="list-group-item text-left border-0"></li><!-- @tood remove hiddens-->
-            <li hidden class="list-group-item text-left border-0">  <!-- @tood remove hiddens-->
-              <span class="pull-left text-muted">
-              <div class="progress" data-toggle="tooltip" data-placement="top" title="Określa w jakim stopniu Twoje konto ma uzupełnione dane.">
-                  <div class="progress-bar bg-success" style="width:{{ user.profile.percentage_completion }}%">{{user.profile.percentage_completion}}%</div>
-              </div>
-            </li>
-            </ul>
-            {% endif %}
-            </ul> 
-            {% block body %}
+          {% block body %}
               
-            {% endblock body %}    
+          {% endblock body %}    
 
           <div class="text-muted">
-            <strong> {{ show_user.profile.history.counter }} </strong> 
-            {% trans 'wizyt' %}
-
+            <strong> {{ show_user.profile.history.counter }} </strong> {% trans 'wizyt' %}
           </div>  
           <div class="text-muted">
-            <strong> {{ show_user.follower_set.count }} </strong> 
-            obserwujących
+            <strong> {{ show_user.follower_set.count }} </strong>  {% trans 'obserwujących' %}
           </div> 
 
-          {% if user.is_verified and editable %}
-            {% if user.is_player  %}
-            <div class="text-muted">
-                Możesz wysłać na platformie do innych użytkowników <strong>{{ user.userinquiry.left }}</strong> zapytań o testy do 30.06.2021. By zwiększyć limity  <a href="https://playmaker.pro/limit/">kliknij</a>
-            </div>
-            {% elif user.is_coach or user.is_club %}
-            <div class="text-muted">
-            Możesz wysłać na platformie do innych użytkowników <strong>{{ user.userinquiry.left }}</strong> zaproszeń na testy do 30.06.2021. By zwiększyć limity  <a href="https://playmaker.pro/limit/">kliknij</a>
-            </div>  
-            {% endif %}
-
-          {% endif %}
+          {% include 'profiles/partials/_inquire_message.html' %}
 
       </div>  <!-- end of col-md-9 -->
     </div>  <!-- end of row -->
@@ -108,24 +40,8 @@
     <div class="stats actions">
 
       <div class="btn-group" role="group" aria-label="action buttons">
-
-          {% if editable %}
-              {% include 'profiles/buttons/edit.html' %}
-
-              {% if user.is_club %}
-                  {% get_my_club_link text="Zarządzaj klubem" css_class="btn-act" %}
-              {% elif user.is_coach %}
-                  {% get_my_team_link text="Zarządzaj drużyną" css_class="btn-act" %}
-              {% endif %}
-
-          {% else %}
-              {% csrf_token %}
-              {% observed_link user show_user text=True %}
-              {% if user.is_club or user.is_player or user.is_coach %}
-                 {% request_link user show_user %}
-              {% endif %}
-              
-          {% endif %}
+          {% include 'profiles/partials/_profiles_buttons.html' %}
+         
       </div>
     </div>
   </div>

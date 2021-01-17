@@ -263,9 +263,36 @@ button[disabled=disabled], button:disabled {
   border-radius: 5px;
 }
 
-.btn-pm:hover{
-  background: #e35052;
+  .btn-pm:hover{
+    background: #e35052;
+  }
+
+
+.pm-nav { 
+  padding: .375rem .375rem;
+  /* padding: 10px 32px; */
+  color: #fff;
+  transition: 0.4s;
+  border-radius: 5px;
+  background-color: #fff;
+  color:#e03a3c;
+  border: 1px solid #e03a3c;
 }
+  .pm-nav:hover{
+    color: #fff;
+    background: #e03a3c;
+  }
+.pm-nav-active {
+  background: #e03a3c;
+  color: #fff;
+  transition: 0.5s;
+}
+.pm-nav-active:hover{
+  color: #fff;
+  
+}
+
+
 
 .btn-pm-sm {
   margin:1px;
@@ -347,7 +374,7 @@ main {
       margin-top: 63px;
   } */
   main { 
-    margin-top: 63px;
+    margin-top: 48px;
   }
 }
 

@@ -8,19 +8,20 @@
 {% block title %}{{ block.super }} {% trans 'Moje Fantasy' %} {% endblock %}
 
 
-
+{% comment %} 
 {% block content_header %}
     {% include '_page_heading.html' with heading_title=page_title size=4 %}
     {{ block.super }}
-{% endblock %}
+{% endblock %} {% endcomment %}
 
 
 
 <!-- Benefits of the Django application -->
 {% block content %}
-
+    {% include 'profiles/player_subpage_header_black.html' %}
 
 <section id="profile-fantasy" class="profile">
+
 
   <div class="container" data-aos="fade-up"> 
 

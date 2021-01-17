@@ -10,27 +10,27 @@
 
 
 
-
+{% comment %} 
 {% block content_header %}
     {% include '_page_heading.html' with heading_title=page_title size=4 %}
     {{ block.super }}
-{% endblock %}
+{% endblock %} {% endcomment %}
 
 
 <!-- Benefits of the Django application -->
 {% block content %}
+{% include 'profiles/player_subpage_header_black.html' %}
+
 <section id="profile-carrier" class="profile">
 
-{% include 'profiles/player_subpage_header.html' %}
 
 <div class="d-flex flex-column justify-content-center text-center" data-aos="fade-up"> 
 
         {% if carrier is None %}
         <div class='col-md-12 text-center'>
-                   {% include 'platform/partials/_empty.html' %}
-                           
-                        <h4>Przygotwoujemy statystyki dla Twojego konta.</h4>
-                        <p>Uzupełnienie w całości Twojego piłkarskiego profilu pozwoli nam sporządzić odpowiednie metryki.</p>
+            {% include 'platform/partials/_empty.html' %}
+            <h4>Przygotwoujemy statystyki dla Twojego konta.</h4>
+            <p>Uzupełnienie w całości Twojego piłkarskiego profilu pozwoli nam sporządzić odpowiednie metryki.</p>
            </div>
         {% else %}
         

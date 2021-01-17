@@ -11,7 +11,9 @@
   padding: .5rem;
 
 }
-
+.page-heading .progress {
+  color: #fff;
+}
 #profile {
     padding-top: 15px;
     margin-left:25px;
@@ -113,7 +115,9 @@ section.profile {
 */
 
 @media all and (max-width: 768px) {   /* @todo to better understand 768px*/
-
+  .inquiry-text {
+    font-size: .8rem;
+  }
     .mobile {
       display: block;
     }

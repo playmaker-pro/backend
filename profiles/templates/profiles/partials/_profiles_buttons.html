@@ -1,0 +1,21 @@
+ {% load playmaker %}
+ 
+ {% if editable %}
+
+    {% include 'profiles/buttons/edit.html' %}
+
+    {% if user.is_club %}
+
+        {% get_my_club_link text="Zarządzaj klubem" css_class="btn-act" %}
+    {% elif user.is_coach %}
+        {% get_my_team_link text="Zarządzaj drużyną" css_class="btn-act" %}
+    {% endif %}
+
+{% else %}
+    {% csrf_token %}
+    {% observed_link user show_user text=True icon='eye' %}
+    {% if user.is_club or user.is_player or user.is_coach %}
+        {% request_link user show_user %}
+    {% endif %}
+    
+{% endif %}

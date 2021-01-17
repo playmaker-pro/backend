@@ -465,7 +465,7 @@ def update_request_button(context, request, accept=False):
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
-def observed_link(context, user, showed_user, text=False, otype='user'):
+def observed_link(context, user, showed_user, text=False, otype='user', icon=None):
     if not user.is_authenticated:
         return {'off': True}
     active_class = None
@@ -505,7 +505,7 @@ def observed_link(context, user, showed_user, text=False, otype='user'):
         'button_text': button_text,
         'button_class': 'btn-obs',
         'button_action': {'onclick': True, 'name': script_func, 'param': param},
-        'button_icon': None,  # 'eye',
+        'button_icon': icon,  # 'eye',
         'modals': context['modals'],
     }
 

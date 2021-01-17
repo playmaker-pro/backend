@@ -9,20 +9,24 @@
     <link href="{% static 'assets/css/circle.css' %}" rel="stylesheet">
 {% endblock extra_css %}
 
-
+{% comment %} 
 {% block content_header %}
     {% include '_page_heading.html' with heading_title=page_title size=4 %}
     {{ block.super }}
-{% endblock %}
+{% endblock %} {% endcomment %}
 
 
 {% block content %}  <!-- @todo frontend to be renovated to adjust template-->
 {% spaceless %}
-<section id="profile" class="profile  mt-5 mt-md-0">
-  <div class="container-fluid profile-container" data-aos="fade-up">
 
+
+{% include 'profiles/player_subpage_header_black.html' %}
+
+<section id="profile" class="profile  mt-5 mt-md-0">
+  <div class="container profile-container" data-aos="fade-up">
+      
       <div class="row">
-        <div class="col-sm-6">{% include 'profiles/cards/player/account_card.html' %}</div>
+        {% comment %} <div class="col-sm-6">{% include 'profiles/cards/player/account_card.html' %}</div> {% endcomment %}
         <div class="col-sm-6">{% include 'profiles/cards/player/primary_card.html' %}</div>
         <div class="col-sm-6">{% include 'profiles/cards/player/season_card.html' %}</div>
         <div class="col-sm-6">{% include 'profiles/cards/player/additional_info_card.html' %}</div>  
