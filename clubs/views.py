@@ -57,8 +57,9 @@ class ClubEdit(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoading
             if not club.is_editor(user):
                 return redirect("app:permission_denied")
         if "club_form" not in kwargs:
+            
             form = forms.ClubForm(instance=club)
-            form.fields['editors'].queryset = User.objects.filter(declared_role__in=[definitions.COACH_SHORT, definitions.CLUB_SHORT, definitions.SCOUT_SHORT]).exclude(email=user.email)
+            form.fields['editors'].queryset = User.objects.filter(declared_role__in=[definitions.COACH_SHORT, definitions.CLUB_SHORT, definitions.SCOUT_SHORT]) #.exclude(email=user.email)
             kwargs["club_form"] = form
 
         kwargs["modals"] = self.modal_activity(request.user)
@@ -88,7 +89,7 @@ class ClubEdit(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoading
             )
             # user_form = forms.UserForm(instance=user)
             # profile_form = get_profile_form_model(user)(instance=user.profile)
-            club_form.fields['editors'].queryset = User.objects.filter(declared_role=definitions.COACH_SHORT)
+            club_form.fields['editors'].queryset = User.objects.filter(declared_role__in=[definitions.COACH_SHORT, definitions.CLUB_SHORT, definitions.SCOUT_SHORT]) #.exclude(email=user.email)
             return super().get(request, slug=club.slug, club_form=club_form)
 
         club = club_form.save()
