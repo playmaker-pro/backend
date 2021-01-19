@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 BASE_URL = 'http://localhost:8000'
 
 
-VERSION = '1.1.1'
+VERSION = '1.1.11'
 
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -133,6 +133,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.i18n',
+                'app.context_processors.app_info',
+                'inquiries.context_processors.get_user_info',
             ],
         },
     },

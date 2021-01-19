@@ -269,6 +269,7 @@ button[disabled=disabled], button:disabled {
 
 
 .pm-nav { 
+  display: flex;
   padding: .375rem .375rem;
   /* padding: 10px 32px; */
   color: #fff;
@@ -413,7 +414,7 @@ main {
     padding: 4px 0;
   }
   #header .logo {
-    font-size: 28px;
+    font-size: 20px;
   }
 }
 
@@ -543,15 +544,23 @@ nav .logo a{
 }
 @media all and (max-width: 768px) {
   .navbar { 
-    padding-right:1rem;
-    padding-left:1rem;
+    padding-right:.25rem;
+    padding-left:.25rem;
+  }
+  .navbar-toggler { 
+    padding: .25rem .25rem;
+  }
+  nav .heading-title {
+    font-size: .9rem;
+      margin:0px;
   }
   nav .logo a{
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     margin: 0;
     padding: 10 0 0 0;
     line-height: 1;
     font-weight: 600;
+    margin-right: 5px;
     /* font-family: "Poppins", sans-serif; */
     font-family: 'PT Sans', sans-serif;
   }

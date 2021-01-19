@@ -24,11 +24,10 @@
         <ul class="nav nav-tabs" id="myTab" role="tablist">
             {% for tab in tabs %}
             <li class="nav-item" role="presentation">
-                <a class="nav-link {% if forloop.first %} active {% endif %}" id="{{ tab.name }}-tab" data-toggle="tab" href="#{{ tab.name }}" role="tab" aria-controls="{{ tab.name }}" aria-selected="true">
+                <a class="nav-link " data-unseen="{{ tab.unseen }}" id="{{ tab.name }}-tab" data-toggle="tab" href="#{{ tab.name }}" role="tab" aria-controls="{{ tab.name }}" aria-selected="true">
                     {{ tab.title }}
-
-                {% if tab.badge %} 
-                    <span class="badge bg-info  {{ tab.badge.class }}">{{ tab.badge.number }}</span> 
+                {% if tab.badge.number != 0 %}   
+                    <span class="badge bg-{{ tab.badge.class }}  badge-{{ tab.badge.class }}">{{ tab.badge.number }}</span> 
                 {% endif %} 
                 </a>
             </li>
@@ -133,5 +132,28 @@
 
     </div>  <!-- end of conatiner-->
 </section>
+{% csrf_token %}
 {% endblock content %}
 {% endspaceless %}
+
+
+{% block extra_js %}
+
+    {{ block.super }}
+    <script src="{% static 'assets/js/requests.js' %}"></script>
+    
+    <script>
+// Select first tab
+$(document).ready(function() {
+    $('.nav-tabs a:first').tab('show');
+});
+
+
+    $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+        console.log($(this).data('unseen') )
+        if ($(this).data('unseen') != '') {
+            seenRequests(e, $(this).data('unseen'))
+        }
+})
+    </script>
+{% endblock %}

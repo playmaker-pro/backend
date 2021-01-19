@@ -9,6 +9,7 @@ app_name = "profiles"
 urlpatterns = [
     path("me/", views.ShowProfile.as_view(), name="show_self"),
     path("me/query/", api.inquiry, name="inquiry_me"),
+    path("me/query/see/", api.inquiry_seen, name="inquiry_see"),
     path("me/query/update/", api.inquiry_update, name="inquiry_update"),
     path("me/observe/", api.observe, name="observe_me"),
     path("me/observe/team/", api.observe_team, name="observe_team"),

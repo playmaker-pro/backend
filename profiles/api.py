@@ -53,6 +53,23 @@ def inquiry_update(request):
 
 
 @login_required
+def inquiry_seen(request):
+    response_data = {'status': False}
+    message = {'body': ''}
+    user = request.user
+    if request.POST.get('action') == 'post':
+        ids = request.POST.get('ids')
+        if ids:
+            id_list = [int(i) for i in ids.split(',')]  
+            inquires = InquiryRequest.objects.filter(id__in=id_list)
+            for r in inquires:
+                r.read()
+                r.save()
+                response_data['status'] = True
+    return JsonResponse(response_data)
+
+
+@login_required
 def inquiry(request):
     response_data = {'status': False}
     message = {'body': ''}

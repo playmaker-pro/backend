@@ -183,7 +183,7 @@ class AnnouncementsView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixi
     http_method_names = ["get"]
     paginate_limit = 9
     table_type = None
-    page_title = 'Ogłoszenia'
+    page_title = 'Testy Piłkarskie'
 
     def filter_queryset(self, queryset):
         

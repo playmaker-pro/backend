@@ -25,13 +25,11 @@
 <div class="container-fluid d-flex align-items-center">
 
 <nav class="navbar fixed-top navbar-expand-lg bg-light navbar-light">
-      <span class="logo mr-auto">
+      <span class="logo">
             <a href="{% if menus_logo_url %}{{ menus_logo_url }}{% else %}/{% endif %}">Play<span>Maker</span><small>.pro</small></a>
     </span>
-      <a  hidden class="d-md-none logo mr-auto" href="{% if menus_logo_url %}{{ menus_logo_url }}{% else %}/{% endif %}"><img src="{% static 'assets/img/playmaker_logo_light.png' %}" alt="logo"></a>
-    
       {% if menus_heading_title %}
-        <span class="mr-auto d-block d-md-none"> <i class="main-color icofont-hand-drawn-right"></i> {{ menus_heading_title }} </span> 
+        <span class="heading-title d-block d-md-none float-left"> <i class="main-color icofont-hand-drawn-right"></i> {{ menus_heading_title }} </span> 
       {% endif %}
       
         <button class="navbar-toggler collapsed border-0" type="button" data-toggle="collapse" data-target="#collapsingNavbar">

@@ -115,7 +115,7 @@ class InquiryRequest(models.Model):
     STATUS_RECEIVED = 'PRZECZYTANE'
     STATUS_ACCEPTED = 'ZAAKCEPTOWANE'
     STATUS_REJECTED = 'ODRZUCONE'
-
+    UNSEEN_STATES = [STATUS_SENT]
     ACTIVE_STATES = [STATUS_NEW, STATUS_SENT, STATUS_RECEIVED]
     RESOLVED_STATES = [STATUS_ACCEPTED, STATUS_REJECTED]
 
@@ -201,7 +201,7 @@ class InquiryRequest(models.Model):
     def read(self):
         '''Should be appeared when message readed/seen by recipient'''
 
-    @transition(field=status, source=[STATUS_NEW, STATUS_SENT], target=STATUS_ACCEPTED)
+    @transition(field=status, source=[STATUS_NEW, STATUS_SENT, STATUS_RECEIVED], target=STATUS_ACCEPTED)
     def accept(self):
         '''Should be appeared when message was accepted by recipient'''
         logger.debug(f'#{self.pk} reuqest accepted creating sender and recipient contanct body')
@@ -209,7 +209,7 @@ class InquiryRequest(models.Model):
         self.body_recipient = ContactBodySnippet.generate(self.recipient)
         request_accepted(self)
 
-    @transition(field=status, source=[STATUS_NEW, STATUS_SENT], target=STATUS_REJECTED)
+    @transition(field=status, source=[STATUS_NEW, STATUS_SENT, STATUS_RECEIVED], target=STATUS_REJECTED)
     def reject(self):
         '''Should be appeared when message was rejected by recipient'''
         request_declined(self)
