@@ -104,7 +104,9 @@ section.tables {
     #tables .card-header {
         padding: .4rem;
     }
-
+    #tables.requests .nav-link { 
+        padding: .4rem .4rem;
+    }
     #tables {
         font-size:.7em;
         padding:.2rem .2rem 90px .2rem;
