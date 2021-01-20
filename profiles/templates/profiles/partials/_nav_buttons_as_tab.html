@@ -1,0 +1,32 @@
+    {% if editable %}
+        
+        {% url 'profiles:my_games' as games_url %}
+        {% url 'profiles:my_fantasy' as fantasy_url %}
+        {% url 'profiles:my_carrier' as carrier_url %}
+    {% else %}
+        {% url 'profiles:player_games'  slug=show_user.profile.slug as games_url %}
+        {% url 'profiles:player_fantasy' slug=show_user.profile.slug as fantasy_url %}
+        {% url 'profiles:player_carrier' slug=show_user.profile.slug as carrier_url %}
+    {% endif %}
+        {% url 'profiles:show' slug=show_user.profile.slug as profile_url %}
+    
+   
+
+ <ul class="nav nav-tabs" id="profile-nav" role="tablist" style="border-bottom:1px solid #e03a3c;">
+  <li class="nav-item" style="margin:0 2px;">
+    <a class="nav-link pm-nav {% if request.get_full_path == profile_url %}pm-nav-active{% endif %}" href="{{ profile_url }}">Profil</a>
+
+  </li>
+  <li class="nav-item" style="margin:0 2px;">
+    <a class="nav-link pm-nav {% if request.get_full_path == carrier_url %}pm-nav-active{% endif %}" href="{{ carrier_url }}">Kariera</a>  
+  </li>
+  <li class="nav-item" style="margin:0 2px;">
+
+       <a class="nav-link pm-nav {% if request.get_full_path == games_url %}pm-nav-active{% endif %}" href="{{ games_url }}">Mecze</a>
+ </li>
+  <li class="nav-item" style="margin:0 2px;">
+  <a class="nav-link pm-nav {% if request.get_full_path == fantasy_url %}pm-nav-active{% endif %}" href="{{ fantasy_url }}">Fantasy</a>
+   
+    <!--a class="nav-link" id="contact-tab"  href="#contact" role="tab" aria-controls="contact" aria-selected="false">Contact</a-->
+  </li>
+</ul>

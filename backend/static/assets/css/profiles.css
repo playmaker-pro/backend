@@ -113,11 +113,14 @@ section.profile {
     background: -webkit-linear-gradient(top, #e3e3e3, #f9f9f9);
   }
 */
-
+.inquiry-text {
+  font-size: .8rem;
+}
 @media all and (max-width: 768px) {   /* @todo to better understand 768px*/
   .inquiry-text {
     font-size: .8rem;
   }
+  
     .mobile {
       display: block;
     }

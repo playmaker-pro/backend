@@ -227,6 +227,14 @@ button[disabled=disabled], button:disabled {
   background: #e35052;
   color:#fff;
 }
+
+@media (max-width: 768px) {
+  .btn-obs  {
+    padding: 3px 3px;
+    font-size:.8rem;
+  }
+}
+
 .observed {
   
   background: #e03a3c;
@@ -234,7 +242,12 @@ button[disabled=disabled], button:disabled {
   transition: 0.5s;
   font-size: inherit;
 }
-
+@media (max-width: 768px) {
+  .observed   {
+    padding: 3px 3px;
+    font-size:.8rem;
+  }
+}
 
 .btn-request {
 
@@ -245,14 +258,24 @@ button[disabled=disabled], button:disabled {
   border: 1px solid #e03a3c;
   border-radius: 5px;
 }
-
+@media (max-width: 768px) {
+  .btn-request {
+    padding: 3px 3px;
+    font-size:.8rem;
+  }
+}
 .btn-requested {
 
   background: #e03a3c;
   color: #fff;
   transition: 0.5s;
 }
-
+@media (max-width: 768px) {
+  .btn-requested{
+    padding: 3px 3px;
+    font-size:.8rem;
+  }
+}
 .btn-pm {
   background: #e03a3c;
   border: 1px solid #e03a3c;
@@ -267,22 +290,46 @@ button[disabled=disabled], button:disabled {
     background: #e35052;
   }
 
+#profile .nav-tabs .nav-link { 
+  border-color:#e03a3c;
+
+  
+}
+@media all and (max-width: 768px) {
+    #profile .nav-tabs .nav-link { 
+     padding: .5rem;
+
+    }
+}
+#profile .nav-tabs .nav-item { 
+
+  margin: 0 2px;
+  
+}
+
+#profile .nav-tabs .nav-link:focus, .nav-tabs .nav-link:hover  {
+  border-color:#e03a3c;
+
+}
 
 .pm-nav { 
-  display: flex;
-  padding: .375rem .375rem;
-  /* padding: 10px 32px; */
-  color: #fff;
-  transition: 0.4s;
-  border-radius: 5px;
+
   background-color: #fff;
   color:#e03a3c;
-  border: 1px solid #e03a3c;
+  border: 2px solid #e03a3c;
 }
   .pm-nav:hover{
     color: #fff;
     background: #e03a3c;
   }
+
+  @media all and (max-width: 768px) {
+
+    .pm-nav { 
+      padding: .5rem;;
+    }
+   }
+  
 .pm-nav-active {
   background: #e03a3c;
   color: #fff;

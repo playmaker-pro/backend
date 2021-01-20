@@ -1,0 +1,9 @@
+
+{% load i18n %}
+
+<div class="d-inline"> 
+    {% include 'platform/buttons/helper.html' with tooltip_title=_("Twoje zgłoszenie trafiło do adminów. Zwykle trwa to do 24h.") tooltip_position="top" %}
+    <div class="alert alert-danger" style="padding:5px;font-size:.9em">
+    {% trans 'Oczekujesz na akceptacje zmiany typu konta z' %} <strong>{{user.pending_role_change.current_pretty|upper}}</strong> {% trans 'na' %} <strong>{{user.pending_role_change.new_pretty|upper}}</strong> <a href="{% url 'profiles:edit_settings' %}"> > cofnij</a> 
+    </div>
+</div>
