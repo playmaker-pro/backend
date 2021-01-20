@@ -15,13 +15,14 @@
 
                         <div class="col-8">
                             <h1 class="d-none d-md-block acc-name" style="#1b1b1b;">{{ show_user.get_full_name.upper }}</h1>
+                            
                             <div class="text-muted acc-info" >
                                 <strong> {{ show_user.profile.history.counter }} </strong> {% trans 'wizyt' %}
                             </div>  
-                            <div class="text-muted  ">
-                                <strong class="acc-info"> {{ show_user.follower_set.count }} </strong> {% trans 'obserwujących' %}
+                            <div class="text-muted  acc-info">
+                                <strong> {{ show_user.follower_set.count }} </strong> {% trans 'obserwujących' %}
                             </div> 
-                             <div class="d-md-none d-inline"> {% include 'profiles/partials/_profiles_buttons.html' %}</div>
+                             
                             <span class="d-md-none d-block"> {% include 'profiles/partials/_acc_status.html' %} </span>
                         </div>
 
@@ -30,7 +31,7 @@
                 <div class="col-md-4">
                     <div class="row">
                          <h1 class=" d-md-none pl-3 acc-name" style="#1b1b1b;">{{ show_user.get_full_name.upper }}</h1>
-                        
+                         <div class="d-md-none d-inline"> {% include 'profiles/partials/_profiles_buttons.html' %}</div>   
                         <div class="col-12">
                             {% include 'profiles/partials/_inquire_message.html' %}
                         </div>

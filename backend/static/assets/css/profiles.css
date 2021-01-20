@@ -136,12 +136,12 @@ section.profile {
       padding-left: 0px;
       padding-right: 0px;
   }
-    #profile .acc-name {
-      font-size: .6rem;
+   .acc-name {
+      font-size: 2.3rem;
     }
 
-    #profile .acc-info {
-      font-size: .6rem;
+    .acc-info {
+      font-size: .9rem;
   }
     #profile { 
         padding-top: 0px;
