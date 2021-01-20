@@ -12,3 +12,4 @@ def get_user_info(request):
             }
                 # 'observers': unseen_user_obeservers(self.request.user),
         }
+    return {}
