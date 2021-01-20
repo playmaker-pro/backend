@@ -133,6 +133,13 @@ section.profile {
       padding-left: 0px;
       padding-right: 0px;
   }
+    #profile .acc-name {
+      font-size: .6rem;
+    }
+
+    #profile .acc-info {
+      font-size: .6rem;
+  }
     #profile { 
         padding-top: 0px;
         margin-left:10px;

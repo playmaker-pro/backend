@@ -525,9 +525,9 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
         if slug:
             profile_model = get_profile_model_from_slug(slug)
             profile = get_object_or_404(profile_model, slug=slug)
-            profile.history.increment()  # @todo 1 coomit to
-            if self.request.user.is_authenticated:
-                if self.request.user.is_coach:
+            if self.request.user != profile.user:
+                profile.history.increment()  # @todo 1 coomit to
+                if self.request.user.is_authenticated and profile.user.is_coach:
                     profile.history.increment_coach()
 
                 # if self.request.user.is_scout:  @todo
