@@ -24,6 +24,7 @@
                             </div> 
                              
                             <span class="d-md-none d-block"> {% include 'profiles/partials/_acc_status.html' %} </span>
+                            <div class="d-md-none d-inline"> {% include 'profiles/partials/_profiles_buttons.html' %}</div>
                         </div>
 
                     </div>
@@ -31,7 +32,7 @@
                 <div class="col-md-4">
                     <div class="row">
                          <h1 class=" d-md-none pl-3 acc-name" style="#1b1b1b;">{{ show_user.get_full_name.upper }}</h1>
-                         <div class="d-md-none d-inline"> {% include 'profiles/partials/_profiles_buttons.html' %}</div>   
+                            
                         <div class="col-12">
                             {% include 'profiles/partials/_inquire_message.html' %}
                         </div>
