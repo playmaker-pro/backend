@@ -890,7 +890,7 @@ class PlayerMetrics(models.Model):
         verbose_name_plural = _("Metryki graczy")
 
     def __str__(self):
-        if all([self.games_summary_updated, self.season_summary_updated]):
+        if not all([self.games_summary_updated, self.season_summary_updated]):
             return f'gs:{self.games_summary_updated} cs:{self.season_summary_updated}'
         return f'gs:{self.games_summary_updated.strftime("%b/%d/%Hh")} cs:{self.season_summary_updated.strftime("%b/%d/%Hh")}'
     
