@@ -110,6 +110,11 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
                 for team_name, data in team_data.items():
                     if not data:
                         return out
+                    
+                    if data['lost_goals'] is not None:
+                        lost_goals = data['lost_goals']
+                    else:
+                        lost_goals = None
                     out.append(
                         {
                             'name': season_name,
@@ -119,7 +124,7 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
                             'yellow_cards': data['yellow_cards'],
                             'minutes_played': data['minutes_played'],
                             'team_goals': data['team_goals'],
-                            'lost_goals': data['lost_goals'],
+                            'lost_goals': lost_goals,
                             'games_played': data['games_played'],
                             'first_squad_games_played': data['first_squad_games_played'],
                         }
