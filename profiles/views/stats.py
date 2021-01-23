@@ -81,11 +81,14 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
             season = adapters.PlayerStatsSeasonAdapter(_id).get(groupped=True)
             user.profile.playermetrics.update_season(season)
         user.profile.playermetrics.refresh_from_db()
-        # return user.profile.playermetrics.season
-        return self.paginate(self.flattern_carrier_structure(user.profile.playermetrics.season))
+        if user.profile.playermetrics.season is None:
+            data = []
+        data = self.flattern_carrier_structure(data)
+        return self.paginate(data)
 
     def flattern_carrier_structure(self, data: dict) -> list:
         '''
+        @todo: this shoudl be in serializers/
         season: {'2014/2015':
             {'4 liga':
                 {'włókniarz mirsk': {
@@ -135,4 +138,6 @@ class ProfileGames(ProfileStatsPageView, mixins.PaginateMixin):
             user.profile.playermetrics.update_games(games)
         # user.profile.playermetrics.refresh_from_db()
         data = user.profile.playermetrics.games
+        if data is None:
+            data = []
         return self.paginate(data)
