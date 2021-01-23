@@ -884,12 +884,16 @@ class PlayerMetrics(models.Model):
         if data_refreshed is not None and data_refreshed is True:
             self.updated_at = datetime.now()
         super().save(*args, **kwargs)
-    def __str__(self):
-        return f'gs:{self.games_summary_updated.strftime("%b/%d/%Hh")} cs:{self.season_summary_updated.strftime("%b/%d/%Hh")}'
+
     class Meta:
         verbose_name = _("Metryka gracza")
         verbose_name_plural = _("Metryki graczy")
 
+    def __str__(self):
+        if all([self.games_summary_updated, self.season_summary_updated]):
+            return f'gs:{self.games_summary_updated} cs:{self.season_summary_updated}'
+        return f'gs:{self.games_summary_updated.strftime("%b/%d/%Hh")} cs:{self.season_summary_updated.strftime("%b/%d/%Hh")}'
+    
 
 class ClubProfile(BaseProfile, SoccerDisplayMixin):
     PROFILE_TYPE = definitions.PROFILE_TYPE_CLUB
