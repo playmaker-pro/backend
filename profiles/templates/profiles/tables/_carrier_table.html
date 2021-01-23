@@ -44,7 +44,7 @@
             <td class="d-none d-md-table-cell">{{ season.name }}</td>
             <td class="d-none d-md-table-cell">{{ season.team|upper }}</td>
             <td class="d-none d-md-table-cell"> {{ season.league|upper }}</td>
-            <td class="">{{ season.games_played }} / {{ season.first_squad_games_played }}</td>
+            <td class="">{{ season.first_squad_games_played }} / {{ season.games_played }}</td>
             {% if user.profile.is_goalkeeper %}
                 <td>{{ season.lost_goals }} </td>
             {% else %}
