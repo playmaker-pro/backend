@@ -81,7 +81,8 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
             season = adapters.PlayerStatsSeasonAdapter(_id).get(groupped=True)
             user.profile.playermetrics.update_season(season)
         user.profile.playermetrics.refresh_from_db()
-        if user.profile.playermetrics.season is None:
+        data = user.profile.playermetrics.season
+        if data is None:
             data = []
         data = self.flattern_carrier_structure(data)
         return self.paginate(data)
