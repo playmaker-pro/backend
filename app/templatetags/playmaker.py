@@ -470,7 +470,7 @@ def observed_link(context, user, showed_user, text=False, otype='user', icon=Non
     if not user.is_authenticated:
         return {'off': True}
     active_class = None
-
+   
     button_text = 'obserwuj'
 
     if context.get('observed'):
@@ -492,6 +492,9 @@ def observed_link(context, user, showed_user, text=False, otype='user', icon=Non
         param = showed_user.slug
     else:
         param = ''
+
+    if showed_user == user:
+        return {'off': True}
 
     if otype == 'user':
         script_func = 'observe'
