@@ -97,10 +97,15 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
         ]}]
         '''
         out = list()
-
+        if not data:
+            return out
         for season_name, league_data in data.items():
             for league_name, team_data in league_data.items():
+                if not team_data:
+                    return out
                 for team_name, data in team_data.items():
+                    if not data:
+                        return out
                     out.append(
                         {
                             'name': season_name,
