@@ -16,7 +16,7 @@
             </th>
             
             <th scope="col" class="">
-                {% if user.profile.is_goalkeeper %}
+                {% if show_user.profile.is_goalkeeper %}
                     <i class="table-icon  icofont-goal text-danger"></i>{% include 'platform/buttons/helper.html' with helper_position="top" tooltip_title=_("Utracone bramki w rozgrywkach.") tooltip_position="top" %}
                 {% else %}
 
@@ -45,7 +45,7 @@
             <td class="d-none d-md-table-cell">{{ season.team|upper }}</td>
             <td class="d-none d-md-table-cell"> {{ season.league|upper }}</td>
             <td class="">{{ season.first_squad_games_played }} / {{ season.games_played }}</td>
-            {% if user.profile.is_goalkeeper %}
+            {% if show_user.profile.is_goalkeeper %}
                 <td>{{ season.lost_goals }} </td>
             {% else %}
                 <td>{{ season.team_goals }}</td>

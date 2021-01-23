@@ -2,8 +2,6 @@
 .page-heading { }
 
 .observed { 
-
-
 }
 
 #profile .about-field { 
@@ -16,20 +14,107 @@
 }
 
 
-#profile {
-    padding-top: 5px;
+.pm-line {
+  content: '';
+  display: block;
+  width: 100px;
+  height: 3px;
+  background: #e76668;
+  border-radius: 25%;
+  margin-top: 10px;
+  margin-bottom: 2px;
+}
 
+/* ---------
+# profile-navigation
+-----------*/
+
+
+
+#profile-nav {
+  border-bottom: 3px solid #e03a3c;
+}
+
+#profile-nav .nav-item {
+  margin: 0 2px;
+}
+
+#profile-nav li:first-child {
+  margin-left: 0px;
+}
+
+#profile-nav li:last-child {
+  margin-right: 0px;
+}
+
+
+#profile-nav .nav-link:focus, #profile-nav .nav-link:hover  {
+  border-color:#e03a3c;
+}
+
+
+@media all and (max-width: 768px) {
+  #profile-nav { 
+    font-size: .8rem;
+    padding-top:.3rem;
+    padding-left:15px;
+  }
+
+  #profile-nav .nav-item {
+    margin: 0 4px;
+  }
+  
+  #profile-nav li:first-child {
+    margin-left: 0px;
+  }
+  
+  #profile-nav li:last-child {
+    margin-right: 0px;
+  }
+}
+
+  .pm-nav { 
+    background-color: #fff;
+    color:#e03a3c;
+    border: 2px solid #e03a3c;
+  }
+    .pm-nav:hover{
+      color: #fff;
+      background: #e03a3c;
+    }
+  
+    @media all and (max-width: 768px) {
+      .pm-nav { 
+        padding: .4rem;;
+      }
+     }
+    
+  .pm-nav-active {
+    background: #e03a3c;
+    color: #fff;
+    transition: 0.5s;
+  }
+  .pm-nav-active:hover{
+    color: #fff;
+    
+  }
+/* ---------
+# Profile
+-----------*/
+#profile {
+  padding-top: 5px;
 }
 
 #profile .card { 
-    margin-bottom: .8em;
-    box-shadow: 2px 5px 5px #e2e8f0;
+  margin-bottom: .8em;
+  box-shadow: 2px 5px 5px #e2e8f0;
 }
 
 #profile .card-footer { 
     background-color:#fff;
     border-top:0px;
 }
+
 @media all and (max-width: 768px) {
   #profile { 
     padding-top: 0px;
@@ -110,34 +195,18 @@ section.profile {
 #profile :-moz-placeholder { /* Firefox 18- */
     color: pink;
   }
-
-
-/*
-  #profile .custom-file-input::-webkit-file-upload-button {
-    visibility: hidden;
-  }
-  #profile .custom-file-input::before {
-    content: 'Select some files';
-    display: inline-block;
-    background: linear-gradient(top, #f9f9f9, #e3e3e3);
-    border: 1px solid #999;
-    border-radius: 3px;
-    padding: 5px 8px;
-    outline: none;
-    white-space: nowrap;
-    -webkit-user-select: none;
-    cursor: pointer;
-    text-shadow: 1px 1px #fff;
-    font-weight: 700;
-    font-size: 10pt;
-  }
-  #profile .custom-file-input:hover::before {
-    border-color: black;
-  }
-  #profile .custom-file-input:active::before {
-    background: -webkit-linear-gradient(top, #e3e3e3, #f9f9f9);
-  }
-*/
+/* ---------
+# Profile Games
+-----------*/
+#profile-games .match-result-tag {
+  min-width: 20px;
+  display: inline-block;
+  text-align: center;
+  
+}
+/* ---------
+# Other
+-----------*/
 .inquiry-text {
   font-size: .8rem;
 }
@@ -147,6 +216,10 @@ section.profile {
 }
 
 .table-icon { font-size: 1.75rem;}
+
+
+
+
 @media all and (max-width: 768px) {   /* @todo to better understand 768px*/
     .inquiry-text {
       font-size: .8rem;
@@ -195,9 +268,6 @@ section.profile {
     .acc-info {
       font-size: .9rem;
   }
-
-
-
 
     #profile .card img.avatar {
         display:block;

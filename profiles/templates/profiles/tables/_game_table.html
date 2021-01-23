@@ -20,10 +20,10 @@
                 <i class="table-icon  icofont-boot-alt-1"></i>
             </th>
             <th scope="col">
-                {% if user.profile.is_goalkeeper %}
-                    <i class="table-icon  icofont-shield text-success"></i>
+                {% if show_user.profile.is_goalkeeper %}
+                    <i class="table-icon icofont-shield text-success"></i>{% include 'platform/buttons/helper.html' with helper_position="top" tooltip_title=_("Zachowanie czystego konta jako bramkarz podczas spotkania. Kolor czerwony oznacza wystąpienie w meczu i nie zachowanie czystego konta.") tooltip_position="top" %}
                 {% else %}
-                    <i class="table-icon  h3 icofont-goal text-success"></i>
+                    <i class="table-icon icofont-goal text-success"></i>{% include 'platform/buttons/helper.html' with helper_position="top" tooltip_title=_("Strzelone bramki") tooltip_position="top" %}
                 {% endif %}
             </th>
             {% if not short %}
@@ -55,8 +55,8 @@
             <td class="d-none d-md-table-cell">{{ game.guest_team_name|truncatechars:25 }}</td>
             <td class="">{{ game.host_score }}:{{ game.guest_score}}</td>
             <td>{{ game.minutes_played }}'</td>
-            {% if user.profile.is_goalkeeper %}
-                <td>{% if game.clear_goal == None %} - {% elif game.clear_goal %} <i class="text-success icofont-goal-keeper"></i> {% else %}<i class="text-warning icofont-goal-keeper"></i> {% endif %}</td>
+            {% if show_user.profile.is_goalkeeper %}
+                <td>{% if game.clear_goal == None %} - {% elif game.clear_goal %} <i class="table-icon icofont-goal-keeper text-success "></i> {% else %}<i class="table-icon icofont-goal-keeper text-danger"></i> {% endif %}</td>
             {% else %}
             <td>{{ game.team_goals }}</td>
             {% endif %}
@@ -65,7 +65,8 @@
             <td>{{ game.yellow_cards }}</td>
             <td>{{ game.red_cards }}</td>
             
-            <td><span class="p-1 text-white rounded bg-{% if game.result.type == 'won' %}success{% elif game.result.type == 'lost' %}danger{% else %}secondary{% endif %}">{{ game.result.name }}</span></td>
+            <td>
+                <span class="match-result-tag p-1 text-white rounded bg-{% if game.result.type == 'won' %}success{% elif game.result.type == 'lost' %}danger{% else %}secondary{% endif %}">{{ game.result.name }}</span></td>
             {% endif %}
         </tr>
     {% endfor %}

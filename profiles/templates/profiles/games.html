@@ -27,23 +27,16 @@
                 {% include 'profiles/partials/_empty_metrics.html' %}
             </div>
         {% else %}
-
-
                   <div class='col-md-12'>
                 {% include 'profiles/tables/_game_table.html' with games=page_obj %}       
             </div>   
             <div class='col-md-12'>
                 {% include 'platform/partials/_pagination.html' with object_type=_('meczy')%}
             </div>       
-
         {% endif %}
-    </div> <!-- 'row' -->
+    </div>
 </div>
-
 </section>
-
-{% include 'platform/debug_info.html' %}
-
 {% endblock content %}
 
 

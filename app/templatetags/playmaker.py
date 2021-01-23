@@ -14,6 +14,11 @@ from django.utils.translation import (
 )
 
 
+TEMPLATE_ACTION_SCRIPT = 'platform/buttons/action_script.html'
+TEMPLATE_ACTION_LINK = 'platform/buttons/action_link.html'
+TEMPLATE_ACTION_BUTTON = 'platform/buttons/action_button.html'
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -131,7 +136,7 @@ def inquiry_display_name(context, inquiry):
     return {'name': name, 'link': link, 'flag': flag, 'picture': picture}
 
 
-@register.inclusion_tag('platform/buttons/action_button.html', takes_context=True)
+@register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def profile_link(context, user, checks=True, text=None):
     if not user.is_authenticated:
         return {'off': True}
@@ -139,6 +144,7 @@ def profile_link(context, user, checks=True, text=None):
     return {
         'button_url': user.profile.get_permalink(),
         'button_icon': 'user',
+        'button_class': 'btn-pm btn-pm-sm',
         'button_text': button_text,
         'modals': context['modals'],
         'checks': checks,
@@ -171,11 +177,6 @@ def is_profile_observed(user, target):
         return True
     except Follow.DoesNotExist:
         return False
-
-
-TEMPLATE_ACTION_SCRIPT = 'platform/buttons/action_script.html'
-TEMPLATE_ACTION_LINK = 'platform/buttons/action_link.html'
-TEMPLATE_ACTION_BUTTON = 'platform/buttons/action_button.html'
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
@@ -464,7 +465,7 @@ def update_request_button(context, request, accept=False):
     }
 
 
-@register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
+@register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)  # TEMPLATE_ACTION_SCRIPT
 def observed_link(context, user, showed_user, text=False, otype='user', icon=None):
     if not user.is_authenticated:
         return {'off': True}

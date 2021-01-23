@@ -7,11 +7,9 @@
                 </div>
                     <div class="serv-section-desc">
                         <h4><a  href="{{ object.club.get_permalink }}">{{ object.club.name }}</a></h4>
-                        <h5>{{ object.league }}</h5> 
+                        <h5>{{ object.league.name|title }}, {{ object.voivodeship.name|lower }} </h5> 
                 </div>
                     <div class="section-heading-line-left"></div>
-
-
     <div class="card-body row no-gutters">
         {% comment %} <div class="col-12 card-title"> 
             <span class="pull-left">
@@ -30,7 +28,7 @@
         <div class="col-12 card-text text-muted"> 
             <small class="row no-gutters">
                 <div class="col-6 col-md-3 text-center">
-                    <h4 class="icofont-match-review"></h4>
+                    <h4 class="ann-icon icofont-match-review"></h4>
                     {% for position in  object.positions.all %} 
                         {{ position }}<br>
                     {% endfor %}
@@ -41,12 +39,15 @@
                 </div>
                 <div class="col-6 col-md-3 text-center">
                     <h4 class="icofont-users-alt-5"></h4>
-                    {{ object.gender }}/{{ object.seniority }}
+                    {{ object.gender }}, {{ object.seniority }}
                 </div>
 
                 <div class="col-6 col-md-3 text-center">
                     <h4 class="icofont-map-pins"></h4> 
                     {{ object.address }}
+                </div>
+                <div class="card-text col-md-12">
+                    <small> {{ object.body }} </small>
                 </div>
             </small>
         </div>
@@ -54,35 +55,33 @@
     </div>
 
     <div class="card-footer row no-gutters">
-        <div class="card-text col-md-12">
-            <small> {{ object.body }} </small>
-        </div>
 
-        <div class="card-text text-center col-md-12">
+
+        <div class="card-text text-center d-inline-flex justify-content-center align-content-center flex-wrap">
             {% if object.www %}
             <div>
                 <small class="text-muted"><a href="{{ object.www }}">{% trans 'Link do ogłoszenia / strony www klubu' %}</a> </small>
             </div>
             {% endif %}
 
-            <span class="card-text">
+            <div class="card-text">
                 <i class="icofont-list"></i>
                 <small class="text-muted"> {{ object.subscribers.count }} odpowiedzi </small>
-            </span>
+            </div>
             
-            <span class="card-text">
+            <div class="card-text">
                 <i class="icofont-wall-clock"></i>
                 <small class="text-muted"> {{ object.created_at|days_since }}</small>
-            </span>
+            </div>
             
-            <span class="card-text pull-right">
+            <div class="card-text pull-right">
             
                 {% if user.is_player %} 
                     {% announcement_response object %}
                 {% elif user.is_club or user.is_coach %}
                     {% announcement_edit object %}
                 {% endif %} 
-            </span>
+            </div>
         </div>
     </div>
 </div>

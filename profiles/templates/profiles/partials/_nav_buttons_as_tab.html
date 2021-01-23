@@ -12,21 +12,17 @@
     
    
 
- <ul class="nav nav-tabs" id="profile-nav" role="tablist" style="border-bottom:3px solid #e03a3c;">
-  <li class="nav-item" style="margin:0 2px;">
+ <ul id="profile-nav" class="nav nav-tabs" role="tablist">
+  <li class="nav-item">
     <a class="nav-link pm-nav {% if request.get_full_path == profile_url %}pm-nav-active{% endif %}" href="{{ profile_url }}">Profil</a>
-
   </li>
-  <li class="nav-item" style="margin:0 2px;">
+  <li class="nav-item">
     <a class="nav-link pm-nav {% if request.get_full_path == carrier_url %}pm-nav-active{% endif %}" href="{{ carrier_url }}">Kariera</a>  
   </li>
-  <li class="nav-item" style="margin:0 2px;">
-
+  <li class="nav-item">
        <a class="nav-link pm-nav {% if request.get_full_path == games_url %}pm-nav-active{% endif %}" href="{{ games_url }}">Mecze</a>
  </li>
-  <li class="nav-item" style="margin:0 2px;">
-  <a class="nav-link pm-nav {% if request.get_full_path == fantasy_url %}pm-nav-active{% endif %}" href="{{ fantasy_url }}">Fantasy</a>
-   
-    <!--a class="nav-link" id="contact-tab"  href="#contact" role="tab" aria-controls="contact" aria-selected="false">Contact</a-->
+  <li class="nav-item">
+    <a class="nav-link pm-nav {% if request.get_full_path == fantasy_url %}pm-nav-active{% endif %}" href="{{ fantasy_url }}">Fantasy</a>
   </li>
 </ul>

@@ -231,7 +231,7 @@ button[disabled=disabled], button:disabled {
 @media (max-width: 768px) {
   .btn-obs  {
     padding: 3px 3px;
-    font-size:.8rem;
+    /*font-size:.8rem;*/
   }
 }
 
@@ -261,7 +261,7 @@ button[disabled=disabled], button:disabled {
 @media (max-width: 768px) {
   .btn-request {
     padding: 3px 3px;
-    font-size:.8rem;
+    /*font-size:.8rem;*/
   }
 }
 .btn-requested {
@@ -273,7 +273,7 @@ button[disabled=disabled], button:disabled {
 @media (max-width: 768px) {
   .btn-requested{
     padding: 3px 3px;
-    font-size:.8rem;
+    /*font-size:.8rem;*/
   }
 }
 .btn-pm {
@@ -290,58 +290,6 @@ button[disabled=disabled], button:disabled {
     background: #e35052;
   }
 
-#profile .nav-tabs .nav-link { 
-  border-color:#e03a3c;
-
-  
-}
-@media all and (max-width: 768px) {
-    #profile .nav-tabs .nav-link { 
-     padding: .5rem;
-
-    }
-}
-#profile .nav-tabs .nav-item { 
-
-  margin: 0 2px;
-  
-}
-
-#profile .nav-tabs .nav-link:focus, .nav-tabs .nav-link:hover  {
-  border-color:#e03a3c;
-
-}
-
-.pm-nav { 
-
-  background-color: #fff;
-  color:#e03a3c;
-  border: 2px solid #e03a3c;
-}
-  .pm-nav:hover{
-    color: #fff;
-    background: #e03a3c;
-  }
-
-  @media all and (max-width: 768px) {
-
-    .pm-nav { 
-      padding: .5rem;;
-    }
-   }
-  
-.pm-nav-active {
-  background: #e03a3c;
-  color: #fff;
-  transition: 0.5s;
-}
-.pm-nav-active:hover{
-  color: #fff;
-  
-}
-
-
-
 .btn-pm-sm {
   margin:1px;
   padding: 5px 5px;
@@ -350,8 +298,8 @@ button[disabled=disabled], button:disabled {
 @media all and (max-width: 768px) {
 
   .btn-pm { 
-    margin:1px;
-    padding: 2px 2px;
+    margin: 1px;
+    padding: 3px 3px;
   }
  }
 
