@@ -1,19 +1,10 @@
-
-
 {% load thumbnail %}
 
-
 <div class="container" data-aos="fade-up"> 
-    
-
     <div class="row">
-
         <div class="col-1">
-            
-                <img title="profile picture" class="avatar rounded img-responsive" src="{% thumbnail show_user.picture|default:'default_profile.png' 'tables_avatar_show' %}">
-            
+            <img title="profile picture" class="avatar rounded img-responsive" src="{% thumbnail show_user.picture|default:'default_profile.png' 'tables_avatar_show' %}">
         </div>
-
         <div class="col">
                 <div>
                     {{ show_user.get_full_name.title }}

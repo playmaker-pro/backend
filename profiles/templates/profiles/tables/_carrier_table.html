@@ -1,0 +1,60 @@
+{% load i18n %}
+
+  <table class="table">
+
+    {% if caption %}
+    <caption><a href="{% url 'profiles:carrier_games' %}" >{% trans 'Zobacz więcej' %}</a></caption>
+    {% endif %}
+    <thead>
+        <tr>
+            <!-- sm --> <th scope="col" class="d-md-none">{% trans 'Sezon' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'Sezon' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'Klub' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'Rozgrywki' %}</th>
+            <th scope="col" class="">
+                <i class="table-icon icofont-jersey-alt"></i>{% include 'platform/buttons/helper.html' with helper_position="top" tooltip_title=_("Pierwszy skład / Rozegrane mecze ") tooltip_position="top" %}
+            </th>
+            
+            <th scope="col" class="">
+                {% if user.profile.is_goalkeeper %}
+                    <i class="table-icon  icofont-goal text-danger"></i>{% include 'platform/buttons/helper.html' with helper_position="top" tooltip_title=_("Utracone bramki w rozgrywkach.") tooltip_position="top" %}
+                {% else %}
+
+                <i class="table-icon icofont-soccer"></i>{% include 'platform/buttons/helper.html' with helper_position="top" tooltip_title=_("Strzelone gole") tooltip_position="top" %} 
+                {% endif %}
+            </th>
+            <th scope="col"><i class="table-icon  icofont-clock-time"></i></th>    
+            <th scope="col"><i class="table-icon  icofont-penalty-card text-warning"></i></th>
+            <th scope="col"><i class="table-icon  icofont-penalty-card text-danger"></i></th>
+        </tr>
+    </thead>
+    <tbody>
+    
+    {% for season in objects %}
+        <tr style="font-size:0.9em;">
+           <!-- sm --> 
+           <td class="d-md-none">
+                <strong>{{ season.name }}</strong> <br>
+                <small class="text-muted">
+                    {{ season.team|upper  }} <br>
+                    {{ season.league|upper }}<Br>
+                </small>
+            </td>
+
+            <td class="d-none d-md-table-cell">{{ season.name }}</td>
+            <td class="d-none d-md-table-cell">{{ season.team|upper }}</td>
+            <td class="d-none d-md-table-cell"> {{ season.league|upper }}</td>
+            <td class="">{{ season.games_played }} / {{ season.first_squad_games_played }}</td>
+            {% if user.profile.is_goalkeeper %}
+                <td>{{ season.lost_goals }} </td>
+            {% else %}
+                <td>{{ season.team_goals }}</td>
+            {% endif %}
+            <td class="">{{ season.minutes_played }}'</td>
+            <td>{{ season.yellow_cards }}</td>
+            <td>{{ season.red_cards }}</td>
+
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

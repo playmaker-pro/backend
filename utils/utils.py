@@ -48,10 +48,9 @@ def generate_league_options():
         if league_name:
             name = league_name.split(' U')[0]
             lgs.append(name)
-        
     for lgn in set(lgs):
         out += '<option {% if "' + lgn + '" in request.GET|get_list:"league" %} selected="selected" {% endif %}>' + lgn + '</option>\n'
-   
+
     with open('filteroptions_league', 'w+') as filterfile:
         filterfile.write(out)
 

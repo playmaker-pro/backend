@@ -1,3 +1,21 @@
+from django.core.paginator import Paginator
+from .utils import page_object_elements_count
+
+
+class PaginateMixin:
+    paginate_limit = 30
+
+    @property
+    def page(self):
+        return self.request.GET.get('page') or 1
+
+    def paginate(self, data, limit=None):
+        limit = limit or self.paginate_limit
+        paginator = Paginator(data, limit)
+        page_number = self.page
+        page_obj = paginator.get_page(page_number)
+        page_obj.elements = page_object_elements_count(page_obj)
+        return page_obj
 
 
 class ViewFilterMixin:

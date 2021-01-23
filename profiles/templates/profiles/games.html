@@ -18,22 +18,14 @@
 <!-- Benefits of the Django application -->
 {% block content %}
 
- {% include 'profiles/player_subpage_header_black.html' %}
+{% include 'profiles/player_subpage_header_black.html' %}
 <section id="profile-games" class="profile">
-
 <div class="container" data-aos="fade-up"> 
-   
-
-    <div class='row mx-auto' >
-
-
+    <div class="row">
         {% if page_obj.paginator.count == 0 %}
-        <div class='col-md-12 text-center'>
-                   {% include 'platform/partials/_empty.html' %}
-                           
-                        <h4>Przygotwoujemy statystyki dla Twojego konta.</h4>
-                        <p>Uzupełnienie w całości Twojego piłkarskiego profilu pozwoli nam sporządzić odpowiednie metryki.</p>
-           </div>
+            <div class="col-md-12 text-center">
+                {% include 'profiles/partials/_empty_metrics.html' %}
+            </div>
         {% else %}
 
 
@@ -41,7 +33,7 @@
                 {% include 'profiles/tables/_game_table.html' with games=page_obj %}       
             </div>   
             <div class='col-md-12'>
-                {% include 'profiles/partials/_pagination.html' %}
+                {% include 'platform/partials/_pagination.html' with object_type=_('meczy')%}
             </div>       
 
         {% endif %}
@@ -49,6 +41,9 @@
 </div>
 
 </section>
+
+{% include 'platform/debug_info.html' %}
+
 {% endblock content %}
 
 

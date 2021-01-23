@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load thumbnail %}
 
-<div class="page-heading " style="box-shadow: 0px 5px 5px #aaaaaa;">
+<div class="page-heading " style="box-shadow: 0px -2px 7px #aaaaaa;">
         <div class="container pt-2"ata-aos="fade-up">
             <div class="row">
                 <div class="col-md-8">
@@ -31,12 +31,12 @@
                 </div>
                 <div class="col-md-4">
                     <div class="row">
-                         <h1 class=" d-md-none pl-3 acc-name" style="#1b1b1b;">{{ show_user.get_full_name.upper }}</h1>
+                         <h1 class=" d-md-none pl-3 acc-name">{{ show_user.get_full_name.upper }}</h1>
                             
                         <div class="col-12">
                             {% include 'profiles/partials/_inquire_message.html' %}
                         </div>
-                        <div class="col-md-12 d-none d-md-block" style="color:#fff;">
+                        <div class="col-md-12 d-none d-md-block">
                            {% include 'profiles/partials/_acc_status.html' %}
  
                         </div>

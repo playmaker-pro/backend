@@ -14,6 +14,7 @@ class ProfileVisitHistoryAdmin(admin.ModelAdmin):
 @admin.register(models.PlayerMetrics)
 class PlayerMetricsAdmin(admin.ModelAdmin):
     list_display = ['player', 'games_updated', 'games_summary_updated', 'fantasy_updated', 'fantasy_summary_updated', 'season_updated', 'season_summary_updated']
+    search_fields = ['player__user__email', 'player__user__first_name', 'player__user__last_name']
 
 
 @admin.register(models.PlayerPosition)
@@ -50,9 +51,18 @@ class ClubProfileAdmin(ProfileAdminBase):
     pass
 
 
+def calculate_metrics(modeladmin, request, queryset):
+    for pp in queryset:
+        pp.playermetrics.refresh_metrics()  # save comes inside
+
+
+calculate_metrics.short_description = "Calculate metrics"
+
+
 @admin.register(models.PlayerProfile)
 class PlayerProfileAdmin(ProfileAdminBase):
-    list_display = ('pk', 'user', 'weight', linkify('playermetrics'))
+    list_display = ('pk', 'user', linkify('playermetrics'))
+    actions = [calculate_metrics]
 
 
 @admin.register(models.CoachProfile)

@@ -1,0 +1,78 @@
+{% extends "profiles/base.html" %}
+
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load thumbnail %}
+
+{% block title %}{{ block.super }} {% trans 'Moja kariera' %} {% endblock %}
+
+
+
+
+{% comment %} 
+{% block content_header %}
+    {% include '_page_heading.html' with heading_title=page_title size=4 %}
+    {{ block.super }}
+{% endblock %} {% endcomment %}
+
+
+<!-- Benefits of the Django application -->
+{% block content %}
+{% include 'profiles/player_subpage_header_black.html' %}
+
+<section id="profile-carrier" class="profile">
+<div class="d-flex flex-column justify-content-center text-center" data-aos="fade-up"> 
+        {% if page_obj is None %}
+        <div class="col-md-12 text-center">
+            {% include 'profiles/partials/_empty_metrics.html' %}
+        </div>
+        {% else %}
+        
+
+
+   {% for season, sdata in page_obj.items %}
+        {% for league, ldata in sdata.items %}
+            {% for team, tdata in ldata.items %}
+                <div class='d-flex flex-column flex-sm-row justify-content-center  bg-white'>
+                          <div class="p-3 mb-0">
+                                <h3>{{ season }}</h3>
+                                
+                          </div>
+                           {% with min_width=86 %}
+                           <div class='d-flex flex-row justify-content-center'> 
+                                <div class="border-left border-right p-3" style="min-width:{{min_width}}px;">
+                                    <div class="h4 font-weight-bold mb-0">{{ tdata.team_goals }}</div><span class="small text-gray">{% trans 'Bramki' %}</span>
+                                </div>
+                                <div class="border-right p-3 " style="min-width:{{min_width}}px;">
+                                    <div class="h4 font-weight-bold mb-0">{{ tdata.minutes_played }}</div><span class="small text-gray">{% trans 'Minuty' %}</span>
+                                </div>
+
+                                <div class="border-right p-3" style="min-width:{{min_width}}px;">
+                                    <div class="h4 font-weight-bold mb-0">{{ tdata.yellow_cards }}</div><span class="small text-gray">{% trans 'Żółte' %}</span>
+                                </div>
+                                <div class="p-3" style="min-width:{{min_width}}px;">
+                                    <div class="h4 font-weight-bold mb-0">{{ tdata.red_cards }}</div><span class="small text-gray">{% trans 'Czerwone' %}</span>
+                                </div>
+                           </div>
+                           {% endwith %}
+                </div>
+            {% endfor %}
+            
+        {% endfor %}
+
+
+    {% endfor %}    
+
+
+
+    {% endif %}
+</div>  <!-- div container -->
+
+</section>
+<div id="debug" class="debug">
+  
+</div> 
+{% endblock content %}
+
+

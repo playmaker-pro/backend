@@ -3,7 +3,7 @@
 {% load playmaker %}
 
 {% with request.GET.urlencode|get_urls_with_no_page as get_params %}
-<div class="pagination d-block mt-2">
+<div id="pagination" class="pagination d-block mt-2">
     <span class="float-center">
         <span class="step-links text-center">
             {% if page_obj.has_previous %}

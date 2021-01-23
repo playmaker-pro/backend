@@ -7,8 +7,7 @@
 
 .helper {
     position:relative;
-    top:10px;
-    left:-5px;
+
     z-index:995;
     font-size: .65rem;
     padding:3px;
@@ -17,7 +16,20 @@
     background: #ccc;
     border-radius: 50%;
 }
+.helper:hover {
+    color:#fff;
+    background: #e03a3c;
+}
 
+.helper-top {
+    top:-9px;
+    left:0px;
+}
+
+.helper-down {
+    top:10px;
+    left:-5px;
+}
 
 .banner {
     padding: 6px 40px;
@@ -26,7 +38,15 @@
 }
 
 
+#pagination {
+    font-size:.8rem;
+}
 
+@media all and (max-width: 768px) {
+    #pagination {
+        font-size:.8rem;
+    }
+}
 
 .card-title {
     text-align: center;
@@ -64,6 +84,7 @@
 
     
 @media all and (max-width: 768px) {
+     
     .banner {
         margin-bottom: 0px;
     }

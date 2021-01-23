@@ -1,6 +1,6 @@
 {% load i18n %}
 
-  <table class="table w-auto m-auto">
+  <table class="table">
 
     {% if caption %}
     <caption><a href="{% url 'profiles:player_games' %}" >{% trans 'Zobacz więcej' %}</a></caption>
@@ -13,13 +13,27 @@
             {% endif %}
             <th scope="col" class="d-none d-md-table-cell">{% trans 'Gospodarz' %}</th>
             <th scope="col" class="d-none d-md-table-cell">{% trans 'Gość' %}</th>
-            <th scope="col" class=""><i class="icofont-score-board"></i></th>
-            <th scope="col" class=""><i class="icofont-boot-alt-1"></i></th>
-            <th scope="col" class="">{% if user.profile.is_goalkeeper %}<i class="icofont-shield text-success"></i>{% else %}<i class="icofont-goal text-success"></i> {% endif %}</th>
+            <th scope="col">
+                <i class="table-icon icofont-score-board"></i>
+            </th>
+            <th scope="col">
+                <i class="table-icon  icofont-boot-alt-1"></i>
+            </th>
+            <th scope="col">
+                {% if user.profile.is_goalkeeper %}
+                    <i class="table-icon  icofont-shield text-success"></i>
+                {% else %}
+                    <i class="table-icon  h3 icofont-goal text-success"></i>
+                {% endif %}
+            </th>
             {% if not short %}
-            <th scope="col" class=""><i class="icofont-penalty-card text-warning"></i></th>
-            <th scope="col" class=""><i class="icofont-penalty-card text-danger"></i></th>
-            <th scope="col" class=""></th>
+            <th scope="col">
+                <i class="table-icon icofont-penalty-card text-warning"></i>
+            </th>
+            <th scope="col">
+                <i class="table-icon icofont-penalty-card text-danger"></i>
+            </th>
+            <th scope="col"></th>
             {% endif %}
         </tr>
     </thead>
@@ -28,16 +42,17 @@
     {% for game in games %}
         <tr style="font-size:0.9em;">
             <td class="d-md-none">
-                {{ game.date }} <br>
-                {{ game.host_team_name|truncatechars:18 }} <br>
-                {{ game.guest_team_name|truncatechars:18 }}<Br>
+               {{ game.date_year }} {{ game.date_short }} <br>
+                <small class="text-muted">
+                {{ game.host_team_name|truncatechars:25 }} <span class="main-color"> vs.</span> {{ game.guest_team_name|truncatechars:25 }}
+                </small>
             </td>
 
             {% if not short %}
             <td class="d-none d-md-table-cell">{{ game.date }}</td>
             {% endif %}
-            <td class="d-none d-md-table-cell">{{ game.host_team_name|truncatechars:18 }}</td>
-            <td class="d-none d-md-table-cell">{{ game.guest_team_name|truncatechars:18 }}</td>
+            <td class="d-none d-md-table-cell">{{ game.host_team_name|truncatechars:25 }}</td>
+            <td class="d-none d-md-table-cell">{{ game.guest_team_name|truncatechars:25 }}</td>
             <td class="">{{ game.host_score }}:{{ game.guest_score}}</td>
             <td>{{ game.minutes_played }}'</td>
             {% if user.profile.is_goalkeeper %}

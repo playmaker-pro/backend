@@ -14,10 +14,11 @@
 .page-heading .progress {
   color: #fff;
 }
+
+
 #profile {
-    padding-top: 15px;
-    margin-left:25px;
-    margin-right:25px;
+    padding-top: 5px;
+
 }
 
 #profile .card { 
@@ -29,7 +30,31 @@
     background-color:#fff;
     border-top:0px;
 }
+@media all and (max-width: 768px) {
+  #profile { 
+    padding-top: 0px;
+    margin-left:10px;
+    margin-right:10px;
+    font-size:.9em;
+}
+  #profile .card {
+    padding-left:1px;
+    padding-right: 1px;
+    margin-bottom: 0px;
+  }
 
+  #profile .card-body {
+    padding-left:1px;
+    padding-right: 1px;
+  }
+  #profile .table { 
+    padding-left: 0px;
+    padding-right: 0px;
+  }
+  #profile .account-card {
+    border-top:none;
+  }
+}
 
 .form-section-title {
   text-align: left;
@@ -116,22 +141,49 @@ section.profile {
 .inquiry-text {
   font-size: .8rem;
 }
+
+#profile-carrier, #profile-games {
+   padding-top:0px;
+}
+
+.table-icon { font-size: 1.75rem;}
 @media all and (max-width: 768px) {   /* @todo to better understand 768px*/
-  .inquiry-text {
-    font-size: .8rem;
-  }
-  
+    .inquiry-text {
+      font-size: .8rem;
+    }
+    .table-icon {font-size:1rem;}
     .mobile {
       display: block;
     }
-    
+    #profile .table thead, #profile .table  {
+      border-top: none;
+    }
+
+    #profile-carrier .table thead, #profile-games .table thead { 
+        background-color: #F8F8F8;
+    }
+    #profile .table td, #profile-carrier .table td, #profile-games .table td {
+      padding: .4rem;
+
+    }
+    #profile-carrier, #profile-games  {
+      font-size:.9em;     
+    }
+
+    .profile .container {
+      padding-left: 0px;
+      padding-right: 0px;
+    }
+
     #profile li {
         padding: 0px;
     }
-    .profile .profile-container { 
+
+    .profile .profile-container  { 
         padding-left: 0px;
         padding-right: 0px;
     }
+
     .profile .profile-container .container { 
       padding-left: 0px;
       padding-right: 0px;
@@ -143,23 +195,9 @@ section.profile {
     .acc-info {
       font-size: .9rem;
   }
-    #profile { 
-        padding-top: 0px;
-        margin-left:10px;
-        margin-right:10px;
-    }
 
 
-    #profile .account-card {
-        border-top:none;
 
-    }
-    #profile {
-        font-size:.9em;
-    }
-    #profile .card {
-        margin-bottom: 2px;
-    }
 
     #profile .card img.avatar {
         display:block;

@@ -18,32 +18,23 @@ from inquiries.models import InquiryRequest
 from roles import definitions
 from stats import adapters
 from django.conf import settings
-from . import forms, models
-from .model_utils import (get_profile_form_model, get_profile_model,
+from profiles import forms, models
+from profiles.model_utils import (get_profile_form_model, get_profile_model,
                           get_profile_model_from_slug)
-from .utils import get_current_season
+from profiles.utils import get_current_season
 from django.contrib.auth import get_user_model
 User = get_user_model()
 from clubs.models import Team
 logger = logging.getLogger(__name__)
 from inquiries.services import unseen_requests, update_requests_with_read_status
 
-from app import mixins
+from app import mixins, utils
 
 
-class PaginateMixin:
-    paginate_limit = 30
-    @property
-    def page(self):
-        return self.request.GET.get('page') or 1
-
-    def paginate(self, data):
-        paginator = Paginator(data, self.paginate_limit)
-        page_number = self.page
-        return paginator.get_page(page_number)
 
 
-class MyObservers(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixins.ViewModalLoadingMixin):
+
+class MyObservers(generic.TemplateView, LoginRequiredMixin, mixins.PaginateMixin, mixins.ViewModalLoadingMixin):
     template_name = "profiles/observers.html"
     http_method_names = ["get"]
 
@@ -153,7 +144,7 @@ def build_request_tab(user, name, title, qs, empty_text, empty_header, actions=T
     return tab.get()
 
 
-class MyRequests(generic.TemplateView, LoginRequiredMixin,  PaginateMixin, mixins.ViewModalLoadingMixin):
+class MyRequests(generic.TemplateView, LoginRequiredMixin, mixins.PaginateMixin, mixins.ViewModalLoadingMixin):
     template_name = "profiles/requests.html"
     http_method_names = ["get"]
     paginate_limit = 100
@@ -292,85 +283,7 @@ class SlugyViewMixin:
         return user == self.request.user
 
 
-class ProfileFantasy(generic.TemplateView, SlugyViewMixin,  mixins.ViewModalLoadingMixin):
-    template_name = "profiles/fantasy2.html"
-    http_method_names = ["get"]
 
-    def get(self, request, *args, **kwargs):
-        user = self.select_user_to_show()
-        if self._is_owner(user):
-            kwargs["editable"] = True
-
-        _id = user.profile.data_mapper_id
-        season_name = get_current_season()
-        kwargs['season_name'] = season_name
-        kwargs['show_user'] = user
-        kwargs["fantasy"] = self.get_data_or_calculate(user)
-        kwargs['page_title'] = 'Twoje fantasy'
-        kwargs['modals'] = self.modal_activity(request.user)
-        return super().get(request, *args, **kwargs)
-
-    def get_data_or_calculate(self, user):
-        season_name = get_current_season()
-        _id = user.profile.data_mapper_id
-        if user.profile.playermetrics.how_old_days(fantasy=True) >= 7 and user.profile.has_data_id:
-            fantasy = adapters.PlayerFantasyDataAdapter(_id).get(season=season_name, full=True)
-            user.profile.playermetrics.update_fantasy(fantasy)
-        return user.profile.playermetrics.fantasy
-
-
-class ProfileCarrier(generic.TemplateView, SlugyViewMixin, mixins.ViewModalLoadingMixin):
-    template_name = "profiles/carrier.html"
-    http_method_names = ["get"]
-
-    def get(self, request, *args, **kwargs):
-        # user = self.request.user
-        user = self.select_user_to_show()
-        _id = user.profile.data_mapper_id
-
-        if self._is_owner(user):
-            kwargs["editable"] = True
-        kwargs['modals'] = self.modal_activity(request.user)
-        kwargs['show_user'] = user
-        kwargs["carrier"] = self.get_data_or_calculate(user)
-        kwargs['page_title'] = 'Twoja kariera'
-        return super().get(request, *args, **kwargs)
-
-    def get_data_or_calculate(self, user):
-        _id = user.profile.data_mapper_id
-        if user.profile.playermetrics.how_old_days(season=True) >= 7 and user.profile.has_data_id:
-            season = adapters.PlayerStatsSeasonAdapter(_id).get(groupped=True)
-            user.profile.playermetrics.update_season(season)
-        user.profile.playermetrics.refresh_from_db()
-        return user.profile.playermetrics.season
-
-
-class ProfileGames(generic.TemplateView, PaginateMixin, SlugyViewMixin, mixins.ViewModalLoadingMixin):
-    # @todo: add limit handling for futhure unknown usage.
-    template_name = "profiles/games.html"
-    http_method_names = ["get"]
-    paginate_limit = 15
-
-    def get(self, request, *args, **kwargs):
-
-        user = self.select_user_to_show()
-
-        games = self.get_data_or_calculate(user)
-        games = games or []
-        if self._is_owner(user):
-            kwargs["editable"] = True
-        kwargs['modals'] = self.modal_activity(request.user)
-        kwargs['show_user'] = user
-        kwargs['page_obj'] = self.paginate(games)
-        kwargs['page_title'] = 'Twoje mecze'
-        return super().get(request, *args, **kwargs)
-
-    def get_data_or_calculate(self, user):
-        _id = user.profile.data_mapper_id
-        if user.profile.playermetrics.how_old_days(games=True) >= 7 and user.profile.has_data_id:
-            games = adapters.PlayerLastGamesAdapter(_id).get()
-            user.profile.playermetrics.update_games(games)
-        return user.profile.playermetrics.games
 
 
 def convert_form_names(data: dict):

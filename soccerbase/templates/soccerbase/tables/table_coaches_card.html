@@ -88,7 +88,7 @@
               <a href="{{ object.profile.get_permalink }}"> 
                 <img  class="rounded img-responsive" src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
                 <img style="padding-left:15px;" class="flag" src="{{ object.profile.country.flag }}" alt="flag">
-                <strong >{{ object.get_full_name|upper}} {{ object.profile.age|default:'' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}
+                <strong>{{ object.get_full_name|upper}} {{ object.profile.age|default:'' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}
                         {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
                 </strong>
               </a>

@@ -1,9 +1,9 @@
 
 
-{% with tooltip_title=tooltip_title tooltip_position=tooltip_position%}
+{% with tooltip_title=tooltip_title tooltip_position=tooltip_position helper_positon=helper_position %}
 
 <span
-    class="helper icofont-question"
+    class="helper icofont-question {% if helper_position == 'top' %}helper-top{% else %}helper-down{% endif %}"
     data-toggle="tooltip" 
     data-placement="{{ tooltip_position }}" 
     title="{{ tooltip_title }}"

@@ -105,10 +105,11 @@
                                                             <img class="avatar rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
 
                                                             <img class="flag pl-3" src="{{ object.profile.country.flag }}" alt="flag">
-                                                            {{object.first_name|upper}} {{ object.last_name|upper}} 
+                                                            <strong>
+                                                            {{ object.get_full_name|upper}}
                                                             {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
                                                             {{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}
-                                                            
+                                                            </strong>
                                                         </a>
                                                     
                                                     </div>
