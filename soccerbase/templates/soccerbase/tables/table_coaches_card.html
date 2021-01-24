@@ -84,7 +84,7 @@
              
                         </div>
 
-            <div class="d-none d-md-inline col-md-3">
+            <div class="sc-cell d-none d-md-flex col-md-3">
               <a href="{{ object.profile.get_permalink }}"> 
                 <img  class="rounded img-responsive" src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
                 <img style="padding-left:15px;" class="flag" src="{{ object.profile.country.flag }}" alt="flag">
@@ -94,24 +94,24 @@
               </a>
             </div>
 
-            <div class=" d-none d-md-inline  col-3 col-md-2  text-left" >
+            <div class="sc-cell d-none d-md-flex  col-3 col-md-2  text-left" >
                 {{ object.profile.display_team|default:'' }}
             </div >
-            <div class="d-none d-md-inline  col-md-2 text-left">
+            <div class="sc-cell d-none d-md-flex  col-md-2 text-left">
                  {{ object.profile.display_league|default:''|title  }}
             </div >
 
             
-            <div class="d-none d-md-inline  col-3 col-md-2  text-left">
+            <div class="sc-cell d-none d-md-flex  col-3 col-md-2  text-left">
                 {{ object.profile.display_voivodeship|default:''|lower  }}
             </div>
 
             
-            <div class="d-none d-md-inline  col-3 col-md-1  text-left">
+            <div class=" sc-cell d-none d-md-flex  col-3 col-md-1  text-left">
               {{ object.profile.get_licence_display|default:''|upper }}
             </div>
 
-        <div class="d-none d-md-inline col-md-2">
+        <div class="sc-cell d-none d-md-flex col-md-2">
           <span class="float-right">
               {% profile_link object text='profil' checks=False %}
             {% observed_link user object text='obserwuj'  %}

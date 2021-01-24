@@ -89,6 +89,14 @@ def inquiry_display_name(context, inquiry):
     flag = None
     picture = None
     link = None
+    functional_name = None
+
+    if inquiry.sender != user:
+        if inquiry.sender.is_club:
+            functional_name = {
+                'name': inquiry.sender.get_full_name,
+                'role': inquiry.sender.profile.get_club_role_display()
+            }
 
     if inquiry.sender != user:
         obj = inquiry.sender
@@ -133,7 +141,7 @@ def inquiry_display_name(context, inquiry):
             link = obj.profile.club_object.get_permalink
             picture = obj.profile.club_object.picture
 
-    return {'name': name, 'link': link, 'flag': flag, 'picture': picture}
+    return {'name': name, 'link': link, 'flag': flag, 'picture': picture, 'functional_name': functional_name}
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
@@ -218,6 +226,7 @@ class Button:
         return {
             'checks': self.checks,
             'button_icon': self.icon,
+            'button_css': self.css_class,
             'button_text': self.text,
             'modals': self.context['modals'],
         }
@@ -362,7 +371,6 @@ def request_link(context, user, showed_user):
     if not user.is_player and not user.is_coach and not user.is_club:
         return off
 
-    
     if isinstance(showed_user, Team) or isinstance(showed_user, Club):
         if isinstance(showed_user, Team):
             if showed_user.manager is not None:
@@ -470,7 +478,7 @@ def observed_link(context, user, showed_user, text=False, otype='user', icon=Non
     if not user.is_authenticated:
         return {'off': True}
     active_class = None
-   
+
     button_text = 'obserwuj'
 
     if context.get('observed'):
@@ -519,6 +527,7 @@ def seemore_link(context, link, checks=True):
     if not context['user'].is_authenticated:
         pass
     return {
+        'button_class': 'btn-pm btn-pm-sm',
         'checks': checks,
         'button_icon': None,
         'button_text': 'zobacz więcej',
@@ -566,7 +575,7 @@ def get_club_edit_link(context, club, text=None, css_class=None, checks=True):
         return payload_off
 
     link = reverse('clubs:edit_club', kwargs={'slug': club.slug})
-
+    css_class = css_class or 'btn-pm btn-pm-sm'
     button = ActionButton(
         url=link,
         text='Edytuj',
@@ -584,6 +593,7 @@ def get_club_link(context, object, text=None, css_class=None, checks=True):
 
     return {
         'checks': checks,
+        'button_css': 'btn-pm btn-pm-sm',
         'button_icon': 'shield',
         'button_url': object.get_permalink,
         'button_text': text,

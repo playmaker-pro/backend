@@ -218,9 +218,17 @@ section.profile {
 .table-icon { font-size: 1.75rem;}
 
 
+.alignRight {
+  overflow:hidden;
 
+  word-wrap: break-word;
 
-@media all and (max-width: 768px) {   /* @todo to better understand 768px*/
+}
+
+#profile .table td, #profile-carrier .table td, #profile-games .table td {
+  vertical-align: middle;
+}
+@media all and (max-width: 768px) {
     .inquiry-text {
       font-size: .8rem;
     }
@@ -237,6 +245,7 @@ section.profile {
     }
     #profile .table td, #profile-carrier .table td, #profile-games .table td {
       padding: .4rem;
+
 
     }
     #profile-carrier, #profile-games  {

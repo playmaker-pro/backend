@@ -11,21 +11,16 @@
         <div class="d-none d-md-inline col-md-4 text-left">
           Nazwa drużyny
         </div>
-
         <div class="col-5 col-md-2 text-left">
            Poziom rozgrywkowy
-        </div >
-        
-        <div class="col-6 col-md-2 text-left">
-            Województwo
-        </div >
-
-        <div class="col-5 col-md-2 text-left">
-             Trener
         </div>
-
+        <div class="col-6 col-md-2 text-left">
+          Województwo
+        </div>
+        <div class="col-5 col-md-2 text-left">
+          Trener
+        </div>
         <div class="d-none d-md-inline col-md-2">
-
         </div>
     </div>
   </div>
@@ -60,35 +55,31 @@
                {{ object.display_league|default:''|title  }}, {{ object.display_voivodeship|default:''|lower|truncatechars:24 }}
             </div>
         </div>
-                           <div class="d-none d-md-inline col-md-4">
+                           <div class="sc-cell d-none d-md-flex col-md-4">
                             <a href="{{ object.get_permalink }}"> 
                               <img class="avatar rounded img-responsive" src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
                               <strong style="padding-left:15px;">{{ object.name|upper}}</strong>
                             </a>
                           </div>
-                    
-                  
-                              <div class="d-none d-md-inline col-6 col-md-2  text-left">
-                                  {{ object.display_league|default:''|title  }}
-                              </div >
 
-                    
-                              <div class="d-none d-md-inline col-5 col-md-2   text-left">
-                                  {{ object.display_voivodeship|default:''|lower|truncatechars:24 }}
+                              <div class="sc-cell d-none d-md-flex col-6 col-md-2  text-left">
+                                  {{ object.display_league|default:''|title  }}
                               </div>
 
-                              <div class="d-none d-md-inline col-6 col-md-2  text-left">
+                              <div class="sc-cell d-none d-md-flex col-5 col-md-2 text-left">
+                                  {{ object.display_voivodeship|default:''|lower|truncatechars:25 }}
+                              </div>
+
+                              <div class="sc-cell d-none d-md-flex col-6 col-md-2  text-left">
                                   <a href="{{ object.manager.profile.get_permalink }} ">{{ object.manager.get_full_name|default:''|upper }}</a>
-                              </div >
+                              </div>
                       
-
-
-        <div class="d-none d-md-inline col-md-2">
-          <span class="float-right"> 
-            {% get_team_link object text='profil' checks=False %}
-            {% observed_link user object otype='team'%}
-          </span>
-        </div>
+                              <div class="sc-cell d-none d-md-flex col-md-2">
+                                <span class="float-right"> 
+                                  {% get_team_link object text='profil' checks=False %}
+                                  {% observed_link user object otype='team'%}
+                                </span>
+                              </div>
     </div>
   </div>
   <div hidden  class="card-footer row no-gutters   d-md-none">

@@ -258,12 +258,16 @@ button[disabled=disabled], button:disabled {
   border: 1px solid #e03a3c;
   border-radius: 5px;
 }
+
+
 @media (max-width: 768px) {
   .btn-request {
     padding: 3px 3px;
     /*font-size:.8rem;*/
   }
 }
+
+
 .btn-requested {
 
   background: #e03a3c;

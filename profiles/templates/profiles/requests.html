@@ -42,9 +42,11 @@
                         <div class="card-body table-item"> 
                             <div class="row no-gutters">
 
-                                <div class="col-9 col-md-3">
+                                <div class="col-9 col-md-4">
                                     {% inquiry_display_name object %}
+
                                 </div>
+
                                 <div class="d-md-none pull-right"> 
                                     {% if object.sender != user %}
                                         {% profile_link object.sender checks=False text='profil' %}
@@ -53,22 +55,13 @@
                                     {% endif %}
                                 </div>
 
-                                {% if object.sender != user %}
-                                    {% if object.sender.is_club %}
-                                    <div class="col-6 col-md-2">
-                                    
-                                        <small class="text-muted">{{ object.sender.profile.get_club_role_display }}</small>
-                                    
-                                        {{ object.sender.get_full_name }}
-                                    </div>
-                                 {% endif %}  
-                                {% endif %}
-
-                                <div class="d-none d-md-inline col-md-2">
-                                     {% include 'inquiries/partials/status.html' with object=object%}    
+                                <div class="sc-cell d-none d-md-flex col-md-2">
+                                    <span>
+                                     {% include 'inquiries/partials/status.html' with object=object %}
+                                     </span>  
                                 </div>
 
-                                <div class="col-6 col-md-2"> 
+                                <div class="sc-cell d-flex col-6 col-md-3"> 
                                    
                                     {% if object.sender != user %}
                                         {% if object.body %}
@@ -83,20 +76,10 @@
                                     {% endif %}
                                 </div>
 
-                                <div class="d-none d-md-inline col-md-1"> 
+                                <div class="sc-cell d-none d-md-flex col-md-1"> 
                                     {{ object.created_at|date:'Y-m-d H:i'  }}
                                 </div>
 
-                               
-                                <div class="d-none d-md-inline col-md-2">
-                                    <span class="pull-right"> 
-                                    {% if tab.actions and object.is_active %}
-                                        {% update_request_button object accept=True %}
-    
-                                        {% update_request_button object accept=False %}
-                                    {% endif %}
-                                    </span>
-                                </div>
                                 
                             </div>
                         </div>

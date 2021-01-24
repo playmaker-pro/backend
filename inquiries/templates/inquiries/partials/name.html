@@ -6,4 +6,7 @@
         <img class="flag" src="{{ flag }}" alt="flag">
     {% endif %}
     {{ name|upper }}
+    {% if functional_name %}
+        (<small>{{ functional_name.role }}</small> {{ functional_name.name }})
+    {% endif %}
 </a>

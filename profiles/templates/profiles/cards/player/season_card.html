@@ -1,59 +1,50 @@
 {% load i18n %}
 {% load playmaker %}
 <div class="card">
-    <!--img class="card-img-top" src="img_avatar1.png" alt="Card image"-->
     <div class="card-body">
-    
-        
         <h2 class="card-title">{% trans 'Sezon' %} {{ season_stat.season_name }}</h2>
         <h6 class="card-subtitle mb-2 text-muted"></h6>
-
         <div class="card-text text-center">
-
-
             {% if season_circle_stats %}
-                  <div class='row'>
-                    {% for circle_stat in season_circle_stats %}
-                      <!-- progress bar holder 1-->
-                      <div class="col-xl-4 col-lg-4 mb-6">
-                        <div class="bg-white rounded-lg p-1">
-                          <h2 class="h6 font-weight-bold text-center mb-4">{{ circle_stat.title }}</h2>
-                          <!-- Progress bar 1 -->
-                          <div class="progress-circle mx-auto" data-value='{{circle_stat.value}}' data-shift='{{circle_stat.shift}}'>
-                            <span class="progress-left">
-                              <span class="progress-bar border-{{ circle_stat.bs4_css }}"></span>
-                            </span>
-                            <span class="progress-right">
-                              <span class="progress-bar border-{{ circle_stat.bs4_css }}"></span>
-                            </span>
-                            <div class="progress-value w-100 h-100 rounded-circle d-flex align-items-center justify-content-center ">
-                                   <div class="progress-circle-text h4 font-weight-bold">{{ circle_stat.value }}%</div>  
-                            </div>
-                          </div>
-                          <!-- END -->
+              <div class="row no-gutters">
+                {% for circle_stat in season_circle_stats %}
+                  <!-- progress bar -->
+                  <div class="col-xl-4 col-lg-4 col-4 mb-6">
+                    <div class="bg-white rounded-lg p-1">
+                      <h4 class="circle-title h6 font-weight-bold text-center">{{ circle_stat.title }}</h4>
+                      <div class="progress-circle mx-auto" data-value='{{circle_stat.value}}' data-shift='{{circle_stat.shift}}'>
+                        <span class="progress-left">
+                          <span class="progress-bar border-{{ circle_stat.bs4_css }}"></span>
+                        </span>
+                        <span class="progress-right">
+                          <span class="progress-bar border-{{ circle_stat.bs4_css }}"></span>
+                        </span>
+                        <div class="progress-value w-100 h-100 rounded-circle d-flex align-items-center justify-content-center ">
+                                <div class="progress-circle-text font-weight-bold">{{ circle_stat.value }}%</div>  
                         </div>
                       </div>
-                    {% endfor %}
+                      <!-- END -->
+                    </div>
+                  </div>
+                {% endfor %}
 
-                  </div> <!--row-->
-
-
+              </div> <!--row-->
                   <div class='row'>
                       <div class="col">
                           <!-- Demo info-->
                           <div class="row text-center mt-4">
                             <div class="col-3 border-right">
-                              <div class="h4 font-weight-bold mb-0">{{ season_stat.team_goals }}</div><span class="small text-gray">{% trans 'Bramki' %}</span>
+                              <div class="season-numbers h4 font-weight-bold mb-0">{{ season_stat.team_goals }}</div><span class="small text-gray">{% trans 'Bramki' %}</span>
                             </div>
                             <div class="col-3 border-right">
-                              <div class="h4 font-weight-bold mb-0">{{ season_stat.minutes_played }}</div><span class="small text-gray">{% trans 'Minuty' %}</span>
+                              <div class="season-numbers h4 font-weight-bold mb-0">{{ season_stat.minutes_played }}</div><span class="small text-gray">{% trans 'Minuty' %}</span>
                             </div>
 
                             <div class="col-3 border-right">
-                              <div class="h4 font-weight-bold mb-0">{{ season_stat.yellow_cards }}</div><span class="small text-gray">{% trans 'Żółte' %}</span>
+                              <div class="season-numbers h4 font-weight-bold mb-0">{{ season_stat.yellow_cards }}</div><span class="small text-gray">{% trans 'Żółte' %}</span>
                             </div>
                             <div class="col-3">
-                              <div class="h4 font-weight-bold mb-0">{{ season_stat.red_cards }}</div><span class="small text-gray">{% trans 'Czerwone' %}</span>
+                              <div class="season-numbers h4 font-weight-bold mb-0">{{ season_stat.red_cards }}</div><span class="small text-gray">{% trans 'Czerwone' %}</span>
                             </div>
                           </div>
                           <!-- END -->

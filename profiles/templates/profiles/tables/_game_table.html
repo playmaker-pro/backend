@@ -21,9 +21,9 @@
             </th>
             <th scope="col">
                 {% if show_user.profile.is_goalkeeper %}
-                    <i class="table-icon icofont-shield text-success"></i>{% include 'platform/buttons/helper.html' with helper_position="top" tooltip_title=_("Zachowanie czystego konta jako bramkarz podczas spotkania. Kolor czerwony oznacza wystąpienie w meczu i nie zachowanie czystego konta.") tooltip_position="top" %}
+                    <i class="table-icon icofont-goal text-success"></i>{% include 'platform/buttons/helper.html' with helper_position="top" tooltip_title=_("Zielony oznacza czyste konto, a czerwony brak czystego konta. Minimum 45 minut.") tooltip_position="top" %}
                 {% else %}
-                    <i class="table-icon icofont-goal text-success"></i>{% include 'platform/buttons/helper.html' with helper_position="top" tooltip_title=_("Strzelone bramki") tooltip_position="top" %}
+                    <i class="table-icon icofont-soccer text-success"></i>{% include 'platform/buttons/helper.html' with helper_position="top" tooltip_title=_("Strzelone bramki") tooltip_position="top" %}
                 {% endif %}
             </th>
             {% if not short %}
@@ -42,10 +42,10 @@
     {% for game in games %}
         <tr style="font-size:0.9em;">
             <td class="d-md-none">
-               {{ game.date_year }} {{ game.date_short }} <br>
-                <small class="text-muted">
-                {{ game.host_team_name|truncatechars:25 }} <span class="main-color"> vs.</span> {{ game.guest_team_name|truncatechars:25 }}
-                </small>
+                <small class="text-muted">{{ game.date_year }} {{ game.date_short }}  </small>
+                <br>
+                {{ game.host_team_name|truncatechars:25 }} <br> {{ game.guest_team_name|truncatechars:25 }}
+               
             </td>
 
             {% if not short %}
