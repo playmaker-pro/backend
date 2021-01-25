@@ -1,17 +1,19 @@
- <li class="nav-item" ><a class="nav-link" href="/about-project/">O projekcie</a></li>
+{% load i18n %}
+<li class="nav-item" ><a class="nav-link" href="/about-project/">{% trans 'O projekcie' %}</a></li>
 {% comment %} <li><a href="#services">Fantasy</a></li>
 <li><a href="#portfolio">Rozgrywki</a></li> {% endcomment %}
 <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="">Bazy</a>
+    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="">{% trans 'Bazy' %}</a>
     <div class="dropdown-menu">
-        <a class="dropdown-item" href="{% url 'soccerbase:players' %}">Piłkarzy</a>
-        <a class="dropdown-item" href="{% url 'soccerbase:coaches' %}">Trenerów</a>
-        <a class="dropdown-item" href="{% url 'soccerbase:teams' %}">Klubów</a>
+        <a class="dropdown-item" href="{% url 'soccerbase:players' %}">{% trans 'Piłkarzy' %}</a>
+        <a class="dropdown-item" href="{% url 'soccerbase:coaches' %}">{% trans 'Trenerów<' %}/a>
+        <a class="dropdown-item" href="{% url 'soccerbase:teams' %}">{% trans 'Klubów' %}</a>
     </div>
 </li>
+<li class="nav-item"><a class="nav-link" href="{% url 'marketplace:announcements'%}">{% trans 'Testy piłkarskie' %}</a></li>
 {% comment %} <li><a href="/products/">Produkty</a></li> {% endcomment %}
-<li class="nav-item"><a class="nav-link" href="/transfer/">Transfer</a></li>
-<li class="nav-item"><a class="nav-link" href="/scouting/">Skauting</a></li>
+<li class="nav-item"><a class="nav-link" href="/transfer/">{% trans 'Transfer' %}</a></li>
+<li class="nav-item"><a class="nav-link" href="/scouting/">{% trans 'Skauting' %}</a></li>
 {% comment %} <li><a href="/blog">Blog</a></li> {% endcomment %}
 {% comment %} <li><a href="#contact">Kontakt</a></li> {% endcomment %}
 

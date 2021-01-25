@@ -17,7 +17,8 @@ from django.utils.translation import (
 TEMPLATE_ACTION_SCRIPT = 'platform/buttons/action_script.html'
 TEMPLATE_ACTION_LINK = 'platform/buttons/action_link.html'
 TEMPLATE_ACTION_BUTTON = 'platform/buttons/action_button.html'
-
+DEFAULT_BUTTON_CSS_CLASS = 'btn-pm btn-pm-sm'
+DEFAULT_TEAM_ICON = 'shield'
 
 logger = logging.getLogger(__name__)
 
@@ -219,14 +220,14 @@ class Button:
         self.checks = checks
         self.context = context
         self.text = text
-        self.css_class = css_class
+        self.css_class = css_class or DEFAULT_BUTTON_CSS_CLASS
         self.icon = icon
 
     def get_json(self):
         return {
             'checks': self.checks,
             'button_icon': self.icon,
-            'button_css': self.css_class,
+            'button_class': self.css_class,
             'button_text': self.text,
             'modals': self.context['modals'],
         }
@@ -527,7 +528,7 @@ def seemore_link(context, link, checks=True):
     if not context['user'].is_authenticated:
         pass
     return {
-        'button_class': 'btn-pm btn-pm-sm',
+        'button_class': DEFAULT_BUTTON_CSS_CLASS,
         'checks': checks,
         'button_icon': None,
         'button_text': 'zobacz więcej',
@@ -538,12 +539,15 @@ def seemore_link(context, link, checks=True):
 
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def get_team_link(context, team, text=None, css_class=None, checks=True):
-    button = ActionButton(url=team.get_permalink, text=text, context=context, css_class=css_class, icon='shield', checks=checks)
+
+    css_class = css_class or DEFAULT_BUTTON_CSS_CLASS
+    button = ActionButton(url=team.get_permalink, text=text, context=context, css_class=css_class, icon=DEFAULT_TEAM_ICON, checks=checks)
     return button.get_json()
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def get_team_edit_link(context, team, text=None, css_class=None, checks=True):
+    css_class = css_class or DEFAULT_BUTTON_CSS_CLASS
     payload_off = {'off': True}
     user = context['user']
     if not user.is_authenticated:
@@ -575,7 +579,7 @@ def get_club_edit_link(context, club, text=None, css_class=None, checks=True):
         return payload_off
 
     link = reverse('clubs:edit_club', kwargs={'slug': club.slug})
-    css_class = css_class or 'btn-pm btn-pm-sm'
+    css_class = css_class or DEFAULT_BUTTON_CSS_CLASS
     button = ActionButton(
         url=link,
         text='Edytuj',
@@ -589,11 +593,11 @@ def get_club_edit_link(context, club, text=None, css_class=None, checks=True):
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def get_club_link(context, object, text=None, css_class=None, checks=True):
 
-    css_class = css_class or ''
+    css_class = css_class or DEFAULT_BUTTON_CSS_CLASS
 
     return {
         'checks': checks,
-        'button_css': 'btn-pm btn-pm-sm',
+        'button_class': css_class,
         'button_icon': 'shield',
         'button_url': object.get_permalink,
         'button_text': text,
@@ -641,7 +645,7 @@ def get_my_club_link(context, text=None, css_class=None):
         link = '#'
     else:
         try:
-            link = user.managed_club.get_permalink  
+            link = user.managed_club.get_permalink  # this works because this bound method is passed to template, funny..
         except Exception as e:
             logger.error(e)
             link = '#'

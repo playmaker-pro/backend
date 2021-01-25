@@ -85,7 +85,11 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
         if data is None:
             data = []
         data = self.flattern_carrier_structure(data)
+        data = self.sort(data)
         return self.paginate(data)
+
+    def sort(self, data):
+        return sorted(data, key=lambda k: k['name'], reverse=True)
 
     def flattern_carrier_structure(self, data: dict) -> list:
         '''

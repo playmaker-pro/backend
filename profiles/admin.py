@@ -61,7 +61,7 @@ calculate_metrics.short_description = "Calculate metrics"
 
 @admin.register(models.PlayerProfile)
 class PlayerProfileAdmin(ProfileAdminBase):
-    list_display = ('pk', 'user', linkify('playermetrics'))
+    list_display = ('pk', 'user', 'data_mapper_id', linkify('playermetrics'))
     actions = [calculate_metrics]
 
 
