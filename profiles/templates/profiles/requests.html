@@ -45,7 +45,7 @@
                                     {% inquiry_display_name object %}
                                 </div>
 
-                                <div class="d-md-none pull-right"> 
+                                <div hidden class="d-md-none pull-right"> 
                                     {% if object.sender != user %}
                                         {% profile_link object.sender checks=False text='profil' %}
                                     {% else %}
@@ -88,9 +88,7 @@
                             <span class="float-right"> 
                              
                                 {% include 'inquiries/partials/status.html' with object=object%}
-                                    
-                                  
-                               
+
                                 {% if object.is_active and tab.actions %}
                                     {% update_request_button object accept=True %}
                                     {% update_request_button object accept=False %}
