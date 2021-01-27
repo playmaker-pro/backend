@@ -1,42 +1,46 @@
+{% load static %}
 <div class="footer-top">
     <div class="container">
     <div class="row">
 
         <div class="col-lg-3 col-md-6 footer-contact">
         <h3>Play<span>Maker</span>.pro</h3>
-        <p>
-            PlayMaker sp. z o. o. <br>
-            NIP: 899 287 14 68 <br>
-            KRS: 0000813330 <br>
-            REGON: 384848876<br>
-            Wrocław<br><br>
-            <strong>Telefon:</strong> 504 271 466<br>
-            <strong>Email:</strong> biuro@playmaker.pro<br>
-        </p>
+            <p>
+                PlayMaker sp. z o. o. <br>
+                NIP: 899 287 14 68 <br>
+                KRS: 0000813330 <br>
+                REGON: 384848876<br>
+                Wrocław<br><br>
+                <strong>Telefon:</strong> 504 271 466<br>
+                <strong>Email:</strong> biuro@playmaker.pro<br>
+            </p>
         </div>
 
         <div class="col-lg-2 col-md-6 footer-links">
         <h4>Przydatne linki</h4>
-        <ul>
-            <li><i class="bx bx-chevron-right"></i> <a href="#">Strona Główna</a></li>
-            <li><i class="bx bx-chevron-right"></i> <a href="#">O projekcie</a></li>
-            {% comment %} <li><i class="bx bx-chevron-right"></i> <a href="#">Produkty</a></li> {% endcomment %}
-            <li><i class="bx bx-chevron-right"></i> <a href="/rules">Regularmin</a></li>
-            <li><i class="bx bx-chevron-right"></i> <a href="/privacypolicy">Warunki prywatności</a></li>
-        </ul>
+            <ul>
+                <li><i class="bx bx-chevron-right"></i> <a href="#">Strona Główna</a></li>
+                <li><i class="bx bx-chevron-right"></i> <a href="#">O projekcie</a></li>
+                {% comment %} <li><i class="bx bx-chevron-right"></i> <a href="#">Produkty</a></li> {% endcomment %}
+                <li><i class="bx bx-chevron-right"></i> <a href="/rules">Regularmin</a></li>
+                <li><i class="bx bx-chevron-right"></i> <a href="/privacypolicy">Warunki prywatności</a></li>
+            </ul>
         </div>
 
         <div class="col-lg-3 col-md-6 footer-links">
         <h4>Nasze usługi</h4>
-        <ul>
-            <li><i class="bx bx-chevron-right"></i> <a href="/scouting">Skauting</a></li>
-            <li><i class="bx bx-chevron-right"></i> <a href="/transfer">Wsparcie transferowe</a></li>
-            {% comment %} <li><i class="bx bx-chevron-right"></i> <a href="#">Cos interesujacego innegot</a></li>
-            <li><i class="bx bx-chevron-right"></i> <a href="#">Moze jeszcze cos</a></li> {% endcomment %}
-            <li><i class="bx bx-chevron-right"></i> {% include 'partials/_link_limit.html' %}</li>
-        </ul>
+            <ul>
+                <li><i class="bx bx-chevron-right"></i> <a href="/scouting">Skauting</a></li>
+                <li><i class="bx bx-chevron-right"></i> <a href="/transfer">Wsparcie transferowe</a></li>
+                {% comment %} <li><i class="bx bx-chevron-right"></i> <a href="#">Cos interesujacego innegot</a></li>
+                <li><i class="bx bx-chevron-right"></i> <a href="#">Moze jeszcze cos</a></li> {% endcomment %}
+                <li><i class="bx bx-chevron-right"></i> {% include 'partials/_link_limit.html' %}</li>
+            </ul>
         </div>
-
+        <div class="col-lg-4 col-md-6">
+            <img src="{% static 'assets/img/coop/lotto.jpg' %}" alt="logo_lotto">
+            <img src="{% static 'assets/img/coop/vitasportpl.jpg' %}" alt="logo_vitasport">
+        </div>
         {% comment %} <div class="col-lg-4 col-md-6 footer-newsletter">
         <h4>Dołącz do newslettera</h4>
         <p>Bądź zawze na bierząco z nowościami PlayMakera. @todo not working yet..</p>
