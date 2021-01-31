@@ -113,7 +113,7 @@ class TeamsTable(TableView):
         return queryset
 
     def get_queryset(self):
-        return Team.objects.all()
+        return Team.objects.filter(visible=True)
 
 
 class CoachesTable(TableView):

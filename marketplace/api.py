@@ -20,12 +20,11 @@ def approve_announcement(request):
     if request.POST.get('action') == 'post':
         if not user.is_player:
             return  # @todo tu cos dorobic
-        
+
         _id = request.POST.get('id')
         if _id:
 
             ann = get_object_or_404(Announcement, id=int(_id))
-  
             #  ann.history.increment()  # @todo 1 coomit to  @ todo zwieszkyc ilosc odwiedzajcych ogloszeniee
             ann.subscribers.add(user)
             annoucement_notify_author(ann, user)

@@ -22,8 +22,22 @@ class Voivodeship(models.Model):
         return f'{self.name}'
 
 
+def remove_polish_chars(filename):
+    return filename.replace('ł', 'l').replace('ą', 'a').replace('ó', 'o').replace('ż', 'z').replace('ź', 'z').replace('ń', 'n').replace('ę', 'e').replace('ś', 's').replace('ć', 'c')
+
+
 class Club(models.Model):
     PROFILE_TYPE = 'klub'
+
+    autocreated = models.BooleanField(default=False, help_text='Autocreated from s38')
+
+    mapping = models.TextField(null=True, blank=True, help_text='Mapping names comma separated. eg "name X", "name Xi"')
+
+    def get_mapped_names(self):
+        if self.mapping:
+            if isinstance(self.mapping, str):
+                return self.mapping.split(',')
+        return None
 
     manager = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -72,8 +86,8 @@ class Club(models.Model):
         return conver_vivo_for_api(self.voivodeship.name)
 
     def get_file_path(instance, filename):
-        filename = filename.replace('ł', 'l').replace('ą', 'a').replace('ó', 'o').replace('ż', 'z').replace('ź', 'z').replace('ń', 'n').replace('ę', 'e').replace('ś', 's')
-        return f"club_pics/%Y-%m-%d/{filename}"
+        '''Replcae server language code mapping'''
+        return f"club_pics/%Y-%m-%d/{remove_polish_chars(filename)}"
 
     picture = models.ImageField(
         _("Zdjęcie"),
@@ -208,6 +222,19 @@ class Team(models.Model):
         'fizo',
         'diet_suplements'
     ]
+
+    mapping = models.TextField(null=True, blank=True, help_text='Mapping names comma separated. eg "name X, name Xi"')
+
+    def get_mapped_names(self):
+        if self.mapping:
+            if isinstance(self.mapping, str):
+                return self.mapping.split(',')
+        return None
+
+    visible = models.BooleanField(default=True, help_text='Visible on database')
+
+    autocreated = models.BooleanField(default=False, help_text='Autocreated from s38')
+
     gender = models.ForeignKey(
         Gender,
         on_delete=models.SET_NULL,
@@ -244,9 +271,9 @@ class Team(models.Model):
         max_length=255,
         blank=True,
         editable=False)
+
     def get_file_path(instance, filename):
-        filename = filename.replace('ł', 'l').replace('ą', 'a').replace('ó', 'o').replace('ż', 'z').replace('ź', 'z').replace('ń', 'n').replace('ę', 'e').replace('ś', 's')
-        return f"team_pics/%Y-%m-%d/{filename}"
+        return f"team_pics/%Y-%m-%d/{remove_polish_chars(filename)}"
 
     picture = models.ImageField(
         _("Zdjęcie"),

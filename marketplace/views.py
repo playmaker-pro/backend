@@ -88,9 +88,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 else:
                     return JsonResponse({})
         else:
-            
             if user.is_coach or user.is_club:
-                
                 if user.is_coach:
                     form = AnnouncementForm(initial={
                         'club': user.profile.team_object.club,
@@ -112,7 +110,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 # form.instance.league = request.user.profile.display_league
             else:
                 return JsonResponse({})
-        
+
         form_raw_data = render_crispy_form(form)
         # form_raw_data = form_raw_data.replace('<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>', '')
         data['form'] = form_raw_data
@@ -134,7 +132,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
             'messages': [],
         }
         _id = request.POST.get('id')
-        
+
         if user.announcementuserquota.left <= 0 and not _id:
             return JsonResponse(data)
         if _id:
@@ -186,7 +184,6 @@ class AnnouncementsView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixi
     page_title = 'Testy Piłkarskie'
 
     def filter_queryset(self, queryset):
-        
         queryset = queryset.filter(
             expire__gt=timezone.now(),
             status__in=Announcement.ACTIVE_STATES,
