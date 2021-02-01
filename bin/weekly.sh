@@ -1,1 +1,1 @@
-source ~/venv/pro/bin/acticate && cd ~/prod/ && python manage.py send weekly --test rafal.kesik@gmail.com
+source ~/venv/pro/bin/activate && cd ~/prod/ && python manage.py send weekly --test rafal.kesik@gmail.com
