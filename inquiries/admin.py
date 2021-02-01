@@ -7,10 +7,19 @@ class InquiryPlanAdmin(admin.ModelAdmin):
     list_display = ('name', 'default', 'limit')
 
 
+def reset_plan(modeladmin, request, queryset):
+    for ui in queryset:
+        ui.reset()  # save comes inside
+
+
+reset_plan.short_description = "Reset plan"
+
+
 @admin.register(models.UserInquiry)
 class UserInquiryAdmin(admin.ModelAdmin):
     search_fields = ('user__email',)
-
+    list_display = ('user', 'plan', 'counter')
+    actions = [reset_plan]
 
 @admin.register(models.InquiryRequest)
 class InquiryRequestAdmin(admin.ModelAdmin):

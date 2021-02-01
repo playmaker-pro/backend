@@ -184,11 +184,11 @@ class AnnouncementsView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixi
     page_title = 'Testy Piłkarskie'
 
     def filter_queryset(self, queryset):
+        now = timezone.now().date()
         queryset = queryset.filter(
-            expire__gt=timezone.now(),
             status__in=Announcement.ACTIVE_STATES,
-            disabled=False
-        )
+            disabled=False,
+            expire__date__gte=now)
         if self.filter_my_ann is not False:
             queryset = queryset.filter(creator=self.request.user)
 
