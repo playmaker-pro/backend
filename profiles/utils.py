@@ -303,7 +303,6 @@ def create_from_data():
             profile.save()
             
             ids += 1
-            if ids == 10:
-                break
+
     print(ids)
 
