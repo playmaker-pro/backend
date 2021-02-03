@@ -38,27 +38,9 @@ class Club(models.Model):
             if isinstance(self.mapping, str):
                 return self.mapping.split(',')
         return None
-
-    manager = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        related_name='managed_club',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-        )
-
-    editors = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        related_name='club_managers',
-        blank=True
-        )
-
-    voivodeship = models.ForeignKey(
-        Voivodeship,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
+    manager = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='managed_club', on_delete=models.SET_NULL, null=True, blank=True)
+    editors = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='club_managers', blank=True)
+    voivodeship = models.ForeignKey(Voivodeship, on_delete=models.SET_NULL, null=True, blank=True)
 
     def is_editor(self, user):
         if user == self.manager or user in self.editors.all():
@@ -132,21 +114,6 @@ class Club(models.Model):
         blank_label=_('Wybierz kraj'),
     )
 
-    def get_permalink(self):
-        return reverse("clubs:show_club", kwargs={"slug": self.slug})
-
-    class Meta:
-        verbose_name = _('Klub')
-        verbose_name_plural = _('Kluby')
-
-    def __str__(self):
-        return f'{self.name}'
-
-    # club_phone = PhoneNumberField(
-    #     _('Telefon'),
-    #     blank=True,
-    #     null=True)
-
     club_phone = models.CharField(
         _('Telefon'),
         max_length=15,
@@ -167,6 +134,16 @@ class Club(models.Model):
         blank=True,
         null=True)
 
+    def get_permalink(self):
+        return reverse("clubs:show_club", kwargs={"slug": self.slug})
+
+    class Meta:
+        verbose_name = _('Klub')
+        verbose_name_plural = _('Kluby')
+
+    def __str__(self):
+        return f'{self.name}'
+
     def save(self, *args, **kwargs):
         slug_str = "%s %s" % (self.PROFILE_TYPE, self.name)
         unique_slugify(self, slug_str)
@@ -175,6 +152,7 @@ class Club(models.Model):
 
 class League(models.Model):
     name = models.CharField(max_length=355, unique=True)
+    code = models.CharField(_("league_code"), null=True, blank=True, max_length=3)
 
     @property
     def display_league(self):
@@ -232,14 +210,8 @@ class Team(models.Model):
         return None
 
     visible = models.BooleanField(default=True, help_text='Visible on database')
-
     autocreated = models.BooleanField(default=False, help_text='Autocreated from s38')
-
-    gender = models.ForeignKey(
-        Gender,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True)
+    gender = models.ForeignKey(Gender, on_delete=models.SET_NULL, null=True, blank=True)
 
     league = models.ForeignKey(
         League,
@@ -349,7 +321,7 @@ class Team(models.Model):
     class Meta:
         verbose_name = _('Team')
         verbose_name_plural = _("Teams")
-        unique_together = ('name', 'club')
+        unique_together = ('name', 'club', 'seniority', 'league')
 
 
     # common  team fileds

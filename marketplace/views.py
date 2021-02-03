@@ -31,6 +31,7 @@ from .forms import AnnouncementForm
 from profiles.models import PlayerPosition
 from .models import Announcement
 
+
 User = get_user_model()
 
 

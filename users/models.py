@@ -10,6 +10,7 @@ from notifications.mail import mail_user_waiting_for_verification
 from django.urls import reverse
 from roles import definitions
 from notifications.mail import verification_notification
+from django.conf import settings
 
 
 class CustomUserManager(BaseUserManager):
@@ -221,6 +222,10 @@ class User(AbstractUser, UserRoleMixin):
     @property
     def is_roleless(self):
         return self.declared_role is None
+
+    @classmethod
+    def get_system_user(cls):
+        return cls.objects.get(email=settings.SYSTEM_USER_EMAIL)
 
     finish_account_initial_setup = models.BooleanField(  # @todo - remove this, it is deprecated.
         _('Skip full setup'),

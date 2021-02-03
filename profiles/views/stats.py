@@ -10,7 +10,7 @@ from stats import adapters
 from .base import SlugyViewMixin
 
 from django.contrib.auth import get_user_model
-from profiles.utils import get_current_season
+from utils import get_current_season
 from app import mixins
 import logging 
 

@@ -1,5 +1,27 @@
 from django.utils.html import format_html
 from django.urls import reverse
+from django.utils import timezone
+
+
+def get_current_season(date=None) -> str:
+    '''
+    JJ:
+    Definicja aktualnego sezonu
+    (wyznaczamy go za pomocą:
+        jeśli miesiąc daty systemowej jest >= 7 to pokaż sezon (aktualny rok/ aktualny rok + 1). 
+        Jeśli < 7 th (aktualny rok - 1 / aktualny rok)
+    '''
+    if date is None:
+        date = timezone.now()
+
+    if date.month >= 7:
+        season = f'{date.year}/{date.year + 1}'
+    else:
+        season = f'{date.year - 1}/{date.year}'
+    return season
+
+
+get_season_string = get_current_season()
 
 
 def linkify(field_name):
@@ -33,6 +55,28 @@ def generate_map(filename):
 
     with open('league_filter_map.py', 'w+') as filterfile:
         filterfile.write(f'LEAGUE_MAP = {d}')
+
+
+def generate_teams_map(filename):
+    d = []
+    import csv
+    with open(filename) as f:
+        lines = f.readlines()
+        out = {}
+        for l in lines:
+            data = l.strip().split(';;')
+            if len(data) == 2:
+                name = data[0].strip()
+                team = data[1].strip()
+                club = None
+            elif len(data) == 3:
+                name = data[0].strip()
+                team = data[1].strip()
+                club = data[2].strip()
+            out[name] = {'name': team, 'club': club}
+
+    with open('teams_map.py', 'w+') as filterfile:
+        filterfile.write(f'TEAM_MAP = {out}')
 
 
 def generate_league_options():
