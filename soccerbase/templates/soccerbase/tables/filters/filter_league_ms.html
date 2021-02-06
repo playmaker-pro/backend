@@ -8,11 +8,13 @@
 <option {% if '3 liga' in request.GET|get_list:'league' %} selected="selected" {% endif %}>3 liga</option>
 <option {% if '4 liga' in request.GET|get_list:'league' %} selected="selected" {% endif %}>4 liga</option>
 <option {% if '5 liga' in request.GET|get_list:'league' %} selected="selected" {% endif %}>5 liga</option>
-<option {% if 'Liga Okręgowa' in request.GET|get_list:'league' %} selected="selected" {% endif %}>Liga Okręgowa</option>
+<option {% if 'Klasa okręgowa' in request.GET|get_list:'league' %} selected="selected" {% endif %}>Klasa okręgowa</option>
 <option {% if 'A klasa' in request.GET|get_list:'league' %} selected="selected"{% endif %}>A klasa</option>
 <option {% if 'B klasa' in request.GET|get_list:'league' %} selected="selected" {% endif %}>B klasa</option>
 <option {% if 'C klasa' in request.GET|get_list:'league' %} selected="selected" {% endif %}>C klasa</option>
-<option {% if 'Ekstraliga' in request.GET|get_list:'league' %} selected="selected" {% endif %}>Ekstraliga</option>
+<option {% if 'CLJ U-18' in request.GET|get_list:'league' %} selected="selected" {% endif %}>CLJ U-18</option>
+<option {% if 'CLJ U-17' in request.GET|get_list:'league' %} selected="selected" {% endif %}>CLJ U-17</option>
+<option {% if 'CLJ U-15' in request.GET|get_list:'league' %} selected="selected" {% endif %}>CLJ U-15</option>
 <option {% if 'Junior A1' in request.GET|get_list:'league' %} selected="selected" {% endif %}>Junior A1</option>
 <option {% if 'Junior A2' in request.GET|get_list:'league' %} selected="selected" {% endif %}>Junior A2</option>
 <option {% if 'Junior Młodszy B1' in request.GET|get_list:'league' %} selected="selected" {% endif %}>Junior Młodszy B1</option>
