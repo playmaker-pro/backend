@@ -242,11 +242,11 @@ def create_from_data():
             for m in LEAGUE_MAP:
                 if  meta_new['zpn'].lower() + 'e' in m['województwo'] and str(lc) == m['league_code']:
                     x = m
-                    print('xxx=', x)
+                    #print('xxx=', x)
                     break
                     
-            print('--------------------------------------------')
-            print(TEAM_MAP[tn])
+            #print('--------------------------------------------')
+            #print(TEAM_MAP[tn])
 
             if TEAM_MAP[tn]['name']:
                 team = TEAM_MAP[tn]['name']
@@ -267,14 +267,19 @@ def create_from_data():
             # print('lc=', lc)
             # print('team=', team)
             # print('club=', club)
-            leagueo, _ = League.objects.update_or_create(name=league_name.title(), defaults={'code': str(lc)})
+            try: 
+                leagueo, _ = League.objects.update_or_create(name=league_name.title(), defaults={'code': str(lc)})
+            except Exception as e:
+                print(e)
+                print('lc=', str(lc), meta_new)
+                
             if vivo is not None:
                 vivoo, _ = Voivodeship.objects.update_or_create(name=vivo.lower())
             else:
                 vivoo = None
 
             cqs = Club.objects.filter(name__icontains=club)
-            print(f'club is present: cqs {cqs.count()}')
+            # print(f'club is present: cqs {cqs.count()}')
             if cqs.count() > 0:
                 clubo = cqs.first()
                 createdc = False
@@ -283,7 +288,7 @@ def create_from_data():
                 clubo, createdc = Club.objects.update_or_create(name=club,  defaults={'manager': sysuser, 'voivodeship': vivoo})
 
             if createdc:
-                print('Club created..')
+                #print('Club created..')
                 clubo.autocreated = True
                 clubo.save()
             # teams 
@@ -298,7 +303,7 @@ def create_from_data():
             elif tqs.count() == 0:
                 teamo, createdt = Team.objects.update_or_create(name=team, league=leagueo, seniority=seno, club=clubo, defaults={'gender': geno})
             if createdt:
-                print('Team created..')
+                # print('Team created..')
                 teamo.visible = False
                 teamo.autocreated = True
                 teamo.save()
