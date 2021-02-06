@@ -54,7 +54,7 @@ class PlayersTable(TableView):
 
         if self.filter_league is not None:
             # queryset = queryset.filter(playerprofile__league__in=self.filter_league)
-            queryset = queryset.filter(team_object__league__name__in=self.filter_league)
+            queryset = queryset.filter(playerprofile__team_object__league__name__in=self.filter_league)
 
         if self.filter_first_last is not None:
             queryset = queryset.annotate(fullname=Concat('first_name', Value(' '), 'last_name'))
@@ -72,7 +72,7 @@ class PlayersTable(TableView):
 
         if self.filter_vivo is not None:
             vivos = [i for i in self.filter_vivo]
-            clauses = (Q(team_object__club__voivodeship__name=p) for p in vivos)
+            clauses = (Q(playerprofile__team_object__club__voivodeship__name=p) for p in vivos)
             query = reduce(operator.or_, clauses)
             queryset = queryset.filter(query)
 
