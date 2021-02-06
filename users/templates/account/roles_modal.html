@@ -1,0 +1,38 @@
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+<div class="modal fade" id="rolesModal" tabindex="-1" aria-labelledby="rolesModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="rolesModalLabel">{% trans 'Jaka rola pasuje do Ciebie?' %}</h3>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true"><i class="icofont-close-circled main-color"></i></span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+      <div>
+       Dostępne role na <strong>{% include 'platform/partials/brandname.html' %}</strong>
+        <ul>
+            <li>Piłkarz</li>
+            <li>Trener</li>
+            <li>Klub / Szkółka piłkarska</li>
+            <li>Agent piłkarski</li>
+            <li>Skout</li>
+            <li>Rodzic małego piłkarza</li>
+            <li>Kibic </li>
+        </ul>
+      </div>
+
+          <div class="modal-footer">
+           
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'UKRYJ' %}</button>
+          </div>
+  
+
+      </div>
+      
+    </div>
+  </div>
+</div>

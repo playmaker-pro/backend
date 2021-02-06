@@ -11,11 +11,7 @@
 {% endblock %}
 
 
-
-
-
 {% block content %}
-
     <!-- ======= Login subpage ======= -->
     <section id="{% block account_section_id %}login{% endblock %}" class="{% block account_section_class %}login{% endblock %} last-section">
       <div class="container">
@@ -36,3 +32,10 @@
     </section>
 
 {% endblock content %}
+
+
+{% block extra_js %}
+    {{ block.super }}
+    {% include 'account/roles_modal.html' %}
+
+{% endblock %}

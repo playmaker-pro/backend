@@ -1,5 +1,6 @@
 from django.contrib import admin
 from . import models 
+from utils import linkify
 
 
 @admin.register(models.Announcement)
@@ -18,7 +19,7 @@ reset_plan.short_description = "Reset plan"
 @admin.register(models.AnnouncementUserQuota)
 class AnnouncementUserQuotaAdmin(admin.ModelAdmin):
     search_fields = ('user__email',)
-    list_display = ('user', 'plan', 'counter')
+    list_display = ('user', linkify('plan'), 'counter')
     actions = [reset_plan]
 
 

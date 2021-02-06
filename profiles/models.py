@@ -296,7 +296,6 @@ class PlayerPosition(models.Model):
 
 class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     '''Player specific profile'''
-    meta = models.TextField(null=True, blank=True)
 
     PROFILE_TYPE = definitions.PROFILE_TYPE_PLAYER
     VERIFICATION_FIELDS = ['country', 'birth_date', 'team_club_league_voivodeship_ver']
@@ -430,8 +429,18 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def attached(self):
         return self.data_mapper_id is not None
 
+    @property
+    def get_team_object(self):
+        '''to support alternative seletion of team'''
+        if self.team_object_alt is not None:
+            return self.team_object_alt
+        return self.team_object
+
+    meta = models.TextField(null=True, blank=True)
+    meta_updated = models.DateTimeField(null=True, blank=True)
     team_club_league_voivodeship_ver = models.CharField(_('team_club_league_voivodeship_ver'), max_length=355, help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'), blank=True, null=True,)
     team_object = models.ForeignKey(clubs_models.Team, on_delete=models.SET_NULL, related_name='players', null=True, blank=True)
+    team_object_alt = models.ForeignKey(clubs_models.Team, on_delete=models.SET_NULL, related_name='players_alt', null=True, blank=True)
     club = models.CharField(_('Klub'), max_length=68, db_index=True, help_text=_('Klub w którym obecnie reprezentuejsz'), blank=True, null=True,)
     club_raw = models.CharField(_('Deklarowany Klub'), max_length=68, help_text=_('Klub w którym deklarujesz że obecnie reprezentuejsz'), blank=True, null=True,)
     team = models.CharField(_('Drużyna'), db_index=True, max_length=68, help_text=_('Drużyna w której obecnie grasz'), blank=True, null=True)
@@ -486,12 +495,20 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
                 self.team = adpt.get_current_team()
 
     def update_data_player_object(self, adpt=None):
-        '''updates wix_id and fantasy position'''
+        '''updates --> s38 wix_id and fantasy position'''
         adpt = adpt or PlayerAdapter(self.data_mapper_id)
         adpt.update_wix_id_and_position(email=self.user.email, position=self.position_fantasy)
 
+    def fetch_data_player_meta(self, adpt=None, save=True):
+        '''updates meta from <--- s38 '''
+        adpt = adpt or PlayerAdapter(self.data_mapper_id)
+        self.meta = adpt.player.meta
+        self.meta_updated = timezone.now()
+        if save:
+            self.save()
+
     def trigger_refresh_data_player_stats(self, adpt=None):
-        '''Trigger update of player stats on 38'''
+        '''Trigger update of player stats --> s38'''
         adpt = adpt or PlayerAdapter(self.data_mapper_id)
         adpt.calculate_stats()
 
@@ -513,8 +530,11 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         (9, 'Napastnik'),
         ]
         '''
+
         adpt = PlayerAdapter(self.data_mapper_id)
         self.calculate_data_from_data_models(adpt)
+        self.fetch_data_player_meta(adpt, save=False)
+
         if self.position_raw is not None:
             self.position_fantasy = self.FANTASY_MAPPING.get(self.position_raw, None)
 
@@ -523,7 +543,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         # print(f'---------- Datamapper: {self.data_mapper_changed}')
         if self.data_mapper_changed and self.data_mapper_id is not None:
             logger.info(f'Calculating metrics. for player {self}')
-            if settings.CONFIGURATION == 'production' and not settings.DEBUG:
+            if utilites.is_allowed_interact_with_s38():
                 self.update_data_player_object(adpt)
                 self.trigger_refresh_data_player_stats(adpt)
             self.playermetrics.refresh_metrics()

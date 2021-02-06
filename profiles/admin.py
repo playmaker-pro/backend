@@ -23,13 +23,16 @@ class PositionAdmin(admin.ModelAdmin):
 
 
 DEFAULT_PROFILE_SEARCHABLES = ('user__email', 'user__first_name', 'user__last_name')
+DEFAULT_PROFILE_DISPLAY_FIELDS = ('pk', linkify('user'), 'data_mapper_id', 'active')
 
 
 class ProfileAdminBase(admin.ModelAdmin):
     search_fields = DEFAULT_PROFILE_SEARCHABLES
+    display_fileds = DEFAULT_PROFILE_DISPLAY_FIELDS
 
     def active(self, obj):
         return obj.is_active
+    active.boolean = True
 
 
 @admin.register(models.ParentProfile)
@@ -54,9 +57,17 @@ class GuestProfileAdmin(ProfileAdminBase):
 
 @admin.register(models.ClubProfile)
 class ClubProfileAdmin(ProfileAdminBase):
-    list_display = ('pk', 'user', 'club_role', 'club_object')
+    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + ('club_role', linkify('club_object'))
     search_fields = DEFAULT_PROFILE_SEARCHABLES + ('club_object',)
     autocomplete_fields = ('club_object',)
+
+
+def trigger_refresh_data_player_stats(modeladmin, request, queryset):
+    for pp in queryset:
+        pp.trigger_refresh_data_player_stats()  # save comes inside
+
+
+trigger_refresh_data_player_stats.short_description = "Refresh data on -->  s38"
 
 
 def calculate_metrics(modeladmin, request, queryset):
@@ -64,21 +75,39 @@ def calculate_metrics(modeladmin, request, queryset):
         pp.playermetrics.refresh_metrics()  # save comes inside
 
 
-calculate_metrics.short_description = "Calculate metrics"
+calculate_metrics.short_description = "Calculate metrics Playermeteics <-- s38"
+
+
+def fetch_data_player_meta(modeladmin, request, queryset):
+    for pp in queryset:
+        pp.fetch_data_player_meta()  # save comes inside
+
+
+fetch_data_player_meta.short_description = 'update meta  <--- s38'
 
 
 @admin.register(models.PlayerProfile)
 class PlayerProfileAdmin(ProfileAdminBase):
-    list_display = ('pk', 'user', 'data_mapper_id', linkify('playermetrics'), 'team_object', 'active')
-    autocomplete_fields = ('team_object',)
-    actions = [calculate_metrics]
+    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
+            linkify('playermetrics'),
+            linkify('team_object'),
+            linkify('team_object_alt'),
+            'display_league',
+            'display_team',
+            'display_seniority',
+            'display_gender',
+            'meta_updated',
+            'meta',
+        )
 
-    def active(self, obj):
-        return obj.is_active
+    autocomplete_fields = ('team_object', 'team_object_alt')
+
+    actions = [calculate_metrics, trigger_refresh_data_player_stats, fetch_data_player_meta]
+
 
 @admin.register(models.CoachProfile)
 class CoachProfileAdmin(ProfileAdminBase):
-    list_display = ('pk', 'user', 'team_object')
+    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (linkify('team_object'),)
     search_fields = ('team_object',)
     autocomplete_fields = ('team_object',)
 

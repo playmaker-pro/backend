@@ -1,6 +1,11 @@
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils import timezone
+from django.conf import settings
+
+
+def is_allowed_interact_with_s38():
+    return settings.CONFIGURATION == 'production' and not settings.DEBUG
 
 
 def get_current_season(date=None) -> str:

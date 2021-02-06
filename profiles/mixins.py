@@ -30,36 +30,41 @@ class SoccerDisplayMixin:
 class TeamObjectsDisplayMixin:
 
     @property
+    def get_team_object(self):
+        return self.team_object
+
+    @supress_exception
+    @property
     def club_object(self):
-        if self.team_object:
-            return self.team_object.club
+        if self.get_team_object:
+            return self.get_team_object.club
 
     @property
     @supress_exception
     def display_club(self):
-        return self.team_object.club.display_club
+        return self.get_team_object.club.display_club
 
     @property
     @supress_exception
     def display_team(self):
-        return self.team_object.display_team
+        return self.get_team_object.display_team
 
     @property
     @supress_exception
     def display_seniority(self):
-        return self.team_object.display_seniority
+        return self.get_team_object.display_seniority
 
     @property
     @supress_exception
     def display_gender(self):
-        return self.team_object.display_gender
+        return self.get_team_object.display_gender
 
     @property
     @supress_exception
     def display_voivodeship(self):
-        return self.team_object.club.display_voivodeship
+        return self.get_team_object.club.display_voivodeship
 
     @property
     @supress_exception
     def display_league(self):
-        return self.team_object.display_league
+        return self.get_team_object.display_league

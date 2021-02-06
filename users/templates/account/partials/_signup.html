@@ -10,7 +10,7 @@
             {% if role %}
                 <input type="hidden" class="form-control" name="role" id="id_role" value="{{ form.role.value|default_if_none:role }}" required>
                 <h4 class="text-center" style="text-transform: uppercase;">jako   
-                             {% if role == 'P'%}Piłkarz
+                          {% if role == 'P'%}Piłkarz
                           {% elif role == 'T' %}Trener
                           {% elif role == 'C' %}Klub / Szkółka piłkarska
                           {% elif role == 'M' %}Agent piłkarski
@@ -20,6 +20,7 @@
                           {% endif %}
                          </h4>
             {% else %} 
+            
                 <select class="selectpicker " name="role" id="id_role" value="{{ form.role.value|default_if_none:'' }}" required title="wybierz role">
                   
                   <option value="P" {% if role == 'P'%} selected {% endif %}>Piłkarz</option>
@@ -30,6 +31,7 @@
                   <option value="R" {% if role == 'R'%} selected {% endif %}>Rodzic małego piłkarza</option>
                   <option value="G" {% if role == 'G'%} selected {% endif %}>Kibic</option>
                 </select>
+                <button type="button" style="min-width:25px" class="btn-pm" data-toggle="modal" data-target="#rolesModal"> <i class="icofont-question"></i></button>
                 {{ form.role.errors }}
             {% endif %}
     {% endwith %}   

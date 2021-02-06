@@ -121,13 +121,7 @@ class Club(models.Model):
         null=True)
 
     club_email = models.EmailField(null=True, blank=True)
-
-    stadion_address = AddressField(
-        related_name='coach_stadion_address',
-        help_text=_('Adres'),
-        blank=True,
-        null=True)
-
+    stadion_address = AddressField(related_name='coach_stadion_address', help_text=_('Adres'), blank=True, null=True)
     practice_stadion_address = AddressField(
         related_name='coach_practice_stadion_address',
         help_text=_('Adres'),
