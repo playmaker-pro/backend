@@ -22,7 +22,7 @@ class PositionAdmin(admin.ModelAdmin):
     pass
 
 
-DEFAULT_PROFILE_SEARCHABLES = ['user__email', 'user__first_name', 'user__last_name']
+DEFAULT_PROFILE_SEARCHABLES = ('user__email', 'user__first_name', 'user__last_name')
 
 
 class ProfileAdminBase(admin.ModelAdmin):
