@@ -152,7 +152,7 @@ class Club(models.Model):
 
 class League(models.Model):
     name = models.CharField(max_length=355, unique=True)
-    code = models.CharField(_("league_code"), null=True, blank=True, max_length=3)
+    code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
 
     @property
     def display_league(self):
