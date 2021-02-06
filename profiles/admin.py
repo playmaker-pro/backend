@@ -48,7 +48,7 @@ class GuestProfileAdmin(ProfileAdminBase):
 
 @admin.register(models.ClubProfile)
 class ClubProfileAdmin(ProfileAdminBase):
-    list_display = ('pk', 'user', 'club_object')
+    list_display = ('pk', 'user', 'club_role', 'club_object')
     search_fields = ('club_object',)
     autocomplete_fields = ('club_object',)
 
