@@ -232,6 +232,7 @@ def create_from_data():
             meta_new = adpt.player.meta.get(get_current_season(), None)
             if meta_new is None:
                 print(f'Player do not have yet meta {adpt.player}')
+                continue
             lc = meta_new['league_code']
             tn = meta_new['team']
             # print(meta_new)
