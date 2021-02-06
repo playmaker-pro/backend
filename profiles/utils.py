@@ -197,6 +197,14 @@ def item_adapter(item: dict) -> dict:
     return dict((PARAMETERS_MAPPING[key], value) for (key, value) in item.items())
 
 
+def make_jj_manago():
+    from clubs.models import Club
+    cs = Club.objects.filter(autocreated=True)
+    sysuser = User.get_system_user()
+    for i in cs:
+        cs.manager = sysuser
+        cs.save()
+
 def create_from_data():
     '''Create and attach League,Season,Seniority,Team,Club - based on data_Plater.meta
     operation should be run once
