@@ -254,7 +254,7 @@ def create_from_data():
                         meta_new = adpt.player.meta.get('2018/2019', None)
                        
                         if meta_new is None:
-                            print(f'!!!!!! PlayerProfile {profile.id} still  do not have yet meta for 2018/2019 /{adpt.player} meta: {adpt.player.meta}')
+                            print(f'!!!!!! PlayerProfile {profile} still  do not have yet meta for 2018/2019 /{adpt.player} meta: {adpt.player.meta}')
                             continue
                 else:
                     print(f'FIXED')
