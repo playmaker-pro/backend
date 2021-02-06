@@ -255,11 +255,12 @@ def create_from_data():
                         meta_new = adpt.player.meta.get('2018/2019', None)
                        
                         if meta_new is None:
-                            print(f'\t\tPlayer do not have yet meta  for 2018/2019 {adpt.player}  -- taking older season.')
-                            meta_new = adpt.player.meta.get('2017/2018', None)
-                            if meta_new is None:
-                                print(f'!!!!!! PlayerProfile {profile} still do not have yet meta for 2017/2018 /{adpt.player} meta: {adpt.player.meta}')
-                                continue
+                            print(f'!!!!!! PlayerProfile {profile} still do not have yet meta for 2018/2019 /{adpt.player} meta: {adpt.player.meta}')
+                            continue
+ 
+                            # print(f'\t\tPlayer do not have yet meta  for 2018/2019 {adpt.player}  -- taking older season.')
+                            # meta_new = adpt.player.meta.get('2017/2018', None)
+                            # if meta_new is None:
                 else:
                     print(f'FIXED')
             else:
