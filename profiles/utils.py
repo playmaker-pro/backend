@@ -226,15 +226,17 @@ def create_from_data():
             print('do not have related object', player)
             continue
         if profile.has_data_id:
-            print('get from s38')
+            # print('get from s38')
             adpt = PlayerAdapter(profile.data_mapper_id)
-            print('adapt')
+            # print('adapt')
             meta_new = adpt.player.meta.get(get_current_season(), None)
+            if meta_new is None:
+                print(f'Player do not have yet meta {adpt.player}')
             lc = meta_new['league_code']
             tn = meta_new['team']
             # print(meta_new)
-            print('--------------------------------------------')
-            print('meta=', meta_new)
+            # print('--------------------------------------------')
+            # print('meta=', meta_new)
             # print('ll=', LEAGUE_MAP)
             for m in LEAGUE_MAP:
                 if  meta_new['zpn'].lower() + 'e' in m['województwo'] and str(lc) == m['league_code']:
@@ -256,14 +258,14 @@ def create_from_data():
             league_name = LEAGUES_CODES_MAP[int(lc)]
             gen = x['plec']
             sen = seniority_translate(x['seniority'])
-            print('------')
-            print('league=', league_name)
-            print('seniority=', sen)
-            print('vivo=', vivo)
-            print('gen=', gen)
-            print('lc=', lc)
-            print('team=', team)
-            print('club=', club)
+            # print('------')
+            # print('league=', league_name)
+            # print('seniority=', sen)
+            # print('vivo=', vivo)
+            # print('gen=', gen)
+            # print('lc=', lc)
+            # print('team=', team)
+            # print('club=', club)
             leagueo, _ = League.objects.update_or_create(name=league_name.title(), defaults={'code': str(lc)})
             if vivo is not None:
                 vivoo, _ = Voivodeship.objects.update_or_create(name=vivo.lower())
