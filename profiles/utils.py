@@ -236,21 +236,26 @@ def create_from_data():
             print('do not have related object', player)
             continue
         if profile.has_data_id:
+            print('---------------------')
             # print('get from s38')
             adpt = PlayerAdapter(profile.data_mapper_id)
             # print('adapt')
             meta_new = adpt.player.meta.get(get_current_season(), None)
             if meta_new is None:
-                print('\t Warning.......... no meta for platyer')
+                print('\t\t Warning.......... no meta for platyer')
                 profile.trigger_refresh_data_player_stats()
                 adpt.player.refresh_from_db()
                 meta_new = adpt.player.meta.get(get_current_season(), None)
                 if meta_new is None:
-                    print(f'\tPlayer do not have yet meta  for 2020/2021 {adpt.player}  -- taking older season.')
+                    print(f'\t\tPlayer do not have yet meta  for 2020/2021 {adpt.player}  -- taking older season.')
                     meta_new = adpt.player.meta.get('2019/2020', None)
                     if meta_new is None:
-                        print(f'!!!!!! Player still  do not have yet meta for 2019/2020 /{adpt.player} meta: {adpt.player.meta}')
-                        continue
+                        print(f'\t\tPlayer do not have yet meta  for 2019/2020 {adpt.player}  -- taking older season.')
+                        meta_new = adpt.player.meta.get('2018/2019', None)
+                       
+                        if meta_new is None:
+                            print(f'!!!!!! PlayerProfile {profile.id} still  do not have yet meta for 2018/2019 /{adpt.player} meta: {adpt.player.meta}')
+                            continue
                 else:
                     print(f'FIXED')
             else:
