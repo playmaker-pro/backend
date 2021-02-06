@@ -233,13 +233,16 @@ def create_from_data():
             # print('adapt')
             meta_new = adpt.player.meta.get(get_current_season(), None)
             if meta_new is None:
-                print('Warning.......... no meta for platyer')
+                print('\t Warning.......... no meta for platyer')
                 profile.trigger_refresh_data_player_stats()
                 adpt.player.refresh_from_db()
                 meta_new = adpt.player.meta.get(get_current_season(), None)
                 if meta_new is None:
-                    print(f'Player do not have yet meta {adpt.player}')
-                    continue
+                    print(f'\tPlayer do not have yet meta  for 2020/2021 {adpt.player}  -- taking older season.')
+                    meta_new = adpt.player.meta.get('2019/2020', None)
+                    if meta_new is None:
+                        print(f'!!!!!! Player still  do not have yet meta for 2019/2020 /{adpt.player}')
+                        continue
                 else:
                     print(f'FIXED')
             else:
@@ -261,7 +264,7 @@ def create_from_data():
             #print('--------------------------------------------')
             #print(TEAM_MAP[tn])
             if TEAM_MAP.get(tn) is None:
-                print(f'Not mapped TEAM {tn} for player Player do not have yet meta {adpt.player}')
+                print(f'!!!!!!! Not mapped TEAM {tn} for player Player do not have yet meta {adpt.player}')
                 continue
             if TEAM_MAP[tn]['name']:
                 team = TEAM_MAP[tn]['name']
