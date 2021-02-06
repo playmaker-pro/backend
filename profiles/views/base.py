@@ -21,7 +21,7 @@ from django.conf import settings
 from profiles import forms, models
 from profiles.model_utils import (get_profile_form_model, get_profile_model,
                           get_profile_model_from_slug)
-from profiles.utils import get_current_season
+from utils import get_current_season
 from django.contrib.auth import get_user_model
 User = get_user_model()
 from clubs.models import Team

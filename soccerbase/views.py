@@ -53,7 +53,8 @@ class PlayersTable(TableView):
             queryset = queryset.filter(playerprofile__prefered_leg=self.filter_leg)
 
         if self.filter_league is not None:
-            queryset = queryset.filter(playerprofile__league__in=self.filter_league)
+            # queryset = queryset.filter(playerprofile__league__in=self.filter_league)
+            queryset = queryset.filter(team_object__league__name__in=self.filter_league)
 
         if self.filter_first_last is not None:
             queryset = queryset.annotate(fullname=Concat('first_name', Value(' '), 'last_name'))
@@ -62,10 +63,16 @@ class PlayersTable(TableView):
             #    Q(first_name__icontains=self.filter_first_last) | Q(last_name__icontains=self.filter_first_last)
             # )
 
+        # if self.filter_vivo is not None:
+        #     vivo = [i[:-1].upper() for i in self.filter_vivo]
+        #     # queryset = queryset.filter(playerprofile__voivodeship__in=vivo)
+        #     clauses = (Q(playerprofile__voivodeship=p) for p in vivo)
+        #     query = reduce(operator.or_, clauses)
+        #     queryset = queryset.filter(query)
+
         if self.filter_vivo is not None:
-            vivo = [i[:-1].upper() for i in self.filter_vivo]
-            # queryset = queryset.filter(playerprofile__voivodeship__in=vivo)
-            clauses = (Q(playerprofile__voivodeship=p) for p in vivo)
+            vivos = [i for i in self.filter_vivo]
+            clauses = (Q(team_object__club__voivodeship__name=p) for p in vivos)
             query = reduce(operator.or_, clauses)
             queryset = queryset.filter(query)
 
@@ -94,7 +101,6 @@ class TeamsTable(TableView):
     page_title = 'Baza drużyn'
 
     def filter_queryset(self, queryset):
-
         if self.filter_league is not None:
             queryset = queryset.filter(league__name__in=self.filter_league)
 

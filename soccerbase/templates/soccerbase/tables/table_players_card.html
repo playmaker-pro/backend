@@ -9,56 +9,16 @@
   
   <div class="card-body  table-item"> 
     <div class="row no-gutters">
-        <div class="d-none d-md-inline col-md-3">
-        Imię / nazwisko / wiek
-        </div>
-
-
-        <div class="col-5 col-md-1 text-left">
-            Pozycja
-        </div >
-        
-        <div class="col-6 col-md-1 text-left">
-           Poziom rozgrywkowy
-        </div >
-
-        <div class="col-5 col-md-2  text-left">
-             Województwo
-        </div>
-        
-        <div class="col-6 col-md-2 text-left"> 
-            Drużyna
-        </div>
-
-        <div class="col-6 col-md-1 text-center"> 
-           Bramki - Mecze - Minuty
-        </div>
-
-        {% comment %} <div class="d-none d-md-inline  col-4 col-md-1 stats  text-center">  
-            Zdobyte bramki / czyste konto
-        </div> {% endcomment %}
-
-        {% comment %} <div class="d-none d-md-inline  col-3 col-md-1 stats"> 
-            <span class="main-color stats">{{ object.profile.playermetrics.season_summary.first_squad_games_played|default:'0' }}</span>  w pierwszym składzie 
-        </div> {% endcomment %}
-
-        {% comment %} <div class="col-4 col-md-1 stats">
-          Ilość meczy
-        </div> {% endcomment %}
-
-        {% comment %} <div class="col-md-1 stats">
-           Minuty na boisku
-        </div> {% endcomment %}
-
-        <div class="d-none d-md-inline col-md-1">
-
-        </div>
+        <div class="d-none d-md-inline col-md-3">Imię / nazwisko / wiek</div>
+        <div class="col-5 col-md-1 text-left">Pozycja</div>
+        <div class="col-6 col-md-1 text-left">Poziom rozgrywkowy</div>
+        <div class="col-5 col-md-2  text-left">Województwo</div>
+        <div class="col-6 col-md-2 text-left">Drużyna</div>
+        <div class="col-6 col-md-1 text-center"> Bramki - Mecze - Minuty</div>
+        <div class="d-none d-md-inline col-md-1"></div>
     </div>
   </div>
-
 </div> 
-
-
 
 {% for object in objects %}
 <div class="card item-card" style="">
@@ -73,23 +33,16 @@
                     </strong>
                 </a>
             </span>
-            <span class="float-right"> 
-                {% observed_link user object text="obserwuj" %}
-                {% profile_link object checks=False text="profil" %}
-            </span>
+            <span class="float-right">{% observed_link user object text="obserwuj" %}{% profile_link object checks=False text="profil" %}</span>
         </div>
     {# --- SM devices #}
 
   <div class="card-body table-item"> 
-    <div class="row no-gutters">
-                                                     
+    <div class="row no-gutters">                                 
         <div class="d-md-none text-center"> <!-- -->
             <img class="rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
         </div>
-
-
         <div class="d-md-none col text-left ml-2">
-    
             <div class="">
                 <strong>{{ object.profile.get_position_raw_display|default:''|title }}</strong> 
             </div>

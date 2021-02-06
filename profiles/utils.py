@@ -3,7 +3,8 @@ import re
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
-
+from utils import get_current_season
+from django.conf import settings
 # from . import models
 # from profiles import forms  # todo teog importu tu nie moze być bo sie robi rekurencja
 from users.models import User
@@ -49,7 +50,6 @@ def supress_exception(func):
             logger.error('Following exception was supressed:')
             logger.exception(f'\t{ex}')
             return None
-            
     return inner
 
 
@@ -81,7 +81,6 @@ def calculate_player_metrics():
     qs = User.objects.filter(declared_role=definitions.PLAYER_SHORT, state=User.STATE_ACCOUNT_VERIFIED)
     for user in qs:
         if user.profile.has_data_id:
-            
             season_name = get_current_season()
             _id = user.profile.data_mapper_id
             games_summary = adapters.PlayerLastGamesAdapter(_id).get(season=season_name, limit=3)  # should be profile.playermetrics.refresh_games_summary() and putted to celery.
@@ -168,27 +167,6 @@ def make_choices(choices):
     return tuple([(k, _(v)) for k, v in choices])
 
 
-def get_current_season(date=None) -> str:
-    '''
-    JJ:
-    Definicja aktualnego sezonu
-    (wyznaczamy go za pomocą:
-        jeśli miesiąc daty systemowej jest >= 7 to pokaż sezon (aktualny rok/ aktualny rok + 1). 
-        Jeśli < 7 th (aktualny rok - 1 / aktualny rok)
-    '''
-    if date is None:
-        date = timezone.now()
-
-    if date.month >= 7:
-        season = f'{date.year}/{date.year + 1}'
-    else:
-        season = f'{date.year - 1}/{date.year}'
-    return season
-
-
-get_season_string = get_current_season
-
-
 PARAMETERS_MAPPING = {
     'game__host_team_name': 'host_name',
     'host_team_name': 'host_name',
@@ -217,3 +195,114 @@ def list_item_adapter(items: list) -> list:
 
 def item_adapter(item: dict) -> dict:
     return dict((PARAMETERS_MAPPING[key], value) for (key, value) in item.items())
+
+
+def create_from_data():
+    '''Create and attach League,Season,Seniority,Team,Club - based on data_Plater.meta
+    operation should be run once
+    '''
+    def seniority_translate(name):
+        if name == 'seniorskie':
+            return 'seniorzy'
+        elif name == 'młodzieżowe':
+            return 'juniorzy'
+        
+    players = User.objects.filter(declared_role=definitions.PLAYER_SHORT)
+    print(f'Number of players to update {players.count()}')
+    ids = 0
+    from clubs.models import Club, Team, League, Seniority, Gender, Voivodeship
+    from stats.adapters import PlayerAdapter
+    from league_filter_map import LEAGUE_MAP
+    from stats.utilites import LEAGUES_CODES_MAP
+    from teams_map import TEAM_MAP
+    print('getting sys user')
+    
+    sysuser = User.get_system_user()
+    print('loop')
+    for player in players:
+        try:
+            profile = player.profile
+        except: 
+            print('do not have related object', player)
+            continue
+        if profile.has_data_id:
+            print('get from s38')
+            adpt = PlayerAdapter(profile.data_mapper_id)
+            print('adapt')
+            meta_new = adpt.player.meta.get(get_current_season(), None)
+            lc = meta_new['league_code']
+            tn = meta_new['team']
+            # print(meta_new)
+            print('--------------------------------------------')
+            print('meta=', meta_new)
+            # print('ll=', LEAGUE_MAP)
+            for m in LEAGUE_MAP:
+                if  meta_new['zpn'].lower() + 'e' in m['województwo'] and str(lc) == m['league_code']:
+                    x = m
+                    print('xxx=', x)
+                    break
+                    
+            print('--------------------------------------------')
+            print(TEAM_MAP[tn])
+
+            if TEAM_MAP[tn]['name']:
+                team = TEAM_MAP[tn]['name']
+                club = TEAM_MAP[tn]['club'] or TEAM_MAP[tn]['name']
+            else:
+                team = tn
+                club = tn
+            vivo = meta_new['zpn'].lower() + 'e'
+            vivo = conver_vivo_for_api(vivo)
+            league_name = LEAGUES_CODES_MAP[int(lc)]
+            gen = x['plec']
+            sen = seniority_translate(x['seniority'])
+            print('------')
+            print('league=', league_name)
+            print('seniority=', sen)
+            print('vivo=', vivo)
+            print('gen=', gen)
+            print('lc=', lc)
+            print('team=', team)
+            print('club=', club)
+            leagueo, _ = League.objects.update_or_create(name=league_name.title(), defaults={'code': str(lc)})
+            if vivo is not None:
+                vivoo, _ = Voivodeship.objects.update_or_create(name=vivo.lower())
+            else:
+                vivoo = None
+
+            cqs = Club.objects.filter(name__icontains=club)
+            print(f'club is present: cqs {cqs.count()}')
+            if cqs.count() > 0:
+                clubo = cqs.first()
+                createdc = False
+            elif cqs.count() == 0:
+                
+                clubo, createdc = Club.objects.update_or_create(name=club,  defaults={'manager': sysuser, 'voivodeship': vivoo})
+
+            if createdc:
+                print('Club created..')
+                clubo.autocreated = True
+                clubo.save()
+            # teams 
+            
+            seno, _ = Seniority.objects.update_or_create(name=sen)
+            geno, _ = Gender.objects.update_or_create(name=gen)
+
+            tqs = Team.objects.filter(name__icontains=Team)
+            if tqs.count() > 0:
+                teamo = tqs.first()
+                createdt = False
+            elif tqs.count() == 0:
+                teamo, createdt = Team.objects.update_or_create(name=team, league=leagueo, seniority=seno, club=clubo, defaults={'gender': geno})
+            if createdt:
+                print('Team created..')
+                teamo.visible = False
+                teamo.autocreated = True
+                teamo.save()
+            profile.team_object = teamo
+            profile.save()
+            
+            ids += 1
+
+    print(ids)
+
