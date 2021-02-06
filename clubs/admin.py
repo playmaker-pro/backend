@@ -28,7 +28,8 @@ class VoivodeshipAdmin(admin.ModelAdmin):
 @admin.register(models.Team)
 class TeamAdmin(admin.ModelAdmin):
     list_display = ('name', 'club', 'league', 'gender', 'seniority', 'manager')
-    search_fields = ('name',)
+    search_fields = ('name', 'manager')
+    autocomplete_fields = ('manager',)
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)

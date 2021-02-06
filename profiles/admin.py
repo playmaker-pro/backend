@@ -48,7 +48,9 @@ class GuestProfileAdmin(ProfileAdminBase):
 
 @admin.register(models.ClubProfile)
 class ClubProfileAdmin(ProfileAdminBase):
-    pass
+    list_display = ('pk', 'user', 'club_object')
+    search_fields = ('club_object',)
+    autocomplete_fields = ('club_object',)
 
 
 def calculate_metrics(modeladmin, request, queryset):
@@ -61,13 +63,17 @@ calculate_metrics.short_description = "Calculate metrics"
 
 @admin.register(models.PlayerProfile)
 class PlayerProfileAdmin(ProfileAdminBase):
-    list_display = ('pk', 'user', 'data_mapper_id', linkify('playermetrics'))
+    list_display = ('pk', 'user', 'data_mapper_id', linkify('playermetrics'), 'team_object')
+    autocomplete_fields = ('team_object',)
+    search_fields = ('team_object',)
     actions = [calculate_metrics]
 
 
 @admin.register(models.CoachProfile)
 class CoachProfileAdmin(ProfileAdminBase):
-    pass
+    list_display = ('pk', 'user', 'team_object')
+    search_fields = ('team_object',)
+    autocomplete_fields = ('team_object',)
 
 
 @admin.register(models.RoleChangeRequest)
