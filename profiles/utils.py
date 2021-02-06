@@ -240,15 +240,18 @@ def create_from_data():
             # print('get from s38')
             adpt = PlayerAdapter(profile.data_mapper_id)
             # print('adapt')
+            if adpt.player.meta is None:
+                print('This player dont have META yet... {adpt.player} ')
+                continue
             meta_new = adpt.player.meta.get(get_current_season(), None)
             if meta_new is None:
-                print('---------------------')
-                print('\t\t Warning.......... no meta for platyer')
+                print(f'--------------------- {adpt.player}')
+                print('\t\tWarning.......... no meta for platyer')
                 profile.trigger_refresh_data_player_stats()
                 adpt.player.refresh_from_db()
                 meta_new = adpt.player.meta.get(get_current_season(), None)
                 if meta_new is None:
-                    print(f'\t\tPlayer do not have yet meta  for 2020/2021 {adpt.player}  -- taking older season.')
+                    print(f'\t\tno meta for 2020/2021 {adpt.player}  -- taking older season.')
                     meta_new = adpt.player.meta.get('2019/2020', None)
                     if meta_new is None:
                         print(f'\t\tPlayer do not have yet meta  for 2019/2020 {adpt.player}  -- taking older season.')
