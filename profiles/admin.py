@@ -22,8 +22,14 @@ class PositionAdmin(admin.ModelAdmin):
     pass
 
 
+DEFAULT_PROFILE_SEARCHABLES = ['user__email', 'user__first_name', 'user__last_name']
+
+
 class ProfileAdminBase(admin.ModelAdmin):
-    search_fields = ['user__email', 'user__first_name', 'user__last_name']
+    search_fields = DEFAULT_PROFILE_SEARCHABLES
+
+    def active(self, obj):
+        return obj.is_active
 
 
 @admin.register(models.ParentProfile)
@@ -49,7 +55,7 @@ class GuestProfileAdmin(ProfileAdminBase):
 @admin.register(models.ClubProfile)
 class ClubProfileAdmin(ProfileAdminBase):
     list_display = ('pk', 'user', 'club_role', 'club_object')
-    search_fields = ('club_object',)
+    search_fields = DEFAULT_PROFILE_SEARCHABLES + ('club_object',)
     autocomplete_fields = ('club_object',)
 
 
@@ -63,11 +69,12 @@ calculate_metrics.short_description = "Calculate metrics"
 
 @admin.register(models.PlayerProfile)
 class PlayerProfileAdmin(ProfileAdminBase):
-    list_display = ('pk', 'user', 'data_mapper_id', linkify('playermetrics'), 'team_object')
+    list_display = ('pk', 'user', 'data_mapper_id', linkify('playermetrics'), 'team_object', 'active')
     autocomplete_fields = ('team_object',)
-    search_fields = ('team_object',)
     actions = [calculate_metrics]
 
+    def active(self, obj):
+        return obj.is_active
 
 @admin.register(models.CoachProfile)
 class CoachProfileAdmin(ProfileAdminBase):

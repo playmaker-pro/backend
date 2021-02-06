@@ -150,6 +150,10 @@ class BaseProfile(models.Model):
             return None
 
     @property
+    def is_active(self):
+        return definitions.PROFILE_TYPE_SHORT_MAP.get(self.PROFILE_TYPE) == self.user.declared_role
+
+    @property
     def is_complete(self):
         for field_name in self.COMPLETE_FIELDS + self.VERIFICATION_FIELDS:
             if getattr(self, field_name) is None:
