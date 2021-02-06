@@ -247,7 +247,9 @@ def create_from_data():
                     
             #print('--------------------------------------------')
             #print(TEAM_MAP[tn])
-
+            if TEAM_MAP.get(tn) is None:
+                print(f'Not mapped TEAM {tn} for player Player do not have yet meta {adpt.player}')
+                continue
             if TEAM_MAP[tn]['name']:
                 team = TEAM_MAP[tn]['name']
                 club = TEAM_MAP[tn]['club'] or TEAM_MAP[tn]['name']

@@ -292,6 +292,8 @@ class PlayerPosition(models.Model):
 
 class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     '''Player specific profile'''
+    meta = models.TextField(null=True, blank=True)
+
     PROFILE_TYPE = definitions.PROFILE_TYPE_PLAYER
     VERIFICATION_FIELDS = ['country', 'birth_date', 'team_club_league_voivodeship_ver']
     COMPLETE_FIELDS = [
