@@ -222,6 +222,8 @@ def create_from_data():
     for player in players:
         try:
             profile = player.profile
+            
+
         except: 
             print('do not have related object', player)
             continue
@@ -231,8 +233,19 @@ def create_from_data():
             # print('adapt')
             meta_new = adpt.player.meta.get(get_current_season(), None)
             if meta_new is None:
-                print(f'Player do not have yet meta {adpt.player}')
-                continue
+                print('Warning.......... no meta for platyer')
+                profile.trigger_refresh_data_player_stats()
+                adpt.player.refresh_from_db()
+                meta_new = adpt.player.meta.get(get_current_season(), None)
+                if meta_new is None:
+                    print(f'Player do not have yet meta {adpt.player}')
+                    continue
+                else:
+                    print(f'FIXED')
+            else:
+                profile.meta = meta_new
+                profile.save()
+
             lc = meta_new['league_code']
             tn = meta_new['team']
             # print(meta_new)

@@ -487,6 +487,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         adpt.update_wix_id_and_position(email=self.user.email, position=self.position_fantasy)
 
     def trigger_refresh_data_player_stats(self, adpt=None):
+        '''Trigger update of player stats on 38'''
         adpt = adpt or PlayerAdapter(self.data_mapper_id)
         adpt.calculate_stats()
 
