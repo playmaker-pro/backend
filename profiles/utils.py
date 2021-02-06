@@ -254,7 +254,7 @@ def create_from_data():
                     print(f'\t\tno meta for 2020/2021 {adpt.player}  -- taking older season.')
                     meta_new = adpt.player.meta.get('2019/2020', None)
                     if meta_new is None:
-                        print(f'\t\tPlayer do not have yet meta  for 2019/2020 {adpt.player}  -- taking older season.')
+                        print(f'\t\tno meta  for 2019/2020 {adpt.player}  -- taking older season.')
                         meta_new = adpt.player.meta.get('2018/2019', None)
                        
                         if meta_new is None:
