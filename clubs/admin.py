@@ -41,7 +41,7 @@ class TeamAdmin(admin.ModelAdmin):
 class ClubAdmin(admin.ModelAdmin):
     list_display = ('name', 'manager', 'voivodeship', 'slug',)
     autocomplete_fields = ('manager',)
-    search_fields = ('name', )
+    search_fields = ('name', 'manager')
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
