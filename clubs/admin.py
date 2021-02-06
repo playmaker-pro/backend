@@ -40,7 +40,7 @@ class TeamAdmin(admin.ModelAdmin):
 @admin.register(models.Club)
 class ClubAdmin(admin.ModelAdmin):
     list_display = ('name', 'manager', 'voivodeship', 'slug',)
-
+    autocomplete_fields = ('manager',)
     search_fields = ('name', )
 
     def get_form(self, request, obj=None, **kwargs):
