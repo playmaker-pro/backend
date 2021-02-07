@@ -26,7 +26,15 @@ def remove_polish_chars(filename):
     return filename.replace('ł', 'l').replace('ą', 'a').replace('ó', 'o').replace('ż', 'z').replace('ź', 'z').replace('ń', 'n').replace('ę', 'e').replace('ś', 's').replace('ć', 'c')
 
 
-class Club(models.Model):
+class MappingMixin:
+    def get_mapped_names(self):
+        if self.mapping:
+            if isinstance(self.mapping, str):
+                return [name.strip() for name in self.mapping.split(',') if name]
+        return None
+
+
+class Club(models.Model, MappingMixin):
     PROFILE_TYPE = 'klub'
 
     autocreated = models.BooleanField(default=False, help_text='Autocreated from s38')
@@ -178,7 +186,7 @@ class Gender(models.Model):
         return f'{self.name}'
 
 
-class Team(models.Model):
+class Team(models.Model, MappingMixin):
     PROFILE_TYPE = 'team'
 
     EDITABLE_FIELDS = [
@@ -195,14 +203,7 @@ class Team(models.Model):
         'diet_suplements'
     ]
 
-    mapping = models.TextField(null=True, blank=True, help_text='Mapping names comma separated. eg "name X, name Xi"')
-
-    def get_mapped_names(self):
-        if self.mapping:
-            if isinstance(self.mapping, str):
-                return self.mapping.split(',')
-        return None
-
+    mapping = models.TextField(null=True, blank=True, help_text='!Always keep commna at the end of each name!!!. Mapping names comma separated. eg "name X, name Xi,"')
     visible = models.BooleanField(default=True, help_text='Visible on database')
     autocreated = models.BooleanField(default=False, help_text='Autocreated from s38')
     gender = models.ForeignKey(Gender, on_delete=models.SET_NULL, null=True, blank=True)

@@ -32,7 +32,7 @@ class ProfileLevelDisplay(TestCase):
     def setUp(self):
         self.club = utils.get_verified_user_club()
         self.coach = utils.get_verified_user_coach()
-        
+
         assert self.coach.is_verified is True
         assert self.club.is_verified is True
         print(f'----> setUp {self.club.state} {self.coach.state}')

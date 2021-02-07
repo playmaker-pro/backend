@@ -486,6 +486,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     video_description_third = models.TextField(_('Temat i opis nagrania nr 3'), null=True, blank=True)
 
     def calculate_data_from_data_models(self, adpt=None):
+        '''Interaction with s38: league, vivo, team <- s38'''
         if self.attached:
             adpt = adpt or PlayerAdapter(self.data_mapper_id)
             if adpt.has_player:
@@ -495,23 +496,34 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
                 self.team = adpt.get_current_team()
 
     def update_data_player_object(self, adpt=None):
-        '''updates --> s38 wix_id and fantasy position'''
-        adpt = adpt or PlayerAdapter(self.data_mapper_id)
-        adpt.update_wix_id_and_position(email=self.user.email, position=self.position_fantasy)
+        '''Interaction with s38: updates --> s38 wix_id and fantasy position'''
+        if self.attached:
+            adpt = adpt or PlayerAdapter(self.data_mapper_id)
+            adpt.update_wix_id_and_position(email=self.user.email, position=self.position_fantasy)
 
     def fetch_data_player_meta(self, adpt=None, save=True):
-        '''updates meta from <--- s38 '''
-        adpt = adpt or PlayerAdapter(self.data_mapper_id)
-        self.meta = adpt.player.meta
-        self.meta_updated = timezone.now()
-        if save:
-            self.save()
+        '''Interaction with s38: updates meta from <--- s38 '''
+        if self.attached:
+            adpt = adpt or PlayerAdapter(self.data_mapper_id)
+            self.meta = adpt.player.meta
+            self.meta_updated = timezone.now()
+            if save:
+                self.save()
 
     def trigger_refresh_data_player_stats(self, adpt=None):
         '''Trigger update of player stats --> s38'''
-        adpt = adpt or PlayerAdapter(self.data_mapper_id)
-        adpt.calculate_stats()
+        if self.attached:
+            adpt = adpt or PlayerAdapter(self.data_mapper_id)
+            adpt.calculate_stats()
 
+    def set_club_team_based_on_meta(self):
+        '''set TeamObject based on meta data'''
+        if self.meta is not None:
+            season = utilites.get_current_season()
+            season_data = self.meta.get(season)
+            if season_data:
+                pass 
+                    
     def save(self, *args, **kwargs):
         ''''Nie jest wyświetlana na profilu.
         Pole wykorzystywane wyłącznie do gry Fantasy.
@@ -530,19 +542,20 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         (9, 'Napastnik'),
         ]
         '''
-
-        adpt = PlayerAdapter(self.data_mapper_id)
-        self.calculate_data_from_data_models(adpt)
-        self.fetch_data_player_meta(adpt, save=False)
-
         if self.position_raw is not None:
             self.position_fantasy = self.FANTASY_MAPPING.get(self.position_raw, None)
+
+        adpt = None
+        if self.attached:
+            adpt = PlayerAdapter(self.data_mapper_id)
+            self.calculate_data_from_data_models(adpt)
+            self.fetch_data_player_meta(adpt, save=False)
 
         # print(f'---------- Datamapper: {self.data_mapper_changed}')
         super().save(*args, **kwargs)
         # print(f'---------- Datamapper: {self.data_mapper_changed}')
-        if self.data_mapper_changed and self.data_mapper_id is not None:
-            logger.info(f'Calculating metrics. for player {self}')
+        if self.data_mapper_changed and self.attached:
+            logger.info(f'Calculating metrics for player {self}')
             if utilites.is_allowed_interact_with_s38():
                 self.update_data_player_object(adpt)
                 self.trigger_refresh_data_player_stats(adpt)

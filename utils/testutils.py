@@ -10,11 +10,16 @@ from users.models import User
 
 def get_team():
     vivo, _ = Voivodeship.objects.get_or_create(name='VIVOX')
-    club, _ = Club.objects.get_or_create(name='CLUBX', voivodeship=vivo)
+    club, _ = Club.objects.get_or_create(name='CLUBX', voivodeship=vivo, defaults={'mapping': 'XXX, YYY,'})
     league, _ = League.objects.get_or_create(name='LEAGUEX')
     seniority, _ = Seniority.objects.get_or_create(name='SENIORITYX')
     gender, _ = Gender.objects.get_or_create(name='GENDERX')
-    team, _  = Team.objects.get_or_create(club=club, name='TEAMX', league=league, seniority=seniority, gender=gender)
+    team, _  = Team.objects.get_or_create(
+        club=club, name='TEAMX',
+        league=league,
+        seniority=seniority,
+        gender=gender,
+        defaults={'mapping': 'XXX, YYY,'})
     return team
 
 

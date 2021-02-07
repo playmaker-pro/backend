@@ -9,6 +9,7 @@ from utils import testutils as utils
 
 from django.conf import settings
 
+from unittest.mock import patch
 
 utils.silence_explamation_mark()
 
@@ -33,7 +34,7 @@ class InitialClassCreationTest(TestCase):
             InquiryPlan.objects.get(name=args['name'], default=args['default'])
 
     def test_player_user_should_have_basic_plan(self):
-        assert self.player.userinquiry.plan.default == True
+        assert self.player.userinquiry.plan.default is True
 
 
 class ModelMethodsRequest(TestCase):
@@ -47,6 +48,7 @@ class ModelMethodsRequest(TestCase):
         self.coach = User.objects.create(email='username-coach', declared_role=definitions.COACH_SHORT)
         self.request = InquiryRequest(sender=self.coach, recipient=self.player)
 
+    @patch('stats.adapters.player.PlayerAdapter.__init__', '')
     def test__status_display(self):
         assert self.request.status == InquiryRequest.STATUS_NEW
 
