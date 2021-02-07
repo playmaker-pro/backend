@@ -1,6 +1,6 @@
 import operator
 from functools import reduce
-
+from django.db.models import F
 from app import mixins, utils
 
 from clubs.models import Club, Team
@@ -96,7 +96,7 @@ class PlayersTable(TableView):
         return User.objects.filter(
             declared_role='P',
             state=User.STATE_ACCOUNT_VERIFIED,
-            playerprofile__birth_date__lte=get_datetime_from_age(15)).order_by('-last_login')
+            playerprofile__birth_date__lte=get_datetime_from_age(15)).order_by(F('last_login').desc(nulls_last=True))
 
 
 class TeamsTable(TableView):
@@ -133,7 +133,7 @@ class CoachesTable(TableView):
         return User.objects.filter(
             declared_role='T',
             state=User.STATE_ACCOUNT_VERIFIED
-        )
+        ).order_by(F('last_login').desc(nulls_last=True))
 
     def filter_queryset(self, queryset):
 

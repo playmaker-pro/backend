@@ -81,9 +81,7 @@
                             <div class=""> 
                                 {{ object.profile.display_league|default:''|title  }}, {{ object.profile.display_voivodeship|default:''|lower|truncatechars:24 }} 
                             </div>
-             
                         </div>
-
             <div class="sc-cell d-none d-md-flex col-md-3">
               <a href="{{ object.profile.get_permalink }}"> 
                 <img  class="rounded img-responsive" src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
