@@ -61,7 +61,7 @@ class ProfileCarrierRows(ProfileStatsPageView):
 
     def get_data_or_calculate(self, user):
         _id = user.profile.data_mapper_id
-        if user.profile.playermetrics.how_old_days(season=True) >= 7 and user.profile.has_data_id:
+        if user.profile.playermetrics.how_old_days(games=True) >= 7 and user.profile.has_data_id:
             season = adapters.PlayerStatsSeasonAdapter(_id).get(groupped=True)
             user.profile.playermetrics.update_season(season)
         user.profile.playermetrics.refresh_from_db()

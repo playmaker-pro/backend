@@ -218,15 +218,19 @@ class BaseProfile(models.Model):
         # if silent_param is not None:
         #     kwargs.pop('silent')
         self._save_make_profile_history()
-
-        obj_before_save = obj = type(self).objects.get(pk=self.pk) if self.pk else None
+        try:
+            obj_before_save = obj = type(self).objects.get(pk=self.pk) if self.pk else None
+        except type(self).DoesNotExist:
+            obj_before_save = None
 
         slug_str = "%s %s %s" % (self.PROFILE_TYPE, self.user.first_name, self.user.last_name)
         unique_slugify(self, slug_str)
 
         ver_old, object_exists = self._get_verification_object_verification_fields(obj=obj_before_save)
-
-        before_datamapper = obj.data_mapper_id
+        if obj_before_save is not None:
+            before_datamapper = obj.data_mapper_id
+        else:
+            before_datamapper = None
 
         # Queen of the show
         super().save(*args, **kwargs)
@@ -436,7 +440,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             return self.team_object_alt
         return self.team_object
 
-    meta = models.TextField(null=True, blank=True)
+    meta = models.JSONField(null=True, blank=True)
     meta_updated = models.DateTimeField(null=True, blank=True)
     team_club_league_voivodeship_ver = models.CharField(_('team_club_league_voivodeship_ver'), max_length=355, help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'), blank=True, null=True,)
     team_object = models.ForeignKey(clubs_models.Team, on_delete=models.SET_NULL, related_name='players', null=True, blank=True)
@@ -516,14 +520,35 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             adpt = adpt or PlayerAdapter(self.data_mapper_id)
             adpt.calculate_stats()
 
-    def set_club_team_based_on_meta(self):
+    def get_team_object_based_on_meta(self, season_name, retries: int = 3):
         '''set TeamObject based on meta data'''
-        if self.meta is not None:
-            season = utilites.get_current_season()
-            season_data = self.meta.get(season)
-            if season_data:
-                pass 
-                    
+        if retries <= 0 or self.meta is None:
+            return None
+        season_data = self.meta.get(season_name, None)
+        if season_data is not None:
+            team_name = season_data['team']
+            if not team_name:
+                return None
+            from clubs.services import TeamAdapter
+            team_object = TeamAdapter().match_name_or_mapping(team_name)
+            return team_object
+        else:
+            r = retries - 1
+            self.get_team_object_based_on_meta(utilites.calculate_prev_season(season_name), retries=r)
+
+    def set_team_object_based_on_meta(self, save=True):
+        if self.meta is not None and self.attached:
+            team_object = self.get_team_object_based_on_meta(utilites.get_current_season())
+            logger.info(f'Found team_object `{team_object}` for playerprofile {self}')
+            if team_object is not None:
+                logger.debug(f'Setting new team_object for {self}')
+                self.team_object = team_object
+                if save:
+                    logger.debug(f'Saving new team_object for {self}')
+                    self.save()
+                    return
+        logger.info('Object not found or meta is empty.')
+
     def save(self, *args, **kwargs):
         ''''Nie jest wyświetlana na profilu.
         Pole wykorzystywane wyłącznie do gry Fantasy.
@@ -546,20 +571,28 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             self.position_fantasy = self.FANTASY_MAPPING.get(self.position_raw, None)
 
         adpt = None
+        # Each time actions
         if self.attached:
-            adpt = PlayerAdapter(self.data_mapper_id)
-            self.calculate_data_from_data_models(adpt)
-            self.fetch_data_player_meta(adpt, save=False)
+            old = self.playermetrics.how_old_days
+            logger.error(f'xxxxx {any([old(season=True) >= 1, old(fantasy=True) >= 1, old(games=True) >= 1])} {old(season=True) >= 1} {old(fantasy=True) >= 1} {old(games=True) >= 1}')
+            if any([old(season=True) >= 1, old(fantasy=True) >= 1, old(games=True) >= 1]):
+                logger.debug(f'Stats old enough {self}')
+                self.playermetrics.refresh_metrics()  # download: metrics data
 
         # print(f'---------- Datamapper: {self.data_mapper_changed}')
         super().save(*args, **kwargs)
         # print(f'---------- Datamapper: {self.data_mapper_changed}')
-        if self.data_mapper_changed and self.attached:
+
+        # Onetime actions:
+        if self.data_mapper_changed and self.attached:  # if datamapper changed after save and it is not None
             logger.info(f'Calculating metrics for player {self}')
-            if utilites.is_allowed_interact_with_s38():
-                self.update_data_player_object(adpt)
-                self.trigger_refresh_data_player_stats(adpt)
-            self.playermetrics.refresh_metrics()
+            adpt = PlayerAdapter(self.data_mapper_id)  # commonly use adpt
+            if utilites.is_allowed_interact_with_s38():  # are we on PROD and not Debug
+                self.update_data_player_object(adpt)  # send data to s38
+                self.trigger_refresh_data_player_stats(adpt)   # send trigger to s38 
+            self.calculate_data_from_data_models(adpt)  # update league, vivo, team from Players meta
+            self.fetch_data_player_meta(adpt)  # update update meta
+            
 
     class Meta:
         verbose_name = "Player Profile"
@@ -674,9 +707,20 @@ class PlayerMetrics(models.Model):
         verbose_name_plural = _("Metryki graczy")
 
     def __str__(self):
-        if not all([self.games_summary_updated, self.season_summary_updated]):
-            return f'gs:{self.games_summary_updated} cs:{self.season_summary_updated}'
-        return f'gs:{self.games_summary_updated.strftime("%b/%d/%Hh")} cs:{self.season_summary_updated.strftime("%b/%d/%Hh")}'
+
+        def none_or_date(param):
+            _f = "%b/%d/%Hh"
+            return getattr(self, param).strftime(_f) if getattr(self, param) else getattr(self, param)
+
+        params = {
+            'g': none_or_date('games_updated'),
+            'gs': none_or_date('games_summary_updated'),
+            'c': none_or_date('season_updated'),
+            'cs': none_or_date('season_summary_updated'),
+            'f': none_or_date('fantasy_updated'),
+            'fs': none_or_date('fantasy_summary_updated'),
+        }
+        return ' '.join([f'{name}:{metric}' for name, metric in params.items()])
 
 
 class ClubProfile(BaseProfile):

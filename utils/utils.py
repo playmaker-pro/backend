@@ -26,6 +26,15 @@ def get_current_season(date=None) -> str:
     return season
 
 
+def calculate_prev_season(season: str):
+    ''' 2019/2020 ->   2018/2019'''
+    assert isinstance(season, str), 'season parameter is not an string'
+    first, second = season.split('/')
+    first_updated = int(first) - 1
+    second_updated = int(second) - 1
+    return f'{first_updated}/{second_updated}'
+
+
 get_season_string = get_current_season()
 
 

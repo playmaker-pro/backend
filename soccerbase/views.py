@@ -93,7 +93,10 @@ class PlayersTable(TableView):
         return queryset
 
     def get_queryset(self):
-        return User.objects.filter(declared_role='P', state=User.STATE_ACCOUNT_VERIFIED, playerprofile__birth_date__lte=get_datetime_from_age(15))
+        return User.objects.filter(
+            declared_role='P',
+            state=User.STATE_ACCOUNT_VERIFIED,
+            playerprofile__birth_date__lte=get_datetime_from_age(15)).order_by('-last_login')
 
 
 class TeamsTable(TableView):

@@ -55,6 +55,7 @@
         </div>   
                                                     <div class="sc-cell d-none d-md-flex col-md-3">
                                                         <a href="{{ object.profile.get_permalink }}">
+                                                        {{ object.last_login }}
                                                             <img class="avatar rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
 
                                                             <img class="flag pl-3" src="{{ object.profile.country.flag }}" alt="flag">

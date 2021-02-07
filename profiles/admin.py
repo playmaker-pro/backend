@@ -67,7 +67,7 @@ def trigger_refresh_data_player_stats(modeladmin, request, queryset):
         pp.trigger_refresh_data_player_stats()  # save comes inside
 
 
-trigger_refresh_data_player_stats.short_description = "Refresh data on -->  s38"
+trigger_refresh_data_player_stats.short_description = "1. Refresh metric data_player on -->  s38"
 
 
 def calculate_metrics(modeladmin, request, queryset):
@@ -75,7 +75,7 @@ def calculate_metrics(modeladmin, request, queryset):
         pp.playermetrics.refresh_metrics()  # save comes inside
 
 
-calculate_metrics.short_description = "Calculate metrics Playermeteics <-- s38"
+calculate_metrics.short_description = "2. Calculate Playermeteics <-- s38"
 
 
 def fetch_data_player_meta(modeladmin, request, queryset):
@@ -83,7 +83,26 @@ def fetch_data_player_meta(modeladmin, request, queryset):
         pp.fetch_data_player_meta()  # save comes inside
 
 
-fetch_data_player_meta.short_description = 'update meta  <--- s38'
+fetch_data_player_meta.short_description = '3. update meta  <--- s38'
+
+
+def set_team_object_based_on_meta(modeladmin, request, queryset):
+    for pp in queryset:
+        pp.set_team_object_based_on_meta()  # save comes inside
+
+
+set_team_object_based_on_meta.short_description = '4. set team_object based on .meta'
+
+
+def refresh(modeladmin, request, queryset):
+    for pp in queryset:
+        pp.trigger_refresh_data_player_stats()  # save not relevant
+        pp.fetch_data_player_meta(save=False)  # save comes inside
+        pp.set_team_object_based_on_meta()  # saving
+        pp.playermetrics.refresh_metrics()  # save not relevant
+
+
+refresh.short_description = '0. Refresh( 1, 2,3,4 )'
 
 
 @admin.register(models.PlayerProfile)
@@ -102,7 +121,7 @@ class PlayerProfileAdmin(ProfileAdminBase):
 
     autocomplete_fields = ('team_object', 'team_object_alt')
 
-    actions = [calculate_metrics, trigger_refresh_data_player_stats, fetch_data_player_meta]
+    actions = [refresh, calculate_metrics, trigger_refresh_data_player_stats, fetch_data_player_meta, set_team_object_based_on_meta]
 
 
 @admin.register(models.CoachProfile)
