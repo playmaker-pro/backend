@@ -1,6 +1,8 @@
-{% extends 'base_inner.html' %}
+{% extends 'base.html' %}
 
-{% block breadcrumbs_items %} 
-    <li><a href="/blog">Blog</a></li>
+{% load i18n %}
+{% load static %}
+
+{% block content_header %} 
+    {% include 'partials/breadcrumbs.html' with breadcrumb_name=_('Blog') breadcrumb_url='/blog' %}
 {% endblock %}
-

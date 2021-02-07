@@ -116,8 +116,13 @@ class PlayerProfileAdmin(ProfileAdminBase):
             'display_seniority',
             'display_gender',
             'meta_updated',
-            'meta',
+            'meta_last',
         )
+    def meta_last(self, obj):
+        if obj.meta:
+            return list(obj.meta.items())[-1]
+        else:
+            obj.meta
 
     autocomplete_fields = ('user', 'team_object', 'team_object_alt')
 

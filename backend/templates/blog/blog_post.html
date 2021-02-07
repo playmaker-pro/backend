@@ -15,12 +15,19 @@
 
     <div class="entry-meta">
       <ul>
-      
+
         {% if blog.date %}
-        <li class="d-flex align-items-center"><i class="icofont-user"></i> <a href="blog-single.html">{{ blog.author }}</a></li>
-        <li class="d-flex align-items-center"><i class="icofont-wall-clock"></i> <a href="blog-single.html"><time datetime="{{ blog.date|date:'F jS, Y' }}">{{ blog.date|date:"F jS, Y" }}</time></a></li>
+        <li class="d-flex align-items-center"><i class="icofont-user"></i> <a href="{{ blog.author.profile.get_permalink }}">{{ blog.author.get_full_name }}</a></li>
+        <li class="d-flex align-items-center"><i class="icofont-wall-clock"></i> <time datetime="{{ blog.date|date:'F jS, Y' }}">{{ blog.date|date:"F jS, Y" }}</time></li>
         {% endif %}
-        <li class="d-flex align-items-center"><i class="icofont-comment"></i> <a href="blog-single.html">12 Comments</a></li>
+
+        {% if blog.categories.all %}
+              
+                {% for cat in blog.categories.all %}
+                    <a style="color:#fff;font-size:.9rem;margin-right:2px;padding:4px;" class="badge badge-danger"  href="{% url 'blog:category' cat.category.slug %}">{{ cat.category.name }}</a>{% if not forloop.last %}, {% endif %}
+                {% endfor %} 
+        {% endif %}
+
       </ul>
     </div>
 
@@ -34,38 +41,18 @@
             {{ blog.body|richtext }}
         {% endif %}
       </p>
-      <div class="read-more">
-        <a href="{% pageurl blog %}">Czytaj więcej &raquo;</a>
+      <div class="read-more mb-3">
+        <a class="btn btn-danger" href="{% pageurl blog %}">Czytaj więcej &raquo;</a>
       </div>
     </div>
 
   </article><!-- End blog entry -->
 
-  <div hidden class="share">
-    <span class="st_linkedin_large" st_title="{{ blog.title }}" st_url="{{ SITE_URL }}{% pageurl blog %}" displayText="LinkedIn"></span>
-    <span class="st_twitter_large" st_title="{{ blog.title }}" st_url="{{ SITE_URL }}{% pageurl blog %}" displayText="Tweet"></span>
-    <span class="st_facebook_large" st_title="{{ blog.title }}" st_url="{{ SITE_URL }}{% pageurl blog %}" displayText="Facebook"></span>
-    <span class="st_plusone_large" st_title="{{ blog.title }}" st_url="{{ SITE_URL }}{% pageurl blog %}" displayText="Google +1"></span>
-    <span class="st_email_large" st_title="{{ blog.title }}" st_url="{{ SITE_URL }}{% pageurl blog %}" displayText="Email"></span>
-    <span class="st_sharethis_large" st_title="{{ blog.title }}" st_url="{{ SITE_URL }}{% pageurl blog %}" displayText="ShareThis"></span>
-</div>
 
-<div hidden class="meta">
-    <div class="tags">
-        {% if blog.tags.all %}
-            Tags: 
-                {% for tag in blog.tags.all %}
-                    <a href="{% url 'blog:tag' tag.slug %}">{{ tag }}</a>{% if not forloop.last %}, {% endif %}
-                {% endfor %}
-        {% endif %}
-    </div>
+<div class="meta">
+
     <div class="tags-and-comments">
-        {% if blog.categories.all %}
-            Posted in 
-                {% for cat in blog.categories.all %}
-                    <a href="{% url 'blog:category' cat.category.slug %}">{{ cat.category.name }}</a>{% if not forloop.last %}, {% endif %}
-                {% endfor %} | 
-        {% endif %}
+
 
         <div id="comments" class="comments">
         {% if COMMENTS_APP == 'django_comments_xtd' %}
