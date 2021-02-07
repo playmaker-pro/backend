@@ -626,7 +626,7 @@ class PlayerMetrics(models.Model):
 
     def _update_cached_field(self, attr: str, data, commit=True):
         setattr(self, attr, data)
-        setattr(self, f'{attr}_updated', datetime.now())
+        setattr(self, f'{attr}_updated', timezone.now())
         if commit:
             self.save()
 
@@ -699,7 +699,7 @@ class PlayerMetrics(models.Model):
 
     def save(self, data_refreshed: bool = None, *args, **kwargs):
         if data_refreshed is not None and data_refreshed is True:
-            self.updated_at = datetime.now()
+            self.updated_at = timezone.now()
         super().save(*args, **kwargs)
 
     class Meta:
