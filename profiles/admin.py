@@ -119,7 +119,7 @@ class PlayerProfileAdmin(ProfileAdminBase):
             'meta',
         )
 
-    autocomplete_fields = ('team_object', 'team_object_alt')
+    autocomplete_fields = ('user', 'team_object', 'team_object_alt')
 
     actions = [refresh, calculate_metrics, trigger_refresh_data_player_stats, fetch_data_player_meta, set_team_object_based_on_meta]
 
