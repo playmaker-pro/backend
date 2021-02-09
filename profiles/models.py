@@ -527,10 +527,11 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         season_data = self.meta.get(season_name, None)
         if season_data is not None:
             team_name = season_data['team']
+            league_code = season_data['league_code']
             if not team_name:
                 return None
             from clubs.services import TeamAdapter
-            team_object = TeamAdapter().match_name_or_mapping(team_name)
+            team_object = TeamAdapter().match_name_or_mapping_with_code(team_name, str(league_code))
             return team_object
         else:
             r = retries - 1
