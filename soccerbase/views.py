@@ -54,6 +54,7 @@ class PlayersTable(TableView):
 
         if self.filter_league is not None:
             # queryset = queryset.filter(playerprofile__league__in=self.filter_league)
+            print('xxxxx ', self.filter_league)
             queryset = queryset.filter(playerprofile__team_object__league__name__in=self.filter_league)
 
         if self.filter_first_last is not None:

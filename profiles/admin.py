@@ -113,11 +113,13 @@ class PlayerProfileAdmin(ProfileAdminBase):
             linkify('team_object_alt'),
             'display_league',
             'display_team',
+            'display_club',
             'display_seniority',
             'display_gender',
             'meta_updated',
             'meta_last',
         )
+
     def meta_last(self, obj):
         if obj.meta:
             return list(obj.meta.items())[-1]
