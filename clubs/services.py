@@ -1,26 +1,33 @@
 from .models import Team, Club
 
 
-class TeamAdapter:
+
+class AdapterBase:
+
+    def get_mapping_name(self, name):
+        return f',,{name},,'
+
+
+class TeamAdapter(AdapterBase):
 
     def match_name_or_mapping(self, name: str):
         try:
             return Team.objects.get(name__iexact=name)
         except Team.DoesNotExist:
-            name += ','
+            name = self.get_mapping_name(name)
             try:
                 return Team.objects.get(mapping__icontains=name)
             except Team.DoesNotExist:
                 return None
 
 
-class ClubAdapter:
+class ClubAdapter(AdapterBase):
 
     def match_name_or_mapping(self, name: str):
         try:
             return Club.objects.get(name__iexact=name)
         except Club.DoesNotExist:
-            name += ','
+            name = self.get_mapping_name(name)
             try:
                 return Club.objects.get(mapping__icontains=name)
             except Club.DoesNotExist:
