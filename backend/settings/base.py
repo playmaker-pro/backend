@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'notifications',
     'app',
     'marketplace',
+    'products',
 
     'data',  # external repo
     'stats',  # external repo

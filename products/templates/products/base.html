@@ -1,0 +1,214 @@
+{% extends 'platform/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ block.super }} {{ page_title }} {% endblock %}
+
+
+{% block content_header %}
+    {% include '_page_heading.html' with heading_title=page_title size=4 %}
+    {{ block.super }}
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+#products{ 
+    background-color:#F8F8F8;
+    padding: .2rem 0 93px 0;
+}
+#products .announcement-card {
+    /*border-left: 5px solid #e03a3c;*/
+    padding: .7rem;
+}
+
+#products .announcement-card .card-body {
+    padding: .6rem 0rem;
+}
+
+#products .announcement-card .sub-title {
+
+    font-size: .5rem;
+}
+
+
+#products .announcement-card .card-footer {
+    background: #fff;
+    border-top:1px dashed #ccc;
+ } 
+
+
+@media all and (max-width: 768px) {
+    #products .container-fluid {
+        padding-right: 0px;
+        padding-left: 0px;
+    } 
+    #products .announcement-card {
+        border: 1px solid rgba(0,0,0,.125);
+        border-radius: .25rem;
+    }
+    #products .announcement-card .card-body {
+        padding: .65rem .55rem;
+    } 
+}
+
+
+
+
+.mt-60{
+    margin-top:60px;
+}
+
+.section-block-grey {
+    padding: 90px 0px 90px 0px;
+    background-color: #f9f9f9;
+}
+
+.serv-section-2 {
+    position: relative;
+    border: 1px solid #eee;
+    background: #fff;
+    box-shadow: 0px 10px 30px 0px rgba(50, 50, 50, 0.16);
+    border-radius: 5px;
+    overflow: hidden;
+    padding: 30px;
+}
+
+.serv-section-2:before {
+    position: absolute;
+    top: 0;
+    right: 0px;
+    z-index: 0;
+    content: " ";
+    width: 100px;
+    height: 100px;
+    background: #f5f5f5;
+    border-bottom-left-radius: 136px;
+    transition: all 0.4s ease-in-out;
+    -webkit-transition: all 0.4s ease-in-out;
+}
+
+@media all and (max-width: 768px) {
+    .serv-section-2:before {
+         display: none;
+    }
+
+}
+.serv-section-2-icon {
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    max-width: 100px;
+    z-index: 1;
+    text-align: center;
+}
+
+.serv-section-2-icon i {
+    color: #5f27cd;
+    font-size: 48px;
+    line-height: 65px;
+    transition: all 0.4s ease-in-out;
+    -webkit-transition: all 0.4s ease-in-out;
+}
+
+.serv-section-desc {
+    position: relative;
+}
+
+.serv-section-2 h4 {
+    color: #333;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.serv-section-2 h5 {
+    color: #333;
+    font-size: 17px;
+    font-weight: 400;
+    line-height: 1;
+    margin-top: 5px;
+}
+
+.section-heading-line-left {
+    content: '';
+    display: block;
+    width: 100px;
+    height: 3px;
+    background: #e76668;
+    border-radius: 25%;
+    margin-top: 10px;
+    margin-bottom: 2px;
+}
+
+.serv-section-2 p {
+    margin-top: 25px;
+    padding-right: 50px;
+}
+
+.serv-section-2:hover .serv-section-2-icon i {
+    color: #fff;
+}
+
+.serv-section-2:hover:before {
+    background: #e76668;
+}
+</style>
+
+<section id="products" class="products"> 
+<div class="container-fluid">
+    {% if page_desc %}
+    <div class="row"> 
+        <div class="col-md-12"> {{ desc|safe }}</div>
+    </div>
+    {% endif %}
+
+
+    <div class="row"> 
+        <div class="col-md-12"> {% include 'products/_tags.html' %}</div>
+    </div>
+
+        <div class="row p-1">
+            {% for object in page_obj %}
+                <div class="col-md-4">
+                {% include 'products/_card.html' with object=object %}
+                </div>
+            {% empty %}
+                <div class="col-12 text-center">
+                    <h1>{% trans 'Brak produktów' %}</h1>
+                    <img class="img-responsive" src="{% static 'assets/img/panga_1.png' %}">
+                </div>
+            {% endfor %}
+            
+        </div>
+        
+        {% include 'platform/partials/_pagination.html' with object_type='ogłoszeń' %}
+        
+ </div>
+</section>
+{% endblock %}
+
+
+{% block extra_js %}
+    {{ block.super }}
+
+    <script src="{% static 'assets/js/filters.js' %}"></script>
+    {% include 'marketplace/filters_modal.html' %}
+    <script>
+            $('#approveAnnouncementModal').on('show.bs.modal', function (event) {
+        var id = $(event.relatedTarget).data('ann');
+        $(this).find('#ann-numner').val(id);
+        //$(this).find(".ann-number").text(id);
+        });
+
+ 
+            $('#addAnnouncementModal').on('show.bs.modal', function (event) {
+        var id = $(event.relatedTarget).data('ann');
+        $(this).find('#add-ann-number').val(id);
+        //$(this).find(".ann-number").text(id);
+        });
+
+
+    </script>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'platform/base.html' %}
+{% load static %}
+{% load i18n %}
+
+
+{% block title %}{{ block.super }} {{ page_title }} {% endblock %}
+
+
+{% block content_header %}
+    {% include '_page_heading.html' with heading_title=page_title size=4 %}
+    {{ block.super }}
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+</style>
+
+<section id="product-detail" class="product-detail"> 
+<div class="container-fluid">
+        <div class="row"> 
+
+            <div class="col-md-12">
+
+            </div>
+        </div>
+
+        <div class="row p-1">
+            {{ page_obj.html_body|safe }}
+            {% include 'products/_form.html' with requet_id=page_obj.id %}
+        </div>
+
+ </div>
+</section>
+{% endblock %}
+
+
+{% block extra_js %}
+    {{ block.super }}
+
+    <script src="{% static 'assets/js/filters.js' %}"></script>
+    {% include 'marketplace/filters_modal.html' %}
+    <script>
+            $('#approveAnnouncementModal').on('show.bs.modal', function (event) {
+        var id = $(event.relatedTarget).data('ann');
+        $(this).find('#ann-numner').val(id);
+        //$(this).find(".ann-number").text(id);
+        });
+
+ 
+            $('#addAnnouncementModal').on('show.bs.modal', function (event) {
+        var id = $(event.relatedTarget).data('ann');
+        $(this).find('#add-ann-number').val(id);
+        //$(this).find(".ann-number").text(id);
+        });
+
+
+    </script>
+{% endblock %}

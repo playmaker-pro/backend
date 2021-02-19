@@ -31,9 +31,6 @@ from inquiries.services import unseen_requests, update_requests_with_read_status
 from app import mixins, utils
 
 
-
-
-
 class MyObservers(generic.TemplateView, LoginRequiredMixin, mixins.PaginateMixin, mixins.ViewModalLoadingMixin):
     template_name = "profiles/observers.html"
     http_method_names = ["get"]
@@ -281,9 +278,6 @@ class SlugyViewMixin:
 
     def _is_owner(self, user):
         return user == self.request.user
-
-
-
 
 
 def convert_form_names(data: dict):
