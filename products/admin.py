@@ -47,4 +47,4 @@ class RequestModel(admin.ModelAdmin):
 
 @admin.register(models.Tag)
 class TagModel(admin.ModelAdmin):
-    list_display = ('name',)
+    list_display = ('name', 'id')

@@ -32,3 +32,5 @@ class ProductMail(PMMailBase):
         instance -> products.models.UserRequest
         '''
         # tbdefined
+        # body = ''
+        # send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [instance.user.email])

@@ -158,11 +158,15 @@
 
 <section id="products" class="products"> 
 <div class="container-fluid">
-    {% if page_desc %}
+    
     <div class="row"> 
+        {% if object.page_desc %}
         <div class="col-md-12"> {{ desc|safe }}</div>
+           {% endif %}
+        <div class="col-md-10">  {% include 'products/filters.html' %}</div>
+
     </div>
-    {% endif %}
+ 
 
 
     <div class="row"> 
@@ -189,26 +193,10 @@
 </section>
 {% endblock %}
 
-
 {% block extra_js %}
     {{ block.super }}
 
     <script src="{% static 'assets/js/filters.js' %}"></script>
-    {% include 'marketplace/filters_modal.html' %}
-    <script>
-            $('#approveAnnouncementModal').on('show.bs.modal', function (event) {
-        var id = $(event.relatedTarget).data('ann');
-        $(this).find('#ann-numner').val(id);
-        //$(this).find(".ann-number").text(id);
-        });
+    {% include 'products/_filter_modal.html' %}
 
- 
-            $('#addAnnouncementModal').on('show.bs.modal', function (event) {
-        var id = $(event.relatedTarget).data('ann');
-        $(this).find('#add-ann-number').val(id);
-        //$(this).find(".ann-number").text(id);
-        });
-
-
-    </script>
 {% endblock %}

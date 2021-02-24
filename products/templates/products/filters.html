@@ -1,0 +1,29 @@
+{% load static %}
+{% load playmaker %}
+{% load i18n %}
+
+  <div id="annoucmenet-filters" class="d-none d-md-inline annoucmenet-filters">
+    <div class="container-fluid">
+      
+            <form id="filter-form" method="get" class="form-inline row ">              
+                  {% include 'products/_filters.html' with size=120 %}
+
+                <div class="col-12 col-md-1 filter-button"> 
+                   {% include 'products/_filter_button.html' with mobile=True %}
+                </div>
+                  
+            </form>
+     </div>
+</div>
+
+
+<div style="background-color:#2b2b2b;"id="annoucmenet-filterss" class="p-4 d-md-none fixed-bottom">
+    <div class="container-fluid text-center">
+     
+        <button id="open-filter-button"  type="button" class="btn-pm" data-toggle="modal" data-target="#filterModal">
+        {% trans 'Filtruj wyniki' %}
+        </button>
+
+     </div>
+</div>
+

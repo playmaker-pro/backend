@@ -54,12 +54,15 @@ class SendRequestView(LoginRequiredMixin, View):
     def post(self, request, id, *args, **kwargs):
         user = self.request.user
         product = Product.objects.get(id=id)
-        Request.objects.create(
+        r = Request.objects.create(
             user=user,
             raw_body=request.POST,
             product=product,
         )
         messages.success(request, _("Twoje zgłoszenie zostało wysłane"))
+        r.mail_admins_about_new_product_request()
+        r.send_notifcation_to_user()
+
         return redirect("products:products")
     #    et('id')
 
@@ -110,8 +113,15 @@ class ProductView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixins.Vie
     page_title = 'Produkty Piłkarskie'
     template_name = "products/detail.html"
 
+    def get_filters_values(self):  # @todo add cache from Redis here
+        return {
+            'tags': list(Tag.objects.filter(active=True).values_list('name', flat=True)),
+
+        }
+
     def get(self, request, id, *args, **kwargs):
         kwargs['page_obj'] = get_object_or_404(Product, id=id)
+        kwargs['filters'] = self.get_filters_values()
         kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
         return super().get(request, *args, **kwargs)
 
