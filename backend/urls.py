@@ -16,6 +16,7 @@ import clubs.urls
 import profiles.urls
 import marketplace.urls
 import products.urls
+import fqa.urls
 import allauth.account.urls
 import followers.urls  # @to be removed 
 from django.views.generic import TemplateView
@@ -36,6 +37,7 @@ urlpatterns = [
     path('users/', include(profiles.urls), name="profiles"),
     path('marketplace/', include(marketplace.urls), name="marketplace"),
     path('products/', include(products.urls), name="products"),
+    path('najczesciej-zadawane-pytania/', include(fqa.urls), name="faqs"),
     path('feeds/', include(followers.urls), name="feeds"),
     path('policy/', TemplateView.as_view(template_name='subpgaes/policy.html')),
     path('terms/', TemplateView.as_view(template_name='subpgaes/terms.html')),

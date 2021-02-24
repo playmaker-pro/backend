@@ -1,0 +1,28 @@
+{% load i18n %}
+
+
+<section id="faq" class="faq">
+      <div class="container aos-init aos-animate" data-aos="fade-up">
+
+        <div class="section-title">
+          <h2>{% trans 'Najczęściej zadawane pytania' %}</h2>
+        </div>
+
+        <ul class="faq-list accordion aos-init aos-animate" data-aos="fade-up">
+        
+         
+         {% for object in objects %}
+          <li>
+            <a data-bs-toggle="collapse" class="collapsed" data-bs-target="#faq1">{{ object.question_html }} <i class="bx bx-chevron-down icon-show"></i><i class="bx bx-x icon-close"></i></a>
+            <div id="faq1" class="collapse" data-bs-parent=".faq-list">
+              <p>
+                {{ object.answer_html }}
+              </p>
+            </div>
+          </li>
+        {% endfor %}
+
+        </ul>
+
+      </div>
+    </section>

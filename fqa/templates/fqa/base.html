@@ -1,0 +1,43 @@
+{% extends 'platform/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ block.super }} {{ page_title }} {% endblock %}
+
+
+{% block content_header %}
+    {% include '_page_heading.html' with heading_title=page_title size=4 %}
+    {{ block.super }}
+{% endblock %}
+
+
+{% block content %}
+
+
+<section id="faq" class="faq">
+      <div class="container aos-init aos-animate" data-aos="fade-up">
+
+        <div class="section-title">
+          <h2>{% trans 'Najczęściej zadawane pytania' %}</h2>
+        </div>
+
+        <ul class="faq-list accordion aos-init aos-animate" data-aos="fade-up">
+        
+         
+         {% for object in objects %}
+          <li>
+            <a data-bs-toggle="collapse" class="collapsed" data-bs-target="#faq{{ forloop.counter }}">{{ object.question_html }} <i class="bx bx-chevron-down icon-show"></i><i class="bx bx-x icon-close"></i></a>
+            <div id="faq{{ forloop.counter }}" class="collapse" data-bs-parent=".faq-list">
+              <p>
+                {{ object.answer_html }}
+              </p>
+            </div>
+          </li>
+        {% endfor %}
+
+        </ul>
+
+      </div>
+    </section>
+
+{% endblock %}
