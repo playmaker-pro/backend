@@ -12,29 +12,32 @@
 {% endblock %}
 
 
+
+
 {% block content %}
-
-<style>
-</style>
-
-<section id="product-detail" class="product-detail"> 
-<div class="container-fluid">
-        <div class="row"> 
-
-            <div class="col-md-12">
-
+    <section id="subpage" class="subpage last-section">
+      <div class="container">
+        <div>
+            <div  class="section-title">
+                <h2 class="mb-3 text-center">{{ page_obj.title }}</h2>
+                <h4 class="mb-3 text-center">{{ page_obj.subtitle }}</h4>
             </div>
+            <div class="row d-flex justify-content-center">
+
+                {{ page_obj.html_body|safe }}
+                
+            </div>
+             <div class="row d-flex justify-content-center">
+                {% include 'products/_form.html' with requet_id=page_obj.id %}
+             </div>
+             
+             <div class="row d-flex justify-content-center">
+                 {{ page_obj.html_body_footer|safe }}
+             </div>
         </div>
-
-        <div class="row p-1">
-            {{ page_obj.html_body|safe }}
-            {% include 'products/_form.html' with requet_id=page_obj.id %}
-        </div>
-
- </div>
-</section>
-{% endblock %}
-
+      </div>
+    </section>
+{% endblock content %}
 
 {% block extra_js %}
     {{ block.super }}

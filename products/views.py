@@ -26,9 +26,9 @@ from profiles.utils import get_datetime_from_age
 from roles import definitions
 from stats import adapters
 from users.models import User
-
+from notifications import message
 from profiles.models import PlayerPosition
-from .models import Product, UserRequest, Tag
+from .models import Product, Request, Tag
 
 
 User = get_user_model()
@@ -52,14 +52,14 @@ class SendRequestView(LoginRequiredMixin, View):
     http_method_names = ['post']
 
     def post(self, request, id, *args, **kwargs):
-        print('xxxxxxx')
         user = self.request.user
         product = Product.objects.get(id=id)
-        new, _ = UserRequest.objects.get_or_create(
+        Request.objects.create(
             user=user,
             raw_body=request.POST,
             product=product,
         )
+        messages.success(request, _("Twoje zgłoszenie zostało wysłane"))
         return redirect("products:products")
     #    et('id')
 

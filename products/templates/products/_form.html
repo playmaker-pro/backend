@@ -5,6 +5,8 @@
 <form id="user-request-form" action="/products/send/{{ requet_id }}/" method="post" class="form-inline row">
     {% csrf_token %}
     {{ page_obj.html_form|safe }}
-    <button id="filter-button{% if mobile %}-mobile{% endif %}" class="btn-pm" type="submit" value="{% trans 'Filtruj' %}">{% trans 'Wyślij zapytanie' %}</button>
+    <div class="row">
+        <button id="request-button" class="btn-pm" type="submit" value="{% trans 'Wyślij zapytanie' %}">{% trans 'Wyślij zapytanie' %}</button>
+    </div>
 </form>
 {% endif %}

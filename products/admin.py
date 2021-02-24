@@ -16,8 +16,8 @@ class ProductModel(admin.ModelAdmin):
     search_fields = ('tags__name',)
 
 
-@admin.register(models.UserRequest)
-class UserRequestModel(admin.ModelAdmin):
+@admin.register(models.Request)
+class RequestModel(admin.ModelAdmin):
     search_fields = ('user__email',)
     list_display = ('user', linkify('product'), 'date')
     autocomplete_fields = ('user',)

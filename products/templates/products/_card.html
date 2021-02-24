@@ -4,35 +4,25 @@
 
 
 <div class="card announcement-card m-1 serv-section-2">
-                <div class="serv-section-2-icon"> <img class="avatar rounded img-responsive"  src="{% thumbnail object.club.picture|default:'default_club.png' 'club_small' %}">
-                </div>
-                    <div class="serv-section-desc">
-                        <h4><a  href="{{ object.club.get_permalink }}">{{ object.title }}</a></h4>
-                        <h5>{{ object.subtitle }} {{ object.person }} </h5> 
-                </div>
+    {%  if  object.picture %}
+    <div class="serv-section-2-icon"> 
+        <img class="avatar rounded img-responsive"  src="{% thumbnail object.picture 'club_small' %}">
+    </div>
+    {% endif %}
+        <div class="serv-section-desc">
+            <h4><a href="/products/{{ object.id }}"> {{ object.title }}</a></h4>
+            <h5>{{ object.subtitle }} {{ object.person }} </h5> 
+        </div>
                     <div class="section-heading-line-left"></div>
     <div class="card-body row no-gutters">
-        {% comment %} <div class="col-12 card-title"> 
-            <span class="pull-left">
-                <a  href="{{ object.club.get_permalink }}">
-                   <h5>
-                    <img class="avatar rounded img-responsive"  src="{% thumbnail object.club.picture|default:'default_club.png' 'club_small' %}">
-                    {{ object.club.name }}
-                   </h5>
-                </a>
-            </span>
-            <small class="pull-right" style="top:3px; position:relative;">
-                {{ object.league }}
-            </small>
-        </div> {% endcomment %}
 
         <div class="col-12 card-text text-muted"> 
             <small class="row no-gutters">
-                <div class="col-6 col-md-3 text-center">
-                    <h4 class="ann-icon icofont-match-review"></h4> {{ object.place }}
+                <div class="col-3 col-md-3 text-center">
+                    <h4 class="icofont-map-pins"></h4> {{ object.place }}
                 </div>
-                <div class="col-6 col-md-3 text-center">
-                    <h4 class="icofont-ui-calendar"></h4>
+                <div class="col-9 col-md-9text-center">
+                   
                     {{ object.teaser }}
                 </div>
               
@@ -46,12 +36,8 @@
 
         <div class="card-text text-center d-inline-flex justify-content-center align-content-center flex-wrap">
            
-            <a href="/products/{{ object.id }}"> Sprawdz ofertę </a>
+            <a class="btn-pm" href="/products/{{ object.id }}"> Sprawdz ofertę </a>
 
-            <div class="card-text">
-                <i class="icofont-list"></i>
-                <small class="text-muted"> {{ object. }} odpowiedzi </small>
-            </div>
         </div>
     </div>
 </div>

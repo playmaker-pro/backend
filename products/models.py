@@ -17,7 +17,7 @@ from datetime import timedelta
 from .notifications import ProductMail
 
 
-class PageDescription(models.Model):    
+class PageDescription(models.Model):
     text = models.TextField()
 
 
@@ -30,8 +30,14 @@ class Product(models.Model):
     description = models.TextField(null=True, blank=True)
     active = models.BooleanField(default=False)
     html_body = models.TextField(null=True, blank=True)
+    html_body_footer = models.TextField(null=True, blank=True)
     html_form = models.TextField(null=True, blank=True)
     tags = models.ManyToManyField('Tag')
+    picture = models.ImageField(
+        _("Zdjęcie"),
+        upload_to="product_pics/%Y-%m-%d/",
+        null=True,
+        blank=True)
 
     def __unicode__(self):
         return f'{self.title}'
@@ -45,11 +51,11 @@ class Tag(models.Model):
         return f'{self.name}'
 
 
-class UserRequest(models.Model):
-    user = models.OneToOneField(
+class Request(models.Model):
+    user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        primary_key=True)
+    )
 
     date = models.DateTimeField(auto_created=True, auto_now=True)
 
@@ -58,7 +64,7 @@ class UserRequest(models.Model):
         on_delete=models.CASCADE
     )
     raw_body = models.JSONField(null=True, blank=True)
-  
+
     class Meta:
         unique_together = ('user', 'product', 'date')
 
@@ -74,4 +80,3 @@ class UserRequest(models.Model):
 
     def send_notification_to_admin(self):
         ProductMail.mail_admins_about_new_product_request(self)
-

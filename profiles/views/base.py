@@ -174,7 +174,6 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin, mixins.PaginateMixin,
                 'qs': qs_recipient.filter(sender__declared_role=definitions.PLAYER_SHORT),
                 'empty_text': 'Piłkarze na naszej platformie mogą wysłać zapytanie o możliwość odbycia testów wraz ze swoimi danymi kontaktowymi.',
                 'empty_header': 'Jeszcze nie otrzymałeś żadnego zapytania o testy od piłkarzy',
-                
             }
 
             tabs.append(build_request_tab(**tagoptions))
