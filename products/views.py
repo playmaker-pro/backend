@@ -60,7 +60,7 @@ class SendRequestView(LoginRequiredMixin, View):
             product=product,
         )
         messages.success(request, _("Twoje zgłoszenie zostało wysłane"))
-        r.mail_admins_about_new_product_request()
+        r.send_notification_to_admin()
         r.send_notifcation_to_user()
 
         return redirect("products:products")
