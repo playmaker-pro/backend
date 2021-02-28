@@ -6,6 +6,11 @@ from . import models
 from utils import linkify
 
 
+@admin.register(models.Season)
+class SeasonAdmin(admin.ModelAdmin):
+    search_fields = ('name',)
+
+
 @admin.register(models.Seniority)
 class SeniorityAdmin(admin.ModelAdmin):
     search_fields = ('name',)

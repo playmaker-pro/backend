@@ -78,6 +78,14 @@ def calculate_metrics(modeladmin, request, queryset):
 calculate_metrics.short_description = "2. Calculate Playermeteics <-- s38"
 
 
+def calculate_fantasy(modeladmin, request, queryset):
+    for pp in queryset:
+        pp.calculate_fantasy_object()  # save comes inside
+
+
+calculate_fantasy.short_description = "Calculate fantasy"
+
+
 def fetch_data_player_meta(modeladmin, request, queryset):
     for pp in queryset:
         pp.fetch_data_player_meta()  # save comes inside
@@ -128,7 +136,7 @@ class PlayerProfileAdmin(ProfileAdminBase):
 
     autocomplete_fields = ('user', 'team_object', 'team_object_alt')
 
-    actions = [refresh, calculate_metrics, trigger_refresh_data_player_stats, fetch_data_player_meta, set_team_object_based_on_meta]
+    actions = [refresh, calculate_metrics, trigger_refresh_data_player_stats, fetch_data_player_meta, set_team_object_based_on_meta, calculate_fantasy]
 
 
 @admin.register(models.CoachProfile)

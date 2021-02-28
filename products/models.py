@@ -8,7 +8,7 @@ from notifications.mail import request_new, request_accepted, request_declined
 from django_countries.fields import CountryField
 from django.utils import timezone
 from address.models import AddressField
-
+from django.template.defaultfilters import slugify
 from profiles.models import PlayerPosition
 
 from clubs.models import League, Voivodeship, Seniority, Gender, Club
@@ -22,6 +22,7 @@ class PageDescription(models.Model):
 
 
 class Product(models.Model):
+    slug = models.SlugField(null=True, blank=True)
     title = models.CharField(max_length=455, null=True, blank=True)
     subtitle = models.CharField(max_length=455, null=True, blank=True)
     place = models.CharField(max_length=455, null=True, blank=True)
@@ -33,6 +34,9 @@ class Product(models.Model):
     html_body_footer = models.TextField(null=True, blank=True)
     html_form = models.TextField(null=True, blank=True)
     tags = models.ManyToManyField('Tag')
+    contact_email = models.EmailField(null=True, blank=True)
+    send_email_to_admin = models.BooleanField(default=False)
+
     picture = models.ImageField(
         _("Zdjęcie"),
         upload_to="product_pics/%Y-%m-%d/",
@@ -41,6 +45,11 @@ class Product(models.Model):
 
     def __unicode__(self):
         return f'{self.title}'
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.subtitle)
+        return super().save(*args, **kwargs)
 
 
 class Tag(models.Model):

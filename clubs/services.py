@@ -1,5 +1,10 @@
-from .models import Team, Club
+from .models import Team, Club, Season
 
+
+class SeasonService:
+    def get(self, name):
+        season, _ = Season.objects.get_or_create(name=name)
+        return season
 
 
 class AdapterBase:

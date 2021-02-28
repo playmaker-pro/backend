@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'marketplace',
     'products',
     'fqa',
+    'fantasy',
 
     'data',  # external repo
     'stats',  # external repo

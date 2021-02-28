@@ -11,6 +11,17 @@ from profiles.utils import unique_slugify, conver_vivo_for_api, supress_exceptio
 from django_countries.fields import CountryField
 
 
+class Season(models.Model):
+    name = models.CharField(max_length=9, unique=True)
+
+    @property
+    def display_season(self):
+        return self.name
+
+    def __str__(self):
+        return f'{self.name}'
+
+
 class Voivodeship(models.Model):
     name = models.CharField(max_length=455, unique=True)
 
@@ -166,6 +177,7 @@ class League(models.Model):
 
 class Seniority(models.Model):
     name = models.CharField(max_length=355, unique=True)
+    is_senior = models.BooleanField(default=True)
 
     @property
     def display_seniority(self):

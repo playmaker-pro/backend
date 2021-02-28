@@ -23,8 +23,10 @@ class ProductMail(PMMailBase):
         message = f'Użytkownik {instance.user.username} {instance.user.first_name} ({instance.user.declared_role}) własnie wysłał zgłoszenie o product. \n\n ' \
             f'Body: {instance.body_pretty} \n' \
             f'\n\n{extra_body}'
-
-        mail_managers(subject, message)
+        if instance.contact_email:
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [instance.contact_email])
+        if instance.send_email_to_admin:
+            mail_managers(subject, message)
 
     @classmethod
     def mail_user_about_his_request(self, instance, extra_body=None):

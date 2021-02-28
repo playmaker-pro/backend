@@ -37,14 +37,12 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
-class ProductFilterMixn:
+from app.base.views import BasePMView
+from .view_mixins import ProductFilterMixn
 
-    @property
-    def filter_tag(self):
-        value = self.request.GET.get('tag')
-        if value:
-            return value
-        return None
+
+class BasePMProductView(BasePMView, ProductFilterMixn):
+    pass
 
 
 class SendRequestView(LoginRequiredMixin, View):
@@ -64,71 +62,24 @@ class SendRequestView(LoginRequiredMixin, View):
         r.send_notifcation_to_user()
 
         return redirect("products:products")
-    #    et('id')
-
-    #     if user.announcementuserquota.left <= 0 and not _id:
-    #         return JsonResponse(data)
-    #     if _id:
-    #         a = Announcement.objects.get(id=int(_id))
-    #         form = AnnouncementForm(request.POST, instance=a)
-    #         if form.is_valid():
-    #             ann = form.save(commit=False)
-    #             ann.creator = request.user
-    #             ann.save()
-    #             form.save_m2m()
-    #             messages.success(request, _("Ogłoszenia zaktualizowano"))
-
-    #             data['success'] = True
-    #             data['redirection_url'] = reverse("marketplace:announcements")
-    #             return JsonResponse(data)
-    #         else:
-
-    #             data['form'] = render_crispy_form(form)
-    #             return JsonResponse(data)
-    #     else:
-    #         if not user.announcementuserquota.can_make_request:
-    #             return JsonResponse({'message': 'Limit ogłoszeń przekroczony.'})
-
-    #         if user.is_coach or user.is_club:
-    #             form = AnnouncementForm(request.POST)
-
-    #         if form.is_valid():
-    #             ann = form.save(commit=False)
-    #             ann.creator = request.user
-    #             ann.save()
-    #             form.save_m2m()
-    #             user.announcementuserquota.increment()
-    #             user.announcementuserquota.save()
-    #             messages.success(request, _("Przyjęto ogłoszenia."))
-
-    #             data['success'] = True
-    #             data['redirection_url'] = reverse("marketplace:announcements")
-    #             return JsonResponse(data)
-    #         else:
-    #             data['form'] = render_crispy_form(form)
-    #             return JsonResponse(data)
 
 
-class ProductView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixins.ViewFilterMixin, ProductFilterMixn):
+class ProductView(BasePMProductView):
     page_title = 'Produkty Piłkarskie'
     template_name = "products/detail.html"
 
-    def get_filters_values(self):  # @todo add cache from Redis here
-        return {
-            'tags': list(Tag.objects.filter(active=True).values_list('name', flat=True)),
+    def get_filters_values(self):
+        return {'tags': list(Tag.objects.filter(active=True).values_list('name', flat=True)),}
 
-        }
-
-    def get(self, request, id, *args, **kwargs):
-        kwargs['page_obj'] = get_object_or_404(Product, id=id)
-        kwargs['filters'] = self.get_filters_values()
-        kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
+    def get(self, request, slug, *args, **kwargs):
+        kwargs['page_obj'] = get_object_or_404(Product, slug=slug)
+        self.prepare_kwargs(kwargs)
         return super().get(request, *args, **kwargs)
 
 
-class ProductTailsView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixins.ViewFilterMixin, ProductFilterMixn):
+class ProductTailsView(BasePMProductView):
+    queryset = Product.objects.all()
     template_name = "products/base.html"
-    http_method_names = ["get"]
     paginate_limit = 9
     table_type = None
     page_title = 'Produkty Piłkarskie'
@@ -137,16 +88,10 @@ class ProductTailsView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixin
         queryset = queryset.filter(active=True)
         if self.filter_tag is not None:
             queryset = queryset.filter(tags__name=self.filter_tag)
-
         return queryset
 
-    def get_queryset(self):
-        return Product.objects.all()
-
     def get_filters_values(self):  # @todo add cache from Redis here
-        return {
-            'tags': list(Tag.objects.filter(active=True).values_list('name', flat=True)),
-        }
+        return {'tags': list(Tag.objects.filter(active=True).values_list('name', flat=True)),}
 
     def get(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -160,9 +105,7 @@ class ProductTailsView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixin
         except Exception as e:
             desc = None
         kwargs['page_desc'] = desc
-        kwargs['page_title'] = self.page_title
         kwargs['type'] = self.table_type
-        kwargs['filters'] = self.get_filters_values()
-        kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
+        self.prepare_kwargs(kwargs)
         page_obj.elements = page_obj.end_index() - page_obj.start_index() + 1
         return super().get(request, *args, **kwargs)

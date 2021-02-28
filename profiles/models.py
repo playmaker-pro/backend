@@ -489,6 +489,20 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     video_title_third = models.CharField(_('Tytuł nagrania nr 3'), max_length=235, blank=True, null=True)
     video_description_third = models.TextField(_('Temat i opis nagrania nr 3'), null=True, blank=True)
 
+    def has_meta_entry_for(self, season: str):
+        '''checks if meta info exists for given season'''
+        return self.meta.get(season, None) is not None
+
+    def calculate_fantasy_object(self):
+        season = utilites.get_current_season()
+        if not self.has_meta_entry_for(season):
+            return
+
+        from fantasy.models import CalculateFantasyStats
+        f = CalculateFantasyStats()
+        f.calculate_fantasy_for_player(self, season, senior=True)
+        f.calculate_fantasy_for_player(self, season, senior=False)
+
     def calculate_data_from_data_models(self, adpt=None):
         '''Interaction with s38: league, vivo, team <- s38'''
         if self.attached:
