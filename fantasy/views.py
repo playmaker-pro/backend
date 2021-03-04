@@ -38,7 +38,10 @@ User = get_user_model()
 
 
 logger = logging.getLogger(__name__)
+
+
 from stats.utilites import translate_team_name, translate_league_name, conver_zpn_for_api
+
 
 class QueryParamsMixin:
     '''Query params handler for Playmaker Wix setup.
@@ -139,14 +142,22 @@ class BasicPagination(PageNumberPagination):
 
 from app.base.views import BasePMView
 from .models import PlayerFantasyRank
+from django.db.models import Window, F
+from django.db.models.functions import DenseRank
 
-class FantasyView(BasePMView):
+class FantasyView(BasePMView, mixins.ViewFilterMixin):
     page_title = 'Fantasy'
     template_name = "fantasy/base.html"
     paginate_limit = 20
 
     def get(self, request, format=None, *args, **kwargs):
-        players = PlayerFantasyRank.objects.all().order_by('score')
+        # players = PlayerFantasyRank.objects.all().order_by('score')
+        players = PlayerFantasyRank.objects.annotate(place=Window(
+            expression=DenseRank(),
+            order_by=[
+                F('score').desc(),
+            ]))
+
         paginator = Paginator(players, self.paginate_limit)
         page_number = request.GET.get('page') or 1
         page_obj = paginator.get_page(page_number)

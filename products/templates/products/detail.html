@@ -19,12 +19,12 @@
       <div class="container">
         <div>
             <div  class="section-title">
-                <h2 class="mb-3 text-center">{{ page_obj.title }}</h2>
-                <h4 class="mb-3 text-center">{{ page_obj.subtitle }}</h4>
+                <h2 class="mb-3 text-center">{{ page_obj.title|default:'' }}</h2>
+                <h4 class="mb-3 text-center">{{ page_obj.subtitle|default:'' }}</h4>
             </div>
             <div class="row d-flex justify-content-center">
 
-                {{ page_obj.html_body|safe }}
+                {{ page_obj.html_body|safe|default:'' }}
                 
             </div>
              <div class="row d-flex justify-content-center">
@@ -32,7 +32,7 @@
              </div>
              
              <div class="row d-flex justify-content-center">
-                 {{ page_obj.html_body_footer|safe }}
+                 {{ page_obj.html_body_footer|safe|default:'' }}
              </div>
         </div>
       </div>

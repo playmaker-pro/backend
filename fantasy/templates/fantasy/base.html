@@ -156,16 +156,18 @@
 }
 </style>
 
-
+{% include 'fantasy/filters.html' %}
 
 
 <section id="fantasy" class="fantasy">
   <div class="container" data-aos="fade-up"> 
+   <div classw="row">
+   </div>
     <div class="row" >
 
         {% if page_obj.paginator.count == 0 %}
             <div class="col-md-12 text-center">
-                {% include 'profiles/partials/_empty_metrics.html' %}
+                {% include 'profiles/partials/_empty_data.html' %}
             </div>
         {% else %}
             <div class="col">

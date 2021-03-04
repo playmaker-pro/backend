@@ -81,7 +81,7 @@ class CalculateFantasyStats:
         ps = player.playerstats.select_related('game', 'gamefication', 'league', 'season').filter(season__name=season)
         ps = self._filter_players_stats(ps, senior=senior)
         games_count = ps.count()
-        
+
         if games_count != 0:
             points = ps.aggregate(Sum('gamefication__score')).get('gamefication__score__sum') or 0
             self.create_or_update_fantasy_object(season, points, games_count, user_profile.user, senior)

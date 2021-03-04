@@ -10,8 +10,8 @@
     </div>
     {% endif %}
         <div class="serv-section-desc">
-            <h4><a href="/products/{{ object.id }}"> {{ object.title }}</a></h4>
-            <h5>{{ object.subtitle }} {{ object.person }} </h5> 
+            <h4><a href="/products/{{ object.id }}"> {{ object.title|default:'' }}</a></h4>
+            <h5>{{ object.subtitle }} {{ object.person|default:'' }} </h5> 
         </div>
                     <div class="section-heading-line-left"></div>
     <div class="card-body row no-gutters">
@@ -19,11 +19,11 @@
         <div class="col-12 card-text text-muted"> 
             <small class="row no-gutters">
                 <div class="col-3 col-md-3 text-center">
-                    <h4 class="icofont-map-pins"></h4> {{ object.place }}
+                    <h4 class="icofont-map-pins"></h4> {{ object.place|default:'' }}
                 </div>
                 <div class="col-9 col-md-9text-center">
                    
-                    {{ object.teaser }}
+                    {{ object.teaser|default:'' }}
                 </div>
               
             </small>
