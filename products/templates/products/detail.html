@@ -25,6 +25,10 @@
             <div class="row d-flex justify-content-center">
                 {{ page_obj.html_first|safe|default:'' }}
                 {{ page_obj.html_form|safe|default:'' }}
+                {% if age_obj.html_form %}
+                  {% csrf_token %}
+                 </form>
+                {% endif %}
                 {{ page_obj.html_body|safe|default:'' }}
                 
             </div>             
