@@ -10,7 +10,7 @@
     </div>
     {% endif %}
         <div class="serv-section-desc">
-            <h4><a href="/products/{{ object.id }}"> {{ object.title|default:'' }}</a></h4>
+            <h4><a href="{% url 'products:detail' slug=object.slug %}"> {{ object.title|default:'' }}</a></h4>
             <h5>{{ object.subtitle }} {{ object.person|default:'' }} </h5> 
         </div>
                     <div class="section-heading-line-left"></div>
