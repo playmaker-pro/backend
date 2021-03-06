@@ -507,7 +507,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def has_meta_entry_for(self, season: str):
         '''checks if meta info exists for given season'''
         if self.meta is None:
-            
             return None
         return self.meta.get(season, None) is not None
 
