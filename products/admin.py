@@ -20,7 +20,7 @@ class ProductModel(admin.ModelAdmin):
 @admin.register(models.Request)
 class RequestModel(admin.ModelAdmin):
     search_fields = ('user__email',)
-    list_display = ('user', linkify('product'), 'date')
+    list_display = ('id', 'user', linkify('product'), 'date')
     autocomplete_fields = ('user',)
     readonly_fields = ('data_prettified',)
 
