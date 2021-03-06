@@ -132,6 +132,18 @@ class BaseProfile(models.Model):
     data_mapper_id = models.PositiveIntegerField(null=True, blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.')
     slug = models.CharField(max_length=255, blank=True, editable=False)
     bio = models.CharField(_("Krótki opis o sobie"), max_length=455, blank=True, null=True)
+    event_log = models.JSONField(null=True, blank=True)
+
+    def make_default_event_log(self):
+        self.event_log = list()
+
+    def add_event_log_message(self, msg):
+        if self.event_log is None or isinstance(self.event_log, dict):
+            self.make_default_event_log()
+        date = timezone.now()
+        msg = {'date': f'{date}', 'message': msg}
+        self.event_log.append(msg)
+        self.save()
 
     def get_permalink(self):
         return reverse("profiles:show", kwargs={"slug": self.slug})
@@ -217,6 +229,9 @@ class BaseProfile(models.Model):
         # silent_param = kwargs.get('silent', False)
         # if silent_param is not None:
         #     kwargs.pop('silent')
+        # if self.event_log is None:
+        #     self.make_default_event_log()
+
         self._save_make_profile_history()
         try:
             obj_before_save = obj = type(self).objects.get(pk=self.pk) if self.pk else None
@@ -491,11 +506,16 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     def has_meta_entry_for(self, season: str):
         '''checks if meta info exists for given season'''
+        if self.meta is None:
+            
+            return None
         return self.meta.get(season, None) is not None
 
     def calculate_fantasy_object(self):
         season = utilites.get_current_season()
         if not self.has_meta_entry_for(season):
+            msg =f'Cannot calculate fantasy data object do not have "meta" or "meta" data do not have data for season={season}'
+            self.add_event_log_message(msg)
             return
 
         from fantasy.models import CalculateFantasyStats

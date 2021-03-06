@@ -1,0 +1,15 @@
+
+#fantasy {
+    padding-top: 15px;
+}
+
+@media all and (max-width: 768px) {   /* @todo to better understand 768px*/
+
+    #fantasy {
+        font-size:.9em;
+        padding:.2rem .2rem 90px .2rem;
+        padding-top: 0px;
+        margin-top: 0px;
+       
+    }
+}

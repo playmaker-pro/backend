@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 from utils import linkify
-
+from app.admin_utils import json_filed_data_prettified
 from . import models
 
 
@@ -29,10 +29,16 @@ DEFAULT_PROFILE_DISPLAY_FIELDS = ('pk', linkify('user'), 'data_mapper_id', 'acti
 class ProfileAdminBase(admin.ModelAdmin):
     search_fields = DEFAULT_PROFILE_SEARCHABLES
     display_fileds = DEFAULT_PROFILE_DISPLAY_FIELDS
+    readonly_fields = ('data_prettified',)
 
     def active(self, obj):
         return obj.is_active
+
+    def data_prettified(self, instance):
+        return json_filed_data_prettified(instance.event_log, reverse=True)
+
     active.boolean = True
+
 
 
 @admin.register(models.ParentProfile)
@@ -137,6 +143,7 @@ class PlayerProfileAdmin(ProfileAdminBase):
     autocomplete_fields = ('user', 'team_object', 'team_object_alt')
 
     actions = [refresh, calculate_metrics, trigger_refresh_data_player_stats, fetch_data_player_meta, set_team_object_based_on_meta, calculate_fantasy]
+
 
 
 @admin.register(models.CoachProfile)

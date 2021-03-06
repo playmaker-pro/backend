@@ -1,5 +1,4 @@
-import operator
-from functools import reduce
+
 from django.db.models import F
 from app import mixins, utils
 
@@ -14,6 +13,11 @@ from django.views import View, generic
 from profiles.utils import get_datetime_from_age
 from roles import definitions
 from users.models import User
+import operator
+from functools import reduce
+from django.db.models import Q, Value
+from app.mixins import FilterPlayerViewMixin
+
 
 TABLE_TYPE_PLAYER = definitions.PLAYER_SHORT
 TABLE_TYPE_TEAM = definitions.CLUB_SHORT
@@ -44,54 +48,9 @@ class TableView(generic.TemplateView, mixins.PaginateMixin, mixins.ViewModalLoad
         return super().get(request, *args, **kwargs)
 
 
-class PlayersTable(TableView):
+class PlayersTable(TableView, FilterPlayerViewMixin):
     table_type = TABLE_TYPE_PLAYER
     page_title = 'Baza piłkarzy'
-
-    def filter_queryset(self, queryset):
-        if self.filter_leg is not None:
-            queryset = queryset.filter(playerprofile__prefered_leg=self.filter_leg)
-
-        if self.filter_league is not None:
-            # queryset = queryset.filter(playerprofile__league__in=self.filter_league)
-            print('xxxxx ', self.filter_league)
-            queryset = queryset.filter(playerprofile__team_object__league__name__in=self.filter_league)
-
-        if self.filter_first_last is not None:
-            queryset = queryset.annotate(fullname=Concat('first_name', Value(' '), 'last_name'))
-            queryset = queryset.filter(fullname__icontains=self.filter_first_last)
-            # queryset = queryset.filter(
-            #    Q(first_name__icontains=self.filter_first_last) | Q(last_name__icontains=self.filter_first_last)
-            # )
-
-        # if self.filter_vivo is not None:
-        #     vivo = [i[:-1].upper() for i in self.filter_vivo]
-        #     # queryset = queryset.filter(playerprofile__voivodeship__in=vivo)
-        #     clauses = (Q(playerprofile__voivodeship=p) for p in vivo)
-        #     query = reduce(operator.or_, clauses)
-        #     queryset = queryset.filter(query)
-
-        if self.filter_vivo is not None:
-            vivos = [i for i in self.filter_vivo]
-            clauses = (Q(playerprofile__team_object__club__voivodeship__name=p) for p in vivos)
-            query = reduce(operator.or_, clauses)
-            queryset = queryset.filter(query)
-
-        if self.filter_age_min is not None:
-            mindate = get_datetime_from_age(self.filter_age_min)
-            queryset = queryset.filter(playerprofile__birth_date__year__lte=mindate.year)
-
-        if self.filter_age_max is not None:
-            maxdate = get_datetime_from_age(self.filter_age_max)
-            queryset = queryset.filter(playerprofile__birth_date__year__gte=maxdate.year)
-
-        # if self.filter_age_range is not None:
-        #     mindate = get_datetime_from_age(self.filter_age_range[0])
-        #     maxdate = get_datetime_from_age(self.filter_age_range[1])
-        #     queryset = queryset.filter(playerprofile__birth_date__range=[maxdate, mindate])  # bo 0,20   to data urodzin 2000-09-01----2020-09-01
-        if self.filter_position is not None:
-            queryset = queryset.filter(playerprofile__position_raw=self.filter_position)
-        return queryset
 
     def get_queryset(self):
         return User.objects.filter(

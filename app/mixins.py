@@ -1,4 +1,10 @@
+import operator
+from functools import reduce
+
 from django.core.paginator import Paginator
+from django.db.models import Q, Value
+from django.db.models.functions import Concat
+from profiles.utils import get_datetime_from_age
 from .utils import page_object_elements_count
 
 
@@ -23,12 +29,36 @@ class ViewFilterMixin:
     '''
     any_name = ['dowolne']
 
+    def _get_param_value(self, name):
+        return self.request.GET.get(name)
+
     def _param_filter(self, name):
-        value = self.request.GET.get(name)
+        value = self._get_param_value(name)
         if value in self.any_name:
             return None
         if value:
             return value
+
+    def _param_bool_filter(self, name):
+        value = self._get_param_value(name)
+        if value in self.any_name:
+            return None
+        if value:
+            if value in [0, '0', 'false', 'FALSE', 'False', 'nie']:
+                return False
+            elif value in [1, '1', 'true', 'TRUE', 'True', 'tak']:
+                return True
+            else:
+                return None
+
+    @property
+    def filter_season_exact(self):
+        return self._param_filter('season')
+
+    @property
+    def filter_is_senior(self):
+        '''bool to set if senior leagues'''
+        return self._param_bool_filter('is_senior')
 
     @property
     def filter_seniority_exact(self):
@@ -260,3 +290,40 @@ class ViewModalLoadingMixin:
                 modals['action_limit_exceeded']['load'] = True
 
         return modals
+
+
+class FilterPlayerViewMixin:
+
+    def filter_queryset(self, queryset):
+        if self.filter_leg is not None:
+            queryset = queryset.filter(
+                playerprofile__prefered_leg=self.filter_leg)
+
+        if self.filter_league is not None:
+            queryset = queryset.filter(playerprofile__team_object__league__name__in=self.filter_league)
+
+        if self.filter_first_last is not None:
+            queryset = queryset.annotate(fullname=Concat('first_name', Value(' '), 'last_name'))
+            queryset = queryset.filter(fullname__icontains=self.filter_first_last)
+
+        if self.filter_vivo is not None:
+            vivos = [i for i in self.filter_vivo]
+            clauses = (Q(playerprofile__team_object__club__voivodeship__name=p) for p in vivos)
+            query = reduce(operator.or_, clauses)
+            queryset = queryset.filter(query)
+
+        if self.filter_age_min is not None:
+            mindate = get_datetime_from_age(self.filter_age_min)
+            queryset = queryset.filter(playerprofile__birth_date__year__lte=mindate.year)
+
+        if self.filter_age_max is not None:
+            maxdate = get_datetime_from_age(self.filter_age_max)
+            queryset = queryset.filter(playerprofile__birth_date__year__gte=maxdate.year)
+
+        # if self.filter_age_range is not None:
+        #     mindate = get_datetime_from_age(self.filter_age_range[0])
+        #     maxdate = get_datetime_from_age(self.filter_age_range[1])
+        #     queryset = queryset.filter(playerprofile__birth_date__range=[maxdate, mindate])  # bo 0,20   to data urodzin 2000-09-01----2020-09-01
+        if self.filter_position is not None:
+            queryset = queryset.filter(playerprofile__position_raw=self.filter_position)
+        return queryset

@@ -328,12 +328,13 @@ def announcement_yes(context):
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def filter_button(context, user, mobile=False):
-    '''Creates button to open inquiry'''
+    '''Creates button to send apply filters'''
     button_attrs = 'type="submit"'
     if mobile:
         button_id = 'filter-button-mobile'
     else:
         button_id = 'filter-button'
+
     button_class = 'btn-pm'
     button_text = 'Filtruj'
     if not user.is_authenticated:

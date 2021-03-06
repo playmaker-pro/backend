@@ -1,11 +1,11 @@
-# external dependencies
 import json
 import logging
 import math
 import operator
 from functools import reduce
 
-from clubs.models import Club, Team, Seniority, League, Gender, Voivodeship
+from app import mixins
+from clubs.models import Club, Gender, League, Seniority, Team, Voivodeship
 from crispy_forms.utils import render_crispy_form
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -21,16 +21,14 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
 from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
-from app import mixins
+from profiles.models import PlayerPosition
 from profiles.utils import get_datetime_from_age
 from roles import definitions
 from stats import adapters
 from users.models import User
 
 from .forms import AnnouncementForm
-from profiles.models import PlayerPosition
 from .models import Announcement
-
 
 User = get_user_model()
 
@@ -39,7 +37,6 @@ logger = logging.getLogger(__name__)
 
 
 class AnnouncementFilterMixn:
-
     @property
     def filter_my_ann(self):
         value = self.request.GET.get('my_ann')
@@ -54,9 +51,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
     http_method_names = ['post', 'get']
 
     def get(self, request, *args, **kwargs):
-
         user = request.user
-
         data = {
             'modal': {
                 'body': None,

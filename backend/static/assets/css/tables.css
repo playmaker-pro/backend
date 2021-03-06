@@ -1,7 +1,7 @@
 
 
 .table-filters { 
-    background-color: #2b2b2b;
+    /* background-color: #2b2b2b; */
     z-index: 996;
     padding:6px;
 }
@@ -39,10 +39,11 @@ select.form-control option:checked { color: #0AD; }
 a.back-to-top i{
     display: none;
 }
+
 #tables .row { 
-        
     padding-left:0px;
 }
+
 #tables .player-header-card {
     font-weight: bold;
     font-size:.7rem;
@@ -50,11 +51,8 @@ a.back-to-top i{
 }
 
 #tables .player-header-card .card-body{
-    
     /*background-color:#ced4da;*/
 }
-
-
 
 #tables .card .card-footer{ 
     background-color:#fff;
@@ -118,7 +116,7 @@ section.tables {
         padding:.2rem .2rem 90px .2rem;
         padding-top: 0px;
         background-color:#2b2b2b;
-        margin-top: 63px;
+        margin-top: 49px;
        
     }
 

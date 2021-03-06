@@ -1,27 +1,12 @@
 {% extends 'platform/base.html' %}
-{% load static %}
 {% load i18n %}
+{% load static %}
 
-{% comment %} 
-{% block content_header %}
 
-    {% if type == 'P' %}
-        {% url 'tables:players' as url %}
-    {% elif type == 'T' %}
-        {% url 'tables:coaches' as url %}
-    {% elif type == 'C' %}
-       {% url 'tables:teams' as url %}
-    {% endif %}
-    
-    {% if type == 'P' %}
-        {% include 'partials/breadcrumbs.html' with breadcrumb_url=url breadcrumb_name='Baza piłkarzy'%}
-    {% elif type == 'T' %}
-        {% include 'partials/breadcrumbs.html' with breadcrumb_url=url breadcrumb_name='Baza trenerów'%}
-    {% elif type == 'C' %}
-        {% include 'partials/breadcrumbs.html' with breadcrumb_url=url breadcrumb_name='Baza klubów'%}
-    {% endif %}
-{% endblock %} {% endcomment %}
-
+{% block extra_css %}
+    {{ block.super }}
+    <link href="{% static 'assets/css/filters.css' %}" rel="stylesheet">
+{% endblock extra_css %}
 
 
 {% block header %}
@@ -79,11 +64,7 @@
         
         {% endif %}
     </div>
-
 </section>
-
- 
-
 {% endblock content %}
 
 
@@ -105,109 +86,44 @@
 
 {% if user.is_authenticated %}
 $(document).ready(function($){
-  
-	$("filter-form").submit(function() {
-		$(this).find(":input").filter(function(){ return !this.value; }).attr("disabled", "disabled");
-		return true; // ensure form still submits
-	});
-	
-	// Un-disable form fields when page loads, in case they click back after submission
-	$( "filter-form" ).find( ":input" ).prop( "disabled", false );
-	
+    $("filter-form").submit(function() {
+        $(this).find(":input").filter(function(){ return !this.value; }).attr("disabled", "disabled");
+        return true; // ensure form still submits
+    });
+    
+    // Un-disable form fields when page loads, in case they click back after submission
+    $( "filter-form" ).find( ":input" ).prop( "disabled", false );
     
     $("filter-form-mobile").submit(function() {
-		$(this).find(":input").filter(function(){ return !this.value; }).attr("disabled", "disabled");
-		return true; // ensure form still submits
-	});
-	
-	// Un-disable form fields when page loads, in case they click back after submission
-	$( "filter-form-mobile" ).find( ":input" ).prop( "disabled", false );
-	
-});
-
-
-
-
-  $("#filter-button").click(function(){
-      $("input").each(function(){
-          if($(this).val() == '') {
-              $(this).remove();
-          }
-      });
-      $("select").each(function(){
-          if($(this).val() == '') {
-              $(this).remove();
-          }
-      });
-      $("#filter-button").submit();
-  });
-
-$("#filter-button-mobile").click(function(){
-    $("input").each(function(){
-        if($(this).val() == '') {
-            $(this).remove();
-        }
+        $(this).find(":input").filter(function(){ return !this.value; }).attr("disabled", "disabled");
+        return true; // ensure form still submits
     });
-    $("select").each(function(){
-        if($(this).val() == '') {
-            $(this).remove();
-        }
-    });
-    $("#filter-button-mobile").submit();
+    
+    // Un-disable form fields when page loads, in case they click back after submission
+    $( "filter-form-mobile" ).find( ":input" ).prop( "disabled", false );
+    
 });
+    {% include 'platform/filters/filters_scripts.html' %}
+
 {% endif %}
 
 function checkWindowSize() {  
-
     if ( $(window).width() > 786 ) {  
-        console.log('low low')
         $('#table-filters').addClass('sticky-top'); 
         $('#table-filters').removeClass('fixed-bottom');   
-    }  
-    else {  
-        $('#table-filters').addClass('fixed-bottom'); 
-        $('#table-filters').removeClass('sticky-top');    
-        
-    }  
-
-}  
+    }
+    else {
+        $('#table-filters').addClass('fixed-bottom');
+        $('#table-filters').removeClass('sticky-top');
+    }
+}
 
 $(document).ready(function() {
-
-    // Executes when the HTML document is loaded and the DOM is ready
     checkWindowSize();
 });
 
 
 $(window).resize(checkWindowSize);  
 
-{% comment %} $("#emailme").mouseover(function(){
-    $(this).animate({
-        paddingTop: "15px"
-    }, 100);
-}).mouseout(function(){
-    $(this).animate({
-        paddingTop: "10px"
-    }, 100);
-}); {% endcomment %}
-{% comment %} $(document).ready(function () {
-    $(".table-item").hover(function () {
-        $(this).css("background", "#e2e8f0");
-    },
-        function () {
-            $(this).css("background", "#fff");
-        });
-}); {% endcomment %}
-{% comment %} $( ".table-item" ).hover(function() {
-
-  $( this ).fadeOut( 100 );
-  $( this ).fadeIn( 500 );
-}); {% endcomment %}
-
-{% comment %} $(".table-item").mouseover(function(){
-    $(this).animate({
-        paddingTop: "35px"
-    }, 100);
-}); {% endcomment %}
 </script>
 {% endblock %}

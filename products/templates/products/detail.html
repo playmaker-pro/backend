@@ -27,9 +27,14 @@
                 {{ page_obj.html_body|safe|default:'' }}
                 
             </div>
+
+             {% csrf_token %}
+
+            {% if page_obj.html_form %}
              <div class="row d-flex justify-content-center">
                 {% include 'products/_form.html' with requet_id=page_obj.id %}
              </div>
+             {% endif %}
              
              <div class="row d-flex justify-content-center">
                  {{ page_obj.html_body_footer|safe|default:'' }}
