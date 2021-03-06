@@ -24,7 +24,7 @@ class ProductMail(PMMailBase):
             f'Body: {instance.body_pretty} \n' \
             f'\n\n{extra_body}'
         if instance.product.contact_email:
-            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [instance.contact_email])
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [instance.product.contact_email])
         if instance.product.send_email_to_admin:
             mail_managers(subject, message)
 
