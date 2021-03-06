@@ -13,7 +13,7 @@ from app.admin_utils import json_filed_data_prettified
 
 @admin.register(models.Product)
 class ProductModel(admin.ModelAdmin):
-    list_display = ('title', 'active', 'subtitle', 'place', 'person', 'teaser')
+    list_display = ('title', 'active', 'subtitle', 'place', 'person', 'teaser', 'slug')
     search_fields = ('tags__name',)
 
 
