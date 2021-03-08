@@ -1,2 +1,2 @@
 echo "args: $1"
-source ~/venvs/pro/bin/activate && cd ~/prod/public_python/ && python manage.py calculate_palyer_metrics
+cd ~/prod/public_python/ && ~/venvs/pro/bin/activate/python manage.py calculate_palyer_metrics
