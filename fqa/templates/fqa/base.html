@@ -26,8 +26,8 @@
          
          {% for object in objects %}
           <li>
-            <a data-bs-toggle="collapse" class="collapsed" data-bs-target="#faq{{ forloop.counter }}">{{ object.question_html }} <i class="bx bx-chevron-down icon-show"></i><i class="bx bx-x icon-close"></i></a>
-            <div id="faq{{ forloop.counter }}" class="collapse" data-bs-parent=".faq-list">
+            <a data-toggle="collapse" class="collapsed" data-target="#faq{{ forloop.counter }}">{{ object.question_html }} <i class="bx bx-chevron-down icon-show"></i><i class="bx bx-x icon-close"></i></a>
+            <div id="faq{{ forloop.counter }}" class="collapse" data-parent=".faq-list">
               <p>
                 {{ object.answer_html }}
               </p>

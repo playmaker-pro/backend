@@ -269,6 +269,7 @@ CORS_ORIGIN_ALLOW_ALL = True  # to be replaces  with CORS_ORIGIN_WHITELIST
 THUMBNAIL_EXTENSION = "png"  # Or any extn for your thumbnails
 THUMBNAIL_ALIASES = {
     '': {
+        'product': {'size': (250, 250), 'crop': True},
         'profile_avatar_show': {'size': (140, 140), 'crop': True},
         'profile_avatar_show_mobile': {'size': (100, 100), 'crop': True},
         'tables_avatar_show': {'size': (64, 64), 'crop': True},

@@ -111,4 +111,11 @@ class CalculateFantasyStats:
     def create_or_update_fantasy_object(self, season: str, points: int, games_count: int, user: User, senior):
         ss = SeasonService()
         season_object = ss.get(season)
-        PlayerFantasyRank.objects.update_or_create(season=season_object, player=user, score=points, games_played=games_count, senior=senior)
+        PlayerFantasyRank.objects.update_or_create(
+            season=season_object,
+            player=user,
+            senior=senior,
+            defaults={
+                'games_played': games_count,
+                'score': points}
+            )

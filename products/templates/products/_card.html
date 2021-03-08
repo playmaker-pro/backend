@@ -5,8 +5,11 @@
 
 <div class="card announcement-card m-1 serv-section-2">
     {%  if  object.picture %}
-    <div class="serv-section-2-icon"> 
-        <img class="avatar rounded img-responsive"  src="{% thumbnail object.picture 'club_small' %}">
+    <div class="serv-section-2-icon d-none d-md-block"> 
+        <img class="avatar rounded img-responsive" src="{% thumbnail object.picture 'profile_avatar_show' %}">
+    </div>
+    <div class="serv-section-2-icon d-md-none"> 
+        <img class="avatar rounded img-responsive" src="{% thumbnail object.picture 'profile_avatar_show_mobile' %}">
     </div>
     {% endif %}
         <div class="serv-section-desc">
