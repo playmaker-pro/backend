@@ -1,22 +1,12 @@
 
-<div aria-live="polite" aria-atomic="true" style="z-index:900;  top:86px; position: relative;">
+<div aria-live="polite" aria-atomic="true" style="z-index:900; top:86px; position: relative;">
   <!-- Position it -->
   <div style="position: absolute; top: 0; right: 0;">
-<!--div id="messages">
-{% for message in messages %}
-  <div class="alert {{ message.tags }} alert-dismissible" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-      <span aria-hidden="true">&times;</span>
-    </button>
-    {{ message }}
-  </div>
-{% endfor %}
-</div-->
-{% if debug %}
-  {% for message in messages %}
-    <!-- Then put toasts-messages -->
-    {% include 'partials/_toast.html' with message=message %}
-  {% endfor %}
-{% endif %}
+    {% for message in messages %}
+      {% include 'partials/_toast_small.html' with message=message %}
+    {% endfor %}
+
   </div>
 </div>
+
+

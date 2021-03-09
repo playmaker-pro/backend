@@ -417,7 +417,7 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
         if role_form.is_valid():
             user.declared_role = role_form.cleaned_data['new']
             user.save()
-            messages.success(request, "Gratulujemy. Profil użytkownika wybrany!")
+            messages.success(request, "Gratulujemy. Profil użytkownika wybrany!", extra_tags='alter-success')
         return redirect("profiles:show_self")
 
     def get_role_declaration_form(self):
@@ -452,7 +452,7 @@ class RequestRoleChange(LoginRequiredMixin, View):
         user = self.request.user
         if "cancel" in self.request.POST:
             self.delete_pending_user_roles(user)
-            messages.success(request, _("Cofnięto prośbe o zmianę roli."))
+            messages.success(request, _("Cofnięto prośbe o zmianę roli."), extra_tags='alter-success')
         else:
             post_values = request.POST.copy()
             post_values['user'] = user
@@ -460,7 +460,7 @@ class RequestRoleChange(LoginRequiredMixin, View):
             role_form = forms.ChangeRoleForm(post_values)  # @todo how to add Current user role as a TextField.
             if role_form.is_valid():
                 role_form.save()
-            messages.success(request, _("Przyjęto zgloszenie o nową role."))
+            messages.success(request, _("Przyjęto zgloszenie o nową role."), extra_tags='alter-success')
         return redirect("profiles:show_self")
 
     def delete_pending_user_roles(self, user):
@@ -552,7 +552,8 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
             messages.error(
                 request,
                 #_("Wystąpiły błąd podczas wysyłania formularza")
-                f"Wystąpiły błąd podczas wysyłania formularza" f". {user_basic_form.errors} {profile_form.errors}"
+                f"Wystąpiły błąd podczas wysyłania formularza" f". {user_basic_form.errors} {profile_form.errors}",
+                extra_tags='alter-danger'
             )
             # user_form = forms.UserForm(instance=user)
             # profile_form = get_profile_form_model(user)(instance=user.profile)
@@ -563,7 +564,7 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
         profile = profile_form.save(commit=False)
         profile.user = user
         profile.save()
-        messages.success(request, "Profile details saved!")
+        messages.success(request, "Twój profil został zaktualizowany." , extra_tags='alter-success')
         return redirect("profiles:show_self")
 
 
@@ -585,7 +586,7 @@ class AccountMissingFirstLastName(LoginRequiredMixin, View):
 
         if form.is_valid():
             form.save()
-            messages.success(request, _("Przyjęto zgłoszenie brakujacych paramterów konta."))
+            messages.success(request, _("Przyjęto zgłoszenie brakujacych paramterów konta."), extra_tags='alter-success')
             data['success'] = True
             data['url'] = reverse("profiles:show_self")
             return JsonResponse(data)
@@ -639,7 +640,7 @@ class AccountVerification(LoginRequiredMixin, View):
             verification_form.save()
             user.unverify()
             user.save()
-            messages.success(request, _("Przyjęto zgłoszenie weryfikacje konta."))
+            messages.success(request, _("Przyjęto zgłoszenie weryfikacje konta."), extra_tags='alter-success')
 
             data['success'] = True
             data['url'] = reverse("profiles:show_self")
@@ -647,7 +648,7 @@ class AccountVerification(LoginRequiredMixin, View):
             # return redirect(reverse("profiles:show_self"))
         else:
             # response_data = {} d
-            # messages.success(request, _("Błędnie wprowadzone dane."))
+            # messages.success(request, _("Błędnie wprowadzone dane."), extra_tags='alter-success')
             # request.session['verification_form_errors'] = verification_form.errors
             data['form'] = render_crispy_form(verification_form)
             return JsonResponse(data)

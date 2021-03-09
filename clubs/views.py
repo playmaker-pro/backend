@@ -84,7 +84,7 @@ class ClubEdit(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoading
         if not club_form.is_valid():
             messages.error(
                 request,
-                _("Wystąpiły błąd podczas wysyłania formularza")
+                _("Wystąpiły błąd podczas wysyłania formularza"), extra_tags='alter-danger'
                 # f"Wystąpiły błąd podczas wysyłania formularza" f". {user_form.errors} {profile_form.errors}"
             )
             # user_form = forms.UserForm(instance=user)
@@ -93,7 +93,7 @@ class ClubEdit(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoading
             return super().get(request, slug=club.slug, club_form=club_form)
 
         club = club_form.save()
-        messages.success(request, "Club details saved!")
+        messages.success(request, "Club details saved!", extra_tags='alter-success')
         return redirect("clubs:show_club", slug=club.slug)
 
 
@@ -158,7 +158,7 @@ class TeamEdit(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoading
         if not team_form.is_valid():
             messages.error(
                 request,
-                _("Wystąpiły błąd podczas wysyłania formularza")
+                _("Wystąpiły błąd podczas wysyłania formularza"), extra_tags='alter-danger'
                 # f"Wystąpiły błąd podczas wysyłania formularza" f". {user_form.errors} {profile_form.errors}"
             )
             # user_form = forms.UserForm(instance=user)
@@ -167,6 +167,6 @@ class TeamEdit(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoading
             return super().get(request, slug=team.slug, team_form=team_form)
 
         team = team_form.save()
-        messages.success(request, "Team details saved!")
+        messages.success(request, _("Profil drużyny zapisany."), extra_tags='alter-success')
                 
         return redirect("clubs:show_team", slug=team.slug)

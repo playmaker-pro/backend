@@ -4,7 +4,7 @@ import logging
 import math
 import operator
 from functools import reduce
-
+from django.core.mail import mail_managers, send_mail
 from clubs.models import Club, Team, Seniority, League, Gender, Voivodeship
 from crispy_forms.utils import render_crispy_form
 from django.contrib import messages
@@ -51,15 +51,25 @@ class SendRequestView(LoginRequiredMixin, View):
 
     def post(self, request, id, *args, **kwargs):
         user = self.request.user
-        product = Product.objects.get(id=id)
-        r = Request.objects.create(
-            user=user,
-            raw_body=request.POST,
-            product=product,
-        )
-        messages.success(request, _("Twoje zgłoszenie zostało wysłane"))
-        r.send_notification_to_admin()
-        r.send_notifcation_to_user()
+        try:
+            product = Product.objects.get(id=id)
+            r = Request.objects.create(
+                user=user,
+                raw_body=request.POST,
+                product=product,
+            )
+        except:     
+            messages.error(request, _("Wybrany product nie jest dostępny"), extra_tags='alert-danger')
+            return redirect("products:products")
+
+        messages.success(request, _("Dziękujemy! Twoje zgłoszenie zostało wysłane."), extra_tags='alert-success')
+        try:
+            r.send_notification_to_admin()
+            r.send_notifcation_to_user()
+        except Exception as e:
+            subject = 'Wysyłanie notifikacji mailowej do usera który wysłał zapytanie o produkt.'
+            message = f'Wysyłanie notifkacji do usera {r.user} nie powidoło się z powodu: {e}'
+            mail_managers(subject, message)
 
         return redirect("products:products")
 
@@ -108,4 +118,5 @@ class ProductTailsView(BasePMProductView):
         kwargs['type'] = self.table_type
         self.prepare_kwargs(kwargs)
         page_obj.elements = page_obj.end_index() - page_obj.start_index() + 1
+        
         return super().get(request, *args, **kwargs)

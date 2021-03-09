@@ -139,7 +139,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 ann.creator = request.user
                 ann.save()
                 form.save_m2m()
-                messages.success(request, _("Ogłoszenia zaktualizowano"))
+                messages.success(request, _("Ogłoszenia zaktualizowano"), extra_tags='alter-success')
 
                 data['success'] = True
                 data['redirection_url'] = reverse("marketplace:announcements")
@@ -162,7 +162,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 form.save_m2m()
                 user.announcementuserquota.increment()
                 user.announcementuserquota.save()
-                messages.success(request, _("Przyjęto ogłoszenia."))
+                messages.success(request, _("Przyjęto ogłoszenia."), extra_tags='alter-success')
 
                 data['success'] = True
                 data['redirection_url'] = reverse("marketplace:announcements")

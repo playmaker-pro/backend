@@ -78,7 +78,10 @@ button[type="submit"]:hover, input[type="button"]:hover{
 /* ---------
 # global forms
 -----------*/
+.toast {
 
+  
+}
 
 input.mandatory::-webkit-input-placeholder {
   color: #de6868 !important;
