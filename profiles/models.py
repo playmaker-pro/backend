@@ -504,6 +504,11 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     video_title_third = models.CharField(_('Tytuł nagrania nr 3'), max_length=235, blank=True, null=True)
     video_description_third = models.TextField(_('Temat i opis nagrania nr 3'), null=True, blank=True)
 
+    def display_position_fantasy(self):
+        if self.position_fantasy.lower() == 'obronca':
+            return 'obrońca'
+        return self.position_fantasy
+
     def has_meta_entry_for(self, season: str):
         '''checks if meta info exists for given season'''
         if self.meta is None:

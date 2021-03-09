@@ -109,6 +109,7 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
         page_obj = paginator.get_page(page_number)
         kwargs['page_obj'] = page_obj
         kwargs['filters'] = self.get_filters_values()
+        page_obj.elements = page_obj.end_index() - page_obj.start_index() + 1
         self.prepare_kwargs(kwargs)
         kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
         return super().get(request, *args, **kwargs)

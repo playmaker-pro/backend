@@ -58,7 +58,11 @@ class ViewFilterMixin:
     @property
     def filter_is_senior(self):
         '''bool to set if senior leagues'''
-        return self._param_bool_filter('is_senior')
+        senior = self._param_bool_filter('is_senior')
+        if senior is None:
+            return True
+        else:
+            return senior
 
     @property
     def filter_seniority_exact(self):

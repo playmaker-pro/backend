@@ -5,7 +5,7 @@
         <tr>
             <!-- sm --> <th scope="col" class="d-md-none">{% trans 'Ranking' %}</th>
             <!-- sm --> <th scope="col" class="d-md-none">{% trans 'Dane piłkarza' %}</th>
-            <th scope="col" class="d-none d-md-table-cell"><i class="icofont-trophy"></i>{% trans 'Miejsce' %}</th>
+            <th scope="col" class="d-none d-md-table-cell"><i class="icofont-trophy"></i></th>
             <th scope="col" class="d-none d-md-table-cell">{% trans 'Punkty' %}</th>
             <th scope="col" class="d-none d-md-table-cell">{% trans 'Mecze' %}</th>
             <th scope="col" class="d-none d-md-table-cell">{% trans 'Piłkarz' %}</th>
@@ -24,7 +24,9 @@
            <td class="d-md-none">
                 <strong>{{ object.place }}</strong> <br>
                 <small class="text-muted">
-                    {{ object.score  }} <span class="text-muted">pkt<span>
+                    {{ object.score  }} <span class="text-muted">pkt<span> 
+                    {{ object.games_played|default:0 }} meczy
+
                 </small>
             </td>
             <td class="d-md-none">
@@ -34,11 +36,10 @@
                     </strong>
                 </a> <br>
                 <small class="text-muted">
-                {{ object.player.profile.position_fantasy|default:''|upper}}
-                {{ object.player.profile.display_team|default:''|upper}}
-                {{ object.player.profile.display_league|default:'' }}
-                {{ object.player.profile.display_voivodeship|default:''|lower }}
-                {{ object.player.profile.fantasy_postion|default:'' }}
+                <strong>{{ object.player.profile.display_position_fantasy|default:''|upper}}</strong>
+                {{ object.player.profile.display_team|default:''|upper}},
+                {{ object.player.profile.display_league|default:'' }},
+                {{ object.player.profile.display_voivodeship|default:''|lower }},
                 </small>
             </td>
             <td class="d-none d-md-table-cell">{{ object.place }}</td>
@@ -52,7 +53,7 @@
                 </a>
 
             </td>
-            <td class="d-none d-md-table-cell">{{ object.player.profile.position_fantasy|default:''|upper}}</td>
+            <td class="d-none d-md-table-cell">{{ object.player.profile.display_position_fantasy|default:''|upper}}</td>
             <td class="d-none d-md-table-cell">{{ object.player.profile.display_team|default:''|upper}}</td>
             <td class="d-none d-md-table-cell">{{ object.player.profile.display_league|default:'' }}</td>
             <td class="d-none d-md-table-cell">{{ object.player.profile.display_voivodeship|default:''|lower }}</td>
