@@ -4,33 +4,32 @@
 
 {% block modal_body %}
 
-
-  <div class="col-12 col-md-1 filter p-2 "> 
-      {% include 'soccerbase/tables/filters/filter_firstlastname_input.html' %}
+  <div class="filter p-2 "> 
+      {% include 'soccerbase/tables/filters/filter_firstlastname_input.html' with size=240  %}
   </div>
 
-  <div class="col-12 col-md-1 filter p-2"> 
-      {% include 'soccerbase/tables/filters/filter_league_ms.html' %}
+  <div class="filter p-2"> 
+      {% include 'soccerbase/tables/filters/filter_league_ms.html' with size=240  %}
   </div>
 
-  <div class="col-12 col-md-1 filter p-2"> 
-      {% include 'soccerbase/tables/filters/filter_vivo_ms.html' %}
+  <div class="filter p-2"> 
+      {% include 'soccerbase/tables/filters/filter_vivo_ms.html' with size=240  %}
   </div>
 
-  <div class="col-12 col-md-1 filter p-2"> 
-    {% include 'soccerbase/tables/filters/filter_position_ms.html' %}
+  <div class="filter p-2"> 
+    {% include 'soccerbase/tables/filters/filter_position_ms.html' with size=240  %}
   </div>   
 
-  <div class="col-12  col-md-1 filter p-2"> 
-      {% include 'soccerbase/tables/filters/filter_leg_ms.html' %}
+  <div class="filter p-2"> 
+      {% include 'soccerbase/tables/filters/filter_leg_ms.html' with size=240 %}
   </div>
 
-  <div class="row">
-      <div class="col-3 filter p-2"> 
-        {% include 'soccerbase/tables/filters/filter_age_min_input.html' %}
+  <div class="d-flex p-2">
+      <div class="filter"> 
+        {% include 'soccerbase/tables/filters/filter_age_min_input.html' with size=120 %}
       </div>
-      <div class="col-3 filter p-2" width="100"> 
-        {% include 'soccerbase/tables/filters/filter_age_max_input.html' %}
+      <div class="filter" width="100"> 
+        {% include 'soccerbase/tables/filters/filter_age_max_input.html' with size=120  %}
       </div>
   </div>
 

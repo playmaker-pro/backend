@@ -6,25 +6,28 @@
 
 
 {% block desktop_filters_body %}
-    <div class="col-4 col-md-1 filter"> 
+    <div class="filter pr-2"> 
         {% include 'soccerbase/tables/filters/filter_firstlastname_input.html' with size=100  %}
     </div>
-    <div class="col-4 col-md-1 filter"> 
+    <div class="filter pr-2"> 
         {% include 'soccerbase/tables/filters/filter_league_ms.html' with size=120 %}
     </div>
-    <div class="col-4 col-md-1 filter ml-1"> 
+    <div class="ilter pr-2"> 
         {% include 'soccerbase/tables/filters/filter_vivo_ms.html' with size=120 %}
     </div>
-    <div class="col-4 col-md-1 filter ml-1"> 
+    <div class="filter pr-2"> 
         {% include 'soccerbase/tables/filters/filter_position_ms.html'%}
     </div>   
-        <div class="col-4 col-md-1 filter ml-1"> 
+    <div class="filter pr-2"> 
         {% include 'soccerbase/tables/filters/filter_leg_ms.html'%}
     </div>
-    <div class="col-1 filter"> 
+    <div class="filter pr-2"> 
         {% include 'soccerbase/tables/filters/filter_age_min_input.html' with size=120 %}
     </div>
-    <div class="col-1 filter"> 
+    <div class="filter pr-2"> 
         {% include 'soccerbase/tables/filters/filter_age_max_input.html' with size=120 %}
+    </div>
+    <div class="filter r-2 "> 
+        {% include 'soccerbase/tables/filters/filter_young.html' with size=120 %}
     </div>
 {% endblock desktop_filters_body %}

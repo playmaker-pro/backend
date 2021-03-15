@@ -4,15 +4,16 @@
 
 <div id="annoucmenet-filters" class="d-none d-md-inline annoucmenet-filters">
   <div class="container-fluid">
-      <form id="filter-form" method="get" class="form-inline row">              
+      <form id="filter-form" method="get" class="form-inline d-flex">    
         {% include 'marketplace/_filters.html' with size=120 %}
-        <div class="col-12 col-md-1 filter-button"> 
+        <div class="ilter-button"> 
             {% include 'marketplace/filter_button.html' with mobile=True %}
         </div>
       </form>
     </div>
 </div>
-<div id="annoucmenet-filterss" class="p-4 d-md-none fixed-bottom">
+
+<div id="mobile-filters" class="p-4 d-md-none fixed-bottom">
   <div class="container-fluid text-center">
       <button id="open-filter-button"  type="button" class="btn-pm" data-toggle="modal" data-target="#filterModal">{% trans 'Filtruj wyniki' %}</button>
     </div>

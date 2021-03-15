@@ -2,6 +2,7 @@
 {% load static %}
 {% load i18n %}
 
+
 {% block title %}{{ block.super }} {{ page_title }} {% endblock %}
 
 
@@ -160,12 +161,23 @@
 .serv-section-2:hover:before {
     background: #e76668;
 }
+@media all and (max-width: 768px) {
+    .page-header{
+        font-size:.7rem;
+    }
+}
 </style>
 
+<div class="container page-header">
+    <div class="row p-2">
+        Czy kiedykolwiek grałeś w Fantasy Premier League lub Fantasy Ekstraklasa Polska? Chciałbyś aby to od Ciebie decydowała liczba zdobytych punktów? Dołącz do pierwszej w historii gry Fantasy dla niższych lig! Niezależnie czy grasz w 3 lidze, w B klasie czy lidze juniorskiej - przeniesiemy Twoje rzeczywiste dokonania do gry. Sprawdź swój wynik, zaproś kolegów do zabawy i rywalizuj z nimi!
+        <button type="button" class="btn-pm " data-toggle="modal" data-target="#exampleModal">Zasady gry</button>
+    </div>
+</div>
 {% include 'fantasy/filters_desktop.html' %}
 
 <section id="fantasy" class="fantasy">
-  <div class="container" data-aos="fade-up"> 
+  <div class="container" data-aos="fade-up">
     <div class="row" >
         {% if page_obj.paginator.count == 0 %}
             <div class="col-md-12 text-center">
@@ -189,4 +201,80 @@
     {% include 'platform/filters/filters_scripts.html' %}
     <script src="{% static 'assets/js/filters.js' %}"></script>
     {% include 'fantasy/filters_mobile_modal.html' %}
+
+        <!-- Modal -->
+        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">{% trans 'Zasady gry' %} </h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true"><i class="icofont-close-circled main-color"></i></span>
+                        </button>
+                    </div>
+                <div class="modal-body">
+                    <p>Twoje rzeczywiste osiągnięcia z boiska zostają przenoszone do sieci! W zależności od Twojej pozycji za odpowiednie wydarzenia otrzymasz punkty. Im większy wynik tym lepiej. Nie jest to rozgrywka jak w typowym Fantasy Premier League czy też Fantasy Polska Ekstraklasa, ponieważ sam decydujesz o swojej zdobyczy punktowej. Nie wybierasz ani szesnastki, ani jedenastki meczowej - grasz swoją osobą.
+                    </p>
+                    
+                    <h4>Jak premiowane jest Twoje konto?</h4>
+                    ​
+                    <ul>
+                        <li>Udział w meczu​
+                            <ul>
+                                <li>Przynajmniej 45 min w meczu <span class="text-success">+2 pkt</span> </li>
+                                <li>45 lub mniej min w meczu <span class="text-success">+1 pkt</span> </li>
+                        ​    </ul>
+                        </li>
+                        
+                        <li>Strzelone bramki
+                            <ul>
+                                <li>Napastnicy <span class="text-success">+4 pkt</span> / gol </li>
+                                <li>Pomocnicy <span class="text-success">+5 pkt</span>  / gol </li>
+                                <li>Obrońcy <span class="text-success">+6 pkt</span>  / gol </li>
+                                <li>Bramkarze <span class="text-success">+8 pkt</span>  / gol </li>
+                            </ul>
+                        </li>
+                        ​
+                        <li>Czyste konto i 60 min na boisku
+                            <ul>
+                                <li>Pomocnicy <span class="text-success">+2 pkt</span>  </li>
+                                <li>Obrońcy i bramkarze <span class="text-success">+4 pkt</span>  </li>
+                            </ul>
+                        </li>
+                        ​
+                        <li>Nieprzegrany mecz ze straconym 1 golem
+                            <ul>
+                                <li>Obrońcy i bramkarze <span class="text-success">+1 pkt</span>  </li>
+                            </ul>
+                        </li>
+                        
+                        <li>Rezultat meczu
+                            <ul>
+                                <li>Wygrana <span class="text-success">+3 pkt</span>  </li>
+                                <li>Remis <span class="text-success">+1 pkt</span>  </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h4>Za co odejmowane są punkty?</h4>
+                    <ul>
+                        <li>Stracone bramki - zawodnicy, którzy przebywają na boisku w momencie utraty gola i ci, którzy zostali wykluczeni  w trakcie meczu​
+                            <ul>
+                                <li>Obrońcy i bramkarze <span class="text-danger">-1 pkt za każdą bramkę z wyłączeniem pierwszej</span></li>
+                            </ul>
+                        </li>
+                        ​
+                        <li>Żółta kartka <span class="text-danger">-1 pkt</span></li>
+                        <li>Czerwona kartka <span class="text-danger">-3 pkt</span></li>
+                        <li>Dwie żółte kartki i w konsekwencji czerwona <span class="text-danger">-3 pkt</span></li>
+                        <li>Żółta kartka, później od razu czerwona <span class="text-danger">-4 pkt</span></li>
+                        <li>Gol samobójczy <span class="text-danger">-3 pkt</span></li>
+                    </ul>
+                </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Zamknij' %}</button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
 {% endblock %}

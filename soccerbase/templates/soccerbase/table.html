@@ -36,7 +36,8 @@
 
 
 {% if type == 'P' %}
-    {% include 'soccerbase/tables/filters_desktop_players.html' %}
+{% include 'soccerbase/tables/filters_desktop_players.html' %}
+
 {% elif type == 'T' %}
     {% include 'soccerbase/tables/filters_desktop_coaches.html' %}
 {% elif type == 'C' %}
@@ -79,7 +80,7 @@
     {% elif type == 'C' %}
         {% include 'soccerbase/tables/filters_modal_teams.html' %}
     {% endif %}
-    
+    {% include 'platform/filters/filters_scripts.html' %}
     <script src="{% static 'assets/js/filters.js' %}"></script>
     
 <script>

@@ -369,7 +369,7 @@ button[disabled=disabled], button:disabled {
   margin-top: 74px;
 } */
 main { 
-  margin-top: 52px;
+  margin-top: 48px;
 }
 
 @media all and (max-width: 992px) {   /* @todo to better understand */

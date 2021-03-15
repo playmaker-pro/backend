@@ -14,37 +14,35 @@
         </div>
 
         <form id="filter-form-mobile" method="get" class="form-inline ">
-          <div class="modal-body row no-gutters">
+          <div class="modal-body d-flex flex-column">
 
-              <div class="col-12 col-md-1 filter p-2">
-                {% include 'platform/filters/filter_select__season.html' with  size=120 options=filters.season %}
+              <div class="filter p-2">
+                {% include 'platform/filters/filter_select__season.html' with  size=200 options=filters.season %}
               </div>
 
-              <div class="col-12 col-md-1 filter p-2">
-                {% include 'platform/filters/filter_radio__is_senior.html' %}
+              <div class="filter p-2">
+                {% include 'platform/filters/filter_radio__is_senior.html' with size=200   %}
               </div>
 
-              <div class="col-12 col-md-1 filter p-2">
-                {% include 'soccerbase/tables/filters/filter_firstlastname_input.html' %}
+              <div class="filter p-2">
+                {% include 'soccerbase/tables/filters/filter_firstlastname_input.html' with size=200 %}
               </div>
 
-              <div class="col-12 col-md-1 filter p-2">
-               {% include 'soccerbase/tables/filters/filter_input_team_name.html' with size=120  %}
+              <div class="filter p-2">
+               {% include 'soccerbase/tables/filters/filter_input_team_name.html' with size=200  %}
               </div>
 
-              <div class="col-12 col-md-1 filter p-2"> 
-                  {% include 'fantasy/filter_leagues.html' with size=120 %}
+              <div class="filter p-2"> 
+                  {% include 'fantasy/filters/filter_leagues.html' with size=200 %}
               </div>
 
-              <div class="col-12 col-md-1 filter p-2"> 
-                  {% include 'soccerbase/tables/filters/filter_vivo_ms.html' %}
+              <div class="filter p-2"> 
+                  {% include 'soccerbase/tables/filters/filter_vivo_ms.html' with size=200  %}
               </div>
 
-          </div>
-          <div class="modal-footer">
-              {% block modal_footer %}
+              <div class="filter p-2"> 
                   {% filter_button user mobile=True %}
-              {% endblock modal_footer %}
+              </div>
           </div>
         </form>
       </div>

@@ -14,15 +14,14 @@
         </div>
 
         <form id="filter-form-mobile" method="get" class="form-inline ">
-          <div class="modal-body row no-gutters">
-                  {% include 'products/_filters.html' %}
+          <div class="modal-body d-flex d-flex-column">
+            <div class="filter p-2">
+                  {% include 'products/filters/filter_tag.html' %}
+            </div>
           </div>
 
           <div class="modal-footer">
-
-                  {% include 'products/_filter_button.html' with mobile=True %}
-                 
-                    
+            {% include 'products/_filter_button.html' with mobile=True %}
           </div>
         </form>
       </div>

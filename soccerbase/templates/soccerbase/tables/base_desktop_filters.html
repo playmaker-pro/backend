@@ -4,7 +4,7 @@
 
 <div id="table-filters" class="d-none d-md-inline table-filters">
   <div class="container-fluid">
-    <form id="filter-form" method="get" class="form-inline row">
+    <form id="filter-form" method="get" class="form-inline d-flex">
         {% block desktop_filters_body %} {# filters body #} {% endblock desktop_filters_body %}
       <div class="col-2 col-md-1 filter-button"> 
           {% filter_button user %}

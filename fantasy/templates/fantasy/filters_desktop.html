@@ -4,38 +4,36 @@
 {% load thumbnail %}
 {% load playmaker %}
 
+<div id="table-filters" class="d-none d-md-inline table-filters" data-aos="fade-up">
+    <div class="container">
+        <form id="filter-form" method="get" class="form-inline d-flex">
+            <div class="filter pr-2"> 
+                {% include 'platform/filters/filter_select__season.html' with size=120 options=filters.season %}
+            </div>
+            <div class="filter pr-2"> 
+                {% include 'platform/filters/filter_radio__is_senior.html' %}
+            </div>    
+            <div class="filter pr-2"> 
+                {% include 'soccerbase/tables/filters/filter_firstlastname_input.html' with size=120  %}
+            </div>
 
-<div id="table-filters" class="d-none d-md-inline table-filters">
-    <div class="container-fluid">
-      
-    <form id="filter-form" method="get" class="form-inline row ">
-        <div class="col-4 col-md-2 filter"> 
-            {% include 'platform/filters/filter_select__season.html' with options=filters.season %}
-        </div>
+            <div class="filter pr-2"> 
+                {% include 'soccerbase/tables/filters/filter_input_team_name.html'  with size=120  %}
+            </div>
+            
+            <div class="filter pr-2"> 
+                {% include 'fantasy/filters/filter_leagues.html' with size=120 %}
+            </div>
 
-        <div class="col-4 col-md-1 filter"> 
-            {% include 'platform/filters/filter_radio__is_senior.html' %}
-        </div>    
-        <div class="col-4 col-md-1 filter"> 
-            {% include 'soccerbase/tables/filters/filter_firstlastname_input.html' with size=100  %}
-        </div>
+            <div class="filter pr-2"> 
+                {% include 'soccerbase/tables/filters/filter_vivo_ms.html'  with size=120  %}
+            </div>
 
-        <div class="col-4 col-md-1 filter ml-1"> 
-            {% include 'soccerbase/tables/filters/filter_input_team_name.html'  with size=120  %}
-        </div>
-        
-        <div class="col-4 col-md-1 filter"> 
-            {% include 'fantasy/filter_leagues.html' with size=120 %}
-        </div>
+            <div class="filter-button"> 
+                {% filter_button user %}
+            </div>
 
-        <div class="col-4 col-md-1 filter ml-1"> 
-            {% include 'soccerbase/tables/filters/filter_vivo_ms.html'  with size=120  %}
-        </div>
-
-        <div class="col-2 col-md-1 filter-button"> 
-            {% filter_button user %}
-        </div>
-    </form>                 
+        </form>         
     </div>
 </div>
 

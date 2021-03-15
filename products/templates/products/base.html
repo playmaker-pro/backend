@@ -81,10 +81,10 @@
     right: 0px;
     z-index: 0;
     content: " ";
-    width: 100px;
-    height: 100px;
+    width: 105px;
+    height: 105px;
     background: #f5f5f5;
-    border-bottom-left-radius: 136px;
+    border-bottom-left-radius: 5px;
     transition: all 0.4s ease-in-out;
     -webkit-transition: all 0.4s ease-in-out;
 }
@@ -97,8 +97,8 @@
 }
 .serv-section-2-icon {
     position: absolute;
-    top: 18px;
-    right: 22px;
+    top: 3px;
+    right: 3px;
     max-width: 100px;
     z-index: 1;
     text-align: center;
@@ -163,16 +163,13 @@
         {% if object.page_desc %}
         <div class="col-md-12"> {{ desc|safe }}</div>
            {% endif %}
-        <div class="col-md-10">  {% include 'products/filters.html' %}</div>
+        <div class="col-md-10">{% include 'products/filters.html' %}</div>
 
     </div>
  
-
-
     <div class="row"> 
         <div class="col-md-12"> {% include 'products/_tags.html' %}</div>
     </div>
-
         <div class="row p-1">
             {% for object in page_obj %}
                 <div class="col-md-4">

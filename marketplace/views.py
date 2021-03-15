@@ -191,6 +191,9 @@ class AnnouncementsView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixi
         if self.filter_league is not None:
             queryset = queryset.filter(league__name__in=self.filter_league)
 
+        if self.filter_vivo is not None:
+            queryset = queryset.filter(voivodeship__name__in=self.filter_vivo)
+
         if self.filter_position_exact is not None:
             queryset = queryset.filter(positions__name=self.filter_position_exact)
 
@@ -214,6 +217,12 @@ class AnnouncementsView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixi
             'position': list(PlayerPosition.objects.values_list('name', flat=True))
         }
 
+    def prepare_kwargs(self, kwargs):
+        self._prepare_extra_kwargs(kwargs)
+
+    def _prepare_extra_kwargs(self, kwargs):
+        kwargs['my'] = False
+
     def get(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
@@ -224,7 +233,16 @@ class AnnouncementsView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixi
         kwargs['page_title'] = self.page_title
         kwargs['type'] = self.table_type
         kwargs['filters'] = self.get_filters_values()
+        self.prepare_kwargs(kwargs)
         kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
         page_obj.elements = page_obj.end_index() - page_obj.start_index() + 1
         # kwargs['ammount'] = page_obj.count()
         return super().get(request, *args, **kwargs)
+
+
+class MyAnnouncementsView(AnnouncementsView):
+    def get_queryset(self):
+        return Announcement.objects.filter(creator=self.request.user)
+
+    def _prepare_extra_kwargs(self, kwargs):
+        kwargs['my'] = True

@@ -1,0 +1,8 @@
+
+{% load playmaker %}
+
+<select name="tag" data-width="200"  class="form-control selectpicker" data-allow-clear="true" title="wybierz tag">
+    {% for option in filters.tags %}
+        <option {% if request.GET.tag == option %} selected {% endif %} value="{{ option }}">{{ option }}</option>
+    {% endfor %}
+</select>

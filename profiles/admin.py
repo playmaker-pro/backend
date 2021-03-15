@@ -145,11 +145,9 @@ class PlayerProfileAdmin(ProfileAdminBase):
     actions = [refresh, calculate_metrics, trigger_refresh_data_player_stats, fetch_data_player_meta, set_team_object_based_on_meta, calculate_fantasy]
 
 
-
 @admin.register(models.CoachProfile)
 class CoachProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (linkify('team_object'),)
-    search_fields = ('team_object',)
     autocomplete_fields = ('team_object',)
 
 

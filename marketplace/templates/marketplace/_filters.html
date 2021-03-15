@@ -1,24 +1,24 @@
 {% with size=size %}
     {% if user.is_club or user.is_coach %}
-    <div class="col-12 col-md-1 filter "> 
-        {% include 'marketplace/filters/my.html' with size=size %}
-    </div>
+    {% comment %} <div class="filter pr-2"> 
+        {% include 'marketplace/filters/filter_my.html' with size=size %}
+    </div> {% endcomment %}
     {% endif %}
-    <div class="col-12 col-md-1 filter"> 
-        {% include 'marketplace/filters/league.html' with size=size options=filters.league %}
+    <div class="filter pr-2"> 
+        {% include 'marketplace/filters/filter_leagues.html' with size=size options=filters.league %}
     </div>
-    <div class="col-12 col-md-1 filter"> 
-        {% include 'marketplace/filters/position.html' with size=size options=filters.position %}
+    <div class="filter pr-2"> 
+        {% include 'marketplace/filters/filter_position.html' with size=size options=filters.position %}
     </div>
-    <div class="col-12 col-md-1 filter"> 
-        {% include 'marketplace/filters/voivodeship.html' with size=size options=filters.voivodeship %}
+    <div class="filter pr-2"> 
+        {% include 'marketplace/filters/filter_voivodeship.html' with size=size options=filters.voivodeship %}
     </div>
 
-    <div class="col-12 col-md-2 filter"> 
-        {% include 'marketplace/filters/gender.html' with filter_name='gender' options=filters.gender %}
+    <div class="filter pr-2 d-flex"> 
+        {% include 'marketplace/filters/filter_gender.html' with filter_name='gender' options=filters.gender %}
     </div>
-    <div class="col-12 col-md-2 filter"> 
-        {% include 'marketplace/filters/seniority.html' with filter_name='seniority' options=filters.seniority %}
+    <div class="filter pr-2 d-flex"> 
+        {% include 'marketplace/filters/filter_seniority.html' with filter_name='seniority' options=filters.seniority %}
     </div>
 
 {% endwith %}

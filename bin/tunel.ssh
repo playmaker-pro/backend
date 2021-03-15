@@ -1,0 +1,1 @@
+ssh -f jacekplaymaker@s38.mydevil.net -L 37113:pgsql38.mydevil.net:5432 -N
