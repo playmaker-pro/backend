@@ -35,7 +35,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         users = self.get_queryset()
         users = self.filter_queryset(users, options)
-        self.stdout.write(self.style.SUCCESS('Starting to calculate fantasy objects.'))
+        self.stdout.write(self.style.SUCCESS(f'Starting to calculate fantasy objects. Following number of objects will be updated {users.count()}'))
         for user in users:
             if user.is_player:
                 try:
