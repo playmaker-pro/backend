@@ -33,7 +33,6 @@ from roles import definitions
 from stats import adapters
 from stats.utilites import (conver_zpn_for_api, translate_league_name,
                             translate_team_name)
-from users.models import User
 from clubs.models import Seniority, Season
 
 from .models import PlayerFantasyRank

@@ -35,7 +35,7 @@ class ProfileAdminBase(admin.ModelAdmin):
         return obj.is_active
 
     def data_prettified(self, instance):
-        return json_filed_data_prettified(instance.event_log, reverse=True)
+        return json_filed_data_prettified(instance.event_log)
 
     active.boolean = True
 

@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from stats.adapters.player import PlayerAdapter
 from django.db.models import Sum
 
+
 User = get_user_model()
 
 
@@ -21,7 +22,7 @@ class FantasySettings(models.Model):
         ls = self.excluded_leagues.split(',')
 
         if ls:
-            return ls
+            return list(map(int, ls))
         else:
             return []
 
@@ -30,7 +31,7 @@ class FantasySettings(models.Model):
             return []
         ls = self.senior_leagues.split(',')
         if ls:
-            return ls
+            return list(map(int, ls))
         else:
             return []
 
@@ -39,7 +40,7 @@ class FantasySettings(models.Model):
             return []
         ls = self.junior_leagues.split(',')
         if ls:
-            return ls
+            return list(map(int, ls))
         else:
             return []
 
@@ -60,7 +61,7 @@ class PlayerFantasyRank(models.Model):
 
     def calculate(self):
         fantasy = CalculateFantasyStats()
-        fantasy.calculate_fantasy_for_player(self.player, self.season.name, self.senior)
+        fantasy.calculate_fantasy_for_player(self.player.profile, self.season.name, self.senior)
 
 
 class CalculateFantasyStats:
@@ -70,52 +71,55 @@ class CalculateFantasyStats:
 
     def __init__(self):
         fsetts = FantasySettings.objects.all().first()
-        self.junior_leagues = fsetts.get_senior_leagues() or self.JUNIOR_LEAGUES
+        self.junior_leagues = fsetts.get_junior_leagues() or self.JUNIOR_LEAGUES
         self.senior_leagues = fsetts.get_senior_leagues() or self.SENIOR_LEAGUES
         self.excluded_leagues = fsetts.get_excluded_leagues() or self.EXCLUDED_LEAGUES
 
-    def calculate_fantasy_for_player(self, user_profile, season: str, senior: bool = True):
+    def calculate_fantasy_for_player(self, user_profile, season: str, is_senior: bool = True):
         '''need to be player'''
         player = PlayerAdapter(user_profile.data_mapper_id).get_player_object()
         points = 0
         ps = player.playerstats.select_related('game', 'gamefication', 'league', 'season').filter(season__name=season)
-        ps = self._filter_players_stats(ps, senior=senior)
+        ps = self._filter_players_stats(ps, is_senior=is_senior)
         games_count = ps.count()
 
         if games_count != 0:
             points = ps.aggregate(Sum('gamefication__score')).get('gamefication__score__sum') or 0
-            self.create_or_update_fantasy_object(season, points, games_count, user_profile.user, senior)
+            self.create_or_update_fantasy_object(season, points, games_count, user_profile.user, is_senior)
+            user_profile.add_event_log_message(f'Fantasy calculated sucesfully and got {points} points for {season} for senior={is_senior}')
         else:
-            # @todo: here some event log...
+            self.try_to_remove_fantasy_object(season, user_profile.user, is_senior)
+            user_profile.add_event_log_message(f'Player got 0 points for {season} for senior={is_senior}')
             return
 
-    def _filter_leagues(self, queryset, league_filter):
-        return queryset.filter(league__code__in=league_filter)
+    def try_to_remove_fantasy_object(self, season, user, is_senior):
+        ss = SeasonService()
+        season_object = ss.get(season)
+        try:
+            pfr = PlayerFantasyRank.objects.get(
+                season=season_object,
+                player=user,
+                senior=is_senior
+            )
+            pfr.delete()
+        except PlayerFantasyRank.DoesNotExist:
+            return
 
-    def _filter_players_stats(self, queryset, senior=True):
-        ll = self.senior_leagues if senior else self.junior_leagues
-        queryset = self._filter_leagues(queryset, ll)
-        queryset = queryset.exclude(league__code__in=self.excluded_leagues)
-
-        # Commented according to CR-8.3
-        # if self.query_league:
-        #     queryset = queryset.filter(league__code=reverse_translate_league_name(self.query_league))
-
-        # if self.query_team:
-        #     queryset = queryset.filter(team_name=reverse_translate_team_name(self.query_team))
-
-        # if self.query_zpn:
-        #     queryset = queryset.filter(league__zpn_code_name=self.query_zpn)
-        return queryset
-
-    def create_or_update_fantasy_object(self, season: str, points: int, games_count: int, user: User, senior):
+    def create_or_update_fantasy_object(self, season: str, points: int, games_count: int, user: User, is_senior):
         ss = SeasonService()
         season_object = ss.get(season)
         PlayerFantasyRank.objects.update_or_create(
             season=season_object,
             player=user,
-            senior=senior,
+            senior=is_senior,
             defaults={
                 'games_played': games_count,
                 'score': points}
             )
+
+    def _filter_players_stats(self, queryset, is_senior=True):
+        ll = self.senior_leagues if is_senior else self.junior_leagues
+        queryset = queryset.exclude(league__code__in=self.excluded_leagues)
+        if ll:
+            queryset = queryset.filter(league__code__in=ll)
+        return queryset

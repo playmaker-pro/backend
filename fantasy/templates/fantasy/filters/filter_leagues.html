@@ -3,7 +3,7 @@
 <select name="league" data-width="{{ size }}"  title="rozgrywki" class="selectpicker" data-actions-box="true" multiple data-live-search="true" data-selected-text-format="count > 3">
 
 <option {% if 'Ekstraklasa' in request.GET|get_list:'league' %} selected="selected" {% endif %}>Ekstraklasa</option>
-<option {% if '1 liga' in request.GET|get_list:'league' %} selected="selected" {% endif %}>1 liga</option>
+<option {% if '1 liga' in request.GET|get_list:'league' %} selected="selected" {% endif %}>1 Liga</option>
 <option {% if '2 liga' in request.GET|get_list:'league' %} selected="selected" {% endif %}>2 liga</option>
 <option {% if '3 liga' in request.GET|get_list:'league' %} selected="selected" {% endif %}>3 liga</option>
 <option {% if '4 liga' in request.GET|get_list:'league' %} selected="selected" {% endif %}>4 liga</option>

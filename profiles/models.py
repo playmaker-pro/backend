@@ -119,6 +119,7 @@ class ProfileVisitHistory(models.Model):
 
 class BaseProfile(models.Model):
     """Base profile model to held most common profile elements"""
+    EVENT_LOG_HISTORY = 35
     PROFILE_TYPE = None
     AUTO_VERIFY = False  # flag to perform auto verification of User based on profile. If true - User.state will be switched to Verified
     VERIFICATION_FIELDS = []  # this is definition of profile fields which will be threaded as must-have params.
@@ -137,12 +138,22 @@ class BaseProfile(models.Model):
     def make_default_event_log(self):
         self.event_log = list()
 
-    def add_event_log_message(self, msg):
+    def add_event_log_message(self, msg: str):
+        '''Adds event log into list
+        if more than event_log_history it will be removed
+        '''
+
         if self.event_log is None or isinstance(self.event_log, dict):
             self.make_default_event_log()
+
+        if len(self.event_log) > self.EVENT_LOG_HISTORY:
+            try:
+                self.event_log.pop()
+            except:
+                logger.error('Cannot remove eventlog message form user profile.')
         date = timezone.now()
         msg = {'date': f'{date}', 'message': msg}
-        self.event_log.append(msg)
+        self.event_log.insert(0, msg)
         self.save()
 
     def get_permalink(self):
@@ -524,8 +535,8 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
 
         from fantasy.models import CalculateFantasyStats
         f = CalculateFantasyStats()
-        f.calculate_fantasy_for_player(self, season, senior=True)
-        f.calculate_fantasy_for_player(self, season, senior=False)
+        f.calculate_fantasy_for_player(self, season, is_senior=True)
+        f.calculate_fantasy_for_player(self, season, is_senior=False)
 
     def calculate_data_from_data_models(self, adpt=None):
         '''Interaction with s38: league, vivo, team <- s38'''
