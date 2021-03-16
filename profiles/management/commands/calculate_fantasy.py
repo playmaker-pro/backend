@@ -41,13 +41,13 @@ class Command(BaseCommand):
                 try:
                     if user.profile.attached:
                         player = Player.objects.get(id=user.profile.data_mapper_id)
-                        self.stdout.write(f'updating {player}')
+                        self.stdout.write(f'...updating {player}')
                         try:
                             user.profile.calculate_fantasy_object()
                             user.profile.save()
                         except Exception as e:
                             self.stdout.write(self.style.ERROR(f'error: {e}'))
-                        msg = f'user {user}: player meta_data {player.meta}'
+                        msg = f'User {user} fantasy metrics updated.'
                         self.stdout.write(self.style.SUCCESS(msg))
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f'{user} {e}'))

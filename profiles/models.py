@@ -630,7 +630,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         # Each time actions
         if self.attached:
             old = self.playermetrics.how_old_days
-            logger.error(f'xxxxx {any([old(season=True) >= 1, old(fantasy=True) >= 1, old(games=True) >= 1])} {old(season=True) >= 1} {old(fantasy=True) >= 1} {old(games=True) >= 1}')
+            # logger.error(f'xxxxx {any([old(season=True) >= 1, old(fantasy=True) >= 1, old(games=True) >= 1])} {old(season=True) >= 1} {old(fantasy=True) >= 1} {old(games=True) >= 1}')
             if any([old(season=True) >= 1, old(fantasy=True) >= 1, old(games=True) >= 1]):
                 logger.debug(f'Stats old enough {self}')
                 self.playermetrics.refresh_metrics()  # download: metrics data
