@@ -35,7 +35,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         users = self.get_queryset()
         users = self.filter_queryset(users, options)
-
+        self.stdout.write(self.style.SUCCESS('Starting to calculate fantasy objects.'))
         for user in users:
             if user.is_player:
                 try:
@@ -46,7 +46,7 @@ class Command(BaseCommand):
                             user.profile.calculate_fantasy_object()
                             user.profile.save()
                         except Exception as e:
-                            self.stdout.write(self.style.ERROR(f'blad: {e}'))
+                            self.stdout.write(self.style.ERROR(f'error: {e}'))
                         msg = f'user {user}: player meta_data {player.meta}'
                         self.stdout.write(self.style.SUCCESS(msg))
                 except Exception as e:

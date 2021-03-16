@@ -77,6 +77,10 @@ class CalculateFantasyStats:
 
     def calculate_fantasy_for_player(self, user_profile, season: str, is_senior: bool = True):
         '''need to be player'''
+        if not user_profile.user.is_player:
+            user_profile.add_event_log_message(f'Cannot calculate Fantasy Metrics for {season} for senior={is_senior} this user is not Player!', type='err')
+            return
+
         player = PlayerAdapter(user_profile.data_mapper_id).get_player_object()
         points = 0
         ps = player.playerstats.select_related('game', 'gamefication', 'league', 'season').filter(season__name=season)

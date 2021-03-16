@@ -138,21 +138,27 @@ class BaseProfile(models.Model):
     def make_default_event_log(self):
         self.event_log = list()
 
-    def add_event_log_message(self, msg: str):
+    def add_event_log_message(self, msg: str, type: str = 'nor'):
         '''Adds event log into list
         if more than event_log_history it will be removed
+        types = ['nor', 'err', 'deb']
         '''
-
+        if type == 'err':
+            suffix = 'ERROR:'
+        elif type == 'dev':
+            suffix = 'DEBUG:'
+        else:
+            suffix = ''
         if self.event_log is None or isinstance(self.event_log, dict):
             self.make_default_event_log()
 
         if len(self.event_log) > self.EVENT_LOG_HISTORY:
             try:
                 self.event_log.pop()
-            except:
-                logger.error('Cannot remove eventlog message form user profile.')
+            except Exception as e:
+                logger.error(f'Cannot remove eventlog message form user profile. reason={e}')
         date = timezone.now()
-        msg = {'date': f'{date}', 'message': msg}
+        msg = {'date': f'{date}', 'message': f'{suffix}{msg}'}
         self.event_log.insert(0, msg)
         self.save()
 
