@@ -43,13 +43,7 @@ class Command(BaseCommand):
                         player = Player.objects.get(id=user.profile.data_mapper_id)
                         self.stdout.write(f'updating {player}')
                         try:
-                            user.profile.calculate_data_from_data_models()
-                            user.profile.trigger_refresh_data_player_stats()  # save not relevant
-                            user.profile.fetch_data_player_meta(save=False)  # save comes inside
-                            # user.profile.set_team_object_based_on_meta()  # saving
-                            user.profile.playermetrics.refresh_metrics()  # save not relevant
                             user.profile.calculate_fantasy_object()
-
                             user.profile.save()
                         except Exception as e:
                             self.stdout.write(self.style.ERROR(f'blad: {e}'))
