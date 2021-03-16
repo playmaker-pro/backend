@@ -39,7 +39,7 @@ class Command(BaseCommand):
         for user in users:
             if user.is_player:
                 try:
-                    if user.profile.data_mapper_id is not None and user.profile.league is None:
+                    if user.profile.attached:
                         player = Player.objects.get(id=user.profile.data_mapper_id)
                         self.stdout.write(f'updating {player}')
                         try:
@@ -51,3 +51,4 @@ class Command(BaseCommand):
                         self.stdout.write(self.style.SUCCESS(msg))
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f'{user} {e}'))
+
