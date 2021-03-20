@@ -14,7 +14,8 @@
 
 {% block extra_css %}
    {{ block.super }}
-    {{ page_obj.extra_css}}
+   <!-- custom styles -->
+   {{ page_obj.extra_css|safe|default:'' }}
 {% endblock %}
 
 
@@ -27,20 +28,15 @@
                 <h4 class="mb-3 text-center">{{ page_obj.subtitle|default:'' }}</h4>
             </div>
             <div class="d-flex flex-column justify-content-center">
-
-
                 {{ page_obj.html_first|safe|default:'' }}
                 {{ page_obj.html_form|safe|default:'' }}
-
                 {% if page_obj.html_form %}
                     {% csrf_token %}
                     </form>
-
                 {% endif %}
                 {{ page_obj.html_body|safe|default:'' }}
-                
             </div>             
-             <div class="d-flex flex-column  justify-content-center">
+             <div class="d-flex flex-column justify-content-center">
                  {{ page_obj.html_body_footer|safe|default:'' }}
              </div>
         </div>
@@ -54,8 +50,6 @@
     <script src="{% static 'assets/js/filters.js' %}"></script>
     {% include 'marketplace/filters_modal.html' %}
     <script>
-
-        {% csrf_token %}
 
         $('#approveAnnouncementModal').on('show.bs.modal', function (event) {
             var id = $(event.relatedTarget).data('ann');
