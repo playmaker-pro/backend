@@ -11,6 +11,13 @@
     {{ block.super }}
 {% endblock %}
 
+
+{% block extra_css %}
+   {{ block.super }}
+    {{ page_obj.extra_css}}
+{% endblock %}
+
+
 {% block content %}
     <section id="subpage" class="subpage last-section">
       <div class="container">
@@ -19,17 +26,21 @@
                 <h2 class="mb-3 text-center">{{ page_obj.title|default:'' }}</h2>
                 <h4 class="mb-3 text-center">{{ page_obj.subtitle|default:'' }}</h4>
             </div>
-            <div class="row d-flex justify-content-center">
+            <div class="d-flex flex-column justify-content-center">
+
+
                 {{ page_obj.html_first|safe|default:'' }}
                 {{ page_obj.html_form|safe|default:'' }}
-                {% if age_obj.html_form %}
-                  {% csrf_token %}
-                 </form>
+
+                {% if page_obj.html_form %}
+                    {% csrf_token %}
+                    </form>
+
                 {% endif %}
                 {{ page_obj.html_body|safe|default:'' }}
                 
             </div>             
-             <div class="row d-flex justify-content-center">
+             <div class="d-flex flex-column  justify-content-center">
                  {{ page_obj.html_body_footer|safe|default:'' }}
              </div>
         </div>
@@ -43,11 +54,14 @@
     <script src="{% static 'assets/js/filters.js' %}"></script>
     {% include 'marketplace/filters_modal.html' %}
     <script>
-            $('#approveAnnouncementModal').on('show.bs.modal', function (event) {
-        var id = $(event.relatedTarget).data('ann');
-        $(this).find('#ann-numner').val(id);
-        //$(this).find(".ann-number").text(id);
-        });
+
+        {% csrf_token %}
+
+        $('#approveAnnouncementModal').on('show.bs.modal', function (event) {
+            var id = $(event.relatedTarget).data('ann');
+            $(this).find('#ann-numner').val(id);
+            //$(this).find(".ann-number").text(id);
+            });
 
  
             $('#addAnnouncementModal').on('show.bs.modal', function (event) {

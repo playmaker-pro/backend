@@ -13,7 +13,26 @@ User = get_user_model()
 
 
 class Command(BaseCommand):
-    help = 'Utility to update Players stats'
+    help = 'Utility to update Players Fantasy'
+
+    def handle(self, *args, **options):
+        users = self.get_queryset()
+        users = self.filter_queryset(users, options)
+        self.stdout.write(self.style.SUCCESS(f'Starting to calculate fantasy objects. Following number of objects will be updated {users.count()}'))
+        for user in users:
+            if user.is_player:
+                try:
+                    if user.profile.attached:
+                        self.stdout.write(f'>> updating {user}')
+                        try:
+                            user.profile.calculate_fantasy_object()
+                            user.profile.save()
+                        except Exception as e:
+                            self.stdout.write(self.style.ERROR(f'error: {e}'))
+                        msg = f'User {user} fantasy metrics updated.'
+                        self.stdout.write(self.style.SUCCESS(msg))
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f'{user} {e}'))
 
     def add_arguments(self, parser):
         parser.add_argument('message_type', type=str)
@@ -31,24 +50,3 @@ class Command(BaseCommand):
             email = options['test']
             queryset = queryset.filter(email=email)
         return queryset
-
-    def handle(self, *args, **options):
-        users = self.get_queryset()
-        users = self.filter_queryset(users, options)
-        self.stdout.write(self.style.SUCCESS(f'Starting to calculate fantasy objects. Following number of objects will be updated {users.count()}'))
-        for user in users:
-            if user.is_player:
-                try:
-                    if user.profile.attached:
-                        player = Player.objects.get(id=user.profile.data_mapper_id)
-                        self.stdout.write(f'...updating {player}')
-                        try:
-                            user.profile.calculate_fantasy_object()
-                            user.profile.save()
-                        except Exception as e:
-                            self.stdout.write(self.style.ERROR(f'error: {e}'))
-                        msg = f'User {user} fantasy metrics updated.'
-                        self.stdout.write(self.style.SUCCESS(msg))
-                except Exception as e:
-                    self.stdout.write(self.style.ERROR(f'{user} {e}'))
-

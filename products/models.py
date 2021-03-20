@@ -30,6 +30,7 @@ class Product(models.Model):
     teaser = models.CharField(max_length=455, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     active = models.BooleanField(default=False)
+    extra_css = models.TextField(null=True, blank=True)
     html_first = models.TextField(null=True, blank=True)
     html_form = models.TextField(null=True, blank=True)
     html_body = models.TextField(null=True, blank=True)
