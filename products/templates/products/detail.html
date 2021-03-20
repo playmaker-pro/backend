@@ -14,8 +14,9 @@
 
 {% block extra_css %}
    {{ block.super }}
-   <!-- custom styles -->
+   <!-- custom page styles -->
    {{ page_obj.extra_css|safe|default:'' }}
+   <!-- end custom styles -->
 {% endblock %}
 
 
@@ -29,11 +30,16 @@
             </div>
             <div class="d-flex flex-column justify-content-center">
                 {{ page_obj.html_first|safe|default:'' }}
-                {{ page_obj.html_form|safe|default:'' }}
-                {% if page_obj.html_form %}
-                    {% csrf_token %}
-                    </form>
-                {% endif %}
+
+                <div>
+                    {{ page_obj.html_form|safe|default:'' }}
+
+                    
+                    {% if page_obj.html_form %}
+                        {% csrf_token %}
+                        </form>
+                    {% endif %}
+                </div>
                 {{ page_obj.html_body|safe|default:'' }}
             </div>             
              <div class="d-flex flex-column justify-content-center">
