@@ -47,10 +47,11 @@
 
 <section id="tables" class="tables" style="padding-top:0px"> 
     <div class="container-fluid">
-    {% csrf_token %}
+        {% csrf_token %}
         {% if page_obj.paginator.count == 0 %}
             {% include 'platform/partials/_empty.html' %}
         {% else %}
+
         {% if type == 'P' %}
             {% include 'soccerbase/tables/table_players_card.html' with objects=page_obj %}
             {% include 'platform/partials/_pagination.html' with object_type='piłkarzy' %}
@@ -108,6 +109,8 @@ $(document).ready(function($){
 
 {% endif %}
 
+
+<script>
 function checkWindowSize() {  
     if ( $(window).width() > 786 ) {  
         $('#table-filters').addClass('sticky-top'); 

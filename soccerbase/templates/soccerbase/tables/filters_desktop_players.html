@@ -27,7 +27,12 @@
     <div class="filter pr-2"> 
         {% include 'soccerbase/tables/filters/filter_age_max_input.html' with size=120 %}
     </div>
-    <div class="filter r-2 "> 
-        {% include 'soccerbase/tables/filters/filter_young.html' with size=120 %}
-    </div>
+
+      <div>
+          <button type="button"  class="{% if foregin %}btn-request btn-requested{% else %}btn-request{% endif %}" onclick="window.location.href='{% if foregin %}{% url 'soccerbase:players' %}{% else %}{% url 'soccerbase:players_quick' 'foregin' %}{% endif %}';">{% if foregin %}Polska{% else %}zagraniczni{% endif %}</button>
+      </div>
+      <div>
+          <button type="button"  class="{% if juniors %}btn-request btn-requested{% else %}btn-request{% endif %}" onclick="window.location.href='{% if juniors %}{% url 'soccerbase:players'%}{% else %}{% url 'soccerbase:players_quick' 'juniors' %}{% endif %}';">{% if junors %}Polska{% else %}młodzieżowiec{% endif %}</button>
+      </div>
+
 {% endblock desktop_filters_body %}

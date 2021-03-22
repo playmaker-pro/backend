@@ -6,6 +6,7 @@ from django.db.models import Q, Value
 from django.db.models.functions import Concat
 from profiles.utils import get_datetime_from_age
 from .utils import page_object_elements_count
+from django.utils import timezone
 
 
 class PaginateMixin:
@@ -50,6 +51,24 @@ class ViewFilterMixin:
                 return True
             else:
                 return None
+
+    @property
+    def filter_is_juniors(self):
+        '''bool to set if we are looking for junior players'''
+        is_juniors = self._param_bool_filter('is_junior')
+        if is_juniors is None:
+            return False
+        else:
+            return is_juniors
+
+    @property
+    def filter_is_foregin(self):
+        '''bool to set if we are looking for foregin players'''
+        is_foregin = self._param_bool_filter('is_foregin')
+        if is_foregin is None:
+            return False
+        else:
+            return is_foregin
 
     @property
     def filter_season_exact(self):
@@ -299,6 +318,13 @@ class ViewModalLoadingMixin:
 class FilterPlayerViewMixin:
 
     def filter_queryset(self, queryset):
+
+        if self.filter_is_foregin:
+            queryset = queryset.exclude(playerprofile__country='PL')
+
+        if self.filter_is_juniors:
+            queryset = queryset.exclude(playerprofile__age__lt=timezone.now().year - 20)
+
         if self.filter_leg is not None:
             queryset = queryset.filter(
                 playerprofile__prefered_leg=self.filter_leg)

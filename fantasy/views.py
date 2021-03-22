@@ -5,7 +5,7 @@ import logging
 import math
 import operator
 from functools import reduce
-
+from django.utils import timezone
 from app import mixins
 from app.base.views import BasePMView
 from clubs.models import Club, Gender, League, Seniority, Team, Voivodeship
@@ -50,9 +50,6 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
     paginate_limit = 20
 
     def filter_queryset(self, queryset):
-        if self.filter_season_exact is not None:
-            queryset = queryset.filter(season__name=self.filter_season_exact)
-
         if self.filter_leg is not None:
             queryset = queryset.filter(player__playerprofile__prefered_leg=self.filter_leg)
 

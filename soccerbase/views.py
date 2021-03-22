@@ -17,6 +17,7 @@ import operator
 from functools import reduce
 from django.db.models import Q, Value
 from app.mixins import FilterPlayerViewMixin
+from django.utils import timezone
 
 
 TABLE_TYPE_PLAYER = definitions.PLAYER_SHORT
@@ -37,18 +38,78 @@ class TableView(generic.TemplateView, mixins.PaginateMixin, mixins.ViewModalLoad
     def get_queryset(self):
         return []
 
+    def add_more_to_kwargs(self, kwargs):
+        pass
+
     def get(self, request, *args, **kwargs):
+        self.is_foregin = False
+        self.is_juniors = False
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
         kwargs['page_obj'] = self.paginate(queryset, limit=self.paginate_limit)
         kwargs['page_title'] = self.page_title
         kwargs['type'] = self.table_type
+        self.add_more_to_kwargs(kwargs)
         kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
         # kwargs['ammount'] = page_obj.count()
         return super().get(request, *args, **kwargs)
 
 
-class PlayersTable(TableView, FilterPlayerViewMixin):
+class PlayersTable(TableView):
+    table_type = TABLE_TYPE_PLAYER
+    page_title = 'Baza piłkarzy'
+
+    def add_more_to_kwargs(self, kwargs):
+        kwargs['foregin'] = self.is_foregin or None
+        kwargs['juniors'] = self.is_juniors or None
+
+    def filter_queryset(self, queryset):
+        if self.filter_leg is not None:
+            queryset = queryset.filter(
+                playerprofile__prefered_leg=self.filter_leg)
+
+        if self.filter_league is not None:
+            queryset = queryset.filter(playerprofile__team_object__league__name__in=self.filter_league)
+
+        if self.filter_first_last is not None:
+            queryset = queryset.annotate(fullname=Concat('first_name', Value(' '), 'last_name'))
+            queryset = queryset.filter(fullname__icontains=self.filter_first_last)
+
+        if self.filter_vivo is not None:
+            vivos = [i for i in self.filter_vivo]
+            clauses = (Q(playerprofile__team_object__club__voivodeship__name=p) for p in vivos)
+            query = reduce(operator.or_, clauses)
+            queryset = queryset.filter(query)
+
+        if self.filter_age_min is not None:
+            mindate = get_datetime_from_age(self.filter_age_min)
+            queryset = queryset.filter(playerprofile__birth_date__year__lte=mindate.year)
+
+        if self.filter_age_max is not None:
+            maxdate = get_datetime_from_age(self.filter_age_max)
+            queryset = queryset.filter(playerprofile__birth_date__year__gte=maxdate.year)
+
+        # if self.filter_age_range is not None:
+        #     mindate = get_datetime_from_age(self.filter_age_range[0])
+        #     maxdate = get_datetime_from_age(self.filter_age_range[1])
+        #     queryset = queryset.filter(playerprofile__birth_date__range=[maxdate, mindate])  # bo 0,20   to data urodzin 2000-09-01----2020-09-01
+        if self.filter_position is not None:
+            queryset = queryset.filter(playerprofile__position_raw=self.filter_position)
+        return queryset
+
+    def get_queryset(self):
+        
+        return User.objects.filter(
+            declared_role='P',
+            state=User.STATE_ACCOUNT_VERIFIED,
+            playerprofile__birth_date__lte=get_datetime_from_age(15)).order_by(F('last_login').desc(nulls_last=True))
+
+
+class PlayerTalbeQuickFilter(generic.TemplateView, mixins.PaginateMixin, mixins.ViewModalLoadingMixin, mixins.ViewFilterMixin):
+    template_name = "soccerbase/table.html"
+    http_method_names = ["get"]
+    paginate_limit = 15
+    table_type = None
     table_type = TABLE_TYPE_PLAYER
     page_title = 'Baza piłkarzy'
 
@@ -57,6 +118,68 @@ class PlayersTable(TableView, FilterPlayerViewMixin):
             declared_role='P',
             state=User.STATE_ACCOUNT_VERIFIED,
             playerprofile__birth_date__lte=get_datetime_from_age(15)).order_by(F('last_login').desc(nulls_last=True))
+
+    def filter_queryset(self, queryset):
+
+        if self.is_foregin is True:
+            queryset = queryset.exclude(playerprofile__country='PL')
+
+        if self.is_juniors is True:
+            queryset = queryset.exclude(playerprofile__birth_date__year__lt=timezone.now().year - 20)
+
+        if self.filter_leg is not None:
+            queryset = queryset.filter(
+                playerprofile__prefered_leg=self.filter_leg)
+
+        if self.filter_league is not None:
+            queryset = queryset.filter(playerprofile__team_object__league__name__in=self.filter_league)
+
+        if self.filter_first_last is not None:
+            queryset = queryset.annotate(fullname=Concat('first_name', Value(' '), 'last_name'))
+            queryset = queryset.filter(fullname__icontains=self.filter_first_last)
+
+        if self.filter_vivo is not None:
+            vivos = [i for i in self.filter_vivo]
+            clauses = (Q(playerprofile__team_object__club__voivodeship__name=p) for p in vivos)
+            query = reduce(operator.or_, clauses)
+            queryset = queryset.filter(query)
+
+        if self.filter_age_min is not None:
+            mindate = get_datetime_from_age(self.filter_age_min)
+            queryset = queryset.filter(playerprofile__birth_date__year__lte=mindate.year)
+
+        if self.filter_age_max is not None:
+            maxdate = get_datetime_from_age(self.filter_age_max)
+            queryset = queryset.filter(playerprofile__birth_date__year__gte=maxdate.year)
+
+        # if self.filter_age_range is not None:
+        #     mindate = get_datetime_from_age(self.filter_age_range[0])
+        #     maxdate = get_datetime_from_age(self.filter_age_range[1])
+        #     queryset = queryset.filter(playerprofile__birth_date__range=[maxdate, mindate])  # bo 0,20   to data urodzin 2000-09-01----2020-09-01
+        if self.filter_position is not None:
+            queryset = queryset.filter(playerprofile__position_raw=self.filter_position)
+        return queryset
+
+    def get(self, request, quick_filter, *args, **kwargs):
+        self.is_foregin = False
+        self.is_juniors = False
+
+        if quick_filter == 'foregin':
+            self.is_foregin = True
+        elif quick_filter == 'juniors':
+            self.is_juniors = True
+
+        kwargs['foregin'] = self.is_foregin or None
+        kwargs['juniors'] = self.is_juniors or None
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        kwargs['page_obj'] = self.paginate(queryset, limit=self.paginate_limit)
+        kwargs['page_title'] = self.page_title
+        kwargs['type'] = self.table_type
+        # self.add_more_to_kwargs(kwargs)
+        kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
+        # kwargs['ammount'] = page_obj.count()
+        return super().get(request, *args, **kwargs)
 
 
 class TeamsTable(TableView):
