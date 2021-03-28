@@ -49,7 +49,6 @@ class Command(BaseCommand):
                             # user.profile.set_team_object_based_on_meta()  # saving
                             user.profile.playermetrics.refresh_metrics()  # save not relevant
                             user.profile.calculate_fantasy_object()
-
                             user.profile.save()
                         except Exception as e:
                             self.stdout.write(self.style.ERROR(f'blad: {e}'))
