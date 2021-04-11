@@ -5,20 +5,19 @@
     {% with request.GET.role as role %}      
       <form id="signup_form{{form_type}}" class="row signup-form needs-validation" method="post" action="{% url 'account_signup' %}{% if role %}?role={{role}}{% endif %}">  
       {% csrf_token %}
-      
           <div class="col-12 mb-3">
             {% if role %}
                 <input type="hidden" class="form-control" name="role" id="id_role" value="{{ form.role.value|default_if_none:role }}" required>
                 <h4 class="text-center" style="text-transform: uppercase;">jako   
-                          {% if role == 'P'%}Piłkarz
-                          {% elif role == 'T' %}Trener
-                          {% elif role == 'C' %}Klub / Szkółka piłkarska
-                          {% elif role == 'M' %}Agent piłkarski
-                          {% elif role == 'S' %}Skout
-                          {% elif role == 'R' %}Rodzic małego piłkarza
-                          {% elif role == 'G' %}Kibic
-                          {% endif %}
-                         </h4>
+                  {% if role == 'P'%}Piłkarz
+                  {% elif role == 'T' %}Trener
+                  {% elif role == 'C' %}Klub / Szkółka piłkarska
+                  {% elif role == 'M' %}Agent piłkarski
+                  {% elif role == 'S' %}Skout
+                  {% elif role == 'R' %}Rodzic małego piłkarza
+                  {% elif role == 'G' %}Kibic
+                  {% endif %}
+                </h4>
             {% else %} 
             
                 <select class="selectpicker " name="role" id="id_role" value="{{ form.role.value|default_if_none:'' }}" required title="wybierz role">
@@ -35,6 +34,14 @@
                 {{ form.role.errors }}
             {% endif %}
     {% endwith %}   
+        </div>
+        <div hidden class="col-md-6 mb-3">
+          <input type="text" class="form-control" name="username" id="id_username"  value="" placeholder="nazwa użytkownika" >
+          {% if form.username.errors %}
+            <div class="alert alert-danger" role="alert">
+            {{form.username.errors}}
+            </div>
+          {% endif %}
         </div>
 
         <div class="col-md-6 mb-3">
@@ -71,8 +78,7 @@
             <div class="alert alert-danger" role="alert">
               {{form.password.errors}}
             </div>
-          {% endif %}
-           
+          {% endif %} 
         </div>
 
         <div class="col-12 mb-3">
@@ -81,12 +87,7 @@
             <small>{% trans 'lub jeżeli masz już konto'%} <a href="{{ login_url }}">{% trans 'zaloguj się' %}</a></small>
           </p>
         </div>
-
         <hr class="mb-4">
-
-
-          
-        
         {% if redirect_field_value %}
             <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
         {% endif %}
