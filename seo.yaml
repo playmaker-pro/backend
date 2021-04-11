@@ -1,0 +1,24 @@
+
+
+default:
+  title: Playmaker.pro
+  description: Główne opis strony
+  ogtitle: Tytuł w Open 
+  ogdescription:
+  ogsite_name: jeśli puste to URL strony
+
+/fantasy/:
+  title: 'xxxxxxxxxxxxx'
+  description:
+  ogtitle: 'xxxxxxxxxxxxx'
+  ogdescription:
+  ossite_name:
+
+# import yaml
+# <meta property="og:description"
+# with open(r'E:\data\fruits.yaml') as file:
+#     # The FullLoader parameter handles the conversion from YAML
+#     # scalar values to Python the dictionary format
+#     fruits_list = yaml.load(file, Loader=yaml.FullLoader)
+
+#     print(fruits_list)

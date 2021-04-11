@@ -1,30 +1,54 @@
+import logging
+from datetime import date, datetime
+
+from clubs.models import Club, Team
 from django import template
+from django.conf import settings
+from django.urls import reverse
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
-from inquiries.models import InquiryRequest
-import logging
-from clubs.models import Club, Team
-from datetime import date, datetime
-from django.urls import reverse
+from django.utils.translation import gettext as _
+from django.utils.translation import (gettext_lazy, ngettext, ngettext_lazy,
+                                      npgettext_lazy, pgettext,
+                                      round_away_from_one)
 from followers.models import Follow, FollowTeam
+from inquiries.models import InquiryRequest
 from profiles.utils import extract_video_id
-from django.utils.translation import (
-    gettext as _, gettext_lazy, ngettext, ngettext_lazy, npgettext_lazy,
-    pgettext, round_away_from_one,
-)
-
 
 TEMPLATE_ACTION_SCRIPT = 'platform/buttons/action_script.html'
 TEMPLATE_ACTION_LINK = 'platform/buttons/action_link.html'
 TEMPLATE_ACTION_BUTTON = 'platform/buttons/action_button.html'
+TEMPLATE_SEO_TAGS = 'platform/seo/tags.html'
+
 DEFAULT_BUTTON_CSS_CLASS = 'btn-pm btn-pm-sm'
 DEFAULT_TEAM_ICON = 'shield'
+
 
 logger = logging.getLogger(__name__)
 
 
 register = template.Library()
 
+
+@register.inclusion_tag(TEMPLATE_SEO_TAGS, takes_context=True)
+def seo_tags(context):
+    request = context['request']
+    seo_data = context['seo']
+    # key = request.build_absolute_uri()
+    key = request.path
+    if key not in context['seo'].keys():
+        key = 'default'
+    request_data = seo_data.get(key)
+    # raise RuntimeError()
+    if request_data is not None:
+        return {
+            'title': request_data.get('title', ''),
+            'description': request_data.get('description', ''),
+            'ogdescription': request_data.get('ogdescription', ''),
+            'ogtitle': request_data.get('ogtitle', ''),
+        }
+    else:
+        return {}
 
 @register.filter
 def get_urls_with_no_page(value):

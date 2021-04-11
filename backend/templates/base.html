@@ -1,6 +1,8 @@
 {% load static %}
 {% load wagtailcore_tags %}
 {% load compress %}
+{% load playmaker %}
+
 <!DOCTYPE html>
 <html lang="en">
 {% spaceless %}
@@ -21,6 +23,7 @@
   <meta content="" name="description">
   <meta content="" name="keywords">
 
+  {% seo_tags %}
   {# Global stylesheets #}
   <!-- Favicons -->
   <link href="{% static 'assets/img/playmaker_logo_dark.svg' %}" rel="icon">

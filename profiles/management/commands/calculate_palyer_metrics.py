@@ -26,15 +26,8 @@ class Command(BaseCommand):
     def get_queryset(self):
         return User.objects.all()
 
-    def filter_queryset(self, queryset, options):
-        if options['test']:
-            email = options['test']
-            queryset = queryset.filter(email=email)
-        return queryset
-
     def handle(self, *args, **options):
         users = self.get_queryset()
-        users = self.filter_queryset(users, options)
 
         for user in users:
             if user.is_player:

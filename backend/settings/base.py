@@ -530,6 +530,15 @@ COUNTRIES_FIRST = ['PL', 'GER', 'CZ', 'UA', 'GB']
 
 
 try:
+    import yaml
+    with open('seo.yaml') as f:
+        SEO_DATA = yaml.load(f, Loader=yaml.FullLoader)
+except Exception as e:
+    print(f'Not possible to write SEO_DATA due to: {e}')
+    SEO_DATA = {}
+
+
+try:
     from backend.settings._local import *
 except Exception as e:
     print(f'No local settings. {e}')
