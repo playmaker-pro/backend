@@ -30,19 +30,14 @@ default:
   ogtitle: Tytuł w Open 
   ogdescription:
   ogsite_name: jeśli puste to URL strony
-  tags: 'kauting piłkarski'
-
 
 
 /fantasy/:
-  description:
-
-  ogtitle: 'xxxxxxxxxxxxx'
-  ogdescription:
-  ossite_name:
-  oimage:
-  otwitter:
-  tags: 'Fantasy'
+  title: 'Fantasy | PlayMaker.pro'
+  description: 'Zapraszaj znajomych i rywalizuj z nimi w Fantasy dla niższych lig'
+  ogtitle: 'Fantasy'
+  ogdescription: 'PlayMaker.pro'
+  ogsite_name: 'https://playmaker.pro/fantasy/'
 
 dynamic:
   /users/player-*/:
