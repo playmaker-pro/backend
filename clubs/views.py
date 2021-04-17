@@ -36,7 +36,8 @@ class ClubShow(generic.TemplateView, mixins.ViewModalLoadingMixin):
 
         if club.is_editor(user):
             kwargs['editable'] = self.editable
-
+        kwargs['seo_object_name'] = club.name
+        kwargs['seo_object_image'] = club.picture.url
         kwargs["club"] = club
         kwargs['show_user'] = club
         kwargs["modals"] = self.modal_activity(request.user)
@@ -57,7 +58,6 @@ class ClubEdit(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoading
             if not club.is_editor(user):
                 return redirect("app:permission_denied")
         if "club_form" not in kwargs:
-            
             form = forms.ClubForm(instance=club)
             form.fields['editors'].queryset = User.objects.filter(declared_role__in=[definitions.COACH_SHORT, definitions.CLUB_SHORT, definitions.SCOUT_SHORT]) #.exclude(email=user.email)
             kwargs["club_form"] = form
@@ -111,6 +111,8 @@ class TeamShow(generic.TemplateView, mixins.ViewModalLoadingMixin):
         if team.is_editor(user):
             kwargs['editable'] = self.editable
         kwargs["team"] = team
+        kwargs['seo_object_name'] = team.name
+        kwargs['seo_object_image'] = team.picture.url
         kwargs["modals"] = self.modal_activity(request.user)
         kwargs['show_user'] = team
         kwargs["page_title"] = self.page_title

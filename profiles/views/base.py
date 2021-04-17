@@ -355,12 +355,12 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
                 kwargs["role_form"] = self.get_role_declaration_form()  # @todo this mechanism can be replaced with ajax call
 
         kwargs["editable"] = self.editable
-
         kwargs['observed'] = self.is_profile_observed(request.user, user)
-        
         kwargs['show_user'] = user
         kwargs['modals'] = self.modal_activity(request.user)
         kwargs['page_title'] = self.set_show_profile_page_title()
+        kwargs['seo_object_name'] = user.get_full_name().title()
+        kwargs['seo_object_image'] = user.picture.url
 
         # To dotyczy tylko playera!!!!
         if user.profile.has_data_id and user.profile.PROFILE_TYPE == 'player':

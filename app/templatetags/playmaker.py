@@ -15,6 +15,7 @@ from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from profiles.utils import extract_video_id
 
+
 TEMPLATE_ACTION_SCRIPT = 'platform/buttons/action_script.html'
 TEMPLATE_ACTION_LINK = 'platform/buttons/action_link.html'
 TEMPLATE_ACTION_BUTTON = 'platform/buttons/action_button.html'
@@ -30,25 +31,79 @@ logger = logging.getLogger(__name__)
 register = template.Library()
 
 
+class PageSeoTags:
+    DYNAMIC_KEY = 'dynamic'
+    DEFAULT_KEY = 'default'
+    DYNAMIC_PAGE_SPLITER = '*'
+
+    def __init__(self, dynamic_keywords=None, dynamic_keys_values=None, inherited=None):
+        self.dynamic_keywords = dynamic_keywords
+        self.dynamic_keys_values = dynamic_keys_values
+        self.dynamic_page = False
+        self.inherited = inherited
+
+    @property
+    def is_dynamic(self):
+        return self.dynamic_page
+
+    def get_page_data(self, uri, seo_data):
+        entry = seo_data.get(uri)
+        if entry is not None:
+            return entry
+        else:
+            # find in dynamics
+            dynamic_seo_data = seo_data.get(self.DYNAMIC_KEY)
+            if dynamic_seo_data is None:
+                return seo_data.get(self.DEFAULT_KEY)
+
+            for name, data in dynamic_seo_data.items():
+                #  /users/player-igorek-rubowski/   vs   /users/player-*/ .split('*') -> ['/users/player-', '/']
+                prefix = name.split(self.DYNAMIC_PAGE_SPLITER)[0]
+
+                if uri.startswith(prefix):
+                    self.dynamic_page = True
+                    return data
+        return seo_data.get(self.DEFAULT_KEY)
+
+    def get_seo_tag(self, tag_name, tag_content):
+        if tag_content is None:
+            if tag_name in self.inherited:
+                return self.inherited.get(tag_name)
+            return None
+        if self.is_dynamic and self.dynamic_keywords is not None:
+            for dtag in self.dynamic_keywords:
+                if '{' + dtag + '}' in tag_content:
+                    
+                    return tag_content.format(**{dtag: self.dynamic_keys_values[dtag]})
+        else:
+            return tag_content
+
+
 @register.inclusion_tag(TEMPLATE_SEO_TAGS, takes_context=True)
 def seo_tags(context):
+    '''Generates SEO tags'''
+
     request = context['request']
     seo_data = context['seo']
-    # key = request.build_absolute_uri()
-    key = request.path
-    if key not in context['seo'].keys():
-        key = 'default'
-    request_data = seo_data.get(key)
-    # raise RuntimeError()
-    if request_data is not None:
-        return {
-            'title': request_data.get('title', ''),
-            'description': request_data.get('description', ''),
-            'ogdescription': request_data.get('ogdescription', ''),
-            'ogtitle': request_data.get('ogtitle', ''),
-        }
+
+    dynamic_keywords = seo_data.get('dynamic_keywords', [])
+    dynamic_keys_values = {'name': context.get('seo_object_name'), 'image_path': context.get('seo_object_image')}
+    inherited = seo_data.get('inherited', [])
+
+    generator = PageSeoTags(
+        dynamic_keywords=dynamic_keywords,
+        dynamic_keys_values=dynamic_keys_values,
+        inherited=inherited)
+    data = generator.get_page_data(request.path, seo_data)
+
+    if data is not None:
+        metas = ['robots', 'title', 'tags', 'description', 'fbapp', 'oglocale', 'ogtype', 'ogtitle', 'ogdescription', 'ogurl', 'ogsite_name']
+        metas_data = {name: generator.get_seo_tag(name, data.get(name)) for name in metas}
+
+        return metas_data
     else:
         return {}
+
 
 @register.filter
 def get_urls_with_no_page(value):

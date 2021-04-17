@@ -1,24 +1,56 @@
 
 
+_meta: 
+  version: 1.0
+  supported_tags:
+    - robots
+    - title
+    - tags
+    - description
+    - fbapp
+    - oglocale
+    - ogtype
+    - ogtitle
+    - ogdescription
+    - ogurl
+    - ogsite_name
+
+dynamic_keywords:
+  - name
+  - seo_object_name
+
+
+inherited:
+  twitter_site: '....'
+
+
 default:
   title: Playmaker.pro
   description: Główne opis strony
   ogtitle: Tytuł w Open 
   ogdescription:
   ogsite_name: jeśli puste to URL strony
+  tags: 'kauting piłkarski'
+
+
 
 /fantasy/:
-  title: 'xxxxxxxxxxxxx'
   description:
+
   ogtitle: 'xxxxxxxxxxxxx'
   ogdescription:
   ossite_name:
+  oimage:
+  otwitter:
+  tags: 'Fantasy'
 
-# import yaml
-# <meta property="og:description"
-# with open(r'E:\data\fruits.yaml') as file:
-#     # The FullLoader parameter handles the conversion from YAML
-#     # scalar values to Python the dictionary format
-#     fruits_list = yaml.load(file, Loader=yaml.FullLoader)
+dynamic:
+  /users/player-*/:
+    description: 
+    ogtitle: 'Pilakrsie CV {name}'
+    ogdescription:
+    ossite_name:
+    oimage: {image_path}
+    otwitter:
+    tags: 'Fantasy {name}'
 
-#     print(fruits_list)
