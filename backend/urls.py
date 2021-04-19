@@ -48,7 +48,7 @@ urlpatterns = [
     path('blog/', include('blog.urls', namespace="blog")),
     path('api/v2/', api_router.urls),
     path('', include('allauth.urls')),
-] + redirects_list
+] + settings.redirects_list
 
 
 
