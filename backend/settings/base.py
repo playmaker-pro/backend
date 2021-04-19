@@ -542,3 +542,28 @@ try:
     from backend.settings._local import *
 except Exception as e:
     print(f'No local settings. {e}')
+
+
+from django.views.generic import RedirectView
+from django.urls import include, path
+# urlpatterns = patterns('',
+#     url(r'^some-page/$', RedirectView.as_view(url='/')),
+#     ...
+
+
+def load_redirects_file():
+    import yaml
+    filename = 'redirects.yaml'
+    try:
+        with open(filename) as f:
+            data = yaml.load(f, Loader=yaml.FullLoader)
+    except Exception as e:
+        print(f'No {filename} file failed due to {e}')
+    return data
+
+
+def build_redirections(redirects):
+    return [path(f'{old}', RedirectView.as_view(url=new, permanent=True)) for old, new in redirects.items()]
+
+
+redirects_list = build_redirections(load_redirects_file())
