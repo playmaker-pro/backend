@@ -36,8 +36,14 @@ class ClubShow(generic.TemplateView, mixins.ViewModalLoadingMixin):
 
         if club.is_editor(user):
             kwargs['editable'] = self.editable
-        kwargs['seo_object_name'] = club.name
-        kwargs['seo_object_image'] = club.picture.url
+        try:
+            kwargs['seo_object_name'] = club.name
+        except:
+            kwargs['seo_object_name'] = None 
+        try:
+            kwargs['seo_object_image'] = club.picture.url
+        except:
+            kwargs['seo_object_image'] = None
         kwargs["club"] = club
         kwargs['show_user'] = club
         kwargs["modals"] = self.modal_activity(request.user)
@@ -111,8 +117,16 @@ class TeamShow(generic.TemplateView, mixins.ViewModalLoadingMixin):
         if team.is_editor(user):
             kwargs['editable'] = self.editable
         kwargs["team"] = team
-        kwargs['seo_object_name'] = team.name
-        kwargs['seo_object_image'] = team.picture.url
+        try:
+            kwargs['seo_object_name'] = team.name
+        except:
+            kwargs['seo_object_name'] = None
+
+        try:
+            kwargs['seo_object_image'] = team.picture.url
+        except:
+            kwargs['seo_object_image'] = None
+    
         kwargs["modals"] = self.modal_activity(request.user)
         kwargs['show_user'] = team
         kwargs["page_title"] = self.page_title

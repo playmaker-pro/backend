@@ -26,6 +26,31 @@ admin.site.site_header = 'PlayMaker.pro - development'
 admin.site.site_title = 'PlayMaker.pro - Admin site'
 
 
+from django.views.generic import RedirectView
+
+# urlpatterns = patterns('',
+#     url(r'^some-page/$', RedirectView.as_view(url='/')),
+#     ...
+
+
+def load_redirects_file():
+    import yaml
+    filename = 'redirects.yaml'
+    try:
+        with open(filename) as f:
+            data = yaml.load(f, Loader=yaml.FullLoader)
+    except Exception as e:
+        print(f'No {filename} file failed due to {e}')
+    return data
+
+
+def build_redirections(redirects):
+    return [path(f'{old}', RedirectView.as_view(url=new, permanent=True)) for old, new in redirects.items()]
+
+
+redirect_urls = build_redirections(load_redirects_file())
+
+
 urlpatterns = [
     path('django-admin/', admin.site.urls, name='django_admin'),
     path('app/', include(app.urls), name='app'),
@@ -46,9 +71,7 @@ urlpatterns = [
     path('blog/', include('blog.urls', namespace="blog")),
     path('api/v2/', api_router.urls),
     path('', include('allauth.urls')),
-
-
-]
+] + redirect_urls
 
 
 if settings.DEBUG:

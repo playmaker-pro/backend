@@ -45,7 +45,7 @@ default:
 /tables/players/:
   title: 'Baza piłkarzy | PlayMaker.pro'
   description: 'Piłkarzy dołącz do bazy piłkarzy. Trenerze szukaj piłkarzy i zapraszaj ich na testy piłkarskie'
-  ogtitle: 'Baza piłkarzy | PlayMaker.pro''
+  ogtitle: 'Baza piłkarzy | PlayMaker.pro'
   ogdescription: 'Piłkarzy dołącz do bazy piłkarzy. Trenerze szukaj piłkarzy i zapraszaj ich na testy piłkarskie'
   ogsite_name: 'https://playmaker.pro/tables/players/'
   ogimage: '/media/images/PlayMaker_logo.max-800x600.png'

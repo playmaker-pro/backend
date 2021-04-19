@@ -359,9 +359,17 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
         kwargs['show_user'] = user
         kwargs['modals'] = self.modal_activity(request.user)
         kwargs['page_title'] = self.set_show_profile_page_title()
-        kwargs['seo_object_name'] = user.get_full_name().title()
-        kwargs['seo_object_image'] = user.picture.url
 
+        try:
+            kwargs['seo_object_name'] = user.get_full_name().title()
+        except:
+            kwargs['seo_object_name'] = None
+
+        try:
+            kwargs['seo_object_image'] = user.picture.url
+        except:
+            kwargs['seo_object_image'] = None
+            
         # To dotyczy tylko playera!!!!
         if user.profile.has_data_id and user.profile.PROFILE_TYPE == 'player':
             _id = user.profile.data_mapper_id
