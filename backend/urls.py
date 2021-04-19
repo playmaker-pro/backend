@@ -21,7 +21,7 @@ import fantasy.urls
 import allauth.account.urls
 import followers.urls  # @to be removed 
 from django.views.generic import TemplateView
-from django.conf import redirects_list
+from django.conf import settings
 
 
 admin.site.site_header = 'PlayMaker.pro - development'
@@ -49,6 +49,7 @@ urlpatterns = [
     path('api/v2/', api_router.urls),
     path('', include('allauth.urls')),
 ] + redirects_list
+
 
 
 if settings.DEBUG:
