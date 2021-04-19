@@ -566,4 +566,4 @@ def build_redirections(redirects):
     return [path(f'{old}', RedirectView.as_view(url=new, permanent=True)) for old, new in redirects.items()]
 
 
-redirects_list = build_redirections(load_redirects_file())
+REDIRECTS_LISTS = build_redirections(load_redirects_file())
