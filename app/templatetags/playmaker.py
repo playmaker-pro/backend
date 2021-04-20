@@ -48,6 +48,7 @@ class PageSeoTags:
 
     def get_page_data(self, uri, seo_data):
         entry = seo_data.get(uri)
+
         if entry is not None:
             return entry
         else:
@@ -72,8 +73,7 @@ class PageSeoTags:
             return None
         if self.is_dynamic and self.dynamic_keywords is not None:
             for dtag in self.dynamic_keywords:
-                if '{' + dtag + '}' in tag_content:
-                    
+                if '{' + dtag + '}' in tag_content:        
                     return tag_content.format(**{dtag: self.dynamic_keys_values[dtag]})
         else:
             return tag_content
@@ -99,7 +99,6 @@ def seo_tags(context):
     if data is not None:
         metas = ['robots', 'title', 'tags', 'description', 'fbapp', 'oglocale', 'ogtype', 'ogtitle', 'ogdescription', 'ogurl', 'ogsite_name']
         metas_data = {name: generator.get_seo_tag(name, data.get(name)) for name in metas}
-
         return metas_data
     else:
         return {}
