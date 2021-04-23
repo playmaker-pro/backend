@@ -97,10 +97,12 @@ def seo_tags(context):
     data = generator.get_page_data(request.path, seo_data)
 
     if data is not None:
+
         metas = ['robots', 'title', 'tags', 'description', 'fbapp', 'oglocale', 'ogtype', 'ogtitle', 'ogdescription', 'ogurl', 'ogsite_name']
         metas_data = {name: generator.get_seo_tag(name, data.get(name)) for name in metas}
         return metas_data
     else:
+        logger.debug(f'No SEO data for {request.path}')
         return {}
 
 
