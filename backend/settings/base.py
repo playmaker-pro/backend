@@ -528,22 +528,6 @@ JQUERY_URL = False
 
 COUNTRIES_FIRST = ['PL', 'GER', 'CZ', 'UA', 'GB']
 
-
-try:
-    import yaml
-    with open('seo.yaml') as f:
-        SEO_DATA = yaml.load(f, Loader=yaml.FullLoader)
-except Exception as e:
-    print(f'Not possible to write SEO_DATA due to: {e}')
-    SEO_DATA = {}
-
-
-try:
-    from backend.settings._local import *
-except Exception as e:
-    print(f'No local settings. {e}')
-
-
 from django.views.generic import RedirectView
 from django.urls import include, path
 # urlpatterns = patterns('',
@@ -558,7 +542,7 @@ def load_redirects_file():
         with open(filename) as f:
             data = yaml.load(f, Loader=yaml.FullLoader)
     except Exception as e:
-        print(f'No {filename} file failed due to {e}')
+        print(f'Loading redirects.yaml: No {filename} file failed due to {e}')
     return data
 
 
@@ -567,3 +551,18 @@ def build_redirections(redirects):
 
 
 REDIRECTS_LISTS = build_redirections(load_redirects_file())
+
+try:
+    import yaml
+    with open('seo.yaml') as f:
+        SEO_DATA = yaml.load(f, Loader=yaml.FullLoader)
+except Exception as e:
+    print(f'Loading seo.yaml: Not possible to write SEO_DATA due to: {e}')
+    SEO_DATA = {}
+
+
+try:
+    from backend.settings._local import *
+except Exception as e:
+    print(f'No local settings. {e}')
+
