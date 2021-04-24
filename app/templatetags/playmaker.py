@@ -25,7 +25,7 @@ DEFAULT_BUTTON_CSS_CLASS = 'btn-pm btn-pm-sm'
 DEFAULT_TEAM_ICON = 'shield'
 
 
-logger = logging.getLogger('project.{__name__}')
+logger = logging.getLogger(f'project.{__name__}')
 
 
 register = template.Library()

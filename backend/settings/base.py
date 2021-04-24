@@ -1,9 +1,11 @@
 import os
-
+import logging
 
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
+
+
 
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
@@ -497,6 +499,9 @@ LOGGING_CONFIG = None
 LOGGING = get_logging_structure('_logs')
 logging.config.dictConfig(LOGGING)
 
+logger = logging.getLogger(f'project.{__name__}')
+
+
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
 CELERY_ALWAYS_EAGER = True
 CELERY_TASK_SERIALIZER = 'pickle'
@@ -549,9 +554,11 @@ try:
     import yaml
     with open('seo.yaml') as f:
         SEO_DATA = yaml.load(f, Loader=yaml.FullLoader)
+        logger.info(f'SEO data loaded from seo.yaml')
     print(f'SEO data loaded from seo.yaml')
 except Exception as e:
     print(f'Loading seo.yaml: Not possible to write SEO_DATA due to: {e}')
+    logger.info('Loading seo.yaml: Not possible to write SEO_DATA due to: {e}')
     SEO_DATA = {}
 
 try:
