@@ -25,7 +25,7 @@ DEFAULT_BUTTON_CSS_CLASS = 'btn-pm btn-pm-sm'
 DEFAULT_TEAM_ICON = 'shield'
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('project.{__name__}')
 
 
 register = template.Library()
@@ -100,6 +100,7 @@ def seo_tags(context):
 
         metas = ['robots', 'title', 'tags', 'description', 'fbapp', 'oglocale', 'ogtype', 'ogtitle', 'ogdescription', 'ogurl', 'ogsite_name']
         metas_data = {name: generator.get_seo_tag(name, data.get(name)) for name in metas}
+        logger.debug(f'SEO metadata produced for page {request.path}: {metas_data}')
         return metas_data
     else:
         logger.debug(f'No SEO data for {request.path}')

@@ -439,10 +439,10 @@ def get_logging_structure(LOGFILE_ROOT):
                 'filename': join(LOGFILE_ROOT, 'profiles.log'),
                 'formatter': 'verbose'
             },
-            'routes_updater_log_file': {
+            'data_log_file': {
                 'level': 'DEBUG',
                 'class': 'logging.FileHandler',
-                'filename': join(LOGFILE_ROOT, 'routes-updater-debug.log'),
+                'filename': join(LOGFILE_ROOT, 'data.log'),
                 'formatter': 'verbose'
             },
             'django_log_file': {
@@ -474,14 +474,7 @@ def get_logging_structure(LOGFILE_ROOT):
                 'handlers': ['console', 'profiles_file'],
                 'level': 'DEBUG',
             },
-            'firebase': {
-                'handlers': ['console', 'routes_updater_log_file'],
-                'level': 'DEBUG',
-            },
-            'firebase.bck': {
-                'handlers': ['console', 'routes_updater_log_file'],
-                'level': 'DEBUG',
-            },
+
             'django': {
                 'handlers': ['django_log_file'],
                 'propagate': True,
@@ -556,10 +549,10 @@ try:
     import yaml
     with open('seo.yaml') as f:
         SEO_DATA = yaml.load(f, Loader=yaml.FullLoader)
+    print(f'SEO data loaded from seo.yaml')
 except Exception as e:
     print(f'Loading seo.yaml: Not possible to write SEO_DATA due to: {e}')
     SEO_DATA = {}
-
 
 try:
     from backend.settings._local import *
