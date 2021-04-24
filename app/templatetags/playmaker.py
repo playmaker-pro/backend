@@ -103,7 +103,7 @@ def seo_tags(context):
         logger.debug(f'SEO metadata produced for page {request.path}: {metas_data}')
         return metas_data
     else:
-        logger.debug(f'No SEO data for {request.path}')
+        logger.debug(f'No SEO data for {request.path} data={data} seo_data: {seo_data}')
         return {}
 
 
