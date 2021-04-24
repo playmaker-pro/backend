@@ -552,7 +552,7 @@ REDIRECTS_LISTS = build_redirections(load_redirects_file())
 
 try:
     import yaml
-    with open('seo.yaml') as f:
+    with open('seo.yaml', encoding='utf8') as f:
         SEO_DATA = yaml.load(f, Loader=yaml.FullLoader)
         logger.info(f'SEO data loaded from seo.yaml')
     print(f'SEO data loaded from seo.yaml')
