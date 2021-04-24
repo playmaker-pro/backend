@@ -558,7 +558,7 @@ try:
     print(f'SEO data loaded from seo.yaml')
 except Exception as e:
     print(f'Loading seo.yaml: Not possible to write SEO_DATA due to: {e}')
-    logger.info('Loading seo.yaml: Not possible to write SEO_DATA due to: {e}')
+    logger.info(f'Loading seo.yaml: Not possible to write SEO_DATA due to: {e}')
     SEO_DATA = {}
 
 try:
