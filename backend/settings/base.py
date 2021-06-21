@@ -566,3 +566,9 @@ try:
 except Exception as e:
     print(f'No local settings. {e}')
 
+
+try:
+    from backend.settings.data_settings import *
+except Exception as e:
+    print(f'No data_model settings. {e}')
+

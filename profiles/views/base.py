@@ -31,6 +31,10 @@ from inquiries.services import unseen_requests, update_requests_with_read_status
 from app import mixins, utils
 
 
+def redirect_to_profile_with_full_name(request):
+    return redirect('profiles:show', slug=request.user.profile.slug)
+
+
 class MyObservers(generic.TemplateView, LoginRequiredMixin, mixins.PaginateMixin, mixins.ViewModalLoadingMixin):
     template_name = "profiles/observers.html"
     http_method_names = ["get"]

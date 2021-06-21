@@ -6,8 +6,9 @@ from . import api
 
 app_name = "profiles"
 
+
 urlpatterns = [
-    path("me/", views.ShowProfile.as_view(), name="show_self"),
+    path("me/",  views.redirect_to_profile_with_full_name, name="show_self"),  # views.ShowProfile.as_view(), name="show_self"),
     path("me/query/", api.inquiry, name="inquiry_me"),
     path("me/query/see/", api.inquiry_seen, name="inquiry_see"),
     path("me/query/update/", api.inquiry_update, name="inquiry_update"),

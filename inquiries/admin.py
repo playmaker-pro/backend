@@ -21,6 +21,7 @@ class UserInquiryAdmin(admin.ModelAdmin):
     list_display = ('user', 'plan', 'counter')
     actions = [reset_plan]
 
+
 @admin.register(models.InquiryRequest)
 class InquiryRequestAdmin(admin.ModelAdmin):
     search_fields = ('recipient__email', 'sender__email',)

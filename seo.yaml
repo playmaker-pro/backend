@@ -28,7 +28,7 @@ inherited:
 default:
   title: Playmaker.pro
   description: Główne opis strony
-  ogtitle: Tytuł w Open 
+  ogtitle: PlayMaker
   ogdescription:
   ogsite_name: jeśli puste to URL strony
 
