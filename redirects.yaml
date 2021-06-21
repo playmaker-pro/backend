@@ -1,7 +1,8 @@
 trener-klub/: /scouting/
 sms-academy/: /scouting/
 skauting/: /scouting/
-pilkarz/: /transfer/
+pilkarz/: /products/transfer/
+transfer/: /products/transfer/
 fantasy-ranking/: /fantasy/
 blog-pilkarski/: /blog/
 misja/: /about-project/
