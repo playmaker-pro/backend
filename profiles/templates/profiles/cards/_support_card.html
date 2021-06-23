@@ -1,17 +1,16 @@
  {% load i18n %}
 
- 
- <div class="card" >
-    <div class="card-body">
-        <h2 class="card-title">Kolejne info</h2>
-        <h6 class="card-subtitle mb-2 text-muted">Piłkarz</h6>
-        <ul class="list-group">
-            <li class="list-group-item text-muted">Profile</li>
-            <li class="list-group-item text-right"><span class="pull-left"><strong>Name:</strong></span> {{ show_user.first_name }}</li>
-            <li class="list-group-item text-right"><span class="pull-left"><strong>Last Name:</strong></span> {{ show_user.last_name }}</li>
-            <li class="list-group-item text-right"><span class="pull-left"><strong>Current profile type:</strong></span> {{ show_user.profile.PROFILE_TYPE }}</li>
-        </ul>
-        <a href="#" class="card-link">Card link</a>
-        <a href="#" class="card-link">Another link</a>
-    </div>
+<div class="card" >
+<div class="card-body">
+    <h2 class="card-title">Kolejne info</h2>
+    <h6 class="card-subtitle mb-2 text-muted">Piłkarz</h6>
+    <ul class="list-group">
+        <li class="list-group-item text-muted">Profile</li>
+        <li class="list-group-item text-right"><span class="pull-left"><strong>Name:</strong></span> {{ show_user.first_name }}</li>
+        <li class="list-group-item text-right"><span class="pull-left"><strong>Last Name:</strong></span> {{ show_user.last_name }}</li>
+        <li class="list-group-item text-right"><span class="pull-left"><strong>Current profile type:</strong></span> {{ show_user.profile.PROFILE_TYPE }}</li>
+    </ul>
+    <a href="#" class="card-link">Card link</a>
+    <a href="#" class="card-link">Another link</a>
+</div>
 </div>

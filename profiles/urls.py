@@ -25,6 +25,14 @@ urlpatterns = [
     path('player/fantasy/<slug:slug>/', views.ProfileFantasy.as_view(), name='player_fantasy'),
     path('player/carrier/<slug:slug>/', views.ProfileCarrier.as_view(), name='player_carrier'),
     path('player/matches/<slug:slug>/', views.ProfileGames.as_view(), name='player_games'),
+
+    path('stats/fantasy/', views.ProfileFantasy.as_view(), name='my_stats_fantasy'),
+    path('stats/carrier/', views.ProfileCarrier.as_view(), name='my_stats_carrier'),
+    path('stats/matches/', views.ProfileGames.as_view(), name='my_stats_games'),
+    path('stats/fantasy/<slug:slug>/', views.ProfileFantasy.as_view(), name='stats_fantasy'),
+    path('stats/carrier/<slug:slug>/', views.ProfileCarrier.as_view(), name='stats_carrier'),
+    path('stats/matches/<slug:slug>/', views.ProfileGames.as_view(), name='stats_games'),
+
     path('my/observers/', views.MyObservers.as_view(), name='my_observers'),
     path('my/requests/', views.MyRequests.as_view(), name='my_requests'),
     path("me/changerole/", views.RequestRoleChange.as_view(), name="rolechange_self"),

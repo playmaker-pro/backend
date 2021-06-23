@@ -1,8 +1,8 @@
 {% load playmaker %}
-
 {% if editable %}
     {% url 'profiles:my_fantasy' as button_url %}
 {% else %}
     {% url 'profiles:player_fantasy' slug=show_user.profile.slug as button_url %}
 {% endif %}
+
 {% seemore_link button_url %}

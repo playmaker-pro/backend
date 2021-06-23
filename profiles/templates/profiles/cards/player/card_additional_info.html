@@ -2,13 +2,9 @@
 <div class="card">
 <div class="card-body">
     <h2 class="card-title">{% trans 'Dodatkowe informacje' %}</h2>
-
     <h6 class="card-subtitle mb-2 text-muted"></h6>
-
      {% with profile=show_user.profile template='platform/tables/two_table.html' %}
         <div class="card-text">
-   
-
 
             {% if  profile.position_raw_alt %}  {% include template with key=_('Pozycja alternatywna')               value=profile.get_position_raw_alt_display|default:'-'  %} {% endif %}
                                                 {% include template with key=_('Formacja')                           value=profile.get_formation_display|default:'-'         %}

@@ -24,6 +24,7 @@ class ProfileStatsPageView(generic.TemplateView, SlugyViewMixin,  mixins.ViewMod
     page_title = None
     template_name = None
     http_method_names = ["get"]
+    paginate_limit = 15
 
     def get(self, request, *args, **kwargs):
         user = self.select_user_to_show()
@@ -33,12 +34,27 @@ class ProfileStatsPageView(generic.TemplateView, SlugyViewMixin,  mixins.ViewMod
             kwargs["editable"] = True
         kwargs['season_name'] = season_name
         kwargs['show_user'] = user
-        kwargs['page_obj'] = self.get_data_or_calculate(user)
+        kwargs['page_obj'] = self.dispatch_get_or_calculate(user)
         kwargs['page_title'] = self.page_title
         kwargs['modals'] = self.modal_activity(request.user)
         return super().get(request, *args, **kwargs)
 
+    def dispatch_get_or_calculate(self, user):
+        if user.is_player:
+            return self.get_data_or_calculate(user)
+
+        elif user.is_coach:
+            return self.coach_get_data_or_calculate(user)
+        else:
+            return self._empty_data()
+
     def get_data_or_calculate(self, *args, **kwargs):
+        return self._empty_data()
+
+    def coach_get_data_or_calculate(self, *args, **kwargs):
+        return self._empty_data()
+
+    def _empty_data(self):
         return list()
 
 
@@ -86,6 +102,10 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
             data = []
         data = self.flattern_carrier_structure(data)
         data = self.sort(data)
+        return self.paginate(data)
+
+    def coach_get_data_or_calculate(self, user):
+        data = []
         return self.paginate(data)
 
     def sort(self, data):
@@ -137,12 +157,18 @@ class ProfileGames(ProfileStatsPageView, mixins.PaginateMixin):
     page_title = _('Twoje mecze')
 
     def get_data_or_calculate(self, user):
-        _id = user.profile.data_mapper_id
-        if user.profile.playermetrics.how_old_days(games=True) >= 7 and user.profile.has_data_id:
-            games = adapters.PlayerLastGamesAdapter(_id).get()
-            user.profile.playermetrics.update_games(games)
-        # user.profile.playermetrics.refresh_from_db()
-        data = user.profile.playermetrics.games
-        if data is None:
-            data = []
+
+        if user.is_player:
+            _id = user.profile.data_mapper_id
+            if user.profile.playermetrics.how_old_days(games=True) >= 7 and user.profile.has_data_id:
+                games = adapters.PlayerLastGamesAdapter(_id).get()
+                user.profile.playermetrics.update_games(games)
+            # user.profile.playermetrics.refresh_from_db()
+            data = user.profile.playermetrics.games
+            if data is None:
+                data = []
+            return self.paginate(data)
+
+    def coach_get_data_or_calculate(self, user):
+        data = []
         return self.paginate(data)

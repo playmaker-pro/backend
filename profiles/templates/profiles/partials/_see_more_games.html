@@ -1,9 +1,9 @@
-            
-
 {% load playmaker %}
-            {% if editable %}
-                {% url 'profiles:my_games' as button_url %}
-            {% else %}
-                {% url 'profiles:player_games' slug=show_user.profile.slug as button_url %}
-            {% endif %}
-            {% seemore_link button_url %}
+
+{% if editable %}
+    {% url 'profiles:my_games' as button_url %}
+{% else %}
+    {% url 'profiles:player_games' slug=show_user.profile.slug as button_url %}
+{% endif %}
+
+{% seemore_link button_url %}

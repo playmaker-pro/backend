@@ -3,7 +3,7 @@
 <div class="card last-game-card">
     <div class="card-body">
         <h2 class="card-title">{% trans "Ostatnie mecze"%}</h2>
-        <div class="card-text">
+        <div class="card-text text-center">
             {% if last_games %}
                 {% include 'profiles/tables/_game_table.html' with short=True games=last_games user=show_user %}
             {% else %}

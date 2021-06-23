@@ -1,18 +1,16 @@
-    {% if editable %}
-        
-        {% url 'profiles:my_games' as games_url %}
-        {% url 'profiles:my_fantasy' as fantasy_url %}
-        {% url 'profiles:my_carrier' as carrier_url %}
-    {% else %}
-        {% url 'profiles:player_games'  slug=show_user.profile.slug as games_url %}
-        {% url 'profiles:player_fantasy' slug=show_user.profile.slug as fantasy_url %}
-        {% url 'profiles:player_carrier' slug=show_user.profile.slug as carrier_url %}
-    {% endif %}
-        {% url 'profiles:show' slug=show_user.profile.slug as profile_url %}
-    
-   
+{% if editable %}
+    {% url 'profiles:my_games' as games_url %}
+    {% url 'profiles:my_fantasy' as fantasy_url %}
+    {% url 'profiles:my_carrier' as carrier_url %}
+{% else %}
+    {% url 'profiles:player_games'  slug=show_user.profile.slug as games_url %}
+    {% url 'profiles:player_fantasy' slug=show_user.profile.slug as fantasy_url %}
+    {% url 'profiles:player_carrier' slug=show_user.profile.slug as carrier_url %}
+{% endif %}
 
- <ul id="profile-nav" class="nav nav-tabs" role="tablist">
+{% url 'profiles:show' slug=show_user.profile.slug as profile_url %}
+
+<ul id="profile-nav" class="nav nav-tabs" role="tablist">
   <li class="nav-item">
     <a class="nav-link pm-nav {% if request.get_full_path == profile_url %}pm-nav-active{% endif %}" href="{{ profile_url }}">Profil</a>
   </li>
@@ -22,7 +20,9 @@
   <li class="nav-item">
        <a class="nav-link pm-nav {% if request.get_full_path == games_url %}pm-nav-active{% endif %}" href="{{ games_url }}">Mecze</a>
  </li>
+{% if user.is_player %}
   <li class="nav-item">
     <a class="nav-link pm-nav {% if request.get_full_path == fantasy_url %}pm-nav-active{% endif %}" href="{{ fantasy_url }}">Fantasy</a>
   </li>
+{% endif %}
 </ul>

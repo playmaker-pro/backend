@@ -1,0 +1,21 @@
+{% load i18n %}
+<div class="card">
+<div class="card-body">
+    <h2 class="card-title">{% trans 'Podstawowe informacje' %}</h2>
+
+    <h6 class="card-subtitle mb-2 text-muted"></h6>
+
+    <div class="card-text">
+    {% with profile=show_user.profile template='platform/tables/two_table.html' %}
+        {% include template with key=_('Licencja')           value=profile.get_licence_display|default:'-'  %}
+        {% include template with key=_('Piłkarski cel')      value=profile.get_soccer_goal_display|default:'-'  %}
+        {% include template with key=_('Wiek')               value=profile.age|default:'-'|upper           %}   
+        {% include template with key=_('Obecna drużyna')     value=profile.display_team|default:'-'|upper           %}
+        {% include template with key=_('Poziom rozgrywkowy') value=profile.display_league|default:'-'|upper         %}
+        {% comment %} {% include template with key=_('Grupa')              value=profile.group|default:'-'|upper              %} {% endcomment %}
+        {% include template with key=_('Wojewodźtwo')        value=profile.display_voivodeship|default:'-'|lower            %}
+    {% endwith %}
+    </div>  <!-- end of card-text-->
+
+</div>
+</div>
