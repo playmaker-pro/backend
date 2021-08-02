@@ -23,7 +23,8 @@ class GenderAdmin(admin.ModelAdmin):
 
 @admin.register(models.League)
 class LeagueAdmin(admin.ModelAdmin):
-    search_fields = ('name',)
+    search_fields = ('name', 'slug')
+    list_display = ('name', 'code', 'slug')
 
 
 @admin.register(models.Voivodeship)

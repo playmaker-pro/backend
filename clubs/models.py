@@ -166,6 +166,15 @@ class Club(models.Model, MappingMixin):
 class League(models.Model):
     name = models.CharField(max_length=355, unique=True)
     code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
+    slug = models.CharField(max_length=255, blank=True, editable=False)
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
+    zpn = models.CharField(max_length=255, null=True, blank=True)
+    zpn_mapped = models.CharField(max_length=255, null=True, blank=True)
+    index = models.CharField(max_length=255, null=True, blank=True)
+    
+    @property
+    def is_parent(self):
+        return self.parent is None
 
     @property
     def display_league(self):
@@ -173,6 +182,20 @@ class League(models.Model):
 
     def __str__(self):
         return f'{self.name}'
+
+    def get_file_path(instance, filename):
+        return f"league_pics/%Y-%m-%d/{remove_polish_chars(filename)}"
+
+    picture = models.ImageField(
+        _("Zdjęcie"),
+        upload_to=get_file_path,
+        null=True,
+        blank=True)
+
+    def save(self, *args, **kwargs):
+        slug_str = f"{self.name}"
+        unique_slugify(self, slug_str)
+        super().save(*args, **kwargs)
 
 
 class Seniority(models.Model):

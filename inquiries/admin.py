@@ -24,5 +24,7 @@ class UserInquiryAdmin(admin.ModelAdmin):
 
 @admin.register(models.InquiryRequest)
 class InquiryRequestAdmin(admin.ModelAdmin):
-    search_fields = ('recipient__email', 'sender__email',)
+    search_fields = ('recipient__email', 'sender__email',
+                     'sender__username', 'sender__first_name', 'sender__last_name', 
+                     'recipient__username', 'recipient__first_name', 'recipient__last_name')
     list_display = ('sender', 'status', 'recipient', 'created_at', 'category', 'body', 'body_recipient')

@@ -1,0 +1,52 @@
+{% load i18n %}
+{% load thumbnail %}
+
+  <table class="table" style="border:1px;">
+
+
+      <thead>
+        <tr>
+            <th scope="col" class="d-md-none">{% trans '#' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'Drużyna' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'G' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'W' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'P' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'R' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'G' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'P' %}</th>
+            <th scope="col">
+                Trend
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+
+    {% for obj in objects %}
+        <tr style="font-size:0.9em;">
+            <td class="d-none d-md-table-cell pull-left">
+                {{ obj.position }}
+                {{ obj.date }}
+                <img width="20" class=" avatar rounded-circle img-responsive" title="profile picture" src="{{ obj.icon }}">
+                {{ obj.team }}
+            </td>
+            <td class="d-none d-md-table-cell">{{ obj.games }}   </td>
+         <td class="d-none d-md-table-cell">{{ obj.wins }}   </td>
+         <td class="d-none d-md-table-cell">{{ obj.losts }}   </td>
+         <td class="d-none d-md-table-cell">{{ obj.draws }}   </td>
+         <td class="d-none d-md-table-cell">{{ obj.goals }}   </td>
+         <td class="d-none d-md-table-cell">{{ obj.points }}   </td>
+           
+
+            <td class="d-none d-md-table-cell">
+             {% for t in obj.trend %}
+
+                <span class="match-result-tag p-1 text-white rounded bg-{% if t == 'W' %}success{% elif t == 'P' %}danger{% else %}secondary{% endif %}">{{ t }}</span>
+
+            {% endfor %}
+            </td>
+
+        </tr>
+
+    {% endfor %}
+    </tbody>
+</table>

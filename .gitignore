@@ -25,11 +25,11 @@ build
 # Logs:
 *.log
 
-# Environment variables
+# local Environment variables
 _local.py
 local.env
-
 local.py
+# Environment variables
 *_wix_dump.csv
 
 misc

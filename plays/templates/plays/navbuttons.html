@@ -1,0 +1,27 @@
+
+{% url 'plays:summary' slug=league.slug  as summary_url %}
+{% url 'plays:scores' slug=league.slug  as scores_url %}
+{% url 'plays:next_games' slug=league.slug as next_games_url %}
+{% url 'plays:table' slug=league.slug  as table_url %}
+{% url 'plays:playmaker' slug=league.slug as playmaker_url %}
+
+{% url 'profiles:show' slug=show_user.profile.slug as profile_url %}
+
+
+<ul id="profile-nav" class="nav nav-tabs" role="tablist">
+  <li class="nav-item">
+    <a class="nav-link pm-nav {% if request.get_full_path == summary_url %}pm-nav-active{% endif %}" href="{{ summary_url }}">Podsumowanie</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link pm-nav {% if request.get_full_path == scores_url %}pm-nav-active{% endif %}" href="{{ scores_url }}">Wyniki</a>  
+  </li>
+  <li class="nav-item">
+       <a class="nav-link pm-nav {% if request.get_full_path == next_games_url %}pm-nav-active{% endif %}" href="{{ next_games_url }}">Spotkania</a>
+ </li>
+  <li class="nav-item">
+       <a class="nav-link pm-nav {% if request.get_full_path == table_url %}pm-nav-active{% endif %}" href="{{ table_url }}">Tabela</a>
+ </li>
+  <li class="nav-item">
+       <a class="nav-link pm-nav {% if request.get_full_path == playmaker_url %}pm-nav-active{% endif %}" href="{{ playmaker_url }}">PlayMaker</a>
+ </li>
+</ul>

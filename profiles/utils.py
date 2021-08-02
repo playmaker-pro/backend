@@ -38,8 +38,7 @@ def extract_video_id(url):
 
 
 def supress_exception(func):
-    """
-    A function wrapper for catching all exceptions and logging them
+    """A function wrapper for catching all exceptions and logging them
     """
     @functools.wraps(func)
     def inner(*args, **kwargs):

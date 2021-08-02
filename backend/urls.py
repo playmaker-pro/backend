@@ -12,6 +12,7 @@ from .api import api_router
 
 import app.urls
 import soccerbase.urls
+import plays.urls
 import clubs.urls
 import profiles.urls
 import marketplace.urls
@@ -36,6 +37,7 @@ urlpatterns = [
     path('project/', TemplateView.as_view(template_name='subpages/project_goals.html'), name="home_goals"),
     path('search/', search_views.search, name='search'),
     path('tables/', include(soccerbase.urls), name='soccerbase'),
+    path('rozgrywki/', include(plays.urls), name='plays'),
     path('clubs/', include(clubs.urls), name="clubs"),
     path('users/', include(profiles.urls), name="profiles"),
     path('marketplace/', include(marketplace.urls), name="marketplace"),

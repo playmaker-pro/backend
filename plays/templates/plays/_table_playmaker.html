@@ -1,0 +1,46 @@
+{% load i18n %}
+{% load thumbnail %}
+
+<table class="table" style="border:1px;">
+    <thead>
+    <tr>
+        <th scope="col" class="d-md-none">{% trans 'Zawodnicy' %}</th>
+
+    </tr>
+    </thead>
+    <tbody>
+
+    {% for obj in objects.players %}
+        <tr style="font-size:0.9em;">
+            
+            <td class="d-none d-md-table-cell"><a href="{{obj.url}}">{{ obj.name }}</a>   </td>
+
+        </tr>
+
+    {% endfor %}
+    </tbody>
+</table>
+
+
+
+  <table class="table" style="border:1px;">
+
+
+      <thead>
+        <tr>
+            <th scope="col" class="d-md-none">{% trans 'Trenerzy' %}</th>
+
+        </tr>
+    </thead>
+    <tbody>
+
+    {% for obj in objects.coaches %}
+        <tr style="font-size:0.9em;">
+         
+         <td class="d-none d-md-table-cell"><a href="{{obj.url}}">{{ obj.name }}</a>   </td>
+
+        </tr>
+
+    {% endfor %}
+    </tbody>
+</table>

@@ -1,0 +1,60 @@
+{% extends 'platform/base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link href="{% static 'assets/css/profiles.css' %}" rel="stylesheet">
+{% endblock extra_css%}
+
+
+{% block content_header %}
+    {% include '_page_heading.html' with heading_title=page_title size=4 %}   
+{% endblock %}
+
+
+{% block content %}
+
+{% include 'plays/header_black.html' %}
+
+{% if  league.is_parent %}
+
+        {% for child in league.parent.set %}
+            <a href="">{{ child.name }} </a>
+        {% endfor %}
+
+{% else %}
+
+<section id="plays" class="plays">
+  <div class="container" data-aos="fade-up">
+    <div class="row">
+        {% if page_obj.paginator.count == 0 %}
+            <div class="col-md-12 text-center">
+                {% include 'profiles/partials/_empty_data.html' %}
+            </div>
+        {% else %}
+            <div class="col">
+            {% if tab == 'table' %}
+                {% include 'plays/_table_table.html' with objects=objects %}
+            {% elif tab == 'playmaker' %}
+                {% include 'plays/_table_playmaker.html' with objects=objects %}
+            {% else %}
+                {% include 'plays/_table.html' with objects=objects %}
+            {% endif %}
+            </div>   
+            <div class='col-md-12'>
+                {% include 'platform/partials/_pagination.html' %}
+            </div>       
+        {% endif %}
+    </div>
+</div>
+</section>
+
+
+{% endif %}
+{% endblock %}
+
+
+{% block extra_js %}
+
+{% endblock %}

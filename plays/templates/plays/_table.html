@@ -1,0 +1,30 @@
+{% load i18n %}
+{% load thumbnail %}
+
+  <table class="table" style="border:1px;">
+    <tbody>
+    
+    {% for name, data in objects.items %}
+
+        {% for game in data %}
+            {{ game.url}}
+        <tr style="font-size:0.9em;">
+            <td class="d-none d-md-table-cell">{{ game.date }}</td>
+            <td class="d-none d-md-table-cell">
+            
+            {{ game.host|truncatechars:25 }}  
+
+            <img width="20" class=" avatar rounded-circle img-responsive" title="profile picture" src="{{ game.host_pic }}">
+            
+            </td>
+            
+            <td class="text-center">{{ game.score}}</td>
+            <td class="d-none d-md-table-cell">
+                <img width="20" class=" avatar rounded-circle img-responsive" title="profile picture" src="{{ game.host_pic }}">
+                {{ game.guest|truncatechars:25 }}</td>
+
+        </tr>
+        {% endfor %}
+    {% endfor %}
+    </tbody>
+</table>

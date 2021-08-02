@@ -6,13 +6,16 @@ from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 
 
+# This loads additional settings for our environemnt
+CONFIGURATION = 'dev'  # following options are allowed ['dev', 'production', 'staging']
+
 
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 BASE_URL = 'http://localhost:8000'
 
 
-VERSION = '1.3.14'
+VERSION = '1.3.15'
 
 
 SYSTEM_USER_EMAIL = 'rafal.kesik@gmail.com'
@@ -50,6 +53,7 @@ INSTALLED_APPS = [
     'products',
     'fqa',
     'fantasy',
+    'plays',
 
     'data',  # external repo
     'stats',  # external repo
@@ -73,6 +77,7 @@ INSTALLED_APPS = [
     'wagtail.core',
     'wagtail.contrib.routable_page',
     'wagtail.api.v2',
+    'wagtailmetadata',
 
     'modelcluster',
     'taggit',
@@ -184,9 +189,6 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
