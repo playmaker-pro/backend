@@ -1,5 +1,4 @@
 {% load i18n %}
-
-{% include 'platform/partials/_empty.html' %}
-<h4>{% trans 'Brak danych dla wybranych filtrów.' %}</h4>
-<p>{% trans '' %}</p>
+{% include "platform/partials/_empty.html" %}
+<h4>{% trans empty_text|default:"Brak danych dla wybranych filtrów." %}</h4>
+<p>{% trans empty_text_additional|default:'' %}</p>

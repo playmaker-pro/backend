@@ -163,7 +163,37 @@ class Club(models.Model, MappingMixin):
         super().save(*args, **kwargs)
 
 
+class LeagueHistory(models.Model):    
+    season = models.ForeignKey('Season', on_delete=models.SET_NULL, null=True, blank=True)
+    index = models.CharField(max_length=255, null=True, blank=True)
+    league = models.ForeignKey('League', on_delete=models.CASCADE, related_name='historical')
+
+    is_table_data = models.BooleanField(default=False)
+    is_matches_data = models.BooleanField(default=False)
+    data = models.JSONField(null=True, blank=True)
+    data_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.season} {self.index}'
+
+    def check_and_set_if_data_exists(self):
+        from data.models import League as Dleague
+        url = Dleague.get_url_based_on_id(self.index)
+        l = Dleague.objects.get(_url=url)
+        if l.advanced_json:
+            self.is_table_data = True
+        if l.games_snapshot:
+            self.is_matches_data = True
+
+    def save(self, *args, **kwargs):
+        self.check_and_set_if_data_exists()
+        super().save(*args, **kwargs)
+
+
 class League(models.Model):
+    
+    order = models.IntegerField(default=0)
+    visible = models.BooleanField(default=False)
     name = models.CharField(max_length=355, unique=True)
     code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
     slug = models.CharField(max_length=255, blank=True, editable=False)
@@ -171,18 +201,13 @@ class League(models.Model):
     zpn = models.CharField(max_length=255, null=True, blank=True)
     zpn_mapped = models.CharField(max_length=255, null=True, blank=True)
     index = models.CharField(max_length=255, null=True, blank=True)
-    
-    @property
-    def is_parent(self):
-        return self.parent is None
+    search_index = models.CharField(max_length=255, null=True, blank=True)
 
-    @property
-    def display_league(self):
-        return self.name
-
-    def __str__(self):
-        return f'{self.name}'
-
+    def has_season_data(self, season_name):
+        if self.historical.filter(season__name=season_name).count() == 0:
+            return False
+        return True
+        
     def get_file_path(instance, filename):
         return f"league_pics/%Y-%m-%d/{remove_polish_chars(filename)}"
 
@@ -192,10 +217,29 @@ class League(models.Model):
         null=True,
         blank=True)
 
+    @property
+    def is_parent(self):
+        return self.parent is None and self.league_set.all().count() != 0
+
+    @property
+    def display_league(self):
+        return self.name
+
     def save(self, *args, **kwargs):
         slug_str = f"{self.name}"
         unique_slugify(self, slug_str)
+        # make search index
+        self.search_index = self.build_serach_index()
         super().save(*args, **kwargs)
+
+    def build_serach_index(self):
+        out = f'{self.name}'
+        if self.zpn: 
+            out += f'__{self.zpn}'
+        return out
+
+    def __str__(self):
+        return f'{self.name}'
 
 
 class Seniority(models.Model):

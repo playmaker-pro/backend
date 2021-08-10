@@ -1,6 +1,8 @@
 from django.db.models import F
 from app import mixins, utils
 
+from metrics.team import LeagueMatchesMetrics, LeagueChildrenSerializer, LeagueMatchesRawMetrics
+
 from clubs.models import Club, Team
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -20,245 +22,111 @@ from django.utils import timezone
 
 from clubs.models import League
 from utils import get_current_season
+from metrics.team import SummarySerializer
 
 
-class PlaysViews(
+class ComplexViews(
     generic.TemplateView,
     mixins.PaginateMixin,
     mixins.ViewModalLoadingMixin,
-    mixins.ViewFilterMixin,
-):
-    template_name = "plays/plays.html"
+    mixins.ViewFilterMixin):
+    pass
+
+
+class PlaysBaseView(ComplexViews):
     http_method_names = ["get"]
+    template_name = "plays/plays.html"
+    page_title = None
+    filter_on = True
+    tab = None
     paginate_limit = 15
-    table_type = None
+
+    def set_kwargs(self, options, slug):
+        self.season = self.request.GET.get('season') or get_current_season()
+        options["current_season"] = self.season
+        options["page_title"] = self.page_title
+
+        options['tab'] = self.tab
+        if not slug:
+            self.league = None
+
+        else:
+            self.league = League.objects.get(slug=slug)
+        options["league"] = self.league
+
+        # filters on
+        if self.filter_on:
+            options["leagues"] = League.objects.filter(
+                #parent__isnull=True,
+                visible=True
+            )
+        else:
+            options['leagues'] = None
+        return options
+
+    def get(self, request, slug, *args, **kwargs):
+        self.set_kwargs(kwargs, slug)
+        return super().get(request, *args, **kwargs)
+
+
+class PlaysViews(PlaysBaseView):
+    '''
+    Podsumowanie (zgodnie z tym co na flashscore)
+        Dzisiejsze mecze (data_game.date = dzis)
+        Najświeższe wyniki (ostatnie 12 meczów rozegranych, wg daty)
+        Następne (najbliższe 12 meczów, które są do rozegrania)
+    '''
     page_title = "Rozgrywki"
+    tab = 'summary'
 
-    def get(self, request, slug, *args, **kwargs):
-        kwargs["data"] = []
-        kwargs["page_title"] = self.page_title
-        kwargs["current_season"] = get_current_season()
-        league_obj =League.objects.get(slug=slug)
-        kwargs["league"] = league_obj
-        kwargs["name"] = league_obj.name
-        return super().get(request, *args, **kwargs)
+    def set_kwargs(self, options, slug):
+        options = super().set_kwargs(options, slug)
+        data_index = self.league.historical.all().get(season__name=self.season)
+        data_index_key = 'summary'
+        if data_index.data is not None and data_index_key in data_index.data:
+            options['objects'] = data_index.data[data_index_key]
+        else:
+            if data_index.data is None:
+                data_index.data = {}
 
+            options['objects'] = SummarySerializer.serialize(self.league, self.season)
+            data_index.data[data_index_key] = options['objects']
+            data_index.save()
 
-class PlaysScoresViews(
-    generic.TemplateView,
-    mixins.PaginateMixin,
-    mixins.ViewModalLoadingMixin,
-    mixins.ViewFilterMixin,
-):
-    template_name = "plays/plays.html"
-    http_method_names = ["get"]
-    paginate_limit = 15
-    table_type = None
-    page_title = "Rozgrywki :: Wyniki"
-
-    def get(self, request, slug, *args, **kwargs):
-        kwargs["objects"] = [
-            {
-                "name": "Kolejka 30",
-                "games": [
-                    {
-                        "guest_pic": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                        "host_pic": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                        "host": "Sokół I",
-                        "guest": "Lechia Dzierżoniów",
-                        "score": "2 - 1",
-                        "date": "10.05 21:00",
-                    },
-                    {
-                        "guest_pic": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                        "host_pic": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                        "host": "Belchatów",
-                        "guest": "Arsenal",
-                        "score": "2 - 1",
-                        "date": "08.05 19:00",
-                    },
-                    {
-                        "guest_pic": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                        "host_pic": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                        "host": "Bielawa",
-                        "guest": "Bukowa",
-                        "score": "2 - 1",
-                        "date": "05.05 21:00",
-                    },
-                    {
-                        "guest_pic": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                        "host_pic": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                        "host": "Sokół I",
-                        "guest": "Barcelona",
-                        "score": "2 - 1",
-                        "date": "05.05 21:00",
-                    },
-                ],
-            },
-            {
-                "name": "Kolejka 29",
-                "games": [
-                    {
-                        "guest_pic": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                        "host_pic": "/url",
-                        "host": "Sokół I",
-                        "guest": "Lechia Dzierżoniów",
-                        "score": "2 - 1",
-                        "date": "10.05 21:00",
-                    },
-                    {
-                        "guest_pic": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                        "host_pic": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                        "host": "Belchatów",
-                        "guest": "Arsenal",
-                        "score": "2 - 1",
-                        "date": "08.05 19:00",
-                    },
-                    {
-                        "guest_pic": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                        "host_pic": "/url",
-                        "host": "Bielawa",
-                        "guest": "Bukowa",
-                        "score": "2 - 1",
-                        "date": "05.05 21:00",
-                    },
-                    {
-                        "guest_pic": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                        "host_pic": "/url",
-                        "host": "Sokół I",
-                        "guest": "Barcelona",
-                        "score": "2 - 1",
-                        "date": "05.05 21:00",
-                    },
-                ],
-            },
-        ]
-        from metrics.team import LeagueMatchesMetrics
-        league_obj = League.objects.get(slug=slug)
-        kwargs['objects'] = dict(LeagueMatchesMetrics().serialize(league_obj, '2013/2014'))
-        print(kwargs['objects'])
-        kwargs["page_title"] = self.page_title
-        kwargs["current_season"] = get_current_season()
-        
-        kwargs["league"] = league_obj
-        kwargs["name"] = league_obj.name
-        return super().get(request, *args, **kwargs)
+        return options
 
 
-class PlaysTableViews(
-    generic.TemplateView,
-    mixins.PaginateMixin,
-    mixins.ViewModalLoadingMixin,
-    mixins.ViewFilterMixin,
-):
-    template_name = "plays/plays.html"
-    http_method_names = ["get"]
-    paginate_limit = 15
+class PlaysTableViews(PlaysBaseView):
     tab = "table"
-    table_type = None
-    page_title = "Rozgrywki :: Wyniki"
+    page_title = "Rozgrywki :: Tabela"
 
-    def get(self, request, slug, *args, **kwargs):
-        kwargs["tab"] = self.tab
-        kwargs["objects"] = [
-            {
-                "position": "1",
-                "icon": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                "team": "Manchaster",
-                "games": 23,
-                "wins": 2,
-                "losts": 21,
-                "draws": 0,
-                "goals": "23:44",
-                "points": 42,
-                "trend": ["W", "L", "W", "W", "P", "P", "R"],
-            },
-            {
-                "position": "2",
-                "icon": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                "team": "Lechia Dzierżoniów",
-                "games": 23,
-                "wins": 2,
-                "losts": 21,
-                "draws": 0,
-                "goals": "23:44",
-                "points": 42,
-                "trend": ["W", "L", "W", "W", "R", "R", "R"],
-            },
-            {
-                "position": "3",
-                "icon": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                "team": "Bukowa Chata",
-                "games": 23,
-                "wins": 2,
-                "losts": 21,
-                "draws": 0,
-                "goals": "77:44",
-                "points": 42,
-                "trend": ["L", "L", "W", "W", "R", "R", "R"],
-            },
-            {
-                "position": "4",
-                "icon": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                "team": "Lechia Dzierżoniów",
-                "games": 23,
-                "wins": 2,
-                "losts": 21,
-                "draws": 0,
-                "goals": "23:44",
-                "points": 42,
-                "trend": ["W", "L", "W", "W", "R", "R", "R"],
-            },
-            {
-                "position": "5",
-                "icon": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                "team": "Lechia Dzierżoniów",
-                "games": 23,
-                "wins": 2,
-                "losts": 21,
-                "draws": 0,
-                "goals": "23:44",
-                "points": 42,
-                "trend": ["W", "L", "W", "W", "R", "R", "R"],
-            },
-            {
-                "position": "6",
-                "icon": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                "team": "Lechia Dzierżoniów",
-                "games": 23,
-                "wins": 2,
-                "losts": 21,
-                "draws": 0,
-                "goals": "23:44",
-                "points": 42,
-                "trend": ["W", "L", "W", "W", "R", "R", "R"],
-            },
-        ]
-        
-        kwargs["page_title"] = self.page_title
-        kwargs["current_season"] = get_current_season()
-        league_obj = League.objects.get(slug=slug)
-        kwargs["league"] = league_obj
-        kwargs["name"] = league_obj.name
-        # kwargs['ammount'] = page_obj.count()
-        return super().get(request, *args, **kwargs)
+    def set_kwargs(self, *args, **kwargs):
+        from metrics.team import LeagueAdvancedTableRawMetrics
 
+        options = super().set_kwargs(*args, **kwargs)
+        data_index = self.league.historical.all().get(season__name=self.season)
 
-class PlaysPlaymakerViews(
-    generic.TemplateView,
-    mixins.PaginateMixin,
-    mixins.ViewModalLoadingMixin,
-    mixins.ViewFilterMixin,
-):
-    template_name = "plays/plays.html"
-    http_method_names = ["get"]
-    paginate_limit = 15
-    table_type = None
+        # @todo: add date check
+        data_index_key = 'advanced'
+        if data_index.data is not None and data_index_key in data_index.data:
+            options['objects'] = data_index.data[data_index_key]
+        else:
+            if data_index.data is None:
+                data_index.data = {}
+
+            options['objects'] = LeagueAdvancedTableRawMetrics.serialize(self.league)
+            data_index.data[data_index_key] = options['objects'] 
+            data_index.save()
+        return options  
+ 
+
+class PlaysPlaymakerViews(PlaysBaseView):
     page_title = "Rozgrywki :: Spotkania"
     tab = "playmaker"
 
-    def get(self, request, slug, *args, **kwargs):
-        kwargs["objects"] = {
+    def set_kwargs(self, *args, **kwargs):
+        options = super().set_kwargs(*args, **kwargs)
+        options["objects"] = {
             "players": [
                 {
                     "name": "Jacek Jasinski",
@@ -267,35 +135,62 @@ class PlaysPlaymakerViews(
             ],
             "coaches": [],
         }
-        kwargs["tab"] = self.tab
-
-        kwargs["page_title"] = self.page_title
-        kwargs["current_season"] = get_current_season()
-        
-        league_obj =League.objects.get(slug=slug)
-        kwargs["league"] = league_obj
-        kwargs["name"] = league_obj.name
-        # kwargs['ammount'] = page_obj.count()
-        return super().get(request, *args, **kwargs)
+        return options
 
 
-class PlaysGamesViews(
-    generic.TemplateView,
-    mixins.PaginateMixin,
-    mixins.ViewModalLoadingMixin,
-    mixins.ViewFilterMixin,
-):
-    template_name = "plays/plays.html"
+class PlaysScoresViews(PlaysBaseView):
+    page_title = "Rozgrywki :: Wyniki"
+    tab = 'scores'
+
+    def set_kwargs(self, *args, **kwargs):
+        options = super().set_kwargs(*args, **kwargs)
+        if self.league.is_parent:
+
+            options['objects'] = dict(LeagueChildrenSerializer().serialize(self.league))
+        else:
+            options['objects'] = dict(LeagueMatchesMetrics().serialize(self.league, self.season))
+        return options
+
+
+class PlaysGamesViews(PlaysBaseView):
+    '''Widok spotkań'''
+    page_title = "Rozgrywki :: Spotkania"
+    tab = 'matches'
+
+    def set_kwargs(self, *args, **kwargs):
+        options = super().set_kwargs(*args, **kwargs)
+        if self.league.is_parent:
+            raise RuntimeError('tego nie powinno byc')
+            options['objects'] = dict(
+                LeagueChildrenSerializer().serialize(self.league)
+            )
+        else:
+
+            options['objects'] = dict(
+                LeagueMatchesMetrics().serialize(self.league, self.season, played=False, sort_up=False)
+            )
+        return options
+
+
+class PlaysListViews(ComplexViews):
+    '''Widok spotkań'''
+    template_name = "plays/list.html"
     http_method_names = ["get"]
     paginate_limit = 15
-    table_type = None
-    page_title = "Rozgrywki :: Playmaker"
+    page_title = "Rozgrywki"
+    tab = None
 
-    def get(self, request, slug, *args, **kwargs):
-        kwargs["objects"] = []
+    def get(self, request, *args, **kwargs):
+        leagues = League.objects.filter(parent__isnull=True)
+        season = request.GET.get('season') or get_current_season()
+
+        kwargs['objects'] = leagues
+        # kwargs['objects'] = dict(LeagueMatchesRawMetrics().serialize(league_obj, '2020/2021'))
         kwargs["page_title"] = self.page_title
-        kwargs["current_season"] = get_current_season()
-        league_obj =League.objects.get(slug=slug)
-        kwargs["league"] = league_obj
-        kwargs["name"] = league_obj.name
+        kwargs["current_season"] = season
+        kwargs['debug_data'] = kwargs['objects']
+        kwargs['tab'] = self.tab
         return super().get(request, *args, **kwargs)
+
+    def serialize(self, leagues):
+        pass

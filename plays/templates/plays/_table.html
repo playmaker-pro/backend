@@ -3,11 +3,12 @@
 
   <table class="table" style="border:1px;">
     <tbody>
-    
-    {% for name, data in objects.items %}
 
+    {% for name, data in objects.items %}
+         <tr style="font-size:0.9em;">
+            <td>{{ name }}</td>
+         </tr>
         {% for game in data %}
-            {{ game.url}}
         <tr style="font-size:0.9em;">
             <td class="d-none d-md-table-cell">{{ game.date }}</td>
             <td class="d-none d-md-table-cell">

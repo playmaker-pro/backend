@@ -38,6 +38,9 @@ def calculate_prev_season(season: str):
 get_season_string = get_current_season()
 
 
+get_prev_season_string = calculate_prev_season(get_season_string)
+
+
 def linkify(field_name):
     """
     Converts a foreign key value into clickable links.

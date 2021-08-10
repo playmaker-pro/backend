@@ -120,6 +120,11 @@ def get_list(dictionary, key):
     return dictionary.getlist(key)
 
 
+@register.filter
+def has_season_data(league, season_name):
+    return league.has_season_data(season_name)
+
+
 @register.filter(expects_localtime=True)
 def days_since(value, arg=None):
     try:

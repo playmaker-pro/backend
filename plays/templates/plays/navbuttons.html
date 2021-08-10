@@ -10,18 +10,18 @@
 
 <ul id="profile-nav" class="nav nav-tabs" role="tablist">
   <li class="nav-item">
-    <a class="nav-link pm-nav {% if request.get_full_path == summary_url %}pm-nav-active{% endif %}" href="{{ summary_url }}">Podsumowanie</a>
+    <a class="nav-link pm-nav {% if request.path  == summary_url %}pm-nav-active{% endif %}" href="{{ summary_url }}?season={{ current_season }}">Podsumowanie</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link pm-nav {% if request.get_full_path == scores_url %}pm-nav-active{% endif %}" href="{{ scores_url }}">Wyniki</a>  
+    <a class="nav-link pm-nav {% if request.path  == scores_url %}pm-nav-active{% endif %}" href="{{ scores_url }}?season={{ current_season }}">Wyniki</a>  
   </li>
   <li class="nav-item">
-       <a class="nav-link pm-nav {% if request.get_full_path == next_games_url %}pm-nav-active{% endif %}" href="{{ next_games_url }}">Spotkania</a>
+       <a class="nav-link pm-nav {% if request.path  == next_games_url %}pm-nav-active{% endif %}" href="{{ next_games_url }}?season={{ current_season }}">Spotkania</a>
  </li>
   <li class="nav-item">
-       <a class="nav-link pm-nav {% if request.get_full_path == table_url %}pm-nav-active{% endif %}" href="{{ table_url }}">Tabela</a>
+       <a class="nav-link pm-nav {% if request.path  == table_url %}pm-nav-active{% endif %}" href="{{ table_url }}?season={{ current_season }}">Tabela</a>
  </li>
   <li class="nav-item">
-       <a class="nav-link pm-nav {% if request.get_full_path == playmaker_url %}pm-nav-active{% endif %}" href="{{ playmaker_url }}">PlayMaker</a>
+       <a class="nav-link pm-nav {% if request.path  == playmaker_url %}pm-nav-active{% endif %}" href="{{ playmaker_url }}?season={{ current_season }}">PlayMaker</a>
  </li>
 </ul>
