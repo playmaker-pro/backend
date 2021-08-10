@@ -114,7 +114,7 @@ class PlaysTableViews(PlaysBaseView):
             if data_index.data is None:
                 data_index.data = {}
 
-            options['objects'] = LeagueAdvancedTableRawMetrics.serialize(self.league)
+            options['objects'] = LeagueAdvancedTableRawMetrics.serialize(self.league, data_index)
             data_index.data[data_index_key] = options['objects'] 
             data_index.save()
         return options  

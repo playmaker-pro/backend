@@ -346,9 +346,9 @@ class LeagueAdvancedTableRawMetrics:
         {'points': '25', 'matches': '30', 'wins_all': '6', 'draws_all': '7', 'goals_all': '29:60', 'loses_all': '17', 'wins_away': '0', 'wins_home': '6', 'draws_away': '3', 'draws_home': '4', 'goals_away': '12:23', 'goals_home': '17:23', 'loses_away': '12', 'loses_home': '5', 'wins_direct': '0', 'draws_direct
     '''
     @classmethod
-    def serialize(cls, league):
+    def serialize(cls, league, data_index):
         from django.db.models import Q
-        url = League.get_url_based_on_id(league.index)
+        url = League.get_url_based_on_id(data_index.index)
         league = League.objects.get(_url=url)
         
 
