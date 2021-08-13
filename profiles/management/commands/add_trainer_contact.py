@@ -13,7 +13,7 @@ class Command(BaseCommand):
     help = 'Load dumped profiles from csv file.'
 
     def add_arguments(self, parser):
-        
+
         parser.add_argument('path', type=str)
         #arser.add_argument('off', type=str)
 

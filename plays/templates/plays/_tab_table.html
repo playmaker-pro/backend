@@ -27,7 +27,9 @@
                 {{ obj.position }}
                 {{ obj.date }}
                 <img width="20" class=" avatar rounded-circle img-responsive" title="profile picture" src="{{ obj.icon }}">
-                {{ obj.team }}
+                {% if obj.team_url %}
+                    <a href="obj.team_url"> {{ obj.team }} </a>
+                {% else %}{{ obj.team }} {% endif %}
             </td>
             <td class="d-none d-md-table-cell">{{ obj.games }}   </td>
          <td class="d-none d-md-table-cell">{{ obj.wins }}   </td>

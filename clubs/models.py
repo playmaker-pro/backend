@@ -52,11 +52,6 @@ class Club(models.Model, MappingMixin):
 
     mapping = models.TextField(null=True, blank=True, help_text='Mapping names comma separated. eg "name X", "name Xi"')
 
-    def get_mapped_names(self):
-        if self.mapping:
-            if isinstance(self.mapping, str):
-                return self.mapping.split(',')
-        return None
     manager = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='managed_club', on_delete=models.SET_NULL, null=True, blank=True)
     editors = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='club_managers', blank=True)
     voivodeship = models.ForeignKey(Voivodeship, on_delete=models.SET_NULL, null=True, blank=True)
@@ -174,7 +169,7 @@ class LeagueHistory(models.Model):
     data_updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f'{self.season} {self.index}'
+        return f'{self.season} {self.league} {self.index}'
 
     def check_and_set_if_data_exists(self):
         from data.models import League as Dleague

@@ -15,44 +15,34 @@
     {{ block.super }}
 {% endblock %} {% endcomment %}
 
-
 {% block content %}  <!-- @todo frontend to be renovated to adjust template-->
 {% spaceless %}
-
-
 {% include 'profiles/player_subpage_header_black.html' %}
-
 <section id="profile" class="profile">
   <div class="container profile-container" data-aos="fade-up">
-      
-      <div class="row">
-        <div class="col-sm-6">{% include 'profiles/cards/player/card_primary.html' %}</div>
-        <div class="col-sm-6">{% include 'profiles/cards/player/card_season.html' %}</div>
-        <div class="col-sm-6">{% include 'profiles/cards/player/card_additional_info.html' %}</div>  
-        <div class="col-sm-6">{% include 'profiles/cards/player/card_latest_games.html' %}</div>
-        <div class="col-sm-6">{% include 'profiles/cards/player/card_about.html' %}</div>
-        <div class="col-sm-6">{% include 'profiles/cards/player/card_fantasy.html' %}</div>
-        <div class="col-sm-6">{% include 'profiles/cards/player/card_video_1.html' %}</div>
-        {% if show_user.profile.video_url %}
-          {% if show_user.profile.video_url_second %}
-            <div class="col-sm-6">{% include 'profiles/cards/player/card_video_2.html' %}</div>
-          {% endif %}
-
-          {% if show_user.profile.video_url_third %}
-            <div class="col-sm-6">{% include 'profiles/cards/player/card_video_3.html' %}</div>
-          {% endif %}
+    <div class="row">
+      <div class="col-sm-6">{% include 'profiles/cards/player/card_primary.html' %}</div>
+      <div class="col-sm-6">{% include 'profiles/cards/player/card_season.html' %}</div>
+      <div class="col-sm-6">{% include 'profiles/cards/player/card_additional_info.html' %}</div>  
+      <div class="col-sm-6">{% include 'profiles/cards/player/card_latest_games.html' %}</div>
+      <div class="col-sm-6">{% include 'profiles/cards/player/card_about.html' %}</div>
+      <div class="col-sm-6">{% include 'profiles/cards/player/card_fantasy.html' %}</div>
+      <div class="col-sm-6">{% include 'profiles/cards/player/card_video_1.html' %}</div>
+      {% if show_user.profile.video_url %}
+        {% if show_user.profile.video_url_second %}
+          <div class="col-sm-6">{% include 'profiles/cards/player/card_video_2.html' %}</div>
         {% endif %}
-      </div>  <!-- end row -->
-
+        {% if show_user.profile.video_url_third %}
+          <div class="col-sm-6">{% include 'profiles/cards/player/card_video_3.html' %}</div>
+        {% endif %}
+      {% endif %}
+    </div><!-- end row -->
   </div>
 </section>
 {% endspaceless %}
 {% endblock content %}
 
-
 {% block extra_js %}
   {{ block.super }}
   <script src="{% static 'assets/js/progress.js' %}"></script>
-
 {% endblock extra_js %}
-

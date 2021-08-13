@@ -2,7 +2,7 @@ from django.db.models import F
 from app import mixins, utils
 
 from metrics.team import LeagueMatchesMetrics, LeagueChildrenSerializer, LeagueMatchesRawMetrics
-
+from django.urls import reverse
 from clubs.models import Club, Team
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -19,17 +19,19 @@ from functools import reduce
 from django.db.models import Q, Value
 from app.mixins import FilterPlayerViewMixin
 from django.utils import timezone
-
+from django.http import Http404
 from clubs.models import League
 from utils import get_current_season
 from metrics.team import SummarySerializer
+from metrics.team import LeagueAdvancedTableRawMetrics
 
 
 class ComplexViews(
-    generic.TemplateView,
-    mixins.PaginateMixin,
-    mixins.ViewModalLoadingMixin,
-    mixins.ViewFilterMixin):
+        generic.TemplateView,
+        mixins.PaginateMixin,
+        mixins.ViewModalLoadingMixin,
+        mixins.ViewFilterMixin
+    ):
     pass
 
 
@@ -45,19 +47,21 @@ class PlaysBaseView(ComplexViews):
         self.season = self.request.GET.get('season') or get_current_season()
         options["current_season"] = self.season
         options["page_title"] = self.page_title
-
         options['tab'] = self.tab
         if not slug:
             self.league = None
 
         else:
             self.league = League.objects.get(slug=slug)
+            if self.league.visible == False:
+                raise Http404()
+
         options["league"] = self.league
 
         # filters on
         if self.filter_on:
             options["leagues"] = League.objects.filter(
-                #parent__isnull=True,
+                parent__isnull=True,
                 visible=True
             )
         else:
@@ -96,29 +100,42 @@ class PlaysViews(PlaysBaseView):
         return options
 
 
+def get_or_make(dataindex, key, method, options):
+    if dataindex.data is not None and key in dataindex.data:
+        return dataindex.data[key]
+    else:
+        if dataindex.data is None:
+            dataindex.data = {}
+        data = method(*options)
+
+        dataindex.data[key] = data
+        dataindex.save()
+        return data
+
+
 class PlaysTableViews(PlaysBaseView):
     tab = "table"
     page_title = "Rozgrywki :: Tabela"
 
     def set_kwargs(self, *args, **kwargs):
-        from metrics.team import LeagueAdvancedTableRawMetrics
-
         options = super().set_kwargs(*args, **kwargs)
-        data_index = self.league.historical.all().get(season__name=self.season)
-
+        try:
+            data_index = self.league.historical.all().get(season__name=self.season)
+        except Exception:
+            options['objects'] = []
+            return options  
+            
         # @todo: add date check
         data_index_key = 'advanced'
-        if data_index.data is not None and data_index_key in data_index.data:
-            options['objects'] = data_index.data[data_index_key]
-        else:
-            if data_index.data is None:
-                data_index.data = {}
 
-            options['objects'] = LeagueAdvancedTableRawMetrics.serialize(self.league, data_index)
-            data_index.data[data_index_key] = options['objects'] 
-            data_index.save()
+        options['objects'] = get_or_make(
+            data_index,
+            data_index_key,
+            LeagueAdvancedTableRawMetrics.serialize,
+            {self.league, data_index})
+
         return options  
- 
+
 
 class PlaysPlaymakerViews(PlaysBaseView):
     page_title = "Rozgrywki :: Spotkania"
@@ -148,7 +165,7 @@ class PlaysScoresViews(PlaysBaseView):
 
             options['objects'] = dict(LeagueChildrenSerializer().serialize(self.league))
         else:
-            options['objects'] = dict(LeagueMatchesMetrics().serialize(self.league, self.season))
+            options['objects'] = dict(LeagueMatchesMetrics().serialize(self.league, self.season, sort_up=False))
         return options
 
 
@@ -191,6 +208,3 @@ class PlaysListViews(ComplexViews):
         kwargs['debug_data'] = kwargs['objects']
         kwargs['tab'] = self.tab
         return super().get(request, *args, **kwargs)
-
-    def serialize(self, leagues):
-        pass

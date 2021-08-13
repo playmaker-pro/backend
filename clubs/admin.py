@@ -1,13 +1,33 @@
 from django.contrib import admin
 from users.queries import get_users_manger_roles
+from app.admin_utils import json_filed_data_prettified
 from . import models
 from utils import linkify
 
 
 @admin.register(models.LeagueHistory)
 class LeagueHistoryAdmin(admin.ModelAdmin):
-    list_display = ("season", "league", "index", "is_table_data", "is_matches_data")
-    ordering = ('-league', )
+    list_display = (
+        "season",
+        "league",
+        "index",
+        "is_table_data",
+        "is_matches_data",
+        "data_updated",
+        "is_data",
+    )
+    ordering = ("-league",)
+    readonly_fields = ('data_prettified',)
+
+    def data_prettified(self, instance):
+        return json_filed_data_prettified(instance.data, limit=150000)
+
+    def is_data(self, obj):
+        if obj.data is not None and obj.data:
+            return True
+        return False
+
+    is_data.boolean = True
 
 
 @admin.register(models.Season)

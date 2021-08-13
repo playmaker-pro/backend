@@ -9,26 +9,16 @@
 {% endblock extra_css%}
 
 
-
 {% block content %}
 <section id="plays" class="plays">
-
-
   <div class="container" data-aos="fade-up">
-
       <select id="leagues" class="selectpicker" data-live-search="true" >
         {% for league in objects %}
             <option data-tokens="{{league.name}} {{league.zpn}}"  value="{% url 'plays:summary' slug=league.slug  %}">{{ league.name }}</option>
         {% endfor %}
     </select>
-    <div class="">
-
-
-
-    
+    <div class="">    
         {% for league in objects %}
-
-    
             {% if league.is_parent %}
                 {{ league.name }}
                 {% for child in league.league_set.all %}
@@ -37,12 +27,10 @@
             {% else %}
                 <div><a href="{% url 'plays:summary' slug=league.slug  %}">{{ league.name }}</a> {{ league.serach_index }}</div><br>
             {% endif %}
-
         {% endfor %}
     </div>
 </div>
 </section>
-
 {% endblock %}
 
 
@@ -50,7 +38,6 @@
     {{ block.super }}
     <script src="{% static 'assets/js/filters.js' %}"></script>
     <script>
-
     $('#leagues').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
         console.log(this.value, clickedIndex, isSelected, previousValue)
         window.location.href = this.value;

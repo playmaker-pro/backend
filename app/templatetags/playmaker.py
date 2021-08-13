@@ -30,6 +30,15 @@ logger = logging.getLogger(f'project.{__name__}')
 
 register = template.Library()
 
+import json
+ 
+ 
+@register.filter(name='jsonify')
+def jsonify(data):
+    if isinstance(data, dict):
+        return json.dumps(data)
+    return data
+
 
 class PageSeoTags:
     DYNAMIC_KEY = 'dynamic'

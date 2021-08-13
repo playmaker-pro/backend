@@ -64,16 +64,16 @@
         {% else %}
             <div class="col">
             {% if tab == 'table' %}
-                {% include 'plays/_table_table.html' with objects=objects %}
+                {% include 'plays/_tab_table.html' with objects=objects %}
 
             {% elif tab == 'matches' %}
-                {% include 'plays/_table.html' with objects=objects %}
+                {% include 'plays/_tab_games.html' with objects=objects %}
             
             {% elif tab == 'scores' %}
-                {% include 'plays/_table.html' with objects=objects %}
+                {% include 'plays/_tab_games.html' with objects=objects %}
 
             {% elif tab == 'playmaker' %}
-                {% include 'plays/_table_playmaker.html' with objects=objects %}
+                {% include 'plays/_tab_playmaker.html' with objects=objects %}
 
             {% else %}
                 {% include 'plays/_summary.html' with objects=objects %}
@@ -91,23 +91,30 @@
 
 
 {% block extra_js %}
-    {{ block.super }}
-    <script src="{% static 'assets/js/filters.js' %}"></script>
-    <script>
-        $('#leagues-search').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
-            console.log(this.value, clickedIndex, isSelected, previousValue)
-            window.location.href = this.value;
-        });
-    </script>
-    <script>
-        $('#search-season').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
-            console.log(this.value, isSelected)
-            var search_params = new URLSearchParams(window.location.search);
-            search_params.set('season', this.value);
+{{ block.super }}
+<script src="{% static 'assets/js/filters.js' %}"></script>
+{% include "plays/modals/modal_show_game.html" %}
+<script>
+    $('#leagues-search').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+        window.location.href = this.value;
+    });
 
-            window.location.search = search_params.toString();
-            console.log(search_params.toString())
-            //window.location.reload()
-        });
-    </script>
+    $('#search-season').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+        var search_params = new URLSearchParams(window.location.search);
+        search_params.set('season', this.value);
+        window.location.search = search_params.toString();
+    });
+
+$('#showGameModal').on('show.bs.modal', function (event) {
+    var data = $(event.relatedTarget).data('game-json');
+
+    $(this).find('#md-gm-title').text(data.host + ' - ' + data.guest);
+    $(this).find('#md-gm-score').text(data.score);
+    $(this).find('#md-gm-sub').text(data.date);
+    $(this).find('#md-gm-host').text(data.host);
+    $(this).find('#md-gm-host').attr("href", data.host_url)
+    $(this).find('#md-gm-guest').text(data.guest);
+    $(this).find('#md-gm-guest').attr("href", data.guest_url)
+});
+</script>
 {% endblock %}

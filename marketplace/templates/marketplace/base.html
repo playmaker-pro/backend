@@ -2,7 +2,6 @@
 {% load static %}
 {% load playmaker %}
 
-
 {% block title %}{{ block.super }} {{ page_title }} {% endblock %}
 
 {% block extra_css %}
@@ -14,7 +13,6 @@
     {% include '_page_heading.html' with heading_title=page_title size=4 %}
     {{ block.super }}
 {% endblock %}
-
 
 {% block content %}
 <style>
@@ -32,16 +30,13 @@
 }
 
 #marketplace .announcement-card .sub-title {
-
     font-size: .5rem;
 }
-
 
 #marketplace .announcement-card .card-footer {
     background: #fff;
     border-top:1px dashed #ccc;
  } 
-
 
 @media all and (max-width: 768px) {
     #marketplace .container-fluid {
@@ -56,9 +51,6 @@
         padding: .65rem .55rem;
     } 
 }
-
-
-
 
 .mt-60{
     margin-top:60px;
@@ -163,7 +155,6 @@
 <section id="marketplace" class="marketplace">
     <div class="container-fluid">
         <div class="row">
-
             <div class="d-flex">
                 <div>
                     {% add_announcement %}
@@ -179,7 +170,6 @@
                 <small>{% include 'marketplace/_plandescription.html' %}</small>
             </div>
         </div>
-
         <div class="row p-1">
             {% for object in page_obj %}
                 <div class="col-md-4">
@@ -192,31 +182,23 @@
             {% endfor %}
         </div>
         {% include 'platform/partials/_pagination.html' with object_type='ogłoszeń' %}
-        
     </div>
 </section>
 {% endblock %}
 
 
 {% block extra_js %}
-    {{ block.super }}
-
-    <script src="{% static 'assets/js/filters.js' %}"></script>
-    {% include 'marketplace/filters_modal.html' %}
-    <script>
-            $('#approveAnnouncementModal').on('show.bs.modal', function (event) {
-        var id = $(event.relatedTarget).data('ann');
-        $(this).find('#ann-numner').val(id);
-        //$(this).find(".ann-number").text(id);
-        });
-
- 
-            $('#addAnnouncementModal').on('show.bs.modal', function (event) {
-        var id = $(event.relatedTarget).data('ann');
-        $(this).find('#add-ann-number').val(id);
-        //$(this).find(".ann-number").text(id);
-        });
-
-
-    </script>
+{{ block.super }}
+<script src="{% static 'assets/js/filters.js' %}"></script>
+{% include 'marketplace/filters_modal.html' %}
+<script>
+$('#approveAnnouncementModal').on('show.bs.modal', function (event) {
+    var id = $(event.relatedTarget).data('ann');
+    $(this).find('#ann-numner').val(id);
+});
+$('#addAnnouncementModal').on('show.bs.modal', function (event) {
+    var id = $(event.relatedTarget).data('ann');
+    $(this).find('#add-ann-number').val(id);
+});
+</script>
 {% endblock %}

@@ -5,7 +5,10 @@ from clubs.models import League as CLeague
 from clubs.models import Team as CTeam
 from collections import defaultdict
 from datetime import datetime
-        
+from django.db.models import Q
+from data.models import Game
+from django.urls import reverse
+
 
 class TeamStatSerializer:
     @classmethod
@@ -84,13 +87,21 @@ class TeamMetrics:
 
 
 
-from data.models import Game
-from django.urls import reverse
+
+
+class TeamMapper:
+    @classmethod
+    def get_team_obj(cls, team_name):
+        from clubs.models import Team as CTeam
+        try:
+            team_obj = CTeam.objects.get(mapping__icontains=team_name.lower())
+            return team_obj
+        except CTeam.DoesNotExist:
+            return None
 
 
 class GameSerializer:
     '''
-
     host_team = 
     guest_team = 
     host_score = models.IntegerField(null=True)
@@ -101,8 +112,7 @@ class GameSerializer:
     guest_team_name = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-            {
-                "name": "Kolejka 30",
+            {"name": "Kolejka 30",
                 "games": [
                     {
                         "guest_pic": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
@@ -111,7 +121,6 @@ class GameSerializer:
                         "guest": "Lechia Dzierżoniów",
                         "score": "2 - 1",
                         "date": "10.05 21:00",
-                    },
     '''
     @classmethod
     def calc(cls, game, host_pic, guest_pic):
@@ -127,7 +136,6 @@ class GameSerializer:
         # # or to get a thumbnail by alias
         # thumbnailer['large']
         # try:
-            
         #     host_pic = get_thumbnailer(host_picture)['nav_avatar']
         # except:
         #     host_pic = ''
@@ -135,14 +143,31 @@ class GameSerializer:
         #     guest_pic = get_thumbnailer(guest_picture)['nav_avatar']
         # except:
         #     guest_pic = ''
+        guest_pic = ''
+        host_pic = ''
+        host_obj = TeamMapper.get_team_obj(game.host_team_name)
+        host_name = host_obj.name if host_obj else game.host_team_name
+        host_url = host_obj.get_permalink() if host_obj else None
+        if host_obj:
+            if host_obj.picture:
+                host_pic = get_thumbnailer(host_obj.picture)['nav_avatar'].url
+
+        guest_obj = TeamMapper.get_team_obj(game.guest_team_name)
+        guest_name = guest_obj.name if guest_obj else game.guest_team_name
+        guest_url = guest_obj.get_permalink() if guest_obj else None
+        if guest_obj:
+            if guest_obj.picture:
+                guest_pic = get_thumbnailer(guest_obj.picture)['nav_avatar'].url
 
         return {
             'guest_pic': guest_pic,
             'host_pic': host_pic,
             'date': game.date.strftime("%Y/%d/%m, %H:%M"),
             'score': f'{game.host_score} - {game.guest_score}',
-            'host': game.host_team_name,
-            'guest': game.guest_team_name,
+            'host_url': host_url,
+            'host': host_name,
+            'guest': guest_name,
+            'guest_url': guest_url,
             'url': game.league._url,
         }
 
@@ -162,24 +187,7 @@ class LeagueChildrenSerializer:
         return output
 
 
-
 class SummarySerializer:
-
-    def get_queryset_played(cls, data_index, season_name, date_sort):
-        return Game.objects.select_related('league', 'season').filter(
-            league___url=League.get_url_based_on_id(data_index.index),
-            season__name=season_name,
-            host_score__isnull=False,
-            guest_score__isnull=False,
-        ).order_by(date_sort)
-
-    def get_queryset(cls, data_index, season_name, date_sort):
-        return Game.objects.select_related('league', 'season').filter(
-                league___url=League.get_url_based_on_id(data_index.index),
-                season__name=season_name,
-                host_score__isnull=True,
-                guest_score__isnull=True,
-            ).order_by(date_sort)
 
     @classmethod
     def serialize(cls, league, season_name):
@@ -268,7 +276,7 @@ class LeagueMatchesMetrics:
                 season__name=season_name,
                 host_score__isnull=False,
                 guest_score__isnull=False,
-                
+
             ).order_by(date_sort)
         else:
             matches = Game.objects.select_related('league', 'season').filter(
@@ -347,22 +355,18 @@ class LeagueAdvancedTableRawMetrics:
     '''
     @classmethod
     def serialize(cls, league, data_index):
-        from django.db.models import Q
+
         url = League.get_url_based_on_id(data_index.index)
         league = League.objects.get(_url=url)
-        
 
         # because league with ID == League within Season
         output = []
-        for pos, row in enumerate(league.advanced_json):
-            last_games = Game.objects.filter(
-                (Q(host_team_name=row.get('club_name')) | Q(guest_team_name=row.get('club_name'))
-                   ) 
+        for pos, row in enumerate(league.advanced_json, 1):
+            last_games = Game.objects.select_related('league').filter(
+                (Q(host_team_name=row.get('club_name')) | Q(guest_team_name=row.get('club_name'))) 
                 & Q(league=league) 
                 & Q(host_score__isnull=False) 
                 & Q(guest_score__isnull=False)).order_by('date')[:5]      
-            for g in last_games:
-                print('AAAAA', g.date, g)
             data = {
                 'position': pos,
                 'games': row['results'].get('matches'),
@@ -388,13 +392,12 @@ class LeagueMatchesRawMetrics:
     serializer = GameRawSerializer()
 
     def serialize(self, league, season_name):
-        import time
-        st = time.time()
+
         url = League.get_url_based_on_id(league.index)
         league = League.objects.get(_url=url)
-        print(f'TIME: getting league: {st - time.time()}')
+
         output = defaultdict(list)
-        st = time.time()
+
         for game in league.games_snapshot:
             q = game.queue
             # try:
@@ -408,5 +411,4 @@ class LeagueMatchesRawMetrics:
             host_pic = ''
             guest_pic = ''
             output[q].append(self.serializer.serialize(game, host_pic, guest_pic))
-        print(f'TIME: making data: {st - time.time()}')
         return output

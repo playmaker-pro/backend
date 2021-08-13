@@ -1,0 +1,36 @@
+{% load i18n %}
+{% load playmaker %}
+
+{% with id="showGameModal" %}
+  <div class="modal fade bd-example-modal-lg" id="{{ id }}" tabindex="-1" role="dialog" aria-labelledby="{{ id }}Label" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="{{ id }}Label">Mecz</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true"><i class="icofont-close-circled main-color"></i></span>
+          </button>
+        </div>
+        <div class="modal-body">
+          
+          <h2 id="md-gm-title"></h2>
+          <h4 id="md-gm-sub"></h4>
+          
+          <a href="" id="md-gm-host" >host_team_name</a>
+              <h3 id="md-gm-score"></h3>
+          <a href="" id="md-gm-guest">guest_team_name</a>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if trigger %}
+  <script type="text/javascript">
+      $(window).on('load',function(){
+          $('#{{ id }}').modal('show');
+      });
+  </script>
+  {% endif %}
+
+{% endwith %}
