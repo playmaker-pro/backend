@@ -1,7 +1,7 @@
 from django.db.models import F
 from app import mixins, utils
 
-from metrics.team import LeagueMatchesMetrics, LeagueChildrenSerializer, LeagueMatchesRawMetrics
+from metrics.team import LeagueMatchesMetrics, LeagueChildrenSerializer, LeagueMatchesRawMetrics, PlaymakerMetrics
 from django.urls import reverse
 from clubs.models import Club, Team
 from django.contrib import messages
@@ -101,6 +101,16 @@ class PlaysViews(PlaysBaseView):
 
 
 def get_or_make(dataindex, key, method, options):
+    '''Caches data in leagueHistorical data, under the Key
+
+    When no data present under key - create new one and save object.
+
+    dataindex represetns LeagueHistory
+    key is the name of attribute in .data
+    method is the way to generate data
+    options are kwargs for given method
+
+    '''
     if dataindex.data is not None and key in dataindex.data:
         return dataindex.data[key]
     else:
@@ -119,12 +129,13 @@ class PlaysTableViews(PlaysBaseView):
 
     def set_kwargs(self, *args, **kwargs):
         options = super().set_kwargs(*args, **kwargs)
+        data_index = self.league.historical.all().get(season__name=self.season)
+
         try:
             data_index = self.league.historical.all().get(season__name=self.season)
         except Exception:
             options['objects'] = []
-            return options  
-            
+            return options
         # @todo: add date check
         data_index_key = 'advanced'
 
@@ -132,26 +143,41 @@ class PlaysTableViews(PlaysBaseView):
             data_index,
             data_index_key,
             LeagueAdvancedTableRawMetrics.serialize,
-            {self.league, data_index})
-
-        return options  
+            (self.league, data_index)
+        )
+        return options
 
 
 class PlaysPlaymakerViews(PlaysBaseView):
-    page_title = "Rozgrywki :: Spotkania"
+    page_title = "Rozgrywki :: Playmaker.pro"
     tab = "playmaker"
+    test_data = {
+        "players": [
+            {
+                "name": "Jacek Jasinski",
+                "url": "http://localhost:8000/users/player-rafal-kesik-2/",
+            }
+        ],
+        "coaches": [],
+    }
 
     def set_kwargs(self, *args, **kwargs):
         options = super().set_kwargs(*args, **kwargs)
-        options["objects"] = {
-            "players": [
-                {
-                    "name": "Jacek Jasinski",
-                    "url": "http://localhost:8000/users/player-rafal-kesik-2/",
-                }
-            ],
-            "coaches": [],
-        }
+
+        try:
+            data_index = self.league.historical.all().get(season__name=self.season)
+        except Exception:
+            options['objects'] = []
+            return options
+
+        data_index_key = 'playmakers'
+
+        options['objects'] = get_or_make(
+            data_index,
+            data_index_key,
+            PlaymakerMetrics.calc,
+            {self.league}
+        )
         return options
 
 

@@ -1,0 +1,2 @@
+{% load thumbnail %}
+<a href="{{data.url}}"><img class="rounded-circle img-responsive" src="{{ data.image }}"> {{ data.name }}</a> ({{ data.team|default:''|upper }})

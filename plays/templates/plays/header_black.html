@@ -12,15 +12,11 @@
                         <div class="d-md-none col-4 pull-right">
                             <img class="d-md-none avatar rounded-circle img-responsive" title="profile picture" src="{% thumbnail league.picture|default:'default_profile.png' 'profile_avatar_show_mobile' %}">
                         </div>
-
                         <div class="col-8">
                             <h1 class="d-none d-md-block acc-name" style="#1b1b1b;">{{ league.name.upper }}</h1>
-                                              
                             <div class=" d-inline">
-
                             </div>
                         </div>
-
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -29,14 +25,12 @@
                             <form >
                                     {% include 'plays/filters/season.html' %}
                             </form> {% endcomment %}
-
                     </div>
                 </div>
             </div>
             
             
-            <div class="row ">
-            
+            <div class="row">
                 <div class="d-flex align-items-center">
                     {% include 'plays/navbuttons.html' %}
                 </div>

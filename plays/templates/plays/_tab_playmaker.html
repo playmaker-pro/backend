@@ -2,17 +2,16 @@
 {% load thumbnail %}
 
 <table class="table" style="border:1px;">
-    <thead>
-    <tr>
-        <th scope="col" class="d-md-none">{% trans 'Zawodnicy' %}</th>
-
-    </tr>
-    </thead>
-    <tbody>
-
+  <thead>
+    <tr><th scope="col" class="{% if not objects.players %} d-none {% endif %}">{% trans 'Zawodnicy' %}</th></tr>
+  </thead>
+  <tbody>
     {% for obj in objects.players %}
         <tr style="font-size:0.9em;">
-            <td class="d-none d-md-table-cell"><a href="{{obj.url}}">{{ obj.name }}</a>   </td>
+            <td class="d-none d-md-table-cell">
+            
+            {% include "plays/partials/row_user.html" with data=obj %}
+            </td>
         </tr>
 
     {% endfor %}
@@ -26,19 +25,14 @@
 
       <thead>
         <tr>
-            <th scope="col" class="d-md-none">{% trans 'Trenerzy' %}</th>
+            <th scope="col" class="{% if not objects.coaches %} d-none {% endif %}">{% trans 'Trenerzy' %}</th>
 
         </tr>
     </thead>
     <tbody>
 
     {% for obj in objects.coaches %}
-        <tr style="font-size:0.9em;">
-         
-         <td class="d-none d-md-table-cell"><a href="{{obj.url}}">{{ obj.name }}</a>   </td>
-
-        </tr>
-
+        <tr style="font-size:0.9em;"><td class="d-none d-md-table-cell">{% include "plays/partials/row_user.html" with data=obj %}</td></tr>
     {% endfor %}
     </tbody>
 </table>

@@ -3,44 +3,4 @@
 {% load playmaker %}
 
 
-<table class="table" style="border:1px;">
-  <tbody>
-  {% for name, data in objects.items %}
-    <tr style="font-size:0.9em;"><td>{{ name }}</td></tr>
-        {% for game in data %}
-        <tr style="font-size:0.9em;">
-            <td class="d-none d-md-table-cell">{{ game.date }}</td>
-
-
-
-            <td class="d-none d-md-table-cell">
-            
-
-            {% if game.host_url %}
-                    <a href="{{ game.host_url }}"> {{ game.host|truncatechars:25 }}
-                    <img width="20" class=" avatar rounded-circle img-responsive" title="profile picture" src="{{ game.host_pic }}">
-            </a>
-            {% else %} 
-                {{ game.host|truncatechars:25 }}<img width="20" class=" avatar rounded-circle img-responsive" title="profile picture" src="{{ game.host_pic }}">
-            {% endif %}</td>
-            
-            <td class="text-center">
-            <a href="#showGameModal"
-                data-toggle="modal"
-                data-target="#showGameModal" data-game-json='{{game|jsonify}}'>{{ game.score }}</a>
-           </td>
-            
-            </td>
-            <td class="d-none d-md-table-cell">
-             {% if game.guest_url %}
-             <a href="{{ game.host_url }}"> {{ game.host|truncatechars:25 }}
-                <img width="20" class=" avatar rounded-circle img-responsive" title="profile picture" src="{{ game.guest_pic }}">
-                </a>
-            {% else %} 
-                {{ game.guest|truncatechars:25 }}<img width="20" class=" avatar rounded-circle img-responsive" title="profile picture" src="{{ game.guest_pic }}">
-            {% endif %}</td>
-        </tr>
-        {% endfor %}
-    {% endfor %}
-    </tbody>
-</table>
+{% include "plays/partials/table_games.html" with games=objects %}

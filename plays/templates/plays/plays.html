@@ -17,14 +17,12 @@
 
 
 {% block content %}
-
-
 <div class="row">
 <section id="leagues-side-bar" style="background-color:#2b2b2b;" class="col-2">
   <div class="container" data-aos="fade-up">
-                                <form >
-                                  {% include 'plays/filters/season.html' %}
-                                </form>
+        <form >
+            {% include 'plays/filters/season.html' %}
+        </form>
     <select id="leagues-search" class="selectpicker" data-live-search="true" >
         {% for league in leagues %}
             {% if league|has_season_data:current_season %}
