@@ -145,7 +145,7 @@ class GameSerializer:
     """
 
     @classmethod
-    def calc(cls, game, host_pic, guest_pic, league):
+    def calc(cls, game, host_pic, guest_pic, league: CLeague):
         # thumbnailer = get_thumbnailer('animals/aardvark.jpg')
 
         # thumbnail_options = {'crop': True}
@@ -165,25 +165,32 @@ class GameSerializer:
         #     guest_pic = ''
         league_obj = league
 
-        guest_pic = ""
-        host_pic = ""
-        host_obj = TeamMapper.get_team_obj(
-            game.host_team_name, league_obj
-        )  # @todo: rafal
-        host_name = host_obj.name if host_obj else game.host_team_name
-        host_url = host_obj.get_permalink() if host_obj else None
-        if host_obj:
-            if host_obj.picture:
-                host_pic = get_thumbnailer(host_obj.picture)["nav_avatar"].url
+        # guest_pic = ""
+        # host_pic = ""
+        # host_obj = TeamMapper.get_team_obj(
+        #     game.host_team_name, league_obj
+        # )  # @todo: rafal
+        # host_name = host_obj.name if host_obj else game.host_team_name
+        # host_url = host_obj.get_permalink() if host_obj else None
 
-        guest_obj = TeamMapper.get_team_obj(game.guest_team_name, league_obj)
-        guest_name = guest_obj.name if guest_obj else game.guest_team_name
-        guest_url = guest_obj.get_permalink() if guest_obj else None
+        host_url, host_pic, host_name = TeamMapper.get_url_pic_name(
+             game.host_team_name, league_obj
+        )
+        # if host_obj:
+        #     if host_obj.picture:
+        #         host_pic = get_thumbnailer(host_obj.picture)["nav_avatar"].url
+
+        # guest_obj = TeamMapper.get_team_obj(game.guest_team_name, league_obj)
+        # guest_name = guest_obj.name if guest_obj else game.guest_team_name
+        # guest_url = guest_obj.get_permalink() if guest_obj else None
         # picture = obj.picture if obj else 'default_profile.png'
         #
-        if guest_obj:
-            if guest_obj.picture:
-                guest_pic = get_thumbnailer(guest_obj.picture)["nav_avatar"].url
+        guest_url, guest_pic, guest_name = TeamMapper.get_url_pic_name(
+             game.guest_team_name, league_obj
+        )
+        # if guest_obj:
+        #     if guest_obj.picture:
+        #         guest_pic = get_thumbnailer(guest_obj.picture)["nav_avatar"].url
 
         return {
             "guest_pic": guest_pic,
