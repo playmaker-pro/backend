@@ -21,13 +21,15 @@
             
             <td class="text-center">
 
-            {% if game.score %}
+        {% if game.score %}
             <a href="#showGameModal"
                 data-toggle="modal"
                 data-target="#showGameModal" data-game-json='{{game|jsonify}}'>{{ game.score }}</a>
-           {% else %}
+        {% elif game.scoer == "None - None" %}
+            - 
+        {% else %}
              - 
-           {% endif %}
+        {% endif %}
            </td>
             
             </td>
