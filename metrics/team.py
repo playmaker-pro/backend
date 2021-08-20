@@ -152,19 +152,23 @@ class GameSerializer:
 
     @classmethod
     def calc(cls, game, host_pic, guest_pic, league: CLeague):
-        h_url, h_pic, h_name = TeamMapper.get_url_pic_name(game.host_team_name, league)
-        g_url, g_pic, g_name = TeamMapper.get_url_pic_name(game.guest_team_name, league)
+        # h_url, h_pic, h_name = TeamMapper.get_url_pic_name(game.host_team_name, league)
+        # g_url, g_pic, g_name = TeamMapper.get_url_pic_name(game.guest_team_name, league)
+        h_url, h_pic, h_name = TeamMapper.get_url_pic_name(game["host_team_name"], league)
+        g_url, g_pic, g_name = TeamMapper.get_url_pic_name(game["guest_team_name"], league)
 
         return {
             "guest_pic": g_pic,
             "host_pic": h_pic,
-            "date": game.date.strftime("%Y/%d/%m, %H:%M"),
-            "score": f"{game.host_score} - {game.guest_score}",
+            #"date": game.date.strftime("%Y/%d/%m, %H:%M"),
+            "date": game["date"].strftime("%Y/%d/%m, %H:%M"),
+            #"score": f"{game.host_score} - {game.guest_score}",
+            "score": f"{game['host_score']} - {game['guest_score']}",
             "host_url": h_url,
             "host": h_name,
             "guest": g_name,
             "guest_url": g_url,
-            "url": game.league._url,
+            #"url": game.league._url,
         }
 
 
@@ -315,7 +319,8 @@ class LeagueMatchesMetrics:
                     host_score__isnull=False,
                     guest_score__isnull=False,
                 )
-                .order_by(date_sort)
+                .order_by(date_sort).values(
+                    "queue", "date", "host_score", "guest_score", "host_team_name", "guest_team_name")  
             )
         else:
             matches = (
@@ -326,12 +331,15 @@ class LeagueMatchesMetrics:
                     host_score__isnull=True,
                     guest_score__isnull=True,
                 )
-                .order_by(date_sort)
+                .order_by(date_sort).values(
+                    "queue", "date", "host_score", "guest_score", "host_team_name", "guest_team_name")  
+            
             )
 
         output = defaultdict(list)
         for game in matches:
-            q = game.queue
+            #q = game.queue
+            q = game["queue"]
             guest_pic = _default_pic
             host_pic = _default_pic
             output[q].append(GameSerializer.calc(game, host_pic, guest_pic, league))
