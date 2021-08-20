@@ -88,17 +88,19 @@ class TeamMetrics:
 
 class TeamMapper:
     @classmethod
-    def get_team_obj(cls, team_name):
+    def get_team_obj(cls, team_name, league_obj):
         from clubs.models import Team as CTeam
         try:
-            team_obj = CTeam.objects.get(mapping__icontains=team_name.lower())
+            team_obj = CTeam.objects.get(
+                league=league_obj,
+                mapping__icontains=team_name.lower())
             return team_obj
         except CTeam.DoesNotExist:
             return None
 
     @classmethod
-    def get_url_pic_name(cls, team_name):
-        obj = TeamMapper.get_team_obj(team_name)
+    def get_url_pic_name(cls, team_name, league_obj):
+        obj = TeamMapper.get_team_obj(team_name, league_obj)
         name = obj.name if obj else team_name
         url = obj.get_permalink() if obj else None
         picture = obj.picture if obj else 'default_profile.png'
@@ -129,7 +131,7 @@ class GameSerializer:
                         "date": "10.05 21:00",
     '''
     @classmethod
-    def calc(cls, game, host_pic, guest_pic):
+    def calc(cls, game, host_pic, guest_pic, league):
         # thumbnailer = get_thumbnailer('animals/aardvark.jpg')
 
         # thumbnail_options = {'crop': True}
@@ -147,19 +149,22 @@ class GameSerializer:
         #     guest_pic = get_thumbnailer(guest_picture)['nav_avatar']
         # except:
         #     guest_pic = ''
-        
+        league_obj = league
+
         guest_pic = ''
         host_pic = ''
-        host_obj = TeamMapper.get_team_obj(game.host_team_name)
+        host_obj = TeamMapper.get_team_obj(game.host_team_name, league_obj)  # @todo: rafal
         host_name = host_obj.name if host_obj else game.host_team_name
         host_url = host_obj.get_permalink() if host_obj else None
         if host_obj:
             if host_obj.picture:
                 host_pic = get_thumbnailer(host_obj.picture)['nav_avatar'].url
 
-        guest_obj = TeamMapper.get_team_obj(game.guest_team_name)
+        guest_obj = TeamMapper.get_team_obj(game.guest_team_name, league_obj)
         guest_name = guest_obj.name if guest_obj else game.guest_team_name
         guest_url = guest_obj.get_permalink() if guest_obj else None
+        # picture = obj.picture if obj else 'default_profile.png'
+        #
         if guest_obj:
             if guest_obj.picture:
                 guest_pic = get_thumbnailer(guest_obj.picture)['nav_avatar'].url
@@ -296,8 +301,8 @@ class LeagueMatchesMetrics:
             #     guest_pic = CTeam.objects.get(name__icontains=game.guest_team_name)
             # except:
             #     guest_pic = ''
-            guest_pic = ''
-            host_pic = ''
+            guest_pic = 'default_profile.png'
+            host_pic = 'default_profile.png'
             output[q].append(GameSerializer.calc(game, host_pic, guest_pic))
         if data_index.data is None:
             data_index.data = {}
@@ -325,7 +330,7 @@ class GameRawSerializer:
         '_url_game_relation': 'https://www2.laczynaspilka.pl/rozgrywki/mecz/bruk-bet-termalica-nieciecza,fks-stal-mielec-s-a,2980870.html'
        }
     '''
-    
+ 
     def serialize(self, obj, host_pic, guest_pic):
         obj['host_pic'] = host_pic
         obj['guest_pic'] = guest_pic
@@ -362,8 +367,8 @@ class LeagueAdvancedTableRawMetrics:
                 & Q(league=league)
                 & Q(host_score__isnull=False) 
                 & Q(guest_score__isnull=False)).order_by('date')[:5]
-
-            team_url, team_pic, team_name = TeamMapper.get_url_pic_name(row.get('club_name'))
+            league_obj = lg
+            team_url, team_pic, team_name = TeamMapper.get_url_pic_name(row.get('club_name'), league_obj)
             # raise RuntimeError(row.get('club_name'), team_name)
             data = {
                 'position': pos,
