@@ -107,7 +107,7 @@ class TeamMapper:
         obj = TeamMapper.get_team_obj(team_name, league_obj)
         name = obj.name if obj else team_name
         url = obj.get_permalink() if obj else None
-        picture = obj.picture if obj else "default_profile.png"
+        picture = obj.picture if obj and obj.picture else "default_profile.png"
         try:
             pic = get_thumbnailer(picture)["nav_avatar"].url
         except easy_thumbnails.exceptions.InvalidImageFormatError as e:
