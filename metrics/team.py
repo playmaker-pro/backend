@@ -113,7 +113,10 @@ class TeamMapper:
         except easy_thumbnails.exceptions.InvalidImageFormatError as e:
             logger.error(f"Picture is: `{picture}`")
             logger.exception(picture)
-            raise RuntimeError(picture)
+            if obj.picture:
+                raise RuntimeError(f"picture={picture}, obj={obj} obj.picture={obj.picture}")
+            else:
+                raise RuntimeError(f"picture={picture}, obj={obj}")
 
         return url, pic, name
 
