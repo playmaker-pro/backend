@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 from datetime import datetime
-
+from data.models import Game as DGame
 import easy_thumbnails
 from clubs.models import League as CLeague
 from clubs.models import LeagueHistory as CLeagueHistory
@@ -149,27 +149,48 @@ class GameSerializer:
                         "score": "2 - 1",
                         "date": "10.05 21:00",
     """
-
     @classmethod
     def calc(cls, game, host_pic, guest_pic, league: CLeague):
-        # h_url, h_pic, h_name = TeamMapper.get_url_pic_name(game.host_team_name, league)
-        # g_url, g_pic, g_name = TeamMapper.get_url_pic_name(game.guest_team_name, league)
+        if isinstance(game, DGame):
+            return cls.calculate_from_obj(game, host_pic, guest_pic, league)
+        elif isinstance(game, dict):
+            return cls.calculate_from_dict(game, host_pic, guest_pic, league)
+        else:
+            raise RuntimeError("Wrong type of data to process.")
+
+    @classmethod
+    def calculate_from_obj(cls, game, host_pic, guest_pic, league: CLeague):
+        h_url, h_pic, h_name = TeamMapper.get_url_pic_name(game.host_team_name, league)
+        g_url, g_pic, g_name = TeamMapper.get_url_pic_name(game.guest_team_name, league)
+        return {
+            "guest_pic": g_pic,
+            "host_pic": h_pic,
+            "date": game.date.strftime("%Y/%d/%m, %H:%M"),
+            "score": f"{game.host_score} - {game.guest_score}",
+            "host_url": h_url,
+            "host": h_name,
+            "guest": g_name,
+            "guest_url": g_url,
+            # "url": game.league._url,
+        }
+
+    @classmethod
+    def calculate_from_dict(cls, game, host_pic, guest_pic, league: CLeague):
         h_url, h_pic, h_name = TeamMapper.get_url_pic_name(game["host_team_name"], league)
         g_url, g_pic, g_name = TeamMapper.get_url_pic_name(game["guest_team_name"], league)
 
         return {
             "guest_pic": g_pic,
             "host_pic": h_pic,
-            #"date": game.date.strftime("%Y/%d/%m, %H:%M"),
             "date": game["date"].strftime("%Y/%d/%m, %H:%M"),
-            #"score": f"{game.host_score} - {game.guest_score}",
             "score": f"{game['host_score']} - {game['guest_score']}",
             "host_url": h_url,
             "host": h_name,
             "guest": g_name,
             "guest_url": g_url,
-            #"url": game.league._url,
+            # "url": game.league._url,
         }
+
 
 
 class LeagueChildrenSerializer:
