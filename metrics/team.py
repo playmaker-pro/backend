@@ -237,19 +237,19 @@ class SummarySerializer:
 
         for c_game in current_games:
             q = c_game.queue
-            current_games_output[q].append(GameSerializer.calc(c_game, host_pic, guest_pic))
+            current_games_output[q].append(GameSerializer.calc(c_game, host_pic, guest_pic, league))
         output['current_games'] = current_games_output
 
         next_games_output = defaultdict(list)
         for n_game in next_games:
             q = n_game.queue
-            next_games_output[q].append(GameSerializer.calc(n_game, host_pic, guest_pic))
+            next_games_output[q].append(GameSerializer.calc(n_game, host_pic, guest_pic, league))
         output['next_games'] = next_games_output
 
         today_output = defaultdict(list)
         for t_game in today_matches:
             q = t_game.queue
-            today_output[q].append(GameSerializer.calc(t_game, host_pic, guest_pic))
+            today_output[q].append(GameSerializer.calc(t_game, host_pic, guest_pic, league))
         output['today_games'] = today_output
 
         return dict(output)
@@ -303,7 +303,7 @@ class LeagueMatchesMetrics:
             #     guest_pic = ''
             guest_pic = 'default_profile.png'
             host_pic = 'default_profile.png'
-            output[q].append(GameSerializer.calc(game, host_pic, guest_pic))
+            output[q].append(GameSerializer.calc(game, host_pic, guest_pic, league))
         if data_index.data is None:
             data_index.data = {}
 
