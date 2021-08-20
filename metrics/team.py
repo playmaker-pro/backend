@@ -146,61 +146,22 @@ class GameSerializer:
 
     @classmethod
     def calc(cls, game, host_pic, guest_pic, league: CLeague):
-        # thumbnailer = get_thumbnailer('animals/aardvark.jpg')
-
-        # thumbnail_options = {'crop': True}
-        # for size in (50, 100, 250):
-        #     thumbnail_options.update({'size': (size, size)})
-        #     thumbnailer.get_thumbnail(thumbnail_options)
-
-        # # or to get a thumbnail by alias
-        # thumbnailer['large']
-        # try:
-        #     host_pic = get_thumbnailer(host_picture)['nav_avatar']
-        # except:
-        #     host_pic = ''
-        # try:
-        #     guest_pic = get_thumbnailer(guest_picture)['nav_avatar']
-        # except:
-        #     guest_pic = ''
-        league_obj = league
-
-        # guest_pic = ""
-        # host_pic = ""
-        # host_obj = TeamMapper.get_team_obj(
-        #     game.host_team_name, league_obj
-        # )  # @todo: rafal
-        # host_name = host_obj.name if host_obj else game.host_team_name
-        # host_url = host_obj.get_permalink() if host_obj else None
-
-        host_url, host_pic, host_name = TeamMapper.get_url_pic_name(
-             game.host_team_name, league_obj
+        h_url, h_pic, h_name = TeamMapper.get_url_pic_name(
+             game.host_team_name, league
         )
-        # if host_obj:
-        #     if host_obj.picture:
-        #         host_pic = get_thumbnailer(host_obj.picture)["nav_avatar"].url
-
-        # guest_obj = TeamMapper.get_team_obj(game.guest_team_name, league_obj)
-        # guest_name = guest_obj.name if guest_obj else game.guest_team_name
-        # guest_url = guest_obj.get_permalink() if guest_obj else None
-        # picture = obj.picture if obj else 'default_profile.png'
-        #
-        guest_url, guest_pic, guest_name = TeamMapper.get_url_pic_name(
-             game.guest_team_name, league_obj
+        g_url, g_pic, g_name = TeamMapper.get_url_pic_name(
+             game.guest_team_name, league
         )
-        # if guest_obj:
-        #     if guest_obj.picture:
-        #         guest_pic = get_thumbnailer(guest_obj.picture)["nav_avatar"].url
 
         return {
-            "guest_pic": guest_pic,
-            "host_pic": host_pic,
+            "guest_pic": g_pic,
+            "host_pic": h_pic,
             "date": game.date.strftime("%Y/%d/%m, %H:%M"),
             "score": f"{game.host_score} - {game.guest_score}",
-            "host_url": host_url,
-            "host": host_name,
-            "guest": guest_name,
-            "guest_url": guest_url,
+            "host_url": h_url,
+            "host": h_name,
+            "guest": g_name,
+            "guest_url": g_url,
             "url": game.league._url,
         }
 

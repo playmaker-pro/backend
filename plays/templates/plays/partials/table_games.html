@@ -12,11 +12,11 @@
             <td class="d-none d-md-table-cell">
             
             {% if game.host_url %}
-                    <a href="{{ game.host_url }}"> {{ game.host|truncatechars:25 }}
-                    <img width="20" class="avatar rounded img-responsive" title="profile picture" src="{{ game.host_pic }}">
+            <a href="{{ game.host_url }}"> {{ game.host|truncatechars:25 }}
+                <img width="20" class="avatar rounded img-responsive" title="profile picture" src="{{ game.host_pic }}">
             </a>
             {% else %} 
-                {{ game.host|truncatechars:25 }}<img width="20" class="avatar rounded-circle img-responsive" title="profile picture" src="{{ game.host_pic }}">
+                {{ game.host|truncatechars:25 }}<img width="20" class="avatar rounded img-responsive" title="profile picture" src="{{ game.host_pic }}">
             {% endif %}</td>
             
             <td class="text-center">
@@ -37,7 +37,7 @@
                 <img width="20" class="avatar rounded img-responsive" title="profile picture" src="{{ game.guest_pic }}">
                 </a>
             {% else %} 
-                {{ game.guest|truncatechars:25 }}<img width="20" class=" avatar rounded-circle img-responsive" title="profile picture" src="{{ game.guest_pic }}">
+                {{ game.guest|truncatechars:25 }}<img width="20" class=" avatar rounded img-responsive" title="profile picture" src="{{ game.guest_pic }}">
             {% endif %}</td>
         </tr>
         {% endfor %}
