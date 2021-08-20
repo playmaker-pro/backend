@@ -402,6 +402,9 @@ class LeagueAdvancedTableRawMetrics:
         league = League.objects.get(_url=url)
         # because league with ID == League within Season
         output = []
+        if league.advanced_json is None:
+            return output
+        # TypeError: 'NoneType' object is not iterable
         for pos, row in enumerate(league.advanced_json, 1):
             last_games = (
                 Game.objects.select_related("league")
