@@ -111,7 +111,7 @@ class TeamMapper:
         try:
             pic = get_thumbnailer(picture)["nav_avatar"].url
         except easy_thumbnails.exceptions.InvalidImageFormatError as e:
-            print(picture)
+            logger.error(f"Picture is: {picture}")
             logger.exception(e)
             raise e
 
