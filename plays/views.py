@@ -191,7 +191,7 @@ class PlaysScoresViews(PlaysBaseView):
 
             options['objects'] = dict(LeagueChildrenSerializer().serialize(self.league))
         else:
-            options['objects'] = dict(LeagueMatchesMetrics().serialize(self.league, self.season, sort_up=False))
+            options['objects'] = dict(LeagueMatchesMetrics().serialize(self.league, self.season, sort_up=True))
         return options
 
 
