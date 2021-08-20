@@ -1,29 +1,88 @@
-from django.db.models import F
-from app import mixins, utils
+import logging
+import operator
+from functools import reduce
 
-from metrics.team import LeagueMatchesMetrics, LeagueChildrenSerializer, LeagueMatchesRawMetrics, PlaymakerMetrics
-from django.urls import reverse
-from clubs.models import Club, Team
+from app import mixins, utils
+from app.mixins import FilterPlayerViewMixin
+from clubs.models import Club, League
+from clubs.models import LeagueHistory as CLeagueHistory
+from clubs.models import Team
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
-from django.db.models import Q, Value
+from django.db.models import F, Q, Value
 from django.db.models.functions import Concat
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils import timezone
 from django.views import View, generic
+from metrics.team import (LeagueAdvancedTableRawMetrics,
+                          LeagueChildrenSerializer, LeagueMatchesMetrics,
+                          LeagueMatchesRawMetrics, PlaymakerMetrics,
+                          SummarySerializer)
 from profiles.utils import get_datetime_from_age
 from roles import definitions
 from users.models import User
-import operator
-from functools import reduce
-from django.db.models import Q, Value
-from app.mixins import FilterPlayerViewMixin
-from django.utils import timezone
-from django.http import Http404
-from clubs.models import League
 from utils import get_current_season
-from metrics.team import SummarySerializer
-from metrics.team import LeagueAdvancedTableRawMetrics
+
+
+logger = logging.getLogger(__name__)
+
+
+def get_or_make(dataindex, key, method, options):
+    '''Caches data in leagueHistorical data, under the Key
+
+    When no data present under key - create new one and save object.
+
+    dataindex represetns LeagueHistory
+    key is the name of attribute in .data
+    method is the way to generate data
+    options are kwargs for given method
+
+    '''
+    if dataindex.data is not None and key in dataindex.data:
+        return dataindex.data[key]
+    else:
+        if dataindex.data is None:
+            dataindex.data = {}
+        data = method(*options)
+
+        dataindex.data[key] = data
+        dataindex.save()
+        return data
+
+
+class Refresh:
+    @classmethod
+    def summary(cls, league_history: CLeagueHistory):
+        key = "summary"
+        return get_or_make(
+            league_history,
+            key,
+            SummarySerializer.serialize,
+            (league_history.league, league_history.season.name)
+        )
+
+    @classmethod
+    def table(cls, league_history: CLeagueHistory):
+        key = "advanced"
+        return get_or_make(
+            league_history,
+            key,
+            LeagueAdvancedTableRawMetrics.serialize,
+            (league_history.league, league_history)
+        )
+
+    @classmethod
+    def playmakers(cls, league_history: CLeagueHistory):
+        key = 'playmakers'
+        return get_or_make(
+            league_history,
+            key,
+            PlaymakerMetrics.calc,
+            {league_history.league}
+        )
 
 
 class ComplexViews(
@@ -85,42 +144,26 @@ class PlaysViews(PlaysBaseView):
 
     def set_kwargs(self, options, slug):
         options = super().set_kwargs(options, slug)
-        data_index = self.league.historical.all().get(season__name=self.season)
-        data_index_key = 'summary'
-        if data_index.data is not None and data_index_key in data_index.data:
-            options['objects'] = data_index.data[data_index_key]
-        else:
-            if data_index.data is None:
-                data_index.data = {}
 
-            options['objects'] = SummarySerializer.serialize(self.league, self.season)
-            data_index.data[data_index_key] = options['objects']
-            data_index.save()
+        try:
+            data_index = self.league.historical.all().get(season__name=self.season)
+        except Exception:
+            options['objects'] = {}
+            return options
+
+        options["objects"] = Refresh.summary(data_index)
+        # data_index_key = 'summary'
+        # if data_index.data is not None and data_index_key in data_index.data:
+        #     options['objects'] = data_index.data[data_index_key]
+        # else:
+        #     if data_index.data is None:
+        #         data_index.data = {}
+
+        #     options['objects'] = SummarySerializer.serialize(self.league, self.season)
+        #     data_index.data[data_index_key] = options['objects']
+        #     data_index.save()
 
         return options
-
-
-def get_or_make(dataindex, key, method, options):
-    '''Caches data in leagueHistorical data, under the Key
-
-    When no data present under key - create new one and save object.
-
-    dataindex represetns LeagueHistory
-    key is the name of attribute in .data
-    method is the way to generate data
-    options are kwargs for given method
-
-    '''
-    if dataindex.data is not None and key in dataindex.data:
-        return dataindex.data[key]
-    else:
-        if dataindex.data is None:
-            dataindex.data = {}
-        data = method(*options)
-
-        dataindex.data[key] = data
-        dataindex.save()
-        return data
 
 
 class PlaysTableViews(PlaysBaseView):
@@ -130,22 +173,14 @@ class PlaysTableViews(PlaysBaseView):
     def set_kwargs(self, *args, **kwargs):
         options = super().set_kwargs(*args, **kwargs)
         data_index = self.league.historical.all().get(season__name=self.season)
-
         try:
             data_index = self.league.historical.all().get(season__name=self.season)
         except Exception:
             options['objects'] = []
             return options
-        # @todo: add date check
-        data_index_key = 'advanced'
-
-        options['objects'] = get_or_make(
-            data_index,
-            data_index_key,
-            LeagueAdvancedTableRawMetrics.serialize,
-            (self.league, data_index)
-        )
+        options['objects'] = Refresh.table(data_index)
         return options
+
 
 
 class PlaysPlaymakerViews(PlaysBaseView):
@@ -170,15 +205,9 @@ class PlaysPlaymakerViews(PlaysBaseView):
             options['objects'] = []
             return options
 
-        data_index_key = 'playmakers'
-
-        options['objects'] = get_or_make(
-            data_index,
-            data_index_key,
-            PlaymakerMetrics.calc,
-            {self.league}
-        )
+        options['objects'] = Refresh.playmakers(data_index)
         return options
+
 
 
 class PlaysScoresViews(PlaysBaseView):
@@ -187,11 +216,12 @@ class PlaysScoresViews(PlaysBaseView):
 
     def set_kwargs(self, *args, **kwargs):
         options = super().set_kwargs(*args, **kwargs)
-        if self.league.is_parent:
+        # if self.league.is_parent:
 
-            options['objects'] = dict(LeagueChildrenSerializer().serialize(self.league))
-        else:
-            options['objects'] = dict(LeagueMatchesMetrics().serialize(self.league, self.season, sort_up=True))
+        #     options['objects'] = dict(LeagueChildrenSerializer().serialize(self.league))
+        # else:
+            # options['objects'] = dict(LeagueMatchesMetrics().serialize(self.league, self.season, sort_up=True))
+        options['objects'] = dict(LeagueMatchesMetrics().serialize(self.league, self.season, sort_up=True))
         return options
 
 
@@ -234,3 +264,31 @@ class PlaysListViews(ComplexViews):
         kwargs['debug_data'] = kwargs['objects']
         kwargs['tab'] = self.tab
         return super().get(request, *args, **kwargs)
+
+
+class RefreshManager:
+    @classmethod
+    def run(cls):
+        from clubs.models import LeagueHistory as CLeagueHistory
+        _all = CLeagueHistory.objects.all()
+        for league_history in _all:
+            logger.info(f"Refresh stared for {league_history}")
+            print(f"Refresh stared for {league_history}")
+            season = league_history.season
+            league = league_history.league
+
+            logger.info("Serialization.... games")
+            print("Serialization.... games")
+            LeagueMatchesMetrics().serialize(league, season, sort_up=True, overwrite=True)
+            logger.info("Serialization.... scores")
+            print("Serialization.... scores")
+            LeagueMatchesMetrics().serialize(league, season, sort_up=False, overwrite=True, played=False)
+            logger.info("Serialization.... playmakers")
+            print("Serialization.... playmakers")
+            Refresh.playmakers(league_history)
+            logger.info("Serialization.... summary")
+            print("Serialization.... summary")
+            Refresh.summary(league_history)
+            logger.info("Serialization.... table")
+            print("Serialization.... table")
+            Refresh.table(league_history)

@@ -4,6 +4,7 @@ from datetime import datetime
 
 import easy_thumbnails
 from clubs.models import League as CLeague
+from clubs.models import LeagueHistory as CLeagueHistory
 from clubs.models import Team as CTeam
 from data.models import Game, League, Team, TeamStat
 from django.db.models import Avg, Count, Min, Q, Sum
@@ -114,7 +115,9 @@ class TeamMapper:
             logger.error(f"Picture is: `{picture}`")
             logger.exception(picture)
             if obj.picture:
-                raise RuntimeError(f"picture={picture}, obj={obj} obj.picture={obj.picture}")
+                raise RuntimeError(
+                    f"picture={picture}, obj={obj} obj.picture={obj.picture}"
+                )
             else:
                 raise RuntimeError(f"picture={picture}, obj={obj}")
 
@@ -133,6 +136,9 @@ class GameSerializer:
     guest_team_name = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
+    : Return :
+
             {"name": "Kolejka 30",
                 "games": [
                     {
@@ -146,12 +152,8 @@ class GameSerializer:
 
     @classmethod
     def calc(cls, game, host_pic, guest_pic, league: CLeague):
-        h_url, h_pic, h_name = TeamMapper.get_url_pic_name(
-             game.host_team_name, league
-        )
-        g_url, g_pic, g_name = TeamMapper.get_url_pic_name(
-             game.guest_team_name, league
-        )
+        h_url, h_pic, h_name = TeamMapper.get_url_pic_name(game.host_team_name, league)
+        g_url, g_pic, g_name = TeamMapper.get_url_pic_name(game.guest_team_name, league)
 
         return {
             "guest_pic": g_pic,
@@ -183,6 +185,7 @@ class LeagueChildrenSerializer:
 class SummarySerializer:
     @classmethod
     def serialize(cls, league, season_name):
+        _number_of_last_games = 12
         output = {}
         output["today_games"] = []
         output["next_games"] = []
@@ -211,7 +214,7 @@ class SummarySerializer:
                 host_score__isnull=True,
                 guest_score__isnull=True,
             )
-            .order_by("date")[:12]
+            .order_by("date")[:_number_of_last_games]
         )
 
         current_games = (
@@ -222,7 +225,7 @@ class SummarySerializer:
                 host_score__isnull=False,
                 guest_score__isnull=False,
             )
-            .order_by("-date")[:12]
+            .order_by("-date")[:_number_of_last_games]
         )
 
         host_pic = ""
@@ -257,26 +260,49 @@ class SummarySerializer:
 
 
 class LeagueMatchesMetrics:
-    def serialize(self, league, season_name, played=True, sort_up=True):
+    def serialize(
+        self,
+        league: CLeague,
+        season_name: str,
+        league_history: CLeagueHistory = None,
+        played: bool = True,
+        sort_up: bool = True,
+        overwrite: bool = False,
+    ):
+        """
+        :param overwrite: Overwirte data if present in cache
+        :param sort_up: defines if decending or ascending
+
+        """
+        _default_pic = "default_profile.png"
+
         if sort_up:
             date_sort = "-date"
         else:
             date_sort = "date"
-        try:
-            data_index = league.historical.all().get(season__name=season_name)
-        except:
-            return []
+
+        if league_history is not None:
+            data_index = league_history
+        else:
+            try:
+                data_index = league.historical.all().get(season__name=season_name)
+            except:
+                return []
 
         # @todo: add date check
         if (
             data_index.data is not None
             and "matches_played" in data_index.data
             and played
+            and not overwrite
         ):
             return data_index.data["matches_played"]
 
         elif (
-            data_index.data is not None and "matches" in data_index.data and not played
+            data_index.data is not None
+            and "matches" in data_index.data
+            and not played
+            and not overwrite
         ):
             return data_index.data["matches"]
 
@@ -306,17 +332,10 @@ class LeagueMatchesMetrics:
         output = defaultdict(list)
         for game in matches:
             q = game.queue
-            # try:
-            #     host_pic = CTeam.objects.get(name__icontains=game.host_team_name)
-            # except:
-            #     host_pic = ''
-            # try:
-            #     guest_pic = CTeam.objects.get(name__icontains=game.guest_team_name)
-            # except:
-            #     guest_pic = ''
-            guest_pic = "default_profile.png"
-            host_pic = "default_profile.png"
+            guest_pic = _default_pic
+            host_pic = _default_pic
             output[q].append(GameSerializer.calc(game, host_pic, guest_pic, league))
+
         if data_index.data is None:
             data_index.data = {}
 
