@@ -6,4 +6,4 @@ class Command(BaseCommand):
     help = "Refresh League History data for all of leagues."
 
     def handle(self, *args, **options):
-        RefreshManager.run()
+        RefreshManager.run(verbose=True)

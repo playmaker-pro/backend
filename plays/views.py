@@ -17,10 +17,14 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views import View, generic
-from metrics.team import (LeagueAdvancedTableRawMetrics,
-                          LeagueChildrenSerializer, LeagueMatchesMetrics,
-                          LeagueMatchesRawMetrics, PlaymakerMetrics,
-                          SummarySerializer)
+from metrics.team import (
+    LeagueAdvancedTableRawMetrics,
+    LeagueChildrenSerializer,
+    LeagueMatchesMetrics,
+    LeagueMatchesRawMetrics,
+    PlaymakerMetrics,
+    SummarySerializer,
+)
 from profiles.utils import get_datetime_from_age
 from roles import definitions
 from users.models import User
@@ -31,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_or_make(dataindex, key, method, options):
-    '''Caches data in leagueHistorical data, under the Key
+    """Caches data in leagueHistorical data, under the Key
 
     When no data present under key - create new one and save object.
 
@@ -40,7 +44,7 @@ def get_or_make(dataindex, key, method, options):
     method is the way to generate data
     options are kwargs for given method
 
-    '''
+    """
     if dataindex.data is not None and key in dataindex.data:
         return dataindex.data[key]
     else:
@@ -61,7 +65,7 @@ class Refresh:
             league_history,
             key,
             SummarySerializer.serialize,
-            (league_history.league, league_history.season.name)
+            (league_history.league, league_history.season.name),
         )
 
     @classmethod
@@ -71,26 +75,23 @@ class Refresh:
             league_history,
             key,
             LeagueAdvancedTableRawMetrics.serialize,
-            (league_history.league, league_history)
+            (league_history.league, league_history),
         )
 
     @classmethod
     def playmakers(cls, league_history: CLeagueHistory):
-        key = 'playmakers'
+        key = "playmakers"
         return get_or_make(
-            league_history,
-            key,
-            PlaymakerMetrics.calc,
-            {league_history.league}
+            league_history, key, PlaymakerMetrics.calc, {league_history.league}
         )
 
 
 class ComplexViews(
-        generic.TemplateView,
-        mixins.PaginateMixin,
-        mixins.ViewModalLoadingMixin,
-        mixins.ViewFilterMixin
-    ):
+    generic.TemplateView,
+    mixins.PaginateMixin,
+    mixins.ViewModalLoadingMixin,
+    mixins.ViewFilterMixin,
+):
     pass
 
 
@@ -103,10 +104,10 @@ class PlaysBaseView(ComplexViews):
     paginate_limit = 15
 
     def set_kwargs(self, options, slug):
-        self.season = self.request.GET.get('season') or get_current_season()
+        self.season = self.request.GET.get("season") or get_current_season()
         options["current_season"] = self.season
         options["page_title"] = self.page_title
-        options['tab'] = self.tab
+        options["tab"] = self.tab
         if not slug:
             self.league = None
 
@@ -120,11 +121,10 @@ class PlaysBaseView(ComplexViews):
         # filters on
         if self.filter_on:
             options["leagues"] = League.objects.filter(
-                parent__isnull=True,
-                visible=True
+                parent__isnull=True, visible=True
             )
         else:
-            options['leagues'] = None
+            options["leagues"] = None
         return options
 
     def get(self, request, slug, *args, **kwargs):
@@ -133,14 +133,15 @@ class PlaysBaseView(ComplexViews):
 
 
 class PlaysViews(PlaysBaseView):
-    '''
+    """
     Podsumowanie (zgodnie z tym co na flashscore)
         Dzisiejsze mecze (data_game.date = dzis)
         Najświeższe wyniki (ostatnie 12 meczów rozegranych, wg daty)
         Następne (najbliższe 12 meczów, które są do rozegrania)
-    '''
+    """
+
     page_title = "Rozgrywki"
-    tab = 'summary'
+    tab = "summary"
 
     def set_kwargs(self, options, slug):
         options = super().set_kwargs(options, slug)
@@ -148,7 +149,7 @@ class PlaysViews(PlaysBaseView):
         try:
             data_index = self.league.historical.all().get(season__name=self.season)
         except Exception:
-            options['objects'] = {}
+            options["objects"] = {}
             return options
 
         options["objects"] = Refresh.summary(data_index)
@@ -176,11 +177,10 @@ class PlaysTableViews(PlaysBaseView):
         try:
             data_index = self.league.historical.all().get(season__name=self.season)
         except Exception:
-            options['objects'] = []
+            options["objects"] = []
             return options
-        options['objects'] = Refresh.table(data_index)
+        options["objects"] = Refresh.table(data_index)
         return options
-
 
 
 class PlaysPlaymakerViews(PlaysBaseView):
@@ -202,17 +202,16 @@ class PlaysPlaymakerViews(PlaysBaseView):
         try:
             data_index = self.league.historical.all().get(season__name=self.season)
         except Exception:
-            options['objects'] = []
+            options["objects"] = []
             return options
 
-        options['objects'] = Refresh.playmakers(data_index)
+        options["objects"] = Refresh.playmakers(data_index)
         return options
-
 
 
 class PlaysScoresViews(PlaysBaseView):
     page_title = "Rozgrywki :: Wyniki"
-    tab = 'scores'
+    tab = "scores"
 
     def set_kwargs(self, *args, **kwargs):
         options = super().set_kwargs(*args, **kwargs)
@@ -220,33 +219,37 @@ class PlaysScoresViews(PlaysBaseView):
 
         #     options['objects'] = dict(LeagueChildrenSerializer().serialize(self.league))
         # else:
-            # options['objects'] = dict(LeagueMatchesMetrics().serialize(self.league, self.season, sort_up=True))
-        options['objects'] = dict(LeagueMatchesMetrics().serialize(self.league, self.season, sort_up=True))
+        # options['objects'] = dict(LeagueMatchesMetrics().serialize(self.league, self.season, sort_up=True))
+        options["objects"] = dict(
+            LeagueMatchesMetrics().serialize(self.league, self.season, sort_up=True)
+        )
         return options
 
 
 class PlaysGamesViews(PlaysBaseView):
-    '''Widok spotkań'''
+    """Widok spotkań"""
+
     page_title = "Rozgrywki :: Spotkania"
-    tab = 'matches'
+    tab = "matches"
 
     def set_kwargs(self, *args, **kwargs):
         options = super().set_kwargs(*args, **kwargs)
         if self.league.is_parent:
-            raise RuntimeError('tego nie powinno byc')
-            options['objects'] = dict(
-                LeagueChildrenSerializer().serialize(self.league)
-            )
+            raise RuntimeError("tego nie powinno byc")
+            options["objects"] = dict(LeagueChildrenSerializer().serialize(self.league))
         else:
 
-            options['objects'] = dict(
-                LeagueMatchesMetrics().serialize(self.league, self.season, played=False, sort_up=False)
+            options["objects"] = dict(
+                LeagueMatchesMetrics().serialize(
+                    self.league, self.season, played=False, sort_up=False
+                )
             )
         return options
 
 
 class PlaysListViews(ComplexViews):
-    '''Widok spotkań'''
+    """Widok spotkań"""
+
     template_name = "plays/list.html"
     http_method_names = ["get"]
     paginate_limit = 15
@@ -255,40 +258,44 @@ class PlaysListViews(ComplexViews):
 
     def get(self, request, *args, **kwargs):
         leagues = League.objects.filter(parent__isnull=True)
-        season = request.GET.get('season') or get_current_season()
+        season = request.GET.get("season") or get_current_season()
 
-        kwargs['objects'] = leagues
+        kwargs["objects"] = leagues
         # kwargs['objects'] = dict(LeagueMatchesRawMetrics().serialize(league_obj, '2020/2021'))
         kwargs["page_title"] = self.page_title
         kwargs["current_season"] = season
-        kwargs['debug_data'] = kwargs['objects']
-        kwargs['tab'] = self.tab
+        kwargs["debug_data"] = kwargs["objects"]
+        kwargs["tab"] = self.tab
         return super().get(request, *args, **kwargs)
 
 
 class RefreshManager:
     @classmethod
-    def run(cls):
+    def run(cls, verbose: bool = False):
         from clubs.models import LeagueHistory as CLeagueHistory
+
         _all = CLeagueHistory.objects.all()
         for league_history in _all:
-            logger.info(f"Refresh stared for {league_history}")
-            print(f"Refresh stared for {league_history}")
             season = league_history.season
             league = league_history.league
-
-            logger.info("Serialization.... games")
-            print("Serialization.... games")
-            LeagueMatchesMetrics().serialize(league, season, sort_up=True, overwrite=True)
-            logger.info("Serialization.... scores")
-            print("Serialization.... scores")
-            LeagueMatchesMetrics().serialize(league, season, sort_up=False, overwrite=True, played=False)
-            logger.info("Serialization.... playmakers")
-            print("Serialization.... playmakers")
-            Refresh.playmakers(league_history)
-            logger.info("Serialization.... summary")
-            print("Serialization.... summary")
-            Refresh.summary(league_history)
-            logger.info("Serialization.... table")
-            print("Serialization.... table")
-            Refresh.table(league_history)
+            print(f"Refresh stared for {league_history}")
+            tasks = [
+                {
+                    "games": (
+                        LeagueMatchesMetrics().serialize,
+                        (league, season),
+                        {"sort_up": True, "overwrite": True},
+                    ),
+                    "scores": (
+                        LeagueMatchesMetrics().serialize,
+                        (league, season),
+                        {"sort_up": False, "overwrite": True, "played": False},
+                    ),
+                    "playmakers": (Refresh.playmakers, (league_history,), {}),
+                    "summary": (Refresh.summary, (league_history,), {}),
+                    "table": (Refresh.table, (league_history,), {}),
+                }
+            ]
+            for task, (method, args, kwargs) in tasks:
+                print(f"Running data serialization for {task}")
+                method(*args, **kwargs)
