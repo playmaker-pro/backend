@@ -296,6 +296,6 @@ class RefreshManager:
                     "table": (Refresh.table, (league_history,), {}),
                 }
             ]
-            for task, (method, args, kwargs) in tasks:
+            for task, (method, args, kwargs) in tasks.items():
                 print(f"Running data serialization for {task}")
                 method(*args, **kwargs)
