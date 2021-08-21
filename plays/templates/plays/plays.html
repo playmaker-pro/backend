@@ -5,9 +5,6 @@
 {% block extra_css %}
     {{ block.super }}
     <link href="{% static 'assets/css/profiles.css' %}" rel="stylesheet">
-
-
-
 {% endblock extra_css%}
 
 
@@ -17,16 +14,22 @@
 
 
 {% block content %}
+
+
 <div class="row">
-<section id="leagues-side-bar" style="background-color:#2b2b2b;" class="col-2">
+
+<div class="col-12 d-md-none">
+    {% include "plays/partials/sidemenu_burger.html" with leagues_data=leagues2 %}
+</div>
+
+<section id="leagues-side-bar" class="col-2 d-none d-md-flex" style="background-color:#2b2b2b;" >
   <div class="container" data-aos="fade-up">
-        <form >
-            {% include 'plays/filters/season.html' %}
-        </form>
+    <form>
+        {% include 'plays/filters/season.html' %}
+    </form>
     <select id="leagues-search" class="selectpicker" data-live-search="true" >
         {% for league in leagues %}
             {% if league|has_season_data:current_season %}
-
                 <option data-tokens="{{league.name}} {{league.zpn}}"  value="{% url 'plays:summary' slug=league.slug  %}">{{ league.name }}</option>
             {% endif %}
         {% endfor %}
@@ -49,6 +52,9 @@
     </div>
 </div>
 </section>
+
+
+
 <section id="plays" class="plays col-10" style="padding:0px 0px;">
 {% include 'plays/header_black.html' %}
   <div class="container" data-aos="fade-up">

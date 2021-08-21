@@ -34,7 +34,7 @@ from utils import get_current_season
 logger = logging.getLogger(__name__)
 
 
-def get_or_make(dataindex, key, method, options):
+def get_or_make(dataindex, key, method, options, overwrite: bool = False):
     """Caches data in leagueHistorical data, under the Key
 
     When no data present under key - create new one and save object.
@@ -45,7 +45,7 @@ def get_or_make(dataindex, key, method, options):
     options are kwargs for given method
 
     """
-    if dataindex.data is not None and key in dataindex.data:
+    if dataindex.data is not None and key in dataindex.data and not overwrite:
         return dataindex.data[key]
     else:
         if dataindex.data is None:
@@ -59,13 +59,14 @@ def get_or_make(dataindex, key, method, options):
 
 class Refresh:
     @classmethod
-    def summary(cls, league_history: CLeagueHistory):
+    def summary(cls, league_history: CLeagueHistory, overwrite: bool = False):
         key = "summary"
         return get_or_make(
             league_history,
             key,
             SummarySerializer.serialize,
             (league_history.league, league_history.season.name),
+            overwrite=overwrite
         )
 
     @classmethod
@@ -76,13 +77,14 @@ class Refresh:
             key,
             LeagueAdvancedTableRawMetrics.serialize,
             (league_history.league, league_history),
+            overwrite=overwrite
         )
 
     @classmethod
     def playmakers(cls, league_history: CLeagueHistory):
         key = "playmakers"
         return get_or_make(
-            league_history, key, PlaymakerMetrics.calc, {league_history.league}
+            league_history, key, PlaymakerMetrics.calc, {league_history.league}, overwrite=overwrite
         )
 
 
@@ -123,8 +125,13 @@ class PlaysBaseView(ComplexViews):
             options["leagues"] = League.objects.filter(
                 parent__isnull=True, visible=True
             )
+
+            options["leagues2"] = League.objects.filter(
+                parent__isnull=True, visible=True
+            )
         else:
             options["leagues"] = None
+            options["leagues2"] = None
         return options
 
     def get(self, request, slug, *args, **kwargs):
@@ -290,11 +297,10 @@ class RefreshManager:
                     (league, season),
                     {"sort_up": False, "overwrite": True, "played": False},
                 ),
-                "playmakers": (Refresh.playmakers, (league_history,), {}),
-                "summary": (Refresh.summary, (league_history,), {}),
-                "table": (Refresh.table, (league_history,), {}),
+                "playmakers": (Refresh.playmakers, (league_history,), {"overwrite": True}),
+                "summary": (Refresh.summary, (league_history,), {"overwrite": True}),
+                "table": (Refresh.table, (league_history,), {"overwrite": True}),
             }
-
             for task, (method, args, kwargs) in tasks.items():
                 print(f"Running data serialization for {task}")
                 method(*args, **kwargs)

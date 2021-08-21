@@ -1,0 +1,98 @@
+{% load playmaker %}
+<style>
+.sidenav {
+  height: 100%; /* 100% Full-height */
+  width: 0; /* 0 width - change this with JavaScript */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Stay on top */
+  top: 0; /* Stay at the top */
+  left: 0;
+  background-color: #2b2b2b;
+  overflow-x: hidden; /* Disable horizontal scroll */
+  padding-top: 60px; /* Place content 60px from the top */
+  transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+}
+
+/* The navigation menu links */
+.sidenav a {
+  padding: 8px 8px 5px 5px;
+  text-decoration: none;
+  /* font-size: 25px; */
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+/* When you mouse over the navigation links, change their color */
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+/* Position and style the close button (top right corner) */
+.sidenav .closebtn {
+  position: relative;
+  top: 0;
+
+  font-size: 26px;
+  margin-left: 160px;
+}
+
+
+/* #main {
+  transition: margin-left .5s;
+  padding: 20px;
+}
+*/ 
+/* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+@media screen and (max-height: 450px) {
+  .sidenav {padding-top: 15px;}
+  /*.sidenav a {font-size: 18px;} */
+}
+</style>
+
+<div id="mySidenav" class="sidenav"><br><Br>
+  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()"><i class="icofont-close-circled main-color"></i></a>
+    <form>
+           {% include 'plays/filters/season.html' %}
+    </form>
+
+    <select id="leagues-search" class="selectpicker" data-live-search="true" >
+      {% for league in leagues %}
+          {% if league|has_season_data:current_season %}
+              <option data-tokens="{{league.name}} {{league.zpn}}"  value="{% url 'plays:summary' slug=league.slug  %}">{{ league.name }}</option>
+          {% endif %}
+      {% endfor %}
+  </select>
+  {% for league in leagues_data %}
+      {% if league.is_parent %}
+          {{ league.name }}
+          {% for child in league.league_set.all %}
+              {% if child|has_season_data:current_season %}
+                  <a href="{% url 'plays:summary' slug=child.slug  %}">{{ child.name }}</a>{{ child.serach_index }}
+              {% endif %}
+          {% endfor %}
+      {% else %}
+              {% if league|has_season_data:current_season %}
+                <a href="{% url 'plays:summary' slug=league.slug  %}">{{ league.name }}</a> {{ league.serach_index }}
+              {% endif %}
+      {% endif %}
+  {% endfor %}
+</div>
+
+<div>
+
+<!-- Use any element to open the sidenav -->
+<button class="btn btn-pm" onclick="openNav()">open</button>
+
+
+</div>
+  
+<script>
+function openNav() {
+  document.getElementById("mySidenav").style.width = "250px";
+}
+
+function closeNav() {
+  document.getElementById("mySidenav").style.width = "0";
+}
+</script>
