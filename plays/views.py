@@ -279,23 +279,22 @@ class RefreshManager:
             season = league_history.season
             league = league_history.league
             print(f"Refresh stared for {league_history}")
-            tasks = [
-                {
-                    "games": (
-                        LeagueMatchesMetrics().serialize,
-                        (league, season),
-                        {"sort_up": True, "overwrite": True},
-                    ),
-                    "scores": (
-                        LeagueMatchesMetrics().serialize,
-                        (league, season),
-                        {"sort_up": False, "overwrite": True, "played": False},
-                    ),
-                    "playmakers": (Refresh.playmakers, (league_history,), {}),
-                    "summary": (Refresh.summary, (league_history,), {}),
-                    "table": (Refresh.table, (league_history,), {}),
-                }
-            ]
+            tasks = {
+                "games": (
+                    LeagueMatchesMetrics().serialize,
+                    (league, season),
+                    {"sort_up": True, "overwrite": True},
+                ),
+                "scores": (
+                    LeagueMatchesMetrics().serialize,
+                    (league, season),
+                    {"sort_up": False, "overwrite": True, "played": False},
+                ),
+                "playmakers": (Refresh.playmakers, (league_history,), {}),
+                "summary": (Refresh.summary, (league_history,), {}),
+                "table": (Refresh.table, (league_history,), {}),
+            }
+
             for task, (method, args, kwargs) in tasks.items():
                 print(f"Running data serialization for {task}")
                 method(*args, **kwargs)
