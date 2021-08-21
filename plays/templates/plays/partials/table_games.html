@@ -1,7 +1,35 @@
 {% load playmaker %}
 
 
-<table class="table" style="border:1px;">
+
+<table class="table d-md-none" style="border:1px;">
+  <tbody>
+  {% for name, data in games.items %}
+    <tr style="font-size:0.9em;"><td>{{ name }}</td></tr>
+        {% for game in data %}
+        <tr style="font-size:0.7em;">
+            <td><small>{{ game.date }}</small></td>
+
+            <td class="text-left">
+            {% include "plays/partials/game_with_pic.html" with name=game.host url=game.host_url pic=game.host_pic %}
+                {% if game.score %}
+                    <a href="#showGameModal"
+                        data-toggle="modal"
+                        data-target="#showGameModal" data-game-json='{{game|jsonify}}'>{{ game.score }}</a>
+                {% elif game.scoer == "None - None" %}
+                    - 
+                {% else %}
+                    - 
+                {% endif %}
+              {% include "plays/partials/game_with_pic.html" with name=game.guest url=game.guest_url pic=game.guest_pic %}</td>
+        </tr>
+        {% endfor %}
+    {% endfor %}
+    </tbody>
+</table>
+
+
+<table class="table d-none d-md-table-cell" style="border:1px;">
   <tbody>
   {% for name, data in games.items %}
     <tr style="font-size:0.9em;"><td>{{ name }}</td></tr>
@@ -10,14 +38,8 @@
             <td class="d-none d-md-table-cell">{{ game.date }}</td>
 
             <td class="d-none d-md-table-cell">
-            
-            {% if game.host_url %}
-            <a href="{{ game.host_url }}"> {{ game.host|truncatechars:25 }}
-                <img width="20" class="avatar rounded img-responsive" title="profile picture" src="{{ game.host_pic }}">
-            </a>
-            {% else %} 
-                {{ game.host|truncatechars:25 }}<img width="20" class="avatar rounded img-responsive" title="profile picture" src="{{ game.host_pic }}">
-            {% endif %}</td>
+            {% include "plays/partials/game_with_pic.html" with name=game.host url=game.host_url pic=game.host_pic %}
+            </td>
             
             <td class="text-center">
 
@@ -34,13 +56,7 @@
             
             </td>
             <td class="d-none d-md-table-cell">
-             {% if game.guest_url %}
-             <a href="{{ game.guest_url }}"> {{ game.guest|truncatechars:25 }}
-                <img width="20" class="avatar rounded img-responsive" title="profile picture" src="{{ game.guest_pic }}">
-                </a>
-            {% else %} 
-                {{ game.guest|truncatechars:25 }}<img width="20" class=" avatar rounded img-responsive" title="profile picture" src="{{ game.guest_pic }}">
-            {% endif %}</td>
+             {% include "plays/partials/game_with_pic.html" with name=game.guest url=game.guest_url pic=game.guest_pic %}</td>
         </tr>
         {% endfor %}
     {% endfor %}

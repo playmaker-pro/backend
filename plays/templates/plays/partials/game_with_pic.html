@@ -1,0 +1,6 @@
+{% if url %}
+    <a href="{{ url }}"> {{ name}}</a>
+{% else %} 
+    {{ name }}
+{% endif %}
+<img width="20" class="avatar rounded img-responsive" title="profile picture" src="{{ pic }}">
