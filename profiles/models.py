@@ -862,6 +862,8 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         (11, 'W trakcie kursu'),
     )
 
+    DATA_KEYS = ("metrics", )
+
     licence = models.IntegerField(
         _("Licencja"),
         choices=LICENCE_CHOICES,
@@ -931,6 +933,31 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         default=1,  # trener
         null=True, blank=True,
         help_text='Defines if admin approved change')
+
+    data = models.JSONField(
+        null=True,
+        blank=True)
+
+    def calculate_metrics(self):
+        """
+        Celem jest możliwość pokazania:
+        kariera [sezon, team, rozgrywki, wygrane mecze, remisy, porażki, śr. pkt na mecz,  bramki strzelone vs. bramki stracone (klubu, który prowadził)]
+        mecze [data, rozgrywki, gospodarz, gość, wynik]  
+
+        Za wygrany mecz 3 pkt, za remis 1 pkt, za porażkę 0 pkt. 
+        """
+        
+        from metrics.coach import CoachGamesAdapter
+        if not self.has_data_id:
+            return
+        _id = self.data_mapper_id
+        season_name = utilites.get_current_season()
+        games = CoachGamesAdapter.get(_id, season=season_name, limit=10)
+        if self.data is None:
+            self.data = {}
+            self.data['games'] = games
+
+        self.save()
 
     @property
     def age(self):  # todo przeniesc to do uzywania z profile.utils.
