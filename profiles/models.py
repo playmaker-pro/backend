@@ -952,7 +952,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
             return
         _id = self.data_mapper_id
         season_name = utilites.get_current_season()
-        games = CoachGamesAdapter().get(int(_id), coach_id=season_name, limit=10)
+        games = CoachGamesAdapter().get(int(_id), season_name=season_name, limit=10)
         if self.data is None:
             self.data = {}
             if not self.data.get(season_name):
