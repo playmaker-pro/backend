@@ -137,7 +137,6 @@ class CoachGamesAdapter:
         if limit is not None:
             queryset = queryset[:limit]
         dta = TeamStatSerializer(queryset).data
-        print(dta)
         return dta
 
 # class CoachStatsAdapter:
