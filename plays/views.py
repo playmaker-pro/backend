@@ -70,25 +70,25 @@ class Refresh:
         )
 
     @classmethod
-    def table(cls, league_history: CLeagueHistory, overwirte: bool = False):
+    def table(cls, league_history: CLeagueHistory, overwrite: bool = False):
         key = "advanced"
         return get_or_make(
             league_history,
             key,
             LeagueAdvancedTableRawMetrics.serialize,
             (league_history.league, league_history),
-            overwrite=overwirte
+            overwrite=overwrite
         )
 
     @classmethod
-    def playmakers(cls, league_history: CLeagueHistory, overwirte: bool = False):
+    def playmakers(cls, league_history: CLeagueHistory, overwrite: bool = False):
         key = "playmakers"
         return get_or_make(
             league_history,
             key,
             PlaymakerMetrics.calc,
             {league_history.league},
-            overwrite=overwirte
+            overwrite=overwrite
         )
 
 
