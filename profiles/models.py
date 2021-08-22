@@ -961,7 +961,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
                 self.data['games'][season_name] = games
         season_name = utilites.get_current_season()
         _calc(season_name)
-        prev_season = utilites.get_prev_season_string()
+        prev_season = utilites.calculate_prev_season(season_name)
         _calc(prev_season)
         self.save()
 
