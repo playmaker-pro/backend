@@ -123,15 +123,15 @@ Za wygrany mecz 3 pkt, za remis 1 pkt, za porażkę 0 pkt.
 class CoachGamesAdapter:
     fields = None
 
-    def get(self, coach_id: int, season: str = None, limit: int = None):
-        print(f"data metrics calculation for: coach_id:{coach_id} season:{season} with limit: {limit} ")
+    def get(self, coach_id: int, season_name: str = None, limit: int = None):
+        print(f"data metrics calculation for: coach_id:{coach_id} season:{season_name} with limit: {limit} ")
         queryset = (
             TeamStat.objects.all()
             .select_related("game", "game__league", "game__season", "coach")
             .order_by("-game__date")
         )  # values(*self.fileds.keys())
-        
-        queryset = queryset.filter(coach__id=coach_id, game__season__name=season)
+        assert isinstance(coach_id, int), f"coach_id need to be type of inteager. it is: {type(coach_id)}"
+        queryset = queryset.filter(coach__id=coach_id, game__season__name=season_name)
         print(f'data to calculate: {queryset.count()}')
         if limit is not None:
             queryset = queryset[:limit]
