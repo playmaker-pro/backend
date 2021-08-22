@@ -33,7 +33,7 @@ from stats import utilites as utils
 
 class GameSerializer:
     def __init__(self, obj):
-        return {
+        self.data = {
             "date": self.get_date(obj),
             "date_short": self.get_date_short(obj),
             "date_year": self.get_date_year(obj),
@@ -43,6 +43,7 @@ class GameSerializer:
             "guest_score": self.get_guest_score(obj),
             "league_name": self.get_league_name(obj),
         }
+        
 
     def get_league_name(self, obj):
         code = obj.league.code
@@ -105,7 +106,7 @@ Za wygrany mecz 3 pkt, za remis 1 pkt, za porażkę 0 pkt.
             d = {
                 "result": self.get_result(ts)
             }
-            d.update(GameSerializer(ts.game))
+            d.update(GameSerializer(ts.game).data)
             self.data .append(d)
 
     def get_result(self, obj):
