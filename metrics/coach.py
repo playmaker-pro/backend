@@ -136,7 +136,9 @@ class CoachGamesAdapter:
         print(f'data to calculate: {queryset.count()}')
         if limit is not None:
             queryset = queryset[:limit]
-        return TeamStatSerializer(queryset).data
+        dta = TeamStatSerializer(queryset).data
+        print(dta)
+        return dta
 
 # class CoachStatsAdapter:
 #     """
