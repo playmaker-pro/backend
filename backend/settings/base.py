@@ -563,6 +563,15 @@ except Exception as e:
     logger.info(f'Loading seo.yaml: Not possible to write SEO_DATA due to: {e}')
     SEO_DATA = {}
 
+
+
+
+
+# To force and replace season on whole system
+# @todo(rkesik): not all elements supports that yet...
+FORCED_SEASON_NAME = None
+
+
 try:
     from backend.settings._local import *
 except Exception as e:
@@ -573,4 +582,5 @@ try:
     from backend.settings.data_settings import *
 except Exception as e:
     print(f'No data_model settings. {e}')
+
 

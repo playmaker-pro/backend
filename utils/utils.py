@@ -35,8 +35,12 @@ def calculate_prev_season(season: str):
     return f'{first_updated}/{second_updated}'
 
 
-get_season_string = get_current_season()
+if settings.FORCED_SEASON_NAME:
+    get_current_season_string = settings.FORCED_SEASON_NAME
+else:
+    get_current_season_string = get_current_season()
 
+get_season_string = get_current_season()
 
 get_prev_season_string = calculate_prev_season(get_season_string)
 

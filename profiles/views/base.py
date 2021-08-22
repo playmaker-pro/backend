@@ -21,7 +21,7 @@ from django.conf import settings
 from profiles import forms, models
 from profiles.model_utils import (get_profile_form_model, get_profile_model,
                           get_profile_model_from_slug)
-from utils import get_current_season
+from utils import get_current_season, calculate_prev_season
 from django.contrib.auth import get_user_model
 User = get_user_model()
 from clubs.models import Team
@@ -404,6 +404,12 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
                 kwargs['season_circle_stats'] = AdaptSeasonPlayerDataToCirclePresentation.adapt(season_stat)
             else:
                 kwargs['season_circle_stats'] = []
+        elif user.profile.has_data_id and user.profile.PROFILE_TYPE == "coach":
+            season_name = get_current_season()
+            prev_season_name = calculate_prev_season(season_name)
+            season_name = prev_season_name
+            if user.profile.data and user.profile.data["games"] and user.profile.data["games"][season_name]:
+                kwargs["last_games"] = user.profile.data["games"][season_name]
 
         if not self._is_owner(user) and request.user.is_authenticated:
             if InquiryRequest.objects.filter(
