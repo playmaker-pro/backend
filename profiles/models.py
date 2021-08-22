@@ -955,7 +955,9 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         games = CoachGamesAdapter().get(int(_id), season=season_name, limit=10)
         if self.data is None:
             self.data = {}
-            self.data['games'] = games
+            if not self.data.get(season_name):
+                self.data["games"][season_name] = None
+            self.data['games'][season_name] = games
 
         self.save()
 

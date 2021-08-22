@@ -124,6 +124,7 @@ class CoachGamesAdapter:
     fields = None
 
     def get(self, coach_id: int, season: str = None, limit: int = None):
+        print(f"data metrics calculation for: coach_id:{coach_id} season:{season} with limit: {limit} ")
         queryset = (
             TeamStat.objects.all()
             .select_related("game", "game__league", "game__season", "coach")
