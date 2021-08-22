@@ -45,8 +45,8 @@ class GameSerializer:
         }
 
     def get_league_name(self, obj):
-        code = obj.game.league.code
-        name = obj.game.league.name
+        code = obj.league.code
+        name = obj.league.name
         return utils.translate_league_name(code, name)
 
     def get_date(self, obj):
