@@ -130,9 +130,9 @@ class CoachGamesAdapter:
             .select_related("game", "game__league", "game__season", "coach")
             .order_by("-game__date")
         )  # values(*self.fileds.keys())
-        print(f'data to calculate: {queryset.count()}')
+        
         queryset = queryset.filter(coach__id=coach_id, game__season__name=season)
-
+        print(f'data to calculate: {queryset.count()}')
         if limit is not None:
             queryset = queryset[:limit]
         return TeamStatSerializer(queryset).data
