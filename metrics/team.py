@@ -256,26 +256,34 @@ class SummarySerializer:
         host_pic = ""
         guest_pic = ""
 
-        current_games_output = defaultdict(list)
+        current_games_output = dict()
 
         for c_game in current_games:
             q = c_game.queue
+            if not current_games_output.get(q):
+                current_games_output[q] = []
+
             current_games_output[q].append(
                 GameSerializer.calc(c_game, host_pic, guest_pic, league)
             )
         output["current_games"] = current_games_output
 
-        next_games_output = defaultdict(list)
+        next_games_output = dict()
         for n_game in next_games:
             q = n_game.queue
+            if not next_games_output.get(q):
+                next_games_output[q] = []           
             next_games_output[q].append(
                 GameSerializer.calc(n_game, host_pic, guest_pic, league)
             )
         output["next_games"] = next_games_output
 
-        today_output = defaultdict(list)
+        today_output = dict()
         for t_game in today_matches:
             q = t_game.queue
+            if not today_output.get(q):
+                today_output[q] = []
+            
             today_output[q].append(
                 GameSerializer.calc(t_game, host_pic, guest_pic, league)
             )
@@ -356,22 +364,24 @@ class LeagueMatchesMetrics:
                     "queue", "date", "host_score", "guest_score", "host_team_name", "guest_team_name")  
             
             )
-
-        output = defaultdict(list)
+        from collections import OrderedDict
+        output = OrderedDict()
         for game in matches:
             #q = game.queue
             q = game["queue"]
             guest_pic = _default_pic
             host_pic = _default_pic
+            if not output.get(q):
+                output[q] = list()
             output[q].append(GameSerializer.calc(game, host_pic, guest_pic, league))
 
         if data_index.data is None:
             data_index.data = {}
 
         if played:
-            data_index.data["matches_played"] = dict(output)
+            data_index.data["matches_played"] = OrderedDict(output)
         else:
-            data_index.data["matches"] = dict(output)
+            data_index.data["matches"] = OrderedDict(output)
         data_index.save()
         return output
 

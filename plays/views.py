@@ -163,7 +163,7 @@ class PlaysViews(PlaysBaseView):
             options["objects"] = {}
             return options
 
-        options["objects"] = Refresh.summary(data_index)
+        options["objects"] = dict(Refresh.summary(data_index))
         # data_index_key = 'summary'
         # if data_index.data is not None and data_index_key in data_index.data:
         #     options['objects'] = data_index.data[data_index_key]
@@ -174,7 +174,9 @@ class PlaysViews(PlaysBaseView):
         #     options['objects'] = SummarySerializer.serialize(self.league, self.season)
         #     data_index.data[data_index_key] = options['objects']
         #     data_index.save()
-
+        print(f'..... {self.season}')
+        print(options["objects"])
+    
         return options
 
 
@@ -231,9 +233,13 @@ class PlaysScoresViews(PlaysBaseView):
         #     options['objects'] = dict(LeagueChildrenSerializer().serialize(self.league))
         # else:
         # options['objects'] = dict(LeagueMatchesMetrics().serialize(self.league, self.season, sort_up=True))
-        options["objects"] = dict(
+        from collections import OrderedDict
+        data = dict(
             LeagueMatchesMetrics().serialize(self.league, self.season, sort_up=True)
         )
+
+        data = OrderedDict(sorted(data.items(), reverse=True))
+        options["objects"] = data
         return options
 
 

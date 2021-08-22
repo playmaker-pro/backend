@@ -184,6 +184,10 @@ class LeagueHistory(models.Model):
         self.check_and_set_if_data_exists()
         super().save(*args, **kwargs)
 
+    def reset(self):
+        self.data = None
+        self.save()
+
 
 class League(models.Model):
     

@@ -5,6 +5,14 @@ from . import models
 from utils import linkify
 
 
+def reset_history(modeladmin, request, queryset):
+    for h in queryset:
+        h.reset()
+
+
+reset_history.short_description = 'Reset history league data.'
+
+
 @admin.register(models.LeagueHistory)
 class LeagueHistoryAdmin(admin.ModelAdmin):
     list_display = (
@@ -18,7 +26,7 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
     )
     ordering = ("-league",)
     readonly_fields = ('data_prettified',)
-
+    actions = [reset_history,]
     def data_prettified(self, instance):
         return json_filed_data_prettified(instance.data, limit=150000)
 
