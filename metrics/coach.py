@@ -130,7 +130,7 @@ class CoachGamesAdapter:
             .select_related("game", "game__league", "game__season", "coach")
             .order_by("-game__date")
         )  # values(*self.fileds.keys())
-
+        print(f'data to calculate: {queryset.count()}')
         queryset = queryset.filter(coach__id=coach_id, game__season__name=season)
 
         if limit is not None:
