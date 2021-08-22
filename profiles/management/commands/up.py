@@ -13,7 +13,7 @@ class Command(BaseCommand):
     help = 'Update metrics..for Coaches.'
 
     def handle(self, *args, **options):
-        profiles = models.CoachProfile.objects.filter(data_id_mapper__isnull=False)
+        profiles = models.CoachProfile.objects.filter(data_mapper_id__isnull=False)
 
         for prof in profiles:
             self.stdout.write(self.style.SUCCESS(f"Updating... {prof.user} profile: {prof}"))
