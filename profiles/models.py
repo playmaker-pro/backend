@@ -953,6 +953,8 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         _id = self.data_mapper_id
         if self.data is None:
             self.data = {}
+        if not self.data.get("games"):
+            self.data["games"] = {}
 
         def _calc(ssn):
             games = CoachGamesAdapter().get(int(_id), season_name=ssn, limit=10)
