@@ -126,7 +126,7 @@ class CoachGamesAdapter:
     def get(self, coach_id: int, season: str = None, limit: int = None):
         queryset = (
             TeamStat.objects.all()
-            .select_related("game", "game__league", "game__season", "game__coach")
+            .select_related("game", "game__league", "game__season", "coach")
             .order_by("-game__date")
         )  # values(*self.fileds.keys())
 
@@ -135,10 +135,6 @@ class CoachGamesAdapter:
         if limit is not None:
             queryset = queryset[:limit]
         return TeamStatSerializer(queryset).data
-
-    def serialize(self, queryset):
-        return PlayerGameSerializer(queryset, many=True).data
-
 
 # class CoachStatsAdapter:
 #     """
