@@ -1,17 +1,17 @@
 {% load i18n %}
 {% load thumbnail %}
 
-<table class="table" style="border:1px;">
+
+<table class="table plays-table d-md-none">
       <thead>
         <tr>
-            <th scope="col" class="d-md-none">{% trans '#' %}</th>
-            <th scope="col" class="d-none d-md-table-cell">{% trans 'Drużyna' %}</th>
-            <th scope="col" class="d-none d-md-table-cell">{% trans 'G' %}</th>
-            <th scope="col" class="d-none d-md-table-cell">{% trans 'W' %}</th>
-            <th scope="col" class="d-none d-md-table-cell">{% trans 'P' %}</th>
-            <th scope="col" class="d-none d-md-table-cell">{% trans 'R' %}</th>
-            <th scope="col" class="d-none d-md-table-cell">{% trans 'G' %}</th>
-            <th scope="col" class="d-none d-md-table-cell">{% trans 'P' %}</th>
+            <th scope="col" class="d-table-cell">{% trans 'Drużyna' %}</th>
+            <th scope="col" class="d-table-cell">{% trans 'G' %}</th>
+            <th scope="col" class="d-table-cell">{% trans 'W' %}</th>
+            <th scope="col" class="d-table-cell">{% trans 'P' %}</th>
+            <th scope="col" class="d-table-cell">{% trans 'R' %}</th>
+            <th scope="col" class="d-table-cell">{% trans 'G' %}</th>
+            <th scope="col" class="d-table-cell">{% trans 'P' %}</th>
             <th scope="col">
                 Trend
             </th>
@@ -20,9 +20,55 @@
     <tbody>
 
     {% for obj in objects %}
+    <tr style="font-size:0.9em;">
+        <td class="d-table-cell pull-left">
+            <span class="table-position"> {{ obj.position }}. </span>
+            {{ obj.date }}
+            <img width="20" class=" avatar rounded img-responsive" title="profile picture" src="{{ obj.pic }}">
+            {% if obj.team_url %}
+                <a href="obj.team_url"> {{ obj.team }} </a>
+            {% else %}{{ obj.team }} {% endif %}
+        </td>
+        <td class="d-table-cell">{{ obj.games }}</td>
+        <td class="d-table-cell">{{ obj.wins }}</td>
+        <td class="d-table-cell">{{ obj.losts }}</td>
+        <td class="d-table-cell">{{ obj.draws }}</td>
+        <td class="d-table-cell">{{ obj.goals }}</td>
+        <td class="d-table-cell">{{ obj.points }}</td>
+        <td class="d-table-cell">
+             {% for t in obj.trend %}
+                <span class="trend-item match-result-tag p-1 text-white rounded bg-{% if t == 'W' %}success{% elif t == 'P' %}danger{% else %}secondary{% endif %}">{{ t }}</span>
+            {% endfor %}
+        </td>
+        </tr>
+
+    {% endfor %}
+    </tbody>
+</table>
+
+
+
+
+
+<table class="table d-none d-md-table-cell plays-table">
+      <thead>
+        <tr>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'Drużyna' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'G' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'W' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'P' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'R' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'G' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'P' %}</th>
+            <th scope="col" class="d-none d-md-table-cell">{% trans 'Trend' %}</th>
+        </tr>
+    </thead>
+    <tbody>
+
+    {% for obj in objects %}
         <tr style="font-size:0.9em;">
             <td class="d-none d-md-table-cell pull-left">
-                {{ obj.position }}
+                <span class="table-position"> {{ obj.position }}. </span>
                 {{ obj.date }}
                 <img width="20" class=" avatar rounded img-responsive" title="profile picture" src="{{ obj.pic }}">
                 {% if obj.team_url %}
@@ -37,7 +83,7 @@
          <td class="d-none d-md-table-cell">{{ obj.points }}</td>
             <td class="d-none d-md-table-cell">
              {% for t in obj.trend %}
-                <span class="match-result-tag p-1 text-white rounded bg-{% if t == 'W' %}success{% elif t == 'P' %}danger{% else %}secondary{% endif %}">{{ t }}</span>
+                <span class="trend-item match-result-tag p-1 text-white rounded bg-{% if t == 'W' %}success{% elif t == 'P' %}danger{% else %}secondary{% endif %}">{{ t }}</span>
             {% endfor %}
             </td>
         </tr>

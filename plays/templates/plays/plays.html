@@ -5,6 +5,27 @@
 {% block extra_css %}
     {{ block.super }}
     <link href="{% static 'assets/css/profiles.css' %}" rel="stylesheet">
+    <style>
+.table td, .table th {
+    padding: 0.3rem;
+}
+
+.trend-item {
+    margin-right:2px;
+    min-width: 20px;
+    display: inline-block;
+    text-align: center;
+}
+.table-position {
+    margin-right:4px;
+    min-width: 20px;
+    display: inline-block;
+}
+
+.plays-table {
+    border: 1px;
+}
+    </style>
 {% endblock extra_css%}
 
 
@@ -55,7 +76,7 @@
 
 
 
-<section id="plays" class="plays col-10" style="padding:0px 0px;">
+<section id="plays" class="plays col-md-10" style="padding:0px 0px;">
 {% include 'plays/header_black.html' %}
   <div class="container" data-aos="fade-up">
     <div class="">
@@ -66,24 +87,31 @@
             </div>
 
         {% else %}
-            <div class="col">
-            {% if tab == 'table' %}
-                {% include 'plays/_tab_table.html' with objects=objects %}
-
-            {% elif tab == 'matches' %}
-                {% include 'plays/_tab_games.html' with objects=objects %}
             
+            {% if tab == 'table' %}
+                <div class="col col-md-7">
+                    {% include 'plays/_tab_table.html' with objects=objects %}
+                </div>
+            {% elif tab == 'matches' %}
+                <div class="col-10">
+                    {% include 'plays/_tab_games.html' with objects=objects %}
+                </div>
             {% elif tab == 'scores' %}
-                {% include 'plays/_tab_games.html' with objects=objects %}
-
+                <div class="col-10">
+                    {% include 'plays/_tab_games.html' with objects=objects %}
+                </div>
             {% elif tab == 'playmaker' %}
-                {% include 'plays/_tab_playmaker.html' with objects=objects %}
+                <div class="col-9">
+                    {% include 'plays/_tab_playmaker.html' with objects=objects %}
+                </div>
 
             {% else %}
-                {% include 'plays/_tab_summary.html' with objects=objects %}
+                <div class="col-10">
+                    {% include 'plays/_tab_summary.html' with objects=objects %}
+                </div>
             {% endif %}
-            </div>   
-            <div class='col-md-12'>
+              
+            <div class='col-md-9'>
                 {% include 'platform/partials/_pagination.html' %}
             </div>       
         {% endif %}

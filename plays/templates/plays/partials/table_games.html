@@ -1,62 +1,59 @@
 {% load playmaker %}
-
-
-
-<table class="table d-md-none" style="border:1px;">
+<table id="table-table" class="table plays-table d-md-none">
   <tbody>
   {% for name, data in games.items %}
-    <tr style="font-size:0.9em;"><td>{{ name }}</td></tr>
-        {% for game in data %}
-        <tr style="font-size:0.7em;">
-            <td><small>{{ game.date }}</small></td>
+    <tr style="font-size:0.9em;">
+        <td>{{ name }}</td>
+    </tr>
 
-            <td class="text-left">
-            {% include "plays/partials/game_with_pic.html" with name=game.host url=game.host_url pic=game.host_pic %}
-                {% if game.score %}
-                    <a href="#showGameModal"
-                        data-toggle="modal"
-                        data-target="#showGameModal" data-game-json='{{game|jsonify}}'>{{ game.score }}</a>
-                {% elif game.scoer == "None - None" %}
-                    - 
-                {% else %}
-                    - 
-                {% endif %}
-              {% include "plays/partials/game_with_pic.html" with name=game.guest url=game.guest_url pic=game.guest_pic %}</td>
-        </tr>
-        {% endfor %}
+    {% for game in data %}
+    <tr style="font-size:0.7em;">
+        <td>
+            <small>{{ game.date }}</small>
+        </td>
+
+        <td class="text-right">
+            {% include "plays/partials/game_with_pic.html" with name=game.host url=game.host_url pic=game.host_pic %}            
+        </td>
+        <td>
+        {% if game.score %}
+            <a href="#showGameModal" data-toggle="modal" data-target="#showGameModal" data-game-json='{{game|jsonify}}'>{{ game.score }}</a>
+        {% else %}
+            - 
+        {% endif %}
+        </td>
+        <td>
+            {% include "plays/partials/game_with_pic.html" with name=game.guest url=game.guest_url pic=game.guest_pic image_left=True %}
+        </td>
+    </tr>
     {% endfor %}
+{% endfor %}
     </tbody>
 </table>
 
 
-<table class="table d-none d-md-table-cell" style="border:1px;">
+<table class="table d-none d-md-table-cell plays-table">
   <tbody>
   {% for name, data in games.items %}
-    <tr style="font-size:0.9em;"><td>{{ name }}</td></tr>
+    <tr style="font-size:0.9em;">
+        <td>{{ name }}</td></tr>
         {% for game in data %}
         <tr style="font-size:0.9em;">
             <td class="d-none d-md-table-cell">{{ game.date }}</td>
 
-            <td class="d-none d-md-table-cell">
+            <td class="d-none d-md-table-cell text-right" >
             {% include "plays/partials/game_with_pic.html" with name=game.host url=game.host_url pic=game.host_pic %}
             </td>
-            
-            <td class="text-center">
 
-        {% if game.score %}
-            <a href="#showGameModal"
-                data-toggle="modal"
-                data-target="#showGameModal" data-game-json='{{game|jsonify}}'>{{ game.score }}</a>
-        {% elif game.scoer == "None - None" %}
-            - 
-        {% else %}
-             - 
-        {% endif %}
+            <td class="d-none d-md-table-cell" >
+                {% if game.score %}
+                <a href="#showGameModal" data-toggle="modal" data-target="#showGameModal" data-game-json='{{game|jsonify}}'>{{ game.score }}</a>
+                {% else %}/ - /{% endif %}
            </td>
-            
+
+            <td class="d-none d-md-table-cell" >
+             {% include "plays/partials/game_with_pic.html" with name=game.guest url=game.guest_url pic=game.guest_pic image_left=True %}
             </td>
-            <td class="d-none d-md-table-cell">
-             {% include "plays/partials/game_with_pic.html" with name=game.guest url=game.guest_url pic=game.guest_pic %}</td>
         </tr>
         {% endfor %}
     {% endfor %}

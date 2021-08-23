@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'easy_thumbnails',
     'djcelery',
+    'django_user_agents',
 
     'wagtail.contrib.forms',
     'wagtail.contrib.modeladmin',
@@ -564,13 +565,15 @@ except Exception as e:
     SEO_DATA = {}
 
 
-
-
-
 # To force and replace season on whole system
 # @todo(rkesik): not all elements supports that yet...
 FORCED_SEASON_NAME = None
 
+# User agents settings
+USER_AGENTS_CACHE = 'default'
+
+
+# Loading of locally stored settings.
 
 try:
     from backend.settings._local import *

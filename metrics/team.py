@@ -162,11 +162,12 @@ class GameSerializer:
     def calculate_from_obj(cls, game, host_pic, guest_pic, league: CLeague):
         h_url, h_pic, h_name = TeamMapper.get_url_pic_name(game.host_team_name, league)
         g_url, g_pic, g_name = TeamMapper.get_url_pic_name(game.guest_team_name, league)
+        score = f"{game.host_score} - {game.guest_score}" if game.host_score and game.guest_score else None
         return {
             "guest_pic": g_pic,
             "host_pic": h_pic,
             "date": game.date.strftime("%Y/%d/%m, %H:%M"),
-            "score": f"{game.host_score} - {game.guest_score}",
+            "score": score,
             "host_url": h_url,
             "host": h_name,
             "guest": g_name,
@@ -178,12 +179,12 @@ class GameSerializer:
     def calculate_from_dict(cls, game, host_pic, guest_pic, league: CLeague):
         h_url, h_pic, h_name = TeamMapper.get_url_pic_name(game["host_team_name"], league)
         g_url, g_pic, g_name = TeamMapper.get_url_pic_name(game["guest_team_name"], league)
-
+        score = f"{game['host_score']} - {game['guest_score']}" if game['host_score'] and game['guest_score'] else None
         return {
             "guest_pic": g_pic,
             "host_pic": h_pic,
             "date": game["date"].strftime("%Y/%d/%m, %H:%M"),
-            "score": f"{game['host_score']} - {game['guest_score']}",
+            "score": score,
             "host_url": h_url,
             "host": h_name,
             "guest": g_name,
