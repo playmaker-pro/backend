@@ -174,8 +174,8 @@ class PlaysViews(PlaysBaseView):
         #     options['objects'] = SummarySerializer.serialize(self.league, self.season)
         #     data_index.data[data_index_key] = options['objects']
         #     data_index.save()
-        print(f'..... {self.season}')
-        print(options["objects"])
+        #print(f'..... {self.season}')
+        #print(options["objects"])
     
         return options
 

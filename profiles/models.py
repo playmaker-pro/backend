@@ -165,7 +165,7 @@ class BaseProfile(models.Model):
     def get_permalink(self):
         return reverse("profiles:show", kwargs={"slug": self.slug})
 
-    def get_team_object(self):
+    def get_team(self):
         if self.PROFILE_TYPE in [definitions.PROFILE_TYPE_COACH, definitions.PROFILE_TYPE_PLAYER]:
             if self.team_object is not None:
                 return self.team_object
@@ -176,7 +176,7 @@ class BaseProfile(models.Model):
             return None
 
     def get_league_object(self):
-        team = self.get_team_object()
+        team = self.get_team()
         if team and team.league:
             return team.league
         return None
