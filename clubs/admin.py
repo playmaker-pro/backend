@@ -18,6 +18,7 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
     list_display = (
         "season",
         "league",
+        "league_slug",
         "index",
         "is_table_data",
         "is_matches_data",
