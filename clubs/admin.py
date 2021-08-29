@@ -30,7 +30,7 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
     actions = [reset_history,]
 
     def get_league_slug(self, obj):
-        return self.league.slug
+        return obj.league.slug
 
     def data_prettified(self, instance):
         return json_filed_data_prettified(instance.data, limit=150000)
