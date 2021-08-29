@@ -13,8 +13,9 @@
                             <img class="d-md-none avatar rounded img-responsive" title="profile picture" src="{% thumbnail league.picture|default:'default_profile.png' 'profile_avatar_show_mobile' %}">
                         </div>
                         <div class="col-8">
-                            <h1 class="d-none d-md-block acc-name" style="#1b1b1b;">{{ league.name.upper }}</h1>
+                            <h3 class="d-none d-md-block acc-name" style="#1b1b1b; padding: 25px 0px 0px  0px;">{{ league.name.upper }}</h3>
                             <div class=" d-inline">
+                                {{ current_season }}
                             </div>
                         </div>
                     </div>

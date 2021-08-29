@@ -274,6 +274,24 @@ class PlaysListViews(ComplexViews):
     tab = None
 
     def get(self, request, *args, **kwargs):
+        from plays.models import PlaysConfig
+
+        redirect_league = request.user.profile.get_league_object()
+
+        if redirect_league:
+            return redirect("plays:summary", slug=redirect_league.slug)
+       
+        redirect_league = PlaysConfig.objects.all().first()
+
+        if redirect_league:
+            return redirect("plays:summary", slug=redirect_league.main_league.slug)
+
+        if not redirect_league:
+            redirect_league = League.objects.all().first()
+            
+        if redirect_league:
+            return redirect("plays:summary", slug=redirect_league.slug)
+       
         leagues = League.objects.filter(parent__isnull=True)
         season = request.GET.get("season") or get_current_season()
 

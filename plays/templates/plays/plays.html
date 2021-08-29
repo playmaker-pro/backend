@@ -25,6 +25,14 @@
 .plays-table {
     border: 1px;
 }
+
+table tr {
+  border-bottom: 1px solid #dee2e6;
+  border-top: 0px solid #dee2e6;
+}
+table td { 
+border-top: 0px solid #dee2e6;
+}
     </style>
 {% endblock extra_css%}
 
@@ -93,27 +101,27 @@
                     {% include 'plays/_tab_table.html' with objects=objects %}
                 </div>
             {% elif tab == 'matches' %}
-                <div class="col-10">
+                <div class="col-md-10">
                     {% include 'plays/_tab_games.html' with objects=objects %}
                 </div>
             {% elif tab == 'scores' %}
-                <div class="col-10">
+                <div class="col-md-10">
                     {% include 'plays/_tab_games.html' with objects=objects %}
                 </div>
             {% elif tab == 'playmaker' %}
-                <div class="col-9">
+                <div class="col-md-9">
                     {% include 'plays/_tab_playmaker.html' with objects=objects %}
                 </div>
 
             {% else %}
-                <div class="col-10">
+                <div class="col-md-10">
                     {% include 'plays/_tab_summary.html' with objects=objects %}
                 </div>
             {% endif %}
               
-            <div class='col-md-9'>
+            {% comment %} <div class='col-md-9'>
                 {% include 'platform/partials/_pagination.html' %}
-            </div>       
+            </div>        {% endcomment %}
         {% endif %}
     </div>
 </div>

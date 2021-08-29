@@ -165,6 +165,22 @@ class BaseProfile(models.Model):
     def get_permalink(self):
         return reverse("profiles:show", kwargs={"slug": self.slug})
 
+    def get_team_object(self):
+        if self.PROFILE_TYPE in [definitions.PROFILE_TYPE_COACH, definitions.PROFILE_TYPE_PLAYER]:
+            if self.team_object is not None:
+                return self.team_object
+            else:
+                return None
+        # @todo: here player profile need to be added.
+        else:
+            return None
+
+    def get_league_object(self):
+        team = self.get_team_object()
+        if team and team.league:
+            return team.league
+        return None
+
     def get_club_object(self):
         if self.PROFILE_TYPE in [definitions.PROFILE_TYPE_CLUB, definitions.PROFILE_TYPE_COACH]:
             if self.PROFILE_TYPE == definitions.PROFILE_TYPE_CLUB:
@@ -174,10 +190,14 @@ class BaseProfile(models.Model):
                     return None
                 else:
                     return self.team_object.club
-            # @todo: here player profile need to be added.
+        # @todo: here player profile need to be added.
         else:
             return None
 
+    @property
+    def has_attachemnt(self):
+        return False
+        
     @property
     def is_active(self):
         return definitions.PROFILE_TYPE_SHORT_MAP.get(self.PROFILE_TYPE) == self.user.declared_role
@@ -448,6 +468,12 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     TRAINING_READY_CHOCIES = GLOBAL_TRAINING_READY_CHOCIES
 
     @property
+    def has_attachemnt(self):
+        if self.team_object is not None:
+            return True
+        return False
+
+    @property
     def is_goalkeeper(self):
         if self.position_raw is not None:
             return self.position_raw == 1
@@ -682,7 +708,7 @@ class PlayerMetrics(models.Model):
     season_summary_updated = models.DateTimeField(null=True, blank=True)
     season = models.JSONField(null=True, blank=True)
     season_updated = models.DateTimeField(null=True, blank=True)
-
+        
     def _update_cached_field(self, attr: str, data, commit=True):
         setattr(self, attr, data)
         setattr(self, f'{attr}_updated', timezone.now())
@@ -806,6 +832,12 @@ class ClubProfile(BaseProfile):
     @supress_exception
     def display_voivodeship(self):
         return self.club_object.display_voivodeship
+
+    @property
+    def has_attachemnt(self):
+        if self.club_object is not None:
+            return True
+        return False
 
     club_object = models.ForeignKey(clubs_models.Club, on_delete=models.SET_NULL, related_name='clubowners', db_index=True, null=True, blank=True)
     phone = models.CharField(_('Telefon'), max_length=15, blank=True, null=True)
@@ -967,6 +999,12 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         prev_season = utilites.calculate_prev_season(season_name)
         _calc(prev_season)
         self.save()
+
+    @property
+    def has_attachemnt(self):
+        if self.team_object is not None:
+            return True
+        return False
 
     @property
     def age(self):  # todo przeniesc to do uzywania z profile.utils.
