@@ -18,7 +18,7 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
     list_display = (
         "season",
         "league",
-        "league_slug",
+        "get_league_slug",
         "index",
         "is_table_data",
         "is_matches_data",
@@ -28,6 +28,10 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
     ordering = ("-league",)
     readonly_fields = ('data_prettified',)
     actions = [reset_history,]
+
+    def get_league_slug(self, obj):
+        return self.league.slug
+
     def data_prettified(self, instance):
         return json_filed_data_prettified(instance.data, limit=150000)
 
