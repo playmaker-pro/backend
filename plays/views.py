@@ -265,7 +265,7 @@ class PlaysGamesViews(PlaysBaseView):
 
 
 class PlaysListViews(ComplexViews):
-    """Widok spotkań"""
+    """Główny widok spotań"""
 
     template_name = "plays/list.html"
     http_method_names = ["get"]
@@ -281,17 +281,16 @@ class PlaysListViews(ComplexViews):
         if redirect_league:
             return redirect("plays:summary", slug=redirect_league.slug)
        
-        redirect_league = PlaysConfig.objects.all().first()
+        plays_config = PlaysConfig.objects.all().first()
 
-        if redirect_league:
-            return redirect("plays:summary", slug=redirect_league.main_league.slug)
+        if plays_config:
+            league_slug = plays_config.main_league.slug
+            return redirect("plays:summary", slug=league_slug)
 
-        if not redirect_league:
-            redirect_league = League.objects.all().first()
-            
-        if redirect_league:
-            return redirect("plays:summary", slug=redirect_league.slug)
-       
+        else:
+            league = League.objects.all().first()
+            return redirect("plays:summary", slug=league.slug)
+
         leagues = League.objects.filter(parent__isnull=True)
         season = request.GET.get("season") or get_current_season()
 

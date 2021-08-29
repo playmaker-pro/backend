@@ -176,6 +176,8 @@ class BaseProfile(models.Model):
             return None
 
     def get_league_object(self):
+        """Gets league object based on self.team_object if present
+        """
         team = self.get_team()
         if team and team.league:
             return team.league
