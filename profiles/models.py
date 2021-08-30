@@ -996,6 +996,8 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
                 self.data["games"][ssn] = None
             self.data['games'][ssn] = games
 
+            season_stats = CoachSeasonAdapter().get(int(_id), season_name=ssn, limit=10)
+
         season_name = utilites.get_current_season()
         _calc(season_name)
         prev_season = utilites.calculate_prev_season(season_name)

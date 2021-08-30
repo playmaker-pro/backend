@@ -13,13 +13,22 @@
         </div>
         <div class="modal-body">
           
-          <h2 id="md-gm-title"></h2>
-          <h4 id="md-gm-sub"></h4>
-          
-          <a href="" id="md-gm-host" >host_team_name</a>
-              <h3 id="md-gm-score"></h3>
-          <a href="" id="md-gm-guest">guest_team_name</a>
-          
+          {% comment %} <h4 id="md-gm-title"></h4> {% endcomment %}
+          <h5 id="md-gm-sub"></h5>
+          <div class="d-flex flex-row  justify-content-center">
+            <div class="p-2">
+                <a href="" id="md-gm-host">host_team_name</a>
+            </div>
+            <div class="p-2">
+                <h4 id="md-gm-score"></h4>
+            </div>
+            <div class="p-2">
+              <a href="" id="md-gm-guest">guest_team_name</a>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="border-top:0px;">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Zamknij' %}</button> 
         </div>
       </div>
     </div>

@@ -10,6 +10,38 @@
     padding: 0.3rem;
 }
 
+.tb-subtitle {
+    padding-top:19px;
+    border: 1px solid transparent;
+    border-top-left-radius: .25rem;
+    border-top-right-radius: .25rem;
+    border-bottom: 3px solid #e03a3c;
+
+}
+.tb-subtitle td { 
+    padding-top:15px;
+    padding-bottom:0px;
+    margin-bottom:5px;
+    pointer-events: none;
+}
+
+.tb-subtitle .text {
+    background: #e03a3c;
+    color: #fff;
+    padding: 4px 4px 0px 4px;
+    margin-bottom:5px;
+    border-top-left-radius: .25rem;
+    border-top-right-radius: .25rem;
+}
+
+.tb-title {
+    background-color: #f2f2f2;
+}
+
+tr:hover {
+    background-color: #f2f2f2;
+}
+
 .trend-item {
     margin-right:2px;
     min-width: 20px;
@@ -30,8 +62,15 @@ table tr {
   border-bottom: 1px solid #dee2e6;
   border-top: 0px solid #dee2e6;
 }
-table td { 
+
+.table td { 
 border-top: 0px solid #dee2e6;
+
+}
+
+#plays {
+
+    line-height: .9;
 }
     </style>
 {% endblock extra_css%}
@@ -63,7 +102,7 @@ border-top: 0px solid #dee2e6;
             {% endif %}
         {% endfor %}
     </select>
-    <div class="">
+
         {% for league in leagues %}
             {% if league.is_parent %}
                 {{ league.name }}
@@ -78,16 +117,14 @@ border-top: 0px solid #dee2e6;
                     {% endif %}
             {% endif %}
         {% endfor %}
-    </div>
+
 </div>
 </section>
 
-
-
 <section id="plays" class="plays col-md-10" style="padding:0px 0px;">
 {% include 'plays/header_black.html' %}
-  <div class="container" data-aos="fade-up">
-    <div class="">
+  <div class="container" data-aos="fade-up" style="margin-left:5px;">
+    <div class="row">
         {% comment %} {% if page_obj.paginator.count == 0 %} {% endcomment %}
         {% if objects|length == 0 %}
             <div class="col-md-12 text-center">
@@ -148,7 +185,7 @@ border-top: 0px solid #dee2e6;
 $('#showGameModal').on('show.bs.modal', function (event) {
     var data = $(event.relatedTarget).data('game-json');
 
-    $(this).find('#md-gm-title').text(data.host + ' - ' + data.guest);
+    //$(this).find('#md-gm-title').text(data.host + ' - ' + data.guest);
     $(this).find('#md-gm-score').text(data.score);
     $(this).find('#md-gm-sub').text(data.date);
     $(this).find('#md-gm-host').text(data.host);

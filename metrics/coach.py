@@ -1,6 +1,7 @@
 from data.models import TeamStat
 
 from stats import utilites as utils
+from collections import defaultdict
 
 
 # class CoachSeasonSerializer:
@@ -139,20 +140,56 @@ class CoachGamesAdapter:
         dta = TeamStatSerializer(queryset).data
         return dta
 
+
+class CoachStatSerializer:
+    def __init__(self, queryset):
+        self.data = []
+        data = defaultdict(lambda: 0)
+        for q in queryset:
+            data["wons"] += 0
+            data["draws"] += 0
+            data["loses"] += 0
+            data["place"] = 0
+            data["avg_goals"] = 0
+            data["avg_goals_losts"] = 0
+            data["avg_points"] = 0
+            
+            
+        self.data = dict(data)
+
+class CoachSeasonAdapter:
+    fields = None
+
+    def get(self, coach_id: int, season_name: str = None, limit: int = None):
+        print(f"data `season stats` metrics calculation for: coach_id:{coach_id} season:{season_name} with limit: {limit} ")
+        queryset = (
+            TeamStat.objects.all()
+            .select_related("game", "game__league", "game__season", "coach")
+            .order_by("-game__date")
+        )  # values(*self.fileds.keys())
+        assert isinstance(coach_id, int), f"coach_id need to be type of inteager. it is: {type(coach_id)}"
+        queryset = queryset.filter(coach__id=coach_id, game__season__name=season_name)
+        print(f'data `season stats` to calculate: {queryset.count()}')
+        if limit is not None:
+            queryset = queryset[:limit]
+        dta = CoachStatSerializer(queryset).data
+        return dta
+
+    def _percentage(self, data):
+        total = data["games_played"]
+        if total != 0:
+            data["first_percent"] = 100 * data["first_squad_games_played"] / total
+            data["from_bench_percent"] = 100 * data["from_bench"] / total
+            data["bench_percent"] = 100 * data["bench"] / total
+        else:
+            data["first_percent"] = 0
+            data["from_bench_percent"] = 0
+            data["bench_percent"] = 0
+
+        return data
+
+
 # class CoachStatsAdapter:
-#     """
-
-#     Uses data.PlayerStat
-
-#     1. know how to get data from data.models
-#     2. know how to filter qs
-#     3. know how to strucrure it
-#     4.. .knows too much......
-
-#     single player stats (player groupped)
-#     Season performance + latest games
-#     """
-
 #     def get(
 #         self,
 #         coach_id: str,

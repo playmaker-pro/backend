@@ -1,19 +1,30 @@
 {% load playmaker %}
-<table id="table-table" class="table plays-table d-md-none" width="100%">
+<table id="table-table" class="table plays-table d-md-none" style="font-size:0.7em;" width="100%">
   <tbody>
-  {% for name, data in games.items %}
-    <tr style="font-size:0.9em;">
-        <td>{{ name }}</td>
+
+    {% for section_name, section_data in games.items %}
+
+    {% if show_sub_title %}
+        <tr class="tb-subtitle">
+            <td colspan="4">{{ section_name }}</td>
+        </tr>
+    {% endif %}
+
+    {% for name, data in section_data.items %}
+   
+    <tr class="tb-title">
+        <td colspan="4">{{ name }}</td>
     </tr>
 
     {% for game in data %}
-    <tr style="font-size:0.7em;">
+    <tr>
         <td>
             <small>{{ game.date }}</small>
         </td>
 
-        <td class="text-right">
-            {% include "plays/partials/game_with_pic.html" with name=game.host url=game.host_url pic=game.host_pic %}            
+        <td class="text-left">
+            {% include "plays/partials/game_with_pic.html" with name=game.host url=game.host_url pic=game.host_pic %} <br>
+            {% include "plays/partials/game_with_pic.html" with name=game.guest url=game.guest_url pic=game.guest_pic %}           
         </td>
         <td>
         {% if game.score %}
@@ -22,23 +33,33 @@
             - 
         {% endif %}
         </td>
-        <td>
-            {% include "plays/partials/game_with_pic.html" with name=game.guest url=game.guest_url pic=game.guest_pic image_left=True %}
-        </td>
+
     </tr>
     {% endfor %}
+{% endfor %}
 {% endfor %}
     </tbody>
 </table>
 
 
-<table class="table d-none d-md-table-cell plays-table" width="100%">
+<table class="table d-none d-md-table-cell plays-table" style="font-size:0.9em;"  width="100%">
   <tbody>
-  {% for name, data in games.items %}
-    <tr style="font-size:0.9em;">
-        <td>{{ name }}</td></tr>
+
+  {% for section_name, section_data in games.items %}
+    
+    {% if show_sub_title %}
+        <tr class="tb-subtitle">
+            <td colspan="4"><span class="text">{{ section_name }}<span></td>
+        </tr>
+    {% endif %}
+
+    {% for name, data in section_data.items %}
+   
+    <tr class="tb-title ">
+        <td colspan="4">{{ name }}</td>
+    </tr>
         {% for game in data %}
-        <tr style="font-size:0.9em;">
+        <tr>
             <td class="d-none d-md-table-cell">{{ game.date }}</td>
 
             <td class="d-none d-md-table-cell text-right" >
@@ -48,7 +69,7 @@
             <td class="d-none d-md-table-cell" >
                 {% if game.score %}
                 <a href="#showGameModal" data-toggle="modal" data-target="#showGameModal" data-game-json='{{game|jsonify}}'>{{ game.score }}</a>
-                {% else %}&nbsp;&nbsp;&nbsp;-{% endif %}
+                {% else %} &nbsp;&nbsp; - &nbsp;&nbsp; {% endif %}
            </td>
 
             <td class="d-none d-md-table-cell" >
@@ -56,6 +77,7 @@
             </td>
         </tr>
         {% endfor %}
+      {% endfor %}
     {% endfor %}
     </tbody>
 </table>

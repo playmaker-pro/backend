@@ -163,7 +163,20 @@ class PlaysViews(PlaysBaseView):
             options["objects"] = {}
             return options
 
-        options["objects"] = dict(Refresh.summary(data_index))
+        # options["objects"] = dict(Refresh.summary(data_index))
+        data = dict(Refresh.summary(data_index))
+        output = {}
+
+        if data.get("today_games"):
+            output["Dzisiejsze mecze:"] = data.get("today_games") 
+        elif data.get("current_games"):
+            output["Rozegrane mecze"] = data.get("current_games")
+        elif data.get("next_games"):
+            output["Nachodzące mecze"] = data.get("next_games")
+
+        options["objects"] = output
+
+        options["summary_table_objects"] = Refresh.table(data_index)
         # data_index_key = 'summary'
         # if data_index.data is not None and data_index_key in data_index.data:
         #     options['objects'] = data_index.data[data_index_key]
@@ -239,7 +252,9 @@ class PlaysScoresViews(PlaysBaseView):
         )
 
         data = OrderedDict(sorted(data.items(), reverse=True))
-        options["objects"] = data
+        options["objects"] = {}
+        options["objects"]["Wyniki"] = {}
+        options["objects"]["Wyniki"] = data
         return options
 
 
@@ -251,16 +266,14 @@ class PlaysGamesViews(PlaysBaseView):
 
     def set_kwargs(self, *args, **kwargs):
         options = super().set_kwargs(*args, **kwargs)
-        if self.league.is_parent:
-            raise RuntimeError("tego nie powinno byc")
-            options["objects"] = dict(LeagueChildrenSerializer().serialize(self.league))
-        else:
 
-            options["objects"] = dict(
-                LeagueMatchesMetrics().serialize(
-                    self.league, self.season, played=False, sort_up=False
-                )
+        options["objects"] = {}
+        options["objects"]["Mecze"] = {}
+        options["objects"]["Mecze"] = dict(
+            LeagueMatchesMetrics().serialize(
+                self.league, self.season, played=False, sort_up=False
             )
+        )
         return options
 
 

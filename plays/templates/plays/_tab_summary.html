@@ -1,12 +1,6 @@
 {% load i18n %}
 {% load thumbnail %}
 
-{% if objects.today_games %}
-Dzisiejsze mecze:
-{% endif %}
-
-{% include "plays/partials/table_games.html" with games=objects.today_games %}
-Rozegrane mecze:
-{% include "plays/partials/table_games.html" with games=objects.current_games %}
-Nachodzące mecze:
-{% include "plays/partials/table_games.html" with games=objects.next_games %}
+{% include "plays/partials/table_games.html" with games=objects show_sub_title=True %}
+<br><br>
+{% include "plays/_tab_table.html" with objects=summary_table_objects %}

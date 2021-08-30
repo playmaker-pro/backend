@@ -293,7 +293,14 @@ def convert_form_names(data: dict):
 
 class AdaptSeasonPlayerDataToCirclePresentation:
     @classmethod
-    def adapt(cls, season_stat):
+    def adapt(cls, season_stat, persona: str = "player"):
+        if persona == 'player':
+            return cls.adapt_player_stats(season_stat)
+        elif persona == 'coach':
+            return cls.adapt_coach_stats(season_stat)
+
+    @classmethod
+    def adapt_player_stats(cls, season_stat):
         return [
             {
                 'title': _('Pierwszy skład'),
@@ -313,6 +320,30 @@ class AdaptSeasonPlayerDataToCirclePresentation:
                 'value': math.floor(season_stat['bench_percent']), 
                 'shift': 0
             }
+        ]
+
+    @classmethod
+    def adapt_coach_stats(cls, season_stat):
+        return [
+            {
+                'title': _('Wygrane'),
+                'bs4_css': 'success',
+                'value': math.ceil(season_stat['won_percent']),
+                'shift': math.ceil(season_stat['draws_percent'] + season_stat['lost_percent'])
+            },
+            {
+                'title': _('Remisy'),
+                'bs4_css': 'secondary',
+                'value': math.floor(season_stat['draws_percent']), 
+                'shift': math.floor(season_stat['lost_percent'])
+            },
+            {
+                'title': _('Przegrane'),
+                'bs4_css': 'danger',
+                'value': math.floor(season_stat['lost_percent']),
+                'shift': 0
+            },
+
         ]
 
 
@@ -410,6 +441,13 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
             season_name = prev_season_name
             if user.profile.data and user.profile.data["games"] and user.profile.data["games"][season_name]:
                 kwargs["last_games"] = user.profile.data["games"][season_name]
+            if user.profile.data and user.profile.data["season_stats"] and user.profile.data["season_stats"][season_name]:
+                kwargs['season_circle_stats'] = AdaptSeasonPlayerDataToCirclePresentation.adapt(
+                    user.profile.data["season_stats"][season_name],
+                    persona='coach')
+            else:
+                kwargs['season_circle_stats'] = []
+
 
         if not self._is_owner(user) and request.user.is_authenticated:
             if InquiryRequest.objects.filter(
