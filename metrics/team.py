@@ -429,9 +429,11 @@ class LeagueMatchesMetrics:
 
         if played:
             data_index.data["matches_played"] = {}
+            print('...........setting matches_played')
             data_index.data["matches_played"] = OrderedDict(output)
         else:
             data_index.data["matches"] = {}
+            print('...........setting matches')
             data_index.data["matches"] = OrderedDict(output)
         print('Saving... data_index....')
         data_index.save()
