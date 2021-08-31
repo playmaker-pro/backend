@@ -433,14 +433,14 @@ class LeagueMatchesMetrics:
             data = data_index.data.copy()
             data["matches_played"] = OrderedDict(output)
             # print(data_index.data["matches_played"])
-            data_index.data = data
+            data_index.data = None
             data_index.save()
         else:
             # data_index.data["matches"] = {}
             print('...........setting matches')
             data = data_index.data.copy()
             data["matches"] = OrderedDict(output)
-            data_index.data = data
+            data_index.data = None
             data_index.save()
 
         print('Saving... data_index....')
