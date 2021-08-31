@@ -166,14 +166,31 @@ class GameSerializer:
         return {
             "guest_pic": g_pic,
             "host_pic": h_pic,
-            "date": game.date.strftime("%Y/%d/%m, %H:%M"),
+            "date": cls.clean_date(game.date),
             "score": score,
             "host_url": h_url,
             "host": h_name,
             "guest": g_name,
             "guest_url": g_url,
+            "guest_score": game.host_score,
+            "host_score": game.guest_score,
             # "url": game.league._url,
         }
+
+    @classmethod
+    def add_timezone_to_datetime(cls, date: datetime) -> datetime:
+        """Two systems uses different date nottation. +2h is needed to shift"""
+        from datetime import timedelta
+        return date + timedelta(hours=2)
+
+    @classmethod
+    def convert_datetime_to_string(cls, date: datetime) -> str:
+        return date.strftime("%Y/%d/%m, %H:%M")
+
+    @classmethod
+    def clean_date(cls, date: datetime) -> str:
+        date = cls.add_timezone_to_datetime(date)
+        return cls.convert_datetime_to_string(date)
 
     @classmethod
     def calculate_from_dict(cls, game, host_pic, guest_pic, league: CLeague):
@@ -183,12 +200,14 @@ class GameSerializer:
         return {
             "guest_pic": g_pic,
             "host_pic": h_pic,
-            "date": game["date"].strftime("%Y/%d/%m, %H:%M"),
+            "date": cls.clean_date(game["date"]),
             "score": score,
             "host_url": h_url,
             "host": h_name,
             "guest": g_name,
             "guest_url": g_url,
+            "guest_score": game.host_score,
+            "host_score": game.guest_score,
             # "url": game.league._url,
         }
 
@@ -367,7 +386,7 @@ class LeagueMatchesMetrics:
         from collections import OrderedDict
         output = OrderedDict()
         for game in matches:
-            #q = game.queue
+            # q = game.queue  # if we do not do values ealier
             q = game["queue"]
             guest_pic = _default_pic
             host_pic = _default_pic
