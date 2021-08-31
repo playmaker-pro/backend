@@ -355,12 +355,14 @@ class LeagueMatchesMetrics:
                 return []
 
         # @todo: add date check
+
         if (
             data_index.data is not None
             and "matches_played" in data_index.data
             and played
             and not overwrite
         ):
+            print(f'Geting data for matched_played. overwrite={overwrite}')
             return data_index.data["matches_played"]
 
         elif (
@@ -369,8 +371,9 @@ class LeagueMatchesMetrics:
             and not played
             and not overwrite
         ):
+            print(f'Geting data for matches. overwrite={overwrite}')
             return data_index.data["matches"]
-
+        print(f'Calculating Game data for {league} season={season_name}')
         if played:
             matches = (
                 Game.objects.select_related("league", "season")
