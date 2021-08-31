@@ -5,36 +5,22 @@
     <div class="container pt-2" style="margin-left:5px;" ata-aos="fade-up">
         <div class="row pb-2">
             <div class="col-md-8">
-                <div class="row no-gutters">
-
-                    <div class="d-md-none col-4 pull-right" style="padding:0 0 0 15px;">
-                        <img class="d-md-none avatar rounded img-responsive" title="profile picture" src="{% thumbnail league.picture|default:'default_profile.png' 'tables_avatar_show' %}">
+                <div class="d-flex flex-row">
+                    <div>
+                        <img class="avatar rounded img-responsive" title="profile picture" src="{% thumbnail league.picture|default:'default_profile.png' 'tables_avatar_show' %}">
                     </div>
-                    <div class="d-md-none col-8">
+                    <div class="pl-2">
                         <h5 class="d-md-block" style="#1b1b1b;">{{ league.name.upper }}</h5>
                         <div class=" d-inline">
-                            {{ current_season }} 
+                             <small>{{ current_season }} </small>
                         </div>
                         {% if league.parent %}
-                        <div class="d-block" > 
-                             {{ league.parent.name }} 
+                        <div class="d-block" style="padding-top:4px;"> 
+                             <small>{{ league.parent.name }} </small>
                         </div>
                         {% endif %}
                     </div>
-                    <div class="d-none d-md-block col-md-2">
-                        <img class=" avatar rounded img-responsive" title="profile picture" src="{% thumbnail league.picture|default:'default_profile.png' 'profile_avatar_show_mobile' %}">
-                    </div>
-                    <div class="d-none d-md-block">
-                        <h3 class=" acc-name" style="#1b1b1b; padding: 15px 0px 0px  0px;">{{ league.name.upper }}</h3>
-                        <div class=" d-inline">
-                            {{ current_season }} 
-                        </div>
-                        {% if league.parent %}
-                        <div class="d-block" > 
-                             {{ league.parent.name }} 
-                        </div>
-                        {% endif %}
-                    </div>
+
                 </div>
             </div>
             <div class="col-md-4">

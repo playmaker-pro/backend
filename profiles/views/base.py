@@ -441,7 +441,7 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
             season_name = prev_season_name
             if user.profile.data and user.profile.data["games"] and user.profile.data["games"][season_name]:
                 kwargs["last_games"] = user.profile.data["games"][season_name]
-            if user.profile.data and user.profile.data["season_stats"] and user.profile.data["season_stats"][season_name]:
+            if user.profile.data and user.profile.data.get("season_stats") and user.profile.data["season_stats"][season_name]:
                 kwargs['season_circle_stats'] = AdaptSeasonPlayerDataToCirclePresentation.adapt(
                     user.profile.data["season_stats"][season_name],
                     persona='coach')

@@ -284,7 +284,6 @@ class SummarySerializer:
             q = t_game.queue
             if not today_output.get(q):
                 today_output[q] = []
-            
             today_output[q].append(
                 GameSerializer.calc(t_game, host_pic, guest_pic, league)
             )

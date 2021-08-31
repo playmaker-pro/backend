@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load thumbnail %}
 
-<table class="table plays-table d-md-none">
+<table class="table plays-table d-md-none" style="font-size:0.9em;">
       <thead>
         <tr><td></td></tr>
 
@@ -19,7 +19,7 @@
     <tbody>
 
     {% for obj in objects %}
-    <tr style="font-size:0.9em;">
+    <tr >
         <td class="d-table-cell pull-left">
             <span class="table-position"> {{ obj.position }}. </span>
             {{ obj.date }}
@@ -28,12 +28,12 @@
                 <a href="obj.team_url"> {{ obj.team }} </a>
             {% else %}{{ obj.team }} {% endif %}
         </td>
-        <td class="d-table-cell">{{ obj.games }}</td>
-        <td class="d-table-cell">{{ obj.wins }}</td>
-        <td class="d-table-cell">{{ obj.draws }}</td>
-        <td class="d-table-cell">{{ obj.losts }}</td>
-        <td class="d-table-cell">{{ obj.goals }}</td>
-        <td class="d-table-cell">{{ obj.points }}</td>
+        <td class="d-table-cell tb-digit">{{ obj.games }}</td>
+        <td class="d-table-cell tb-digit">{{ obj.wins }}</td>
+        <td class="d-table-cell tb-digit">{{ obj.draws }}</td>
+        <td class="d-table-cell tb-digit">{{ obj.losts }}</td>
+        <td class="d-table-cell tb-digit">{{ obj.goals }}</td>
+        <td class="d-table-cell tb-digit">{{ obj.points }}</td>
         <td class="d-table-cell">
              {% for t in obj.trend %}
                 <span class="trend-item match-result-tag p-1 text-white rounded bg-{% if t == 'W' %}success{% elif t == 'P' %}danger{% else %}secondary{% endif %}">{{ t }}</span>
@@ -46,7 +46,7 @@
 </table>
 
 
-<table class="table d-none d-md-table-cell plays-table">
+<table class="table d-none d-md-table-cell plays-table" style="font-size:0.9em;">
       <thead>
         <tr>
             <th scope="col" class="d-none d-md-table-cell">{% trans 'Klub' %}</th>
@@ -62,7 +62,7 @@
     <tbody>
 
     {% for obj in objects %}
-        <tr style="font-size:0.9em;">
+        <tr>
             <td class="d-none d-md-table-cell pull-left">
                 <span class="table-position"> {{ obj.position }}. </span>
                 {{ obj.date }}
@@ -71,12 +71,12 @@
                     <a href="obj.team_url"> {{ obj.team }} </a>
                 {% else %}{{ obj.team }} {% endif %}
             </td>
-            <td class="d-none d-md-table-cell">{{ obj.games }}</td>
-         <td class="d-none d-md-table-cell">{{ obj.wins }}</td>
-         <td class="d-none d-md-table-cell">{{ obj.draws }}</td>
-         <td class="d-none d-md-table-cell">{{ obj.losts }}</td>
-         <td class="d-none d-md-table-cell">{{ obj.goals }}</td>
-         <td class="d-none d-md-table-cell">{{ obj.points }}</td>
+         <td class="tb-digit">{{ obj.games }}</td>
+         <td class="tb-digit">{{ obj.wins }}</td>
+         <td class="tb-digit">{{ obj.draws }}</td>
+         <td class="tb-digit">{{ obj.losts }}</td>
+         <td class="tb-digit">{{ obj.goals }}</td>
+         <td class="tb-digit">{{ obj.points }}</td>
             <td class="d-none d-md-table-cell">
              {% for t in obj.trend %}
                 <span class="trend-item match-result-tag p-1 text-white rounded bg-{% if t == 'W' %}success{% elif t == 'P' %}danger{% else %}secondary{% endif %}">{{ t }}</span>

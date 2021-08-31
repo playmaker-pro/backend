@@ -18,15 +18,15 @@
 
     {% for game in data %}
     <tr>
-        <td>
+        <td class="tb-digit">
             <small>{{ game.date }}</small>
         </td>
 
         <td class="text-left">
-            {% include "plays/partials/game_with_pic.html" with name=game.host url=game.host_url pic=game.host_pic %} <br>
-            {% include "plays/partials/game_with_pic.html" with name=game.guest url=game.guest_url pic=game.guest_pic %}           
+            {% include "plays/partials/game_with_pic.html" with name=game.host url=game.host_url pic=game.host_pic image_left=True %} <br>
+            {% include "plays/partials/game_with_pic.html" with name=game.guest url=game.guest_url pic=game.guest_pic image_left=True %}           
         </td>
-        <td>
+        <td class="tb-digit">
         {% if game.score %}
             <a href="#showGameModal" data-toggle="modal" data-target="#showGameModal" data-game-json='{{game|jsonify}}'>{{ game.score }}</a>
         {% else %}
@@ -60,13 +60,13 @@
     </tr>
         {% for game in data %}
         <tr>
-            <td class="d-none d-md-table-cell">{{ game.date }}</td>
+            <td class="d-none d-md-table-cell tb-digit">{{ game.date }}</td>
 
-            <td class="d-none d-md-table-cell text-right" >
+            <td class="d-none d-md-table-cell text-right">
             {% include "plays/partials/game_with_pic.html" with name=game.host url=game.host_url pic=game.host_pic %}
             </td>
 
-            <td class="d-none d-md-table-cell" >
+            <td class="d-none d-md-table-cell tb-digit" >
                 {% if game.score %}
                 <a href="#showGameModal" data-toggle="modal" data-target="#showGameModal" data-game-json='{{game|jsonify}}'>{{ game.score }}</a>
                 {% else %} &nbsp;&nbsp; - &nbsp;&nbsp; {% endif %}

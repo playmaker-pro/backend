@@ -168,7 +168,7 @@ class PlaysViews(PlaysBaseView):
         output = {}
         output["Nachodzące mecze"] = {}
         output["Rozegrane mecze"] = {}
-        
+
         if data.get("today_games"):
             output["Dzisiejsze mecze"] = data.get("today_games") 
         if data.get("current_games"):
