@@ -149,6 +149,7 @@ class GameSerializer:
                         "score": "2 - 1",
                         "date": "10.05 21:00",
     """
+
     @classmethod
     def calc(cls, game, host_pic, guest_pic, league: CLeague):
         if isinstance(game, DGame):
@@ -162,7 +163,11 @@ class GameSerializer:
     def calculate_from_obj(cls, game, host_pic, guest_pic, league: CLeague):
         h_url, h_pic, h_name = TeamMapper.get_url_pic_name(game.host_team_name, league)
         g_url, g_pic, g_name = TeamMapper.get_url_pic_name(game.guest_team_name, league)
-        score = f"{game.host_score} - {game.guest_score}" if game.host_score and game.guest_score else None
+        score = (
+            f"{game.host_score} - {game.guest_score}"
+            if game.host_score and game.guest_score
+            else None
+        )
         return {
             "guest_pic": g_pic,
             "host_pic": h_pic,
@@ -181,6 +186,7 @@ class GameSerializer:
     def add_timezone_to_datetime(cls, date: datetime) -> datetime:
         """Two systems uses different date nottation. +2h is needed to shift"""
         from datetime import timedelta
+
         return date + timedelta(hours=2)
 
     @classmethod
@@ -194,9 +200,17 @@ class GameSerializer:
 
     @classmethod
     def calculate_from_dict(cls, game, host_pic, guest_pic, league: CLeague):
-        h_url, h_pic, h_name = TeamMapper.get_url_pic_name(game["host_team_name"], league)
-        g_url, g_pic, g_name = TeamMapper.get_url_pic_name(game["guest_team_name"], league)
-        score = f"{game['host_score']} - {game['guest_score']}" if game['host_score'] and game['guest_score'] else None
+        h_url, h_pic, h_name = TeamMapper.get_url_pic_name(
+            game["host_team_name"], league
+        )
+        g_url, g_pic, g_name = TeamMapper.get_url_pic_name(
+            game["guest_team_name"], league
+        )
+        score = (
+            f"{game['host_score']} - {game['guest_score']}"
+            if game["host_score"] and game["guest_score"]
+            else None
+        )
         return {
             "guest_pic": g_pic,
             "host_pic": h_pic,
@@ -206,11 +220,10 @@ class GameSerializer:
             "host": h_name,
             "guest": g_name,
             "guest_url": g_url,
-            "guest_score": game.host_score,
-            "host_score": game.guest_score,
+            "guest_score": game["host_score"],
+            "host_score": game["guest_score"],
             # "url": game.league._url,
         }
-
 
 
 class LeagueChildrenSerializer:
@@ -292,7 +305,7 @@ class SummarySerializer:
         for n_game in next_games:
             q = n_game.queue
             if not next_games_output.get(q):
-                next_games_output[q] = []           
+                next_games_output[q] = []
             next_games_output[q].append(
                 GameSerializer.calc(n_game, host_pic, guest_pic, league)
             )
@@ -367,8 +380,15 @@ class LeagueMatchesMetrics:
                     host_score__isnull=False,
                     guest_score__isnull=False,
                 )
-                .order_by(date_sort).values(
-                    "queue", "date", "host_score", "guest_score", "host_team_name", "guest_team_name")  
+                .order_by(date_sort)
+                .values(
+                    "queue",
+                    "date",
+                    "host_score",
+                    "guest_score",
+                    "host_team_name",
+                    "guest_team_name",
+                )
             )
         else:
             matches = (
@@ -379,11 +399,18 @@ class LeagueMatchesMetrics:
                     host_score__isnull=True,
                     guest_score__isnull=True,
                 )
-                .order_by(date_sort).values(
-                    "queue", "date", "host_score", "guest_score", "host_team_name", "guest_team_name")  
-            
+                .order_by(date_sort)
+                .values(
+                    "queue",
+                    "date",
+                    "host_score",
+                    "guest_score",
+                    "host_team_name",
+                    "guest_team_name",
+                )
             )
         from collections import OrderedDict
+
         output = OrderedDict()
         for game in matches:
             # q = game.queue  # if we do not do values ealier
