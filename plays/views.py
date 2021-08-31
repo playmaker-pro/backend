@@ -166,12 +166,14 @@ class PlaysViews(PlaysBaseView):
         # options["objects"] = dict(Refresh.summary(data_index))
         data = dict(Refresh.summary(data_index))
         output = {}
-
+        output["Nachodzące mecze"] = {}
+        output["Rozegrane mecze"] = {}
+        
         if data.get("today_games"):
-            output["Dzisiejsze mecze:"] = data.get("today_games") 
-        elif data.get("current_games"):
+            output["Dzisiejsze mecze"] = data.get("today_games") 
+        if data.get("current_games"):
             output["Rozegrane mecze"] = data.get("current_games")
-        elif data.get("next_games"):
+        if data.get("next_games"):
             output["Nachodzące mecze"] = data.get("next_games")
 
         options["objects"] = output
