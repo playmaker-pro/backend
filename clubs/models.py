@@ -180,9 +180,9 @@ class LeagueHistory(models.Model):
         if l.games_snapshot:
             self.is_matches_data = True
 
-    def save(self, *args, **kwargs):
-        self.check_and_set_if_data_exists()
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     self.check_and_set_if_data_exists()
+    #     super().save(*args, **kwargs)
 
     def reset(self):
         self.data = None
