@@ -340,7 +340,7 @@ class LeagueMatchesMetrics:
 
         """
         _default_pic = "default_profile.png"
-
+        logger.info("League matches metrics calculation started.")
         if sort_up:
             date_sort = "-date"
         else:
@@ -373,7 +373,7 @@ class LeagueMatchesMetrics:
         ):
             print(f'Geting data for matches. overwrite={overwrite}')
             return data_index.data["matches"]
-        print(f'Calculating Game data for {league} season={season_name}')
+        print(f'===> Calculating Game data for {league} season={season_name}')
         if played:
             matches = (
                 Game.objects.select_related("league", "season")
@@ -428,10 +428,14 @@ class LeagueMatchesMetrics:
             data_index.data = {}
 
         if played:
+            data_index.data["matches_played"] = {}
             data_index.data["matches_played"] = OrderedDict(output)
         else:
+            data_index.data["matches"] = {}
             data_index.data["matches"] = OrderedDict(output)
+        print('Saving... data_index....')
         data_index.save()
+        
         return output
 
 
