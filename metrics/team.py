@@ -425,6 +425,7 @@ class LeagueMatchesMetrics:
             output[q].append(GameSerializer.calc(game, host_pic, guest_pic, league))
 
         if data_index.data is None:
+            print(">> Data_index is None, making empty one.")
             data_index.data = {}
 
         if played:
@@ -433,15 +434,14 @@ class LeagueMatchesMetrics:
             data = data_index.data.copy()
             data["matches_played"] = OrderedDict(output)
             # print(data_index.data["matches_played"])
-            data_index.data = None
-            data_index.save()
+            data_index.data = data
+
         else:
             # data_index.data["matches"] = {}
             print('...........setting matches')
             data = data_index.data.copy()
             data["matches"] = OrderedDict(output)
-            data_index.data = None
-            data_index.save()
+            data_index.data = data
 
         print('Saving... data_index....')
         data_index.save()
