@@ -12,4 +12,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         _id = options.get("id")
         keyname = options.get("keyname")
-        RefreshManager.run(verbose=True, ids=[_id], keyname=keyname)
+        if _id:
+            ids = [_id]
+        else:
+            ids = None
+        RefreshManager.run(verbose=True, ids=ids, keyname=keyname)
