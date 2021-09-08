@@ -322,6 +322,7 @@ class RefreshManager:
     @classmethod
     def run(cls, verbose: bool = False, ids: list = None, keyname: str = None):
         from clubs.models import LeagueHistory as CLeagueHistory
+        print(f"# Params verbose={verbose} ids={ids} keyname={keyname}")
         keyname = keyname
 
         if keyname and keyname not in ["future-games", "scores", "playmakers", "summary", "table"]:
