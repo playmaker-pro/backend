@@ -31,20 +31,19 @@
               </div> <!--row-->
                   <div class='row'>
                       <div class="col">
-                          <!-- Demo info-->
                           <div class="row text-center mt-4">
-                            <div class="col-3 border-right">
-                              <div class="season-numbers h4 font-weight-bold mb-0">{{ season_stat.team_goals }}</div><span class="small text-gray">{% trans 'Bramki' %}</span>
-                            </div>
-                            <div class="col-3 border-right">
-                              <div class="season-numbers h4 font-weight-bold mb-0">{{ season_stat.minutes_played }}</div><span class="small text-gray">{% trans 'Minuty' %}</span>
+                            {% comment %} <div class="col-3 border-right">
+                              <div class="season-numbers h4 font-weight-bold mb-0">{{ season_stat.position_in_table }}</div><span class="small text-gray">{% trans 'Miejsce' %}</span>
+                            </div> {% endcomment %}
+                            <div class="col-4 border-right">
+                              <div class="season-numbers h4 font-weight-bold mb-0">{{ season_stat.avg_points }}</div><span class="small text-gray">{% trans 'Średnia punktów na mecz' %}</span>
                             </div>
 
-                            <div class="col-3 border-right">
-                              <div class="season-numbers h4 font-weight-bold mb-0">{{ season_stat.yellow_cards }}</div><span class="small text-gray">{% trans 'Żółte' %}</span>
+                            <div class="col-4 border-right">
+                              <div class="season-numbers h4 font-weight-bold mb-0">{{ season_stat.avg_goals_gain }}</div><span class="small text-gray">{% trans 'Średnia strzelonych bramek na mecz' %}</span>
                             </div>
-                            <div class="col-3">
-                              <div class="season-numbers h4 font-weight-bold mb-0">{{ season_stat.red_cards }}</div><span class="small text-gray">{% trans 'Czerwone' %}</span>
+                            <div class="col-4">
+                              <div class="season-numbers h4 font-weight-bold mb-0">{{ season_stat.avg_goals_losts }}</div><span class="small text-gray">{% trans 'Średnia traconych bramek na mecz' %}</span>
                             </div>
                           </div>
                           <!-- END -->

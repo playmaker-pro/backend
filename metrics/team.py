@@ -165,7 +165,7 @@ class GameSerializer:
         g_url, g_pic, g_name = TeamMapper.get_url_pic_name(game.guest_team_name, league)
         score = (
             f"{game.host_score} - {game.guest_score}"
-            if game.host_score and game.guest_score
+            if game.host_score is not None and game.guest_score is not None
             else None
         )
         return {
@@ -179,6 +179,33 @@ class GameSerializer:
             "guest_url": g_url,
             "guest_score": game.host_score,
             "host_score": game.guest_score,
+            # "url": game.league._url,
+        }
+
+    @classmethod
+    def calculate_from_dict(cls, game, host_pic, guest_pic, league: CLeague):
+        h_url, h_pic, h_name = TeamMapper.get_url_pic_name(
+            game["host_team_name"], league
+        )
+        g_url, g_pic, g_name = TeamMapper.get_url_pic_name(
+            game["guest_team_name"], league
+        )
+        score = (
+            f"{game['host_score']} - {game['guest_score']}"
+            if game["host_score"] is not None and game["guest_score"] is not None
+            else None
+        )
+        return {
+            "guest_pic": g_pic,
+            "host_pic": h_pic,
+            "date": cls.clean_date(game["date"]),
+            "score": score,
+            "host_url": h_url,
+            "host": h_name,
+            "guest": g_name,
+            "guest_url": g_url,
+            "guest_score": game["host_score"],
+            "host_score": game["guest_score"],
             # "url": game.league._url,
         }
 
@@ -197,33 +224,6 @@ class GameSerializer:
     def clean_date(cls, date: datetime) -> str:
         date = cls.add_timezone_to_datetime(date)
         return cls.convert_datetime_to_string(date)
-
-    @classmethod
-    def calculate_from_dict(cls, game, host_pic, guest_pic, league: CLeague):
-        h_url, h_pic, h_name = TeamMapper.get_url_pic_name(
-            game["host_team_name"], league
-        )
-        g_url, g_pic, g_name = TeamMapper.get_url_pic_name(
-            game["guest_team_name"], league
-        )
-        score = (
-            f"{game['host_score']} - {game['guest_score']}"
-            if game["host_score"] and game["guest_score"]
-            else None
-        )
-        return {
-            "guest_pic": g_pic,
-            "host_pic": h_pic,
-            "date": cls.clean_date(game["date"]),
-            "score": score,
-            "host_url": h_url,
-            "host": h_name,
-            "guest": g_name,
-            "guest_url": g_url,
-            "guest_score": game["host_score"],
-            "host_score": game["guest_score"],
-            # "url": game.league._url,
-        }
 
 
 class LeagueChildrenSerializer:
@@ -339,6 +339,11 @@ class LeagueMatchesMetrics:
         :param sort_up: defines if decending or ascending
 
         """
+        print(f'Param passed league: {type(league)}, ({league})')
+        print(f'Param passed season_name: {type(season_name)}, ({season_name})')
+        print(f'Param passed league_history: {type(league_history)}, ({league_history})')
+        print(f'Param passed played: {type(played)}, ({played})')
+
         _default_pic = "default_profile.png"
         logger.info("League matches metrics calculation started.")
         if sort_up:
@@ -351,10 +356,12 @@ class LeagueMatchesMetrics:
         else:
             try:
                 data_index = league.historical.all().get(season__name=season_name)
-            except:
+            except Exception as e:
+                print(f"Error occured {e}")
                 return []
 
         # @todo: add date check
+
 
         if (
             data_index.data is not None
@@ -373,79 +380,79 @@ class LeagueMatchesMetrics:
         ):
             print(f'Geting data for matches. overwrite={overwrite}')
             return data_index.data["matches"]
-        print(f'===> Calculating Game data for {league} season={season_name}')
-        if played:
-            matches = (
-                Game.objects.select_related("league", "season")
-                .filter(
-                    league___url=League.get_url_based_on_id(data_index.index),
-                    season__name=season_name,
-                    host_score__isnull=False,
-                    guest_score__isnull=False,
-                )
-                .order_by(date_sort)
-                .values(
-                    "queue",
-                    "date",
-                    "host_score",
-                    "guest_score",
-                    "host_team_name",
-                    "guest_team_name",
-                )
-            )
         else:
-            matches = (
-                Game.objects.select_related("league", "season")
-                .filter(
-                    league___url=League.get_url_based_on_id(data_index.index),
-                    season__name=season_name,
-                    host_score__isnull=True,
-                    guest_score__isnull=True,
+            print(f'===> Calculating Game data for {league} season={season_name}')
+            if played:
+                matches = (
+                    Game.objects.select_related("league", "season")
+                    .filter(
+                        league___url=League.get_url_based_on_id(data_index.index),
+                        season__name=season_name,
+                        host_score__isnull=False,
+                        guest_score__isnull=False,
+                    )
+                    .order_by(date_sort)
+                    .values(
+                        "queue",
+                        "date",
+                        "host_score",
+                        "guest_score",
+                        "host_team_name",
+                        "guest_team_name",
+                    )
                 )
-                .order_by(date_sort)
-                .values(
-                    "queue",
-                    "date",
-                    "host_score",
-                    "guest_score",
-                    "host_team_name",
-                    "guest_team_name",
+            else:
+                matches = (
+                    Game.objects.select_related("league", "season")
+                    .filter(
+                        league___url=League.get_url_based_on_id(data_index.index),
+                        season__name=season_name,
+                        host_score__isnull=True,
+                        guest_score__isnull=True,
+                    )
+                    .order_by(date_sort)
+                    .values(
+                        "queue",
+                        "date",
+                        "host_score",
+                        "guest_score",
+                        "host_team_name",
+                        "guest_team_name",
+                    )
                 )
-            )
-        from collections import OrderedDict
 
-        output = OrderedDict()
-        for game in matches:
-            # q = game.queue  # if we do not do values ealier
-            q = game["queue"]
-            guest_pic = _default_pic
-            host_pic = _default_pic
-            if not output.get(q):
-                output[q] = list()
-            output[q].append(GameSerializer.calc(game, host_pic, guest_pic, league))
+            output = dict()  # OrderedDict()
+            for game in matches:
+                # q = game.queue  # if we do not do values ealier
+                q = game["queue"]
+                guest_pic = _default_pic
+                host_pic = _default_pic
+                if not output.get(q):
+                    output[q] = list()
+                output[q].append(GameSerializer.calc(game, host_pic, guest_pic, league))
 
-        if data_index.data is None:
-            print(">> Data_index is None, making empty one.")
-            data_index.data = {}
+            if data_index.data is None:
+                print(">> Data_index is None, making empty one.")
+                data_index.data = {}
 
-        if played:
-            # data_index.data["matches_played"] = {}
-            print('...........setting matches_played')
-            data = data_index.data.copy()
-            data["matches_played"] = OrderedDict(output)
-            # print(data_index.data["matches_played"])
-            data_index.data = data
+            if played:
+                # data_index.data["matches_played"] = {}
+                print('...........setting matches_played')
+                # data = data_index.data.copy()
+                data_index.data["matches_played"] = output  # OrderedDict(output)
+                # print(data_index.data["matches_played"])
+                #data_index.data = data
 
-        else:
-            # data_index.data["matches"] = {}
-            print('...........setting matches')
-            data = data_index.data.copy()
-            data["matches"] = OrderedDict(output)
-            data_index.data = data
+            else:
+                # data_index.data["matches"] = {}
+                print('...........setting matches')
+                #data = data_index.data.copy()
+                data_index.data["matches"] = output  # OrderedDict(output)
+                #data_index.data = data
 
-        print('Saving... data_index....')
-        data_index.save()
-        
+            print(f'Saving... data_index....{data_index} {type(data_index)}')
+            data_index.save()
+
         return output
 
 

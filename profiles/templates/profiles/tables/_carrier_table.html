@@ -1,7 +1,12 @@
 {% load i18n %}
 
-  <table class="table">
+    {% comment %} DEBUG:<br>
+    {% for data in objects %}
+    {{data}}<br>
+    {% endfor %} {% endcomment %}
 
+
+  <table class="table">
     {% if caption %}
     <caption><a href="{% url 'profiles:carrier_games' %}" >{% trans 'Zobacz więcej' %}</a></caption>
     {% endif %}

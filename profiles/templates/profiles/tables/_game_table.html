@@ -1,5 +1,11 @@
 {% load i18n %}
 
+
+{% comment %} 
+DEBUG: coach={{ coach }}
+DEBUG: short={{ short }}
+{% endcomment %}
+
   <table class="table">
 
     {% if caption %}
@@ -8,7 +14,7 @@
     <thead>
         <tr>
             <th scope="col" class="d-md-none">{% trans 'Dane meczu' %}</th>
-            {% if not short %}
+            {% if not short or coach %} 
             <th scope="col" class="d-none d-md-table-cell">{% trans 'Data' %}</th>
             {% endif %}
             <th scope="col" class="d-none d-md-table-cell">{% trans 'Gospodarz' %}</th>
@@ -16,9 +22,14 @@
             <th scope="col">
                 <i class="table-icon icofont-score-board"></i>
             </th>
+
+            {% if not coach %}
             <th scope="col">
                 <i class="table-icon  icofont-boot-alt-1"></i>
             </th>
+            {% endif %}
+
+            {% if not coach %}
             <th scope="col">
                 {% if show_user.profile.is_goalkeeper %}
                     <i class="table-icon icofont-goal text-success"></i>{% include 'platform/buttons/helper.html' with helper_position="top" tooltip_title=_("Zielony oznacza czyste konto, a czerwony brak czystego konta. Minimum 45 minut.") tooltip_position="top" %}
@@ -26,13 +37,17 @@
                     <i class="table-icon icofont-soccer text-success"></i>{% include 'platform/buttons/helper.html' with helper_position="top" tooltip_title=_("Strzelone bramki") tooltip_position="top" %}
                 {% endif %}
             </th>
+            {% endif %}
+
             {% if not short %}
-            <th scope="col">
-                <i class="table-icon icofont-penalty-card text-warning"></i>
-            </th>
-            <th scope="col">
-                <i class="table-icon icofont-penalty-card text-danger"></i>
-            </th>
+             {% if not coach %}
+                <th scope="col">
+                    <i class="table-icon icofont-penalty-card text-warning"></i>
+                </th>
+                <th scope="col">
+                    <i class="table-icon icofont-penalty-card text-danger"></i>
+                </th>
+            {% endif %}
             <th scope="col"></th>
             {% endif %}
         </tr>
@@ -47,23 +62,28 @@
                 {{ game.host_team_name|truncatechars:25 }} <br> {{ game.guest_team_name|truncatechars:25 }}
             </td>
 
-            {% if not short %}
+            {% if not short or coach %}
             <td class="d-none d-md-table-cell">{{ game.date }}</td>
             {% endif %}
             <td class="d-none d-md-table-cell">{{ game.host_team_name|truncatechars:25 }}</td>
             <td class="d-none d-md-table-cell">{{ game.guest_team_name|truncatechars:25 }}</td>
             <td class="">{{ game.host_score }}:{{ game.guest_score}}</td>
-            <td>{{ game.minutes_played }}'</td>
-            {% if show_user.profile.is_goalkeeper %}
-                <td>{% if game.clear_goal == None %} - {% elif game.clear_goal %} <i class="table-icon icofont-goal-keeper text-success "></i> {% else %}<i class="table-icon icofont-goal-keeper text-danger"></i> {% endif %}</td>
-            {% else %}
+            {% if not coach %}
+                <td>{{ game.minutes_played }}'</td>
+            {% endif %}
+            {% if not coach %}
+                {% if show_user.profile.is_goalkeeper %}
+                    <td>{% if game.clear_goal == None %} - {% elif game.clear_goal %} <i class="table-icon icofont-goal-keeper text-success "></i> {% else %}<i class="table-icon icofont-goal-keeper text-danger"></i> {% endif %}</td>
+                {% else %}
+            {% endif %}
             <td>{{ game.team_goals }}</td>
             {% endif %}
 
             {% if not short %}
-            <td>{{ game.yellow_cards }}</td>
-            <td>{{ game.red_cards }}</td>
-            
+                {% if not coach %}
+                <td>{{ game.yellow_cards }}</td>
+                <td>{{ game.red_cards }}</td>
+                {% endif %}
             <td>
                 <span class="match-result-tag p-1 text-white rounded bg-{% if game.result.type == 'won' %}success{% elif game.result.type == 'lost' %}danger{% else %}secondary{% endif %}">{{ game.result.name }}</span></td>
             {% endif %}

@@ -320,29 +320,38 @@ class PlaysListViews(ComplexViews):
 
 class RefreshManager:
     @classmethod
-    def run(cls, verbose: bool = False):
+    def run(cls, verbose: bool = False, ids: list = None, keyname: str = None):
         from clubs.models import LeagueHistory as CLeagueHistory
-
+        keyname = keyname
+        
+        if keyname and keyname not in ["future-games", "scores", "playmakers", "summary", "table"]:
+            raise RuntimeError(f"Selected `keyname`: {keyname} is not allowed.")
         _all = CLeagueHistory.objects.all()
+        if ids:
+            _all = _all.filter(id__in=ids)
+
         for league_history in _all:
             season = league_history.season
             league = league_history.league
             print(f"Refresh stared for {league_history}")
             tasks = {
-                "games": (
-                    LeagueMatchesMetrics().serialize,
-                    (league, season),
-                    {"sort_up": True, "overwrite": True},
-                ),
                 "scores": (
                     LeagueMatchesMetrics().serialize,
-                    (league, season),
-                    {"sort_up": False, "overwrite": True, "played": False},
+                    (league, season.name),
+                    {"league_history": league_history, "sort_up": True, "overwrite": True}
+                ),
+                "future-games": (
+                    LeagueMatchesMetrics().serialize,
+                    (league, season.name),
+                    {"league_history": league_history, "sort_up": False, "overwrite": True, "played": False}
                 ),
                 "playmakers": (Refresh.playmakers, (league_history,), {"overwrite": True}),
                 "summary": (Refresh.summary, (league_history,), {"overwrite": True}),
                 "table": (Refresh.table, (league_history,), {"overwrite": True}),
             }
             for task, (method, args, kwargs) in tasks.items():
-                print(f"Running data serialization for {task}")
+                if keyname:
+                    if task != keyname:
+                        continue
+                print(f"Running data serialization for `{task}`")
                 method(*args, **kwargs)

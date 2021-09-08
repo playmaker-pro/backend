@@ -4,7 +4,9 @@ import logging
 import math
 
 from crispy_forms.utils import render_crispy_form
+from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from django.http import JsonResponse
@@ -15,20 +17,21 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
 from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
-from roles import definitions
-from stats import adapters
-from django.conf import settings
 from profiles import forms, models
 from profiles.model_utils import (get_profile_form_model, get_profile_model,
-                          get_profile_model_from_slug)
-from utils import get_current_season, calculate_prev_season
-from django.contrib.auth import get_user_model
+                                  get_profile_model_from_slug)
+from roles import definitions
+from utils import calculate_prev_season, get_current_season
+
+from stats import adapters
+
 User = get_user_model()
 from clubs.models import Team
-logger = logging.getLogger(__name__)
-from inquiries.services import unseen_requests, update_requests_with_read_status
 
+logger = logging.getLogger(__name__)
 from app import mixins, utils
+from inquiries.services import (unseen_requests,
+                                update_requests_with_read_status)
 
 
 def redirect_to_profile_with_full_name(request):
@@ -292,8 +295,14 @@ def convert_form_names(data: dict):
 
 
 class AdaptSeasonPlayerDataToCirclePresentation:
+    """Class wihich converts data into circural statistics.
+    """
+    allowed_personas = ["player", "coach"]
+
     @classmethod
     def adapt(cls, season_stat, persona: str = "player"):
+        if persona not in cls.allowed_personas:
+            raise RuntimeError(f"Given persona is not allowerd. persona={persona}")
         if persona == 'player':
             return cls.adapt_player_stats(season_stat)
         elif persona == 'coach':
@@ -317,7 +326,7 @@ class AdaptSeasonPlayerDataToCirclePresentation:
             {
                 'title': _('Ławka'),
                 'bs4_css': 'secondary',
-                'value': math.floor(season_stat['bench_percent']), 
+                'value': math.floor(season_stat['bench_percent']),
                 'shift': 0
             }
         ]
@@ -328,19 +337,19 @@ class AdaptSeasonPlayerDataToCirclePresentation:
             {
                 'title': _('Wygrane'),
                 'bs4_css': 'success',
-                'value': math.ceil(season_stat['won_percent']),
-                'shift': math.ceil(season_stat['draws_percent'] + season_stat['lost_percent'])
+                'value': math.ceil(season_stat['wons_percent']),
+                'shift': math.ceil(season_stat['draws_percent'] + season_stat['loses_percent'])
             },
             {
                 'title': _('Remisy'),
                 'bs4_css': 'secondary',
-                'value': math.floor(season_stat['draws_percent']), 
-                'shift': math.floor(season_stat['lost_percent'])
+                'value': math.floor(season_stat['draws_percent']),
+                'shift': math.floor(season_stat['loses_percent'])
             },
             {
                 'title': _('Przegrane'),
                 'bs4_css': 'danger',
-                'value': math.floor(season_stat['lost_percent']),
+                'value': math.floor(season_stat['loses_percent']),
                 'shift': 0
             },
 
@@ -350,6 +359,13 @@ class AdaptSeasonPlayerDataToCirclePresentation:
 class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "profiles/show_default_profile.html"
     http_method_names = ["get", "post"]
+
+    @property
+    def season_name(self):
+        if settings.FORCED_SEASON_NAME:
+            return settings.FORCED_SEASON_NAME
+        else:
+            return get_current_season()
 
     def set_show_profile_page_title(self):
         default_my_profile = 'Mój profil'
@@ -404,8 +420,7 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
             kwargs['seo_object_image'] = user.picture.url
         except:
             kwargs['seo_object_image'] = None
-            
-        # To dotyczy tylko playera!!!!
+
         if user.profile.has_data_id and user.profile.PROFILE_TYPE == 'player':
             _id = user.profile.data_mapper_id
             # kwargs["last_games"] = adapters.PlayerAdapter._get_user_last_games(_id)
@@ -435,19 +450,20 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
                 kwargs['season_circle_stats'] = AdaptSeasonPlayerDataToCirclePresentation.adapt(season_stat)
             else:
                 kwargs['season_circle_stats'] = []
-        elif user.profile.has_data_id and user.profile.PROFILE_TYPE == "coach":
-            season_name = get_current_season()
-            prev_season_name = calculate_prev_season(season_name)
-            season_name = prev_season_name
-            if user.profile.data and user.profile.data["games"] and user.profile.data["games"][season_name]:
-                kwargs["last_games"] = user.profile.data["games"][season_name]
-            if user.profile.data and user.profile.data.get("season_stats") and user.profile.data["season_stats"][season_name]:
+        elif user.profile.has_data_id and user.is_coach:
+            games_data = user.profile.get_season_games_data(self.season_name)
+
+            if games_data:
+                kwargs["last_games"] = games_data[:5]
+
+            carrier_data = user.profile.get_total_season_carrier_data(self.season_name)
+            if carrier_data:
+                kwargs["season_stat"] = carrier_data
                 kwargs['season_circle_stats'] = AdaptSeasonPlayerDataToCirclePresentation.adapt(
-                    user.profile.data["season_stats"][season_name],
+                    carrier_data,
                     persona='coach')
             else:
                 kwargs['season_circle_stats'] = []
-
 
         if not self._is_owner(user) and request.user.is_authenticated:
             if InquiryRequest.objects.filter(

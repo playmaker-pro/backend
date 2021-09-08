@@ -587,3 +587,5 @@ except Exception as e:
     print(f'No data_model settings. {e}')
 
 
+if FORCED_SEASON_NAME is not None:
+    print(f"Force to use season for dispaly metrics: {FORCED_SEASON_NAME}")

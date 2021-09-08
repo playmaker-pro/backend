@@ -138,7 +138,7 @@ class BaseProfile(models.Model):
     def make_default_event_log(self):
         self.event_log = list()
 
-    def add_event_log_message(self, msg: str, type: str = 'nor'):
+    def add_event_log_message(self, msg: str, type: str = 'nor', commit: bool = True):
         '''Adds event log into list
         if more than event_log_history it will be removed
         types = ['nor', 'err', 'deb']
@@ -160,7 +160,8 @@ class BaseProfile(models.Model):
         date = timezone.now()
         msg = {'date': f'{date}', 'message': f'{suffix}{msg}'}
         self.event_log.insert(0, msg)
-        self.save()
+        if commit:
+            self.save()
 
     def get_permalink(self):
         return reverse("profiles:show", kwargs={"slug": self.slug})
@@ -199,7 +200,7 @@ class BaseProfile(models.Model):
     @property
     def has_attachemnt(self):
         return False
-        
+
     @property
     def is_active(self):
         return definitions.PROFILE_TYPE_SHORT_MAP.get(self.PROFILE_TYPE) == self.user.declared_role
@@ -856,6 +857,8 @@ class ClubProfile(BaseProfile):
 
 class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     PROFILE_TYPE = definitions.PROFILE_TYPE_COACH
+    DATA_KEY_GAMES = "games"
+    DATA_KET_CARRIER = "carrier"
 
     COMPLETE_FIELDS = ['phone']
 
@@ -972,36 +975,63 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         blank=True)
 
-    def calculate_metrics(self):
-        """
-        Celem jest możliwość pokazania:
-        kariera [sezon, team, rozgrywki, wygrane mecze, remisy, porażki, śr. pkt na mecz,  bramki strzelone vs. bramki stracone (klubu, który prowadził)]
-        mecze [data, rozgrywki, gospodarz, gość, wynik]  
+    def get_season_games_data(self, season: str) -> bool:
+        if self.data and self.data.get(season) and isinstance(self.data.get(season), dict) and self.data.get(season).get(self.DATA_KEY_GAMES):
+            return self.data.get(season).get(self.DATA_KEY_GAMES)
 
-        Za wygrany mecz 3 pkt, za remis 1 pkt, za porażkę 0 pkt. 
-        """
+    def get_data(self) -> list:
+        if self.data and isinstance(self.data, dict):
+            return self.data
+
+    def get_season_carrier_data(self, season: str) -> bool:
+        if self.data and self.data.get(season) and isinstance(self.data.get(season), dict) and self.data.get(season).get(self.DATA_KET_CARRIER):
+            return self.data.get(season).get(self.DATA_KET_CARRIER)
+
+    def get_total_season_carrier_data(self, season: str) -> bool:
+        data = self.get_season_carrier_data(season)
+        if data:
+            return data.get("total")
         
-        from metrics.coach import CoachGamesAdapter
+    def calculate_metrics(self, seasons_behind: int = 1, season_name: str = None, requestor: User = None):
+        """
+        :param seasons_behind: if present it defines how many season we want to calucalte in past.
+                               value 1 means that we will calcuate for current season
+        :season_name: name of season to update
+
+        Celem jest możliwość pokazania:
+        kariera [sezon, team, rozgrywki, wygrane mecze,
+        remisy, porażki, śr. pkt na mecz,  bramki strzelone vs. bramki stracone (klubu, który prowadził)]
+        mecze [data, rozgrywki, gospodarz, gość, wynik]
+
+        Za wygrany mecz 3 pkt, za remis 1 pkt, za porażkę 0 pkt.
+
+        """
+        from metrics.coach import CoachGamesAdapter, CoachCarrierAdapterPercentage
         if not self.has_data_id:
             return
         _id = self.data_mapper_id
-        if self.data is None:
-            self.data = {}
-        if not self.data.get("games"):
-            self.data["games"] = {}
+        season_name = season_name or utilites.get_current_season()
 
-        def _calc(ssn):
-            games = CoachGamesAdapter().get(int(_id), season_name=ssn, limit=10)
-            if not self.data.get(ssn):
-                self.data["games"][ssn] = None
-            self.data['games'][ssn] = games
+        def _calculate(season_name):
+            # set default value for data attribute
+            if self.data is None:
+                self.data = {}
 
-            season_stats = CoachSeasonAdapter().get(int(_id), season_name=ssn, limit=10)
+            if not self.data.get(season_name):
+                self.data[season_name] = {}
 
-        season_name = utilites.get_current_season()
-        _calc(season_name)
-        prev_season = utilites.calculate_prev_season(season_name)
-        _calc(prev_season)
+            games = CoachGamesAdapter().get(int(_id), season_name=season_name)
+            self.data[season_name][self.DATA_KEY_GAMES] = games
+
+            season_stats = CoachCarrierAdapterPercentage().get(int(_id), season_name=season_name)
+            self.data[season_name][self.DATA_KET_CARRIER] = season_stats
+
+        for _ in range(seasons_behind):
+            print(f"Calculating data for {self} for season {season_name}")
+            _calculate(season_name)
+            season_name = utilites.calculate_prev_season(season_name)
+        msg = "Coach stats updated."
+        self.add_event_log_message(msg, commit=False)
         self.save()
 
     @property

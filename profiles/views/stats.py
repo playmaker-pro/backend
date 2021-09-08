@@ -1,18 +1,18 @@
 
+import logging
+from typing_extensions import runtime
+
+from app import mixins
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-
-
 from django.utils.translation import gettext_lazy as _
 from django.views import generic
+from utils import get_current_season
 
-from stats import adapters
+from stats import adapters, utilites
 
 from .base import SlugyViewMixin
-
-from django.contrib.auth import get_user_model
-from utils import get_current_season
-from app import mixins
-import logging 
 
 User = get_user_model()
 
@@ -25,6 +25,13 @@ class ProfileStatsPageView(generic.TemplateView, SlugyViewMixin,  mixins.ViewMod
     template_name = None
     http_method_names = ["get"]
     paginate_limit = 15
+
+    @property
+    def season_name(self):
+        if settings.FORCED_SEASON_NAME:
+            return settings.FORCED_SEASON_NAME
+        else:
+            return get_current_season()
 
     def get(self, request, *args, **kwargs):
         user = self.select_user_to_show()
@@ -40,18 +47,12 @@ class ProfileStatsPageView(generic.TemplateView, SlugyViewMixin,  mixins.ViewMod
         return super().get(request, *args, **kwargs)
 
     def dispatch_get_or_calculate(self, user):
-        if user.is_player:
+        if user.is_player or user.is_coach:
             return self.get_data_or_calculate(user)
-
-        elif user.is_coach:
-            return self.coach_get_data_or_calculate(user)
         else:
             return self._empty_data()
 
     def get_data_or_calculate(self, *args, **kwargs):
-        return self._empty_data()
-
-    def coach_get_data_or_calculate(self, *args, **kwargs):
         return self._empty_data()
 
     def _empty_data(self):
@@ -87,33 +88,60 @@ class ProfileCarrierRows(ProfileStatsPageView):
 
 
 class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
+    """
+    coach.data:
+
+    {"2020/2021": {
+        "games": [{"date": "2020-11-21", "result": {"name": "P", "type...
+        "carrier": {"wons": 2, "draws": 0, "loses": 5, "points": 6, "avg_points": 0.9, "gain_goals": 14, 
+            "lost_goals": 11, "games_played": 7, "wons_percent": 28.571428571428573, "draws_percent": 0.0, 
+            "loses_percent": 71.42857142857143, "avg_goals_gain": 1.6, "avg_goals_losts": 2.0,
+            "position_in_table": 0}
+    """
     template_name = "profiles/carrier.html"
     paginate_limit = 16
     page_title = _('Twoja kariera')
 
     def get_data_or_calculate(self, user):
-        _id = user.profile.data_mapper_id
-        if user.profile.playermetrics.how_old_days(season=True) >= 7 and user.profile.has_data_id:
-            season = adapters.PlayerStatsSeasonAdapter(_id).get(groupped=True)
-            user.profile.playermetrics.update_season(season)
-        user.profile.playermetrics.refresh_from_db()
-        data = user.profile.playermetrics.season
-        if data is None:
-            data = []
-        data = self.flattern_carrier_structure(data)
-        data = self.sort(data)
-        return self.paginate(data)
-
-    def coach_get_data_or_calculate(self, user):
         data = []
+        if user.is_player:
+            _id = user.profile.data_mapper_id
+            if user.profile.playermetrics.how_old_days(season=True) >= 7 and user.profile.has_data_id:
+                season = adapters.PlayerStatsSeasonAdapter(_id).get(groupped=True)
+                user.profile.playermetrics.update_season(season)
+            user.profile.playermetrics.refresh_from_db()
+            data = user.profile.playermetrics.season
+            if data is None:
+                data = []
+            data = self.flattern_carrier_structure(data)
+            data = self.sort(data)
+
+        elif user.is_coach:
+            data = user.profile.get_data() or []
+            data = self.flattern_coach_carrier_structure(data)
+            data = self.sort(data)
+           
+
         return self.paginate(data)
 
     def sort(self, data):
         return sorted(data, key=lambda k: k['name'], reverse=True)
 
+    def flattern_coach_carrier_structure(self, data: dict) -> list:
+        out = []
+        for season, season_data in data.items():
+            season_dict = {}
+            for team, team_stat in season_data["carrier"]["teams"].items():
+                season_dict["name"] = season
+                season_dict["team"] = team
+                season_dict.update(team_stat)
+                out.append(season_dict)
+        return out
+
     def flattern_carrier_structure(self, data: dict) -> list:
         '''
-        @todo: this shoudl be in serializers/
+        @todo: this should be in serializers/ package
+
         season: {'2014/2015':
             {'4 liga':
                 {'włókniarz mirsk': {
@@ -157,7 +185,6 @@ class ProfileGames(ProfileStatsPageView, mixins.PaginateMixin):
     page_title = _('Twoje mecze')
 
     def get_data_or_calculate(self, user):
-
         if user.is_player:
             _id = user.profile.data_mapper_id
             if user.profile.playermetrics.how_old_days(games=True) >= 7 and user.profile.has_data_id:
@@ -168,7 +195,10 @@ class ProfileGames(ProfileStatsPageView, mixins.PaginateMixin):
             if data is None:
                 data = []
             return self.paginate(data)
-
-    def coach_get_data_or_calculate(self, user):
-        data = []
-        return self.paginate(data)
+        elif user.is_coach:
+            games_data = user.profile.get_season_games_data(self.season_name)
+            if games_data:
+                data = games_data
+            else:
+                data = []
+            return self.paginate(data)

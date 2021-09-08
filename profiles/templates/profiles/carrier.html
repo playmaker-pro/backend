@@ -22,14 +22,17 @@
 <section id="profile-carrier" class="profile">
   <div class="container" data-aos="fade-up"> 
     <div class="row" >
-
         {% if page_obj.paginator.count == 0 %}
             <div class="col-md-12 text-center">
                 {% include 'profiles/partials/_empty_metrics.html' %}
             </div>
         {% else %}
             <div class="col">
-                {% include 'profiles/tables/_carrier_table.html' with objects=page_obj %}       
+                {% if user.is_player %}
+                    {% include 'profiles/tables/_carrier_table.html' with objects=page_obj %}
+                {% elif user.is_coach %}
+                    {% include 'profiles/tables/_carrier_table_coach.html' with objects=page_obj %}  
+                {% endif %}
             </div>   
             <div class='col-md-12'>
                 {% include 'platform/partials/_pagination.html' %}

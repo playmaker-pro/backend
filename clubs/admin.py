@@ -16,6 +16,7 @@ reset_history.short_description = 'Reset history league data.'
 @admin.register(models.LeagueHistory)
 class LeagueHistoryAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "season",
         "league",
         "get_league_slug",

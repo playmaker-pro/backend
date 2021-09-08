@@ -8,14 +8,11 @@
 {% block title %}{{ block.super }} {% trans 'Moje mecze' %} {% endblock %}
 
 
-
 {% comment %} {% block content_header %}
     {% include '_page_heading.html' with heading_title=page_title size=4 %}
     {{ block.super }}
 {% endblock %} {% endcomment %}
 
-
-<!-- Benefits of the Django application -->
 {% block content %}
 
 {% include 'profiles/player_subpage_header_black.html' %}
@@ -28,7 +25,11 @@
             </div>
         {% else %}
                   <div class='col-md-12'>
-                {% include 'profiles/tables/_game_table.html' with games=page_obj %}       
+                 {% if user.is_player %}
+                    {% include 'profiles/tables/_game_table.html' with games=page_obj %}   
+                 {% elif user.is_coach %}    
+                   {% include 'profiles/tables/_game_table.html' with games=page_obj  coach=True %}   
+                {% endif %}
             </div>   
             <div class='col-md-12'>
                 {% include 'platform/partials/_pagination.html' with object_type=_('meczy')%}

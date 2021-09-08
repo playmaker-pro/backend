@@ -3,6 +3,13 @@
 {% load static %}
 {% load thumbnail %}
 
+
+{% block extra_css %}
+    {{ block.super }}
+    <link href="{% static 'assets/css/circle.css' %}" rel="stylesheet">
+{% endblock extra_css %}
+
+
 {% block content_header %}
     {% include '_page_heading.html' with heading_title=page_title size=4  %}
     {{ block.super }}
@@ -23,3 +30,8 @@
   </div>
 </section>
 {% endblock content %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script src="{% static 'assets/js/progress.js' %}"></script>
+{% endblock extra_js %}
