@@ -323,13 +323,13 @@ class RefreshManager:
     def run(cls, verbose: bool = False, ids: list = None, keyname: str = None):
         from clubs.models import LeagueHistory as CLeagueHistory
         keyname = keyname
-        
+
         if keyname and keyname not in ["future-games", "scores", "playmakers", "summary", "table"]:
             raise RuntimeError(f"Selected `keyname`: {keyname} is not allowed.")
         _all = CLeagueHistory.objects.all()
         if ids:
             _all = _all.filter(id__in=ids)
-
+        print(f"# Selected {_all.count()} for update.")
         for league_history in _all:
             season = league_history.season
             league = league_history.league
