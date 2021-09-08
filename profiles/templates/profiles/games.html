@@ -25,9 +25,9 @@
             </div>
         {% else %}
                   <div class='col-md-12'>
-                 {% if user.is_player %}
+                 {% if show_user.is_player %}
                     {% include 'profiles/tables/_game_table.html' with games=page_obj %}   
-                 {% elif user.is_coach %}    
+                 {% elif show_user.is_coach %}    
                    {% include 'profiles/tables/_game_table.html' with games=page_obj  coach=True %}   
                 {% endif %}
             </div>   

@@ -120,8 +120,6 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
             data = user.profile.get_data() or []
             data = self.flattern_coach_carrier_structure(data)
             data = self.sort(data)
-           
-
         return self.paginate(data)
 
     def sort(self, data):

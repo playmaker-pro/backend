@@ -20,7 +20,7 @@
   <li class="nav-item">
        <a class="nav-link pm-nav {% if request.get_full_path == games_url %}pm-nav-active{% endif %}" href="{{ games_url }}">Mecze</a>
  </li>
-{% if user.is_player %}
+{% if show_user.is_player %}
   <li class="nav-item">
     <a class="nav-link pm-nav {% if request.get_full_path == fantasy_url %}pm-nav-active{% endif %}" href="{{ fantasy_url }}">Fantasy</a>
   </li>

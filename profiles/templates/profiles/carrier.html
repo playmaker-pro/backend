@@ -28,9 +28,9 @@
             </div>
         {% else %}
             <div class="col">
-                {% if user.is_player %}
+                {% if show_user.is_player %}
                     {% include 'profiles/tables/_carrier_table.html' with objects=page_obj %}
-                {% elif user.is_coach %}
+                {% elif show_user.is_coach %}
                     {% include 'profiles/tables/_carrier_table_coach.html' with objects=page_obj %}  
                 {% endif %}
             </div>   
