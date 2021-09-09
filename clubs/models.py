@@ -162,7 +162,7 @@ class LeagueHistory(models.Model):
     season = models.ForeignKey('Season', on_delete=models.SET_NULL, null=True, blank=True)
     index = models.CharField(max_length=255, null=True, blank=True)
     league = models.ForeignKey('League', on_delete=models.CASCADE, related_name='historical')
-
+    visible = models.BooleanField(default=True)
     is_table_data = models.BooleanField(default=False)
     is_matches_data = models.BooleanField(default=False)
     data = models.JSONField(null=True, blank=True)
@@ -190,23 +190,23 @@ class LeagueHistory(models.Model):
 
 
 class League(models.Model):
-    
     order = models.IntegerField(default=0)
     visible = models.BooleanField(default=False)
     name = models.CharField(max_length=355, unique=True)
     code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
     slug = models.CharField(max_length=255, blank=True, editable=False)
     parent = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
+    isparent = models.BooleanField(default=False)
     zpn = models.CharField(max_length=255, null=True, blank=True)
     zpn_mapped = models.CharField(max_length=255, null=True, blank=True)
     index = models.CharField(max_length=255, null=True, blank=True)
     search_index = models.CharField(max_length=255, null=True, blank=True)
 
-    def has_season_data(self, season_name):
+    def has_season_data(self, season_name: str) -> bool:
         if self.historical.filter(season__name=season_name).count() == 0:
             return False
         return True
-        
+   
     def get_file_path(instance, filename):
         return f"league_pics/%Y-%m-%d/{remove_polish_chars(filename)}"
 
@@ -225,6 +225,13 @@ class League(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
+        if self.is_parent:
+            self.isparent = True
+
+        if self.parent is not None:
+            self.parent.isparent = True
+            self.parent.save()
+
         slug_str = f"{self.name}"
         unique_slugify(self, slug_str)
         # make search index

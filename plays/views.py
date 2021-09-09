@@ -127,15 +127,25 @@ class PlaysBaseView(ComplexViews):
         # filters on
         if self.filter_on:
             options["leagues"] = League.objects.filter(
-                parent__isnull=True, visible=True
+                parent__isnull=True,
+                visible=True
             )
 
-            options["leagues2"] = League.objects.filter(
-                parent__isnull=True, visible=True
+            options["history_leagues"] = CLeagueHistory.objects.filter(
+                season__name=self.season,
+                visible=True
             )
+
+            options["league_groups"] = League.objects.filter(
+                league__historical__season__name=self.season,
+                isparent=True,
+                visible=True
+            )
+
+            
         else:
             options["leagues"] = None
-            options["leagues2"] = None
+            options["history_leagues"] = None
         return options
 
     def get(self, request, slug, *args, **kwargs):
@@ -295,7 +305,7 @@ class PlaysListViews(ComplexViews):
 
         if redirect_league:
             return redirect("plays:summary", slug=redirect_league.slug)
-       
+
         plays_config = PlaysConfig.objects.all().first()
 
         if plays_config:
@@ -303,8 +313,8 @@ class PlaysListViews(ComplexViews):
             return redirect("plays:summary", slug=league_slug)
 
         else:
-            league = League.objects.all().first()
-            return redirect("plays:summary", slug=league.slug)
+            history_league = CLeagueHistory.objects.all().first()
+            return redirect("plays:summary", slug=history_league.league.slug)
 
         leagues = League.objects.filter(parent__isnull=True)
         season = request.GET.get("season") or get_current_season()

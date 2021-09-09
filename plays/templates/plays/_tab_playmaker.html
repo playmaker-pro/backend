@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load thumbnail %}
 
-<table class="table" style="border:1px;">
+<table class="table pys-tbl pys-tbl-pm">
   <thead>
     <tr><th scope="col" class="{% if not objects.players %} d-none {% endif %}">{% trans 'Zawodnicy' %}</th></tr>
   </thead>
@@ -18,11 +18,7 @@
     </tbody>
 </table>
 
-
-
-  <table class="table" style="border:1px;">
-
-
+  <table class="table pys-tbl-pm">
       <thead>
         <tr>
             <th scope="col" class="{% if not objects.coaches %} d-none {% endif %}">{% trans 'Trenerzy' %}</th>

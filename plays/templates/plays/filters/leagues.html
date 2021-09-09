@@ -1,0 +1,6 @@
+ <select id="searchleagues" class="side-filter selectpicker side-filter searchleagues" data-live-search="true">
+            <option data-tokens="" value="" >wybierz</option>
+            {% for history_league in history_leagues %}
+                <option data-tokens="{{history_league.league.name}} {{history_league.league.zpn}}" value="{% url 'plays:summary' slug=history_league.league.slug  %}?season={{ current_season }}">{{ history_league.league.name }} </option>
+            {% endfor %}
+        </select>

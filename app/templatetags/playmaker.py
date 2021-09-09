@@ -1,7 +1,7 @@
 import logging
 from datetime import date, datetime
 
-from clubs.models import Club, Team
+from clubs.models import Club, Team, League
 from django import template
 from django.conf import settings
 from django.urls import reverse
@@ -130,7 +130,7 @@ def get_list(dictionary, key):
 
 
 @register.filter
-def has_season_data(league, season_name):
+def has_season_data(league: League, season_name: str) -> bool:
     return league.has_season_data(season_name)
 
 

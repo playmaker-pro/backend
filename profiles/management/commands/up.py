@@ -24,7 +24,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         deep = options.get("deep")
         season_name = options.get("season")
-        
+
         profiles = models.CoachProfile.objects.filter(data_mapper_id__isnull=False)
         counter = profiles.count()
         if counter == 0:

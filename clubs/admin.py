@@ -66,7 +66,9 @@ class LeagueAdmin(admin.ModelAdmin):
         "name",
         "order",
         "visible",
+        "isparent",
         "is_parent",
+        "history",
         "parent_of",
         "index",
         "code",
@@ -74,12 +76,15 @@ class LeagueAdmin(admin.ModelAdmin):
         "search_index",
     )
 
+    def history(self, obj):
+        return [h.season.name for h in obj.historical.all()]
+
     def parent_of(self, obj):
         return obj.parent.name if obj.parent else ""
 
     def is_parent(self, obj):
         return obj.is_parent
-
+    is_parent.short_description = 'is_parent()'
     is_parent.boolean = True
 
 
