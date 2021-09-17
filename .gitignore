@@ -31,7 +31,7 @@ local.env
 local.py
 # Environment variables
 *_wix_dump.csv
-
+*.csv
 misc
 _misc
 

@@ -59,7 +59,7 @@
             {% endfor %}
             
             <div id="accordion1">
-                {% for league_grouped in league_groups %}
+                {% for league_grouped in league_parents %}
                     <div class="" id="heading{{league_grouped.id}}" style="cursor: pointer;">
                         <span style="color: #fff;" class="" data-toggle="collapse" data-target="#collapse{{league_grouped.id}}" aria-expanded="true" aria-controls="collapse{{league_grouped.id}}">
                             <i class="icofont-arrow-down"></i>{{ league_grouped.name }}

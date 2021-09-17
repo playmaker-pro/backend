@@ -170,19 +170,18 @@ span.text {
     <div class="container" data-aos="fade-up">
         {% include 'plays/filters/season.html' %}
         {% include 'plays/filters/leagues.html' %}
-        {% for league in leagues %}
-            {% if league|has_season_data:current_season %}
-                <div class="plays-link"><a href="{% url 'plays:summary' slug=league.slug  %}?season={{ current_season }}"><i class="icofont-arrow-right"></i>{{ league.name }}</a></div>
-            {% endif %}
+        {% for league in history_leagues_no_parent %}
+            <div class="plays-link"><a href="{% url 'plays:summary' slug=league.league.slug  %}?season={{ current_season }}"><i class="icofont-arrow-right"></i>{{ league.league.name }}</a></div>
         {% endfor %}
+
         <div id="accordion">
-            {% for league_grouped in league_groups %}
-                <div class="" id="heading{{league_grouped.id}}" style="cursor: pointer;">
+            {% for league_grouped in league_parents %}
+                <div class="" id="heading{{ league_grouped.id }}" style="cursor: pointer;">
                     <span style="color: #fff;" class="" data-toggle="collapse" data-target="#collapse{{league_grouped.id}}" aria-expanded="true" aria-controls="collapse{{league_grouped.id}}">
                         <i class="icofont-arrow-down"></i>{{ league_grouped.name }}
                     </span>
                 </div>
-                <div id="collapse{{league_grouped.id}}" class="collapse" aria-labelledby="heading{{league_grouped.id}}" data-parent="#accordion">
+                <div id="collapse{{ league_grouped.id }}" class="collapse" aria-labelledby="heading{{league_grouped.id}}" data-parent="#accordion">
                     {% for child in league_grouped.league_set.all %}
                         {% if child|has_season_data:current_season %}
                             <div class="plays-sub-link"><a href="{% url 'plays:summary' slug=child.slug  %}?season={{ current_season }}">{{ child.name }}</a></div>

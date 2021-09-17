@@ -121,7 +121,7 @@ class PlaysBaseView(ComplexViews):
             self.league = League.objects.get(slug=slug)
             if self.league.visible == False:
                 raise Http404()
-
+    
         options["league"] = self.league
 
         # filters on
@@ -129,20 +129,19 @@ class PlaysBaseView(ComplexViews):
             options["leagues"] = League.objects.filter(
                 parent__isnull=True,
                 visible=True
-            )
-
-            options["history_leagues"] = CLeagueHistory.objects.filter(
+            ).order_by("order")
+            history_leagues_all = CLeagueHistory.objects.select_related("league").filter(
                 season__name=self.season,
                 visible=True
             )
-
-            options["league_groups"] = League.objects.filter(
+            options["history_leagues"] = history_leagues_all.order_by("league__order")
+            options["history_leagues_no_parent"] = history_leagues_all.filter(league__parent__isnull=True).order_by("league__order")
+            options["league_parents"] = League.objects.filter(
                 league__historical__season__name=self.season,
                 isparent=True,
                 visible=True
-            )
+            ).order_by("name", "order").distinct("name")
 
-            
         else:
             options["leagues"] = None
             options["history_leagues"] = None

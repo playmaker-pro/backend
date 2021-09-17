@@ -206,7 +206,7 @@ class League(models.Model):
         if self.historical.filter(season__name=season_name).count() == 0:
             return False
         return True
-   
+
     def get_file_path(instance, filename):
         return f"league_pics/%Y-%m-%d/{remove_polish_chars(filename)}"
 
@@ -403,7 +403,6 @@ class Team(models.Model, MappingMixin):
         verbose_name_plural = _("Teams")
         unique_together = ('name', 'club', 'seniority', 'league')
 
-
     # common  team fileds
     travel_refunds = models.BooleanField(
         _('Zwrot za dojazdy'),
@@ -449,4 +448,5 @@ class Team(models.Model, MappingMixin):
         )
 
     def __str__(self):
-        return f'{self.name} ({self.league.name})'
+        league_name = self.display_league
+        return f"{self.name} ({league_name})"

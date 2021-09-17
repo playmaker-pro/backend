@@ -128,13 +128,12 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
     def flattern_coach_carrier_structure(self, data: dict) -> list:
         out = []
         for season, season_data in data.items():
-            
+            season_dict = {}
             if not season_data.get("carrier"):
                 continue
             if not season_data.get("carrier").get("teams"):
                 continue
             for team, team_stat in season_data["carrier"]["teams"].items():
-                season_dict = {}
                 season_dict["name"] = season
                 season_dict["team"] = team
                 season_dict.update(team_stat)

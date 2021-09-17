@@ -1,9 +1,7 @@
 {% load playmaker %}
 <table id="table-table" class="table plays-table d-md-none" style="font-size:0.7em;" width="100%">
   <tbody>
-
     {% for section_name, section_data in games.items %}
-
     {% if show_sub_title %}
         <tr class="tb-subtitle">
             <td colspan="4">{{ section_name }}</td>
@@ -11,24 +9,21 @@
     {% endif %}
 
     {% for name, data in section_data.items %}
-   
     <tr class="tb-title">
         <td colspan="4">{{ name }}</td>
     </tr>
-
     {% for game in data %}
     <tr>
         <td class="tb-digit">
             <small>{{ game.date }}</small>
         </td>
-
         <td class="text-left">
             {% include "plays/partials/game_with_pic.html" with name=game.host url=game.host_url pic=game.host_pic image_left=True %} <br>
             {% include "plays/partials/game_with_pic.html" with name=game.guest url=game.guest_url pic=game.guest_pic image_left=True %}           
         </td>
         <td class="tb-digit">
         {% if game.score %}
-            <a href="#showGameModal" data-toggle="modal" data-target="#showGameModal" data-game-json='{{game|jsonify}}'>{{ game.score }}</a>
+            <a href="#showGameModal" data-toggle="modal" data-target="#showGameModal" data-game-json='{{game|jsonify}}'>{{ game.host_score }}<br><br><br> {{ game.guest_score }}</a>
         {% else %}
             - 
         {% endif %}
