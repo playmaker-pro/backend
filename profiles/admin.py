@@ -23,7 +23,7 @@ class PositionAdmin(admin.ModelAdmin):
 
 
 DEFAULT_PROFILE_SEARCHABLES = ('user__email', 'user__first_name', 'user__last_name')
-DEFAULT_PROFILE_DISPLAY_FIELDS = ('pk', linkify('user'), 'data_mapper_id', 'active')
+DEFAULT_PROFILE_DISPLAY_FIELDS = ('pk', linkify('user'), 'data_mapper_id', 'slug', 'active')
 
 
 class ProfileAdminBase(admin.ModelAdmin):
