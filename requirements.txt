@@ -20,3 +20,5 @@ django-address==0.2.5
 djangorestframework==3.12.1
 django_compressor==2.4
 django-user-agents==0.4.0
+pygments
+typing_extensions
