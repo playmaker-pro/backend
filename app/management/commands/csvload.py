@@ -39,10 +39,8 @@ class Command(BaseCommandCsvHandler, BaseCommand, BaseCsvDump):
             data = csv.DictReader(csvfile)
             if _type == "player":
                 self.handle_player_changes(data, _dryrun)
-              
             elif _type == "team":
                 self.handle_team_changes(data, _dryrun)
-
 
     def handle_team_changes(self, rows, _dryrun):
         for row in rows:
@@ -50,6 +48,8 @@ class Command(BaseCommandCsvHandler, BaseCommand, BaseCsvDump):
             team = Team.objects.get(id=object_id)
             changed_league_object_id = row.get(self._write_field("league_object"))
             changed_mapping = row.get(self._write_field("mapping"))
+            changed_data_mapper_id = row.get(self._write_field("data_mapper_id"))
+            changed_name = row.get(self._write_field("name"))
             changed_club_object_id = row.get(self._write_field("club_object"))
             if any([changed_league_object_id, changed_mapping, changed_club_object_id]):
                 print(f"ROW: New value for team detected for {team}")
@@ -61,8 +61,12 @@ class Command(BaseCommandCsvHandler, BaseCommand, BaseCsvDump):
                     continue
                 else:
                     from clubs.models import League, Club
+                    if changed_data_mapper_id:
+                        team.data_mapper_id = int(changed_data_mapper_id)
                     if changed_mapping:
                         team.mapping = changed_mapping
+                    if changed_name:
+                        team.name = changed_name
                     if changed_league_object_id:
                         team.league = League.objects.get(id=changed_league_object_id)
                     if changed_club_object_id:
