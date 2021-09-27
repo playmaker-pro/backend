@@ -111,10 +111,13 @@ class BaseCsvDump:
             self._read_field("seniorty"): instance.display_seniority,
             self._read_field("display_league"): instance.display_league,
             self._read_field("league_object"): instance.league.id if instance.league else None,
+            self._read_field("data_mapper_id"): instance.data_mapper_id,
             self._read_field("display_club"): instance.display_club,
             self._read_field("club_object"): instance.club.id if instance.club else None,
             # read fields
+            self._write_field("name"): None,
             self._write_field("league_object"): None,
+            self._write_field("data_mapper_id"): None,
             self._write_field("mapping"): None,
             self._write_field("club_object"): None,
         })
