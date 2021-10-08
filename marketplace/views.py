@@ -177,7 +177,7 @@ class AnnouncementsView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixi
     http_method_names = ["get"]
     paginate_limit = 9
     table_type = None
-    page_title = 'Testy Piłkarskie'
+    page_title = 'Ogłoszenia'
 
     def filter_queryset(self, queryset):
         now = timezone.now().date()

@@ -9,7 +9,7 @@
     {% with profile=show_user.profile template='platform/tables/two_table.html' %}
         {% include template with key=_('Licencja')           value=profile.get_licence_display|default:'-'  %}
         {% include template with key=_('Piłkarski cel')      value=profile.get_soccer_goal_display|default:'-'  %}
-        {% include template with key=_('Wiek')               value=profile.age|default:'-'|upper           %}   
+        {% include template with key=_('Wiek')               value=profile.birth_date.year|default:'-'|upper           %}
         {% include template with key=_('Obecna drużyna')     value=profile.display_team|default:'-'|upper           %}
         {% include template with key=_('Poziom rozgrywkowy') value=profile.display_league|default:'-'|upper         %}
         {% comment %} {% include template with key=_('Grupa')              value=profile.group|default:'-'|upper              %} {% endcomment %}

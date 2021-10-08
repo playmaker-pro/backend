@@ -28,7 +28,7 @@
                 <a href="{{ object.profile.get_permalink }}">
                     <strong> 
                         {{ object.first_name|upper}} {{ object.last_name|upper}} {{ object.profile.age|default:'' }} 
-                        {% if object.profile.age %}{% trans 'l.' %} {% endif %} 
+                        {% if object.profile.birth_date.year %}{% trans 'r.' %} {% endif %}
                         {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
                     </strong>
                 </a>
