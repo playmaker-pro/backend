@@ -179,11 +179,14 @@ class PlaysViews(PlaysBaseView):
         output["Rozegrane mecze"] = {}
 
         if data.get("today_games"):
-            output["Dzisiejsze mecze"] = data.get("today_games") 
+            output["Dzisiejsze mecze"] = data.get("today_games")
+            # output["Dzisiejsze mecze"]["url"] = reverse("plays:next_games", kwargs={"slug": slug})
         if data.get("current_games"):
             output["Rozegrane mecze"] = data.get("current_games")
+            # output["Rozegrane mecze"]["url"] = reverse("plays:next_games", kwargs={"slug": slug})
         if data.get("next_games"):
             output["Nachodzące mecze"] = data.get("next_games")
+            # output["Nachodzące mecze"]["url"] = reverse("plays:next_games", kwargs={"slug": slug})
 
         options["objects"] = output
 

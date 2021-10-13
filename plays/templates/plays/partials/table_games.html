@@ -1,18 +1,20 @@
 {% load playmaker %}
+
 <table id="table-table" class="table plays-table d-md-none" style="font-size:0.7em;" width="100%">
   <tbody>
     {% for section_name, section_data in games.items %}
-    {% if show_sub_title %}
-        <tr class="tb-subtitle">
-            <td colspan="4">{{ section_name }}</td>
-        </tr>
-    {% endif %}
-
+        {% if show_sub_title %}
+            <tr class="tb-subtitle">
+                <td colspan="3">{{ section_name }}</td>
+                <td class="pull-right"><a href="{% url 'plays:table' slug=league.slug  %}?season={{ current_season }}">Tabela</a></td>
+            </tr>
+        {% endif %}
     {% for name, data in section_data.items %}
+
     <tr class="tb-title">
         <td colspan="4">{{ name }}</td>
     </tr>
-    {% for game in data %}
+    {% for game in data.data %}
     <tr>
         <td class="tb-digit">
             <small>{{ game.date }}</small>
@@ -31,8 +33,19 @@
 
     </tr>
     {% endfor %}
-{% endfor %}
-{% endfor %}
+
+         {% if forloop.last %}
+           {% if more_games %}
+           <tr style="border:0px;">
+            <td colspan="4">
+                <a href="{% url 'plays:next_games' slug=league.slug  %}?season={{ current_season }}">
+                            Pokaż więcej meczów... </a>
+            </td>
+            </tr>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+    {% endfor %}
     </tbody>
 </table>
 
@@ -44,7 +57,12 @@
     
     {% if show_sub_title %}
         <tr class="tb-subtitle">
-            <td colspan="4"><span class="text">{{ section_name }}<span></td>
+            <td colspan="3"><span class="text">{{ section_name }}<span></td>
+            <td class="pull-right">
+                   <a href="{% url 'plays:table' slug=league.slug  %}?season={{ current_season }}">
+                    Tabela</a>
+  
+                </td>
         </tr>
     {% endif %}
 
@@ -72,7 +90,19 @@
             </td>
         </tr>
         {% endfor %}
+        {% if forloop.last %}
+           {% if more_games %}
+           <tr style="border:0px;">
+            <td colspan="4">
+                <a href="{% url 'plays:next_games' slug=league.slug  %}?season={{ current_season }}">
+                            Pokaż więcej meczów... </a>
+            </td>
+            </tr>
+            {% endif %}
+        {% endif %}
       {% endfor %}
+
     {% endfor %}
     </tbody>
 </table>
+

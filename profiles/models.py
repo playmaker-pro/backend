@@ -724,18 +724,34 @@ class PlayerMetrics(models.Model):
         season_name = utilites.get_current_season()
         _id = self.player.data_mapper_id
 
+        
+        # user.profile.set_team_object_based_on_meta()  # saving
+        start = datetime.now()
         fantasy = adapters.PlayerFantasyDataAdapter(_id).get(season=season_name, full=True)
         self.update_fantasy(fantasy)
-
+        print(f"\t> PlayerFantasyDataAdapter: {datetime.now()-start}")
+        
+        start = datetime.now()
         season = adapters.PlayerStatsSeasonAdapter(_id).get(groupped=True)
         self.update_season(season)
+        print(f"\t> PlayerStatsSeasonAdapter: {datetime.now()-start}")
 
+        start = datetime.now()
         games = adapters.PlayerLastGamesAdapter(_id).get()
         self.update_games(games)
+        print(f"\t> PlayerLastGamesAdapter: {datetime.now()-start}")
 
+        start = datetime.now()
         games_summary = adapters.PlayerLastGamesAdapter(_id).get(season=season_name, limit=3)  # should be profile.playermetrics.refresh_games_summary() and putted to celery.
+        print(f"\t> PlayerLastGamesAdapter: {datetime.now()-start}")
+        
+        start = datetime.now() 
         fantasy_summary = adapters.PlayerFantasyDataAdapter(_id).get(season=season_name)
+        print(f"\t> PlayerFantasyDataAdapter: {datetime.now()-start}")
+        
+        start = datetime.now() 
         season_summary = adapters.PlayerStatsSeasonAdapter(_id).get(season=season_name)
+        print(f"\t> PlayerStatsSeasonAdapter: {datetime.now()-start}")
         self.update_summaries(games_summary, season_summary, fantasy_summary)
         self.save()
 

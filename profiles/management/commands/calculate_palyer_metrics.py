@@ -28,7 +28,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         users = self.get_queryset()
-
+        from datetime import datetime
         for user in users:
             if user.is_player:
                 try:
@@ -36,12 +36,23 @@ class Command(BaseCommand):
                         player = Player.objects.get(id=user.profile.data_mapper_id)
                         self.stdout.write(f'updating {player}')
                         try:
+                            print("mapper_id", user.profile.data_mapper_id)
+                            start = datetime.now()
                             user.profile.calculate_data_from_data_models()
+                            print(f"> calculate_data_from_data_models: {datetime.now()-start}")
+                            start = datetime.now()
                             user.profile.trigger_refresh_data_player_stats()  # save not relevant
+                            print(f"> trigger_refresh_data_player_stats: {datetime.now()-start}")
+                            start = datetime.now()
                             user.profile.fetch_data_player_meta(save=False)  # save comes inside
+                            print(f"> fetch_data_player_meta: {datetime.now()-start}")
                             # user.profile.set_team_object_based_on_meta()  # saving
+                            start = datetime.now()
                             user.profile.playermetrics.refresh_metrics()  # save not relevant
+                            print(f"> refresh_metrics: {datetime.now()-start}")
+                            start = datetime.now()
                             user.profile.calculate_fantasy_object()
+                            print(f"> calculate_fantasy_object: {datetime.now()-start}")
                             user.profile.save()
                         except Exception as e:
                             self.stdout.write(self.style.ERROR(f'blad: {e}'))
@@ -49,3 +60,7 @@ class Command(BaseCommand):
                         self.stdout.write(self.style.SUCCESS(msg))
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f'{user} {e}'))
+            # if user.profile.data_mapper_id == 9898:
+            #     break
+            from django.db import reset_queries
+            reset_queries()
