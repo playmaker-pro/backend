@@ -1,6 +1,6 @@
 {% load i18n %}
 {% load thumbnail %}
 
-{% include "plays/partials/table_games.html" with games=objects show_sub_title=True %}
+{% include "plays/partials/table_games.html" with games=objects show_sub_title=True more_games=True %}
 <br><br>
 {% include "plays/_tab_table.html" with objects=summary_table_objects %}

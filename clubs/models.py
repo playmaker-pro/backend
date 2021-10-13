@@ -230,6 +230,14 @@ class League(models.Model):
     index = models.CharField(max_length=255, null=True, blank=True)
     search_index = models.CharField(max_length=255, null=True, blank=True)
 
+    country = CountryField(
+        _("Kraj"),
+        # blank=True,
+        default="PL",
+        null=True,
+        blank_label=_("Wybierz kraj"),
+    )
+
     def has_season_data(self, season_name: str) -> bool:
         if self.historical.filter(season__name=season_name).count() == 0:
             return False
@@ -272,6 +280,9 @@ class League(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+
+    class Meta:
+        unique_together = ("name", "country")
 
 
 class Seniority(models.Model):

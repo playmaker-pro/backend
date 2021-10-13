@@ -69,6 +69,7 @@ class LeagueAdmin(admin.ModelAdmin):
         "isparent",
         "is_parent",
         "history",
+        "country",
         "parent_of",
         "index",
         "code",
