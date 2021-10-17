@@ -223,7 +223,7 @@ class League(models.Model):
     name = models.CharField(max_length=355, unique=True)
     code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
     slug = models.CharField(max_length=255, blank=True, editable=False)
-    parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True)
+    parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs")
     isparent = models.BooleanField(default=False)
     zpn = models.CharField(max_length=255, null=True, blank=True)
     zpn_mapped = models.CharField(max_length=255, null=True, blank=True)
@@ -252,7 +252,7 @@ class League(models.Model):
 
     @property
     def is_parent(self):
-        return self.parent is None and self.league_set.all().count() != 0
+        return self.parent is None and self.childs.all().count() != 0
 
     @property
     def display_league(self):

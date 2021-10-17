@@ -78,7 +78,7 @@ class LeagueAdmin(admin.ModelAdmin):
     )
 
     def history(self, obj):
-        return [h.season.name for h in obj.historical.all()]
+        return [f"{h.season.name}({h.visible})" for h in obj.historical.all()]
 
     def parent_of(self, obj):
         return obj.parent.name if obj.parent else ""
