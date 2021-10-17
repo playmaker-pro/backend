@@ -110,6 +110,7 @@ class PlaysBaseView(ComplexViews):
     paginate_limit = 15
 
     def set_kwargs(self, options, slug):
+        options["current_league_id"] = None
         self.season = self.request.GET.get("season") or get_current_season()
         options["current_season"] = self.season
         options["page_title"] = self.page_title
@@ -119,32 +120,39 @@ class PlaysBaseView(ComplexViews):
 
         else:
             self.league = League.objects.get(slug=slug)
-            if self.league.visible == False:
+            options["current_league_id"] = self.league.id
+            if self.league.visible is False:
                 raise Http404()
     
         options["league"] = self.league
 
-        # filters on
+        # Just when filters are on.
         if self.filter_on:
-            options["leagues"] = League.objects.filter(
-                parent__isnull=True,
-                visible=True
-            ).order_by("order")
-            history_leagues_all = CLeagueHistory.objects.select_related("league").filter(
-                season__name=self.season,
-                visible=True
-            )
-            options["history_leagues"] = history_leagues_all.order_by("league__order")
-            options["history_leagues_no_parent"] = history_leagues_all.filter(league__parent__isnull=True).order_by("league__order")
-            options["league_parents"] = League.objects.filter(
-                league__historical__season__name=self.season,
-                isparent=True,
-                visible=True
-            ).order_by("name", "order").distinct("name")
+            options["league_filters"] = League.objects.filter(visible=True).filter(
+                Q(
+                    Q(isparent=True) |
+                    Q(parent__isnull=True)
+                ) 
+                
+                & 
+                
+                Q(
+                    Q(
+                        Q(historical__season__name=self.season) &
+                        Q(historical__visible=True)
+                    )
+                    |
+                    Q( 
+                        Q(childs__historical__season__name=self.season) &
+                        Q(childs__historical__visible=True)
+                    )
+                )
+            ).order_by("order").distinct()
 
         else:
             options["leagues"] = None
             options["history_leagues"] = None
+            options["league_filters"] = None
         return options
 
     def get(self, request, slug, *args, **kwargs):
