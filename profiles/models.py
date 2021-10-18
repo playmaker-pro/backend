@@ -605,7 +605,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         '''Trigger update of player stats --> s38'''
         if self.attached:
             adpt = adpt or PlayerAdapter(self.data_mapper_id)
-            adpt.calculate_stats()
+            adpt.calculate_stats(season_name=utilites.get_current_season())
 
     def get_team_object_based_on_meta(self, season_name, retries: int = 3):
         '''set TeamObject based on meta data'''
