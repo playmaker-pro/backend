@@ -49,7 +49,7 @@ class Command(BaseCommand):
                 )
                 continue
 
-            if player.data_mapper_id and player.league:
+            if not player.data_mapper_id and player.league:
                 self.stdout.write(
                     self.style.ERROR(
                         f" ERROR > That user profile do not have data_mapper_id={player.data_mapper_id} set or it has league={player.league}"
