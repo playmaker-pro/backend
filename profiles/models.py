@@ -564,7 +564,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             return None
         return self.meta.get(season, None) is not None
 
-    def calculate_fantasy_object(self):
+    def calculate_fantasy_object(self, *args, **kwargs):
         season = utilites.get_current_season()
         if not self.has_meta_entry_for(season):
             msg =f'Cannot calculate fantasy data object do not have "meta" or "meta" data do not have data for season={season}'
@@ -576,7 +576,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         f.calculate_fantasy_for_player(self, season, is_senior=True)
         f.calculate_fantasy_for_player(self, season, is_senior=False)
 
-    def calculate_data_from_data_models(self, adpt=None):
+    def calculate_data_from_data_models(self, adpt=None, *args, **kwargs):
         '''Interaction with s38: league, vivo, team <- s38'''
         if self.attached:
             adpt = adpt or PlayerAdapter(self.data_mapper_id)
@@ -592,7 +592,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             adpt = adpt or PlayerAdapter(self.data_mapper_id)
             adpt.update_wix_id_and_position(email=self.user.email, position=self.position_fantasy)
 
-    def fetch_data_player_meta(self, adpt=None, save=True):
+    def fetch_data_player_meta(self, adpt=None, save=True, *args, **kwargs):
         '''Interaction with s38: updates meta from <--- s38 '''
         if self.attached:
             adpt = adpt or PlayerAdapter(self.data_mapper_id)
@@ -601,7 +601,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             if save:
                 self.save()
 
-    def trigger_refresh_data_player_stats(self, adpt=None):
+    def trigger_refresh_data_player_stats(self, adpt=None, *args, **kwargs):
         '''Trigger update of player stats --> s38'''
         if self.attached:
             adpt = adpt or PlayerAdapter(self.data_mapper_id)
@@ -636,6 +636,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
                     self.save()
                     return
         logger.info('Object not found or meta is empty.')
+
+    def refresh_metrics(self, *args, **kwargs):
+        self.playermetrics.refresh_metrics()
 
     def save(self, *args, **kwargs):
         ''''Nie jest wyświetlana na profilu.
