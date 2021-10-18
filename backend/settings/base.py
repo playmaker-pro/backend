@@ -483,7 +483,7 @@ def get_logging_structure(LOGFILE_ROOT):
             'django': {
                 'handlers': ['django_log_file'],
                 'propagate': True,
-                'level': 'DEBUG',
+                'level': 'ERROR',
             },
             'project': {
                 'handlers': ['proj_log_file'],
