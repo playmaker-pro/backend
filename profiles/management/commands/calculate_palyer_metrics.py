@@ -31,7 +31,8 @@ class Command(BaseCommand):
         selected_method = options.get("method")
 
         players = models.PlayerProfile.objects.filter(
-            user__declared_role=definitions.PLAYER_SHORT, data_mapper_id__isnull=False
+            user__declared_role=definitions.PLAYER_SHORT,
+            data_mapper_id__isnull=False
         )
         methods = [
             ("calculate_data_from_data_models", (), {}),
@@ -40,7 +41,7 @@ class Command(BaseCommand):
             ("refresh_metrics", (), {}),
             ("calculate_fantasy_object", (), {}),
         ]
-        for player in players:
+        for player in players.iterator():
             self.stdout.write(f"###> {player}")
             if not player.user.is_player:
                 self.stdout.write(
