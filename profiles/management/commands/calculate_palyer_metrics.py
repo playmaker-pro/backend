@@ -62,7 +62,7 @@ class Command(BaseCommand):
                     start = datetime.now()
 
                     for method, args, kwargs in methods:
-                        if selected_method != "all":
+                        if selected_method == "all":
                             start = datetime.now()
                             getattr(player, method)(*args, **kwargs)
                             print(f"> \t calc: {method}: {datetime.now() - start}")
