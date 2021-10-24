@@ -4,6 +4,7 @@ from datetime import datetime
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import reset_queries
+from data.models import Player
 from profiles import models
 from profiles.views import (
     get_profile_model,
@@ -64,21 +65,23 @@ class Command(BaseCommand):
 
                     for method, args, kwargs in methods:
                         if selected_method == "all":
-                            start = datetime.now()
-                            getattr(player, method)(*args, **kwargs)
-                            print(f"> \t calc: {method}: {datetime.now() - start}")
+                            self.execute_method(player, method, *args, **kwargs)
                         elif selected_method == method:
-                            start = datetime.now()
-                            getattr(player, method)(*args, **kwargs)
-                            print(f"> \t calc: {method}: {datetime.now() - start}")
+                            self.execute_method(player, method, *args, **kwargs)
                     player.save()
+                    print('-----------')
 
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f"ERROR > : {e}"))
                     logger.exception(e)
 
             except Exception as e:
-                logger.exception(e)
                 self.stdout.write(self.style.ERROR(f"ERROR: {player} {e}"))
+                logger.exception(e)
 
             reset_queries()
+
+    def execute_method(self, profile: models.ParentProfile, method: str, *args, **kwargs):
+        start = datetime.now()
+        getattr(profile, method)(*args, **kwargs)
+        print(f"> \t calc: {method}: {datetime.now() - start}")
