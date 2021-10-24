@@ -177,8 +177,8 @@ class GameSerializer:
             "host": h_name,
             "guest": g_name,
             "guest_url": g_url,
-            "guest_score": game.host_score,
-            "host_score": game.guest_score,
+            "guest_score": game.guest_score,
+            "host_score": game.host_score,
             # "url": game.league._url,
         }
 
