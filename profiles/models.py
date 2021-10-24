@@ -682,8 +682,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
                 self.update_data_player_object(adpt)  # send data to s38
                 self.trigger_refresh_data_player_stats(adpt)   # send trigger to s38 
             self.calculate_data_from_data_models(adpt)  # update league, vivo, team from Players meta
-            self.fetch_data_player_meta(adpt)  # update update meta
-            
+            self.fetch_data_player_meta(adpt)  # update update meta   
 
     class Meta:
         verbose_name = "Player Profile"
