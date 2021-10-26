@@ -49,6 +49,8 @@ urlpatterns = [
     path('terms/', TemplateView.as_view(template_name='subpgaes/terms.html')),
     path('blog/', include('blog.urls', namespace="blog")),
     path('api/v2/', api_router.urls),
+    path('resources/', include('resources.urls', namespace="resources")),
+
     path('', include('allauth.urls')),
 ] + settings.REDIRECTS_LISTS
 

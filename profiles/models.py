@@ -638,7 +638,8 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         logger.info('Object not found or meta is empty.')
 
     def refresh_metrics(self, *args, **kwargs):
-        self.playermetrics.refresh_metrics()
+        self.add_event_log_message(kwargs.get("event_log_msg", "Refresh metrics started."))
+        self.playermetrics.refresh_metrics(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         ''''Nie jest wyświetlana na profilu.
@@ -720,7 +721,7 @@ class PlayerMetrics(models.Model):
         if commit:
             self.save()
 
-    def refresh_metrics(self):
+    def refresh_metrics(self, *args, **kwargs):
         if not self.player.has_data_id:
             return
         season_name = utilites.get_current_season()

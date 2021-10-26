@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'fqa',
     'fantasy',
     'plays',
+    'resource',
 
     'data',  # external repo
     'stats',  # external repo
@@ -99,6 +100,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.humanize',
     'rest_framework',
+    'rest_framework.authtoken',  # <-- Here
     'corsheaders',
 
     'allauth',
@@ -521,6 +523,14 @@ STREAM_REDIS_CONFIG = {
 }
 
 # https://pypi.org/project/django-address/
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',  # <-- And here
+    ],
+}
+
 
 GOOGLE_API_KEY = 'AIzaSyAwISspDEfhVel-fTYm18Dh1EKtrD0xDH0xxxxx'
 JQUERY_URL = False
