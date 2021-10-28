@@ -142,6 +142,18 @@ class ViewFilterMixin:
             return int(value)
 
     @property
+    def filter_year_max(self):
+        value = self.request.GET.get('year_max')
+        if value:
+            return int(value)
+
+    @property
+    def filter_year_min(self):
+        value = self.request.GET.get('year_min')
+        if value:
+            return int(value)
+
+    @property
     def filter_first_last(self):
         value = self.request.GET.get('first_last')
         return value

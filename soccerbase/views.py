@@ -10,7 +10,7 @@ from django.db.models import Q, Value
 from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View, generic
-from profiles.utils import get_datetime_from_age
+from profiles.utils import get_datetime_from_age, get_datetime_from_year
 from roles import definitions
 from users.models import User
 import operator
@@ -81,13 +81,13 @@ class PlayersTable(TableView):
             query = reduce(operator.or_, clauses)
             queryset = queryset.filter(query)
 
-        if self.filter_age_min is not None:
-            mindate = get_datetime_from_age(self.filter_age_min)
-            queryset = queryset.filter(playerprofile__birth_date__year__lte=mindate.year)
+        if self.filter_year_min is not None:
+            mindate = get_datetime_from_year(self.filter_year_min)
+            queryset = queryset.filter(playerprofile__birth_date__year__gte=mindate.year)
 
-        if self.filter_age_max is not None:
-            maxdate = get_datetime_from_age(self.filter_age_max)
-            queryset = queryset.filter(playerprofile__birth_date__year__gte=maxdate.year)
+        if self.filter_year_max is not None:
+            maxdate = get_datetime_from_year(self.filter_year_max)
+            queryset = queryset.filter(playerprofile__birth_date__year__lte=maxdate.year)
 
         # if self.filter_age_range is not None:
         #     mindate = get_datetime_from_age(self.filter_age_range[0])

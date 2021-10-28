@@ -74,6 +74,12 @@ def get_datetime_from_age(age):
     return None
 
 
+def get_datetime_from_year(year):
+    if not year:
+        return None
+    return timezone.datetime(year, 1, 1)
+
+
 def calculate_player_metrics():
 
     qs = User.objects.filter(declared_role=definitions.PLAYER_SHORT, state=User.STATE_ACCOUNT_VERIFIED)
