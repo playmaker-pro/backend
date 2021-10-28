@@ -27,7 +27,7 @@
             <span> 
                 <a href="{{ object.profile.get_permalink }}">
                     <strong> 
-                        {{ object.first_name|upper}} {{ object.last_name|upper}} {{ object.profile.age|default:'' }} 
+                        {{ object.first_name|upper}} {{ object.last_name|upper}} {{ object.profile.birth_date.year|default:'' }}
                         {% if object.profile.birth_date.year %}{% trans 'r.' %} {% endif %}
                         {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
                     </strong>
@@ -62,7 +62,7 @@
                                                             <strong>
                                                             {{ object.get_full_name|upper}}
                                                             {% if object.is_verified %}<i class="text-success icofont-verification-check"></i>{% endif %}
-                                                            {{ object.profile.age|default:'-' }} {% if object.profile.age %}{% trans 'l.' %} {% endif %}
+                                                            {{ object.profile.birth_date.year|default:'-' }}{% if object.profile.age %}{% trans 'r.' %} {% endif %}
                                                             </strong>
                                                         </a>
                                                     

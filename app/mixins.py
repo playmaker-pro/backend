@@ -142,6 +142,18 @@ class ViewFilterMixin:
             return int(value)
 
     @property
+    def filter_year_max(self):
+        value = self.request.GET.get('year_max')
+        if value:
+            return int(value)
+
+    @property
+    def filter_year_min(self):
+        value = self.request.GET.get('year_min')
+        if value:
+            return int(value)
+
+    @property
     def filter_first_last(self):
         value = self.request.GET.get('first_last')
         return value
@@ -171,26 +183,26 @@ class ViewFilterMixin:
 
     @property
     def filter_position(self):
-        POSITION_CHOICES = [
-            (1, 'Bramkarz'),
-            (2, 'Obrońca Lewy'),
-            (3, 'Obrońca Prawy'),
-            (4, 'Obrońca Środkowy'),
-            (5, 'Pomocnik defensywny (6)'),
-            (6, 'Pomocnik środkowy (8)'),
-            (7, 'Pomocnik ofensywny (10)'),
-            (8, 'Skrzydłowy'),
-            (9, 'Napastnik'),
-        ]
 
-        value = self.request.GET.get('position')
-        # return value
-        if value == '----':
-            return None
-        for number, txt in POSITION_CHOICES:
-            if txt == value:
-                return number
-        return None
+        POSITION_CHOICES = {
+            'Bramkarz': 1,
+            'Obrońca Lewy': 2,
+            'Obrońca Prawy': 3,
+            'Obrońca Środkowy': 4,
+            'Pomocnik defensywny (6)': 5,
+            'Pomocnik środkowy (8)': 6,
+            'Pomocnik ofensywny (10)': 7,
+            'Skrzydłowy': 8,
+            'Napastnik': 9
+        }
+
+        values = self.request.GET.getlist('position')
+
+        filtered_positions = []
+        for value in values:
+            if value in POSITION_CHOICES.keys():
+                filtered_positions.append(POSITION_CHOICES[value])
+        return filtered_positions
 
     @property
     def filter_leg(self):

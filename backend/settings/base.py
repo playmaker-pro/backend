@@ -511,6 +511,7 @@ CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
 CELERY_ALWAYS_EAGER = True
 CELERY_TASK_SERIALIZER = 'pickle'
 import djcelery
+
 djcelery.setup_loader()
 # Redis & stream activity
 STREAM_REDIS_CONFIG = {

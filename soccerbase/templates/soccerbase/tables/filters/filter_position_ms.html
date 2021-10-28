@@ -1,14 +1,23 @@
 
 
-<select name="position" data-width="{{ size }}"  class="form-control selectpicker" title="pozycja">
+<select name="position" data-width="{{ size }}"  class="selectpicker" multiple title="pozycja">
     <option value="----">----</option>
-    <option {% if request.GET.position == 'Bramkarz' %} selected {% endif %}value="Bramkarz">Bramkarz</option>
-    <option {% if request.GET.position == 'Obrońca Lewy' %} selected {% endif %}value="Obrońca Lewy">Obrońca Lewy</option>
-    <option {% if request.GET.position == 'Obrońca Prawy' %} selected {% endif %}value="Obrońca Prawy">Obrońca Prawy</option>
-    <option {% if request.GET.position == 'Obrońca Środkowy' %} selected {% endif %}value="Obrońca Środkowy">Obrońca Środkowy</option>
-    <option {% if request.GET.position == 'Pomocnik defensywny (6)' %} selected {% endif %}value="Pomocnik defensywny (6)">Pomocnik defensywny (6)</option>
-    <option {% if request.GET.position == 'Pomocnik środkowy (8)' %} selected {% endif %}value="Pomocnik środkowy (8)">Pomocnik środkowy (8)</option>
-    <option {% if request.GET.position == 'Pomocnik ofensywny (10)' %} selected {% endif %}value="Pomocnik ofensywny (10)">Pomocnik ofensywny (10)</option>
-    <option {% if request.GET.position == 'Skrzydłowy' %} selected {% endif %}value="Skrzydłowy">Skrzydłowy</option>
-    <option {% if request.GET.position == 'Napastnik' %} selected {% endif %}value="Napastnik">Napastnik</option>
+    <option value="Bramkarz">Bramkarz</option>
+    <option value="Obrońca Lewy">Obrońca Lewy</option>
+    <option value="Obrońca Prawy">Obrońca Prawy</option>
+    <option value="Obrońca Środkowy">Obrońca Środkowy</option>
+    <option value="Pomocnik defensywny (6)">Pomocnik defensywny (6)</option>
+    <option value="Pomocnik środkowy (8)">Pomocnik środkowy (8)</option>
+    <option value="Pomocnik ofensywny (10)">Pomocnik ofensywny (10)</option>
+    <option value="Skrzydłowy">Skrzydłowy</option>
+    <option value="Napastnik">Napastnik</option>
+<!--    <option {% if request.GET.position == 'Bramkarz' %} selected {% endif %}value="Bramkarz">Bramkarz</option>-->
+<!--    <option {% if request.GET.position == 'Obrońca Lewy' %} selected {% endif %}value="Obrońca Lewy">Obrońca Lewy</option>-->
+<!--    <option {% if request.GET.position == 'Obrońca Prawy' %} selected {% endif %}value="Obrońca Prawy">Obrońca Prawy</option>-->
+<!--    <option {% if request.GET.position == 'Obrońca Środkowy' %} selected {% endif %}value="Obrońca Środkowy">Obrońca Środkowy</option>-->
+<!--    <option {% if request.GET.position == 'Pomocnik defensywny (6)' %} selected {% endif %}value="Pomocnik defensywny (6)">Pomocnik defensywny (6)</option>-->
+<!--    <option {% if request.GET.position == 'Pomocnik środkowy (8)' %} selected {% endif %}value="Pomocnik środkowy (8)">Pomocnik środkowy (8)</option>-->
+<!--    <option {% if request.GET.position == 'Pomocnik ofensywny (10)' %} selected {% endif %}value="Pomocnik ofensywny (10)">Pomocnik ofensywny (10)</option>-->
+<!--    <option {% if request.GET.position == 'Skrzydłowy' %} selected {% endif %}value="Skrzydłowy">Skrzydłowy</option>-->
+<!--    <option {% if request.GET.position == 'Napastnik' %} selected {% endif %}value="Napastnik">Napastnik</option>-->
 </select>
