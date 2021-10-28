@@ -93,8 +93,8 @@ class PlayersTable(TableView):
         #     mindate = get_datetime_from_age(self.filter_age_range[0])
         #     maxdate = get_datetime_from_age(self.filter_age_range[1])
         #     queryset = queryset.filter(playerprofile__birth_date__range=[maxdate, mindate])  # bo 0,20   to data urodzin 2000-09-01----2020-09-01
-        if self.filter_position is not None:
-            queryset = queryset.filter(playerprofile__position_raw=self.filter_position)
+        if self.filter_position:
+            queryset = queryset.filter(playerprofile__position_raw__in=self.filter_position)
         return queryset
 
     def get_queryset(self):
