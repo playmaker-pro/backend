@@ -15,7 +15,7 @@ CONFIGURATION = 'dev'  # following options are allowed ['dev', 'production', 'st
 BASE_URL = 'http://localhost:8000'
 
 
-VERSION = '1.3.15'
+VERSION = '1.3.16'
 
 
 SYSTEM_USER_EMAIL = 'rafal.kesik@gmail.com'
@@ -527,8 +527,14 @@ STREAM_REDIS_CONFIG = {
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',  # <-- And here
+        'rest_framework.authentication.TokenAuthentication',
     ],
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated', 
+    ),
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ]
 }
 
 

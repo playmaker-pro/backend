@@ -8,15 +8,26 @@ from rest_framework.permissions import IsAuthenticated  # <-- Here
 
 class WebhookPlayer(APIView):
     permission_classes = (IsAuthenticated,)
-
-    def get(self, request):
-        player_id = request.POST.get("user_id")
+    
+    def post(self, request):
+        player_id = request.data.get("user_id")
+        
         if player_id:
+            player_id = int(player_id)
             from profiles.models import PlayerProfile
             try:
                 player = PlayerProfile.objects.get(data_mapper_id=player_id)
-                player.refresh_metrics(event_log_msg="Triggered by s38 as a webook")
+                player.refresh_metrics(event_log_msg="Triggered by s38 as a webook.")
+                content = {f'data refreshed. for player={player} player-id:{player_id}'}
+
             except PlayerProfile.DoesNotExist:
-                content = {"data do not exists for that ID"}
-            
+                content = {f"data do not exists for that ID {player_id}"}
+
+            except PlayerProfile.MultipleObjectsReturned:
+                player = PlayerProfile.objects.filter(data_mapper_id=player_id).first()
+                player.refresh_metrics(event_log_msg="Triggered by s38 as a webook")
+                content = {f'data refreshed. for player={player} player-id:{player_id}'}
+                
+        else:
+            content = {"No user with given data"}    
         return Response(content)
