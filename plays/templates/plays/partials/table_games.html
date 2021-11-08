@@ -57,9 +57,11 @@
     
     {% if show_sub_title %}
         <tr class="tb-subtitle">
-            <td colspan="3"><span class="text">{{ section_name }}<span></td>
+            <td colspan="3"><span class="text">{{ section_name }}</span>
+            
+            </td>
             <td class="pull-right">
-                   <a href="{% url 'plays:table' slug=league.slug  %}?season={{ current_season }}">
+                <a href="{% url 'plays:table' slug=league.slug  %}?season={{ current_season }}">
                     Tabela</a>
   
                 </td>

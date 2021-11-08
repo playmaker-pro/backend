@@ -77,3 +77,5 @@ media/profile_pics/
 media/documents/
 media/images/
 
+# other scripts..
+custom_script_*.py

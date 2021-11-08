@@ -220,7 +220,7 @@ class LeagueHistory(models.Model):
 class League(models.Model):
     order = models.IntegerField(default=0)
     visible = models.BooleanField(default=False)
-    name = models.CharField(max_length=355, unique=True)
+    name = models.CharField(max_length=355)
     code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
     slug = models.CharField(max_length=255, blank=True, editable=False)
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs")
