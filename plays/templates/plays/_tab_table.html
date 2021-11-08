@@ -1,38 +1,58 @@
 {% load i18n %}
 {% load thumbnail %}
 
+<style>
+.view {
+  margin: auto;
+  width: 600px;
+}
+
+.wrapper {
+  position: relative;
+  overflow: auto;
+  white-space: nowrap;
+}
+
+.sticky-col {
+  position: sticky;
+  position: -webkit-sticky;    
+  background-color: white;
+}
+</style>
+
+<div class="wrapper d-md-none"> 
 <table class="table plays-table d-md-none" style="font-size:0.7em;">
       <thead>
         <tr><td></td></tr>
         <tr>
-            <th scope="col" class="d-table-cell">{% trans 'Klub' %}</th>
-            <th scope="col" class="d-table-cell">{% trans 'M' %}</th>
-            <th scope="col" class="d-table-cell">{% trans 'W' %}</th>
-            <th scope="col" class="d-table-cell">{% trans 'R' %}</th>
-            <th scope="col" class="d-table-cell">{% trans 'P' %}</th>
-            <th scope="col" class="d-table-cell">{% trans 'BR' %}</th>
-            <th scope="col" class="d-table-cell">{% trans 'PKT' %}</th>
+            <th scope="col" class="sticky-col d-table-cell">{% trans 'Klub' %}</th>
+            <th scope="col" class="sticky-col d-table-cell">{% trans 'M' %}</th>
+            <th scope="col" class="sticky-col d-table-cell">{% trans 'W' %}</th>
+            <th scope="col" class="sticky-col d-table-cell">{% trans 'R' %}</th>
+            <th scope="col" class="sticky-col d-table-cell">{% trans 'P' %}</th>
+            <th scope="col" class="sticky-col d-table-cell">{% trans 'BR' %}</th>
+            <th scope="col" class="sticky-col d-table-cell">{% trans 'PKT' %}</th>
             <th scope="col">FORMA</th>
         </tr>
     </thead>
     <tbody>
 
     {% for obj in objects %}
-    <tr >
-        <td class="d-table-cell pull-left">
+    <tr>
+        <td class="d-table-cell pull-left sticky-col">
             <span class="table-position"> {{ obj.position }}. </span>
             {{ obj.date }}
             <img width="20" class=" avatar rounded img-responsive" title="profile picture" src="{{ obj.pic }}">
             {% if obj.team_url %}
-                <a href="obj.team_url"> {{ obj.team }} </a>
-            {% else %}{{ obj.team }} {% endif %}
+                <a href="obj.team_url"> {{ obj.team|truncatechars:25  }} </a>
+            {% else %}{{ obj.team|truncatechars:25  }} {% endif %}
         </td>
-        <td class="d-table-cell tb-digit">{{ obj.games }}</td>
-        <td class="d-table-cell tb-digit">{{ obj.wins }}</td>
-        <td class="d-table-cell tb-digit">{{ obj.draws }}</td>
-        <td class="d-table-cell tb-digit">{{ obj.losts }}</td>
-        <td class="d-table-cell tb-digit">{{ obj.goals }}</td>
-        <td class="d-table-cell tb-digit">{{ obj.points }}</td>
+        <td class="d-table-cell tb-digit sticky-col">{{ obj.games }}</td>
+        <td class="d-table-cell tb-digit sticky-col">{{ obj.wins }}</td>
+        <td class="d-table-cell tb-digit sticky-col">{{ obj.draws }}</td>
+        <td class="d-table-cell tb-digit sticky-col">{{ obj.losts }}</td>
+        <td class="d-table-cell tb-digit sticky-col">{{ obj.goals }}</td>
+        <td class="d-table-cell tb-digit sticky-col">{{ obj.points }}</td>
         <td class="d-table-cell">
              {% for t in obj.trend %}
                 <span class="trend-item match-result-tag p-1 text-white rounded bg-{% if t == 'W' %}success{% elif t == 'P' %}danger{% else %}secondary{% endif %}">{{ t }}</span>
@@ -43,7 +63,7 @@
     {% endfor %}
     </tbody>
 </table>
-
+</div>
 
 <table class="table d-none d-md-table-cell plays-table" style="font-size:0.9em;">
       <thead>
@@ -67,8 +87,8 @@
                 {{ obj.date }}
                 <img width="20" class=" avatar rounded img-responsive" title="profile picture" src="{{ obj.pic }}">
                 {% if obj.team_url %}
-                    <a href="obj.team_url"> {{ obj.team }} </a>
-                {% else %}{{ obj.team }} {% endif %}
+                    <a href="obj.team_url"> {{ obj.team|truncatechars:25  }} </a>
+                {% else %}{{ obj.team|truncatechars:25  }} {% endif %}
             </td>
          <td class="tb-digit">{{ obj.games }}</td>
          <td class="tb-digit">{{ obj.wins }}</td>

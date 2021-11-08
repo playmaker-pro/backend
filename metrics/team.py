@@ -1,6 +1,8 @@
 import logging
 from collections import defaultdict
 from datetime import datetime
+
+from PIL.Image import ID
 from data.models import Game as DGame
 import easy_thumbnails
 from clubs.models import League as CLeague
@@ -88,7 +90,14 @@ class TeamMetrics:
 
         return output
 
-
+# class PlayerMapper:
+#     @classmethod
+#     def get_player_profile_object(cls, player_id):
+#         ......
+#         @ get player by ID
+#         @ cahce taht 
+#         @ in one runtime... or store same cache...
+        
 class TeamMapper:
     @classmethod
     def get_team_obj(cls, team_name, league_obj):
@@ -123,7 +132,7 @@ class TeamMapper:
 
         return url, pic, name
 
-
+    
 class GameSerializer:
     """
     host_team =
@@ -179,6 +188,8 @@ class GameSerializer:
             "guest_url": g_url,
             "guest_score": game.guest_score,
             "host_score": game.host_score,
+            "players": game.players_ids,
+
             # "url": game.league._url,
         }
 
@@ -206,6 +217,7 @@ class GameSerializer:
             "guest_url": g_url,
             "guest_score": game["host_score"],
             "host_score": game["guest_score"],
+            "players": game["players_ids"],
             # "url": game.league._url,
         }
 
@@ -339,6 +351,7 @@ class LeagueMatchesMetrics:
         :param sort_up: defines if decending or ascending
 
         """
+        from django.contrib.postgres.aggregates import ArrayAgg
         print(f'Param passed league: {type(league)}, ({league})')
         print(f'Param passed season_name: {type(season_name)}, ({season_name})')
         print(f'Param passed league_history: {type(league_history)}, ({league_history})')
@@ -361,8 +374,6 @@ class LeagueMatchesMetrics:
                 return []
 
         # @todo: add date check
-
-
         if (
             data_index.data is not None
             and "matches_played" in data_index.data
@@ -391,6 +402,7 @@ class LeagueMatchesMetrics:
                         host_score__isnull=False,
                         guest_score__isnull=False,
                     )
+                    .annotate(players_ids=ArrayAgg('playerstat__player'))
                     .order_by(date_sort)
                     .values(
                         "queue",
@@ -399,6 +411,7 @@ class LeagueMatchesMetrics:
                         "guest_score",
                         "host_team_name",
                         "guest_team_name",
+                        "players_ids",
                     )
                 )
             else:
@@ -410,6 +423,7 @@ class LeagueMatchesMetrics:
                         host_score__isnull=True,
                         guest_score__isnull=True,
                     )
+                    .annotate(players_ids=ArrayAgg('playerstat__player'))
                     .order_by(date_sort)
                     .values(
                         "queue",
@@ -418,6 +432,7 @@ class LeagueMatchesMetrics:
                         "guest_score",
                         "host_team_name",
                         "guest_team_name",
+                        "players_ids",
                     )
                 )
 

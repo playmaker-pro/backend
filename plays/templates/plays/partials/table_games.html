@@ -57,14 +57,9 @@
     
     {% if show_sub_title %}
         <tr class="tb-subtitle">
-            <td colspan="3"><span class="text">{{ section_name }}</span>
-            
-            </td>
+            <td colspan="3"><span class="text">{{ section_name }}</span></td>
             <td class="pull-right">
-                <a href="{% url 'plays:table' slug=league.slug  %}?season={{ current_season }}">
-                    Tabela</a>
-  
-                </td>
+                <a href="{% url 'plays:table' slug=league.slug  %}?season={{ current_season }}">Tabela</a></td>
         </tr>
     {% endif %}
 
@@ -73,23 +68,21 @@
     <tr class="tb-title ">
         <td colspan="4">{{ name }}</td>
     </tr>
-        {% for game in data %}
-        <tr>
-            <td class="d-none d-md-table-cell tb-digit">{{ game.date }}</td>
-
-            <td class="d-none d-md-table-cell text-right">
+    {% for game in data %}
+    <tr>
+        <td class="d-none d-md-table-cell tb-digit">{{ game.date }}</td>
+        <td class="d-none d-md-table-cell text-right">
             {% include "plays/partials/game_with_pic.html" with name=game.host url=game.host_url pic=game.host_pic %}
-            </td>
+         </td>
+        <td class="d-none d-md-table-cell tb-digit" >
+            {% if game.score %}
+            <a href="#showGameModal" data-toggle="modal" data-target="#showGameModal" data-game-json='{{game|jsonify}}'>{{ game.score }}</a>
+            {% else %} &nbsp;&nbsp; - &nbsp;&nbsp; {% endif %}
+        </td>
 
-            <td class="d-none d-md-table-cell tb-digit" >
-                {% if game.score %}
-                <a href="#showGameModal" data-toggle="modal" data-target="#showGameModal" data-game-json='{{game|jsonify}}'>{{ game.score }}</a>
-                {% else %} &nbsp;&nbsp; - &nbsp;&nbsp; {% endif %}
-           </td>
-
-            <td class="d-none d-md-table-cell" >
-             {% include "plays/partials/game_with_pic.html" with name=game.guest url=game.guest_url pic=game.guest_pic image_left=True %}
-            </td>
+        <td class="d-none d-md-table-cell" >
+            {% include "plays/partials/game_with_pic.html" with name=game.guest url=game.guest_url pic=game.guest_pic image_left=True %}
+        </td>
         </tr>
         {% endfor %}
         {% if forloop.last %}
