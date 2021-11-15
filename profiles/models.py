@@ -354,7 +354,7 @@ class PlayerPosition(models.Model):
 
 
 class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
-    '''Player specific profile'''
+    """Player specific profile"""
 
     PROFILE_TYPE = definitions.PROFILE_TYPE_PLAYER
     VERIFICATION_FIELDS = ['country', 'birth_date', 'team_club_league_voivodeship_ver']

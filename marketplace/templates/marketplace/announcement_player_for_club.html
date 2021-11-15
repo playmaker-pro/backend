@@ -1,0 +1,84 @@
+{% load playmaker %}
+{% load thumbnail %}
+{% load i18n %}
+
+{% with player=object.creator %}
+<div class="card announcement-card m-1 serv-section-2">
+<!--    <div class="serv-section-2-icon"> <img class="avatar rounded img-responsive"  src="{% thumbnail object.club.picture|default:'default_club.png' 'club_small' %}">-->
+<!--    </div>-->
+<!--        <div><h3><span class="badge badge-dark" style="float: right">Piłkarz szuka klubu</span></h3></div>-->
+        <div class="serv-section-desc">
+            <h4>
+                <a href="/users/{{ player.profile.slug }}">{{ player.first_name }} {{ player.last_name }} {% if player.profile.birth_date.year %}({% trans 'r.' %} {{ player.profile.birth_date.year|default:'' }}){% endif %} </a>
+                <span class="badge badge-dark" style="float: right">Piłkarz szuka klubu</span>
+            </h4>
+    </div>
+        <div class="section-heading-line-left"></div>
+    <div class="card-body row no-gutters">
+        <div class="row">
+            <div class="card-text">
+            <img class="flag pl-3" src="{{ player.profile.country.flag }}" alt="flag">
+            </div>
+
+            <div class="card-text">
+                <small class="text-muted"> {{ object.profile.playermetrics.season_summary.games_played|default:'0' }} mecze </small>
+            </div>
+
+            <div class="card-text">
+                <small class="text-muted"> {{ object.profile.playermetrics.season_summary.minutes_played |default:'0' }} minuty </small>
+            </div>
+
+            <div class="card-text">
+                <small class="text-muted"> {{ object.profile.playermetrics.season_summary.team_goals|default:'0' }} bramki </small>
+            </div>
+        </div>
+        <div class="col-12 card-text text-muted">
+            <small class="row no-gutters">
+                <div class="col-6 col-md-3 text-center">
+                    <h5>{{ player.profile.get_position_raw_display }}</h5>
+                    Pozycja
+                </div>
+                <div class="col-6 col-md-3 text-center">
+<!--                    <h5>{{ player.profile.display_league|default:'-' }}</h5>-->
+                    <h5> b/d (temp) </h5>
+                    Poziom
+                </div>
+                <div class="col-6 col-md-3 text-center">
+<!--                    <h5>{{ player.profile.soccer_goal|default:'-' }}</h5>-->
+                    <h5> b/d </h5>
+                    Cel poszukiwań
+                </div>
+
+                <div class="col-6 col-md-3 text-center">
+                    {% if not player.profile.voivodeship and not player.profile.address %}
+                    <h5>-</h5>
+                    {% else %}
+                    <h5>{% if player.profile.voivodeship %} {{ player.profile.voivodeship }}, {% endif %}
+                        {% if player.profile.address %} {{ player.profile.address }} {% if player.profile.practice_distance %} +{{ player.profile.practice_distance }}km {% endif %}{% endif %}</h5>
+                    {% endif %}
+                    Region
+                </div>
+                <div class="card-text col-md-12">
+<!--                    <small> {{ object.body }} </small>-->
+                </div>
+            </small>
+        </div>
+    </div>
+
+    <div class="card-footer row no-gutters">
+        <div class="card-text text-center d-inline-flex justify-content-center align-content-center flex-wrap">
+            <div>
+              <button type="button" class="btn-request" onclick="window.location.href='/users/{{ player.profile.slug }}';">Zobacz profil</button>
+            </div>
+            {% if not user.is_player %}
+            <div>
+              <button type="button" class="btn-request" onclick="">Zaproś na testy</button>
+            </div>
+            {% endif %}
+            <div>
+              <button type="button" class="btn-request" onclick="">Udostępnij</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endwith %}

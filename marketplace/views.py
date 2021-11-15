@@ -47,7 +47,7 @@ class AnnouncementFilterMixn:
 
 
 class AddAnnouncementView(LoginRequiredMixin, View):
-    '''Fetch form for annoucments'''
+    """Fetch form for announcements"""
     http_method_names = ['post', 'get']
 
     def get(self, request, *args, **kwargs):
@@ -104,6 +104,8 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     form.fields['club'].queryset = Club.objects.filter(name=user.profile.club_object.name)
 
                 # form.instance.league = request.user.profile.display_league
+            elif user.is_player:
+                form = AnnouncementForm()
             else:
                 return JsonResponse({})
 
@@ -194,14 +196,14 @@ class AnnouncementsView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixi
         if self.filter_vivo is not None:
             queryset = queryset.filter(voivodeship__name__in=self.filter_vivo)
 
-        if self.filter_position_exact is not None:
-            queryset = queryset.filter(positions__name=self.filter_position_exact)
+        # if self.filter_position_exact is not None:
+        #     queryset = queryset.filter(positions__name=self.filter_position_exact)
 
-        if self.filter_gender_exact is not None:
-            queryset = queryset.filter(gender__name=self.filter_gender_exact)
+        # if self.filter_gender_exact is not None:
+        #     queryset = queryset.filter(gender__name=self.filter_gender_exact)
 
-        if self.filter_seniority_exact is not None:
-            queryset = queryset.filter(seniority__name=self.filter_seniority_exact)
+        # if self.filter_seniority_exact is not None:
+        #     queryset = queryset.filter(seniority__name=self.filter_seniority_exact)
 
         return queryset
 
@@ -246,3 +248,23 @@ class MyAnnouncementsView(AnnouncementsView):
 
     def _prepare_extra_kwargs(self, kwargs):
         kwargs['my'] = True
+
+
+class ClubForPlayerAnnouncementsView(AnnouncementsView):
+    def get_queryset(self):
+        return Announcement.objects.filter(creator__declared_role="C")
+
+
+class CoachForClubAnnouncementsView(AnnouncementsView):
+    def get_queryset(self):
+        return Announcement.objects.filter(creator__declared_role="T")
+
+
+class ClubForCoachAnnouncementsView(AnnouncementsView):
+    def get_queryset(self):
+        return Announcement.objects.filter(creator__declared_role="C")
+
+
+class PlayerForClubAnnouncementsView(AnnouncementsView):
+    def get_queryset(self):
+        return Announcement.objects.filter(creator__declared_role="P")
