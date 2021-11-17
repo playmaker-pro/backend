@@ -1,22 +1,16 @@
 import logging
 from collections import defaultdict
 from datetime import datetime
-from functools import lru_cache
 
-from profiles.models import PlayerProfile
 from .serializers import CoachProfileSerializer, PlayerProfileSerializer, SimplePlayerProfileSerializer
 
-from PIL.Image import ID
 from data.models import Game as DGame
-import easy_thumbnails
 from clubs.models import League as CLeague
 from clubs.models import LeagueHistory as CLeagueHistory
-from clubs.models import Team as CTeam
 from data.models import Game, League, Team, TeamStat
 from django.db.models import Avg, Count, Min, Q, Sum
 from django.urls import reverse
-from easy_thumbnails.files import get_thumbnailer
-from rest_framework.serializers import ModelSerializer
+from .mappers import TeamMapper, PlayerMapper
 
 logger = logging.getLogger(__name__)
 
@@ -95,61 +89,6 @@ class TeamMetrics:
         return output
 
 
-class PlayerMapper:
-    @lru_cache
-    @classmethod
-    def get_player_profile_object(cls, player_id: int) -> PlayerProfile:
-        """
-        :player_id: s38 data mapper id
-        """
-        try:
-            obj = PlayerProfile.objects.get(data_mapper_id=player_id)
-            return obj
-        except PlayerProfile.DoesNotExist:
-            return None
-
-        except PlayerProfile.MultipleObjectsReturned:
-            # send email to admin.
-            return None
-
-
-class TeamMapper:
-    @lru_cache
-    @classmethod
-    def get_team_obj(cls, team_name, league_obj):
-        from clubs.models import Team as CTeam
-
-        try:
-            team_obj = CTeam.objects.get(
-                league=league_obj, mapping__icontains=team_name.lower()
-            )
-            return team_obj
-        except CTeam.DoesNotExist:
-            return None
-
-    @lru_cache
-    @classmethod
-    def get_url_pic_name(cls, team_name: str, league_obj: CLeague):
-        """Returns tuple of (Url, Picture Url, name)"""
-        obj = TeamMapper.get_team_obj(team_name, league_obj)
-        name = obj.name if obj else team_name
-        url = obj.get_permalink() if obj else None
-        picture = obj.picture if obj and obj.picture else "default_profile.png"
-        try:
-            pic = get_thumbnailer(picture)["nav_avatar"].url
-        except easy_thumbnails.exceptions.InvalidImageFormatError as e:
-            logger.error(f"Picture is: `{picture}`")
-            logger.exception(picture)
-            if obj.picture:
-                raise RuntimeError(
-                    f"picture={picture}, obj={obj} obj.picture={obj.picture}"
-                )
-            else:
-                raise RuntimeError(f"picture={picture}, obj={obj}")
-
-        return url, pic, name
-
-
 class GameSerializer:
     """
     host_team =
@@ -174,72 +113,121 @@ class GameSerializer:
                         "guest": "Lechia Dzierżoniów",
                         "score": "2 - 1",
                         "date": "10.05 21:00",
+                        "players": [ {}, {}]
     """
+    model = DGame
+
+    @classmethod
+    def serialize(cls, *args, **kwargs):
+        cls.calc(cls, *args, **kwargs)
 
     @classmethod
     def calc(cls, game, host_pic, guest_pic, league: CLeague):
-        if isinstance(game, DGame):
-            return cls.calculate_from_obj(game, host_pic, guest_pic, league)
-        elif isinstance(game, dict):
-            return cls.calculate_from_dict(game, host_pic, guest_pic, league)
+        if isinstance(game, (cls.model, dict)):
+            return cls.calculate(game, host_pic, guest_pic, league) 
         else:
-            raise RuntimeError("Wrong type of data to process.")
+            raise RuntimeError(f"Wrong data type. Expected is {cls.model} instance or dict.")
+        # if isinstance(game, cls.model):
+        #     return cls.calculate_from_obj(game, host_pic, guest_pic, league)
+        # elif isinstance(game, dict):
+        #     return cls.calculate_from_dict(game, host_pic, guest_pic, league)
+        # else:
+        #     raise RuntimeError(f"Wrong data type. Expected is {cls.model} instance or dict.")
 
     @classmethod
-    def calculate_from_obj(cls, game, host_pic, guest_pic, league: CLeague):
-        h_url, h_pic, h_name = TeamMapper.get_url_pic_name(game.host_team_name, league)
-        g_url, g_pic, g_name = TeamMapper.get_url_pic_name(game.guest_team_name, league)
-        score = (
-            f"{game.host_score} - {game.guest_score}"
-            if game.host_score is not None and game.guest_score is not None
-            else None
-        )
-
-        return {
-            "guest_pic": g_pic,
-            "host_pic": h_pic,
-            "date": cls.clean_date(game.date),
-            "score": score,
-            "host_url": h_url,
-            "host": h_name,
-            "guest": g_name,
-            "guest_url": g_url,
-            "guest_score": game.guest_score,
-            "host_score": game.host_score,
-            "players": SimplePlayerProfileSerializer.serialize(
-                [profile for _id in game.players_ids if (profile := PlayerMapper.get_player_profile_object(_id)) is not None]
-            )
-
-            # "url": game.league._url,
-        }
-
-    @classmethod
-    def calculate_from_dict(cls, game, host_pic, guest_pic, league: CLeague):
+    def calculate(cls, game, host_pic, guest_pic, league: CLeague):
         h_url, h_pic, h_name = TeamMapper.get_url_pic_name(
-            game["host_team_name"], league
-        )
+            cls._get_attr(game, "host_team_name"), league)
         g_url, g_pic, g_name = TeamMapper.get_url_pic_name(
-            game["guest_team_name"], league
-        )
+            cls._get_attr(game, "guest_team_name"), league)
+
+        guest_score = cls._get_attr(game, 'guest_score')
+        host_score = cls._get_attr(game, 'host_score')
         score = (
-            f"{game['host_score']} - {game['guest_score']}"
-            if game["host_score"] is not None and game["guest_score"] is not None
+            f"{host_score} - {guest_score}"
+            if host_score is not None and guest_score is not None
             else None
         )
+
+        players_ids = cls._get_attr(game, "players_ids")
+
         return {
             "guest_pic": g_pic,
             "host_pic": h_pic,
-            "date": cls.clean_date(game["date"]),
+            "date": cls.clean_date(cls._get_attr(game, "date")),
             "score": score,
             "host_url": h_url,
             "host": h_name,
             "guest": g_name,
             "guest_url": g_url,
-            "guest_score": game["host_score"],
-            "host_score": game["guest_score"],
-            "players": game["players_ids"],
-            # "url": game.league._url,
+            "guest_score": guest_score,
+            "host_score": host_score,
+            "players": SimplePlayerProfileSerializer.serialize(
+                [profile for _id in players_ids if (profile := PlayerMapper.get_player_profile_object(_id)) is not None]
+            )
         }
+
+    # @classmethod
+    # def calculate_from_obj(cls, game: DGame, host_pic, guest_pic, league: CLeague):
+    #     h_url, h_pic, h_name = TeamMapper.get_url_pic_name(game.host_team_name, league)
+    #     g_url, g_pic, g_name = TeamMapper.get_url_pic_name(game.guest_team_name, league)
+    #     score = (
+    #         f"{game.host_score} - {game.guest_score}"
+    #         if game.host_score is not None and game.guest_score is not None
+    #         else None
+    #     )
+    #     players_ids = cls._get_attr(game, "players_ids")
+    #     return {
+    #         "guest_pic": g_pic,
+    #         "host_pic": h_pic,
+    #         "date": cls.clean_date(game.date),
+    #         "score": score,
+    #         "host_url": h_url,
+    #         "host": h_name,
+    #         "guest": g_name,
+    #         "guest_url": g_url,
+    #         "guest_score": game.guest_score,
+    #         "host_score": game.host_score,
+    #         "players": SimplePlayerProfileSerializer.serialize(
+    #             [profile for _id in players_ids if (profile := PlayerMapper.get_player_profile_object(_id)) is not None]
+    #         )
+    #     }
+    
+    @classmethod
+    def _get_attr(cls, obj, name: str):
+        if isinstance(obj, cls.model):
+            return getattr(obj, name)
+        elif isinstance(obj, dict):
+            return obj.get(name)
+        else:
+            raise RuntimeError("Not supported data type.")
+
+    # @classmethod
+    # def calculate_from_dict(cls, game, host_pic, guest_pic, league: CLeague):
+    #     h_url, h_pic, h_name = TeamMapper.get_url_pic_name(
+    #         game["host_team_name"], league
+    #     )
+    #     g_url, g_pic, g_name = TeamMapper.get_url_pic_name(
+    #         game["guest_team_name"], league
+    #     )
+    #     score = (
+    #         f"{game['host_score']} - {game['guest_score']}"
+    #         if game["host_score"] is not None and game["guest_score"] is not None
+    #         else None
+    #     )
+    #     return {
+    #         "guest_pic": g_pic,
+    #         "host_pic": h_pic,
+    #         "date": cls.clean_date(game["date"]),
+    #         "score": score,
+    #         "host_url": h_url,
+    #         "host": h_name,
+    #         "guest": g_name,
+    #         "guest_url": g_url,
+    #         "guest_score": game["host_score"],
+    #         "host_score": game["guest_score"],
+    #         "players": game["players_ids"],
+    #     }
 
     @classmethod
     def add_timezone_to_datetime(cls, date: datetime) -> datetime:
