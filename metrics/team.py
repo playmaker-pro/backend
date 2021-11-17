@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 from datetime import datetime
+from functools import lru_cache
 
 from PIL.Image import ID
 from data.models import Game as DGame
@@ -90,16 +91,20 @@ class TeamMetrics:
 
         return output
 
-# class PlayerMapper:
-#     @classmethod
-#     def get_player_profile_object(cls, player_id):
-#         ......
-#         @ get player by ID
-#         @ cahce taht 
-#         @ in one runtime... or store same cache...
-        
-class TeamMapper:
+class PlayerMapper:
+    @lru_cache
     @classmethod
+    def get_player_profile_object(cls, player_id: int):
+        ......
+        @ get player by ID
+        @ cahce taht 
+        @ in one runtime... or store same cache...
+
+
+class TeamMapper:
+
+    @lru_cache
+    @classmethod  
     def get_team_obj(cls, team_name, league_obj):
         from clubs.models import Team as CTeam
 
@@ -273,6 +278,7 @@ class SummarySerializer:
                 season__name=season_name,
                 date=datetime.today(),
             )
+            .annotate(players_ids=ArrayAgg('playerstat__player'))
             .order_by("date")
         )
 
@@ -284,6 +290,7 @@ class SummarySerializer:
                 host_score__isnull=True,
                 guest_score__isnull=True,
             )
+            .annotate(players_ids=ArrayAgg('playerstat__player'))
             .order_by("date")[:_number_of_last_games]
         )
 
@@ -295,6 +302,7 @@ class SummarySerializer:
                 host_score__isnull=False,
                 guest_score__isnull=False,
             )
+            .annotate(players_ids=ArrayAgg('playerstat__player'))
             .order_by("-date")[:_number_of_last_games]
         )
 
