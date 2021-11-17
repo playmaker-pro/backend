@@ -1,4 +1,6 @@
 import logging
+import json
+
 from datetime import date, datetime
 
 from clubs.models import Club, Team, League
@@ -30,9 +32,7 @@ logger = logging.getLogger(f'project.{__name__}')
 
 register = template.Library()
 
-import json
- 
- 
+
 @register.filter(name='jsonify')
 def jsonify(data):
     if isinstance(data, dict):

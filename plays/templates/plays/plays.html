@@ -294,6 +294,9 @@ $('#showGameModal').on('show.bs.modal', function (event) {
     $(this).find('#md-gm-host').attr("href", data.host_url)
     $(this).find('#md-gm-guest').text(data.guest);
     $(this).find('#md-gm-guest').attr("href", data.guest_url)
+    for (player in data.players){
+        $(this).find('#md-gm-players').append('<li><a href="' + player.url + '">' + player.name + '</a></li>');
+    }
 });
 </script>
 {% endblock %}

@@ -38,8 +38,8 @@
            {% if more_games %}
            <tr style="border:0px;">
             <td colspan="4">
-                <a href="{% url 'plays:next_games' slug=league.slug  %}?season={{ current_season }}">
-                            Pokaż więcej meczów... </a>
+                <a href="{% if section_name == "Rozegrane mecze" %}{% url 'plays:scores' slug=league.slug  %}{% else %}{% url 'plays:next_games' slug=league.slug  %}{% endif %}?season={{ current_season }}">Pokaż więcej meczów... </a>
+  
             </td>
             </tr>
             {% endif %}
@@ -89,8 +89,7 @@
            {% if more_games %}
            <tr style="border:0px;">
             <td colspan="4">
-                <a href="{% url 'plays:next_games' slug=league.slug  %}?season={{ current_season }}">
-                            Pokaż więcej meczów... </a>
+                <a href="{% if section_name == "Rozegrane mecze" %}{% url 'plays:scores' slug=league.slug  %}{% else %}{% url 'plays:next_games' slug=league.slug  %}{% endif %}?season={{ current_season }}">Pokaż więcej meczów... </a>
             </td>
             </tr>
             {% endif %}
