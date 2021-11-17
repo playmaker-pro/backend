@@ -3,6 +3,9 @@ from collections import defaultdict
 from datetime import datetime
 from functools import lru_cache
 
+from profiles.models import PlayerProfile
+from .serializers import CoachProfileSerializer, PlayerProfileSerializer, SimplePlayerProfileSerializer
+
 from PIL.Image import ID
 from data.models import Game as DGame
 import easy_thumbnails
@@ -91,20 +94,28 @@ class TeamMetrics:
 
         return output
 
+
 class PlayerMapper:
     @lru_cache
     @classmethod
-    def get_player_profile_object(cls, player_id: int):
-        ......
-        @ get player by ID
-        @ cahce taht 
-        @ in one runtime... or store same cache...
+    def get_player_profile_object(cls, player_id: int) -> PlayerProfile:
+        """
+        :player_id: s38 data mapper id
+        """
+        try:
+            obj = PlayerProfile.objects.get(data_mapper_id=player_id)
+            return obj
+        except PlayerProfile.DoesNotExist:
+            return None
+
+        except PlayerProfile.MultipleObjectsReturned:
+            # send email to admin.
+            return None
 
 
 class TeamMapper:
-
     @lru_cache
-    @classmethod  
+    @classmethod
     def get_team_obj(cls, team_name, league_obj):
         from clubs.models import Team as CTeam
 
@@ -116,6 +127,7 @@ class TeamMapper:
         except CTeam.DoesNotExist:
             return None
 
+    @lru_cache
     @classmethod
     def get_url_pic_name(cls, team_name: str, league_obj: CLeague):
         """Returns tuple of (Url, Picture Url, name)"""
@@ -137,7 +149,7 @@ class TeamMapper:
 
         return url, pic, name
 
-    
+
 class GameSerializer:
     """
     host_team =
@@ -182,6 +194,7 @@ class GameSerializer:
             if game.host_score is not None and game.guest_score is not None
             else None
         )
+
         return {
             "guest_pic": g_pic,
             "host_pic": h_pic,
@@ -193,7 +206,9 @@ class GameSerializer:
             "guest_url": g_url,
             "guest_score": game.guest_score,
             "host_score": game.host_score,
-            "players": game.players_ids,
+            "players": SimplePlayerProfileSerializer.serialize(
+                [profile for _id in game.players_ids if (profile := PlayerMapper.get_player_profile_object(_id)) is not None]
+            )
 
             # "url": game.league._url,
         }
@@ -598,9 +613,6 @@ class LeagueMatchesRawMetrics:
             guest_pic = ""
             output[q].append(self.serializer.serialize(game, host_pic, guest_pic))
         return output
-
-
-from .serializers import CoachProfileSerializer, PlayerProfileSerializer
 
 
 class PlaymakerMetrics:

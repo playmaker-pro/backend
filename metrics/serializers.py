@@ -22,5 +22,19 @@ class PlayerProfileSerializer(UserProfileSerializer):
     pass
 
 
+class SimplePlayerProfileSerializer:
+    @classmethod
+    def serialize(cls, objects):
+        output = []
+        for obj in objects:
+            image = obj.user.picture or 'default_profile.png'
+            output.append({
+                'data_mapper_id': obj.
+                'name': obj.user.get_full_name(),
+                'url': obj.get_permalink(),
+            })
+        return output
+
+
 class CoachProfileSerializer(UserProfileSerializer):
     pass
