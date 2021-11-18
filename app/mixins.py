@@ -202,7 +202,7 @@ class ViewFilterMixin:
         for value in values:
             if value in POSITION_CHOICES.keys():
                 filtered_positions.append(POSITION_CHOICES[value])
-        return filtered_positions
+        return filtered_positions if filtered_positions else None
 
     @property
     def filter_leg(self):
