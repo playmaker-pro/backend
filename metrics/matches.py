@@ -40,43 +40,45 @@ class LeagueMatchesMetrics:
 
         if played:
             keyname = "matches_played"
-            matches = self.calculate_matches_played(
+            matches, calculated = self.calculate_matches_played(
                 league_history, overwrite=overwrite, sort_by=date_sort
             )
         else:
             keyname = "matches"
-            matches = self.calculate_matches(
+            matches, calculated = self.calculate_matches(
                 league_history, overwrite=overwrite, sort_by=date_sort
             )
-
-        output = dict()  # OrderedDict()
-        for game in matches:
-            # q = game.queue  # if we do not do values ealier
-            q = game["queue"]
-            guest_pic = self._default_pic
-            host_pic = self._default_pic
-            if not output.get(q):
-                output[q] = list()
-            output[q].append(
-                GameSerializer.serialize(
-                    game, host_pic, guest_pic, league_history.league
+        if calculated:
+            output = dict()  # OrderedDict()
+            for game in matches:
+                # q = game.queue  # if we do not do values ealier
+                q = game["queue"]
+                guest_pic = self._default_pic
+                host_pic = self._default_pic
+                if not output.get(q):
+                    output[q] = list()
+                output[q].append(
+                    GameSerializer.serialize(
+                        game, host_pic, guest_pic, league_history.league
+                    )
                 )
+
+            if league_history.data is None:
+                print("........Data_index is None, making empty one.")
+                league_history.data = {}
+
+            print("........setting matches")
+            league_history.data[keyname] = output  # OrderedDict(output)
+            # data_index.data = data
+
+            print(
+                f"........Saving... data_index....{league_history} {type(league_history)}"
             )
+            league_history.save()
 
-        if league_history.data is None:
-            print("........Data_index is None, making empty one.")
-            league_history.data = {}
-
-        print("........setting matches")
-        league_history.data[keyname] = output  # OrderedDict(output)
-        # data_index.data = data
-
-        print(
-            f"........Saving... data_index....{league_history} {type(league_history)}"
-        )
-        league_history.save()
-
-        return output
+            return output
+        else:
+            return matches
 
     def get_league_history(
         self, league: CLeague, season_name: str, league_history: CLeagueHistory = None
@@ -108,12 +110,12 @@ class LeagueMatchesMetrics:
             and not overwrite
         ):
             print(f"Geting data for matches. overwrite={overwrite}")
-            return league_history.data["matches"]
+            return league_history.data["matches"], False
         else:
             print(
                 f"===> Calculating Game data for {league_history.league} season={season_name}"
             )
-            return (
+            matches = (
                 Game.objects.select_related("league", "season")
                 .filter(
                     league___url=League.get_url_based_on_id(league_history.index),
@@ -133,6 +135,7 @@ class LeagueMatchesMetrics:
                     "players_ids",
                 )
             )
+            return matches, True
 
     def calculate_matches_played(
         self,
@@ -150,9 +153,9 @@ class LeagueMatchesMetrics:
             and not overwrite
         ):
             print(f"Geting data for matches. overwrite={overwrite}")
-            return league_history.data[keyname]
+            return league_history.data[keyname], False
         else:
-            return (
+            matches = (
                 Game.objects.select_related("league", "season")
                 .filter(
                     league___url=League.get_url_based_on_id(league_history.index),
@@ -172,6 +175,7 @@ class LeagueMatchesMetrics:
                     "players_ids",
                 )
             )
+            return matches, True
 
     # def serialize(
     #     self,
