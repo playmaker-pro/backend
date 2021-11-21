@@ -1,4 +1,8 @@
+import logging
+
 from easy_thumbnails.files import get_thumbnailer
+
+logger = logging.getLogger(__name__)
 
 
 class UserProfileSerializer:

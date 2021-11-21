@@ -1,7 +1,7 @@
 import logging
 import operator
 from functools import reduce
-
+from clubs.models import LeagueHistory as CLeagueHistory
 from app import mixins, utils
 from app.mixins import FilterPlayerViewMixin
 from clubs.models import Club, League
@@ -20,11 +20,11 @@ from django.views import View, generic
 from metrics.team import (
     LeagueAdvancedTableRawMetrics,
     LeagueChildrenSerializer,
-    LeagueMatchesMetrics,
     LeagueMatchesRawMetrics,
     PlaymakerMetrics,
     SummarySerializer,
 )
+from metrics.matches import LeagueMatchesMetrics
 from profiles.utils import get_datetime_from_age
 from roles import definitions
 from users.models import User
@@ -270,7 +270,7 @@ class PlaysScoresViews(PlaysBaseView):
         # options['objects'] = dict(LeagueMatchesMetrics().serialize(self.league, self.season, sort_up=True))
         from collections import OrderedDict
         data = dict(
-            LeagueMatchesMetrics().serialize(self.league, self.season, sort_up=True)
+            LeagueMatchesMetrics().calculate(self.league, self.season, sort_up=True)
         )
 
         data = OrderedDict(sorted(data.items(), reverse=True))
@@ -292,7 +292,7 @@ class PlaysGamesViews(PlaysBaseView):
         options["objects"] = {}
         options["objects"]["Mecze"] = {}
         options["objects"]["Mecze"] = dict(
-            LeagueMatchesMetrics().serialize(
+            LeagueMatchesMetrics().calculate(
                 self.league, self.season, played=False, sort_up=False
             )
         )
@@ -338,41 +338,80 @@ class PlaysListViews(ComplexViews):
         return super().get(request, *args, **kwargs)
 
 
-class RefreshManager:
+class LeagueHistoryService:
+    allowed_keynames = [
+        "future-games",
+        "scores",
+        "playmakers",
+        "summary",
+        "table"
+    ]
+
+    def refresh_data_from_s38(self, league_history: CLeagueHistory, keyname: str = None):
+        """
+        Gets data from s38, serialize and saves into HistoryLeague object.
+
+        :keyname: is a keyname which need to be updated
+        """
+
+        self.validate_keyname(keyname)
+
+        season = league_history.season
+        league = league_history.league
+
+        tasks = {
+            "scores": (
+                LeagueMatchesMetrics().calculate,
+                (league, season.name),
+                {"league_history": league_history, "sort_up": True, "overwrite": True}
+            ),
+            "future-games": (
+                LeagueMatchesMetrics().calculate,
+                (league, season.name),
+                {"league_history": league_history, "sort_up": False, "overwrite": True, "played": False}
+            ),
+            "playmakers": (
+                Refresh.playmakers,
+                (league_history,),
+                {"overwrite": True}
+            ),
+            "summary": (
+                Refresh.summary,
+                (league_history,),
+                {"overwrite": True}
+            ),
+
+            "table": (
+                Refresh.table,
+                (league_history,),
+                {"overwrite": True}
+            ),
+        }
+
+        for task, (method, args, kwargs) in tasks.items():
+            if keyname:  # we want to update only one key if needed.
+                if task != keyname:
+                    continue
+            print(f"Running data serialization for `{task}`")
+            method(*args, **kwargs)
+
+    def validate_keyname(self, keyname: str):
+        if keyname and keyname not in self.allowed_keynames:
+            raise RuntimeError(f"Selected `keyname`: {keyname} is not allowed.")
+        return True
+
+
+class LeagueHistoryRefreshManager:
+    """Updates whole or single """
+
+    service = LeagueHistoryService()
+
     @classmethod
     def run(cls, verbose: bool = False, ids: list = None, keyname: str = None):
-        from clubs.models import LeagueHistory as CLeagueHistory
         print(f"# Params verbose={verbose} ids={ids} keyname={keyname}")
-        keyname = keyname
-
-        if keyname and keyname not in ["future-games", "scores", "playmakers", "summary", "table"]:
-            raise RuntimeError(f"Selected `keyname`: {keyname} is not allowed.")
         _all = CLeagueHistory.objects.all()
         if ids:
             _all = _all.filter(id__in=ids)
         print(f"# Selected {_all.count()} for update.")
         for league_history in _all:
-            season = league_history.season
-            league = league_history.league
-            print(f"Refresh stared for {league_history}")
-            tasks = {
-                "scores": (
-                    LeagueMatchesMetrics().serialize,
-                    (league, season.name),
-                    {"league_history": league_history, "sort_up": True, "overwrite": True}
-                ),
-                "future-games": (
-                    LeagueMatchesMetrics().serialize,
-                    (league, season.name),
-                    {"league_history": league_history, "sort_up": False, "overwrite": True, "played": False}
-                ),
-                "playmakers": (Refresh.playmakers, (league_history,), {"overwrite": True}),
-                "summary": (Refresh.summary, (league_history,), {"overwrite": True}),
-                "table": (Refresh.table, (league_history,), {"overwrite": True}),
-            }
-            for task, (method, args, kwargs) in tasks.items():
-                if keyname:
-                    if task != keyname:
-                        continue
-                print(f"Running data serialization for `{task}`")
-                method(*args, **kwargs)
+            cls.service.refresh_data_from_s38(league_history, keyname=keyname)

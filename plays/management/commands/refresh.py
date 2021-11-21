@@ -1,15 +1,20 @@
 from django.core.management.base import BaseCommand
-from plays.views import RefreshManager
+from plays.views import LeagueHistoryRefreshManager
 
 
 class Command(BaseCommand):
     help = "Refresh League History data for all of leagues."
+    update_handler = LeagueHistoryRefreshManager
+
+    @property
+    def allowed_keynames(self):
+        return self.update_handler.service.allowed_keynames
 
     def add_arguments(self, parser):
         parser.add_argument(
             "-i", "--id", type=int, default=None
         )
-        parser.add_argument("-k", "--keyname", type=str, default=None)
+        parser.add_argument("-k", "--keyname", type=str, default=None, help=f"Allowed keynames={self.allowed_keynames}")
 
     def handle(self, *args, **options):
         _id = options.get("id")
@@ -22,4 +27,4 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(f"Parameters: {ids}, {keyname}"))
         print("--------------------")
-        RefreshManager.run(verbose=True, ids=ids, keyname=keyname)
+        self.update_handler.run(verbose=True, ids=ids, keyname=keyname)

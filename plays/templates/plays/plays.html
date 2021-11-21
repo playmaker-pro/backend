@@ -270,32 +270,28 @@ span.text {
         function(e, clickedIndex, newValue, oldValue) {
         console.log(this.value, clickedIndex, newValue, oldValue)
     });
-//$(document).ready(function() {
+
     $(".searchseason").on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
 
         if(typeof this.value !== "undefined"){
             var search_params = new URLSearchParams(window.location.search);
             search_params.set('season', this.value);
-            // console.log('yeess', this.value, search_params.toString());
             window.location.search = search_params.toString();
         }
        
         
     });
-//});
 
 $('#showGameModal').on('show.bs.modal', function (event) {
     var data = $(event.relatedTarget).data('game-json');
-
-    //$(this).find('#md-gm-title').text(data.host + ' - ' + data.guest);
     $(this).find('#md-gm-score').text(data.score);
     $(this).find('#md-gm-sub').text(data.date);
     $(this).find('#md-gm-host').text(data.host);
     $(this).find('#md-gm-host').attr("href", data.host_url)
     $(this).find('#md-gm-guest').text(data.guest);
     $(this).find('#md-gm-guest').attr("href", data.guest_url)
-    for (player in data.players){
-        $(this).find('#md-gm-players').append('<li><a href="' + player.url + '">' + player.name + '</a></li>');
+    for (var player in data.players) {
+        $(this).find('#md-gm-players').append('<li><a href="' + data.players[player].url + '">' + data.players[player].name+'</a></li>');
     }
 });
 </script>

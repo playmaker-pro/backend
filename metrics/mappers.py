@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 
 
 class PlayerMapper:
+    """Found player in profile.PlayerProfile and connects with ID from s38
+    """
+
     @classmethod
     @lru_cache()
     def get_player_profile_object(cls, player_id: int) -> PlayerProfile:

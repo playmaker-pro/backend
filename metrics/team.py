@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 
-from .serializers import CoachProfileSerializer, PlayerProfileSerializer, SimplePlayerProfileSerializer
+from .serializers import CoachProfileSerializer, PlayerProfileSerializer, SimplePlayerProfileSerializer, GameSerializer, GameRawSerializer, TrendSerializer
 from django.contrib.postgres.aggregates import ArrayAgg
 from data.models import Game as DGame
 from clubs.models import League as CLeague
@@ -11,28 +11,10 @@ from data.models import Game, League, Team, TeamStat
 from django.db.models import Avg, Count, Min, Q, Sum
 from django.urls import reverse
 from .mappers import TeamMapper, PlayerMapper
- 
+from profiles.models import CoachProfile, PlayerProfile
+
+
 logger = logging.getLogger(__name__)
-
-
-class TeamStatSerializer:
-    @classmethod
-    def calc(cls, teamstat):
-        return {
-            "result": teamstat.result,
-            "side": teamstat.side,
-            "points": teamstat.points,
-            "lost_goals": teamstat.lost_goals,
-            "gain_goals": teamstat.gain_goals,
-            # "game": teamstat.game.date,
-            # "league_code": teamstat.game.league.code,
-            # "league_name": teamstat.game.league.name,
-        }
-
-
-class LeagueMatches:
-    def serialize(self):
-        pass
 
 
 class TeamMetrics:
@@ -87,163 +69,6 @@ class TeamMetrics:
         }
 
         return output
-
-
-class GameSerializer:
-    """
-    host_team =
-    guest_team =
-    host_score = models.IntegerField(null=True)
-    host_coach = models.ForeignKe
-    host_team_name = models.TextField()
-    guest_score = models.IntegerField(null=True)
-    guest_coach = models.Foreign
-    guest_team_name = models.TextField()
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-
-    : Return :
-
-            {"name": "Kolejka 30",
-                "games": [
-                    {
-                        "guest_pic": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                        "host_pic": "/media/league_pics/%25Y-%25m-%25d/29584_1000x.jpg.100x100_q85_crop.png",
-                        "host": "Sokół I",
-                        "guest": "Lechia Dzierżoniów",
-                        "score": "2 - 1",
-                        "date": "10.05 21:00",
-                        "players": [ {}, {}]
-    """
-    model = DGame
-
-    @classmethod
-    def serialize(cls, *args, **kwargs):
-        cls.calc(cls, *args, **kwargs)
-
-    @classmethod
-    def calc(cls, game, host_pic, guest_pic, league: CLeague):
-        if isinstance(game, (cls.model, dict)):
-            return cls.calculate(game, host_pic, guest_pic, league) 
-        else:
-            raise RuntimeError(f"Wrong data type. Expected is {cls.model} instance or dict.")
-        # if isinstance(game, cls.model):
-        #     return cls.calculate_from_obj(game, host_pic, guest_pic, league)
-        # elif isinstance(game, dict):
-        #     return cls.calculate_from_dict(game, host_pic, guest_pic, league)
-        # else:
-        #     raise RuntimeError(f"Wrong data type. Expected is {cls.model} instance or dict.")
-
-    @classmethod
-    def calculate(cls, game, host_pic, guest_pic, league: CLeague):
-        h_url, h_pic, h_name = TeamMapper.get_url_pic_name(
-            cls._get_attr(game, "host_team_name"), league)
-        g_url, g_pic, g_name = TeamMapper.get_url_pic_name(
-            cls._get_attr(game, "guest_team_name"), league)
-
-        guest_score = cls._get_attr(game, 'guest_score')
-        host_score = cls._get_attr(game, 'host_score')
-        score = (
-            f"{host_score} - {guest_score}"
-            if host_score is not None and guest_score is not None
-            else None
-        )
-
-        players_ids = cls._get_attr(game, "players_ids")
-
-        return {
-            "guest_pic": g_pic,
-            "host_pic": h_pic,
-            "date": cls.clean_date(cls._get_attr(game, "date")),
-            "score": score,
-            "host_url": h_url,
-            "host": h_name,
-            "guest": g_name,
-            "guest_url": g_url,
-            "guest_score": guest_score,
-            "host_score": host_score,
-            "players": SimplePlayerProfileSerializer.serialize(
-                [profile for _id in players_ids if (profile := PlayerMapper.get_player_profile_object(_id)) is not None]
-            )
-        }
-
-    # @classmethod
-    # def calculate_from_obj(cls, game: DGame, host_pic, guest_pic, league: CLeague):
-    #     h_url, h_pic, h_name = TeamMapper.get_url_pic_name(game.host_team_name, league)
-    #     g_url, g_pic, g_name = TeamMapper.get_url_pic_name(game.guest_team_name, league)
-    #     score = (
-    #         f"{game.host_score} - {game.guest_score}"
-    #         if game.host_score is not None and game.guest_score is not None
-    #         else None
-    #     )
-    #     players_ids = cls._get_attr(game, "players_ids")
-    #     return {
-    #         "guest_pic": g_pic,
-    #         "host_pic": h_pic,
-    #         "date": cls.clean_date(game.date),
-    #         "score": score,
-    #         "host_url": h_url,
-    #         "host": h_name,
-    #         "guest": g_name,
-    #         "guest_url": g_url,
-    #         "guest_score": game.guest_score,
-    #         "host_score": game.host_score,
-    #         "players": SimplePlayerProfileSerializer.serialize(
-    #             [profile for _id in players_ids if (profile := PlayerMapper.get_player_profile_object(_id)) is not None]
-    #         )
-    #     }
-    
-    @classmethod
-    def _get_attr(cls, obj, name: str):
-        if isinstance(obj, cls.model):
-            return getattr(obj, name)
-        elif isinstance(obj, dict):
-            return obj.get(name)
-        else:
-            raise RuntimeError("Not supported data type.")
-
-    # @classmethod
-    # def calculate_from_dict(cls, game, host_pic, guest_pic, league: CLeague):
-    #     h_url, h_pic, h_name = TeamMapper.get_url_pic_name(
-    #         game["host_team_name"], league
-    #     )
-    #     g_url, g_pic, g_name = TeamMapper.get_url_pic_name(
-    #         game["guest_team_name"], league
-    #     )
-    #     score = (
-    #         f"{game['host_score']} - {game['guest_score']}"
-    #         if game["host_score"] is not None and game["guest_score"] is not None
-    #         else None
-    #     )
-    #     return {
-    #         "guest_pic": g_pic,
-    #         "host_pic": h_pic,
-    #         "date": cls.clean_date(game["date"]),
-    #         "score": score,
-    #         "host_url": h_url,
-    #         "host": h_name,
-    #         "guest": g_name,
-    #         "guest_url": g_url,
-    #         "guest_score": game["host_score"],
-    #         "host_score": game["guest_score"],
-    #         "players": game["players_ids"],
-    #     }
-
-    @classmethod
-    def add_timezone_to_datetime(cls, date: datetime) -> datetime:
-        """Two systems uses different date nottation. +2h is needed to shift"""
-        from datetime import timedelta
-
-        return date + timedelta(hours=2)
-
-    @classmethod
-    def convert_datetime_to_string(cls, date: datetime) -> str:
-        return date.strftime("%Y/%d/%m, %H:%M")
-
-    @classmethod
-    def clean_date(cls, date: datetime) -> str:
-        date = cls.add_timezone_to_datetime(date)
-        return cls.convert_datetime_to_string(date)
 
 
 class LeagueChildrenSerializer:
@@ -320,7 +145,7 @@ class SummarySerializer:
                 current_games_output[q] = []
 
             current_games_output[q].append(
-                GameSerializer.calc(c_game, host_pic, guest_pic, league)
+                GameSerializer.serialize(c_game, host_pic, guest_pic, league)
             )
         output["current_games"] = current_games_output
 
@@ -330,7 +155,7 @@ class SummarySerializer:
             if not next_games_output.get(q):
                 next_games_output[q] = []
             next_games_output[q].append(
-                GameSerializer.calc(n_game, host_pic, guest_pic, league)
+                GameSerializer.serialize(n_game, host_pic, guest_pic, league)
             )
         output["next_games"] = next_games_output
 
@@ -340,168 +165,11 @@ class SummarySerializer:
             if not today_output.get(q):
                 today_output[q] = []
             today_output[q].append(
-                GameSerializer.calc(t_game, host_pic, guest_pic, league)
+                GameSerializer.serialize(t_game, host_pic, guest_pic, league)
             )
         output["today_games"] = today_output
 
         return dict(output)
-
-
-class LeagueMatchesMetrics:
-    def serialize(
-        self,
-        league: CLeague,
-        season_name: str,
-        league_history: CLeagueHistory = None,
-        played: bool = True,
-        sort_up: bool = True,
-        overwrite: bool = False,
-    ):
-        """
-        :param overwrite: Overwirte data if present in cache
-        :param sort_up: defines if decending or ascending
-
-        """
-        from django.contrib.postgres.aggregates import ArrayAgg
-        print(f'Param passed league: {type(league)}, ({league})')
-        print(f'Param passed season_name: {type(season_name)}, ({season_name})')
-        print(f'Param passed league_history: {type(league_history)}, ({league_history})')
-        print(f'Param passed played: {type(played)}, ({played})')
-
-        _default_pic = "default_profile.png"
-        logger.info("League matches metrics calculation started.")
-        if sort_up:
-            date_sort = "-date"
-        else:
-            date_sort = "date"
-
-        if league_history is not None:
-            data_index = league_history
-        else:
-            try:
-                data_index = league.historical.all().get(season__name=season_name)
-            except Exception as e:
-                print(f"Error occured {e}")
-                return []
-
-        # @todo: add date check
-        if (
-            data_index.data is not None
-            and "matches_played" in data_index.data
-            and played
-            and not overwrite
-        ):
-            print(f'Geting data for matched_played. overwrite={overwrite}')
-            return data_index.data["matches_played"]
-
-        elif (
-            data_index.data is not None
-            and "matches" in data_index.data
-            and not played
-            and not overwrite
-        ):
-            print(f'Geting data for matches. overwrite={overwrite}')
-            return data_index.data["matches"]
-        else:
-            print(f'===> Calculating Game data for {league} season={season_name}')
-            if played:
-                matches = (
-                    Game.objects.select_related("league", "season")
-                    .filter(
-                        league___url=League.get_url_based_on_id(data_index.index),
-                        season__name=season_name,
-                        host_score__isnull=False,
-                        guest_score__isnull=False,
-                    )
-                    .annotate(players_ids=ArrayAgg('playerstat__player'))
-                    .order_by(date_sort)
-                    .values(
-                        "queue",
-                        "date",
-                        "host_score",
-                        "guest_score",
-                        "host_team_name",
-                        "guest_team_name",
-                        "players_ids",
-                    )
-                )
-            else:
-                matches = (
-                    Game.objects.select_related("league", "season")
-                    .filter(
-                        league___url=League.get_url_based_on_id(data_index.index),
-                        season__name=season_name,
-                        host_score__isnull=True,
-                        guest_score__isnull=True,
-                    )
-                    .annotate(players_ids=ArrayAgg('playerstat__player'))
-                    .order_by(date_sort)
-                    .values(
-                        "queue",
-                        "date",
-                        "host_score",
-                        "guest_score",
-                        "host_team_name",
-                        "guest_team_name",
-                        "players_ids",
-                    )
-                )
-
-            output = dict()  # OrderedDict()
-            for game in matches:
-                # q = game.queue  # if we do not do values ealier
-                q = game["queue"]
-                guest_pic = _default_pic
-                host_pic = _default_pic
-                if not output.get(q):
-                    output[q] = list()
-                output[q].append(GameSerializer.calc(game, host_pic, guest_pic, league))
-
-            if data_index.data is None:
-                print(">> Data_index is None, making empty one.")
-                data_index.data = {}
-
-            if played:
-                # data_index.data["matches_played"] = {}
-                print('...........setting matches_played')
-                # data = data_index.data.copy()
-                data_index.data["matches_played"] = output  # OrderedDict(output)
-                # print(data_index.data["matches_played"])
-                #data_index.data = data
-
-            else:
-                # data_index.data["matches"] = {}
-                print('...........setting matches')
-                #data = data_index.data.copy()
-                data_index.data["matches"] = output  # OrderedDict(output)
-                #data_index.data = data
-
-            print(f'Saving... data_index....{data_index} {type(data_index)}')
-            data_index.save()
-
-        return output
-
-
-class GameRawSerializer:
-    """
-    {'date': '23/07/2021 18:00',
-     'host': 'BRUK-BET Termalica Nieciecza',
-     'guest': 'FKS Stal Mielec S. A.',
-     'place': 'Stadion Sportowy BRUK-BET TERMALICA Nieciecza (Nieciecza 150)',
-     'queue': '1 kolejka',
-     'score': '1:1',
-     'league': 'Ekstraklasa "PKO Bank Polski Ekstraklasa"',
-     '_url_host': 'https://www2.laczynaspilka.pl/druzyna/bruk-bet-termalica-nieciecza,434083.html',
-     '_url_guest': 'https://www2.laczynaspilka.pl/druzyna/fks-stal-mielec-s-a,450461.html',
-     'game_action': 'relacja z meczu ›',
-     '_url_game_relation': 'https://www2.laczynaspilka.pl/rozgrywki/mecz/bruk-bet-termalica-nieciecza,fks-stal-mielec-s-a,2980870.html'
-    }
-    """
-
-    def serialize(self, obj, host_pic, guest_pic):
-        obj["host_pic"] = host_pic
-        obj["guest_pic"] = guest_pic
-        return obj
 
 
 class LeagueAdvancedTableRawMetrics:
@@ -571,12 +239,6 @@ class LeagueAdvancedTableRawMetrics:
         return output
 
 
-class TrendSerializer:
-    @classmethod
-    def serialize(cls, game, team_name):
-        return game.is_winning_team(team_name)
-
-
 class LeagueMatchesRawMetrics:
     serializer = GameRawSerializer()
 
@@ -606,8 +268,6 @@ class LeagueMatchesRawMetrics:
 class PlaymakerMetrics:
     @classmethod
     def calc(cls, league):
-        from profiles.models import CoachProfile, PlayerProfile
-
         players = PlayerProfile.objects.filter(team_object__league=league)
         coaches = CoachProfile.objects.filter(team_object__league=league)
         data = {}
