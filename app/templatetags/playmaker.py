@@ -40,6 +40,11 @@ def jsonify(data):
     return data
 
 
+@register.filter
+def classname(obj):
+    return obj.__class__.__name__
+
+
 class PageSeoTags:
     DYNAMIC_KEY = 'dynamic'
     DEFAULT_KEY = 'default'
@@ -289,6 +294,23 @@ def add_announcement(context):
 
     if not user.is_authenticated:
         return {'off': True}
+    if user.is_player:
+        return {
+            'active_class': None,
+            # 'button_script': 'inquiry',
+            'button_id': 'addAnnoucementButton',
+            'button_attrs': None,
+            'button_class': 'btn-request',
+            'button_actions': {
+                'modal': {'name': 'addAnnouncementModal'},
+                'onclick': {'name': 'get_add_announcement_form'},
+            },
+            'button_action': {'modal': True, 'name': 'addAnnouncementModal'},
+            'button_action_onlick': {'onclick': True, 'name': 'get_add_announcement_form'},
+            'button_icon': 'plus',
+            'button_text': 'Dodaj ogłoszenie (player)',
+            'modals': context['modals'],
+        }
     if not user.is_club and not user.is_coach:
         return {'off': True}
 

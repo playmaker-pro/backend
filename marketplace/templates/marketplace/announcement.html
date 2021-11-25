@@ -3,7 +3,7 @@
 {% load i18n %}
 
 <!--PIŁKARZ KLUBU-->
-{% if object.creator.declared_role == "P" %}
+{% if object|classname == "PlayerForClubAnnouncement" %}
 {% include 'marketplace/announcement_player_for_club.html' with object=object %}
 
 <!--KLUB PIŁKARZA-->

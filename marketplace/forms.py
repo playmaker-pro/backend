@@ -115,3 +115,63 @@ class AnnouncementForm(forms.ModelForm):
         model = models.Announcement
         fields = ['country', 'club', 'league', 'voivodeship', 'seniority', 'gender', 'www', 'body', 'address', 'positions', 'year_from', 'year_to']
         exclude = ['creator']
+
+
+class PlayerForClubAnnouncementForm(forms.ModelForm):
+    building_fields = [
+
+        ('position', 'Pozycja', None, {}),
+        ('voivodeship', 'Województwo', None, {}),
+        ('address', 'np. Wrocław', None, {}),
+        ('practice_distance', 'Maksymalna odległość dojazdu', None, {}),
+        ('looking_for', 'Cel poszukiwań', None, {}),
+        ('body', 'Opisz krótko swoje oczekiwania', None, {}),
+    ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.error_text_inline = True
+        self.helper.labels_uppercase = True
+        self.helper.label_class = 'col-12 col-md-4 text-md-right text-muted upper form-label'
+        self.helper.field_class = 'col-12 col-md-8'
+        self.helper.wrapper_class = 'row'
+
+        self.set_fields_rules()
+        self.helper.layout = self.build_verification_form()
+
+    def set_fields_rules(self):
+        self.fields['position'].required = True
+        self.fields['position'].label = 'Pozycja'
+        self.fields['position'].help_text = False
+
+        self.fields['voivodeship'].required = True
+        self.fields['voivodeship'].label = 'Województwo'
+        self.fields['voivodeship'].help_text = False
+
+        self.fields['address'].required = True
+        self.fields['address'].label = 'Miejscowość z której dojeżdżasz na trening'
+        self.fields['address'].help_text = False
+
+        self.fields['practice_distance'].required = True
+        self.fields['practice_distance'].label = 'Maksymalna odległość dojazdu w km'  # '<i class="icofont-ui-user-group"></i>'
+        self.fields['practice_distance'].help_text = False
+
+        self.fields['looking_for'].required = True
+        self.fields['looking_for'].label = 'Cel poszukiwań'  # '<i class="icofont-ui-user-group"></i>'
+        self.fields['looking_for'].help_text = False
+
+        self.fields['body'].required = True
+        self.fields['body'].label = 'Oczekiwania'
+        self.fields['body'].help_text = False
+
+    def build_verification_form(self):
+        fds = [''] + [Field(fn, wrapper_class='row', placeholder=fp, title=fp, css_class=fc, **kwargs) for fn, fp, fc, kwargs in self.building_fields]
+        return Fieldset(*fds)
+
+    class Meta:
+        # widgets = {'country': CountrySelectWidget(layout='{widget}')}
+        model = models.PlayerForClubAnnouncement
+        fields = ['position', 'voivodeship', 'address', 'practice_distance', 'looking_for', 'body']
+        exclude = ['creator']

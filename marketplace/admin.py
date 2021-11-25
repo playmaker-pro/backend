@@ -8,6 +8,11 @@ class AnnouncementAdmin(admin.ModelAdmin):
     search_fields = ('user__email',)
 
 
+@admin.register(models.PlayerForClubAnnouncement)
+class PlayerForClubAnnouncementAdmin(admin.ModelAdmin):
+    search_fields = ('user__email',)
+
+
 def reset_plan(modeladmin, request, queryset):
     for ui in queryset:
         ui.reset()  # save comes inside

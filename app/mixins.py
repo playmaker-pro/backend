@@ -280,6 +280,13 @@ class ViewModalLoadingMixin:
                 'load': False,
                 'async': 'get_add_announcement_form'
             },
+            'add_announcement_player_for_club': {
+                'name': 'inquiryModal',
+                'template': 'profiles/modals/_add_announcement_modal.html',
+                'auto': False,
+                'load': False,
+                'async': 'get_add_announcement_form'
+            },
             'approve_announcement_modal': {
                 'name': 'approveAnnouncementModal',
                 'template': 'profiles/modals/_approve_announcement_modal.html',
@@ -320,7 +327,8 @@ class ViewModalLoadingMixin:
             modals['approve_announcement_modal']['load'] = True
             if user.is_club or user.is_coach:
                 modals['add_announcement']['load'] = True
-
+            if user.is_player:
+                modals['add_announcement_player_for_club']['load'] = True
             if user.userinquiry.counter == user.userinquiry.limit:
                 modals['action_limit_exceeded']['load'] = True
 

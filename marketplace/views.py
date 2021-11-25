@@ -3,6 +3,7 @@ import logging
 import math
 import operator
 from functools import reduce
+from itertools import chain
 
 from app import mixins
 from clubs.models import Club, Gender, League, Seniority, Team, Voivodeship
@@ -11,7 +12,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.http import JsonResponse
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -27,8 +28,8 @@ from roles import definitions
 from stats import adapters
 from users.models import User
 
-from .forms import AnnouncementForm
-from .models import Announcement
+from .forms import AnnouncementForm, PlayerForClubAnnouncementForm
+from .models import Announcement, PlayerForClubAnnouncement
 
 User = get_user_model()
 
@@ -57,7 +58,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 'body': None,
                 'title': 'Dodaj nowe ogłoszenie',
                 'button': {
-                    'name': 'Dodaj ogłoszenie o testach'
+                    'name': 'Dodaj ogłoszenie'
                 }
             },
             'form': None,
@@ -105,7 +106,12 @@ class AddAnnouncementView(LoginRequiredMixin, View):
 
                 # form.instance.league = request.user.profile.display_league
             elif user.is_player:
-                form = AnnouncementForm()
+                form = PlayerForClubAnnouncementForm(initial={
+                        'position': user.profile.position_raw,
+                        'voivodeship': user.profile.team_object.club.voivodeship,
+                        'address': user.profile.address,
+                        'practice_distance': user.profile.practice_distance,
+                    })
             else:
                 return JsonResponse({})
 
@@ -156,7 +162,8 @@ class AddAnnouncementView(LoginRequiredMixin, View):
 
             if user.is_coach or user.is_club:
                 form = AnnouncementForm(request.POST)
-
+            if user.is_player:
+                form = PlayerForClubAnnouncementForm(request.POST)
             if form.is_valid():
                 ann = form.save(commit=False)
                 ann.creator = request.user
@@ -174,12 +181,13 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 return JsonResponse(data)
 
 
-class AnnouncementsView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixins.ViewFilterMixin, AnnouncementFilterMixn):
+class AnnouncementsMeta(generic.TemplateView, mixins.ViewModalLoadingMixin, mixins.ViewFilterMixin, AnnouncementFilterMixn):
     template_name = "marketplace/base.html"
     http_method_names = ["get"]
     paginate_limit = 9
     table_type = None
     page_title = 'Ogłoszenia'
+    queried_classes = None
 
     def filter_queryset(self, queryset):
         now = timezone.now().date()
@@ -207,8 +215,8 @@ class AnnouncementsView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixi
 
         return queryset
 
-    def get_queryset(self):
-        return Announcement.objects.all()
+    def get_queryset(self, queried_class=None) -> QuerySet:
+        return queried_class.objects.all()
 
     def get_filters_values(self):  # @todo add cache from Redis here
         return {
@@ -226,8 +234,13 @@ class AnnouncementsView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixi
         kwargs['my'] = False
 
     def get(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
+        lista = []
+        for i in self.queried_classes:
+            queryset = self.get_queryset(i)
+            queryset = self.filter_queryset(queryset)
+            lista.append(queryset)
+        queryset = list(chain(*lista))
+
         paginator = Paginator(queryset, self.paginate_limit)
         page_number = request.GET.get('page') or 1
         page_obj = paginator.get_page(page_number)
@@ -242,29 +255,35 @@ class AnnouncementsView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixi
         return super().get(request, *args, **kwargs)
 
 
-class MyAnnouncementsView(AnnouncementsView):
-    def get_queryset(self):
-        return Announcement.objects.filter(creator=self.request.user)
+class AnnouncementsView(AnnouncementsMeta):
+    queried_classes = [Announcement, PlayerForClubAnnouncement]
+
+
+class MyAnnouncementsView(AnnouncementsMeta):
+    queried_classes = [Announcement, PlayerForClubAnnouncement]
+
+    def get_queryset(self, queried_class=None):
+        return queried_class.objects.filter(creator=self.request.user)
 
     def _prepare_extra_kwargs(self, kwargs):
         kwargs['my'] = True
 
 
 class ClubForPlayerAnnouncementsView(AnnouncementsView):
-    def get_queryset(self):
-        return Announcement.objects.filter(creator__declared_role="C")
+    def get_queryset(self, queried_class=None):
+        return Announcement.objects.filter(creator__declared_role="C")  # not true, i have to change it
 
 
 class CoachForClubAnnouncementsView(AnnouncementsView):
-    def get_queryset(self):
-        return Announcement.objects.filter(creator__declared_role="T")
+    def get_queryset(self, queried_class=None):
+        return Announcement.objects.filter(creator__declared_role="T")  # not true, i have to change it
 
 
 class ClubForCoachAnnouncementsView(AnnouncementsView):
-    def get_queryset(self):
-        return Announcement.objects.filter(creator__declared_role="C")
+    def get_queryset(self, queried_class=None):
+        return Announcement.objects.filter(creator__declared_role="C")  # not true, i have to change it
 
 
 class PlayerForClubAnnouncementsView(AnnouncementsView):
-    def get_queryset(self):
-        return Announcement.objects.filter(creator__declared_role="P")
+    queried_classes = [PlayerForClubAnnouncement]
+

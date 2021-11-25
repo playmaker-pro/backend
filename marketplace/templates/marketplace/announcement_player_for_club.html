@@ -35,17 +35,17 @@
         <div class="col-12 card-text text-muted">
             <small class="row no-gutters">
                 <div class="col-6 col-md-3 text-center">
-                    <h5>{{ player.profile.get_position_raw_display }}</h5>
+                    <h5>{{ object.position }}</h5>
                     Pozycja
                 </div>
                 <div class="col-6 col-md-3 text-center">
-<!--                    <h5>{{ player.profile.display_league|default:'-' }}</h5>-->
-                    <h5> b/d (temp) </h5>
+                    <h5>{{ player.profile.display_league|default:'-' }}</h5>
+<!--                    <h5> {{ object.looking_for }} </h5>-->
                     Poziom
                 </div>
                 <div class="col-6 col-md-3 text-center">
 <!--                    <h5>{{ player.profile.soccer_goal|default:'-' }}</h5>-->
-                    <h5> b/d </h5>
+                    <h5> {{ object.looking_for }} </h5>
                     Cel poszukiwań
                 </div>
 
@@ -53,8 +53,8 @@
                     {% if not player.profile.voivodeship and not player.profile.address %}
                     <h5>-</h5>
                     {% else %}
-                    <h5>{% if player.profile.voivodeship %} {{ player.profile.voivodeship }}, {% endif %}
-                        {% if player.profile.address %} {{ player.profile.address }} {% if player.profile.practice_distance %} +{{ player.profile.practice_distance }}km {% endif %}{% endif %}</h5>
+                    <h5> {{ object.voivodeship|capitalize }},
+                        {{ object.address }} +{{ object.practice_distance }}km </h5>
                     {% endif %}
                     Region
                 </div>

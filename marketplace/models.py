@@ -105,7 +105,7 @@ class ActiveAnnouncementManager(models.Manager):
         )
 
 
-class Announcement(models.Model):
+class AnnouncementMeta(models.Model):
     active = ActiveAnnouncementManager()
     objects = models.Manager()
 
@@ -141,18 +141,33 @@ class Announcement(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
-    positions = models.ManyToManyField(PlayerPosition)
-
     subscribers = models.ManyToManyField(
-            settings.AUTH_USER_MODEL,
-            null=True, blank=True
+        settings.AUTH_USER_MODEL,
+        null=True, blank=True
     )
 
+    def set_expiration_date(self):
+        if self.expire is None:
+            self.expire = timezone.now() + self.creator.announcementuserquota.plan.days
+
+    def save(self, *args, **kwargs):
+        self.set_expiration_date()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.creator} #nr {self.id}'
+
+    class Meta:
+        abstract = True
+
+
+class Announcement(AnnouncementMeta):
     creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='announcement_creator',
         on_delete=models.CASCADE
     )
+    positions = models.ManyToManyField(PlayerPosition)
 
     club = models.ForeignKey(
         Club,
@@ -204,13 +219,33 @@ class Announcement(models.Model):
         blank=True,
         null=True)
 
-    def set_expiration_date(self):
-        if self.expire is None:
-            self.expire = timezone.now() + self.creator.announcementuserquota.plan.days
 
-    def save(self, *args, **kwargs):
-        self.set_expiration_date()
-        super().save(*args, **kwargs)
+class PlayerForClubAnnouncement(AnnouncementMeta):
+    creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='player_for_club_announcement_creator',
+        on_delete=models.CASCADE
+    )
+    position = models.ForeignKey(
+        PlayerPosition,
+        on_delete=models.CASCADE
+    )
 
-    def __str__(self):
-        return f'{self.creator} #nr {self.id}'
+    voivodeship = models.ForeignKey(
+        Voivodeship,
+        on_delete=models.CASCADE
+    )
+
+    address = AddressField(
+        help_text=_('Adres'),
+        blank=True,
+        null=True)
+
+    practice_distance = models.CharField(max_length=3)
+
+    looking_for = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE
+    )
+    body = models.TextField()
+
