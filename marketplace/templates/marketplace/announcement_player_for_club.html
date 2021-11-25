@@ -53,7 +53,7 @@
                     {% if not player.profile.voivodeship and not player.profile.address %}
                     <h5>-</h5>
                     {% else %}
-                    <h5> {{ object.voivodeship|capitalize }},
+                    <h5> {{ object.voivodeship }},
                         {{ object.address }} +{{ object.practice_distance }}km </h5>
                     {% endif %}
                     Region
