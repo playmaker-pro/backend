@@ -142,13 +142,13 @@ class ViewFilterMixin:
             return int(value)
 
     @property
-    def filter_year_max(self):
+    def filter_year_max(self):  # 2010 in (1990 - 2010)
         value = self.request.GET.get('year_max')
         if value:
             return int(value)
 
     @property
-    def filter_year_min(self):
+    def filter_year_min(self):  # 1990 in (1990 - 2010)
         value = self.request.GET.get('year_min')
         if value:
             return int(value)
@@ -178,6 +178,12 @@ class ViewFilterMixin:
     @property
     def filter_position_exact(self):
         value = self.request.GET.get('position')
+        if value:
+            return value
+
+    @property
+    def filter_target_league_exact(self):
+        value = self.request.GET.get('target_league')
         if value:
             return value
 

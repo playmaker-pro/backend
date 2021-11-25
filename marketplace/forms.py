@@ -124,7 +124,7 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
         ('voivodeship', 'Województwo', None, {}),
         ('address', 'np. Wrocław', None, {}),
         ('practice_distance', 'Maksymalna odległość dojazdu', None, {}),
-        ('looking_for', 'Cel poszukiwań', None, {}),
+        ('target_league', 'Cel poszukiwań', None, {}),
         ('body', 'Opisz krótko swoje oczekiwania', None, {}),
     ]
 
@@ -158,9 +158,9 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
         self.fields['practice_distance'].label = 'Maksymalna odległość dojazdu w km'  # '<i class="icofont-ui-user-group"></i>'
         self.fields['practice_distance'].help_text = False
 
-        self.fields['looking_for'].required = True
-        self.fields['looking_for'].label = 'Cel poszukiwań'  # '<i class="icofont-ui-user-group"></i>'
-        self.fields['looking_for'].help_text = False
+        self.fields['target_league'].required = True
+        self.fields['target_league'].label = 'Cel poszukiwań'  # '<i class="icofont-ui-user-group"></i>'
+        self.fields['target_league'].help_text = False
 
         self.fields['body'].required = True
         self.fields['body'].label = 'Oczekiwania'
@@ -173,5 +173,5 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
     class Meta:
         # widgets = {'country': CountrySelectWidget(layout='{widget}')}
         model = models.PlayerForClubAnnouncement
-        fields = ['position', 'voivodeship', 'address', 'practice_distance', 'looking_for', 'body']
+        fields = ['position', 'voivodeship', 'address', 'practice_distance', 'target_league', 'body']
         exclude = ['creator']

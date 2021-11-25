@@ -1,0 +1,9 @@
+
+{% load playmaker %}
+<select name="target_league" data-width="{{ size|add:35 }}"  class="form-control selectpicker" data-allow-clear="true" title="cel poszukiwań">
+
+{% for option in options %}
+    <option {% if request.GET.target_league == option %} selected {% endif %} value="{{ option }}">{{ option }}</option>
+{% endfor %}
+
+</select>

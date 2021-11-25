@@ -30,6 +30,7 @@ from users.models import User
 
 from .forms import AnnouncementForm, PlayerForClubAnnouncementForm
 from .models import Announcement, PlayerForClubAnnouncement
+from .utils import get_datetime_from_year
 
 User = get_user_model()
 
@@ -204,8 +205,19 @@ class AnnouncementsMeta(generic.TemplateView, mixins.ViewModalLoadingMixin, mixi
         if self.filter_vivo is not None:
             queryset = queryset.filter(voivodeship__name__in=self.filter_vivo)
 
-        # if self.filter_position_exact is not None:
-        #     queryset = queryset.filter(positions__name=self.filter_position_exact)
+        if self.filter_position_exact is not None:  # used in playerforclub
+            queryset = queryset.filter(position__name=self.filter_position_exact)
+
+        if self.filter_target_league_exact is not None:  # used in playerforclub
+            queryset = queryset.filter(target_league__name=self.filter_target_league_exact)
+
+        if self.filter_year_min is not None:   # used in playerforclub
+            mindate = get_datetime_from_year(self.filter_year_min)
+            queryset = queryset.filter(creator__playerprofile__birth_date__year__gte=mindate.year)
+
+        if self.filter_year_max is not None:   # used in playerforclub
+            maxdate = get_datetime_from_year(self.filter_year_max)
+            queryset = queryset.filter(creator__playerprofile__birth_date__year__lte=maxdate.year)
 
         # if self.filter_gender_exact is not None:
         #     queryset = queryset.filter(gender__name=self.filter_gender_exact)
@@ -273,17 +285,33 @@ class ClubForPlayerAnnouncementsView(AnnouncementsView):
     def get_queryset(self, queried_class=None):
         return Announcement.objects.filter(creator__declared_role="C")  # not true, i have to change it
 
+    def _prepare_extra_kwargs(self, kwargs):
+        kwargs['view_type'] = "club_for_player"
+        super(ClubForPlayerAnnouncementsView, self)._prepare_extra_kwargs(kwargs)
+
 
 class CoachForClubAnnouncementsView(AnnouncementsView):
     def get_queryset(self, queried_class=None):
         return Announcement.objects.filter(creator__declared_role="T")  # not true, i have to change it
+
+    def _prepare_extra_kwargs(self, kwargs):
+        kwargs['view_type'] = "coach_for_club"
+        super(CoachForClubAnnouncementsView, self)._prepare_extra_kwargs(kwargs)
 
 
 class ClubForCoachAnnouncementsView(AnnouncementsView):
     def get_queryset(self, queried_class=None):
         return Announcement.objects.filter(creator__declared_role="C")  # not true, i have to change it
 
+    def _prepare_extra_kwargs(self, kwargs):
+        kwargs['view_type'] = "club_for_coach"
+        super(ClubForCoachAnnouncementsView, self)._prepare_extra_kwargs(kwargs)
+
 
 class PlayerForClubAnnouncementsView(AnnouncementsView):
     queried_classes = [PlayerForClubAnnouncement]
+
+    def _prepare_extra_kwargs(self, kwargs):
+        kwargs['view_type'] = "player_for_club"
+        super(PlayerForClubAnnouncementsView, self)._prepare_extra_kwargs(kwargs)
 

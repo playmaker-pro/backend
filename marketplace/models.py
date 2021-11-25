@@ -16,8 +16,9 @@ from datetime import timedelta
 
 
 class AnnouncementPlan(models.Model):
-    '''Holds information about user's annoucment plans.
-    '''
+    """
+    Holds information about user's announcement plans.
+    """
     name = models.CharField(
         _('Plan Name'),
         max_length=255,
@@ -85,12 +86,12 @@ class AnnouncementUserQuota(models.Model):
         return self.plan.limit
 
     def reset(self):
-        '''Reset current counter'''
+        """Reset current counter"""
         self.counter = 0
         self.save()
 
     def increment(self):
-        '''Increase by one counter'''
+        """Increase by one counter"""
         self.counter += 1
         self.save()
 
@@ -243,9 +244,10 @@ class PlayerForClubAnnouncement(AnnouncementMeta):
 
     practice_distance = models.CharField(max_length=3)
 
-    looking_for = models.ForeignKey(
+    target_league = models.ForeignKey(
         League,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
+
     body = models.TextField()
 
