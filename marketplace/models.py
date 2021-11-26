@@ -102,7 +102,7 @@ class AnnouncementUserQuota(models.Model):
 class ActiveAnnouncementManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(
-            status__in=Announcement.ACTIVE_STATES,
+            status__in=AnnouncementMeta.ACTIVE_STATES,
         )
 
 
@@ -162,7 +162,7 @@ class AnnouncementMeta(models.Model):
         abstract = True
 
 
-class Announcement(AnnouncementMeta):
+class ClubForPlayerAnnouncement(AnnouncementMeta):
     creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='announcement_creator',
@@ -251,3 +251,10 @@ class PlayerForClubAnnouncement(AnnouncementMeta):
 
     body = models.TextField()
 
+
+class ClubForCoachAnnouncement(AnnouncementMeta):
+    body = models.TextField()
+
+
+class CoachForClubAnnouncement(AnnouncementMeta):
+    body = models.TextField()

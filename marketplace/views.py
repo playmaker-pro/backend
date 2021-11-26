@@ -28,8 +28,10 @@ from roles import definitions
 from stats import adapters
 from users.models import User
 
-from .forms import AnnouncementForm, PlayerForClubAnnouncementForm
-from .models import Announcement, PlayerForClubAnnouncement
+from .forms import PlayerForClubAnnouncementForm, ClubForPlayerAnnouncementForm, \
+    CoachForClubAnnouncementForm, ClubForCoachAnnouncementForm
+from .models import ClubForPlayerAnnouncement, PlayerForClubAnnouncement, CoachForClubAnnouncement, \
+    ClubForCoachAnnouncement, AnnouncementMeta
 from .utils import get_datetime_from_year
 
 User = get_user_model()
@@ -52,6 +54,11 @@ class AddAnnouncementView(LoginRequiredMixin, View):
     """Fetch form for announcements"""
     http_method_names = ['post', 'get']
 
+    coach_looking_for_player = False
+    coach_looking_for_club = False
+    club_looking_for_player = False
+    club_looking_for_coach = True
+
     def get(self, request, *args, **kwargs):
         user = request.user
         data = {
@@ -70,42 +77,56 @@ class AddAnnouncementView(LoginRequiredMixin, View):
         if user.announcementuserquota.left <= 0 and not _id:
             return JsonResponse(data)
         elif _id:
-            _id = int(_id)
-            ann = Announcement.objects.get(id=_id)
-            data['modal']['title'] = "Edytuj ogłoszenie"
-            data['modal']['button']['name'] = 'Aktualizuj'
-            if user != ann.creator:
-                return JsonResponse({})
-            else:
-                form = AnnouncementForm(instance=ann)
-                if user.is_coach:
-                    form.fields['club'].queryset = Club.objects.filter(name=user.profile.team_object.club.name)
-                    form.fields['league'].queryset = League.objects.filter(name=user.profile.team_object.league.name)
-                elif user.is_club:
-                    form.fields['club'].queryset = Club.objects.filter(name=user.profile.club_object.name)
+            return JsonResponse({})  # TODO: TEMPORARY! remember to uncomment
+            # _id = int(_id)
+            # ann = Announcement.objects.get(id=_id)
+            # data['modal']['title'] = "Edytuj ogłoszenie"
+            # data['modal']['button']['name'] = 'Aktualizuj'
+            # if user != ann.creator:
+            #     return JsonResponse({})
+            # else:
+            #     form = AnnouncementForm(instance=ann)
+            #     if user.is_coach:
+            #         form.fields['club'].queryset = Club.objects.filter(name=user.profile.team_object.club.name)
+            #         form.fields['league'].queryset = League.objects.filter(name=user.profile.team_object.league.name)
+            #     elif user.is_club:
+            #         form.fields['club'].queryset = Club.objects.filter(name=user.profile.club_object.name)
+            #     else:
+            #         return JsonResponse({})
+        else:
+            if user.is_coach:
+                if self.coach_looking_for_player:  # temp
+                    if user.profile.club_object:
+                        form = ClubForPlayerAnnouncementForm(initial={
+                            'club': user.profile.team_object.club,
+                            'league': user.profile.team_object.league,
+                            'voivodeship': user.profile.team_object.club.voivodeship,
+                            'seniority': user.profile.team_object.seniority,
+                            'gender': user.profile.team_object.gender,
+                        })
+                        form.fields['club'].queryset = Club.objects.filter(name=user.profile.team_object.club.name)
+                        form.fields['league'].queryset = League.objects.filter(name=user.profile.team_object.league.name)
+                    else:
+                        form = ClubForPlayerAnnouncementForm(initial={})
+                elif self.coach_looking_for_club:  # temp
+                    form = CoachForClubAnnouncementForm(initial={})
                 else:
                     return JsonResponse({})
-        else:
-            if user.is_coach or user.is_club:
-                if user.is_coach:
-                    form = AnnouncementForm(initial={
-                        'club': user.profile.team_object.club,
-                        'league': user.profile.team_object.league,
-                        'voivodeship': user.profile.team_object.club.voivodeship,
-                        'seniority': user.profile.team_object.seniority,
-                        'gender': user.profile.team_object.gender,
-                    })
-                    form.fields['club'].queryset = Club.objects.filter(name=user.profile.team_object.club.name)
-                    form.fields['league'].queryset = League.objects.filter(name=user.profile.team_object.league.name)
-
-                elif user.is_club:
-                    form = AnnouncementForm(initial={
-                        'club': user.profile.club_object,
-                        'voivodeship': user.profile.club_object.voivodeship
-                    })
-                    form.fields['club'].queryset = Club.objects.filter(name=user.profile.club_object.name)
-
-                # form.instance.league = request.user.profile.display_league
+            elif user.is_club:
+                if self.club_looking_for_player:  # temp
+                    if user.profile.club_object:
+                        form = ClubForPlayerAnnouncementForm(initial={
+                            'club': user.profile.club_object,
+                            'voivodeship': user.profile.club_object.voivodeship
+                        })
+                        form.fields['club'].queryset = Club.objects.filter(name=user.profile.club_object.name)
+                    else:
+                        form = ClubForPlayerAnnouncementForm(initial={})
+                elif self.club_looking_for_coach:  # temp
+                    form = ClubForCoachAnnouncementForm(initial={})
+                else:
+                    return JsonResponse({})
+            # form.instance.league = request.user.profile.display_league
             elif user.is_player:
                 form = PlayerForClubAnnouncementForm(initial={
                         'position': user.profile.position_raw,
@@ -141,30 +162,42 @@ class AddAnnouncementView(LoginRequiredMixin, View):
         if user.announcementuserquota.left <= 0 and not _id:
             return JsonResponse(data)
         if _id:
-            a = Announcement.objects.get(id=int(_id))
-            form = AnnouncementForm(request.POST, instance=a)
-            if form.is_valid():
-                ann = form.save(commit=False)
-                ann.creator = request.user
-                ann.save()
-                form.save_m2m()
-                messages.success(request, _("Ogłoszenia zaktualizowano"), extra_tags='alter-success')
-
-                data['success'] = True
-                data['redirection_url'] = reverse("marketplace:announcements")
-                return JsonResponse(data)
-            else:
-
-                data['form'] = render_crispy_form(form)
-                return JsonResponse(data)
+            pass
+            # a = Announcement.objects.get(id=int(_id))  # TODO: temporary! Uncomment!
+            # form = AnnouncementForm(request.POST, instance=a)
+            # if form.is_valid():
+            #     ann = form.save(commit=False)
+            #     ann.creator = request.user
+            #     ann.save()
+            #     form.save_m2m()
+            #     messages.success(request, _("Ogłoszenia zaktualizowano"), extra_tags='alter-success')
+            #
+            #     data['success'] = True
+            #     data['redirection_url'] = reverse("marketplace:announcements")
+            #     return JsonResponse(data)
+            # else:
+            #
+            #     data['form'] = render_crispy_form(form)
+            #     return JsonResponse(data)
         else:
             if not user.announcementuserquota.can_make_request:
                 return JsonResponse({'message': 'Limit ogłoszeń przekroczony.'})
 
-            if user.is_coach or user.is_club:
-                form = AnnouncementForm(request.POST)
+            if user.is_coach:
+                if self.coach_looking_for_club:
+                    form = CoachForClubAnnouncementForm(request.POST)
+                if self.coach_looking_for_player:
+                    form = ClubForPlayerAnnouncementForm(request.POST)
+
+            if user.is_club:
+                if self.club_looking_for_coach:
+                    form = ClubForCoachAnnouncementForm(request.POST)
+                if self.club_looking_for_player:
+                    form = ClubForPlayerAnnouncementForm(request.POST)
+
             if user.is_player:
                 form = PlayerForClubAnnouncementForm(request.POST)
+
             if form.is_valid():
                 ann = form.save(commit=False)
                 ann.creator = request.user
@@ -182,7 +215,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 return JsonResponse(data)
 
 
-class AnnouncementsMeta(generic.TemplateView, mixins.ViewModalLoadingMixin, mixins.ViewFilterMixin, AnnouncementFilterMixn):
+class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixins.ViewFilterMixin, AnnouncementFilterMixn):
     template_name = "marketplace/base.html"
     http_method_names = ["get"]
     paginate_limit = 9
@@ -193,7 +226,7 @@ class AnnouncementsMeta(generic.TemplateView, mixins.ViewModalLoadingMixin, mixi
     def filter_queryset(self, queryset):
         now = timezone.now().date()
         queryset = queryset.filter(
-            status__in=Announcement.ACTIVE_STATES,
+            status__in=AnnouncementMeta.ACTIVE_STATES,
             disabled=False,
             expire__date__gte=now)
         if self.filter_my_ann is not False:
@@ -267,12 +300,15 @@ class AnnouncementsMeta(generic.TemplateView, mixins.ViewModalLoadingMixin, mixi
         return super().get(request, *args, **kwargs)
 
 
-class AnnouncementsView(AnnouncementsMeta):
-    queried_classes = [Announcement, PlayerForClubAnnouncement]
+class AnnouncementsView(AnnouncementsMetaView):
+    queried_classes = [ClubForPlayerAnnouncement,
+                       ClubForCoachAnnouncement,
+                       CoachForClubAnnouncement,
+                       PlayerForClubAnnouncement]
 
 
-class MyAnnouncementsView(AnnouncementsMeta):
-    queried_classes = [Announcement, PlayerForClubAnnouncement]
+class MyAnnouncementsView(AnnouncementsView):
+    queried_classes = [ClubForPlayerAnnouncement, PlayerForClubAnnouncement]
 
     def get_queryset(self, queried_class=None):
         return queried_class.objects.filter(creator=self.request.user)
@@ -283,7 +319,7 @@ class MyAnnouncementsView(AnnouncementsMeta):
 
 class ClubForPlayerAnnouncementsView(AnnouncementsView):
     def get_queryset(self, queried_class=None):
-        return Announcement.objects.filter(creator__declared_role="C")  # not true, i have to change it
+        return ClubForPlayerAnnouncement.objects.filter(creator__declared_role="C")  # not true, i have to change it
 
     def _prepare_extra_kwargs(self, kwargs):
         kwargs['view_type'] = "club_for_player"
@@ -291,8 +327,7 @@ class ClubForPlayerAnnouncementsView(AnnouncementsView):
 
 
 class CoachForClubAnnouncementsView(AnnouncementsView):
-    def get_queryset(self, queried_class=None):
-        return Announcement.objects.filter(creator__declared_role="T")  # not true, i have to change it
+    queried_classes = [CoachForClubAnnouncement]
 
     def _prepare_extra_kwargs(self, kwargs):
         kwargs['view_type'] = "coach_for_club"
@@ -300,8 +335,7 @@ class CoachForClubAnnouncementsView(AnnouncementsView):
 
 
 class ClubForCoachAnnouncementsView(AnnouncementsView):
-    def get_queryset(self, queried_class=None):
-        return Announcement.objects.filter(creator__declared_role="C")  # not true, i have to change it
+    queried_classes = [ClubForCoachAnnouncement]
 
     def _prepare_extra_kwargs(self, kwargs):
         kwargs['view_type'] = "club_for_coach"

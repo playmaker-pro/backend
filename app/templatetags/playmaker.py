@@ -294,7 +294,7 @@ def add_announcement(context):
 
     if not user.is_authenticated:
         return {'off': True}
-    if user.is_player:
+    if user.is_player or user.is_club or user.is_coach:
         return {
             'active_class': None,
             # 'button_script': 'inquiry',
@@ -308,28 +308,10 @@ def add_announcement(context):
             'button_action': {'modal': True, 'name': 'addAnnouncementModal'},
             'button_action_onlick': {'onclick': True, 'name': 'get_add_announcement_form'},
             'button_icon': 'plus',
-            'button_text': 'Dodaj ogłoszenie (player)',
+            'button_text': 'Dodaj ogłoszenie',
             'modals': context['modals'],
         }
-    if not user.is_club and not user.is_coach:
-        return {'off': True}
-
-    return {
-        'active_class': None,
-        # 'button_script': 'inquiry',
-        'button_id': 'addAnnoucementButton',
-        'button_attrs': None,
-        'button_class': 'btn-request',
-        'button_actions': {
-            'modal': {'name': 'addAnnouncementModal'},
-            'onclick': {'name': 'get_add_announcement_form'},
-        },
-        'button_action': {'modal': True, 'name': 'addAnnouncementModal'},
-        'button_action_onlick': {'onclick': True, 'name': 'get_add_announcement_form'},
-        'button_icon': 'plus',
-        'button_text': 'Dodaj ogłoszenie',
-        'modals': context['modals'],
-    }
+    return {'off': True}
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)

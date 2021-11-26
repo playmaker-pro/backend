@@ -23,8 +23,7 @@ def year_choices():
     return [(i, i) for i in list(range(start, now + 1))]
 
 
-class AnnouncementForm(forms.ModelForm):
-
+class ClubForPlayerAnnouncementForm(forms.ModelForm):
     building_fields = [
         
         ('country', 'Kraj', None, {}),
@@ -112,7 +111,7 @@ class AnnouncementForm(forms.ModelForm):
 
     class Meta:
         widgets = {'country': CountrySelectWidget(layout='{widget}')}
-        model = models.Announcement
+        model = models.ClubForPlayerAnnouncement
         fields = ['country', 'club', 'league', 'voivodeship', 'seniority', 'gender', 'www', 'body', 'address', 'positions', 'year_from', 'year_to']
         exclude = ['creator']
 
@@ -174,4 +173,72 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
         # widgets = {'country': CountrySelectWidget(layout='{widget}')}
         model = models.PlayerForClubAnnouncement
         fields = ['position', 'voivodeship', 'address', 'practice_distance', 'target_league', 'body']
+        exclude = ['creator']
+
+
+class CoachForClubAnnouncementForm(forms.ModelForm):
+    building_fields = [
+        ('body', 'COACH FOR CLUB', None, {}),
+    ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.error_text_inline = True
+        self.helper.labels_uppercase = True
+        self.helper.label_class = 'col-12 col-md-4 text-md-right text-muted upper form-label'
+        self.helper.field_class = 'col-12 col-md-8'
+        self.helper.wrapper_class = 'row'
+
+        self.set_fields_rules()
+        self.helper.layout = self.build_verification_form()
+
+    def set_fields_rules(self):
+        self.fields['body'].required = True
+        self.fields['body'].label = 'Oczekiwania'
+        self.fields['body'].help_text = False
+
+    def build_verification_form(self):
+        fds = [''] + [Field(fn, wrapper_class='row', placeholder=fp, title=fp, css_class=fc, **kwargs) for fn, fp, fc, kwargs in self.building_fields]
+        return Fieldset(*fds)
+
+    class Meta:
+        # widgets = {'country': CountrySelectWidget(layout='{widget}')}
+        model = models.CoachForClubAnnouncement
+        fields = ['body']
+        exclude = ['creator']
+
+
+class ClubForCoachAnnouncementForm(forms.ModelForm):
+    building_fields = [
+        ('body', 'CLUB FOR COACH', None, {}),
+    ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.error_text_inline = True
+        self.helper.labels_uppercase = True
+        self.helper.label_class = 'col-12 col-md-4 text-md-right text-muted upper form-label'
+        self.helper.field_class = 'col-12 col-md-8'
+        self.helper.wrapper_class = 'row'
+
+        self.set_fields_rules()
+        self.helper.layout = self.build_verification_form()
+
+    def set_fields_rules(self):
+        self.fields['body'].required = True
+        self.fields['body'].label = 'Oczekiwania'
+        self.fields['body'].help_text = False
+
+    def build_verification_form(self):
+        fds = [''] + [Field(fn, wrapper_class='row', placeholder=fp, title=fp, css_class=fc, **kwargs) for fn, fp, fc, kwargs in self.building_fields]
+        return Fieldset(*fds)
+
+    class Meta:
+        # widgets = {'country': CountrySelectWidget(layout='{widget}')}
+        model = models.ClubForCoachAnnouncement
+        fields = ['body']
         exclude = ['creator']
