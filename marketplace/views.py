@@ -238,26 +238,6 @@ class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, 
         if self.filter_vivo is not None:
             queryset = queryset.filter(voivodeship__name__in=self.filter_vivo)
 
-        if self.filter_position_exact is not None:  # used in playerforclub
-            queryset = queryset.filter(position__name=self.filter_position_exact)
-
-        if self.filter_target_league_exact is not None:  # used in playerforclub
-            queryset = queryset.filter(target_league__name=self.filter_target_league_exact)
-
-        if self.filter_year_min is not None:   # used in playerforclub
-            mindate = get_datetime_from_year(self.filter_year_min)
-            queryset = queryset.filter(creator__playerprofile__birth_date__year__gte=mindate.year)
-
-        if self.filter_year_max is not None:   # used in playerforclub
-            maxdate = get_datetime_from_year(self.filter_year_max)
-            queryset = queryset.filter(creator__playerprofile__birth_date__year__lte=maxdate.year)
-
-        # if self.filter_gender_exact is not None:
-        #     queryset = queryset.filter(gender__name=self.filter_gender_exact)
-
-        # if self.filter_seniority_exact is not None:
-        #     queryset = queryset.filter(seniority__name=self.filter_seniority_exact)
-
         return queryset
 
     def get_queryset(self, queried_class=None) -> QuerySet:
@@ -308,8 +288,6 @@ class AnnouncementsView(AnnouncementsMetaView):
 
 
 class MyAnnouncementsView(AnnouncementsView):
-    queried_classes = [ClubForPlayerAnnouncement, PlayerForClubAnnouncement]
-
     def get_queryset(self, queried_class=None):
         return queried_class.objects.filter(creator=self.request.user)
 
@@ -318,12 +296,21 @@ class MyAnnouncementsView(AnnouncementsView):
 
 
 class ClubForPlayerAnnouncementsView(AnnouncementsView):
-    def get_queryset(self, queried_class=None):
-        return ClubForPlayerAnnouncement.objects.filter(creator__declared_role="C")  # not true, i have to change it
+    queried_classes = [ClubForPlayerAnnouncement]
 
     def _prepare_extra_kwargs(self, kwargs):
         kwargs['view_type'] = "club_for_player"
         super(ClubForPlayerAnnouncementsView, self)._prepare_extra_kwargs(kwargs)
+
+    def filter_queryset(self, queryset):
+        queryset = super(ClubForPlayerAnnouncementsView, self).filter_queryset(queryset)
+        if self.filter_gender_exact is not None:
+            queryset = queryset.filter(gender__name=self.filter_gender_exact)
+
+        if self.filter_seniority_exact is not None:
+            queryset = queryset.filter(seniority__name=self.filter_seniority_exact)
+
+        return queryset
 
 
 class CoachForClubAnnouncementsView(AnnouncementsView):
@@ -349,3 +336,20 @@ class PlayerForClubAnnouncementsView(AnnouncementsView):
         kwargs['view_type'] = "player_for_club"
         super(PlayerForClubAnnouncementsView, self)._prepare_extra_kwargs(kwargs)
 
+    def filter_queryset(self, queryset):
+        queryset = super(PlayerForClubAnnouncementsView, self).filter_queryset(queryset)
+        if self.filter_position_exact is not None:  # used in playerforclub
+            queryset = queryset.filter(position__name=self.filter_position_exact)
+
+        if self.filter_target_league_exact is not None:  # used in playerforclub
+            queryset = queryset.filter(target_league__name=self.filter_target_league_exact)
+
+        if self.filter_year_min is not None:   # used in playerforclub
+            mindate = get_datetime_from_year(self.filter_year_min)
+            queryset = queryset.filter(creator__playerprofile__birth_date__year__gte=mindate.year)
+
+        if self.filter_year_max is not None:   # used in playerforclub
+            maxdate = get_datetime_from_year(self.filter_year_max)
+            queryset = queryset.filter(creator__playerprofile__birth_date__year__lte=maxdate.year)
+
+        return queryset

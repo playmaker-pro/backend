@@ -1,16 +1,12 @@
 {% with size=size %}
-    <div>club for player</div>
-    <div class="filter pr-2">
-        {% include 'marketplace/filters/filter_voivodeship.html' with size=size options=filters.voivodeship %}
-    </div>
-    <div class="filter pr-2">
-        {% include 'marketplace/filters/filter_leagues.html' with size=size options=filters.league %}
-    </div>
-    {% if view_type == "player_for_club" %}
      <div class="filter pr-2">
-        {% include 'marketplace/filters/filter_leagues.html' with size=size options=filters.league %}
-         GUWNO
+        {% include 'marketplace/filters/filter_position.html' with size=size options=filters.position %}
     </div>
-    {% endif %}
+     <div class="filter pr-2">
+        {% include 'marketplace/filters/filter_gender.html' with size=size options=filters.gender %}
+    </div>
+     <div class="filter pr-2">
+        {% include 'marketplace/filters/filter_seniority.html' with size=size options=filters.seniority %}
+    </div>
 
 {% endwith %}
