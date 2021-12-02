@@ -253,8 +253,82 @@ class PlayerForClubAnnouncement(AnnouncementMeta):
 
 
 class ClubForCoachAnnouncement(AnnouncementMeta):
+    creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='club_for_coach_announcement_creator',
+        on_delete=models.CASCADE
+    )
+
+    country = CountryField(
+        _('Country'),
+        # blank=True,
+        default='PL',
+        null=True,
+        blank_label=_('Wybierz kraj'),
+    )
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE
+    )
+
+    league = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+        related_name='club_for_coach_announcement_league',
+
+    )
+
+    voivodeship = models.ForeignKey(
+        Voivodeship,
+        on_delete=models.CASCADE
+    )
+
+    lic_type = models.TextField(blank=True)
+
+    target_league = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+        related_name='club_for_coach_announcement_target_league',
+    )
+
+    seniority = models.ForeignKey(
+        Seniority,
+        on_delete=models.CASCADE
+    )
+
+    gender = models.ForeignKey(
+        Gender,
+        on_delete=models.CASCADE
+    )
+
     body = models.TextField()
 
 
 class CoachForClubAnnouncement(AnnouncementMeta):
+    creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='coach_for_club_announcement_creator',
+        on_delete=models.CASCADE
+    )
+
+    lic_type = models.TextField(blank=True)
+
+    voivodeship = models.ForeignKey(
+        Voivodeship,
+        on_delete=models.CASCADE
+    )
+
+    address = AddressField(
+        help_text=_('Adres'),
+        blank=True,
+        null=True)
+
+    practice_distance = models.CharField(max_length=3)
+
+    target_league = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+    )
+
     body = models.TextField()

@@ -47,14 +47,14 @@ function outFunc() {
 
 
 
-function get_add_announcement_form(event, id = null){
+function get_add_announcement_form(event, id = null, announcement_type = null){
   $("#add-announcement-form-body").empty();
   $('#add-ann-out').hide();
   $('#add-ann-left').hide();
   $.ajax({
       url: "/marketplace/add/",
       type: "get",
-      data: {'id': id},
+      data: {'id': id, 'announcement_type': announcement_type},
       /*data: {slug: slug},*/
       success: function(json) {
         if (json.form === null) {
@@ -192,7 +192,8 @@ $(document).on('submit', '#add-announcement-form', function(e){
 
   var form = $(this);
   var url = form.attr('action');
-  var data = form.serialize() + '&id=' + $('#add-ann-number').val();
+  var data = form.serialize() + '&id=' + $('#add-ann-number').val() + '&announcement_type=' + $('#add-ann-type').val();
+//  var data = form.serialize() + '&id=' + $('#add-ann-number').val();
 
   console.log('x>>>>>>>>>>>>>', data)
   $.ajax({

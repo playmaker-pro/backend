@@ -365,18 +365,17 @@ def announcement_edit(context, ann):
     if not user.is_authenticated or ann.creator != user:
         return {'off': True}
 
-    if not user.is_club and not user.is_coach:
-        return {'off': True}
-
     return {
         'active_class': None,
         # 'button_script': 'inquiry',
         'button_id': 'addAnnoucementButton',
-        'button_attrs': f'data-ann={ann.id}',
+        'button_attrs': f'data-ann={ann.id} data-ann-type={ann.__class__.__name__}',
         'button_class': 'btn-request',
         'button_actions': {
             'modal': {'name': 'addAnnouncementModal'},
-            'onclick': {'name': 'get_add_announcement_form', 'param': f'{ann.id}'},
+            'onclick': {'name': 'get_add_announcement_form',
+                        'param': f'{ann.id}',
+                        'param2': f'{ann.__class__.__name__}'},
         },
         'button_action': {
             'modal': True,

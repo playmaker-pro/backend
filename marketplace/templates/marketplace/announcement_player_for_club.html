@@ -59,13 +59,22 @@
                     Region
                 </div>
                 <div class="card-text col-md-12">
-<!--                    <small> {{ object.body }} </small>-->
+                    <small> {{ object.body }} </small>
                 </div>
             </small>
         </div>
     </div>
 
     <div class="card-footer row no-gutters">
+        <div class="card-text">
+                <i class="icofont-list"></i>
+                <small class="text-muted"> {{ object.subscribers.count }} odpowiedzi </small>
+            </div>
+
+            <div class="card-text">
+                <i class="icofont-wall-clock"></i>
+                <small class="text-muted"> {{ object.created_at|days_since }}</small>
+            </div>
         <div class="card-text text-center d-inline-flex justify-content-center align-content-center flex-wrap">
             <div>
               <button type="button" class="btn-request" onclick="window.location.href='/users/{{ player.profile.slug }}';">Zobacz profil</button>
@@ -75,6 +84,7 @@
               <button type="button" class="btn-request" onclick="">Zaproś na testy</button>
             </div>
             {% endif %}
+            {% announcement_edit object %}
             <div>
               <button type="button" class="btn-request" onclick="">Udostępnij</button>
             </div>

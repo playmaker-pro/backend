@@ -217,7 +217,9 @@ $('#approveAnnouncementModal').on('show.bs.modal', function (event) {
 });
 $('#addAnnouncementModal').on('show.bs.modal', function (event) {
     var id = $(event.relatedTarget).data('ann');
+    var announcement_type = $(event.relatedTarget).data('ann-type');
     $(this).find('#add-ann-number').val(id);
+    $(this).find('#add-ann-type').val(announcement_type);
 });
 </script>
 {% endblock %}
