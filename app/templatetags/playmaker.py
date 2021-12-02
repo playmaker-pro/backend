@@ -294,7 +294,7 @@ def add_announcement(context):
 
     if not user.is_authenticated:
         return {'off': True}
-    if user.is_player or user.is_club or user.is_coach:
+    if user.is_player:
         return {
             'active_class': None,
             # 'button_script': 'inquiry',
@@ -311,6 +311,31 @@ def add_announcement(context):
             'button_text': 'Dodaj ogłoszenie',
             'modals': context['modals'],
         }
+    elif user.is_club:
+        context = context['modals']
+        return {
+            'modals': context,
+            'multiple_options': True,
+            'options': [
+                {'flag': 'club_looking_for_player',
+                 'friendly_name': 'Klub szuka zawodnika'},
+                {'flag': 'club_looking_for_coach',
+                 'friendly_name': 'Klub szuka trenera'},
+            ]
+        }
+    elif user.is_coach:
+        context = context['modals']
+        return {
+            'modals': context,
+            'multiple_options': True,
+            'options': [
+                {'flag': 'coach_looking_for_player',
+                 'friendly_name': 'Trener szuka zawodnika'},
+                {'flag': 'coach_looking_for_club',
+                 'friendly_name': 'Trener szuka klubu'},
+            ]
+        }
+
     return {'off': True}
 
 

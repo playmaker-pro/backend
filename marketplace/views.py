@@ -4,7 +4,7 @@ import math
 import operator
 from functools import reduce
 from itertools import chain
-
+from copy import deepcopy
 from app import mixins
 from clubs.models import Club, Gender, League, Seniority, Team, Voivodeship
 from crispy_forms.utils import render_crispy_form
@@ -72,7 +72,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
     coach_looking_for_player = False
     coach_looking_for_club = False
     club_looking_for_player = False
-    club_looking_for_coach = True
+    club_looking_for_coach = False
     player_looking_for_club = False
 
     def get(self, request, *args, **kwargs):
@@ -91,6 +91,8 @@ class AddAnnouncementView(LoginRequiredMixin, View):
 
         _id = request.GET.get('id')
         _announcement_type = request.GET.get('announcement_type')
+        _action_name = request.GET.get('action_name')
+
         if user.announcementuserquota.left <= 0 and not _id:
             return JsonResponse(data)
         elif _id and _announcement_type:
@@ -104,7 +106,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
             else:
                 form = announcement_form_mapper.get(_announcement_type)(instance=ann)
         else:
-            if self.coach_looking_for_player:  # temp
+            if _action_name == "coach_looking_for_player":
                 if user.profile.club_object:
                     form = ClubForPlayerAnnouncementForm(initial={
                         'club': user.profile.team_object.club,
@@ -117,7 +119,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     form.fields['league'].queryset = League.objects.filter(name=user.profile.team_object.league.name)
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
-            elif self.coach_looking_for_club:  # temp
+            elif _action_name == "coach_looking_for_club":  # temp
                 form = CoachForClubAnnouncementForm(initial={
                     'lic_type': user.profile.licence,
                     'voivodeship': user.profile.team_object.club.voivodeship,
@@ -125,7 +127,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     'practice_distance': user.profile.practice_distance,
 
                 })
-            elif self.club_looking_for_player:  # temp
+            elif _action_name == "club_looking_for_player":
                 if user.profile.club_object:
                     form = ClubForPlayerAnnouncementForm(initial={
                         'club': user.profile.club_object,
@@ -134,9 +136,9 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     form.fields['club'].queryset = Club.objects.filter(name=user.profile.club_object.name)
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
-            elif self.club_looking_for_coach:
+            elif _action_name == "club_looking_for_coach":
                 form = ClubForCoachAnnouncementForm(initial={})
-            elif self.player_looking_for_club:
+            elif user.is_player:
                 form = PlayerForClubAnnouncementForm(initial={
                         'position': user.profile.position_raw,
                         'voivodeship': user.profile.team_object.club.voivodeship,
@@ -147,7 +149,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 return JsonResponse({})
 
         form_raw_data = render_crispy_form(form)
-        # form_raw_data = form_raw_data.replace('<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>', '')
+        form_raw_data = form_raw_data.replace('<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>', '')
         data['form'] = form_raw_data
         return JsonResponse(data)
 
@@ -168,6 +170,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
         }
         _id = request.POST.get('id')
         _announcement_type = request.POST.get('announcement_type')
+        _action_name = request.POST.get('action_name')
 
         if user.announcementuserquota.left <= 0 and not _id:
             return JsonResponse(data)
@@ -197,15 +200,15 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 return JsonResponse({'message': 'Limit ogłoszeń przekroczony.'})
 
             if user.is_coach:
-                if self.coach_looking_for_club:
+                if _action_name == "coach_looking_for_club":
                     form = CoachForClubAnnouncementForm(request.POST)
-                if self.coach_looking_for_player:
+                if _action_name == "coach_looking_for_player":
                     form = ClubForPlayerAnnouncementForm(request.POST)
 
             if user.is_club:
-                if self.club_looking_for_coach:
+                if _action_name == "club_looking_for_coach":
                     form = ClubForCoachAnnouncementForm(request.POST)
-                if self.club_looking_for_player:
+                if _action_name == "club_looking_for_player":
                     form = ClubForPlayerAnnouncementForm(request.POST)
 
             if user.is_player:

@@ -180,6 +180,7 @@
         <div>
           <button type="button" class="btn-request" onclick="window.location.href='{% url 'marketplace:player_for_club_announcements' %}';">Piłkarz szuka klubu</button>
         </div>
+
         </div>
         <div class="row">
             <div class="d-flex">
@@ -218,8 +219,10 @@ $('#approveAnnouncementModal').on('show.bs.modal', function (event) {
 $('#addAnnouncementModal').on('show.bs.modal', function (event) {
     var id = $(event.relatedTarget).data('ann');
     var announcement_type = $(event.relatedTarget).data('ann-type');
+    var action_name = $(event.relatedTarget).data('ann-action-name');
     $(this).find('#add-ann-number').val(id);
     $(this).find('#add-ann-type').val(announcement_type);
+    $(this).find('#add-ann-action-name').val(action_name);
 });
 </script>
 {% endblock %}

@@ -34,6 +34,7 @@
           
               <input id="add-ann-number" name="add-ann-number" type="hidden" value>
               <input id="add-ann-type" name="add-ann-type" type="hidden" value>
+              <input id="add-ann-action-name" name="add-ann-action-name" type="hidden" value>
               <form id="add-announcement-form" class="mt-3" enctype="multipart/form-data" action={% url 'marketplace:add_announcement' %} method="post">
                   {% csrf_token %}
                   <span id="add-announcement-form-body"> </span>
