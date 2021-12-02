@@ -7,14 +7,15 @@
 {% include 'marketplace/announcement_player_for_club.html' with object=object %}
 
 <!--KLUB PIŁKARZA-->
-{% elif object.creator.declared_role == "C" %}
+{% elif object|classname == "ClubForPlayerAnnouncement" %}
+
 {% include 'marketplace/announcement_club_for_player.html' with object=object %}
 
 <!--KLUB TRENERA-->
-<!--{% elif object.creator.declared_role == "C" %}-->
-<!--{% include 'marketplace/announcement_club_for_coach.html' with object=object %}-->
+{% elif object|classname == "ClubForCoachAnnouncement" %}
+{% include 'marketplace/announcement_club_for_coach.html' with object=object %}
 
 <!--TRENER KLUBU-->
-{% elif object.creator.declared_role == "T" %}
+{% elif object|classname == "CoachForClubAnnouncement" %}
 {% include 'marketplace/announcement_coach_for_club.html' with object=object %}
 {% endif %}

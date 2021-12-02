@@ -1,12 +1,6 @@
 
-
+<select name="seniority" data-width="{{ size|add:20 }}"  class="form-control selectpicker" data-allow-clear="true" title="starszeństwo">
 {% for option in options %}
-<div class="form-check form-check-inline" style="display:inline-flex;">
-    <input class="form-check-input" type="radio" name="{{ filter_name }}" id="inlineRadio{{ forloop.counter }}" {% if request.GET.seniority == option %} checked {% endif %} value="{{ option }}">
-    <label class="form-check-label" for="inlineRadio{{ forloop.counter }}"><small>{{ option }}</small></label>
-</div>
+    <option {% if request.GET.seniority == option %} selected {% endif %} value="{{ option }}">{{ option }}</option>
 {% endfor %}
-<div class="form-check form-check-inline" style="display:inline-flex;">
-    <input class="form-check-input" type="radio" name="{{ filter_name }}" id="inlineRadio0"  {% if request.GET.seniority == 'dowolne' %} checked {% endif %} value="dowolne">
-    <label class="form-check-label" for="inlineRadio0"><small>dowolne</small></label>
-</div>
+</select>

@@ -23,8 +23,7 @@ def year_choices():
     return [(i, i) for i in list(range(start, now + 1))]
 
 
-class AnnouncementForm(forms.ModelForm):
-
+class ClubForPlayerAnnouncementForm(forms.ModelForm):
     building_fields = [
         
         ('country', 'Kraj', None, {}),
@@ -112,7 +111,7 @@ class AnnouncementForm(forms.ModelForm):
 
     class Meta:
         widgets = {'country': CountrySelectWidget(layout='{widget}')}
-        model = models.Announcement
+        model = models.ClubForPlayerAnnouncement
         fields = ['country', 'club', 'league', 'voivodeship', 'seniority', 'gender', 'www', 'body', 'address', 'positions', 'year_from', 'year_to']
         exclude = ['creator']
 
@@ -124,7 +123,7 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
         ('voivodeship', 'Województwo', None, {}),
         ('address', 'np. Wrocław', None, {}),
         ('practice_distance', 'Maksymalna odległość dojazdu', None, {}),
-        ('looking_for', 'Cel poszukiwań', None, {}),
+        ('target_league', 'Cel poszukiwań', None, {}),
         ('body', 'Opisz krótko swoje oczekiwania', None, {}),
     ]
 
@@ -158,9 +157,9 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
         self.fields['practice_distance'].label = 'Maksymalna odległość dojazdu w km'  # '<i class="icofont-ui-user-group"></i>'
         self.fields['practice_distance'].help_text = False
 
-        self.fields['looking_for'].required = True
-        self.fields['looking_for'].label = 'Cel poszukiwań'  # '<i class="icofont-ui-user-group"></i>'
-        self.fields['looking_for'].help_text = False
+        self.fields['target_league'].required = True
+        self.fields['target_league'].label = 'Cel poszukiwań'  # '<i class="icofont-ui-user-group"></i>'
+        self.fields['target_league'].help_text = False
 
         self.fields['body'].required = True
         self.fields['body'].label = 'Oczekiwania'
@@ -173,5 +172,139 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
     class Meta:
         # widgets = {'country': CountrySelectWidget(layout='{widget}')}
         model = models.PlayerForClubAnnouncement
-        fields = ['position', 'voivodeship', 'address', 'practice_distance', 'looking_for', 'body']
+        fields = ['position', 'voivodeship', 'address', 'practice_distance', 'target_league', 'body']
+        exclude = ['creator']
+
+
+class CoachForClubAnnouncementForm(forms.ModelForm):
+    building_fields = [
+        ('lic_type', 'Typ licencji', None, {}),
+        ('voivodeship', 'Województwo', None, {}),
+        ('address', 'np. Wrocław', None, {}),
+        ('practice_distance', 'Maksymalna odległość dojazdu', None, {}),
+        ('target_league', 'Cel poszukiwań', None, {}),
+        ('body', 'Opisz krótko swoje dotychczasowe osiągniecia oraz oczekiwania', None, {}),
+
+    ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.error_text_inline = True
+        self.helper.labels_uppercase = True
+        self.helper.label_class = 'col-12 col-md-4 text-md-right text-muted upper form-label'
+        self.helper.field_class = 'col-12 col-md-8'
+        self.helper.wrapper_class = 'row'
+
+        self.set_fields_rules()
+        self.helper.layout = self.build_verification_form()
+
+    def set_fields_rules(self):
+        self.fields['lic_type'].required = True
+        self.fields['lic_type'].label = 'Typ licencji'
+        self.fields['lic_type'].help_text = False
+
+        self.fields['voivodeship'].required = True
+        self.fields['voivodeship'].label = 'Województwo'
+        self.fields['voivodeship'].help_text = False
+
+        self.fields['address'].required = True
+        self.fields['address'].label = 'Miejscowość z której dojeżdżasz na trening'
+        self.fields['address'].help_text = False
+
+        self.fields['practice_distance'].required = True
+        self.fields['practice_distance'].label = 'Maksymalna odległość dojazdu w km'
+        self.fields['practice_distance'].help_text = False
+
+        self.fields['target_league'].required = True
+        self.fields['target_league'].label = 'Cel poszukiwań'  # '<i class="icofont-ui-user-group"></i>'
+        self.fields['target_league'].help_text = False
+
+        self.fields['body'].required = True
+        self.fields['body'].label = 'Opis ogłoszenia'
+        self.fields['body'].help_text = False
+
+    def build_verification_form(self):
+        fds = [''] + [Field(fn, wrapper_class='row', placeholder=fp, title=fp, css_class=fc, **kwargs) for fn, fp, fc, kwargs in self.building_fields]
+        return Fieldset(*fds)
+
+    class Meta:
+        # widgets = {'country': CountrySelectWidget(layout='{widget}')}
+        model = models.CoachForClubAnnouncement
+        fields = ['lic_type', 'voivodeship', 'address', 'practice_distance', 'target_league', 'body']
+        exclude = ['creator']
+
+
+class ClubForCoachAnnouncementForm(forms.ModelForm):
+    building_fields = [
+        ('country', 'Kraj', None, {}),
+        ('club', 'Klub', None, {}),
+        ('league', 'Poziom rozgrywkowy', None, {}),
+        ('voivodeship', 'Województwo', None, {}),
+        ('lic_type', 'Typ licencji', None, {}),
+        ('target_league', 'Cel poszukiwań', None, {}),
+        ('seniority', 'Rozgrywki młodzieżowe / Rozgrywki seniorskie', None, {}),
+        ('gender', 'Mężczyźni / Kobiety', None, {}),
+        ('body', 'Opisz krótko oczekiwania wobec trenerów', None, {}),
+    ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.error_text_inline = True
+        self.helper.labels_uppercase = True
+        self.helper.label_class = 'col-12 col-md-4 text-md-right text-muted upper form-label'
+        self.helper.field_class = 'col-12 col-md-8'
+        self.helper.wrapper_class = 'row'
+
+        self.set_fields_rules()
+        self.helper.layout = self.build_verification_form()
+
+    def set_fields_rules(self):
+        self.fields['country'].required = True
+        self.fields['country'].label = 'Kraj'
+        self.fields['country'].help_text = False
+
+        self.fields['club'].required = True
+        self.fields['club'].label = 'Klub'
+        self.fields['club'].help_text = False
+
+        self.fields['league'].required = True
+        self.fields['league'].label = 'Poziom rozgrywkowy'  # '<i class="icofont-ui-user-group"></i>'
+        self.fields['league'].help_text = False
+
+        self.fields['voivodeship'].required = True
+        self.fields['voivodeship'].label = 'Województwo'
+        self.fields['voivodeship'].help_text = False
+
+        self.fields['lic_type'].required = True
+        self.fields['lic_type'].label = 'Typ licencji'
+        self.fields['lic_type'].help_text = False
+
+        self.fields['target_league'].required = True
+        self.fields['target_league'].label = 'Cel poszukiwań'  # '<i class="icofont-ui-user-group"></i>'
+        self.fields['target_league'].help_text = False
+
+        self.fields['seniority'].required = True
+        self.fields['seniority'].label = 'Rozgrywki młodzieżowe / Rozgrywki seniorskie'
+        self.fields['seniority'].help_text = False
+
+        self.fields['gender'].required = True
+        self.fields['gender'].label = 'Mężczyźni / Kobiety'
+        self.fields['gender'].help_text = False
+
+        self.fields['body'].required = True
+        self.fields['body'].label = 'Oczekiwania'
+        self.fields['body'].help_text = False
+
+    def build_verification_form(self):
+        fds = [''] + [Field(fn, wrapper_class='row', placeholder=fp, title=fp, css_class=fc, **kwargs) for fn, fp, fc, kwargs in self.building_fields]
+        return Fieldset(*fds)
+
+    class Meta:
+        # widgets = {'country': CountrySelectWidget(layout='{widget}')}
+        model = models.ClubForCoachAnnouncement
+        fields = ['country', 'club', 'league', 'voivodeship', 'lic_type', 'target_league', 'seniority', 'gender', 'body']
         exclude = ['creator']

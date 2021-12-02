@@ -142,13 +142,13 @@ class ViewFilterMixin:
             return int(value)
 
     @property
-    def filter_year_max(self):
+    def filter_year_max(self):  # 2010 in (1990 - 2010)
         value = self.request.GET.get('year_max')
         if value:
             return int(value)
 
     @property
-    def filter_year_min(self):
+    def filter_year_min(self):  # 1990 in (1990 - 2010)
         value = self.request.GET.get('year_min')
         if value:
             return int(value)
@@ -178,6 +178,12 @@ class ViewFilterMixin:
     @property
     def filter_position_exact(self):
         value = self.request.GET.get('position')
+        if value:
+            return value
+
+    @property
+    def filter_target_league_exact(self):
+        value = self.request.GET.get('target_league')
         if value:
             return value
 
@@ -280,13 +286,13 @@ class ViewModalLoadingMixin:
                 'load': False,
                 'async': 'get_add_announcement_form'
             },
-            'add_announcement_player_for_club': {
-                'name': 'inquiryModal',
-                'template': 'profiles/modals/_add_announcement_modal.html',
-                'auto': False,
-                'load': False,
-                'async': 'get_add_announcement_form'
-            },
+            # 'add_announcement_player_for_club': {
+            #     'name': 'inquiryModal',
+            #     'template': 'profiles/modals/_add_announcement_modal.html',
+            #     'auto': False,
+            #     'load': False,
+            #     'async': 'get_add_announcement_form'
+            # },
             'approve_announcement_modal': {
                 'name': 'approveAnnouncementModal',
                 'template': 'profiles/modals/_approve_announcement_modal.html',
@@ -325,10 +331,10 @@ class ViewModalLoadingMixin:
         else:
             modals['inquiry']['load'] = True
             modals['approve_announcement_modal']['load'] = True
-            if user.is_club or user.is_coach:
+            if user.is_club or user.is_coach or user.is_player:
                 modals['add_announcement']['load'] = True
-            if user.is_player:
-                modals['add_announcement_player_for_club']['load'] = True
+            # if user.is_player:
+            #     modals['add_announcement_player_for_club']['load'] = True
             if user.userinquiry.counter == user.userinquiry.limit:
                 modals['action_limit_exceeded']['load'] = True
 

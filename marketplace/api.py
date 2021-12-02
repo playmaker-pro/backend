@@ -8,7 +8,8 @@ from followers.models import FollowTeam
 from clubs.models import Team
 from followers.models import Follow
 from notifications.mail import annoucement_notify_author, annoucement_notify_player
-from marketplace.models import Announcement
+# from marketplace.models import Announcement  # TODO: sprawdzic o co tu chodzi i podac prawdziwa klase!
+from marketplace.models import PlayerForClubAnnouncement
 
 
 @login_required
@@ -24,12 +25,12 @@ def approve_announcement(request):
         _id = request.POST.get('id')
         if _id:
 
-            ann = get_object_or_404(Announcement, id=int(_id))
+            ann = get_object_or_404(PlayerForClubAnnouncement, id=int(_id))
             #  ann.history.increment()  # @todo 1 coomit to  @ todo zwieszkyc ilosc odwiedzajcych ogloszeniee
             ann.subscribers.add(user)
             annoucement_notify_author(ann, user)
             annoucement_notify_player(ann, user)
-            message = 'Zgłoszenie na testy wyłane'
+            message = 'Zgłoszenie wysłane'
             response_data['message'] = message
             return JsonResponse(response_data)
         # else:
