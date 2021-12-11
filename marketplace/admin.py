@@ -3,8 +3,23 @@ from . import models
 from utils import linkify
 
 
-@admin.register(models.Announcement)
-class AnnouncementAdmin(admin.ModelAdmin):
+@admin.register(models.PlayerForClubAnnouncement)
+class PlayerForClubAnnouncementAdmin(admin.ModelAdmin):
+    search_fields = ('user__email',)
+
+
+@admin.register(models.ClubForPlayerAnnouncement)
+class ClubForPlayerAnnouncementAdmin(admin.ModelAdmin):
+    search_fields = ('user__email',)
+
+
+@admin.register(models.ClubForCoachAnnouncement)
+class ClubForCoachAnnouncementAdmin(admin.ModelAdmin):
+    search_fields = ('user__email',)
+
+
+@admin.register(models.CoachForClubAnnouncement)
+class CoachForClubAnnouncementAdmin(admin.ModelAdmin):
     search_fields = ('user__email',)
 
 

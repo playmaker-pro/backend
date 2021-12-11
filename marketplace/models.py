@@ -16,8 +16,9 @@ from datetime import timedelta
 
 
 class AnnouncementPlan(models.Model):
-    '''Holds information about user's annoucment plans.
-    '''
+    """
+    Holds information about user's announcement plans.
+    """
     name = models.CharField(
         _('Plan Name'),
         max_length=255,
@@ -85,12 +86,12 @@ class AnnouncementUserQuota(models.Model):
         return self.plan.limit
 
     def reset(self):
-        '''Reset current counter'''
+        """Reset current counter"""
         self.counter = 0
         self.save()
 
     def increment(self):
-        '''Increase by one counter'''
+        """Increase by one counter"""
         self.counter += 1
         self.save()
 
@@ -101,11 +102,11 @@ class AnnouncementUserQuota(models.Model):
 class ActiveAnnouncementManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(
-            status__in=Announcement.ACTIVE_STATES,
+            status__in=AnnouncementMeta.ACTIVE_STATES,
         )
 
 
-class Announcement(models.Model):
+class AnnouncementMeta(models.Model):
     active = ActiveAnnouncementManager()
     objects = models.Manager()
 
@@ -141,18 +142,33 @@ class Announcement(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
-    positions = models.ManyToManyField(PlayerPosition)
-
     subscribers = models.ManyToManyField(
-            settings.AUTH_USER_MODEL,
-            null=True, blank=True
+        settings.AUTH_USER_MODEL,
+        null=True, blank=True
     )
 
+    def set_expiration_date(self):
+        if self.expire is None:
+            self.expire = timezone.now() + self.creator.announcementuserquota.plan.days
+
+    def save(self, *args, **kwargs):
+        self.set_expiration_date()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.creator} #nr {self.id}'
+
+    class Meta:
+        abstract = True
+
+
+class ClubForPlayerAnnouncement(AnnouncementMeta):
     creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='announcement_creator',
         on_delete=models.CASCADE
     )
+    positions = models.ManyToManyField(PlayerPosition)
 
     club = models.ForeignKey(
         Club,
@@ -204,13 +220,115 @@ class Announcement(models.Model):
         blank=True,
         null=True)
 
-    def set_expiration_date(self):
-        if self.expire is None:
-            self.expire = timezone.now() + self.creator.announcementuserquota.plan.days
 
-    def save(self, *args, **kwargs):
-        self.set_expiration_date()
-        super().save(*args, **kwargs)
+class PlayerForClubAnnouncement(AnnouncementMeta):
+    creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='player_for_club_announcement_creator',
+        on_delete=models.CASCADE
+    )
+    position = models.ForeignKey(
+        PlayerPosition,
+        on_delete=models.CASCADE
+    )
 
-    def __str__(self):
-        return f'{self.creator} #nr {self.id}'
+    voivodeship = models.ForeignKey(
+        Voivodeship,
+        on_delete=models.CASCADE
+    )
+
+    address = AddressField(
+        help_text=_('Adres'),
+        blank=True,
+        null=True)
+
+    practice_distance = models.CharField(max_length=3)
+
+    target_league = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+    )
+
+    body = models.TextField()
+
+
+class ClubForCoachAnnouncement(AnnouncementMeta):
+    creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='club_for_coach_announcement_creator',
+        on_delete=models.CASCADE
+    )
+
+    country = CountryField(
+        _('Country'),
+        # blank=True,
+        default='PL',
+        null=True,
+        blank_label=_('Wybierz kraj'),
+    )
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE
+    )
+
+    league = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+        related_name='club_for_coach_announcement_league',
+
+    )
+
+    voivodeship = models.ForeignKey(
+        Voivodeship,
+        on_delete=models.CASCADE
+    )
+
+    lic_type = models.TextField(blank=True)
+
+    target_league = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+        related_name='club_for_coach_announcement_target_league',
+    )
+
+    seniority = models.ForeignKey(
+        Seniority,
+        on_delete=models.CASCADE
+    )
+
+    gender = models.ForeignKey(
+        Gender,
+        on_delete=models.CASCADE
+    )
+
+    body = models.TextField()
+
+
+class CoachForClubAnnouncement(AnnouncementMeta):
+    creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='coach_for_club_announcement_creator',
+        on_delete=models.CASCADE
+    )
+
+    lic_type = models.TextField(blank=True)
+
+    voivodeship = models.ForeignKey(
+        Voivodeship,
+        on_delete=models.CASCADE
+    )
+
+    address = AddressField(
+        help_text=_('Adres'),
+        blank=True,
+        null=True)
+
+    practice_distance = models.CharField(max_length=3)
+
+    target_league = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+    )
+
+    body = models.TextField()

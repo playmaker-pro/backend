@@ -1,11 +1,6 @@
-{% for option in options %}
-<div class="form-check form-check-inline" style="display:inline-flex;">
-    <input class="form-check-input" type="radio" name="{{ filter_name }}" id="inlineRadio{{ forloop.counter }}009" {% if request.GET.gender == option %} checked {% endif %} value="{{ option }}">
-    <label class="form-check-label" for="inlineRadio{{ forloop.counter }}009"><small>{{ option }}</small></label>
-</div>
-{% endfor %}
 
-<div class="form-check form-check-inline" style="display:inline-flex;">
-    <input class="form-check-input" type="radio" name="{{ filter_name }}" id="inlineRadio0009" {% if request.GET.gender == 'dowolne' %} checked {% endif %} value="dowolne">
-    <label class="form-check-label" for="inlineRadio0009"><small>dowolne</small></label>
-</div>
+<select name="gender" data-width="{{ size }}"  class="form-control selectpicker" data-allow-clear="true" title="płeć">
+{% for option in options %}
+    <option {% if request.GET.gender == option %} selected {% endif %} value="{{ option }}">{{ option }}</option>
+{% endfor %}
+</select>
