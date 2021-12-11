@@ -255,6 +255,13 @@ class League(models.Model):
         return self.parent is None and self.childs.all().count() != 0
 
     @property
+    def get_childs_ids(self):
+        if self.childs:
+            return list(self.childs.all().values_list("id", flat=True))
+        else:
+            return []
+
+    @property
     def display_league(self):
         return self.name
 

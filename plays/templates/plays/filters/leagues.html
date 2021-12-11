@@ -1,6 +1,7 @@
- <select id="searchleagues" class="side-filter selectpicker side-filter searchleagues" data-live-search="true">
-    <option data-tokens="" value="" >wybierz</option>
-    {% for history_league in history_leagues %}
-        <option {% if league.name == history_league.league.name %} selected {% endif %} data-tokens="{{ history_league.league.name }} {{history_league.league.zpn}}" value="{% url 'plays:summary' slug=history_league.league.slug  %}?season={{ current_season }}">{{ history_league.league.name }} </option>
+{% load plays %}
+<select id="searchleagues" class="side-filter selectpicker side-filter searchleagues" data-live-search="true">
+    <option data-tokens="" value="">wybierz</option>
+    {% for lf in league_filters %}
+        <option {% if league.name == lf.name %} selected {% endif %} data-tokens="{{ lf.name }} {{lf.zpn}}" value="{{ lf|get_league_url:current_season }}">{{ lf.name }} </option>
     {% endfor %}
 </select>

@@ -1,4 +1,6 @@
 {% load playmaker %}
+{% load plays %}
+
 <style>
 .sidenav {
   height: 100%; /* 100% Full-height */
@@ -13,16 +15,16 @@
   transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
 }
 
-/* The navigation menu links */
+/* The navigation menu links 
 .sidenav a {
   padding: 8px 8px 5px 5px;
   text-decoration: none;
-  /* font-size: 25px; */
+
   color: #818181;
   display: block;
   transition: 0.3s;
 }
-
+*/
 /* When you mouse over the navigation links, change their color */
 .sidenav a:hover {
   color: #f1f1f1;
@@ -52,28 +54,27 @@
 <div id="mySidenav" class="sidenav d-flex flex-column"><br><Br>
     <a href="javascript:void(0)" class="closebtn" onclick="closeNav()"><i class="icofont-close-circled main-color"></i></a>
     <span>
-    <div id="accordion1">
+   
+      <div id="accordion1">
         {% for league in league_filters %}
             {% if not league.isparent and not league.childs.all %}
-                <div class="plays-link {% if current_league_id == league.id %} link-active {% endif %}"><a href="{% url 'plays:summary' slug=league.slug  %}?season={{ current_season }}"><i class="icofont-arrow-right"></i>{{ league.name }} </a></div>
+                <div class="plays-link {% if current_league_id == league.id %} link-active {% endif %}"><a href="{{ league|get_league_url:current_season }}"><i class="icofont-cube"></i>{{ league.name }} </a></div>
             {% else %}
-
             <div class="" id="heading{{ league.id }}" style="cursor: pointer;">
                 <span style="color: #fff;" class="" data-toggle="collapse" data-target="#collapse{{league.id}}" aria-expanded="true" aria-controls="collapse{{league.id}}">
-                    <i class="icofont-arrow-down"></i>{{ league.name }}
+                    <i class="icofont-circled-down"></i>{{ league.name }}
                 </span>
             </div>
-            <div id="collapse{{ league.id }}" class="collapse" aria-labelledby="heading{{league.id}}" data-parent="#accordion1">
+            <div id="collapse{{ league.id }}" class="collapse {% if current_league_id in league.get_childs_ids %} show{% else %} {% endif %}" aria-labelledby="heading{{league.id}}" data-parent="#accordion1">
                 {% for child in league.childs.all %}
                     {% if child|has_season_data:current_season %}
-                        <div class="plays-sub-link {% if current_league_id == child.id %} link-active {% endif %}" ><a href="{% url 'plays:summary' slug=child.slug  %}?season={{ current_season }}">{{ child.name }}</a></div>
+                        <div class="plays-sub-link {% if current_league_id == child.id %} link-active {% endif %}" ><a href="{{ child|get_league_url:current_season }}"><i class="icofont-cube"></i> {{ child.name }}</a></div>
                     {% endif %}
                 {% endfor %}
             </div>
             {% endif %}
         {% endfor %}
-    </div>
-    </span>
+    </div> </span>
 </div>
 
 <div>

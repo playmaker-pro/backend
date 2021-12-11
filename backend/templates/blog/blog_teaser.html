@@ -1,0 +1,7 @@
+{% load static %}
+{% load wagtailcore_tags static %}
+{% load wagtailimages_tags %}
+
+<div style="margin-bottom:5px;">
+    <a href="{% pageurl blog %}">{% image blog.header_image width-70 class="img-fluid rounded"  %} {{ blog.title }}</a>
+</div>

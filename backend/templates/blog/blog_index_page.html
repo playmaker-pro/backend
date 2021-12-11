@@ -20,7 +20,7 @@
           
               </div>
           </div>
-          <div class="col-lg-12 entries">
+          <div class="col-lg-8 entries">
 
           {% block posts %}
                 <ul class="list-unstyled the-loop">
@@ -29,8 +29,8 @@
                     <li class="blog-post-item{% if forloop.first and not category and not tag %} first-reset{% endif %}">
                         {% include 'blog/blog_post.html' with include_context="index_page" %}
                     </li>
-                    {% if forloop.counter == 3 %}
-                      {% include 'blog/teaser_banner.html' %}
+                    {% if forloop.counter == 2 %}
+                      {% include 'blog/teaser_banner_big.html' %}
                     {% endif %}
                     
                 {% empty %}
@@ -65,22 +65,28 @@
             </div>
           </div><!-- End blog entries list -->
 
+          
 
-
-          <div hidden class="col-lg-4">
+          <div class="col-lg-4">
 
             <div class="sidebar">
 
-              <h3 hidden class="sidebar-title">Search</h3>
-              <div  hidden class="sidebar-item search-form">
-                <form action="">
-                  <input type="text">
-                  <button type="submit"><i class="icofont-search"></i></button>
-                </form>
-              </div><!-- End sidebar search formn-->
+              <h3 class="sidebar-title">Ostanie posty</h3>
+              <div class="sidebar-item search-form">
+                  
+                  {% for blog in blogs|slice:"3" %}
+                      {% include "blog/blog_teaser.html" with blog=blog%}
+     
+                  {% endfor %}
+              </div>
 
-              <h3 class="sidebar-title">Kategorie</h3>
-              <div class="sidebar-item categories">
+              <h3 class="sidebar-title"></h3>
+              <div class="sidebar-item search-form">
+                  {% include 'blog/teaser_banner.html' %}
+              </div>
+
+              <h3 hidden class="sidebar-title">Kategorie</h3>
+              <div hidden  class="sidebar-item categories">
                 <ul>
                  {% for cat in  all_categories %}
                   <li><a href="/blog/?category={{ cat.slug }}">{{ cat.name }} <span hidden>(25)</span></a></li>
