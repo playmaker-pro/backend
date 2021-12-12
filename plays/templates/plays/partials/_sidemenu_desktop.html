@@ -6,7 +6,7 @@
     <div id="accordion">
         {% for league in league_filters %}
             {% if not league.isparent and not league.childs.all %}
-                <div class="plays-link {% if current_league_id == league.id %} link-active {% endif %}"><a href="{{ league|get_league_url:current_season }}"><i class="icofont-cube"></i>{{ league.name }} </a></div>
+            <a href="{{ league|get_league_url:current_season }}"><div class="plays-link {% if current_league_id == league.id %} link-active {% endif %}"><i class="icofont-cube"></i>{{ league.name }} </div></a>
             {% else %}
             <div class="" id="heading{{ league.id }}" style="cursor: pointer;">
                 <span style="color: #fff;" class="" data-toggle="collapse" data-target="#collapse{{league.id}}" aria-expanded="true" aria-controls="collapse{{league.id}}">
@@ -16,7 +16,7 @@
             <div id="collapse{{ league.id }}" class="collapse {% if current_league_id in league.get_childs_ids %} show{% else %} {% endif %}" aria-labelledby="heading{{league.id}}" data-parent="#accordion">
                 {% for child in league.childs.all %}
                     {% if child|has_season_data:current_season %}
-                        <div class="plays-sub-link {% if current_league_id == child.id %} link-active {% endif %}" ><a href="{{ child|get_league_url:current_season }}"><i class="icofont-cube"></i> {{ child.name }}</a></div>
+                    <a href="{{ child|get_league_url:current_season }}"><div class="plays-sub-link {% if current_league_id == child.id %} link-active {% endif %}" ><i class="icofont-cube"></i> {{ child.name }}</div></a>
                     {% endif %}
                 {% endfor %}
             </div>
