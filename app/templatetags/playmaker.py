@@ -66,7 +66,7 @@ class PageSeoTags:
         if entry is not None:
             return entry
         else:
-            # find in dynamics
+            # find in `dynamics` keywords
             dynamic_seo_data = seo_data.get(self.DYNAMIC_KEY)
             if dynamic_seo_data is None:
                 return seo_data.get(self.DEFAULT_KEY)
@@ -115,7 +115,6 @@ def seo_tags(context):
     data = generator.get_page_data(request.path, seo_data)
 
     if data is not None:
-
         metas = ['robots', 'title', 'tags', 'description', 'fbapp', 'oglocale', 'ogtype', 'ogtitle', 'ogdescription', 'ogurl', 'ogsite_name']
         metas_data = {name: generator.get_seo_tag(name, data.get(name)) for name in metas}
         logger.debug(f'SEO metadata produced for page {request.path}: {metas_data}')
