@@ -101,7 +101,11 @@ def seo_tags(context):
     seo_data = context['seo']
 
     dynamic_keywords = seo_data.get('dynamic_keywords', [])
-    dynamic_keys_values = {'name': context.get('seo_object_name'), 'image_path': context.get('seo_object_image')}
+    dynamic_keys_values = {
+        'name': context.get('seo_object_name'),
+        'image_path': context.get('seo_object_image')
+    }
+
     inherited = seo_data.get('inherited', [])
 
     generator = PageSeoTags(

@@ -1,6 +1,4 @@
-
-
-_meta: 
+meta: 
   version: 1.0
   supported_tags:
     - robots
@@ -22,15 +20,17 @@ dynamic_keywords:
 
 inherited:
   twitter_site: 'https://twitter.com/ProPlaymaker'
-  oglocale: 'PL'
-
+  oglocale: 'pl_PL'
+  ogtype: 'website'
+  oimage: '/media/images/PlayMaker_logo.max-800x600.png'
+  fbapp: ""
 
 default:
-  title: Playmaker.pro
-  description: Główne opis strony
-  ogtitle: PlayMaker
-  ogdescription:
-  ogsite_name: jeśli puste to URL strony
+  title: 'Piłkarska platforma | Playmaker.pro'
+  description: 'Piłkarska platforma dla piłkarzy, trenerów i klubów'
+  ogtitle: 'Piłkarska platforma | Playmaker.pro'
+  ogdescription: 'Szukaj piłkarzy, klubów i trenerów. Zapraszaj na testy i korzystaj z ogłoszeń o testach piłkarskich'
+  ogsite_name: 
 
 
 /fantasy/:
@@ -39,17 +39,95 @@ default:
   ogtitle: 'Fantasy | PlayMaker.pro'
   ogdescription: 'Zapraszaj znajomych piłkarzy i rywalizuj z nimi w grze Fantasy dla niższych lig'
   ogsite_name: 'https://playmaker.pro/fantasy/'
-  oimage: '/media/images/PlayMaker_logo.max-800x600.png'
   ogurl: 'https://playmaker.pro/fantasy/'
+
+/marketplace/:
+ title: 'Testy piłkarskie | PlayMaker.pro'
+ description: 'Stwórz ogłoszenie o Twoich zapotrzebowaniach kadrowych, otrzymuj na e-mail CV zawodników, którzy wyrazili chęć sprawdzenia się na testach w Twoim klubie'
+ ogtitle: 'Testy piłkarskie | PlayMaker.pro'
+ ogdescription: 'Stwórz ogłoszenie o Twoich zapotrzebowaniach kadrowych, otrzymuj na e-mail CV zawodników, którzy wyrazili chęć sprawdzenia się na testach w Twoim klubie'
+ ogsite_name: 'https://playmaker.pro/marketplace/'
+ ogurl: 'https://playmaker.pro/marketplace/'
+
+/about-project/:
+ title: 'O projekcie | PlayMaker.pro'
+ description: 'PlayMaker to pierwsza w historii piłkarska platforma społecznościowa za pomocą, której możesz szukać Klub/Trenera/Zawodnika. Firma ta oferuje również nowoczesne rozwiązania skautingowe dopasowane do potrzeb klubu z każdego poziomu rozgrywkowego w Polsce!'
+ ogtitle: 'O projekcie | PlayMaker.pro'
+ ogdescription: 'PlayMaker to pierwsza w historii piłkarska platforma społecznościowa za pomocą, której możesz szukać Klub, Trenera lub Piłkarza. Oferujemy nowoczesne rozwiązania skautingowe dopasowane do potrzeb klubu z każdego poziomu rozgrywkowego w Polsce!'
+ ogsite_name: 'https://playmaker.pro/about-project/'
+ ogurl: 'https://playmaker.pro/about-project/'
+
+/blog/:
+ title: 'Blog | PlayMaker.pro'
+ description: 'Piszemy o tym czego nie widać na pierwszy rzut oka - Niższe ligi w Polsce, Skauting Piłkarski, Piłka nożna, Futbol Młodzieżowy. Brzmi interesująco? Zapraszamy!'
+ ogtitle: 'Blog | PlayMaker.pro'
+ ogdescription: 'Piszemy o tym czego nie widać na pierwszy rzut oka - Niższe ligi w Polsce, Skauting Piłkarski, Piłka nożna, Futbol Młodzieżowy. Brzmi interesująco? Zapraszamy!'
+ ogsite_name: 'https://playmaker.pro/blog/'
+ ogurl: 'https://playmaker.pro/blog/'
+
+/scouting/:
+ title: 'Skauting | PlayMaker.pro'
+ description: 'Skauting PlayMaker.pro w Twoim klubie. Uzyskaj wsparcie w skautingu od PlayMaker.pro. Skoncentruj się na działalności klubu, a skauting zostaw profesjonalistom'
+ ogtitle: 'Scouting | PlayMaker.pro'
+ ogdescription: 'Skauting PlayMaker.pro w Twoim klubie. Uzyskaj wsparcie w skautingu od PlayMaker.pro. Skoncentruj się na działalności klubu, a skauting zostaw profesjonalistom'
+ ogsite_name: 'https://playmaker.pro/scouting/'
+ ogurl: 'https://playmaker.pro/scouting/'
+
+/transfer/:
+ title: 'Wsparcie transferowe | PlayMaker.pro'
+ description: 'Piłkarzu testuj się z PlayMaker.pro! Zgłoś się do nas, a znajdziemy dla Ciebie testy piłkarskie na poziomie dopasowanym do Ciebie!'
+ ogtitle: 'Wsparcie transferowe | PlayMaker.pro'
+ ogdescription: 'Piłkarzu testuj się z PlayMaker.pro! Zgłoś się do nas, a znajdziemy dla Ciebie testy piłkarskie na poziomie dopasowanym do Ciebie!'
+ ogsite_name: 'https://playmaker.pro/transfer/'
+ ogurl: 'https://playmaker.pro/transfer/'
+
+/products/transfer/:
+ title: 'Wsparcie transferowe | PlayMaker.pro'
+ description: 'Piłkarzu testuj się z PlayMaker.pro! Zgłoś się do nas, a znajdziemy dla Ciebie testy piłkarskie na poziomie dopasowanym do Ciebie!'
+ ogtitle: 'Wsparcie transferowe | PlayMaker.pro'
+ ogdescription: 'Piłkarzu testuj się z PlayMaker.pro! Zgłoś się do nas, a znajdziemy dla Ciebie testy piłkarskie na poziomie dopasowanym do Ciebie!'
+ ogsite_name: 'https://playmaker.pro/products/transfer/'
+ ogurl: 'https://playmaker.pro/products/transfer/'
+
+/products/testy-w-niemczech/:
+ title: 'Testy piłkarskie w Niemczech | PlayMaker.pro'
+ description: 'Piłkarzu testuj się za granicą z PlayMaker.pro! Zgłoś się do nas i sprawdź swoje umiejętności, trenując z profesjonalnym klubem Inter Lipsk grającym w Oberlidze!'
+ ogtitle: 'Testy piłkarskie w Niemczech | PlayMaker.pro'
+ ogdescription: 'Piłkarzu testuj się za granicą z PlayMaker.pro! Zgłoś się do nas i sprawdź swoje umiejętności, trenując z profesjonalnym klubem Inter Lipsk grającym w Oberlidze!'
+ ogsite_name: 'https://playmaker.pro/products/testy-w-niemczech/'
+ ogurl: 'https://playmaker.pro/products/testy-w-niemczech/'
+
+/products/RaportSkautingowy/:
+ title: 'Analiza gry piłkarza | PlayMaker.pro'
+ description:  'Piłkarzu uzyskaj raport skautingowy Twojej gry! Wznieś swój piłkarski potencjał na wyższy poziom dzięki profesjonalnej analizie meczowej, skoncentrowanej wyłącznie na Tobie!'
+ ogtitle: 'Analiza gry piłkarza | PlayMaker.pro'
+ ogdescription: 'Piłkarzu uzyskaj raport skautingowy Twojej gry! Wznieś swój piłkarski potencjał na wyższy poziom dzięki profesjonalnej analizie meczowej, skoncentrowanej wyłącznie na Tobie!'
+ ogsite_name: 'https://playmaker.pro/products/RaportSkautingowy/'
+ ogurl: 'https://playmaker.pro/products/RaportSkautingowy/'
 
 /tables/players/:
   title: 'Baza piłkarzy | PlayMaker.pro'
-  description: 'Piłkarzy dołącz do bazy piłkarzy. Trenerze szukaj piłkarzy i zapraszaj ich na testy piłkarskie'
+  description: 'Piłkarzu dołącz do bazy piłkarzy. Trenerze szukaj piłkarzy i zapraszaj ich na testy piłkarskie'
   ogtitle: 'Baza piłkarzy | PlayMaker.pro'
-  ogdescription: 'Piłkarzy dołącz do bazy piłkarzy. Trenerze szukaj piłkarzy i zapraszaj ich na testy piłkarskie'
+  ogdescription: 'Piłkarzu dołącz do bazy piłkarzy. Trenerze szukaj piłkarzy i zapraszaj ich na testy piłkarskie'
   ogsite_name: 'https://playmaker.pro/tables/players/'
-  ogimage: '/media/images/PlayMaker_logo.max-800x600.png'
   ogurl: 'https://playmaker.pro/tables/players/'
+
+/tables/coaches/:
+ title: 'Baza trenerów | PlayMaker.pro'
+ description: 'Trenerze dołącz do piłkarskiej platformy PlayMaker.pro! Szukaj piłkarzy, zapraszaj ich na testy, twórz ogłoszenia o potrzebach kadrowych na ogólnodostępnej tablicy ogłoszeń!'
+ ogtitle: 'Baza trenerów | PlayMaker.pro'
+ ogdescription: 'Trenerze dołącz do piłkarskiej platformy PlayMaker.pro! Szukaj piłkarzy, zapraszaj ich na testy, twórz ogłoszenia o potrzebach kadrowych na ogólnodostępnej tablicy ogłoszeń!' 
+ ogsite_name: 'https://playmaker.pro/tables/coaches/'
+ ogurl: 'https://playmaker.pro/tables/coaches/'
+
+/tables/teams/:
+  title: 'Baza klubów | PlayMaker.pro'
+  description: 'Prezesie, działaczu dołącz do bazy klubów! Szukaj piłkarzy, wysyłaj zaproszenia na testy, twórz ogłoszenia o potrzebach kadrowych na ogólnodostępnej tablicy ogłoszeń!'
+  ogtitle: 'Baza klubów| PlayMaker.pro'
+  ogdescription: 'Prezesie, działaczu dołącz do bazy klubów! Szukaj piłkarzy, wysyłaj zaproszenia na testy, twórz ogłoszenia o potrzebach kadrowych na ogólnodostępnej tablicy ogłoszeń!'
+  ogsite_name: 'https://playmaker.pro/tables/teams/'
+  ogurl: 'https://playmaker.pro/tables/teams/'
 
 
 
@@ -59,7 +137,6 @@ dynamic:
     ogtitle: 'Profil piłkarza {name}'
     ogdescription:
     ossite_name:
-    oimage: {image_path}
+    oimage: '{image_path}'
     otwitter:
     tags: 'Profil piłkarza {name}'
-
