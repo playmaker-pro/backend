@@ -69,12 +69,6 @@ class AddAnnouncementView(LoginRequiredMixin, View):
     """Fetch form for announcements"""
     http_method_names = ['post', 'get']
 
-    coach_looking_for_player = False
-    coach_looking_for_club = False
-    club_looking_for_player = False
-    club_looking_for_coach = False
-    player_looking_for_club = False
-
     def get(self, request, *args, **kwargs):
         user = request.user
         data = {
@@ -139,9 +133,11 @@ class AddAnnouncementView(LoginRequiredMixin, View):
             elif _action_name == "club_looking_for_coach":
                 form = ClubForCoachAnnouncementForm(initial={})
             elif user.is_player:
+                voivodeship = user.profile.team_object.club.voivodeship if user.profile.team_object else None
                 form = PlayerForClubAnnouncementForm(initial={
                         'position': user.profile.position_raw,
-                        'voivodeship': user.profile.team_object.club.voivodeship,
+                        'voivodeship': voivodeship,
+                        # 'voivodeship': user.profile.team_object.club.voivodeship,
                         'address': user.profile.address,
                         'practice_distance': user.profile.practice_distance,
                     })
@@ -335,6 +331,13 @@ class CoachForClubAnnouncementsView(AnnouncementsView):
     def _prepare_extra_kwargs(self, kwargs):
         kwargs['view_type'] = "coach_for_club"
         super(CoachForClubAnnouncementsView, self)._prepare_extra_kwargs(kwargs)
+
+    def filter_queryset(self, queryset):
+        queryset = super(CoachForClubAnnouncementsView, self).filter_queryset(queryset)
+        if self.filter_target_league_exact is not None:
+            queryset = queryset.filter(target_league__name=self.filter_target_league_exact)
+
+        return queryset
 
 
 class ClubForCoachAnnouncementsView(AnnouncementsView):

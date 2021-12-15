@@ -503,7 +503,7 @@ def is_same_club(user, showed_user):
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def request_link(context, user, showed_user):
-    '''Creates button to open inquiry'''
+    """Creates button to open inquiry"""
     off = {'off': True}
     if not user.is_authenticated:
         return off

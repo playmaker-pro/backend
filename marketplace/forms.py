@@ -6,6 +6,8 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, Div, Submit, HTML, Button, Row, Field, MultiField
 from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions, Tab, TabHolder, Alert
 from django.contrib.auth import get_user_model
+
+from clubs.models import Voivodeship
 from . import models
 from django_countries.widgets import CountrySelectWidget
 from django.utils.translation import gettext_lazy as _
@@ -110,7 +112,9 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         return Fieldset(*fds)
 
     class Meta:
-        widgets = {'country': CountrySelectWidget(layout='{widget}')}
+        widgets = {'country': CountrySelectWidget(layout='{widget}'),
+                   'body': forms.Textarea(attrs={'rows': 5})
+                   }
         model = models.ClubForPlayerAnnouncement
         fields = ['country', 'club', 'league', 'voivodeship', 'seniority', 'gender', 'www', 'body', 'address', 'positions', 'year_from', 'year_to']
         exclude = ['creator']
@@ -170,18 +174,20 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
         return Fieldset(*fds)
 
     class Meta:
-        # widgets = {'country': CountrySelectWidget(layout='{widget}')}
+        widgets = {'body': forms.Textarea(attrs={'rows': 5})}
         model = models.PlayerForClubAnnouncement
         fields = ['position', 'voivodeship', 'address', 'practice_distance', 'target_league', 'body']
         exclude = ['creator']
 
 
 class CoachForClubAnnouncementForm(forms.ModelForm):
+
     building_fields = [
         ('lic_type', 'Typ licencji', None, {}),
         ('voivodeship', 'Województwo', None, {}),
         ('address', 'np. Wrocław', None, {}),
         ('practice_distance', 'Maksymalna odległość dojazdu', None, {}),
+        ('league', 'Obecna liga', None, {}),
         ('target_league', 'Cel poszukiwań', None, {}),
         ('body', 'Opisz krótko swoje dotychczasowe osiągniecia oraz oczekiwania', None, {}),
 
@@ -217,6 +223,10 @@ class CoachForClubAnnouncementForm(forms.ModelForm):
         self.fields['practice_distance'].label = 'Maksymalna odległość dojazdu w km'
         self.fields['practice_distance'].help_text = False
 
+        self.fields['league'].required = True
+        self.fields['league'].label = 'Obecna liga'  # '<i class="icofont-ui-user-group"></i>'
+        self.fields['league'].help_text = False
+
         self.fields['target_league'].required = True
         self.fields['target_league'].label = 'Cel poszukiwań'  # '<i class="icofont-ui-user-group"></i>'
         self.fields['target_league'].help_text = False
@@ -231,8 +241,9 @@ class CoachForClubAnnouncementForm(forms.ModelForm):
 
     class Meta:
         # widgets = {'country': CountrySelectWidget(layout='{widget}')}
+        widgets = {'body': forms.Textarea(attrs={'rows': 5})}
         model = models.CoachForClubAnnouncement
-        fields = ['lic_type', 'voivodeship', 'address', 'practice_distance', 'target_league', 'body']
+        fields = ['lic_type', 'voivodeship', 'address', 'practice_distance', 'target_league', 'league', 'body']
         exclude = ['creator']
 
 
@@ -305,6 +316,7 @@ class ClubForCoachAnnouncementForm(forms.ModelForm):
 
     class Meta:
         # widgets = {'country': CountrySelectWidget(layout='{widget}')}
+        widgets = {'body': forms.Textarea(attrs={'rows': 5})}
         model = models.ClubForCoachAnnouncement
         fields = ['country', 'club', 'league', 'voivodeship', 'lic_type', 'target_league', 'seniority', 'gender', 'body']
         exclude = ['creator']

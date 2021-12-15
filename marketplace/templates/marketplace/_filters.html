@@ -6,15 +6,25 @@
     {% endif %}
 
     <div class="filter pr-2">
-        {% include 'marketplace/filters/filter_voivodeship.html' with size=size options=filters.voivodeship %}
+        {% include 'marketplace/filters/filter_voivodeship.html' with size=150 options=filters.voivodeship %}
     </div>
+
+    {% if view_type == "coach_for_club" %}
     <div class="filter pr-2">
-        {% include 'marketplace/filters/filter_leagues.html' with size=size options=filters.league %}
+        {% include 'marketplace/filters/filter_leagues.html' with size=160 options=filters.league title='aktualny poziom' %}
     </div>
+    {% else %}
+    <div class="filter pr-2">
+        {% include 'marketplace/filters/filter_leagues.html' with size=size options=filters.league title='rozgrywki' %}
+    </div>
+    {% endif %}
+
     {% if view_type == "player_for_club" %}
         {% include 'marketplace/filters/filters_player_for_club.html' with size=size %}
     {% elif view_type == "club_for_player" %}
         {% include 'marketplace/filters/filters_club_for_player.html' with size=size %}
+    {% elif view_type == "coach_for_club" %}
+        {% include 'marketplace/filters/filters_coach_for_club.html' with size=size %}
     {% endif %}
 
 {% endwith %}
