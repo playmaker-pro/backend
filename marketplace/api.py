@@ -7,10 +7,19 @@ from django.contrib.auth.decorators import login_required
 from followers.models import FollowTeam
 from clubs.models import Team
 from followers.models import Follow
-from notifications.mail import annoucement_notify_author, annoucement_notify_player
+from notifications.mail import announcement_notify_author, announcement_notify_player
 # from marketplace.models import Announcement  # TODO: sprawdzic o co tu chodzi i podac prawdziwa klase!
-from marketplace.models import PlayerForClubAnnouncement
+from marketplace.models import (PlayerForClubAnnouncement,
+                                ClubForPlayerAnnouncement,
+                                ClubForCoachAnnouncement,
+                                CoachForClubAnnouncement)
 
+class_mapper = {
+    'PlayerForClubAnnouncement': PlayerForClubAnnouncement,
+    'ClubForPlayerAnnouncement': ClubForPlayerAnnouncement,
+    'ClubForCoachAnnouncement': ClubForCoachAnnouncement,
+    'CoachForClubAnnouncement': CoachForClubAnnouncement,
+}
 
 @login_required
 def approve_announcement(request):
@@ -19,17 +28,22 @@ def approve_announcement(request):
     user = request.user
 
     if request.POST.get('action') == 'post':
-        if not user.is_player:
-            return  # @todo tu cos dorobic
-
         _id = request.POST.get('id')
-        if _id:
-
-            ann = get_object_or_404(PlayerForClubAnnouncement, id=int(_id))
+        _announcement_type = request.POST.get('announcement_type')
+        if _id and _announcement_type:
+            announcement_class = class_mapper[_announcement_type]
+            ann = get_object_or_404(announcement_class, id=int(_id))
             #  ann.history.increment()  # @todo 1 coomit to  @ todo zwieszkyc ilosc odwiedzajcych ogloszeniee
             ann.subscribers.add(user)
-            annoucement_notify_author(ann, user)
-            annoucement_notify_player(ann, user)
+            announcement_notify_author(ann, user)
+            if _announcement_type == "ClubForPlayerAnnouncement":
+                annoucement_notify_player(ann, user)
+            elif _announcement_type == "PlayerForClubAnnouncement":  # TODO: napisac funkcje z roznymi tresciami
+                pass
+            elif _announcement_type == "ClubForCoachAnnouncement":
+                pass
+            elif _announcement_type == "CoachForClubAnnouncement":
+                pass
             message = 'Zgłoszenie wysłane'
             response_data['message'] = message
             return JsonResponse(response_data)

@@ -421,14 +421,22 @@ def announcement_response(context, ann):
 
     if not user.is_authenticated:
         return {'off': True}
-    if not user.is_player:
-        return {'off': True}
+    if user.is_player:
+        button_text = 'Zgłaszam się na testy'
+    elif user.is_coach:
+        button_text = 'Zgłaszam się'
+    elif user.is_club:
+        if ann.__class__.__name__ == 'CoachForClubAnnouncement':
+            button_text = 'Zaproś na rozmowę'
+        elif ann.__class__.__name__ == 'PlayerForClubAnnouncement':
+            button_text = 'Zaproś na testy'
+
     button_class = 'btn-request'
-    button_text = 'Zgłaszam się na testy'
-    button_attrs = f'data-ann={ann.id}'
+    # button_text = 'Zgłaszam się na testy'
+    button_attrs = f'data-ann={ann.id} data-ann-type={ann.__class__.__name__}'
 
     if user in ann.subscribers.all():
-        button_text = 'Już się zgłosiłeś'
+        button_text = 'Zgłoszenie wysłane'
         button_class = 'btn-requested'
         button_attrs += ' disabled'
 
@@ -451,8 +459,8 @@ def announcement_yes(context):
 
     if not user.is_authenticated:
         return {'off': True}
-    if not user.is_player:
-        return {'off': True}
+    # if not user.is_player:
+    #     return {'off': True}
 
     return {
         'active_class': None,
@@ -462,7 +470,7 @@ def announcement_yes(context):
         'button_class': 'btn-request',
         'button_action': {'onclick': True, 'name': 'approve_annoucement', 'param': user.id},
         'button_icon': '',
-        'button_text': 'Tak, Zgłaszam się na testy',
+        'button_text': 'Tak, wysyłam zapytanie',
         'modals': context['modals'],
     }
 
@@ -506,7 +514,7 @@ def is_same_club(user, showed_user):
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def request_link(context, user, showed_user):
-    '''Creates button to open inquiry'''
+    """Creates button to open inquiry"""
     off = {'off': True}
     if not user.is_authenticated:
         return off

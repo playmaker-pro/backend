@@ -79,12 +79,14 @@
             <div>
               <button type="button" class="btn-request" onclick="window.location.href='/users/{{ player.profile.slug }}';">Zobacz profil</button>
             </div>
-            {% if not user.is_player %}
-            <div>
-              <button type="button" class="btn-request" onclick="">Zaproś na testy</button>
+            <div class="card-text pull-right">
+
+                {% if user.is_coach or user.is_club %}
+                    {% announcement_response object %}
+                {% elif user.is_player %}
+                    {% announcement_edit object %}
+                {% endif %}
             </div>
-            {% endif %}
-            {% announcement_edit object %}
             <div>
               <button type="button" class="btn-request" onclick="">Udostępnij</button>
             </div>

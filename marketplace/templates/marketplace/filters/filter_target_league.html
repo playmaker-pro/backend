@@ -1,9 +1,25 @@
-
 {% load playmaker %}
-<select name="target_league" data-width="{{ size|add:35 }}"  class="form-control selectpicker" data-allow-clear="true" title="cel poszukiwań">
 
-{% for option in options %}
-    <option {% if request.GET.target_league == option %} selected {% endif %} value="{{ option }}">{{ option }}</option>
-{% endfor %}
+<select name="target_league" data-width="{{ size|add:35 }}"  class="form-control selectpicker" data-allow-clear="true" title="{{ title }}">
+
+<option {% if 'Ekstraklasa' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>Ekstraklasa</option>
+<option {% if '1 Liga' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>1 Liga</option>
+<option {% if '2 Liga' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>2 Liga</option>
+<option {% if '3 Liga' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>3 Liga</option>
+<option {% if '4 Liga' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>4 Liga</option>
+<option {% if '5 Liga' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>5 Liga</option>
+<option {% if 'Klasa Okręgowa' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>Klasa Okręgowa</option>
+<option {% if 'A Klasa' in request.GET|get_list:'target_league' %} selected="selected"{% endif %}>A Klasa</option>
+<option {% if 'B Klasa' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>B Klasa</option>
+<option {% if 'C Klasa' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>C Klasa</option>
+<option {% if 'CLj U-18' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>Clj U-18</option>
+<option {% if 'CLj U-17' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>Clj U-17</option>
+<option {% if 'CLj U-15' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>Clj U-15</option>
+<option {% if 'Junior A1' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>Junior A1</option>
+<option {% if 'Junior A2' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>Junior A2</option>
+<option {% if 'Junior Młodszy B1' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>Junior Młodszy B1</option>
+<option {% if 'Junior Młodszy B2' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>Junior Młodszy B2</option>
+<option {% if 'Trampkarz C1' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>Trampkarz C1</option>
+<option {% if 'Trampkarz C2' in request.GET|get_list:'target_league' %} selected="selected" {% endif %}>Trampkarz C2</option>
 
 </select>

@@ -13,7 +13,7 @@ from profiles.models import PlayerPosition
 
 from clubs.models import League, Voivodeship, Seniority, Gender, Club
 from datetime import timedelta
-
+from django.core.validators import RegexValidator
 
 class AnnouncementPlan(models.Model):
     """
@@ -259,14 +259,6 @@ class ClubForCoachAnnouncement(AnnouncementMeta):
         on_delete=models.CASCADE
     )
 
-    country = CountryField(
-        _('Country'),
-        # blank=True,
-        default='PL',
-        null=True,
-        blank_label=_('Wybierz kraj'),
-    )
-
     club = models.ForeignKey(
         Club,
         on_delete=models.CASCADE
@@ -285,12 +277,6 @@ class ClubForCoachAnnouncement(AnnouncementMeta):
     )
 
     lic_type = models.TextField(blank=True)
-
-    target_league = models.ForeignKey(
-        League,
-        on_delete=models.CASCADE,
-        related_name='club_for_coach_announcement_target_league',
-    )
 
     seniority = models.ForeignKey(
         Seniority,
@@ -324,7 +310,14 @@ class CoachForClubAnnouncement(AnnouncementMeta):
         blank=True,
         null=True)
 
-    practice_distance = models.CharField(max_length=3)
+    practice_distance = models.CharField(max_length=3, validators=[RegexValidator(r'^\d{1,3}$')])
+
+    league = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+        related_name='coach_for_club_announcement_league',
+        null=True
+    )
 
     target_league = models.ForeignKey(
         League,

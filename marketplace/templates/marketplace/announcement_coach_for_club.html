@@ -8,34 +8,36 @@
         <div class="serv-section-desc">
             <h4>
 <!--                <a  href="{{ object.club.get_permalink }}">{{ object.club.name }}</a>-->
-                <a  href="{{ object.club.get_permalink }}">Trener szuka klubu! temp</a>
+                <a  href="{{ object.club.get_permalink }}">Trener {{ object.creator.first_name }} {{ object.creator.last_name }}</a>
                 <span class="badge badge-info" style="float: right">Trener szuka klubu</span>
             </h4>
-            <h5>{{ object.voivodeship.name|lower }} </h5>
-<!--            <h5>{{ object.league.name|title }}, {{ object.voivodeship.name|lower }} </h5> -->
+            <h5>{{ object.creator.declared_club|default:'Bez klubu' }} </h5>
     </div>
         <div class="section-heading-line-left"></div>
     <div class="card-body row no-gutters">
         <div class="col-12 card-text text-muted"> 
             <small class="row no-gutters">
                 <div class="col-6 col-md-3 text-center">
-                    <h4 class="ann-icon icofont-match-review"></h4>
-                    {% for position in  object.positions.all %} 
-                        {{ position }}<br>
-                    {% endfor %}
+                    <h5>{{ object.lic_type }}</h5>
+                        Licencja
                 </div>
                 <div class="col-6 col-md-3 text-center">
-                    <h4 class="icofont-ui-calendar"></h4>
-                    {{ object.year_from }} - {{ object.year_to }}
+                    <h5>{{ object.creator.profile.display_league|default:'-' }}</h5>
+                    Aktualny poziom
                 </div>
                 <div class="col-6 col-md-3 text-center">
-                    <h4 class="icofont-users-alt-5"></h4>
-                    {{ object.gender }}, {{ object.seniority }}
+                    <h5>{{ object.target_league.name }}</h5>
+                    Cel poszukiwań
                 </div>
 
                 <div class="col-6 col-md-3 text-center">
-                    <h4 class="icofont-map-pins"></h4> 
-                    {{ object.address }}
+                    {% if not object.creator.profile.voivodeship and not object.creator.profile.address %}
+                    <h5>-</h5>
+                    {% else %}
+                    <h5> {{ object.voivodeship }},
+                        {{ object.address }} +{{ object.practice_distance }}km </h5>
+                    {% endif %}
+                    Region
                 </div>
                 <div class="card-text col-md-12">
                     <small> {{ object.body }} </small>
@@ -64,9 +66,10 @@
             
             <div class="card-text pull-right">
             
-                {% if user.is_player %} 
+                {% if user.is_club %}
                     {% announcement_response object %}
-                {% elif user.is_club or user.is_coach %}
+                {% endif %}
+                {% if user.is_coach %}
                     {% announcement_edit object %}
                 {% endif %}
             </div>

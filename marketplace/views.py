@@ -69,12 +69,6 @@ class AddAnnouncementView(LoginRequiredMixin, View):
     """Fetch form for announcements"""
     http_method_names = ['post', 'get']
 
-    coach_looking_for_player = False
-    coach_looking_for_club = False
-    club_looking_for_player = False
-    club_looking_for_coach = False
-    player_looking_for_club = False
-
     def get(self, request, *args, **kwargs):
         user = request.user
         data = {
@@ -119,7 +113,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     form.fields['league'].queryset = League.objects.filter(name=user.profile.team_object.league.name)
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
-            elif _action_name == "coach_looking_for_club":  # temp
+            elif _action_name == "coach_looking_for_club":
                 form = CoachForClubAnnouncementForm(initial={
                     'lic_type': user.profile.licence,
                     'voivodeship': user.profile.team_object.club.voivodeship,
@@ -137,11 +131,17 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
             elif _action_name == "club_looking_for_coach":
-                form = ClubForCoachAnnouncementForm(initial={})
+                club = Club.objects.get(manager__id=user.id)
+                form = ClubForCoachAnnouncementForm(initial={
+                    'club': club,
+                    'voivodeship': club.voivodeship
+                })
             elif user.is_player:
+                voivodeship = user.profile.team_object.club.voivodeship if user.profile.team_object else None
                 form = PlayerForClubAnnouncementForm(initial={
                         'position': user.profile.position_raw,
-                        'voivodeship': user.profile.team_object.club.voivodeship,
+                        'voivodeship': voivodeship,
+                        # 'voivodeship': user.profile.team_object.club.voivodeship,
                         'address': user.profile.address,
                         'practice_distance': user.profile.practice_distance,
                     })
@@ -311,7 +311,7 @@ class MyAnnouncementsView(AnnouncementsView):
         kwargs['my'] = True
 
 
-class ClubForPlayerAnnouncementsView(AnnouncementsView):
+class ClubForPlayerAnnouncementsView(AnnouncementsMetaView):
     queried_classes = [ClubForPlayerAnnouncement]
 
     def _prepare_extra_kwargs(self, kwargs):
@@ -329,15 +329,22 @@ class ClubForPlayerAnnouncementsView(AnnouncementsView):
         return queryset
 
 
-class CoachForClubAnnouncementsView(AnnouncementsView):
+class CoachForClubAnnouncementsView(AnnouncementsMetaView):
     queried_classes = [CoachForClubAnnouncement]
 
     def _prepare_extra_kwargs(self, kwargs):
         kwargs['view_type'] = "coach_for_club"
         super(CoachForClubAnnouncementsView, self)._prepare_extra_kwargs(kwargs)
 
+    def filter_queryset(self, queryset):
+        queryset = super(CoachForClubAnnouncementsView, self).filter_queryset(queryset)
+        if self.filter_target_league_exact is not None:
+            queryset = queryset.filter(target_league__name=self.filter_target_league_exact)
 
-class ClubForCoachAnnouncementsView(AnnouncementsView):
+        return queryset
+
+
+class ClubForCoachAnnouncementsView(AnnouncementsMetaView):
     queried_classes = [ClubForCoachAnnouncement]
 
     def _prepare_extra_kwargs(self, kwargs):
@@ -345,7 +352,7 @@ class ClubForCoachAnnouncementsView(AnnouncementsView):
         super(ClubForCoachAnnouncementsView, self)._prepare_extra_kwargs(kwargs)
 
 
-class PlayerForClubAnnouncementsView(AnnouncementsView):
+class PlayerForClubAnnouncementsView(AnnouncementsMetaView):
     queried_classes = [PlayerForClubAnnouncement]
 
     def _prepare_extra_kwargs(self, kwargs):
