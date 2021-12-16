@@ -113,7 +113,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     form.fields['league'].queryset = League.objects.filter(name=user.profile.team_object.league.name)
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
-            elif _action_name == "coach_looking_for_club":  # temp
+            elif _action_name == "coach_looking_for_club":
                 form = CoachForClubAnnouncementForm(initial={
                     'lic_type': user.profile.licence,
                     'voivodeship': user.profile.team_object.club.voivodeship,
@@ -131,7 +131,11 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
             elif _action_name == "club_looking_for_coach":
-                form = ClubForCoachAnnouncementForm(initial={})
+                club = Club.objects.get(manager__id=user.id)
+                form = ClubForCoachAnnouncementForm(initial={
+                    'club': club,
+                    'voivodeship': club.voivodeship
+                })
             elif user.is_player:
                 voivodeship = user.profile.team_object.club.voivodeship if user.profile.team_object else None
                 form = PlayerForClubAnnouncementForm(initial={
@@ -307,7 +311,7 @@ class MyAnnouncementsView(AnnouncementsView):
         kwargs['my'] = True
 
 
-class ClubForPlayerAnnouncementsView(AnnouncementsView):
+class ClubForPlayerAnnouncementsView(AnnouncementsMetaView):
     queried_classes = [ClubForPlayerAnnouncement]
 
     def _prepare_extra_kwargs(self, kwargs):
@@ -325,7 +329,7 @@ class ClubForPlayerAnnouncementsView(AnnouncementsView):
         return queryset
 
 
-class CoachForClubAnnouncementsView(AnnouncementsView):
+class CoachForClubAnnouncementsView(AnnouncementsMetaView):
     queried_classes = [CoachForClubAnnouncement]
 
     def _prepare_extra_kwargs(self, kwargs):
@@ -340,7 +344,7 @@ class CoachForClubAnnouncementsView(AnnouncementsView):
         return queryset
 
 
-class ClubForCoachAnnouncementsView(AnnouncementsView):
+class ClubForCoachAnnouncementsView(AnnouncementsMetaView):
     queried_classes = [ClubForCoachAnnouncement]
 
     def _prepare_extra_kwargs(self, kwargs):
@@ -348,7 +352,7 @@ class ClubForCoachAnnouncementsView(AnnouncementsView):
         super(ClubForCoachAnnouncementsView, self)._prepare_extra_kwargs(kwargs)
 
 
-class PlayerForClubAnnouncementsView(AnnouncementsView):
+class PlayerForClubAnnouncementsView(AnnouncementsMetaView):
     queried_classes = [PlayerForClubAnnouncement]
 
     def _prepare_extra_kwargs(self, kwargs):

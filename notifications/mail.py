@@ -19,7 +19,7 @@ def build_absolute_url(uri: str) -> str:
 absurl = build_absolute_url
 
 
-def annoucement_notify_author(annoucemenet, player):
+def announcement_notify_author(announcement, player):
     subject = 'Dostałeś odpowiedź na Twoje ogłoszenie'
     body = f'Piłkarz {player.first_name} {player.last_name} jest zainteresowany testami w Twoim klubie.\n'
     body += f'Jeśli jego CV jest dla Ciebie interesujące, skontaktuj się z nim\n\n'
@@ -30,12 +30,12 @@ def annoucement_notify_author(annoucemenet, player):
     body += 'Pozdrawiamy, \n'
     body += 'Zespół PlayMaker.pro'
 
-    send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [annoucemenet.creator.email])
+    send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [announcement.creator.email])
 
 
-def annoucement_notify_player(annoucemenet, player):
+def announcement_notify_player(announcement, player):
     subject = 'Wysłałeś zgłoszenie na testy'
-    body = f'Twoje zgłoszenie na testy zostało wysłane do {annoucemenet.creator.profile.display_club}. Reszta pozostaje w rękach trenera, prezesa lub dyrektora sportowego. To oni decydują czy otrzymasz zaproszenie na testy.\n\n'
+    body = f'Twoje zgłoszenie na testy zostało wysłane do {announcement.creator.profile.display_club}. Reszta pozostaje w rękach trenera, prezesa lub dyrektora sportowego. To oni decydują czy otrzymasz zaproszenie na testy.\n\n'
     body += 'Pozdrawiamy, \n'
     body += 'Zespół PlayMaker.pro'
 

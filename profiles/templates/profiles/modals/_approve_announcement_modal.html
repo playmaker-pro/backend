@@ -3,7 +3,7 @@
 
 {% load i18n %}
 {% load playmaker %}
-{% with id="approveAnnouncementModal" title='Czy na pewno chcesz się zglosić na testy? ' %}
+{% with id="approveAnnouncementModal" title='Czy na pewno chcesz się zglosić?' %}
   <div class="modal fade" id="{{ id }}" tabindex="-1" role="dialog" aria-labelledby="{{ id }}Label" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -17,6 +17,7 @@
 
         </div>
         <input id="ann-numner" name="ann-numner" type="hidden" value>
+        <input id="ann-type" name="ann-type" type="hidden" value>
         <div class="ann-number">
 
         </div>

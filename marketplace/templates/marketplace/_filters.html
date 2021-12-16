@@ -25,6 +25,8 @@
         {% include 'marketplace/filters/filters_club_for_player.html' with size=size %}
     {% elif view_type == "coach_for_club" %}
         {% include 'marketplace/filters/filters_coach_for_club.html' with size=size %}
+    {% elif view_type == "club_for_coach" %}
+        {% include 'marketplace/filters/filters_club_for_coach.html' with size=size %}
     {% endif %}
 
 {% endwith %}

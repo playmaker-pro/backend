@@ -8,7 +8,7 @@
         <div class="serv-section-desc">
             <h4>
 <!--                <a  href="{{ object.club.get_permalink }}">{{ object.club.name }}</a>-->
-                <a  href="{{ object.club.get_permalink }}">Klub szuka trenera! temp</a>
+                <a  href="{{ object.club.get_permalink }}">{{ object.club.name }}</a>
                 <span class="badge badge-primary" style="float: right">Klub szuka trenera</span>
             </h4>
             <h5>{{ object.voivodeship.name|lower }} </h5>
@@ -19,23 +19,21 @@
         <div class="col-12 card-text text-muted"> 
             <small class="row no-gutters">
                 <div class="col-6 col-md-3 text-center">
-                    <h4 class="ann-icon icofont-match-review"></h4>
-                    {% for position in  object.positions.all %} 
-                        {{ position }}<br>
-                    {% endfor %}
+                    <h5>{{ object.lic_type }}</h5>
+                        Licencja
                 </div>
                 <div class="col-6 col-md-3 text-center">
-                    <h4 class="icofont-ui-calendar"></h4>
-                    {{ object.year_from }} - {{ object.year_to }}
+                    <h5>{{ object.league }}</h5>
+                    Aktualny poziom
                 </div>
                 <div class="col-6 col-md-3 text-center">
-                    <h4 class="icofont-users-alt-5"></h4>
-                    {{ object.gender }}, {{ object.seniority }}
+                    <h5>{{ object.gender }}, {{ object.seniority }}</h5>
+                    Płeć i starszeństwo
                 </div>
 
                 <div class="col-6 col-md-3 text-center">
-                    <h4 class="icofont-map-pins"></h4> 
-                    {{ object.address }}
+                    <h5>{{ object.voivodeship }}</h5>
+                    Województwo
                 </div>
                 <div class="card-text col-md-12">
                     <small> {{ object.body }} </small>
@@ -64,9 +62,9 @@
             
             <div class="card-text pull-right">
             
-                {% if user.is_player %} 
+                {% if user.is_coach %}
                     {% announcement_response object %}
-                {% elif user.is_club or user.is_coach %}
+                {% elif user.is_club %}
                     {% announcement_edit object %}
                 {% endif %} 
             </div>

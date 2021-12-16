@@ -66,9 +66,10 @@
             
             <div class="card-text pull-right">
             
-                {% if user.is_player %} 
+                {% if user.is_club %}
                     {% announcement_response object %}
-                {% elif user.is_club or user.is_coach %}
+                {% endif %}
+                {% if user.is_coach %}
                     {% announcement_edit object %}
                 {% endif %}
             </div>

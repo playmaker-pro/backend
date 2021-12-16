@@ -259,14 +259,6 @@ class ClubForCoachAnnouncement(AnnouncementMeta):
         on_delete=models.CASCADE
     )
 
-    country = CountryField(
-        _('Country'),
-        # blank=True,
-        default='PL',
-        null=True,
-        blank_label=_('Wybierz kraj'),
-    )
-
     club = models.ForeignKey(
         Club,
         on_delete=models.CASCADE
@@ -285,12 +277,6 @@ class ClubForCoachAnnouncement(AnnouncementMeta):
     )
 
     lic_type = models.TextField(blank=True)
-
-    target_league = models.ForeignKey(
-        League,
-        on_delete=models.CASCADE,
-        related_name='club_for_coach_announcement_target_league',
-    )
 
     seniority = models.ForeignKey(
         Seniority,

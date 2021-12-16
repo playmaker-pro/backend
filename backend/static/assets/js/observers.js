@@ -108,6 +108,7 @@ function approve_annoucement(event, slug) {
         data:{
             csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
             id: $('#ann-numner').val(),
+            announcement_type: $('#ann-type').val(),
             action: 'post'
         },
         success:function(json){         

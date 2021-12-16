@@ -214,7 +214,9 @@
 <script>
 $('#approveAnnouncementModal').on('show.bs.modal', function (event) {
     var id = $(event.relatedTarget).data('ann');
+    var announcement_type = $(event.relatedTarget).data('ann-type');
     $(this).find('#ann-numner').val(id);
+    $(this).find('#ann-type').val(announcement_type);
 });
 $('#addAnnouncementModal').on('show.bs.modal', function (event) {
     var id = $(event.relatedTarget).data('ann');
