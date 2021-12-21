@@ -73,7 +73,8 @@
 
             <div class="card-text">
                 <i class="icofont-wall-clock"></i>
-                <small class="text-muted"> {{ object.created_at|days_since }}</small>
+                <small class="text-muted"> {{ object.expire|days_until }}</small>
+
             </div>
         <div class="card-text text-center d-inline-flex justify-content-center align-content-center flex-wrap">
             <div>

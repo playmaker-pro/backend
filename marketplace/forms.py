@@ -19,6 +19,25 @@ from django.utils import timezone
 
 User = get_user_model()
 
+VOIVODESHIPS = [
+    "dolnośląskie",
+    "kujawskopomorskie",
+    "lubelskie",
+    "lubuskie",
+    "łódzkie ",
+    "małopolskie ",
+    "mazowieckie",
+    "opolskie",
+    "podkarpackie",
+    "podlaskie",
+    "pomorskie",
+    "śląskie",
+    "świętokrzyskie",
+    "warmińskomazurskie",
+    "wielkopolskie",
+    "zachodniopomorskie",
+]
+
 
 def year_choices():
     now = timezone.now().year - 10
@@ -285,10 +304,10 @@ class ClubForCoachAnnouncementForm(forms.ModelForm):
         self.fields['voivodeship'].label = 'Województwo'
         self.fields['voivodeship'].help_text = False
 
+        self.fields['lic_type'] = forms.ChoiceField(widget=forms.Select(), choices=CoachProfile.LICENCE_CHOICES)
         self.fields['lic_type'].required = True
         self.fields['lic_type'].label = 'Typ licencji'
         self.fields['lic_type'].help_text = False
-        self.fields['lic_type'] = forms.ChoiceField(widget=forms.Select(), choices=CoachProfile.LICENCE_CHOICES)
 
         self.fields['seniority'].required = True
         self.fields['seniority'].label = 'Rozgrywki młodzieżowe / Rozgrywki seniorskie'

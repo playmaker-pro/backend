@@ -22,7 +22,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
 from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
-from profiles.models import PlayerPosition
+from profiles.models import PlayerPosition, ClubProfile
 from profiles.utils import get_datetime_from_age
 from roles import definitions
 from stats import adapters
@@ -101,7 +101,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
         _announcement_type = request.GET.get('announcement_type')
         _action_name = request.GET.get('action_name')
 
-        if user.announcementuserquota.left <= 0 and not _id:
+        if user.announcementuserquota and user.announcementuserquota.left <= 0 and not _id:
             return JsonResponse(data)
         elif _id and _announcement_type:
             _id = int(_id)
@@ -145,11 +145,17 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
             elif _action_name == "club_looking_for_coach":
-                club = Club.objects.get(manager__id=user.id)
-                form = ClubForCoachAnnouncementForm(initial={
-                    'club': club,
-                    'voivodeship': club.voivodeship
-                })
+                initial_values = {
+                    'club': None,
+                    'voivodeship': None
+                }
+                club = ClubProfile.objects.filter(club_object__manager__id=user.id)
+
+                if club:
+                    club = club[0]
+                    initial_values['club'] = club.display_club
+                    initial_values['voivodeship'] = club.display_voivodeship
+                form = ClubForCoachAnnouncementForm(initial=initial_values)
             elif user.is_player:
                 voivodeship = user.profile.team_object.club.voivodeship if user.profile.team_object else None
                 form = PlayerForClubAnnouncementForm(initial={
@@ -279,7 +285,8 @@ class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, 
             'gender': list(Gender.objects.values_list('name', flat=True)),
             'voivodeship': list(Voivodeship.objects.values_list('name', flat=True)),
             'league': list(League.objects.values_list('name', flat=True)),
-            'position': list(PlayerPosition.objects.values_list('name', flat=True))
+            'position': list(PlayerPosition.objects.values_list('name', flat=True)),
+            'licence': LICENCE_CHOICES
         }
 
     def prepare_kwargs(self, kwargs):
@@ -359,11 +366,6 @@ class CoachForClubAnnouncementsView(AnnouncementsMetaView):
             queryset = queryset.filter(lic_type=self.filter_licence_type)
         return queryset
 
-    def get_filters_values(self):
-        filters = super(CoachForClubAnnouncementsView, self).get_filters_values()
-        filters['licence'] = LICENCE_CHOICES
-        return filters
-
 
 class ClubForCoachAnnouncementsView(AnnouncementsMetaView):
     queried_classes = [ClubForCoachAnnouncement]
@@ -371,6 +373,12 @@ class ClubForCoachAnnouncementsView(AnnouncementsMetaView):
     def _prepare_extra_kwargs(self, kwargs):
         kwargs['view_type'] = "club_for_coach"
         super(ClubForCoachAnnouncementsView, self)._prepare_extra_kwargs(kwargs)
+
+    def filter_queryset(self, queryset):
+        queryset = super(ClubForCoachAnnouncementsView, self).filter_queryset(queryset)
+        if self.filter_licence_type is not None:
+            queryset = queryset.filter(lic_type=self.filter_licence_type)
+        return queryset
 
 
 class PlayerForClubAnnouncementsView(AnnouncementsMetaView):
