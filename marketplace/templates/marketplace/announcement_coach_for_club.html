@@ -11,7 +11,7 @@
                 <a  href="{{ object.club.get_permalink }}">Trener {{ object.creator.first_name }} {{ object.creator.last_name }}</a>
                 <span class="badge badge-info" style="float: right">Trener szuka klubu</span>
             </h4>
-            <h5>{{ object.creator.declared_club|default:'Bez klubu' }} </h5>
+            <h5>{{ object.creator.coachprofile.get_team|default:'Bez klubu' }} </h5>
     </div>
         <div class="section-heading-line-left"></div>
     <div class="card-body row no-gutters">
@@ -22,7 +22,7 @@
                         Licencja
                 </div>
                 <div class="col-6 col-md-3 text-center">
-                    <h5>{{ object.creator.profile.display_league|default:'-' }}</h5>
+                    <h5>{{ object.league }}</h5>
                     Aktualny poziom
                 </div>
                 <div class="col-6 col-md-3 text-center">
@@ -31,12 +31,7 @@
                 </div>
 
                 <div class="col-6 col-md-3 text-center">
-                    {% if not object.creator.profile.voivodeship and not object.creator.profile.address %}
-                    <h5>-</h5>
-                    {% else %}
-                    <h5> {{ object.voivodeship }},
-                        {{ object.address }} +{{ object.practice_distance }}km </h5>
-                    {% endif %}
+                    <h5> {{ object.voivodeship }}, {{ object.address }} +{{ object.practice_distance }}km </h5>
                     Region
                 </div>
                 <div class="card-text col-md-12">

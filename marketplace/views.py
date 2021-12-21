@@ -54,6 +54,20 @@ announcement_form_mapper = {
     'CoachForClubAnnouncement': CoachForClubAnnouncementForm
 }
 
+LICENCE_CHOICES = [
+    'UEFA PRO',
+    'UEFA A',
+    'UEFA EY A',
+    'UEFA B',
+    'UEFA C',
+    'GRASS C',
+    'GRASS D',
+    'UEFA Futsal B',
+    'PZPN A',
+    'PZPN B',
+    'W trakcie kursu',
+]
+
 
 class AnnouncementFilterMixn:
     @property
@@ -341,7 +355,14 @@ class CoachForClubAnnouncementsView(AnnouncementsMetaView):
         if self.filter_target_league_exact is not None:
             queryset = queryset.filter(target_league__name=self.filter_target_league_exact)
 
+        if self.filter_licence_type is not None:
+            queryset = queryset.filter(lic_type=self.filter_licence_type)
         return queryset
+
+    def get_filters_values(self):
+        filters = super(CoachForClubAnnouncementsView, self).get_filters_values()
+        filters['licence'] = LICENCE_CHOICES
+        return filters
 
 
 class ClubForCoachAnnouncementsView(AnnouncementsMetaView):
