@@ -8,6 +8,7 @@ from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions, Tab
 from django.contrib.auth import get_user_model
 
 from clubs.models import Voivodeship
+from profiles.models import CoachProfile
 from . import models
 from django_countries.widgets import CountrySelectWidget
 from django.utils.translation import gettext_lazy as _
@@ -17,6 +18,25 @@ from django.utils import timezone
 
 
 User = get_user_model()
+
+VOIVODESHIPS = [
+    "dolnośląskie",
+    "kujawskopomorskie",
+    "lubelskie",
+    "lubuskie",
+    "łódzkie ",
+    "małopolskie ",
+    "mazowieckie",
+    "opolskie",
+    "podkarpackie",
+    "podlaskie",
+    "pomorskie",
+    "śląskie",
+    "świętokrzyskie",
+    "warmińskomazurskie",
+    "wielkopolskie",
+    "zachodniopomorskie",
+]
 
 
 def year_choices():
@@ -284,6 +304,7 @@ class ClubForCoachAnnouncementForm(forms.ModelForm):
         self.fields['voivodeship'].label = 'Województwo'
         self.fields['voivodeship'].help_text = False
 
+        self.fields['lic_type'] = forms.ChoiceField(widget=forms.Select(), choices=CoachProfile.LICENCE_CHOICES)
         self.fields['lic_type'].required = True
         self.fields['lic_type'].label = 'Typ licencji'
         self.fields['lic_type'].help_text = False
@@ -307,8 +328,8 @@ class ClubForCoachAnnouncementForm(forms.ModelForm):
     class Meta:
         widgets = {
             'body': forms.Textarea(attrs={'rows': 5}),
-            'lic_type': forms.Textarea(attrs={'rows': 1})
+            # 'lic_type': forms.Textarea(attrs={'rows': 1})
         }
         model = models.ClubForCoachAnnouncement
-        fields = ['club', 'league', 'voivodeship', 'lic_type', 'seniority', 'gender', 'body']
+        fields = ['club', 'league', 'lic_type', 'voivodeship', 'seniority', 'gender', 'body']
         exclude = ['creator']

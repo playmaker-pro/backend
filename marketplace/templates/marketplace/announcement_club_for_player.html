@@ -19,23 +19,23 @@
         <div class="col-12 card-text text-muted"> 
             <small class="row no-gutters">
                 <div class="col-6 col-md-3 text-center">
-                    <h4 class="ann-icon icofont-match-review"></h4>
-                    {% for position in  object.positions.all %} 
-                        {{ position }}<br>
+                    {% for position in  object.positions.all %}
+                    <h5>{{ position }}</h5>
                     {% endfor %}
+                    Pozycja
                 </div>
                 <div class="col-6 col-md-3 text-center">
-                    <h4 class="icofont-ui-calendar"></h4>
-                    {{ object.year_from }} - {{ object.year_to }}
+                    <h5>{{ object.year_from }} - {{ object.year_to }}</h5>
+                    Roczniki
                 </div>
                 <div class="col-6 col-md-3 text-center">
-                    <h4 class="icofont-users-alt-5"></h4>
-                    {{ object.gender }}, {{ object.seniority }}
+                    <h5>{{ object.gender }}, {{ object.seniority }}</h5>
+                    Rozgrywki
                 </div>
 
                 <div class="col-6 col-md-3 text-center">
-                    <h4 class="icofont-map-pins"></h4> 
-                    {{ object.address }}
+                    <h5>{{ object.address|default:'-' }}</h5>
+                    Region
                 </div>
                 <div class="card-text col-md-12">
                     <small> {{ object.body }} </small>
@@ -59,7 +59,7 @@
             
             <div class="card-text">
                 <i class="icofont-wall-clock"></i>
-                <small class="text-muted"> {{ object.created_at|days_since }}</small>
+                <small class="text-muted"> {{ object.expire|days_until }}</small>
             </div>
             
             <div class="card-text pull-right">

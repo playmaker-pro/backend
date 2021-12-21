@@ -188,6 +188,12 @@ class ViewFilterMixin:
             return value
 
     @property
+    def filter_licence_type(self):
+        value = self.request.GET.get('licence')
+        if value:
+            return value
+
+    @property
     def filter_position(self):
 
         POSITION_CHOICES = {

@@ -168,6 +168,27 @@ def days_since(value, arg=None):
     return "%s %s" % (abs(delta.days), day_str)  # , fa_str)
 
 
+@register.filter(expects_localtime=True)
+def days_until(exp_date, arg=None):
+    try:
+        tzinfo = getattr(exp_date, 'tzinfo', None)
+        value = date(exp_date.year, exp_date.month, exp_date.day)
+    except AttributeError:
+        # Passed value wasn't a date object
+        return exp_date
+    except ValueError:
+        # Date arguments out of range
+        return exp_date
+    today = datetime.now(tzinfo).date()
+    delta = today - value
+    if abs(delta.days) == 1:
+        day_str = _("dzień")
+    else:
+        day_str = _("dni")
+
+    return "%s %s" % (abs(delta.days), day_str)  # , fa_str)
+
+
 @register.filter
 def convert_to_embeded(url):
     """concatenate arg1 & arg2"""
