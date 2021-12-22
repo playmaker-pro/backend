@@ -155,12 +155,14 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     form = ClubForCoachAnnouncementForm(initial={})
             elif user.is_player:
                 voivodeship = user.profile.team_object.club.voivodeship if user.profile.team_object else None
+                league = user.profile.team_object.league if user.profile.team_object else None
                 form = PlayerForClubAnnouncementForm(initial={
                         'position': user.profile.position_raw,
                         'voivodeship': voivodeship,
                         # 'voivodeship': user.profile.team_object.club.voivodeship,
                         'address': user.profile.address,
                         'practice_distance': user.profile.practice_distance,
+                        'league': league
                     })
             else:
                 return JsonResponse({})

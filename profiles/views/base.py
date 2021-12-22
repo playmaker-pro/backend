@@ -712,7 +712,7 @@ class AccountVerification(LoginRequiredMixin, View):
             verification_form.save()
             user.unverify()
             user.save()
-            messages.success(request, _("Przyjęto zgłoszenie weryfikacje konta."), extra_tags='alter-success')
+            messages.success(request, _("Przyjęto zgłoszenie weryfikacji konta."), extra_tags='alter-success')
 
             data['success'] = True
             data['url'] = reverse("profiles:show_self")
