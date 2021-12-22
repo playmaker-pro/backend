@@ -244,6 +244,13 @@ class PlayerForClubAnnouncement(AnnouncementMeta):
 
     practice_distance = models.CharField(max_length=3)
 
+    league = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+        related_name='player_for_club_announcement_league',
+        null=True
+    )
+
     target_league = models.ForeignKey(
         League,
         on_delete=models.CASCADE,

@@ -145,9 +145,10 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
 
         ('position', 'Pozycja', None, {}),
         ('voivodeship', 'Województwo', None, {}),
+        ('league', 'Poziom rozgrywkowy', None, {}),
+        ('target_league', 'Cel poszukiwań', None, {}),
         ('address', 'np. Wrocław', None, {}),
         ('practice_distance', 'Maksymalna odległość dojazdu', None, {}),
-        ('target_league', 'Cel poszukiwań', None, {}),
         ('body', 'Opisz krótko swoje oczekiwania', None, {}),
     ]
 
@@ -173,6 +174,10 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
         self.fields['voivodeship'].label = 'Województwo'
         self.fields['voivodeship'].help_text = False
 
+        self.fields['league'].required = True
+        self.fields['league'].label = 'Poziom rozgrywkowy'  # '<i class="icofont-ui-user-group"></i>'
+        self.fields['league'].help_text = False
+
         self.fields['address'].required = True
         self.fields['address'].label = 'Miejscowość z której dojeżdżasz na trening'
         self.fields['address'].help_text = False
@@ -196,7 +201,7 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
     class Meta:
         widgets = {'body': forms.Textarea(attrs={'rows': 5})}
         model = models.PlayerForClubAnnouncement
-        fields = ['position', 'voivodeship', 'address', 'practice_distance', 'target_league', 'body']
+        fields = ['position', 'voivodeship', 'address', 'practice_distance', 'target_league', 'body', 'league']
         exclude = ['creator']
 
 
@@ -270,6 +275,7 @@ class CoachForClubAnnouncementForm(forms.ModelForm):
 class ClubForCoachAnnouncementForm(forms.ModelForm):
     building_fields = [
         ('club', 'Klub', None, {'disabled': True}),
+        # ('club', 'Klub', None, {}),
         ('league', 'Poziom rozgrywkowy', None, {}),
         ('voivodeship', 'Województwo', None, {'disabled': True}),
         ('lic_type', 'Typ licencji', None, {}),
@@ -295,6 +301,7 @@ class ClubForCoachAnnouncementForm(forms.ModelForm):
         self.fields['club'].required = True
         self.fields['club'].label = 'Klub'
         self.fields['club'].help_text = False
+        # self.fields['club'].disabled = True
 
         self.fields['league'].required = True
         self.fields['league'].label = 'Poziom rozgrywkowy'  # '<i class="icofont-ui-user-group"></i>'
@@ -328,7 +335,6 @@ class ClubForCoachAnnouncementForm(forms.ModelForm):
     class Meta:
         widgets = {
             'body': forms.Textarea(attrs={'rows': 5}),
-            # 'lic_type': forms.Textarea(attrs={'rows': 1})
         }
         model = models.ClubForCoachAnnouncement
         fields = ['club', 'league', 'lic_type', 'voivodeship', 'seniority', 'gender', 'body']

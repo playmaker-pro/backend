@@ -10,13 +10,7 @@
     </div>
 
     <div class="filter pr-2">
-    {% if view_type == "coach_for_club" %}
         {% include 'marketplace/filters/filter_leagues.html' with size=160 options=filters.league title='aktualny poziom' %}
-    {% elif view_type == "club_for_coach" %}
-        {% include 'marketplace/filters/filter_leagues.html' with size=size options=filters.league title='poziom' %}
-    {% else %}
-        {% include 'marketplace/filters/filter_leagues.html' with size=size options=filters.league title='rozgrywki' %}
-    {% endif %}
     </div>
 
     {% if view_type == "player_for_club" %}
