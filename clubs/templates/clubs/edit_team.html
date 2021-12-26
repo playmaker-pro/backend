@@ -7,8 +7,6 @@
 
 {% block title %}{{ block.super }} {% trans 'Edycja drużyny' %} {% endblock %}
 
-<!-- Benefits of the Django application -->
-
 {% block content_header %}
   {{ block.super }}
   {% include '_page_heading_with_picture.html' with image=team.picture %}
@@ -16,9 +14,6 @@
 
 
 {% block content %}
-
-
-
 <section id="profile" class="profile">
   <div class="container" data-aos="fade-up">
         <div class="row">
@@ -35,7 +30,6 @@
     </div>
   </div>
 </div>
-
 </section>
 {% endblock content %}
 

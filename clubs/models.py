@@ -1,5 +1,5 @@
 import uuid
-
+from functools import cached_property, singledispatch
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
@@ -217,28 +217,59 @@ class LeagueHistory(models.Model):
         self.save()
 
 
-class League(models.Model):
-    order = models.IntegerField(default=0)
-    visible = models.BooleanField(default=False)
-    name = models.CharField(max_length=355)
-    code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
-    slug = models.CharField(max_length=255, blank=True, editable=False)
-    parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs")
-    isparent = models.BooleanField(default=False)
-    zpn = models.CharField(max_length=255, null=True, blank=True)
-    zpn_mapped = models.CharField(max_length=255, null=True, blank=True)
-    index = models.CharField(max_length=255, null=True, blank=True)
-    search_index = models.CharField(max_length=255, null=True, blank=True)
+class LeagueGroup(models.Model):
+    name = models.CharField(max_length=25)
+    level = models.IntegerField(default=0)
 
+    def __str__(self):
+        return f"{self.name}"
+
+
+class Region(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.name}"
+
+
+class League(models.Model):
+    """
+    League - parent 
+    """
+    order = models.IntegerField(default=0)
+    group = models.ForeignKey("LeagueGroup",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True)
+    region = models.ForeignKey("Region", on_delete=models.SET_NULL, null=True, blank=True)
+    city_name = models.CharField(max_length=255, null=True, default=None, blank=True)
+    visible = models.BooleanField(default=False)
+    name = models.CharField(max_length=355, help_text="eg. Ekstraklasa")
+    code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
+    parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs")
     country = CountryField(
         _("Kraj"),
-        # blank=True,
         default="PL",
         null=True,
         blank_label=_("Wybierz kraj"),
     )
+    gender = models.ForeignKey('Gender', default=None, on_delete=models.SET_NULL, null=True, blank=True)
+    seniority = models.ForeignKey(
+        'Seniority', default=None, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    rw = models.BooleanField(default=False, help_text="Spring round (runda wiosenna)")
+    # auto calculated fields & flags
+    slug = models.CharField(max_length=255, blank=True, editable=False)
+    isparent = models.BooleanField(default=False)
+    zpn = models.CharField(max_length=255, null=True, blank=True)
+    # @todo(rkesik): zpn mapped looks like deprecated. Shall we remove that?
+    zpn_mapped = models.CharField(max_length=255, null=True, blank=True)
+    index = models.CharField(max_length=255, null=True, blank=True)
+
+    search_index = models.CharField(max_length=255, null=True, blank=True)
 
     def has_season_data(self, season_name: str) -> bool:
+        """Just a helper function to know if historical object has data for given season"""
         if self.historical.filter(season__name=season_name).count() == 0:
             return False
         return True
@@ -250,7 +281,7 @@ class League(models.Model):
         _("Zdjęcie"), upload_to=get_file_path, null=True, blank=True
     )
 
-    @property
+    @cached_property
     def is_parent(self):
         return self.parent is None and self.childs.all().count() != 0
 
@@ -265,7 +296,52 @@ class League(models.Model):
     def display_league(self):
         return self.name
 
+    @property
+    def display_league_name(self):
+        return self.name
+
+    @property
+    @supress_exception
+    def display_league_seniority_name(self):
+        return self.seniority.name
+
+    @property
+    @supress_exception
+    def display_league_group_name(self):
+        return self.group.name
+
+    @property
+    @supress_exception
+    def display_league_voivodeship(self):
+        return self.zpn
+
+    def get_permalink(self):
+        return reverse("plays:summary", kwargs={"slug": self.slug})
+
+    def get_slug_value(self):
+        '''
+        /name/name_jun/ZPN_name/city_name/group/RW
+
+        /4-liga,dolnoslaskie,grupa-ii
+        /u-19,4-liga-okregowa,opolskie,opole,grupa-iii,rw
+        /ekstraklasa
+        '''
+        value = self.name
+        if self.seniority:
+            value += f"--{self.seniority.name}"
+        if self.region:
+            value += f"--{self.region.name}"
+        if self.city_name:
+            value += f"--{self.city_name}"
+        if self.group:
+            value += f"--{self.group.name}"
+        if self.rw is not None:
+            if self.rw:
+                value += f"--rw"
+        return str(value)
+
     def save(self, *args, **kwargs):
+        # If league do not have parent object flag is set to true
         if self.is_parent:
             self.isparent = True
 
@@ -273,13 +349,13 @@ class League(models.Model):
             self.parent.isparent = True
             self.parent.save()
 
-        slug_str = f"{self.name}"
-        unique_slugify(self, slug_str)
+        unique_slugify(self, self.get_slug_value())
         # make search index
         self.search_index = self.build_serach_index()
         super().save(*args, **kwargs)
 
     def build_serach_index(self):
+        """Creates string which will be used to text-search"""
         out = f"{self.name}"
         if self.zpn:
             out += f"__{self.zpn}"
@@ -289,7 +365,7 @@ class League(models.Model):
         return f"{self.name}"
 
     class Meta:
-        unique_together = ("name", "country")
+        unique_together = ("name", "country", "group", "region", "zpn")
 
 
 class Seniority(models.Model):
@@ -410,6 +486,31 @@ class Team(models.Model, MappingMixin):
     @supress_exception
     def display_league(self):
         return self.league.display_league
+
+    @property
+    @supress_exception
+    def display_league_name(self):
+        return self.league.display_league_name
+
+    @property
+    @supress_exception
+    def display_league_seniority_name(self):
+        return self.league.display_league_seniority_name
+
+    @property
+    @supress_exception
+    def display_league_group_name(self):
+        return self.league.display_league_group_name
+
+    @property
+    @supress_exception
+    def display_league_voivodeship(self):
+        return self.league.display_league_voivodeship
+    
+    @property
+    @supress_exception
+    def get_league_permalink(self):
+        return self.league.get_permalink
 
     @property
     @supress_exception

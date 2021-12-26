@@ -81,7 +81,6 @@ def get_datetime_from_year(year):
 
 
 def calculate_player_metrics():
-
     qs = User.objects.filter(declared_role=definitions.PLAYER_SHORT, state=User.STATE_ACCOUNT_VERIFIED)
     for user in qs:
         if user.profile.has_data_id:
@@ -93,6 +92,7 @@ def calculate_player_metrics():
             user.profile.playermetrics.update_summaries(games_summary, season_summary, fantasy_summary)
 
 
+# @(rkesik): that can be moved to /app/utils.py
 def unique_slugify(instance, value, slug_field_name='slug', queryset=None,
                    slug_separator='-'):
     """

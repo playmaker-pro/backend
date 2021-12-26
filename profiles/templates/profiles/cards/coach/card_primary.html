@@ -11,9 +11,16 @@
         {% include template with key=_('Piłkarski cel')      value=profile.get_soccer_goal_display|default:'-'  %}
         {% include template with key=_('Rocznik')               value=profile.birth_date.year|default:'-'|upper           %}
         {% include template with key=_('Obecna drużyna')     value=profile.display_team|default:'-'|upper           %}
-        {% include template with key=_('Poziom rozgrywkowy') value=profile.display_league|default:'-'|upper         %}
-        {% comment %} {% include template with key=_('Grupa')              value=profile.group|default:'-'|upper              %} {% endcomment %}
-        {% include template with key=_('Wojewodźtwo')        value=profile.display_voivodeship|default:'-'|lower            %}
+        {% include template with key=_('Rozgrywki')          value=profile.display_league_name|default:'-'|upper   link=profile.get_league_permalink  %}
+        {% if profile.profile.display_league_seniority_name %}
+            {% include template with key=_('Poziom')             value=profile.display_league_seniority_name|default:'-'|upper        %} 
+        {% endif %}
+        
+        {% if profile.display_league_group_name %}
+            {% include template with key=_('Grupa')              value=profile.display_league_group_name|default:'-'|upper  %}
+        {% endif %}
+            {% include template with key=_('Wojewodźtwo')        value=profile.display_league_voivodeship|default:'-'|lower        %}
+        
     {% endwith %}
     </div>  <!-- end of card-text-->
 

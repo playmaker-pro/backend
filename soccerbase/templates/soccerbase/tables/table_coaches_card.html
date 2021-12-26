@@ -3,12 +3,7 @@
 {% load thumbnail %}
 {% load playmaker %}
 
-
-
-
-
-<div class="card player-header-card d-none d-md-inline item-card" style="">
-  
+<div class="card player-header-card d-none d-md-inline item-card" style="">  
   <div class="card-body  table-item"> 
     <div class="row no-gutters">
         <div class="d-none d-md-inline col-md-3">
@@ -25,26 +20,14 @@
         <div class="col-5 col-md-2  text-left">
              Województwo
         </div>
-
-
         <div class="col-6 col-md-1 text-left"> 
            Licencja
         </div>
-
-
         <div class="d-none d-md-inline col-md-2">
-
         </div>
-
     </div>
   </div>
-
 </div> 
-
-
-
-
-
 
 
 {% for object in objects %}
@@ -65,8 +48,6 @@
 
   <div class="card-body table-item"> 
     <div class="row no-gutters">
-
-
                         <div class="d-md-none text-center"> <!-- -->
                             <img class="rounded img-responsive"  src="{% thumbnail object.picture|default:'default_profile.png' 'tables_avatar_show_medium' %}">
                         </div>
@@ -79,7 +60,7 @@
                                 {{ object.profile.display_team|default:''|upper }}
                             </div>
                             <div class=""> 
-                                {{ object.profile.display_league|default:''|title  }}, {{ object.profile.display_voivodeship|default:''|lower|truncatechars:24 }} 
+                                {{ object.profile.display_league_name|default:''|title  }}, {{ object.profile.display_voivodeship|default:''|lower|truncatechars:24 }} 
                             </div>
                         </div>
             <div class="sc-cell d-none d-md-flex col-md-3">
@@ -92,20 +73,16 @@
               </a>
             </div>
 
-            <div class="sc-cell d-none d-md-flex  col-3 col-md-2  text-left" >
+            <div class="sc-cell d-none d-md-flex col-3 col-md-2 text-left" >
                 {{ object.profile.display_team|default:'' }}
             </div >
-            <div class="sc-cell d-none d-md-flex  col-md-2 text-left">
-                 {{ object.profile.display_league|default:''|title  }}
+            <div class="sc-cell d-none d-md-flex col-md-2 text-left">
+                 {{ object.profile.display_league_name|default:''|title  }}
             </div >
-
-            
-            <div class="sc-cell d-none d-md-flex  col-3 col-md-2  text-left">
+            <div class="sc-cell d-none d-md-flex col-3 col-md-2 text-left">
                 {{ object.profile.display_voivodeship|default:''|lower  }}
             </div>
-
-            
-            <div class=" sc-cell d-none d-md-flex  col-3 col-md-1  text-left">
+            <div class=" sc-cell d-none d-md-flex col-3 col-md-1 text-left">
               {{ object.profile.get_licence_display|default:''|upper }}
             </div>
 
@@ -120,10 +97,7 @@
   </div>
   <div hidden class="card-footer row no-gutters d-md-none ">
     <div class="col-1">
-     
     </div>
-
-    
     <span class="float-right"> 
     </span>
   </div>

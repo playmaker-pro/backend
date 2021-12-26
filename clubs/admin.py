@@ -49,8 +49,18 @@ class SeasonAdmin(admin.ModelAdmin):
     search_fields = ("name",)
 
 
+@admin.register(models.LeagueGroup)
+class LeagueGroupAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+
+
 @admin.register(models.Seniority)
 class SeniorityAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+
+
+@admin.register(models.Region)
+class RegionAdmin(admin.ModelAdmin):
     search_fields = ("name",)
 
 
@@ -62,6 +72,7 @@ class GenderAdmin(admin.ModelAdmin):
 @admin.register(models.League)
 class LeagueAdmin(admin.ModelAdmin):
     search_fields = ("name", "slug")
+    readonly_fields = ("slug", "search_index")
     list_display = (
         "name",
         "order",
@@ -71,7 +82,10 @@ class LeagueAdmin(admin.ModelAdmin):
         "history",
         "country",
         "parent_of",
+        'seniority',
+        'gender',
         "index",
+        "group",
         "code",
         "slug",
         "search_index",

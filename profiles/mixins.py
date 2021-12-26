@@ -28,6 +28,11 @@ class SoccerDisplayMixin:
 
 
 class TeamObjectsDisplayMixin:
+    """Exposes values to display on UI.
+    
+    Profile's team based mixin - object who has a team_object and club_object
+    When link is broken excpetion should be supressed
+    """
 
     @property
     def get_team_object(self):
@@ -68,3 +73,28 @@ class TeamObjectsDisplayMixin:
     @supress_exception
     def display_league(self):
         return self.get_team_object.display_league
+
+    @property
+    @supress_exception
+    def display_league_name(self):
+        return self.get_team_object.display_league_name
+
+    @property
+    @supress_exception
+    def display_league_seniority_name(self):
+        return self.get_team_object.display_league_seniority_name
+
+    @property
+    @supress_exception
+    def display_league_group_name(self):
+        return self.get_team_object.display_league_group_name
+
+    @property
+    @supress_exception
+    def display_league_voivodeship(self):
+        return self.get_team_object.display_league_voivodeship
+
+    @property
+    @supress_exception
+    def get_league_permalink(self):
+        return self.get_team_object.get_league_permalink

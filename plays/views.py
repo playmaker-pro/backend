@@ -1,6 +1,5 @@
 import logging
-import operator
-from functools import reduce
+
 from clubs.models import LeagueHistory as CLeagueHistory
 from app import mixins, utils
 from app.mixins import FilterPlayerViewMixin
@@ -14,8 +13,6 @@ from django.db.models import F, Q, Value
 from django.db.models.functions import Concat
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
-from django.utils import timezone
 from django.views import View, generic
 from metrics.team import (
     LeagueAdvancedTableRawMetrics,
@@ -128,7 +125,7 @@ class PlaysBaseView(ComplexViews):
 
         # Just when filters are on.
         if self.filter_on:
-            options["league_filters"] = League.objects.filter(visible=True).filter(
+            league_filters = League.objects.filter(visible=True).filter(
                 Q(
                     Q(isparent=True) |
                     Q(parent__isnull=True)
@@ -148,7 +145,8 @@ class PlaysBaseView(ComplexViews):
                     )
                 )
             ).order_by("order").distinct()
-
+            
+            options["league_filters"] = league_filters
         else:
             options["leagues"] = None
             options["history_leagues"] = None
