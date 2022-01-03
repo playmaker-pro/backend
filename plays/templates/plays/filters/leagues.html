@@ -1,7 +1,17 @@
 {% load plays %}
+{% load playmaker %}
+
 <select id="searchleagues" class="side-filter selectpicker side-filter searchleagues" data-live-search="true">
     <option data-tokens="" value="">wybierz</option>
     {% for lf in league_filters %}
-        <option {% if league.name == lf.name %} selected {% endif %} data-tokens="{{ lf.name }} {{lf.zpn}}" value="{{ lf|get_league_url:current_season }}">{{ lf.name }} </option>
+        {% if not lf.isparent and not lf.childs.all %}
+            <option {% if league.id == lf.id %} selected {% endif %} data-tokens="{{ lf.name }} {{lf.zpn}}" value="{{ lf|get_league_url:current_season }}">{{ lf.name }} </option>
+        {% else %}
+            {% for child in lf.childs.all %}
+                {% if child|has_season_data:current_season %}
+                    <option {% if league.id == child.id %} selected {% endif %} data-tokens="{{ child.name }} {{child.zpn}}" value="{{ child|get_league_url:current_season }}">{{ child.name }} </option>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
     {% endfor %}
 </select>

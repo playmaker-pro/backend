@@ -232,9 +232,17 @@ class Region(models.Model):
         return f"{self.name}"
 
 
+class JuniorLeague(models.Model):
+    name = models.CharField(max_length=255)
+    order = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.name}"
+
+
 class League(models.Model):
     """
-    League - parent 
+    League - parent
     """
     order = models.IntegerField(default=0)
     group = models.ForeignKey("LeagueGroup",
@@ -257,6 +265,9 @@ class League(models.Model):
     seniority = models.ForeignKey(
         'Seniority', default=None, on_delete=models.SET_NULL, null=True, blank=True
     )
+
+    name_junior = models.ForeignKey("JuniorLeague", on_delete=models.SET_NULL, null=True, blank=True, default=None)
+
     rw = models.BooleanField(default=False, help_text="Spring round (runda wiosenna)")
     # auto calculated fields & flags
     slug = models.CharField(max_length=255, blank=True, editable=False)
@@ -327,8 +338,8 @@ class League(models.Model):
         /ekstraklasa
         '''
         value = self.name
-        if self.seniority:
-            value += f"--{self.seniority.name}"
+        if self.name_junior:
+            value += f"--{self.name_junior.name}"
         if self.region:
             value += f"--{self.region.name}"
         if self.city_name:
