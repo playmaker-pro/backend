@@ -4,20 +4,24 @@ import os
 
 DEBUG = False
 
-BASE_URL = 'https://staging.playmakerpro.usermd.net'
+BASE_URL = "https://staging.playmakerpro.usermd.net"
 
 COMPRESS_ENABLED = True
-MANAGERS = [('Rafal', 'rafal.kesik@gmail.com'), ('Jacek', 'jjasinski.playmaker@gmail.com')]
+MANAGERS = [
+    ("Rafal", "rafal.kesik@gmail.com"),
+    ("Jacek", "jjasinski.playmaker@gmail.com"),
+]
 
-MIDDLEWARE = ['django.middleware.common.BrokenLinkEmailsMiddleware'] + MIDDLEWARE
+MIDDLEWARE = ["django.middleware.common.BrokenLinkEmailsMiddleware"] + MIDDLEWARE
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'public', 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, "public", "static")
 
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'public', 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, "public", "media")
 
 try:
     from .local import *
-    print('::> Loading custom local settings (local.py)')
+
+    print("::> Loading custom local settings (local.py)")
 except ImportError as e:
-    print(f'[error] Cannot load local settings. Reason={e}')
+    print(f"[error] Cannot load local settings. Reason={e}")
