@@ -145,8 +145,6 @@ border-top: 0px solid #dee2e6;
 }
 
 .plays-sub-link {
-    //font-size:.8rem;
-    margin-left:15px;
     margin-bottom:1px;
 }
 
@@ -154,6 +152,23 @@ border-top: 0px solid #dee2e6;
     background-color:#ccc;
     border-radius: .25rem;
 }
+
+.plays-level-1{
+    margin-left:12px;
+}
+
+.plays-level-2{
+    margin-left:24px;
+}
+
+.plays-level-3{
+    margin-left:36px;
+}
+
+.plays-level-4{
+    margin-left:48px;
+}
+
 .side-filter { 
     width:200px!important;
     padding-bottom:5px;
@@ -184,6 +199,15 @@ span.text {
     font-size:.8rem;
 }
 
+.plays-section-header {
+    border-bottom-style: dotted;
+    color: #fff;
+    border-width: thin;
+    font-weight: bold;
+    margin-bottom: 10px;
+    margin-top: 5px;
+}
+
     </style>
 {% endblock extra_css%}
 
@@ -197,7 +221,7 @@ span.text {
 
 <div class="row">
   <div class="col-12 d-md-none">
-    {% include "plays/partials/_sidemenu_mobile.html" with leagues_data=leagues %}
+    {% include "plays/partials/_sidemenu_mobile.html" %}
   </div>
 
   <section id="leagues-side-bar" class="col-2 d-none d-md-flex">
@@ -257,7 +281,6 @@ span.text {
     $('.searchleagues').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
         if(typeof this.value !== "undefined"){
             window.location.href = this.value;
-            console.log('yeess2');
         };
     });
 

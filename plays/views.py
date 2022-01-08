@@ -3,7 +3,7 @@ import logging
 from clubs.models import LeagueHistory as CLeagueHistory
 from app import mixins, utils
 from app.mixins import FilterPlayerViewMixin
-from clubs.models import Club, League
+from clubs.models import Club, League, Season
 from clubs.models import LeagueHistory as CLeagueHistory
 from clubs.models import Team
 from django.contrib import messages
@@ -110,6 +110,8 @@ class PlaysBaseView(ComplexViews):
         options["current_league_id"] = None
         self.season = self.request.GET.get("season") or get_current_season()
         options["current_season"] = self.season
+        options["league_filters"] = None
+        options["current_season_obj"] = Season.objects.get(name=self.season)
         options["page_title"] = self.page_title
         options["tab"] = self.tab
         if not slug:
@@ -120,37 +122,15 @@ class PlaysBaseView(ComplexViews):
             options["current_league_id"] = self.league.id
             if self.league.visible is False:
                 raise Http404()
-    
-        options["league"] = self.league
 
-        # Just when filters are on.
+        options["league_obj"] = self.league
+        # Only when filtering feature is on.
         if self.filter_on:
-            league_filters = League.objects.filter(visible=True).filter(
-                Q(
-                    Q(isparent=True) |
-                    Q(parent__isnull=True)
-                ) 
-                
-                & 
-                
-                Q(
-                    Q(
-                        Q(historical__season__name=self.season) &
-                        Q(historical__visible=True)
-                    )
-                    |
-                    Q( 
-                        Q(childs__historical__season__name=self.season) &
-                        Q(childs__historical__visible=True)
-                    )
-                )
-            ).order_by("order").distinct()
-            
-            options["league_filters"] = league_filters
-        else:
-            options["leagues"] = None
-            options["history_leagues"] = None
-            options["league_filters"] = None
+            options["league_filters"] = League.objects.prefetch_related("data_seasons", "childs").filter(
+                Q(visible=True) &
+                Q(parent__isnull=True)              
+#                Q(data_seasons__in=[options["current_season_obj"]])
+            ).order_by("order")
         return options
 
     def get(self, request, slug, *args, **kwargs):

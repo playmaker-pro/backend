@@ -1,6 +1,8 @@
 import uuid
+from typing import List
 from functools import cached_property, singledispatch
 from django.db import models
+from django.template.defaultfilters import truncatechars
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.urls import reverse
@@ -185,6 +187,7 @@ class LeagueHistory(models.Model):
     season = models.ForeignKey(
         "Season", on_delete=models.SET_NULL, null=True, blank=True
     )
+
     index = models.CharField(max_length=255, null=True, blank=True)
     league = models.ForeignKey(
         "League", on_delete=models.CASCADE, related_name="historical"
@@ -208,8 +211,13 @@ class LeagueHistory(models.Model):
         if l.games_snapshot:
             self.is_matches_data = True
 
+    def get_admin_url(self):
+        return reverse(f"admin:{self._meta.app_label}_{self._meta.model_name}_change", args=(self.id,))
+
     def save(self, *args, **kwargs):
         self.check_and_set_if_data_exists()
+        self.league.set_league_season([self.season])
+
         super().save(*args, **kwargs)
 
     def reset(self):
@@ -240,18 +248,32 @@ class JuniorLeague(models.Model):
         return f"{self.name}"
 
 
+class SectionGrouping(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.name}"
+
+
 class League(models.Model):
     """
-    League - parent
+    League
     """
+    virtual = models.BooleanField(default=False)
+    visible = models.BooleanField(default=False, help_text="Determine if that league will be visible")
+
+    data_seasons = models.ManyToManyField("Season", blank=True)
+
+    section = models.ForeignKey("SectionGrouping", on_delete=models.SET_NULL, null=True, blank=True)
     order = models.IntegerField(default=0)
+
     group = models.ForeignKey("LeagueGroup",
         on_delete=models.SET_NULL,
         null=True,
         blank=True)
     region = models.ForeignKey("Region", on_delete=models.SET_NULL, null=True, blank=True)
     city_name = models.CharField(max_length=255, null=True, default=None, blank=True)
-    visible = models.BooleanField(default=False)
+
     name = models.CharField(max_length=355, help_text="eg. Ekstraklasa")
     code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs")
@@ -272,12 +294,13 @@ class League(models.Model):
     # auto calculated fields & flags
     slug = models.CharField(max_length=255, blank=True, editable=False)
     isparent = models.BooleanField(default=False)
+
     zpn = models.CharField(max_length=255, null=True, blank=True)
     # @todo(rkesik): zpn mapped looks like deprecated. Shall we remove that?
     zpn_mapped = models.CharField(max_length=255, null=True, blank=True)
     index = models.CharField(max_length=255, null=True, blank=True)
 
-    search_index = models.CharField(max_length=255, null=True, blank=True)
+    search_tokens = models.CharField(max_length=255, null=True, blank=True)
 
     def has_season_data(self, season_name: str) -> bool:
         """Just a helper function to know if historical object has data for given season"""
@@ -293,35 +316,51 @@ class League(models.Model):
     )
 
     @cached_property
+    def get_childs(self):
+        return self.childs.all()
+
+    @cached_property
+    def get_data_seasons(self):
+        return self.data_seasons.all()
+
+    @cached_property
     def is_parent(self):
-        return self.parent is None and self.childs.all().count() != 0
+        """ If has no parent and have children"""
+        return self.parent is None and self.get_childs.count() != 0
 
-    @property
-    def get_childs_ids(self):
+    @cached_property
+    def standalone(self):
+        """ If has no parent and represents own data"""
+        return self.parent is None and self.childs.all().count() == 0
+
+    @cached_property
+    def childs_ids(self) -> list:
+        id_list = []
         if self.childs:
-            return list(self.childs.all().values_list("id", flat=True))
-        else:
-            return []
+            id_list = id_list + list(self.get_childs.values_list("id", flat=True))
+            for child in self.get_childs:
+                id_list = id_list + child.childs_ids
+        return id_list
 
-    @property
+    @cached_property
     def display_league(self):
         return self.name
 
-    @property
+    @cached_property
     def display_league_name(self):
         return self.name
 
-    @property
+    @cached_property
     @supress_exception
     def display_league_seniority_name(self):
         return self.seniority.name
 
-    @property
+    @cached_property
     @supress_exception
     def display_league_group_name(self):
         return self.group.name
 
-    @property
+    @cached_property
     @supress_exception
     def display_league_voivodeship(self):
         return self.zpn
@@ -352,32 +391,52 @@ class League(models.Model):
         return str(value)
 
     def save(self, *args, **kwargs):
-        # If league do not have parent object flag is set to true
+        # is a virtual parent?
         if self.is_parent:
+            # isparent flag is due to historical reasons
             self.isparent = True
-
+            # virtual set to true it means that this is an virtual group
+            # and do not contains any league data.
+            self.virtual = True
+        
+        # We set a new/modify parent attribute
+        # so we need to trigger our parent object
+        # to recalclate data and set a proper flag.
         if self.parent is not None:
             self.parent.isparent = True
             self.parent.save()
 
         unique_slugify(self, self.get_slug_value())
         # make search index
-        self.search_index = self.build_serach_index()
+        self.search_tokens = self.build_search_tokens()
         super().save(*args, **kwargs)
 
-    def build_serach_index(self):
-        """Creates string which will be used to text-search"""
-        out = f"{self.name}"
-        if self.zpn:
-            out += f"__{self.zpn}"
-        return out
+    def get_upper_parent_names(self):
+        name = self.name
+        if self.parent: 
+            name = f"{self.parent.get_upper_parent_names()} / {name}"
+        return name
+
+    def set_league_season(self, seasons: List[Season]):
+        """Mechanism to set and propagate changes in data seasons."""
+        self.data_seasons.add(*seasons)
+        if self.parent:
+            self.parent.set_league_season(list(self.data_seasons.all()))        
+
+    def build_search_tokens(self):
+        """Creates string which will be used to text based searches
+           `name  region city_name group.name`
+        """
+        group_name = self.group.name if self.group else ''
+        fields = [self.name, self.zpn, self.city_name, group_name]
+        return ' '.join(filter(None, fields))
 
     def __str__(self):
         return f"{self.name}"
 
     class Meta:
-        unique_together = ("name", "country", "group", "region", "zpn")
-
+        unique_together = ("name", "country", "group", "region", "zpn", "parent")
+        ordering = ("order", "section__name")
 
 class Seniority(models.Model):
     name = models.CharField(max_length=355, unique=True)

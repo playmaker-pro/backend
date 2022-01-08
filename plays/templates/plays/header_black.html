@@ -7,16 +7,16 @@
             <div class="col-md-8">
                 <div class="d-flex flex-row">
                     <div>
-                        <img class="avatar rounded img-responsive" title="profile picture" src="{% thumbnail league.picture|default:'default_profile.png' 'tables_avatar_show' %}">
+                        <img class="avatar rounded img-responsive" title="profile picture" src="{% thumbnail league_obj.picture|default:'default_profile.png' 'tables_avatar_show' %}">
                     </div>
                     <div class="pl-2">
-                        <h5 class="d-md-block" style="#1b1b1b;">{{ league.name.upper }}</h5>
+                        <h5 class="d-md-block" style="#1b1b1b;">{{ league_obj.name.upper }}</h5>
                         <div class=" d-inline">
                              <small>{{ current_season }} </small>
                         </div>
-                        {% if league.parent %}
+                        {% if league_obj.parent %}
                         <div class="d-block" style="padding-top:4px;"> 
-                             <small>{{ league.parent.name }} </small>
+                             <small>{{ league_obj.parent.name }} </small>
                         </div>
                         {% endif %}
                     </div>

@@ -1,0 +1,20 @@
+{% load playmaker %}
+{% load plays %}
+
+<div id="{{ parent_accordion }}">
+    {% for league in league_filters %}
+        {% ifchanged  league.section %}
+            {% if  league.section %}
+            <div class="plays-section-header">{{league.section.name}}</div>
+            {% endif %}
+        {% endifchanged %}
+
+        {% if current_season_obj in league.get_data_seasons %}
+            {% if league.get_childs %}
+                {% include 'plays/partials/tree/nested_childs.html' with league=league level=level parent_accordion=parent_accordion %}
+            {% else %}
+                <a href="{{ league|get_league_url:current_season }}"><div class="plays-link {% if current_league_id == league.id %} link-active {% endif %}"><i class="icofont-cube"></i> {{ league.name }} </div></a>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+</div>

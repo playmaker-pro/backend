@@ -1,0 +1,24 @@
+{% load plays %}
+{% load playmaker %}
+
+{% with accordion_level=parent_accordion|addstr:level %}
+
+<div id="{{accordion_level}}">
+    <div id="heading{{ league.id }}" style="cursor: pointer;">
+        <span class="plays-level-{{level}}" style="color: #fff;"  data-toggle="collapse" data-target="#collapse{{league.id}}" aria-expanded="true" aria-controls="collapse{{league.id}}">
+            <i class="icofont-circled-down"></i> {{ league.name }}
+        </span>
+    </div>
+    <div id="collapse{{ league.id }}" class="collapse {% if current_league_id in league.childs_ids %} show{% else %} {% endif %}" aria-labelledby="heading{{league.id}}" data-parent="#{{parent_accordion}}">
+        {% for child in league.get_childs %}
+            {% if current_season_obj in child.get_data_seasons %}
+                {% if child.get_childs %}
+                    {% include "plays/partials/tree/nested_childs.html" with league=child level=level|add:1 parent_accordion=accordion_level %}
+                {% else %}
+                    <a href="{{ child|get_league_url:current_season }}"><div class="plays-sub-link {% if current_league_id == child.id %} link-active {% endif %} plays-level-{{level|add:1}}" ><i class="icofont-cube"></i> {{ child.name }}</div></a>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endwith %}

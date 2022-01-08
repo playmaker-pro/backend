@@ -54,33 +54,12 @@
 <div id="mySidenav" class="sidenav d-flex flex-column"><br><Br>
     <a href="javascript:void(0)" class="closebtn" onclick="closeNav()"><i class="icofont-close-circled main-color"></i></a>
     <span>
-      <div id="accordion1">
-        {% for league in league_filters %}
-            {% if not league.isparent and not league.childs.all %}
-                <a href="{{ league|get_league_url:current_season }}">
-                  <div class="plays-link {% if current_league_id == league.id %} link-active {% endif %}"><i class="icofont-cube"></i>{{ league.name }} 
-                  </div>
-                </a>
-            {% else %}
-              <div class="" id="heading{{ league.id }}" style="cursor: pointer;">
-                  <span style="color: #fff;" class="" data-toggle="collapse" data-target="#collapse{{league.id}}" aria-expanded="true" aria-controls="collapse{{league.id}}">
-                      <i class="icofont-circled-down"></i>{{ league.name }}
-                  </span>
-              </div>
-              <div id="collapse{{ league.id }}" class="collapse {% if current_league_id in league.get_childs_ids %} show{% else %} {% endif %}" aria-labelledby="heading{{league.id}}" data-parent="#accordion1">
-                  {% for child in league.childs.all %}
-                      {% if child|has_season_data:current_season %}
-                      <a href="{{ child|get_league_url:current_season }}"><div class="plays-sub-link {% if current_league_id == child.id %} link-active {% endif %}" ><i class="icofont-cube"></i> {{ child.name }}</div></a>
-                      {% endif %}
-                  {% endfor %}
-              </div>
-            {% endif %}
-        {% endfor %}
-    </div> </span>
+      {% with parent_accordion="accordion1" level=0 %}
+         {% include "plays/partials/tree/leagues.html" with level=level parent_accordion=parent_accordion %}
+      {% endwith %}
+  </span>
 </div>
-
 <div>
-<!-- Use any element to open the sidenav -->
 <button class="btn btn-pm" onclick="openNav()"><i class="icofont-arrow-left"></i>rozgrywki</button>
 
 {% include 'plays/filters/season.html' %}

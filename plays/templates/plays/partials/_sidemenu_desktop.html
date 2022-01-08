@@ -1,27 +1,11 @@
 {% load plays %}
 {% load playmaker %}
-<div class="container" data-aos="fade-up">
+
+ <div class="container" data-aos="fade-up">
     {% include 'plays/filters/season.html' %}
     {% include 'plays/filters/leagues.html' %}
-    <div id="accordion">
-        {% for league in league_filters %}
-            {% if not league.isparent and not league.childs.all %}
-            <a href="{{ league|get_league_url:current_season }}"><div class="plays-link {% if current_league_id == league.id %} link-active {% endif %}"><i class="icofont-cube"></i>{{ league.name }} </div></a>
-            {% else %}
-            <div class="" id="heading{{ league.id }}" style="cursor: pointer;">
-                <span style="color: #fff;" class="" data-toggle="collapse" data-target="#collapse{{league.id}}" aria-expanded="true" aria-controls="collapse{{league.id}}">
-                    <i class="icofont-circled-down"></i>{{ league.name }}
-                </span>
-            </div>
-            <div id="collapse{{ league.id }}" class="collapse {% if current_league_id in league.get_childs_ids %} show{% else %} {% endif %}" aria-labelledby="heading{{league.id}}" data-parent="#accordion">
-                {% for child in league.childs.all %}
-                    {% if child|has_season_data:current_season %}
-                    <a href="{{ child|get_league_url:current_season }}"><div class="plays-sub-link {% if current_league_id == child.id %} link-active {% endif %}" ><i class="icofont-cube"></i> {{ child.name }}</div></a>
-                    {% endif %}
-                {% endfor %}
-            </div>
-            {% endif %}
-        {% endfor %}
-    </div>
+
+    {% with parent_accordion="accordion"  level=0 %}
+        {% include "plays/partials/tree/leagues.html" with level=level parent_accordion=parent_accordion %}
+    {% endwith %}
 </div>
-   

@@ -4,14 +4,13 @@
 <select id="searchleagues" class="side-filter selectpicker side-filter searchleagues" data-live-search="true">
     <option data-tokens="" value="">wybierz</option>
     {% for lf in league_filters %}
-        {% if not lf.isparent and not lf.childs.all %}
-            <option {% if league.id == lf.id %} selected {% endif %} data-tokens="{{ lf.name }} {{lf.zpn}}" value="{{ lf|get_league_url:current_season }}">{{ lf.name }} </option>
-        {% else %}
-            {% for child in lf.childs.all %}
-                {% if child|has_season_data:current_season %}
-                    <option {% if league.id == child.id %} selected {% endif %} data-tokens="{{ child.name }} {{child.zpn}}" value="{{ child|get_league_url:current_season }}">{{ child.name }} </option>
-                {% endif %}
-            {% endfor %}
+        {% if current_season_obj in lf.get_data_seasons %}
+            {% if lf.get_childs %}
+                {% include "plays/filters/_nested_league_options.html" with league=lf %}
+            {% else %}
+                {{ lf.search_tokens }}
+                <option {% if league.id == lf.id %} selected {% endif %} data-tokens="{{ lf.search_tokens }}" value="{{ lf|get_league_url:current_season }}">{{ lf.name }} </option>
+            {% endif %}
         {% endif %}
     {% endfor %}
 </select>

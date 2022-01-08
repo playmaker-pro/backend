@@ -3,6 +3,7 @@ from users.queries import get_users_manger_roles
 from app.admin_utils import json_filed_data_prettified
 from . import models
 from utils import linkify
+from django.utils.safestring import mark_safe
 
 
 def reset_history(modeladmin, request, queryset):
@@ -69,37 +70,64 @@ class GenderAdmin(admin.ModelAdmin):
     search_fields = ("name",)
 
 
+@admin.register(models.JuniorLeague)
+class JuniorLeagueAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+
+
+@admin.register(models.SectionGrouping)
+class SectionGroupingAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+
+
 @admin.register(models.League)
 class LeagueAdmin(admin.ModelAdmin):
     search_fields = ("name", "slug")
-    readonly_fields = ("slug", "search_index")
+    readonly_fields = ("slug", "search_tokens", "virtual")
     list_display = (
+        "get_slicer",
+        "section",
         "name",
+        "get_data_seasons",
+        "virtual",
         "order",
         "visible",
         "isparent",
         "is_parent",
-        "history",
+        "standalone",
+        "league_history",
         "country",
-        "parent_of",
+        "parent",
+        "childs_no",
         'seniority',
         'gender',
         "index",
         "group",
         "code",
         "slug",
-        "search_index",
+        "search_tokens",
     )
 
-    def history(self, obj):
-        return [f"{h.season.name}({h.visible})" for h in obj.historical.all()]
+    def get_slicer(self, obj):
+        return f"{obj.get_upper_parent_names()}"
 
-    def parent_of(self, obj):
-        return obj.parent.name if obj.parent else ""
+    def get_data_seasons(self, obj):
+        return "\n".join([season.name for season in obj.data_seasons.all()])
+
+    def league_history(self, obj):
+        return mark_safe('\n'.join([f'<a href="{h.get_admin_url()}">{h.season.name}</a>' for h in obj.historical.all()]))
+
+    def childs_no(self, obj):
+        return obj.get_childs.count()
+
+    def standalone(self, obj):
+        return obj.standalone
 
     def is_parent(self, obj):
         return obj.is_parent
+
     is_parent.short_description = 'is_parent()'
+    standalone.boolean = True
     is_parent.boolean = True
 
 
