@@ -5,7 +5,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Value
 from django.db.models.functions import Concat
 from profiles.utils import get_datetime_from_age
-from .utils import page_object_elements_count
+from .utils.paginate import page_object_elements_count
 from django.utils import timezone
 
 

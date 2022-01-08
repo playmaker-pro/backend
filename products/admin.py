@@ -8,7 +8,7 @@ from pygments.formatters import HtmlFormatter
 
 from django.contrib import admin
 from django.utils.safestring import mark_safe
-from app.admin_utils import json_filed_data_prettified
+from app.utils.admin import json_filed_data_prettified
 
 
 @admin.register(models.Product)

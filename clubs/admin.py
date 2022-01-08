@@ -1,6 +1,6 @@
 from django.contrib import admin
 from users.queries import get_users_manger_roles
-from app.admin_utils import json_filed_data_prettified
+from app.utils.admin import json_filed_data_prettified
 from . import models
 from utils import linkify
 from django.utils.safestring import mark_safe
@@ -11,7 +11,7 @@ def reset_history(modeladmin, request, queryset):
         h.reset()
 
 
-reset_history.short_description = 'Reset history league data.'
+reset_history.short_description = "Reset history league data."
 
 
 @admin.register(models.LeagueHistory)
@@ -28,8 +28,10 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
         "is_data",
     )
     ordering = ("-league",)
-    readonly_fields = ('data_prettified',)
-    actions = [reset_history,]
+    readonly_fields = ("data_prettified",)
+    actions = [
+        reset_history,
+    ]
 
     def get_league_slug(self, obj):
         return obj.league.slug
@@ -99,8 +101,8 @@ class LeagueAdmin(admin.ModelAdmin):
         "country",
         "parent",
         "childs_no",
-        'seniority',
-        'gender',
+        "seniority",
+        "gender",
         "index",
         "group",
         "code",
@@ -115,7 +117,14 @@ class LeagueAdmin(admin.ModelAdmin):
         return "\n".join([season.name for season in obj.data_seasons.all()])
 
     def league_history(self, obj):
-        return mark_safe('\n'.join([f'<a href="{h.get_admin_url()}">{h.season.name}</a>' for h in obj.historical.all()]))
+        return mark_safe(
+            "\n".join(
+                [
+                    f'<a href="{h.get_admin_url()}">{h.season.name}</a>'
+                    for h in obj.historical.all()
+                ]
+            )
+        )
 
     def childs_no(self, obj):
         return obj.get_childs.count()
@@ -126,7 +135,7 @@ class LeagueAdmin(admin.ModelAdmin):
     def is_parent(self, obj):
         return obj.is_parent
 
-    is_parent.short_description = 'is_parent()'
+    is_parent.short_description = "is_parent()"
     standalone.boolean = True
     is_parent.boolean = True
 

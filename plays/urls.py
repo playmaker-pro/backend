@@ -9,5 +9,7 @@ urlpatterns = [
     path("<slug:slug>/wyniki", views.PlaysScoresViews.as_view(), name="scores"),
     path("<slug:slug>/tabela", views.PlaysTableViews.as_view(), name="table"),
     path("<slug:slug>/spotkania", views.PlaysGamesViews.as_view(), name="next_games"),
-    path("<slug:slug>/playmaker", views.PlaysPlaymakerViews.as_view(), name="playmaker"),
+    path(
+        "<slug:slug>/playmaker", views.PlaysPlaymakerViews.as_view(), name="playmaker"
+    ),
 ]
