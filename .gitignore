@@ -85,3 +85,6 @@ media/images/
 
 # other scripts..
 custom_script_*.py
+
+# Ipynb
+.ipynb_checkpoints
