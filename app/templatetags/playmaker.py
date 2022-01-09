@@ -498,7 +498,7 @@ def announcement_yes(context):
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def filter_button(context, user, mobile=False):
-    '''Creates button to send apply filters'''
+    """Creates button to send apply filters"""
     button_attrs = 'type="submit"'
     if mobile:
         button_id = 'filter-button-mobile'
