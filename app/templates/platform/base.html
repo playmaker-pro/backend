@@ -59,15 +59,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script> {% endcomment %}
 
     <script src="{% static 'assets/vendor/bootstrap-select/js/bootstrap-select.min.js' %}"></script> 
-    <!--testout-->
-    <!--script src="//cdn.jsdelivr.net/npm/less" ></script-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.2/js/tempusdominus-bootstrap-4.min.js" integrity="sha256-z0oKYg6xiLq3yJGsp/LsY9XykbweQlHl42jHv2XTBz4=" crossorigin="anonymous"></script>
-
     <script src="{% static 'assets/js/profiles.js' %}"></script>
     <script src="{% static 'assets/js/observers.js' %}"></script>
     
     <!-- extra modals -->
-    {# Loading proper modals #}
     {% for _, modal in modals.items %}
         {% if modal.load %}
             {% include modal.template with trigger=modal.auto %}

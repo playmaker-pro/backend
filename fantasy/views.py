@@ -1,5 +1,3 @@
-# Create your views here.
-# external dependencies
 import json
 import logging
 import math
@@ -52,7 +50,7 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
     def filter_queryset(self, queryset):
         if self.filter_season_exact:
             queryset = queryset.filter(season__name=self.filter_season_exact)
-  
+
         if self.filter_leg is not None:
             queryset = queryset.filter(player__playerprofile__prefered_leg=self.filter_leg)
 

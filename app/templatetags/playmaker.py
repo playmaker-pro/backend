@@ -1,6 +1,6 @@
 import logging
 import json
-
+import django
 from datetime import date, datetime
 
 from clubs.models import Club, Team, League
@@ -187,6 +187,7 @@ def days_until(exp_date, arg=None):
         day_str = _("dni")
 
     return "%s %s" % (abs(delta.days), day_str)  # , fa_str)
+
 
 
 @register.filter

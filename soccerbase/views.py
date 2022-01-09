@@ -98,7 +98,6 @@ class PlayersTable(TableView):
         return queryset
 
     def get_queryset(self):
-        
         return User.objects.filter(
             declared_role='P',
             state=User.STATE_ACCOUNT_VERIFIED,

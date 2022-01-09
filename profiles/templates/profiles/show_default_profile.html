@@ -6,11 +6,11 @@
 
 
 {% block content_header %}
-    {% include '_page_heading.html' with heading_title=page_title size=4 %}
+    {% include '_page_heading.html' with heading_title=page_title %}
     {{ block.super }}
 {% endblock %}
 
-{% block content %}  <!-- @todo frontend to be renovated to adjust template-->
+{% block content %}
 <section id="profile" class="profile">
   <div class="container profile-container" data-aos="fade-up">
       <div class="row">
