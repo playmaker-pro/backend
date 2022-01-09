@@ -873,7 +873,7 @@ class ClubProfile(BaseProfile):
     club_role = models.IntegerField(
         choices=CLUB_ROLE,
         null=True, blank=True,
-        help_text='Defines if admin approved change')   
+        help_text='Defines if admin approved change')
 
     class Meta:
         verbose_name = "Club Profile"
