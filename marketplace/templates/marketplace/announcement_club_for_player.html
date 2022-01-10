@@ -58,14 +58,14 @@
                 <i class="icofont-wall-clock"></i>
                 <small class="text-muted"> {{ object.expire|days_until }}</small>
             </div>
-            
-            <div class="card-text pull-right">
-            
-                {% if user.is_player %} 
+        </div>
+        <div class="card-text pull-right">
+
+                {% if user.is_player %}
                     {% announcement_response object %}
                 {% elif user.is_club or user.is_coach %}
                     {% announcement_edit object %}
-                {% endif %} 
+                {% endif %}
             </div>
             <div>
               <button type="button" class="btn-request" onclick="window.location.href='{{ object.club.get_permalink }}';">Zobacz profil</button>
@@ -73,6 +73,5 @@
             <div>
               <button type="button" class="btn-request" onclick="">Udostępnij</button>
             </div>
-        </div>
     </div>
 </div>
