@@ -8,7 +8,7 @@
         <div class="serv-section-desc">
             <h4>
 <!--                <a  href="{{ object.club.get_permalink }}">{{ object.club.name }}</a>-->
-                <a  href="{{ object.club.get_permalink }}">{{ object.club.name }}</a>
+                <a href="{{ object.club.get_permalink }}">{{ object.club.name }}</a>
                 <span class="badge badge-primary" style="float: right">Klub szuka trenera</span>
             </h4>
             <h5>{{ object.voivodeship.name|lower }} </h5>
@@ -59,7 +59,7 @@
                 <i class="icofont-wall-clock"></i>
                 <small class="text-muted"> {{ object.expire|days_until }}</small>
             </div>
-            
+
             <div class="card-text pull-right">
             
                 {% if user.is_coach %}
@@ -67,6 +67,12 @@
                 {% elif user.is_club %}
                     {% announcement_edit object %}
                 {% endif %} 
+            </div>
+            <div>
+              <button type="button" class="btn-request" onclick="window.location.href='{{ object.club.get_permalink }}';">Zobacz profil</button>
+            </div>
+            <div>
+              <button type="button" class="btn-request" onclick="">Udostępnij</button>
             </div>
         </div>
     </div>

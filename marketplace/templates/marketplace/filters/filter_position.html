@@ -1,6 +1,14 @@
 
 {% load playmaker %}
-<select name="position" data-width="{{ size }}"  class="form-control selectpicker" data-allow-clear="true" title="pozycja">
+<select name="position"
+        data-width="{{ size }}"
+        class="selectpicker"
+        multiple
+        data-actions-box="true"
+        data-live-search="true"
+        data-allow-clear="true"
+        data-selected-text-format="count > 1"
+        title="pozycja">
 
 {% for option in options %}
     <option {% if request.GET.position == option %} selected {% endif %} value="{{ option }}">{{ option }}</option>

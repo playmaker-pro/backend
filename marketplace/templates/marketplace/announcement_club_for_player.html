@@ -3,8 +3,6 @@
 {% load i18n %}
 
 <div class="card announcement-card m-1 serv-section-2">
-<!--    <div class="serv-section-2-icon"> <img class="avatar rounded img-responsive"  src="{% thumbnail object.club.picture|default:'default_club.png' 'club_small' %}">-->
-<!--    </div>-->
         <div class="serv-section-desc">
             <h4>
                 <a href="{{ object.club.get_permalink }}">{{ object.club.name }}</a>
@@ -12,7 +10,6 @@
                 <span class="badge badge-success" style="float: right">Klub szuka zawodnika</span>
             </h4>
             <h5>{{ object.voivodeship.name|lower }} </h5>
-<!--            <h5>{{ object.league.name|title }}, {{ object.voivodeship.name|lower }} </h5> -->
     </div>
         <div class="section-heading-line-left"></div>
     <div class="card-body row no-gutters">
@@ -61,15 +58,20 @@
                 <i class="icofont-wall-clock"></i>
                 <small class="text-muted"> {{ object.expire|days_until }}</small>
             </div>
-            
-            <div class="card-text pull-right">
-            
-                {% if user.is_player %} 
+        </div>
+        <div class="card-text pull-right">
+
+                {% if user.is_player %}
                     {% announcement_response object %}
                 {% elif user.is_club or user.is_coach %}
                     {% announcement_edit object %}
-                {% endif %} 
+                {% endif %}
             </div>
-        </div>
+            <div>
+              <button type="button" class="btn-request" onclick="window.location.href='{{ object.club.get_permalink }}';">Zobacz profil</button>
+            </div>
+            <div>
+              <button type="button" class="btn-request" onclick="">Udostępnij</button>
+            </div>
     </div>
 </div>

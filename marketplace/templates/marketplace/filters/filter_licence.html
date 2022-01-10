@@ -1,5 +1,14 @@
 
-<select name="licence" data-width="{{ size }}"  class="form-control selectpicker" data-allow-clear="true" title="licencja">
+<select name="licence"
+        data-width="{{ size }}"
+        class="selectpicker"
+        multiple
+        data-actions-box="true"
+        data-live-search="true"
+        data-allow-clear="true"
+        title="licencja"
+        data-selected-text-format="count > 1"
+>
 {% for option in options %}
     <option {% if request.GET.licence == option %} selected {% endif %} value="{{ option }}">{{ option }}</option>
 {% endfor %}
