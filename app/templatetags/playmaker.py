@@ -445,7 +445,10 @@ def announcement_response(context, ann):
     if user.is_player:
         button_text = 'Zgłaszam się na testy'
     elif user.is_coach:
-        button_text = 'Zgłaszam się'
+        if ann.__class__.__name__ == "ClubForCoachAnnouncement":
+            button_text = 'Zgłaszam się'
+        else:
+            button_text = 'Zaproś na testy'
     elif user.is_club:
         if ann.__class__.__name__ == 'CoachForClubAnnouncement':
             button_text = 'Zaproś na rozmowę'

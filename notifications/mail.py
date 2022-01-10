@@ -42,7 +42,7 @@ def announcement_notify_club_coach(announcement, coach):
     subject = 'Dostałeś odpowiedź na Twoje ogłoszenie o pracy'
     body = f'Trener {coach.first_name} {coach.last_name} chce wziąć udział w rekrutacji na stanowisko trenera.\n'
     body += f'Jeśli jesteś zainteresowany, skontaktuj się:\n\n'
-    body += f'Email: {coach.profile.email}\n'
+    body += f'Email: {coach.email}\n'
     if coach.profile.phone:
         body += f'Telefon: {coach.profile.phone}:\n'
     body += f'Link do profilu: {absurl(coach.profile.get_permalink())}\n\n'
@@ -51,26 +51,30 @@ def announcement_notify_club_coach(announcement, coach):
     send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [announcement.creator.email])
 
 
-def announcement_notify_player(announcement, club):
+def announcement_notify_player(announcement, inviter):
     subject = 'Dostałeś odpowiedź na Twoje ogłoszenie'
-    body = f'Klub {club.name} chce Cię zaprosić na testy!.\n'
-    body += f'Jeśli jesteś zainteresowany, skontaktuj się: \n\n'
-    body += f'Email: {coach.profile.email / club.profile.email}\n'
-    if coach.profile.phone:
-        body += f'Telefon: {coach.profile.phone}:\n'
-    body += f'Link do profilu: {absurl(club.get_permalink / team.get_permalink())}\n\n'
+    if inviter.declared_role == 'T':
+        pass
+    else:  # if inviter is a Club
+        body = f'Klub {inviter.clubprofile.display_club} chce Cię zaprosić na testy!.\n'
+        body += f'Jeśli jesteś zainteresowany, skontaktuj się: \n\n'
+        body += f'Email:{inviter.clubprofile.user.email}\n'  # or coach's email if coach exists
+    # if coach.profile.phone:
+    #     body += f'Telefon: {coach.profile.phone}:\n'
+    body += f'Link do profilu: {absurl(inviter.clubprofile.get_permalink())}\n\n'  # or coach's email if coach exists
+    body = add_footer(body)
 
     send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [announcement.creator.email])
 
 
 def announcement_notify_coach(announcement, club):
     subject = 'Dostałeś odpowiedź na Twoje ogłoszenie'
-    body = f'Klub {club.name} chce Cię zaprosić na rozmowę o pracę!.\n'
+    body = f'Klub {club.clubprofile.display_club} chce Cię zaprosić na rozmowę o pracę!.\n'
     body += f'Jeśli jesteś zainteresowany, skontaktuj się: \n\n'
-    body += f'Email: {club.profile.email}\n'
-    if club.profile.phone:
-        body += f'Telefon: {club.profile.phone}:\n'
-    body += f'Link do profilu: {absurl(club.get_permalink)}\n\n'
+    body += f'Email: {club.clubprofile.user.email}\n'
+    if club.clubprofile.phone:
+        body += f'Telefon: {club.clubprofile.phone}:\n'
+    body += f'Link do profilu: {absurl(club.clubprofile.get_permalink())}\n\n'
     body = add_footer(body)
 
     send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [announcement.creator.email])
@@ -81,15 +85,17 @@ def announcement_notify_requester(announcement_type, announcement, user):
     body = ""
     if announcement_type == "PlayerForClubAnnouncement":
         subject = 'Wysłałeś zaproszenie na testy'
-        body = f'Twoje zgłoszenie na testy zostało wysłane do {announcement.creator.profile.player}.\n' \
+        body = f'Twoje zgłoszenie na testy zostało wysłane do ' \
+               f'{announcement.creator.first_name} {announcement.creator.last_name}.\n' \
                f'Jeśli zawodnik będzie zainteresowany - skontaktuje się z Tobą telefonicznie lub mailowo.\n\n'
     elif announcement_type == "CoachForClubAnnouncement":
         subject = 'Wysłałeś zaproszenie na rozmowę o pracę'
-        body = f'Twoje zgłoszenie na testy zostało wysłane do {announcement.creator.profile.coach}.\n' \
+        body = f'Twoje zgłoszenie na testy zostało wysłane do ' \
+               f'{announcement.creator.first_name} {announcement.creator.last_name}.\n' \
                f'Jeśli trener będzie zainteresowany - skontaktuje się z Tobą telefonicznie lub mailowo.\n\n'
     elif announcement_type == "ClubForCoachAnnouncement":
         subject = 'Wysłałeś aplikację na rozmowę o pracę'
-        body = f'Twoje zgłoszenie na testy zostało wysłane do {announcement.creator.club.name}.\n' \
+        body = f'Twoje zgłoszenie na testy zostało wysłane do {announcement.club.display_club}.\n' \
                f'Jeśli klub będzie zainteresowany Twoją kandydaturą - skontaktuje się z Tobą ' \
                f'telefonicznie lub mailowo.\n\n'
     elif announcement_type == "ClubForPlayer":

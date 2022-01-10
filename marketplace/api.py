@@ -34,6 +34,7 @@ announcement_mail_mapper = {
     'CoachForClubAnnouncement': announcement_notify_coach,
 }
 
+
 @login_required
 def approve_announcement(request):
     response_data = {'status': False}
