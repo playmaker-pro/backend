@@ -5,6 +5,7 @@ meta:
     - title
     - tags
     - description
+    - keywords
     - fbapp
     - oglocale
     - ogtype
@@ -32,10 +33,10 @@ default:
   ogdescription: 'Szukaj piłkarzy, klubów i trenerów. Zapraszaj na testy i korzystaj z ogłoszeń o testach piłkarskich'
   ogsite_name: 
 
-
 /fantasy/:
   title: 'Fantasy | PlayMaker.pro'
   description: 'Zapraszaj znajomych piłkarzy i rywalizuj z nimi w grze Fantasy dla niższych lig'
+  tags: 'fantasy, ranking piłkarzy'
   ogtitle: 'Fantasy | PlayMaker.pro'
   ogdescription: 'Zapraszaj znajomych piłkarzy i rywalizuj z nimi w grze Fantasy dla niższych lig'
   ogsite_name: 'https://playmaker.pro/fantasy/'
@@ -128,8 +129,6 @@ default:
   ogdescription: 'Prezesie, działaczu dołącz do bazy klubów! Szukaj piłkarzy, wysyłaj zaproszenia na testy, twórz ogłoszenia o potrzebach kadrowych na ogólnodostępnej tablicy ogłoszeń!'
   ogsite_name: 'https://playmaker.pro/tables/teams/'
   ogurl: 'https://playmaker.pro/tables/teams/'
-
-
 
 dynamic:
   /users/player-*/:

@@ -2,6 +2,8 @@
 {% load wagtailcore_tags %}
 {% load compress %}
 {% load playmaker %}
+{% load core_tags %}
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -9,12 +11,9 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-  <title>
-    {% block title %}
+  <title>{% block title %}
       {% if self.seo_title %}{{ self.seo_title }}{% else %}{{ self.title|default:"PlayMaker.pro" }}{% endif %}
     {% endblock %}
-    
     {% block title_suffix %}
     {% with self.get_site.site_name as site_name %}
         {% if site_name %}- {{ site_name }}{% endif %}
@@ -36,7 +35,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Asap&family=Roboto&display=swap" rel="stylesheet">
   <!-- Vendor CSS Files -->
 
-  
   {% compress css %}
   <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
   <link href="{% static 'assets/vendor/icofont/icofont.min.css' %}" rel="stylesheet">
@@ -45,13 +43,10 @@
   <link href="{% static 'assets/vendor/remixicon/remixicon.css' %}" rel="stylesheet">
   <link href="{% static 'assets/vendor/venobox/venobox.css' %}" rel="stylesheet">
   <link href="{% static 'assets/vendor/aos/aos.css' %}" rel="stylesheet">
-  
-  <!-- Template Main CSS File -->
   <link href="{% static 'assets/css/style.css' %}" rel="stylesheet">
   <link href="{% static 'assets/css/loading.css' %}" rel="stylesheet">
   {% endcompress %}
 
-  
   {% block extra_css %}
       {# Override this in templates to add extra stylesheets #}
   {% endblock extra_css %}
@@ -81,11 +76,13 @@ onReady(function() {
   setVisible('#loading', false);
 });
 </script>
-
 </head>
 
-<body >
-  {% include 'ga.html' %}
+<body>
+  {% template_exists 'ga.html' as ga_template_exists %}
+  {% if ga_template_exists %}
+    {% include 'ga.html' %}
+  {% endif %}
   {% comment %} <div id="loading">
     <a href="#" class="intro-banner-vdo-play-btn pinkBg" target="_blank">
         <i class="glyphicon glyphicon-play whiteText" aria-hidden="true"></i>
@@ -174,11 +171,6 @@ onReady(function() {
     {# Override this in templates to add extra javascript #}
 {% endblock %}
 
-
-
-
 </body>
-
 </html>
-
 {% endspaceless %}

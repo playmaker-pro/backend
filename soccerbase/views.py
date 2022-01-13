@@ -98,8 +98,7 @@ class PlayersTable(TableView):
         return queryset
 
     def get_queryset(self):
-        
-        return User.objects.filter(
+        return User.objects.select_related("playerprofile").filter(
             declared_role='P',
             state=User.STATE_ACCOUNT_VERIFIED,
             playerprofile__birth_date__lte=get_datetime_from_age(15)).order_by(F('last_login').desc(nulls_last=True))
@@ -114,7 +113,7 @@ class PlayerTalbeQuickFilter(generic.TemplateView, mixins.PaginateMixin, mixins.
     page_title = 'Baza piłkarzy'
 
     def get_queryset(self):
-        return User.objects.filter(
+        return User.objects.select_related("playerprofile").filter(
             declared_role='P',
             state=User.STATE_ACCOUNT_VERIFIED,
             playerprofile__birth_date__lte=get_datetime_from_age(15)).order_by(F('last_login').desc(nulls_last=True))
@@ -213,7 +212,7 @@ class CoachesTable(TableView):
     page_title = 'Baza trenerów'
 
     def get_queryset(self):
-        return User.objects.filter(
+        return User.objects.select_related("coachprofile", "coachprofile__team_object").filter(
             declared_role='T',
             state=User.STATE_ACCOUNT_VERIFIED
         ).order_by(F('last_login').desc(nulls_last=True))

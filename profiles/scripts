@@ -1,8 +1,0 @@
-for u in us:
-     try:
-         profile = u.profile
-         profile.event_log = {'messages': []}
-         profile.save()
-     except Exception as e:
-         print(e)
-         print('!!!!!!', u)
