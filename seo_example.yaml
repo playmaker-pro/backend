@@ -42,6 +42,7 @@ default:
 /fantasy/:
   title: 'Fantasy | PlayMaker.pro'
   description: 'Zapraszaj znajomych piłkarzy i rywalizuj z nimi w grze Fantasy dla niższych lig'
+  tags: 'fantasy ranking'
   ogtitle: 'Fantasy | PlayMaker.pro'
   ogdescription: 'Zapraszaj znajomych piłkarzy i rywalizuj z nimi w grze Fantasy dla niższych lig'
   ogsite_name: 'https://playmaker.pro/fantasy/'

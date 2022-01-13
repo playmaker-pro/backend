@@ -117,23 +117,8 @@ class ProfileVisitHistory(models.Model):
             self.save()
 
 
-class BaseProfile(models.Model):
-    """Base profile model to held most common profile elements"""
+class EventLogMixin:
     EVENT_LOG_HISTORY = 35
-    PROFILE_TYPE = None
-    AUTO_VERIFY = False  # flag to perform auto verification of User based on profile. If true - User.state will be switched to Verified
-    VERIFICATION_FIELDS = []  # this is definition of profile fields which will be threaded as must-have params.
-    COMPLETE_FIELDS = []  # this is definition of profile fields which will be threaded as mandatory for full profile.
-    OPTIONAL_FIELDS = []  # this is definition of profile fields which will be threaded optional
-
-    data_mapper_changed = None
-
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True)
-    history = models.OneToOneField(ProfileVisitHistory, on_delete=models.CASCADE, null=True, blank=True)
-    data_mapper_id = models.PositiveIntegerField(null=True, blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.')
-    slug = models.CharField(max_length=255, blank=True, editable=False)
-    bio = models.CharField(_("Krótki opis o sobie"), max_length=455, blank=True, null=True)
-    event_log = models.JSONField(null=True, blank=True)
 
     def make_default_event_log(self):
         self.event_log = list()
@@ -162,6 +147,28 @@ class BaseProfile(models.Model):
         self.event_log.insert(0, msg)
         if commit:
             self.save()
+
+
+class BaseProfile(models.Model, EventLogMixin):
+    """Base profile model to held most common profile elements"""
+    
+    PROFILE_TYPE = None
+    AUTO_VERIFY = False  # flag to perform auto verification of User based on profile. If true - User.state will be switched to Verified
+    VERIFICATION_FIELDS = []  # this is definition of profile fields which will be threaded as must-have params.
+    COMPLETE_FIELDS = []  # this is definition of profile fields which will be threaded as mandatory for full profile.
+    OPTIONAL_FIELDS = []  # this is definition of profile fields which will be threaded optional
+
+    data_mapper_changed = None
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True)
+    history = models.OneToOneField(ProfileVisitHistory, on_delete=models.CASCADE, null=True, blank=True)
+    data_mapper_id = models.PositiveIntegerField(null=True, blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.')
+    slug = models.CharField(max_length=255, blank=True, editable=False)
+    bio = models.CharField(_("Krótki opis o sobie"), max_length=455, blank=True, null=True)
+    event_log = models.JSONField(null=True, blank=True)
+
+    def get_absolute_url(self):
+        return self.get_permalink()
 
     def get_permalink(self):
         return reverse("profiles:show", kwargs={"slug": self.slug})
@@ -866,7 +873,7 @@ class ClubProfile(BaseProfile):
     club_role = models.IntegerField(
         choices=CLUB_ROLE,
         null=True, blank=True,
-        help_text='Defines if admin approved change')   
+        help_text='Defines if admin approved change')
 
     class Meta:
         verbose_name = "Club Profile"

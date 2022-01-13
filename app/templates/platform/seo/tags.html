@@ -1,9 +1,7 @@
-
 <!-- tags -->
 {% if robots %} <meta name="robots" content="max-snippet:-1, max-image-preview:large, max-video-preview:-1"> {% endif %}
 {% if description %} <meta name="description" content="{{ description }}"> {% endif %}
 {% if tags %}<meta name="keywords" content="{{ tags }}"> {% endif %}
-
 {% if fbapp %}<meta property="fb:app_id" content="{{ fbapp }}">{% endif %}
 <meta property="og:locale" content="{{ oglocale|default:'pl_PL' }}">
 <meta property="og:type" content="{{ ogtype|default:'website' }}">
