@@ -1,7 +1,11 @@
 from django.db import models
 from modelcluster.fields import ParentalKey
-from wagtail.admin.edit_handlers import (FieldPanel, FieldRowPanel,
-                                         InlinePanel, MultiFieldPanel)
+from wagtail.admin.edit_handlers import (
+    FieldPanel,
+    FieldRowPanel,
+    InlinePanel,
+    MultiFieldPanel,
+)
 from wagtail.contrib.forms.models import AbstractEmailForm, AbstractFormField
 from wagtail.core.fields import RichTextField
 from django.shortcuts import redirect
@@ -9,9 +13,9 @@ from django.shortcuts import redirect
 
 class FormField(AbstractFormField):
     page = ParentalKey(
-        'ContactPage',
+        "ContactPage",
         on_delete=models.CASCADE,
-        related_name='form_fields',
+        related_name="form_fields",
     )
 
 
@@ -26,18 +30,23 @@ class ContactPage(AbstractEmailForm):
     thank_you_text = RichTextField(blank=True)
 
     content_panels = AbstractEmailForm.content_panels + [
-        FieldPanel('intro'),
-        InlinePanel('form_fields', label='Form Fields'),
-        FieldPanel('thank_you_text'),
-        MultiFieldPanel([
-            FieldRowPanel([
-                FieldPanel('from_address', classname="col6"),
-                FieldPanel('to_address', classname="col6"),
-            ]),
-            FieldPanel("subject"),
-        ], heading="Email Settings"),
+        FieldPanel("intro"),
+        InlinePanel("form_fields", label="Form Fields"),
+        FieldPanel("thank_you_text"),
+        MultiFieldPanel(
+            [
+                FieldRowPanel(
+                    [
+                        FieldPanel("from_address", classname="col6"),
+                        FieldPanel("to_address", classname="col6"),
+                    ]
+                ),
+                FieldPanel("subject"),
+            ],
+            heading="Email Settings",
+        ),
     ]
-    
+
     # def render_landing_page(self, request, form_submission=None, *args, **kwargs):
     #     raise RuntimeError('xxxxxxxx')
     #     return redirect('/', permanent=False)
