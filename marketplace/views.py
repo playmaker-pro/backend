@@ -146,6 +146,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     form = ClubForPlayerAnnouncementForm(initial={})
             elif _action_name == "club_looking_for_coach":
                 if user.profile.club_object:
+
                     form = ClubForCoachAnnouncementForm(initial={
                         'club': user.profile.club_object,
                         'voivodeship': user.profile.club_object.voivodeship
@@ -346,9 +347,8 @@ class ClubForPlayerAnnouncementsView(AnnouncementsMetaView):
         if self.filter_seniority_exact is not None:
             queryset = queryset.filter(seniority__name=self.filter_seniority_exact)
 
-        if self.filter_position is not None:
-            queryset = queryset.filter(positions__name__in=self.filter_position)
-
+        if self.filter_position_marketplace is not None:
+            queryset = queryset.filter(positions__name__in=self.filter_position_marketplace).distinct()
         return queryset
 
 
@@ -364,8 +364,8 @@ class CoachForClubAnnouncementsView(AnnouncementsMetaView):
         if self.filter_target_league_exact is not None:
             queryset = queryset.filter(target_league__name=self.filter_target_league_exact)
 
-        if self.filter_licence_type is not None:
-            queryset = queryset.filter(lic_type=self.filter_licence_type)
+        if self.filter_licence_list is not None:
+            queryset = queryset.filter(lic_type__in=self.filter_licence_list)
         return queryset
 
 
