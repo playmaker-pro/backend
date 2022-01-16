@@ -301,7 +301,7 @@ class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, 
             queryset = self.filter_queryset(queryset)
             lista.append(queryset)
         queryset = list(chain(*lista))
-
+        queryset = sorted(queryset, key=lambda x: x.created_at, reverse=True)
         paginator = Paginator(queryset, self.paginate_limit)
         page_number = request.GET.get('page') or 1
         page_obj = paginator.get_page(page_number)
@@ -345,6 +345,9 @@ class ClubForPlayerAnnouncementsView(AnnouncementsMetaView):
 
         if self.filter_seniority_exact is not None:
             queryset = queryset.filter(seniority__name=self.filter_seniority_exact)
+
+        if self.filter_position is not None:
+            queryset = queryset.filter(positions__name__in=self.filter_position)
 
         return queryset
 

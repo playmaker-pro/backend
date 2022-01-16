@@ -53,15 +53,20 @@ def announcement_notify_club_coach(announcement, coach):
 
 def announcement_notify_player(announcement, inviter):
     subject = 'Dostałeś odpowiedź na Twoje ogłoszenie'
-    if inviter.declared_role == 'T':
-        pass
+    if inviter.declared_role == 'T':  # if inviter is a Coach
+        body = f'Klub {inviter.coachprofile.display_club} chce Cię zaprosić na testy!.\n'
+        body += f'Jeśli jesteś zainteresowany, skontaktuj się: \n\n'
+        body += f'Email:{inviter.coachprofile.user.email}\n'  # or coach's email if coach exists
+        if phone := inviter.profile.phone:
+            body += f'Telefon: {phone}:\n'
+        body += f'Link do profilu trenera: {absurl(inviter.coachprofile.get_permalink())}\n\n'
+
     else:  # if inviter is a Club
         body = f'Klub {inviter.clubprofile.display_club} chce Cię zaprosić na testy!.\n'
         body += f'Jeśli jesteś zainteresowany, skontaktuj się: \n\n'
-        body += f'Email:{inviter.clubprofile.user.email}\n'  # or coach's email if coach exists
-    # if coach.profile.phone:
-    #     body += f'Telefon: {coach.profile.phone}:\n'
-    body += f'Link do profilu: {absurl(inviter.clubprofile.get_permalink())}\n\n'  # or coach's email if coach exists
+        body += f'Email:{inviter.clubprofile.user.email}\n'
+        body += f'Link do profilu: {absurl(inviter.clubprofile.get_permalink())}\n\n'
+
     body = add_footer(body)
 
     send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [announcement.creator.email])
@@ -84,7 +89,7 @@ def announcement_notify_requester(announcement_type, announcement, user):
     subject = ""
     body = ""
     if announcement_type == "PlayerForClubAnnouncement":
-        subject = 'Wysłałeś zaproszenie na testy'
+        subject = 'Wysłałeś zgłoszenie na testy'
         body = f'Twoje zgłoszenie na testy zostało wysłane do ' \
                f'{announcement.creator.first_name} {announcement.creator.last_name}.\n' \
                f'Jeśli zawodnik będzie zainteresowany - skontaktuje się z Tobą telefonicznie lub mailowo.\n\n'
@@ -98,7 +103,7 @@ def announcement_notify_requester(announcement_type, announcement, user):
         body = f'Twoje zgłoszenie na testy zostało wysłane do {announcement.club.display_club}.\n' \
                f'Jeśli klub będzie zainteresowany Twoją kandydaturą - skontaktuje się z Tobą ' \
                f'telefonicznie lub mailowo.\n\n'
-    elif announcement_type == "ClubForPlayer":
+    elif announcement_type == "ClubForPlayerAnnouncement":
         subject = 'Wysłałeś zgłoszenie na testy'
         body = f'Twoje zgłoszenie na testy zostało wysłane do {announcement.creator.profile.display_club}. \n' \
                f'Reszta pozostaje w rękach trenera, prezesa lub dyrektora sportowego. ' \

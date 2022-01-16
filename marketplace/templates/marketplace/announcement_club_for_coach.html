@@ -42,8 +42,8 @@
         </div>
     </div>
 
-    <div class="card-footer row no-gutters">
-        <div class="card-text text-center d-inline-flex justify-content-center align-content-center flex-wrap">
+    <div class="card-footer no-gutters">
+        <div class="row card-text text-center centered-div">
             {% if object.www %}
             <div>
                 <small class="text-muted"><a href="{{ object.www }}">{% trans 'Link do ogłoszenia / strony www klubu' %}</a> </small>
@@ -59,18 +59,20 @@
                 <i class="icofont-wall-clock"></i>
                 <small class="text-muted"> {{ object.expire|days_until }}</small>
             </div>
-
+        </div>
+        <div class="row card-text text-center centered-div">
             <div class="card-text pull-right">
-            
                 {% if user.is_coach %}
                     {% announcement_response object %}
                 {% elif user.is_club %}
                     {% announcement_edit object %}
-                {% endif %} 
+                {% endif %}
             </div>
+
             <div>
-              <button type="button" class="btn-request" onclick="window.location.href='{{ object.club.get_permalink }}';">Zobacz profil</button>
+              <button type="button" class="btn-request" onclick="window.location.href='/users/{{ object.club.get_permalink }}';">Zobacz profil</button>
             </div>
+
             <div>
               <button type="button" class="btn-request" onclick="">Udostępnij</button>
             </div>

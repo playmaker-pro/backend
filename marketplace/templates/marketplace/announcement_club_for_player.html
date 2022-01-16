@@ -9,7 +9,7 @@
 
                 <span class="badge badge-success" style="float: right">Klub szuka zawodnika</span>
             </h4>
-            <h5>{{ object.voivodeship.name|lower }} </h5>
+            <h5>{{ object.league }}</h5>
     </div>
         <div class="section-heading-line-left"></div>
     <div class="card-body row no-gutters">
@@ -31,7 +31,7 @@
                 </div>
 
                 <div class="col-6 col-md-3 text-center">
-                    <h5>{{ object.address|default:'-' }}</h5>
+                    <h5>{{ object.voivodeship }}, {{ object.address }}</h5>
                     Region
                 </div>
                 <div class="card-text col-md-12">
@@ -41,8 +41,8 @@
         </div>
     </div>
 
-    <div class="card-footer row no-gutters">
-        <div class="card-text text-center d-inline-flex justify-content-center align-content-center flex-wrap">
+    <div class="card-footer no-gutters">
+        <div class="row card-text text-center centered-div">
             {% if object.www %}
             <div>
                 <small class="text-muted"><a href="{{ object.www }}">{% trans 'Link do ogłoszenia / strony www klubu' %}</a> </small>
@@ -59,19 +59,22 @@
                 <small class="text-muted"> {{ object.expire|days_until }}</small>
             </div>
         </div>
-        <div class="card-text pull-right">
-
+        <div class="row card-text text-center centered-div">
+            <div class="card-text pull-right">
                 {% if user.is_player %}
                     {% announcement_response object %}
                 {% elif user.is_club or user.is_coach %}
                     {% announcement_edit object %}
                 {% endif %}
             </div>
+
             <div>
               <button type="button" class="btn-request" onclick="window.location.href='{{ object.club.get_permalink }}';">Zobacz profil</button>
             </div>
+
             <div>
               <button type="button" class="btn-request" onclick="">Udostępnij</button>
             </div>
+        </div>
     </div>
 </div>
