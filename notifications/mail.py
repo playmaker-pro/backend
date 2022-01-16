@@ -54,18 +54,18 @@ def announcement_notify_club_coach(announcement, coach):
 def announcement_notify_player(announcement, inviter):
     subject = 'Dostałeś odpowiedź na Twoje ogłoszenie'
     if inviter.declared_role == 'T':  # if inviter is a Coach
-        body = f'Klub {inviter.coachprofile.display_club} chce Cię zaprosić na testy!.\n'
+        body = f'Klub {inviter.coachprofile.display_club} chce Cię zaprosić na testy!\n'
         body += f'Jeśli jesteś zainteresowany, skontaktuj się: \n\n'
-        body += f'Email:{inviter.coachprofile.user.email}\n'  # or coach's email if coach exists
+        body += f'Email trenera: {inviter.coachprofile.user.email}\n'  # or coach's email if coach exists
         if phone := inviter.profile.phone:
-            body += f'Telefon: {phone}:\n'
+            body += f'Telefon trenera: {phone}:\n'
         body += f'Link do profilu trenera: {absurl(inviter.coachprofile.get_permalink())}\n\n'
 
     else:  # if inviter is a Club
-        body = f'Klub {inviter.clubprofile.display_club} chce Cię zaprosić na testy!.\n'
+        body = f'Klub {inviter.clubprofile.display_club} chce Cię zaprosić na testy!\n'
         body += f'Jeśli jesteś zainteresowany, skontaktuj się: \n\n'
-        body += f'Email:{inviter.clubprofile.user.email}\n'
-        body += f'Link do profilu: {absurl(inviter.clubprofile.get_permalink())}\n\n'
+        body += f'Email: {inviter.clubprofile.user.email}\n'
+        body += f'Link do profilu: {absurl(inviter.clubprofile.club_object.get_permalink())}\n\n'
 
     body = add_footer(body)
 
@@ -74,12 +74,12 @@ def announcement_notify_player(announcement, inviter):
 
 def announcement_notify_coach(announcement, club):
     subject = 'Dostałeś odpowiedź na Twoje ogłoszenie'
-    body = f'Klub {club.clubprofile.display_club} chce Cię zaprosić na rozmowę o pracę!.\n'
+    body = f'Klub {club.clubprofile.display_club} chce Cię zaprosić na rozmowę o pracę!\n'
     body += f'Jeśli jesteś zainteresowany, skontaktuj się: \n\n'
     body += f'Email: {club.clubprofile.user.email}\n'
     if club.clubprofile.phone:
         body += f'Telefon: {club.clubprofile.phone}:\n'
-    body += f'Link do profilu: {absurl(club.clubprofile.get_permalink())}\n\n'
+    body += f'Link do profilu: {absurl(club.clubprofile.club_object.get_permalink())}\n\n'
     body = add_footer(body)
 
     send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [announcement.creator.email])
@@ -89,13 +89,13 @@ def announcement_notify_requester(announcement_type, announcement, user):
     subject = ""
     body = ""
     if announcement_type == "PlayerForClubAnnouncement":
-        subject = 'Wysłałeś zgłoszenie na testy'
-        body = f'Twoje zgłoszenie na testy zostało wysłane do ' \
+        subject = 'Wysłałeś zaproszenie na testy'
+        body = f'Twoje zaproszenie na testy zostało wysłane do ' \
                f'{announcement.creator.first_name} {announcement.creator.last_name}.\n' \
                f'Jeśli zawodnik będzie zainteresowany - skontaktuje się z Tobą telefonicznie lub mailowo.\n\n'
     elif announcement_type == "CoachForClubAnnouncement":
         subject = 'Wysłałeś zaproszenie na rozmowę o pracę'
-        body = f'Twoje zgłoszenie na testy zostało wysłane do ' \
+        body = f'Twoje zaproszenie na rozmowę o pracę zostało wysłane do ' \
                f'{announcement.creator.first_name} {announcement.creator.last_name}.\n' \
                f'Jeśli trener będzie zainteresowany - skontaktuje się z Tobą telefonicznie lub mailowo.\n\n'
     elif announcement_type == "ClubForCoachAnnouncement":

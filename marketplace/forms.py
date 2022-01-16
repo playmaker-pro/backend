@@ -145,6 +145,7 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
 
         ('position', 'Pozycja', None, {}),
         ('voivodeship', 'Województwo', None, {}),
+        ('league', 'Poziom rozgrywkowy', None, {}),
         ('target_league', 'Cel poszukiwań', None, {}),
         ('address', 'np. Wrocław', None, {}),
         ('practice_distance', 'Maksymalna odległość dojazdu', None, {}),
@@ -185,6 +186,11 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
         self.fields['target_league'].label = 'Cel poszukiwań'  # '<i class="icofont-ui-user-group"></i>'
         self.fields['target_league'].help_text = False
 
+        self.fields['league'].required = False
+        self.fields['league'].label = 'Poziom rozgrywkowy'  # '<i class="icofont-ui-user-group"></i>'
+        self.fields['league'].help_text = False
+        self.fields['league'].disabled = True
+
         self.fields['body'].required = True
         self.fields['body'].label = 'Oczekiwania'
         self.fields['body'].help_text = False
@@ -198,7 +204,7 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
             'body': forms.Textarea(attrs={'rows': 5}),
             }
         model = models.PlayerForClubAnnouncement
-        fields = ['position', 'voivodeship', 'address', 'practice_distance', 'target_league', 'body']
+        fields = ['position', 'voivodeship', 'address', 'practice_distance', 'target_league', 'league', 'body']
         exclude = ['creator']
 
 
@@ -271,10 +277,10 @@ class CoachForClubAnnouncementForm(forms.ModelForm):
 
 class ClubForCoachAnnouncementForm(forms.ModelForm):
     building_fields = [
-        ('club', 'Klub', None, {'disabled': True}),
+        ('club', 'Klub', None, {}),
         # ('club', 'Klub', None, {}),
         ('league', 'Poziom rozgrywkowy', None, {}),
-        ('voivodeship', 'Województwo', None, {'disabled': True}),
+        ('voivodeship', 'Województwo', None, {}),
         ('lic_type', 'Typ licencji', None, {}),
         ('seniority', 'Rozgrywki młodzieżowe / Rozgrywki seniorskie', None, {}),
         ('gender', 'Mężczyźni / Kobiety', None, {}),
@@ -298,7 +304,6 @@ class ClubForCoachAnnouncementForm(forms.ModelForm):
         self.fields['club'].required = True
         self.fields['club'].label = 'Klub'
         self.fields['club'].help_text = False
-        # self.fields['club'].disabled = True
 
         self.fields['league'].required = True
         self.fields['league'].label = 'Poziom rozgrywkowy'  # '<i class="icofont-ui-user-group"></i>'
