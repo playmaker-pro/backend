@@ -292,13 +292,6 @@ class ViewModalLoadingMixin:
                 'load': False,
                 'async': 'get_add_announcement_form'
             },
-            # 'add_announcement_player_for_club': {
-            #     'name': 'inquiryModal',
-            #     'template': 'profiles/modals/_add_announcement_modal.html',
-            #     'auto': False,
-            #     'load': False,
-            #     'async': 'get_add_announcement_form'
-            # },
             'approve_announcement_modal': {
                 'name': 'approveAnnouncementModal',
                 'template': 'profiles/modals/_approve_announcement_modal.html',

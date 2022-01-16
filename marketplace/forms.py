@@ -51,7 +51,7 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         ('country', 'Kraj', None, {}),
         ('club', 'Klub', None, {}),
         ('league', 'Poziom rozgrywkowy', None, {}),
-        ('positions', 'Pozycje(3)', 'multiple', {'data-actions-box': "true", 'data-max-options': "2"}),
+        ('positions', 'Pozycje', 'multiple', {'data-actions-box': "true"}),
         ('voivodeship', 'Województwo',  None, {}),
         ('year_from', 'Rocznik od',  None, {}),
         ('year_to', 'Rocznik do',  None, {}),
@@ -145,7 +145,6 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
 
         ('position', 'Pozycja', None, {}),
         ('voivodeship', 'Województwo', None, {}),
-        ('league', 'Poziom rozgrywkowy', None, {}),
         ('target_league', 'Cel poszukiwań', None, {}),
         ('address', 'np. Wrocław', None, {}),
         ('practice_distance', 'Maksymalna odległość dojazdu', None, {}),
@@ -174,10 +173,6 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
         self.fields['voivodeship'].label = 'Województwo'
         self.fields['voivodeship'].help_text = False
 
-        self.fields['league'].required = True
-        self.fields['league'].label = 'Poziom rozgrywkowy'  # '<i class="icofont-ui-user-group"></i>'
-        self.fields['league'].help_text = False
-
         self.fields['address'].required = True
         self.fields['address'].label = 'Miejscowość z której dojeżdżasz na trening'
         self.fields['address'].help_text = False
@@ -199,9 +194,11 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
         return Fieldset(*fds)
 
     class Meta:
-        widgets = {'body': forms.Textarea(attrs={'rows': 5})}
+        widgets = {
+            'body': forms.Textarea(attrs={'rows': 5}),
+            }
         model = models.PlayerForClubAnnouncement
-        fields = ['position', 'voivodeship', 'address', 'practice_distance', 'target_league', 'body', 'league']
+        fields = ['position', 'voivodeship', 'address', 'practice_distance', 'target_league', 'body']
         exclude = ['creator']
 
 

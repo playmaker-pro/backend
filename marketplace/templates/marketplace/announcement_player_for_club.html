@@ -15,7 +15,7 @@
     </div>
         <div class="section-heading-line-left"></div>
     <div class="card-body row no-gutters">
-        <div class="row">
+        <div class="row centered-div">
             <div class="card-text">
             <img class="flag pl-3" src="{{ player.profile.country.flag }}" alt="flag">
             </div>
@@ -64,33 +64,35 @@
         </div>
     </div>
 
-    <div class="card-footer row no-gutters">
-        <div class="card-text">
+    <div class="card-footer no-gutters">
+        <div class="row card-text text-center centered-div">
+            <div class="card-text">
                 <i class="icofont-list"></i>
                 <small class="text-muted"> {{ object.subscribers.count }} odpowiedzi </small>
             </div>
-
             <div class="card-text">
-                <i class="icofont-wall-clock"></i>
-                <small class="text-muted"> {{ object.expire|days_until }}</small>
-
+             <i class="icofont-wall-clock"></i>
+            <small class="text-muted"> {{ object.expire|days_until }}</small>
             </div>
-        <div class="card-text text-center d-inline-flex justify-content-center align-content-center flex-wrap">
-            <div>
-              <button type="button" class="btn-request" onclick="window.location.href='/users/{{ player.profile.slug }}';">Zobacz profil</button>
-            </div>
+        </div>
+        <div class="row card-text text-center centered-div">
             <div class="card-text pull-right">
-
                 {% if user.is_coach or user.is_club %}
                     {% announcement_response object %}
                 {% elif user.is_player %}
                     {% announcement_edit object %}
                 {% endif %}
             </div>
+
+            <div>
+              <button type="button" class="btn-request" onclick="window.location.href='/users/{{ player.profile.slug }}';">Zobacz profil</button>
+            </div>
+
             <div>
               <button type="button" class="btn-request" onclick="">Udostępnij</button>
             </div>
         </div>
+
     </div>
 </div>
 {% endwith %}
