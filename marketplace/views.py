@@ -22,7 +22,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
 from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
-from profiles.models import PlayerPosition, ClubProfile
+from profiles.models import PlayerPosition, ClubProfile, CoachProfile
 from profiles.utils import get_datetime_from_age
 from roles import definitions
 from stats import adapters
@@ -128,12 +128,13 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
             elif _action_name == "coach_looking_for_club":
+                league = user.profile.team_object.league if user.profile.team_object else None
                 form = CoachForClubAnnouncementForm(initial={
                     'lic_type': user.profile.licence,
                     'voivodeship': user.profile.team_object.club.voivodeship,
                     'address': user.profile.address,
                     'practice_distance': user.profile.practice_distance,
-
+                    'league': league,
                 })
             elif _action_name == "club_looking_for_player":
                 if user.profile.club_object:
@@ -233,6 +234,10 @@ class AddAnnouncementView(LoginRequiredMixin, View):
 
             if user.is_player:
                 form = PlayerForClubAnnouncementForm(request.POST)
+
+            if form.is_valid() and 'positions' in form.cleaned_data:
+                if qse := list(filter(lambda qse: qse.name == "Dowolna", form.cleaned_data['positions'])):
+                    form.cleaned_data['positions'] = qse
 
             if form.is_valid():
                 ann = form.save(commit=False)
@@ -349,6 +354,7 @@ class ClubForPlayerAnnouncementsView(AnnouncementsMetaView):
 
         if self.filter_position_marketplace is not None:
             queryset = queryset.filter(positions__name__in=self.filter_position_marketplace).distinct()
+
         return queryset
 
 

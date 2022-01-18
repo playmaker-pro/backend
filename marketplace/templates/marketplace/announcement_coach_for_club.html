@@ -15,11 +15,11 @@
         <div class="col-12 card-text text-muted"> 
             <small class="row no-gutters">
                 <div class="col-6 col-md-3 text-center">
-                    <h5>{{ object.lic_type }}</h5>
+                    <h5>{{ object.get_licence_name }}</h5>
                         Licencja
                 </div>
                 <div class="col-6 col-md-3 text-center">
-                    <h5>{{ object.league }}</h5>
+                    <h5>{{ object.league|default:'-' }}</h5>
                     Aktualny poziom
                 </div>
                 <div class="col-6 col-md-3 text-center">

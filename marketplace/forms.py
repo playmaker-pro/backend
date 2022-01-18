@@ -189,7 +189,7 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
         self.fields['league'].required = False
         self.fields['league'].label = 'Poziom rozgrywkowy'  # '<i class="icofont-ui-user-group"></i>'
         self.fields['league'].help_text = False
-        self.fields['league'].disabled = True
+        self.fields['league'].widget = forms.HiddenInput()
 
         self.fields['body'].required = True
         self.fields['body'].label = 'Oczekiwania'
@@ -251,9 +251,10 @@ class CoachForClubAnnouncementForm(forms.ModelForm):
         self.fields['practice_distance'].label = 'Maksymalna odległość dojazdu w km'
         self.fields['practice_distance'].help_text = False
 
-        self.fields['league'].required = True
+        self.fields['league'].required = False
         self.fields['league'].label = 'Obecna liga'  # '<i class="icofont-ui-user-group"></i>'
         self.fields['league'].help_text = False
+        self.fields['league'].widget = forms.HiddenInput()
 
         self.fields['target_league'].required = True
         self.fields['target_league'].label = 'Cel poszukiwań'  # '<i class="icofont-ui-user-group"></i>'
@@ -278,7 +279,6 @@ class CoachForClubAnnouncementForm(forms.ModelForm):
 class ClubForCoachAnnouncementForm(forms.ModelForm):
     building_fields = [
         ('club', 'Klub', None, {}),
-        # ('club', 'Klub', None, {}),
         ('league', 'Poziom rozgrywkowy', None, {}),
         ('voivodeship', 'Województwo', None, {}),
         ('lic_type', 'Typ licencji', None, {}),
@@ -313,7 +313,7 @@ class ClubForCoachAnnouncementForm(forms.ModelForm):
         self.fields['voivodeship'].label = 'Województwo'
         self.fields['voivodeship'].help_text = False
 
-        self.fields['lic_type'] = forms.ChoiceField(widget=forms.Select(), choices=CoachProfile.LICENCE_CHOICES)
+        # self.fields['lic_type'] = forms.ChoiceField(widget=forms.Select(), choices=CoachProfile.LICENCE_CHOICES)
         self.fields['lic_type'].required = True
         self.fields['lic_type'].label = 'Typ licencji'
         self.fields['lic_type'].help_text = False
