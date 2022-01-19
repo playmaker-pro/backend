@@ -194,6 +194,12 @@ class ViewFilterMixin:
             return value
 
     @property
+    def filter_licence_list(self):
+        values = self.request.GET.getlist('licence')
+        if values:
+            return values
+
+    @property
     def filter_position(self):
 
         POSITION_CHOICES = {
@@ -214,6 +220,29 @@ class ViewFilterMixin:
         for value in values:
             if value in POSITION_CHOICES.keys():
                 filtered_positions.append(POSITION_CHOICES[value])
+        return filtered_positions if filtered_positions else None
+
+    @property
+    def filter_position_marketplace(self):
+
+        POSITION_CHOICES = (
+            'Bramkarz',
+            'Obrońca Lewy',
+            'Obrońca Prawy',
+            'Obrońca Środkowy',
+            'Pomocnik defensywny (6)',
+            'Pomocnik środkowy (8)',
+            'Pomocnik ofensywny (10)',
+            'Skrzydłowy',
+            'Napastnik',
+        )
+
+        values = self.request.GET.getlist('position')
+
+        filtered_positions = []
+        for value in values:
+            if value in POSITION_CHOICES:
+                filtered_positions.append(value)
         return filtered_positions if filtered_positions else None
 
     @property
@@ -292,13 +321,6 @@ class ViewModalLoadingMixin:
                 'load': False,
                 'async': 'get_add_announcement_form'
             },
-            # 'add_announcement_player_for_club': {
-            #     'name': 'inquiryModal',
-            #     'template': 'profiles/modals/_add_announcement_modal.html',
-            #     'auto': False,
-            #     'load': False,
-            #     'async': 'get_add_announcement_form'
-            # },
             'approve_announcement_modal': {
                 'name': 'approveAnnouncementModal',
                 'template': 'profiles/modals/_approve_announcement_modal.html',

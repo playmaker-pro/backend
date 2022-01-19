@@ -1,9 +1,9 @@
 {% with size=size %}
      <div class="filter pr-2">
-        {% include 'marketplace/filters/filter_licence.html' with size=size options=filters.licence %}
+        {% include 'marketplace/filters/filter_licence.html' with size=size %}
     </div>
     <div class="filter pr-2">
-        {% include 'marketplace/filters/filter_target_league.html' with size=size options=filters.league title='cel trenera' %}
+        {% include 'marketplace/filters/filter_target_league.html' with size=size options=filters.league title='cel poszukiwań' %}
     </div>
 
 {% endwith %}

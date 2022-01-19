@@ -1,6 +1,24 @@
+{% load playmaker %}
 
-<select name="licence" data-width="{{ size }}"  class="form-control selectpicker" data-allow-clear="true" title="licencja">
-{% for option in options %}
-    <option {% if request.GET.licence == option %} selected {% endif %} value="{{ option }}">{{ option }}</option>
-{% endfor %}
+<select name="licence"
+        data-width="{{ size }}"
+        class="selectpicker"
+        multiple
+        data-actions-box="true"
+        data-live-search="true"
+        data-allow-clear="true"
+        title="licencja"
+        data-selected-text-format="count > 1"
+>
+    <option {% if 'UEFA PRO' in request.GET|get_list:'licence' %} selected="selected" {% endif %}>UEFA PRO</option>
+    <option {% if 'UEFA A' in request.GET|get_list:'licence' %} selected="selected" {% endif %}>UEFA A</option>
+    <option {% if 'UEFA EY A' in request.GET|get_list:'licence' %} selected="selected" {% endif %}>UEFA EY A</option>
+    <option {% if 'UEFA B' in request.GET|get_list:'licence' %} selected="selected" {% endif %}>UEFA B</option>
+    <option {% if 'UEFA C' in request.GET|get_list:'licence' %} selected="selected" {% endif %}>UEFA C</option>
+    <option {% if 'GRASS C' in request.GET|get_list:'licence' %} selected="selected" {% endif %}>GRASS C</option>
+    <option {% if 'GRASS D' in request.GET|get_list:'licence' %} selected="selected" {% endif %}>GRASS D</option>
+    <option {% if 'UEFA Futsal B' in request.GET|get_list:'licence' %} selected="selected" {% endif %}>UEFA Futsal B</option>
+    <option {% if 'PZPN A' in request.GET|get_list:'licence' %} selected="selected" {% endif %}>PZPN A</option>
+    <option {% if 'PZPN B' in request.GET|get_list:'licence' %} selected="selected" {% endif %}>PZPN B</option>
+    <option {% if 'W trakcie kursu' in request.GET|get_list:'licence' %} selected="selected" {% endif %}>W trakcie kursu</option>
 </select>

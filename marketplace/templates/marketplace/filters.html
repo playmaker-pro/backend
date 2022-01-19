@@ -6,8 +6,11 @@
   <div class="container-fluid">
       <form id="filter-form" method="get" class="form-inline d-flex">    
         {% include 'marketplace/_filters.html' with size=120 %}
-        <div class="ilter-button"> 
+        <div class="filter-button pr-2">
             {% include 'marketplace/filter_button.html' with mobile=True %}
+        </div>
+          <div>
+            {% include 'marketplace/filter_button_clear.html' with mobile=True %}
         </div>
       </form>
     </div>

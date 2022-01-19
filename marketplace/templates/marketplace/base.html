@@ -150,6 +150,37 @@
 <!--.serv-section-2:hover:before {-->
 <!--    background: #e76668;-->
 <!--}-->
+
+.centered-div {
+    flex: display;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+}
+
+.btn-club-for-player {
+    background-color: #28a745 !important;
+    color: #fff !important;
+<!--    border-color: #fff;-->
+}
+
+.btn-coach-for-club {
+    background-color: #17a2b8 !important;
+    color: #fff !important;
+<!--    border-color: #fff;-->
+}
+
+.btn-club-for-coach {
+    background-color: #007bff !important;
+    color: #fff !important;
+<!--    border-color: #fff;-->
+}
+
+.btn-player-for-club {
+    background-color: #343a40 !important;
+    color: #fff !important;
+<!--    border-color: #fff;-->
+}
 </style>
 
 <section id="marketplace" class="marketplace">
@@ -169,16 +200,16 @@
               <button type="button" class="btn-request" onclick="window.location.href='{% url 'marketplace:announcements' %}';">Wszystkie ogłoszenia</button>
           </div>
         <div>
-          <button type="button" class="btn-request" onclick="window.location.href='{% url 'marketplace:club_for_player_announcements' %}';">Klub szuka zawodnika</button>
+          <button type="button" class="btn-request btn-club-for-player" onclick="window.location.href='{% url 'marketplace:club_for_player_announcements' %}';"><b>Klub szuka zawodnika</b></button>
         </div>
         <div>
-          <button type="button" class="btn-request" onclick="window.location.href='{% url 'marketplace:coach_for_club_announcements' %}';">Trener szuka klubu</button>
+          <button type="button" class="btn-request btn-coach-for-club" onclick="window.location.href='{% url 'marketplace:coach_for_club_announcements' %}';"><b>Trener szuka klubu</b></button>
         </div>
         <div>
-          <button type="button" class="btn-request" onclick="window.location.href='{% url 'marketplace:club_for_coach_announcements' %}';">Klub szuka trenera</button>
+          <button type="button" class="btn-request btn-club-for-coach" onclick="window.location.href='{% url 'marketplace:club_for_coach_announcements' %}';"><b>Klub szuka trenera</b></button>
         </div>
         <div>
-          <button type="button" class="btn-request" onclick="window.location.href='{% url 'marketplace:player_for_club_announcements' %}';">Piłkarz szuka klubu</button>
+          <button type="button" class="btn-request btn-player-for-club" onclick="window.location.href='{% url 'marketplace:player_for_club_announcements' %}';"><b>Piłkarz szuka klubu</b></button>
         </div>
 
         </div>

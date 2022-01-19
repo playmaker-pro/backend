@@ -8,7 +8,7 @@
         <div class="serv-section-desc">
             <h4>
 <!--                <a  href="{{ object.club.get_permalink }}">{{ object.club.name }}</a>-->
-                <a  href="{{ object.club.get_permalink }}">{{ object.club.name }}</a>
+                <a href="{{ object.club.get_permalink }}">{{ object.club.name }}</a>
                 <span class="badge badge-primary" style="float: right">Klub szuka trenera</span>
             </h4>
             <h5>{{ object.voivodeship.name|lower }} </h5>
@@ -19,7 +19,7 @@
         <div class="col-12 card-text text-muted"> 
             <small class="row no-gutters">
                 <div class="col-6 col-md-3 text-center">
-                    <h5>{{ object.lic_type }}</h5>
+                    <h5>{{ object.get_licence_name }}</h5>
                     Licencja
                 </div>
                 <div class="col-6 col-md-3 text-center">
@@ -42,8 +42,8 @@
         </div>
     </div>
 
-    <div class="card-footer row no-gutters">
-        <div class="card-text text-center d-inline-flex justify-content-center align-content-center flex-wrap">
+    <div class="card-footer no-gutters">
+        <div class="row card-text text-center centered-div">
             {% if object.www %}
             <div>
                 <small class="text-muted"><a href="{{ object.www }}">{% trans 'Link do ogłoszenia / strony www klubu' %}</a> </small>
@@ -59,15 +59,20 @@
                 <i class="icofont-wall-clock"></i>
                 <small class="text-muted"> {{ object.expire|days_until }}</small>
             </div>
-            
+        </div>
+        <div class="row card-text text-center centered-div">
             <div class="card-text pull-right">
-            
                 {% if user.is_coach %}
                     {% announcement_response object %}
                 {% elif user.is_club %}
                     {% announcement_edit object %}
-                {% endif %} 
+                {% endif %}
             </div>
+
+            <div>
+              <button type="button" class="btn-request" onclick="window.location.href='/users/{{ object.club.get_permalink }}';">Zobacz profil</button>
+            </div>
+
         </div>
     </div>
 </div>
