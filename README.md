@@ -1,85 +1,96 @@
 
+# Project bootstrap PlayMaker
 
-# PlayMaker.pro 
+Backend side for PlayMaker project.
 
+# Installation
 
-Backend is a backend side for PlayMaker project. It is built with [Python][3]
+To set up a development environment quickly you need to have following prerequisits:
+> Python 3.8  
 
-This project has the following basic apps:
+> PostgreSQL (latest)  
 
-* App1 (short desc)
-* App2 (short desc)
-* App3 (short desc)
+## Steps:
 
-## Installation
+  
+1. Create and activate virtualenv for `python 3.8.x` ([see more](https://docs.python.org/3.8/library/venv.html))
 
-### Quick start
+2. Create workspace directories
+    ```
+    mkdir /pm
+    cd pm
+    mkdir packages/
+    ```
+3. Clone repository and initialize submodules
+    ```
+    git clone https://gitlab.com/playmaker1/webapp --recurse-submodules
+    ```
 
-To set up a development environment quickly, first install Python 3. It
-comes with virtualenv built-in. So create a virtual env by:
+4. Clone streamer package and install as a in-develop package
+    ````
+    git clone https://gitlab.com/playmaker1/packages/pm-stream-framework
 
-    1. `$ python3 -m venv pm`
-    2. `$ . pm/bin/activate`
+    ````
 
-Install all dependencies:
+5. Install all dependencies:  
+    **Please follow order of installation!**
+    ```
+    cd webapp
+    (vn) pip install -r requirements.txt
+    (vn) pip install celery==3.1.26.post2
+    (vn) pip install -r requirement_dev.txt
+    ```
 
-    pip install -r requirements.txt
+    Then we need to add custom version of a streamer library. (please note that this is a directory to which we cloned repository from 4.)
+    ```
+    cd ..
+    cd package/pm-stream-framework 
+    (vn) pip install -e .
+    ```
 
-Run migrations:
+    note: ignore error about django-celery incompatibility.
 
+    Now you can verify if everything is fine you should see:
+    ```
+    python manage.py check 
+
+    :: loading dev configuration
+    SEO data loaded from seo.yaml
+    No local settings. No module named 'backend.settings.local'
+    >> Loading app settings: data.app_settings app settings laoded
+    ...
+
+    ```
+6. Create local env file
+    If you use defauly postgres settings, ofc you need to create database (for example: local_pm)  and allow user to use it.
+
+    `backend/settings/local.py`
+    ```
+    CONFIGURATION = 'dev'
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': 'local_pm',
+            'USER': 'jacek',
+            'PASSWORD': 'postgres',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        },
+    ```
+7. Run migrations:
+    ```
     python manage.py migrate
+    ```
+8. Create super-user (and follow pop-ups)
+    ```
+    python manage.py createsuperuser
+    ```
 
-Run development server
-
+9. Run development server
+    ```
     python manage.py runserver
-
-
-
-# Project bootstrap
-
-
-### Setting redirects 
-
-File contains rules for redirecting pages. 
-
-```bash
-redirects.yaml
-```
-
-redirects.yaml:
-
-```yaml
-trener-klub/: /scouting/
-```
-
-### Install Google Analitics tags.
-
-To enable trakcing codes (Goggle analytics or Fb pixel) you need to create new file ga.html in a following location:
-```python
-backend/templates/ga.html
-```
-
-ga.html
-```javascript
-!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=code"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-        ....
-</script>
-
-<!-- Facebook Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-.....
-/></noscript>
-```
-
-### Detailed instructions
-
-Take a look at the docs for more information.
-
-[0]: https://www.python.org/
-[1]: https://www.djangoproject.com/
+    ```
+11. Go to http://localhost:8000/admin/  (wagtail admin)  
+    Login into a Admin user (see step no 8)  
+    Create new page as Main PlaymakerPage  
+    Create servce with port :8000 and attach main page to that service.
