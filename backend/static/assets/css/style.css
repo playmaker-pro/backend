@@ -2471,6 +2471,11 @@ section {
   background: #111111;
 }
 
+/* dodano */
+#footer .footer-banner-side img{
+  max-width: 356px;
+}
+
 #footer .footer-top {
   padding: 60px 0 30px 0;
   background: #1b1b1b;
