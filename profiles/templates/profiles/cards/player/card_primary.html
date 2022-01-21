@@ -1,17 +1,18 @@
 {% load i18n %}
 <div class="card">
 <div class="card-body">
-    <h2 class="card-title">{% trans 'Podstawowe informacje' %}</h2>
+    <h2 class="card-title">{% trans 'Dane Podstawowe' %}</h2>
 
     <h6 class="card-subtitle mb-2 text-muted"></h6>
-
-    <div class="card-text">
     {% with profile=show_user.profile template='platform/tables/two_table.html' %}
+        <div class="card-text">
+   
             {% include template with key=_('Noga')               value=profile.get_prefered_leg_display|default:'-'         %}
             {% include template with key=_('Pozycja')            value=profile.get_position_raw_display|default:'-'         %}
             {% include template with key=_('Rocznik')            value=profile.birth_date.year|default:'-'|upper            %}
-            {% include template with key=_('Obecna drużyna')     value=profile.display_team|default:'-'|upper               %}
-            {% include template with key=_('Rozgrywki')          value=profile.display_league_name|default:'-'|upper   link=profile.get_league_permalink  %}
+            {% include template with key=_('Lokalizacja')            value=profile.voivodeship|default:'-'                  %}
+            {% include template with key=_('Miasto')            value=profile.address|default:'-'           %}
+
         {% if profile.display_league_seniority_name %}
             {% include template with key=_('Poziom')             value=profile.display_league_seniority_name|default:'-'|upper        %} 
         {% endif %}
@@ -19,9 +20,15 @@
         {% if profile.display_league_group_name %}
             {% include template with key=_('Grupa')              value=profile.display_league_group_name|default:'-'|upper  %}
         {% endif %}
-            {% include template with key=_('Wojewodźtwo')        value=profile.display_league_voivodeship|default:'-'|lower        %}
         
+        </div>
+
+        <div class="card-text">
+            <h2 class="mt-3 card-title">{% trans 'Klub' %} </h2>
+            {% include template with key=_('Obecna drużyna')     value=profile.display_team|default:'-'|upper               %}        
+            {% include template with key=_('Poziom rozgrywkowy')          value=profile.display_league_name|default:'-'|upper   link=profile.get_league_permalink  %}
+            {% include template with key=_('Województwo')        value=profile.display_league_voivodeship|default:'-'|lower        %}
+        </div>  <!-- end of card-text-->
     {% endwith %}
-    </div>
 </div>
 </div>

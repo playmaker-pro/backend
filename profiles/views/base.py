@@ -15,6 +15,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
+from pytest import Session
 from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from profiles import forms, models
@@ -629,9 +630,11 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
             )
             # user_form = forms.UserForm(instance=user)
             # profile_form = get_profile_form_model(user)(instance=user.profile)
+            # request.session['address'] = request.POST.get('address')
             return super().get(request, profile_form=profile_form, user_basic_form=user_basic_form)
 
         # Both forms are fine. Time to save!
+        
         user_basic_form.save()
         profile = profile_form.save(commit=False)
         profile.user = user
@@ -639,6 +642,10 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
         messages.success(request, "Twój profil został zaktualizowany." , extra_tags='alter-success')
         return redirect("profiles:show_self")
 
+    def get_context_data(self, **kwargs):
+        context = super(EditProfile, self).get_context_data(**kwargs)
+        context['address'] = self.request.POST.get('address') or self.request.user.profile.address if not None else ""
+        return context
 
 class AccountMissingFirstLastName(LoginRequiredMixin, View):
 
