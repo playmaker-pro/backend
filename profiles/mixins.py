@@ -76,8 +76,8 @@ class TeamObjectsDisplayMixin:
 
     @property
     @supress_exception
-    def display_league_name(self):
-        return self.get_team_object.display_league_name
+    def display_highest_parent_league_name(self):
+        return self.get_team_object.display_highest_parent_league_name
 
     @property
     @supress_exception
