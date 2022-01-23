@@ -11,6 +11,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from address.models import AddressField
 from profiles.utils import unique_slugify, conver_vivo_for_api, supress_exception
 from django_countries.fields import CountryField
+from .managers import LeagueManager
 
 
 class Season(models.Model):
@@ -314,6 +315,8 @@ class League(models.Model):
     picture = models.ImageField(
         _("Zdjęcie"), upload_to=get_file_path, null=True, blank=True
     )
+
+    objects = LeagueManager()
 
     @cached_property
     def get_childs(self):
