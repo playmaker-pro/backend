@@ -453,8 +453,9 @@ class League(models.Model):
         return f"{self.name}"
 
     class Meta:
-        unique_together = ("name", "country", "group", "region", "zpn", "parent")
+        unique_together = ("name", "country", "zpn", "parent")
         ordering = ("order", "section__name")
+
 
 class Seniority(models.Model):
     name = models.CharField(max_length=355, unique=True)
