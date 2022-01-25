@@ -5,7 +5,7 @@
     {% if current_season_obj in child.get_data_seasons %}
         {% if not child.get_childs %}
             {{ child.search_tokens }}
-            <option {% if current_league_id == child.id %} selected {% endif %} data-tokens="{{ child.search_tokens }} {{child.group.name}}" value="{{ child|get_league_url:current_season }}">{{league.name}}/{{ child.name }} </option>
+            <option {% if current_league_id == child.id %} selected {% endif %} data-tokens="{{ child.search_tokens }} {{child.group.name}}" value="{{ child|get_league_url:current_season }}">{{ league.get_upper_parent_names }} </option>
         {% else %}
             {% include "plays/filters/_nested_league_options.html" with league=child %}
         {% endif %}

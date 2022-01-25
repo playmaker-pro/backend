@@ -354,6 +354,11 @@ class League(models.Model):
         return self.name
 
     @cached_property
+    def display_name_junior(self):
+        if self.display_name_junior:
+            return self.display_name_junior.name
+
+    @cached_property
     def display_highest_parent_league_name(self):
         if self.parent:
             parent = self.parent
@@ -429,12 +434,12 @@ class League(models.Model):
         self.search_tokens = self.build_search_tokens()
         super().save(*args, **kwargs)
 
-    def get_upper_parent_names(self):
+    def get_upper_parent_names(self, spliter=', '):
         name = self.name
         if self.parent: 
-            name = f"{self.parent.get_upper_parent_names()} / {name}"
+            name = f"{self.parent.get_upper_parent_names()}{spliter}{name}"
         return name
-
+        
     def set_league_season(self, seasons: List[Season]):
         """Mechanism to set and propagate changes in data seasons."""
         self.data_seasons.add(*seasons)
@@ -585,6 +590,12 @@ class Team(models.Model, MappingMixin):
     @supress_exception
     def display_league_seniority_name(self):
         return self.league.display_league_seniority_name
+
+    @property
+    @supress_exception
+    def display_name_junior(self):
+        if self.league:
+            return self.league.display_name_junior
 
     @property
     @supress_exception

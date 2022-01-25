@@ -61,6 +61,11 @@ class TeamObjectsDisplayMixin:
 
     @property
     @supress_exception
+    def display_name_junior(self):
+        return self.get_team_object.display_name_junior
+
+    @property
+    @supress_exception
     def display_gender(self):
         return self.get_team_object.display_gender
 

@@ -12,8 +12,8 @@
             {% include template with key=_('Rocznik')            value=profile.birth_date.year|default:'-'|upper            %}
             {% include template with key=_('Obecna drużyna')     value=profile.display_team|default:'-'|upper               %}
             {% include template with key=_('Rozgrywki')          value=profile.display_highest_parent_league_name|default:'-'|upper   link=profile.get_league_permalink  %}
-        {% if profile.display_league_seniority_name %}
-            {% include template with key=_('Poziom')             value=profile.display_league_seniority_name|default:'-'|upper        %} 
+        {% if profile.display_name_junior %}
+            {% include template with key=_('Poziom')             value=profile.display_name_junior|default:'-'|upper        %} 
         {% endif %}
         
         {% if profile.display_league_group_name %}
