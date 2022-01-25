@@ -210,6 +210,9 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 ann.creator = request.user
                 ann.save()
                 form.save_m2m()
+
+                # because we Address here is an FK to modesl.Address and after m2m 
+                # we are adding 
                 ann.address.formatted = new_address
                 ann.address.save()
 
