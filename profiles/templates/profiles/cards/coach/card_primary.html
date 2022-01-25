@@ -11,7 +11,7 @@
         {% include template with key=_('Piłkarski cel')      value=profile.get_soccer_goal_display|default:'-'  %}
         {% include template with key=_('Rocznik')               value=profile.birth_date.year|default:'-'|upper           %}
         {% include template with key=_('Obecna drużyna')     value=profile.display_team|default:'-'|upper           %}
-        {% include template with key=_('Rozgrywki')          value=profile.display_league_name|default:'-'|upper   link=profile.get_league_permalink  %}
+        {% include template with key=_('Rozgrywki')          value=profile.display_highest_parent_league_name|default:'-'|upper   link=profile.get_league_permalink  %}
         {% if profile.profile.display_league_seniority_name %}
             {% include template with key=_('Poziom')             value=profile.display_league_seniority_name|default:'-'|upper        %} 
         {% endif %}

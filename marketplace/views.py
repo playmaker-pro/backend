@@ -1,8 +1,7 @@
 from hashlib import new
 import json
 import logging
-import math
-import operator
+
 from functools import reduce
 from itertools import chain
 from copy import deepcopy
@@ -130,13 +129,17 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     form = ClubForPlayerAnnouncementForm(initial={})
             elif _action_name == "coach_looking_for_club":
                 league = user.profile.team_object.league if user.profile.team_object else None
-                form = CoachForClubAnnouncementForm(initial={
-                    'lic_type': user.profile.licence,
-                    'voivodeship': user.profile.team_object.club.voivodeship,
-                    'address': user.profile.address,
-                    'practice_distance': user.profile.practice_distance,
-                    'league': league,
-                })
+                form = CoachForClubAnnouncementForm(
+                    initial={
+                        'lic_type': user.profile.licence,
+                        'voivodeship': user.profile.team_object.club.voivodeship,
+                        'address': user.profile.address,
+                        'practice_distance': user.profile.practice_distance,
+                        'league': league,
+                    }
+                )
+                form.fields['target_league'].queryset = League.objects.is_top_parent()
+
             elif _action_name == "club_looking_for_player":
                 if user.profile.club_object:
                     form = ClubForPlayerAnnouncementForm(initial={
@@ -159,7 +162,8 @@ class AddAnnouncementView(LoginRequiredMixin, View):
             elif user.is_player:
                 voivodeship = user.profile.team_object.club.voivodeship if user.profile.team_object else None
                 league = user.profile.team_object.league if user.profile.team_object else None
-                form = PlayerForClubAnnouncementForm(initial={
+                form = PlayerForClubAnnouncementForm(
+                    initial={
                         'position': user.profile.position_raw,
                         'voivodeship': voivodeship,
                         # 'voivodeship': user.profile.team_object.club.voivodeship,
@@ -167,6 +171,8 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                         'practice_distance': user.profile.practice_distance,
                         'league': league
                     })
+                form.fields['target_league'].queryset = League.objects.is_top_parent()
+    
             else:
                 return JsonResponse({})
 

@@ -60,7 +60,7 @@
                                 {{ object.profile.display_team|default:''|upper }}
                             </div>
                             <div class=""> 
-                                {{ object.profile.display_league_name|default:''|title  }}, {{ object.profile.display_voivodeship|default:''|lower|truncatechars:24 }} 
+                                {{ object.profile.display_highest_parent_league_name|default:''|title  }}, {{ object.profile.display_voivodeship|default:''|lower|truncatechars:24 }} 
                             </div>
                         </div>
             <div class="sc-cell d-none d-md-flex col-md-3">
@@ -77,7 +77,7 @@
                 {{ object.profile.display_team|default:'' }}
             </div >
             <div class="sc-cell d-none d-md-flex col-md-2 text-left">
-                 {{ object.profile.display_league_name|default:''|title  }}
+                 {{ object.profile.display_highest_parent_league_name|default:''|title  }}
             </div >
             <div class="sc-cell d-none d-md-flex col-3 col-md-2 text-left">
                 {{ object.profile.display_voivodeship|default:''|lower  }}
