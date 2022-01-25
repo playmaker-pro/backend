@@ -15,7 +15,7 @@ from django.utils.translation import gettext_lazy as _
 from profiles import widgets
 from django_countries.widgets import CountrySelectWidget
 from django.utils import timezone
-
+from address.forms import AddressField, AddressWidget
 
 User = get_user_model()
 
@@ -202,7 +202,8 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
     class Meta:
         widgets = {
             'body': forms.Textarea(attrs={'rows': 5}),
-            }
+            # 'address': AddressWidget(),
+        }
         model = models.PlayerForClubAnnouncement
         fields = ['position', 'voivodeship', 'address', 'practice_distance', 'target_league', 'league', 'body']
         exclude = ['creator']
@@ -337,6 +338,7 @@ class ClubForCoachAnnouncementForm(forms.ModelForm):
     class Meta:
         widgets = {
             'body': forms.Textarea(attrs={'rows': 5}),
+            'address': AddressWidget(),
         }
         model = models.ClubForCoachAnnouncement
         fields = ['club', 'league', 'lic_type', 'voivodeship', 'seniority', 'gender', 'body']
