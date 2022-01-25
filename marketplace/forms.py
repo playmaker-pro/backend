@@ -336,7 +336,6 @@ class ClubForCoachAnnouncementForm(forms.ModelForm):
     class Meta:
         widgets = {
             'body': forms.Textarea(attrs={'rows': 5}),
-            'address': AddressWidget(),
         }
         model = models.ClubForCoachAnnouncement
         fields = ['club', 'league', 'lic_type', 'voivodeship', 'seniority', 'gender', 'body']
