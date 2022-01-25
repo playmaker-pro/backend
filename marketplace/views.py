@@ -1,3 +1,5 @@
+from hashlib import new
+import json
 import logging
 
 from functools import reduce
@@ -203,15 +205,23 @@ class AddAnnouncementView(LoginRequiredMixin, View):
         if _id and _announcement_type:
             _announcement_class = announcement_classname_mapper.get(_announcement_type)
             _form_class = announcement_form_mapper.get(_announcement_type)
-
+            new_address = request.POST["address"]  
+            # do not know yet why but we need to pass post value to updated object.
             a = _announcement_class.objects.get(id=int(_id))
             form = _form_class(request.POST, instance=a)
-
             if form.is_valid():
+                # Commit=Flase is necessary to save m2m
                 ann = form.save(commit=False)
+
                 ann.creator = request.user
                 ann.save()
                 form.save_m2m()
+
+                # because we Address here is an FK to modesl.Address and after m2m 
+                # we are adding 
+                ann.address.formatted = new_address
+                ann.address.save()
+
                 messages.success(request, _("Ogłoszenia zaktualizowano"), extra_tags='alter-success')
 
                 data['success'] = True
