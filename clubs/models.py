@@ -354,6 +354,21 @@ class League(models.Model):
         return self.name
 
     @cached_property
+    def display_highest_parent_league_name(self):
+        if self.parent:
+            parent = self.parent
+        else:
+            return self.display_league
+
+        while True:
+            if parent.parent is None:
+                return parent.display_league
+            else:
+                parent = parent.parent
+                continue
+            break
+
+    @cached_property
     @supress_exception
     def display_league_seniority_name(self):
         return self.seniority.name
@@ -562,8 +577,8 @@ class Team(models.Model, MappingMixin):
 
     @property
     @supress_exception
-    def display_league_name(self):
-        return self.league.display_league_name
+    def display_highest_parent_league_name(self):
+        return self.league.display_highest_parent_league_name
 
     @property
     @supress_exception
