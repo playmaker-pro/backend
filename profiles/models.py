@@ -840,11 +840,20 @@ class ClubProfile(BaseProfile):
     PROFILE_TYPE = definitions.PROFILE_TYPE_CLUB
 
     CLUB_ROLE = (
+        (5, 'Trener'),
         (1, 'Prezes'),
-        (2, 'Kierownik'),
+        (2, 'Kierownik'), 
         (3, 'Członek zarządu'),
         (4, 'Sztab szkoleniowy'),
-        (5, 'Inne'))
+        (6, 'V-ce prezes'),
+        (7, 'II trener'),
+        (8, 'Dyrektor sportowy'),
+        (9, 'Analityk'),
+        (10, 'Dyrektor skautingu'),
+        (11, 'Skaut'),
+        (12, 'Trener bramkarzy'),
+        (13, 'Koordynator')
+    )
 
     VERIFICATION_FIELDS = [
         'team_club_league_voivodeship_ver',
