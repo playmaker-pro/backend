@@ -257,9 +257,7 @@ class SectionGrouping(models.Model):
 
 
 class League(models.Model):
-    """
-    League
-    """
+    name = models.CharField(max_length=355, help_text="eg. Ekstraklasa")
     virtual = models.BooleanField(default=False)
     visible = models.BooleanField(default=False, help_text="Determine if that league will be visible")
 
@@ -275,7 +273,6 @@ class League(models.Model):
     region = models.ForeignKey("Region", on_delete=models.SET_NULL, null=True, blank=True)
     city_name = models.CharField(max_length=255, null=True, default=None, blank=True)
 
-    name = models.CharField(max_length=355, help_text="eg. Ekstraklasa")
     code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs")
     country = CountryField(

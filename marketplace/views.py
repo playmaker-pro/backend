@@ -113,6 +113,9 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 return JsonResponse({})
             else:
                 form = announcement_form_mapper.get(_announcement_type)(instance=ann)
+                if isinstance(form, (CoachForClubAnnouncementForm, PlayerForClubAnnouncementForm)):
+                    
+                    form.fields['target_league'].queryset = League.objects.is_top_parent()
         else:
             if _action_name == "coach_looking_for_player":
                 if user.profile.club_object:
@@ -238,6 +241,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
             if user.is_coach:
                 if _action_name == "coach_looking_for_club":
                     form = CoachForClubAnnouncementForm(request.POST)
+                    # form.fields['target_league'].queryset = League.objects.is_top_parent()
                 if _action_name == "coach_looking_for_player":
                     form = ClubForPlayerAnnouncementForm(request.POST)
 
@@ -249,6 +253,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
 
             if user.is_player:
                 form = PlayerForClubAnnouncementForm(request.POST)
+                # form.fields['target_league'].queryset = League.objects.is_top_parent()
 
             if form.is_valid() and 'positions' in form.cleaned_data:
                 if qse := list(filter(lambda qse: qse.name == "Dowolna", form.cleaned_data['positions'])):
