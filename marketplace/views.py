@@ -1,7 +1,7 @@
+from hashlib import new
 import json
 import logging
-import math
-import operator
+
 from functools import reduce
 from itertools import chain
 from copy import deepcopy
@@ -113,6 +113,9 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 return JsonResponse({})
             else:
                 form = announcement_form_mapper.get(_announcement_type)(instance=ann)
+                if isinstance(form, (CoachForClubAnnouncementForm, PlayerForClubAnnouncementForm)):
+                    
+                    form.fields['target_league'].queryset = League.objects.is_top_parent()
         else:
             if _action_name == "coach_looking_for_player":
                 if user.profile.club_object:
@@ -129,13 +132,17 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     form = ClubForPlayerAnnouncementForm(initial={})
             elif _action_name == "coach_looking_for_club":
                 league = user.profile.team_object.league if user.profile.team_object else None
-                form = CoachForClubAnnouncementForm(initial={
-                    'lic_type': user.profile.licence,
-                    'voivodeship': user.profile.team_object.club.voivodeship,
-                    'address': user.profile.address,
-                    'practice_distance': user.profile.practice_distance,
-                    'league': league,
-                })
+                form = CoachForClubAnnouncementForm(
+                    initial={
+                        'lic_type': user.profile.licence,
+                        'voivodeship': user.profile.team_object.club.voivodeship,
+                        'address': user.profile.address,
+                        'practice_distance': user.profile.practice_distance,
+                        'league': league,
+                    }
+                )
+                form.fields['target_league'].queryset = League.objects.is_top_parent()
+
             elif _action_name == "club_looking_for_player":
                 if user.profile.club_object:
                     form = ClubForPlayerAnnouncementForm(initial={
@@ -158,7 +165,8 @@ class AddAnnouncementView(LoginRequiredMixin, View):
             elif user.is_player:
                 voivodeship = user.profile.team_object.club.voivodeship if user.profile.team_object else None
                 league = user.profile.team_object.league if user.profile.team_object else None
-                form = PlayerForClubAnnouncementForm(initial={
+                form = PlayerForClubAnnouncementForm(
+                    initial={
                         'position': user.profile.position_raw,
                         'voivodeship': voivodeship,
                         # 'voivodeship': user.profile.team_object.club.voivodeship,
@@ -166,6 +174,8 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                         'practice_distance': user.profile.practice_distance,
                         'league': league
                     })
+                form.fields['target_league'].queryset = League.objects.is_top_parent()
+    
             else:
                 return JsonResponse({})
 
@@ -198,15 +208,23 @@ class AddAnnouncementView(LoginRequiredMixin, View):
         if _id and _announcement_type:
             _announcement_class = announcement_classname_mapper.get(_announcement_type)
             _form_class = announcement_form_mapper.get(_announcement_type)
-
+            new_address = request.POST["address"]  
+            # do not know yet why but we need to pass post value to updated object.
             a = _announcement_class.objects.get(id=int(_id))
             form = _form_class(request.POST, instance=a)
-
             if form.is_valid():
+                # Commit=Flase is necessary to save m2m
                 ann = form.save(commit=False)
+
                 ann.creator = request.user
                 ann.save()
                 form.save_m2m()
+
+                # because we Address here is an FK to modesl.Address and after m2m 
+                # we are adding 
+                ann.address.formatted = new_address
+                ann.address.save()
+
                 messages.success(request, _("Ogłoszenia zaktualizowano"), extra_tags='alter-success')
 
                 data['success'] = True
@@ -223,6 +241,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
             if user.is_coach:
                 if _action_name == "coach_looking_for_club":
                     form = CoachForClubAnnouncementForm(request.POST)
+                    # form.fields['target_league'].queryset = League.objects.is_top_parent()
                 if _action_name == "coach_looking_for_player":
                     form = ClubForPlayerAnnouncementForm(request.POST)
 
@@ -234,6 +253,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
 
             if user.is_player:
                 form = PlayerForClubAnnouncementForm(request.POST)
+                # form.fields['target_league'].queryset = League.objects.is_top_parent()
 
             if form.is_valid() and 'positions' in form.cleaned_data:
                 if qse := list(filter(lambda qse: qse.name == "Dowolna", form.cleaned_data['positions'])):

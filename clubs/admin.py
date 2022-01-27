@@ -85,7 +85,7 @@ class SectionGroupingAdmin(admin.ModelAdmin):
 @admin.register(models.League)
 class LeagueAdmin(admin.ModelAdmin):
     search_fields = ("name", "slug")
-    readonly_fields = ("slug", "search_tokens", "virtual")
+    readonly_fields = ("slug", "search_tokens", "virtual", "is_parent")
     list_display = (
         "get_slicer",
         "section",
