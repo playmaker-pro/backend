@@ -16,7 +16,6 @@ from profiles import widgets
 from django_countries.widgets import CountrySelectWidget
 from django.utils import timezone
 
-
 User = get_user_model()
 
 VOIVODESHIPS = [
@@ -127,7 +126,7 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         self.fields['positions'].label = 'Pozycje'
         self.fields['positions'].help_text = False
 
-    def build_verification_form(self):                      
+    def build_verification_form(self):                   
         fds = [''] + [Field(fn, wrapper_class='row', placeholder=fp, title=fp, css_class=fc, **kwargs) for fn, fp, fc, kwargs in self.building_fields]
         return Fieldset(*fds)
 
@@ -202,7 +201,7 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
     class Meta:
         widgets = {
             'body': forms.Textarea(attrs={'rows': 5}),
-            }
+        }
         model = models.PlayerForClubAnnouncement
         fields = ['position', 'voivodeship', 'address', 'practice_distance', 'target_league', 'league', 'body']
         exclude = ['creator']

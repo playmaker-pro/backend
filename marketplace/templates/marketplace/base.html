@@ -191,7 +191,9 @@
                     {% add_announcement %}
                 </div>
                 <div>
-                    <button type="button" class="icofont-paperclip {% if my %}btn-request btn-requested{% else %}btn-request{% endif %}" onclick="window.location.href='{% if my %}{% url 'marketplace:announcements' %}{% else %}{% url 'marketplace:my_announcements' %}{% endif %}';">{% if my %}Wszystkie{% else %}Moje{% endif %} ogłoszenia</button>
+                    {% if user.is_authenticated or user.is_scout or user.is_manager or user.is_parent %}
+                        <button type="button" class="icofont-paperclip {% if my %}btn-request btn-requested{% else %}btn-request{% endif %}" onclick="window.location.href='{% if my %}{% url 'marketplace:announcements' %}{% else %}{% url 'marketplace:my_announcements' %}{% endif %}';">{% if my %}Wszystkie{% else %}Moje{% endif %} ogłoszenia</button>
+                    {% endif %}
                 </div>
             </div>
         </div>

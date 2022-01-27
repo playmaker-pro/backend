@@ -25,7 +25,10 @@
         {% endif %}
 
         {% include template with key=_('Rozgrywki') value=object.display_league|default:'-'           link=object.get_league_permalink     %}
-        {% include template with key=_('Poziom') value=object.display_league_seniority_name|default:'-'                          %}
+        {% if object.display_name_junior %}
+            {% include template with key=_('Poziom')             value=object.display_name_junior|default:'-'|upper        %} 
+        {% endif %}
+
         {% include template with key=_('Grupa') value=object.display_league_group_name|default:'-'                          %}
 
         {% if see_club %}

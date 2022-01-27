@@ -11,6 +11,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from address.models import AddressField
 from profiles.utils import unique_slugify, conver_vivo_for_api, supress_exception
 from django_countries.fields import CountryField
+from .managers import LeagueManager
 
 
 class Season(models.Model):
@@ -256,9 +257,7 @@ class SectionGrouping(models.Model):
 
 
 class League(models.Model):
-    """
-    League
-    """
+    name = models.CharField(max_length=355, help_text="eg. Ekstraklasa")
     virtual = models.BooleanField(default=False)
     visible = models.BooleanField(default=False, help_text="Determine if that league will be visible")
 
@@ -274,7 +273,6 @@ class League(models.Model):
     region = models.ForeignKey("Region", on_delete=models.SET_NULL, null=True, blank=True)
     city_name = models.CharField(max_length=255, null=True, default=None, blank=True)
 
-    name = models.CharField(max_length=355, help_text="eg. Ekstraklasa")
     code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs")
     country = CountryField(
@@ -315,6 +313,8 @@ class League(models.Model):
         _("Zdjęcie"), upload_to=get_file_path, null=True, blank=True
     )
 
+    objects = LeagueManager()
+
     @cached_property
     def get_childs(self):
         return self.childs.all()
@@ -349,6 +349,26 @@ class League(models.Model):
     @cached_property
     def display_league_name(self):
         return self.name
+
+    @cached_property
+    def display_name_junior(self):
+        if self.display_name_junior:
+            return self.display_name_junior.name
+
+    @cached_property
+    def display_highest_parent_league_name(self):
+        if self.parent:
+            parent = self.parent
+        else:
+            return self.display_league
+
+        while True:
+            if parent.parent is None:
+                return parent.display_league
+            else:
+                parent = parent.parent
+                continue
+            break
 
     @cached_property
     @supress_exception
@@ -411,12 +431,12 @@ class League(models.Model):
         self.search_tokens = self.build_search_tokens()
         super().save(*args, **kwargs)
 
-    def get_upper_parent_names(self):
+    def get_upper_parent_names(self, spliter=', '):
         name = self.name
         if self.parent: 
-            name = f"{self.parent.get_upper_parent_names()} / {name}"
+            name = f"{self.parent.get_upper_parent_names()}{spliter}{name}"
         return name
-
+        
     def set_league_season(self, seasons: List[Season]):
         """Mechanism to set and propagate changes in data seasons."""
         self.data_seasons.add(*seasons)
@@ -435,8 +455,9 @@ class League(models.Model):
         return f"{self.name}"
 
     class Meta:
-        unique_together = ("name", "country", "group", "region", "zpn", "parent")
+        unique_together = ("name", "country", "zpn", "parent")
         ordering = ("order", "section__name")
+
 
 class Seniority(models.Model):
     name = models.CharField(max_length=355, unique=True)
@@ -559,13 +580,19 @@ class Team(models.Model, MappingMixin):
 
     @property
     @supress_exception
-    def display_league_name(self):
-        return self.league.display_league_name
+    def display_highest_parent_league_name(self):
+        return self.league.display_highest_parent_league_name
 
     @property
     @supress_exception
     def display_league_seniority_name(self):
         return self.league.display_league_seniority_name
+
+    @property
+    @supress_exception
+    def display_name_junior(self):
+        if self.league:
+            return self.league.display_name_junior
 
     @property
     @supress_exception
