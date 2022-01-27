@@ -2625,3 +2625,7 @@ section {
   color: #fff;
   text-decoration: none;
 }
+
+.footer-logos{
+  max-width: 100% !important;
+}
