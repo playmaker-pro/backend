@@ -34,6 +34,8 @@ from .models import ClubForPlayerAnnouncement, PlayerForClubAnnouncement, CoachF
     ClubForCoachAnnouncement, AnnouncementMeta
 from .utils import get_datetime_from_year
 
+from marketplace.models import get_licence_choice_number
+
 User = get_user_model()
 
 
@@ -353,7 +355,8 @@ class ClubForPlayerAnnouncementsView(AnnouncementsMetaView):
             queryset = queryset.filter(seniority__name=self.filter_seniority_exact)
 
         if self.filter_position_marketplace is not None:
-            queryset = queryset.filter(positions__name__in=self.filter_position_marketplace).distinct()
+            if "Dowolna" not in self.filter_position_marketplace:
+                queryset = queryset.filter(position__name__in=self.filter_position_marketplace).distinct()
 
         return queryset
 
@@ -371,7 +374,8 @@ class CoachForClubAnnouncementsView(AnnouncementsMetaView):
             queryset = queryset.filter(target_league__name=self.filter_target_league_exact)
 
         if self.filter_licence_list is not None:
-            queryset = queryset.filter(lic_type__in=self.filter_licence_list)
+            licence_choices = [get_licence_choice_number(i) for i in self.filter_licence_list]
+            queryset = queryset.filter(lic_type__in=licence_choices)
         return queryset
 
 
@@ -384,8 +388,9 @@ class ClubForCoachAnnouncementsView(AnnouncementsMetaView):
 
     def filter_queryset(self, queryset):
         queryset = super(ClubForCoachAnnouncementsView, self).filter_queryset(queryset)
-        if self.filter_licence_type is not None:
-            queryset = queryset.filter(lic_type=self.filter_licence_type)
+        if self.filter_licence_list is not None:
+            licence_choices = [get_licence_choice_number(i) for i in self.filter_licence_list]
+            queryset = queryset.filter(lic_type__in=licence_choices)
         return queryset
 
 
@@ -398,8 +403,9 @@ class PlayerForClubAnnouncementsView(AnnouncementsMetaView):
 
     def filter_queryset(self, queryset):
         queryset = super(PlayerForClubAnnouncementsView, self).filter_queryset(queryset)
-        if self.filter_position_exact is not None:
-            queryset = queryset.filter(position__name=self.filter_position_exact)
+        if self.filter_position_marketplace is not None:
+            if "Dowolna" not in self.filter_position_marketplace:
+                queryset = queryset.filter(position__name__in=self.filter_position_marketplace).distinct()
 
         if self.filter_target_league_exact is not None:
             queryset = queryset.filter(target_league__name=self.filter_target_league_exact)

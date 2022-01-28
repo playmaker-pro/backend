@@ -235,6 +235,7 @@ class ViewFilterMixin:
             'Pomocnik ofensywny (10)',
             'Skrzydłowy',
             'Napastnik',
+            'Dowolna'
         )
 
         values = self.request.GET.getlist('position')
