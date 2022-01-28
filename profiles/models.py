@@ -1,7 +1,6 @@
 
 from collections import Counter
 from datetime import datetime
-from random import choices
 from stats import adapters
 from address.models import AddressField
 from django.conf import settings
@@ -34,25 +33,6 @@ GLOBAL_TRAINING_READY_CHOCIES = (
         (1, '1-2 treningi'),
         (2, '3-4 treningi'),
         (3, '5-6 treningi'))
-
-VOIVODESHIP_CHOICES = (
-    ("Dolnośląskie", "Dolnośląskie"),
-    ("kujawsko-pomorskie", "Kujawsko-Pomorskie"),
-    ("lubelskie", "Lubelskie"),
-    ("lubuskie", "Lubuskie"),
-    ("łódzkie", "Łódzkie"),
-    ("małopolskie", "Małopolskie"),
-    ("mazowieckie", "Mazowieckie"),
-    ("opolskie", "Opolskie"),
-    ("podkarpackie", "Podkarpackie"),
-    ("podlaskie", "Podlaskie"),
-    ("pomorskie", "Pomorskie"),
-    ("śląskie", "Śląskie"),
-    ("świętokrzyskie", "Świętokrzyskie"),
-    ("warmińsko-mazurskie", "Warmińsko-Mazurskie"),
-    ("wielkopolskie", "Wielkopolskie"),
-    ("zachodniopomorskie", "Zachodniopomorskie")
-)
 
 
 class VerificationCompletionFieldsWrongSetup(Exception):
@@ -539,7 +519,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     team_raw = models.CharField(_('Deklarowana Drużyna'), max_length=68, help_text=_('Drużyna w której deklarujesz że obecnie grasz'), blank=True, null=True)
     league = models.CharField(_('Rozgrywki'), max_length=68, db_index=True, help_text=_('Poziom rozgrywkowy'), blank=True, null=True)
     league_raw = models.CharField(_('Rozgrywki'), max_length=68, help_text=_('Poziom rozgrywkowy który deklarujesz że grasz.'), blank=True, null=True)
-    voivodeship = models.CharField(_('Województwo'), help_text=_('Województwo'), max_length=68, db_index=True, blank=True, null=True, choices=make_choices(VOIVODESHIP_CHOICES))
+    voivodeship = models.CharField(_('Wojewódźtwo'), help_text=_('Wojewódźtwo'), max_length=68, db_index=True, blank=True, null=True)
     voivodeship_raw = models.CharField(_('Wojewódźtwo'), help_text=_('Wojewódźtwo w którym grasz.'), max_length=68, blank=True, null=True)
     birth_date = models.DateField(_('Data urodzenia'), blank=True, null=True)
     height = models.PositiveIntegerField(_('Wzrost'), help_text=_('Wysokość (cm) [130-210cm]'), blank=True, null=True, validators=[MinValueValidator(130), MaxValueValidator(210)])
@@ -1018,14 +998,6 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True)
     # club & coach specific attrs.
-
-    voivodeship = models.CharField(
-        _('Województwo'),
-        choices=make_choices(VOIVODESHIP_CHOICES),
-        max_length=68,
-        blank=True,
-        null=True,
-        )
 
     club_role = models.IntegerField(
         choices=CLUB_ROLE,

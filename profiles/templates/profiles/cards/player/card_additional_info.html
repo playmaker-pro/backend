@@ -13,9 +13,7 @@
                                                 {% include template with key=_('Status transferowy') value=profile.get_transfer_status_display|default:'-'  %}
                                                 {% include template with key=_('Karta')              value=profile.get_card_display|default:'-' %}
                                                 {% include template with key=_('Piłkarski cel')      value=profile.get_soccer_goal_display|default:'-'  %}
-                                                {% include template with key=_('Oczekiwana liczba treningów')      value=profile.get_training_ready_display|default:'-' value_suffix=' / tydzień' %}
-                                                {% include template with key=_('Maksymalna odległość na trening')      value=profile.practice_distance|default:'-' value_suffix=' km' %}
-
+   
         </div>  <!-- end of card-text-->    
 
         <div class="card-text">

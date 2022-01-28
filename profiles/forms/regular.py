@@ -145,7 +145,7 @@ class CoachProfileForm(BaseProfileForm):
                 Field('birth_date', wrapper_class='row', css_class=self.get_mandatory_field_class("birth_date"),),
                 # Field('league', wrapper_class='row', readonly=True),
                 # # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
-                Field('voivodeship', wrapper_class='row'),
+                # Field('voivodeship', wrapper_class='row', readonly=True),
                 # Field('team', wrapper_class='row', readonly=True),
                 # Field('country', wrapper_class='row'),
                 Field("address", wrapper_class='row'),
@@ -165,19 +165,7 @@ class CoachProfileForm(BaseProfileForm):
 
     class Meta:
         model = models.CoachProfile
-        fields = [
-            'club_role',
-            'country',
-            'address', 
-            'about', 
-            'birth_date', 
-            'facebook_url', 
-            'soccer_goal', 
-            'phone', 
-            'practice_distance', 
-            'licence', 
-            'voivodeship',
-            ]
+        fields = ['club_role', 'country', 'address', 'about', 'birth_date', 'facebook_url', 'soccer_goal', 'phone', 'practice_distance', 'licence']
 
     def get_mandatory_field_class(self, field_name):
         if field_name in models.CoachProfile.VERIFICATION_FIELDS:
@@ -188,7 +176,6 @@ class PlayerProfileForm(BaseProfileForm):
     settings = (
         ('address', False),
         ('weight', False),
-        ('voivodeship', False),
         ('height', False),
         ('practice_distance', False),
         ('agent_name', False),
@@ -223,7 +210,6 @@ class PlayerProfileForm(BaseProfileForm):
                 Field("height", wrapper_class='row', placeholder='130 - 210 cm', css_class='mandatory'),
                 Field("weight", wrapper_class='row', placeholder='40 - 140 kg', css_class='mandatory'),
                 Field("address", wrapper_class='row', placeholder='Miasto z którego dojeżdżam na trening', css_class='mandatory'),
-                Field("voivodeship", wrapper_class='row', placeholder='Województwo, w którym mieszkasz'),
                 Field("about", wrapper_class='row'),
                 css_class='col-md-6',
             ),
