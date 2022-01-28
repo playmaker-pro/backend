@@ -100,7 +100,7 @@ def announcement_notify_requester(announcement_type, announcement, user):
                f'Jeśli trener będzie zainteresowany - skontaktuje się z Tobą telefonicznie lub mailowo.\n\n'
     elif announcement_type == "ClubForCoachAnnouncement":
         subject = 'Wysłałeś aplikację na rozmowę o pracę'
-        body = f'Twoje zgłoszenie na testy zostało wysłane do {announcement.club.display_club}.\n' \
+        body = f'Twoja aplikacja na rozmowę o pracę została wysłana do {announcement.club.display_club}.\n' \
                f'Jeśli klub będzie zainteresowany Twoją kandydaturą - skontaktuje się z Tobą ' \
                f'telefonicznie lub mailowo.\n\n'
     elif announcement_type == "ClubForPlayerAnnouncement":

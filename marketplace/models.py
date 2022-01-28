@@ -30,6 +30,13 @@ LICENCE_CHOICES = (
 )
 
 
+def get_licence_choice_number(licence_name: str) -> int:
+    for licence_pair in LICENCE_CHOICES:
+        if licence_pair[1] == licence_name:
+            return licence_pair[0]
+    return 0
+
+
 class AnnouncementPlan(models.Model):
     """
     Holds information about user's announcement plans.
