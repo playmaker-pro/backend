@@ -14,6 +14,14 @@ def reset_history(modeladmin, request, queryset):
 reset_history.short_description = "Reset history league data."
 
 
+def resave(modeladmin, request, queryset):
+    for object in queryset:
+        object.save()
+
+
+resave.short_description = 'Save objects again.'
+
+
 @admin.register(models.LeagueHistory)
 class LeagueHistoryAdmin(admin.ModelAdmin):
     list_display = (
@@ -86,6 +94,7 @@ class SectionGroupingAdmin(admin.ModelAdmin):
 class LeagueAdmin(admin.ModelAdmin):
     search_fields = ("name", "slug")
     readonly_fields = ("slug", "search_tokens", "virtual", "is_parent")
+    actions = [resave]
     list_display = (
         "get_slicer",
         "section",
@@ -108,6 +117,7 @@ class LeagueAdmin(admin.ModelAdmin):
         "code",
         "slug",
         "search_tokens",
+        linkify("top_parent"),
     )
 
     def get_slicer(self, obj):

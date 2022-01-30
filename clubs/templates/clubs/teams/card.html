@@ -18,11 +18,11 @@
   
       <div class="card-text">
        {% if see_team %}
-        {% include template with key=_('Nazwa')            value=object.display_team %}
+          {% include template with key=_('Nazwa')            value=object.display_team %}
        {% endif %}
-        {% if see_club %}
-          {% include template with key=_('Klub')             value=object.display_club  link=object.club.get_permalink %}
-        {% endif %}
+          {% if see_club %}
+             {% include template with key=_('Klub')             value=object.display_club  link=object.club.get_permalink %}
+          {% endif %}
 
         {% include template with key=_('Rozgrywki') value=object.display_league|default:'-'           link=object.get_league_permalink     %}
         {% if object.display_name_junior %}
@@ -47,11 +47,10 @@
         {% csrf_token %}
 
         {% if not user.is_club %}
-        {% request_link user object %}
+            {% request_link user object %}
         {% endif %}
+  
         {% get_team_edit_link object %}
-
-
       </div>
   </div>
 </div>

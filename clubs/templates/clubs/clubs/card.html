@@ -6,29 +6,18 @@
 
 {% with template='platform/tables/two_table.html'  object=object %}
 <div class="card m-2">
-
-
     <div class="card-body">
-
-
       <h2 class="card-title">{% trans 'Podstawowe informacje' %}</h2>
-
       <h6 class="card-subtitle mb-2 text-muted"></h6>
-
-
       <div hidden class="card-title text-center">
         <img title="" class="avatar" src="{% thumbnail object.picture|default:'default_club.png' 'profile_avatar_show' %}">
       </div>
       <h6 class="card-subtitle mb-2 text-muted"></h6>  
   
       <div class="card-text">
-        
-        {% include template with key=_('Województwo')  value=object.display_voivodeship|default:'-'      %}
-               
-        {% include template with key=_('Adres stadionu (mecze)')  value=object.stadion_address|default:'-'      %}
-               
-        {% include template with key=_('Adres boiska (trening)')  value=object.practice_stadion_address|default:'-'      %}
-       
+        {% include template with key=_('Województwo')  value=object.display_voivodeship|default:'-' %} 
+        {% include template with key=_('Adres stadionu (mecze)')  value=object.stadion_address|default:'-' %}
+        {% include template with key=_('Adres boiska (trening)')  value=object.practice_stadion_address|default:'-' %}
         {% request_link user object %}
         {% get_club_edit_link object %}
 

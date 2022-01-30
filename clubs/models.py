@@ -1,6 +1,6 @@
 import uuid
 from typing import List
-from functools import cached_property, singledispatch
+from functools import cached_property, lru_cache, singledispatch
 from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.translation import gettext_lazy as _
@@ -275,6 +275,7 @@ class League(models.Model):
 
     code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs")
+    top_parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True)
     country = CountryField(
         _("Kraj"),
         default="PL",
@@ -357,14 +358,20 @@ class League(models.Model):
 
     @cached_property
     def display_highest_parent_league_name(self):
+        top_parent = self.get_highest_parent()
+        if top_parent:
+            return top_parent.display_league
+
+    @lru_cache
+    def get_highest_parent(self):
+        """Loops to find last (top) parent in a tree"""
         if self.parent:
             parent = self.parent
         else:
-            return self.display_league
-
+            return self
         while True:
             if parent.parent is None:
-                return parent.display_league
+                return parent
             else:
                 parent = parent.parent
                 continue
@@ -389,28 +396,14 @@ class League(models.Model):
         return reverse("plays:summary", kwargs={"slug": self.slug})
 
     def get_slug_value(self):
-        '''
-        /name/name_jun/ZPN_name/city_name/group/RW
-
-        /4-liga,dolnoslaskie,grupa-ii
-        /u-19,4-liga-okregowa,opolskie,opole,grupa-iii,rw
-        /ekstraklasa
-        '''
-        value = self.name
-        if self.name_junior:
-            value += f"--{self.name_junior.name}"
-        if self.region:
-            value += f"--{self.region.name}"
-        if self.city_name:
-            value += f"--{self.city_name}"
-        if self.group:
-            value += f"--{self.group.name}"
-        if self.rw is not None:
-            if self.rw:
-                value += f"--rw"
-        return str(value)
+        return self.get_upper_parent_names(spliter='--')
 
     def save(self, *args, **kwargs):
+
+        # Identify and set highest parent
+        if top_parent := self.get_highest_parent():
+            self.top_parent = top_parent
+
         # is a virtual parent?
         if self.is_parent:
             # isparent flag is due to historical reasons
@@ -433,10 +426,10 @@ class League(models.Model):
 
     def get_upper_parent_names(self, spliter=', '):
         name = self.name
-        if self.parent: 
-            name = f"{self.parent.get_upper_parent_names()}{spliter}{name}"
+        if self.parent:
+            name = f"{self.parent.get_upper_parent_names(spliter=spliter)}{spliter}{name}"
         return name
-        
+
     def set_league_season(self, seasons: List[Season]):
         """Mechanism to set and propagate changes in data seasons."""
         self.data_seasons.add(*seasons)
@@ -455,7 +448,7 @@ class League(models.Model):
         return f"{self.name}"
 
     class Meta:
-        unique_together = ("name", "country", "zpn", "parent")
+        unique_together = ("name", "country", "parent")
         ordering = ("order", "section__name")
 
 

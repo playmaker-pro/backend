@@ -541,6 +541,8 @@ def is_same_club(user, showed_user):
 def request_link(context, user, showed_user):
     """Creates button to open inquiry"""
     off = {'off': True}
+
+    # Check permissions
     if not user.is_authenticated:
         return off
 
@@ -549,6 +551,10 @@ def request_link(context, user, showed_user):
 
     if isinstance(showed_user, Team) or isinstance(showed_user, Club):
         if isinstance(showed_user, Team):
+            # we do not want to allow to click on button when 
+            # Team should not be visible in database
+            if not showed_user.visible:
+                return off
             if showed_user.manager is not None:
                 showed_user = showed_user.manager
             else:
