@@ -376,7 +376,7 @@ class ClubForPlayerAnnouncementsView(AnnouncementsMetaView):
 
         if self.filter_position_marketplace is not None:
             if "Dowolna" not in self.filter_position_marketplace:
-                queryset = queryset.filter(position__name__in=self.filter_position_marketplace).distinct()
+                queryset = queryset.filter(positions__name__in=self.filter_position_marketplace).distinct()
 
         return queryset
 
