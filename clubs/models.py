@@ -275,7 +275,7 @@ class League(models.Model):
 
     code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs")
-    top_parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True)
+    highest_parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True)
     country = CountryField(
         _("Kraj"),
         default="PL",
