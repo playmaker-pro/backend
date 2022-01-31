@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from email.policy import default
 from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, Div, Submit, HTML, Button, Row, Field, MultiField
@@ -8,7 +9,7 @@ from profiles import models
 from django_countries.widgets import CountrySelectWidget
 from django.utils.translation import gettext_lazy as _
 from profiles import widgets
-
+from crispy_forms.bootstrap import InlineRadios
 
 User = get_user_model()
 
@@ -38,16 +39,14 @@ class VerificationForm(forms.ModelForm):
         self.fields['team_club_league_voivodeship_ver'].help_text = None
 
     def build_verification_form(self):
-
-        fds = [''] + [Field(fn, warpper_class='row', placeholder=fp, css_class=fc) for fn, fp, fc in self.building_fields]
+        fds = [''] + [cfg.get('field_class', Field)(fn, warpper_class='row', placeholder=cfg.get('placeholder'), css_class=cfg.get('css_class')) for fn, cfg in self.building_fields]
         return Fieldset(*fds)
 
 
 class ClubVerificationForm(VerificationForm):
     building_fields = [
-
-        ('team_club_league_voivodeship_ver', 'np. MKS Zbyszkowo, we Wrocławiu', None),
-        ('club_role', None, None),
+        ('team_club_league_voivodeship_ver', {'placeholder': 'np. MKS Zbyszkowo, we Wrocławiu'}),
+        ('club_role', {}),
     ]
 
     def set_fields_rules(self):
@@ -57,7 +56,7 @@ class ClubVerificationForm(VerificationForm):
 
         self.fields['team_club_league_voivodeship_ver'].help_text = 'Który klub reprezentujesz'
         self.fields['team_club_league_voivodeship_ver'].required = True
-        self.fields['team_club_league_voivodeship_ver'].label = False  # '<i class="icofont-team-alt"></i>'
+        self.fields['team_club_league_voivodeship_ver'].label = False
 
     class Meta:
         model = models.ClubProfile
@@ -67,9 +66,9 @@ class ClubVerificationForm(VerificationForm):
 class CoachVerificationForm(VerificationForm):
     birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
     building_fields = [
-        ('birth_date', '1998-09-24', None),
-        ('team_club_league_voivodeship_ver', 'np. MKS Zbyszkowo, we Wrocławiu', None),
-        ('country', None, None),
+        ('birth_date', {'placeholder': '1998-09-24'}),
+        ('team_club_league_voivodeship_ver', {'placeholder': 'np. MKS Zbyszkowo, we Wrocławiu'}),
+        ('country', {}),
     ]
 
     def set_fields_rules(self):
@@ -89,18 +88,26 @@ class CoachVerificationForm(VerificationForm):
         model = models.CoachProfile
         widgets = {'country': CountrySelectWidget(layout='{widget}')}
         fields = models.CoachProfile.VERIFICATION_FIELDS
-
+from clubs.models import Team
 
 class PlayerVerificationForm(VerificationForm):
     birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
     building_fields = [
-            ('birth_date', '1998-09-24', None),
-            ('position_raw', None, None),
-            ('team_club_league_voivodeship_ver', 'np. MKS Zbyszkowo, we Wrocławiu', None),
-            ('country', None, None),
+            ('birth_date', {'placeholder': '1998-09-24'}),
+            ('position_raw', {}),
+            ('team_club_league_voivodeship_ver', {'placeholder': 'np. MKS Zbyszkowo, we Wrocławiu'}),
+            ('country', {}),
+            ('team', {}),
+            ('has_team', {'field_class': InlineRadios})
         ]
-
+    CHOICES = (('tak mam klub', 'tak mam klub'), ('Nie mam klubu','Nie mam klubu'))
+    team = forms.ModelChoiceField(queryset=Team.objects.all())
+    has_team = forms.ChoiceField(choices=CHOICES, widget=forms.RadioSelect)
     def set_fields_rules(self):
+        self.fields['team'].help_text = 'team w koryt'
+        self.fields['team'].required = True
+        self.fields['team'].label = False  # '<i class="icofont-field"></i>'
+
         self.fields['position_raw'].help_text = 'Pozycja na której obecnie grasz'
         self.fields['position_raw'].required = True
         self.fields['position_raw'].label = False  # '<i class="icofont-field"></i>'
@@ -120,4 +127,4 @@ class PlayerVerificationForm(VerificationForm):
     class Meta:
         model = models.PlayerProfile
         widgets = {'country': CountrySelectWidget(layout='{widget}')}
-        fields = models.PlayerProfile.VERIFICATION_FIELDS + ['position_raw']
+        fields = models.PlayerProfile.VERIFICATION_FIELDS + ['position_raw', 'team']
