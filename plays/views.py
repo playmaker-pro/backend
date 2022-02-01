@@ -296,7 +296,7 @@ class PlaysListViews(ComplexViews):
 
         plays_config = PlaysConfig.objects.all().first()
 
-        if plays_config:
+        if plays_config and plays_config.main_league:
             league_slug = plays_config.main_league.slug
             return redirect("plays:summary", slug=league_slug)
 
