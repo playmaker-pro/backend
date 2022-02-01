@@ -18,15 +18,15 @@
   
       <div class="card-text">
        {% if see_team %}
-          {% include template with key=_('Nazwa')            value=object.display_team %}
+          {% include template with key=_('Nazwa')     value=object.display_team %}
        {% endif %}
           {% if see_club %}
-             {% include template with key=_('Klub')             value=object.display_club  link=object.club.get_permalink %}
+             {% include template with key=_('Klub')   value=object.display_club  link=object.club.get_permalink %}
           {% endif %}
 
-        {% include template with key=_('Rozgrywki') value=object.display_league|default:'-'           link=object.get_league_permalink     %}
+        {% include template with key=_('Rozgrywki')   value=object.display_league_top_parent|default:'-'           link=object.get_league_permalink     %}
         {% if object.display_name_junior %}
-            {% include template with key=_('Poziom')             value=object.display_name_junior|default:'-'|upper        %} 
+            {% include template with key=_('Poziom')  value=object.display_name_junior|default:'-'|upper        %} 
         {% endif %}
 
         {% include template with key=_('Grupa') value=object.display_league_group_name|default:'-'                          %}

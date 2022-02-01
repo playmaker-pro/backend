@@ -2,20 +2,20 @@
 {% load thumbnail %}
 {% load i18n %}
 
-<!--PIŁKARZ KLUBU-->
+{% comment %} <!--PIŁKARZ KLUBU--> {% endcomment %}
 {% if object|classname == "PlayerForClubAnnouncement" %}
 {% include 'marketplace/announcement_player_for_club.html' with object=object %}
 
-<!--KLUB PIŁKARZA-->
+{% comment %} <!--KLUB PIŁKARZA--> {% endcomment %}
 {% elif object|classname == "ClubForPlayerAnnouncement" %}
 
 {% include 'marketplace/announcement_club_for_player.html' with object=object %}
 
-<!--KLUB TRENERA-->
+{% comment %} <!--KLUB TRENERA--> {% endcomment %}
 {% elif object|classname == "ClubForCoachAnnouncement" %}
 {% include 'marketplace/announcement_club_for_coach.html' with object=object %}
 
-<!--TRENER KLUBU-->
+{% comment %} <!--TRENER KLUBU--> {% endcomment %}
 {% elif object|classname == "CoachForClubAnnouncement" %}
 {% include 'marketplace/announcement_coach_for_club.html' with object=object %}
 {% endif %}

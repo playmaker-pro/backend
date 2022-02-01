@@ -52,7 +52,7 @@
             </div>
             {% endif %}
             <div class="">
-               {{ object.display_highest_parent_league_name|default:''|title  }}, {{ object.display_voivodeship|default:''|lower|truncatechars:24 }}
+               {{ object.display_league_top_parent|default:''|title  }}, {{ object.display_voivodeship|default:''|lower|truncatechars:24 }}
             </div>
         </div>
                            <div class="sc-cell d-none d-md-flex col-md-4">
@@ -63,7 +63,7 @@
                           </div>
 
                               <div class="sc-cell d-none d-md-flex col-6 col-md-2  text-left">
-                                  {{ object.display_highest_parent_league_name|default:''|title  }}
+                                  {{ object.display_league_top_parent|default:''|title  }}
                               </div>
 
                               <div class="sc-cell d-none d-md-flex col-5 col-md-2 text-left">

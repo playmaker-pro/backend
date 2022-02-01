@@ -43,18 +43,17 @@ def my_annoucement(context):
 
     url = reverse('marketplace:announcements') if my else reverse('marketplace:my_announcements')
 
-    if user.is_player:
-        return {
-            'active_class': None,
-            # 'button_script': 'inquiry',
-            'button_id': 'myAnnoucementButton',
-            'button_attrs': None,
-            'button_class': 'btn-request btn-requested' if my else 'btn-request' ,
-            'button_actions': {
-                'onclick': {'function': f"window.location.href='{url}';"},
-            },
-            'button_icon': 'paperclip',
-            'button_text': "Wszystkie ogłoszenia" if my else "Moje ogłoszenia",
-            'modals': context['modals'],
-        }
+    return {
+        'active_class': None,
+        # 'button_script': 'inquiry',
+        'button_id': 'myAnnoucementButton',
+        'button_attrs': None,
+        'button_class': 'btn-request btn-requested' if my else 'btn-request' ,
+        'button_actions': {
+            'onclick': {'function': f"window.location.href='{url}';"},
+        },
+        'button_icon': 'paperclip',
+        'button_text': "Wszystkie ogłoszenia" if my else "Moje ogłoszenia",
+        'modals': context['modals'],
+    }
     return {'off': True}

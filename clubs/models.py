@@ -344,23 +344,18 @@ class League(models.Model):
         return id_list
 
     @cached_property
-    def display_league(self):
+    def display_league(self) -> str:
         return self.name
 
     @cached_property
-    def display_league_name(self):
-        return self.name
-
-    @cached_property
-    def display_name_junior(self):
+    def display_name_junior(self) -> str:
         if self.display_name_junior:
             return self.display_name_junior.name
 
     @cached_property
-    def display_highest_parent_league_name(self):
-        top_parent = self.get_highest_parent()
-        if top_parent:
-            return top_parent.display_league
+    def display_league_top_parent(self) -> str:
+        if self.highest_parent:
+            return self.highest_parent.display_league
 
     @lru_cache
     def get_highest_parent(self):
@@ -573,8 +568,8 @@ class Team(models.Model, MappingMixin):
 
     @property
     @supress_exception
-    def display_highest_parent_league_name(self):
-        return self.league.display_highest_parent_league_name
+    def display_league_top_parent(self):
+        return self.league.display_league_top_parent
 
     @property
     @supress_exception
