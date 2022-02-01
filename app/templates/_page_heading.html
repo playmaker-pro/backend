@@ -1,7 +1,10 @@
 <div class="page-heading d-none d-md-block" style="background-color:#2b2b2b; box-shadow: 0px 5px 5px #aaaaaa;">
   <div class="container"ata-aos="fade-up">
-    <div class="row">
-      <h1 style="font-size:1.5rem; color:#fff; margin-bottom: .5rem; font-weight: 500; line-height: 1.2;" class="p-2"><i class="main-color icofont-hand-drawn-right"></i> {{ heading_title }}</h1>
+    <div class="d-flex d-flex-inline p-2">
+      <h1 style="font-size:1.5rem; color:#fff; margin-bottom: .5rem; font-weight: 500; line-height: 1.2; padding-right:15px;" ><i class="main-color icofont-hand-drawn-right"></i> {{ heading_title }}</h1>
+        {% if include_extra_panel %}
+          {% include include_extra_panel %}
+        {% endif %}
     </div>
   </div>
 </div>

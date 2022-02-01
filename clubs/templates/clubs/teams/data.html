@@ -1,13 +1,10 @@
 {% load i18n %}
 {% load static %}
 {% with template='platform/tables/two_table_true_false.html'  object=object %}
-
     <div class="card m-2">
         <div class="card-body">
             <h2 class="card-title">{% trans 'Podstawowe informacje' %}</h2>
-
             <h6 class="card-subtitle mb-2 text-muted"></h6>
-
             <div class="card-text">
                 {% if object.travel_refunds %} {% include template with key=_('Zwrot za dojazdy') value=object.travel_refunds      %} {% endif %}
                 {% if object.game_bonus %} {% include template with key=_('Premie za mecze') value=object.game_bonus      %} {% endif %}
@@ -19,10 +16,7 @@
                 {% if object.fizo %} {% include template with key=_('Fizjoterapeuta') value=object.fizo     %} {% endif %}
                 {% if object.diet_suplements %} {% include template with key=_('Suplemnety / odżywki') value=object.diet_suplements      %} {% endif %}
             </div>
-
-
             <h2 class="card-title pt-3">{% trans 'Osoby w klubie' %}</h2>
-
             <h6 class="card-subtitle mb-2 text-muted"></h6>
             {% with template='platform/tables/two_table.html'  object=object %}
             <div class="card-text">    
@@ -32,6 +26,4 @@
             {% endwith %}
         </div>
     </div>
-
 {% endwith %}
-
