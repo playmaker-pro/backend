@@ -117,7 +117,15 @@ function get_verification_form(slug)
         success: function(json) {
             $("#verification-form-body").html(json.form);
             $("#verification-form-body select").addClass("selectpicker").selectpicker('refresh'); 
-        }
+        
+            if($('#id_has_team_1').is(':checked')) { 
+              console.log('=', $("#select_team_div"))
+              $("#select_team_div").fadeIn()
+              $("#text_team_div").hide()
+          }
+          
+        
+          }
     })
   }
 
