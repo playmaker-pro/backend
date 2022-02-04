@@ -2,9 +2,6 @@
 {% load playmaker %}
 
  <div class="container" data-aos="fade-up">
-    {% include 'plays/filters/season.html' %}
-    {% include 'plays/filters/leagues.html' %}
-
     {% with parent_accordion="accordion"  level=0 %}
         {% include "plays/partials/tree/leagues.html" with level=level parent_accordion=parent_accordion %}
     {% endwith %}

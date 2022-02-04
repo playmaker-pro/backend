@@ -360,6 +360,7 @@ class ViewModalLoadingMixin:
         else:
             modals['inquiry']['load'] = True
             modals['approve_announcement_modal']['load'] = True
+            
             if user.is_club or user.is_coach or user.is_player:
                 modals['add_announcement']['load'] = True
             # if user.is_player:

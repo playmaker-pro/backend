@@ -342,10 +342,14 @@ def add_announcement(context):
             'modals': context,
             'multiple_options': True,
             'options': [
-                {'flag': 'club_looking_for_player',
-                 'friendly_name': 'Klub szuka zawodnika'},
-                {'flag': 'club_looking_for_coach',
-                 'friendly_name': 'Klub szuka trenera'},
+                {
+                    'flag': 'club_looking_for_player',
+                    'friendly_name': 'Klub szuka zawodnika'
+                 },
+                {
+                    'flag': 'club_looking_for_coach',
+                    'friendly_name': 'Klub szuka trenera'
+                },
             ]
         }
     elif user.is_coach:

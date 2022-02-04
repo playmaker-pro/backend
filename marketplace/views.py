@@ -162,8 +162,11 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                         'voivodeship': user.profile.club_object.voivodeship
                     })
                     form.fields['club'].queryset = Club.objects.filter(name=user.profile.club_object.name)
+                    
                 else:
                     form = ClubForCoachAnnouncementForm(initial={})
+                form.fields['league'].queryset = League.objects.is_top_parent()
+
             elif user.is_player:
                 voivodeship = user.profile.team_object.club.voivodeship if user.profile.team_object else None
                 league = user.profile.team_object.league if user.profile.team_object else None
@@ -338,7 +341,9 @@ class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, 
         kwargs['type'] = self.table_type
         kwargs['filters'] = self.get_filters_values()
         self.prepare_kwargs(kwargs)
+        
         kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
+
         page_obj.elements = page_obj.end_index() - page_obj.start_index() + 1
         # kwargs['ammount'] = page_obj.count()
         return super().get(request, *args, **kwargs)

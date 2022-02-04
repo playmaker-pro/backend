@@ -128,7 +128,7 @@ class PlaysBaseView(ComplexViews):
         if self.filter_on:
             options["league_filters"] = League.objects.prefetch_related("data_seasons", "childs").filter(
                 Q(visible=True) &
-                Q(parent__isnull=True)              
+                Q(parent__isnull=True)          
 #                Q(data_seasons__in=[options["current_season_obj"]])
             ).order_by("order")
         return options
@@ -296,7 +296,7 @@ class PlaysListViews(ComplexViews):
 
         plays_config = PlaysConfig.objects.all().first()
 
-        if plays_config:
+        if plays_config and plays_config.main_league:
             league_slug = plays_config.main_league.slug
             return redirect("plays:summary", slug=league_slug)
 
