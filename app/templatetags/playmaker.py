@@ -315,6 +315,10 @@ def is_profile_observed(user, target):
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def add_announcement(context):
+    '''
+    as a club user: 
+        when club user do not have any club attached we should tirgger no_club_assigned modal
+    '''
     user = context['user']
 
     if not user.is_authenticated:

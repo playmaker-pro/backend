@@ -29,7 +29,7 @@
             {% include template with key=_('Poziom')  value=object.display_name_junior|default:'-'|upper        %} 
         {% endif %}
 
-        {% include template with key=_('Grupa') value=object.display_league_group_name|default:'-'                          %}
+        {% include template with key=_('Grupa') value=object.display_league_region_and_group_name|default:'-'                          %}
 
         {% if see_club %}
         {% include template with key=_('Województwo')        value=object.display_voivodeship|default:'-'      %}

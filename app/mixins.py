@@ -239,7 +239,8 @@ class ViewFilterMixin:
         )
 
         values = self.request.GET.getlist('position')
-
+        if "Dowolna" in values:
+            return
         filtered_positions = []
         for value in values:
             if value in POSITION_CHOICES:
@@ -322,6 +323,13 @@ class ViewModalLoadingMixin:
                 'load': False,
                 'async': 'get_add_announcement_form'
             },
+            'no_club': {
+                'name': 'noClubModal',
+                'template': 'profiles/modals/_no_club_assigned_modal.html',
+                'auto': False,
+                'load': False,
+                'async': False
+            },
             'approve_announcement_modal': {
                 'name': 'approveAnnouncementModal',
                 'template': 'profiles/modals/_approve_announcement_modal.html',
@@ -358,6 +366,9 @@ class ViewModalLoadingMixin:
         # Loading action specific modals
         # here is case when we can perfom action, so here are the action that we can perform
         else:
+            if user.is_club and not user.clubprofile.is_clubless:
+                modals['no_club']['load'] = True
+
             modals['inquiry']['load'] = True
             modals['approve_announcement_modal']['load'] = True
             

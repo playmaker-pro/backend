@@ -129,10 +129,10 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                         'gender': user.profile.team_object.gender,
                     })
                     form.fields['club'].queryset = Club.objects.filter(name=user.profile.team_object.club.name)
-                    form.fields['league'].queryset = League.objects.filter(name=user.profile.team_object.league.name)
+                    form.fields['league'].queryset = League.objects.is_top_parent().filter(name=user.profile.team_object.league.name)
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
-                form.fields['target_league'].queryset = League.objects.is_top_parent()
+                    form.fields['league'].queryset = League.objects.is_top_parent()
 
             elif _action_name == "coach_looking_for_club":
                 league = user.profile.team_object.league if user.profile.team_object else None
@@ -156,7 +156,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     form.fields['club'].queryset = Club.objects.filter(name=user.profile.club_object.name)
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
-                form.fields['target_league'].queryset = League.objects.is_top_parent()
+                form.fields['league'].queryset = League.objects.is_top_parent()
 
             elif _action_name == "club_looking_for_coach":
                 if user.profile.club_object:
@@ -170,7 +170,6 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 else:
                     form = ClubForCoachAnnouncementForm(initial={})
                 form.fields['league'].queryset = League.objects.is_top_parent()
-                form.fields['target_league'].queryset = League.objects.is_top_parent()
 
             elif user.is_player:
                 voivodeship = user.profile.team_object.club.voivodeship if user.profile.team_object else None
@@ -385,8 +384,7 @@ class ClubForPlayerAnnouncementsView(AnnouncementsMetaView):
             queryset = queryset.filter(seniority__name=self.filter_seniority_exact)
 
         if self.filter_position_marketplace is not None:
-            if "Dowolna" not in self.filter_position_marketplace:
-                queryset = queryset.filter(positions__name__in=self.filter_position_marketplace).distinct()
+            queryset = queryset.filter(positions__name__in=self.filter_position_marketplace).distinct()
 
         return queryset
 
@@ -434,8 +432,7 @@ class PlayerForClubAnnouncementsView(AnnouncementsMetaView):
     def filter_queryset(self, queryset):
         queryset = super(PlayerForClubAnnouncementsView, self).filter_queryset(queryset)
         if self.filter_position_marketplace is not None:
-            if "Dowolna" not in self.filter_position_marketplace:
-                queryset = queryset.filter(position__name__in=self.filter_position_marketplace).distinct()
+            queryset = queryset.filter(position__name__in=self.filter_position_marketplace).distinct()
 
         if self.filter_target_league_exact is not None:
             queryset = queryset.filter(target_league__name=self.filter_target_league_exact)
