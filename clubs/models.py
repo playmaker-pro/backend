@@ -669,4 +669,4 @@ class Team(models.Model, MappingMixin):
 
     def __str__(self):
         region_name = self.league.region.name if self.league and self.league.region else ''
-        return f"{self.name}, ({self.display_highest_parent_league_name}"#, {region_name})"
+        return f"{self.name}, ({self.display_league_top_parent}, {region_name})"
