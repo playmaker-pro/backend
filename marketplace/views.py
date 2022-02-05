@@ -132,6 +132,8 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     form.fields['league'].queryset = League.objects.filter(name=user.profile.team_object.league.name)
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
+                form.fields['target_league'].queryset = League.objects.is_top_parent()
+
             elif _action_name == "coach_looking_for_club":
                 league = user.profile.team_object.league if user.profile.team_object else None
                 form = CoachForClubAnnouncementForm(
@@ -154,6 +156,8 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     form.fields['club'].queryset = Club.objects.filter(name=user.profile.club_object.name)
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
+                form.fields['target_league'].queryset = League.objects.is_top_parent()
+
             elif _action_name == "club_looking_for_coach":
                 if user.profile.club_object:
 
@@ -166,6 +170,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 else:
                     form = ClubForCoachAnnouncementForm(initial={})
                 form.fields['league'].queryset = League.objects.is_top_parent()
+                form.fields['target_league'].queryset = League.objects.is_top_parent()
 
             elif user.is_player:
                 voivodeship = user.profile.team_object.club.voivodeship if user.profile.team_object else None
