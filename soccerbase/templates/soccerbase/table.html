@@ -51,17 +51,16 @@
         {% if page_obj.paginator.count == 0 %}
             {% include 'platform/partials/_empty.html' %}
         {% else %}
-
-        {% if type == 'P' %}
-            {% include 'soccerbase/tables/table_players_card.html' with objects=page_obj %}
-            {% include 'platform/partials/_pagination.html' with object_type='piłkarzy' %}
-        {% elif type == 'T' %}
-            {% include 'soccerbase/tables/table_coaches_card.html' with objects=page_obj %}
-            {% include 'platform/partials/_pagination.html' with object_type='trenerów' %}
-        {% elif type == 'C' %}
-            {% include 'soccerbase/tables/table_teams_card.html' with objects=page_obj %}
-            {% include 'platform/partials/_pagination.html' with object_type='klubów' %}
-        {% endif %}
+            {% if type == 'P' %}
+                {% include 'soccerbase/tables/table_players_card.html' with objects=page_obj %}
+                {% include 'platform/partials/_pagination.html' with object_type='piłkarzy' %}
+            {% elif type == 'T' %}
+                {% include 'soccerbase/tables/table_coaches_card.html' with objects=page_obj %}
+                {% include 'platform/partials/_pagination.html' with object_type='trenerów' %}
+            {% elif type == 'C' %}
+                {% include 'soccerbase/tables/table_teams_card.html' with objects=page_obj %}
+                {% include 'platform/partials/_pagination.html' with object_type='klubów' %}
+            {% endif %}
         <span></span>   
         
         {% endif %}
@@ -82,52 +81,53 @@
         {% include 'soccerbase/tables/filters_modal_teams.html' %}
     {% endif %}
     {% include 'platform/filters/filters_scripts.html' %}
-    <script src="{% static 'assets/js/filters.js' %}"></script>
+    {% comment %} <script src="{% static 'assets/js/filters.js' %}"></script> {% endcomment %}
     
-<script>
 
 {% if user.is_authenticated %}
-$(document).ready(function($){
-    $("filter-form").submit(function() {
-        $(this).find(":input").filter(function(){ return !this.value; }).attr("disabled", "disabled");
-        return true; // ensure form still submits
-    });
-    
-    // Un-disable form fields when page loads, in case they click back after submission
-    $( "filter-form" ).find( ":input" ).prop( "disabled", false );
-    
-    $("filter-form-mobile").submit(function() {
-        $(this).find(":input").filter(function(){ return !this.value; }).attr("disabled", "disabled");
-        return true; // ensure form still submits
-    });
-    
-    // Un-disable form fields when page loads, in case they click back after submission
-    $( "filter-form-mobile" ).find( ":input" ).prop( "disabled", false );
-    
-});
+    <script>
+        $(document).ready(function($){
+            $("filter-form").submit(function() {
+                $(this).find(":input").filter(function(){ return !this.value; }).attr("disabled", "disabled");
+                return true; // ensure form still submits
+            });
+            
+            // Un-disable form fields when page loads, in case they click back after submission
+            $( "filter-form" ).find( ":input" ).prop( "disabled", false );
+            
+            $("filter-form-mobile").submit(function() {
+                $(this).find(":input").filter(function(){ return !this.value; }).attr("disabled", "disabled");
+                return true; // ensure form still submits
+            });
+            
+            // Un-disable form fields when page loads, in case they click back after submission
+            $( "filter-form-mobile" ).find( ":input" ).prop( "disabled", false );
+            
+        });
+    </script>
     {% include 'platform/filters/filters_scripts.html' %}
-
 {% endif %}
 
 
 <script>
-function checkWindowSize() {  
-    if ( $(window).width() > 786 ) {  
-        $('#table-filters').addClass('sticky-top'); 
-        $('#table-filters').removeClass('fixed-bottom');   
+    function checkWindowSize() {  
+        if ( $(window).width() > 786 ) {  
+            $('#table-filters').addClass('sticky-top'); 
+            $('#table-filters').removeClass('fixed-bottom');   
+        }
+        else {
+            $('#table-filters').addClass('fixed-bottom');
+            $('#table-filters').removeClass('sticky-top');
+        }
     }
-    else {
-        $('#table-filters').addClass('fixed-bottom');
-        $('#table-filters').removeClass('sticky-top');
-    }
-}
 
-$(document).ready(function() {
-    checkWindowSize();
-});
+    $(document).ready(function() {
+        checkWindowSize();
+    });
 
 
-$(window).resize(checkWindowSize);  
+    $(window).resize(checkWindowSize);  
 
 </script>
+
 {% endblock %}
