@@ -14,6 +14,8 @@ from clubs.models import Team
 User = get_user_model()
 from dataclasses import dataclass
 import collections.abc
+from django.core.exceptions import ValidationError
+
 
 def update(d, u):
     for k, v in u.items():
@@ -37,23 +39,33 @@ class FieldConfig:
 class VerificationForm(forms.ModelForm):
     settings = {
         'team_club_league_voivodeship_ver': {
-            'placeholder': 'np. WKS Śląsk'},
-        
-        'has_team': {'initial': 'tak mam klub'}}
+            'placeholder': 'np. WKS Wrocław, IV Liga, donlośląskie',
+            'required': False
+        },
+        'team': {
+            'required': False
+        },
+        'has_team': {
+            'initial': 'tak mam klub',
+            'required': False},
+        'team_not_found': {
+            'label': 'zaznacz jeśli nie znalazłeś swojego klubu na liście',
+            'required': False}
+    }
 
     custom_settings = None
 
     building_fields = []
 
-    CHOICES = (('tak mam klub', 'tak mam klub'), ('Nie mam klubu','Nie mam klubu'))
+    CHOICES = (('tak mam klub', 'tak mam klub'), ('Nie mam klubu', 'Nie mam klubu'))
     team = forms.ModelChoiceField(queryset=Team.objects.all())
     has_team = forms.ChoiceField(choices=CHOICES, widget=forms.RadioSelect)
     team_not_found = forms.BooleanField()
     # DEFAULT_FIELDS = ['team_not_found', 'team', 'has_team']
 
     def __init__(self, *args, **kwargs):
-        self.default_field_settings = FieldConfig()
         super().__init__(*args, **kwargs)
+        self.default_field_settings = FieldConfig()
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.error_text_inline = True
@@ -64,11 +76,23 @@ class VerificationForm(forms.ModelForm):
 
         self.helper.layout = self.build_layout()
 
+    def clean(self):
+        cleaned_data = super().clean()
+        team = cleaned_data.get("team")
+        text_club = cleaned_data.get("team_club_league_voivodeship_ver")
+
+        if not team and not text_club:
+            msg = "Wybierz klub z listy bądź wprowadź klub ręcznie"
+            self.add_error('team', msg)
+            self.add_error("team_club_league_voivodeship_ver", msg)
+
     def set_fields_rules(self):
         """ Configure fields"""
         settings = self.settings.copy()
         if self.custom_settings:
             update(settings, self.custom_settings)
+
+        print(settings)
         for field_name, options in settings.items():
             self.fields[field_name].required = options.get("required", self.default_field_settings.required)
             self.fields[field_name].label = options.get("label", self.default_field_settings.label)
