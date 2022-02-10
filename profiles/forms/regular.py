@@ -164,16 +164,16 @@ class CoachProfileForm(BaseProfileForm):
             Fieldset(
                 _('<h2 class="form-section-title">Klub</h2>'),
                 Field('team_club_league_voivodeship_ver', wrapper_class='row'),
-                Field('team', wrapper_class='row'),
                 css_class='col-md-6',
             ),
         )
 
     class Meta:
         model = models.CoachProfile
-        fields = ['club_role', 'country', 'address', 'about', 'birth_date', 
+        fields = ['club_role', 'country',
+                  'address', 'about', 'birth_date', 
         'facebook_url', 'soccer_goal', 'phone', 'practice_distance', 
-        'licence', 'voivodeship', 'team', 'team_club_league_voivodeship_ver']
+        'licence', 'voivodeship',  'team_club_league_voivodeship_ver']
 
     def get_mandatory_field_class(self, field_name):
         if field_name in models.CoachProfile.VERIFICATION_FIELDS:

@@ -11,7 +11,6 @@
             {% include template with key=_('Licencja')           value=profile.get_licence_display|default:'-'  %}
             {% include template with key=_('Piłkarski cel')      value=profile.get_soccer_goal_display|default:'-'  %}
             {% include template with key=_('Rocznik')               value=profile.birth_date.year|default:'-'|upper           %}
-            {% include template with key=_('Obecna drużyna')     value=profile.display_team|default:'-'|upper           %}
             {% include template with key=_('Rozgrywki')          value=profile.display_league_name|default:'-'|upper   link=profile.get_league_permalink  %}
             {% if profile.profile.display_league_seniority_name %}
                 {% include template with key=_('Poziom')             value=profile.display_league_seniority_name|default:'-'|upper        %} 
@@ -35,8 +34,8 @@
             
             {% with profile=show_user.profile template='platform/tables/two_table.html' %}
 
-                {% include template with key=_('Licencja') value=profile.team|default:'-'|upper %}
-                {% include template with key=_('Licencja') value=profile.team_club_league_voivodeship_ver|default:'-' %}
+                {% include template with key=_('Obecna drużyna')     value=profile.display_team|default:'-'|upper           %}
+                {% include template with key=_('Licencja')           value=profile.team_club_league_voivodeship_ver|default:'-' %}
                 
             {% endwith %}
 

@@ -10,7 +10,6 @@
                 {% include template with key=_('Noga')               value=profile.get_prefered_leg_display|default:'-'         %}
                 {% include template with key=_('Pozycja')            value=profile.get_position_raw_display|default:'-'         %}
                 {% include template with key=_('Rocznik')            value=profile.birth_date.year|default:'-'|upper            %}
-                {% include template with key=_('Rozgrywki')          value=profile.display_league_name|default:'-'|upper   link=profile.get_league_permalink  %}
                 {% if profile.display_name_junior %}
                     {% include template with key=_('Poziom')             value=profile.display_name_junior|default:'-'|upper        %} 
                 {% endif %}
@@ -33,8 +32,9 @@
     <div class="card-text">
         {% with profile=show_user.profile template='platform/tables/two_table.html' %}
 
-            {% include template with key=_('Obecna drużyna') value=profile.team|default:'-'|upper %}
-            {% include template with key=_('Województwo') value=profile.voivodeship_raw|default:'-' %}
+            {% include template with key=_('Obecna drużyna')  value=profile.display_team|default:'-'|upper %}
+            {% include template with key=_('Poziom rozgrywkowy')          value=profile.display_league_name|default:'-'|upper   link=profile.get_league_permalink  %}
+            {% include template with key=_('Województwo')     value=profile.voivodeship_raw|default:'-' %}
             
         {% endwith %}
     </div>

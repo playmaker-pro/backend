@@ -561,7 +561,8 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     laczynaspilka_url = models.URLField(_('LNP'), max_length=500, blank=True, null=True)
     min90_url = models.URLField(_('90min portal'), max_length=500, blank=True, null=True)
     transfermarket_url = models.URLField(_('TrasferMarket'), blank=True, null=True)
-    address = models.CharField(max_length=100, help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)
+    address = AddressField(help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)
+    # address = models.CharField(max_length=100, help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)
     practice_distance = models.PositiveIntegerField(_('Odległość na trening'), blank=True, null=True, help_text=_('Maksymalna odległośc na trening'), validators=[MinValueValidator(10), MaxValueValidator(500)])
     about = models.TextField(_('O sobie'), null=True, blank=True)
     training_ready = models.IntegerField(_('Gotowość do treningu'), choices=make_choices(TRAINING_READY_CHOCIES), null=True, blank=True)
@@ -978,13 +979,6 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True)
 
-    team = models.CharField(
-        max_length=355,
-        help_text=_('Klub'),
-        blank=True,
-        null=True,
-    )
-
     team_club_league_voivodeship_ver = models.CharField(
         _('Województwo'),
         max_length=355,
@@ -1039,11 +1033,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         blank=True)
 
-    address = models.CharField(
-        max_length=100,
-        help_text=_('Adres'),
-        blank=True,
-        null=True)
+    address = AddressField(help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)
     
     voivodeship = models.CharField(
         _('Województwo'),
@@ -1226,7 +1216,7 @@ class ScoutProfile(BaseProfile):
         blank=True,
         null=True)
 
-    address = models.CharField(
+    address = AddressField(
         max_length=100,
         help_text=_('Adres'),
         blank=True,
