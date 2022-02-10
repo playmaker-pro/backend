@@ -985,7 +985,6 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'),
         blank=True,
         null=True,
-        choices=VOIVODESHIP_CHOICE
         )
 
     team_object = models.ForeignKey(
