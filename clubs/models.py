@@ -347,10 +347,10 @@ class League(models.Model):
     def display_league(self) -> str:
         return self.name
 
-    @cached_property
+    @property
     def display_name_junior(self) -> str:
-        if self.display_name_junior:
-            return self.display_name_junior.name
+        if self.name_junior:
+            return self.name_junior.name
 
     @cached_property
     def display_league_top_parent(self) -> str:
@@ -577,7 +577,6 @@ class Team(models.Model, MappingMixin):
         return self.league.display_league_seniority_name
 
     @property
-    @supress_exception
     def display_name_junior(self):
         if self.league:
             return self.league.display_name_junior
