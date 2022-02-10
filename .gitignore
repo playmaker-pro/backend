@@ -88,5 +88,3 @@ custom_script_*.py
 
 # Ipynb
 .ipynb_checkpoints
-
-migrations/
