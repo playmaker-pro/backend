@@ -1,28 +1,45 @@
 {% load i18n %}
+
 <div class="card">
-<div class="card-body">
-    <h2 class="card-title">{% trans 'Podstawowe informacje' %}</h2>
+    <div class="card-body">
+        <h2 class="card-title">{% trans 'Podstawowe informacje' %}</h2>
 
-    <h6 class="card-subtitle mb-2 text-muted"></h6>
+        <h6 class="card-subtitle mb-2 text-muted"></h6>
 
-    <div class="card-text">
-    {% with profile=show_user.profile template='platform/tables/two_table.html' %}
-        {% include template with key=_('Licencja')           value=profile.get_licence_display|default:'-'  %}
-        {% include template with key=_('Piłkarski cel')      value=profile.get_soccer_goal_display|default:'-'  %}
-        {% include template with key=_('Rocznik')               value=profile.birth_date.year|default:'-'|upper           %}
-        {% include template with key=_('Obecna drużyna')     value=profile.display_team|default:'-'|upper           %}
-        {% include template with key=_('Rozgrywki')          value=profile.display_league_name|default:'-'|upper   link=profile.get_league_permalink  %}
-        {% if profile.profile.display_league_seniority_name %}
-            {% include template with key=_('Poziom')             value=profile.display_league_seniority_name|default:'-'|upper        %} 
-        {% endif %}
-        
-        {% if profile.display_league_group_name %}
-            {% include template with key=_('Grupa')              value=profile.display_league_group_name|default:'-'|upper  %}
-        {% endif %}
-            {% include template with key=_('Wojewodźtwo')        value=profile.display_league_voivodeship|default:'-'|lower        %}
-        
-    {% endwith %}
-    </div>  <!-- end of card-text-->
+        <div class="card-text">
+        {% with profile=show_user.profile template='platform/tables/two_table.html' %}
+            {% include template with key=_('Licencja')           value=profile.get_licence_display|default:'-'  %}
+            {% include template with key=_('Piłkarski cel')      value=profile.get_soccer_goal_display|default:'-'  %}
+            {% include template with key=_('Rocznik')               value=profile.birth_date.year|default:'-'|upper           %}
+            {% include template with key=_('Rozgrywki')          value=profile.display_league_name|default:'-'|upper   link=profile.get_league_permalink  %}
+            {% if profile.profile.display_league_seniority_name %}
+                {% include template with key=_('Poziom')             value=profile.display_league_seniority_name|default:'-'|upper        %} 
+            {% endif %}
+            
+            {% if profile.display_league_group_name %}
+                {% include template with key=_('Grupa')              value=profile.display_league_group_name|default:'-'|upper  %}
+            {% endif %}
+                {% include template with key=_('Miasto')        value=profile.address|default:'-'        %}
+                {% include template with key=_('Wojewodźtwo')        value=profile.voivodeship|default:'-'        %}
+            
+        {% endwith %}
+        </div>  <!-- end of card-text-->
 
-</div>
+        <!-- Club card -->
+        <h2 class="card-title">{% trans 'Klub' %}</h2>
+
+        <h6 class="card-subtitle mb-2 text-muted"></h6>
+
+        <div class="card-text">
+            
+            {% with profile=show_user.profile template='platform/tables/two_table.html' %}
+
+                {% include template with key=_('Obecna drużyna')     value=profile.display_team|default:'-'|upper           %}
+                {% include template with key=_('Licencja')           value=profile.team_club_league_voivodeship_ver|default:'-' %}
+                
+            {% endwith %}
+
+        </div>
+
+    </div>
 </div>

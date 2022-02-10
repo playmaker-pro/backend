@@ -2,6 +2,7 @@ from django.conf import settings
 from django.urls import include, path
 from django.contrib import admin
 from django.views.generic import TemplateView
+from django.contrib.sitemaps.views import sitemap
 
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.core import urls as wagtail_urls
@@ -42,7 +43,7 @@ urlpatterns = [
     path('users/', include(profiles.urls), name="profiles"),
     path('marketplace/', include(marketplace.urls), name="marketplace"),
     path('products/', include(products.urls), name="products"),
-    path('fantasy/', include(fantasy.urls), name="products"),
+    path('fantasy/', include(fantasy.urls), name="fantasy"),
     path('najczesciej-zadawane-pytania/', include(fqa.urls), name="faqs"),
     path('feeds/', include(followers.urls), name="feeds"),
     path('policy/', TemplateView.as_view(template_name='subpgaes/policy.html')),
@@ -78,4 +79,10 @@ urlpatterns = urlpatterns + [
     # Alternatively, if you want Wagtail pages to be served from a subpath
     # of your site, rather than the site root:
     #    path("pages/", include(wagtail_urls)),
+]
+
+from .sitemaps import sitemaps
+
+urlpatterns = urlpatterns + [
+    path('sitemap.xml', sitemap, sitemaps, name='django.contrib.sitemaps.views.sitemap')
 ]

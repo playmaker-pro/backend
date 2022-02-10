@@ -11,7 +11,7 @@
 
 {% comment %} 
 {% block content_header %}
-    {% include '_page_heading.html' with heading_title=page_title size=4 %}
+    {% include '_page_heading.html' with heading_title=page_title %}
     {{ block.super }}
 {% endblock %} {% endcomment %}
 
@@ -25,7 +25,9 @@
       <div class="col-sm-6">{% include 'profiles/cards/player/card_season.html' %}</div>
       <div class="col-sm-6">{% include 'profiles/cards/player/card_additional_info.html' %}</div>  
       <div class="col-sm-6">{% include 'profiles/cards/player/card_latest_games.html' %}</div>
-      <div class="col-sm-6">{% include 'profiles/cards/player/card_about.html' %}</div>
+      <div class="col-sm-6 {% if not user.profile.about %}d-none {% else %} d-block{% endif %}">
+        {% include 'profiles/cards/player/card_about.html' %}
+      </div>
       <div class="col-sm-6">{% include 'profiles/cards/player/card_fantasy.html' %}</div>
       <div class="col-sm-6">{% include 'profiles/cards/player/card_video_1.html' %}</div>
       {% if show_user.profile.video_url %}

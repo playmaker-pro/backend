@@ -69,7 +69,7 @@ class PlayersTable(TableView):
                 playerprofile__prefered_leg=self.filter_leg)
 
         if self.filter_league is not None:
-            queryset = queryset.filter(playerprofile__team_object__league__name__in=self.filter_league)
+            queryset = queryset.filter(playerprofile__team_object__league__highest_parent__name__in=self.filter_league)
 
         if self.filter_first_last is not None:
             queryset = queryset.annotate(fullname=Concat('first_name', Value(' '), 'last_name'))
@@ -98,8 +98,7 @@ class PlayersTable(TableView):
         return queryset
 
     def get_queryset(self):
-        
-        return User.objects.filter(
+        return User.objects.select_related("playerprofile").filter(
             declared_role='P',
             state=User.STATE_ACCOUNT_VERIFIED,
             playerprofile__birth_date__lte=get_datetime_from_age(15)).order_by(F('last_login').desc(nulls_last=True))
@@ -114,7 +113,7 @@ class PlayerTalbeQuickFilter(generic.TemplateView, mixins.PaginateMixin, mixins.
     page_title = 'Baza piłkarzy'
 
     def get_queryset(self):
-        return User.objects.filter(
+        return User.objects.select_related("playerprofile").filter(
             declared_role='P',
             state=User.STATE_ACCOUNT_VERIFIED,
             playerprofile__birth_date__lte=get_datetime_from_age(15)).order_by(F('last_login').desc(nulls_last=True))
@@ -188,7 +187,7 @@ class TeamsTable(TableView):
 
     def filter_queryset(self, queryset):
         if self.filter_league is not None:
-            queryset = queryset.filter(league__name__in=self.filter_league)
+            queryset = queryset.filter(league__highest_parent__name__in=self.filter_league)
 
         if self.filter_vivo is not None:
             vivos = [i for i in self.filter_vivo]
@@ -213,7 +212,7 @@ class CoachesTable(TableView):
     page_title = 'Baza trenerów'
 
     def get_queryset(self):
-        return User.objects.filter(
+        return User.objects.select_related("coachprofile", "coachprofile__team_object").filter(
             declared_role='T',
             state=User.STATE_ACCOUNT_VERIFIED
         ).order_by(F('last_login').desc(nulls_last=True))
@@ -229,7 +228,7 @@ class CoachesTable(TableView):
             queryset = queryset.filter(coachprofile__team_object__club__name__icontains=self.filter_name_of_club)
 
         if self.filter_league is not None:
-            queryset = queryset.filter(coachprofile__team_object__league__name__in=self.filter_league)
+            queryset = queryset.filter(coachprofile__team_object__league__highest_parent__name__in=self.filter_league)
 
         if self.filter_vivo is not None:
             vivo = [i[:-1].upper() for i in self.filter_vivo]

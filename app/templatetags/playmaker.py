@@ -1,6 +1,6 @@
 import logging
 import json
-
+import django
 from datetime import date, datetime
 
 from clubs.models import Club, Team, League
@@ -189,6 +189,7 @@ def days_until(exp_date, arg=None):
     return "%s %s" % (abs(delta.days), day_str)  # , fa_str)
 
 
+
 @register.filter
 def convert_to_embeded(url):
     """concatenate arg1 & arg2"""
@@ -314,6 +315,10 @@ def is_profile_observed(user, target):
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def add_announcement(context):
+    '''
+    as a club user: 
+        when club user do not have any club attached we should tirgger no_club_assigned modal
+    '''
     user = context['user']
 
     if not user.is_authenticated:
@@ -341,10 +346,14 @@ def add_announcement(context):
             'modals': context,
             'multiple_options': True,
             'options': [
-                {'flag': 'club_looking_for_player',
-                 'friendly_name': 'Klub szuka zawodnika'},
-                {'flag': 'club_looking_for_coach',
-                 'friendly_name': 'Klub szuka trenera'},
+                {
+                    'flag': 'club_looking_for_player',
+                    'friendly_name': 'Klub szuka zawodnika'
+                 },
+                {
+                    'flag': 'club_looking_for_coach',
+                    'friendly_name': 'Klub szuka trenera'
+                },
             ]
         }
     elif user.is_coach:
@@ -445,7 +454,10 @@ def announcement_response(context, ann):
     if user.is_player:
         button_text = 'Zgłaszam się na testy'
     elif user.is_coach:
-        button_text = 'Zgłaszam się'
+        if ann.__class__.__name__ == "ClubForCoachAnnouncement":
+            button_text = 'Zgłaszam się'
+        else:
+            button_text = 'Zaproś na testy'
     elif user.is_club:
         if ann.__class__.__name__ == 'CoachForClubAnnouncement':
             button_text = 'Zaproś na rozmowę'
@@ -498,7 +510,7 @@ def announcement_yes(context):
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def filter_button(context, user, mobile=False):
-    '''Creates button to send apply filters'''
+    """Creates button to send apply filters"""
     button_attrs = 'type="submit"'
     if mobile:
         button_id = 'filter-button-mobile'
@@ -537,6 +549,8 @@ def is_same_club(user, showed_user):
 def request_link(context, user, showed_user):
     """Creates button to open inquiry"""
     off = {'off': True}
+
+    # Check permissions
     if not user.is_authenticated:
         return off
 
@@ -545,6 +559,10 @@ def request_link(context, user, showed_user):
 
     if isinstance(showed_user, Team) or isinstance(showed_user, Club):
         if isinstance(showed_user, Team):
+            # we do not want to allow to click on button when 
+            # Team should not be visible in database
+            if not showed_user.visible:
+                return off
             if showed_user.manager is not None:
                 showed_user = showed_user.manager
             else:

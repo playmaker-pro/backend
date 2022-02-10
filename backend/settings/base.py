@@ -64,7 +64,7 @@ INSTALLED_APPS = [
     'easy_thumbnails',
     'djcelery',
     'django_user_agents',
-
+    
     'wagtail.contrib.forms',
     'wagtail.contrib.modeladmin',
     'wagtail.contrib.redirects',
@@ -97,7 +97,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
     'django.contrib.sites',
+
     'django.contrib.humanize',
     'rest_framework',
     'rest_framework.authtoken',  # <-- Here

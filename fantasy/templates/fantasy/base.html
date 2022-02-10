@@ -10,172 +10,169 @@
     {{ block.super }}
     <link href="{% static 'assets/css/filters.css' %}" rel="stylesheet">
     <link href="{% static 'assets/css/fantasy.css' %}" rel="stylesheet">
+    <style>
+        #products{ 
+            background-color:#F8F8F8;
+            padding: .2rem 0 93px 0;
+        }
+        #products .announcement-card {
+            /*border-left: 5px solid #e03a3c;*/
+            padding: .7rem;
+        }
+        
+        #products .announcement-card .card-body {
+            padding: .6rem 0rem;
+        }
+        
+        #products .announcement-card .sub-title {
+        
+            font-size: .5rem;
+        }
+        
+        
+        #products .announcement-card .card-footer {
+            background: #fff;
+            border-top:1px dashed #ccc;
+         } 
+        
+        
+        @media all and (max-width: 768px) {
+            #products .container-fluid {
+                padding-right: 0px;
+                padding-left: 0px;
+            } 
+            #products .announcement-card {
+                border: 1px solid rgba(0,0,0,.125);
+                border-radius: .25rem;
+            }
+            #products .announcement-card .card-body {
+                padding: .65rem .55rem;
+            } 
+        }
+        
+        .mt-60{
+            margin-top:60px;
+        }
+        
+        .section-block-grey {
+            padding: 90px 0px 90px 0px;
+            background-color: #f9f9f9;
+        }
+        
+        .serv-section-2 {
+            position: relative;
+            border: 1px solid #eee;
+            background: #fff;
+            box-shadow: 0px 10px 30px 0px rgba(50, 50, 50, 0.16);
+            border-radius: 5px;
+            overflow: hidden;
+            padding: 30px;
+        }
+        
+        .serv-section-2:before {
+            position: absolute;
+            top: 0;
+            right: 0px;
+            z-index: 0;
+            content: " ";
+            width: 100px;
+            height: 100px;
+            background: #f5f5f5;
+            border-bottom-left-radius: 136px;
+            transition: all 0.4s ease-in-out;
+            -webkit-transition: all 0.4s ease-in-out;
+        }
+        
+        @media all and (max-width: 768px) {
+            .serv-section-2:before {
+                 display: none;
+            }
+        
+        }
+        .serv-section-2-icon {
+            position: absolute;
+            top: 18px;
+            right: 22px;
+            max-width: 100px;
+            z-index: 1;
+            text-align: center;
+        }
+        
+        .serv-section-2-icon i {
+            color: #5f27cd;
+            font-size: 48px;
+            line-height: 65px;
+            transition: all 0.4s ease-in-out;
+            -webkit-transition: all 0.4s ease-in-out;
+        }
+        
+        .serv-section-desc {
+            position: relative;
+        }
+        
+        .serv-section-2 h4 {
+            color: #333;
+            font-size: 20px;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+        
+        .serv-section-2 h5 {
+            color: #333;
+            font-size: 17px;
+            font-weight: 400;
+            line-height: 1;
+            margin-top: 5px;
+        }
+        
+        .section-heading-line-left {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 3px;
+            background: #e76668;
+            border-radius: 25%;
+            margin-top: 10px;
+            margin-bottom: 2px;
+        }
+        
+        .serv-section-2 p {
+            margin-top: 25px;
+            padding-right: 50px;
+        }
+        
+        .serv-section-2:hover .serv-section-2-icon i {
+            color: #fff;
+        }
+        
+        .serv-section-2:hover:before {
+            background: #e76668;
+        }
+        .page-teaser {
+            font-size:.8rem;
+            text-align: center;
+        }
+        @media all and (max-width: 768px) {
+            .page-teaser {
+                font-size:.7rem;
+            }
+        }
+        </style>
 {% endblock extra_css %}
 
 
 {% block content_header %}
-<style>
-#products{ 
-    background-color:#F8F8F8;
-    padding: .2rem 0 93px 0;
-}
-#products .announcement-card {
-    /*border-left: 5px solid #e03a3c;*/
-    padding: .7rem;
-}
+  {% include '_page_heading.html' with heading_title=page_title %}
+{{ block.super }}
 
-#products .announcement-card .card-body {
-    padding: .6rem 0rem;
-}
-
-#products .announcement-card .sub-title {
-
-    font-size: .5rem;
-}
-
-
-#products .announcement-card .card-footer {
-    background: #fff;
-    border-top:1px dashed #ccc;
- } 
-
-
-@media all and (max-width: 768px) {
-    #products .container-fluid {
-        padding-right: 0px;
-        padding-left: 0px;
-    } 
-    #products .announcement-card {
-        border: 1px solid rgba(0,0,0,.125);
-        border-radius: .25rem;
-    }
-    #products .announcement-card .card-body {
-        padding: .65rem .55rem;
-    } 
-}
-
-
-
-
-.mt-60{
-    margin-top:60px;
-}
-
-.section-block-grey {
-    padding: 90px 0px 90px 0px;
-    background-color: #f9f9f9;
-}
-
-.serv-section-2 {
-    position: relative;
-    border: 1px solid #eee;
-    background: #fff;
-    box-shadow: 0px 10px 30px 0px rgba(50, 50, 50, 0.16);
-    border-radius: 5px;
-    overflow: hidden;
-    padding: 30px;
-}
-
-.serv-section-2:before {
-    position: absolute;
-    top: 0;
-    right: 0px;
-    z-index: 0;
-    content: " ";
-    width: 100px;
-    height: 100px;
-    background: #f5f5f5;
-    border-bottom-left-radius: 136px;
-    transition: all 0.4s ease-in-out;
-    -webkit-transition: all 0.4s ease-in-out;
-}
-
-@media all and (max-width: 768px) {
-    .serv-section-2:before {
-         display: none;
-    }
-
-}
-.serv-section-2-icon {
-    position: absolute;
-    top: 18px;
-    right: 22px;
-    max-width: 100px;
-    z-index: 1;
-    text-align: center;
-}
-
-.serv-section-2-icon i {
-    color: #5f27cd;
-    font-size: 48px;
-    line-height: 65px;
-    transition: all 0.4s ease-in-out;
-    -webkit-transition: all 0.4s ease-in-out;
-}
-
-.serv-section-desc {
-    position: relative;
-}
-
-.serv-section-2 h4 {
-    color: #333;
-    font-size: 20px;
-    font-weight: 500;
-    line-height: 1.5;
-}
-
-.serv-section-2 h5 {
-    color: #333;
-    font-size: 17px;
-    font-weight: 400;
-    line-height: 1;
-    margin-top: 5px;
-}
-
-.section-heading-line-left {
-    content: '';
-    display: block;
-    width: 100px;
-    height: 3px;
-    background: #e76668;
-    border-radius: 25%;
-    margin-top: 10px;
-    margin-bottom: 2px;
-}
-
-.serv-section-2 p {
-    margin-top: 25px;
-    padding-right: 50px;
-}
-
-.serv-section-2:hover .serv-section-2-icon i {
-    color: #fff;
-}
-
-.serv-section-2:hover:before {
-    background: #e76668;
-}
-.page-teaser {
-    font-size:.8rem;
-    text-align: center;
-}
-@media all and (max-width: 768px) {
-    .page-teaser {
-        font-size:.7rem;
-    }
-}
-</style>
-    {% include '_page_heading.html' with heading_title=page_title size=4 %}
-    {{ block.super }}
-
-    <div class="container page-teaser">
-        <div center class="row p-2">
-            <div class="col">
-            Czy kiedykolwiek grałeś w Fantasy Premier League lub Fantasy Ekstraklasa Polska? Chciałbyś aby to od Ciebie decydowała liczba zdobytych punktów? Dołącz do pierwszej w historii gry Fantasy dla niższych lig! Niezależnie czy grasz w 3 lidze, w B klasie czy lidze juniorskiej - przeniesiemy Twoje rzeczywiste dokonania do gry. Sprawdź swój wynik, zaproś kolegów do zabawy i rywalizuj z nimi!
-            <button type="button" class="btn-pm " data-toggle="modal" data-target="#exampleModal">Zasady gry</button>
-            </div>
+<div class="container page-teaser">
+    <div center class="row p-2">
+        <div class="col">
+        Czy kiedykolwiek grałeś w Fantasy Premier League lub Fantasy Ekstraklasa Polska? Chciałbyś aby to od Ciebie decydowała liczba zdobytych punktów? Dołącz do pierwszej w historii gry Fantasy dla niższych lig! Niezależnie czy grasz w 3 lidze, w B klasie czy lidze juniorskiej - przeniesiemy Twoje rzeczywiste dokonania do gry. Sprawdź swój wynik, zaproś kolegów do zabawy i rywalizuj z nimi!
+        <button type="button" class="btn-pm " data-toggle="modal" data-target="#exampleModal">Zasady gry</button>
         </div>
     </div>
+</div>
 {% endblock %}
 
 

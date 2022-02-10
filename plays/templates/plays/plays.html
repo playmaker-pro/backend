@@ -115,7 +115,7 @@ border-top: 0px solid #dee2e6;
 }
 
 #plays {
-
+    //z-index:-1;
     line-height: .9;
 }
 .plays-link {
@@ -213,7 +213,7 @@ span.text {
 
 
 {% block content_header %}
-    {% include '_page_heading.html' with heading_title=page_title size=4 %}   
+    {% include '_page_heading.html' with heading_title=page_title  include_extra_panel="plays/partials/_filters_panel_desktop.html" %}
 {% endblock %}
 
 
@@ -226,7 +226,7 @@ span.text {
 
   <section id="leagues-side-bar" class="col-2 d-none d-md-flex">
     {% include "plays/partials/_sidemenu_desktop.html" %}
-    </section>
+  </section>
 
 <section id="plays" class="plays col-md-10" style="padding:0px 0px;">
 {% include 'plays/header_black.html' %}

@@ -6,11 +6,11 @@
     {% endif %}
 
     <div class="filter pr-2">
-        {% include 'marketplace/filters/filter_voivodeship.html' with size=150 options=filters.voivodeship %}
+        {% include 'marketplace/filters/filter_voivodeship.html' with size=size options=filters.voivodeship %}
     </div>
 
     <div class="filter pr-2">
-        {% include 'marketplace/filters/filter_leagues.html' with size=160 options=filters.league title='aktualny poziom' %}
+        {% include 'marketplace/filters/filter_leagues.html' with size=size options=filters.league title='aktualny poziom' %}
     </div>
 
     {% if view_type == "player_for_club" %}

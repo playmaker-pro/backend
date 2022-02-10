@@ -11,11 +11,11 @@
 
 
 {% block content_header %}
-    {% include '_page_heading.html' with heading_title=page_title size=4  %}
+    {% include '_page_heading.html' with heading_title=page_title %}
     {{ block.super }}
 {% endblock %}
 
-{% block content %}  <!-- @todo frontend to be renovated to adjust template-->
+{% block content %}
 
 {% include 'profiles/player_subpage_header_black.html' %}
 
@@ -24,6 +24,9 @@
       <div class="row">
         <div class="col-sm-6">{% include 'profiles/cards/coach/card_primary.html' %}</div>
         <div class="col-sm-6">{% include 'profiles/cards/coach/card_season.html' %}</div>
+        <div class="col-sm-6 {% if user.profile.about %} d-block {% else %} d-none{% endif %} ">
+          {% include 'profiles/cards/coach/card_about.html' %}
+        </div>
         <div class="col-sm-6">{% include 'profiles/cards/coach/card_latest_games.html' %}</div>
       </div>
     </div>

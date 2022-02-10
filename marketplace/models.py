@@ -15,6 +15,28 @@ from clubs.models import League, Voivodeship, Seniority, Gender, Club
 from datetime import timedelta
 from django.core.validators import RegexValidator
 
+LICENCE_CHOICES = (
+    (1, 'UEFA PRO'),
+    (2, 'UEFA A'),
+    (3, 'UEFA EY A'),
+    (4, 'UEFA B'),
+    (5, 'UEFA C'),
+    (6, 'GRASS C'),
+    (7, 'GRASS D'),
+    (8, 'UEFA Futsal B'),
+    (9, 'PZPN A'),
+    (10, 'PZPN B'),
+    (11, 'W trakcie kursu'),
+)
+
+
+def get_licence_choice_number(licence_name: str) -> int:
+    for licence_pair in LICENCE_CHOICES:
+        if licence_pair[1] == licence_name:
+            return licence_pair[0]
+    return 0
+
+
 class AnnouncementPlan(models.Model):
     """
     Holds information about user's announcement plans.
@@ -283,7 +305,11 @@ class ClubForCoachAnnouncement(AnnouncementMeta):
         on_delete=models.CASCADE
     )
 
-    lic_type = models.TextField(blank=True)
+    lic_type = models.IntegerField(
+        _("Licencja"),
+        choices=LICENCE_CHOICES,
+        blank=True,
+        null=True)
 
     seniority = models.ForeignKey(
         Seniority,
@@ -297,15 +323,23 @@ class ClubForCoachAnnouncement(AnnouncementMeta):
 
     body = models.TextField()
 
+    def get_licence_name(self) -> str:
+        return LICENCE_CHOICES[self.lic_type-1][1]
+
 
 class CoachForClubAnnouncement(AnnouncementMeta):
+
     creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='coach_for_club_announcement_creator',
         on_delete=models.CASCADE
     )
 
-    lic_type = models.TextField(blank=True)
+    lic_type = models.IntegerField(
+        _("Licencja"),
+        choices=LICENCE_CHOICES,
+        blank=True,
+        null=True)
 
     voivodeship = models.ForeignKey(
         Voivodeship,
@@ -332,3 +366,6 @@ class CoachForClubAnnouncement(AnnouncementMeta):
     )
 
     body = models.TextField()
+
+    def get_licence_name(self) -> str:
+        return LICENCE_CHOICES[self.lic_type-1][1]

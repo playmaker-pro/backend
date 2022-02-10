@@ -1,10 +1,24 @@
 
 {% load playmaker %}
-<select name="position" data-width="{{ size }}"  class="form-control selectpicker" data-allow-clear="true" title="pozycja">
+<select name="position"
+        data-width="{{ size }}"
+        class="selectpicker"
+        multiple
+        data-actions-box="true"
+        data-live-search="true"
+        data-allow-clear="true"
+        data-selected-text-format="count > 1"
+        title="pozycja">
 
-{% for option in options %}
-    <option {% if request.GET.position == option %} selected {% endif %} value="{{ option }}">{{ option }}</option>
-{% endfor %}
-
+    <option {% if 'Bramkarz' in request.GET|get_list:'position' %} selected="selected" {% endif %}>Bramkarz</option>
+    <option {% if 'Obrońca Lewy' in request.GET|get_list:'position' %} selected="selected" {% endif %}>Obrońca Lewy</option>
+    <option {% if 'Obrońca Prawy' in request.GET|get_list:'position' %} selected="selected" {% endif %}>Obrońca Prawy</option>
+    <option {% if 'Obrońca Środkowy' in request.GET|get_list:'position' %} selected="selected" {% endif %}>Obrońca Środkowy</option>
+    <option {% if 'Pomocnik defensywny (6)' in request.GET|get_list:'position' %} selected="selected" {% endif %}>Pomocnik defensywny (6)</option>
+    <option {% if 'Pomocnik środkowy (8)' in request.GET|get_list:'position' %} selected="selected" {% endif %}>Pomocnik środkowy (8)</option>
+    <option {% if 'Pomocnik ofensywny (10)' in request.GET|get_list:'position' %} selected="selected" {% endif %}>Pomocnik ofensywny (10)</option>
+    <option {% if 'Skrzydłowy' in request.GET|get_list:'position' %} selected="selected" {% endif %}>Skrzydłowy</option>
+    <option {% if 'Napastnik' in request.GET|get_list:'position' %} selected="selected" {% endif %}>Napastnik</option>
+    <option {% if 'Dowolna' in request.GET|get_list:'position' %} selected="selected" {% endif %}>Dowolna</option>
 </select>
 

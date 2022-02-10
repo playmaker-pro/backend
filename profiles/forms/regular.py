@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from curses import wrapper
 from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, Div, Submit, HTML, Button, Row, Field, MultiField
@@ -145,12 +146,11 @@ class CoachProfileForm(BaseProfileForm):
                 Field('birth_date', wrapper_class='row', css_class=self.get_mandatory_field_class("birth_date"),),
                 # Field('league', wrapper_class='row', readonly=True),
                 # # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
-                # Field('voivodeship', wrapper_class='row', readonly=True),
-                # Field('team', wrapper_class='row', readonly=True),
                 # Field('country', wrapper_class='row'),
                 Field("address", wrapper_class='row'),
                 Field('licence', wrapper_class='row'),
                 Field("about", wrapper_class='row'),
+                Field("voivodeship", wrapper_class='row'),
                 css_class='col-md-6',
             ),
             Fieldset(
@@ -160,12 +160,20 @@ class CoachProfileForm(BaseProfileForm):
                 Field("soccer_goal", wrapper_class='row'),
                 Field("practice_distance", wrapper_class='row'),
                 css_class='col-md-6',
-            )
+            ),
+            Fieldset(
+                _('<h2 class="form-section-title">Klub</h2>'),
+                Field('team_club_league_voivodeship_ver', wrapper_class='row'),
+                css_class='col-md-6',
+            ),
         )
 
     class Meta:
         model = models.CoachProfile
-        fields = ['club_role', 'country', 'address', 'about', 'birth_date', 'facebook_url', 'soccer_goal', 'phone', 'practice_distance', 'licence']
+        fields = ['club_role', 'country',
+                  'address', 'about', 'birth_date', 
+        'facebook_url', 'soccer_goal', 'phone', 'practice_distance', 
+        'licence', 'voivodeship',  'team_club_league_voivodeship_ver']
 
     def get_mandatory_field_class(self, field_name):
         if field_name in models.CoachProfile.VERIFICATION_FIELDS:
@@ -204,12 +212,11 @@ class PlayerProfileForm(BaseProfileForm):
                 Field('birth_date', wrapper_class='row', css_class='mandatory'),
                 # Field('league', wrapper_class='row', readonly=True),
                 # # Field('club', wrapper_class='row', readonly=True),  # @todo kicked-off due to waiting for club mapping implemnetaiton into data_player.meta
-                # Field('voivodeship', wrapper_class='row', readonly=True),
-                # Field('team', wrapper_class='row', readonly=True),
                 Field('country', wrapper_class='row', css_class='mandatory'),
                 Field("height", wrapper_class='row', placeholder='130 - 210 cm', css_class='mandatory'),
                 Field("weight", wrapper_class='row', placeholder='40 - 140 kg', css_class='mandatory'),
                 Field("address", wrapper_class='row', placeholder='Miasto z którego dojeżdżam na trening', css_class='mandatory'),
+                Field("voivodeship", wrapper_class='row'),
                 Field("about", wrapper_class='row'),
                 css_class='col-md-6',
             ),
@@ -223,7 +230,12 @@ class PlayerProfileForm(BaseProfileForm):
                 Field("practice_distance", wrapper_class='row', css_class='mandatory', placeholder='Maksymalna odległośc na trening'),
                 css_class='col-md-6',
             ),
-
+            Fieldset(
+                _('<h2 class="form-section-title">Klub</h2>'),
+                Field('voivodeship_raw', wrapper_class='row'),
+                Field('team', wrapper_class='row'),
+                css_class='col-md-6',
+            ),
             Fieldset(
                 _('<h2 class="form-section-title">Współpraca</h2>'),
                 Field('agent_status', wrapper_class='row'),

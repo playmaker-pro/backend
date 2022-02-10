@@ -34,6 +34,24 @@ GLOBAL_TRAINING_READY_CHOCIES = (
         (2, '3-4 treningi'),
         (3, '5-6 treningi'))
 
+VOIVODESHIP_CHOICE = (
+        ('Dolnośląskie', 'Dolnośląskie'),
+        ('Kujawsko-pomorskie', 'Kujawsko-pomorskie'),
+        ('Lubelskie', 'Lubelskie'),
+        ('Lubuskie', 'Lubuskie'),
+        ('Łódzkie', 'Łódzkie'),
+        ('Małopolskie', 'Małopolskie'),
+        ('Mazowieckie', 'Mazowieckie'),
+        ('Opolskie', 'Opolskie'),
+        ('Podkarpackie', 'Podkarpackie'),
+        ('Podlaskie', 'Podlaskie'),
+        ('Pomorskie', 'Pomorskie'),
+        ('Śląskie', 'Śląskie'),
+        ('Świętokrzyskie', 'Świętokrzyskie'),
+        ('Warmińsko-Mazurskie', 'Warmińsko-Mazurskie'),
+        ('Wielkopolskie', 'Wielkopolskie'),
+        ('Zachodniopomorskie', 'Zachodniopomorskie')
+    )
 
 class VerificationCompletionFieldsWrongSetup(Exception):
     pass
@@ -117,23 +135,8 @@ class ProfileVisitHistory(models.Model):
             self.save()
 
 
-class BaseProfile(models.Model):
-    """Base profile model to held most common profile elements"""
+class EventLogMixin:
     EVENT_LOG_HISTORY = 35
-    PROFILE_TYPE = None
-    AUTO_VERIFY = False  # flag to perform auto verification of User based on profile. If true - User.state will be switched to Verified
-    VERIFICATION_FIELDS = []  # this is definition of profile fields which will be threaded as must-have params.
-    COMPLETE_FIELDS = []  # this is definition of profile fields which will be threaded as mandatory for full profile.
-    OPTIONAL_FIELDS = []  # this is definition of profile fields which will be threaded optional
-
-    data_mapper_changed = None
-
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True)
-    history = models.OneToOneField(ProfileVisitHistory, on_delete=models.CASCADE, null=True, blank=True)
-    data_mapper_id = models.PositiveIntegerField(null=True, blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.')
-    slug = models.CharField(max_length=255, blank=True, editable=False)
-    bio = models.CharField(_("Krótki opis o sobie"), max_length=455, blank=True, null=True)
-    event_log = models.JSONField(null=True, blank=True)
 
     def make_default_event_log(self):
         self.event_log = list()
@@ -162,6 +165,28 @@ class BaseProfile(models.Model):
         self.event_log.insert(0, msg)
         if commit:
             self.save()
+
+
+class BaseProfile(models.Model, EventLogMixin):
+    """Base profile model to held most common profile elements"""
+    
+    PROFILE_TYPE = None
+    AUTO_VERIFY = False  # flag to perform auto verification of User based on profile. If true - User.state will be switched to Verified
+    VERIFICATION_FIELDS = []  # this is definition of profile fields which will be threaded as must-have params.
+    COMPLETE_FIELDS = []  # this is definition of profile fields which will be threaded as mandatory for full profile.
+    OPTIONAL_FIELDS = []  # this is definition of profile fields which will be threaded optional
+
+    data_mapper_changed = None
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True)
+    history = models.OneToOneField(ProfileVisitHistory, on_delete=models.CASCADE, null=True, blank=True)
+    data_mapper_id = models.PositiveIntegerField(null=True, blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.')
+    slug = models.CharField(max_length=255, blank=True, editable=False)
+    bio = models.CharField(_("Krótki opis o sobie"), max_length=455, blank=True, null=True)
+    event_log = models.JSONField(null=True, blank=True)
+
+    def get_absolute_url(self):
+        return self.get_permalink()
 
     def get_permalink(self):
         return reverse("profiles:show", kwargs={"slug": self.slug})
@@ -379,7 +404,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
        # 'team_raw',
        'position_raw',
        'voivodeship',
-       # 'voivodeship_raw',
+       'voivodeship_raw',
     ]
 
     OPTIONAL_FIELDS = [
@@ -513,7 +538,12 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     league = models.CharField(_('Rozgrywki'), max_length=68, db_index=True, help_text=_('Poziom rozgrywkowy'), blank=True, null=True)
     league_raw = models.CharField(_('Rozgrywki'), max_length=68, help_text=_('Poziom rozgrywkowy który deklarujesz że grasz.'), blank=True, null=True)
     voivodeship = models.CharField(_('Wojewódźtwo'), help_text=_('Wojewódźtwo'), max_length=68, db_index=True, blank=True, null=True)
-    voivodeship_raw = models.CharField(_('Wojewódźtwo'), help_text=_('Wojewódźtwo w którym grasz.'), max_length=68, blank=True, null=True)
+    voivodeship_raw = models.CharField(
+        _('Wojewódźtwo'), 
+        help_text=_('Wojewódźtwo w którym grasz.'), 
+        max_length=68, blank=True, null=True,
+        choices=VOIVODESHIP_CHOICE
+        )
     birth_date = models.DateField(_('Data urodzenia'), blank=True, null=True)
     height = models.PositiveIntegerField(_('Wzrost'), help_text=_('Wysokość (cm) [130-210cm]'), blank=True, null=True, validators=[MinValueValidator(130), MaxValueValidator(210)])
     weight = models.PositiveIntegerField(_('Waga'), help_text=_('Waga(kg) [40-140kg]'), blank=True, null=True, validators=[MinValueValidator(40), MaxValueValidator(140)])
@@ -532,6 +562,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     min90_url = models.URLField(_('90min portal'), max_length=500, blank=True, null=True)
     transfermarket_url = models.URLField(_('TrasferMarket'), blank=True, null=True)
     address = AddressField(help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)
+    # address = models.CharField(max_length=100, help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)
     practice_distance = models.PositiveIntegerField(_('Odległość na trening'), blank=True, null=True, help_text=_('Maksymalna odległośc na trening'), validators=[MinValueValidator(10), MaxValueValidator(500)])
     about = models.TextField(_('O sobie'), null=True, blank=True)
     training_ready = models.IntegerField(_('Gotowość do treningu'), choices=make_choices(TRAINING_READY_CHOCIES), null=True, blank=True)
@@ -549,6 +580,14 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     video_url_third = models.URLField(_('Youtube url nr 3'), blank=True, null=True)
     video_title_third = models.CharField(_('Tytuł nagrania nr 3'), max_length=235, blank=True, null=True)
     video_description_third = models.TextField(_('Temat i opis nagrania nr 3'), null=True, blank=True)
+    
+    voivodeship = models.CharField(
+        _('Województwo'),
+        max_length=20,
+        blank=True,
+        null=True,
+        choices=VOIVODESHIP_CHOICE
+        )
 
     def display_position_fantasy(self):
         if self.position_fantasy is not None:
@@ -833,11 +872,20 @@ class ClubProfile(BaseProfile):
     PROFILE_TYPE = definitions.PROFILE_TYPE_CLUB
 
     CLUB_ROLE = (
+        (5, 'Trener'),
         (1, 'Prezes'),
-        (2, 'Kierownik'),
+        (2, 'Kierownik'), 
         (3, 'Członek zarządu'),
         (4, 'Sztab szkoleniowy'),
-        (5, 'Inne'))
+        (6, 'V-ce prezes'),
+        (7, 'II trener'),
+        (8, 'Dyrektor sportowy'),
+        (9, 'Analityk'),
+        (10, 'Dyrektor skautingu'),
+        (11, 'Skaut'),
+        (12, 'Trener bramkarzy'),
+        (13, 'Koordynator')
+    )
 
     VERIFICATION_FIELDS = [
         'team_club_league_voivodeship_ver',
@@ -860,13 +908,19 @@ class ClubProfile(BaseProfile):
             return True
         return False
 
+    @property
+    def is_clubless(self):
+        if self.club_object:
+            return True
+        return False
+
     club_object = models.ForeignKey(clubs_models.Club, on_delete=models.SET_NULL, related_name='clubowners', db_index=True, null=True, blank=True)
     phone = models.CharField(_('Telefon'), max_length=15, blank=True, null=True)
     team_club_league_voivodeship_ver = models.CharField(_('team_club_league_voivodeship_ver'), max_length=355, help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'), blank=True, null=True,)
     club_role = models.IntegerField(
         choices=CLUB_ROLE,
         null=True, blank=True,
-        help_text='Defines if admin approved change')   
+        help_text='Defines if admin approved change')
 
     class Meta:
         verbose_name = "Club Profile"
@@ -926,11 +980,13 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True)
 
     team_club_league_voivodeship_ver = models.CharField(
-        _('team_club_league_voivodeship_ver'),
+        _('Województwo'),
         max_length=355,
         help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'),
         blank=True,
-        null=True,)
+        null=True,
+        choices=VOIVODESHIP_CHOICE
+        )
 
     team_object = models.ForeignKey(
         clubs_models.Team,
@@ -977,10 +1033,16 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         blank=True)
 
-    address = AddressField(
-        help_text=_('Adres'),
+    address = AddressField(help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)
+    
+    voivodeship = models.CharField(
+        _('Województwo'),
+        max_length=20,
         blank=True,
-        null=True)
+        null=True,
+        choices=VOIVODESHIP_CHOICE
+        )
+
     # club & coach specific attrs.
 
     club_role = models.IntegerField(
@@ -1155,6 +1217,7 @@ class ScoutProfile(BaseProfile):
         null=True)
 
     address = AddressField(
+        max_length=100,
         help_text=_('Adres'),
         blank=True,
         null=True)
