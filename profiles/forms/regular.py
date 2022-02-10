@@ -173,7 +173,9 @@ class CoachProfileForm(BaseProfileForm):
         fields = ['club_role', 'country',
                   'address', 'about', 'birth_date', 
         'facebook_url', 'soccer_goal', 'phone', 'practice_distance', 
-        'licence', 'voivodeship',  'team_club_league_voivodeship_ver']
+        'licence', 
+        # 'voivodeship',
+        'team_club_league_voivodeship_ver']
 
     def get_mandatory_field_class(self, field_name):
         if field_name in models.CoachProfile.VERIFICATION_FIELDS:
