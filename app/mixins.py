@@ -224,7 +224,6 @@ class ViewFilterMixin:
 
     @property
     def filter_position_marketplace(self):
-
         POSITION_CHOICES = (
             'Bramkarz',
             'Obrońca Lewy',
@@ -239,12 +238,17 @@ class ViewFilterMixin:
         )
 
         values = self.request.GET.getlist('position')
+
         if "Dowolna" in values:
             return
-        filtered_positions = []
+        if not values:
+            return
+
+        filtered_positions = ['Dowolna']
         for value in values:
             if value in POSITION_CHOICES:
                 filtered_positions.append(value)
+        
         return filtered_positions if filtered_positions else None
 
     @property
