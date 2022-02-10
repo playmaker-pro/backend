@@ -1,6 +1,8 @@
 {% load static %}
 {% load playmaker %}
 {% load i18n %}
+{% load marketplace %}
+
 
 <div id="announcement-filters" class="d-none d-md-inline announcement-filters">
   <div class="container-fluid">
@@ -9,7 +11,7 @@
         <div class="filter-button pr-2">
             {% include 'marketplace/filter_button.html' with mobile=True %}
         </div>
-          <div>
+        <div>
             {% include 'marketplace/filter_button_clear.html' with mobile=True %}
         </div>
       </form>
@@ -18,7 +20,12 @@
 
 <div id="mobile-filters" class="p-4 d-md-none fixed-bottom">
   <div class="container-fluid text-center">
-      <button id="open-filter-button"  type="button" class="btn-pm" data-toggle="modal" data-target="#filterModal">{% trans 'Filtruj wyniki' %}</button>
-    </div>
+      {% add_announcement %}
+      <button id="open-filter-button" type="button" class="btn-pm" data-toggle="modal" data-target="#filterModal">{% trans 'Filtruj wyniki' %}</button>
+      {% my_annoucement %}
+  </div>
+  <div class='pt-1'> 
+    <a href="" class="button" id="clear-filter-button{% if mobile %}-mobile{% endif %}" value="{% trans 'Usuń filtry' %}">{% trans 'Usuń filtry' %} <i class="icofont-delete"></i></a>
+  </div>
 </div>
 

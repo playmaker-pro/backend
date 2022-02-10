@@ -69,7 +69,7 @@ class PlayersTable(TableView):
                 playerprofile__prefered_leg=self.filter_leg)
 
         if self.filter_league is not None:
-            queryset = queryset.filter(playerprofile__team_object__league__name__in=self.filter_league)
+            queryset = queryset.filter(playerprofile__team_object__league__highest_parent__name__in=self.filter_league)
 
         if self.filter_first_last is not None:
             queryset = queryset.annotate(fullname=Concat('first_name', Value(' '), 'last_name'))
@@ -187,7 +187,7 @@ class TeamsTable(TableView):
 
     def filter_queryset(self, queryset):
         if self.filter_league is not None:
-            queryset = queryset.filter(league__name__in=self.filter_league)
+            queryset = queryset.filter(league__highest_parent__name__in=self.filter_league)
 
         if self.filter_vivo is not None:
             vivos = [i for i in self.filter_vivo]
@@ -228,7 +228,7 @@ class CoachesTable(TableView):
             queryset = queryset.filter(coachprofile__team_object__club__name__icontains=self.filter_name_of_club)
 
         if self.filter_league is not None:
-            queryset = queryset.filter(coachprofile__team_object__league__name__in=self.filter_league)
+            queryset = queryset.filter(coachprofile__team_object__league__highest_parent__name__in=self.filter_league)
 
         if self.filter_vivo is not None:
             vivo = [i[:-1].upper() for i in self.filter_vivo]

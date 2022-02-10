@@ -1,6 +1,6 @@
 import uuid
 from typing import List
-from functools import cached_property, singledispatch
+from functools import cached_property, lru_cache, singledispatch
 from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.translation import gettext_lazy as _
@@ -275,6 +275,7 @@ class League(models.Model):
 
     code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs")
+    highest_parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True)
     country = CountryField(
         _("Kraj"),
         default="PL",
@@ -343,28 +344,29 @@ class League(models.Model):
         return id_list
 
     @cached_property
-    def display_league(self):
+    def display_league(self) -> str:
         return self.name
 
-    @cached_property
-    def display_league_name(self):
-        return self.name
+    @property
+    def display_name_junior(self) -> str:
+        if self.name_junior:
+            return self.name_junior.name
 
     @cached_property
-    def display_name_junior(self):
-        if self.display_name_junior:
-            return self.display_name_junior.name
+    def display_league_top_parent(self) -> str:
+        if self.highest_parent:
+            return self.highest_parent.display_league
 
-    @cached_property
-    def display_highest_parent_league_name(self):
+    @lru_cache
+    def get_highest_parent(self):
+        """Loops to find last (top) parent in a tree"""
         if self.parent:
             parent = self.parent
         else:
-            return self.display_league
-
+            return self
         while True:
             if parent.parent is None:
-                return parent.display_league
+                return parent
             else:
                 parent = parent.parent
                 continue
@@ -389,28 +391,14 @@ class League(models.Model):
         return reverse("plays:summary", kwargs={"slug": self.slug})
 
     def get_slug_value(self):
-        '''
-        /name/name_jun/ZPN_name/city_name/group/RW
-
-        /4-liga,dolnoslaskie,grupa-ii
-        /u-19,4-liga-okregowa,opolskie,opole,grupa-iii,rw
-        /ekstraklasa
-        '''
-        value = self.name
-        if self.name_junior:
-            value += f"--{self.name_junior.name}"
-        if self.region:
-            value += f"--{self.region.name}"
-        if self.city_name:
-            value += f"--{self.city_name}"
-        if self.group:
-            value += f"--{self.group.name}"
-        if self.rw is not None:
-            if self.rw:
-                value += f"--rw"
-        return str(value)
+        return self.get_upper_parent_names(spliter='--')
 
     def save(self, *args, **kwargs):
+
+        # Identify and set highest parent
+        if top_parent := self.get_highest_parent():
+            self.highest_parent = top_parent
+
         # is a virtual parent?
         if self.is_parent:
             # isparent flag is due to historical reasons
@@ -433,10 +421,10 @@ class League(models.Model):
 
     def get_upper_parent_names(self, spliter=', '):
         name = self.name
-        if self.parent: 
-            name = f"{self.parent.get_upper_parent_names()}{spliter}{name}"
+        if self.parent:
+            name = f"{self.parent.get_upper_parent_names(spliter=spliter)}{spliter}{name}"
         return name
-        
+
     def set_league_season(self, seasons: List[Season]):
         """Mechanism to set and propagate changes in data seasons."""
         self.data_seasons.add(*seasons)
@@ -455,7 +443,7 @@ class League(models.Model):
         return f"{self.name}"
 
     class Meta:
-        unique_together = ("name", "country", "zpn", "parent")
+        unique_together = ("name", "country", "parent")
         ordering = ("order", "section__name")
 
 
@@ -580,8 +568,8 @@ class Team(models.Model, MappingMixin):
 
     @property
     @supress_exception
-    def display_highest_parent_league_name(self):
-        return self.league.display_highest_parent_league_name
+    def display_league_top_parent(self):
+        return self.league.display_league_top_parent
 
     @property
     @supress_exception
@@ -589,7 +577,6 @@ class Team(models.Model, MappingMixin):
         return self.league.display_league_seniority_name
 
     @property
-    @supress_exception
     def display_name_junior(self):
         if self.league:
             return self.league.display_name_junior
@@ -598,6 +585,12 @@ class Team(models.Model, MappingMixin):
     @supress_exception
     def display_league_group_name(self):
         return self.league.display_league_group_name
+
+    @property
+    @supress_exception
+    def display_league_region_and_group_name(self):
+        region = self.league.region if self.league and self.league.region else ''
+        return f'{self.league.display_league_group_name}, {region}'
 
     @property
     @supress_exception

@@ -907,6 +907,12 @@ class ClubProfile(BaseProfile):
             return True
         return False
 
+    @property
+    def is_clubless(self):
+        if self.club_object:
+            return True
+        return False
+
     club_object = models.ForeignKey(clubs_models.Club, on_delete=models.SET_NULL, related_name='clubowners', db_index=True, null=True, blank=True)
     phone = models.CharField(_('Telefon'), max_length=15, blank=True, null=True)
     team_club_league_voivodeship_ver = models.CharField(_('team_club_league_voivodeship_ver'), max_length=355, help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'), blank=True, null=True,)

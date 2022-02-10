@@ -1,6 +1,8 @@
 {% extends 'platform/base.html' %}
 {% load static %}
 {% load playmaker %}
+{% load marketplace %}
+
 
 {% block title %}{{ block.super }} {{ page_title }} {% endblock %}
 
@@ -161,25 +163,25 @@
 .btn-club-for-player {
     background-color: #28a745 !important;
     color: #fff !important;
-<!--    border-color: #fff;-->
+    border-color: transparent;
 }
 
 .btn-coach-for-club {
     background-color: #17a2b8 !important;
     color: #fff !important;
-<!--    border-color: #fff;-->
+    border-color: transparent;
 }
 
 .btn-club-for-coach {
     background-color: #007bff !important;
     color: #fff !important;
-<!--    border-color: #fff;-->
+    border-color: transparent;
 }
 
 .btn-player-for-club {
     background-color: #343a40 !important;
     color: #fff !important;
-<!--    border-color: #fff;-->
+    border-color: transparent;
 }
 </style>
 
@@ -187,32 +189,30 @@
     <div class="container-fluid">
         <div class="row">
             <div class="d-flex">
-                <div>
+                <div class="d-none d-md-inline">
                     {% add_announcement %}
                 </div>
-                <div>
-                    {% if user.is_authenticated or user.is_scout or user.is_manager or user.is_parent %}
-                        <button type="button" class="icofont-paperclip {% if my %}btn-request btn-requested{% else %}btn-request{% endif %}" onclick="window.location.href='{% if my %}{% url 'marketplace:announcements' %}{% else %}{% url 'marketplace:my_announcements' %}{% endif %}';">{% if my %}Wszystkie{% else %}Moje{% endif %} ogłoszenia</button>
-                    {% endif %}
+                <div class="d-none d-md-inline">
+                    {% my_annoucement %}
                 </div>
             </div>
         </div>
-        <div class="row">
-          <div>
-              <button type="button" class="btn-request" onclick="window.location.href='{% url 'marketplace:announcements' %}';">Wszystkie ogłoszenia</button>
-          </div>
-        <div>
-          <button type="button" class="btn-request btn-club-for-player" onclick="window.location.href='{% url 'marketplace:club_for_player_announcements' %}';"><b>Klub szuka zawodnika</b></button>
-        </div>
-        <div>
-          <button type="button" class="btn-request btn-coach-for-club" onclick="window.location.href='{% url 'marketplace:coach_for_club_announcements' %}';"><b>Trener szuka klubu</b></button>
-        </div>
-        <div>
-          <button type="button" class="btn-request btn-club-for-coach" onclick="window.location.href='{% url 'marketplace:club_for_coach_announcements' %}';"><b>Klub szuka trenera</b></button>
-        </div>
-        <div>
-          <button type="button" class="btn-request btn-player-for-club" onclick="window.location.href='{% url 'marketplace:player_for_club_announcements' %}';"><b>Piłkarz szuka klubu</b></button>
-        </div>
+        <div class="row d-none d-md-flex">
+            <div>
+                <button type="button" class="btn-request" onclick="window.location.href='{% url 'marketplace:announcements' %}';">Wszystkie ogłoszenia</button>
+            </div>
+            <div>
+                <button type="button" class="btn-request btn-club-for-player" onclick="window.location.href='{% url 'marketplace:club_for_player_announcements' %}';"><b>Klub szuka zawodnika</b></button>
+            </div>
+            <div>
+                <button type="button" class="btn-request btn-coach-for-club" onclick="window.location.href='{% url 'marketplace:coach_for_club_announcements' %}';"><b>Trener szuka klubu</b></button>
+            </div>
+            <div>
+                <button type="button" class="btn-request btn-club-for-coach" onclick="window.location.href='{% url 'marketplace:club_for_coach_announcements' %}';"><b>Klub szuka trenera</b></button>
+            </div>
+            <div>
+                <button type="button" class="btn-request btn-player-for-club" onclick="window.location.href='{% url 'marketplace:player_for_club_announcements' %}';"><b>Piłkarz szuka klubu</b></button>
+            </div>
 
         </div>
         <div class="row">
@@ -243,7 +243,10 @@
 {% block extra_js %}
 {{ block.super }}
 <script src="{% static 'assets/js/filters.js' %}"></script>
+
 {% include 'marketplace/filters_modal.html' %}
+
+
 <script>
 $('#approveAnnouncementModal').on('show.bs.modal', function (event) {
     var id = $(event.relatedTarget).data('ann');
