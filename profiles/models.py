@@ -583,7 +583,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     
     voivodeship = models.CharField(
         _('Województwo'),
-        max_length=20,
+        max_length=68,
         blank=True,
         null=True,
         choices=VOIVODESHIP_CHOICE
@@ -980,7 +980,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True)
 
     team_club_league_voivodeship_ver = models.CharField(
-        _('Województwo'),
+        _('Województwo3'),
         max_length=355,
         help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'),
         blank=True,
@@ -1034,13 +1034,13 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     address = AddressField(help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)
     
-    voivodeship = models.CharField(
-        _('Województwo'),
-        max_length=20,
-        blank=True,
-        null=True,
-        choices=VOIVODESHIP_CHOICE
-        )
+    # voivodeship = models.CharField(
+    #     _('Województwo2'),
+    #     max_length=20,
+    #     blank=True,
+    #     null=True,
+    #     choices=VOIVODESHIP_CHOICE
+    #     )
 
     # club & coach specific attrs.
 
