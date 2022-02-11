@@ -1,6 +1,7 @@
 
 from collections import Counter
 from datetime import datetime
+from random import choices
 from stats import adapters
 from address.models import AddressField
 from django.conf import settings
@@ -21,6 +22,7 @@ from .utils import conver_vivo_for_api, supress_exception
 from clubs import models as clubs_models
 from .mixins import TeamObjectsDisplayMixin
 import logging
+from .erros import VerificationCompletionFieldsWrongSetup
 
 
 User = get_user_model()
@@ -53,8 +55,6 @@ VOIVODESHIP_CHOICE = (
         ('Zachodniopomorskie', 'Zachodniopomorskie')
     )
 
-class VerificationCompletionFieldsWrongSetup(Exception):
-    pass
 
 
 class RoleChangeRequest(models.Model):
@@ -1036,13 +1036,11 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     
     # voivodeship = models.CharField(
     #     _('Województwo2'),
-    #     max_length=20,
+    #     max_length=68,
     #     blank=True,
     #     null=True,
     #     choices=VOIVODESHIP_CHOICE
     #     )
-
-    # club & coach specific attrs.
 
     club_role = models.IntegerField(
         choices=CLUB_ROLE,

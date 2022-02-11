@@ -117,7 +117,15 @@ function get_verification_form(slug)
         success: function(json) {
             $("#verification-form-body").html(json.form);
             $("#verification-form-body select").addClass("selectpicker").selectpicker('refresh'); 
-        }
+        
+            if($('#id_has_team_1').is(':checked')) { 
+              console.log('=', $("#select_team_div"))
+              $("#select_team_div").fadeIn()
+              $("#text_team_div").hide()
+          }
+          
+        
+          }
     })
   }
 
@@ -158,6 +166,7 @@ $(document).on('submit', '#missingname-form', function(e){
                 if (json.success == true ) {
                     location.reload();
                 } else { 
+                 
                         $("#missingname-form-body").html(json.form);
                 }
            }
@@ -165,6 +174,57 @@ $(document).on('submit', '#missingname-form', function(e){
 
     
 });
+
+
+function setHasClubDefaults() {
+    $("#select_team_div").fadeIn()
+    $("#text_team_div").hide()
+    $("#id_team_not_found").prop( "checked", false );
+}
+
+function setHasntClubDefaults() {
+  $("#select_team_div").hide()
+  $("#hint_id_team_club_league_voivodeship_ver").text("Jeśli wcześniej grałeś w rozgrywkach PZPN - wprowadź nazwę ostatniego klubu, poziom rozgrywkowy, region oraz sezon. My poszukamy Twoich statystyk historycznych.")
+  $("#text_team_div").fadeIn()
+}
+function setVerificationDefaults() {
+    if($('#id_has_team_1').is(':checked')) { 
+      setHasClubDefaults()
+
+    } else if ($('#id_has_team_2').is(':checked')) { 
+      setHasntClubDefaults()
+    }
+}
+
+$(document).on("click", "#div_id_team_not_found", function(){ 
+
+  if($('#id_team_not_found').is(':checked')) {
+
+    $("#text_team_div").fadeIn()
+    $("#hint_id_team_club_league_voivodeship_ver").text("Wprowadź ręcznie nazwę klubu, poziom rozgrywkowy, region i kraj jeśli jest inny niż Polska")
+    $('label[for="id_team_not_found"]').text('odznacz jeśli chesz wybrać klub z listy')
+    
+  } else {
+    $("#text_team_div").hide()
+    $('label[for="id_team_not_found"]').text('zaznacz jeśli nie znalazłeś swojego klubu na liście')
+}
+
+
+});
+
+$(document).on("click", "#id_has_team_1", function(){
+  
+    if($('#id_has_team_1').is(':checked')) { 
+        setHasClubDefaults()
+      } 
+ });
+
+$(document).on("click", "#id_has_team_2", function(){
+    if($('#id_has_team_2').is(':checked')) { 
+      setHasntClubDefaults()
+      }
+});
+
 $(document).on('submit', '#verification-form', function(e){
 
     e.preventDefault(); // avoid to execute the actual submit of the form.
@@ -174,19 +234,22 @@ $(document).on('submit', '#verification-form', function(e){
     $.ajax({
            type: "POST",
            url: url,
-           data: form.serialize(), // serializes the form's elements.
+           data: form.serialize(),
            success: function(json)
            {
                 if (json.success == true ) {
                     location.reload();
                 } else { 
-                        $("#verification-form-body").html(json.form);
+                    $("#verification-form-body").html(json.form);
+                    $('select').selectpicker();
+                    setVerificationDefaults()
                 }
            }
          });
 
     
 });
+
 $(document).on('submit', '#add-announcement-form', function(e){
 
   e.preventDefault(); // avoid to execute the actual submit of the form.
@@ -195,7 +258,6 @@ $(document).on('submit', '#add-announcement-form', function(e){
   var url = form.attr('action');
   var data = form.serialize() + '&id=' + $('#add-ann-number').val() + '&announcement_type=' + $('#add-ann-type').val() + '&action_name=' + $('#add-ann-action-name').val();
 
-  console.log('x>>>>>>>>>>>>>', data)
   $.ajax({
          type: "POST",
          url: url,
