@@ -18,7 +18,6 @@ def _post_save_league(sender, instance, created, **kwargs):
 
     if highest_parent := instance.get_highest_parent():
         instance.highest_parent = highest_parent
-
     try:
         instance._skip_post_save = True
         instance.save()
