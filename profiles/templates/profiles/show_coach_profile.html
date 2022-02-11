@@ -24,6 +24,9 @@
       <div class="row">
         <div class="col-sm-6">{% include 'profiles/cards/coach/card_primary.html' %}</div>
         <div class="col-sm-6">{% include 'profiles/cards/coach/card_season.html' %}</div>
+        <div class="col-sm-6 {% if user.profile.about %} d-block {% else %} d-none{% endif %} ">
+          {% include 'profiles/cards/coach/card_about.html' %}
+        </div>
         <div class="col-sm-6">{% include 'profiles/cards/coach/card_latest_games.html' %}</div>
       </div>
     </div>
