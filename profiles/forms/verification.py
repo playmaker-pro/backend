@@ -137,11 +137,11 @@ class ClubVerificationForm(VerificationForm):
 
 class CoachVerificationForm(VerificationForm):
     birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
-    custom_settings = [
-        ('team_club_league_voivodeship_ver', {'help_text': 'Który klub reprezentujesz'}),
-        ('birth_date', {'placeholder': '1998-09-24', 'help_text': _('Data urodzenia')}),
-        ('country', {'help_text': _('Kraj pochodzenia')}),
-    ]
+    custom_settings = {
+        'team_club_league_voivodeship_ver': {'help_text': 'Który klub reprezentujesz'},
+        'birth_date': {'placeholder': '1998-09-24', 'help_text': _('Data urodzenia')},
+        'country': {'help_text': _('Kraj pochodzenia')},
+    }
 
     class Meta:
         model = models.CoachProfile
@@ -151,13 +151,13 @@ class CoachVerificationForm(VerificationForm):
 
 class PlayerVerificationForm(VerificationForm):
     birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
-    custom_settings = [
-            ('birth_date', {'placeholder': '1998-09-24', 'help_text': _('Kraj pochodzenia')}),
-            ('position_raw', {}),
-            ('team', {'help_text': 'Wybierz z listy rozwijanej'}),
-            ('country', {'help_text': _('Data urodzenia')}),
-            ('has_team', {})
-        ]
+    custom_settings = {
+        'birth_date': {'placeholder': '1998-09-24', 'help_text': _('Kraj pochodzenia')},
+        'position_raw': {},
+        'team': {'help_text': 'Wybierz z listy rozwijanej'},
+        'country': {'help_text': _('Data urodzenia')},
+        'has_team': {}
+    }
     building_fields = (
         ('position_raw', {}), 
         ('birth_date', {}), 

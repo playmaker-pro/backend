@@ -1036,21 +1036,11 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     
     # voivodeship = models.CharField(
     #     _('Województwo2'),
-    #     max_length=20,
+    #     max_length=68,
     #     blank=True,
     #     null=True,
     #     choices=VOIVODESHIP_CHOICE
     #     )
-
-    # club & coach specific attrs.
-
-    voivodeship = models.CharField(
-        _('Województwo'),
-        choices=make_choices(VOIVODESHIP_CHOICES),
-        max_length=68,
-        blank=True,
-        null=True,
-        )
 
     club_role = models.IntegerField(
         choices=CLUB_ROLE,
