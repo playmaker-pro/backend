@@ -275,7 +275,7 @@ class League(models.Model):
 
     code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs")
-    top_parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True)
+    highest_parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True)
     country = CountryField(
         _("Kraj"),
         default="PL",
@@ -344,23 +344,18 @@ class League(models.Model):
         return id_list
 
     @cached_property
-    def display_league(self):
+    def display_league(self) -> str:
         return self.name
 
-    @cached_property
-    def display_league_name(self):
-        return self.name
+    @property
+    def display_name_junior(self) -> str:
+        if self.name_junior:
+            return self.name_junior.name
 
     @cached_property
-    def display_name_junior(self):
-        if self.display_name_junior:
-            return self.display_name_junior.name
-
-    @cached_property
-    def display_highest_parent_league_name(self):
-        top_parent = self.get_highest_parent()
-        if top_parent:
-            return top_parent.display_league
+    def display_league_top_parent(self) -> str:
+        if self.highest_parent:
+            return self.highest_parent.display_league
 
     @lru_cache
     def get_highest_parent(self):
@@ -399,11 +394,6 @@ class League(models.Model):
         return self.get_upper_parent_names(spliter='--')
 
     def save(self, *args, **kwargs):
-
-        # Identify and set highest parent
-        if top_parent := self.get_highest_parent():
-            self.top_parent = top_parent
-
         # is a virtual parent?
         if self.is_parent:
             # isparent flag is due to historical reasons
@@ -573,8 +563,8 @@ class Team(models.Model, MappingMixin):
 
     @property
     @supress_exception
-    def display_highest_parent_league_name(self):
-        return self.league.display_highest_parent_league_name
+    def display_league_top_parent(self):
+        return self.league.display_league_top_parent
 
     @property
     @supress_exception
@@ -582,7 +572,6 @@ class Team(models.Model, MappingMixin):
         return self.league.display_league_seniority_name
 
     @property
-    @supress_exception
     def display_name_junior(self):
         if self.league:
             return self.league.display_name_junior
@@ -591,6 +580,12 @@ class Team(models.Model, MappingMixin):
     @supress_exception
     def display_league_group_name(self):
         return self.league.display_league_group_name
+
+    @property
+    @supress_exception
+    def display_league_region_and_group_name(self):
+        region = self.league.region if self.league and self.league.region else ''
+        return f'{self.league.display_league_group_name}, {region}'
 
     @property
     @supress_exception

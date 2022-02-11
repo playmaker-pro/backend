@@ -6,22 +6,38 @@
     <h6 class="card-subtitle mb-2 text-muted"></h6>
 
     <div class="card-text">
-    {% with profile=show_user.profile template='platform/tables/two_table.html' %}
-            {% include template with key=_('Noga')               value=profile.get_prefered_leg_display|default:'-'         %}
-            {% include template with key=_('Pozycja')            value=profile.get_position_raw_display|default:'-'         %}
-            {% include template with key=_('Rocznik')            value=profile.birth_date.year|default:'-'|upper            %}
-            {% include template with key=_('Obecna drużyna')     value=profile.display_team|default:'-'|upper               %}
-            {% include template with key=_('Rozgrywki')          value=profile.display_highest_parent_league_name|default:'-'|upper   link=profile.get_league_permalink  %}
-        {% if profile.display_name_junior %}
-            {% include template with key=_('Poziom')             value=profile.display_name_junior|default:'-'|upper        %} 
-        {% endif %}
-        
-        {% if profile.display_league_group_name %}
-            {% include template with key=_('Grupa')              value=profile.display_league_group_name|default:'-'|upper  %}
-        {% endif %}
-            {% include template with key=_('Wojewodźtwo')        value=profile.display_league_voivodeship|default:'-'|lower        %}
-        
-    {% endwith %}
+        {% with profile=show_user.profile template='platform/tables/two_table.html' %}
+                {% include template with key=_('Noga')               value=profile.get_prefered_leg_display|default:'-'         %}
+                {% include template with key=_('Pozycja')            value=profile.get_position_raw_display|default:'-'         %}
+                {% include template with key=_('Rocznik')            value=profile.birth_date.year|default:'-'|upper            %}
+                {% if profile.display_name_junior %}
+                    {% include template with key=_('Poziom')             value=profile.display_name_junior|default:'-'|upper        %} 
+                {% endif %}
+                {% include template with key=_('Miasto ') value=profile.address|default:'-' %}
+                
+            
+            {% if profile.display_league_group_name %}
+                {% include template with key=_('Grupa')              value=profile.display_league_group_name|default:'-'|upper  %}
+            {% endif %}
+            
+            {% include template with key=_('Lokalizacja') value=profile.voivodeship|default:'-' %}
+            
+        {% endwith %}
     </div>
+
+    <!-- Club card -->
+    <h2 class="card-title">{% trans 'Klub' %}</h2>
+    <h6 class="card-subtitle mb-2 text-muted"></h6>
+
+    <div class="card-text">
+        {% with profile=show_user.profile template='platform/tables/two_table.html' %}
+
+            {% include template with key=_('Obecna drużyna')  value=profile.display_team|default:'-'|upper %}
+            {% include template with key=_('Poziom rozgrywkowy')          value=profile.display_league_name|default:'-'|upper   link=profile.get_league_permalink  %}
+            {% include template with key=_('Województwo')     value=profile.voivodeship_raw|default:'-' %}
+            
+        {% endwith %}
+    </div>
+
 </div>
 </div>

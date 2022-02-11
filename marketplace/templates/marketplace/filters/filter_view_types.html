@@ -1,9 +1,9 @@
 <select id="select-view-type" class="side-filter selectpicker side-filter searchleagues">
-    <option {% if view_type != "player_for_club,club_for_player,coach_for_club,club_for_coach" %} selected {% endif %}  value="{% url 'marketplace:announcements' %}">Wszystkie ogłoszenia</option>
-    <option {% if view_type == "player_for_club" %} selected {% endif %}  value="{% url 'marketplace:club_for_player_announcements' %}">Klub szuka zawodnika</option>
-    <option {% if view_type == "club_for_player" %} selected {% endif %}  value="{% url 'marketplace:club_for_coach_announcements' %}">Trener szuka klubu</option>
-    <option {% if view_type == "coach_for_club" %} selected {% endif %}  value="{% url 'marketplace:club_for_coach_announcements' %}">Klub szuka trenera</option>
-    <option {% if view_type == "club_for_coach" %} selected {% endif %}  value="{% url 'marketplace:player_for_club_announcements' %}">Piłkarz szuka klubu</option>
+    <option {% if not view_type %} selected {% endif %}  value="{% url 'marketplace:announcements' %}">Wszystkie ogłoszenia</option>
+    <option {% if view_type == "club_for_player" %} selected {% endif %}  value="{% url 'marketplace:club_for_player_announcements' %}">Klub szuka zawodnika</option>
+    <option {% if view_type == "club_for_coach" %} selected {% endif %}  value="{% url 'marketplace:club_for_coach_announcements' %}">Klub szuka trenera</option>
+    <option {% if view_type == "coach_for_club" %} selected {% endif %}  value="{% url 'marketplace:coach_for_club_announcements' %}">Trener szuka klubu</option>
+    <option {% if view_type == "player_for_club" %} selected {% endif %}  value="{% url 'marketplace:player_for_club_announcements' %}">Piłkarz szuka klubu</option>
  </select>
 
  <script>

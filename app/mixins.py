@@ -224,7 +224,6 @@ class ViewFilterMixin:
 
     @property
     def filter_position_marketplace(self):
-
         POSITION_CHOICES = (
             'Bramkarz',
             'Obrońca Lewy',
@@ -240,10 +239,16 @@ class ViewFilterMixin:
 
         values = self.request.GET.getlist('position')
 
-        filtered_positions = []
+        if "Dowolna" in values:
+            return
+        if not values:
+            return
+
+        filtered_positions = ['Dowolna']
         for value in values:
             if value in POSITION_CHOICES:
                 filtered_positions.append(value)
+        
         return filtered_positions if filtered_positions else None
 
     @property
@@ -322,6 +327,13 @@ class ViewModalLoadingMixin:
                 'load': False,
                 'async': 'get_add_announcement_form'
             },
+            'no_club': {
+                'name': 'noClubModal',
+                'template': 'profiles/modals/_no_club_assigned_modal.html',
+                'auto': False,
+                'load': False,
+                'async': False
+            },
             'approve_announcement_modal': {
                 'name': 'approveAnnouncementModal',
                 'template': 'profiles/modals/_approve_announcement_modal.html',
@@ -358,8 +370,12 @@ class ViewModalLoadingMixin:
         # Loading action specific modals
         # here is case when we can perfom action, so here are the action that we can perform
         else:
+            if user.is_club and not user.clubprofile.is_clubless:
+                modals['no_club']['load'] = True
+
             modals['inquiry']['load'] = True
             modals['approve_announcement_modal']['load'] = True
+            
             if user.is_club or user.is_coach or user.is_player:
                 modals['add_announcement']['load'] = True
             # if user.is_player:

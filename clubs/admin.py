@@ -117,7 +117,7 @@ class LeagueAdmin(admin.ModelAdmin):
         "code",
         "slug",
         "search_tokens",
-        linkify("top_parent"),
+        linkify("highest_parent"),
     )
 
     def get_slicer(self, obj):

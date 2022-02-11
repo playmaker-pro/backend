@@ -34,6 +34,24 @@ GLOBAL_TRAINING_READY_CHOCIES = (
         (2, '3-4 treningi'),
         (3, '5-6 treningi'))
 
+VOIVODESHIP_CHOICE = (
+        ('Dolnośląskie', 'Dolnośląskie'),
+        ('Kujawsko-pomorskie', 'Kujawsko-pomorskie'),
+        ('Lubelskie', 'Lubelskie'),
+        ('Lubuskie', 'Lubuskie'),
+        ('Łódzkie', 'Łódzkie'),
+        ('Małopolskie', 'Małopolskie'),
+        ('Mazowieckie', 'Mazowieckie'),
+        ('Opolskie', 'Opolskie'),
+        ('Podkarpackie', 'Podkarpackie'),
+        ('Podlaskie', 'Podlaskie'),
+        ('Pomorskie', 'Pomorskie'),
+        ('Śląskie', 'Śląskie'),
+        ('Świętokrzyskie', 'Świętokrzyskie'),
+        ('Warmińsko-Mazurskie', 'Warmińsko-Mazurskie'),
+        ('Wielkopolskie', 'Wielkopolskie'),
+        ('Zachodniopomorskie', 'Zachodniopomorskie')
+    )
 
 class VerificationCompletionFieldsWrongSetup(Exception):
     pass
@@ -386,7 +404,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
        # 'team_raw',
        'position_raw',
        'voivodeship',
-       # 'voivodeship_raw',
+       'voivodeship_raw',
     ]
 
     OPTIONAL_FIELDS = [
@@ -520,7 +538,12 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     league = models.CharField(_('Rozgrywki'), max_length=68, db_index=True, help_text=_('Poziom rozgrywkowy'), blank=True, null=True)
     league_raw = models.CharField(_('Rozgrywki'), max_length=68, help_text=_('Poziom rozgrywkowy który deklarujesz że grasz.'), blank=True, null=True)
     voivodeship = models.CharField(_('Wojewódźtwo'), help_text=_('Wojewódźtwo'), max_length=68, db_index=True, blank=True, null=True)
-    voivodeship_raw = models.CharField(_('Wojewódźtwo'), help_text=_('Wojewódźtwo w którym grasz.'), max_length=68, blank=True, null=True)
+    voivodeship_raw = models.CharField(
+        _('Wojewódźtwo'), 
+        help_text=_('Wojewódźtwo w którym grasz.'), 
+        max_length=68, blank=True, null=True,
+        choices=VOIVODESHIP_CHOICE
+        )
     birth_date = models.DateField(_('Data urodzenia'), blank=True, null=True)
     height = models.PositiveIntegerField(_('Wzrost'), help_text=_('Wysokość (cm) [130-210cm]'), blank=True, null=True, validators=[MinValueValidator(130), MaxValueValidator(210)])
     weight = models.PositiveIntegerField(_('Waga'), help_text=_('Waga(kg) [40-140kg]'), blank=True, null=True, validators=[MinValueValidator(40), MaxValueValidator(140)])
@@ -539,6 +562,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     min90_url = models.URLField(_('90min portal'), max_length=500, blank=True, null=True)
     transfermarket_url = models.URLField(_('TrasferMarket'), blank=True, null=True)
     address = AddressField(help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)
+    # address = models.CharField(max_length=100, help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)
     practice_distance = models.PositiveIntegerField(_('Odległość na trening'), blank=True, null=True, help_text=_('Maksymalna odległośc na trening'), validators=[MinValueValidator(10), MaxValueValidator(500)])
     about = models.TextField(_('O sobie'), null=True, blank=True)
     training_ready = models.IntegerField(_('Gotowość do treningu'), choices=make_choices(TRAINING_READY_CHOCIES), null=True, blank=True)
@@ -556,6 +580,14 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     video_url_third = models.URLField(_('Youtube url nr 3'), blank=True, null=True)
     video_title_third = models.CharField(_('Tytuł nagrania nr 3'), max_length=235, blank=True, null=True)
     video_description_third = models.TextField(_('Temat i opis nagrania nr 3'), null=True, blank=True)
+    
+    voivodeship = models.CharField(
+        _('Województwo'),
+        max_length=68,
+        blank=True,
+        null=True,
+        choices=VOIVODESHIP_CHOICE
+        )
 
     def display_position_fantasy(self):
         if self.position_fantasy is not None:
@@ -876,6 +908,12 @@ class ClubProfile(BaseProfile):
             return True
         return False
 
+    @property
+    def is_clubless(self):
+        if self.club_object:
+            return True
+        return False
+
     club_object = models.ForeignKey(clubs_models.Club, on_delete=models.SET_NULL, related_name='clubowners', db_index=True, null=True, blank=True)
     phone = models.CharField(_('Telefon'), max_length=15, blank=True, null=True)
     team_club_league_voivodeship_ver = models.CharField(_('team_club_league_voivodeship_ver'), max_length=355, help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'), blank=True, null=True,)
@@ -942,11 +980,12 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True)
 
     team_club_league_voivodeship_ver = models.CharField(
-        _('team_club_league_voivodeship_ver'),
+        _('Województwo3'),
         max_length=355,
         help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'),
         blank=True,
-        null=True,)
+        null=True,
+        )
 
     team_object = models.ForeignKey(
         clubs_models.Team,
@@ -993,10 +1032,16 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         blank=True)
 
-    address = AddressField(
-        help_text=_('Adres'),
-        blank=True,
-        null=True)
+    address = AddressField(help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)
+    
+    # voivodeship = models.CharField(
+    #     _('Województwo2'),
+    #     max_length=20,
+    #     blank=True,
+    #     null=True,
+    #     choices=VOIVODESHIP_CHOICE
+    #     )
+
     # club & coach specific attrs.
 
     club_role = models.IntegerField(
@@ -1171,6 +1216,7 @@ class ScoutProfile(BaseProfile):
         null=True)
 
     address = AddressField(
+        max_length=100,
         help_text=_('Adres'),
         blank=True,
         null=True)
