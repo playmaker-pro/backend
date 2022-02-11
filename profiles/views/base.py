@@ -613,12 +613,13 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
             request.POST,
             request.FILES,
             instance=user.profile
-        )
+            )
 
         user_basic_form = forms.UserBasicForm(
             request.POST,
             request.FILES,
-            instance=user)
+            instance=user,
+            )
 
         if not profile_form.is_valid() or not user_basic_form.is_valid():
             messages.error(
@@ -627,8 +628,7 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
                 f"Wystąpiły błąd podczas wysyłania formularza" f". {user_basic_form.errors} {profile_form.errors}",
                 extra_tags='alter-danger'
             )
-            # user_form = forms.UserForm(instance=user)
-            # profile_form = get_profile_form_model(user)(instance=user.profile)
+
             return super().get(request, profile_form=profile_form, user_basic_form=user_basic_form)
 
         # Both forms are fine. Time to save!

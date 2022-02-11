@@ -26,10 +26,10 @@
 
         {% include template with key=_('Rozgrywki')   value=object.display_league_top_parent|default:'-'           link=object.get_league_permalink     %}
         {% if object.display_name_junior %}
-            {% include template with key=_('Poziom')  value=object.display_name_junior|default:'-'|upper        %} 
+            {% include template with key=_('Poziom')  value=object.display_name_junior|default:'-'        %} 
         {% endif %}
 
-        {% include template with key=_('Grupa') value=object.display_league_group_name|default:'-'                          %}
+        {% include template with key=_('Grupa') value=object.display_league_region_and_group_name|default:'-'                          %}
 
         {% if see_club %}
         {% include template with key=_('Województwo')        value=object.display_voivodeship|default:'-'      %}
