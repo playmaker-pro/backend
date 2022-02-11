@@ -394,11 +394,6 @@ class League(models.Model):
         return self.get_upper_parent_names(spliter='--')
 
     def save(self, *args, **kwargs):
-
-        # Identify and set highest parent
-        if top_parent := self.get_highest_parent():
-            self.highest_parent = top_parent
-
         # is a virtual parent?
         if self.is_parent:
             # isparent flag is due to historical reasons
