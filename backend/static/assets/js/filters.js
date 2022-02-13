@@ -66,7 +66,6 @@ leg.addEventListener('change', ()=> {
 const foreignAndJuniorURLS = link => {
     // window.location.href
     urlSearchParams = new URLSearchParams(window.location.search);
-    console.log(Object.fromEntries(urlSearchParams))
     let params = '?';
     for (let [param, value] of urlSearchParams.entries()){
         value.split(',').forEach(element => {
@@ -74,6 +73,5 @@ const foreignAndJuniorURLS = link => {
         })
     }
     let newUrl = link.trim() + params;
-    console.log(newUrl)
     window.location.href = newUrl;
 }
