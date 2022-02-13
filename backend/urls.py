@@ -82,6 +82,16 @@ urlpatterns = urlpatterns + [
 ]
 
 from .sitemaps import sitemaps
+from django.urls import path
+from django.views.generic.base import TemplateView
+
+
+urlpatterns = urlpatterns + [
+    path(
+        "robots.txt",
+        TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
+    ),
+]
 
 urlpatterns = urlpatterns + [
     path('sitemap.xml', sitemap, sitemaps, name='django.contrib.sitemaps.views.sitemap')
