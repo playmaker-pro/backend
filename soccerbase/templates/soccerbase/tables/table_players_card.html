@@ -46,10 +46,15 @@
                 <strong>{{ object.profile.get_position_raw_display|default:''|title }}</strong> 
             </div>
              <div class="">
-               {{ object.profile.display_team|default:''|upper  }} 
+                <a href="{{ object.profile.team_object.get_permalink }}">
+                    {{ object.profile.display_team|default:''|upper  }} 
+                </a>
             </div>
-            <div class=""> 
-                {{ object.profile.display_league_top_parent|default:'-'|title }}, {{ object.profile.display_voivodeship|default:''|lower|truncatechars:25 }}
+            <div class="">
+                <a href="{{ object.profile.team_object.get_league_permalink }}"> 
+                    {{ object.profile.display_league_top_parent|default:'-'|title }}
+                </a>
+                , {{ object.profile.display_voivodeship|default:''|lower|truncatechars:25 }}
             </div>
         </div>   
                                                     <div class="sc-cell d-none d-md-flex col-md-3">
@@ -69,14 +74,18 @@
                                                         </div >
                                                         
                                                         <div class="sc-cell d-none d-md-flex col-6 col-md-1 text-left">
-                                                            {{ object.profile.display_league_top_parent|default:''|title  }}
+                                                            <a href="{{ object.profile.team_object.get_league_permalink }}">
+                                                                {{ object.profile.display_league_top_parent|default:''|title  }}
+                                                            </a>
                                                         </div >
                                                         <div class="sc-cell d-none d-md-flex col-5 col-md-2  text-left">
                                                             {{ object.profile.display_voivodeship|default:''|lower|truncatechars:25 }}
                                                         </div>
                                                         
                                                         <div class="sc-cell d-none d-md-flex col-6 col-md-2 text-left"> 
-                                                            {{ object.profile.display_team|default:''|upper  }}
+                                                            <a href="{{ object.profile.team_object.get_permalink }}">
+                                                                {{ object.profile.display_team|default:''|upper  }}
+                                                            </a>
                                                         </div>
 
                                                         <div class="sc-cell d-none d-md-flex col-1 text-center">
