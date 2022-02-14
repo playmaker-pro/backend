@@ -12,10 +12,6 @@
                 {% include template with key=_('Poziom')             value=profile.display_league_seniority_name|default:'-'|upper %} 
             {% endif %}
             
-            {% if profile.display_league_group_name %}
-                {% include template with key=_('Grupa')     value=profile.display_league_group_name|default:'-'|upper %}
-            {% endif %}
-            
             {% include template with key=_('Miasto')        value=profile.address|default:'-' %}
             {% include template with key=_('Lokalizacja')   value=profile.voivodeship|default:'-' %}
         {% endwith %}
@@ -27,7 +23,6 @@
                 {% include template with key=_('Obecna drużyna')  value=profile.display_team|default:'-'|upper  link=profile.get_team_permalink %}
                 {% include template with key=_('Rozgrywki')       value=profile.display_league_top_parent|default:'-'|upper   link=profile.get_league_permalink %}
                 {% include template with key=_('Wojewodźtwo')     value=profile.display_voivodeship|default:'-' %}
-                {% include template with key=_('Licencja')        value=profile.team_club_league_voivodeship_ver|default:'-' %}
             {% endwith %}
         </div>
     </div>
