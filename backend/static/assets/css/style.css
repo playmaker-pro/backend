@@ -427,6 +427,15 @@ main {
 .navigation-avatar { 
     /* border:1px solid red; */
 }
+
+.dropdown-toggle::after{
+  display: none !important;
+}
+
+.navbar-nav .dropdown-menu{
+  left: -4rem;
+}
+
 .navbar { 
   padding-right:6rem;
   padding-left:6rem;
