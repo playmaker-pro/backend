@@ -49,7 +49,6 @@
                     <a class="nav-link dropdown-toggle" href="{% url 'profiles:show_self' %}" data-toggle="dropdown">
                         <!--i class="icofont-user-alt-7"></i-->
                         <img class="navigation-avatar rounded-circle img-responsive" src="{% thumbnail user.picture|default:'default_profile.png' 'nav_avatar' %}">
-                        {% comment %} {{ request.user.display_name }} {% endcomment %}
                     </a>
                     <div class="dropdown-menu">
                     <a class="dropdown-item" href="{% url 'profiles:show' slug=user.profile.slug %}">Profil</a>
