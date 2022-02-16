@@ -12,13 +12,17 @@
             <span aria-hidden="true"><i class="icofont-close-circled main-color"></i></span>
           </button>
         </div>
-
+        <div class="modal-body d-flex-column">
+          <a class="button" id="clear-filter-button{% if mobile %}-mobile{% endif %}" value="{% trans 'Usuń filtry' %}">{% trans 'Usuń filtry' %} <i class="icofont-delete"></i></a>
+        </div>   
         <form id="filter-form-mobile" method="get">
-          <div class="modal-body d-flex-column">            
+          <div class="modal-body d-flex-column">
+
             {% include 'marketplace/filters/filter_view_types.html' %}
             {% include 'marketplace/_filters.html' %}
           </div>
-          <div class="modal-footer">
+          <div class="modal-footer d-flex justify-content-between">
+            
             {% include 'marketplace/filter_button.html' with mobile=True %}      
           </div>
         </form>
