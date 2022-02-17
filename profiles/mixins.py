@@ -1,3 +1,4 @@
+from functools import cached_property, lru_cache
 from .utils import supress_exception, conver_vivo_for_api
 
 
@@ -34,7 +35,7 @@ class TeamObjectsDisplayMixin:
     When link is broken excpetion should be supressed
     """
 
-    @property
+    @cached_property
     def get_team_object(self):
         return self.team_object
 
@@ -103,3 +104,8 @@ class TeamObjectsDisplayMixin:
     @supress_exception
     def get_league_permalink(self):
         return self.get_team_object.get_league_permalink
+
+    @property
+    @supress_exception
+    def get_team_permalink(self):
+        return self.get_team_object.get_permalink()
