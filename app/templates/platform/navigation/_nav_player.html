@@ -4,8 +4,7 @@
 {% if user.is_authenticated %}
     <li class="nav-item"><a class="nav-link" href="/transfer/">Transfer</a></li>
     <li class="nav-item"><a class="nav-link" href="{% url 'marketplace:announcements'%}">{% trans 'Ogłoszenia' %}</a></li>
-
-<li class="nav-item"><a class="nav-link" href="{% url 'products:products'%}?tag=dlaPiłkarza">{% trans 'Produkty' %}</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'products:products'%}?tag=dlaPiłkarza">{% trans 'Produkty' %}</a></li>
 
     <li class="nav-item">
         <a class="nav-link d-lg-flex d-md-block email-logo pt-0" href="{% url 'profiles:my_requests'%}">
