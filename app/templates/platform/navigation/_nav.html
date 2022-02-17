@@ -1,6 +1,11 @@
 {% load i18n %}
+{% load static %}
 
-<li class="nav-item"><a class="nav-link" href="{% url 'profiles:my_observers'%}">{% trans 'Obserwowani' %}</a></li>
+<li class="nav-item">
+    <a class="nav-link d-lg-flex d-md-block view-logo pt-0" href="{% url 'profiles:my_observers'%}">
+        <img src="{% static 'assets/img/navbar/view.png' %}" alt="">
+    </a>
+</li>
 <li class="nav-item"><a class="nav-link" href="/fantasy?season={{current_season}}&is_senior=true">{% trans 'Fantasy' %}</a></li>
 <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle"  href="" data-toggle="dropdown">Bazy</a>
