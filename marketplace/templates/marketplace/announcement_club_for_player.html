@@ -1,17 +1,18 @@
-{% load playmaker %}
-{% load thumbnail %}
 {% load i18n %}
 
-<div class="card announcement-card m-1 serv-section-2">
-        <div class="serv-section-desc">
-            <h4>
-                <a href="{{ object.club.get_permalink }}">{{ object.club.name }}</a>
+{% load playmaker %}
+{% load thumbnail %}
 
-                <span class="badge badge-success" style="float: right">Klub szuka zawodnika</span>
-            </h4>
-            <h5>{{ object.league }}</h5>
+<div class="card announcement-card m-1 serv-section-2">
+    <div class="serv-section-desc">
+        <h4>
+            <a href="{{ object.club.get_permalink }}">{{ object.club.name }}</a>
+            <span class="badge badge-success" style="float: right">{% trans 'Klub szuka zawodnika' %}</span>
+        </h4>
+        {% comment %} due to PM-141 
+        <h5>{{ object.league }}</h5> {% endcomment %}
     </div>
-        <div class="section-heading-line-left"></div>
+    <div class="section-heading-line-left"></div>
     <div class="card-body row no-gutters">
         <div class="col-12 card-text text-muted"> 
             <small class="row no-gutters">
@@ -26,7 +27,7 @@
                     Roczniki
                 </div>
                 <div class="col-6 col-md-3 text-center">
-                    <h5>{{ object.gender }}, {{ object.seniority }}</h5>
+                    <h5>{{ object.league.display_league_top_parent }}</h5>
                     Rozgrywki
                 </div>
 

@@ -8,7 +8,7 @@
                 <a  href="{{ object.creator.profile.get_permalink }}">Trener {{ object.creator.first_name }} {{ object.creator.last_name }}</a>
                 <span class="badge badge-info" style="float: right">Trener szuka klubu</span>
             </h4>
-            <h5>{{ object.creator.coachprofile.get_team|default:'Bez klubu' }} </h5>
+            <h5>{{ object.creator.coachprofile.display_team|default:'Bez klubu' }} ({{ object.creator.coachprofile.display_league_top_parent|default:'-' }}) </h5>
     </div>
         <div class="section-heading-line-left"></div>
     <div class="card-body row no-gutters">
@@ -19,7 +19,7 @@
                         Licencja
                 </div>
                 <div class="col-6 col-md-3 text-center">
-                    <h5>{{ object.league|default:'-' }}</h5>
+                    <h5>{{ object.creator.coachprofile.display_league_top_parent|default:'-' }}</h5>
                     Aktualny poziom
                 </div>
                 <div class="col-6 col-md-3 text-center">

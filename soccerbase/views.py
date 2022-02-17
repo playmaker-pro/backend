@@ -93,6 +93,7 @@ class PlayersTable(TableView):
         #     mindate = get_datetime_from_age(self.filter_age_range[0])
         #     maxdate = get_datetime_from_age(self.filter_age_range[1])
         #     queryset = queryset.filter(playerprofile__birth_date__range=[maxdate, mindate])  # bo 0,20   to data urodzin 2000-09-01----2020-09-01
+
         if self.filter_position:
             queryset = queryset.filter(playerprofile__position_raw__in=self.filter_position)
         return queryset
@@ -156,7 +157,7 @@ class PlayerTalbeQuickFilter(generic.TemplateView, mixins.PaginateMixin, mixins.
         #     maxdate = get_datetime_from_age(self.filter_age_range[1])
         #     queryset = queryset.filter(playerprofile__birth_date__range=[maxdate, mindate])  # bo 0,20   to data urodzin 2000-09-01----2020-09-01
         if self.filter_position is not None:
-            queryset = queryset.filter(playerprofile__position_raw=self.filter_position)
+            queryset = queryset.filter(playerprofile__position_raw__in=self.filter_position)
         return queryset
 
     def get(self, request, quick_filter, *args, **kwargs):
@@ -167,7 +168,6 @@ class PlayerTalbeQuickFilter(generic.TemplateView, mixins.PaginateMixin, mixins.
             self.is_foregin = True
         elif quick_filter == 'juniors':
             self.is_juniors = True
-
         kwargs['foregin'] = self.is_foregin or None
         kwargs['juniors'] = self.is_juniors or None
         queryset = self.get_queryset()
