@@ -161,11 +161,11 @@ class CoachProfileForm(BaseProfileForm):
                 Field("practice_distance", wrapper_class='row'),
                 css_class='col-md-6',
             ),
-            Fieldset(
-                _('<h2 class="form-section-title">Klub</h2>'),
-                Field('team_club_league_voivodeship_ver', wrapper_class='row'),
-                css_class='col-md-6',
-            ),
+            # Fieldset(
+            #     _('<h2 class="form-section-title">Klub</h2>'),
+            #     Field('voivodeship', wrapper_class='row'),
+            #     css_class='col-md-6',
+            # ),
         )
 
     class Meta:
@@ -174,7 +174,7 @@ class CoachProfileForm(BaseProfileForm):
                   'address', 'about', 'birth_date', 
         'facebook_url', 'soccer_goal', 'phone', 'practice_distance', 
         'licence', 
-        # 'voivodeship',
+        'voivodeship',
         'team_club_league_voivodeship_ver']
 
     def get_mandatory_field_class(self, field_name):

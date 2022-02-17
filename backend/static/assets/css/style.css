@@ -427,6 +427,15 @@ main {
 .navigation-avatar { 
     /* border:1px solid red; */
 }
+
+.dropdown-toggle::after{
+  display: none !important;
+}
+
+.navbar-nav .dropdown-menu{
+  left: -4rem;
+}
+
 .navbar { 
   padding-right:6rem;
   padding-left:6rem;
@@ -444,12 +453,12 @@ nav .logo a{
   font-family: 'PT Sans', sans-serif;
 }
 
-.view-logo img{
+.email-logo img, .view-logo img{
   max-height: 22px;
   opacity: .5;
 }
 
-.view-logo{
+.email-logo, .view-logo{
   height: 100%;
   justify-content: center;
   align-items: center;
@@ -462,7 +471,6 @@ nav .logo a{
   padding: 0;
   list-style: none;
 }
-
 
 .nav-menu> ul {
   display: flex;
