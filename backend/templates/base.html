@@ -67,7 +67,11 @@ function onReady(callback) {
 }
 
 function setVisible(selector, visible) {
-  document.querySelector(selector).style.display = visible ? 'block' : 'none';
+  const element = document.querySelector(selector);
+  if (element){
+   element.style.display = visible ? 'block' : 'none';
+
+  }
 }
 
 onReady(function() {
