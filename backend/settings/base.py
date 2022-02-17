@@ -9,6 +9,9 @@ from django.utils.translation import ugettext_lazy as _
 # This loads additional settings for our environemnt
 CONFIGURATION = 'dev'  # following options are allowed ['dev', 'production', 'staging']
 
+# This flag allow us to see debug panel on each page.
+DEBUG_PANEL = False
+
 
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
