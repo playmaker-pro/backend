@@ -1,5 +1,6 @@
 {% load static %}
 {% load thumbnail %}
+{% load playmaker %}
 {% load i18n %}
 
 <style>
@@ -49,12 +50,22 @@
                     {% include menuitems_template|default:"partials/_menuitems.html" %}
 
                     {% if request.user.is_authenticated %}
+                    <!-- Navbar user icon -->
+
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="{% url 'profiles:show_self' %}" data-toggle="dropdown">
                                 <!--i class="icofont-user-alt-7"></i-->
                                 <img class="navigation-avatar rounded-circle img-responsive" src="{% thumbnail user.picture|default:'default_profile.png' 'nav_avatar' %}">
                             </a>
                             <div class="dropdown-menu">
+
+                                {% if user.is_coach %}
+                                    {% get_my_team_link css_class='dropdown-item' %}
+                                {% endif %}
+                                {% if user.is_club %}
+                                    {% get_my_club_link css_class='dropdown-item'%}
+                                {% endif %}
+                                
                                 <a class="dropdown-item" href="{% url 'profiles:show' slug=user.profile.slug %}">Profil</a>
                                 <a class="dropdown-item" href="{% url 'profiles:edit_self' %}">Edytuj CV
                                     <div class="progress">
