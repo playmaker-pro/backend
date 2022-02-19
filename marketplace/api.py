@@ -42,20 +42,24 @@ def approve_announcement(request):
     user = request.user
 
     if request.POST.get('action') == 'post':
+        
         _id = request.POST.get('id')
         _announcement_type = request.POST.get('announcement_type')
         if _id and _announcement_type:
-            announcement_class = class_mapper[_announcement_type]
-            ann = get_object_or_404(announcement_class, id=int(_id))
-            #  ann.history.increment()  # @todo 1 coomit to  @ todo zwieszkyc ilosc odwiedzajcych ogloszeniee
 
-            announcement_mail_mapper[_announcement_type](ann, user)
-            announcement_notify_requester(_announcement_type, ann, user)
-            ann.subscribers.add(user)
-            response_data['status']: True
+            request_user = request.POST.get('user')
 
-            message = 'Zgłoszenie wysłane'
-            response_data['message'] = message
-            return JsonResponse(response_data)
+            # announcement_class = class_mapper[_announcement_type]
+            # ann = get_object_or_404(announcement_class, id=int(_id))
+            # #  ann.history.increment()  # @todo 1 coomit to  @ todo zwieszkyc ilosc odwiedzajcych ogloszeniee
+
+            # announcement_mail_mapper[_announcement_type](ann, user)
+            # announcement_notify_requester(_announcement_type, ann, user)
+            # ann.subscribers.add(user)
+            # response_data['status'] = True
+
+            # message = 'Zgłoszenie wysłane'
+            # response_data['message'] = message
+            # return JsonResponse(response_data)
         # else:
         #     return JsonResponse({'message': 'Błąd'})
