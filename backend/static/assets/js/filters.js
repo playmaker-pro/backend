@@ -33,35 +33,47 @@ const dropdownParams = (dom, nameOfParam) =>{
     window.history.pushState("", "", `?${urlSearchParams}`);
 }
 
-getNameFilter.addEventListener('input', () => {
-    inputParams(getNameFilter, 'first_last')
-})
+if(getNameFilter){
+    getNameFilter.addEventListener('input', () => {
+        inputParams(getNameFilter, 'first_last')
+    })    
+}
 
-minYear.addEventListener('input', () => {
-    inputParams(minYear, 'year_min')
-})
+if(minYear){
+    minYear.addEventListener('input', () => {
+        inputParams(minYear, 'year_min')
+    })
+}
 
-maxYear.addEventListener('input', () => {
-    inputParams(maxYear, 'year_max')
-})
+if(maxYear){
+    maxYear.addEventListener('input', () => {
+        inputParams(maxYear, 'year_max')
+    })
+}
 
+if(getLeague){
+    getLeague.addEventListener('change', () =>{
+        dropdownParams(getLeague, 'league');
+    })
+}
 
-getLeague.addEventListener('change', () =>{
-    dropdownParams(getLeague, 'league');
-})
+if(vivo){
+    vivo.addEventListener('change', () =>{
+        dropdownParams(vivo, 'vivo');
+    })    
+}
 
-vivo.addEventListener('change', () =>{
-    dropdownParams(vivo, 'vivo');
-})
+if(possition){
+    possition.addEventListener('change', () => {
+        dropdownParams(possition, 'position');
+    })
+}
 
-possition.addEventListener('change', () => {
-    dropdownParams(possition, 'position');
-})
-
-leg.addEventListener('change', ()=> {
-    dropdownParams(leg, 'leg')
-})
-
+if(leg){
+    leg.addEventListener('change', ()=> {
+        dropdownParams(leg, 'leg')
+    })
+}
 
 const foreignAndJuniorURLS = link => {
     // window.location.href
