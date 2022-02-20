@@ -69,7 +69,9 @@ class PlayersTable(TableView):
                 playerprofile__prefered_leg=self.filter_leg)
 
         if self.filter_league is not None:
-            queryset = queryset.filter(playerprofile__team_object__league__highest_parent__name__in=self.filter_league)
+            queryset = queryset.filter(
+                playerprofile__team_object__league__highest_parent__name__in=self.filter_league
+                )
 
         if self.filter_first_last is not None:
             queryset = queryset.annotate(fullname=Concat('first_name', Value(' '), 'last_name'))
@@ -89,6 +91,7 @@ class PlayersTable(TableView):
             maxdate = get_datetime_from_year(self.filter_year_max)
             queryset = queryset.filter(playerprofile__birth_date__year__lte=maxdate.year)
 
+        # breakpoint()
         # if self.filter_age_range is not None:
         #     mindate = get_datetime_from_age(self.filter_age_range[0])
         #     maxdate = get_datetime_from_age(self.filter_age_range[1])
@@ -132,7 +135,9 @@ class PlayerTalbeQuickFilter(generic.TemplateView, mixins.PaginateMixin, mixins.
                 playerprofile__prefered_leg=self.filter_leg)
 
         if self.filter_league is not None:
-            queryset = queryset.filter(playerprofile__team_object__league__name__in=self.filter_league)
+            queryset = queryset.filter(
+                playerprofile__team_object__league__highest_parent__name__in=self.filter_league
+                )
 
         if self.filter_first_last is not None:
             queryset = queryset.annotate(fullname=Concat('first_name', Value(' '), 'last_name'))
@@ -164,9 +169,9 @@ class PlayerTalbeQuickFilter(generic.TemplateView, mixins.PaginateMixin, mixins.
         self.is_foregin = False
         self.is_juniors = False
 
-        if quick_filter == 'foregin':
+        if 'foregin' in quick_filter:
             self.is_foregin = True
-        elif quick_filter == 'juniors':
+        if 'juniors' in quick_filter:
             self.is_juniors = True
         kwargs['foregin'] = self.is_foregin or None
         kwargs['juniors'] = self.is_juniors or None

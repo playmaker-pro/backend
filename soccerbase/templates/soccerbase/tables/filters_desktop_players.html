@@ -33,11 +33,10 @@
             type="button" 
             class="{% if foregin %}btn-request btn-requested{% else %}btn-request{% endif %}" 
             onclick="foreignAndJuniorURLS(
-                `{% if foregin %} {% url 'soccerbase:players'%}
-                    {% else %} {% url 'soccerbase:players_quick' 'foregin' %}
+                `{% if foregin %} {% url 'soccerbase:players'%}{% if juniors %}&juniors{% endif %}
+                    {% else %} {% url 'soccerbase:players_quick' 'foregin' %}{% if juniors %}&juniors{% endif %}
                 {% endif %}`)"
-        >
-        {% if foregin %}Polska{% else %}zagraniczni{% endif %}
+        >zagraniczni
         </button>
     </div>
     <div>
@@ -45,11 +44,10 @@
             type="button" 
             class="{% if juniors %}btn-request btn-requested{% else %}btn-request{% endif %}" 
             onclick="foreignAndJuniorURLS(
-                `{% if juniors %} {% url 'soccerbase:players'%}
-                    {% else %} {% url 'soccerbase:players_quick' 'juniors' %}
+                `{% if juniors %} {% url 'soccerbase:players'%}{% if foregin %}&foregin{% endif %}
+                    {% else %} {% url 'soccerbase:players_quick' 'juniors' %}{% if foregin %}&foregin{% endif %}
                 {% endif %}`)"
-        >
-        {% if juniors %}Polska{% else %}młodzieżowiec{% endif %}
+        >młodzieżowiec
         </button>
     </div>
 
