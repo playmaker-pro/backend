@@ -19,7 +19,3 @@
 {% elif object|classname == "CoachForClubAnnouncement" %}
 {% include 'marketplace/announcement_coach_for_club.html' with object=object %}
 {% endif %}
-
-<script>
-    const userAnnouncement = '{{ request.user.id }}'
-</script>

@@ -1,4 +1,5 @@
 
+from attr import Attribute
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext_lazy as _
@@ -14,6 +15,8 @@ from notifications.mail import (
     announcement_notify_club_player,
     announcement_notify_club_coach,
 )
+from users.models import User
+
 # from marketplace.models import Announcement  # TODO: sprawdzic o co tu chodzi i podac prawdziwa klase!
 from marketplace.models import (PlayerForClubAnnouncement,
                                 ClubForPlayerAnnouncement,
@@ -46,20 +49,36 @@ def approve_announcement(request):
         _id = request.POST.get('id')
         _announcement_type = request.POST.get('announcement_type')
         if _id and _announcement_type:
+            try:
+                club_name = user.profile.team_object.club.name
+            except AttributeError:
+                club_name = user.profile.club_object.name
+            announcement_class = class_mapper[_announcement_type]
+            ann = get_object_or_404(announcement_class, id=int(_id))
 
-            request_user = request.POST.get('user')
+            ann_user = User.objects.get(id=ann.creator_id)
+            if ann_user.declared_role == 'T':
+                ann_club = ann_user.coachprofile.team_object.club.name
+            elif ann_user.declared_role == 'P':
+                ann_club = ann_user.playerprofile.team_object.club.name
+            elif ann_user.declared_role == 'C':
+                ann_club = ann_user.clubprofile.club_object.name
 
-            # announcement_class = class_mapper[_announcement_type]
-            # ann = get_object_or_404(announcement_class, id=int(_id))
-            # #  ann.history.increment()  # @todo 1 coomit to  @ todo zwieszkyc ilosc odwiedzajcych ogloszeniee
+            if club_name == ann_club:
+                message = 'Nie możesz wchodzić w interakcję z użytkownikami, którzy są z Tobą w klubie'
+                response_data['message'] = message
+                return JsonResponse(response_data)
 
-            # announcement_mail_mapper[_announcement_type](ann, user)
-            # announcement_notify_requester(_announcement_type, ann, user)
-            # ann.subscribers.add(user)
-            # response_data['status'] = True
 
-            # message = 'Zgłoszenie wysłane'
-            # response_data['message'] = message
-            # return JsonResponse(response_data)
+            #  ann.history.increment()  # @todo 1 coomit to  @ todo zwieszkyc ilosc odwiedzajcych ogloszeniee
+
+            announcement_mail_mapper[_announcement_type](ann, user)
+            announcement_notify_requester(_announcement_type, ann, user)
+            ann.subscribers.add(user)
+            response_data['status'] = True
+
+            message = 'Zgłoszenie wysłane'
+            response_data['message'] = message
+            return JsonResponse(response_data)
         # else:
         #     return JsonResponse({'message': 'Błąd'})

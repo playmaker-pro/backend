@@ -110,14 +110,13 @@ function approve_annoucement(event, slug) {
             id: $('#ann-numner').val(),
             announcement_type: $('#ann-type').val(),
             action: 'post',
-            user: userAnnouncement
         },
         success:function(json){         
             $('#requestButton').toggleClass("btn-requested")   
             modalHide('inquiryModal');
-            showToastMessage(json.message.body);
-            window.setTimeout(location.reload(), 500);
-            
+            showToastMessage(json.message);
+            window.setTimeout(function(){location.reload()}, 3000);
+     
         },
         error : function(xhr, errmsg, err) {
         console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
