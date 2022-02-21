@@ -115,7 +115,7 @@ function approve_annoucement(event, slug) {
             $('#requestButton').toggleClass("btn-requested")   
             modalHide('inquiryModal');
             showToastMessage(json.message);
-            window.setTimeout(function(){location.reload()}, 3000);
+            window.setTimeout(function(){location.reload()}, 700);
      
         },
         error : function(xhr, errmsg, err) {
