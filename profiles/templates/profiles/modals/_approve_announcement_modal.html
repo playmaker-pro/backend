@@ -1,14 +1,12 @@
-
-
-
 {% load i18n %}
 {% load playmaker %}
-{% with id="approveAnnouncementModal" title='Czy na pewno chcesz wykonać tę akcję?' %}
-  <div class="modal fade" id="{{ id }}" tabindex="-1" role="dialog" aria-labelledby="{{ id }}Label" aria-hidden="true">
+
+{% with id="approveAnnouncementModal" %}
+  <div class="modal fade" id="{{ object|classname }}{{ object.id }}" tabindex="-1" role="dialog" aria-labelledby="{{ id }}Label" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="{{ id }}Label">{{ title }}</h5>
+          <h5 class="modal-title" id="{{ id }}Label">{% get_title user object %}</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true"><i class="icofont-close-circled main-color"></i></span>
           </button>
@@ -23,8 +21,17 @@
         </div>
         <div class="modal-footer" style="border-top:0px;">
           {% csrf_token %}
-          {% announcement_yes %}
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Zamknij' %}</button> 
+
+            {% if user.is_authenticated %}
+                {% if user.is_coach or user.is_player or user.is_club %}
+                    {% announcement_yes object %}
+                {% else %}
+                    {% other_roles_button %}
+                {% endif %}
+            {% else %}
+                {% other_roles_button %}
+            {% endif %}
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Zamknij' %}</button>
         </div>
       </div>
     </div>

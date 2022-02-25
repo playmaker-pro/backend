@@ -2,6 +2,8 @@
 {% load thumbnail %}
 {% load i18n %}
 
+{{ object|classname }}
+
 {% comment %} <!--PIŁKARZ KLUBU--> {% endcomment %}
 {% if object|classname == "PlayerForClubAnnouncement" %}
 {% include 'marketplace/announcement_player_for_club.html' with object=object %}
@@ -19,3 +21,5 @@
 {% elif object|classname == "CoachForClubAnnouncement" %}
 {% include 'marketplace/announcement_coach_for_club.html' with object=object %}
 {% endif %}
+
+{% include 'profiles/modals/_approve_announcement_modal.html' with object=object %}
