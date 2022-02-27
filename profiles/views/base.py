@@ -265,7 +265,7 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin, mixins.PaginateMixin,
             tabs.append(build_request_tab(**tagoptions))
 
         kwargs['modals'] = self.modal_activity(user, verification_auto=False)
-        kwargs['page_title'] = 'Zapytania'
+        kwargs['page_title'] = 'Moje Zapytania'
         kwargs['tabs'] = tabs
 
         return super().get(request, *args, **kwargs)

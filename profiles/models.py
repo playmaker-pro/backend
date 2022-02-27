@@ -539,7 +539,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     league_raw = models.CharField(_('Rozgrywki'), max_length=68, help_text=_('Poziom rozgrywkowy który deklarujesz że grasz.'), blank=True, null=True)
     voivodeship = models.CharField(_('Wojewódźtwo'), help_text=_('Wojewódźtwo'), max_length=68, db_index=True, blank=True, null=True)
     voivodeship_raw = models.CharField(
-        _('Wojewódźtwo'), 
+        _('Wojewódźtwo (raw)'), 
         help_text=_('Wojewódźtwo w którym grasz.'), 
         max_length=68, blank=True, null=True,
         choices=VOIVODESHIP_CHOICE
@@ -1034,13 +1034,13 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     address = AddressField(help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)
     
-    # voivodeship = models.CharField(
-    #     _('Województwo2'),
-    #     max_length=68,
-    #     blank=True,
-    #     null=True,
-    #     choices=VOIVODESHIP_CHOICE
-    #     )
+    voivodeship = models.CharField(
+        _('Województwo zamieszkania'),
+        max_length=68,
+        blank=True,
+        null=True,
+        choices=VOIVODESHIP_CHOICE
+        )
 
     club_role = models.IntegerField(
         choices=CLUB_ROLE,

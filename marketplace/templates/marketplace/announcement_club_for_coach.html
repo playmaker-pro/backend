@@ -11,7 +11,8 @@
                 <a href="{{ object.club.get_permalink }}">{{ object.club.name }}</a>
                 <span class="badge badge-primary" style="float: right">Klub szuka trenera</span>
             </h4>
-            <h5>{{ object.voivodeship.name|lower }} </h5>
+            {% comment %}  due to PM-141
+            <h5>{{ object.voivodeship.name|lower }} </h5> {% endcomment %}
 <!--            <h5>{{ object.league.name|title }}, {{ object.voivodeship.name|lower }} </h5> -->
     </div>
         <div class="section-heading-line-left"></div>

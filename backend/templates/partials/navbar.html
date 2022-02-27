@@ -46,7 +46,10 @@
 
                 {% if request.user.is_authenticated %}
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="{% url 'profiles:show_self' %}" data-toggle="dropdown"><!--i class="icofont-user-alt-7"></i--><img class="navigation-avatar rounded-circle img-responsive"  src="{% thumbnail user.picture|default:'default_profile.png' 'nav_avatar' %}"> {{ request.user.display_name }}</a>
+                    <a class="nav-link dropdown-toggle" href="{% url 'profiles:show_self' %}" data-toggle="dropdown">
+                        <!--i class="icofont-user-alt-7"></i-->
+                        <img class="navigation-avatar rounded-circle img-responsive" src="{% thumbnail user.picture|default:'default_profile.png' 'nav_avatar' %}">
+                    </a>
                     <div class="dropdown-menu">
                     <a class="dropdown-item" href="{% url 'profiles:show' slug=user.profile.slug %}">Profil</a>
                     <a class="dropdown-item" href="{% url 'profiles:edit_self' %}">Edytuj CV
