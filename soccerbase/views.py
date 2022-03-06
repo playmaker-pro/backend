@@ -11,6 +11,7 @@ from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View, generic
 from profiles.utils import get_datetime_from_age, get_datetime_from_year
+from profiles.models import VOIVODESHIP_CHOICE
 from roles import definitions
 from users.models import User
 import operator
@@ -49,6 +50,7 @@ class TableView(generic.TemplateView, mixins.PaginateMixin, mixins.ViewModalLoad
         kwargs['page_obj'] = self.paginate(queryset, limit=self.paginate_limit)
         kwargs['page_title'] = self.page_title
         kwargs['type'] = self.table_type
+        kwargs['vivos'] = VOIVODESHIP_CHOICE
         self.add_more_to_kwargs(kwargs)
         kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
         # kwargs['ammount'] = page_obj.count()
@@ -224,16 +226,18 @@ class CoachesTable(TableView):
             queryset = queryset.filter(fullname__icontains=self.filter_first_last)
             # queryset = queryset.filter(Q(first_name__icontains=self.filter_first_last) | Q(last_name__icontains=self.filter_first_last))
 
-        if self.filter_name_of_club is not None:
-            queryset = queryset.filter(coachprofile__team_object__club__name__icontains=self.filter_name_of_club)
+        if self.filter_name_of_team is not None:
+            queryset = queryset.filter(
+                coachprofile__team_object__name__icontains=self.filter_name_of_team
+            )
 
         if self.filter_league is not None:
             queryset = queryset.filter(coachprofile__team_object__league__highest_parent__name__in=self.filter_league)
 
         if self.filter_vivo is not None:
-            vivo = [i[:-1].upper() for i in self.filter_vivo]
 
-            clauses = (Q(coachprofile__team_object__club__voivodeship__name=p) for p in vivo)
+            voivo = [i.lower().replace('-', '') for i in self.filter_vivo]
+            clauses = (Q(coachprofile__team_object__club__voivodeship__name=p) for p in voivo)
             query = reduce(operator.or_, clauses)
             queryset = queryset.filter(query)
 
