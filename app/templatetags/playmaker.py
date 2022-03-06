@@ -810,7 +810,7 @@ def get_my_team_link(context, text=None, css_class=None):
         except Exception as e:
             logger.error(e)
             link = '#'
-
+            
     link_class = css_class or ''
     link_attrs = ''
 
