@@ -13,8 +13,14 @@ let urlSearchParams = new URLSearchParams(window.location.search);
 
 
 const inputParams = (dom, nameOfParam) => {
+
     urlSearchParams = new URLSearchParams(window.location.search);
-    urlSearchParams.set(nameOfParam, dom.value);
+
+    if (!dom.value){
+        urlSearchParams.delete(nameOfParam, dom.value)
+    } else {
+        urlSearchParams.set(nameOfParam, dom.value);
+    }
     window.history.pushState("", "", `?${urlSearchParams}`);
 }
 
@@ -29,49 +35,74 @@ const dropdownParams = (dom, nameOfParam) =>{
         newEl.push(element.innerText)
     })
 
-    urlSearchParams.set(nameOfParam, newEl);
+    if ((nameOfParam == 'leg' && newEl[0] == '----') || selected.length == 0){
+        urlSearchParams.delete(nameOfParam, newEl)
+    } else {
+        urlSearchParams.set(nameOfParam, newEl);   
+    }
     window.history.pushState("", "", `?${urlSearchParams}`);
+    
 }
 
-getNameFilter.addEventListener('input', () => {
-    inputParams(getNameFilter, 'first_last')
-})
+if(getNameFilter){
+    getNameFilter.addEventListener('input', () => {
+        inputParams(getNameFilter, 'first_last')
+    })    
+}
 
-minYear.addEventListener('input', () => {
-    inputParams(minYear, 'year_min')
-})
+if(minYear){
+    minYear.addEventListener('input', () => {
+        inputParams(minYear, 'year_min')
+    })
+}
 
-maxYear.addEventListener('input', () => {
-    inputParams(maxYear, 'year_max')
-})
+if(maxYear){
+    maxYear.addEventListener('input', () => {
+        inputParams(maxYear, 'year_max')
+    })
+}
 
+if(getLeague){
+    getLeague.addEventListener('change', () =>{
+        dropdownParams(getLeague, 'league');
+    })
+}
 
-getLeague.addEventListener('change', () =>{
-    dropdownParams(getLeague, 'league');
-})
+if(vivo){
+    vivo.addEventListener('change', () =>{
+        dropdownParams(vivo, 'vivo');
+    })    
+}
 
-vivo.addEventListener('change', () =>{
-    dropdownParams(vivo, 'vivo');
-})
+if(possition){
+    possition.addEventListener('change', () => {
+        dropdownParams(possition, 'position');
+    })
+}
 
-possition.addEventListener('change', () => {
-    dropdownParams(possition, 'position');
-})
-
-leg.addEventListener('change', ()=> {
-    dropdownParams(leg, 'leg')
-})
-
+if(leg){
+    leg.addEventListener('change', ()=> {
+        dropdownParams(leg, 'leg')
+    })
+}
 
 const foreignAndJuniorURLS = link => {
-    // window.location.href
+
     urlSearchParams = new URLSearchParams(window.location.search);
+    const actualPath = window.location.pathname;
+
     let params = '?';
     for (let [param, value] of urlSearchParams.entries()){
-        value.split(',').forEach(element => {
-            params += `${param}=${element}&`
-        })
+        if (value){
+            value.split(',').forEach(element => {
+                params += `${param}=${element}&`
+            })
+        }
     }
-    let newUrl = link.trim() + params;
+
+    let newUrl = '';
+
+    newUrl = link.trim() + params;
+    console.log(newUrl)
     window.location.href = newUrl;
 }

@@ -289,7 +289,10 @@ class PlaysListViews(ComplexViews):
     def get(self, request, *args, **kwargs):
         from plays.models import PlaysConfig
 
-        redirect_league = request.user.profile.get_league_object()
+        try:
+            redirect_league = request.user.profile.get_league_object()
+        except AttributeError:
+            redirect_league = ''
 
         if redirect_league:
             return redirect("plays:summary", slug=redirect_league.slug)
