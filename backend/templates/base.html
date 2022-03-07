@@ -157,7 +157,22 @@ onReady(function() {
   function showToastMessage(body) {
       $('#micro-messages').empty();
       $('#micro-messages').append(
-          '<div class="alert alert-success micro-message" data-aos-anchor-placement="top-center" data-aos-delay="800" data-aos="slide-down" data-delay="2000" role="alert" style=" border-radius:16px; padding:4px 8px; font-size: .8rem;">' + body + '</div>');
+          '<div class="alert alert-success micro-message" ' +
+          'data-aos-delay="800" data-aos="slide-down" ' +
+          'data-delay="2000" role="alert" ' +
+          'style=" border-radius:16px; padding:4px 8px; font-size: .8rem; width: fit-content; margin: 0 auto">' + body + '</div>'
+      );
+      $(".micro-message").toast('show', function() {});
+  }
+
+  function showToastErrorMessage(body){
+      $('#micro-messages').empty();
+      $('#micro-messages').append(
+          '<div class="alert alert-warning micro-message" ' +
+          'data-aos-delay="800" data-aos="slide-down" ' +
+          'data-delay="2000" role="alert" ' +
+          'style=" border-radius:16px; padding:4px 8px; font-size: .8rem; width: fit-content; margin: 0 auto">' + body + '</div>'
+      );
       $(".micro-message").toast('show', function() {});
   }
 

@@ -98,7 +98,7 @@ function inquiryUpdate(event, idTick) {
         console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
     }
     });
-};
+}
 
 function approve_annoucement(event, slug) {
 
@@ -114,7 +114,11 @@ function approve_annoucement(event, slug) {
         success:function(json){         
             $('#requestButton').toggleClass("btn-requested")   
             modalHide('inquiryModal');
-            showToastMessage(json.message);
+            if(json.error){
+                showToastErrorMessage(json.message)
+            } else {
+                showToastMessage(json.message);
+            }
             window.setTimeout(function(){location.reload()}, 700);
      
         },
@@ -122,7 +126,7 @@ function approve_annoucement(event, slug) {
         console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
     }
     });
-};
+}
 
 function inquiry(event, slug, category) {
     $.ajax({

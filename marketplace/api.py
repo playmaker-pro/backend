@@ -57,18 +57,18 @@ def approve_announcement(request):
             ann = get_object_or_404(announcement_class, id=int(_id))
 
             ann_user = User.objects.get(id=ann.creator_id)
-            if ann_user.declared_role == 'T':
+            if ann_user.is_coach:
                 ann_club = ann_user.coachprofile.team_object.club.name
-            elif ann_user.declared_role == 'P':
+            elif ann_user.is_player:
                 ann_club = ann_user.playerprofile.team_object.club.name
-            elif ann_user.declared_role == 'C':
+            elif ann_user.is_club:
                 ann_club = ann_user.clubprofile.club_object.name
 
             if club_name == ann_club:
                 message = 'Nie możesz wchodzić w interakcję z użytkownikami, którzy są z Tobą w klubie'
                 response_data['message'] = message
+                response_data['error'] = True
                 return JsonResponse(response_data)
-
 
             #  ann.history.increment()  # @todo 1 coomit to  @ todo zwieszkyc ilosc odwiedzajcych ogloszeniee
 
@@ -79,6 +79,7 @@ def approve_announcement(request):
 
             message = 'Zgłoszenie wysłane'
             response_data['message'] = message
+            response_data['success'] = True
             return JsonResponse(response_data)
         # else:
         #     return JsonResponse({'message': 'Błąd'})
