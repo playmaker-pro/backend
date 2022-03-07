@@ -557,8 +557,6 @@ def request_link(context, user, showed_user):
     if not user.is_player and not user.is_coach and not user.is_club:
         return off
 
-    # breakpoint()
-
     if isinstance(showed_user, Team) or isinstance(showed_user, Club):
         if isinstance(showed_user, Team):
             # we do not want to allow to click on button when 
