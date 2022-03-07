@@ -557,6 +557,8 @@ def request_link(context, user, showed_user):
     if not user.is_player and not user.is_coach and not user.is_club:
         return off
 
+    # breakpoint()
+
     if isinstance(showed_user, Team) or isinstance(showed_user, Club):
         if isinstance(showed_user, Team):
             # we do not want to allow to click on button when 
@@ -569,20 +571,21 @@ def request_link(context, user, showed_user):
                 showed_user = showed_user.club.manager
         else:
             showed_user = showed_user.manager
-            logger.info(f'Appending new show_user {showed_user}')    
-    if is_same_club(user, showed_user):
-        return off
+            logger.info(f'Appending new show_user {showed_user}')
+    if showed_user:
+        if is_same_club(user, showed_user):
+            return off
+        if (user.is_coach or user.is_club) and showed_user.is_player:
+            button_text = 'Zaproś na testy'
+        elif user.is_player and (showed_user.is_coach or showed_user.is_club):
+            button_text = 'Zapytaj o testy'
+        elif user.is_club and showed_user.is_coach:
+            button_text = 'Zaproś na rozmowę'
+        elif user.is_coach and showed_user.is_club:
+            button_text = 'Zapytaj o rozmowę'
+        else:
+            return off
 
-    if (user.is_coach or user.is_club) and showed_user.is_player:
-        button_text = 'Zaproś na testy'
-    elif user.is_player and (showed_user.is_coach or showed_user.is_club):
-        button_text = 'Zapytaj o testy'
-    elif user.is_club and showed_user.is_coach:
-        button_text = 'Zaproś na rozmowę'
-    elif user.is_coach and showed_user.is_club:
-        button_text = 'Zapytaj o rozmowę'
-    else:
-        return off
     try:
         request = InquiryRequest.objects.get(sender=user, recipient=showed_user, status__in=InquiryRequest.ACTIVE_STATES)
         requested = True
@@ -599,6 +602,7 @@ def request_link(context, user, showed_user):
         button_text = 'Wysłano'
         attrs = 'disabled'
     else:
+        button_text = ''
         attrs = None
 
     return {
@@ -637,12 +641,17 @@ def send_request(context, user, showed_user, category='user'):
             showed_user = showed_user.manager
             logger.info(f'Appending new show_user {showed_user}')
 
+    if showed_user:
+        btn_param = showed_user.profile.slug
+    else:
+        btn_param = ''
+
     return {
         'show_user': showed_user,
         'button_attrs': attrs,
         'button_text': 'Tak, wyślij',
         'button_class': 'btn btn-success',
-        'button_action': {'onclick': True, 'name': 'inquiry', 'param': showed_user.profile.slug, 'param2': category},
+        'button_action': {'onclick': True, 'name': 'inquiry', 'param': btn_param, 'param2': category},
         'modals': context['modals'],
     }
 
