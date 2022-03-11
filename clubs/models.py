@@ -608,7 +608,7 @@ class Team(models.Model, MappingMixin):
         return self.gender.display_gender
 
     name = models.CharField(
-        _("Team name"), max_length=255, help_text="Displayed Name of team"
+        _("Nazwa drużyny"), max_length=255,
     )
 
     def get_permalink(self):
