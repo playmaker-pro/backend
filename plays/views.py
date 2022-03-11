@@ -14,6 +14,7 @@ from django.db.models.functions import Concat
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View, generic
+from django.core.exceptions import ObjectDoesNotExist
 from metrics.team import (
     LeagueAdvancedTableRawMetrics,
     LeagueChildrenSerializer,
@@ -134,7 +135,10 @@ class PlaysBaseView(ComplexViews):
         return options
 
     def get(self, request, slug, *args, **kwargs):
-        self.set_kwargs(kwargs, slug)
+        try:
+            self.set_kwargs(kwargs, slug)
+        except ObjectDoesNotExist:
+            pass
         return super().get(request, *args, **kwargs)
 
 
