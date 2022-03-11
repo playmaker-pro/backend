@@ -359,6 +359,7 @@ class AdaptSeasonPlayerDataToCirclePresentation:
 class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "profiles/show_default_profile.html"
     http_method_names = ["get", "post"]
+    modal_verification_force_loading = True
 
     @property
     def season_name(self):
@@ -544,6 +545,7 @@ class RequestRoleChange(LoginRequiredMixin, View):
 class EditAccountSettings(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "profiles/edit_account_settings.html"
     http_method_names = ["get", "post"]
+    modal_verification_force_loading = True
 
     def get(self, request, *args, **kwargs):
         user = self.request.user
@@ -579,6 +581,7 @@ class EditAccountSettings(LoginRequiredMixin, generic.TemplateView, mixins.ViewM
 class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "profiles/edit_profile.html"
     http_method_names = ["get", "post"]
+    modal_verification_force_loading = True
 
     def set_edit_profile_page_title(self):
         if self.user.is_coach or self.user.is_club:
@@ -630,7 +633,7 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
             )
 
             return super().get(request, profile_form=profile_form, user_basic_form=user_basic_form)
-
+        print('xxx>', profile_form)
         # Both forms are fine. Time to save!
         user_basic_form.save()
         profile = profile_form.save(commit=False)
@@ -668,6 +671,8 @@ class AccountMissingFirstLastName(LoginRequiredMixin, View):
 
 
 class AccountSettings(LoginRequiredMixin, View):
+    modal_verification_force_loading = True
+
     def get(self, request, *args, **kwargs):
         usersettings = request.user.notificationsetting
         toggled = not usersettings.weekly_report

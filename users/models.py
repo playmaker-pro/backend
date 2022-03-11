@@ -1,5 +1,4 @@
 from django.db import models
-from datetime import datetime
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
@@ -9,7 +8,6 @@ from notifications.mail import mail_user_waiting_for_verification
 from django.urls import reverse
 from roles import definitions
 from notifications.mail import verification_notification
-from django.conf import settings
 
 
 class CustomUserManager(BaseUserManager):
@@ -142,6 +140,7 @@ class User(AbstractUser, UserRoleMixin):
         example:
             extra['reason'] = 'User removed field1'
         '''
+        print(">>>>>>>>>>>>>>>>> verifyin...")
         if not silent:
             verification_notification(self)
 
@@ -177,11 +176,20 @@ class User(AbstractUser, UserRoleMixin):
         example:
             extra['reason'] = 'User removed field1'
         '''
+        print(">>>>>>>>>>>>>>>>> un-verifyin...")
         if extra:
             reason = extra.get('reason')
         else:
             reason = None
         mail_user_waiting_for_verification(self, extra_body=reason)
+
+    @property
+    def email_username(self):
+        return self.email.split('@')[0]
+
+    @property
+    def display_name(self):
+        return self.email_username
 
     @property
     def role(self):
@@ -261,18 +269,17 @@ class User(AbstractUser, UserRoleMixin):
         blank=True,
         help_text="Users declaration in which role he has. It is main paramter.")
 
+    # verification = models.OneToOneField(
+    #     "VerificationStatus",
+    #     on_delete=models.SET_NULL,
+    #     null=True,
+    #     blank=True
+    # )
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
     objects = CustomUserManager()
-
-    @property
-    def email_username(self):
-        return self.email.split('@')[0]
-
-    @property
-    def display_name(self):
-        return self.email_username
 
     def __str__(self):
         return f'{self.get_full_name()} ({self.get_declared_role_display()})'
@@ -293,3 +300,4 @@ class User(AbstractUser, UserRoleMixin):
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
+

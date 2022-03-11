@@ -39,23 +39,21 @@ class AccountVerification(LoginRequiredMixin, View):
         profile = user.profile
 
         if request.user.is_coach:
-            form = forms.CoachVerificationForm
+            verification_form = forms.CoachVerificationForm
         if request.user.is_club:
-            form = forms.ClubVerificationForm
+            verification_form = forms.ClubVerificationForm
         if request.user.is_player:
-            form = forms.PlayerVerificationForm
-        
-        if not form:
+            verification_form = forms.PlayerVerificationForm
+
+        if not verification_form:
             raise Http404
 
-        form = form(request.POST, instance=profile)
+        verification_form = verification_form(request.POST, instance=profile)
 
         data = {"success": False, "url": None, "form": None}
 
-        if form.is_valid():
-            form.save()
-            user.unverify()
-            user.save()
+        if verification_form.is_valid():
+            verification_form.save()
             messages.success(
                 request,
                 _("Przyjęto zgłoszenie weryfikacji konta."),
@@ -70,6 +68,5 @@ class AccountVerification(LoginRequiredMixin, View):
             # response_data = {} d
             # messages.success(request, _("Błędnie wprowadzone dane."), extra_tags='alter-success')
             # request.session['verification_form_errors'] = verification_form.errors
-            data["form"] = render_crispy_form(form)
+            data["form"] = render_crispy_form(verification_form)
             return JsonResponse(data)
-            # redirect('profiles:show_self')

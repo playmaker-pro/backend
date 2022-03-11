@@ -190,12 +190,16 @@ class PlayerProfileForm(BaseProfileForm):
         ('practice_distance', False),
         ('agent_name', False),
     )
+    # @todo(rkesik): that is not working - when saving it uses different date format.
+    # birth_date = forms.DateField(
+    #     input_formats=["%Y-%m-%d"],
+    #     widget=widgets.BootstrapDateTimePickerInput()
+    # )
 
     def setup_fields(self):
         for field, help_text in self.settings:
             self.fields[field].help_text = help_text
         self.fields['address'].label = 'Adres'
-    # birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

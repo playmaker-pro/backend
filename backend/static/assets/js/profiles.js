@@ -187,6 +187,8 @@ function setHasntClubDefaults() {
   $("#hint_id_team_club_league_voivodeship_ver").text("Jeśli wcześniej grałeś w rozgrywkach PZPN - wprowadź nazwę ostatniego klubu, poziom rozgrywkowy, region oraz sezon. My poszukamy Twoich statystyk historycznych.")
   $("#text_team_div").fadeIn()
 }
+
+
 function setVerificationDefaults() {
     if($('#id_has_team_1').is(':checked')) { 
       setHasClubDefaults()

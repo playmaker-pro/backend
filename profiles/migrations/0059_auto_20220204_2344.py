@@ -10,11 +10,13 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='coachprofile',
-            name='voivodeship',
-            field=models.CharField(blank=True, choices=[('Dolnośląskie', 'Dolnośląskie'), ('kujawsko-pomorskie', 'Kujawsko-Pomorskie'), ('lubelskie', 'Lubelskie'), ('lubuskie', 'Lubuskie'), ('łódzkie', 'Łódzkie'), ('małopolskie', 'Małopolskie'), ('mazowieckie', 'Mazowieckie'), ('opolskie', 'Opolskie'), ('podkarpackie', 'Podkarpackie'), ('podlaskie', 'Podlaskie'), ('pomorskie', 'Pomorskie'), ('śląskie', 'Śląskie'), ('świętokrzyskie', 'Świętokrzyskie'), ('warmińsko-mazurskie', 'Warmińsko-Mazurskie'), ('wielkopolskie', 'Wielkopolskie'), ('zachodniopomorskie', 'Zachodniopomorskie')], max_length=68, null=True, verbose_name='Województwo'),
-        ),
+        # @(rkesik): something bad happen and we are adding that field
+        # twice.
+        # migrations.AddField(
+        #     model_name='coachprofile',
+        #     name='voivodeship',
+        #     field=models.CharField(blank=True, choices=[('Dolnośląskie', 'Dolnośląskie'), ('kujawsko-pomorskie', 'Kujawsko-Pomorskie'), ('lubelskie', 'Lubelskie'), ('lubuskie', 'Lubuskie'), ('łódzkie', 'Łódzkie'), ('małopolskie', 'Małopolskie'), ('mazowieckie', 'Mazowieckie'), ('opolskie', 'Opolskie'), ('podkarpackie', 'Podkarpackie'), ('podlaskie', 'Podlaskie'), ('pomorskie', 'Pomorskie'), ('śląskie', 'Śląskie'), ('świętokrzyskie', 'Świętokrzyskie'), ('warmińsko-mazurskie', 'Warmińsko-Mazurskie'), ('wielkopolskie', 'Wielkopolskie'), ('zachodniopomorskie', 'Zachodniopomorskie')], max_length=68, null=True, verbose_name='Województwo'),
+        # ),
         migrations.AlterField(
             model_name='playerprofile',
             name='voivodeship',
