@@ -62,13 +62,15 @@ function get_add_announcement_form(event, id = null, announcement_type = null, a
           $('#add-ann-out').show();
           $('#add-ann-left').hide();
           $("#add-announcement-form-body").empty();
-        } else {
+        } else if(Object.keys(json).length > 0) {
           $('#add-ann-out').hide();
           $('#add-ann-left').show();
           $("#add-announcement-form-body").html(json.form);
-          $('#addAnnouncementModalLabel').html(json.modal.title);
-          $('#add-announcement-submit').html(json.modal.button.name);
-          $('#add-announcement-form-body select').addClass("selectpicker").selectpicker('refresh'); 
+          try{
+            $('#addAnnouncementModalLabel').html(json.modal.title);
+            $('#add-announcement-submit').html(json.modal.button.name);
+            $('#add-announcement-form-body select').addClass("selectpicker").selectpicker('refresh'); 
+          } catch(e){}
         }
       
       },

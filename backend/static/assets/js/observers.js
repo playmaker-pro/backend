@@ -98,7 +98,7 @@ function inquiryUpdate(event, idTick) {
         console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
     }
     });
-};
+}
 
 function approve_annoucement(event, slug) {
 
@@ -109,20 +109,24 @@ function approve_annoucement(event, slug) {
             csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
             id: $('#ann-numner').val(),
             announcement_type: $('#ann-type').val(),
-            action: 'post'
+            action: 'post',
         },
         success:function(json){         
             $('#requestButton').toggleClass("btn-requested")   
             modalHide('inquiryModal');
-            showToastMessage(json.message.body);
-            window.setTimeout(location.reload(), 500);
-            
+            if(json.error){
+                showToastErrorMessage(json.message)
+            } else {
+                showToastMessage(json.message);
+            }
+            window.setTimeout(function(){location.reload()}, 700);
+     
         },
         error : function(xhr, errmsg, err) {
         console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
     }
     });
-};
+}
 
 function inquiry(event, slug, category) {
     $.ajax({
