@@ -5,7 +5,6 @@ from datetime import date, datetime
 
 from clubs.models import Club, Team, League
 from django import template
-from django.shortcuts import get_object_or_404
 from django.conf import settings
 from django.urls import reverse
 from django.utils.html import conditional_escape
@@ -17,6 +16,7 @@ from django.utils.translation import (gettext_lazy, ngettext, ngettext_lazy,
 from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from profiles.utils import extract_video_id
+
 
 TEMPLATE_ACTION_SCRIPT = 'platform/buttons/action_script.html'
 TEMPLATE_ACTION_LINK = 'platform/buttons/action_link.html'
@@ -639,19 +639,20 @@ def request_link(context, user, showed_user):
         else:
             showed_user = showed_user.manager
             logger.info(f'Appending new show_user {showed_user}')
-    if is_same_club(user, showed_user):
-        return off
+    if showed_user:
+        if is_same_club(user, showed_user):
+            return off
+        if (user.is_coach or user.is_club) and showed_user.is_player:
+            button_text = 'Zaproś na testy'
+        elif user.is_player and (showed_user.is_coach or showed_user.is_club):
+            button_text = 'Zapytaj o testy'
+        elif user.is_club and showed_user.is_coach:
+            button_text = 'Zaproś na rozmowę'
+        elif user.is_coach and showed_user.is_club:
+            button_text = 'Zapytaj o rozmowę'
+        else:
+            return off
 
-    if (user.is_coach or user.is_club) and showed_user.is_player:
-        button_text = 'Zaproś na testy'
-    elif user.is_player and (showed_user.is_coach or showed_user.is_club):
-        button_text = 'Zapytaj o testy'
-    elif user.is_club and showed_user.is_coach:
-        button_text = 'Zaproś na rozmowę'
-    elif user.is_coach and showed_user.is_club:
-        button_text = 'Zapytaj o rozmowę'
-    else:
-        return off
     try:
         request = InquiryRequest.objects.get(sender=user, recipient=showed_user,
                                              status__in=InquiryRequest.ACTIVE_STATES)
@@ -669,6 +670,7 @@ def request_link(context, user, showed_user):
         button_text = 'Wysłano'
         attrs = 'disabled'
     else:
+        button_text = ''
         attrs = None
 
     return {
@@ -707,6 +709,11 @@ def send_request(context, user, showed_user, category='user'):
             showed_user = showed_user.manager
             logger.info(f'Appending new show_user {showed_user}')
 
+    if showed_user:
+        btn_param = showed_user.profile.slug
+    else:
+        btn_param = ''
+
     return {
         'show_user': showed_user,
         'button_attrs': attrs,
@@ -719,6 +726,7 @@ def send_request(context, user, showed_user, category='user'):
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def update_request_button(context, request, accept=False):
+
     button_text = 'Akceptuj' if accept else 'Odrzuć'
     param = f'{request.id}---1' if accept else f'{request.id}---0'
     button_class = 'btn-request btn-requested inquiryAnswerButtons'
@@ -797,6 +805,7 @@ def seemore_link(context, link, checks=True):
 
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def get_team_link(context, team, text=None, css_class=None, checks=True):
+
     css_class = css_class or DEFAULT_BUTTON_CSS_CLASS
     button = ActionButton(url=team.get_permalink, text=text, context=context, css_class=css_class,
                           icon=DEFAULT_TEAM_ICON, checks=checks)
@@ -850,6 +859,7 @@ def get_club_edit_link(context, club, text=None, css_class=None, checks=True):
 
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def get_club_link(context, object, text=None, css_class=None, checks=True):
+
     css_class = css_class or DEFAULT_BUTTON_CSS_CLASS
 
     return {

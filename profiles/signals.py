@@ -6,6 +6,7 @@ from django.dispatch import receiver
 from notifications.mail import mail_role_change_request, mail_admins_about_new_user
 from roles import definitions
 from . import models
+from .services import ProfileService
 
 
 logger = logging.getLogger(__name__)
@@ -50,45 +51,27 @@ def set_user_inquiry_plan(user):
         logger.info(f'User {user.id} plan created.')
 
 
-def set_and_create_user_profile(user):
-    model_map = {
-        definitions.PLAYER_SHORT: models.PlayerProfile,
-        definitions.COACH_SHORT: models.CoachProfile,
-        definitions.CLUB_SHORT: models.ClubProfile,
-        definitions.SCOUT_SHORT: models.ScoutProfile,
-        definitions.MANAGER_SHORT: models.ManagerProfile,
-        definitions.PARENT_SHORT: models.ParentProfile,
-        definitions.GUEST_SHORT: models.GuestProfile,
-    }
-    profile_model = model_map.get(user.role, models.GuestProfile)
-    
-    profile, _ = profile_model.objects.get_or_create(user=user)
-
-    # custom things for player accout
-    # we need to attach metrics to PLayer's profile
-    if user.is_player:
-        models.PlayerMetrics.objects.get_or_create(player=profile)
-    # profile.save()
-
-
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_profile_handler(sender, instance, created, **kwargs):
     '''Signal reponsible for creating and attaching proper profile to user during creation process.
 
     Based on declared role append proper role (profile)
     '''
+    service = ProfileService()
+
     if not created:  # this place is point where we decide if we want to update user's profile each time.
         # mechanism to prevent double db queries would be to detect if role has been requested to update.
         msgprefix = 'Updated'
-        set_and_create_user_profile(instance)
+        profile = service.set_and_create_user_profile(instance)
+        service.set_initial_verification(profile)
 
     if created:
-        logger.info(f'Sending email to admins about new user {instance.username}')
+        logger.debug(f'Sending email to admins about new user {instance.username}')
         mail_admins_about_new_user(instance)
-
         msgprefix = 'New'
 
-    set_and_create_user_profile(instance)
+    # @todo(rkesik): that second call of set_and_create_user_profile might be not needed.
+    service.set_and_create_user_profile(instance)
     set_user_inquiry_plan(instance)
 
     logger.info(f"{msgprefix} user profile for {instance} created with declared role {instance.declared_role}")
