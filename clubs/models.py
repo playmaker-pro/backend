@@ -318,7 +318,7 @@ class League(models.Model):
 
     @cached_property
     def get_childs(self):
-        return self.childs.all()
+        return self.childs.all().order_by('name')
 
     @cached_property
     def get_data_seasons(self):
