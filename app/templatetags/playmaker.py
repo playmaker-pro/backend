@@ -208,6 +208,16 @@ def addstr(arg1, arg2):
     return str(arg1) + str(arg2)
 
 
+@register.filter
+def get_club_pic(team_name):
+    club_pic = Team.objects.get(name=team_name).club.picture.url
+
+    if not club_pic:
+        club_pic = '/media/default_team.png'
+
+    return club_pic
+
+
 @register.inclusion_tag('inquiries/partials/name.html', takes_context=True)
 def inquiry_display_name(context, inquiry):
     user = context['user']

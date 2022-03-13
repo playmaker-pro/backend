@@ -228,48 +228,47 @@ span.text {
     {% include "plays/partials/_sidemenu_desktop.html" %}
   </section>
 
-<section id="plays" class="plays col-md-10" style="padding:0px 0px;">
-{% include 'plays/header_black.html' %}
-  <div class="container" data-aos="fade-up" style="margin-left:5px;">
-    <div class="row">
-        {% comment %} {% if page_obj.paginator.count == 0 %} {% endcomment %}
-        {% if objects|length == 0 %}
-            <div class="col-md-12 text-center">
-                {% include 'profiles/partials/_empty_data.html' with empty_text="Brak danych" %}
-            </div>
-
-        {% else %}
-            
-            {% if tab == 'table' %}
-                <div class="col col-md-7">
-                    {% include 'plays/_tab_table.html' with objects=objects %}
+    <section id="plays" class="plays col-md-10" style="padding:0px 0px;">
+    {% include 'plays/header_black.html' %}
+      <div class="container" data-aos="fade-up" style="margin-left:5px;">
+        <div class="row">
+            {% comment %} {% if page_obj.paginator.count == 0 %} {% endcomment %}
+            {% if objects|length == 0 %}
+                <div class="col-md-12 text-center">
+                    {% include 'profiles/partials/_empty_data.html' with empty_text="Brak danych" %}
                 </div>
-            {% elif tab == 'matches' %}
-                <div class="col-md-10">
-                    {% include 'plays/_tab_games.html' with objects=objects %}
-                </div>
-            {% elif tab == 'scores' %}
-                <div class="col-md-10">
-                    {% include 'plays/_tab_games.html' with objects=objects %}
-                </div>
-            {% elif tab == 'playmaker' %}
-                <div class="col-md-9">
-                    {% include 'plays/_tab_playmaker.html' with objects=objects %}
-                </div>
-
             {% else %}
-                <div class="col-md-10">
-                    {% include 'plays/_tab_summary.html' with objects=objects %}
-                </div>
+
+                {% if tab == 'table' %}
+                    <div class="col col-md-7">
+                        {% include 'plays/_tab_table.html' with objects=objects %}
+                    </div>
+                {% elif tab == 'matches' %}
+                    <div class="col-md-10">
+                        {% include 'plays/_tab_games.html' with objects=objects %}
+                    </div>
+                {% elif tab == 'scores' %}
+                    <div class="col-md-10">
+                        {% include 'plays/_tab_games.html' with objects=objects %}
+                    </div>
+                {% elif tab == 'playmaker' %}
+                    <div class="col-md-9">
+                        {% include 'plays/_tab_playmaker.html' with objects=objects %}
+                    </div>
+
+                {% else %}
+                    <div class="col-md-10">
+                        {% include 'plays/_tab_summary.html' with objects=objects %}
+                    </div>
+                {% endif %}
+
+                {% comment %} <div class='col-md-9'>
+                    {% include 'platform/partials/_pagination.html' %}
+                </div>        {% endcomment %}
             {% endif %}
-              
-            {% comment %} <div class='col-md-9'>
-                {% include 'platform/partials/_pagination.html' %}
-            </div>        {% endcomment %}
-        {% endif %}
-    </div>
-</div>
-</section>
+        </div>
+      </div>
+    </section>
 </div>
 {% endblock %}
 

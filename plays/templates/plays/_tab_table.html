@@ -1,5 +1,6 @@
 {% load i18n %}
 {% load thumbnail %}
+{% load playmaker %}
 
 <style>
 .view {
@@ -42,10 +43,12 @@
         <td class="d-table-cell pull-left sticky-col">
             <span class="table-position"> {{ obj.position }}. </span>
             {{ obj.date }}
-            <img width="20" class=" avatar rounded img-responsive" title="profile picture" src="{{ obj.pic }}">
+            <img width="20" class=" avatar rounded img-responsive" title="profile picture" src="{{ obj.team|get_club_pic }}">
             {% if obj.team_url %}
                 <a href="{{ obj.team_url }}"> {{ obj.team|truncatechars:25  }} </a>
-            {% else %}{{ obj.team|truncatechars:25  }} {% endif %}
+            {% else %}
+                {{ obj.team|truncatechars:25  }}
+            {% endif %}
         </td>
         <td class="d-table-cell tb-digit sticky-col">{{ obj.games }}</td>
         <td class="d-table-cell tb-digit sticky-col">{{ obj.wins }}</td>
@@ -85,10 +88,15 @@
             <td class="d-none d-md-table-cell pull-left">
                 <span class="table-position"> {{ obj.position }}. </span>
                 {{ obj.date }}
-                <img width="20" class=" avatar rounded img-responsive" title="profile picture" src="{{ obj.pic }}">
+                <img width="20" class=" avatar rounded img-responsive"
+                     title="profile picture" src="{{ obj.team|get_club_pic }}">
                 {% if obj.team_url %}
-                    <a href="{{ obj.team_url }}"> {{ obj.team|truncatechars:25  }} </a>
-                {% else %}{{ obj.team|truncatechars:25  }} {% endif %}
+                    <a href="{{ obj.team_url }}">
+                        {{ obj.team|truncatechars:25 }}
+                    </a>
+                {% else %}
+                    {{ obj.team|truncatechars:25 }}
+                {% endif %}
             </td>
          <td class="tb-digit">{{ obj.games }}</td>
          <td class="tb-digit">{{ obj.wins }}</td>
