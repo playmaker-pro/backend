@@ -14,8 +14,8 @@
         <div class="modal-body">
 
         </div>
-        <input id="ann-numner" name="ann-numner" type="hidden" value>
-        <input id="ann-type" name="ann-type" type="hidden" value>
+        <input id="ann-numner" name="ann-numner" type="hidden" value="{{ object.pk }}">
+        <input id="ann-type" name="ann-type" type="hidden" value="{{ object|classname }}">
         <div class="ann-number">
 
         </div>
