@@ -379,7 +379,9 @@ section.profile {
 .profile .profile-edit-form input[type="checkbox"]:checked{
   background-color: #e03a3c;
 }
-  .profile .profile-edit-form button[type="submit"], .profile .profile-edit-form input[type="button"]{
+  .profile .profile-edit-form button[type="submit"],
+  .profile .profile-edit-form input[type="button"],
+  .update-club-btn {
     background: #e03a3c;
     border: 0;
     padding: 10px 32px;

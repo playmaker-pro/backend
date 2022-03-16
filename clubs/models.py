@@ -113,7 +113,7 @@ class Club(models.Model, MappingMixin):
         return f"club_pics/%Y-%m-%d/{remove_polish_chars(filename)}"
 
     picture = models.ImageField(
-        _("Zdjęcie"), upload_to=get_file_path, null=True, blank=True
+        _("Herb klubu"), upload_to=get_file_path, null=True, blank=True
     )
 
     data_mapper_id = models.PositiveIntegerField(
