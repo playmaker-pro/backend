@@ -1,123 +1,224 @@
 from __future__ import unicode_literals
+from email.policy import default
 from django import forms
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, Div, Submit, HTML, Button, Row, Field, MultiField
-from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions, Tab, TabHolder, Alert
+from crispy_forms.layout import (
+    Layout,
+    Fieldset,
+    Div,
+    Submit,
+    HTML,
+    Button,
+    Row,
+    Field,
+    MultiField,
+)
+from crispy_forms.bootstrap import (
+    AppendedText,
+    PrependedText,
+    FormActions,
+    Tab,
+    TabHolder,
+    Alert,
+)
 from django.contrib.auth import get_user_model
 from profiles import models
 from django_countries.widgets import CountrySelectWidget
 from django.utils.translation import gettext_lazy as _
 from profiles import widgets
+from crispy_forms.bootstrap import InlineRadios
+from clubs.models import Team
+from profiles.services import ProfileVerificationService
+
+from dataclasses import dataclass
+import collections.abc
+from django.core.exceptions import ValidationError
 
 
 User = get_user_model()
 
 
-CSS_MANDATORY_FIELD_CLASS = 'mandatory'
+def update(d, u):
+    for k, v in u.items():
+        if isinstance(v, collections.abc.Mapping):
+            d[k] = update(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d
+
+
+CSS_MANDATORY_FIELD_CLASS = "mandatory"
+
+
+@dataclass
+class FieldConfig:
+    required = True
+    label = False
+    help_text = ""
+    placeholder = ""
 
 
 class VerificationForm(forms.ModelForm):
+    """
+    settings describes how filed will be build.
 
-    building_fields = None
+    """
+
+    settings = {
+        "team_club_league_voivodeship_ver": {
+            "placeholder": "np. WKS Wrocław, IV Liga, donlośląskie",
+            "required": False,
+        },
+        "team": {"required": False},
+        "has_team": {"initial": "tak mam klub", "required": False},
+        "team_not_found": {
+            "label": "zaznacz jeśli nie znalazłeś swojego klubu na liście",
+            "required": False,
+        },
+    }
+
+    custom_settings = None
+
+    building_fields = []
+
+    CHOICES = (("tak mam klub", "tak mam klub"), ("Nie mam klubu", "Nie mam klubu"))
+    team = forms.ModelChoiceField(
+        queryset=Team.objects.all(),
+        widget=forms.Select(attrs={"data-live-search": "true"}),
+    )
+    has_team = forms.ChoiceField(choices=CHOICES, widget=forms.RadioSelect)
+    team_not_found = forms.BooleanField()
+    # DEFAULT_FIELDS = ['team_not_found', 'team', 'has_team']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.default_field_settings = FieldConfig()
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.error_text_inline = True
         self.helper.labels_uppercase = True
-        self.helper.label_class = 'col-md-2 p-1'
-        self.helper.field_class = 'col-12 p-1'
+        self.helper.label_class = "col-md-2 p-1"
+        self.helper.field_class = "col-12 p-1"
         self.set_fields_rules()
+        self.helper.layout = self.build_layout()
 
-        self.helper.layout = self.build_verification_form()
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        # user = instance.user
+        service = ProfileVerificationService(instance)
+        data = self.cleaned_data
+
+        service.update_verification_data(data)
+        service.verify()
+
+        if commit:
+            instance.save()
+        return instance
+
+    def clean(self):
+        cleaned_data = super().clean()
+        team = cleaned_data.get("team")
+        text_club = cleaned_data.get("team_club_league_voivodeship_ver")
+
+        if not team and not text_club:
+            msg = "Wybierz klub z listy bądź wprowadź klub ręcznie"
+            self.add_error("team", msg)
+            self.add_error("team_club_league_voivodeship_ver", msg)
 
     def set_fields_rules(self):
-        self.fields['team_club_league_voivodeship_ver'].required = True
-        self.fields['team_club_league_voivodeship_ver'].label = False  # '<i class="icofont-ui-user-group"></i>'
-        self.fields['team_club_league_voivodeship_ver'].help_text = None
+        """Configure fields"""
+        settings = self.settings.copy()
+        if self.custom_settings:
+            update(settings, self.custom_settings)
+        for field_name, options in settings.items():
+            self.fields[field_name].required = options.get(
+                "required", self.default_field_settings.required
+            )
+            self.fields[field_name].label = options.get(
+                "label", self.default_field_settings.label
+            )
+            self.fields[field_name].help_text = options.get(
+                "help_text", self.default_field_settings.help_text
+            )
+            self.fields[field_name].widget.attrs["placeholder"] = options.get(
+                "placeholder", self.default_field_settings.placeholder
+            )
+            if initial := options.get("initial"):
+                self.fields[field_name].initial = initial
 
-    def build_verification_form(self):
-
-        fds = [''] + [Field(fn, warpper_class='row', placeholder=fp, css_class=fc) for fn, fp, fc in self.building_fields]
-        return Fieldset(*fds)
+    def build_layout(self):
+        common_fields = [""] + [
+            cfg.get("field_class", Field)(
+                fn, warpper_class="row", css_class=cfg.get("css_class")
+            )
+            for fn, cfg in self.building_fields
+        ]
+        return Layout(
+            Fieldset(*common_fields),
+            InlineRadios("has_team", id="team_choice"),
+            Div(Field("team"), Field("team_not_found"), css_id="select_team_div"),
+            Div(Field("team_club_league_voivodeship_ver"), css_id="text_team_div"),
+        )
 
 
 class ClubVerificationForm(VerificationForm):
+    custom_settings = {
+        "team_club_league_voivodeship_ver": {"help_text": "Który klub reprezentujesz"},
+        "club_role": {"help_text": "Jaka rolę pełnisz w klubie"},
+        "team": {"help_text": "Team którym zarządzasz"},
+    }
+
     building_fields = [
-
-        ('team_club_league_voivodeship_ver', 'np. MKS Zbyszkowo, we Wrocławiu', None),
-        ('club_role', None, None),
+        ("club_role", {}),
     ]
-
-    def set_fields_rules(self):
-        self.fields['club_role'].required = True
-        self.fields['club_role'].label = False
-        self.fields['club_role'].help_text = 'Jaka rolę pełnisz w klubie'
-
-        self.fields['team_club_league_voivodeship_ver'].help_text = 'Który klub reprezentujesz'
-        self.fields['team_club_league_voivodeship_ver'].required = True
-        self.fields['team_club_league_voivodeship_ver'].label = False  # '<i class="icofont-team-alt"></i>'
 
     class Meta:
         model = models.ClubProfile
-        fields = models.ClubProfile.VERIFICATION_FIELDS
+        fields = models.ClubProfile.VERIFICATION_FIELDS + ["team_club_league_voivodeship_ver"]
+        widgets = {
+            "team": forms.Select(
+                attrs={"class": "selectpickerxxx", "data-live-search": "true"}
+            ),
+        }
 
 
 class CoachVerificationForm(VerificationForm):
-    birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
-    building_fields = [
-        ('birth_date', '1998-09-24', None),
-        ('team_club_league_voivodeship_ver', 'np. MKS Zbyszkowo, we Wrocławiu', None),
-        ('country', None, None),
-    ]
-
-    def set_fields_rules(self):
-        self.fields['birth_date'].help_text = _('Data urodzenia')
-        self.fields['birth_date'].required = True
-        self.fields['birth_date'].label = False  # '<i class="icofont-birthday-cake"></i>'
-
-        self.fields['country'].required = True
-        self.fields['country'].label = False  # '<i class="icofont-map"></i>'
-        self.fields['country'].help_text = _('Kraj pochodzenia')
-
-        self.fields['team_club_league_voivodeship_ver'].help_text = 'Który klub reprezentujesz'
-        self.fields['team_club_league_voivodeship_ver'].required = True
-        self.fields['team_club_league_voivodeship_ver'].label = False  # '<i class="icofont-team-alt"></i>'
+    birth_date = forms.DateField(
+        input_formats=["%Y-%m-%d"], widget=widgets.BootstrapDateTimePickerInput()
+    )
+    custom_settings = {
+        "team_club_league_voivodeship_ver": {"help_text": "Który klub reprezentujesz"},
+        "birth_date": {"placeholder": "1998-09-24", "help_text": _("Data urodzenia")},
+        "country": {"help_text": _("Kraj pochodzenia")},
+    }
 
     class Meta:
         model = models.CoachProfile
-        widgets = {'country': CountrySelectWidget(layout='{widget}')}
-        fields = models.CoachProfile.VERIFICATION_FIELDS
+        widgets = {
+            "country": CountrySelectWidget(layout="{widget}"),
+        }
+        fields = models.CoachProfile.VERIFICATION_FIELDS + ["team_club_league_voivodeship_ver"]
 
 
 class PlayerVerificationForm(VerificationForm):
-    birth_date = forms.DateField(input_formats=['%Y-%m-%d'], widget=widgets.BootstrapDateTimePickerInput())
-    building_fields = [
-            ('birth_date', '1998-09-24', None),
-            ('position_raw', None, None),
-            ('team_club_league_voivodeship_ver', 'np. MKS Zbyszkowo, we Wrocławiu', None),
-            ('country', None, None),
-        ]
-
-    def set_fields_rules(self):
-        self.fields['position_raw'].help_text = 'Pozycja na której obecnie grasz'
-        self.fields['position_raw'].required = True
-        self.fields['position_raw'].label = False  # '<i class="icofont-field"></i>'
-
-        self.fields['birth_date'].help_text = _('Data urodzenia')
-        self.fields['birth_date'].required = True
-        self.fields['birth_date'].label = False  # '<i class="icofont-birthday-cake"></i>'
-
-        self.fields['country'].required = True
-        self.fields['country'].label = False  # '<i class="icofont-map"></i>'
-        self.fields['country'].help_text = _('Kraj pochodzenia')
-
-        self.fields['team_club_league_voivodeship_ver'].help_text = _('Klub w którym grasz / nie mam jeszcze klubu')
-        self.fields['team_club_league_voivodeship_ver'].required = True
-        self.fields['team_club_league_voivodeship_ver'].label = False  # '<i class="icofont-team-alt"></i>'
+    birth_date = forms.DateField(
+        input_formats=["%Y-%m-%d"], widget=widgets.BootstrapDateTimePickerInput()
+    )
+    custom_settings = {
+        "birth_date": {"placeholder": "1998-09-24", "help_text": _("Data urodzenia")},
+        "position_raw": {"help_text": _("Pozycja")},
+        "team": {"help_text": _("Wybierz z listy rozwijanej")},
+        "country": {"help_text": _("Kraj pochodzenia")},
+        "has_team": {},
+    }
+    building_fields = (("position_raw", {}), ("birth_date", {}), ("country", {}))
 
     class Meta:
         model = models.PlayerProfile
-        widgets = {'country': CountrySelectWidget(layout='{widget}')}
-        fields = models.PlayerProfile.VERIFICATION_FIELDS + ['position_raw']
+        widgets = {
+            "country": CountrySelectWidget(layout="{widget}"),
+            "team": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+        }
+        fields = models.PlayerProfile.VERIFICATION_FIELDS + ["position_raw", "team_club_league_voivodeship_ver"]

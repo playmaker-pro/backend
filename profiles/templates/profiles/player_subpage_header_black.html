@@ -12,7 +12,6 @@
                         <div class="d-md-none col-4 pull-right">
                             <img class="d-md-none avatar rounded-circle img-responsive" title="profile picture" src="{% thumbnail show_user.picture|default:'default_profile.png' 'profile_avatar_show_mobile' %}">
                         </div>
-
                         <div class="col-8">
                             <h1 class="d-none d-md-block acc-name" style="#1b1b1b;">{{ show_user.get_full_name.upper }}</h1>
                             
@@ -43,26 +42,15 @@
                     </div>
                 </div>
             </div>
-            
-            
             <div class="row ">
-            
                 <div class="d-flex align-items-center">
                     {% include 'profiles/partials/profile_nav_buttons/_nav_buttons_as_tab__role__.html' %}
                 </div>
-                <div class="d-flex align-items-center ">
+                <div class="d-flex align-items-center">
                     <span class="d-none d-md-block">
                     {% include 'profiles/partials/_profiles_buttons.html' %}
                     </span>
                 </div>
-               
-                
             </div>
-
-
         </div>
-
-
-
-
 </div>

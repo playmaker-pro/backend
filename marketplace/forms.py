@@ -86,11 +86,11 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         self.fields['year_to'].label = 'Rocznik do'  # '<i class="icofont-ui-user-group"></i>'
         self.fields['year_to'].help_text = False
 
-        self.fields['league'].required = True
+        self.fields['league'].widget = forms.HiddenInput()
         self.fields['league'].label = 'Poziom rozgrywkowy'  # '<i class="icofont-ui-user-group"></i>'
         self.fields['league'].help_text = False
 
-        self.fields['club'].required = True
+        self.fields['club'].widget = forms.HiddenInput()
         self.fields['club'].label = 'Klub'
         self.fields['club'].help_text = False
 
@@ -98,7 +98,7 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         self.fields['country'].label = 'Kraj'
         self.fields['country'].help_text = False
 
-        self.fields['voivodeship'].required = True
+        self.fields['voivodeship'].widget = forms.HiddenInput()
         self.fields['voivodeship'].label = 'Województwo'
         self.fields['voivodeship'].help_text = False
 
