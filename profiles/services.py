@@ -89,7 +89,7 @@ class ProfileVerificationService:
                 profile.club_object = club
                 profile.save()
 
-                for t in club.teams:
+                for t in club.teams.all():
                     t.visible = True
                     t.save()
 

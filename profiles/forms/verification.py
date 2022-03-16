@@ -205,10 +205,10 @@ class PlayerVerificationForm(VerificationForm):
         input_formats=["%Y-%m-%d"], widget=widgets.BootstrapDateTimePickerInput()
     )
     custom_settings = {
-        "birth_date": {"placeholder": "1998-09-24", "help_text": _("Kraj pochodzenia")},
-        "position_raw": {},
-        "team": {"help_text": "Wybierz z listy rozwijanej"},
-        "country": {"help_text": _("Data urodzenia")},
+        "birth_date": {"placeholder": "1998-09-24", "help_text": _("Data urodzenia")},
+        "position_raw": {"help_text": _("Pozycja")},
+        "team": {"help_text": _("Wybierz z listy rozwijanej")},
+        "country": {"help_text": _("Kraj pochodzenia")},
         "has_team": {},
     }
     building_fields = (("position_raw", {}), ("birth_date", {}), ("country", {}))

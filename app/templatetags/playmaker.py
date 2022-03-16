@@ -3,6 +3,8 @@ import json
 import django
 from datetime import date, datetime
 
+from django.core.exceptions import ObjectDoesNotExist
+
 from clubs.models import Club, Team, League
 from django import template
 from django.conf import settings
@@ -26,9 +28,7 @@ TEMPLATE_SEO_TAGS = 'platform/seo/tags.html'
 DEFAULT_BUTTON_CSS_CLASS = 'btn-pm btn-pm-sm'
 DEFAULT_TEAM_ICON = 'shield'
 
-
 logger = logging.getLogger(f'project.{__name__}')
-
 
 register = template.Library()
 
@@ -87,7 +87,7 @@ class PageSeoTags:
             return None
         if self.is_dynamic and self.dynamic_keywords is not None:
             for dtag in self.dynamic_keywords:
-                if '{' + dtag + '}' in tag_content:        
+                if '{' + dtag + '}' in tag_content:
                     return tag_content.format(**{dtag: self.dynamic_keys_values[dtag]})
         else:
             return tag_content
@@ -115,7 +115,8 @@ def seo_tags(context):
     data = generator.get_page_data(request.path, seo_data)
 
     if data is not None:
-        metas = ['robots', 'title', 'tags', 'description', 'fbapp', 'oglocale', 'ogtype', 'ogtitle', 'ogdescription', 'ogurl', 'ogsite_name']
+        metas = ['robots', 'title', 'tags', 'description', 'fbapp', 'oglocale', 'ogtype', 'ogtitle', 'ogdescription',
+                 'ogurl', 'ogsite_name']
         metas_data = {name: generator.get_seo_tag(name, data.get(name)) for name in metas}
         logger.debug(f'SEO metadata produced for page {request.path}: {metas_data}')
         return metas_data
@@ -189,7 +190,6 @@ def days_until(exp_date, arg=None):
     return "%s %s" % (abs(delta.days), day_str)  # , fa_str)
 
 
-
 @register.filter
 def convert_to_embeded(url):
     """concatenate arg1 & arg2"""
@@ -208,14 +208,42 @@ def addstr(arg1, arg2):
     return str(arg1) + str(arg2)
 
 
+@register.simple_tag
+def get_title(user, ann):
+    """ get announcement modal title """
+
+    if user.is_authenticated:
+        if user.is_player and ann.__class__.__name__ == 'ClubForPlayerAnnouncement':
+            return 'Czy na pewno chcesz wykonać tą akcję?'  # club for player
+        elif user.is_club and ann.__class__.__name__ == 'CoachForClubAnnouncement':
+            return 'Czy na pewno chcesz wykonać tą akcję?'  # coach lf club
+        elif user.is_club and ann.__class__.__name__ == 'PlayerForClubAnnouncement':
+            return 'Czy na pewno chcesz wykonać tą akcję?'  # player lf club
+        elif user.is_coach and ann.__class__.__name__ == "PlayerForClubAnnouncement":
+            return 'Czy na pewno chcesz wykonać tą akcję?'  # player lf club
+        elif user.is_coach and ann.__class__.__name__ == "ClubForCoachAnnouncement":
+            return 'Czy na pewno chcesz wykonać tą akcję?'  # player lf club
+
+        elif not user.is_player and not user.is_coach and not user.is_club:
+            return 'Nie masz uprawnień do wykonania tej akcji. ' \
+                   'W ogłoszeniach aktywnie mogą uczestniczyć użytkownicy o ' \
+                   'roli klub, trener i piłkarz.'
+        else:
+            return 'Błąd'
+    else:
+        return "Musisz być zarejestrowanym użytkownikiem by odpowiedzieć na to ogłoszenie"
+
+
 @register.filter
-def get_club_pic(team_name):
-    club_pic = Team.objects.get(name=team_name).club.picture.url
+def get_club_pic(team_name: str) -> str:
+    """ Get club pic url """
 
-    if not club_pic:
-        club_pic = '/media/default_team.png'
+    try:
+        club_pic = Team.objects.get(name=team_name)
+        return club_pic.club.picture.url
 
-    return club_pic
+    except ObjectDoesNotExist:
+        return '/media/default_team.png'
 
 
 @register.inclusion_tag('inquiries/partials/name.html', takes_context=True)
@@ -325,10 +353,11 @@ def is_profile_observed(user, target):
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def add_announcement(context):
-    '''
-    as a club user: 
+    """
+    as a club user:
         when club user do not have any club attached we should tirgger no_club_assigned modal
-    '''
+    """
+
     user = context['user']
 
     if not user.is_authenticated:
@@ -359,7 +388,7 @@ def add_announcement(context):
                 {
                     'flag': 'club_looking_for_player',
                     'friendly_name': 'Klub szuka zawodnika'
-                 },
+                },
                 {
                     'flag': 'club_looking_for_coach',
                     'friendly_name': 'Klub szuka trenera'
@@ -368,14 +397,23 @@ def add_announcement(context):
         }
     elif user.is_coach:
         context = context['modals']
+        multiple_options = True
+        if not user.profile.display_club:
+            multiple_options = False
+            context['no_club']['load'] = True
+
         return {
             'modals': context,
-            'multiple_options': True,
+            'multiple_options': multiple_options,
             'options': [
                 {'flag': 'coach_looking_for_player',
-                 'friendly_name': 'Trener szuka zawodnika'},
+                 'friendly_name': 'Trener szuka zawodnika',
+                 'no_club': True
+                 },
                 {'flag': 'coach_looking_for_club',
-                 'friendly_name': 'Trener szuka klubu'},
+                 'friendly_name': 'Trener szuka klubu',
+                 'no_club': False
+                 },
             ]
         }
 
@@ -457,25 +495,24 @@ def announcement_edit(context, ann):
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def announcement_response(context, ann):
+
     user = context['user']
+    button_text = ''
+    button_action = {'modal': True, 'name': f'{ann.__class__.__name__}{ann.id}'}
+
+    if ann.__class__.__name__ == "ClubForCoachAnnouncement":
+        button_text = 'Wyślij aplikację'
+    elif ann.__class__.__name__ == 'CoachForClubAnnouncement':
+        button_text = 'Zaproś na rozmowę'
+    elif ann.__class__.__name__ == 'PlayerForClubAnnouncement':
+        button_text = 'Zaproś na testy'
+    elif ann.__class__.__name__ == 'ClubForPlayerAnnouncement':
+        button_text = "Zgłaszam się na testy"
 
     if not user.is_authenticated:
-        return {'off': True}
-    if user.is_player:
-        button_text = 'Zgłaszam się na testy'
-    elif user.is_coach:
-        if ann.__class__.__name__ == "ClubForCoachAnnouncement":
-            button_text = 'Zgłaszam się'
-        else:
-            button_text = 'Zaproś na testy'
-    elif user.is_club:
-        if ann.__class__.__name__ == 'CoachForClubAnnouncement':
-            button_text = 'Zaproś na rozmowę'
-        elif ann.__class__.__name__ == 'PlayerForClubAnnouncement':
-            button_text = 'Zaproś na testy'
+        button_action = {'modal': True, 'name': 'registerModal'}
 
     button_class = 'btn-request'
-    # button_text = 'Zgłaszam się na testy'
     button_attrs = f'data-ann={ann.id} data-ann-type={ann.__class__.__name__}'
 
     if user in ann.subscribers.all():
@@ -487,9 +524,9 @@ def announcement_response(context, ann):
         'active_class': None,
         # 'button_script': 'inquiry',
         'button_id': 'approveAnnoucementButton',
-        'button_attrs':  button_attrs,
+        'button_attrs': button_attrs,
         'button_class': button_class,
-        'button_action': {'modal': True, 'name': 'approveAnnouncementModal'},
+        'button_action': button_action,
         'button_icon': '',
         'button_text': button_text,
         'modals': context['modals'],
@@ -497,13 +534,32 @@ def announcement_response(context, ann):
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
-def announcement_yes(context):
+def announcement_yes(context, obj, css_class=None):
+
     user = context['user']
 
-    if not user.is_authenticated:
-        return {'off': True}
-    # if not user.is_player:
-    #     return {'off': True}
+    if user.is_authenticated:
+        if user.is_player and obj.__class__.__name__ == 'ClubForPlayerAnnouncement':
+            title = 'TAK, wysyłam zgłoszenie' ''  # club lf player
+        elif user.is_coach and obj.__class__.__name__ == "ClubForCoachAnnouncement":
+            title = 'TAK, wysyłam zgłoszenie'  # club lf coach
+        elif user.is_coach and obj.__class__.__name__ == "PlayerForClubAnnouncement":
+            title = 'TAK, wysyłam zaproszenie'  # player lf club
+        elif user.is_club and obj.__class__.__name__ == "PlayerForClubAnnouncement":
+            title = 'TAK, wysyłam zaproszenie'  # player lf club
+        elif user.is_club and obj.__class__.__name__ == "CoachForClubAnnouncement":
+            title = 'TAK, wysyłam zaproszenie'  # coach lf club
+        else:
+            title = 'Twoja rola na platformie jest nieprawidłowa? ' \
+                    'Kliknij tutaj (ustawienia) ' \
+                    'i wyślij prośbę o zmianę.'
+    else:
+        title = 'Zarejestruj się tutaj (Rejestracja)'
+        return {
+            'link_href': '#',
+            'link_body': title,
+            'link_class': 'btn-request',
+        }
 
     return {
         'active_class': None,
@@ -513,8 +569,34 @@ def announcement_yes(context):
         'button_class': 'btn-request',
         'button_action': {'onclick': True, 'name': 'approve_annoucement', 'param': user.id},
         'button_icon': '',
-        'button_text': 'Tak, wysyłam zapytanie',
+        'button_text': title,
         'modals': context['modals'],
+    }
+
+
+@register.inclusion_tag(TEMPLATE_ACTION_LINK, takes_context=True)
+def other_roles_button(context, text=None, css_class=None):
+    user = context['user']
+
+    if not user.is_authenticated:
+
+        title = 'Zarejestruj się tutaj (Rejestracja)'
+        link = '/signup/'
+
+    elif not user.is_club and not user.is_player and not user.is_coach:
+
+        title = 'Twoja rola na platformie jest nieprawidłowa? ' \
+                'Kliknij tutaj (ustawienia) i wyślij prośbę o zmianę.”'
+        link = '/users/me/edit/settings/'
+
+    else:
+        link = '#'
+        title = 'Nieznany błąd, spróbuj ponownie później'
+
+    return {
+        'link_href': link,
+        'link_body': title,
+        'link_class': 'btn-request',
     }
 
 
@@ -595,7 +677,8 @@ def request_link(context, user, showed_user):
             return off
 
     try:
-        request = InquiryRequest.objects.get(sender=user, recipient=showed_user, status__in=InquiryRequest.ACTIVE_STATES)
+        request = InquiryRequest.objects.get(sender=user, recipient=showed_user,
+                                             status__in=InquiryRequest.ACTIVE_STATES)
         requested = True
     except InquiryRequest.DoesNotExist:
         requested = False
@@ -659,7 +742,7 @@ def send_request(context, user, showed_user, category='user'):
         'button_attrs': attrs,
         'button_text': 'Tak, wyślij',
         'button_class': 'btn btn-success',
-        'button_action': {'onclick': True, 'name': 'inquiry', 'param': btn_param, 'param2': category},
+        'button_action': {'onclick': True, 'name': 'inquiry', 'param': showed_user.profile.slug, 'param2': category},
         'modals': context['modals'],
     }
 
@@ -747,7 +830,8 @@ def seemore_link(context, link, checks=True):
 def get_team_link(context, team, text=None, css_class=None, checks=True):
 
     css_class = css_class or DEFAULT_BUTTON_CSS_CLASS
-    button = ActionButton(url=team.get_permalink, text=text, context=context, css_class=css_class, icon=DEFAULT_TEAM_ICON, checks=checks)
+    button = ActionButton(url=team.get_permalink, text=text, context=context, css_class=css_class,
+                          icon=DEFAULT_TEAM_ICON, checks=checks)
     return button.get_json()
 
 
@@ -827,7 +911,7 @@ def get_my_team_link(context, text=None, css_class=None):
         except Exception as e:
             logger.error(e)
             link = '#'
-            
+
     link_class = css_class or ''
     link_attrs = ''
 
