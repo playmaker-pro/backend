@@ -18,7 +18,6 @@ dynamic_keywords:
   - name
   - seo_object_name
 
-
 inherited:
   twitter_site: 'https://twitter.com/ProPlaymaker'
   oglocale: 'pl_PL'
@@ -35,6 +34,7 @@ default:
 
 /fantasy/:
   title: 'Fantasy | PlayMaker.pro'
+  tags: 'fantasy player'
   description: 'Zapraszaj znajomych piłkarzy i rywalizuj z nimi w grze Fantasy dla niższych lig'
   tags: 'fantasy, ranking piłkarzy'
   ogtitle: 'Fantasy | PlayMaker.pro'

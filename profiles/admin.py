@@ -119,6 +119,11 @@ def refresh(modeladmin, request, queryset):
 refresh.short_description = '0. Refresh( 1, 2,3,4 )'
 
 
+@admin.register(models.ProfileVerificationStatus)
+class ProfileVerificationStatusAdmin(admin.ModelAdmin):
+    pass
+
+  
 @admin.register(models.PlayerProfile)
 class PlayerProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
@@ -132,6 +137,7 @@ class PlayerProfileAdmin(ProfileAdminBase):
             'display_gender',
             'meta_updated',
             'meta_last',
+            linkify('verification'),
         )
 
     def meta_last(self, obj):

@@ -13,25 +13,33 @@
     {% include '_page_heading_with_picture.html'  with image=club.picture %}
 {% endblock content_header %}
 
-
 {% block content %}
-<section id="profile" class="profile">
-  <div class="container" data-aos="fade-up">
-        <div class="row">
-          <div class="col-md-12">
-               <form class='profile-edit-form' enctype="multipart/form-data" method="post">
-                  {% crispy club_form %}
-                <button type="submit" name="update" value="Update" id="submit-id-update">{% trans 'Aktualizuj klubowe dane' %}</button>
-               </form>
-         </div> 
+    <section id="profile" class="profile">
+        <link rel="stylesheet" href="{% static 'assets/css/profiles.css' %}">
+        <div class="container" data-aos="fade-up">
+            <div class="row">
+                <div class="col-md-12">
+                    <form class='profile-edit-form' enctype="multipart/form-data" method="post">
+                        {% crispy club_form %}
+                        <button class="update-club-btn"
+                                type="submit"
+                                name="update"
+                                value="Update"
+                                id="submit-id-update">
+                            {% trans 'Aktualizuj klubowe dane' %}
+                        </button>
+                   </form>
+                </div>
+            </div>
+            <div>
+            </div>
         </div>
-      <div>         
-      </div>
-    </div>
-  </div>
-</div>
-
-</section>
+    </section>
+    <style>
+        .custom-file-input:lang(en)~.custom-file-label::after{
+            content: 'Przegladaj' !important
+        }
+    </style>
 {% endblock content %}
 
 
