@@ -383,14 +383,23 @@ def add_announcement(context):
         }
     elif user.is_coach:
         context = context['modals']
+        multiple_options = True
+        if not user.profile.display_club:
+            multiple_options = False
+            context['no_club']['load'] = True
+
         return {
             'modals': context,
-            'multiple_options': True,
+            'multiple_options': multiple_options,
             'options': [
                 {'flag': 'coach_looking_for_player',
-                 'friendly_name': 'Trener szuka zawodnika'},
+                 'friendly_name': 'Trener szuka zawodnika',
+                 'no_club': True
+                 },
                 {'flag': 'coach_looking_for_club',
-                 'friendly_name': 'Trener szuka klubu'},
+                 'friendly_name': 'Trener szuka klubu',
+                 'no_club': False
+                 },
             ]
         }
 

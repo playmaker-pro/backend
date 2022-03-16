@@ -38,9 +38,7 @@ from marketplace.models import get_licence_choice_number
 
 User = get_user_model()
 
-
 logger = logging.getLogger(__name__)
-
 
 announcement_classname_mapper = {
     'ClubForPlayerAnnouncement': ClubForPlayerAnnouncement,
@@ -102,7 +100,6 @@ class AddAnnouncementView(LoginRequiredMixin, View):
         _id = request.GET.get('id')
         _announcement_type = request.GET.get('announcement_type')
         _action_name = request.GET.get('action_name')
-
         if user.announcementuserquota and user.announcementuserquota.left <= 0 and not _id:
             return JsonResponse(data)
         elif _id and _announcement_type:
@@ -116,30 +113,47 @@ class AddAnnouncementView(LoginRequiredMixin, View):
             else:
                 form = announcement_form_mapper.get(_announcement_type)(instance=ann)
                 if isinstance(form, (CoachForClubAnnouncementForm, PlayerForClubAnnouncementForm)):
-                    
                     form.fields['target_league'].queryset = League.objects.is_top_parent()
         else:
             if _action_name == "coach_looking_for_player":
                 if user.profile.club_object:
+
+                    profile = user.profile.team_object
+                    club = profile.club if profile else ''
+                    league = profile.league if profile else ''
+                    voivodeship = profile.club.voivodeship if profile else ''
+                    seniority = profile.seniority if profile else ''
+                    gender = profile.gender if profile else ''
+
                     form = ClubForPlayerAnnouncementForm(initial={
-                        'club': user.profile.team_object.club,
-                        'league': user.profile.team_object.league,
-                        'voivodeship': user.profile.team_object.club.voivodeship,
-                        'seniority': user.profile.team_object.seniority,
-                        'gender': user.profile.team_object.gender,
+                        'club': club,
+                        'league': league,
+                        'voivodeship': voivodeship,
+                        'seniority': seniority,
+                        'gender': gender,
                     })
-                    form.fields['club'].queryset = Club.objects.filter(name=user.profile.team_object.club.name)
-                    form.fields['league'].queryset = League.objects.is_top_parent().filter(name=user.profile.team_object.league.name)
+
+                    if profile:
+                        form.fields['club'].queryset = Club.objects.filter(
+                            name=profile.club.name
+                        )
+                        form.fields['league'].queryset = League.objects.is_top_parent().filter(
+                            name=profile.league.name
+                        )
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
                     form.fields['league'].queryset = League.objects.is_top_parent()
 
             elif _action_name == "coach_looking_for_club":
                 league = user.profile.team_object.league if user.profile.team_object else None
+                if league:
+                    voivodeship = user.profile.team_object.club.voivodeship
+                else:
+                    voivodeship = ''
                 form = CoachForClubAnnouncementForm(
                     initial={
                         'lic_type': user.profile.licence,
-                        'voivodeship': user.profile.team_object.club.voivodeship,
+                        'voivodeship': voivodeship,
                         'address': user.profile.address,
                         'practice_distance': user.profile.practice_distance,
                         'league': league,
@@ -166,7 +180,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                         'voivodeship': user.profile.club_object.voivodeship
                     })
                     form.fields['club'].queryset = Club.objects.filter(name=user.profile.club_object.name)
-                    
+
                 else:
                     form = ClubForCoachAnnouncementForm(initial={})
                 form.fields['league'].queryset = League.objects.is_top_parent()
@@ -184,12 +198,13 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                         'league': league
                     })
                 form.fields['target_league'].queryset = League.objects.is_top_parent()
-    
+
             else:
                 return JsonResponse({})
 
         form_raw_data = render_crispy_form(form)
-        form_raw_data = form_raw_data.replace('<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>', '')
+        form_raw_data = form_raw_data.replace(
+            '<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>', '')
         data['form'] = form_raw_data
         return JsonResponse(data)
 
@@ -217,7 +232,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
         if _id and _announcement_type:
             _announcement_class = announcement_classname_mapper.get(_announcement_type)
             _form_class = announcement_form_mapper.get(_announcement_type)
-            new_address = request.POST["address"]  
+            new_address = request.POST["address"]
             # do not know yet why but we need to pass post value to updated object.
             a = _announcement_class.objects.get(id=int(_id))
             form = _form_class(request.POST, instance=a)
@@ -285,7 +300,8 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 return JsonResponse(data)
 
 
-class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixins.ViewFilterMixin, AnnouncementFilterMixn):
+class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixins.ViewFilterMixin,
+                            AnnouncementFilterMixn):
     template_name = "marketplace/base.html"
     http_method_names = ["get"]
     paginate_limit = 9
@@ -345,7 +361,7 @@ class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, 
         kwargs['type'] = self.table_type
         kwargs['filters'] = self.get_filters_values()
         self.prepare_kwargs(kwargs)
-        
+
         kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
         kwargs['modals']['register']['load'] = False
 

@@ -3,19 +3,46 @@
   {% with multiple_options=multiple_options button_attrs=button_attrs button_class=button_class button_text=button_text button_icon=button_icon button_script=button_script button_id=button_id button_text_prefix=button_text_prefix button_text_suffix=button_text_suffix  %}
     {% if multiple_options %}
             <div class="dropdown">
-                <button class="btn-request dropdown-toggle" type="button" id="addAnnoucementButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="icofont-plus"></i> Dodaj ogłoszenie</button>
+                <button class="btn-request dropdown-toggle"
+                        type="button" id="addAnnoucementButton"
+                        data-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false"><i class="icofont-plus"></i> Dodaj ogłoszenie
+                </button>
                 <div class="dropdown-menu" aria-labelledby="addAnnoucementButton">
                     {% for option in options %}
                         <a class="dropdown-item"
-                           href="{% if modals.no_club.load %}#noClubModal{% else %}#addAnnouncementModal"
-                           onclick="get_add_announcement_form(event, '', '', '{{ option.flag }}')"{% endif %}
-                           ZZdata-toggle="modal"
+                           href="{% if modals.no_club.load %}#noClubModal{% else %}#addAnnouncementModal{% endif %}"
+                           onclick="get_add_announcement_form(event, '', '', '{{ option.flag }}')"
+                           data-toggle="modal"
                            data-target="{% if modals.no_club.load %}#noClubModal{% else %}#addAnnouncementModal{% endif %}"
                            data-ann-action-name="{{ option.flag }}">{{ option.friendly_name }}
                         </a>
                     {% endfor %}
                 </div>
             </div>
+
+    {% elif not multiple_options %}
+        <div class="dropdown">
+            <button class="btn-request dropdown-toggle"
+                    type="button"
+                    id="addAnnoucementButton"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"><i class="icofont-plus"></i> Dodaj ogłoszenie
+            </button>
+            <div class="dropdown-menu" aria-labelledby="addAnnoucementButton">
+                {% for option in options %}
+                    <a class="dropdown-item"
+                       href="{% if option.no_club %}#noClubModal{% else %}#addAnnouncementModal{% endif %}"
+                       onclick="get_add_announcement_form(event, '', '', '{{ option.flag }}')"
+                       data-toggle="modal"
+                       data-target="{% if option.no_club %}#noClubModal{% else %}#addAnnouncementModal{% endif %}"
+                       data-ann-action-name="{{ option.flag }}">{{ option.friendly_name }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
 
     {% elif modals.register.load %}
         <button
