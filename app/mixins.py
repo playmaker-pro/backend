@@ -268,6 +268,7 @@ class ViewFilterMixin:
 
 
 class ViewModalLoadingMixin:
+    modal_verification_force_loading = False
 
     def modal_activity(self, user, register_auto=None, verification_auto=None):
         modals = {
@@ -342,6 +343,10 @@ class ViewModalLoadingMixin:
                 'async': False
             }
         }
+        # Load custom settigs, if class attribute is being set to Ture
+        if getattr(self, 'modal_verification_force_loading'):
+            modals['verification']['load'] = True
+
         # Loading account specific modals (mandatory)
         if not user.is_authenticated:
             modals['register']['load'] = True
@@ -382,7 +387,6 @@ class ViewModalLoadingMixin:
             #     modals['add_announcement_player_for_club']['load'] = True
             if user.userinquiry.counter == user.userinquiry.limit:
                 modals['action_limit_exceeded']['load'] = True
-
         return modals
 
 

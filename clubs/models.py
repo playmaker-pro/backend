@@ -318,7 +318,7 @@ class League(models.Model):
 
     @cached_property
     def get_childs(self):
-        return self.childs.all()
+        return self.childs.all().order_by('name')
 
     @cached_property
     def get_data_seasons(self):
@@ -668,5 +668,5 @@ class Team(models.Model, MappingMixin):
     )
 
     def __str__(self):
-        league_name = self.display_league
-        return f"{self.name} ({league_name})"
+        region_name = self.league.region.name if self.league and self.league.region else ''
+        return f"{self.name}, ({self.display_league_top_parent}, {region_name})"
