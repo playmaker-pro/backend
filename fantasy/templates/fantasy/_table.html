@@ -64,7 +64,7 @@
                 </a>
             </td>
             <td class="d-none d-md-table-cell">
-                <a href="{{ object.player.profile.team_object.league.highest_parent.get_permalink }}">
+                <a href="{{ object.player.profile.get_league_permalink }}">
                    {{ object.player.profile.display_league_top_parent|default:'' }}
                 </a>
             </td>
