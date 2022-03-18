@@ -1,16 +1,14 @@
-import uuid
+from functools import cached_property, lru_cache
 from typing import List
-from functools import cached_property, lru_cache, singledispatch
-from django.db import models
-from django.template.defaultfilters import truncatechars
-from django.utils.translation import gettext_lazy as _
-from django.conf import settings
-from django.urls import reverse
-from django_countries.fields import CountryField
-from phonenumber_field.modelfields import PhoneNumberField
+
 from address.models import AddressField
-from profiles.utils import unique_slugify, conver_vivo_for_api, supress_exception
+from django.conf import settings
+from django.db import models
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
+from profiles.utils import conver_vivo_for_api, supress_exception, unique_slugify
+
 from .managers import LeagueManager
 
 
@@ -69,13 +67,14 @@ class Club(models.Model, MappingMixin):
         help_text='Mapping names comma separated. eg "name X", "name Xi"',
     )
 
-    manager = models.ForeignKey(
+    manager = models.OneToOneField(
         settings.AUTH_USER_MODEL,
-        related_name="managed_club",
         on_delete=models.SET_NULL,
+        related_name="managed_club",
         null=True,
         blank=True,
     )
+
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name="club_managers", blank=True
     )
@@ -113,7 +112,7 @@ class Club(models.Model, MappingMixin):
         return f"club_pics/%Y-%m-%d/{remove_polish_chars(filename)}"
 
     picture = models.ImageField(
-        _("Zdjęcie"), upload_to=get_file_path, null=True, blank=True
+        _("Herb klubu"), upload_to=get_file_path, null=True, blank=True
     )
 
     data_mapper_id = models.PositiveIntegerField(
@@ -213,7 +212,10 @@ class LeagueHistory(models.Model):
             self.is_matches_data = True
 
     def get_admin_url(self):
-        return reverse(f"admin:{self._meta.app_label}_{self._meta.model_name}_change", args=(self.id,))
+        return reverse(
+            f"admin:{self._meta.app_label}_{self._meta.model_name}_change",
+            args=(self.id,),
+        )
 
     def save(self, *args, **kwargs):
         self.check_and_set_if_data_exists()
@@ -259,35 +261,48 @@ class SectionGrouping(models.Model):
 class League(models.Model):
     name = models.CharField(max_length=355, help_text="eg. Ekstraklasa")
     virtual = models.BooleanField(default=False)
-    visible = models.BooleanField(default=False, help_text="Determine if that league will be visible")
+    visible = models.BooleanField(
+        default=False, help_text="Determine if that league will be visible"
+    )
 
     data_seasons = models.ManyToManyField("Season", blank=True)
 
-    section = models.ForeignKey("SectionGrouping", on_delete=models.SET_NULL, null=True, blank=True)
+    section = models.ForeignKey(
+        "SectionGrouping", on_delete=models.SET_NULL, null=True, blank=True
+    )
     order = models.IntegerField(default=0)
 
-    group = models.ForeignKey("LeagueGroup",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True)
-    region = models.ForeignKey("Region", on_delete=models.SET_NULL, null=True, blank=True)
+    group = models.ForeignKey(
+        "LeagueGroup", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    region = models.ForeignKey(
+        "Region", on_delete=models.SET_NULL, null=True, blank=True
+    )
     city_name = models.CharField(max_length=255, null=True, default=None, blank=True)
 
     code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
-    parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs")
-    highest_parent = models.ForeignKey("self", on_delete=models.SET_NULL, blank=True, null=True)
+    parent = models.ForeignKey(
+        "self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs"
+    )
+    highest_parent = models.ForeignKey(
+        "self", on_delete=models.SET_NULL, blank=True, null=True
+    )
     country = CountryField(
         _("Kraj"),
         default="PL",
         null=True,
         blank_label=_("Wybierz kraj"),
     )
-    gender = models.ForeignKey('Gender', default=None, on_delete=models.SET_NULL, null=True, blank=True)
+    gender = models.ForeignKey(
+        "Gender", default=None, on_delete=models.SET_NULL, null=True, blank=True
+    )
     seniority = models.ForeignKey(
-        'Seniority', default=None, on_delete=models.SET_NULL, null=True, blank=True
+        "Seniority", default=None, on_delete=models.SET_NULL, null=True, blank=True
     )
 
-    name_junior = models.ForeignKey("JuniorLeague", on_delete=models.SET_NULL, null=True, blank=True, default=None)
+    name_junior = models.ForeignKey(
+        "JuniorLeague", on_delete=models.SET_NULL, null=True, blank=True, default=None
+    )
 
     rw = models.BooleanField(default=False, help_text="Spring round (runda wiosenna)")
     # auto calculated fields & flags
@@ -318,7 +333,7 @@ class League(models.Model):
 
     @cached_property
     def get_childs(self):
-        return self.childs.all()
+        return self.childs.all().order_by("name")
 
     @cached_property
     def get_data_seasons(self):
@@ -326,12 +341,12 @@ class League(models.Model):
 
     @cached_property
     def is_parent(self):
-        """ If has no parent and have children"""
+        """If has no parent and have children"""
         return self.parent is None and self.get_childs.count() != 0
 
     @cached_property
     def standalone(self):
-        """ If has no parent and represents own data"""
+        """If has no parent and represents own data"""
         return self.parent is None and self.childs.all().count() == 0
 
     @cached_property
@@ -391,7 +406,7 @@ class League(models.Model):
         return reverse("plays:summary", kwargs={"slug": self.slug})
 
     def get_slug_value(self):
-        return self.get_upper_parent_names(spliter='--')
+        return self.get_upper_parent_names(spliter="--")
 
     def save(self, *args, **kwargs):
         # is a virtual parent?
@@ -401,7 +416,7 @@ class League(models.Model):
             # virtual set to true it means that this is an virtual group
             # and do not contains any league data.
             self.virtual = True
-        
+
         # We set a new/modify parent attribute
         # so we need to trigger our parent object
         # to recalclate data and set a proper flag.
@@ -414,25 +429,27 @@ class League(models.Model):
         self.search_tokens = self.build_search_tokens()
         super().save(*args, **kwargs)
 
-    def get_upper_parent_names(self, spliter=', '):
+    def get_upper_parent_names(self, spliter=", "):
         name = self.name
         if self.parent:
-            name = f"{self.parent.get_upper_parent_names(spliter=spliter)}{spliter}{name}"
+            name = (
+                f"{self.parent.get_upper_parent_names(spliter=spliter)}{spliter}{name}"
+            )
         return name
 
     def set_league_season(self, seasons: List[Season]):
         """Mechanism to set and propagate changes in data seasons."""
         self.data_seasons.add(*seasons)
         if self.parent:
-            self.parent.set_league_season(list(self.data_seasons.all()))        
+            self.parent.set_league_season(list(self.data_seasons.all()))
 
     def build_search_tokens(self):
         """Creates string which will be used to text based searches
-           `name  region city_name group.name`
+        `name  region city_name group.name`
         """
-        group_name = self.group.name if self.group else ''
+        group_name = self.group.name if self.group else ""
         fields = [self.name, self.zpn, self.city_name, group_name]
-        return ' '.join(filter(None, fields))
+        return " ".join(filter(None, fields))
 
     def __str__(self):
         return f"{self.name}"
@@ -584,14 +601,14 @@ class Team(models.Model, MappingMixin):
     @property
     @supress_exception
     def display_league_region_and_group_name(self):
-        region = self.league.region if self.league and self.league.region else ''
-        return f'{self.league.display_league_group_name}, {region}'
+        region = self.league.region if self.league and self.league.region else ""
+        return f"{self.league.display_league_group_name}, {region}"
 
     @property
     @supress_exception
     def display_league_voivodeship(self):
         return self.league.display_league_voivodeship
-    
+
     @property
     @supress_exception
     def get_league_permalink(self):
@@ -668,5 +685,7 @@ class Team(models.Model, MappingMixin):
     )
 
     def __str__(self):
-        league_name = self.display_league
-        return f"{self.name} ({league_name})"
+        region_name = (
+            self.league.region.name if self.league and self.league.region else ""
+        )
+        return f"{self.name}, ({self.display_league_top_parent}, {region_name})"

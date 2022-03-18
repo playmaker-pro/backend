@@ -1,0 +1,33 @@
+{% load static %}
+
+{% comment %} <!-- TODO  waiting for the release v1.5--> 
+<li class="nav-item">
+    <a class="nav-link d-lg-flex d-md-block view-logo pt-0" href="">
+        <img src="{% static 'assets/img/navbar/search.png' %}" alt="">
+    </a>
+</li>
+{% endcomment %}
+
+<li class="nav-item">
+    <a class="nav-link d-lg-flex d-md-block view-logo pt-0" href="{% url 'profiles:my_observers'%}">
+        <img src="{% static 'assets/img/navbar/view.png' %}" alt="">
+    </a>
+</li>
+
+{% comment %} <!-- TODO  waiting for the release v1.5--> 
+<li class="nav-item">
+    <a class="nav-link d-lg-flex d-md-block view-logo pt-0" href="">
+        <img src="{% static 'assets/img/navbar/notification.png' %}" alt="">
+    </a>
+</li>
+{% endcomment %}
+
+{% if user.is_club or user.is_player or user.is_coach %}
+    <li class="nav-item">
+        <a class="nav-link d-lg-flex d-md-block email-logo pt-0" href="{% url 'profiles:my_requests'%}">
+            <img src="{% static 'assets/img/navbar/email.png' %}" alt="">
+            {% include 'platform/navigation/_nav_badge_requests.html' %}
+        </a>
+    </li>
+{% endif %}
+

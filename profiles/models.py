@@ -1,6 +1,7 @@
 
 from collections import Counter
 from datetime import datetime
+from random import choices
 from stats import adapters
 from address.models import AddressField
 from django.conf import settings
@@ -21,6 +22,7 @@ from .utils import conver_vivo_for_api, supress_exception
 from clubs import models as clubs_models
 from .mixins import TeamObjectsDisplayMixin
 import logging
+from .erros import VerificationCompletionFieldsWrongSetup
 
 
 User = get_user_model()
@@ -52,9 +54,6 @@ VOIVODESHIP_CHOICE = (
         ('Wielkopolskie', 'Wielkopolskie'),
         ('Zachodniopomorskie', 'Zachodniopomorskie')
     )
-
-class VerificationCompletionFieldsWrongSetup(Exception):
-    pass
 
 
 class RoleChangeRequest(models.Model):
@@ -177,7 +176,7 @@ class BaseProfile(models.Model, EventLogMixin):
     OPTIONAL_FIELDS = []  # this is definition of profile fields which will be threaded optional
 
     data_mapper_changed = None
-
+    verification = models.OneToOneField('ProfileVerificationStatus', on_delete=models.SET_NULL, null=True, blank=True)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True)
     history = models.OneToOneField(ProfileVisitHistory, on_delete=models.CASCADE, null=True, blank=True)
     data_mapper_id = models.PositiveIntegerField(null=True, blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.')
@@ -382,7 +381,16 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     """Player specific profile"""
 
     PROFILE_TYPE = definitions.PROFILE_TYPE_PLAYER
-    VERIFICATION_FIELDS = ['country', 'birth_date', 'team_club_league_voivodeship_ver']
+    VERIFICATION_FIELDS = [
+        'country',
+        'birth_date',
+    ]
+    # @(rkesik): since PM-87 we always verify player
+    #    'team_club_league_voivodeship_ver',
+    # ]
+    #     'team_object'
+    # ]
+
     COMPLETE_FIELDS = [
        'height',
        'weight',
@@ -888,7 +896,7 @@ class ClubProfile(BaseProfile):
     )
 
     VERIFICATION_FIELDS = [
-        'team_club_league_voivodeship_ver',
+        # 'team_club_league_voivodeship_ver',
         'club_role',
     ]
 
@@ -932,7 +940,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     DATA_KEY_GAMES = "games"
     DATA_KET_CARRIER = "carrier"
 
-    COMPLETE_FIELDS = ['phone']
+    COMPLETE_FIELDS = ['phone',]
 
     CLUB_ROLE = (
         (1, 'Trener'),
@@ -946,7 +954,8 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     VERIFICATION_FIELDS = [
         'country',
         'birth_date',
-        'team_club_league_voivodeship_ver']
+        'licence',
+    ] # 'team_club_league_voivodeship_ver']
 
     OPTIONAL_FIELDS = ['licence']
 
@@ -977,7 +986,8 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         _("Licencja"),
         choices=LICENCE_CHOICES,
         blank=True,
-        null=True)
+        null=True,
+    )
 
     team_club_league_voivodeship_ver = models.CharField(
         _('Województwo3'),
@@ -1041,8 +1051,6 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         choices=VOIVODESHIP_CHOICE
         )
-
-    # club & coach specific attrs.
 
     club_role = models.IntegerField(
         choices=CLUB_ROLE,
@@ -1273,3 +1281,22 @@ class ScoutProfile(BaseProfile):
     class Meta:
         verbose_name = "Scout Profile"
         verbose_name_plural = "Scouts Profiles"
+
+
+class ProfileVerificationStatus(models.Model):
+    set_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='set_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=255)
+    previous_status = models.CharField(max_length=255, null=True, blank=True)
+    team = models.ForeignKey('clubs.Team', on_delete=models.SET_NULL, null=True, blank=True, related_name='team')
+    previous_team = models.ForeignKey('clubs.Team', on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_team')
+    has_team = models.BooleanField(null=True, blank=True)
+    team_not_found = models.BooleanField(null=True, blank=True)
+
+    @classmethod
+    def create_initial(cls, for_user: User):
+        return cls.objects.create(
+            status=for_user.state,
+            set_by=User.get_system_user()
+        )

@@ -22,6 +22,6 @@ User = get_user_model()
 
 
 @receiver(pre_save, sender=settings.AUTH_USER_MODEL)
-def update_username_from_email(sender, instance, **kwargs):
+def pre_save_user(sender, instance, **kwargs):
     # This is mechanism to overwrite username for each account. s
     instance.username = instance.email

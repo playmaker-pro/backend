@@ -36,12 +36,16 @@ class PlayerMapper:
 class TeamMapper:
     @classmethod
     @lru_cache()
-    def get_team_obj(cls, team_name, league_obj) -> CTeam:
+    def get_team_obj(cls, team_name: str, league_obj: CLeague) -> CTeam:
         try:
             team_obj = CTeam.objects.get(
                 league=league_obj, mapping__icontains=team_name.lower()
             )
             return team_obj
+        except CTeam.MultipleObjectsReturned:
+            msg = f"input data: team_name={team_name} league_obj={league_obj} league_obj.id={league_obj.id} query used={team_name.lower()}"
+            logger.debug(msg)
+            print(msg)
         except CTeam.DoesNotExist:
             return None
 
