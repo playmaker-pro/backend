@@ -46,7 +46,8 @@ def year_choices():
 
 class ClubForPlayerAnnouncementForm(forms.ModelForm):
     building_fields = [
-        
+
+        ('Teams', "Dużyna", None, {}),
         ('country', 'Kraj', None, {}),
         ('club', 'Klub', None, {}),
         ('league', 'Poziom rozgrywkowy', None, {}),
@@ -72,11 +73,15 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         self.helper.wrapper_class = 'row'
 
         self.fields['year_from'] = forms.ChoiceField(choices=year_choices())
+        self.fields['Teams'] = forms.ChoiceField(choices=[])
         self.fields['year_to'] = forms.ChoiceField(choices=year_choices())
         self.set_fields_rules()
         self.helper.layout = self.build_verification_form()
 
     def set_fields_rules(self):
+
+        self.fields['Teams'].required = True
+        self.fields['Teams'].label = "Drużyna"
 
         self.fields['year_from'].required = True
         self.fields['year_from'].label = 'Rocznik od'  # '<i class="icofont-ui-user-group"></i>'
@@ -94,7 +99,7 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         self.fields['club'].label = 'Klub'
         self.fields['club'].help_text = False
 
-        self.fields['country'].required = True
+        self.fields['country'].widget = forms.HiddenInput()
         self.fields['country'].label = 'Kraj'
         self.fields['country'].help_text = False
 

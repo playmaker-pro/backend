@@ -165,8 +165,11 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 if user.profile.club_object:
                     form = ClubForPlayerAnnouncementForm(initial={
                         'club': user.profile.club_object,
-                        'voivodeship': user.profile.club_object.voivodeship
+                        'voivodeship': user.profile.club_object.voivodeship,
                     })
+                    teams = user.profile.club_object.teams.all()
+                    teams = [(team.name, team.name) for team in teams]
+                    form.fields['Teams'].choices = teams
                     form.fields['club'].queryset = Club.objects.filter(name=user.profile.club_object.name)
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
