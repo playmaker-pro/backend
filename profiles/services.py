@@ -2,6 +2,8 @@ from roles import definitions
 from . import models
 from django.contrib.auth import get_user_model
 import logging
+from clubs.models import Team as CTeam
+from clubs.models import Club as CClub
 
 logger = logging.getLogger(__name__)
 
@@ -90,10 +92,11 @@ class ProfileVerificationService:
             profile.save()
 
             if hasattr(profile.user, 'managed_team'):
-                managed_team = profile.user.managed_team
-                managed_team.visible = False
-                managed_team.manager = None
-                managed_team.save()
+                managed_team_id = profile.user.managed_team.id
+                team = CTeam.objects.get(id=managed_team_id)
+                team.visible = False
+                team.manager = None
+                team.save()
 
             if not profile.team_object.manager:
                 profile.team_object.manager = profile.user
@@ -101,9 +104,10 @@ class ProfileVerificationService:
                 profile.team_object.save()
 
             if hasattr(profile.user, 'managed_club'):
-                managed_club = profile.user.managed_club
-                managed_club.manager = None
-                managed_club.save()
+                managed_club_id = profile.user.managed_club.id
+                club = CClub.objects.get(id=managed_team_id)
+                club.manager = None
+                club.save()
 
             if club := profile.team_object.club:
                 if not club.manager:
