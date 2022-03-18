@@ -37,7 +37,6 @@ class AccountVerification(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         user = self.request.user
         profile = user.profile
-
         if request.user.is_coach:
             verification_form = forms.CoachVerificationForm
         if request.user.is_club:
@@ -50,23 +49,25 @@ class AccountVerification(LoginRequiredMixin, View):
 
         verification_form = verification_form(request.POST, instance=profile)
 
-        data = {"success": False, "url": None, "form": None}
+        data = {"success": False, "url": None, "form": None, "errors": None}
 
         if verification_form.is_valid():
             verification_form.save()
             messages.success(
                 request,
-                _("Przyjęto zgłoszenie weryfikacji konta."),
+                _("Dziękujemy Twoje konto zostało zwerifikowane."),
                 extra_tags="alter-success",
             )
 
             data["success"] = True
+            data["errors"] = verification_form.errors
             data["url"] = reverse("profiles:show_self")
             return JsonResponse(data)
-            # return redirect(reverse("profiles:show_self"))
         else:
             # response_data = {} d
             # messages.success(request, _("Błędnie wprowadzone dane."), extra_tags='alter-success')
             # request.session['verification_form_errors'] = verification_form.errors
             data["form"] = render_crispy_form(verification_form)
+            data["success"] = False
+            data["errors"] = verification_form.errors
             return JsonResponse(data)

@@ -73,17 +73,18 @@
         </div>
         <div class="row card-text text-center centered-div">
             <div class="card-text pull-right">
-                {% if user.is_coach or user.is_club %}
-                    {% announcement_response object %}
-                {% elif user.is_player %}
+
+                {% if user.is_player %}
                     {% announcement_edit object %}
+                {% else %}
+                    {% announcement_response object %}
                 {% endif %}
+
             </div>
 
             <div>
               <button type="button" class="btn-request" onclick="window.location.href='/users/{{ player.profile.slug }}';">Zobacz profil</button>
             </div>
-
         </div>
 
     </div>
