@@ -90,8 +90,8 @@ class ProfileVerificationService:
             profile.save()
 
             if hasattr(profile.user, 'managed_team'):
-                profile.user.managed_team.manager = None
                 profile.user.managed_team.visible = False
+                profile.user.managed_team.manager = None
                 profile.user.managed_team.save()
 
             if not profile.team_object.manager:
