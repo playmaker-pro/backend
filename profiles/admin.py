@@ -121,7 +121,11 @@ refresh.short_description = '0. Refresh( 1, 2,3,4 )'
 
 @admin.register(models.ProfileVerificationStatus)
 class ProfileVerificationStatusAdmin(admin.ModelAdmin):
-    pass
+    list_display = (
+        linkify("set_by"),
+        "created_at",
+        "updated_at",
+        )
 
   
 @admin.register(models.PlayerProfile)

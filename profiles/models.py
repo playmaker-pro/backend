@@ -1286,6 +1286,9 @@ class ProfileVerificationStatus(models.Model):
     set_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='set_by')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    data = models.JSONField(null=False, default=dict)
+
     status = models.CharField(max_length=255)
     previous_status = models.CharField(max_length=255, null=True, blank=True)
     team = models.ForeignKey('clubs.Team', on_delete=models.SET_NULL, null=True, blank=True, related_name='team')
