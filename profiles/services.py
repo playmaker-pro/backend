@@ -90,9 +90,10 @@ class ProfileVerificationService:
             profile.save()
 
             if hasattr(profile.user, 'managed_team'):
-                profile.user.managed_team.visible = False
-                profile.user.managed_team.manager = None
-                profile.user.managed_team.save()
+                managed_team = profile.user.managed_team
+                managed_team.visible = False
+                managed_team.manager = None
+                managed_team.save()
 
             if not profile.team_object.manager:
                 profile.team_object.manager = profile.user
@@ -100,8 +101,9 @@ class ProfileVerificationService:
                 profile.team_object.save()
 
             if hasattr(profile.user, 'managed_club'):
-                profile.user.managed_club.manager = None
-                profile.user.managed_club.save()
+                managed_club = profile.user.managed_club
+                managed_club.manager = None
+                managed_club.save()
 
             if club := profile.team_object.club:
                 if not club.manager:
@@ -143,9 +145,10 @@ class ProfileVerificationService:
                     t.visible = True
                     t.save()
 
-                if hasattr(profile.user, 'managed_club'):
-                    profile.user.managed_club.manager = None
-                    profile.user.managed_club.save()
+                if hasattr(profile.user, 'managed_club')
+                    managed_club = profile.user.managed_club
+                    managed_club.manager = None
+                    managed_club.save()
                 if not club.manager:
                     club.manager = profile.user
                     club.save()
