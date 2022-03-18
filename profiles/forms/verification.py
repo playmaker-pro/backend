@@ -61,7 +61,6 @@ class FieldConfig:
 class VerificationForm(forms.ModelForm):
     """
     settings describes how filed will be build.
-
     """
 
     settings = {
@@ -186,6 +185,9 @@ class CoachVerificationForm(VerificationForm):
     birth_date = forms.DateField(
         input_formats=["%Y-%m-%d"], widget=widgets.BootstrapDateTimePickerInput()
     )
+
+    building_fields = (("birth_date", {}), ("country", {}))
+
     custom_settings = {
         "team_club_league_voivodeship_ver": {"help_text": "Który klub reprezentujesz"},
         "birth_date": {"placeholder": "1998-09-24", "help_text": _("Data urodzenia")},
