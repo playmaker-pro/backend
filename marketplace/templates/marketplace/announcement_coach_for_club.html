@@ -52,18 +52,15 @@
         </div>
         <div class="row card-text text-center centered-div">
             <div class="card-text pull-right">
-                {% if user.is_club %}
+                {% if user.is_coach  %}
+                    {% announcement_edit object %}
+                {% elif not user.is_player %}
                     {% announcement_response object %}
                 {% endif %}
-                {% if user.is_coach %}
-                    {% announcement_edit object %}
-                {% endif %}
             </div>
-
             <div>
               <button type="button" class="btn-request" onclick="window.location.href='{{ object.creator.profile.get_permalink }}';">Zobacz profil</button>
             </div>
-
         </div>
     </div>
 </div>

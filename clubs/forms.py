@@ -49,6 +49,8 @@ class ClubForm(forms.ModelForm):
         self.fields["editors"].help_text = False
         self.fields["name"].label = "Nazwa klubu"
         self.fields["name"].help_text = False
+        self.fields["name"].widget.attrs.update({'disabled': True})
+
         self.helper.layout = Layout(
             Div(
                 Div(
@@ -63,7 +65,7 @@ class ClubForm(forms.ModelForm):
                         css_class="col-md-6",
                     ),
                     Fieldset(
-                        _('<h2 class="form-section-title">Moderatorzy</h2>'),
+                        _('<h2 class="form-section-title">Zarządzający Klubem</h2>'),
                         Div(
                             Field(
                                 "editors",
@@ -103,6 +105,7 @@ class TeamForm(forms.ModelForm):
         self.helper.labels_uppercase = True
         self.helper.label_class = "col-md-3 text-muted upper"
         self.helper.field_class = "col-md-6"
+        self.fields["name"].widget.attrs.update({'disabled': True})
         self.helper.layout = Layout(
             Div(
                 Fieldset(
