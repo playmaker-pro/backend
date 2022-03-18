@@ -363,6 +363,7 @@ class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, 
         self.prepare_kwargs(kwargs)
 
         kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
+        kwargs['modals']['register']['load'] = False
 
         page_obj.elements = page_obj.end_index() - page_obj.start_index() + 1
         # kwargs['ammount'] = page_obj.count()
