@@ -142,6 +142,7 @@ class VerificationForm(forms.ModelForm):
             self.fields[field_name].widget.attrs["placeholder"] = options.get(
                 "placeholder", self.default_field_settings.placeholder
             )
+
             if initial := options.get("initial"):
                 self.fields[field_name].initial = initial
 
@@ -186,12 +187,13 @@ class CoachVerificationForm(VerificationForm):
         input_formats=["%Y-%m-%d"], widget=widgets.BootstrapDateTimePickerInput()
     )
 
-    building_fields = (("birth_date", {}), ("country", {}))
+    building_fields = (("birth_date", {}), ("country", {}), ("licence", {}))
 
     custom_settings = {
         "team_club_league_voivodeship_ver": {"help_text": "Który klub reprezentujesz"},
         "birth_date": {"placeholder": "1998-09-24", "help_text": _("Data urodzenia")},
         "country": {"help_text": _("Kraj pochodzenia")},
+        "licence": {"placeholder": "np. UEFA B", "help_text": _("Licencjaa")}
     }
 
     class Meta:
