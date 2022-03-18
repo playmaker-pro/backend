@@ -940,7 +940,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     DATA_KEY_GAMES = "games"
     DATA_KET_CARRIER = "carrier"
 
-    COMPLETE_FIELDS = ['phone']
+    COMPLETE_FIELDS = ['phone',]
 
     CLUB_ROLE = (
         (1, 'Trener'),
@@ -954,8 +954,8 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     VERIFICATION_FIELDS = [
         'country',
         'birth_date',
-    ] 
-        # 'team_club_league_voivodeship_ver']
+        'licence',
+    ] # 'team_club_league_voivodeship_ver']
 
     OPTIONAL_FIELDS = ['licence']
 
@@ -986,7 +986,8 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         _("Licencja"),
         choices=LICENCE_CHOICES,
         blank=True,
-        null=True)
+        null=True,
+    )
 
     team_club_league_voivodeship_ver = models.CharField(
         _('Województwo3'),
