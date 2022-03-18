@@ -43,7 +43,7 @@
         <td class="d-table-cell pull-left sticky-col">
             <span class="table-position"> {{ obj.position }}. </span>
             {{ obj.date }}
-            <img width="20" class=" avatar rounded img-responsive" title="profile picture" src="{{ obj.team|get_club_pic }}">
+            <img width="20" class=" avatar rounded img-responsive" title="profile picture" src="{{ obj.club_pic }}">
             {% if obj.team_url %}
                 <a href="{{ obj.team_url }}"> {{ obj.team|truncatechars:25  }} </a>
             {% else %}
@@ -89,7 +89,7 @@
                 <span class="table-position"> {{ obj.position }}. </span>
                 {{ obj.date }}
                 <img width="20" class=" avatar rounded img-responsive"
-                     title="profile picture" src="{{ obj.team|get_club_pic }}">
+                     title="profile picture" src="{{ obj.club_pic }}">
                 {% if obj.team_url %}
                     <a href="{{ obj.team_url }}">
                         {{ obj.team|truncatechars:25 }}

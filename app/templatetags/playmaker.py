@@ -3,8 +3,6 @@ import json
 import django
 from datetime import date, datetime
 
-from django.core.exceptions import ObjectDoesNotExist
-
 from clubs.models import Club, Team, League
 from django import template
 from django.conf import settings
@@ -232,18 +230,6 @@ def get_title(user, ann):
             return 'Błąd'
     else:
         return "Musisz być zarejestrowanym użytkownikiem by odpowiedzieć na to ogłoszenie"
-
-
-@register.filter
-def get_club_pic(team_name: str) -> str:
-    """ Get club pic url """
-
-    try:
-        club_pic = Team.objects.get(name=team_name)
-        return club_pic.club.picture.url
-
-    except ObjectDoesNotExist:
-        return '/media/default_team.png'
 
 
 @register.inclusion_tag('inquiries/partials/name.html', takes_context=True)

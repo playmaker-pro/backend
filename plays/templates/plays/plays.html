@@ -232,7 +232,6 @@ span.text {
     {% include 'plays/header_black.html' %}
       <div class="container" data-aos="fade-up" style="margin-left:5px;">
         <div class="row">
-            {% comment %} {% if page_obj.paginator.count == 0 %} {% endcomment %}
             {% if objects|length == 0 %}
                 <div class="col-md-12 text-center">
                     {% include 'profiles/partials/_empty_data.html' with empty_text="Brak danych" %}
@@ -261,10 +260,6 @@ span.text {
                         {% include 'plays/_tab_summary.html' with objects=objects %}
                     </div>
                 {% endif %}
-
-                {% comment %} <div class='col-md-9'>
-                    {% include 'platform/partials/_pagination.html' %}
-                </div>        {% endcomment %}
             {% endif %}
         </div>
       </div>

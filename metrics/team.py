@@ -2,6 +2,8 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 
+from django.core.exceptions import ObjectDoesNotExist
+
 from .serializers import CoachProfileSerializer, PlayerProfileSerializer, SimplePlayerProfileSerializer, GameSerializer, GameRawSerializer, TrendSerializer
 from django.contrib.postgres.aggregates import ArrayAgg
 from data.models import Game as DGame
@@ -218,6 +220,9 @@ class LeagueAdvancedTableRawMetrics:
             team_url, team_pic, team_name = TeamMapper.get_url_pic_name(
                 row.get("club_name"), league_obj
             )
+
+            club_pic = Team.objects.get(name=team_name).get_club_pic
+
             # raise RuntimeError(row.get('club_name'), team_name)
             data = {
                 "position": pos,
@@ -225,6 +230,7 @@ class LeagueAdvancedTableRawMetrics:
                 "pic": team_pic,
                 "team": team_name,
                 "team_url": team_url,
+                "team_pic": club_pic,
                 "losts": row["results"].get("loses_all"),
                 "wins": row["results"].get("wins_all"),
                 "draws": row["results"].get("draws_all"),
