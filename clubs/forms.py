@@ -105,6 +105,7 @@ class TeamForm(forms.ModelForm):
         self.helper.labels_uppercase = True
         self.helper.label_class = "col-md-3 text-muted upper"
         self.helper.field_class = "col-md-6"
+        self.fields["name"].widget.attrs.update({'disabled': True})
         self.helper.layout = Layout(
             Div(
                 Fieldset(
