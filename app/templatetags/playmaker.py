@@ -728,7 +728,7 @@ def send_request(context, user, showed_user, category='user'):
         'button_attrs': attrs,
         'button_text': 'Tak, wyślij',
         'button_class': 'btn btn-success',
-        'button_action': {'onclick': True, 'name': 'inquiry', 'param': showed_user.profile.slug, 'param2': category},
+        'button_action': {'onclick': True, 'name': 'inquiry', 'param': btn_param, 'param2': category},
         'modals': context['modals'],
     }
 
