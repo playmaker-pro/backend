@@ -49,7 +49,7 @@ class ClubForm(forms.ModelForm):
         self.fields["editors"].help_text = False
         self.fields["name"].label = "Nazwa klubu"
         self.fields["name"].help_text = False
-        self.fields["name"].widget.attrs.update({'disabled': True})
+        self.fields["name"].widget.attrs['readonly'] = True
 
         self.helper.layout = Layout(
             Div(
