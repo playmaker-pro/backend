@@ -133,6 +133,9 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                         'gender': gender,
                     })
 
+                    teams = f'{profile.display_team } ({profile.display_league_top_parent})'
+                    form.fields['Teams'].choices = [(teams, teams)]
+
                     if profile:
                         form.fields['club'].queryset = Club.objects.filter(
                             name=profile.club.name
@@ -168,8 +171,17 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                         'voivodeship': user.profile.club_object.voivodeship,
                     })
                     teams = user.profile.club_object.teams.all()
-                    teams = [(team.name, team.name) for team in teams]
-                    form.fields['Teams'].choices = teams
+
+                    new_teams = []
+                    for team in teams:
+                        league = team.league
+                        if league.highest_parent.name == league.name or not league.highest_parent:
+                            league = league.name
+                        else:
+                            league = f'{league.highest_parent} {league.name}'
+                        new_teams.append((f'{team.name} ({league})', f'{team.name} ({league})'))
+
+                    form.fields['Teams'].choices = new_teams
                     form.fields['club'].queryset = Club.objects.filter(name=user.profile.club_object.name)
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})

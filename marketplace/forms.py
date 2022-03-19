@@ -107,11 +107,11 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         self.fields['voivodeship'].label = 'Województwo'
         self.fields['voivodeship'].help_text = False
 
-        self.fields['seniority'].required = True
+        self.fields['seniority'].widget = forms.HiddenInput()
         self.fields['seniority'].label = 'Rozgrywki młodzieżowe / Rozgrywki seniorskie'
         self.fields['seniority'].help_text = False
 
-        self.fields['gender'].required = True
+        self.fields['gender'].widget = forms.HiddenInput()
         self.fields['gender'].label = 'Mężczyźni / Kobiety'
         self.fields['gender'].help_text = False
 
