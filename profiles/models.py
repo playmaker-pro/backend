@@ -36,25 +36,6 @@ GLOBAL_TRAINING_READY_CHOCIES = (
         (2, '3-4 treningi'),
         (3, '5-6 treningi'))
 
-VOIVODESHIP_CHOICE = (
-        ('Dolnośląskie', 'Dolnośląskie'),
-        ('Kujawsko-pomorskie', 'Kujawsko-pomorskie'),
-        ('Lubelskie', 'Lubelskie'),
-        ('Lubuskie', 'Lubuskie'),
-        ('Łódzkie', 'Łódzkie'),
-        ('Małopolskie', 'Małopolskie'),
-        ('Mazowieckie', 'Mazowieckie'),
-        ('Opolskie', 'Opolskie'),
-        ('Podkarpackie', 'Podkarpackie'),
-        ('Podlaskie', 'Podlaskie'),
-        ('Pomorskie', 'Pomorskie'),
-        ('Śląskie', 'Śląskie'),
-        ('Świętokrzyskie', 'Świętokrzyskie'),
-        ('Warmińsko-Mazurskie', 'Warmińsko-Mazurskie'),
-        ('Wielkopolskie', 'Wielkopolskie'),
-        ('Zachodniopomorskie', 'Zachodniopomorskie')
-    )
-
 
 class RoleChangeRequest(models.Model):
     """Keeps track on requested changes made by users."""
@@ -550,7 +531,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         _('Wojewódźtwo (raw)'), 
         help_text=_('Wojewódźtwo w którym grasz.'), 
         max_length=68, blank=True, null=True,
-        choices=VOIVODESHIP_CHOICE
+        choices=settings.VOIVODESHIP_CHOICES
         )
     birth_date = models.DateField(_('Data urodzenia'), blank=True, null=True)
     height = models.PositiveIntegerField(_('Wzrost'), help_text=_('Wysokość (cm) [130-210cm]'), blank=True, null=True, validators=[MinValueValidator(130), MaxValueValidator(210)])
@@ -594,7 +575,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         max_length=68,
         blank=True,
         null=True,
-        choices=VOIVODESHIP_CHOICE
+        choices=settings.VOIVODESHIP_CHOICES
         )
 
     def display_position_fantasy(self):
@@ -1049,7 +1030,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         max_length=68,
         blank=True,
         null=True,
-        choices=VOIVODESHIP_CHOICE
+        choices=settings.VOIVODESHIP_CHOICES
         )
 
     club_role = models.IntegerField(
