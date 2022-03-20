@@ -58,29 +58,29 @@
 
     {% if 1 not in custom_range %}
 
-        <a href="" class="cdp_i page-item {% if page == page_obj.number %}active btn-red {% endif %} toogle-view">1
+        <a href="{% url 'marketplace:announcements' %}?page=1" class="cdp_i page-item {% if page == page_obj.number %}active btn-red {% endif %} toogle-view">1
         </a>
         <a class="cdp_i toogle-view">..</a>
 
     {% endif %}
 
     {% for page in custom_range %}
-        <a href="" class="cdp_i page-item toogle-view {% if page == page_obj.number %}active{% endif %}">{{page}}
+        <a href="{% url 'marketplace:announcements' %}?page={{ page }}" class="cdp_i page-item toogle-view {% if page == page_obj.number %}active{% endif %}">{{page}}
         </a>
 
     {% endfor %}
 
-    {% if page_obj.number not in page_num_range %}
+    {% if page_obj.number not in page_num_range or last_page not in page_num_range%}
         <a class="cdp_i toogle-view">..</a>
             <a class="cdp_i toogle-view"
-               href="">{{last_page}}
+               href="{% url 'marketplace:announcements' %}?page={{ last_page }}">{{last_page}}
         </a>
     {% endif %}
 
 
     {% if page_obj.paginator.has_next %}
 
-        <a href="" class="cdp_i page-link toogle-view">next</a>
+        <a href="{% url 'marketplace:announcements' %}?page={{ page_obj.next_page_number }}" class="cdp_i page-link toogle-view">next</a>
 
     {% endif %}
 

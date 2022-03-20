@@ -364,6 +364,8 @@ class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, 
         # kwargs["page_num_range"] = range(
         #     page_obj.num_pages - 3, page_obj.num_pages + 1
         # )
+        kwargs["last_page"] = self.last_page
+        kwargs['page_num_range'] = self.page_num_range
         kwargs['custom_range'] = self.custom_range
         kwargs['page_obj'] = page_obj
         kwargs['page_title'] = self.page_title
