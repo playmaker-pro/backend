@@ -611,3 +611,23 @@ except Exception as e:
 
 if FORCED_SEASON_NAME is not None:
     print(f"Force to use season for dispaly metrics: {FORCED_SEASON_NAME}")
+
+
+VOIVODESHIP_CHOICES = (
+        ('Dolnośląskie', 'Dolnośląskie'),
+        ('Kujawsko-pomorskie', 'Kujawsko-pomorskie'),
+        ('Lubelskie', 'Lubelskie'),
+        ('Lubuskie', 'Lubuskie'),
+        ('Łódzkie', 'Łódzkie'),
+        ('Małopolskie', 'Małopolskie'),
+        ('Mazowieckie', 'Mazowieckie'),
+        ('Opolskie', 'Opolskie'),
+        ('Podkarpackie', 'Podkarpackie'),
+        ('Podlaskie', 'Podlaskie'),
+        ('Pomorskie', 'Pomorskie'),
+        ('Śląskie', 'Śląskie'),
+        ('Świętokrzyskie', 'Świętokrzyskie'),
+        ('Warmińsko-Mazurskie', 'Warmińsko-Mazurskie'),
+        ('Wielkopolskie', 'Wielkopolskie'),
+        ('Zachodniopomorskie', 'Zachodniopomorskie')
+    )

@@ -1,4 +1,4 @@
-
+from django.conf import settings
 from django.db.models import F
 from app import mixins, utils
 
@@ -11,7 +11,6 @@ from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View, generic
 from profiles.utils import get_datetime_from_age, get_datetime_from_year
-from profiles.models import VOIVODESHIP_CHOICE
 from roles import definitions
 from users.models import User
 import operator
@@ -50,7 +49,7 @@ class TableView(generic.TemplateView, mixins.PaginateMixin, mixins.ViewModalLoad
         kwargs['page_obj'] = self.paginate(queryset, limit=self.paginate_limit)
         kwargs['page_title'] = self.page_title
         kwargs['type'] = self.table_type
-        kwargs['vivos'] = VOIVODESHIP_CHOICE
+        kwargs['vivos'] = settings.VOIVODESHIP_CHOICES
         self.add_more_to_kwargs(kwargs)
         kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
         # kwargs['ammount'] = page_obj.count()
@@ -80,8 +79,10 @@ class PlayersTable(TableView):
             queryset = queryset.filter(fullname__icontains=self.filter_first_last)
 
         if self.filter_vivo is not None:
-            vivos = [i for i in self.filter_vivo]
-            clauses = (Q(playerprofile__team_object__club__voivodeship__name=p) for p in vivos)
+            vivos = [i.replace('-', '') for i in self.filter_vivo]
+            clauses = (Q(
+                playerprofile__team_object__club__voivodeship__name__icontains=p
+            ) for p in vivos)
             query = reduce(operator.or_, clauses)
             queryset = queryset.filter(query)
 
@@ -197,8 +198,8 @@ class TeamsTable(TableView):
             queryset = queryset.filter(league__highest_parent__name__in=self.filter_league)
 
         if self.filter_vivo is not None:
-            vivos = [i for i in self.filter_vivo]
-            clauses = (Q(club__voivodeship__name=p) for p in vivos)
+            vivos = [i.replace('-', '') for i in self.filter_vivo]
+            clauses = (Q(club__voivodeship__name__icontains=p) for p in vivos)
             query = reduce(operator.or_, clauses)
             queryset = queryset.filter(query)
 

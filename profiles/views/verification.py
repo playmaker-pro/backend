@@ -24,12 +24,17 @@ class AccountVerification(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         user = request.user
+        profile = user.profile
         if request.user.is_coach:
-            form = forms.CoachVerificationForm(instance=user.profile)
+            form = forms.CoachVerificationForm(instance=profile,
+                initial={'team': profile.team_object}
+            )
+            
         if request.user.is_club:
-            form = forms.ClubVerificationForm(instance=user.profile)
+            form = forms.ClubVerificationForm(instance=profile)
         if request.user.is_player:
-            form = forms.PlayerVerificationForm(instance=user.profile)
+            form = forms.PlayerVerificationForm(instance=profile,
+                initial={'team': profile.team_object})
         data = {}
         data["form"] = render_crispy_form(form)
         return JsonResponse(data)
@@ -38,16 +43,26 @@ class AccountVerification(LoginRequiredMixin, View):
         user = self.request.user
         profile = user.profile
         if request.user.is_coach:
-            verification_form = forms.CoachVerificationForm
+            verification_form = forms.CoachVerificationForm(
+                request.POST,
+                instance=profile,
+                initial={'team': profile.team_object})
         if request.user.is_club:
-            verification_form = forms.ClubVerificationForm
+            verification_form = forms.ClubVerificationForm(
+                request.POST,
+                instance=profile,
+            )
+               
         if request.user.is_player:
-            verification_form = forms.PlayerVerificationForm
+            verification_form = forms.PlayerVerificationForm(
+                request.POST,
+                instance=profile,
+                initial={'team': profile.team_object}
+            )
 
         if not verification_form:
             raise Http404
 
-        verification_form = verification_form(request.POST, instance=profile)
 
         data = {"success": False, "url": None, "form": None, "errors": None}
 
