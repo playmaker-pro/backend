@@ -34,19 +34,21 @@ class ProfileVerificationService:
             self._verify_club()
 
     def update_verification_data(self, data: dict) -> models.ProfileVerificationStatus:
+        print(data)
         if has_team := data.get("has_team"):
             if has_team == "tak mam klub":
                 self.profile.verification.has_team = True
             else:
                 self.profile.verification.has_team = False
 
-        if team_not_found := data.get("team_not_found"):
-            self.profile.verification.team_not_found = team_not_found
+        self.profile.verification.team_not_found = data.get("team_not_found")
 
         if team := data.get("team"):
             self.profile.verification.previous_team = self.profile.verification.team
             self.profile.verification.team = team
-
+        else:
+            self.profile.verification.previous_team = self.profile.verification.team
+            self.profile.verification.team = None
         # self.profile.verificaiton.previous_status = instance.verificaiton.status
 
         # self.profile.verificaiton.status =
@@ -139,7 +141,8 @@ class ProfileVerificationService:
 
     def _verify_club(self) -> None:
         profile = self.profile
-
+        print('vvvvv', profile.verification.team)
+        print(profile.verification.has_team, profile.verification.team_not_found, profile.team_club_league_voivodeship_ver)
         if profile.verification.has_team and profile.verification.team:
             if club := profile.verification.team.club:
                 profile.club_object = club
@@ -151,19 +154,29 @@ class ProfileVerificationService:
 
                 if hasattr(profile.user, 'managed_club'):
                     managed_club_id = profile.user.managed_club.id
-                    club = CClub.objects.get(id=managed_club_id)
-                    club.manager = None
-                    club.save()
+                    clubb = CClub.objects.get(id=managed_club_id)
+                    clubb.manager = None
+                    clubb.save()
 
                 if not club.manager:
                     club.manager = profile.user
                     club.save()
+                self._verify_user()
 
-        elif (
+        if (
             profile.verification.has_team is True
             and profile.verification.team_not_found is True
             and profile.team_club_league_voivodeship_ver
         ):
+            print('000000')
+            profile.club_object = None
+            if hasattr(profile.user, 'managed_club'):
+                managed_club_id = profile.user.managed_club.id
+                clubb = CClub.objects.get(id=managed_club_id)
+                clubb.manager = None
+                clubb.save()
+
+            profile.save()
             self._verify_user()
 
         elif (
@@ -176,6 +189,12 @@ class ProfileVerificationService:
             and profile.team_club_league_voivodeship_ver
         ):
             profile.club_object = None
+            if hasattr(profile.user, 'managed_club'):
+                managed_club_id = profile.user.managed_club.id
+                clubb = CClub.objects.get(id=managed_club_id)
+                clubb.manager = None
+                clubb.save()
+
             profile.save()
             self._verify_user()
 
