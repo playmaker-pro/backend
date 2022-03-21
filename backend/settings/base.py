@@ -614,3 +614,22 @@ if FORCED_SEASON_NAME is not None:
 
 
 DEFAULT_CLUB_PICTURE_URL = '/media/default_club.png'
+
+VOIVODESHIP_CHOICES = (
+        ('Dolnośląskie', 'Dolnośląskie'),
+        ('Kujawsko-pomorskie', 'Kujawsko-pomorskie'),
+        ('Lubelskie', 'Lubelskie'),
+        ('Lubuskie', 'Lubuskie'),
+        ('Łódzkie', 'Łódzkie'),
+        ('Małopolskie', 'Małopolskie'),
+        ('Mazowieckie', 'Mazowieckie'),
+        ('Opolskie', 'Opolskie'),
+        ('Podkarpackie', 'Podkarpackie'),
+        ('Podlaskie', 'Podlaskie'),
+        ('Pomorskie', 'Pomorskie'),
+        ('Śląskie', 'Śląskie'),
+        ('Świętokrzyskie', 'Świętokrzyskie'),
+        ('Warmińsko-Mazurskie', 'Warmińsko-Mazurskie'),
+        ('Wielkopolskie', 'Wielkopolskie'),
+        ('Zachodniopomorskie', 'Zachodniopomorskie')
+    )
