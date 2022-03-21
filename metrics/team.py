@@ -2,8 +2,6 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 
-from django.core.exceptions import ObjectDoesNotExist
-
 from .serializers import CoachProfileSerializer, PlayerProfileSerializer, SimplePlayerProfileSerializer, GameSerializer, GameRawSerializer, TrendSerializer
 from django.contrib.postgres.aggregates import ArrayAgg
 from data.models import Game as DGame
