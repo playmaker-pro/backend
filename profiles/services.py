@@ -43,9 +43,9 @@ class ProfileVerificationService:
 
         self.profile.verification.team_not_found = data.get("team_not_found")
 
-        if team := data.get("team"):
+        if data.get("team") and self.profile.verification.team_not_found is False:
             self.profile.verification.previous_team = self.profile.verification.team
-            self.profile.verification.team = team
+            self.profile.verification.team = data.get("team")
         else:
             self.profile.verification.previous_team = self.profile.verification.team
             self.profile.verification.team = None
