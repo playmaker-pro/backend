@@ -320,34 +320,36 @@ class BaseProfile(models.Model, EventLogMixin):
             self.data_mapper_changed = False
 
         # we are updating existing model (not first occurence)
-        ver_new = self._get_verification_field_values(self)
-        if not object_exists:
-            ver_old = ver_new
+        # rkesik: due to new registration flow that is not needed.
+        # ver_new = self._get_verification_field_values(self)
+        # if not object_exists:
+        #     ver_old = ver_new
 
-        # if not silent_param:
+        # rkesik: due to new registration flow that is not needed.
         # Cases when one of verification fields is None
-        if self._is_verification_fields_filled():
-            if not self.user.is_waiting_for_verification and not self.user.is_verified:
-                reason_text = 'Parametry weryfikacyjne są uzupełnione, a użytkownik nie miał wcześniej statusu "zwerfikowany" ani że "czeka na weryfikacje"'
-                reason = f'[verification-params-ready]: \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS})  \n Old:{ver_old} -> New:{ver_new} \n'
-                self.user.waiting_for_verification(extra={'reason': reason})
-                self.user.save()
-            else:
-                if self._verification_fileds_has_changed_and_was_filled(ver_old, ver_new):
-                    reason_text = 'Parametry weryfikacyjne zostały zmienione i są wszyskie pola uzupełnione.'
-                    reason = f'[verification-params-changed] \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS}) \n Old:{ver_old} -> New:{ver_new} \n'
-                    self.user.unverify(extra={'reason': reason})
-                    self.user.save()
-        else:
-            if not self.user.is_missing_verification_data:
-                self.user.missing_verification_data()  # -> change state to missing ver data
-                self.user.save()
+        # if self._is_verification_fields_filled():
+        #     if not self.user.is_waiting_for_verification and not self.user.is_verified:
+        #         reason_text = 'Parametry weryfikacyjne są uzupełnione, a użytkownik nie miał wcześniej statusu "zwerfikowany" ani że "czeka na weryfikacje"'
+        #         reason = f'[verification-params-ready]: \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS})  \n Old:{ver_old} -> New:{ver_new} \n'
+        #         self.user.waiting_for_verification(extra={'reason': reason})
+        #         self.user.save()
+        #     else:
+        #         if self._verification_fileds_has_changed_and_was_filled(ver_old, ver_new):
+        #             reason_text = 'Parametry weryfikacyjne zostały zmienione i są wszyskie pola uzupełnione.'
+        #             reason = f'[verification-params-changed] \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS}) \n Old:{ver_old} -> New:{ver_new} \n'
+        #             self.user.unverify(extra={'reason': reason})
+        #             self.user.save()
+        # else:
+        #     if not self.user.is_missing_verification_data:
+        #         self.user.missing_verification_data()  # -> change state to missing ver data
+        #         self.user.save()
 
-    def _is_verification_fields_filled(self):
-        return all(self._get_verification_field_values(self))
+    # rkesik: due to new registration flow that is not needed.
+    # def _is_verification_fields_filled(self):
+    #     return all(self._get_verification_field_values(self))
 
-    def _verification_fileds_has_changed_and_was_filled(self, old, new):
-        return old != new and all(old) and all(new)
+    # def _verification_fileds_has_changed_and_was_filled(self, old, new):
+    #     return old != new and all(old) and all(new)
 
     def _get_verification_field_values(self, obj):
         return [getattr(obj, field) for field in self.VERIFICATION_FIELDS]
