@@ -536,9 +536,7 @@ def announcement_yes(context, obj, css_class=None):
         elif user.is_club and obj.__class__.__name__ == "CoachForClubAnnouncement":
             title = 'TAK, wysyłam zaproszenie'  # coach lf club
         else:
-            title = 'Twoja rola na platformie jest nieprawidłowa? ' \
-                    'Kliknij tutaj (ustawienia) ' \
-                    'i wyślij prośbę o zmianę.'
+            title = 'Zmień rolę'
     else:
         title = 'Zarejestruj się tutaj (Rejestracja)'
         return {
@@ -571,8 +569,7 @@ def other_roles_button(context, text=None, css_class=None):
 
     elif not user.is_club and not user.is_player and not user.is_coach:
 
-        title = 'Twoja rola na platformie jest nieprawidłowa? ' \
-                'Kliknij tutaj (ustawienia) i wyślij prośbę o zmianę.”'
+        title = 'Zmień rolę'
         link = '/users/me/edit/settings/'
 
     else:
@@ -582,7 +579,7 @@ def other_roles_button(context, text=None, css_class=None):
     return {
         'link_href': link,
         'link_body': title,
-        'link_class': 'btn-request',
+        'link_class': 'btn-pm',
     }
 
 
