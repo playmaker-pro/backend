@@ -25,7 +25,7 @@ class PaginateMixin:
     def paginate(self,
                  data: Union[QuerySet, List],
                  limit: Union[int, None],
-                 page_num_range: int = 0):
+                 page_num_range: int = 0) -> Paginator:
 
         limit = limit or self.paginate_limit
         paginator = Paginator(data, limit)
@@ -53,8 +53,7 @@ class PaginateMixin:
         right_index = int(page_number) + 3
         if right_index > paginator_pages:
             right_index = paginator_pages + 1
-        if right_index + 1 == paginator_pages:
-            right_index = right_index + 2
+
 
 
         self.custom_range = range(left_index, right_index)

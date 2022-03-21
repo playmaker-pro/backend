@@ -347,6 +347,14 @@ class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, 
 
     def get(self, request, *args, **kwargs):
         lista = []
+
+        total_items = request.GET.get('total_items')
+        if total_items:
+            self.paginate_limit = total_items
+        # pages = request.GET.get('pages')
+        # if pages:
+        #     self.paginate_limit = pages
+
         for i in self.queried_classes:
             queryset = self.get_queryset(i)
             queryset = self.filter_queryset(queryset)

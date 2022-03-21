@@ -1,6 +1,9 @@
     
 {% load i18n %}
 {% load playmaker %}
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'assets/css/paginator.css' %}">
 
 {% with request.GET.urlencode|get_urls_with_no_page as get_params %}
 <div id="pagination" class="pagination d-block mt-2">
@@ -50,40 +53,128 @@
     </div>
 
 </div>
-<div class="content_detail__pagination cdp" actpage="1">
+<div class="d-flex paginator justify-content-between">
+    {% with page_obj.paginator.num_pages as total_pages %}
+        <div class="d-flex ">
+            {% if page_obj.has_previous %}
 
-    {% if page_obj.paginator.has_previous %}
-        <a class="cdp_i page-link toogle-view" href="">prev</a>
-    {% endif %}
+                <div class="d-flex">
+                    <a href="{% url 'marketplace:announcements' %}?page=1"
+                        class="cdp_i page-item {% if page == page_obj.number %}active btn-red {% endif %}">
+                        <p class="arrow-right">&laquo;</p>
+                    </a>
+                    <a href="{% url 'marketplace:announcements' %}?page={{ page_obj.previous_page_number }}">
+                        <p class="arrow-right">&lsaquo;</p>
+                    </a>
+                </div>
 
-    {% if 1 not in custom_range %}
+        {#        <a href="{% url 'marketplace:announcements' %}?page=1"#}
+        {#           class="cdp_i page-item {% if page == page_obj.number %}active btn-red {% endif %} toogle-view">#}
+        {#            <p class="">1</p>#}
+        {#        </a>#}
 
-        <a href="{% url 'marketplace:announcements' %}?page=1" class="cdp_i page-item {% if page == page_obj.number %}active btn-red {% endif %} toogle-view">1
-        </a>
-        <a class="cdp_i toogle-view">..</a>
+            {% endif %}
 
-    {% endif %}
+            {% if page_obj.has_previous %}
 
-    {% for page in custom_range %}
-        <a href="{% url 'marketplace:announcements' %}?page={{ page }}" class="cdp_i page-item toogle-view {% if page == page_obj.number %}active{% endif %}">{{page}}
-        </a>
+        {#        <a href="{% url 'marketplace:announcements' %}?page={{ page_obj.previous_page_number }}" class="pg-img">#}
+        {#            <img src="{% static 'assets/img/paginator/left-arrows.png' %}" alt="Arrow paginator left">#}
+        {#        </a>#}
+            {% endif %}
 
-    {% endfor %}
+            {% if total_pages > 1 %}
 
-    {% if page_obj.number not in page_num_range or last_page not in page_num_range%}
-        <a class="cdp_i toogle-view">..</a>
-            <a class="cdp_i toogle-view"
-               href="{% url 'marketplace:announcements' %}?page={{ last_page }}">{{last_page}}
-        </a>
-    {% endif %}
+                {% for page in custom_range %}
+                    <a href="{% url 'marketplace:announcements' %}?page={{ page }}"
+                       class="cdp_i page-item toogle-view {% if page == page_obj.number %}active{% endif %}">
+                        <p class="page-num">{{page}}</p>
+                    </a>
+
+                {% endfor %}
+
+            {% endif %}
 
 
-    {% if page_obj.paginator.has_next %}
+            {% if page_obj.number not in page_num_range %}
+        {#        <a href="{% url 'marketplace:announcements' %}?page={{ last_page }}" class="pg-img">#}
+        {#            <img src="{% static 'assets/img/paginator/next.png' %}" alt="Arrow paginator right">#}
+        {#        </a>#}
+        {#        <a href=""><p class="arrow-right">&raquo;</p></a>#}
 
-        <a href="{% url 'marketplace:announcements' %}?page={{ page_obj.next_page_number }}" class="cdp_i page-link toogle-view">next</a>
+        {#        <a href="{% url 'marketplace:announcements' %}?page={{ last_page }}" class="pg-img">#}
+        {#            <img src="{% static 'assets/img/paginator/arrow-right.png' %}" alt="Double arrow paginator right">#}
+        {#        </a>#}
+        {#            <a class="cdp_i toogle-view"#}
+        {#               href="{% url 'marketplace:announcements' %}?page={{ last_page }}">{{last_page}}#}
+        {#        </a>#}
 
-    {% endif %}
+            {% endif %}
 
+
+            {% if page_obj.has_next %}
+
+        {#        <a href="{% url 'marketplace:announcements' %}?page={{ page_obj.next_page_number }}"#}
+        {#           class="cdp_i page-link toogle-view">next#}
+        {#        </a>#}
+                <a href="{% url 'marketplace:announcements' %}?page={{ page_obj.next_page_number }}"><p class="arrow-right">&rsaquo;</p></a>
+
+                <a href="{% url 'marketplace:announcements' %}?page={{ last_page }}">
+                    <p class="arrow-right">&raquo;</p>
+                </a>
+
+            {% endif %}
+
+            <div class="got-to-site {% if total_pages > 1 %}ml-4{%endif %}">
+                <form action="{% url 'marketplace:announcements' %}" class="got-to-site" method="get">
+                    <span>Idź do strony</span>
+                    <input class="serv-section-2 ml-2" type="text" name="page">
+                    <a><p class="arrow-right">&rsaquo;</p></a>
+                </form>
+
+
+            </div>
+        </div>
+
+        <div class="total-ann">
+            <div class="dropdown ">
+              <div class="btn-group">
+                  <button class="btn btn-sm d-flex dropdown-toggle dropdown-btn"
+                          type="button"
+                          data-toggle="dropdown"
+                          aria-haspopup="true"
+                          aria-expanded="false"
+                  >
+                      <a href="{% url 'marketplace:announcements' %}?total_items=25">25</a>
+                      <span>
+                          &#9660;
+                      </span>
+                  </button>
+                  <div class="dropdown-menu dropdown-custom">
+                      <button class="dropdown-item" type="button">
+                          <a data-1="1" href="{% url 'marketplace:announcements' %}?total_items=10">10</a>
+                      </button>
+
+                      <button class="dropdown-item" type="button">
+                          <a data-2="2" href="{% url 'marketplace:announcements' %}?total_items=50">50</a>
+                      </button>
+
+                      <button class="dropdown-item" type="button">
+                          <a data-3="3" href="{% url 'marketplace:announcements' %}?total_items=100">100</a>
+                      </button>
+                  </div>
+
+              </div>
+            <span class="ml-2">/</span>
+            <span class="main-color">
+                {{ page_obj.paginator.count }}
+            </span>
+            <span>
+                wszystkich {{ object_type|default:'wpisów' }}
+            </span>
+        </div>
+    {% endwith %}
 </div>
+
+    <script type="text/javascript" src="{% static 'assets/js/pagination.js' %}"></script>
 
 {% endwith %}
