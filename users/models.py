@@ -140,7 +140,6 @@ class User(AbstractUser, UserRoleMixin):
         example:
             extra['reason'] = 'User removed field1'
         '''
-        print(">>>>>>>>>>>>>>>>> verifyin...")
         if not silent:
             verification_notification(self)
 
@@ -176,7 +175,7 @@ class User(AbstractUser, UserRoleMixin):
         example:
             extra['reason'] = 'User removed field1'
         '''
-        print(">>>>>>>>>>>>>>>>> un-verifyin...")
+
         if extra:
             reason = extra.get('reason')
         else:
