@@ -134,6 +134,7 @@ class PlaysBaseView(ComplexViews):
         return options
 
     def get(self, request, slug, *args, **kwargs):
+
         self.set_kwargs(kwargs, slug)
         return super().get(request, *args, **kwargs)
 
@@ -199,7 +200,6 @@ class PlaysTableViews(PlaysBaseView):
 
     def set_kwargs(self, *args, **kwargs):
         options = super().set_kwargs(*args, **kwargs)
-        data_index = self.league.historical.all().get(season__name=self.season)
         try:
             data_index = self.league.historical.all().get(season__name=self.season)
         except Exception:
