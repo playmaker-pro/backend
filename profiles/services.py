@@ -72,12 +72,14 @@ class ProfileVerificationService:
             and profile.verification.team_not_found is True
             and profile.team_club_league_voivodeship_ver
         ):
+            profile.team_object = None
             self._verify_user()
 
         elif (
             profile.verification.has_team is False
             and not profile.team_club_league_voivodeship_ver
         ):
+            profile.team_object = None
             self._verify_user()
         elif (
             profile.verification.has_team is False
@@ -141,8 +143,7 @@ class ProfileVerificationService:
 
     def _verify_club(self) -> None:
         profile = self.profile
-        print('vvvvv', profile.verification.team)
-        print(profile.verification.has_team, profile.verification.team_not_found, profile.team_club_league_voivodeship_ver)
+
         if profile.verification.has_team and profile.verification.team:
             if club := profile.verification.team.club:
                 profile.club_object = club
@@ -168,7 +169,6 @@ class ProfileVerificationService:
             and profile.verification.team_not_found is True
             and profile.team_club_league_voivodeship_ver
         ):
-            print('000000')
             profile.club_object = None
             if hasattr(profile.user, 'managed_club'):
                 managed_club_id = profile.user.managed_club.id
