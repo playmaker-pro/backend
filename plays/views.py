@@ -14,7 +14,6 @@ from django.db.models.functions import Concat
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View, generic
-from django.core.exceptions import ObjectDoesNotExist
 from metrics.team import (
     LeagueAdvancedTableRawMetrics,
     LeagueChildrenSerializer,
