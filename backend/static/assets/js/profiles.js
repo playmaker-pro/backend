@@ -177,11 +177,28 @@ $(document).on('submit', '#missingname-form', function(e){
     
 });
 
+function checkIfTeamNotFound() {
+  if($('#id_team_not_found').is(':checked')) {
+
+    $("#text_team_div").fadeIn()
+    $("#div_id_team").hide()
+    $("#hint_id_team_club_league_voivodeship_ver").text("Wprowadź ręcznie nazwę klubu, poziom rozgrywkowy, region i kraj jeśli jest inny niż Polska")
+    $('label[for="id_team_not_found"]').text('odznacz jeśli chesz wybrać klub z listy')
+    
+  } else {
+    $("#text_team_div").hide()
+    $("#div_id_team").fadeIn()
+    $('label[for="id_team_not_found"]').text('zaznacz jeśli nie znalazłeś swojego klubu na liście')
+  }
+}
 
 function setHasClubDefaults() {
-    $("#select_team_div").fadeIn()
-    $("#text_team_div").hide()
-    $("#id_team_not_found").prop( "checked", false );
+  console.log('xxx')
+  $("#select_team_div").fadeIn()
+  $("#text_team_div").hide()
+  checkIfTeamNotFound()
+
+
 }
 
 function setHasntClubDefaults() {
@@ -202,16 +219,7 @@ function setVerificationDefaults() {
 
 $(document).on("click", "#div_id_team_not_found", function(){ 
 
-  if($('#id_team_not_found').is(':checked')) {
-
-    $("#text_team_div").fadeIn()
-    $("#hint_id_team_club_league_voivodeship_ver").text("Wprowadź ręcznie nazwę klubu, poziom rozgrywkowy, region i kraj jeśli jest inny niż Polska")
-    $('label[for="id_team_not_found"]').text('odznacz jeśli chesz wybrać klub z listy')
-    
-  } else {
-    $("#text_team_div").hide()
-    $('label[for="id_team_not_found"]').text('zaznacz jeśli nie znalazłeś swojego klubu na liście')
-}
+  checkIfTeamNotFound()
 
 
 });
