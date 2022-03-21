@@ -3,6 +3,8 @@ import logging
 import math
 import operator
 from functools import reduce
+
+from django.conf import settings
 from django.utils import timezone
 from app import mixins
 from app.base.views import BasePMView
@@ -61,7 +63,12 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
             queryset = queryset.filter(player__playerprofile__team_object__name__icontains=self.filter_name_of_team)
 
         if self.filter_league is not None:
-            queryset = queryset.filter(player__playerprofile__team_object__league__name__in=self.filter_league)
+            leagues = [league for league in self.filter_league]
+            league = (Q(
+                player__playerprofile__team_object__league__highest_parent__name__icontains=league
+            ) for league in leagues)
+            query = reduce(operator.or_, league)
+            queryset = queryset.filter(query)
 
         if self.filter_first_last is not None:
             queryset = queryset.annotate(
@@ -70,8 +77,10 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
                 fullname__icontains=self.filter_first_last)
 
         if self.filter_vivo is not None:
-            vivos = [i for i in self.filter_vivo]
-            clauses = (Q(player__playerprofile__team_object__club__voivodeship__name=p) for p in vivos)
+            vivos = [i.replace('-', '') for i in self.filter_vivo]
+            clauses = (Q(
+                player__playerprofile__team_object__club__voivodeship__name__icontains=p
+            ) for p in vivos)
             query = reduce(operator.or_, clauses)
             queryset = queryset.filter(query)
 
@@ -105,6 +114,7 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
         page_number = request.GET.get('page') or 1
         page_obj = paginator.get_page(page_number)
         kwargs['page_obj'] = page_obj
+        kwargs['vivos'] = settings.VOIVODESHIP_CHOICES
         kwargs['filters'] = self.get_filters_values()
         page_obj.elements = page_obj.end_index() - page_obj.start_index() + 1
         self.prepare_kwargs(kwargs)
