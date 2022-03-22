@@ -1,9 +1,9 @@
 
-{% url 'plays:summary' slug=league.slug  as summary_url %}
-{% url 'plays:scores' slug=league.slug  as scores_url %}
-{% url 'plays:next_games' slug=league.slug as next_games_url %}
-{% url 'plays:table' slug=league.slug  as table_url %}
-{% url 'plays:playmaker' slug=league.slug as playmaker_url %}
+{% url 'plays:summary' slug=league_obj.slug  as summary_url %}
+{% url 'plays:scores' slug=league_obj.slug  as scores_url %}
+{% url 'plays:next_games' slug=league_obj.slug as next_games_url %}
+{% url 'plays:table' slug=league_obj.slug  as table_url %}
+{% url 'plays:playmaker' slug=league_obj.slug as playmaker_url %}
 
 {% url 'profiles:show' slug=show_user.profile.slug as profile_url %}
 
