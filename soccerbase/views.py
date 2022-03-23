@@ -81,13 +81,9 @@ class PlayersTable(TableView):
                 playerprofile__prefered_leg=self.filter_leg)
 
         if self.filter_league is not None:
-            leagues = [league for league in self.filter_league]
-            league = (Q(
-                playerprofile__team_object__league__highest_parent__name__icontains=league)
-                for league in leagues
-            )
-            query = reduce(operator.or_, league)
-            queryset = queryset.filter(query)
+            queryset = queryset.filter(
+                playerprofile__team_object__league__highest_parent__name__in=self.filter_league
+                )
 
         if self.filter_first_last is not None:
             queryset = queryset.annotate(fullname=Concat('first_name', Value(' '), 'last_name'))
@@ -109,6 +105,7 @@ class PlayersTable(TableView):
             maxdate = get_datetime_from_year(self.filter_year_max)
             queryset = queryset.filter(playerprofile__birth_date__year__lte=maxdate.year)
 
+        # breakpoint()
         # if self.filter_age_range is not None:
         #     mindate = get_datetime_from_age(self.filter_age_range[0])
         #     maxdate = get_datetime_from_age(self.filter_age_range[1])
@@ -209,13 +206,7 @@ class TeamsTable(TableView):
 
     def filter_queryset(self, queryset):
         if self.filter_league is not None:
-            leagues = [league for league in self.filter_league]
-            league = (Q(
-                league__highest_parent__name__icontains=league)
-                for league in leagues
-            )
-            query = reduce(operator.or_, league)
-            queryset = queryset.filter(query)
+            queryset = queryset.filter(league__highest_parent__name__in=self.filter_league)
 
         if self.filter_vivo is not None:
             vivos = [i.replace('-', '') for i in self.filter_vivo]
