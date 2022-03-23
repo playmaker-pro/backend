@@ -81,10 +81,9 @@ class PlayersTable(TableView):
                 playerprofile__prefered_leg=self.filter_leg)
 
         if self.filter_league is not None:
-            leagues = [league for league in self.filter_league]
             league = (Q(
                 playerprofile__team_object__league__highest_parent__name__icontains=league)
-                for league in leagues
+                for league in self.filter_league
             )
             query = reduce(operator.or_, league)
             queryset = queryset.filter(query)
@@ -222,10 +221,9 @@ class TeamsTable(TableView):
     def filter_queryset(self, queryset):
 
         if self.filter_league is not None:
-            leagues = [league for league in self.filter_league]
             league = (Q(
                 league__highest_parent__name__icontains=league)
-                for league in leagues
+                for league in self.filter_league
             )
             query = reduce(operator.or_, league)
             queryset = queryset.filter(query)
