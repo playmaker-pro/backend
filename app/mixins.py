@@ -24,8 +24,7 @@ class PaginateMixin:
 
     def paginate(self,
                  data: Union[QuerySet, List],
-                 limit: Union[int, None],
-                 page_num_range: int = 0) -> Paginator:
+                 limit: Union[int, None]) -> Paginator:
 
         limit = limit or self.paginate_limit
         paginator = Paginator(data, limit)
@@ -46,6 +45,8 @@ class PaginateMixin:
         self.page_num_range = range(
             paginator_pages - 3, paginator_pages + 1
         )
+
+        # Adding right and left range of visible pages
         left_index = int(page_number) - 2
         if left_index < 1:
             left_index = 1
@@ -54,8 +55,6 @@ class PaginateMixin:
         if right_index > paginator_pages:
             right_index = paginator_pages + 1
 
-
-
         self.custom_range = range(left_index, right_index)
         self.last_page = paginator_pages
 
@@ -63,8 +62,9 @@ class PaginateMixin:
 
 
 class ViewFilterMixin:
-    '''Adds properites with parsed filters
-    '''
+    """
+        Adds properites with parsed filters
+    """
     any_name = ['dowolne']
 
     def _get_param_value(self, name):
