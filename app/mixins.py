@@ -1,8 +1,9 @@
 import operator
 from functools import reduce
+from typing import Union, List
 
-from django.core.paginator import Paginator
-from django.db.models import Q, Value
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.db.models import Q, Value, QuerySet
 from django.db.models.functions import Concat
 from profiles.utils import get_datetime_from_age
 from .utils.paginate import page_object_elements_count
@@ -12,22 +13,58 @@ from django.utils import timezone
 class PaginateMixin:
     paginate_limit = 30
 
+    def __init__(self):
+        self.custom_range = None
+        self.page_num_range = None
+        self.last_page = 0
+
     @property
     def page(self):
         return self.request.GET.get('page') or 1
 
-    def paginate(self, data, limit=None):
+    def paginate(self,
+                 data: Union[QuerySet, List],
+                 limit: Union[int, None]) -> Paginator:
+
         limit = limit or self.paginate_limit
         paginator = Paginator(data, limit)
         page_number = self.page
-        page_obj = paginator.get_page(page_number)
+        paginator_pages = paginator.num_pages
+
+        try:
+            page_obj = paginator.page(page_number)
+        except PageNotAnInteger:
+            page_number = 1
+            page_obj = paginator.page(page_number)
+        except EmptyPage:
+            page_number = paginator_pages
+            page_obj = paginator.page(page_number)
+
         page_obj.elements = page_object_elements_count(page_obj)
+
+        self.page_num_range = range(
+            paginator_pages - 3, paginator_pages + 1
+        )
+
+        # Adding right and left range of visible pages
+        left_index = int(page_number) - 2
+        if left_index < 1:
+            left_index = 1
+
+        right_index = int(page_number) + 3
+        if right_index > paginator_pages:
+            right_index = paginator_pages + 1
+
+        self.custom_range = range(left_index, right_index)
+        self.last_page = paginator_pages
+
         return page_obj
 
 
 class ViewFilterMixin:
-    '''Adds properites with parsed filters
-    '''
+    """
+        Adds properites with parsed filters
+    """
     any_name = ['dowolne']
 
     def _get_param_value(self, name):
@@ -248,7 +285,7 @@ class ViewFilterMixin:
         for value in values:
             if value in POSITION_CHOICES:
                 filtered_positions.append(value)
-        
+
         return filtered_positions if filtered_positions else None
 
     @property
@@ -380,7 +417,7 @@ class ViewModalLoadingMixin:
 
             modals['inquiry']['load'] = True
             modals['approve_announcement_modal']['load'] = True
-            
+
             if user.is_club or user.is_coach or user.is_player:
                 modals['add_announcement']['load'] = True
             # if user.is_player:

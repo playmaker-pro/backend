@@ -28,7 +28,7 @@ TABLE_TYPE_COACH = definitions.COACH_SHORT
 class TableView(generic.TemplateView, mixins.PaginateMixin, mixins.ViewModalLoadingMixin, mixins.ViewFilterMixin):
     template_name = "soccerbase/table.html"
     http_method_names = ["get"]
-    paginate_limit = 15
+    paginate_limit = 25
     table_type = None
     page_title = 'Baza piłkarska'
 
@@ -44,9 +44,20 @@ class TableView(generic.TemplateView, mixins.PaginateMixin, mixins.ViewModalLoad
     def get(self, request, *args, **kwargs):
         self.is_foregin = False
         self.is_juniors = False
+
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
-        kwargs['page_obj'] = self.paginate(queryset, limit=self.paginate_limit)
+
+        total_items = request.GET.get('total_items')
+        if total_items:
+            self.paginate_limit = total_items
+
+        page_obj = self.paginate(queryset, limit=self.paginate_limit)
+
+        kwargs["last_page"] = self.last_page
+        kwargs['page_num_range'] = self.page_num_range
+        kwargs['custom_range'] = self.custom_range
+        kwargs['page_obj'] = page_obj
         kwargs['page_title'] = self.page_title
         kwargs['type'] = self.table_type
         kwargs['vivos'] = settings.VOIVODESHIP_CHOICES
@@ -114,7 +125,7 @@ class PlayersTable(TableView):
 class PlayerTalbeQuickFilter(generic.TemplateView, mixins.PaginateMixin, mixins.ViewModalLoadingMixin, mixins.ViewFilterMixin):
     template_name = "soccerbase/table.html"
     http_method_names = ["get"]
-    paginate_limit = 15
+    paginate_limit = 25
     table_type = None
     table_type = TABLE_TYPE_PLAYER
     page_title = 'Baza piłkarzy'
@@ -180,7 +191,18 @@ class PlayerTalbeQuickFilter(generic.TemplateView, mixins.PaginateMixin, mixins.
         kwargs['juniors'] = self.is_juniors or None
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
-        kwargs['page_obj'] = self.paginate(queryset, limit=self.paginate_limit)
+
+        total_items = request.GET.get('total_items')
+        if total_items:
+            self.paginate_limit = total_items
+
+        page_obj = self.paginate(queryset, limit=self.paginate_limit)
+
+        kwargs["last_page"] = self.last_page
+        kwargs['page_num_range'] = self.page_num_range
+        kwargs['custom_range'] = self.custom_range
+
+        kwargs['page_obj'] = page_obj
         kwargs['page_title'] = self.page_title
         kwargs['type'] = self.table_type
         # self.add_more_to_kwargs(kwargs)
