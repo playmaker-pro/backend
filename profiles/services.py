@@ -170,6 +170,9 @@ class ProfileVerificationService:
             if not profile.club_object.manager:
                 profile.club_object.manager = profile.user
                 profile.club_object.save()
+            else:
+                profile.club_object.editors.add(profile.user)
+                profile.club_object.save()
             self._verify_user()
 
         if (
