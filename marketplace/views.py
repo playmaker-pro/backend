@@ -304,7 +304,7 @@ class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, 
                             AnnouncementFilterMixn, mixins.PaginateMixin):
     template_name = "marketplace/base.html"
     http_method_names = ["get"]
-    paginate_limit = 1
+    paginate_limit = 25
     table_type = None
     page_title = 'Ogłoszenia'
     queried_classes = None
