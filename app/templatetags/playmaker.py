@@ -635,7 +635,11 @@ def request_link(context, user, showed_user):
     if not user.is_player and not user.is_coach and not user.is_club:
         return off
 
-    if not showed_user.manager_id:
+    try:
+        manager = showed_user.manager
+    except AttributeError:
+        manager = ''
+    if not manager:
         return off
 
     if isinstance(showed_user, Team) or isinstance(showed_user, Club):
