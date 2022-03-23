@@ -44,9 +44,20 @@ class TableView(generic.TemplateView, mixins.PaginateMixin, mixins.ViewModalLoad
     def get(self, request, *args, **kwargs):
         self.is_foregin = False
         self.is_juniors = False
+
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
-        kwargs['page_obj'] = self.paginate(queryset, limit=self.paginate_limit)
+
+        total_items = request.GET.get('total_items')
+        if total_items:
+            self.paginate_limit = total_items
+
+        page_obj = self.paginate(queryset, limit=self.paginate_limit)
+
+        kwargs["last_page"] = self.last_page
+        kwargs['page_num_range'] = self.page_num_range
+        kwargs['custom_range'] = self.custom_range
+        kwargs['page_obj'] = page_obj
         kwargs['page_title'] = self.page_title
         kwargs['type'] = self.table_type
         kwargs['vivos'] = settings.VOIVODESHIP_CHOICES
@@ -70,9 +81,13 @@ class PlayersTable(TableView):
                 playerprofile__prefered_leg=self.filter_leg)
 
         if self.filter_league is not None:
-            queryset = queryset.filter(
-                playerprofile__team_object__league__highest_parent__name__in=self.filter_league
-                )
+            leagues = [league for league in self.filter_league]
+            league = (Q(
+                playerprofile__team_object__league__highest_parent__name__icontains=league)
+                for league in leagues
+            )
+            query = reduce(operator.or_, league)
+            queryset = queryset.filter(query)
 
         if self.filter_first_last is not None:
             queryset = queryset.annotate(fullname=Concat('first_name', Value(' '), 'last_name'))
@@ -94,7 +109,6 @@ class PlayersTable(TableView):
             maxdate = get_datetime_from_year(self.filter_year_max)
             queryset = queryset.filter(playerprofile__birth_date__year__lte=maxdate.year)
 
-        # breakpoint()
         # if self.filter_age_range is not None:
         #     mindate = get_datetime_from_age(self.filter_age_range[0])
         #     maxdate = get_datetime_from_age(self.filter_age_range[1])
@@ -195,7 +209,13 @@ class TeamsTable(TableView):
 
     def filter_queryset(self, queryset):
         if self.filter_league is not None:
-            queryset = queryset.filter(league__highest_parent__name__in=self.filter_league)
+            leagues = [league for league in self.filter_league]
+            league = (Q(
+                league__highest_parent__name__icontains=league)
+                for league in leagues
+            )
+            query = reduce(operator.or_, league)
+            queryset = queryset.filter(query)
 
         if self.filter_vivo is not None:
             vivos = [i.replace('-', '') for i in self.filter_vivo]

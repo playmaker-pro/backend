@@ -12,17 +12,17 @@ const maxYear = document.querySelector('[name="year_max"]');
 let urlSearchParams = new URLSearchParams(window.location.search);
 
 
-const inputParams = (dom, nameOfParam) => {
-
-    urlSearchParams = new URLSearchParams(window.location.search);
-
-    if (!dom.value){
-        urlSearchParams.delete(nameOfParam, dom.value)
-    } else {
-        urlSearchParams.set(nameOfParam, dom.value);
-    }
-    window.history.pushState("", "", `?${urlSearchParams}`);
-}
+// const inputParams = (dom, nameOfParam) => {
+//
+//     urlSearchParams = new URLSearchParams(window.location.search);
+//
+//     if (!dom.value){
+//         urlSearchParams.delete(nameOfParam, dom.value)
+//     } else {
+//         urlSearchParams.set(nameOfParam, dom.value);
+//     }
+//     window.history.pushState("", "", `?${urlSearchParams}`);
+// }
 
 const dropdownParams = (dom, nameOfParam) =>{
     
@@ -35,7 +35,7 @@ const dropdownParams = (dom, nameOfParam) =>{
         newEl.push(element.innerText)
     })
 
-    if ((nameOfParam == 'leg' && newEl[0] == '----') || selected.length == 0){
+    if ((nameOfParam === 'leg' && newEl[0] === '----') || selected.length === 0){
         urlSearchParams.delete(nameOfParam, newEl)
     } else {
         urlSearchParams.set(nameOfParam, newEl);   

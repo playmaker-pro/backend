@@ -16,6 +16,11 @@
 
 .paginator{
     height: 3rem;
+    margin: 1rem 0 3rem 0;
+}
+
+.pagination-first-div{
+    flex: 1;
 }
 
 .paginator a{
@@ -40,18 +45,22 @@
     color: red !important
 }
 
-.got-to-site{
+.go-to-site{
     display: flex;
     align-content: center;
     align-items: center;
 }
 
-.got-to-site input{
+.go-to-site input{
     width: 2.5rem;
     padding: 0.1rem;
 }
 
-.got-to-site span, .total-ann span{
+.go-to-site button{
+    border: none;
+    background-color: inherit;
+}
+.go-to-site span, .total-ann span{
     padding-bottom: 0;
     font-size: 0.8rem;
 }

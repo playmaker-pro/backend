@@ -5,176 +5,158 @@
 
 <link rel="stylesheet" href="{% static 'assets/css/paginator.css' %}">
 
-{% with request.GET.urlencode|get_urls_with_no_page as get_params %}
-<div id="pagination" class="pagination d-block mt-2">
-    <span class="float-center">
-        <span class="step-links text-center">
+{#{% with request.GET.urlencode|get_urls_with_no_page as get_params %}#}
+{#<div id="pagination" class="pagination d-block mt-2">#}
+{#    <span class="float-center">#}
+{#        <span class="step-links text-center">#}
+{##}
+{#            {% if page_obj.has_previous %}#}
+{#                <span class="p-1">#}
+{#                {% with "?page=1"|addstr:"&"|addstr:get_params as button_url %}#}
+{#                    {% include 'platform/buttons/action_button.html' with button_text=_('pierwsza') checks=True button_url=button_url %}#}
+{#                {% endwith %}#}
+{##}
+{#                </span>#}
+{#                <span class="p-1">#}
+{##}
+{#                {% with "?page="|addstr:page_obj.previous_page_number|addstr:"&"|addstr:get_params as button_url %}#}
+{#                    {% include 'platform/buttons/action_button.html' with button_text=_('poprzednia') button_url=button_url checks=True button_prefix='&laquo;'%}#}
+{#                {% endwith %}#}
+{#                </span>#}
+{#            {% endif %}#}
+{##}
+{#            <span class="current">#}
+{#                {% trans 'Strona' %} {{ page_obj.number }} {% trans 'z' %} {{ page_obj.paginator.num_pages }}.#}
+{#            </span>#}
+{##}
+{#            {% if page_obj.has_next %}#}
+{#               <span class="p-1">#}
+{#                {% with "?page="|addstr:page_obj.next_page_number|addstr:"&"|addstr:get_params as button_url %}#}
+{##}
+{#                    {% include 'platform/buttons/action_button.html' with button_text=_('następna') button_url=button_url checks=True %}#}
+{#                {% endwith %}#}
+{#                </span>#}
+{#                <span class="p-1">#}
+{#                {% with "?page="|addstr:page_obj.paginator.num_pages|addstr:"&"|addstr:get_params as button_url %}#}
+{#                    {% include 'platform/buttons/action_button.html' with button_text=_('ostatnia') button_url=button_url checks=True button_suffix='&raquo;'%}#}
+{#                {% endwith %}#}
+{#                </span>#}
+{#            {% endif %}#}
+{#        </span>#}
+{#    </span>#}
+{##}
+{##}
+{#    <div class="float-right">#}
+{##}
+{#            <span class="main-color "> {{ page_obj.elements }}</span> /  <span class="main-color">{{ page_obj.paginator.count }} </span>wszystkich {{ object_type|default:'wpisów' }}#}
+{##}
+{#    </div>#}
+{#{% endwith %}#}
+{#</div>#}
 
-            {% if page_obj.has_previous %}
-                <span class="p-1">
-                {% with "?page=1"|addstr:"&"|addstr:get_params as button_url %}
-                    {% include 'platform/buttons/action_button.html' with button_text=_('pierwsza') checks=True button_url=button_url %}
-                {% endwith %}
-                
-                </span>
-                <span class="p-1">
-                
-                {% with "?page="|addstr:page_obj.previous_page_number|addstr:"&"|addstr:get_params as button_url %}
-                    {% include 'platform/buttons/action_button.html' with button_text=_('poprzednia') button_url=button_url checks=True button_prefix='&laquo;'%}
-                {% endwith %}
-                </span>
-            {% endif %}
+{% with total_pages=page_obj.paginator.num_pages total_items=request.GET.total_items %}
+    <div class="d-flex paginator
+        {% if total_pages <= 1 or total_pages == None %}justify-content-end
+        {% else %}justify-content-between
+        {% endif %}"
+    >
 
-            <span class="current">
-                {% trans 'Strona' %} {{ page_obj.number }} {% trans 'z' %} {{ page_obj.paginator.num_pages }}.
-            </span>
+        <div class="d-flex pagination-first-div">
 
-            {% if page_obj.has_next %}
-               <span class="p-1">
-                {% with "?page="|addstr:page_obj.next_page_number|addstr:"&"|addstr:get_params as button_url %}
-                   
-                    {% include 'platform/buttons/action_button.html' with button_text=_('następna') button_url=button_url checks=True %}
-                {% endwith %}
-                </span>
-                <span class="p-1">
-                {% with "?page="|addstr:page_obj.paginator.num_pages|addstr:"&"|addstr:get_params as button_url %}
-                    {% include 'platform/buttons/action_button.html' with button_text=_('ostatnia') button_url=button_url checks=True button_suffix='&raquo;'%}
-                {% endwith %}
-                </span>
-            {% endif %}
-        </span>
-    </span>
-
-
-    <div class="float-right">  
- 
-            <span class="main-color "> {{ page_obj.elements }}</span> /  <span class="main-color">{{ page_obj.paginator.count }} </span>wszystkich {{ object_type|default:'wpisów' }}
-
-    </div>
-
-</div>
-<div class="d-flex paginator justify-content-between">
-    {% with page_obj.paginator.num_pages as total_pages %}
-        <div class="d-flex ">
             {% if page_obj.has_previous %}
 
                 <div class="d-flex">
-                    <a href="{% url 'marketplace:announcements' %}?page=1"
+                    <a href="{{ request.path }}?page=1{% if total_items %}&total_items={{ total_items }}{% endif %}"
                         class="cdp_i page-item {% if page == page_obj.number %}active btn-red {% endif %}">
                         <p class="arrow-right">&laquo;</p>
                     </a>
-                    <a href="{% url 'marketplace:announcements' %}?page={{ page_obj.previous_page_number }}">
+                    <a href="{{ request.path }}?page={{ page_obj.previous_page_number }}{% if total_items %}&total_items={{ total_items }}{% endif %}">
                         <p class="arrow-right">&lsaquo;</p>
                     </a>
                 </div>
 
-        {#        <a href="{% url 'marketplace:announcements' %}?page=1"#}
-        {#           class="cdp_i page-item {% if page == page_obj.number %}active btn-red {% endif %} toogle-view">#}
-        {#            <p class="">1</p>#}
-        {#        </a>#}
-
-            {% endif %}
-
-            {% if page_obj.has_previous %}
-
-        {#        <a href="{% url 'marketplace:announcements' %}?page={{ page_obj.previous_page_number }}" class="pg-img">#}
-        {#            <img src="{% static 'assets/img/paginator/left-arrows.png' %}" alt="Arrow paginator left">#}
-        {#        </a>#}
             {% endif %}
 
             {% if total_pages > 1 %}
-
                 {% for page in custom_range %}
-                    <a href="{% url 'marketplace:announcements' %}?page={{ page }}"
+
+                    <a href="{{ request.path }}?page={{ page }}{% if total_items %}&total_items={{ total_items }}{% endif %}"
                        class="cdp_i page-item toogle-view {% if page == page_obj.number %}active{% endif %}">
                         <p class="page-num">{{page}}</p>
                     </a>
 
                 {% endfor %}
-
             {% endif %}
-
-
-            {% if page_obj.number not in page_num_range %}
-        {#        <a href="{% url 'marketplace:announcements' %}?page={{ last_page }}" class="pg-img">#}
-        {#            <img src="{% static 'assets/img/paginator/next.png' %}" alt="Arrow paginator right">#}
-        {#        </a>#}
-        {#        <a href=""><p class="arrow-right">&raquo;</p></a>#}
-
-        {#        <a href="{% url 'marketplace:announcements' %}?page={{ last_page }}" class="pg-img">#}
-        {#            <img src="{% static 'assets/img/paginator/arrow-right.png' %}" alt="Double arrow paginator right">#}
-        {#        </a>#}
-        {#            <a class="cdp_i toogle-view"#}
-        {#               href="{% url 'marketplace:announcements' %}?page={{ last_page }}">{{last_page}}#}
-        {#        </a>#}
-
-            {% endif %}
-
 
             {% if page_obj.has_next %}
-
-        {#        <a href="{% url 'marketplace:announcements' %}?page={{ page_obj.next_page_number }}"#}
-        {#           class="cdp_i page-link toogle-view">next#}
-        {#        </a>#}
-                <a href="{% url 'marketplace:announcements' %}?page={{ page_obj.next_page_number }}"><p class="arrow-right">&rsaquo;</p></a>
-
-                <a href="{% url 'marketplace:announcements' %}?page={{ last_page }}">
+                <a href="{{ request.path }}?page={{ page_obj.next_page_number }}
+                    {% if total_items %}&total_items={{ total_items }}
+                    {% endif %}"
+                >
+                    <p class="arrow-right">&rsaquo;</p>
+                </a>
+                <a href="{{ request.path }}?page={{ last_page }}{% if total_items %}&total_items={{ total_items }}{% endif %}">
                     <p class="arrow-right">&raquo;</p>
                 </a>
-
             {% endif %}
 
-            <div class="got-to-site {% if total_pages > 1 %}ml-4{%endif %}">
-                <form action="{% url 'marketplace:announcements' %}" class="got-to-site" method="get">
-                    <span>Idź do strony</span>
-                    <input class="serv-section-2 ml-2" type="text" name="page">
-                    <a><p class="arrow-right">&rsaquo;</p></a>
-                </form>
+            {% if total_pages > 1 %}
+                <div class="got-to-site {% if total_pages > 1 %}ml-4{%endif %}">
+                    <form class="go-to-site">
+                        <span>Idź do strony</span>
+                        <input class="serv-section-2 ml-2 paginate-page" type="text" name="page">
+                        <a><button type="submit" class="arrow-right">&rsaquo;</button></a>
+                    </form>
+                </div>
+            {% endif %}
 
-
-            </div>
         </div>
 
         <div class="total-ann">
             <div class="dropdown ">
-              <div class="btn-group">
-                  <button class="btn btn-sm d-flex dropdown-toggle dropdown-btn"
+
+                <div class="btn-group">
+                    <button class="btn btn-sm d-flex dropdown-toggle dropdown-btn"
                           type="button"
                           data-toggle="dropdown"
                           aria-haspopup="true"
                           aria-expanded="false"
-                  >
-                      <a href="{% url 'marketplace:announcements' %}?total_items=25">25</a>
-                      <span>
-                          &#9660;
-                      </span>
-                  </button>
-                  <div class="dropdown-menu dropdown-custom">
-                      <button class="dropdown-item" type="button">
-                          <a data-1="1" href="{% url 'marketplace:announcements' %}?total_items=10">10</a>
-                      </button>
+                    >
+                        <a href="{{ request.path }}?total_items=25">25</a>
+                        <span>
+                            &#9660;
+                        </span>
+                    </button>
 
-                      <button class="dropdown-item" type="button">
-                          <a data-2="2" href="{% url 'marketplace:announcements' %}?total_items=50">50</a>
-                      </button>
+                    <div class="dropdown-menu dropdown-custom">
 
-                      <button class="dropdown-item" type="button">
-                          <a data-3="3" href="{% url 'marketplace:announcements' %}?total_items=100">100</a>
-                      </button>
-                  </div>
+                        <button class="dropdown-item" type="button">
+                          <span data-1="1">10</span>
+                        </button>
 
-              </div>
-            <span class="ml-2">/</span>
-            <span class="main-color">
-                {{ page_obj.paginator.count }}
-            </span>
-            <span>
-                wszystkich {{ object_type|default:'wpisów' }}
-            </span>
+                        <button class="dropdown-item" type="button">
+                          <span data-2="2">50</span>
+                        </button>
+
+                        <button class="dropdown-item" type="button">
+                          <span data-3="3">100</span>
+                        </button>
+                    </div>
+
+                </div>
+
+                <span class="ml-2">/</span>
+                <span class="main-color">
+                    {{ page_obj.paginator.count }}
+                </span>
+                <span>
+                    wszystkich {{ object_type|default:'wpisów' }}
+                </span>
+
+            </div>
         </div>
-    {% endwith %}
-</div>
 
-    <script type="text/javascript" src="{% static 'assets/js/pagination.js' %}"></script>
-
+    </div>
 {% endwith %}
+
+<script type="text/javascript" src="{% static 'assets/js/pagination.js' %}"></script>
