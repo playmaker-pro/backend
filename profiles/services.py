@@ -19,7 +19,7 @@ class ProfileVerificationService:
         self.user = self.profile.user
 
     def verify(self):
-        if len(self.user.last_name) < 2:
+        if self.user.validate_last_name():
             self.user.unverify()
             self.user.save()
             logger.info(
@@ -34,7 +34,6 @@ class ProfileVerificationService:
             self._verify_club()
 
     def update_verification_data(self, data: dict) -> models.ProfileVerificationStatus:
-        print(data)
         if has_team := data.get("has_team"):
             if has_team == "tak mam klub":
                 self.profile.verification.has_team = True
