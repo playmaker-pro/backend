@@ -222,6 +222,11 @@ class User(AbstractUser, UserRoleMixin):
     def is_pending_role_change(self):
         return self.changerolerequestor.filter(approved=False).count() > 0
 
+    def validate_last_name(self):
+        if len(self.last_name) < 2:
+            return False
+        return True
+
     def pending_role_change(self):
         return self.changerolerequestor.filter(approved=False).last()
 

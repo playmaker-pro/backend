@@ -341,11 +341,21 @@ class ViewModalLoadingMixin:
                 'auto': False,
                 'load': False,
                 'async': False
+            },
+            'no_updated_profile_modal': {
+                'name': 'profileNotValidModal',
+                'template': 'profiles/modals/_profile_not_valid.html',
+                'auto': False,
+                'load': False,
+                'async': False
             }
         }
         # Load custom settigs, if class attribute is being set to Ture
         if getattr(self, 'modal_verification_force_loading'):
             modals['verification']['load'] = True
+
+        if not user.validate_last_name():
+            modals['no_updated_profile_modal']['load'] = True
 
         # Loading account specific modals (mandatory)
         if not user.is_authenticated:

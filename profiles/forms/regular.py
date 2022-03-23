@@ -9,6 +9,7 @@ from profiles import models
 from django_countries.widgets import CountrySelectWidget
 from django.utils.translation import gettext_lazy as _
 from profiles import widgets
+from django.contrib import messages
 
 
 User = get_user_model()
@@ -100,9 +101,9 @@ class BaseProfileForm(forms.ModelForm):
         self.helper.label_class = 'col-md-4 text-md-right text-muted upper form-label'
         self.helper.field_class = 'col-md-6'
 
-
 class UserBasicForm(BaseProfileForm):
     def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
         self.helper.layout = Layout(
             Fieldset(
@@ -114,6 +115,17 @@ class UserBasicForm(BaseProfileForm):
                 css_class='col',
             ),
         )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        last_name = cleaned_data.get("last_name")
+
+        if len(last_name) < 2:
+            if self.request:
+                self.request.user.unverify()
+                self.request.user.save()
+                messages.error(self.request, "Twoje konto wymaga werifikacji. Nazwisko musi miec co najmniej 2 znaki.")
+
 
     class Meta:
         model = User
