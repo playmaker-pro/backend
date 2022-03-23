@@ -27,7 +27,7 @@ from django_countries.widgets import CountrySelectWidget
 from django.utils.translation import gettext_lazy as _
 from profiles import widgets
 from crispy_forms.bootstrap import InlineRadios
-from clubs.models import Team
+from clubs.models import Team, Club
 from profiles.services import ProfileVerificationService
 
 from dataclasses import dataclass
@@ -165,11 +165,15 @@ class ClubVerificationForm(VerificationForm):
     custom_settings = {
         "team_club_league_voivodeship_ver": {"help_text": "Który klub reprezentujesz"},
         "club_role": {"help_text": "Jaka rolę pełnisz w klubie"},
-        "team": {"help_text": "Team którym zarządzasz"},
+        "team": {"help_text": "Klub którym zarządzasz"},
     }
-
+    team = forms.ModelChoiceField(
+        queryset=Club.objects.all(),
+        widget=forms.Select(attrs={"data-live-search": "true"}),
+    )
     building_fields = [
         ("club_role", {}),
+
     ]
 
     class Meta:
