@@ -1,9 +1,8 @@
-
-
 from django.contrib import admin
 from utils import linkify
 from app.utils.admin import json_filed_data_prettified
-from . import models
+from profiles import models
+from .filters import OnlyLastVerificationFilter, HasDataMapperIdFilter, HasTeamObjectFilter, HasClubObjectFilter, HasTextInputFilter
 
 
 @admin.register(models.ProfileVisitHistory)
@@ -121,9 +120,23 @@ refresh.short_description = '0. Refresh( 1, 2,3,4 )'
 
 @admin.register(models.ProfileVerificationStatus)
 class ProfileVerificationStatusAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('id', linkify('owner'), 'has_team', 'team_not_found', 'club', 'team', 'get_team_club_league_voivodeship_ver', 'status', 'set_by', 'created_at', 'updated_at', linkify('previous'), 'get_next')
+    list_filter = ('owner__declared_role', 'status', OnlyLastVerificationFilter, HasDataMapperIdFilter, HasTextInputFilter, ('has_team', admin.BooleanFieldListFilter), ('team_not_found', admin.BooleanFieldListFilter), HasTeamObjectFilter, HasClubObjectFilter)
 
-  
+    def get_next(self, obj):
+        return obj.next
+
+    get_next.short_description = 'NEXT'
+
+    def get_team_club_league_voivodeship_ver(self, obj):
+        try:
+            return obj.owner.profile.team_club_league_voivodeship_ver
+        except:
+            return ''
+        
+    get_team_club_league_voivodeship_ver.short_description = 'Text input'
+
+
 @admin.register(models.PlayerProfile)
 class PlayerProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (

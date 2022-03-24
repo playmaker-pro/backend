@@ -1,3 +1,4 @@
+from re import T
 from roles import definitions
 from . import models
 from django.contrib.auth import get_user_model
@@ -33,39 +34,49 @@ class ProfileVerificationService:
         elif self.user.is_club:
             self._verify_club()
 
-    def update_verification_data(self, data: dict) -> models.ProfileVerificationStatus:
+    def update_verification_data(self, data: dict, requestor: User = None) -> models.ProfileVerificationStatus:
+        """using dict-like data we can create new verification object"""
+        logger.debug(f"New verification recieved for {self.user}")
+        team = None
+        club = None
         if has_team := data.get("has_team"):
             if has_team == "tak mam klub":
-                self.profile.verification.has_team = True
+                has_team = True
             else:
-                self.profile.verification.has_team = False
+                has_team = False
 
-        self.profile.verification.team_not_found = data.get("team_not_found")
-
-
-        if data.get("team") and self.profile.verification.team_not_found is False:
-            
+        team_not_found = data.get("team_not_found")
+        if data.get("team") and team_not_found is False:
             if self.user.is_club:
-                self.profile.verification.previous_club = self.profile.verification.club
-                self.profile.verification.club = data.get("team")
-
-            else:    
-                self.profile.verification.previous_team = self.profile.verification.team
-                self.profile.verification.team = data.get("team")
+                club = data.get("team")
+            else:  
+                team = data.get("team")
         else:
             if self.user.is_club:
-                self.profile.verification.previous_club = self.profile.verification.club
-                self.profile.verification.club = data.get("team")
+                club = data.get("team")
             else:
-                self.profile.verification.previous_team = self.profile.verification.team
-                self.profile.verification.team = None
-        # self.profile.verificaiton.previous_status = instance.verificaiton.status
+                team = None
 
-        # self.profile.verificaiton.status =
+                
+        set_by = requestor or User.get_system_user()
+        new = models.ProfileVerificationStatus.create(
+            owner=self.user,
+            previous=self.profile.verification,
+            has_team=has_team,
+            team_not_found=team_not_found,
+            club=club,
+            team=team,
+            set_by=set_by
+        )
+        self.profile.verification = new
+        self.profile.save()
+        return new
 
-        self.profile.verification.save()
-        return self.profile.verification
-
+    def update_verification_status(self, status: str, verification: models.ProfileVerificationStatus = None ) -> None:
+        verification = self.profile.verification or verification
+        verification.status = status
+        verification.save()
+        
     def _verify_user(self):
         self.user.verify()
         self.user.save()
