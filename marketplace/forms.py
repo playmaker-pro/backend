@@ -63,6 +63,7 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
     ]
 
     def __init__(self, *args, **kwargs):
+        # self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -74,6 +75,7 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
 
         self.fields['year_from'] = forms.ChoiceField(choices=year_choices())
         self.fields['Teams'] = forms.ChoiceField(choices=[])
+        # TODO nie definiowac choicefield sprawdzic linijke 155
         self.fields['year_to'] = forms.ChoiceField(choices=year_choices())
         self.set_fields_rules()
         self.helper.layout = self.build_verification_form()

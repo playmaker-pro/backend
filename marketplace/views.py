@@ -213,6 +213,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                         'league': league
                     })
                 form.fields['target_league'].queryset = League.objects.is_top_parent()
+            #     TODO wykorzystac
 
             else:
                 return JsonResponse({})
