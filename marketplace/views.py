@@ -301,10 +301,10 @@ class AddAnnouncementView(LoginRequiredMixin, View):
 
 
 class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, mixins.ViewFilterMixin,
-                            AnnouncementFilterMixn):
+                            AnnouncementFilterMixn, mixins.PaginateMixin):
     template_name = "marketplace/base.html"
     http_method_names = ["get"]
-    paginate_limit = 9
+    paginate_limit = 25
     table_type = None
     page_title = 'Ogłoszenia'
     queried_classes = None
@@ -347,15 +347,34 @@ class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, 
 
     def get(self, request, *args, **kwargs):
         lista = []
+
+        total_items = request.GET.get('total_items')
+        if total_items:
+            self.paginate_limit = total_items
+        # pages = request.GET.get('pages')
+        # if pages:
+        #     self.paginate_limit = pages
+
         for i in self.queried_classes:
             queryset = self.get_queryset(i)
             queryset = self.filter_queryset(queryset)
             lista.append(queryset)
         queryset = list(chain(*lista))
         queryset = sorted(queryset, key=lambda x: x.created_at, reverse=True)
-        paginator = Paginator(queryset, self.paginate_limit)
-        page_number = request.GET.get('page') or 1
-        page_obj = paginator.get_page(page_number)
+
+
+        page_obj = self.paginate(queryset, limit=self.paginate_limit)
+
+        # paginator = Paginator(queryset, self.paginate_limit)
+        # page_number = request.GET.get('page') or 1
+        # page_obj = paginator.get_page(page_number)
+
+        # kwargs["page_num_range"] = range(
+        #     page_obj.num_pages - 3, page_obj.num_pages + 1
+        # )
+        kwargs["last_page"] = self.last_page
+        kwargs['page_num_range'] = self.page_num_range
+        kwargs['custom_range'] = self.custom_range
         kwargs['page_obj'] = page_obj
         kwargs['page_title'] = self.page_title
         kwargs['type'] = self.table_type

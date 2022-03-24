@@ -140,7 +140,6 @@ class User(AbstractUser, UserRoleMixin):
         example:
             extra['reason'] = 'User removed field1'
         '''
-        print(">>>>>>>>>>>>>>>>> verifyin...")
         if not silent:
             verification_notification(self)
 
@@ -176,7 +175,7 @@ class User(AbstractUser, UserRoleMixin):
         example:
             extra['reason'] = 'User removed field1'
         '''
-        print(">>>>>>>>>>>>>>>>> un-verifyin...")
+
         if extra:
             reason = extra.get('reason')
         else:
@@ -222,6 +221,11 @@ class User(AbstractUser, UserRoleMixin):
     @property
     def is_pending_role_change(self):
         return self.changerolerequestor.filter(approved=False).count() > 0
+
+    def validate_last_name(self):
+        if len(self.last_name) < 2:
+            return False
+        return True
 
     def pending_role_change(self):
         return self.changerolerequestor.filter(approved=False).last()

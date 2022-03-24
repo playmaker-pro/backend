@@ -1,28 +1,41 @@
-
 {% load i18n %}
 
 {% if user.is_authenticated and user.is_missing_verification_data %}
-<div class="notification-banner">
-  <div class="banner alert alert-danger" role="alert">
-    <strong>{% trans 'Twój profil wymaga weryfikacji' %}.</strong>
-    <button type="button" class="btn-pm btn-pm-sm" data-toggle="modal" data-target="#verificationModal">
-      {% trans 'Zweryfikuj swoje konto' %}
-    </button>
+    <div class="notification-banner">
+      <div class="banner alert alert-danger" role="alert">
+        <strong>{% trans 'Twój profil wymaga weryfikacji' %}.</strong>
+        <button type="button" class="btn-pm btn-pm-sm" data-toggle="modal" data-target="#verificationModal">
+          {% trans 'Zweryfikuj swoje konto' %}
+        </button>
 
-  </div>
-</div>
+      </div>
+    </div>
 
 {% elif user.is_authenticated and user.profile.is_not_complete %}
-<div class="notification-banner">
-  <div class="banner alert alert-danger" role="alert">
-    {% if user.is_player or user.is_coach or user.is_club %}
-      <strong>{% blocktrans with percentage=user.profile.percentage_completion%} Twój profil jest gotowy w  {{percentage}}%.{% endblocktrans %}</strong>{% trans 'Uzupełnij swoje CV by móc korzystać z wszelkich funkcjonalności platformy. <span class="d-none d-md-inline"> Stań się bardziej widoczny i zwiększ swoje szanse na znalezienie klubu na który zasługujesz!' %}</span> <a href="{% url 'profiles:edit_self' %}">{% trans 'edytuj CV' %}</a>
-    {% else %}
-      <strong>{% blocktrans with percentage=user.profile.percentage_completion%} Twój profil jest gotowy w  {{percentage}}%.{% endblocktrans %}</strong>{% trans 'Uzupełnij go by móc korzystać z wszelkich funkcjonalności platformy.' %}</span> <a href="{% url 'profiles:edit_self' %}">{% trans 'edytuj profil' %}</a>
-    {% endif %}
-  </div>
-</div>
-
+    <div class="notification-banner">
+      <div class="banner alert alert-danger" role="alert">
+        {% if user.is_player or user.is_coach or user.is_club %}
+            <strong>
+                {% blocktrans with percentage=user.profile.percentage_completion %}
+                  Twój profil jest gotowy w  {{percentage}}%.{% endblocktrans %}
+            </strong>
+            {% trans 'Uzupełnij swoje CV by móc korzystać z wszelkich funkcjonalności platformy.' %}
+            <span class="d-none d-md-inline">
+                Stań się bardziej widoczny i zwiększ swoje szanse na znalezienie klubu na który zasługujesz!
+            </span>
+            <a href="{% url 'profiles:edit_self' %}">{% trans 'edytuj CV' %}</a>
+        {% else %}
+          <strong>
+              {% blocktrans with percentage=user.profile.percentage_completion%}
+                  Twój profil jest gotowy w  {{percentage}}%.{% endblocktrans %}
+          </strong>
+            {% trans 'Uzupełnij go by móc korzystać z wszelkich funkcjonalności platformy.' %}
+          <a href="{% url 'profiles:edit_self' %}">
+              {% trans 'edytuj profil' %}
+          </a>
+        {% endif %}
+      </div>
+    </div>
 {% endif %}
 
 
