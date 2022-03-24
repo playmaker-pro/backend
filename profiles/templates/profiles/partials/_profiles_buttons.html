@@ -5,11 +5,14 @@
     {% include 'profiles/buttons/edit.html' %}
 
     {% if user.is_player or user.is_club or user.is_coach %}
-        {% if user.is_verified %}
-            <a href="#verificationModal" class="btn-act" data-target="#verificationModal" data-toggle="modal" >{% trans 'Zmieniłem klub' %}</a>
-        {% else %}
-            <a href="#verificationModal" class="btn-act" data-target="#verificationModal" data-toggle="modal" >{% trans 'Zweryfikuj swoje konto' %}</a>
-        {% endif %}
+        {% get_user_verification_modal_id user as verification_modal_id %} 
+        <a href="{{ verification_modal_id }}" class="btn-act" data-target="{{ verification_modal_id }}" data-toggle="modal" >
+            {% if user.is_verified %}
+                {% trans 'Zmieniłem klub' %}
+            {% else %}
+                {% trans 'Zweryfikuj swoje konto' %}
+            {% endif %}
+        </a>
     {% endif %}
 
     {% if user.is_club %}

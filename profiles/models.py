@@ -36,25 +36,6 @@ GLOBAL_TRAINING_READY_CHOCIES = (
         (2, '3-4 treningi'),
         (3, '5-6 treningi'))
 
-VOIVODESHIP_CHOICE = (
-        ('Dolnośląskie', 'Dolnośląskie'),
-        ('Kujawsko-pomorskie', 'Kujawsko-pomorskie'),
-        ('Lubelskie', 'Lubelskie'),
-        ('Lubuskie', 'Lubuskie'),
-        ('Łódzkie', 'Łódzkie'),
-        ('Małopolskie', 'Małopolskie'),
-        ('Mazowieckie', 'Mazowieckie'),
-        ('Opolskie', 'Opolskie'),
-        ('Podkarpackie', 'Podkarpackie'),
-        ('Podlaskie', 'Podlaskie'),
-        ('Pomorskie', 'Pomorskie'),
-        ('Śląskie', 'Śląskie'),
-        ('Świętokrzyskie', 'Świętokrzyskie'),
-        ('Warmińsko-Mazurskie', 'Warmińsko-Mazurskie'),
-        ('Wielkopolskie', 'Wielkopolskie'),
-        ('Zachodniopomorskie', 'Zachodniopomorskie')
-    )
-
 
 class RoleChangeRequest(models.Model):
     """Keeps track on requested changes made by users."""
@@ -320,34 +301,36 @@ class BaseProfile(models.Model, EventLogMixin):
             self.data_mapper_changed = False
 
         # we are updating existing model (not first occurence)
-        ver_new = self._get_verification_field_values(self)
-        if not object_exists:
-            ver_old = ver_new
+        # rkesik: due to new registration flow that is not needed.
+        # ver_new = self._get_verification_field_values(self)
+        # if not object_exists:
+        #     ver_old = ver_new
 
-        # if not silent_param:
+        # rkesik: due to new registration flow that is not needed.
         # Cases when one of verification fields is None
-        if self._is_verification_fields_filled():
-            if not self.user.is_waiting_for_verification and not self.user.is_verified:
-                reason_text = 'Parametry weryfikacyjne są uzupełnione, a użytkownik nie miał wcześniej statusu "zwerfikowany" ani że "czeka na weryfikacje"'
-                reason = f'[verification-params-ready]: \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS})  \n Old:{ver_old} -> New:{ver_new} \n'
-                self.user.waiting_for_verification(extra={'reason': reason})
-                self.user.save()
-            else:
-                if self._verification_fileds_has_changed_and_was_filled(ver_old, ver_new):
-                    reason_text = 'Parametry weryfikacyjne zostały zmienione i są wszyskie pola uzupełnione.'
-                    reason = f'[verification-params-changed] \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS}) \n Old:{ver_old} -> New:{ver_new} \n'
-                    self.user.unverify(extra={'reason': reason})
-                    self.user.save()
-        else:
-            if not self.user.is_missing_verification_data:
-                self.user.missing_verification_data()  # -> change state to missing ver data
-                self.user.save()
+        # if self._is_verification_fields_filled():
+        #     if not self.user.is_waiting_for_verification and not self.user.is_verified:
+        #         reason_text = 'Parametry weryfikacyjne są uzupełnione, a użytkownik nie miał wcześniej statusu "zwerfikowany" ani że "czeka na weryfikacje"'
+        #         reason = f'[verification-params-ready]: \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS})  \n Old:{ver_old} -> New:{ver_new} \n'
+        #         self.user.waiting_for_verification(extra={'reason': reason})
+        #         self.user.save()
+        #     else:
+        #         if self._verification_fileds_has_changed_and_was_filled(ver_old, ver_new):
+        #             reason_text = 'Parametry weryfikacyjne zostały zmienione i są wszyskie pola uzupełnione.'
+        #             reason = f'[verification-params-changed] \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS}) \n Old:{ver_old} -> New:{ver_new} \n'
+        #             self.user.unverify(extra={'reason': reason})
+        #             self.user.save()
+        # else:
+        #     if not self.user.is_missing_verification_data:
+        #         self.user.missing_verification_data()  # -> change state to missing ver data
+        #         self.user.save()
 
-    def _is_verification_fields_filled(self):
-        return all(self._get_verification_field_values(self))
+    # rkesik: due to new registration flow that is not needed.
+    # def _is_verification_fields_filled(self):
+    #     return all(self._get_verification_field_values(self))
 
-    def _verification_fileds_has_changed_and_was_filled(self, old, new):
-        return old != new and all(old) and all(new)
+    # def _verification_fileds_has_changed_and_was_filled(self, old, new):
+    #     return old != new and all(old) and all(new)
 
     def _get_verification_field_values(self, obj):
         return [getattr(obj, field) for field in self.VERIFICATION_FIELDS]
@@ -550,7 +533,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         _('Wojewódźtwo (raw)'), 
         help_text=_('Wojewódźtwo w którym grasz.'), 
         max_length=68, blank=True, null=True,
-        choices=VOIVODESHIP_CHOICE
+        choices=settings.VOIVODESHIP_CHOICES
         )
     birth_date = models.DateField(_('Data urodzenia'), blank=True, null=True)
     height = models.PositiveIntegerField(_('Wzrost'), help_text=_('Wysokość (cm) [130-210cm]'), blank=True, null=True, validators=[MinValueValidator(130), MaxValueValidator(210)])
@@ -594,7 +577,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         max_length=68,
         blank=True,
         null=True,
-        choices=VOIVODESHIP_CHOICE
+        choices=settings.VOIVODESHIP_CHOICES
         )
 
     def display_position_fantasy(self):
@@ -1049,7 +1032,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         max_length=68,
         blank=True,
         null=True,
-        choices=VOIVODESHIP_CHOICE
+        choices=settings.VOIVODESHIP_CHOICES
         )
 
     club_role = models.IntegerField(
@@ -1291,6 +1274,8 @@ class ProfileVerificationStatus(models.Model):
     previous_status = models.CharField(max_length=255, null=True, blank=True)
     team = models.ForeignKey('clubs.Team', on_delete=models.SET_NULL, null=True, blank=True, related_name='team')
     previous_team = models.ForeignKey('clubs.Team', on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_team')
+    club = models.ForeignKey('clubs.Club', on_delete=models.SET_NULL, null=True, blank=True, related_name='club')
+    previous_club = models.ForeignKey('clubs.Club', on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_club')
     has_team = models.BooleanField(null=True, blank=True)
     team_not_found = models.BooleanField(null=True, blank=True)
 
