@@ -1274,6 +1274,8 @@ class ProfileVerificationStatus(models.Model):
     previous_status = models.CharField(max_length=255, null=True, blank=True)
     team = models.ForeignKey('clubs.Team', on_delete=models.SET_NULL, null=True, blank=True, related_name='team')
     previous_team = models.ForeignKey('clubs.Team', on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_team')
+    club = models.ForeignKey('clubs.Club', on_delete=models.SET_NULL, null=True, blank=True, related_name='club')
+    previous_club = models.ForeignKey('clubs.Club', on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_club')
     has_team = models.BooleanField(null=True, blank=True)
     team_not_found = models.BooleanField(null=True, blank=True)
 
