@@ -173,12 +173,13 @@ class ClubVerificationForm(VerificationForm):
     )
     building_fields = [
         ("club_role", {}),
-
     ]
 
     class Meta:
         model = models.ClubProfile
-        fields = models.ClubProfile.VERIFICATION_FIELDS + ["team_club_league_voivodeship_ver"]
+        fields = models.ClubProfile.VERIFICATION_FIELDS + [
+            "team_club_league_voivodeship_ver"
+        ]
         widgets = {
             "team": forms.Select(
                 attrs={"class": "selectpickerxxx", "data-live-search": "true"}
@@ -197,7 +198,7 @@ class CoachVerificationForm(VerificationForm):
         "team_club_league_voivodeship_ver": {"help_text": "Który klub reprezentujesz"},
         "birth_date": {"placeholder": "1998-09-24", "help_text": _("Data urodzenia")},
         "country": {"help_text": _("Kraj pochodzenia")},
-        "licence": {"placeholder": "np. UEFA B", "help_text": _("Licencjaa")}
+        "licence": {"placeholder": "np. UEFA B", "help_text": _("Licencjaa")},
     }
 
     class Meta:
@@ -205,12 +206,15 @@ class CoachVerificationForm(VerificationForm):
         widgets = {
             "country": CountrySelectWidget(layout="{widget}"),
         }
-        fields = models.CoachProfile.VERIFICATION_FIELDS + ["team_club_league_voivodeship_ver"]
+        fields = models.CoachProfile.VERIFICATION_FIELDS + [
+            "team_club_league_voivodeship_ver"
+        ]
 
 
 class PlayerVerificationForm(VerificationForm):
     birth_date = forms.DateField(
-        input_formats=["%Y-%m-%d"], widget=widgets.BootstrapDateTimePickerInput()
+        # input_formats=["%Y-%m-%d"],
+        widget=widgets.BootstrapDateTimePickerInput()
     )
     custom_settings = {
         "birth_date": {"placeholder": "1998-09-24", "help_text": _("Data urodzenia")},
@@ -229,4 +233,7 @@ class PlayerVerificationForm(VerificationForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
         }
-        fields = models.PlayerProfile.VERIFICATION_FIELDS + ["position_raw", "team_club_league_voivodeship_ver"]
+        fields = models.PlayerProfile.VERIFICATION_FIELDS + [
+            "position_raw",
+            "team_club_league_voivodeship_ver",
+        ]

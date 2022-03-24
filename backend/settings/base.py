@@ -118,6 +118,8 @@ INSTALLED_APPS = [
 
 SITE_ID = 1
 
+DATE_FORMAT = "Y-m-d"
+
 
 # Reference to custom User model
 AUTH_USER_MODEL = 'users.User'
@@ -236,7 +238,7 @@ TIME_ZONE = 'Europe/Warsaw'
 
 USE_I18N = True
 
-USE_L10N = True
+USE_L10N = False
 
 USE_TZ = True
 
