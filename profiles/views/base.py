@@ -622,6 +622,7 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
             request.POST,
             request.FILES,
             instance=user,
+            request=request
             )
 
         if not profile_form.is_valid() or not user_basic_form.is_valid():

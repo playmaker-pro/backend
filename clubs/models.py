@@ -175,7 +175,8 @@ class Club(models.Model, MappingMixin):
         verbose_name_plural = _("Kluby")
 
     def __str__(self):
-        return f"{self.name}"
+        vivo_str = f', {self.voivodeship}' if self.voivodeship else ''
+        return f"{self.name} {vivo_str}"
 
     def save(self, *args, **kwargs):
         slug_str = "%s %s" % (self.PROFILE_TYPE, self.name)

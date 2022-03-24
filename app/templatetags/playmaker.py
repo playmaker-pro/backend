@@ -2,7 +2,7 @@ import logging
 import json
 import django
 from datetime import date, datetime
-
+from django.contrib.auth import get_user_model
 from clubs.models import Club, Team, League
 from django import template
 from django.conf import settings
@@ -17,6 +17,7 @@ from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from profiles.utils import extract_video_id
 
+User = get_user_model()
 
 TEMPLATE_ACTION_SCRIPT = 'platform/buttons/action_script.html'
 TEMPLATE_ACTION_LINK = 'platform/buttons/action_link.html'
@@ -204,6 +205,14 @@ def status_display_for(inquiryrequest, user):
 def addstr(arg1, arg2):
     """concatenate arg1 & arg2"""
     return str(arg1) + str(arg2)
+
+
+@register.simple_tag
+def get_user_verification_modal_id(user: User) -> str:
+    if user.validate_last_name():        
+        return "#verificationModal"
+    else:
+        return "#profileNotValidModal"
 
 
 @register.simple_tag
@@ -536,9 +545,7 @@ def announcement_yes(context, obj, css_class=None):
         elif user.is_club and obj.__class__.__name__ == "CoachForClubAnnouncement":
             title = 'TAK, wysyłam zaproszenie'  # coach lf club
         else:
-            title = 'Twoja rola na platformie jest nieprawidłowa? ' \
-                    'Kliknij tutaj (ustawienia) ' \
-                    'i wyślij prośbę o zmianę.'
+            title = 'Zmień rolę'
     else:
         title = 'Zarejestruj się tutaj (Rejestracja)'
         return {
@@ -571,8 +578,7 @@ def other_roles_button(context, text=None, css_class=None):
 
     elif not user.is_club and not user.is_player and not user.is_coach:
 
-        title = 'Twoja rola na platformie jest nieprawidłowa? ' \
-                'Kliknij tutaj (ustawienia) i wyślij prośbę o zmianę.”'
+        title = 'Zmień rolę'
         link = '/users/me/edit/settings/'
 
     else:
@@ -582,7 +588,7 @@ def other_roles_button(context, text=None, css_class=None):
     return {
         'link_href': link,
         'link_body': title,
-        'link_class': 'btn-request',
+        'link_class': 'btn-pm',
     }
 
 

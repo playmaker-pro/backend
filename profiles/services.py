@@ -19,7 +19,7 @@ class ProfileVerificationService:
         self.user = self.profile.user
 
     def verify(self):
-        if len(self.user.last_name) < 2:
+        if not self.user.validate_last_name():
             self.user.unverify()
             self.user.save()
             logger.info(
@@ -34,7 +34,6 @@ class ProfileVerificationService:
             self._verify_club()
 
     def update_verification_data(self, data: dict) -> models.ProfileVerificationStatus:
-        print(data)
         if has_team := data.get("has_team"):
             if has_team == "tak mam klub":
                 self.profile.verification.has_team = True
@@ -43,12 +42,23 @@ class ProfileVerificationService:
 
         self.profile.verification.team_not_found = data.get("team_not_found")
 
+
         if data.get("team") and self.profile.verification.team_not_found is False:
-            self.profile.verification.previous_team = self.profile.verification.team
-            self.profile.verification.team = data.get("team")
+            
+            if self.user.is_club:
+                self.profile.verification.previous_club = self.profile.verification.club
+                self.profile.verification.club = data.get("team")
+
+            else:    
+                self.profile.verification.previous_team = self.profile.verification.team
+                self.profile.verification.team = data.get("team")
         else:
-            self.profile.verification.previous_team = self.profile.verification.team
-            self.profile.verification.team = None
+            if self.user.is_club:
+                self.profile.verification.previous_club = self.profile.verification.club
+                self.profile.verification.club = data.get("team")
+            else:
+                self.profile.verification.previous_team = self.profile.verification.team
+                self.profile.verification.team = None
         # self.profile.verificaiton.previous_status = instance.verificaiton.status
 
         # self.profile.verificaiton.status =
@@ -143,26 +153,27 @@ class ProfileVerificationService:
 
     def _verify_club(self) -> None:
         profile = self.profile
+        if profile.verification.has_team and profile.verification.club:
+            profile.club_object = profile.verification.club
+            profile.save()
 
-        if profile.verification.has_team and profile.verification.team:
-            if club := profile.verification.team.club:
-                profile.club_object = club
-                profile.save()
+            for t in profile.verification.club.teams.all():
+                t.visible = True
+                t.save()
 
-                for t in club.teams.all():
-                    t.visible = True
-                    t.save()
+            if hasattr(profile.user, 'managed_club'):
+                managed_club_id = profile.user.managed_club.id
+                clubb = CClub.objects.get(id=managed_club_id)
+                clubb.manager = None
+                clubb.save()
 
-                if hasattr(profile.user, 'managed_club'):
-                    managed_club_id = profile.user.managed_club.id
-                    clubb = CClub.objects.get(id=managed_club_id)
-                    clubb.manager = None
-                    clubb.save()
-
-                if not club.manager:
-                    club.manager = profile.user
-                    club.save()
-                self._verify_user()
+            if not profile.club_object.manager:
+                profile.club_object.manager = profile.user
+                profile.club_object.save()
+            else:
+                profile.club_object.editors.add(profile.user)
+                profile.club_object.save()
+            self._verify_user()
 
         if (
             profile.verification.has_team is True
