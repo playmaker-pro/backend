@@ -635,14 +635,9 @@ def request_link(context, user, showed_user):
     if not user.is_player and not user.is_coach and not user.is_club:
         return off
 
-    try:
-        manager = showed_user.manager
-    except AttributeError:
-        manager = ''
-    if not manager:
-        return off
-
     if isinstance(showed_user, Team) or isinstance(showed_user, Club):
+        if not showed_user.manager:
+            return off
         if isinstance(showed_user, Team):
             # we do not want to allow to click on button when 
             # Team should not be visible in database
