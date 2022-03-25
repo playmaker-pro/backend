@@ -3,7 +3,7 @@ from django.db.models import Q, Value, BooleanField, Case, When, ForeignKey, Int
 
 
 class OnlyLastVerificationFilter(SimpleListFilter):
-    title = 'Ostania werifickaja'
+    title = 'Ostania werifickaja dla aktywnego profilu'
     parameter_name = 'only_verification'
 
     def lookups(self, request, model_admin):
@@ -14,10 +14,11 @@ class OnlyLastVerificationFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == '1':
-            queryset =  queryset.filter(next__isnull=True)
+            queryset = queryset.filter(
+                next__isnull=True
+            )
         if self.value() == '2':
-            print('aa')
-            
+            pass
         return queryset
 
 
