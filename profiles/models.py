@@ -1277,7 +1277,7 @@ class ProfileVerificationStatus(models.Model):
     has_team = models.BooleanField(null=True, blank=True)
     team_not_found = models.BooleanField(null=True, blank=True)
     text = models.CharField(max_length=355, null=True, blank=True)
-
+ 
     previous = models.OneToOneField(
         "self", on_delete=models.SET_NULL, blank=True, null=True, related_name="next"
     )
