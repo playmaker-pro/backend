@@ -61,14 +61,6 @@ class HasTeamObjectFilter(SimpleListFilter):
         ]
 
     def queryset(self, request, queryset):
-        queryset = queryset.select_related('clubprofile', 'coachprofile', 'playerprofile').annotate(
-            team_club_league_voivodeship_ver_x=Case(
-                    When(owner__declared_role="C", then=F("clubprofile__team_club_league_voivodeship_ver")),
-                    When(owner__declared_role="T", then=F("coachprofile__team_club_league_voivodeship_ver")),
-                    When(owner__declared_role="P", then=F("playerprofile__team_club_league_voivodeship_ver")),
-                    default=None,
-               )
-            )
         if self.value() == '1':
             return queryset.filter(team__isnull=False)
         return queryset
