@@ -31,7 +31,9 @@ class AccountVerification(LoginRequiredMixin, View):
             )
             
         if request.user.is_club:
-            form = forms.ClubVerificationForm(instance=profile)
+            form = forms.ClubVerificationForm(instance=profile,
+                initial={"team": profile.club_object}
+            )
         if request.user.is_player:
             form = forms.PlayerVerificationForm(instance=profile,
                 initial={'team': profile.team_object})
