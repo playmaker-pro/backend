@@ -96,14 +96,6 @@ class UserRoleMixin:
         return reverse(f"admin:{self._meta.app_label}_{self._meta.model_name}_change", args=(self.id,))
 
 
-class DeclaredRole(models.Model):
-    name = models.CharField(max_length=155)
-    abvertation = models.CharField(max_length=1)
-
-    def __str__(self):
-        return f'{self.name}({self.abvertation})'
-
-
 class User(AbstractUser, UserRoleMixin):
 
     ROLE_CHOICES = definitions.ACCOUNT_ROLES
