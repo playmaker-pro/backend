@@ -190,10 +190,17 @@ class BaseProfile(models.Model, EventLogMixin):
         return None
 
     def get_club_object(self):
-        if self.PROFILE_TYPE in [definitions.PROFILE_TYPE_CLUB, definitions.PROFILE_TYPE_COACH]:
+        if self.PROFILE_TYPE in [
+            definitions.PROFILE_TYPE_CLUB,
+            definitions.PROFILE_TYPE_COACH,
+            definitions.PROFILE_TYPE_PLAYER
+        ]:
+
             if self.PROFILE_TYPE == definitions.PROFILE_TYPE_CLUB:
                 return self.club_object
-            elif self.PROFILE_TYPE == definitions.PROFILE_TYPE_COACH:
+            elif self.PROFILE_TYPE == definitions.PROFILE_TYPE_COACH or \
+                    definitions.PROFILE_TYPE_PLAYER:
+
                 if self.team_object is None:
                     return None
                 else:

@@ -43,8 +43,14 @@ def approve_announcement(request):
     user = request.user
 
     if request.POST.get('action') == 'post':
-        
-        _id = request.POST.get('id')
+
+        try:
+            _id = int(request.POST.get('id'))
+        except:
+            response_data['message'] = 'Id have to be a number, not string'
+            response_data['error'] = True
+            return JsonResponse(response_data)
+
         _announcement_type = request.POST.get('announcement_type')
         if _id and _announcement_type:
             try:
@@ -55,14 +61,16 @@ def approve_announcement(request):
             ann = get_object_or_404(announcement_class, id=int(_id))
 
             ann_user = User.objects.get(id=ann.creator_id)
-            if ann_user.is_coach:
-                ann_club = ann_user.coachprofile.team_object.club.name
-            elif ann_user.is_player:
-                ann_club = ann_user.playerprofile.team_object.club.name
-            elif ann_user.is_club:
-                ann_club = ann_user.clubprofile.club_object.name
+            ann_club = ann_user.profile.get_club_object()
+            if ann_user.is_coach and ann_club:
+                ann_club = ann_club.name
+            elif ann_user.is_player and ann_club:
+                ann_club = ann_club.name
+            elif ann_user.is_club and ann_club:
+                ann_club = ann_club.name
 
             if club_name == ann_club:
+
                 message = 'Nie możesz wchodzić w interakcję z użytkownikami, którzy są z Tobą w klubie'
                 response_data['message'] = message
                 response_data['error'] = True
