@@ -47,7 +47,7 @@ def year_choices():
 class ClubForPlayerAnnouncementForm(forms.ModelForm):
     building_fields = [
 
-        ('Teams', "Dużyna", None, {}),
+        ('teams', "Dużyna", None, {}),
         ('country', 'Kraj', None, {}),
         ('club', 'Klub', None, {}),
         ('league', 'Poziom rozgrywkowy', None, {}),
@@ -74,7 +74,7 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         self.helper.wrapper_class = 'row'
 
         self.fields['year_from'] = forms.ChoiceField(choices=year_choices())
-        self.fields['Teams'] = forms.ChoiceField(choices=[])
+        # self.fields['Teams'] = forms.ChoiceField(choices=[])
         # TODO nie definiowac choicefield sprawdzic linijke 155
         self.fields['year_to'] = forms.ChoiceField(choices=year_choices())
         self.set_fields_rules()
@@ -82,8 +82,8 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
 
     def set_fields_rules(self):
 
-        self.fields['Teams'].required = True
-        self.fields['Teams'].label = "Drużyna"
+        self.fields['teams'].required = True
+        self.fields['teams'].label = "Drużyna"
 
         self.fields['year_from'].required = True
         self.fields['year_from'].label = 'Rocznik od'  # '<i class="icofont-ui-user-group"></i>'

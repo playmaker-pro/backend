@@ -181,7 +181,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                             league = f'{league.highest_parent} {league.name}'
                         new_teams.append((f'{team.name} ({league})', f'{team.name} ({league})'))
 
-                    form.fields['Teams'].choices = new_teams
+                    form.fields['Teams'].queryset = new_teams
                     form.fields['club'].queryset = Club.objects.filter(name=user.profile.club_object.name)
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
