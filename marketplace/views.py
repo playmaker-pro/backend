@@ -165,7 +165,11 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 form.fields['target_league'].queryset = League.objects.is_top_parent()
 
             elif _action_name == "club_looking_for_player":
+                # breakpoint()
                 if user.profile.club_object:
+                    voivo = user.profile.club_object.voivodeship
+                    # breakpoint()
+                    club = user.profile.get_club_object()
                     form = ClubForPlayerAnnouncementForm(initial={
                         'club': user.profile.club_object,
                         'voivodeship': user.profile.club_object.voivodeship,

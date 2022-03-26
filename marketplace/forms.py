@@ -97,23 +97,23 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         self.fields['league'].label = 'Poziom rozgrywkowy'  # '<i class="icofont-ui-user-group"></i>'
         self.fields['league'].help_text = False
 
-        self.fields['club'].widget = forms.HiddenInput()
+        self.fields['club'].widget.attrs['readonly'] = True
         self.fields['club'].label = 'Klub'
         self.fields['club'].help_text = False
 
-        self.fields['country'].widget = forms.HiddenInput()
+        self.fields['country'].widget.attrs['readonly'] = True
         self.fields['country'].label = 'Kraj'
         self.fields['country'].help_text = False
 
-        self.fields['voivodeship'].widget = forms.HiddenInput()
+        self.fields['voivodeship'].widget.attrs['readonly'] = True
         self.fields['voivodeship'].label = 'Województwo'
         self.fields['voivodeship'].help_text = False
 
-        self.fields['seniority'].widget = forms.HiddenInput()
+        self.fields['seniority'].widget.attrs['readonly'] = True
         self.fields['seniority'].label = 'Rozgrywki młodzieżowe / Rozgrywki seniorskie'
         self.fields['seniority'].help_text = False
 
-        self.fields['gender'].widget = forms.HiddenInput()
+        self.fields['gender'].widget.attrs['readonly'] = True
         self.fields['gender'].label = 'Mężczyźni / Kobiety'
         self.fields['gender'].help_text = False
 
@@ -142,7 +142,7 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
                    'body': forms.Textarea(attrs={'rows': 5})
                    }
         model = models.ClubForPlayerAnnouncement
-        fields = ['country', 'club', 'league', 'voivodeship', 'seniority', 'gender', 'www', 'body', 'address', 'positions', 'year_from', 'year_to']
+        fields = ['teams', 'country', 'club', 'league', 'voivodeship', 'seniority', 'gender', 'www', 'body', 'address', 'positions', 'year_from', 'year_to']
         exclude = ['creator']
 
 
