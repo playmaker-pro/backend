@@ -1267,17 +1267,35 @@ class ScoutProfile(BaseProfile):
 
 
 class ProfileVerificationStatus(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='verifications')
     set_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='set_by')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=255)
-    previous_status = models.CharField(max_length=255, null=True, blank=True)
+    status = models.CharField(max_length=255, null=True, blank=True)
     team = models.ForeignKey('clubs.Team', on_delete=models.SET_NULL, null=True, blank=True, related_name='team')
-    previous_team = models.ForeignKey('clubs.Team', on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_team')
     club = models.ForeignKey('clubs.Club', on_delete=models.SET_NULL, null=True, blank=True, related_name='club')
-    previous_club = models.ForeignKey('clubs.Club', on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_club')
     has_team = models.BooleanField(null=True, blank=True)
     team_not_found = models.BooleanField(null=True, blank=True)
+    text = models.CharField(max_length=355, null=True, blank=True)
+ 
+    previous = models.OneToOneField(
+        "self", on_delete=models.SET_NULL, blank=True, null=True, related_name="next"
+    )
+
+    @classmethod
+    def create(cls, owner: User = owner, text: str = text, previous=previous, set_by: User = set_by, status: str = status, has_team: bool = has_team, team_not_found: bool = team_not_found, club = None, team = None,
+    ):
+        return cls.objects.create(
+            owner=owner,
+            text=text,
+            has_team=has_team,
+            team_not_found=team_not_found,
+            club=club,
+            team=team,
+            status=status,
+            set_by=set_by,
+            previous=previous
+        )
 
     @classmethod
     def create_initial(cls, for_user: User):
@@ -1285,3 +1303,6 @@ class ProfileVerificationStatus(models.Model):
             status=for_user.state,
             set_by=User.get_system_user()
         )
+
+    def __str__(self):
+        return f'{self.owner}({self.id})'

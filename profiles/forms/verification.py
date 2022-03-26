@@ -107,8 +107,9 @@ class VerificationForm(forms.ModelForm):
         service = ProfileVerificationService(instance)
         data = self.cleaned_data
 
-        service.update_verification_data(data)
+        service.update_verification_data(data, requestor=self.instance.user)
         service.verify()
+        service.update_verification_status(status=service.user.state)
 
         if commit:
             instance.save()
