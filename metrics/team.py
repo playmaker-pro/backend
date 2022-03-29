@@ -215,11 +215,15 @@ class LeagueAdvancedTableRawMetrics:
                 .order_by("date")[:5]
             )
             league_obj = lg
-            team_url, team_pic, team_name = TeamMapper.get_url_pic_name(
+            tm = TeamMapper()
+
+            team_url, team_pic, team_name = tm.get_url_pic_name(
                 row.get("club_name"), league_obj
             )
 
-            club_pic = Team.objects.get(name=team_name).get_club_pic
+            tm.team_object.get_club_pic()
+
+            club_pic = tm.team_object.get_club_pic()
 
             # raise RuntimeError(row.get('club_name'), team_name)
             data = {
