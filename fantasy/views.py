@@ -116,6 +116,7 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
         kwargs['page_obj'] = page_obj
         kwargs['vivos'] = settings.VOIVODESHIP_CHOICES
         kwargs['filters'] = self.get_filters_values()
+        kwargs['leagues'] = League.objects.is_top_parent()
         page_obj.elements = page_obj.end_index() - page_obj.start_index() + 1
         self.prepare_kwargs(kwargs)
         kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
