@@ -379,6 +379,8 @@ class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, 
         kwargs['page_title'] = self.page_title
         kwargs['type'] = self.table_type
         kwargs['filters'] = self.get_filters_values()
+        kwargs['filters'] = self.get_filters_values()
+        kwargs['leagues'] = League.objects.is_top_parent()
         self.prepare_kwargs(kwargs)
 
         kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
