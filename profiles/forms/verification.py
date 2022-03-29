@@ -27,7 +27,7 @@ from django_countries.widgets import CountrySelectWidget
 from django.utils.translation import gettext_lazy as _
 from profiles import widgets
 from crispy_forms.bootstrap import InlineRadios
-from clubs.models import Team
+from clubs.models import Team, Club
 from profiles.services import ProfileVerificationService
 
 from dataclasses import dataclass
@@ -107,8 +107,9 @@ class VerificationForm(forms.ModelForm):
         service = ProfileVerificationService(instance)
         data = self.cleaned_data
 
-        service.update_verification_data(data)
+        service.update_verification_data(data, requestor=self.instance.user)
         service.verify()
+        service.update_verification_status(status=service.user.state)
 
         if commit:
             instance.save()
@@ -165,16 +166,21 @@ class ClubVerificationForm(VerificationForm):
     custom_settings = {
         "team_club_league_voivodeship_ver": {"help_text": "Który klub reprezentujesz"},
         "club_role": {"help_text": "Jaka rolę pełnisz w klubie"},
-        "team": {"help_text": "Team którym zarządzasz"},
+        "team": {"help_text": "Klub którym zarządzasz"},
     }
-
+    team = forms.ModelChoiceField(
+        queryset=Club.objects.all(),
+        widget=forms.Select(attrs={"data-live-search": "true"}),
+    )
     building_fields = [
         ("club_role", {}),
     ]
 
     class Meta:
         model = models.ClubProfile
-        fields = models.ClubProfile.VERIFICATION_FIELDS + ["team_club_league_voivodeship_ver"]
+        fields = models.ClubProfile.VERIFICATION_FIELDS + [
+            "team_club_league_voivodeship_ver"
+        ]
         widgets = {
             "team": forms.Select(
                 attrs={"class": "selectpickerxxx", "data-live-search": "true"}
@@ -193,7 +199,7 @@ class CoachVerificationForm(VerificationForm):
         "team_club_league_voivodeship_ver": {"help_text": "Który klub reprezentujesz"},
         "birth_date": {"placeholder": "1998-09-24", "help_text": _("Data urodzenia")},
         "country": {"help_text": _("Kraj pochodzenia")},
-        "licence": {"placeholder": "np. UEFA B", "help_text": _("Licencjaa")}
+        "licence": {"placeholder": "np. UEFA B", "help_text": _("Licencjaa")},
     }
 
     class Meta:
@@ -201,12 +207,15 @@ class CoachVerificationForm(VerificationForm):
         widgets = {
             "country": CountrySelectWidget(layout="{widget}"),
         }
-        fields = models.CoachProfile.VERIFICATION_FIELDS + ["team_club_league_voivodeship_ver"]
+        fields = models.CoachProfile.VERIFICATION_FIELDS + [
+            "team_club_league_voivodeship_ver"
+        ]
 
 
 class PlayerVerificationForm(VerificationForm):
     birth_date = forms.DateField(
-        input_formats=["%Y-%m-%d"], widget=widgets.BootstrapDateTimePickerInput()
+        # input_formats=["%Y-%m-%d"],
+        widget=widgets.BootstrapDateTimePickerInput()
     )
     custom_settings = {
         "birth_date": {"placeholder": "1998-09-24", "help_text": _("Data urodzenia")},
@@ -225,4 +234,7 @@ class PlayerVerificationForm(VerificationForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
         }
-        fields = models.PlayerProfile.VERIFICATION_FIELDS + ["position_raw", "team_club_league_voivodeship_ver"]
+        fields = models.PlayerProfile.VERIFICATION_FIELDS + [
+            "position_raw",
+            "team_club_league_voivodeship_ver",
+        ]

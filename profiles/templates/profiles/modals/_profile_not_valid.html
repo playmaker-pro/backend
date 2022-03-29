@@ -1,0 +1,37 @@
+
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+<div class="modal fade" id="profileNotValidModal" tabindex="-1" aria-labelledby="vprofileNotValidModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="profileNotValidModalLabel">{% trans 'Twój profil wymaga aktualizacji' %}</h3>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true"><i class="icofont-close-circled main-color"></i></span>
+        </button>
+      </div>
+
+
+      <div class="modal-body">
+        <div>
+            Twoje nazwisko jest za krótkie by móc przeprowadzić weryfikcje na platformie <strong>{% include 'platform/partials/brandname.html' %}</strong> 
+            
+        </div>
+        <div class="mt-4">
+          Proszę zakutalizuj swoje nazwisko tutaj {% include 'profiles/buttons/edit.html' %}
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+
+{% if trigger %}
+<script type="text/javascript">
+    $(window).on('load',function(){
+        $('#verificationNeededModal').modal('show');
+    });
+</script>
+{% endif %}
