@@ -46,7 +46,7 @@ def approve_announcement(request):
 
         try:
             _id = int(request.POST.get('id'))
-        except:
+        except ValueError:
             response_data['message'] = 'Id have to be a number, not string'
             response_data['error'] = True
             return JsonResponse(response_data)
