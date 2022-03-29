@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db.models import F
 from app import mixins, utils
 
-from clubs.models import Club, Team
+from clubs.models import Club, Team, League
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
@@ -61,6 +61,7 @@ class TableView(generic.TemplateView, mixins.PaginateMixin, mixins.ViewModalLoad
         kwargs['page_title'] = self.page_title
         kwargs['type'] = self.table_type
         kwargs['vivos'] = settings.VOIVODESHIP_CHOICES
+        kwargs['leagues'] = League.objects.is_top_parent()
         self.add_more_to_kwargs(kwargs)
         kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
         # kwargs['ammount'] = page_obj.count()

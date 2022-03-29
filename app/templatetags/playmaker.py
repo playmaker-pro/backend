@@ -553,6 +553,10 @@ def announcement_yes(context, obj, css_class=None):
             'link_body': title,
             'link_class': 'btn-request',
         }
+    if not isinstance(obj, str):
+        obj_id = obj.id
+    else:
+        obj_id = obj
 
     return {
         'active_class': None,
@@ -560,7 +564,12 @@ def announcement_yes(context, obj, css_class=None):
         'button_id': 'approveAnnoucementButton',
         'button_attrs': None,
         'button_class': 'btn-request',
-        'button_action': {'onclick': True, 'name': 'approve_annoucement', 'param': user.id},
+        'button_action': {
+            'onclick': True,
+            'name': 'approve_annoucement',
+            'param': obj_id,
+            'param2': obj.__class__.__name__
+        },
         'button_icon': '',
         'button_text': title,
         'modals': context['modals'],
@@ -641,10 +650,9 @@ def request_link(context, user, showed_user):
     if not user.is_player and not user.is_coach and not user.is_club:
         return off
 
-    if not showed_user.manager_id:
-        return off
-
     if isinstance(showed_user, Team) or isinstance(showed_user, Club):
+        if not showed_user.manager:
+            return off
         if isinstance(showed_user, Team):
             # we do not want to allow to click on button when 
             # Team should not be visible in database
