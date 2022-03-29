@@ -100,15 +100,15 @@ function inquiryUpdate(event, idTick) {
     });
 }
 
-function approve_annoucement(event, slug) {
+function approve_annoucement(event, slug, type) {
 
     $.ajax({
         type:'POST',
         url:'/marketplace/approve/',
         data:{
             csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
-            id: $('#ann-numner').val(),
-            announcement_type: $('#ann-type').val(),
+            id: slug,
+            announcement_type: type,
             action: 'post',
         },
         success:function(json){         
