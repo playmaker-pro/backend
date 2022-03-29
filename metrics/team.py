@@ -225,7 +225,6 @@ class LeagueAdvancedTableRawMetrics:
 
             club_pic = tm.team_object.get_club_pic()
 
-            # raise RuntimeError(row.get('club_name'), team_name)
             data = {
                 "position": pos,
                 "games": row["results"].get("matches"),
