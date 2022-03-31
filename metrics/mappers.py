@@ -34,26 +34,33 @@ class PlayerMapper:
 
 
 class TeamMapper:
-    @classmethod
+
+    def __init__(self):
+        self.team_object = None
+
     @lru_cache()
-    def get_team_obj(cls, team_name: str, league_obj: CLeague) -> CTeam:
+    def get_team_obj(self, team_name: str, league_obj: CLeague) -> CTeam:
+
         try:
             team_obj = CTeam.objects.get(
                 league=league_obj, mapping__icontains=team_name.lower()
             )
             return team_obj
+
         except CTeam.MultipleObjectsReturned:
-            msg = f"input data: team_name={team_name} league_obj={league_obj} league_obj.id={league_obj.id} query used={team_name.lower()}"
+
+            msg = f"input data: team_name={team_name} league_obj={league_obj} " \
+                  f"league_obj.id={league_obj.id} query used={team_name.lower()} "
             logger.debug(msg)
             print(msg)
         except CTeam.DoesNotExist:
             return None
 
-    @classmethod
     @lru_cache()
-    def get_url_pic_name(cls, team_name: str, league_obj: CLeague) -> tuple:
+    def get_url_pic_name(self, team_name: str, league_obj: CLeague) -> tuple:
         """Returns tuple of (Url, Picture Url, name)"""
-        obj = TeamMapper.get_team_obj(team_name, league_obj)
+
+        obj = self.get_team_obj(team_name, league_obj)
         name = obj.name if obj else team_name
         url = obj.get_permalink() if obj else None
         picture = obj.picture if obj and obj.picture else "default_profile.png"
@@ -70,3 +77,4 @@ class TeamMapper:
                 raise RuntimeError(f"picture={picture}, obj={obj}")
 
         return url, pic, name
+
