@@ -319,7 +319,7 @@ class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, 
             queryset = queryset.filter(creator=self.request.user)
 
         if self.filter_league is not None:
-            queryset = queryset.filter(league__name__in=self.filter_league)
+            queryset = queryset.filter(league__highest_parent__name__in=self.filter_league)
 
         if self.filter_vivo is not None:
             queryset = queryset.filter(voivodeship__name__in=self.filter_vivo)
@@ -361,7 +361,6 @@ class AnnouncementsMetaView(generic.TemplateView, mixins.ViewModalLoadingMixin, 
             lista.append(queryset)
         queryset = list(chain(*lista))
         queryset = sorted(queryset, key=lambda x: x.created_at, reverse=True)
-
 
         page_obj = self.paginate(queryset, limit=self.paginate_limit)
 
