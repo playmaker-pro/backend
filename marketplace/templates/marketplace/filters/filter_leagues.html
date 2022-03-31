@@ -12,7 +12,7 @@
 >
 
     {% for league in leagues %}
-        <option {% if league in request.GET|get_list:'league' %} selected="selected" {% endif %}>
+        <option {% if league.name in request.GET|get_list:'league' %} selected="selected" {% endif %}>
             {{ league }}
         </option>
     {% endfor %}
