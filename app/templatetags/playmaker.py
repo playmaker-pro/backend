@@ -699,6 +699,9 @@ def request_link(context, user, showed_user):
         button_text = ''
         attrs = None
 
+    if user.profile.verification.status == 'Account Verified':
+        context['modals']['verification'] = False
+
     return {
         'show_user': showed_user,
         'active_class': active_class,
