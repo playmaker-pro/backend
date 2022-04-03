@@ -699,7 +699,7 @@ def request_link(context, user, showed_user):
         button_text = ''
         attrs = None
 
-    if user.profile.verification.status == 'Account Verified':
+    if user.is_verified:
         context['modals']['verification'] = False
 
     return {
