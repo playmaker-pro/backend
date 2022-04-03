@@ -58,7 +58,6 @@ function get_add_announcement_form(event, id = null, announcement_type = null, a
       data: {'id': id, 'announcement_type': announcement_type, 'action_name': action_name},
       /*data: {slug: slug},*/
       success: function(json) {
-          console.log(json)
         if (json.form === null) {
           $('#add-ann-out').show();
           $('#add-ann-left').hide();
