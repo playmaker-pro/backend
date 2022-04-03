@@ -94,7 +94,7 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         self.fields['year_to'].label = 'Rocznik do'  # '<i class="icofont-ui-user-group"></i>'
         self.fields['year_to'].help_text = False
 
-        self.fields['league'].widget.attrs.update({'readonly': True})
+        self.fields['league'].widget = forms.HiddenInput()
         self.fields['league'].label = 'Poziom rozgrywkowy'  # '<i class="icofont-ui-user-group"></i>'
         self.fields['league'].help_text = False
 
