@@ -231,11 +231,6 @@ class CoachForClubAnnouncementForm(forms.ModelForm):
 
     ]
 
-    team = forms.ModelChoiceField(
-        queryset=Team.objects.all(),
-        widget=forms.Select(attrs={"data-live-search": "true"}),
-    )
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -250,9 +245,6 @@ class CoachForClubAnnouncementForm(forms.ModelForm):
         self.helper.layout = self.build_verification_form()
 
     def set_fields_rules(self):
-
-        self.fields['team'].required = True
-        self.fields['team'].label = "Drużyna"
 
         self.fields['lic_type'].required = True
         self.fields['lic_type'].label = 'Typ licencji'
@@ -284,8 +276,7 @@ class CoachForClubAnnouncementForm(forms.ModelForm):
         self.fields['body'].help_text = False
 
     def build_verification_form(self):
-        fds = [''] + [Field('team', placeholder='Drużyna', title=None, css_class={}, wrapper_class="row")] + \
-              [Field(fn, wrapper_class='row', placeholder=fp, title=fp, css_class=fc, **kwargs) for
+        fds = [''] + [Field(fn, wrapper_class='row', placeholder=fp, title=fp, css_class=fc, **kwargs) for
                       fn, fp, fc, kwargs in self.building_fields]
         return Fieldset(*fds)
 
