@@ -53,14 +53,14 @@ class TeamMapper:
     @lru_cache()
     def get_urls_pics(cls, team_name: str,
                       league_obj: CLeague,
-                      club_or_team: Optional[bool] = False) -> tuple:
+                      club: Optional[bool] = False) -> tuple:
         """ Helper method of get_url_pic_name and get_url_pic_for_club"""
 
         obj = TeamMapper.get_team_obj(team_name, league_obj)
         name = obj.name if obj else team_name
         url = obj.get_permalink() if obj else None
 
-        if club_or_team:
+        if club:
             picture = obj.get_club_pic()
         else:
             picture = obj.picture if obj and obj.picture else "default_profile.png"
