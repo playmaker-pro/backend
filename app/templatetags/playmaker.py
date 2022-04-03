@@ -276,9 +276,14 @@ def inquiry_display_name(context, inquiry):
 
     elif inquiry.is_team_type:  # X -> sends to Team (shoudl be player)
         if obj.is_coach:
-            name = obj.profile.display_team
-            link = obj.profile.team_object.get_permalink
-            picture = obj.profile.team_object.picture
+            if not obj.profole.team_object:
+                name = 'zapytanie nie aktualne'
+                link = None
+                picture = ''
+            else:
+                name = obj.profile.display_team
+                link = obj.profile.team_object.get_permalink
+                picture = obj.profile.team_object.picture
         elif obj.is_player:
             name, link, picture = user_data(obj)
 
