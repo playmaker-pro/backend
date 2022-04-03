@@ -700,6 +700,9 @@ def request_link(context, user, showed_user):
     else:
         attrs = None
 
+    if user.is_verified:
+        context['modals']['verification'] = False
+
     return {
         'show_user': showed_user,
         'active_class': active_class,
