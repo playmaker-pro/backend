@@ -615,6 +615,8 @@ if FORCED_SEASON_NAME is not None:
     print(f"Force to use season for dispaly metrics: {FORCED_SEASON_NAME}")
 
 
+DEFAULT_CLUB_PICTURE_URL = '/media/default_club.png'
+
 VOIVODESHIP_CHOICES = (
         ('Dolnośląskie', 'Dolnośląskie'),
         ('Kujawsko-pomorskie', 'Kujawsko-pomorskie'),

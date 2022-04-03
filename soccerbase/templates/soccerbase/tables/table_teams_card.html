@@ -60,7 +60,8 @@
         </div>
                            <div class="sc-cell d-none d-md-flex col-md-4">
                             <a href="{{ object.get_permalink }}"> 
-                              <img class="avatar rounded img-responsive" src="{% thumbnail object.picture|default:'default_team.png' 'tables_avatar_show_medium' %}">
+                              <img class="avatar rounded img-responsive"
+                                   src="{% thumbnail object.club.picture|default:'default_team.png' 'tables_avatar_show_medium' %}">
                               <strong style="padding-left:15px;">{{ object.name|upper}}</strong>
                             </a>
                           </div>

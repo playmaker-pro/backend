@@ -391,7 +391,7 @@ class ViewModalLoadingMixin:
         if getattr(self, 'modal_verification_force_loading'):
             modals['verification']['load'] = True
 
-        if not user.validate_last_name():
+        if user.is_authenticated and not user.validate_last_name():
             modals['no_updated_profile_modal']['load'] = True
 
         # Loading account specific modals (mandatory)

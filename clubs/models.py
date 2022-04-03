@@ -549,6 +549,12 @@ class Team(models.Model, MappingMixin):
         help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
     )
 
+    @property
+    def get_club_pic(self):
+        if self.club:
+            return self.club.picture.url
+        return settings.DEFAULT_CLUB_IMAGE_PATH
+
     def is_editor(self, user):
         if user == self.manager or user in self.editors.all():
             return True

@@ -276,17 +276,26 @@ def inquiry_display_name(context, inquiry):
 
     elif inquiry.is_team_type:  # X -> sends to Team (shoudl be player)
         if obj.is_coach:
-            name = obj.profile.display_team
-            link = obj.profile.team_object.get_permalink
-            picture = obj.profile.team_object.picture
+            if not obj.profile.team_object:
+                name = 'zapytanie nie aktualne'
+                link = None
+                picture = ''
+            else:
+                name = obj.profile.display_team
+                link = obj.profile.team_object.get_permalink
+                picture = obj.profile.team_object.picture
         elif obj.is_player:
             name, link, picture = user_data(obj)
 
         elif obj.is_club:
-            name = obj.profile.display_club
-            link = obj.profile.club_object.get_permalink
-            picture = obj.profile.club_object.picture
-
+            if obj.profile.club_object:
+                name = obj.profile.display_club
+                link = obj.profile.club_object.get_permalink
+                picture = obj.profile.club_object.picture
+            else:
+                name = 'zapytanie nie aktualne'
+                link = None
+                picture = ''
     elif inquiry.is_club_type:
         if obj.is_coach:
             name, link, picture = user_data(obj)
@@ -553,6 +562,10 @@ def announcement_yes(context, obj, css_class=None):
             'link_body': title,
             'link_class': 'btn-request',
         }
+    if not isinstance(obj, str):
+        obj_id = obj.id
+    else:
+        obj_id = obj
 
     return {
         'active_class': None,
@@ -560,7 +573,12 @@ def announcement_yes(context, obj, css_class=None):
         'button_id': 'approveAnnoucementButton',
         'button_attrs': None,
         'button_class': 'btn-request',
-        'button_action': {'onclick': True, 'name': 'approve_annoucement', 'param': user.id},
+        'button_action': {
+            'onclick': True,
+            'name': 'approve_annoucement',
+            'param': obj_id,
+            'param2': obj.__class__.__name__
+        },
         'button_icon': '',
         'button_text': title,
         'modals': context['modals'],
@@ -632,6 +650,8 @@ def is_same_club(user, showed_user):
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def request_link(context, user, showed_user):
     """Creates button to open inquiry"""
+
+    button_text = ''
     off = {'off': True}
 
     # Check permissions
@@ -641,10 +661,9 @@ def request_link(context, user, showed_user):
     if not user.is_player and not user.is_coach and not user.is_club:
         return off
 
-    if not showed_user.manager_id:
-        return off
-
     if isinstance(showed_user, Team) or isinstance(showed_user, Club):
+        if not showed_user.manager:
+            return off
         if isinstance(showed_user, Team):
             # we do not want to allow to click on button when 
             # Team should not be visible in database
@@ -688,8 +707,10 @@ def request_link(context, user, showed_user):
         button_text = 'Wysłano'
         attrs = 'disabled'
     else:
-        button_text = ''
         attrs = None
+
+    if user.is_verified:
+        context['modals']['verification'] = False
 
     return {
         'show_user': showed_user,
