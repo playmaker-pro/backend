@@ -50,6 +50,7 @@ class ProfileVerificationService:
                 has_team = False
 
         team_not_found = data.get("team_not_found")
+
         if data.get("team") and team_not_found is False:
             if self.user.is_club:
                 club = data.get("team")
@@ -61,7 +62,17 @@ class ProfileVerificationService:
             else:
                 team = None
 
-                
+        if has_team is True:
+            if team_not_found:
+                team = None
+                club = None
+            else:
+                text = None
+
+        if has_team is False:
+            team = None
+            club = None
+      
         set_by = requestor or User.get_system_user()
         new = models.ProfileVerificationStatus.create(
             owner=self.user,
