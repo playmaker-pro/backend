@@ -276,7 +276,7 @@ def inquiry_display_name(context, inquiry):
 
     elif inquiry.is_team_type:  # X -> sends to Team (shoudl be player)
         if obj.is_coach:
-            if not obj.profole.team_object:
+            if not obj.profile.team_object:
                 name = 'zapytanie nie aktualne'
                 link = None
                 picture = ''
@@ -288,10 +288,14 @@ def inquiry_display_name(context, inquiry):
             name, link, picture = user_data(obj)
 
         elif obj.is_club:
-            name = obj.profile.display_club
-            link = obj.profile.club_object.get_permalink
-            picture = obj.profile.club_object.picture
-
+            if obj.profile.club_object:
+                name = obj.profile.display_club
+                link = obj.profile.club_object.get_permalink
+                picture = obj.profile.club_object.picture
+            else:
+                name = 'zapytanie nie aktualne'
+                link = None
+                picture = ''
     elif inquiry.is_club_type:
         if obj.is_coach:
             name, link, picture = user_data(obj)
