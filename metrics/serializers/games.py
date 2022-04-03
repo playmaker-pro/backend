@@ -48,10 +48,9 @@ class GameSerializer:
     @classmethod
     def calculate(cls, game, host_pic, guest_pic, league: CLeague):
 
-        tm = TeamMapper()
-        h_url, h_pic, h_name = tm.get_url_pic_name(
+        h_url, h_pic, h_name = TeamMapper.get_url_pic_for_club(
             cls._get_attr(game, "host_team_name"), league)
-        g_url, g_pic, g_name = tm.get_url_pic_name(
+        g_url, g_pic, g_name = TeamMapper.get_url_pic_for_club(
             cls._get_attr(game, "guest_team_name"), league)
 
         guest_score = cls._get_attr(game, 'guest_score')
