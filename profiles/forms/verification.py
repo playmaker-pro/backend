@@ -83,7 +83,7 @@ class VerificationForm(forms.ModelForm):
     CHOICES = (("tak mam klub", "tak mam klub"), ("Nie mam klubu", "Nie mam klubu"))
     team = forms.ModelChoiceField(
         queryset=Team.objects.all(),
-        widget=forms.Select(attrs={"data-live-search": "true"}),
+        widget=forms.Select(attrs={"data-live-search": "true", "data-dropdown-align-right": "true"})
     )
     has_team = forms.ChoiceField(choices=CHOICES, widget=forms.RadioSelect)
     team_not_found = forms.BooleanField()
@@ -213,10 +213,6 @@ class CoachVerificationForm(VerificationForm):
 
 
 class PlayerVerificationForm(VerificationForm):
-    birth_date = forms.DateField(
-        # input_formats=["%Y-%m-%d"],
-        widget=widgets.BootstrapDateTimePickerInput()
-    )
     custom_settings = {
         "birth_date": {"placeholder": "1998-09-24", "help_text": _("Data urodzenia")},
         "position_raw": {"help_text": _("Pozycja")},
@@ -224,7 +220,12 @@ class PlayerVerificationForm(VerificationForm):
         "country": {"help_text": _("Kraj pochodzenia")},
         "has_team": {},
     }
+
     building_fields = (("position_raw", {}), ("birth_date", {}), ("country", {}))
+
+    birth_date = forms.DateField(
+        widget=widgets.BootstrapDateTimePickerInput()
+    )
 
     class Meta:
         model = models.PlayerProfile
