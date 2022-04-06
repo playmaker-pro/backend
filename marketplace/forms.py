@@ -196,7 +196,7 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
         self.fields['target_league'].label = 'Cel poszukiwań'  # '<i class="icofont-ui-user-group"></i>'
         self.fields['target_league'].help_text = False
 
-        self.fields['league'].required = False
+        self.fields['league'].widget = forms.HiddenInput()
         self.fields['league'].label = 'Poziom rozgrywkowy'  # '<i class="icofont-ui-user-group"></i>'
         self.fields['league'].help_text = False
         self.fields['league'].widget.attrs['readonly'] = True
