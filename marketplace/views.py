@@ -199,7 +199,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                         # 'voivodeship': user.profile.team_object.club.voivodeship,
                         'address': user.profile.address,
                         'practice_distance': user.profile.practice_distance,
-                        'league': league
+                        'league': league.highest_parent
                     })
                 form.fields['target_league'].queryset = League.objects.is_top_parent()
 
