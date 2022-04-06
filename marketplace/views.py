@@ -291,7 +291,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 ann = form.save(commit=False)
                 ann.creator = request.user
 
-                if user.is_club:
+                if user.is_club and _action_name == "club_looking_for_player":
                     ann.league = form.cleaned_data['team'].league
                     ann.gender = form.cleaned_data['team'].gender
                     ann.seniority = form.cleaned_data['team'].seniority
