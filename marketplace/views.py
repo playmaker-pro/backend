@@ -134,12 +134,10 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     })
 
                     if profile:
-                        form.fields['club'].queryset = Club.objects.filter(
-                            name=profile.club.name
+                        form.fields['team'].queryset = Team.objects.filter(
+                            name=profile.name
                         )
-                        form.fields['league'].queryset = League.objects.is_top_parent().filter(
-                            name=profile.league.name
-                        )
+
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
                     form.fields['league'].queryset = League.objects.is_top_parent()
@@ -162,11 +160,17 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 form.fields['target_league'].queryset = League.objects.is_top_parent()
 
             elif _action_name == "club_looking_for_player":
+
                 if user.profile.club_object:
+                    voivo = user.profile.club_object.voivodeship
+
                     form = ClubForPlayerAnnouncementForm(initial={
                         'club': user.profile.club_object,
-                        'voivodeship': user.profile.club_object.voivodeship
+                        'voivodeship': voivo,
                     })
+                    teams = user.profile.club_object.teams.all()
+
+                    form.fields['team'].queryset = teams
                     form.fields['club'].queryset = Club.objects.filter(name=user.profile.club_object.name)
                 else:
                     form = ClubForPlayerAnnouncementForm(initial={})
@@ -286,6 +290,12 @@ class AddAnnouncementView(LoginRequiredMixin, View):
             if form.is_valid():
                 ann = form.save(commit=False)
                 ann.creator = request.user
+
+                if user.is_club:
+                    ann.league = form.cleaned_data['team'].league
+                    ann.gender = form.cleaned_data['team'].gender
+                    ann.seniority = form.cleaned_data['team'].seniority
+
                 ann.save()
                 form.save_m2m()
                 user.announcementuserquota.increment()

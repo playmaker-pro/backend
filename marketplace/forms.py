@@ -7,7 +7,7 @@ from crispy_forms.layout import Layout, Fieldset, Div, Submit, HTML, Button, Row
 from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions, Tab, TabHolder, Alert
 from django.contrib.auth import get_user_model
 
-from clubs.models import Voivodeship
+from clubs.models import Voivodeship, Team
 from profiles.models import CoachProfile
 from . import models
 from django_countries.widgets import CountrySelectWidget
@@ -45,8 +45,8 @@ def year_choices():
 
 
 class ClubForPlayerAnnouncementForm(forms.ModelForm):
+
     building_fields = [
-        
         ('country', 'Kraj', None, {}),
         ('club', 'Klub', None, {}),
         ('league', 'Poziom rozgrywkowy', None, {}),
@@ -61,7 +61,13 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         ('www', "http://stronaklubu.pl", None, {}),
     ]
 
+    team = forms.ModelChoiceField(
+        queryset=Team.objects.all(),
+        widget=forms.Select(attrs={"data-live-search": "true"}),
+    )
+
     def __init__(self, *args, **kwargs):
+
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -70,13 +76,15 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         self.helper.label_class = 'col-12 col-md-4 text-md-right text-muted upper form-label'
         self.helper.field_class = 'col-12 col-md-8'
         self.helper.wrapper_class = 'row'
-
         self.fields['year_from'] = forms.ChoiceField(choices=year_choices())
         self.fields['year_to'] = forms.ChoiceField(choices=year_choices())
         self.set_fields_rules()
         self.helper.layout = self.build_verification_form()
 
     def set_fields_rules(self):
+
+        self.fields['team'].required = True
+        self.fields['team'].label = "Drużyna"
 
         self.fields['year_from'].required = True
         self.fields['year_from'].label = 'Rocznik od'  # '<i class="icofont-ui-user-group"></i>'
@@ -86,7 +94,7 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         self.fields['year_to'].label = 'Rocznik do'  # '<i class="icofont-ui-user-group"></i>'
         self.fields['year_to'].help_text = False
 
-        self.fields['league'].widget.attrs.update({'readonly': True})
+        self.fields['league'].widget = forms.HiddenInput()
         self.fields['league'].label = 'Poziom rozgrywkowy'  # '<i class="icofont-ui-user-group"></i>'
         self.fields['league'].help_text = False
 
@@ -94,7 +102,7 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         self.fields['club'].label = 'Klub'
         self.fields['club'].help_text = False
 
-        self.fields['country'].required = True
+        self.fields['country'].widget = forms.HiddenInput()
         self.fields['country'].label = 'Kraj'
         self.fields['country'].help_text = False
 
@@ -102,11 +110,11 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         self.fields['voivodeship'].label = 'Województwo'
         self.fields['voivodeship'].help_text = False
 
-        self.fields['seniority'].required = True
+        self.fields['seniority'].widget = forms.HiddenInput()
         self.fields['seniority'].label = 'Rozgrywki młodzieżowe / Rozgrywki seniorskie'
         self.fields['seniority'].help_text = False
 
-        self.fields['gender'].required = True
+        self.fields['gender'].widget = forms.HiddenInput()
         self.fields['gender'].label = 'Mężczyźni / Kobiety'
         self.fields['gender'].help_text = False
 
@@ -126,8 +134,11 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         self.fields['positions'].label = 'Pozycje'
         self.fields['positions'].help_text = False
 
-    def build_verification_form(self):                   
-        fds = [''] + [Field(fn, wrapper_class='row', placeholder=fp, title=fp, css_class=fc, **kwargs) for fn, fp, fc, kwargs in self.building_fields]
+    def build_verification_form(self):
+        fds = [''] + [Field('team', placeholder='Drużyna', title=None, css_class={}, wrapper_class="row")] + \
+              [Field(fn, wrapper_class='row', placeholder=fp, title=fp, css_class=fc, **kwargs) for
+                      fn, fp, fc, kwargs in self.building_fields]
+
         return Fieldset(*fds)
 
     class Meta:
@@ -234,6 +245,7 @@ class CoachForClubAnnouncementForm(forms.ModelForm):
         self.helper.layout = self.build_verification_form()
 
     def set_fields_rules(self):
+
         self.fields['lic_type'].required = True
         self.fields['lic_type'].label = 'Typ licencji'
         self.fields['lic_type'].help_text = False
@@ -264,7 +276,8 @@ class CoachForClubAnnouncementForm(forms.ModelForm):
         self.fields['body'].help_text = False
 
     def build_verification_form(self):
-        fds = [''] + [Field(fn, wrapper_class='row', placeholder=fp, title=fp, css_class=fc, **kwargs) for fn, fp, fc, kwargs in self.building_fields]
+        fds = [''] + [Field(fn, wrapper_class='row', placeholder=fp, title=fp, css_class=fc, **kwargs) for
+                      fn, fp, fc, kwargs in self.building_fields]
         return Fieldset(*fds)
 
     class Meta:
