@@ -120,7 +120,7 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
             data = user.profile.get_data() or []
             data = self.flattern_coach_carrier_structure(data)
             data = self.sort(data)
-        return self.paginate(data)
+        return self.paginate(data, self.paginate_limit)
 
     def sort(self, data):
         return sorted(data, key=lambda k: k['name'], reverse=True)
@@ -196,11 +196,11 @@ class ProfileGames(ProfileStatsPageView, mixins.PaginateMixin):
             data = user.profile.playermetrics.games
             if data is None:
                 data = []
-            return self.paginate(data)
+            return self.paginate(data, self.paginate_limit)
         elif user.is_coach:
             games_data = user.profile.get_season_games_data(self.season_name)
             if games_data:
                 data = games_data
             else:
                 data = []
-            return self.paginate(data)
+            return self.paginate(data, self.paginate_limit)

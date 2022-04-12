@@ -1,6 +1,7 @@
 import logging
 
 from functools import lru_cache
+from typing import Optional
 
 import easy_thumbnails
 from clubs.models import League as CLeague
@@ -8,7 +9,6 @@ from clubs.models import Team as CTeam
 
 from easy_thumbnails.files import get_thumbnailer
 from profiles.models import PlayerProfile
-
 
 logger = logging.getLogger(__name__)
 
@@ -36,23 +36,35 @@ class PlayerMapper:
 class TeamMapper:
     @classmethod
     @lru_cache()
-    def get_team_obj(cls, team_name, league_obj) -> CTeam:
+    def get_team_obj(cls, team_name: str, league_obj: CLeague) -> CTeam:
         try:
             team_obj = CTeam.objects.get(
                 league=league_obj, mapping__icontains=team_name.lower()
             )
             return team_obj
+        except CTeam.MultipleObjectsReturned:
+            msg = f"input data: team_name={team_name} league_obj={league_obj} league_obj.id={league_obj.id} query used={team_name.lower()}"
+            logger.debug(msg)
+            print(msg)
         except CTeam.DoesNotExist:
             return None
 
     @classmethod
     @lru_cache()
-    def get_url_pic_name(cls, team_name: str, league_obj: CLeague) -> tuple:
-        """Returns tuple of (Url, Picture Url, name)"""
+    def get_urls_pics(cls, team_name: str,
+                      league_obj: CLeague,
+                      club: Optional[bool] = False) -> tuple:
+        """ Helper method of get_url_pic_name and get_url_pic_for_club"""
+
         obj = TeamMapper.get_team_obj(team_name, league_obj)
         name = obj.name if obj else team_name
         url = obj.get_permalink() if obj else None
-        picture = obj.picture if obj and obj.picture else "default_profile.png"
+
+        if club:
+            picture = obj.get_club_pic()
+        else:
+            picture = obj.picture if obj and obj.picture else "default_profile.png"
+
         try:
             pic = get_thumbnailer(picture)["nav_avatar"].url
         except easy_thumbnails.exceptions.InvalidImageFormatError as e:
@@ -64,5 +76,21 @@ class TeamMapper:
                 )
             else:
                 raise RuntimeError(f"picture={picture}, obj={obj}")
+
+        return url, pic, name
+
+    @classmethod
+    def get_url_pic_name(cls, team_name: str, league_obj: CLeague) -> tuple:
+        """Returns tuple of (Url, Picture Url, name) for team object"""
+
+        url, pic, name = cls.get_urls_pics(team_name, league_obj)
+
+        return url, pic, name
+
+    @classmethod
+    def get_url_pic_for_club(cls, team_name: str, league_obj: CLeague) -> tuple:
+        """Returns tuple of (Url, Picture Url, name) for club object"""
+
+        url, pic, name = cls.get_urls_pics(team_name, league_obj, True)
 
         return url, pic, name

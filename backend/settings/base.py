@@ -118,6 +118,8 @@ INSTALLED_APPS = [
 
 SITE_ID = 1
 
+DATE_FORMAT = "Y-m-d"
+
 
 # Reference to custom User model
 AUTH_USER_MODEL = 'users.User'
@@ -236,7 +238,7 @@ TIME_ZONE = 'Europe/Warsaw'
 
 USE_I18N = True
 
-USE_L10N = True
+USE_L10N = False
 
 USE_TZ = True
 
@@ -611,3 +613,25 @@ except Exception as e:
 
 if FORCED_SEASON_NAME is not None:
     print(f"Force to use season for dispaly metrics: {FORCED_SEASON_NAME}")
+
+
+DEFAULT_CLUB_PICTURE_URL = '/media/default_club.png'
+
+VOIVODESHIP_CHOICES = (
+        ('Dolnośląskie', 'Dolnośląskie'),
+        ('Kujawsko-pomorskie', 'Kujawsko-pomorskie'),
+        ('Lubelskie', 'Lubelskie'),
+        ('Lubuskie', 'Lubuskie'),
+        ('Łódzkie', 'Łódzkie'),
+        ('Małopolskie', 'Małopolskie'),
+        ('Mazowieckie', 'Mazowieckie'),
+        ('Opolskie', 'Opolskie'),
+        ('Podkarpackie', 'Podkarpackie'),
+        ('Podlaskie', 'Podlaskie'),
+        ('Pomorskie', 'Pomorskie'),
+        ('Śląskie', 'Śląskie'),
+        ('Świętokrzyskie', 'Świętokrzyskie'),
+        ('Warmińsko-Mazurskie', 'Warmińsko-Mazurskie'),
+        ('Wielkopolskie', 'Wielkopolskie'),
+        ('Zachodniopomorskie', 'Zachodniopomorskie')
+    )

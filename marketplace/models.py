@@ -215,17 +215,23 @@ class ClubForPlayerAnnouncement(AnnouncementMeta):
 
     league = models.ForeignKey(
         League,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
     )
 
     seniority = models.ForeignKey(
         Seniority,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
     )
 
     gender = models.ForeignKey(
         Gender,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
     )
 
     voivodeship = models.ForeignKey(

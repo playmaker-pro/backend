@@ -1,5 +1,6 @@
 {% load static %}
 {% load thumbnail %}
+{% load playmaker %}
 {% load i18n %}
 
 <style>
@@ -22,54 +23,74 @@
 
 <header id="header" class="fixed-top">
 
-<div class="container-fluid d-flex align-items-center">
+    <div class="container-fluid d-flex align-items-center">
 
-<nav class="navbar fixed-top navbar-expand-lg bg-light navbar-light">
-      <span class="logo">
-            <a href="{% if menus_logo_url %}{{ menus_logo_url }}{% else %}/{% endif %}">Play<span>Maker</span><small>.pro</small></a>
-    </span>
-      {% if menus_heading_title %}
-        <span class="heading-title d-block d-md-none float-left"> <i class="main-color icofont-hand-drawn-right"></i> {{ menus_heading_title }} </span> 
-      {% endif %}
-      
-        <button class="navbar-toggler collapsed border-0" type="button" data-toggle="collapse" data-target="#collapsingNavbar">
-            <span class="navbar-toggler-icon"></span>
-            <div class="close-icon py-1">✖</div>
-        </button>
+        <nav class="navbar fixed-top navbar-expand-lg bg-light navbar-light">
+            <span class="logo">
+                <a href="{% if menus_logo_url %}{{ menus_logo_url }}{% else %}/{% endif %}">
+                    Play<span>Maker</span><small>.pro</small>
+                </a>
+            </span>
+            
+            {% if menus_heading_title %}
+                <span class="heading-title d-block d-md-none float-left"> 
+                    <i class="main-color icofont-hand-drawn-right"></i> {{ menus_heading_title }} 
+                </span> 
+            {% endif %}
+            
+            <button class="navbar-toggler collapsed border-0" type="button" data-toggle="collapse" data-target="#collapsingNavbar">
+                <span class="navbar-toggler-icon"></span>
+                <div class="close-icon py-1">✖</div>
+            </button>
 
+            <div class="collapse navbar-collapse justify-content-end" id="collapsingNavbar">
+                <ul class="nav navbar-nav">
+                            
+                    <!--li class="active"><a href="#header">Home</a></li-->
+                    {% include menuitems_template|default:"partials/_menuitems.html" %}
 
-        <div class="collapse navbar-collapse justify-content-end" id="collapsingNavbar">
-            <ul class="nav navbar-nav">
-                        
-                <!--li class="active"><a href="#header">Home</a></li-->
-                {% include menuitems_template|default:"partials/_menuitems.html" %}
+                    {% if request.user.is_authenticated %}
+                    <!-- Navbar user icon -->
 
-                {% if request.user.is_authenticated %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="{% url 'profiles:show_self' %}" data-toggle="dropdown"><!--i class="icofont-user-alt-7"></i--><img class="navigation-avatar rounded-circle img-responsive"  src="{% thumbnail user.picture|default:'default_profile.png' 'nav_avatar' %}"> {{ request.user.display_name }}</a>
-                    <div class="dropdown-menu">
-                    <a class="dropdown-item" href="{% url 'profiles:show' slug=user.profile.slug %}">Profil</a>
-                    <a class="dropdown-item" href="{% url 'profiles:edit_self' %}">Edytuj CV
-                        <div class="progress">
-                        <div class="progress-bar bg-success" style="width:{{user.profile.percentage_completion}}%">{{user.profile.percentage_completion}}%</div>
-                        </div>
-                        </a>
-                        
-                    <a class="dropdown-item" href="{% url 'profiles:edit_settings' %}">Ustawienia konta</a>
-                    <a class="dropdown-item" href="{% url 'account_logout' %}">Wyloguj <i class="icofont-logout"></i></a>
-                    {% if request.user.is_superuser %}
-                    <a class="dropdown-item" href="{% url 'wagtailadmin_home' %}">Admin</a>
-                    <a class="dropdown-item" href="/django-admin/">Data Admin</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="{% url 'profiles:show_self' %}" data-toggle="dropdown">
+                                <!--i class="icofont-user-alt-7"></i-->
+                                <img class="navigation-avatar rounded-circle img-responsive" src="{% thumbnail user.picture|default:'default_profile.png' 'nav_avatar' %}">
+                            </a>
+                            <div class="dropdown-menu">
+
+                                {% if user.is_coach %}
+                                    {% get_my_team_link css_class='dropdown-item' %}
+                                {% endif %}
+                                {% if user.is_club %}
+                                    {% get_my_club_link css_class='dropdown-item'%}
+                                {% endif %}
+                                
+                                <a class="dropdown-item" href="{% url 'profiles:show' slug=user.profile.slug %}">Profil</a>
+                                <a class="dropdown-item" href="{% url 'profiles:edit_self' %}">Edytuj CV
+                                    <div class="progress">
+                                        <div class="progress-bar bg-success" style="width:{{user.profile.percentage_completion}}%">
+                                            {{user.profile.percentage_completion}}%
+                                        </div>
+                                    </div>
+                                </a>
+                                
+                                <a class="dropdown-item" href="{% url 'profiles:edit_settings' %}">Ustawienia konta</a>
+                                <a class="dropdown-item" href="{% url 'account_logout' %}">Wyloguj <i class="icofont-logout"></i></a>
+                                {% if request.user.is_superuser %}
+                                    <a class="dropdown-item" href="{% url 'wagtailadmin_home' %}">Admin</a>
+                                    <a class="dropdown-item" href="/django-admin/">Data Admin</a>
+                                {% endif %}
+                                
+                            </div>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'account_login' %}">{% trans 'Zaloguj' %}</a></li>
                     {% endif %}
-                    </div>
-                </li>
-                {% else %}
-                <li class="nav-item"><a class="nav-link" href="{% url 'account_login' %}">{% trans 'Zaloguj' %}</a></li>
-                {% endif %}
-                
-            </ul>
-        </div>
-</nav>
-</div>
+                    
+                </ul>
+            </div>
+        </nav>
+    </div>
 
 </header>

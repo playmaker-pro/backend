@@ -98,31 +98,35 @@ function inquiryUpdate(event, idTick) {
         console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
     }
     });
-};
+}
 
-function approve_annoucement(event, slug) {
+function approve_annoucement(event, slug, type) {
 
     $.ajax({
         type:'POST',
         url:'/marketplace/approve/',
         data:{
             csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
-            id: $('#ann-numner').val(),
-            announcement_type: $('#ann-type').val(),
-            action: 'post'
+            id: slug,
+            announcement_type: type,
+            action: 'post',
         },
         success:function(json){         
             $('#requestButton').toggleClass("btn-requested")   
             modalHide('inquiryModal');
-            showToastMessage(json.message.body);
-            window.setTimeout(location.reload(), 500);
-            
+            if(json.error){
+                showToastErrorMessage(json.message)
+            } else {
+                showToastMessage(json.message);
+            }
+            window.setTimeout(function(){location.reload()}, 700);
+     
         },
         error : function(xhr, errmsg, err) {
         console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
     }
     });
-};
+}
 
 function inquiry(event, slug, category) {
     $.ajax({

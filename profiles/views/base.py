@@ -265,7 +265,7 @@ class MyRequests(generic.TemplateView, LoginRequiredMixin, mixins.PaginateMixin,
             tabs.append(build_request_tab(**tagoptions))
 
         kwargs['modals'] = self.modal_activity(user, verification_auto=False)
-        kwargs['page_title'] = 'Zapytania'
+        kwargs['page_title'] = 'Moje Zapytania'
         kwargs['tabs'] = tabs
 
         return super().get(request, *args, **kwargs)
@@ -359,6 +359,7 @@ class AdaptSeasonPlayerDataToCirclePresentation:
 class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "profiles/show_default_profile.html"
     http_method_names = ["get", "post"]
+    modal_verification_force_loading = True
 
     @property
     def season_name(self):
@@ -544,6 +545,7 @@ class RequestRoleChange(LoginRequiredMixin, View):
 class EditAccountSettings(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "profiles/edit_account_settings.html"
     http_method_names = ["get", "post"]
+    modal_verification_force_loading = True
 
     def get(self, request, *args, **kwargs):
         user = self.request.user
@@ -579,6 +581,7 @@ class EditAccountSettings(LoginRequiredMixin, generic.TemplateView, mixins.ViewM
 class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "profiles/edit_profile.html"
     http_method_names = ["get", "post"]
+    modal_verification_force_loading = True
 
     def set_edit_profile_page_title(self):
         if self.user.is_coach or self.user.is_club:
@@ -619,6 +622,7 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
             request.POST,
             request.FILES,
             instance=user,
+            request=request
             )
 
         if not profile_form.is_valid() or not user_basic_form.is_valid():
@@ -630,7 +634,7 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
             )
 
             return super().get(request, profile_form=profile_form, user_basic_form=user_basic_form)
-
+        print('xxx>', profile_form)
         # Both forms are fine. Time to save!
         user_basic_form.save()
         profile = profile_form.save(commit=False)
@@ -668,6 +672,8 @@ class AccountMissingFirstLastName(LoginRequiredMixin, View):
 
 
 class AccountSettings(LoginRequiredMixin, View):
+    modal_verification_force_loading = True
+
     def get(self, request, *args, **kwargs):
         usersettings = request.user.notificationsetting
         toggled = not usersettings.weekly_report
@@ -676,52 +682,3 @@ class AccountSettings(LoginRequiredMixin, View):
         data = {}
         return JsonResponse(data)
 
-
-class AccountVerification(LoginRequiredMixin, View):
-
-    http_method_names = ['post', 'get']
-
-    def get(self, request, *args, **kwargs):
-        user = request.user
-        if request.user.is_coach:
-            form = forms.CoachVerificationForm(instance=user.profile)
-        if request.user.is_club:
-            form = forms.ClubVerificationForm(instance=user.profile)
-        if request.user.is_player:
-            form = forms.PlayerVerificationForm(instance=user.profile)
-        data = {}
-        data['form'] = render_crispy_form(form)
-        return JsonResponse(data)
-
-    def post(self, request, *args, **kwargs):
-        user = self.request.user
-        profile = user.profile
-
-        if request.user.is_coach:
-            verification_form = forms.CoachVerificationForm(request.POST, instance=profile)  # @todo how to add Current user role as a TextField.
-
-        if request.user.is_club:
-            verification_form = forms.ClubVerificationForm(request.POST, instance=profile)  # @todo how to add Current user role as a TextField.
-
-        if request.user.is_player:
-            verification_form = forms.PlayerVerificationForm(request.POST, instance=profile)  # @todo how to add Current user role as a TextField.
-
-        data = {'success': False, 'url': None, 'form': None}
-
-        if verification_form.is_valid():
-            verification_form.save()
-            user.unverify()
-            user.save()
-            messages.success(request, _("Przyjęto zgłoszenie weryfikacji konta."), extra_tags='alter-success')
-
-            data['success'] = True
-            data['url'] = reverse("profiles:show_self")
-            return JsonResponse(data)
-            # return redirect(reverse("profiles:show_self"))
-        else:
-            # response_data = {} d
-            # messages.success(request, _("Błędnie wprowadzone dane."), extra_tags='alter-success')
-            # request.session['verification_form_errors'] = verification_form.errors
-            data['form'] = render_crispy_form(verification_form)
-            return JsonResponse(data)
-            # redirect('profiles:show_self')

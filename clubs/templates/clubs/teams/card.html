@@ -9,9 +9,11 @@
     <div class="card-body">
       <div class="card-title text-center">
       {% if picture_size %}
-        <img title="" class="avatar" src="{% thumbnail object.picture|default:'default_team.png' 'tables_avatar_show' %}">
+        <img title="" class="avatar"
+             src="{% thumbnail object.club.picture|default:'default_team.png' 'tables_avatar_show' %}">
       {% else %}
-        <img title="" class="avatar" src="{% thumbnail object.picture|default:'default_team.png' 'profile_avatar_show' %}">
+        <img title="" class="avatar"
+             src="{% thumbnail object.club.picture|default:'default_team.png' 'profile_avatar_show' %}">
       {%  endif %}
       </div>
       <h6 class="card-subtitle mb-2 text-muted"></h6>  
