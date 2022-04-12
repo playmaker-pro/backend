@@ -63,7 +63,8 @@ def create_profile_handler(sender, instance, created, **kwargs):
         # mechanism to prevent double db queries would be to detect if role has been requested to update.
         msgprefix = 'Updated'
         profile = service.set_and_create_user_profile(instance)
-        service.set_initial_verification(profile)
+        if not profile.verification:
+            service.set_initial_verification(profile)
 
     if created:
         logger.debug(f'Sending email to admins about new user {instance.username}')
