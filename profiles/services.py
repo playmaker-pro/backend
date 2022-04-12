@@ -256,9 +256,10 @@ class ProfileVerificationService:
 class ProfileService:
     def set_initial_verification(self, profile):
         # set initial verification status object if not present
+
         if profile.verification is None:
             profile.verification = models.ProfileVerificationStatus.create_initial(
-                profile.user
+                for_user=profile.user
             )
             profile.save()
 

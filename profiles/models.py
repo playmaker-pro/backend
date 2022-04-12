@@ -1307,6 +1307,7 @@ class ProfileVerificationStatus(models.Model):
     @classmethod
     def create_initial(cls, for_user: User):
         return cls.objects.create(
+            owner=for_user,
             status=for_user.state,
             set_by=User.get_system_user()
         )
