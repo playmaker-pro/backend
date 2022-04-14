@@ -1,0 +1,1 @@
+{"1": {"club_name": "Olimpia Elblag", "pic_name": "olimpia elblag", "file_name": "Olimpia Elblag.jpg"}}
