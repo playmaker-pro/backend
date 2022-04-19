@@ -209,7 +209,7 @@ def addstr(arg1, arg2):
 
 @register.simple_tag
 def get_user_verification_modal_id(user: User) -> str:
-    if user.validate_last_name():        
+    if user.validate_last_name():      
         return "#verificationModal"
     else:
         return "#profileNotValidModal"
@@ -839,6 +839,7 @@ def seemore_link(context, link, checks=True):
         'button_text': 'zobacz więcej',
         'button_url': link,
         'modals': context['modals'],
+        'user': context['user']
     }
 
 
