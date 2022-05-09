@@ -62,19 +62,13 @@ def create_profile_handler(sender, instance, created, **kwargs):
     if not created:  # this place is point where we decide if we want to update user's profile each time.
         # mechanism to prevent double db queries would be to detect if role has been requested to update.
         msgprefix = 'Updated'
-        profile = service.set_and_create_user_profile(instance)
-        if not profile.verification:
-            service.set_initial_verification(profile)
 
     if created:
         logger.debug(f'Sending email to admins about new user {instance.username}')
         mail_admins_about_new_user(instance)
         msgprefix = 'New'
-
-    # @todo(rkesik): that second call of set_and_create_user_profile might be not needed.
     service.set_and_create_user_profile(instance)
     set_user_inquiry_plan(instance)
-
     logger.info(f"{msgprefix} user profile for {instance} created with declared role {instance.declared_role}")
 
 
