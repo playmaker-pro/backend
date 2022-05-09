@@ -24,7 +24,7 @@
         >
             {% if button_icon %}<i class="icofont-{{ button_icon }}"></i>{% endif %} {{ button_prefix }} {{ button_text }} {{ button_suffix }}
         </a>
-    {% elif modals.verification.load and checks  %}
+    {% elif modals.verification.load and checks and not user.is_verified %}
         <a
           {{ button_attrs }}
           {% if button_id %} id="{{ button_id }}" {% endif %}   
@@ -35,7 +35,7 @@
         >
             {% if button_icon %}<i class="icofont-{{ button_icon }}"></i>{% endif %} {{ button_prefix }} {{ button_text }} {{ button_suffix }}
         </a>
-    {% elif modals.need_verification.load and checks  %}
+    {% elif modals.need_verification.load and checks %}
         <a 
           {{ button_attrs }}
           {% if button_id %} id="{{ button_id }}" {% endif %}  

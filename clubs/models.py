@@ -607,9 +607,17 @@ class Team(models.Model, MappingMixin):
 
     @property
     @supress_exception
-    def display_league_region_and_group_name(self):
+    def display_league_region_and_group_name(self) -> str:
+
         region = self.league.region if self.league and self.league.region else ""
-        return f"{self.league.display_league_group_name}, {region}"
+        group_name = self.league.display_league_group_name
+
+        if not group_name:
+            return region
+        elif not group_name and not region:
+            return ''
+
+        return f"{group_name}, {region}"
 
     @property
     @supress_exception

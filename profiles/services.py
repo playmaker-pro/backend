@@ -1,10 +1,12 @@
-from re import T
-from roles import definitions
-from . import models
-from django.contrib.auth import get_user_model
 import logging
-from clubs.models import Team as CTeam
+from re import T
+
 from clubs.models import Club as CClub
+from clubs.models import Team as CTeam
+from django.contrib.auth import get_user_model
+from roles import definitions
+
+from . import models
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +76,7 @@ class ProfileVerificationService:
             club = None
       
         set_by = requestor or User.get_system_user()
-        new = models.ProfileVerificationStatus.create(
+        new = models.ProfileVerificationStatus.objects.create(
             owner=self.user,
             previous=self.profile.verification,
             has_team=has_team,
@@ -88,16 +90,16 @@ class ProfileVerificationService:
         self.profile.save()
         return new
 
-    def update_verification_status(self, status: str, verification: models.ProfileVerificationStatus = None ) -> None:
+    def update_verification_status(self, status: str, verification: models.ProfileVerificationStatus = None) -> None:
         verification = self.profile.verification or verification
         verification.status = status
         verification.save()
         
-    def _verify_user(self):
+    def _verify_user(self) -> None:
         self.user.verify()
         self.user.save()
 
-    def _verify_player(self):
+    def _verify_player(self) -> None:
         profile = self.profile
 
         if profile.verification.has_team and profile.verification.team:
@@ -254,16 +256,13 @@ class ProfileVerificationService:
 
 
 class ProfileService:
-    def set_initial_verification(self, profile):
+    def set_initial_verification(self, profile: models.BaseProfile) -> None:
         # set initial verification status object if not present
-
         if profile.verification is None:
-            profile.verification = models.ProfileVerificationStatus.create_initial(
-                for_user=profile.user
-            )
+            profile.verification = models.ProfileVerificationStatus.create_initial(profile.user)
             profile.save()
 
-    def set_and_create_user_profile(self, user):
+    def set_and_create_user_profile(self, user: User) -> models.BaseProfile:
         model_map = {
             definitions.PLAYER_SHORT: models.PlayerProfile,
             definitions.COACH_SHORT: models.CoachProfile,
@@ -276,9 +275,13 @@ class ProfileService:
         profile_model = model_map.get(user.role, models.GuestProfile)
 
         profile, _ = profile_model.objects.get_or_create(user=user)
-
         # custom things for player accout
         # we need to attach metrics to PLayer's profile
         if user.is_player:
             models.PlayerMetrics.objects.get_or_create(player=profile)
+        
+        # print('Profile ver:', profile.verification)
+        # if not profile.verification:
+        #     self.set_initial_verification(profile)
+
         return profile

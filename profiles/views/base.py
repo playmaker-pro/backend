@@ -634,7 +634,7 @@ class EditProfile(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoad
             )
 
             return super().get(request, profile_form=profile_form, user_basic_form=user_basic_form)
-        print('xxx>', profile_form)
+
         # Both forms are fine. Time to save!
         user_basic_form.save()
         profile = profile_form.save(commit=False)
