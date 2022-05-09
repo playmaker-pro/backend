@@ -260,6 +260,27 @@ class ViewFilterMixin:
         return filtered_positions if filtered_positions else None
 
     @property
+    def filter_fantasy_position(self) -> Union[list, None]:
+
+        fantasy_positions = {
+            'Bramkarz': 1,
+            'Obrońca': [2, 3, 4],
+            'Pomocnik': [5, 6, 7, 8],
+            'Napastnik': 9
+        }
+
+        values = self.request.GET.getlist('fantasy_position')
+
+        filtered_positions = []
+        for value in values:
+            if value in fantasy_positions.keys():
+                if isinstance(fantasy_positions[value], list):
+                    filtered_positions += fantasy_positions[value]
+                else:
+                    filtered_positions.append(fantasy_positions[value])
+        return filtered_positions if filtered_positions else None
+
+    @property
     def filter_position_marketplace(self):
         POSITION_CHOICES = (
             'Bramkarz',

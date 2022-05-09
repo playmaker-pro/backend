@@ -219,6 +219,10 @@ class User(AbstractUser, UserRoleMixin):
         return self.state == self.STATE_ACCOUNT_VERIFIED
 
     @property
+    def is_need_verfication_role(self):
+        return self.is_player or self.is_coach or self.is_club
+    
+    @property
     def is_pending_role_change(self):
         return self.changerolerequestor.filter(approved=False).count() > 0
 
