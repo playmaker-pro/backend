@@ -131,8 +131,12 @@ class ProfileVerificationStatusAdmin(admin.ModelAdmin):
     list_display = ('id', linkify('owner'), 'has_team', 'team_not_found', 'club', 'team', 'text', 'status', 'set_by', 'created_at', 'updated_at', linkify('previous'), 'get_next')
     list_filter = ('owner__declared_role', 'status', OnlyLastVerificationFilter, HasDataMapperIdFilter, HasTextInputFilter, ('has_team', admin.BooleanFieldListFilter), ('team_not_found', admin.BooleanFieldListFilter), HasTeamObjectFilter, HasClubObjectFilter)
     actions = [update_with_profile_data]
+
     def get_next(self, obj):
         return obj.next
+
+    def get_owner(self, obj):
+        return linkify(obj.profile)
 
     get_next.short_description = 'NEXT'
 
