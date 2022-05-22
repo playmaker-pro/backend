@@ -89,3 +89,4 @@ custom_script_*.py
 
 # zips
 *.zip
+.idea/

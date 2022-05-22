@@ -43,6 +43,8 @@ User = get_user_model()
 
 logger = logging.getLogger(__name__)
 
+FANTASY_CHOICES = ['Bramkarz', 'Obrońca', 'Pomocnik', 'Napastnik']
+
 
 class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMixin):
     page_title = 'Fantasy'
@@ -50,6 +52,7 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
     paginate_limit = 20
 
     def filter_queryset(self, queryset):
+
         if self.filter_season_exact:
             queryset = queryset.filter(season__name=self.filter_season_exact)
 
@@ -95,6 +98,9 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
         if self.filter_position is not None:
             queryset = queryset.filter(player__playerprofile__position_raw=self.filter_position)
 
+        if self.filter_fantasy_position:
+            queryset = queryset.filter(player__playerprofile__position_raw__in=self.filter_fantasy_position)
+
         return queryset
 
     def get_filters_values(self):  # @todo add cache from Redis here
@@ -117,6 +123,7 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
         kwargs['vivos'] = settings.VOIVODESHIP_CHOICES
         kwargs['filters'] = self.get_filters_values()
         kwargs['leagues'] = League.objects.is_top_parent()
+        kwargs['positions'] = FANTASY_CHOICES
         page_obj.elements = page_obj.end_index() - page_obj.start_index() + 1
         self.prepare_kwargs(kwargs)
         kwargs['modals'] = self.modal_activity(request.user, register_auto=False, verification_auto=False)
