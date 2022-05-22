@@ -89,10 +89,7 @@ class SummarySerializer:
     @classmethod
     def serialize(cls, league, season_name):
         _number_of_last_games = 12
-        output = {}
-        output["today_games"] = []
-        output["next_games"] = []
-        output["current_games"] = []
+        output = {"today_games": [], "next_games": [], "current_games": []}
 
         try:
             data_index = league.historical.all().get(season__name=season_name)
@@ -221,17 +218,12 @@ class LeagueAdvancedTableRawMetrics:
                 row.get("club_name"), league_obj
             )
 
-            tm.team_object.get_club_pic()
-
-            club_pic = tm.team_object.get_club_pic()
-
             data = {
                 "position": pos,
                 "games": row["results"].get("matches"),
                 "pic": team_pic,
                 "team": team_name,
                 "team_url": team_url,
-                "team_pic": club_pic,
                 "losts": row["results"].get("loses_all"),
                 "wins": row["results"].get("wins_all"),
                 "draws": row["results"].get("draws_all"),

@@ -30,10 +30,14 @@ class SoccerDisplayMixin:
 
 class TeamObjectsDisplayMixin:
     """Exposes values to display on UI.
-    
+
     Profile's team based mixin - object who has a team_object and club_object
     When link is broken excpetion should be supressed
     """
+    
+    def get_team_object_or_none(self):
+        if self.team_object:
+            return self.team_object
 
     @cached_property
     def get_team_object(self):

@@ -23,6 +23,7 @@ from clubs import models as clubs_models
 from .mixins import TeamObjectsDisplayMixin
 import logging
 from .erros import VerificationCompletionFieldsWrongSetup
+from . import managers
 
 
 User = get_user_model()
@@ -299,6 +300,11 @@ class BaseProfile(models.Model, EventLogMixin):
         else:
             before_datamapper = None
 
+        # If there is no verification object set we need to create initial for that        
+        if self.verification is None and self.user.is_need_verfication_role:
+            self.verification = ProfileVerificationStatus.create_initial(self.user)
+
+        
         # Queen of the show
         super().save(*args, **kwargs)
 
@@ -338,6 +344,47 @@ class BaseProfile(models.Model, EventLogMixin):
 
     # def _verification_fileds_has_changed_and_was_filled(self, old, new):
     #     return old != new and all(old) and all(new)
+
+    def get_verification_data_from_profile(self, owner: User = None) -> dict:
+        '''Based on user porfile get default verification-status data.'''
+        owner = owner or self.user
+        team = None
+        has_team = None
+        team_not_found = None
+        club = None
+        text = None
+
+        if owner.is_coach or owner.is_player:
+            team = owner.profile.get_team_object_or_none()
+            if team is None:
+                has_team = False
+                text = owner.declared_club if owner.declared_club else None
+            else:
+                has_team = True
+            team_not_found = False
+
+        elif owner.is_club:
+            team_not_found = False
+            club = owner.profile.get_club_object_or_none()
+            if club is None:
+                has_team = False
+                text = owner.declared_club if owner.declared_club else None
+            else:
+                has_team = True
+            text = None
+        else:
+            return None
+
+        return {
+            'status': owner.state,
+            'set_by': User.get_system_user(),
+            'owner': owner,
+            'text': text,
+            'has_team': has_team,
+            'team_not_found': team_not_found,
+            'club': club,
+            'team': team
+        }
 
     def _get_verification_field_values(self, obj):
         return [getattr(obj, field) for field in self.VERIFICATION_FIELDS]
@@ -890,6 +937,10 @@ class ClubProfile(BaseProfile):
         'club_role',
     ]
 
+    def get_club_object_or_none(self):
+        if self.club_object:
+            return self.club_object
+
     @property
     @supress_exception
     def display_club(self):
@@ -1284,33 +1335,43 @@ class ProfileVerificationStatus(models.Model):
     has_team = models.BooleanField(null=True, blank=True)
     team_not_found = models.BooleanField(null=True, blank=True)
     text = models.CharField(max_length=355, null=True, blank=True)
- 
+
     previous = models.OneToOneField(
         "self", on_delete=models.SET_NULL, blank=True, null=True, related_name="next"
     )
 
-    @classmethod
-    def create(cls, owner: User = owner, text: str = text, previous=previous, set_by: User = set_by, status: str = status, has_team: bool = has_team, team_not_found: bool = team_not_found, club = None, team = None,
-    ):
-        return cls.objects.create(
-            owner=owner,
-            text=text,
-            has_team=has_team,
-            team_not_found=team_not_found,
-            club=club,
-            team=team,
-            status=status,
-            set_by=set_by,
-            previous=previous
-        )
+    # objects = managers.VerificationObjectManager()
+
+    # @classmethod
+    # def create(cls, owner: User = owner, text: str = text, previous=previous, set_by: User = set_by, status: str = status, has_team: bool = has_team, team_not_found: bool = team_not_found, club = None, team = None,
+    # ):
+    #     return cls.objects.create(
+    #         owner=owner,
+    #         text=text,
+    #         has_team=has_team,
+    #         team_not_found=team_not_found,
+    #         club=club,
+    #         team=team,
+    #         status=status,
+    #         set_by=set_by,
+    #         previous=previous
+    #     )
 
     @classmethod
-    def create_initial(cls, for_user: User):
-        return cls.objects.create(
-            owner=for_user,
-            status=for_user.state,
-            set_by=User.get_system_user()
-        )
+    def create_initial(cls, owner: User):
+        '''Creates initial verifcation object for a profile based on current data.'''
+        defaults = owner.profile.get_verification_data_from_profile()
+        defaults['set_by'] = User.get_system_user()
+        defaults['previous'] = None
+        return cls.objects.create(**defaults)
 
-    def __str__(self):
-        return f'{self.owner}({self.id})'
+    def update_with_profile_data(self, requestor: User = None):
+        defaults = self.owner.profile.get_verification_data_from_profile()
+        self.set_by = requestor or User.get_system_user()
+        self.status = defaults.get('status')
+        self.text = defaults.get('text')
+        self.has_team = defaults.get('has_team')
+        self.team_not_found = defaults.get('team_not_found')
+        self.club = defaults.get('club')
+        self.team = defaults.get('team')
+        self.save()
