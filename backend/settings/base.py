@@ -83,6 +83,8 @@ INSTALLED_APPS = [
     'wagtail.contrib.routable_page',
     'wagtail.api.v2',
     'wagtailmetadata',
+    # 'comments_wagtail_xtd',
+    # 'django_comments',
 
     'modelcluster',
     'taggit',
@@ -271,7 +273,7 @@ MEDIA_URL = '/media/'
 # Wagtail settings
 
 WAGTAIL_SITE_NAME = "backend"
-
+WAGTAILADMIN_COMMENTS_ENABLED = False
 # Wagtail customization
 WAGTAIL_USER_EDIT_FORM = 'users.forms.CustomUserEditForm'
 WAGTAIL_USER_CREATION_FORM = 'users.forms.CustomUserCreationForm'
