@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from django.core.cache import cache
 from email.policy import default
 from django import forms
 from crispy_forms.helper import FormHelper
@@ -36,6 +37,22 @@ from django.core.exceptions import ValidationError
 
 
 User = get_user_model()
+
+
+def get_all_teams():
+    teams = cache.get('all_teams')
+    if not teams:
+        teams = Team.objects.all()
+        cache.set('all_teams', teams)
+    return teams
+
+
+def get_all_clubs():
+    teams = cache.get('all_clubs')
+    if not teams:
+        teams = Club.objects.all()
+        cache.set('all_clubs', teams)
+    return teams
 
 
 def update(d, u):
@@ -82,7 +99,7 @@ class VerificationForm(forms.ModelForm):
 
     CHOICES = (("tak mam klub", "tak mam klub"), ("Nie mam klubu", "Nie mam klubu"))
     team = forms.ModelChoiceField(
-        queryset=Team.objects.all(),
+        queryset=get_all_teams(),
         widget=forms.Select(attrs={"data-live-search": "true", "data-dropdown-align-right": "true"})
     )
     has_team = forms.ChoiceField(choices=CHOICES, widget=forms.RadioSelect)
@@ -169,7 +186,7 @@ class ClubVerificationForm(VerificationForm):
         "team": {"help_text": "Klub którym zarządzasz"},
     }
     team = forms.ModelChoiceField(
-        queryset=Club.objects.all(),
+        queryset=get_all_clubs(),
         widget=forms.Select(attrs={"data-live-search": "true"}),
     )
     building_fields = [
