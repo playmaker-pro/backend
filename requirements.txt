@@ -7,7 +7,7 @@ django-allauth==0.42.0
 django-crispy-forms==1.9.2
 wagtail-blog==2.3.5
 wagtail-metadata==3.4.0
-
+pymemcache==3.5.2
 easy-thumbnails==2.7
 django-fsm==2.7.1
 redis==3.2.1
