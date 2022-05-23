@@ -54,9 +54,7 @@ function get_add_announcement_form(event, id = null, announcement_type = null, a
   $.ajax({
       url: "/marketplace/add/",
       type: "get",
-//      data: {'id': id, 'announcement_type': announcement_type},
       data: {'id': id, 'announcement_type': announcement_type, 'action_name': action_name},
-      /*data: {slug: slug},*/
       success: function(json) {
         if (json.form === null) {
           $('#add-ann-out').show();
@@ -84,7 +82,6 @@ function get_add_announcement_form(event, id = null, announcement_type = null, a
       $.ajax({
           url: "/marketplace/filters/",
           type: "get",
-          /*data: {slug: slug},*/
           success: function(json) {
               $("#filters-form-body").html(json.form);
               $("#filters-form-body select").addClass("selectpicker").selectpicker('refresh'); 
@@ -96,40 +93,44 @@ function get_add_announcement_form(event, id = null, announcement_type = null, a
     }
 
 
+function get_missingname_form(slug) {
+  $.ajax({
+      url: "/users/me/missingname/",
+      type: "get",
+      data: {slug: slug},
+      success: function(json) {
+          $("#missingname-form-body").html(json.form);
+          $("#missingname-form-body select").addClass("selectpicker").selectpicker('refresh'); 
+      }
+  })
+}
 
-function get_missingname_form(slug)
-{
-        $.ajax({
-            url: "/users/me/missingname/",
-            type: "get",
-            data: {slug: slug},
-            success: function(json) {
-                $("#missingname-form-body").html(json.form);
-                $("#missingname-form-body select").addClass("selectpicker").selectpicker('refresh'); 
-            }
-        })
-  }
-
-function get_verification_form(slug)
-{
+function get_verification_form(slug) {
     $.ajax({
-        url: "/users/me/verification/",
-        type: "get",
-        data: {slug: slug},
-        success: function(json) {
-            $("#verification-form-body").html(json.form);
-            $("#verification-form-body select").addClass("selectpicker").selectpicker('refresh'); 
-        
-            if($('#id_has_team_1').is(':checked')) { 
-              console.log('=', $("#select_team_div"))
-              $("#select_team_div").fadeIn()
-              $("#text_team_div").hide()
-          }
-          
-        
-          }
-    })
-  }
+      url: "/users/me/verification/",
+      type: "get",
+      data: {slug: slug},
+      success: function(json) {
+          $("#verification-form-body").html(json.form);
+          //$("#verification-form-body select").addClass("selectpicker").selectpicker('refresh'); 
+          $("#id_position_raw").addClass("selectpicker").selectpicker('refresh'); 
+          $("#id_country").addClass("selectpicker").selectpicker('refresh'); 
+          $('#id_team').select2({
+            width: '100%',
+            ajax: {
+              url: '/resources/teams_search',
+              dataType:  'json'
+            }
+          });
+
+          if($('#id_has_team_1').is(':checked')) { 
+            console.log('=', $("#select_team_div"))
+            $("#select_team_div").fadeIn()
+            $("#text_team_div").hide()
+    }
+    }
+  })
+}
 
 function copyToClipboard() {
     var copyText = document.getElementById("copyToClipBoard");
