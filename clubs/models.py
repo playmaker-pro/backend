@@ -703,4 +703,14 @@ class Team(models.Model, MappingMixin):
         region_name = (
             self.league.region.name if self.league and self.league.region else ""
         )
-        return f"{self.name}, ({self.display_league_top_parent}, {region_name})"
+        league_name = self.display_league_top_parent
+        if not league_name:
+            suffix = ''
+        else:
+            suffix = f'({league_name}'
+            if region_name:
+                suffix += f', {region_name})'
+            else:
+                suffix += ')'
+
+        return f"{self.name} {suffix}"

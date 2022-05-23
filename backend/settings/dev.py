@@ -38,6 +38,7 @@ CACHES = {
     }
 }
 
+SELECT2_CACHE_BACKEND = "default"
 
 try:
     from .local import *

@@ -40,11 +40,12 @@ User = get_user_model()
 
 
 def get_all_teams():
-    teams = cache.get('all_teams')
-    if not teams:
-        teams = Team.objects.all()
-        cache.set('all_teams', teams)
-    return teams
+    return Team.objects.all()
+    # teams = cache.get('all_teams')
+    # if not teams:
+    #     teams = Team.objects.all()
+    #     cache.set('all_teams', teams)
+    # return teams
 
 
 def get_all_clubs():
@@ -75,6 +76,26 @@ class FieldConfig:
     placeholder = ""
 
 
+class ChoiceFieldNoValidation(forms.ChoiceField):
+    def to_python(self, value):
+        if value in self.empty_values:
+            return None
+        try:
+            key = 'pk'
+            if isinstance(value, Team):
+                value = getattr(value, key)
+            value = Team.objects.get(**{key: value})
+        except (ValueError, TypeError, Team.DoesNotExist):
+            raise ValidationError(self.error_messages['invalid_choice'], code='invalid_choice')
+        return value
+
+    def validate(self, value):
+        return True
+    
+    def valid_value(self, value):
+        """Check to see if the provided value is a valid choice."""
+        return True
+ 
 class VerificationForm(forms.ModelForm):
     """
     settings describes how filed will be build.
@@ -98,15 +119,18 @@ class VerificationForm(forms.ModelForm):
     building_fields = []
 
     CHOICES = (("tak mam klub", "tak mam klub"), ("Nie mam klubu", "Nie mam klubu"))
-    team = forms.ModelChoiceField(
-        queryset=Team.objects.all(),
-        widget=forms.Select(attrs={"data-live-search": "true", "data-dropdown-align-right": "true"})
-    )
+    # team = forms.ModelChoiceField(
+    #     queryset=get_all_teams(),
+    #     widget=forms.Select(attrs={"data-live-search": "true", "data-dropdown-align-right": "true"})
+    # )
+    team = ChoiceFieldNoValidation()
     has_team = forms.ChoiceField(choices=CHOICES, widget=forms.RadioSelect)
     team_not_found = forms.BooleanField()
-    # DEFAULT_FIELDS = ['team_not_found', 'team', 'has_team']
 
     def __init__(self, *args, **kwargs):
+        data = args[0] if args else kwargs.get('data', None)
+        if data:
+            print('data=', data)
         super().__init__(*args, **kwargs)
         self.default_field_settings = FieldConfig()
         self.helper = FormHelper(self)
@@ -133,6 +157,7 @@ class VerificationForm(forms.ModelForm):
         return instance
 
     def clean(self):
+        
         cleaned_data = super().clean()
         team = cleaned_data.get("team")
         text_club = cleaned_data.get("team_club_league_voivodeship_ver")
@@ -198,11 +223,7 @@ class ClubVerificationForm(VerificationForm):
         fields = models.ClubProfile.VERIFICATION_FIELDS + [
             "team_club_league_voivodeship_ver"
         ]
-        widgets = {
-            "team": forms.Select(
-                attrs={"class": "selectpickerxxx", "data-live-search": "true"}
-            ),
-        }
+
 
 
 class CoachVerificationForm(VerificationForm):
@@ -248,9 +269,6 @@ class PlayerVerificationForm(VerificationForm):
         model = models.PlayerProfile
         widgets = {
             "country": CountrySelectWidget(layout="{widget}"),
-            "team": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
-            ),
         }
         fields = models.PlayerProfile.VERIFICATION_FIELDS + [
             "position_raw",
