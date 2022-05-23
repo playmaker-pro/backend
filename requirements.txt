@@ -23,3 +23,4 @@ django-user-agents==0.4.0
 pygments==2.10.0
 typing_extensions==3.10.0.0
 poetry==1.1.11
+django-select2==7.10.0
