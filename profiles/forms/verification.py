@@ -99,7 +99,7 @@ class VerificationForm(forms.ModelForm):
 
     CHOICES = (("tak mam klub", "tak mam klub"), ("Nie mam klubu", "Nie mam klubu"))
     team = forms.ModelChoiceField(
-        queryset=get_all_teams(),
+        queryset=Team.objects.all(),
         widget=forms.Select(attrs={"data-live-search": "true", "data-dropdown-align-right": "true"})
     )
     has_team = forms.ChoiceField(choices=CHOICES, widget=forms.RadioSelect)
@@ -186,7 +186,7 @@ class ClubVerificationForm(VerificationForm):
         "team": {"help_text": "Klub którym zarządzasz"},
     }
     team = forms.ModelChoiceField(
-        queryset=get_all_clubs(),
+        queryset=Club.objects.all(),
         widget=forms.Select(attrs={"data-live-search": "true"}),
     )
     building_fields = [
