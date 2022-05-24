@@ -117,11 +117,17 @@ function get_verification_form(slug) {
           $("#id_country").addClass("selectpicker").selectpicker('refresh'); 
           $('#id_team').select2({
             width: '100%',
+            placeholder: "Wybierz klub",
             ajax: {
-              url: '/resources/teams_search',
+              url: '/resources/teams_search?i=' + json.id,
               dataType:  'json'
             }
           });
+
+          if(json.preselected) { 
+              var newOption = new Option(json.preselected.text, json.preselected.id, false, true);
+              $('#id_team').append(newOption).trigger('change');
+          }
 
           if($('#id_has_team_1').is(':checked')) { 
             console.log('=', $("#select_team_div"))

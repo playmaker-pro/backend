@@ -11,6 +11,7 @@ from django.http import Http404, JsonResponse
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import View
+from clubs.api.serizalizer import TeamSerializer
 
 User = get_user_model()
 
@@ -24,50 +25,53 @@ class AccountVerification(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         user = request.user
+        preselected = None
         profile = user.profile
         if request.user.is_coach:
-            form = forms.CoachVerificationForm(instance=profile,
-                initial={'team': profile.team_object}
-            )
-            
+            form = forms.CoachVerificationForm(instance=profile)
         if request.user.is_club:
-            form = forms.ClubVerificationForm(instance=profile,
-                initial={"team": profile.club_object}
-            )
+            form = forms.ClubVerificationForm(instance=profile)
         if request.user.is_player:
-            form = forms.PlayerVerificationForm(instance=profile,
-                initial={'team': profile.team_object})
+            form = forms.PlayerVerificationForm(instance=profile)
+        if request.user.profile.team_object:
+            preselected = TeamSerializer(request.user.profile.team_object).data
         data = {}
+        data["id"] = request.user.id
+        data["preselected"] = preselected
         data["form"] = render_crispy_form(form)
         return JsonResponse(data)
 
     def post(self, request, *args, **kwargs):
         user = self.request.user
         profile = user.profile
+        preselected = None
         if request.user.is_coach:
             verification_form = forms.CoachVerificationForm(
-                request.POST,
-                instance=profile,
-                initial={'team': profile.team_object})
+                request.POST, instance=profile
+            )
         if request.user.is_club:
             verification_form = forms.ClubVerificationForm(
                 request.POST,
                 instance=profile,
             )
-               
+
         if request.user.is_player:
             verification_form = forms.PlayerVerificationForm(
-                request.POST,
-                instance=profile,
-                initial={'team': profile.team_object}
+                request.POST, instance=profile
             )
 
         if not verification_form:
             raise Http404
 
-
-        data = {"success": False, "url": None, "form": None, "errors": None}
-
+        data = {
+            "success": False,
+            "url": None,
+            "form": None,
+            "errors": None,
+            "preselected": None,
+        }
+        if request.user.profile.team_object:
+            preselected = TeamSerializer(request.user.profile.team_object).data
         if verification_form.is_valid():
             verification_form.save()
             messages.success(
@@ -75,7 +79,7 @@ class AccountVerification(LoginRequiredMixin, View):
                 _("Dziękujemy Twoje konto zostało zwerifikowane."),
                 extra_tags="alter-success",
             )
-
+            data["preselected"] = preselected
             data["success"] = True
             data["errors"] = verification_form.errors
             data["url"] = reverse("profiles:show_self")
