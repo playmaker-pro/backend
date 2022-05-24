@@ -120,7 +120,8 @@ function get_verification_form(slug) {
             placeholder: "Wybierz klub",
             ajax: {
               url: '/resources/teams_search?i=' + json.id,
-              dataType:  'json'
+              dataType:  'json',
+              cache: true
             }
           });
 
