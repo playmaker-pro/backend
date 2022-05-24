@@ -76,7 +76,7 @@ class FieldConfig:
     placeholder = ""
 
 
-class ChoiceFieldNoValidation(forms.ChoiceField):
+class ModelChoiceFieldNoValidation(forms.ChoiceField):
     def to_python(self, value):
         if value in self.empty_values:
             return None
@@ -91,11 +91,12 @@ class ChoiceFieldNoValidation(forms.ChoiceField):
 
     def validate(self, value):
         return True
-    
+
     def valid_value(self, value):
         """Check to see if the provided value is a valid choice."""
         return True
- 
+
+
 class VerificationForm(forms.ModelForm):
     """
     settings describes how filed will be build.
@@ -119,11 +120,8 @@ class VerificationForm(forms.ModelForm):
     building_fields = []
 
     CHOICES = (("tak mam klub", "tak mam klub"), ("Nie mam klubu", "Nie mam klubu"))
-    # team = forms.ModelChoiceField(
-    #     queryset=get_all_teams(),
-    #     widget=forms.Select(attrs={"data-live-search": "true", "data-dropdown-align-right": "true"})
-    # )
-    team = ChoiceFieldNoValidation()
+
+    team = ModelChoiceFieldNoValidation()
     has_team = forms.ChoiceField(choices=CHOICES, widget=forms.RadioSelect)
     team_not_found = forms.BooleanField()
 

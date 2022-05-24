@@ -1,4 +1,3 @@
-
 import logging
 from typing_extensions import runtime
 
@@ -20,7 +19,9 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
-class ProfileStatsPageView(generic.TemplateView, SlugyViewMixin,  mixins.ViewModalLoadingMixin):
+class ProfileStatsPageView(
+    generic.TemplateView, SlugyViewMixin, mixins.ViewModalLoadingMixin
+):
     page_title = None
     template_name = None
     http_method_names = ["get"]
@@ -39,11 +40,11 @@ class ProfileStatsPageView(generic.TemplateView, SlugyViewMixin,  mixins.ViewMod
 
         if self._is_owner(user):
             kwargs["editable"] = True
-        kwargs['season_name'] = season_name
-        kwargs['show_user'] = user
-        kwargs['page_obj'] = self.dispatch_get_or_calculate(user)
-        kwargs['page_title'] = self.page_title
-        kwargs['modals'] = self.modal_activity(request.user)
+        kwargs["season_name"] = season_name
+        kwargs["show_user"] = user
+        kwargs["page_obj"] = self.dispatch_get_or_calculate(user)
+        kwargs["page_title"] = self.page_title
+        kwargs["modals"] = self.modal_activity(request.user)
         return super().get(request, *args, **kwargs)
 
     def dispatch_get_or_calculate(self, user):
@@ -61,24 +62,32 @@ class ProfileStatsPageView(generic.TemplateView, SlugyViewMixin,  mixins.ViewMod
 
 class ProfileFantasy(ProfileStatsPageView):
     template_name = "profiles/fantasy2.html"
-    page_title = _('Twoje fantasy')
+    page_title = _("Twoje fantasy")
 
     def get_data_or_calculate(self, user):
         season_name = get_current_season()
         _id = user.profile.data_mapper_id
-        if user.profile.playermetrics.how_old_days(fantasy=True) >= 7 and user.profile.has_data_id:
-            fantasy = adapters.PlayerFantasyDataAdapter(_id).get(season=season_name, full=True)
+        if (
+            user.profile.playermetrics.how_old_days(fantasy=True) >= 7
+            and user.profile.has_data_id
+        ):
+            fantasy = adapters.PlayerFantasyDataAdapter(_id).get(
+                season=season_name, full=True
+            )
             user.profile.playermetrics.update_fantasy(fantasy)
         return user.profile.playermetrics.fantasy
 
 
 class ProfileCarrierRows(ProfileStatsPageView):
-    template_name = 'profiles/carrier_rows.html'
-    page_title = _('Twoja kariera')
+    template_name = "profiles/carrier_rows.html"
+    page_title = _("Twoja kariera")
 
     def get_data_or_calculate(self, user):
         _id = user.profile.data_mapper_id
-        if user.profile.playermetrics.how_old_days(games=True) >= 7 and user.profile.has_data_id:
+        if (
+            user.profile.playermetrics.how_old_days(games=True) >= 7
+            and user.profile.has_data_id
+        ):
             season = adapters.PlayerStatsSeasonAdapter(_id).get(groupped=True)
             user.profile.playermetrics.update_season(season)
         user.profile.playermetrics.refresh_from_db()
@@ -93,20 +102,24 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
 
     {"2020/2021": {
         "games": [{"date": "2020-11-21", "result": {"name": "P", "type...
-        "carrier": {"wons": 2, "draws": 0, "loses": 5, "points": 6, "avg_points": 0.9, "gain_goals": 14, 
-            "lost_goals": 11, "games_played": 7, "wons_percent": 28.571428571428573, "draws_percent": 0.0, 
+        "carrier": {"wons": 2, "draws": 0, "loses": 5, "points": 6, "avg_points": 0.9, "gain_goals": 14,
+            "lost_goals": 11, "games_played": 7, "wons_percent": 28.571428571428573, "draws_percent": 0.0,
             "loses_percent": 71.42857142857143, "avg_goals_gain": 1.6, "avg_goals_losts": 2.0,
             "position_in_table": 0}
     """
+
     template_name = "profiles/carrier.html"
     paginate_limit = 16
-    page_title = _('Twoja kariera')
+    page_title = _("Twoja kariera")
 
     def get_data_or_calculate(self, user):
         data = []
         if user.is_player:
             _id = user.profile.data_mapper_id
-            if user.profile.playermetrics.how_old_days(season=True) >= 7 and user.profile.has_data_id:
+            if (
+                user.profile.playermetrics.how_old_days(season=True) >= 7
+                and user.profile.has_data_id
+            ):
                 season = adapters.PlayerStatsSeasonAdapter(_id).get(groupped=True)
                 user.profile.playermetrics.update_season(season)
             user.profile.playermetrics.refresh_from_db()
@@ -123,12 +136,12 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
         return self.paginate(data, limit=self.paginate_limit)
 
     def sort(self, data):
-        return sorted(data, key=lambda k: k['name'], reverse=True)
+        return sorted(data, key=lambda k: k["name"], reverse=True)
 
     def flattern_coach_carrier_structure(self, data: dict) -> list:
         out = []
         for season, season_data in data.items():
-            
+
             if not season_data.get("carrier"):
                 continue
             if not season_data.get("carrier").get("teams"):
@@ -142,7 +155,7 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
         return out
 
     def flattern_carrier_structure(self, data: dict) -> list:
-        '''
+        """
         @todo: this should be in serializers/ package
 
         season: {'2014/2015':
@@ -154,7 +167,7 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
         [{season: '2014', leagues: [
 
         ]}]
-        '''
+        """
         out = list()
         if not data:
             return out
@@ -167,16 +180,18 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
                         return out
                     out.append(
                         {
-                            'name': season_name,
-                            'league': league_name,
-                            'team': team_name,
-                            'red_cards': data.get('red_cards'),
-                            'yellow_cards': data.get('yellow_cards'),
-                            'minutes_played': data.get('minutes_played'),
-                            'team_goals': data.get('team_goals'),
-                            'lost_goals': data.get('lost_goals'),
-                            'games_played': data.get('games_played'),
-                            'first_squad_games_played': data.get('first_squad_games_played'),
+                            "name": season_name,
+                            "league": league_name,
+                            "team": team_name,
+                            "red_cards": data.get("red_cards"),
+                            "yellow_cards": data.get("yellow_cards"),
+                            "minutes_played": data.get("minutes_played"),
+                            "team_goals": data.get("team_goals"),
+                            "lost_goals": data.get("lost_goals"),
+                            "games_played": data.get("games_played"),
+                            "first_squad_games_played": data.get(
+                                "first_squad_games_played"
+                            ),
                         }
                     )
         return out
@@ -185,12 +200,15 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
 class ProfileGames(ProfileStatsPageView, mixins.PaginateMixin):
     template_name = "profiles/games.html"
     paginate_limit = 15
-    page_title = _('Twoje mecze')
+    page_title = _("Twoje mecze")
 
     def get_data_or_calculate(self, user):
         if user.is_player:
             _id = user.profile.data_mapper_id
-            if user.profile.playermetrics.how_old_days(games=True) >= 7 and user.profile.has_data_id:
+            if (
+                user.profile.playermetrics.how_old_days(games=True) >= 7
+                and user.profile.has_data_id
+            ):
                 games = adapters.PlayerLastGamesAdapter(_id).get()
                 user.profile.playermetrics.update_games(games)
             # user.profile.playermetrics.refresh_from_db()
