@@ -27,7 +27,7 @@ class TeamViewSet(viewsets.ModelViewSet):
 class TeamSearchApi(APIView):
     permission_classes = []
 
-    @method_decorator(cache_page(60*60*2))
+    # @method_decorator(cache_page(60*60*2))
     def get(self, request):
         teams = Team.objects.all().order_by("name")
 
