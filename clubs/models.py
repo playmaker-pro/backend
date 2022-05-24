@@ -699,7 +699,7 @@ class Team(models.Model, MappingMixin):
         default=False,
     )
 
-    def __str__(self):
+    def get_pretty_name(self):
         region_name = (
             self.league.region.name if self.league and self.league.region else ""
         )
@@ -714,3 +714,6 @@ class Team(models.Model, MappingMixin):
                 suffix += ')'
 
         return f"{self.name} {suffix}"
+
+    def __str__(self):
+        return self.get_pretty_name()
