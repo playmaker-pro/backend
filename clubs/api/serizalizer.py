@@ -3,14 +3,14 @@ from rest_framework import serializers
 
 
 class TeamSerializer(serializers.HyperlinkedModelSerializer):
-    text = serializers.CharField(source="name")
+    text = serializers.SerializerMethodField()
+
+    def get_text(self, obj: Team):
+        return obj.get_pretty_name()
+
     class Meta:
         model = Team
-        fields = ['id', 'text',]
-
-
-class TeamSerializerSerach(serializers.Serializer):
-    
-    results = TeamSerializer()
-    
-    
+        fields = [
+            "id",
+            "text",
+        ]
