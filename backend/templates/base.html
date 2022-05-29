@@ -26,14 +26,17 @@
   <link href="{% static 'assets/img/playmaker_logo_dark.svg' %}" rel="icon">
   <link href="{% static 'assets/img/playmaker_logo_dark.svg' %}" rel="apple-touch-icon">
 
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.gstatic.com"> 
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
-  {% comment %} <link href="https://fonts.googleapis.com/css2?family=PT+Sans&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@200&display=swap" rel="stylesheet"> {% endcomment %}
-  {% comment %} <link href="https://fonts.googleapis.com/css2?family=Asap&display=swap" rel="stylesheet"> {% endcomment %}
-  <link href="https://fonts.googleapis.com/css2?family=Asap&family=Roboto&display=swap" rel="stylesheet">
-  <!-- Vendor CSS Files -->
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+    {% comment %} <link href="https://fonts.googleapis.com/css2?family=PT+Sans&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@200&display=swap" rel="stylesheet"> {% endcomment %}
+    {% comment %} <link href="https://fonts.googleapis.com/css2?family=Asap&display=swap" rel="stylesheet"> {% endcomment %}
+    <link href="https://fonts.googleapis.com/css2?family=Asap&family=Roboto&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300&family=Poppins:wght@200&display=swap" rel="stylesheet">
+    <!-- Vendor CSS Files -->
 
   {% compress css %}
   <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
@@ -102,7 +105,11 @@ onReady(function() {
   {% include 'partials/action_messages.html' %}
 
   {% block header %}
-      {% include 'partials/navbar.html' %}
+      {% if request.path == '/landingpage/' %}
+          {% include 'landingpage/navbar.html' %}
+      {% else %}
+        {% include 'partials/navbar.html' %}
+      {% endif %}
   {% endblock header %}
 
 
@@ -127,7 +134,12 @@ onReady(function() {
   {% block footer %}
   <!-- ======= Footer ======= -->
   <footer id="footer">
-      {% include 'partials/footer.html' %}
+      {% if request.path == '/landingpage/' %}
+
+      {% else %}
+        {% include 'partials/footer.html' %}
+      {% endif %}
+
   </footer><!-- End Footer -->
   {% endblock footer %}
 

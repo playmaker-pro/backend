@@ -80,6 +80,8 @@ media/club_pics/
 media/profile_pics/
 media/documents/
 media/images/
+.idea/
+
 
 # other scripts..
 custom_script_*.py

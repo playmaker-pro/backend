@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'fantasy',
     'plays',
     'resource',
+    'landingpage',
 
     'data',  # external repo
     'stats',  # external repo
@@ -334,15 +335,15 @@ INQUIRIES_INITAL_PLANS = [
         'default': True,
         'limit': 3,
         'name': 'Basic Inital',
-        'description': 'Default inital plan, need to be created if we wont ' \
-            'to add to each user UserInquery. In future can be alterd'
+        'description': 'Default inital plan, need to be created if we wont '
+                       'to add to each user UserInquery. In future can be alterd'
     },
     {
         'default': False,
         'limit': 5,
         'name': 'Basic Inital for coaches',
-        'description': 'Default inital plan, need to be created if we wont ' \
-            'to add to each user UserInquery. In future can be alterd'
+        'description': 'Default inital plan, need to be created if we wont '
+                       'to add to each user UserInquery. In future can be alterd'
     }
 ]
 
