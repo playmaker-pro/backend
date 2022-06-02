@@ -7,8 +7,6 @@
 
 {% block title %}{{ block.super }} {% trans 'Edycja profilu' %} {% endblock %}
 
-<!-- Benefits of the Django application -->
-
 {% block content_header %}
   {{ block.super }}
   {% include '_page_heading_with_picture.html' with image=user.picture %}
@@ -19,7 +17,6 @@
 <section id="profile" class="profile">
   <div class="container-fluid m-2 p-4" data-aos="fade-up">
     <h1> KONTO {{ user.get_declared_role_display|upper }} </h1>
-
     <form class='profile-edit-form row' enctype="multipart/form-data" method="post">
       
       {% crispy user_basic_form %}
@@ -30,7 +27,6 @@
             {% trans 'Aktualizuj CV' %}
         </button>
       </div>
-
     </form>
   </div>
 </section>

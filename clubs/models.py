@@ -643,12 +643,34 @@ class Team(models.Model, MappingMixin):
         _("Nazwa drużyny"), max_length=255,
     )
 
+    # full_name will be calculated on save
+    full_name = models.CharField(
+        _("Nazwa drużyny"), max_length=255, null=True, blank=True
+    )
+
     def get_permalink(self):
         return reverse("clubs:show_team", kwargs={"slug": self.slug})
+
+    def get_pretty_name(self):
+        region_name = (
+            self.league.region.name if self.league and self.league.region else ""
+        )
+        league_name = self.display_league_top_parent
+        if not league_name:
+            suffix = ''
+        else:
+            suffix = f'({league_name}'
+            if region_name:
+                suffix += f', {region_name})'
+            else:
+                suffix += ')'
+
+        return f"{self.name} {suffix}"
 
     def save(self, *args, **kwargs):
         slug_str = "%s %s %s" % (self.PROFILE_TYPE, self.name, self.club.name)
         unique_slugify(self, slug_str)
+        self.full_name = self.get_pretty_name()
         super().save(*args, **kwargs)
 
     class Meta:
@@ -656,7 +678,7 @@ class Team(models.Model, MappingMixin):
         verbose_name_plural = _("Teams")
         unique_together = ("name", "club", "seniority", "league")
 
-    # common  team fileds
+    # common team fileds
     travel_refunds = models.BooleanField(_("Zwrot za dojazdy"), default=False)
 
     game_bonus = models.BooleanField(
@@ -700,7 +722,4 @@ class Team(models.Model, MappingMixin):
     )
 
     def __str__(self):
-        region_name = (
-            self.league.region.name if self.league and self.league.region else ""
-        )
-        return f"{self.name}, ({self.display_league_top_parent}, {region_name})"
+        return self.get_pretty_name()

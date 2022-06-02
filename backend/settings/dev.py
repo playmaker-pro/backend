@@ -31,6 +31,15 @@ MIDDLEWARE = MIDDLEWARE + [
 INTERNAL_IPS = ("127.0.0.1", "172.17.0.1")
 
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
+SELECT2_CACHE_BACKEND = "default"
+
 try:
     from .local import *
 
