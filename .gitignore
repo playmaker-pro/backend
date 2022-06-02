@@ -88,3 +88,7 @@ custom_script_*.py
 
 # Ipynb
 .ipynb_checkpoints
+
+# zips
+*.zip
+.idea/

@@ -48,6 +48,7 @@
   <link href="{% static 'assets/vendor/aos/aos.css' %}" rel="stylesheet">
   <link href="{% static 'assets/css/style.css' %}" rel="stylesheet">
   <link href="{% static 'assets/css/loading.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/select2/select2.min.css' %}" rel="stylesheet" />
   {% endcompress %}
 
   {% block extra_css %}
@@ -132,23 +133,19 @@ onReady(function() {
 
   
   {% block footer %}
-  <!-- ======= Footer ======= -->
-  <footer id="footer">
-      {% if request.path == '/landingpage/' %}
-
-      {% else %}
-        {% include 'partials/footer.html' %}
-      {% endif %}
-
-  </footer><!-- End Footer -->
+      <!-- ======= Footer ======= -->
+      <footer id="footer">
+            {% include 'partials/footer.html' %}
+      </footer><!-- End Footer -->
   {% endblock footer %}
 
   {% block extra_content %}
     {# parts of content which are by default hided from page viewers #}
   {% endblock %}
 
-  <a href="#" class="back-to-top"><i class="icofont-simple-up"></i></a>
-  
+  {% if request.path != '/landingpage/' %}
+    <a href="#" class="back-to-top"><i class="icofont-simple-up"></i></a>
+  {% endif %}
   {# Global javascript #}
 
   {% compress js %}
@@ -166,6 +163,13 @@ onReady(function() {
   <script src="{% static 'assets/vendor/aos/aos.js' %}"></script>
   <!-- App specific JS File -->
   <script src="{% static 'assets/js/main.js' %}"></script>
+    <script src="{% static 'assets/js/landingpage/navbar_color.js' %}"></script>
+    <script src="{% static 'assets/js/landingpage/small_nav.js' %}"></script>
+
+<<<<<<< Updated upstream
+  <script src="{% static 'assets/vendor/select2/select2.min.js' %}"></script>
+=======
+>>>>>>> Stashed changes
   {% endcompress %}
 
   <script>

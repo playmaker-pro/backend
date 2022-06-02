@@ -2,9 +2,6 @@
 {% load wagtailcore_tags static %}
 {% load wagtailimages_tags %}
 
-
-{# Page mixin #}
-
 <article class="entry">
     <div class="entry-img">
       {% image blog.header_image original class="img-fluid"  %}
@@ -33,9 +30,7 @@
     </div>
 
     <div class="entry-content">
-        
-      <p>
-        
+      <p> 
         {% if include_context == "index_page" %}
             {{ blog.body|richtext|truncatewords_html:70 }} 
         {% else %}
@@ -46,18 +41,14 @@
         <a class="btn btn-danger" href="{% pageurl blog %}">Czytaj więcej &raquo;</a>
       </div>
     </div>
-
   </article><!-- End blog entry -->
 
 
 <div class="meta">
-
     <div class="tags-and-comments">
-
-
         <div id="comments" class="comments">
         {% if COMMENTS_APP == 'django_comments_xtd' %}
-            {% include 'blog/blog_post_comments_xtd_link.html' with blog=blog %}
+            
         {% elif False %}
             <a href="{% pageurl blog %}#disqus_thread">No Comments</a>
         {% endif %}

@@ -54,6 +54,7 @@ urlpatterns = [
     path('resources/', include('resources.urls', namespace="resources")),
     path('landingpage/', include(landingpage.urls, namespace="landingpage")),
 
+    path("select2/", include("django_select2.urls")),
     path('', include('allauth.urls')),
 ] + settings.REDIRECTS_LISTS
 
