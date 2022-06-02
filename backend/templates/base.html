@@ -133,10 +133,15 @@ onReady(function() {
 
   
   {% block footer %}
-      <!-- ======= Footer ======= -->
-      <footer id="footer">
-            {% include 'partials/footer.html' %}
-      </footer><!-- End Footer -->
+  <!-- ======= Footer ======= -->
+  <footer id="footer">
+      {% if request.path == '/landingpage/' %}
+
+      {% else %}
+        {% include 'partials/footer.html' %}
+      {% endif %}
+
+  </footer><!-- End Footer -->
   {% endblock footer %}
 
   {% block extra_content %}
@@ -166,10 +171,7 @@ onReady(function() {
     <script src="{% static 'assets/js/landingpage/navbar_color.js' %}"></script>
     <script src="{% static 'assets/js/landingpage/small_nav.js' %}"></script>
 
-<<<<<<< Updated upstream
   <script src="{% static 'assets/vendor/select2/select2.min.js' %}"></script>
-=======
->>>>>>> Stashed changes
   {% endcompress %}
 
   <script>
