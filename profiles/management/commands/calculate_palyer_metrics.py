@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-
+from datetime import timedelta
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import reset_queries
@@ -33,8 +33,10 @@ class Command(BaseCommand):
 
         players = models.PlayerProfile.objects.filter(
             user__declared_role=definitions.PLAYER_SHORT,
-            data_mapper_id__isnull=False
+            data_mapper_id__isnull=False,
+            user__last_login__gt=datetime.now() - timedelta(days=30)
         )
+
         methods = [
             ("calculate_data_from_data_models", (), {}),
             ("trigger_refresh_data_player_stats", (), {}),
