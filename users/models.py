@@ -7,7 +7,7 @@ from notifications.mail import mail_user_waiting_for_verification
 from django.urls import reverse
 from roles import definitions
 from notifications.mail import verification_notification
-from .managers import CustomUserManagers
+from users.managers import CustomUserManager
 
 
 class UserRoleMixin:
