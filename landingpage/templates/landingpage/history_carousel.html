@@ -9,89 +9,20 @@
 
 
         <!-- Full-width images with number and caption text -->
-        <div class="card carousel_item_desktop history__card_desktop active__card" data-target="1">
-            <div class="card__img">
-                <img class="card-img-top" src="{% static 'assets/img/landingpage/frame_2.png' %}" alt="Card image cap">
-            </div>
-            <div class="card-body">
-                <p class="card-text">
-                    Pierwsza karta <br>
-                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Distinctio dolore ea earum eligendi inventore ipsum maiores non odit pariatur
-                </p>
-                <div class="d-flex mt-3">
-                    <div class="img__icon__card">
-                        <img src="{% static 'assets/img/landingpage/pilka1.jfif' %}" alt="">
-                    </div>
-                    <div class="player__card d-flex flex-column pl-3">
-                        <p>Bartosz Włodziejowski</p>
-                        <p>Prawy pomocnik</p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <div class="card carousel_item_desktop history__card_desktop" data-target="2">
-            <div class="card__img">
-                <img class="card-img-top" src="{% static 'assets/img/landingpage/frame_2.png' %}" alt="Card image cap">
-            </div>
-            <div class="card-body">
-                <p class="card-text">
-                    Druga karta <br>
-                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Distinctio dolore ea earum eligendi inventore ipsum maiores non odit pariatur
-                </p>
-                <div class="d-flex mt-3">
-                    <div class="img__icon__card">
-                       <img src="{% static 'assets/img/landingpage/pilka1.jfif' %}" alt="">
-                    </div>
-                    <div class="player__card d-flex flex-column pl-3">
-                        <p>Bartosz Włodziejowski</p>
-                        <p>Prawy pomocnik</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% with club_name='Spartakus Deleszyce' player_name='Patryk Raczyński' player='Lewy obrońca / skrzydłowy' content='landingpage/partials/history/history_first.html' club_herb='assets/img/landingpage/history/spartakus.png' dest_name='Neptun Końskie' dest_herb='assets/img/landingpage/history/neptun.png' dest_league='4 liga' %}
+            {% include 'landingpage/partials/history_card.html' %}
+        {% endwith %}
 
-        <div class="card carousel_item_desktop history__card_desktop" data-target="3">
-            <div class="card__img">
-                <img class="card-img-top" src="{% static 'assets/img/landingpage/frame_2.png' %}" alt="Card image cap">
-            </div>
-            <div class="card-body">
-                <p class="card-text">
-                    Trzecia karta <br>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Distinctio dolore ea earum eligendi inventore ipsum maiores non odit pariatur
-                </p>
-                <div class="d-flex mt-3">
-                    <div class="img__icon__card">
-                        <img src="{% static 'assets/img/landingpage/pilka1.jfif' %}" alt="">
-                    </div>
-                    <div class="player__card d-flex flex-column pl-3">
-                        <p>Bartosz Włodziejowski</p>
-                        <p>Prawy pomocnik</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% with club_name='Spartakus Deleszyce' player_name='Patryk Raczyński' player='Lewy obrońca / skrzydłowy' content='landingpage/partials/history/history_first.html' club_herb='assets/img/landingpage/history/spartakus.png' dest_name='Neptun Końskie' dest_herb='assets/img/landingpage/history/neptun.png' dest_league='4 liga' %}
+            {% include 'landingpage/partials/history_card.html' %}
+        {% endwith %}
 
-        <div class="card carousel_item_desktop history__card_desktop" data-target="4">
-            <div class="card__img">
-                <img class="card-img-top" src="{% static 'assets/img/landingpage/frame_2.png' %}" alt="Card image cap">
-            </div>
-            <div class="card-body">
-                <p class="card-text">
-                    Ostatnia karta <br>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Distinctio dolore ea earum eligendi inventore ipsum maiores non odit pariatur
-                </p>
-                <div class="d-flex mt-3">
-                    <div class="img__icon__card">
-                        <img src="{% static 'assets/img/landingpage/pilka1.jfif' %}" alt="">
-                    </div>
-                    <div class="player__card d-flex flex-column pl-3">
-                        <p>Bartosz Włodziejowski</p>
-                        <p>Prawy pomocnik</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% with club_name='Spartakus Deleszyce' player_name='Patryk Raczyński' player='Lewy obrońca / skrzydłowy' content='landingpage/partials/history/history_first.html' club_herb='assets/img/landingpage/history/spartakus.png' dest_name='Neptun Końskie' dest_herb='assets/img/landingpage/history/neptun.png' dest_league='4 liga' %}
+            {% include 'landingpage/partials/history_card.html' %}
+        {% endwith %}
+
+
     </div>
     <div class="d-xxl-none d-flex justify-content-between carousel__control_div">
         <!-- Next and previous buttons -->

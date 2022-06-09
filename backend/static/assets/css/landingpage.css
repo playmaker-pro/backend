@@ -17,6 +17,8 @@ h1, h1, p{
     --alert__color: #FF8F0B;
     --info__color: #3870FF;
     --success__color: #00B41E;
+    --c: '';
+    --navbar__height: 4rem;
   }
 
 
@@ -35,6 +37,11 @@ a:hover{
 
 
 /* Utils */
+
+.color__placeholder::placeholder{
+    color: red !important;
+}
+
 .dark__background{
     background-color: var(--dark__color) !important;
     transition: background-color 0.5s;
@@ -49,10 +56,21 @@ a:hover{
     background-color: var(--light__color) !important;
 }
 
+.gey__background{
+    background-color: #B0B4B8;
+}
+
+.primary__background{
+    background-color: var(--primary__color);
+}
+
+.border__rounded{
+    border-radius: 25%;
+}
+
 .align-items-center{
     align-items: center;
 }
-
 
 .hamburger__icons rect{
     fill: white
@@ -67,10 +85,13 @@ a:hover{
 
 #header .container-fluid{
     max-width: inherit;
+    height: var(--navbar__height);
+    padding: 0 1rem !important;
 }
 
 #header{
-    height: 6rem;
+    height: var(--navbar__height);
+    padding: 0;
 }
 
 #header .navbar-collapse{
@@ -89,7 +110,8 @@ a:hover{
 }
 
 #header .navbar{
-    padding: 0 6rem;
+    padding: 0;
+    height: 100%;
 }
 
 #header .navbar-nav{
@@ -203,7 +225,7 @@ svg text{
 /* first section */
 
 #main{
-    margin-top: 6rem
+    padding-top: 1rem
 }
 
 .landingpage__main_photo{
@@ -415,7 +437,15 @@ svg text{
 }
 
 .history__card_desktop .card-body .card-text{
-    height: 10rem;
+    height: 12rem;
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: 0.1px;
+    color: #141414;
+    opacity: 0.72;
 }
 
 
@@ -451,7 +481,108 @@ svg text{
     /*height: 100%;*/
     display: flex;
     object-fit: contain;
+    height: 12rem;
+}
+.history__herbs__container {
+    grid-gap: 1rem;
+}
 
+.club__name p, .league__title, .dest__club__name p{
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 18px;
+    text-align: center;
+    letter-spacing: 0.002em;
+    color: #FFFFFF;
+}
+
+.league__title{
+    padding: 0.3rem 0.7rem;
+    background-color: var(--white__color);
+    color: var(--dark__color);
+    display: inline;
+    border-radius: 5px;
+}
+
+.leag__dest p{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 2px 8px;
+    gap: 10px;
+    background: #141414;
+    border-radius: 4px;
+    color: white;
+    z-index: 100;
+}
+
+.league__arrow{
+    position: absolute;
+    right: 1.5rem;
+    bottom: -.3rem;
+}
+
+.leag__dest{
+    background-color: transparent;
+    padding: 0;
+}
+
+
+.herb__container img, .dest__club__herb img{
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.herb__container, .dest__club__herb{
+    height: 100%;
+    max-height: 100%;
+}
+
+.vector__herb{
+    position: absolute;
+    width: 68px;
+    height: 0;
+    left: 100px;
+    top: calc(50% - 0px/2);
+    opacity: 0.5;
+    border: 1px solid #FFFFFF;
+}
+
+.vector__herb__dest{
+    position: absolute;
+    width: 67px;
+    height: 0;
+    right: 56px;
+    top: calc(50% - -10px/2);
+    opacity: 0.5;
+    border: 1px solid #FFFFFF;
+}
+
+.vector__herb__arrow{
+    position: absolute;
+    width: 80px;
+    height: 20px;
+    right: -38px;
+    top: calc(50% - 18px/2);
+}
+
+.dest__club__herb{
+    height: 40%;
+}
+
+.dest__club__herb img{
+    padding: 1rem 0.5rem;
+}
+
+.dest__club__herb  .herb__container{
+    max-width: 100%;
+    max-height: 100%;
+    height: 100%;
+    display: flex;
+    justify-self: center;
+    /*width: 20%;*/
 }
 
 
@@ -474,13 +605,25 @@ svg text{
 }
 
 .player__card p:first-child{
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
     font-weight: 700;
-    padding-bottom: 0;
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: 0.2px;
+    color: #141414;
 }
 
 .player__card p:last-child{
     padding-bottom: 0;
-    opacity: 0.5;
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 18px;
+    letter-spacing: 0.002em;
+    color: #141414;
+    opacity: 0.64;
 }
 
 #history__section .carousel-control-prev,
@@ -955,6 +1098,42 @@ svg text{
     grid-gap: 1rem;
 }
 
+.choose__league, .choose__distance{
+    cursor: pointer;
+}
+
+.leagues__form .form__error div{
+    /*border: 2px solid #F00E0E;*/
+    color: var(--primary__color);
+    margin-top: 1rem;
+}
+
+.leagues__form .form__error p,
+.distance__form .form__error p{
+    color: var(--primary__color);
+    margin-top: 1rem;
+    margin-bottom: 0;,
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 18px;
+    opacity: 0.64;
+}
+
+.leagues__form .error__form, .distance__form  .error__form{
+    animation: hiddeError;
+    animation-duration: 6s;
+    animation-fill-mode: forwards;
+
+}
+
+@keyframes hiddeError {
+    from { opacity: 1; }
+      to { opacity: 0}
+}
+
+
 #test__section .leagues__form .choose__league,
 #test__section .distance__form .choose__distance{
     display: flex;
@@ -1008,6 +1187,30 @@ svg text{
     opacity: 0.64;
 }
 
+.error_message_form{
+    animation: hiddeError;
+    animation-duration: 6s;
+    animation-fill-mode: forwards;
+}
+
+.error_message_form p{
+    font-family: 'Poppins', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 24px;
+    letter-spacing: 0.1px;
+    color: var(--primary__color)
+}
+
+.form__input img{
+    width: 4%;
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
 #test__section .form__input input{
     display: flex;
     flex-direction: row;
@@ -1022,7 +1225,7 @@ svg text{
 }
 
 #test__section .form__input input::placeholder{
-    color: black !important;
+    color: var(--c, black) !important;
 
     font-family: 'Poppins', sans-serif;
     font-style: normal;
@@ -1120,10 +1323,19 @@ svg text{
     padding-left: 0;
 }
 
-
-
 #faq__section .accordion{
     width: 65%;
+}
+
+.accordion-button:not(.collapsed){
+    color: var(--primary__color) !important;
+    border-color: #ffeaea !important;
+    background-color: #ffeaea !important;
+}
+
+.accordion-button:focus {
+    border-color: var(--primary__color) !important;
+    box-shadow: none !important;
 }
 
 /* Modals */

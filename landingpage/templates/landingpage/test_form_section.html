@@ -1,5 +1,22 @@
 {% load static %}
 
+<div
+        aria-live="polite"
+        aria-atomic="true"
+        style="z-index:1500;
+        position: absolute;
+        top:15px;
+        width: 100%;"
+>
+  <!-- Position it -->
+  <div id="micro-messages-red">
+
+    {% comment %} <div class="alert alert-success micro-message" data-aos-anchor-placement="top-center" data-aos-delay="800" data-aos="slide-down" data-delay="2000"  role="alert" style=" border-radius:16px; padding:4px 8px; font-size: .8rem;">
+      zaobserowałeś piłkarza
+    </div> {% endcomment %}
+  </div>
+</div>
+
 <div class="ml-2 w-50 test__container">
     <div class="d-flex flex-column-reverse text-left test__header">
         <h1 class=""> Gotowy na testy? </h1>
@@ -32,6 +49,13 @@
                 <div class="choose__league"><p>Klasa A lub B</p></div>
                 <div class="choose__league"><p>Klasa profesjonalna</p></div>
             </div>
+
+            <div class="w-100 justify-content-center d-none form__error">
+                <div class="w-50">
+                    <p>Możesz wybrać tylko dwie ligi</p>
+                </div>
+            </div>
+
         </div>
 
         <div class="where_do_you_want_to_play">
@@ -44,22 +68,39 @@
             <p>Określ region poszukiwań oraz max odległość na dojazd.</p>
         </div>
 
-        <form class="form__input">
-            <input type="text" placeholder="Miasto">
+        <form class="form__input position-relative d-non">
+
+            <input type="text" placeholder="Miasto" required>
+            <img class="d-none" src="{% static 'assets/img/landingpage/warning.png' %}" alt="">
+
         </form>
 
+        <div class="error_message_form mt-2">
+            <p>Uzupełnij pole</p>
+        </div>
+
         <div class="distance__form my-4 d-flex flex-column">
+
             <div class="distance__first_line mb-2 d-flex w-100">
                 <div class="choose__distance"><p>Bez znaczenia</p></div>
                 <div class="choose__distance distance__active"><p>+10km</p></div>
                 <div class="choose__distance"><p>+20km</p></div>
             </div>
+
             <div class="distance__second_line d-flex w-100 mt-1">
                 <div class="choose__distance"><p>+50km</p></div>
                 <div class="choose__distance"><p>+100km</p></div>
                 <div class="choose__distance"><p>+200km</p></div>
             </div>
+
+            <div class="w-100 justify-content-center d-none form__error">
+                <div class="w-50">
+                    <p>Możesz wybrać tylko jeden zakres</p>
+                </div>
+            </div>
+
         </div>
+
         <div class="">
             <button class="user_is_authenticated">Zgłoś się</button>
         </div>
@@ -81,3 +122,8 @@
     {% endif %}
 
 </div>
+
+<script src="{% static 'assets/js/landingpage/form.js' %}"></script>
+<script>
+    const user = '{{ request.user.id }}';
+</script>

@@ -197,6 +197,17 @@ onReady(function() {
       $(".micro-message").toast('show', function() {});
   }
 
+   function showToastErrorRedMessage(body){
+      $('#micro-messages-red').empty();
+      $('#micro-messages-red').append(
+          '<div class="alert alert-warning micro-message" ' +
+          'data-aos-delay="800" data-aos="slide-down" ' +
+          'data-delay="2000" role="alert" ' +
+          'style="display: block; border-radius:16px; padding:4px 8px; font-size: .8rem; width: fit-content; margin: 0 auto; background-color: #ffdddd">' + body + '</div>'
+      );
+      $(".micro-message").toast('show', function() {});
+  }
+
   $(document).ready(function(){
       $(".micro-message").toast('show', {
               delay: 2000
