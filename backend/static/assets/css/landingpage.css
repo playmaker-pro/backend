@@ -114,9 +114,9 @@ a:hover{
     height: 100%;
 }
 
-#header .navbar-nav{
-    width: 80% !important;
-}
+/*#header .navbar-nav{*/
+/*    width: 80% !important;*/
+/*}*/
 
 #header .close-icon{
     position: absolute;
@@ -369,7 +369,7 @@ svg text{
 }
 
 .sticky__menu{
-    top: 6rem;
+    top:  var(--navbar__height);
     z-index: 500;
 }
 
@@ -1327,17 +1327,6 @@ svg text{
     width: 65%;
 }
 
-.accordion-button:not(.collapsed){
-    color: var(--primary__color) !important;
-    border-color: #ffeaea !important;
-    background-color: #ffeaea !important;
-}
-
-.accordion-button:focus {
-    border-color: var(--primary__color) !important;
-    box-shadow: none !important;
-}
-
 /* Modals */
 
 #questionModal1 .modal-dialog,
@@ -1433,6 +1422,10 @@ svg text{
         width: 100% !important;
         margin-left: 0 !important;
     }
+
+    #header .fixed-top{
+        max-width: 100%;
+    }
 }
 
 @media (max-width: 400px){
@@ -1491,7 +1484,8 @@ svg text{
 
     #price__section .price__table{
         grid-column: 3/10;
-        grid-row: 1/3;
+        grid-row: 1/4;
+        justify-content: center;
     }
 
     #price__section .guarantee__grid{

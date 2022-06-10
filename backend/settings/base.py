@@ -57,7 +57,7 @@ INSTALLED_APPS = [
     'fqa',
     'fantasy',
     'plays',
-    'resource',
+    # 'resource',
     'landingpage',
 
     'data',  # external repo

@@ -17,7 +17,7 @@
                 <p>{{ club_name }}</p>
             </div>
             <div class="club__league w-100 d-flex justify-content-center align-items-center">
-                <p class="league__title">{{ dest_league }}</p>
+                <p class="league__title">{{ league }}</p>
             </div>
 
         </div>
@@ -53,10 +53,10 @@
         </p>
         <div class="d-flex mt-3">
             <div class="img__icon__card">
-                <img src="{% static 'assets/img/landingpage/pilka1.jfif' %}" alt="">
+                <img src="{% static player_photo %}" alt="">
             </div>
             <div class="player__card d-flex flex-column pl-3">
-                <p>{{ player_name }}</p>
+                <p><a href="{{ player_url }}">{{ player_name }}</a></p>
                 <p>{{ player }}</p>
             </div>
         </div>
