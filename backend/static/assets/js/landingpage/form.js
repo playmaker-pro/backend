@@ -66,20 +66,25 @@ dinstanceDivs.forEach(element => {
 })
 
 function getCookie(name) {
-    var nameEQ = name + "=";
-    var ca = document.cookie.split(';');
-    for(var i=0;i < ca.length;i++) {
-        var c = ca[i];
-        while (c.charAt(0)===' ') c = c.substring(1,c.length);
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length,c.length);
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
     }
-    return null;
+    return cookieValue;
 }
 
 const formBtn = document.querySelector('.user_is_authenticated');
 const sendForm = (url, data) => {
 
-        fetch(url, {
+     return fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -109,9 +114,12 @@ const clearAtributes = () => {
 }
 
 const formInput = document.querySelector('.form__input input');
-formInput.addEventListener('click', ()=>{
-    clearAtributes()
-})
+
+if (formInput){
+    formInput.addEventListener('click', ()=>{
+        clearAtributes()
+    })
+}
 
 const addAtributes = () => {
     const inputForm =  document.querySelector('.form__input input');
@@ -129,43 +137,52 @@ const addAtributes = () => {
     document.querySelector('.form__input img').classList.remove('d-none')
 }
 
-formBtn.addEventListener('click', (e) => {
+if(formBtn){
+    formBtn.addEventListener('click', (e) => {
 
-    e.preventDefault();
+        e.preventDefault();
 
-    let leagues = [];
+        let leagues = [];
 
-    const getLeagues = document.querySelectorAll('.leagues__form .league__active');
-    getLeagues.forEach(element => {
-        leagues.push(element.querySelector('p').innerText)
-    })
+        const getLeagues = document.querySelectorAll('.leagues__form .league__active');
+        getLeagues.forEach(element => {
+            leagues.push(element.querySelector('p').innerText)
+        })
 
-    let distance = [];
-    const getDistance = document.querySelectorAll('.distance__form .distance__active');
+        let distance = [];
+        const getDistance = document.querySelectorAll('.distance__form .distance__active');
 
-    getDistance.forEach(element => {
-        distance.push(element.querySelector('p').innerText)
-    })
+        getDistance.forEach(element => {
+            distance.push(element.querySelector('p').innerText)
+        })
 
-    const getCity = document.querySelector('.form__input input').value;
+        const getCity = document.querySelector('.form__input input').value;
 
-    if (getCity && distance.length === 1 && leagues.length >= 1) {
+        if (getCity && distance.length === 1 && leagues.length >= 1) {
 
-        const url = '/landingpage/test-form/';
-        const result = {
-            leagues: leagues,
-            distance: distance[0],
-            city: getCity,
-            user: user
+            const url = '/landingpage/test-form/1/';
+            const result = {
+                leagues: leagues,
+                distance: distance[0],
+                city: getCity,
+                user: user
+            }
+
+            sendForm(url, result)
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success){
+                         window.location.href = `/landingpage/we-got-it/${data.success}`
+                    }
+                })
+
+        } else if(!getCity){
+
+            addAtributes()
+
+        } else {
+            showToastErrorRedMessage('Coś poszło nie tak. Spróbuj ponownie później');
         }
+    })
+}
 
-        sendForm(url, result)
-
-    } else if(!getCity){
-
-        addAtributes()
-
-    } else {
-        showToastErrorRedMessage('Coś poszło nie tak. Spróbuj ponownie później');
-    }
-})

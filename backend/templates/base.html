@@ -106,7 +106,7 @@ onReady(function() {
   {% include 'partials/action_messages.html' %}
 
   {% block header %}
-      {% if request.path == '/landingpage/' %}
+      {% if 'landingpage' in request.path %}
           {% include 'landingpage/navbar.html' %}
       {% else %}
         {% include 'partials/navbar.html' %}
@@ -135,11 +135,8 @@ onReady(function() {
   {% block footer %}
   <!-- ======= Footer ======= -->
   <footer id="footer">
-      {% if request.path == '/landingpage/' %}
+      {% include 'partials/footer.html' %}
 
-      {% else %}
-        {% include 'partials/footer.html' %}
-      {% endif %}
 
   </footer><!-- End Footer -->
   {% endblock footer %}

@@ -1,8 +1,5 @@
-/*font-family: 'Assistant', sans-serif;*/
-/*font-family: 'Poppins', sans-serif;*/
-
 h1, h1, p{
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins);
 }
 
 /* Variables */
@@ -19,6 +16,8 @@ h1, h1, p{
     --success__color: #00B41E;
     --c: '';
     --navbar__height: 4rem;
+    --font-poppins:  'Poppins', sans-serif;
+    --font-inter: 'Inter', sans-serif;
   }
 
 
@@ -56,7 +55,7 @@ a:hover{
     background-color: var(--light__color) !important;
 }
 
-.gey__background{
+.grey__background{
     background-color: #B0B4B8;
 }
 
@@ -80,7 +79,6 @@ a:hover{
     grid-gap: 1rem;
 }
 
-
 /* navbar */
 
 #header .container-fluid{
@@ -95,7 +93,7 @@ a:hover{
 }
 
 #header .navbar-collapse{
-    top: 5rem;
+    top: var(--navbar__height);
     left: 0;
     width: 100%;
 }
@@ -113,10 +111,6 @@ a:hover{
     padding: 0;
     height: 100%;
 }
-
-/*#header .navbar-nav{*/
-/*    width: 80% !important;*/
-/*}*/
 
 #header .close-icon{
     position: absolute;
@@ -274,7 +268,7 @@ svg text{
 }
 
 .promo_div > div:nth-child(odd){
-    width: 15%;
+    width: 8%;
 }
 
 .promo_div p{
@@ -288,11 +282,11 @@ svg text{
 	border:1px solid #ffffff;
 	display:inline-block;
 	cursor:pointer;
-	color:#000000;
+	color:#000000 !important;
 	padding: 13px 48px;
 	text-decoration:none;
 	text-shadow:0 1px 0 #fcfffc;
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins);
     font-style: normal;
     font-weight: 700;
     font-size: 16px;
@@ -374,7 +368,6 @@ svg text{
 }
 
 .active__border{
-    /*border-bottom: 1px var(--primary__color) solid;*/
     position: relative;
 }
 
@@ -438,7 +431,7 @@ svg text{
 
 .history__card_desktop .card-body .card-text{
     height: 12rem;
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 14px;
@@ -488,7 +481,7 @@ svg text{
 }
 
 .club__name p, .league__title, .dest__club__name p{
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 12px;
@@ -533,6 +526,10 @@ svg text{
 .herb__container img, .dest__club__herb img{
     max-height: 100%;
     object-fit: contain;
+}
+
+.herb__container img{
+    border-radius: 10px;
 }
 
 .herb__container, .dest__club__herb{
@@ -582,9 +579,7 @@ svg text{
     height: 100%;
     display: flex;
     justify-self: center;
-    /*width: 20%;*/
 }
-
 
 .img__icon__card{
     width: 2rem;
@@ -605,7 +600,7 @@ svg text{
 }
 
 .player__card p:first-child{
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins);
     font-style: normal;
     font-weight: 700;
     font-size: 14px;
@@ -616,7 +611,7 @@ svg text{
 
 .player__card p:last-child{
     padding-bottom: 0;
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 12px;
@@ -632,8 +627,7 @@ svg text{
 #how_it_works .carousel-control-prev,
 #how_it_works .carousel-control-next,
 #how_it_works .carousel-indicators{
-    /*height: 8%;*/
-    /*bottom: -5rem;*/
+
     top: auto;
     font-size: 5rem;
     position: relative;
@@ -684,10 +678,8 @@ svg text{
 }
 
 .carousel_item_desktop{
-    /*min-width: 11vw !important;*/
-    box-shadow: 0px 1px 4px rgba(7, 15, 26, 0.08), 0px 4px 16px rgba(7, 15, 26, 0.08);
+    box-shadow: 0 1px 4px rgba(7, 15, 26, 0.08), 0 4px 16px rgba(7, 15, 26, 0.08);
     border: none;
-    /*max-width: 12vw;*/
     min-width: 19rem !important;
     max-width: 20rem;
 }
@@ -716,12 +708,6 @@ svg text{
     display: none;
 }
 
-/*.active_desktop, .carousel_item_desktop:hover{*/
-/*    transform: scale(1.1);*/
-/*    box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4);*/
-/*    z-index: 3;*/
-/*}*/
-
 .active_desktop{
     animation: fadeIn 0.5s;
 }
@@ -736,7 +722,6 @@ svg text{
 
 .slideshow_container_main_second{
     grid-gap: 1rem;
-    /*overflow: scroll;*/
     width: 2000px;
     position: relative;
     height: 100%;
@@ -744,18 +729,11 @@ svg text{
     min-width: 1400px;
 }
 
-
 #history__section .carousel-control-next{
-    /*width: 4%;*/
-    /*border: 1px solid rgba(0,0,0,0.2);*/
-    /*border-radius: 50%;*/
     opacity: 0.5;
 }
 
 #how_it_works .carousel-control-next{
-    /*width: 5%;*/
-    /*border: 1px solid rgba(0,0,0,0.2);*/
-    /*border-radius: 50%;*/
     opacity: 0.5;
 }
 
@@ -771,15 +749,10 @@ svg text{
     /*margin-left: 1rem;*/
 }
 
-/*#how_it_works .carousel-control-prev,*/
-/*#how_it_works .carousel-control-next{*/
-/*    bottom: -3rem;*/
-/*}*/
-
 #how_it_works .steps{
     width: 263px;
     height: 18px;
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 600;
     font-size: 12px;
@@ -789,7 +762,7 @@ svg text{
 #how_it_works .steps__title{
     width: 263px;
     height: 26px;
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins);
     font-style: normal;
     font-weight: 700;
     font-size: 18px;
@@ -797,7 +770,7 @@ svg text{
 }
 
 #how_it_works .card__text{
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 14px;
@@ -849,7 +822,7 @@ svg text{
     width: 79px;
     height: 16px;
 
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 700;
     font-size: 10px;
@@ -869,26 +842,18 @@ svg text{
 
 #how_it_works .tip__body{
     height: 54px;
-
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 12px;
     line-height: 18px;
-
-    /* Core/Dark */
-
     color: var(--dark__color);
-
     opacity: 0.72;
-
     flex: none;
     order: 1;
     align-self: stretch;
     flex-grow: 0;
 }
-
-
 
 /* Price section */
 
@@ -904,16 +869,13 @@ svg text{
 
 #price__section .section-title h2{
 
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins);
     font-style: normal;
     font-weight: 700;
     font-size: 24px;
     line-height: 32px;
-
     letter-spacing: 0.2px;
-
     color: var(--dark__color);
-
     flex: none;
     order: 0;
     align-self: stretch;
@@ -921,18 +883,14 @@ svg text{
 }
 
 #price__section .section-title p{
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 14px;
     line-height: 20px;
-
     letter-spacing: 0.1px;
-
     color: var(--dark__color);
-
     opacity: 0.72;
-
     flex: none;
     order: 1;
     align-self: stretch;
@@ -945,10 +903,8 @@ svg text{
     align-items: flex-end;
     padding: 16px;
     gap: 16px;
-
     background: var(--white__color);
     box-shadow: 0 1px 4px rgba(7, 15, 26, 0.08), 0 4px 16px rgba(7, 15, 26, 0.08);
-
     flex: none;
     order: 0;
     align-self: stretch;
@@ -958,7 +914,7 @@ svg text{
 
 #price__section .price__table .pricelist_desc{
 
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 14px;
@@ -974,15 +930,13 @@ svg text{
 }
 
 #price__section .price__table .pricelist__price{
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 700;
     font-size: 14px;
     line-height: 20px;
-
     text-align: right;
     letter-spacing: 0.1px;
-
     color: var(--dark__color);
 }
 
@@ -1014,7 +968,7 @@ svg text{
 }
 
 #price__section .guarantee__text{
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 12px;
@@ -1023,7 +977,7 @@ svg text{
 }
 
 #price__section .danger__text{
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 12px;
@@ -1047,7 +1001,7 @@ svg text{
 
 #test__section h1{
 
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins);
     font-style: normal;
     font-weight: 700;
     font-size: 24px;
@@ -1057,7 +1011,7 @@ svg text{
 }
 
 #test__section .test__header p{
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 14px;
@@ -1069,7 +1023,7 @@ svg text{
 
 #test__section .test__second__header h3{
 
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins);
     font-style: normal;
     font-weight: 700;
     font-size: 16px;
@@ -1079,7 +1033,7 @@ svg text{
 }
 
 #test__section .test__second__header p{
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 12px;
@@ -1113,7 +1067,7 @@ svg text{
     color: var(--primary__color);
     margin-top: 1rem;
     margin-bottom: 0;,
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 12px;
@@ -1125,7 +1079,6 @@ svg text{
     animation: hiddeError;
     animation-duration: 6s;
     animation-fill-mode: forwards;
-
 }
 
 @keyframes hiddeError {
@@ -1157,7 +1110,7 @@ svg text{
 
 #test__section .leagues__form .choose__league p,
 #test__section .distance__form .choose__distance p{
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins);
     font-style: normal;
     font-weight: 500;
     font-size: 12px;
@@ -1168,7 +1121,7 @@ svg text{
 }
 
 #test__section .where_do_you_want_to_play h3{
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins);
     font-style: normal;
     font-weight: 700;
     font-size: 16px;
@@ -1178,7 +1131,7 @@ svg text{
 }
 
 #test__section .where_do_you_want_to_play p{
-    font-family: 'Inter';
+    font-family: var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 12px;
@@ -1194,7 +1147,7 @@ svg text{
 }
 
 .error_message_form p{
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins);
     font-style: normal;
     font-weight: 500;
     font-size: 14px;
@@ -1227,7 +1180,7 @@ svg text{
 #test__section .form__input input::placeholder{
     color: var(--c, black) !important;
 
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins);
     font-style: normal;
     font-weight: 500;
     font-size: 14px;
@@ -1239,7 +1192,7 @@ svg text{
 }
 
 #test__section .ready_for_tests_unauthenticated p{
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 14px;
@@ -1266,7 +1219,7 @@ svg text{
 }
 
 #test__section .terms{
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 12px;
@@ -1278,14 +1231,18 @@ svg text{
 }
 
 #test__section .test__form__register p{
-    color: var(--white__color);
+    color: var(--white__color) !important;
     opacity: 1;
     margin-bottom: 0;
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins);
     font-style: normal;
     font-weight: 700;
     line-height: 22px;
     letter-spacing: 0.2px;
+}
+
+.test__form__register a {
+    color: white;
 }
 
 /* FAQ section */
@@ -1294,12 +1251,8 @@ svg text{
     padding-top: 2rem;
 }
 
-#faq__section .container > div:first-child{
-    /*align-items: center;*/
-}
-
 #faq__section .accordion__title h1{
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins);
     font-style: normal;
     font-weight: 700;
     font-size: 24px;
@@ -1309,7 +1262,7 @@ svg text{
 }
 
 #faq__section .accordion__title p{
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 14px;
@@ -1344,7 +1297,7 @@ svg text{
 
 #questionModal1 h1,
 #questionModal2 h1{
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins);
     font-style: normal;
     font-weight: 700;
     font-size: 23px;
@@ -1354,7 +1307,7 @@ svg text{
 
 #questionModal1 p,
 #questionModal2 p{
-    font-family: 'Inter', sans-serif;
+    font-family:var(--font-inter);
     font-style: normal;
     font-weight: 500;
     font-size: 14px;
@@ -1371,7 +1324,7 @@ svg text{
     gap: 10px;
     border: 1px solid #454A52;
     border-radius: 24px;
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins);
     font-style: normal;
     font-weight: 700;
     font-size: 16px;
@@ -1380,7 +1333,6 @@ svg text{
     letter-spacing: 0.2px;
     opacity: 1;
 }
-
 
 /* Back home btn*/
 
@@ -1393,7 +1345,7 @@ svg text{
     gap: 10px;
     border: 1px solid #454A52;
     border-radius: 16px;
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins);
     font-style: normal;
     font-weight: 700;
     font-size: 12px;
@@ -1407,15 +1359,99 @@ svg text{
     color: var(--dark__color);
 }
 
-/*@media (max-width: 768px){*/
-/*.slideshow_container_desktop {*/
-/*    max-width: 720px;*/
-/*}}*/
+/* We got it */
 
-/*@media (min-width: 576px) and (max-width: 767px){*/
-/*.slideshow_container_desktop {*/
-/*    max-width: 540px;*/
-/*}}*/
+.we__got_it__txt{
+    font-family: var(--font-poppins);
+    font-style: normal;
+    font-weight: 700;
+    font-size: 24px;
+    line-height: 32px;
+    text-align: center;
+    letter-spacing: 0.2px;
+    color: var(--dark__color);
+}
+
+.we__got__it .paragraph{
+    font-family: var(--font-inter);
+    font-style: normal;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 28px;
+    letter-spacing: 0.1px;
+    color: #141414;
+    opacity: 0.72;
+}
+
+.second__test__form form textarea{
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    padding: 17px 16px;
+    gap: 10px;
+    resize: none;
+    width:100%;
+    border: 1px solid rgba(20, 20, 20, 0.48);
+    border-radius: 8px;flex: none;
+    order: 1;
+    align-self: stretch;
+    flex-grow: 0;
+    margin-top: 2rem;
+}
+
+.second__test__form .small__container .form__description{
+    font-family: var(--font-inter);
+    font-style: normal;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px; letter-spacing: 0.1px;
+}
+
+.second__test__form .video__from__game{
+    font-family: var(--font-poppins);
+    font-style: normal;
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 30px;
+    letter-spacing: 0.2px;
+    position: relative;
+}
+
+.video__from__game::after{
+    content: 'Opcjonalne';
+    position: absolute;
+    bottom: -1rem;
+    left: 0;
+    font-family: var(--font-inter);
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--dark__color);
+    opacity: 0.64;
+}
+
+.second__form__btn{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 16px 64px;
+    gap: 10px;
+    width: 70%;
+    background: var(--light__color);
+    border-radius: 28px;
+    margin-top: 5rem;
+    border: none;
+    font-family: var(--font-poppins);
+    font-style: normal;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 24px;
+    letter-spacing: 0.4px;
+    color: rgba(20, 20, 20, 0.24);
+}
+
 
 @media (max-width: 1200px) {
     #header .navbar-nav{
@@ -1428,15 +1464,6 @@ svg text{
     }
 }
 
-@media (max-width: 400px){
-    #header .navbar{
-        /*flex-direction: column;*/
-    }
-    .hamburger__div {
-        /*width: 100%;*/
-    }
-}
-
 @media (max-width: 980px) {
     #header .container-fluid{
         padding: 0;
@@ -1446,11 +1473,6 @@ svg text{
     #header .container{
         margin: 0;
         padding: 0;
-    }
-
-    #header .navbar{
-        /*padding-left: 0 !important;*/
-        /*padding-right: 0 !important;*/
     }
 
     #header .navbar-collapse{
@@ -1524,7 +1546,6 @@ svg text{
         flex-direction: column;
         grid-gap: 2rem;
         margin-top: 2rem;
-        /*padding: 1rem;*/
         width: 60%;
 
     }
@@ -1551,14 +1572,17 @@ svg text{
     #faq__section .container{
         width: 100% !important;
     }
-}
 
-@media (max-width: 768px) {
-    #faq__section .container{
+    .small__container{
         width: 100% !important;
+        justify-content: center;
     }
 
     #test__section .test__container{
         width: 100% !important;
+    }
+
+    .promo_div > div:nth-child(odd){
+        width: 15%;
     }
 }

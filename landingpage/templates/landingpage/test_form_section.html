@@ -1,21 +1,8 @@
 {% load static %}
 
-<div
-        aria-live="polite"
-        aria-atomic="true"
-        style="z-index:1500;
-        position: absolute;
-        top:15px;
-        width: 100%;"
->
-  <!-- Position it -->
-  <div id="micro-messages-red">
-
-    {% comment %} <div class="alert alert-success micro-message" data-aos-anchor-placement="top-center" data-aos-delay="800" data-aos="slide-down" data-delay="2000"  role="alert" style=" border-radius:16px; padding:4px 8px; font-size: .8rem;">
-      zaobserowałeś piłkarza
-    </div> {% endcomment %}
-  </div>
-</div>
+{% with bottom=None top='15px' %}
+    {% include 'landingpage/partials/micro_messages.html' %}
+{% endwith %}
 
 <div class="ml-2 w-50 test__container">
     <div class="d-flex flex-column-reverse text-left test__header">
@@ -116,7 +103,7 @@
             <p>
                Po zalogowaniu się lub rejestracji, wyświetlimy Ci formularz zgłoszeniowy. Jest to dla nas ważne, bo ułatwi nam dostęp do Twoich statystyk.
             </p>
-            <button class="test__form__register"><p>Zaloguj się <span class="">lub zarejestruj</span></p></button>
+            <button class="test__form__register"><p><a href="{% url 'account_login' %}?next={{ request.path }}">Zaloguj się <span class="">lub zarejestruj</span></a></p></button>
         </div>
 
     {% endif %}

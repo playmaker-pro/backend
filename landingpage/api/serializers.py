@@ -1,11 +1,10 @@
 from rest_framework import serializers
+from products.models import Product, Request
 
 
-class TestFormSerializer(serializers.Serializer):
-    distance = serializers.CharField()
-    leagues = serializers.ListField()
-    city = serializers.CharField()
-    user = serializers.CharField()
+class TestFormSerializer(serializers.ModelSerializer):
+    raw_body = serializers.DictField()
 
     class Meta:
-        fields = ['distance', 'leagues', 'city', 'user']
+        model = Request
+        fields = ['product', 'user', 'raw_body']

@@ -17,7 +17,7 @@
     <section class="landingpage__main_photo dark__background d-flex align-items-center">
         <div class="container h-100">
           <div class="row">
-            <div class="landingpage__section col-xl-6 p-4 d-flex flex-column flex-lg-row-reverse justify-content-center w-100">
+            <div class="landingpage__section col-xl-6 p-4 d-flex flex-column flex-xl-row-reverse justify-content-center w-100">
                 <img src="{% static 'assets/img/landingpage/pilka_out.png' %}"
                      class="w-100"
                      alt="Player standing infront of stadium"
@@ -60,7 +60,7 @@
                         {% if user.is_authenticated %}
                             <a href="#test__section" class="text-center reach_us_btn">Zgłoś się</a>
                         {% else %}
-                           <a href="/login/" class="text-center reach_us_btn">Zaloguj się i zgłoś</a>
+                           <a href="{% url 'account_login' %}?next={{ request.path }}" class="text-center reach_us_btn">Zaloguj się i zgłoś</a>
                         {% endif %}
                         <span class="text-center my-4 prices__text">
                             Ceny już od 149 zł • Szybkie zgłoszenie i szybka odpowiedź (max 48h)
