@@ -1,12 +1,11 @@
 import json
 import logging
 
-from django.core.mail import send_mail, mail_managers
+from django.core.mail import mail_managers
 from django.shortcuts import get_object_or_404
 
 from rest_framework import permissions, status
 from rest_framework import generics
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from .serializers import TestFormSerializer
 
@@ -34,19 +33,31 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
         data = request.data
 
         name = 'Wsparcie transferowe dla piłkarza'
-        product = get_object_or_404(Product, title=name)
-        user = get_object_or_404(User, pk=data['user'])
 
-        data = {
-            'product': product.id,
-            'user': user.id,
-            'raw_body':
-                {
-                    'city': data['city'],
-                    'leagues': data['leagues'],
-                    'distance': data['distance'],
-                }
-        }
+        product = Product.objects.filter(title=name)
+        user = User.objects.filter(pk=data['user'])
+
+        if not user or not product or (len(user) >= 2 or len(product) >= 2):
+            logger.error('User or product couldnt be find')
+            return Response({'error': "User or product couldnt be find"}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            data = {
+                'product': product[0].id,
+                'user': user[0].id,
+                'raw_body':
+                    {
+                        'city': data['city'],
+                        'leagues': data['leagues'],
+                        'distance': data['distance'],
+                        'email': user[0].email,
+                        'profile': f"{request.META['HTTP_HOST']}/users/{user[0].profile.slug}",
+                        'phone': user[0].profile.phone
+                    }
+            }
+        except Exception as e:
+            logger.error(e)
+            return Response({'error': "Ups, coś poszło nie tak"})
 
         serializer = self.serializer_class(data=data)
         serializer.is_valid(raise_exception=True)
@@ -54,8 +65,13 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
 
         try:
             message = serializer.data
-            subject = f'User {user.username} requested help'
+            message['user'] = f"{user[0].first_name} {user[0].last_name}"
+            message['product'] = product[0].title,
+
+            subject = f'User {user[0].username} requested help'
             mail_managers(subject, json.dumps(message))
+            logger.info(f'Mail sent: {message}')
+
 
         except Exception as e:
             logger.error(f'Mail could not be sent')
@@ -80,6 +96,7 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
             message = data
             subject = f'Request update: {request_help.user}'
             mail_managers(subject, json.dumps(message))
+            logger.info(f'Mail sent: {message}')
 
         except Exception as e:
             logger.error(f'Mail could not be sent')

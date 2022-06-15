@@ -1,6 +1,5 @@
 const nav = document.querySelector('.navbar');
 const playA = nav.querySelector('.logo a');
-// const loginBtn = nav.querySelector('.login_btn');
 const hamburger = document.querySelector('.hamburger__icons');
 const hambList = hamburger.querySelectorAll('rect');
 const scrollContainer = document.querySelector(".second__navbar_fixed");
@@ -35,12 +34,7 @@ window.onscroll = function () {
         }catch(e){
         }
 
-
-
-
-        //    #141414
         playA.classList.add('color__change');
-        // loginBtn.classList.add('login-btn__change');
 
         hambList.forEach(element => {
             element.style.fill = 'black'
@@ -52,7 +46,6 @@ window.onscroll = function () {
         nav.classList.remove('white__background');
 
         playA.classList.remove('color__change');
-        // loginBtn.classList.remove('login-btn__change');
 
         hambList.forEach(element => {
             element.style.fill = 'white'

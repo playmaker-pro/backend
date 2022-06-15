@@ -223,15 +223,18 @@ svg text{
 }
 
 .landingpage__main_photo{
-    /*height: 120vh;*/
     padding-top: 0;
     padding-bottom: 0;
-    margin-bottom: 2rem;
 }
 
 .landingpage__section{
     grid-gap: 2rem;
     margin-bottom: 2rem;
+}
+
+.landingpage__section img{
+    object-fit: contain;
+    align-self: flex-start;
 }
 
 .landingpage__main_photo h1, .landingpage__main_photo h2{
@@ -365,6 +368,7 @@ svg text{
 .sticky__menu{
     top:  var(--navbar__height);
     z-index: 500;
+    padding: 0.6rem 0 !important;
 }
 
 .active__border{
@@ -397,6 +401,10 @@ svg text{
 #history__section .section-title,
 #how_it_works .section-title {
     padding-bottom: 0;
+}
+
+#how_it_works .card__img{
+    height: auto;
 }
 
 .carousel__section{
@@ -530,6 +538,7 @@ svg text{
 
 .herb__container img{
     border-radius: 10px;
+    width: 3rem;
 }
 
 .herb__container, .dest__club__herb{
@@ -545,16 +554,19 @@ svg text{
     top: calc(50% - 0px/2);
     opacity: 0.5;
     border: 1px solid #FFFFFF;
+    background-color: white;
+
 }
 
 .vector__herb__dest{
     position: absolute;
     width: 67px;
     height: 0;
-    right: 56px;
-    top: calc(50% - -10px/2);
+    right: 95px;
+    top: calc(50% - 4px/2);
     opacity: 0.5;
     border: 1px solid #FFFFFF;
+    background-color: white;
 }
 
 .vector__herb__arrow{
@@ -566,12 +578,9 @@ svg text{
 }
 
 .dest__club__herb{
-    height: 40%;
+    height: 25%;
 }
 
-.dest__club__herb img{
-    padding: 1rem 0.5rem;
-}
 
 .dest__club__herb  .herb__container{
     max-width: 100%;

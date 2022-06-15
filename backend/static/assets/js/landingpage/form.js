@@ -39,29 +39,10 @@ dinstanceDivs.forEach(element => {
         let counter = 0;
 
         dinstanceDivs.forEach(element =>{
-            if(element.classList.contains('distance__active')){
-                counter += 1;
-            }
+            element.classList.remove('distance__active')
         })
 
-        if (counter < 1 && !element.classList.contains('distance__active')){
-           element.classList.add('distance__active')
-
-        } else if(counter === 1 && element.classList.contains('distance__active')){
-
-            element.classList.remove('distance__active');
-
-        } else if(counter === 1 && !element.classList.contains('distance__active')) {
-
-            const formDiv = document.querySelector('.distance__form .form__error');
-
-            formDiv.classList.remove('d-none')
-            formDiv.classList.add('error__form');
-
-            setTimeout(() => {
-                formDiv.classList.add('d-none')
-            }, 5000)
-        }
+        element.classList.add('distance__active')
     })
 })
 
@@ -171,8 +152,11 @@ if(formBtn){
             sendForm(url, result)
                 .then(response => response.json())
                 .then(data => {
+                    console.log(data)
                     if(data.success){
                          window.location.href = `/landingpage/we-got-it/${data.success}`
+                    } else if(data.error){
+                        showToastErrorRedMessage(data.error);
                     }
                 })
 

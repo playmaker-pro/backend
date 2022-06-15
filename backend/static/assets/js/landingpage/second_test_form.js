@@ -1,6 +1,30 @@
 const secondFormBtn = document.querySelector('.second__form__btn');
 const secondFormVideos = document.querySelector('.video__section textarea');
 const secontFormComment = document.querySelector('.form__section .extra__comment');
+const secondFormTextArea = document.querySelector('.form__section textarea');
+
+secondFormTextArea.addEventListener('input', () => {
+    changeBtn(secondFormTextArea)
+})
+
+secontFormComment.addEventListener('input', () => {
+    changeBtn(secontFormComment)
+})
+
+const changeBtn = element => {
+    let secondFormTextAreaValue = element.value
+
+    if (secondFormTextAreaValue){
+        secondFormBtn.style.backgroundColor = 'Black';
+        secondFormBtn.style.color = 'White';
+        secondFormBtn.removeAttribute('disabled')
+
+    } else {
+        secondFormBtn.style.backgroundColor = '#EBEDF0';
+        secondFormBtn.style.color = 'rgba(20, 20, 20, 0.24)';
+        secondFormBtn.setAttribute('disabled', '')
+    }
+}
 
 
 function getCookie(name) {
