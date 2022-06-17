@@ -141,7 +141,7 @@ if(formBtn){
 
         if (getCity && distance.length === 1 && leagues.length >= 1) {
 
-            const url = '/landingpage/test-form/1/';
+            const url = '/transfer/test-form/1/';
             const result = {
                 leagues: leagues,
                 distance: distance[0],
@@ -152,9 +152,9 @@ if(formBtn){
             sendForm(url, result)
                 .then(response => response.json())
                 .then(data => {
-                    console.log(data)
+
                     if(data.success){
-                         window.location.href = `/landingpage/we-got-it/${data.success}`
+                         window.location.href = `/transfer/we-got-it/${data.success}`
                     } else if(data.error){
                         showToastErrorRedMessage(data.error);
                     }
@@ -169,4 +169,3 @@ if(formBtn){
         }
     })
 }
-

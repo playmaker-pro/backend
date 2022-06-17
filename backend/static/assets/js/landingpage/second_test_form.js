@@ -1,14 +1,14 @@
 const secondFormBtn = document.querySelector('.second__form__btn');
 const secondFormVideos = document.querySelector('.video__section textarea');
-const secontFormComment = document.querySelector('.form__section .extra__comment');
+const secondFormComment = document.querySelector('.form__section .extra__comment');
 const secondFormTextArea = document.querySelector('.form__section textarea');
 
 secondFormTextArea.addEventListener('input', () => {
     changeBtn(secondFormTextArea)
 })
 
-secontFormComment.addEventListener('input', () => {
-    changeBtn(secontFormComment)
+secondFormComment.addEventListener('input', () => {
+    changeBtn(secondFormComment)
 })
 
 const changeBtn = element => {
@@ -49,12 +49,12 @@ if(secondFormBtn){
 
         const data = {
             videos: secondFormVideos.value,
-            comment: secontFormComment.value,
+            comment: secondFormComment.value,
             user: user
         }
 
         const url_path = window.location.pathname.split('/')
-        const url = `/landingpage/test-form/${url_path[url_path.length-2]}/`
+        const url = `/transfer/test-form/${url_path[url_path.length-2]}/`
 
         fetch(url, {
             method: 'PATCH',
@@ -69,7 +69,7 @@ if(secondFormBtn){
         .then(response => response.json())
         .then(data => {
             if(data.success){
-                window.location.href = '/landingpage/we-got-it-success/'
+                window.location.href = '/transfer/we-got-it-success/'
             } else{
                 showToastErrorRedMessage('Coś poszło nie tak. Spróbuj ponownie później');
             }

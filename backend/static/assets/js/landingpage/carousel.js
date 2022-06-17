@@ -32,7 +32,6 @@ const createDotElements = slide => {
 }
 
 function checkCarouselWitdh(){
-    // console.log('odpalanm')
   if (carouselFirstRange.matches) {
         getIndicatorParent.innerHTML = '';
         carouselItem.forEach(element =>{
@@ -41,10 +40,6 @@ function checkCarouselWitdh(){
 
         cards.forEach((element, count) =>{
             createDotElements(count);
-            // console.log(cards[count]);
-            // console.log(isInViewport(cards[count]))
-            console.log(isInViewport(element))
-            console.log(count)
             if(isInViewport(element)){
                 const colourDot = document.querySelector(`[data-slide-to="${count}"]`);
                 colourDot.classList.add('active')
@@ -102,7 +97,6 @@ function checkCarouselWitdh(){
 
 function isInViewport(element) {
     const rect = element.getBoundingClientRect();
-    console.log('element', rect.left, rect.right)
     return (
         // rect.top >= 0 &&
         rect.left >= 0 &&

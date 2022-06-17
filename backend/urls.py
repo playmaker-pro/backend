@@ -53,7 +53,7 @@ urlpatterns = [
     path('api/v2/', api_router.urls),
     path('resources/', include('resources.urls', namespace="resources")),
     path("select2/", include("django_select2.urls")),
-    path('landingpage/', include(landingpage.urls, namespace="landingpage")),
+    path('transfer/', include(landingpage.urls, namespace="landingpage")),
 
     path("select2/", include("django_select2.urls")),
     path('', include('allauth.urls')),
