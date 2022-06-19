@@ -9,12 +9,5 @@ anchors.forEach(anchor => {
         })
 
         anchor.querySelector('p').classList.add('active__border');
-
-        // e.preventDefault();
-        // console.log('klikam', anchor)
-        // const element = document.querySelector(this.getAttribute('href'));
-        // const dims = element.getBoundingClientRect();
-        // dims.y = dims.y -200;
-        // window.scrollTo(window.scrollX, window.scrollY - 500);
     });
 })

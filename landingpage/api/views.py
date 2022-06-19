@@ -72,7 +72,6 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
             mail_managers(subject, json.dumps(message))
             logger.info(f'Mail sent: {message}')
 
-
         except Exception as e:
             logger.error(f'Mail could not be sent')
 
