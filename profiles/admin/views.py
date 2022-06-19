@@ -135,6 +135,8 @@ class ProfileVerificationStatusAdmin(admin.ModelAdmin):
     def get_next(self, obj):
         return obj.next
 
+    #  TODO napisac swoja metode v
+
     def get_owner(self, obj):
         return linkify(obj.profile)
 
