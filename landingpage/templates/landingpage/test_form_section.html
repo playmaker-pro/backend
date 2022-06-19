@@ -1,0 +1,116 @@
+{% load static %}
+
+{% with bottom=None top='15px' %}
+    {% include 'landingpage/partials/micro_messages.html' %}
+{% endwith %}
+
+<div class="ml-2 w-50 test__container">
+    <div class="d-flex flex-column-reverse text-left test__header">
+        <h1 class=""> Gotowy na testy? </h1>
+        <p class="mb-0">Zgłoszenie</p>
+    </div>
+
+    {% if user.is_authenticated %}
+
+        <!-- Modals -->
+        {% include 'landingpage/partials/form_modal_1.html' %}
+        {% include 'landingpage/partials/form_modal_2.html' %}
+
+        <div class="test__second__header mt-3">
+            <div class="d-flex justify-content-between">
+                <h3>W jakiej lidzie chciałbyś grać?</h3>
+                <div class="">
+                    <img data-toggle="modal" data-target="#questionModal1" src="{% static 'assets/img/landingpage/question_mark.png' %}" alt="question mark">
+                </div>
+            </div>
+            <p class="mb-0">Zaznacz max 2</p>
+        </div>
+
+        <div class="leagues__form my-4 d-flex flex-column">
+            <div class="leagues__first_line mb-2 d-flex w-100">
+                <div class="choose__league"><p>3 liga</p></div>
+                <div class="choose__league"><p>4 liga</p></div>
+                <div class="choose__league"><p>Klasa okręgowa</p></div>
+            </div>
+            <div class="leagues__second_line d-flex w-100 mt-1">
+                <div class="choose__league"><p>Klasa A lub B</p></div>
+                <div class="choose__league"><p>Klasa profesjonalna</p></div>
+            </div>
+
+            <div class="w-100 justify-content-center d-none form__error">
+                <div class="w-50">
+                    <p>Możesz wybrać tylko dwie ligi</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="where_do_you_want_to_play">
+            <div class="d-flex justify-content-between">
+                <h3>Gdzie chciałbyś grać?</h3>
+                <div class="">
+                    <img data-toggle="modal" data-target="#questionModal2" src="{% static 'assets/img/landingpage/question_mark.png' %}" alt="question mark">
+                </div>
+            </div>
+            <p>Określ region poszukiwań oraz max odległość na dojazd.</p>
+        </div>
+
+        <form class="form__input position-relative d-non">
+
+            <input type="text" placeholder="Miasto" required>
+            <img class="d-none" src="{% static 'assets/img/landingpage/warning.png' %}" alt="">
+
+        </form>
+
+        <div class="error_message_form mt-2">
+            <p>Uzupełnij pole</p>
+        </div>
+
+        <div class="distance__form my-4 d-flex flex-column">
+
+            <div class="distance__first_line mb-2 d-flex w-100">
+                <div class="choose__distance"><p>Bez znaczenia</p></div>
+                <div class="choose__distance distance__active"><p>+10km</p></div>
+                <div class="choose__distance"><p>+20km</p></div>
+            </div>
+
+            <div class="distance__second_line d-flex w-100 mt-1">
+                <div class="choose__distance"><p>+50km</p></div>
+                <div class="choose__distance"><p>+100km</p></div>
+                <div class="choose__distance"><p>+200km</p></div>
+            </div>
+
+            <div class="w-100 justify-content-center d-none form__error">
+                <div class="w-50">
+                    <p>Możesz wybrać tylko jeden zakres</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="">
+            <button class="user_is_authenticated">Zgłoś się</button>
+        </div>
+        <div class="">
+            <p class="terms mt-3">
+                Klikając w ‘Zgłoś się’ zgadzasz się z naszym
+                <a href="/rules/"><span> Regulaminem świadczenia usług</span></a>
+            </p>
+        </div>
+    {% else %}
+
+        <div class="ready_for_tests_unauthenticated">
+            <p>
+               Po zalogowaniu się lub rejestracji, wyświetlimy Ci formularz zgłoszeniowy. Jest to dla nas ważne, bo ułatwi nam dostęp do Twoich statystyk.
+            </p>
+            <button class="test__form__register"><p><a href="{% url 'account_login' %}?next={{ request.path }}">Zaloguj się <span class="">lub zarejestruj</span></a></p></button>
+        </div>
+
+    {% endif %}
+
+</div>
+
+<script src="{% static 'assets/js/landingpage/form.js' %}"></script>
+<script>
+    const user = '{{ request.user.id }}';
+</script>
