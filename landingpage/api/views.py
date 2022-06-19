@@ -64,13 +64,8 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
         new_data = self.perform_create(serializer)
 
         try:
-            message = serializer.data
-            message['user'] = f"{user[0].first_name} {user[0].last_name}"
-            message['product'] = product[0].title,
-
-            subject = f'User {user[0].username} requested help'
-            mail_managers(subject, json.dumps(message))
-            logger.info(f'Mail sent: {message}')
+            new_data.send_notification_to_admin()
+            logger.info(f'Mail sent: {serializer.data}')
 
         except Exception as e:
             logger.error(f'Mail could not be sent')
@@ -92,10 +87,8 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
         self.partial_update(request, *args, **kwargs)
 
         try:
-            message = data
-            subject = f'Request update: {request_help.user}'
-            mail_managers(subject, json.dumps(message))
-            logger.info(f'Mail sent: {message}')
+            request_help.send_notification_to_admin()
+            logger.info(f'Mail sent: {data}')
 
         except Exception as e:
             logger.error(f'Mail could not be sent')
