@@ -1,0 +1,49 @@
+{% load i18n %}
+{% load static %}
+
+
+<!-- Slideshow container dekstop -->
+<div class="slideshow_container_desktop">
+
+    <div class="d-flex position-relative slideshow_container_main_desktop">
+
+
+        <!-- Full-width images with number and caption text -->
+
+        {% with club_name='Spartakus Daleszyce' player_name='Patryk Raczyński' league='4 liga' player='Lewy obrońca / skrzydłowy' content='landingpage/partials/history/history_first.html' club_herb='assets/img/landingpage/history/spartakus.png' dest_name='Neptun Końskie' dest_herb='assets/img/landingpage/history/neptun.png' dest_league='4 liga' player_url='https://www.playmaker.pro/users/player-patryk-raczynski/' player_photo='assets/img/landingpage/history/patryk_raczynski.jpg' %}
+            {% include 'landingpage/partials/history_card.html' %}
+        {% endwith %}
+
+        {% with club_name='Foto-Higiena Gać' player_name='Sebastian Jaroszyński' league='3 liga' player='Napastnik' content='landingpage/partials/history/history_second.html' club_herb='assets/img/landingpage/history/foto-higiena-gac.png' dest_name='Polonia Świdnica' dest_herb='assets/img/landingpage/history/polonia_sparta_swidnica.jpg' dest_league='3 liga' player_url='https://www.playmaker.pro/users/player-sebastian-jaroszynski/' player_photo='assets/img/landingpage/history/sebastian1.jpg' %}
+            {% include 'landingpage/partials/history_card.html' %}
+        {% endwith %}
+
+        {% with club_name='Yeclano Deportivo' player_name='Grzegorz Kleemann' league='3 liga' player='Bramkarz' content='landingpage/partials/history/history_third.html' club_herb='assets/img/landingpage/history/yeclano-deportivo.png' dest_name='Kotwica Kołobrzeg' dest_herb='assets/img/landingpage/history/Kotwica Kolobrzeg.jpg' dest_league='3 liga' player_url='https://www.transfermarkt.pl/grzegorz-kleemann/profil/spieler/332027' player_photo='assets/img/landingpage/history/grzegorz_kleemann.jpg'  %}
+            {% include 'landingpage/partials/history_card.html' %}
+        {% endwith %}
+
+
+    </div>
+    <div class="d-xxl-none d-flex justify-content-between carousel__control_div">
+        <!-- Next and previous buttons -->
+        <a class="carousel-control-prev" role="button" data-slide="prev">
+            <img class="arrow-right"  src="{% static 'assets/img/landingpage/left-arrow.png' %}" alt="">
+            <span class="sr-only">Previous</span>
+        </a>
+
+{#         <ol class="carousel-indicators">#}
+{#            <li class="carouselDesktopIndicators active" data-slide-to="1"></li>#}
+{#            <li class="carouselDesktopIndicators" data-slide-to="2"></li>#}
+{#            <li class="carouselDesktopIndicators" data-slide-to="3"></li>#}
+{#            <li class="carouselDesktopIndicators" data-slide-to="4"></li>#}
+{#        </ol>#}
+
+        <a class="carousel-control-next" role="button" data-slide="next">
+            <img class="arrow-right"  src="{% static 'assets/img/landingpage/button_next.png' %}" alt="">
+            <span class="sr-only">Next</span>
+        </a>
+    </div>
+
+
+
+</div>

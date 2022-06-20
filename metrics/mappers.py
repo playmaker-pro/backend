@@ -37,13 +37,15 @@ class TeamMapper:
     @classmethod
     @lru_cache()
     def get_team_obj(cls, team_name: str, league_obj: CLeague) -> CTeam:
+
         try:
             team_obj = CTeam.objects.get(
                 league=league_obj, mapping__icontains=team_name.lower()
             )
             return team_obj
         except CTeam.MultipleObjectsReturned:
-            msg = f"input data: team_name={team_name} league_obj={league_obj} league_obj.id={league_obj.id} query used={team_name.lower()}"
+            msg = f"input data: team_name={team_name} league_obj={league_obj} " \
+                  f"league_obj.id={league_obj.id} query used={team_name.lower()}"
             logger.debug(msg)
             print(msg)
         except CTeam.DoesNotExist:
@@ -61,7 +63,10 @@ class TeamMapper:
         url = obj.get_permalink() if obj else None
 
         if club:
-            picture = obj.get_club_pic()
+            try:
+                picture = obj.club.picture
+            except (AttributeError, TypeError):
+                picture = obj.picture if obj and obj.picture else "default_profile.png"
         else:
             picture = obj.picture if obj and obj.picture else "default_profile.png"
 
