@@ -5,18 +5,11 @@
 <!-- Slideshow container dekstop -->
 <div class="slideshow_container_desktop">
 
-    <ol class="carousel-indicators">
-        <li class="carouselDesktopIndicators active" data-slide-to="1"></li>
-        <li class="carouselDesktopIndicators" data-slide-to="2"></li>
-        <li class="carouselDesktopIndicators" data-slide-to="3"></li>
-        <li class="carouselDesktopIndicators" data-slide-to="4"></li>
-    </ol>
-
     <div class="d-flex position-relative slideshow_container_main_desktop">
 
 
         <!-- Full-width images with number and caption text -->
-        <div class="card carousel_item_desktop history__card_desktop active__card" data-target="1">
+        <div class="card carousel_item_desktop history__card_desktop active__card light__background" data-target="1">
             <div class="card__img">
                 <img class="card-img-top" src="{% static 'assets/img/landingpage/how_it_works.png' %}" alt="Card image cap">
             </div>
@@ -31,22 +24,22 @@
                         <p class="tips__text">Łap wskazówkę</p>
                     </div>
                     <p class="tip__body text-left">
-                        Po wysłaniu zgłoszenia zapytamy Cię o wideo i Twoje oczekiwania. Takie informacje przyśpieszają poszukiwania.
+                        Ustaw na profilu swoja drużynę i zweryfikuj swój profil. Pomoże nam to w znalezieniu Twoich statystyk!
                     </p>
                 </div>
             </div>
         </div>
 
-         <div class="card carousel_item_desktop history__card_desktop active__card" data-target="1">
+         <div class="card carousel_item_desktop history__card_desktop active__card light__background" data-target="1">
             <div class="card__img">
-                <img class="card-img-top" src="{% static 'assets/img/landingpage/how_it_works.png' %}" alt="Card image cap">
+                <img class="card-img-top" src="{% static 'assets/img/landingpage/48h.png' %}" alt="Card image cap">
             </div>
             <div class="card-body">
                 <div class="text-left">
                     <p><span class="font-red steps">{% trans 'Krok 2' %}</span></p>
                     <p class="card_header steps__title mb-2"> 48h na odpowiedź </p>
                     <p class="card__text">
-                        Opiekun przeanalizuje Twoje zgłoszenie. Doradzi Ci, jak będą wyglądać poszukiwania. To też czas na Twoją płatność. Wyślemy Ci dane do przelewu.
+                        Każde zgłoszenie weryfikujemy indywidualnie. Opiekun Twoich testów będzie z Tobą w kontakcie. To także czas na Twoją płatność. Wyślemy Ci dane do przelewu.
                     </p>
                 </div>
                 <div class="card__frame mt-3">
@@ -54,22 +47,22 @@
                         <p class="tips__text">Łap wskazówkę</p>
                     </div>
                     <p class="tip__body text-left">
-                        Nasi opiekunowie mają wieloletnie doświadczenie w doradzaniu. Pomogli już ponad X zawodnikom i klubom!
+                       Mamy wieloletnie doświadczenie we wsparciu transferowym. Pomogliśmy już ponad 100 zawodnikom i klubom.
                     </p>
                 </div>
             </div>
         </div>
 
-        <div class="card carousel_item_desktop history__card_desktop active__card" data-target="1">
+        <div class="card carousel_item_desktop history__card_desktop active__card light__background" data-target="1">
             <div class="card__img">
-                <img class="card-img-top" src="{% static 'assets/img/landingpage/how_it_works.png' %}" alt="Card image cap">
+                <img class="card-img-top" src="{% static 'assets/img/landingpage/test.png' %}" alt="Card image cap">
             </div>
             <div class="card-body">
                 <div class="text-left">
                     <p><span class="font-red steps">{% trans 'Krok 3' %}</span></p>
                     <p class="card_header steps__title mb-2"> Poszukiwania i testy </p>
                     <p class="card__text">
-                        Usiądź wygodnie, bo to opiekun weźmie na siebie kontakt z klubami. Skontaktuje się z Tobą, aby Cię zaprosić na test.
+                        Pakuj torbę na trening. Twój opiekun zajmie się kontaktem z klubami i zadba, abyś otrzymał wszystkie niezbędne informacje dotyczące terminu i organizacji testów
                     </p>
                 </div>
                 <div class="card__frame mt-3">
@@ -77,22 +70,32 @@
                         <p class="tips__text">Łap wskazówkę</p>
                     </div>
                     <p class="tip__body text-left">
-                        Gwarantujemy Ci zaproszenie na test. Reszta w Twoich nogach! My kibicujemy, aby testy były udane i aby skończyło się transferem.
+                        Gwarantujemy Ci znalezieniu klubu, reszta w Twoich nogach. Kibicujemy, aby po testach piłkarskich doszło do transferu!
                     </p>
                 </div>
             </div>
         </div>
 
     </div>
-    <!-- Next and previous buttons -->
-    <a class="carousel-control-prev" role="button" data-slide="prev">
-        <img class="arrow-right"  src="{% static 'assets/img/landingpage/left-arrow.png' %}" alt="">
-        <span class="sr-only">Previous</span>
-    </a>
-    <a class="carousel-control-next" role="button" data-slide="next">
-        <img class="arrow-right"  src="{% static 'assets/img/landingpage/right-arrow.png' %}" alt="">
-        <span class="sr-only">Next</span>
-    </a>
 
+    <div class="d-lg-none d-flex justify-content-between w-100 carousel__control_div">
+        <!-- Next and previous buttons -->
+        <a class="carousel-control-prev" role="button" data-slide="prev">
+            <img class="arrow-right"  src="{% static 'assets/img/landingpage/left-arrow.png' %}" alt="">
+            <span class="sr-only">Previous</span>
+        </a>
+
+{#        <ol class="carousel-indicators">#}
+{#            <li class="carouselDesktopIndicators active" data-slide-to="1"></li>#}
+{#            <li class="carouselDesktopIndicators" data-slide-to="2"></li>#}
+{#            <li class="carouselDesktopIndicators" data-slide-to="3"></li>#}
+{#            <li class="carouselDesktopIndicators" data-slide-to="4"></li>#}
+{#        </ol>#}
+
+        <a class="carousel-control-next" role="button" data-slide="next">
+            <img class=""  src="{% static 'assets/img/landingpage/button_next.png' %}" alt="">
+            <span class="sr-only">Next</span>
+        </a>
+    </div>
 
 </div>

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block body_class %}template-homepage{% endblock %}
+
+{% block content %}
+    <link href="{% static 'assets/css/landingpage.css' %}" rel="stylesheet">
+    <style>
+        #header, #header .navbar-collapse, #header .navbar{
+            background-color: var(--white__color) !important;
+        }
+        #header .nav-link{
+            color: var(--dark__color) !important
+        }
+        .menu__dropdown img{
+            filter: none;
+        }
+        .navbar .logo a{
+            color: var(--dark__color) !important
+        }
+
+        .hamburger__icons rect{
+            fill: black
+        }
+
+    </style>
+
+    <!-- "We got it" section -->
+    {% include 'landingpage/partials/we_got_it_partial.html' %}
+
+    <!-- second test form -->
+    <section class="second__test__form white__background">
+
+        <div class="container d-flex flex-column align-items-center">
+            <div class="small__container w-50">
+
+                <p class="form__description"> Odpowiedz na dodatkowe pytania i przyśpiesz poszukiwania! </p>
+
+                <form class="mt-5 d-flex align-items-center flex-column">
+
+                    <div class="form__section w-100 video__section">
+                        <p class="video__from__game">{% trans 'Wideo z gry' %}</p>
+                        <textarea class="" name="" id="" rows="5" placeholder="Wklej linki do wideo"></textarea>
+                    </div>
+
+                    <div class="form__section mt-5 w-100">
+                        <p class="video__from__game">{% trans 'Dodatkowy komentarz' %}</p>
+                        <textarea
+                                class="extra__comment" name="" id="" rows="5"
+                                placeholder="Miejsce na informacje o: kontuzjach, oczekiwaniach, o Twoim agencie i aktualnym trenerze">
+                        </textarea>
+                    </div>
+
+                    {% with top=None bottom='10rem' %}
+                        {% include 'landingpage/partials/micro_messages.html' %}
+                    {% endwith %}
+
+                    <button disabled class="second__form__btn">{% trans 'Wyślij' %}</button>
+
+                </form>
+
+
+            </div>
+        </div>
+
+    </section>
+    <script src="{% static 'assets/js/landingpage/second_test_form.js' %}"></script>
+    <script>
+        let user = '{{ request.user.id }}';
+    </script>
+{% endblock %}

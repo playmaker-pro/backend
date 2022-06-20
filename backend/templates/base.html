@@ -106,7 +106,7 @@ onReady(function() {
   {% include 'partials/action_messages.html' %}
 
   {% block header %}
-      {% if request.path == '/landingpage/' %}
+      {% if 'transfer' in request.path %}
           {% include 'landingpage/navbar.html' %}
       {% else %}
         {% include 'partials/navbar.html' %}
@@ -135,11 +135,8 @@ onReady(function() {
   {% block footer %}
   <!-- ======= Footer ======= -->
   <footer id="footer">
-      {% if request.path == '/landingpage/' %}
+      {% include 'partials/footer.html' %}
 
-      {% else %}
-        {% include 'partials/footer.html' %}
-      {% endif %}
 
   </footer><!-- End Footer -->
   {% endblock footer %}
@@ -148,8 +145,9 @@ onReady(function() {
     {# parts of content which are by default hided from page viewers #}
   {% endblock %}
 
-  <a href="#" class="back-to-top"><i class="icofont-simple-up"></i></a>
-  
+  {% if request.path != '/landingpage/' %}
+    <a href="#" class="back-to-top"><i class="icofont-simple-up"></i></a>
+  {% endif %}
   {# Global javascript #}
 
   {% compress js %}
@@ -167,6 +165,9 @@ onReady(function() {
   <script src="{% static 'assets/vendor/aos/aos.js' %}"></script>
   <!-- App specific JS File -->
   <script src="{% static 'assets/js/main.js' %}"></script>
+    <script src="{% static 'assets/js/landingpage/navbar_color.js' %}"></script>
+    <script src="{% static 'assets/js/landingpage/small_nav.js' %}"></script>
+
   <script src="{% static 'assets/vendor/select2/select2.min.js' %}"></script>
   {% endcompress %}
 
@@ -189,6 +190,17 @@ onReady(function() {
           'data-aos-delay="800" data-aos="slide-down" ' +
           'data-delay="2000" role="alert" ' +
           'style=" border-radius:16px; padding:4px 8px; font-size: .8rem; width: fit-content; margin: 0 auto">' + body + '</div>'
+      );
+      $(".micro-message").toast('show', function() {});
+  }
+
+   function showToastErrorRedMessage(body){
+      $('#micro-messages-red').empty();
+      $('#micro-messages-red').append(
+          '<div class="alert alert-warning micro-message" ' +
+          'data-aos-delay="800" data-aos="slide-down" ' +
+          'data-delay="2000" role="alert" ' +
+          'style="display: block; border-radius:16px; padding:4px 8px; font-size: .8rem; width: fit-content; margin: 0 auto; background-color: #ffdddd">' + body + '</div>'
       );
       $(".micro-message").toast('show', function() {});
   }

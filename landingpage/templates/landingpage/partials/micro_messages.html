@@ -1,0 +1,21 @@
+<div
+        aria-live="polite"
+        aria-atomic="true"
+        style="z-index:1500;
+        position: absolute;
+        {% if top %}
+            top:{{ top }};
+        {% endif %}
+        {% if bottom %}
+            bottom: {{bottom}};
+        {% endif %}
+        width: 100%;"
+>
+  <!-- Position it -->
+  <div id="micro-messages-red">
+
+    {% comment %} <div class="alert alert-success micro-message" data-aos-anchor-placement="top-center" data-aos-delay="800" data-aos="slide-down" data-delay="2000"  role="alert" style=" border-radius:16px; padding:4px 8px; font-size: .8rem;">
+      zaobserowałeś piłkarza
+    </div> {% endcomment %}
+  </div>
+</div>
