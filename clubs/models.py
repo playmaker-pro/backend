@@ -103,8 +103,8 @@ class Club(models.Model, MappingMixin):
     @property
     @supress_exception
     def display_voivodeship(self):
-        if self.voivodeship_raw:
-            return conver_vivo_for_api(self.voivodeship_raw)
+        # if self.voivodeship_raw:
+        #     return conver_vivo_for_api(self.voivodeship_raw)
         return conver_vivo_for_api(self.voivodeship.name)
 
     def get_file_path(instance, filename):
@@ -136,12 +136,12 @@ class Club(models.Model, MappingMixin):
     )
 
     voivodeship_raw = models.CharField(
-        _("Wojewódźtwo"),
+        _("Województwo"),
         help_text=_("Wojewódźtwo w którym grasz."),
         max_length=255,
         blank=True,
         null=True,
-    )
+    )  # nie uzywane
 
     country = CountryField(
         _("Kraj"),
