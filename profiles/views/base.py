@@ -473,6 +473,14 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
         kwargs["observed"] = self.is_profile_observed(request.user, user)
         kwargs["show_user"] = user
         kwargs["modals"] = self.modal_activity(request.user)
+
+        if user.profile.updated:
+            # Activate verification modal
+
+            kwargs["modals"]['verification']['auto'] = True
+            user.profile.updated = False
+            user.profile.save()
+
         kwargs["page_title"] = self.set_show_profile_page_title()
 
         try:
@@ -737,10 +745,15 @@ class EditProfile(
         user_basic_form.save()
         profile = profile_form.save(commit=False)
         profile.user = user
+
+        # Initialize verification modal
+        profile.updated = True
         profile.save()
+
         messages.success(
             request, "Twój profil został zaktualizowany.", extra_tags="alter-success"
         )
+
         return redirect("profiles:show_self")
 
 

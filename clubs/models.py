@@ -141,7 +141,7 @@ class Club(models.Model, MappingMixin):
         max_length=255,
         blank=True,
         null=True,
-    )  # nie uzywane
+    )  # TODO:(l.remkowicz): followup needed to see if that can be safely removed from database scheme follow-up: PM-365
 
     country = CountryField(
         _("Kraj"),
@@ -645,7 +645,7 @@ class Team(models.Model, MappingMixin):
 
     # full_name will be calculated on save
     full_name = models.CharField(
-        _("Nazwa drużyny"), max_length=255, null=True, blank=True
+        _("Pełna nazwa drużyny"), max_length=255, null=True, blank=True
     )
 
     def get_permalink(self):

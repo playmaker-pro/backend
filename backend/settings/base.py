@@ -57,7 +57,6 @@ INSTALLED_APPS = [
     'fqa',
     'fantasy',
     'plays',
-    'resource',
     'landingpage',
 
     'data',  # external repo
@@ -118,6 +117,9 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.facebook',
 ]
 
+from sys import platform
+if not platform.startswith('win32'):
+    INSTALLED_APPS.append("resource")
 
 SITE_ID = 1
 
