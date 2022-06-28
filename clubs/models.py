@@ -103,8 +103,6 @@ class Club(models.Model, MappingMixin):
     @property
     @supress_exception
     def display_voivodeship(self):
-        # if self.voivodeship_raw:
-        #     return conver_vivo_for_api(self.voivodeship_raw)
         return conver_vivo_for_api(self.voivodeship.name)
 
     def get_file_path(instance, filename):

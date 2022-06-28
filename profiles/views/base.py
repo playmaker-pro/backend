@@ -475,7 +475,7 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
         kwargs["modals"] = self.modal_activity(request.user)
 
         if user.profile.updated:
-            # Activate verification modal
+            # Activate verification modal - relates to task feature/PM-360
 
             kwargs["modals"]['verification']['auto'] = True
             user.profile.updated = False

@@ -313,6 +313,7 @@ class PlayerProfileForm(BaseProfileForm):
                 ),
                 css_class="col-md-6",
             ),
+            # Relates to feature/PM-360
             # Fieldset(
             #     _('<h2 class="form-section-title">Klub</h2>'),
             #     Field("voivodeship_raw", wrapper_class="row"),

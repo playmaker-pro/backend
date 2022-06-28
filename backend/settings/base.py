@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'fantasy',
     'plays',
     'landingpage',
+    'resources',
 
     'data',  # external repo
     'stats',  # external repo
@@ -67,7 +68,7 @@ INSTALLED_APPS = [
     'easy_thumbnails',
     'djcelery',
     'django_user_agents',
-    
+
     'wagtail.contrib.forms',
     'wagtail.contrib.modeladmin',
     'wagtail.contrib.redirects',
@@ -117,9 +118,6 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.facebook',
 ]
 
-from sys import platform
-if not platform.startswith('win32'):
-    INSTALLED_APPS.append("resource")
 
 SITE_ID = 1
 
