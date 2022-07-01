@@ -31,7 +31,7 @@ a{
 }
 
 a:hover{
-    color: black !important;
+    /*color: black !important;*/
 }
 
 
@@ -1239,7 +1239,7 @@ svg text{
     opacity: 0.76;
 }
 
-#test__section .test__form__register p{
+.test__form__register{
     color: var(--white__color) !important;
     opacity: 1;
     margin-bottom: 0;
@@ -1248,10 +1248,6 @@ svg text{
     font-weight: 700;
     line-height: 22px;
     letter-spacing: 0.2px;
-}
-
-.test__form__register a {
-    color: white;
 }
 
 /* FAQ section */

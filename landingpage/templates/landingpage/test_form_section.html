@@ -103,7 +103,10 @@
             <p>
                Po zalogowaniu się lub rejestracji, wyświetlimy Ci formularz zgłoszeniowy. Jest to dla nas ważne, bo ułatwi nam dostęp do Twoich statystyk.
             </p>
-            <button class="test__form__register"><p><a href="{% url 'account_login' %}?next={{ request.path }}">Zaloguj się <span class="">lub zarejestruj</span></a></p></button>
+            <a href="{% url 'account_login' %}?next={{ request.path }}">
+                <button class="test__form__register">Zaloguj się <span class="">lub zarejestruj</span>
+                </button>
+            </a>
         </div>
 
     {% endif %}
