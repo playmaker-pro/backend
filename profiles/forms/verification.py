@@ -97,6 +97,27 @@ class ModelChoiceFieldNoValidation(forms.ChoiceField):
         return True
 
 
+class ClubModelChoiceFieldNoValidation(forms.ChoiceField):
+    def to_python(self, value):
+        if value in self.empty_values:
+            return None
+        try:
+            key = 'pk'
+            if isinstance(value, Club):
+                value = getattr(value, key)
+            value = Club.objects.get(**{key: value})
+        except (ValueError, TypeError, Club.DoesNotExist):
+            raise ValidationError(self.error_messages['invalid_choice'], code='invalid_choice')
+        return value
+
+    def validate(self, value):
+        return True
+
+    def valid_value(self, value):
+        """Check to see if the provided value is a valid choice."""
+        return True
+
+
 class VerificationForm(forms.ModelForm):
     """
     settings describes how filed will be build.
@@ -208,10 +229,13 @@ class ClubVerificationForm(VerificationForm):
         "club_role": {"help_text": "Jaka rolę pełnisz w klubie"},
         "team": {"help_text": "Klub którym zarządzasz"},
     }
-    team = forms.ModelChoiceField(
-        queryset=Club.objects.all(),
-        widget=forms.Select(attrs={"data-live-search": "true"}),
-    )
+
+    team = ClubModelChoiceFieldNoValidation()
+    # team = forms.ModelChoiceField(
+    #     queryset=Club.objects.all(),
+    #     widget=forms.Select(attrs={"data-live-search": "true"}),
+    # )
+
     building_fields = [
         ("club_role", {}),
     ]
