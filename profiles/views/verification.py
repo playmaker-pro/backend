@@ -43,6 +43,7 @@ class AccountVerification(LoginRequiredMixin, View):
         data["id"] = request.user.id
         data["preselected"] = preselected
         data["form"] = render_crispy_form(form)
+        data["is_club"] = request.user.is_club
         return JsonResponse(data)
 
     def post(self, request, *args, **kwargs):

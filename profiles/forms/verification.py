@@ -49,10 +49,10 @@ def get_all_teams():
 
 
 def get_all_clubs():
-    teams = cache.get('all_clubs')
+    teams = cache.get("all_clubs")
     if not teams:
         teams = Club.objects.all()
-        cache.set('all_clubs', teams)
+        cache.set("all_clubs", teams)
     return teams
 
 
@@ -81,12 +81,14 @@ class ModelChoiceFieldNoValidation(forms.ChoiceField):
         if value in self.empty_values:
             return None
         try:
-            key = 'pk'
+            key = "pk"
             if isinstance(value, Team):
                 value = getattr(value, key)
             value = Team.objects.get(**{key: value})
         except (ValueError, TypeError, Team.DoesNotExist):
-            raise ValidationError(self.error_messages['invalid_choice'], code='invalid_choice')
+            raise ValidationError(
+                self.error_messages["invalid_choice"], code="invalid_choice"
+            )
         return value
 
     def validate(self, value):
@@ -102,12 +104,14 @@ class ClubModelChoiceFieldNoValidation(forms.ChoiceField):
         if value in self.empty_values:
             return None
         try:
-            key = 'pk'
+            key = "pk"
             if isinstance(value, Club):
                 value = getattr(value, key)
             value = Club.objects.get(**{key: value})
         except (ValueError, TypeError, Club.DoesNotExist):
-            raise ValidationError(self.error_messages['invalid_choice'], code='invalid_choice')
+            raise ValidationError(
+                self.error_messages["invalid_choice"], code="invalid_choice"
+            )
         return value
 
     def validate(self, value):
@@ -147,9 +151,9 @@ class VerificationForm(forms.ModelForm):
     team_not_found = forms.BooleanField()
 
     def __init__(self, *args, **kwargs):
-        data = args[0] if args else kwargs.get('data', None)
+        data = args[0] if args else kwargs.get("data", None)
         if data:
-            print('data=', data)
+            print("data=", data)
         super().__init__(*args, **kwargs)
         self.default_field_settings = FieldConfig()
         self.helper = FormHelper(self)
@@ -176,7 +180,7 @@ class VerificationForm(forms.ModelForm):
         return instance
 
     def clean(self):
-        
+
         cleaned_data = super().clean()
         team = cleaned_data.get("team")
         text_club = cleaned_data.get("team_club_league_voivodeship_ver")
@@ -247,7 +251,6 @@ class ClubVerificationForm(VerificationForm):
         ]
 
 
-
 class CoachVerificationForm(VerificationForm):
     birth_date = forms.DateField(
         input_formats=["%Y-%m-%d"], widget=widgets.BootstrapDateTimePickerInput()
@@ -283,9 +286,7 @@ class PlayerVerificationForm(VerificationForm):
 
     building_fields = (("position_raw", {}), ("birth_date", {}), ("country", {}))
 
-    birth_date = forms.DateField(
-        widget=widgets.BootstrapDateTimePickerInput()
-    )
+    birth_date = forms.DateField(widget=widgets.BootstrapDateTimePickerInput())
 
     class Meta:
         model = models.PlayerProfile

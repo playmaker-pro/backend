@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
-from clubs.models import Team
+from clubs.models import Team, Club
 from rest_framework import viewsets
-from .serizalizer import TeamSerializer
+from .serizalizer import TeamSerializer, ClubSerializer
 
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
@@ -36,5 +36,21 @@ class TeamSearchApi(APIView):
             teams = teams.filter(name__icontains=q_name)
 
         serializer = TeamSerializer(teams, many=True, context={"request": request})
+
+        return Response({"results": serializer.data})
+
+
+class ClubSearchApi(APIView):
+    permission_classes = []
+
+    # @method_decorator(cache_page(60*60*2))
+    def get(self, request):
+        queryset = Club.objects.all().order_by("name")
+
+        q_name = request.query_params.get("q")
+        if q_name:
+            queryset = queryset.filter(name__icontains=q_name)
+
+        serializer = ClubSerializer(queryset, many=True, context={"request": request})
 
         return Response({"results": serializer.data})
