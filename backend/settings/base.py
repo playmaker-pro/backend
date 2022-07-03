@@ -57,8 +57,8 @@ INSTALLED_APPS = [
     'fqa',
     'fantasy',
     'plays',
-    'resource',
     'landingpage',
+    'resources',
 
     'data',  # external repo
     'stats',  # external repo
@@ -68,7 +68,7 @@ INSTALLED_APPS = [
     'easy_thumbnails',
     'djcelery',
     'django_user_agents',
-    
+
     'wagtail.contrib.forms',
     'wagtail.contrib.modeladmin',
     'wagtail.contrib.redirects',
@@ -330,6 +330,7 @@ ANNOUNCEMENT_DEFAULT_PLANS = [
 
 ANNOUNCEMENT_INITAL_PLAN = ANNOUNCEMENT_DEFAULT_PLANS[0]
 
+SEASON_DEFINITION = {"middle": 7}
 
 # Inquiries app
 INQUIRIES_INITAL_PLANS = [

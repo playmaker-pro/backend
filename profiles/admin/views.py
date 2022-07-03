@@ -29,6 +29,7 @@ class ProfileAdminBase(admin.ModelAdmin):
     search_fields = DEFAULT_PROFILE_SEARCHABLES
     display_fileds = DEFAULT_PROFILE_DISPLAY_FIELDS
     readonly_fields = ('data_prettified',)
+    exclude = ('voivodeship_raw',)
 
     def active(self, obj):
         return obj.is_active
@@ -37,7 +38,6 @@ class ProfileAdminBase(admin.ModelAdmin):
         return json_filed_data_prettified(instance.event_log)
 
     active.boolean = True
-
 
 
 @admin.register(models.ParentProfile)
@@ -52,7 +52,7 @@ class ManagerProfileAdmin(ProfileAdminBase):
 
 @admin.register(models.ScoutProfile)
 class ScoutProfileAdmin(ProfileAdminBase):
-    pass
+    exclude = ('voivodeship_raw',)
 
 
 @admin.register(models.GuestProfile)
@@ -128,7 +128,7 @@ update_with_profile_data.short_description = 'Updated selected verification obje
 
 @admin.register(models.ProfileVerificationStatus)
 class ProfileVerificationStatusAdmin(admin.ModelAdmin):
-    list_display = ('id', linkify('owner'), 'has_team', 'team_not_found', 'club', 'team', 'text', 'status', 'set_by', 'created_at', 'updated_at', linkify('previous'), 'get_next')
+    list_display = ('id', 'get_owner', 'has_team', 'team_not_found', 'club', 'team', 'text', 'status', 'set_by', 'created_at', 'updated_at', linkify('previous'), 'get_next')
     list_filter = ('owner__declared_role', 'status', OnlyLastVerificationFilter, HasDataMapperIdFilter, HasTextInputFilter, ('has_team', admin.BooleanFieldListFilter), ('team_not_found', admin.BooleanFieldListFilter), HasTeamObjectFilter, HasClubObjectFilter)
     actions = [update_with_profile_data]
 
@@ -138,7 +138,9 @@ class ProfileVerificationStatusAdmin(admin.ModelAdmin):
     #  TODO napisac swoja metode v
 
     def get_owner(self, obj):
-        return linkify(obj.profile)
+        if obj.owner is None:
+            return linkify('owner')(obj)
+        return linkify('profile')(obj.owner)
 
     get_next.short_description = 'NEXT'
 

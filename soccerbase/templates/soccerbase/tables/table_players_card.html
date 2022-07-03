@@ -11,7 +11,7 @@
         <div class="d-none d-md-inline col-md-3">Imię / nazwisko / wiek</div>
         <div class="col-5 col-md-1 text-left">Pozycja</div>
         <div class="col-6 col-md-1 text-left">Poziom rozgrywkowy</div>
-        <div class="col-5 col-md-2  text-left">Województwo</div>
+        <div class="col-5 col-md-2  text-left">Województwo zamieszkania</div>
         <div class="col-6 col-md-2 text-left">Drużyna</div>
         <div class="col-6 col-md-1 text-center"> Bramki - Mecze - Minuty</div>
         <div class="d-none d-md-inline col-md-1"></div>
@@ -53,7 +53,14 @@
                 <a href="{{ object.profile.team_object.get_league_permalink }}"> 
                     {{ object.profile.display_league_top_parent|default:'-'|title }}
                 </a>
-                , {{ object.profile.display_voivodeship|default:''|lower|truncatechars:25 }}
+            {{ object.profile.get_team_object }}
+                {% if object.profile.voivodeship %}
+                     , {{ object.profile.voivodeship|default:''|title|truncatechars:25 }}
+                {% elif  object.profile.get_team_object %}
+                     , {{ object.profile.get_team_object.club.voivodeship|title|truncatechars:25 }}
+                {% else %}
+                    ,
+                {% endif %}
             </div>
         </div>   
                                                     <div class="sc-cell d-none d-md-flex col-md-3">
@@ -78,7 +85,11 @@
                                                             </a>
                                                         </div >
                                                         <div class="sc-cell d-none d-md-flex col-5 col-md-2  text-left">
-                                                            {{ object.profile.display_voivodeship|default:''|lower|truncatechars:25 }}
+                                                            {% if object.profile.voivodeship %}
+                                                                {{ object.profile.voivodeship|default:''|title|truncatechars:25 }}
+                                                            {% elif  object.profile.get_team_object %}
+                                                                 {{ object.profile.get_team_object.club.voivodeship|title|truncatechars:25 }}
+                                                            {% endif %}
                                                         </div>
                                                         
                                                         <div class="sc-cell d-none d-md-flex col-6 col-md-2 text-left"> 
