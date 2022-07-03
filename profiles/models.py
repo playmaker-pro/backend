@@ -150,7 +150,7 @@ class EventLogMixin:
 
 class BaseProfile(models.Model, EventLogMixin):
     """Base profile model to held most common profile elements"""
-    
+
     PROFILE_TYPE = None
     AUTO_VERIFY = False  # flag to perform auto verification of User based on profile. If true - User.state will be switched to Verified
     VERIFICATION_FIELDS = []  # this is definition of profile fields which will be threaded as must-have params.
@@ -304,7 +304,6 @@ class BaseProfile(models.Model, EventLogMixin):
         if self.verification is None and self.user.is_need_verfication_role:
             self.verification = ProfileVerificationStatus.create_initial(self.user)
 
-        
         # Queen of the show
         super().save(*args, **kwargs)
 
@@ -573,7 +572,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     meta = models.JSONField(null=True, blank=True)
     meta_updated = models.DateTimeField(null=True, blank=True)
-    team_club_league_voivodeship_ver = models.CharField(_('team_club_league_voivodeship_ver'), max_length=355, help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'), blank=True, null=True,)
+    team_club_league_voivodeship_ver = models.CharField(_('team_club_league_voivodeship_ver'), max_length=355, help_text=_('Drużyna, klub, rozgrywki, województwo.'), blank=True, null=True,)
     team_object = models.ForeignKey(clubs_models.Team, on_delete=models.SET_NULL, related_name='players', null=True, blank=True)
     team_object_alt = models.ForeignKey(clubs_models.Team, on_delete=models.SET_NULL, related_name='players_alt', null=True, blank=True)
     club = models.CharField(_('Klub'), max_length=68, db_index=True, help_text=_('Klub w którym obecnie reprezentuejsz'), blank=True, null=True,)
@@ -582,13 +581,14 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     team_raw = models.CharField(_('Deklarowana Drużyna'), max_length=68, help_text=_('Drużyna w której deklarujesz że obecnie grasz'), blank=True, null=True)
     league = models.CharField(_('Rozgrywki'), max_length=68, db_index=True, help_text=_('Poziom rozgrywkowy'), blank=True, null=True)
     league_raw = models.CharField(_('Rozgrywki'), max_length=68, help_text=_('Poziom rozgrywkowy który deklarujesz że grasz.'), blank=True, null=True)
-    voivodeship = models.CharField(_('Wojewódźtwo'), help_text=_('Wojewódźtwo'), max_length=68, db_index=True, blank=True, null=True)
     voivodeship_raw = models.CharField(
-        _('Wojewódźtwo (raw)'), 
-        help_text=_('Wojewódźtwo w którym grasz.'), 
+        # TODO:(l.remkowicz):followup needed to see if that can be safely removed from database scheme follow-up: PM-365
+        _('Wojewódźtwo (raw)'),
+        help_text=_('Wojewódźtwo w którym grasz. Nie uzywane pole'),
         max_length=68, blank=True, null=True,
         choices=settings.VOIVODESHIP_CHOICES
         )
+
     birth_date = models.DateField(_('Data urodzenia'), blank=True, null=True)
     height = models.PositiveIntegerField(_('Wzrost'), help_text=_('Wysokość (cm) [130-210cm]'), blank=True, null=True, validators=[MinValueValidator(130), MaxValueValidator(210)])
     weight = models.PositiveIntegerField(_('Waga'), help_text=_('Waga(kg) [40-140kg]'), blank=True, null=True, validators=[MinValueValidator(40), MaxValueValidator(140)])
@@ -606,6 +606,14 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     laczynaspilka_url = models.URLField(_('LNP'), max_length=500, blank=True, null=True)
     min90_url = models.URLField(_('90min portal'), max_length=500, blank=True, null=True)
     transfermarket_url = models.URLField(_('TrasferMarket'), blank=True, null=True)
+    voivodeship = models.CharField(
+        _('Województwo zamieszkania'),
+        help_text='Wybierz województwo',
+        max_length=68,
+        blank=True,
+        null=True,
+        choices=settings.VOIVODESHIP_CHOICES
+    )
     address = AddressField(help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)
     # address = models.CharField(max_length=100, help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)
     practice_distance = models.PositiveIntegerField(_('Odległość na trening'), blank=True, null=True, help_text=_('Maksymalna odległośc na trening'), validators=[MinValueValidator(10), MaxValueValidator(500)])
@@ -625,14 +633,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     video_url_third = models.URLField(_('Youtube url nr 3'), blank=True, null=True)
     video_title_third = models.CharField(_('Tytuł nagrania nr 3'), max_length=235, blank=True, null=True)
     video_description_third = models.TextField(_('Temat i opis nagrania nr 3'), null=True, blank=True)
-    
-    voivodeship = models.CharField(
-        _('Województwo'),
-        max_length=68,
-        blank=True,
-        null=True,
-        choices=settings.VOIVODESHIP_CHOICES
-        )
+    updated = models.BooleanField(default=False)
 
     def display_position_fantasy(self):
         if self.position_fantasy is not None:
@@ -643,7 +644,8 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             return None
 
     def has_meta_entry_for(self, season: str):
-        '''checks if meta info exists for given season'''
+        """checks if meta info exists for given season"""
+
         if self.meta is None:
             return None
         return self.meta.get(season, None) is not None
@@ -765,7 +767,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             adpt = PlayerAdapter(self.data_mapper_id)  # commonly use adpt
             if utilites.is_allowed_interact_with_s38():  # are we on PROD and not Debug
                 self.update_data_player_object(adpt)  # send data to s38
-                self.trigger_refresh_data_player_stats(adpt)   # send trigger to s38 
+                self.trigger_refresh_data_player_stats(adpt)   # send trigger to s38
             self.calculate_data_from_data_models(adpt)  # update league, vivo, team from Players meta
             self.fetch_data_player_meta(adpt)  # update update meta   
 
@@ -798,7 +800,7 @@ class PlayerMetrics(models.Model):
     season_summary_updated = models.DateTimeField(null=True, blank=True)
     season = models.JSONField(null=True, blank=True)
     season_updated = models.DateTimeField(null=True, blank=True)
-        
+
     def _update_cached_field(self, attr: str, data, commit=True):
         setattr(self, attr, data)
         setattr(self, f'{attr}_updated', timezone.now())
@@ -830,12 +832,12 @@ class PlayerMetrics(models.Model):
         start = datetime.now()
         games_summary = adapters.PlayerLastGamesAdapter(_id).get(season=season_name, limit=3)  # should be profile.playermetrics.refresh_games_summary() and putted to celery.
         print(f"\t> PlayerLastGamesAdapter: {datetime.now() - start}")
-        
-        start = datetime.now() 
+
+        start = datetime.now()
         fantasy_summary = adapters.PlayerFantasyDataAdapter(_id).get(season=season_name)
         print(f"\t> PlayerFantasyDataAdapter: {datetime.now() - start}")
-        
-        start = datetime.now() 
+
+        start = datetime.now()
         season_summary = adapters.PlayerStatsSeasonAdapter(_id).get(season=season_name)
         print(f"\t> PlayerStatsSeasonAdapter: {datetime.now() - start}")
         self.update_summaries(games_summary, season_summary, fantasy_summary)
@@ -919,7 +921,7 @@ class ClubProfile(BaseProfile):
     CLUB_ROLE = (
         (5, 'Trener'),
         (1, 'Prezes'),
-        (2, 'Kierownik'), 
+        (2, 'Kierownik'),
         (3, 'Członek zarządu'),
         (4, 'Sztab szkoleniowy'),
         (6, 'V-ce prezes'),
@@ -1031,7 +1033,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
 
     team_club_league_voivodeship_ver = models.CharField(
-        _('Województwo3'),
+        _('Województwo'),
         max_length=355,
         help_text=_('Drużyna, klub, rozgrywki, wojewódźtwo.'),
         blank=True,
@@ -1084,7 +1086,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True)
 
     address = AddressField(help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)
-    
+
     voivodeship = models.CharField(
         _('Województwo zamieszkania'),
         max_length=68,
@@ -1119,7 +1121,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         data = self.get_season_carrier_data(season)
         if data:
             return data.get("total")
-        
+
     def calculate_metrics(self, seasons_behind: int = 1, season_name: str = None, requestor: User = None):
         """
         :param seasons_behind: if present it defines how many season we want to calucalte in past.

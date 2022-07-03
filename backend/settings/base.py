@@ -57,8 +57,8 @@ INSTALLED_APPS = [
     'fqa',
     'fantasy',
     'plays',
-    'resources',
     'landingpage',
+    'resources',
 
     'data',  # external repo
     'stats',  # external repo
@@ -68,7 +68,7 @@ INSTALLED_APPS = [
     'easy_thumbnails',
     'djcelery',
     'django_user_agents',
-    
+
     'wagtail.contrib.forms',
     'wagtail.contrib.modeladmin',
     'wagtail.contrib.redirects',
