@@ -1,4 +1,4 @@
-from clubs.models import Team
+from clubs.models import Team, Club
 from rest_framework import serializers
 
 
@@ -10,6 +10,20 @@ class TeamSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Team
+        fields = [
+            "id",
+            "text",
+        ]
+
+
+class ClubSerializer(serializers.HyperlinkedModelSerializer):
+    text = serializers.SerializerMethodField()
+
+    def get_text(self, obj):
+        return obj.name
+
+    class Meta:
+        model = Club
         fields = [
             "id",
             "text",

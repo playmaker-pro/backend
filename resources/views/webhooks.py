@@ -15,10 +15,11 @@ class WebhookPlayer(APIView):
         if player_id:
             player_id = int(player_id)
             from profiles.models import PlayerProfile
+
             try:
                 player = PlayerProfile.objects.get(data_mapper_id=player_id)
                 player.refresh_metrics(event_log_msg="Triggered by s38 as a webook.")
-                content = {f'data refreshed. for player={player} player-id:{player_id}'}
+                content = {f"data refreshed. for player={player} player-id:{player_id}"}
 
             except PlayerProfile.DoesNotExist:
                 content = {f"data do not exists for that ID {player_id}"}
@@ -26,7 +27,7 @@ class WebhookPlayer(APIView):
             except PlayerProfile.MultipleObjectsReturned:
                 player = PlayerProfile.objects.filter(data_mapper_id=player_id).first()
                 player.refresh_metrics(event_log_msg="Triggered by s38 as a webook")
-                content = {f'data refreshed. for player={player} player-id:{player_id}'}
+                content = {f"data refreshed. for player={player} player-id:{player_id}"}
         else:
-            content = {"No user with given data"}    
+            content = {"No user with given data"}
         return Response(content)
