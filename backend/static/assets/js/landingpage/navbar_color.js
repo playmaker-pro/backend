@@ -1,7 +1,13 @@
 const nav = document.querySelector('.navbar');
 const playA = nav.querySelector('.logo a');
 const hamburger = document.querySelector('.hamburger__icons');
-const hambList = hamburger.querySelectorAll('rect');
+const hambList = (() => {
+    if(hamburger){
+        return hamburger.querySelectorAll('rect');
+    }
+})()
+
+
 const scrollContainer = document.querySelector(".second__navbar_fixed");
 
 
@@ -27,11 +33,12 @@ window.onscroll = function () {
             document.querySelector('.email-logo').style.filter = 'invert(1)'
         }
         try{
-            document.querySelector('.menu__dropdown .dropdown-menu').style.backgroundColor = '#FFFFFF'
+            // document.querySelector('.menu__dropdown .dropdown-menu').style.backgroundColor = '#FFFFFF'
             document.querySelector('#header .dropdown-menu a').style.color = '#141414'
 
             document.querySelector('.nav-item .dropdown-menu').style.backgroundColor = '#FFFFFF'
         }catch(e){
+            console.log(e)
         }
 
         playA.classList.add('color__change');
@@ -69,10 +76,12 @@ window.onscroll = function () {
         }
 
         try{
-            document.querySelector('.menu__dropdown .dropdown-menu').style.backgroundColor = '#141414'
+            // document.querySelector('.menu__dropdown .dropdown-menu').style.backgroundColor = '#141414'
             document.querySelector('#header .dropdown-menu a').style.color = '#FFFFFF'
             document.querySelector('.nav-item .dropdown-menu').style.backgroundColor = '#141414'
-        }catch(e){}
+        }catch(e){
+            console.log(e)
+        }
 
     }
 };

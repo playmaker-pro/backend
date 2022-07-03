@@ -313,12 +313,13 @@ class PlayerProfileForm(BaseProfileForm):
                 ),
                 css_class="col-md-6",
             ),
-            Fieldset(
-                _('<h2 class="form-section-title">Klub</h2>'),
-                Field("voivodeship_raw", wrapper_class="row"),
-                Field("team", wrapper_class="row"),
-                css_class="col-md-6",
-            ),
+            # Relates to feature/PM-360
+            # Fieldset(
+            #     _('<h2 class="form-section-title">Klub</h2>'),
+            #     Field("voivodeship_raw", wrapper_class="row"),
+            #     Field("team", wrapper_class="row"),
+            #     css_class="col-md-6",
+            # ),
             Fieldset(
                 _('<h2 class="form-section-title">Współpraca</h2>'),
                 Field("agent_status", wrapper_class="row"),
