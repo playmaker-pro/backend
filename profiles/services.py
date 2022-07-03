@@ -253,6 +253,7 @@ class ProfileVerificationService:
 
             profile.save()
             self._verify_user()
+        # profile.save()
 
 
 class ProfileService:

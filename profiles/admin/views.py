@@ -29,6 +29,7 @@ class ProfileAdminBase(admin.ModelAdmin):
     search_fields = DEFAULT_PROFILE_SEARCHABLES
     display_fileds = DEFAULT_PROFILE_DISPLAY_FIELDS
     readonly_fields = ('data_prettified',)
+    exclude = ('voivodeship_raw',)
 
     def active(self, obj):
         return obj.is_active
@@ -37,7 +38,6 @@ class ProfileAdminBase(admin.ModelAdmin):
         return json_filed_data_prettified(instance.event_log)
 
     active.boolean = True
-
 
 
 @admin.register(models.ParentProfile)
@@ -52,7 +52,7 @@ class ManagerProfileAdmin(ProfileAdminBase):
 
 @admin.register(models.ScoutProfile)
 class ScoutProfileAdmin(ProfileAdminBase):
-    pass
+    exclude = ('voivodeship_raw',)
 
 
 @admin.register(models.GuestProfile)

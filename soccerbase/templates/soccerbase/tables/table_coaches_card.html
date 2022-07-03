@@ -18,7 +18,7 @@
         </div >
 
         <div class="col-5 col-md-2  text-left">
-             Województwo
+             Województwo zamieszkania
         </div>
         <div class="col-6 col-md-1 text-left"> 
            Licencja
@@ -66,7 +66,12 @@
                               <a href="{{ object.profile.team_object.get_league_permalink }}">
                                 {{ object.profile.display_league_top_parent|default:''|title  }}
                               </a>
-                              , {{ object.profile.display_voivodeship|default:''|lower|truncatechars:24 }} 
+                                {% if object.profile.voivodeship %}
+                                    , {{ object.profile.voivodeship|default:''|title|truncatechars:24 }}
+                                {% elif  object.profile.get_team_object %}
+                                     {{ object.profile.get_team_object.club.voivodeship|title|truncatechars:25 }}
+                                {% endif %}
+
                             </div>
                         </div>
             <div class="sc-cell d-none d-md-flex col-md-3">
@@ -90,7 +95,11 @@
               </a>
             </div >
             <div class="sc-cell d-none d-md-flex col-3 col-md-2 text-left">
-                {{ object.profile.display_voivodeship|default:''|lower  }}
+                {% if object.profile.voivodeship %}
+                    {{ object.profile.voivodeship|default:''|title  }}
+                {% elif  object.profile.get_team_object %}
+                     {{ object.profile.get_team_object.club.voivodeship|title|truncatechars:25 }}
+                {% endif %}
             </div>
             <div class=" sc-cell d-none d-md-flex col-3 col-md-1 text-left">
               {{ object.profile.get_licence_display|default:''|upper }}

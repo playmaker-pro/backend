@@ -94,10 +94,8 @@ class PlayersTable(TableView):
             queryset = queryset.filter(fullname__icontains=self.filter_first_last)
 
         if self.filter_vivo is not None:
-            vivos = [i.replace('-', '') for i in self.filter_vivo]
-            clauses = (Q(
-                playerprofile__team_object__club__voivodeship__name__icontains=p
-            ) for p in vivos)
+            vivos = [i for i in self.filter_vivo]
+            clauses = (Q(playerprofile__voivodeship__icontains=p) for p in vivos)
             query = reduce(operator.or_, clauses)
             queryset = queryset.filter(query)
 
@@ -163,7 +161,7 @@ class PlayerTalbeQuickFilter(generic.TemplateView, mixins.PaginateMixin, mixins.
 
         if self.filter_vivo is not None:
             vivos = [i for i in self.filter_vivo]
-            clauses = (Q(playerprofile__team_object__club__voivodeship__name=p) for p in vivos)
+            clauses = (Q(playerprofile__voivodeship__icontains=p) for p in vivos)
             query = reduce(operator.or_, clauses)
             queryset = queryset.filter(query)
 
@@ -230,7 +228,7 @@ class TeamsTable(TableView):
             queryset = queryset.filter(query)
 
         if self.filter_vivo is not None:
-            vivos = [i.replace('-', '') for i in self.filter_vivo]
+            vivos = [i.replace('-', '').lower() for i in self.filter_vivo]
             clauses = (Q(club__voivodeship__name__icontains=p) for p in vivos)
             query = reduce(operator.or_, clauses)
             queryset = queryset.filter(query)
@@ -274,9 +272,10 @@ class CoachesTable(TableView):
 
         if self.filter_vivo is not None:
 
-            voivo = [i.lower().replace('-', '') for i in self.filter_vivo]
-            clauses = (Q(coachprofile__team_object__club__voivodeship__name=p) for p in voivo)
+            voivo = [i for i in self.filter_vivo]
+            clauses = (Q(coachprofile__voivodeship__icontains=p) for p in voivo)
             query = reduce(operator.or_, clauses)
+
             queryset = queryset.filter(query)
 
         return queryset
