@@ -115,15 +115,27 @@ function get_verification_form(slug) {
           //$("#verification-form-body select").addClass("selectpicker").selectpicker('refresh'); 
           $("#id_position_raw").addClass("selectpicker").selectpicker('refresh'); 
           $("#id_country").addClass("selectpicker").selectpicker('refresh'); 
-          $('#id_team').select2({
-            width: '100%',
-            placeholder: "Wybierz klub",
-            ajax: {
-              url: '/resources/teams_search?i=' + json.id,
-              dataType:  'json',
-              cache: true
-            }
-          });
+          if (json.is_club) {
+            $('#id_team').select2({
+              width: '100%',
+              placeholder: "Wybierz klub",
+              ajax: {
+                url: '/resources/clubs_search?i=' + json.id,
+                dataType: 'json',
+                cache: true
+              }
+            });
+          } else {
+            $('#id_team').select2({
+              width: '100%',
+              placeholder: "Wybierz klub",
+              ajax: {
+                url: '/resources/teams_search?i=' + json.id,
+                dataType:  'json',
+                cache: true
+              }
+            });
+        }
 
           if(json.preselected) { 
               var newOption = new Option(json.preselected.text, json.preselected.id, false, true);

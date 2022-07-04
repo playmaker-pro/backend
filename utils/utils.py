@@ -16,10 +16,11 @@ def get_current_season(date=None) -> str:
         jeśli miesiąc daty systemowej jest >= 7 to pokaż sezon (aktualny rok/ aktualny rok + 1).
         Jeśli < 7 th (aktualny rok - 1 / aktualny rok)
     """
+    season_middle = settings.SEASON_DEFINITION.get("middle")
     if date is None:
         date = timezone.now()
 
-    if date.month >= 7:
+    if date.month >= season_middle:
         season = f'{date.year}/{date.year + 1}'
     else:
         season = f'{date.year - 1}/{date.year}'

@@ -11,7 +11,7 @@ from django.http import Http404, JsonResponse
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import View
-from clubs.api.serizalizer import TeamSerializer
+from clubs.api.serizalizer import ClubSerializer, TeamSerializer
 
 User = get_user_model()
 
@@ -33,12 +33,17 @@ class AccountVerification(LoginRequiredMixin, View):
             form = forms.ClubVerificationForm(instance=profile)
         if request.user.is_player:
             form = forms.PlayerVerificationForm(instance=profile)
-        if request.user.profile.team_object:
-            preselected = TeamSerializer(request.user.profile.team_object).data
+        if request.user.is_club:
+            if request.user.profile.club_object:
+                preselected = ClubSerializer(request.user.profile.club_object).data
+        else:
+            if request.user.profile.team_object:
+                preselected = TeamSerializer(request.user.profile.team_object).data
         data = {}
         data["id"] = request.user.id
         data["preselected"] = preselected
         data["form"] = render_crispy_form(form)
+        data["is_club"] = request.user.is_club
         return JsonResponse(data)
 
     def post(self, request, *args, **kwargs):
@@ -70,8 +75,13 @@ class AccountVerification(LoginRequiredMixin, View):
             "errors": None,
             "preselected": None,
         }
-        if request.user.profile.team_object:
-            preselected = TeamSerializer(request.user.profile.team_object).data
+        if request.user.is_club:
+            if request.user.profile.club_object:
+                preselected = ClubSerializer(request.user.profile.club_object).data
+        else:
+            if request.user.profile.team_object:
+                preselected = TeamSerializer(request.user.profile.team_object).data
+
         if verification_form.is_valid():
             verification_form.save()
             messages.success(
