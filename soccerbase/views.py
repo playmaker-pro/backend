@@ -98,11 +98,11 @@ class PlayersTable(TableView):
         if self.filter_vivo is not None:
             vivos = [i for i in self.filter_vivo]
 
-            clauses = (Q(playerprofile__voivodeship__icontains=p) for p in vivos)
+            clauses = (Q(playerprofile__voivodeship=p) for p in vivos)
             query = reduce(operator.or_, clauses)
 
             players_with_no_vivo = queryset.filter(playerprofile__voivodeship__isnull=True)
-            no_vivo_clause = (Q(playerprofile__team_object__club__voivodeship__name__icontains=p) for p in vivos)
+            no_vivo_clause = (Q(playerprofile__team_object__club__voivodeship__name=p) for p in vivos)
             no_vivo_query = reduce(operator.or_, no_vivo_clause)
 
             queryset = queryset.filter(query)
@@ -297,7 +297,7 @@ class CoachesTable(TableView):
             query = reduce(operator.or_, clauses)
 
             coaches_with_no_vivo = queryset.filter(coachprofile__voivodeship__isnull=True)
-            no_vivo_clause = (Q(coachprofile__team_object__club__voivodeship__name__icontains=p) for p in vivos)
+            no_vivo_clause = (Q(coachprofile__team_object__club__voivodeship__name=p) for p in vivos)
             no_vivo_query = reduce(operator.or_, no_vivo_clause)
 
             second_queryset = coaches_with_no_vivo.filter(no_vivo_query)
