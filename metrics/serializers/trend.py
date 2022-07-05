@@ -1,5 +1,3 @@
-
-
 class TrendSerializer:
     @classmethod
     def serialize(cls, game, team_name):

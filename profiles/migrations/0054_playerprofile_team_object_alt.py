@@ -7,14 +7,20 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0026_auto_20210206_1612'),
-        ('profiles', '0053_playerprofile_meta_updated'),
+        ("clubs", "0026_auto_20210206_1612"),
+        ("profiles", "0053_playerprofile_meta_updated"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='playerprofile',
-            name='team_object_alt',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='players_alt', to='clubs.team'),
+            model_name="playerprofile",
+            name="team_object_alt",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="players_alt",
+                to="clubs.team",
+            ),
         ),
     ]

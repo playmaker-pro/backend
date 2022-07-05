@@ -32,6 +32,7 @@ from collections import defaultdict
 
 #         return data
 
+
 class GameSerializer:
     def __init__(self, obj):
         self.data = {
@@ -67,7 +68,7 @@ class GameSerializer:
 
 
 class TeamStatSerializer:
-    '''
+    """
     game = models.ForeignKey("Game", on_delete=models.CASCADE, related_name="teamstat")
     team = models.ForeignKey("Team", on_delete=models.CASCADE, related_name="teamstats")
     coach = models.ForeignKey(
@@ -85,59 +86,59 @@ class TeamStatSerializer:
 
     Celem jest możliwość pokazania:
     kariera [sezon, team, rozgrywki, wygrane mecze, remisy, porażki, śr. pkt na mecz,  bramki strzelone vs. bramki stracone (klubu, który prowadził)]
-    mecze [data, rozgrywki, gospodarz, gość, wynik]  
+    mecze [data, rozgrywki, gospodarz, gość, wynik]
 
-    Za wygrany mecz 3 pkt, za remis 1 pkt, za porażkę 0 pkt. 
+    Za wygrany mecz 3 pkt, za remis 1 pkt, za porażkę 0 pkt.
 
 
-    {"date": "2021-08-15", 
-    "goals": 0, "result": {"name": "W", "type": "won"}, 
-    "date_year": "2021", "red_cards": 0, "team_name": "zagłębie lubin", 
-    "clear_goal": null, "date_short": "08/15", "host_score": 2, 
-    "team_goals": 0, 
-    "guest_score": 0, 
-    "league_name": "Ekstraklasa", 
-    "yellow_cards": 0, "host_team_name": "ZAGŁĘBIE LUBIN", 
+    {"date": "2021-08-15",
+    "goals": 0, "result": {"name": "W", "type": "won"},
+    "date_year": "2021", "red_cards": 0, "team_name": "zagłębie lubin",
+    "clear_goal": null, "date_short": "08/15", "host_score": 2,
+    "team_goals": 0,
+    "guest_score": 0,
+    "league_name": "Ekstraklasa",
+    "yellow_cards": 0, "host_team_name": "ZAGŁĘBIE LUBIN",
     "minutes_played": 23, "guest_team_name": "Pogoń Szczecin"}
-    '''
+    """
+
     def __init__(self, queryset):
         self.data = []
         for ts in queryset:
-            d = {
-                "team": ts.team.name,
-                "result": self.get_result(ts)
-            }
+            d = {"team": ts.team.name, "result": self.get_result(ts)}
             d.update(GameSerializer(ts.game).data)
             self.data.append(d)
 
     def get_result(self, obj):
         """result = models.IntegerField(default=-1, help_text='1 meas won, 0 means draw, 2 means lost , -1 is default')"""
         if obj.result == 1:
-            return {'name': 'W', 'type': 'won'}
+            return {"name": "W", "type": "won"}
         elif obj.result == 0:
-            return {'name': 'R', 'type': 'draw'}
+            return {"name": "R", "type": "draw"}
         elif obj.result == 2:
-            return {'name': 'P', 'type': 'lost'}
+            return {"name": "P", "type": "lost"}
         else:
-            return {'name': None, 'type': None}
+            return {"name": None, "type": None}
 
 
 class CoachGamesAdapter:
     serializer = TeamStatSerializer
 
     def get(self, coach_id: int, season_name: str = None, limit: int = None):
-        print(f"data metrics calculation for: coach_id:{coach_id} season:{season_name} with limit: {limit} ")
+        print(
+            f"data metrics calculation for: coach_id:{coach_id} season:{season_name} with limit: {limit} "
+        )
         queryset = (
             TeamStat.objects.all()
             .select_related("game", "game__league", "game__season", "coach")
             .order_by("-game__date")
         )  # values(*self.fileds.keys())
-        assert isinstance(coach_id, int), f"coach_id need to be type of inteager. it is: {type(coach_id)}"
-        queryset = queryset.filter(
-            coach__id=coach_id,
-            game__season__name=season_name)
+        assert isinstance(
+            coach_id, int
+        ), f"coach_id need to be type of inteager. it is: {type(coach_id)}"
+        queryset = queryset.filter(coach__id=coach_id, game__season__name=season_name)
 
-        print(f'data to calculate: {queryset.count()}')
+        print(f"data to calculate: {queryset.count()}")
         if limit is not None:
             queryset = queryset[:limit]
         return self.serializer(queryset).data
@@ -159,6 +160,7 @@ class CoachStatSerializer:
     lost_goals = models.IntegerField(default=0)
     gain_goals = models.IntegerField(default=0)
     """
+
     def _set_default(self, data_storage):
         data_storage["games_played"] = 0
         data_storage["wons"] = 0
@@ -231,20 +233,24 @@ class CoachStatSerializer:
 
 
 class CoachCarrierAdapter:
-    """Calculates metrics for coach stats for given season.
-    """
+    """Calculates metrics for coach stats for given season."""
+
     serializer = CoachStatSerializer
 
     def get(self, coach_id: int, season_name: str = None, limit: int = None):
-        print(f"# data `season carrier` metrics calculation for: coach_id:{coach_id} season:{season_name} with limit: {limit} ")
+        print(
+            f"# data `season carrier` metrics calculation for: coach_id:{coach_id} season:{season_name} with limit: {limit} "
+        )
         queryset = (
             TeamStat.objects.all()
             .select_related("game", "game__league", "game__season", "coach")
             .order_by("-game__date")
         )  # values(*self.fileds.keys())
-        assert isinstance(coach_id, int), f"coach_id need to be type of inteager. it is: {type(coach_id)}"
+        assert isinstance(
+            coach_id, int
+        ), f"coach_id need to be type of inteager. it is: {type(coach_id)}"
         queryset = queryset.filter(coach__id=coach_id, game__season__name=season_name)
-        print(f'# data `season carrier` to calculate: {queryset.count()}')
+        print(f"# data `season carrier` to calculate: {queryset.count()}")
         if limit is not None:
             queryset = queryset[:limit]
         return self.serializer(queryset).data
@@ -277,7 +283,8 @@ class CoachCarrierAdapterPercentage(CoachCarrierAdapter):
             kpis["draws_percent"] = 0
             kpis["loses_percent"] = 0
         return data
-    
+
+
 # class CoachStatsAdapter:
 #     def get(
 #         self,

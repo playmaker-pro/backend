@@ -12,41 +12,131 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('users', '0005_auto_20201128_1256'),
+        ("users", "0005_auto_20201128_1256"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AnnouncementPlan',
+            name="AnnouncementPlan",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Plan name', max_length=255, verbose_name='Plan Name')),
-                ('limit', models.PositiveIntegerField(help_text='Limit how many actions are allowed', verbose_name='Plan limit')),
-                ('sort', models.PositiveIntegerField(default=0, help_text='Used to sort plans low numbers threaded as lowest plans. Default=0 which means this is not set.', verbose_name='Soring')),
-                ('description', models.TextField(blank=True, help_text='Short description what is rationale behind plan. Used only for internal purpose.', null=True, verbose_name='Description')),
-                ('default', models.BooleanField(default=False, help_text='Defines if this is default plan selected during account creation.', verbose_name='Default Plan')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Plan name", max_length=255, verbose_name="Plan Name"
+                    ),
+                ),
+                (
+                    "limit",
+                    models.PositiveIntegerField(
+                        help_text="Limit how many actions are allowed",
+                        verbose_name="Plan limit",
+                    ),
+                ),
+                (
+                    "sort",
+                    models.PositiveIntegerField(
+                        default=0,
+                        help_text="Used to sort plans low numbers threaded as lowest plans. Default=0 which means this is not set.",
+                        verbose_name="Soring",
+                    ),
+                ),
+                (
+                    "description",
+                    models.TextField(
+                        blank=True,
+                        help_text="Short description what is rationale behind plan. Used only for internal purpose.",
+                        null=True,
+                        verbose_name="Description",
+                    ),
+                ),
+                (
+                    "default",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Defines if this is default plan selected during account creation.",
+                        verbose_name="Default Plan",
+                    ),
+                ),
             ],
             options={
-                'unique_together': {('name', 'limit')},
+                "unique_together": {("name", "limit")},
             },
         ),
         migrations.CreateModel(
-            name='AnnouncementUserQuota',
+            name="AnnouncementUserQuota",
             fields=[
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='users.user')),
-                ('counter', models.PositiveIntegerField(default=0, help_text='Current number of used inquiries.', verbose_name='Obecna ilość ogłoszeń')),
-                ('plan', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='marketplace.announcementplan')),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to="users.user",
+                    ),
+                ),
+                (
+                    "counter",
+                    models.PositiveIntegerField(
+                        default=0,
+                        help_text="Current number of used inquiries.",
+                        verbose_name="Obecna ilość ogłoszeń",
+                    ),
+                ),
+                (
+                    "plan",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="marketplace.announcementplan",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Announcement',
+            name="Announcement",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('body', models.TextField(blank=True, null=True)),
-                ('status', django_fsm.FSMField(choices=[('NOWE', 'NOWE'), ('WYSŁANO', 'WYSŁANO'), ('PRZECZYTANE', 'PRZECZYTANE'), ('ZAAKCEPTOWANE', 'ZAAKCEPTOWANE'), ('ODRZUCONE', 'ODRZUCONE')], default='NOWE', max_length=50)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('creator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='announcement_creator', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("body", models.TextField(blank=True, null=True)),
+                (
+                    "status",
+                    django_fsm.FSMField(
+                        choices=[
+                            ("NOWE", "NOWE"),
+                            ("WYSŁANO", "WYSŁANO"),
+                            ("PRZECZYTANE", "PRZECZYTANE"),
+                            ("ZAAKCEPTOWANE", "ZAAKCEPTOWANE"),
+                            ("ODRZUCONE", "ODRZUCONE"),
+                        ],
+                        default="NOWE",
+                        max_length=50,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "creator",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="announcement_creator",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

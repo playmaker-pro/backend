@@ -8,53 +8,116 @@ import phonenumber_field.modelfields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0007_auto_20201112_1614'),
+        ("profiles", "0007_auto_20201112_1614"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='playerprofile',
-            name='agent_phone',
-            field=phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128, null=True, region=None, verbose_name='Numer telefonu do agenta / agencji'),
+            model_name="playerprofile",
+            name="agent_phone",
+            field=phonenumber_field.modelfields.PhoneNumberField(
+                blank=True,
+                max_length=128,
+                null=True,
+                region=None,
+                verbose_name="Numer telefonu do agenta / agencji",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='club_raw',
-            field=models.CharField(blank=True, help_text='Klub w którym obecnie reprezentuejsz', max_length=68, null=True, verbose_name='Klub'),
+            model_name="playerprofile",
+            name="club_raw",
+            field=models.CharField(
+                blank=True,
+                help_text="Klub w którym obecnie reprezentuejsz",
+                max_length=68,
+                null=True,
+                verbose_name="Klub",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='height',
-            field=models.PositiveIntegerField(blank=True, help_text='Wysokość (cm) [130-210cm]', null=True, validators=[django.core.validators.MinValueValidator(130), django.core.validators.MaxValueValidator(210)], verbose_name='Wzrost'),
+            model_name="playerprofile",
+            name="height",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="Wysokość (cm) [130-210cm]",
+                null=True,
+                validators=[
+                    django.core.validators.MinValueValidator(130),
+                    django.core.validators.MaxValueValidator(210),
+                ],
+                verbose_name="Wzrost",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='league_raw',
-            field=models.CharField(blank=True, help_text='Poziom rozgrywkowy', max_length=68, null=True, verbose_name='Rozgrywki'),
+            model_name="playerprofile",
+            name="league_raw",
+            field=models.CharField(
+                blank=True,
+                help_text="Poziom rozgrywkowy",
+                max_length=68,
+                null=True,
+                verbose_name="Rozgrywki",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='phone',
-            field=phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128, null=True, region=None, verbose_name='Telefon'),
+            model_name="playerprofile",
+            name="phone",
+            field=phonenumber_field.modelfields.PhoneNumberField(
+                blank=True,
+                max_length=128,
+                null=True,
+                region=None,
+                verbose_name="Telefon",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='practice_distance',
-            field=models.PositiveIntegerField(blank=True, help_text='Maksymalna odległośc na trening', null=True, validators=[django.core.validators.MinValueValidator(10), django.core.validators.MaxValueValidator(500)], verbose_name='Maksymalna odległość na trening'),
+            model_name="playerprofile",
+            name="practice_distance",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="Maksymalna odległośc na trening",
+                null=True,
+                validators=[
+                    django.core.validators.MinValueValidator(10),
+                    django.core.validators.MaxValueValidator(500),
+                ],
+                verbose_name="Maksymalna odległość na trening",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='team_raw',
-            field=models.CharField(blank=True, help_text='Drużyna w której obecnie grasz', max_length=68, null=True, verbose_name='Drużyna'),
+            model_name="playerprofile",
+            name="team_raw",
+            field=models.CharField(
+                blank=True,
+                help_text="Drużyna w której obecnie grasz",
+                max_length=68,
+                null=True,
+                verbose_name="Drużyna",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='voivodeship_raw',
-            field=models.CharField(blank=True, help_text='Wojewódźtwo', max_length=68, null=True, verbose_name='Wojewódźtwo'),
+            model_name="playerprofile",
+            name="voivodeship_raw",
+            field=models.CharField(
+                blank=True,
+                help_text="Wojewódźtwo",
+                max_length=68,
+                null=True,
+                verbose_name="Wojewódźtwo",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='weight',
-            field=models.PositiveIntegerField(blank=True, help_text='Waga(kg) [40-140kg]', null=True, validators=[django.core.validators.MinValueValidator(40), django.core.validators.MaxValueValidator(140)], verbose_name='Waga'),
+            model_name="playerprofile",
+            name="weight",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="Waga(kg) [40-140kg]",
+                null=True,
+                validators=[
+                    django.core.validators.MinValueValidator(40),
+                    django.core.validators.MaxValueValidator(140),
+                ],
+                verbose_name="Waga",
+            ),
         ),
     ]

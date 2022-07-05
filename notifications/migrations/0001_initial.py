@@ -9,15 +9,23 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('users', '0005_auto_20201128_1256'),
+        ("users", "0005_auto_20201128_1256"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='NotificationSetting',
+            name="NotificationSetting",
             fields=[
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='users.user')),
-                ('weekly_report', models.BooleanField(default=True)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to="users.user",
+                    ),
+                ),
+                ("weekly_report", models.BooleanField(default=True)),
             ],
         ),
     ]

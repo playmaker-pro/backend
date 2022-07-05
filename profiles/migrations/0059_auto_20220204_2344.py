@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0058_auto_20220130_1815'),
+        ("profiles", "0058_auto_20220130_1815"),
     ]
 
     operations = [
@@ -18,8 +18,33 @@ class Migration(migrations.Migration):
         #     field=models.CharField(blank=True, choices=[('Dolnośląskie', 'Dolnośląskie'), ('kujawsko-pomorskie', 'Kujawsko-Pomorskie'), ('lubelskie', 'Lubelskie'), ('lubuskie', 'Lubuskie'), ('łódzkie', 'Łódzkie'), ('małopolskie', 'Małopolskie'), ('mazowieckie', 'Mazowieckie'), ('opolskie', 'Opolskie'), ('podkarpackie', 'Podkarpackie'), ('podlaskie', 'Podlaskie'), ('pomorskie', 'Pomorskie'), ('śląskie', 'Śląskie'), ('świętokrzyskie', 'Świętokrzyskie'), ('warmińsko-mazurskie', 'Warmińsko-Mazurskie'), ('wielkopolskie', 'Wielkopolskie'), ('zachodniopomorskie', 'Zachodniopomorskie')], max_length=68, null=True, verbose_name='Województwo'),
         # ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='voivodeship',
-            field=models.CharField(blank=True, choices=[('Dolnośląskie', 'Dolnośląskie'), ('kujawsko-pomorskie', 'Kujawsko-Pomorskie'), ('lubelskie', 'Lubelskie'), ('lubuskie', 'Lubuskie'), ('łódzkie', 'Łódzkie'), ('małopolskie', 'Małopolskie'), ('mazowieckie', 'Mazowieckie'), ('opolskie', 'Opolskie'), ('podkarpackie', 'Podkarpackie'), ('podlaskie', 'Podlaskie'), ('pomorskie', 'Pomorskie'), ('śląskie', 'Śląskie'), ('świętokrzyskie', 'Świętokrzyskie'), ('warmińsko-mazurskie', 'Warmińsko-Mazurskie'), ('wielkopolskie', 'Wielkopolskie'), ('zachodniopomorskie', 'Zachodniopomorskie')], db_index=True, help_text='Województwo', max_length=68, null=True, verbose_name='Województwo'),
+            model_name="playerprofile",
+            name="voivodeship",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("Dolnośląskie", "Dolnośląskie"),
+                    ("kujawsko-pomorskie", "Kujawsko-Pomorskie"),
+                    ("lubelskie", "Lubelskie"),
+                    ("lubuskie", "Lubuskie"),
+                    ("łódzkie", "Łódzkie"),
+                    ("małopolskie", "Małopolskie"),
+                    ("mazowieckie", "Mazowieckie"),
+                    ("opolskie", "Opolskie"),
+                    ("podkarpackie", "Podkarpackie"),
+                    ("podlaskie", "Podlaskie"),
+                    ("pomorskie", "Pomorskie"),
+                    ("śląskie", "Śląskie"),
+                    ("świętokrzyskie", "Świętokrzyskie"),
+                    ("warmińsko-mazurskie", "Warmińsko-Mazurskie"),
+                    ("wielkopolskie", "Wielkopolskie"),
+                    ("zachodniopomorskie", "Zachodniopomorskie"),
+                ],
+                db_index=True,
+                help_text="Województwo",
+                max_length=68,
+                null=True,
+                verbose_name="Województwo",
+            ),
         ),
     ]

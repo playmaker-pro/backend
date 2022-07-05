@@ -6,48 +6,64 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0033_auto_20201207_1147'),
+        ("profiles", "0033_auto_20201207_1147"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='coachprofile',
-            name='facebook_url',
-            field=models.URLField(blank=True, max_length=500, null=True, verbose_name='Facebook'),
+            model_name="coachprofile",
+            name="facebook_url",
+            field=models.URLField(
+                blank=True, max_length=500, null=True, verbose_name="Facebook"
+            ),
         ),
         migrations.AlterField(
-            model_name='guestprofile',
-            name='facebook_url',
-            field=models.URLField(blank=True, max_length=500, null=True, verbose_name='Facebook'),
+            model_name="guestprofile",
+            name="facebook_url",
+            field=models.URLField(
+                blank=True, max_length=500, null=True, verbose_name="Facebook"
+            ),
         ),
         migrations.AlterField(
-            model_name='managerprofile',
-            name='facebook_url',
-            field=models.URLField(blank=True, max_length=500, null=True, verbose_name='Facebook'),
+            model_name="managerprofile",
+            name="facebook_url",
+            field=models.URLField(
+                blank=True, max_length=500, null=True, verbose_name="Facebook"
+            ),
         ),
         migrations.AlterField(
-            model_name='parentprofile',
-            name='facebook_url',
-            field=models.URLField(blank=True, max_length=500, null=True, verbose_name='Facebook'),
+            model_name="parentprofile",
+            name="facebook_url",
+            field=models.URLField(
+                blank=True, max_length=500, null=True, verbose_name="Facebook"
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='facebook_url',
-            field=models.URLField(blank=True, max_length=500, null=True, verbose_name='Facebook'),
+            model_name="playerprofile",
+            name="facebook_url",
+            field=models.URLField(
+                blank=True, max_length=500, null=True, verbose_name="Facebook"
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='laczynaspilka_url',
-            field=models.URLField(blank=True, max_length=500, null=True, verbose_name='LNP'),
+            model_name="playerprofile",
+            name="laczynaspilka_url",
+            field=models.URLField(
+                blank=True, max_length=500, null=True, verbose_name="LNP"
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='min90_url',
-            field=models.URLField(blank=True, max_length=500, null=True, verbose_name='90min portal'),
+            model_name="playerprofile",
+            name="min90_url",
+            field=models.URLField(
+                blank=True, max_length=500, null=True, verbose_name="90min portal"
+            ),
         ),
         migrations.AlterField(
-            model_name='scoutprofile',
-            name='facebook_url',
-            field=models.URLField(blank=True, max_length=500, null=True, verbose_name='Facebook'),
+            model_name="scoutprofile",
+            name="facebook_url",
+            field=models.URLField(
+                blank=True, max_length=500, null=True, verbose_name="Facebook"
+            ),
         ),
     ]

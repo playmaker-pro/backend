@@ -7,21 +7,35 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0047_auto_20211226_2331'),
+        ("clubs", "0047_auto_20211226_2331"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='JuniorLeague',
+            name="JuniorLeague",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('order', models.IntegerField(default=0)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                ("order", models.IntegerField(default=0)),
             ],
         ),
         migrations.AddField(
-            model_name='league',
-            name='name_junior',
-            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.SET_NULL, to='clubs.juniorleague'),
+            model_name="league",
+            name="name_junior",
+            field=models.ForeignKey(
+                blank=True,
+                default=None,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="clubs.juniorleague",
+            ),
         ),
     ]

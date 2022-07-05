@@ -7,17 +7,24 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='QuestionAnswer',
+            name="QuestionAnswer",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('visible', models.BooleanField(default=True)),
-                ('question_html', models.TextField(blank=True, null=True)),
-                ('answer_html', models.TextField(blank=True, null=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("visible", models.BooleanField(default=True)),
+                ("question_html", models.TextField(blank=True, null=True)),
+                ("answer_html", models.TextField(blank=True, null=True)),
             ],
         ),
     ]

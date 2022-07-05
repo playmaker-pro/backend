@@ -211,10 +211,7 @@ class UserAdminPanel(UserAdmin):
         "get_team_object",
         "get_team_club_league_voivodeship_ver",
     )
-    list_filter = (
-        "state",
-        "declared_role"
-    )
+    list_filter = ("state", "declared_role")
     search_fields = ("username", "first_name", "last_name", "declared_role")
 
     actions = [verify_one]

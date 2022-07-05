@@ -6,13 +6,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0008_auto_20201112_1635'),
+        ("profiles", "0008_auto_20201112_1635"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='playerprofile',
-            name='position_raw',
-            field=models.IntegerField(blank=True, choices=[(1, 'Bramkarz'), (2, 'Obrońca Lewy'), (3, 'Obrońca Prawy'), (4, 'Obrońca Środkowy'), (5, 'Pomocnik defensywny (6)'), (6, 'Pomocnik środkowy (8)'), (7, 'Pomocnik ofensywny (10)'), (8, 'Skrzydłowy'), (9, 'Napastnik')], null=True, verbose_name='Pozycja'),
+            model_name="playerprofile",
+            name="position_raw",
+            field=models.IntegerField(
+                blank=True,
+                choices=[
+                    (1, "Bramkarz"),
+                    (2, "Obrońca Lewy"),
+                    (3, "Obrońca Prawy"),
+                    (4, "Obrońca Środkowy"),
+                    (5, "Pomocnik defensywny (6)"),
+                    (6, "Pomocnik środkowy (8)"),
+                    (7, "Pomocnik ofensywny (10)"),
+                    (8, "Skrzydłowy"),
+                    (9, "Napastnik"),
+                ],
+                null=True,
+                verbose_name="Pozycja",
+            ),
         ),
     ]

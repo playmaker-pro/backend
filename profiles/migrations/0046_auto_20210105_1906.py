@@ -7,23 +7,50 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0045_auto_20210105_1650'),
+        ("profiles", "0045_auto_20210105_1650"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='playerprofile',
-            name='licence',
-            field=models.IntegerField(blank=True, choices=[(1, 'UEFA PRO'), (2, 'UEFA A'), (3, 'UEFA EY A'), (4, 'UEFA B'), (5, 'UEFA C'), (5, 'GRASS C'), (5, 'GRASS D'), (5, 'UEFA Futsal B'), (5, 'PZPN A'), (5, 'PZPN B')], null=True, verbose_name='Licencja'),
+            model_name="playerprofile",
+            name="licence",
+            field=models.IntegerField(
+                blank=True,
+                choices=[
+                    (1, "UEFA PRO"),
+                    (2, "UEFA A"),
+                    (3, "UEFA EY A"),
+                    (4, "UEFA B"),
+                    (5, "UEFA C"),
+                    (5, "GRASS C"),
+                    (5, "GRASS D"),
+                    (5, "UEFA Futsal B"),
+                    (5, "PZPN A"),
+                    (5, "PZPN B"),
+                ],
+                null=True,
+                verbose_name="Licencja",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='agent_name',
-            field=models.CharField(blank=True, max_length=45, null=True, verbose_name='Nazwa agenta'),
+            model_name="playerprofile",
+            name="agent_name",
+            field=models.CharField(
+                blank=True, max_length=45, null=True, verbose_name="Nazwa agenta"
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='practice_distance',
-            field=models.PositiveIntegerField(blank=True, help_text='Maksymalna odległośc na trening', null=True, validators=[django.core.validators.MinValueValidator(10), django.core.validators.MaxValueValidator(500)], verbose_name='Odległość na trening'),
+            model_name="playerprofile",
+            name="practice_distance",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="Maksymalna odległośc na trening",
+                null=True,
+                validators=[
+                    django.core.validators.MinValueValidator(10),
+                    django.core.validators.MaxValueValidator(500),
+                ],
+                verbose_name="Odległość na trening",
+            ),
         ),
     ]

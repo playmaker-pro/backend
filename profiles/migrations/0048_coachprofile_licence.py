@@ -6,13 +6,29 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0047_remove_playerprofile_licence'),
+        ("profiles", "0047_remove_playerprofile_licence"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='coachprofile',
-            name='licence',
-            field=models.IntegerField(blank=True, choices=[(1, 'UEFA PRO'), (2, 'UEFA A'), (3, 'UEFA EY A'), (4, 'UEFA B'), (5, 'UEFA C'), (5, 'GRASS C'), (5, 'GRASS D'), (5, 'UEFA Futsal B'), (5, 'PZPN A'), (5, 'PZPN B')], null=True, verbose_name='Licencja'),
+            model_name="coachprofile",
+            name="licence",
+            field=models.IntegerField(
+                blank=True,
+                choices=[
+                    (1, "UEFA PRO"),
+                    (2, "UEFA A"),
+                    (3, "UEFA EY A"),
+                    (4, "UEFA B"),
+                    (5, "UEFA C"),
+                    (5, "GRASS C"),
+                    (5, "GRASS D"),
+                    (5, "UEFA Futsal B"),
+                    (5, "PZPN A"),
+                    (5, "PZPN B"),
+                ],
+                null=True,
+                verbose_name="Licencja",
+            ),
         ),
     ]

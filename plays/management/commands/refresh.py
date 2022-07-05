@@ -11,10 +11,14 @@ class Command(BaseCommand):
         return self.update_handler.service.allowed_keynames
 
     def add_arguments(self, parser):
+        parser.add_argument("-i", "--id", type=int, default=None)
         parser.add_argument(
-            "-i", "--id", type=int, default=None
+            "-k",
+            "--keyname",
+            type=str,
+            default=None,
+            help=f"Allowed keynames={self.allowed_keynames}",
         )
-        parser.add_argument("-k", "--keyname", type=str, default=None, help=f"Allowed keynames={self.allowed_keynames}")
 
     def handle(self, *args, **options):
         _id = options.get("id")
@@ -24,7 +28,6 @@ class Command(BaseCommand):
         else:
             ids = None
 
-        self.stdout.write(
-            self.style.SUCCESS(f"Parameters: {ids}, {keyname}"))
+        self.stdout.write(self.style.SUCCESS(f"Parameters: {ids}, {keyname}"))
         print("--------------------")
         self.update_handler.run(verbose=True, ids=ids, keyname=keyname)

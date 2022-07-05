@@ -6,72 +6,72 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0036_auto_20201209_1835'),
+        ("profiles", "0036_auto_20201209_1835"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='club',
+            model_name="clubprofile",
+            name="club",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='club_raw',
+            model_name="clubprofile",
+            name="club_raw",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='league',
+            model_name="clubprofile",
+            name="league",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='league_raw',
+            model_name="clubprofile",
+            name="league_raw",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='team',
+            model_name="clubprofile",
+            name="team",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='team_raw',
+            model_name="clubprofile",
+            name="team_raw",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='voivodeship',
+            model_name="clubprofile",
+            name="voivodeship",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='voivodeship_raw',
+            model_name="clubprofile",
+            name="voivodeship_raw",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='club',
+            model_name="coachprofile",
+            name="club",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='club_raw',
+            model_name="coachprofile",
+            name="club_raw",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='league',
+            model_name="coachprofile",
+            name="league",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='league_raw',
+            model_name="coachprofile",
+            name="league_raw",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='team',
+            model_name="coachprofile",
+            name="team",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='team_raw',
+            model_name="coachprofile",
+            name="team_raw",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='voivodeship',
+            model_name="coachprofile",
+            name="voivodeship",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='voivodeship_raw',
+            model_name="coachprofile",
+            name="voivodeship_raw",
         ),
     ]

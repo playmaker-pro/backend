@@ -6,13 +6,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0017_auto_20201117_0326'),
+        ("profiles", "0017_auto_20201117_0326"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='playerprofile',
-            name='team_club_league_voivodeship_ver',
-            field=models.CharField(blank=True, help_text='Drużyna, klub, rozgrywki, wojewódźtwo.', max_length=355, null=True, verbose_name='team_club_league_voivodeship_ver'),
+            model_name="playerprofile",
+            name="team_club_league_voivodeship_ver",
+            field=models.CharField(
+                blank=True,
+                help_text="Drużyna, klub, rozgrywki, wojewódźtwo.",
+                max_length=355,
+                null=True,
+                verbose_name="team_club_league_voivodeship_ver",
+            ),
         ),
     ]

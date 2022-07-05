@@ -8,14 +8,20 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('address', '0003_auto_20200830_1851'),
-        ('profiles', '0044_auto_20210105_1611'),
+        ("address", "0003_auto_20200830_1851"),
+        ("profiles", "0044_auto_20210105_1611"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='playerprofile',
-            name='address',
-            field=address.models.AddressField(blank=True, help_text='Miasto z którego dojeżdżam na trening', null=True, on_delete=django.db.models.deletion.SET_NULL, to='address.address'),
+            model_name="playerprofile",
+            name="address",
+            field=address.models.AddressField(
+                blank=True,
+                help_text="Miasto z którego dojeżdżam na trening",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="address.address",
+            ),
         ),
     ]

@@ -7,13 +7,18 @@ import users.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0006_auto_20201222_1256'),
+        ("users", "0006_auto_20201222_1256"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='picture',
-            field=models.ImageField(blank=True, null=True, upload_to=users.models.User.get_file_path, verbose_name='Zdjęcie'),
+            model_name="user",
+            name="picture",
+            field=models.ImageField(
+                blank=True,
+                null=True,
+                upload_to=users.models.User.get_file_path,
+                verbose_name="Zdjęcie",
+            ),
         ),
     ]

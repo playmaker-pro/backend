@@ -2,12 +2,13 @@ from .models import InquiryRequest
 
 
 def unseen_requests(queryset, user):
-    return queryset.filter(
-        recipient=user,
-        status__in=InquiryRequest.UNSEEN_STATES)
+    return queryset.filter(recipient=user, status__in=InquiryRequest.UNSEEN_STATES)
+
 
 def unseen_user_requests(user):
-    return InquiryRequest.objects.filter(recipient=user, status=InquiryRequest.STATUS_SENT)
+    return InquiryRequest.objects.filter(
+        recipient=user, status=InquiryRequest.STATUS_SENT
+    )
 
 
 def update_requests_with_read_status(queryset, user):
@@ -15,4 +16,3 @@ def update_requests_with_read_status(queryset, user):
         if request.recipient == user:
             request.read()
             request.save()
-

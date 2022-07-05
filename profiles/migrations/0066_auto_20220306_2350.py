@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0065_auto_20220306_2345'),
+        ("profiles", "0065_auto_20220306_2345"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='profileverificationstatus',
-            name='has_team',
+            model_name="profileverificationstatus",
+            name="has_team",
             field=models.BooleanField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='profileverificationstatus',
-            name='team_not_found',
+            model_name="profileverificationstatus",
+            name="team_not_found",
             field=models.BooleanField(blank=True, null=True),
         ),
     ]

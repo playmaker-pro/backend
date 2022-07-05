@@ -10,25 +10,28 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('marketplace', '0006_announcement_positions'),
+        ("marketplace", "0006_announcement_positions"),
     ]
 
     operations = [
         migrations.AlterModelManagers(
-            name='announcement',
+            name="announcement",
             managers=[
-                ('active', django.db.models.manager.Manager()),
+                ("active", django.db.models.manager.Manager()),
             ],
         ),
         migrations.AddField(
-            model_name='announcement',
-            name='subscribers',
+            model_name="announcement",
+            name="subscribers",
             field=models.ManyToManyField(to=settings.AUTH_USER_MODEL),
         ),
         migrations.AddField(
-            model_name='announcementplan',
-            name='days',
-            field=models.DurationField(default=datetime.timedelta, help_text='Number of days to set after which plan expires.'),
+            model_name="announcementplan",
+            name="days",
+            field=models.DurationField(
+                default=datetime.timedelta,
+                help_text="Number of days to set after which plan expires.",
+            ),
             preserve_default=False,
         ),
     ]

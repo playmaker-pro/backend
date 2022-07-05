@@ -7,24 +7,37 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0054_auto_20220108_1845'),
+        ("clubs", "0054_auto_20220108_1845"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='SectionGrouping',
+            name="SectionGrouping",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
             ],
         ),
         migrations.AlterModelOptions(
-            name='league',
-            options={'ordering': ('order', 'section__name')},
+            name="league",
+            options={"ordering": ("order", "section__name")},
         ),
         migrations.AlterField(
-            model_name='league',
-            name='section',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='clubs.sectiongrouping'),
+            model_name="league",
+            name="section",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="clubs.sectiongrouping",
+            ),
         ),
     ]

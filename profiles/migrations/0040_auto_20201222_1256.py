@@ -6,13 +6,24 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0039_auto_20201216_1955'),
+        ("profiles", "0039_auto_20201216_1955"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='rolechangerequest',
-            name='new',
-            field=models.CharField(choices=[('P', 'Piłkarz'), ('T', 'Trener'), ('C', 'Klub / Szkółka piłkarska'), ('M', 'Agent piłkarski'), ('S', 'Skaut'), ('R', 'Rodzic małego piłkarza'), ('G', 'Kibic')], max_length=100),
+            model_name="rolechangerequest",
+            name="new",
+            field=models.CharField(
+                choices=[
+                    ("P", "Piłkarz"),
+                    ("T", "Trener"),
+                    ("C", "Klub / Szkółka piłkarska"),
+                    ("M", "Agent piłkarski"),
+                    ("S", "Skaut"),
+                    ("R", "Rodzic małego piłkarza"),
+                    ("G", "Kibic"),
+                ],
+                max_length=100,
+            ),
         ),
     ]

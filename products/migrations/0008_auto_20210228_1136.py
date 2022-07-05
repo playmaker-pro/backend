@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('products', '0007_product_slug'),
+        ("products", "0007_product_slug"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='product',
-            name='contact_email',
+            model_name="product",
+            name="contact_email",
             field=models.EmailField(blank=True, max_length=254, null=True),
         ),
         migrations.AddField(
-            model_name='product',
-            name='send_email_to_admin',
+            model_name="product",
+            name="send_email_to_admin",
             field=models.BooleanField(default=False),
         ),
     ]

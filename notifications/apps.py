@@ -2,7 +2,7 @@ from django.apps import AppConfig
 
 
 class NotificationConfig(AppConfig):
-    name = 'notifications'
+    name = "notifications"
     verbose_name = "User notifications"
 
     def ready(self):

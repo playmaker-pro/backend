@@ -8,13 +8,11 @@ class SeasonService:
 
 
 class AdapterBase:
-
     def get_mapping_name(self, name):
-        return f',,{name},,'
+        return f",,{name},,"
 
 
 class TeamAdapter(AdapterBase):
-
     def match_name_or_mapping(self, name: str):
         try:
             return Team.objects.get(name__iexact=name)
@@ -35,8 +33,8 @@ class TeamAdapter(AdapterBase):
             except Team.DoesNotExist:
                 return None
 
-class ClubAdapter(AdapterBase):
 
+class ClubAdapter(AdapterBase):
     def match_name_or_mapping(self, name: str):
         try:
             return Club.objects.get(name__iexact=name)

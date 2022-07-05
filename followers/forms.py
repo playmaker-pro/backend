@@ -11,15 +11,14 @@ class PinForm(forms.ModelForm):
 
     class Meta:
         model = Pin
-        exclude = ['board']
+        exclude = ["board"]
 
     def save(self, *args, **kwargs):
         # board_name = self.cleaned_data['board_name']
-        user = self.cleaned_data['user']
-        remove = bool(int(self.cleaned_data.get('remove', 0) or 0))
+        user = self.cleaned_data["user"]
+        remove = bool(int(self.cleaned_data.get("remove", 0) or 0))
         if remove:
-            pins = Pin.objects.filter(
-                user=user, item=self.cleaned_data['item'])
+            pins = Pin.objects.filter(user=user, item=self.cleaned_data["item"])
             for pin in pins:
                 manager.remove_pin(pin)
                 pin.delete()
@@ -46,9 +45,9 @@ class FollowForm(forms.Form):
     remove = forms.IntegerField(required=False)
 
     def save(self):
-        user = self.cleaned_data['user']
-        target = self.cleaned_data['target']
-        remove = bool(int(self.cleaned_data.get('remove', 0) or 0))
+        user = self.cleaned_data["user"]
+        target = self.cleaned_data["target"]
+        remove = bool(int(self.cleaned_data.get("remove", 0) or 0))
 
         if remove:
             follows = Follow.objects.filter(user=user, target=target)

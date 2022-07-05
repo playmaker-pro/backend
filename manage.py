@@ -4,12 +4,13 @@ import sys
 
 if __name__ == "__main__":
 
-    config = 'dev'
+    config = "dev"
 
     try:
         from backend.settings import local
+
         config = local.CONFIGURATION
-        print(f':: loading {config} configuration')
+        print(f":: loading {config} configuration")
     except:
         pass
 

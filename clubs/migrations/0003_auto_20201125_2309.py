@@ -7,17 +7,17 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0002_club_editors'),
+        ("clubs", "0002_club_editors"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='club',
-            options={'verbose_name': 'Klub', 'verbose_name_plural': 'Kluby'},
+            name="club",
+            options={"verbose_name": "Klub", "verbose_name_plural": "Kluby"},
         ),
         migrations.AddField(
-            model_name='team',
-            name='slug',
+            model_name="team",
+            name="slug",
             field=models.UUIDField(blank=True, default=uuid.uuid4, editable=False),
         ),
     ]

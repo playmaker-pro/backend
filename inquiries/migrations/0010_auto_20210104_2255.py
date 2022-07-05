@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('inquiries', '0009_inquiryrequest_category'),
+        ("inquiries", "0009_inquiryrequest_category"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='inquiryrequest',
-            name='category',
-            field=models.CharField(choices=[('user', 'user'), ('team', 'team'), ('club', 'club')], default='user', max_length=255),
+            model_name="inquiryrequest",
+            name="category",
+            field=models.CharField(
+                choices=[("user", "user"), ("team", "team"), ("club", "club")],
+                default="user",
+                max_length=255,
+            ),
         ),
     ]

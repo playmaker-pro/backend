@@ -2,17 +2,13 @@ from stream_framework.feed_managers.base import Manager
 from stream_framework.feed_managers.base import FanoutPriority
 
 from .models import Follow
-from .pin_feed import AggregatedPinFeed, PinFeed, \
-    UserPinFeed
+from .pin_feed import AggregatedPinFeed, PinFeed, UserPinFeed
 
 
 class PinManager(Manager):
     # this example has both a normal feed and an aggregated feed (more like
     # how facebook or wanelo uses feeds)
-    feed_classes = dict(
-        normal=PinFeed,
-        aggregated=AggregatedPinFeed
-    )
+    feed_classes = dict(normal=PinFeed, aggregated=AggregatedPinFeed)
     user_feed_class = UserPinFeed
 
     def add_pin(self, pin):
@@ -26,7 +22,8 @@ class PinManager(Manager):
         self.remove_user_activity(pin.user.id, activity)
 
     def get_user_follower_ids(self, user_id):
-        ids = Follow.objects.filter(target=user_id).values_list('user_id', flat=True)
-        return {FanoutPriority.HIGH:ids}
+        ids = Follow.objects.filter(target=user_id).values_list("user_id", flat=True)
+        return {FanoutPriority.HIGH: ids}
+
 
 manager = PinManager()

@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0018_auto_20210117_1515'),
+        ("clubs", "0018_auto_20210117_1515"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='team',
-            name='visible',
-            field=models.BooleanField(default=True, help_text='Visible on database'),
+            model_name="team",
+            name="visible",
+            field=models.BooleanField(default=True, help_text="Visible on database"),
         ),
     ]

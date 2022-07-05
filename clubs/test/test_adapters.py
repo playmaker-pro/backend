@@ -1,4 +1,3 @@
-
 import logging
 
 import pytest
@@ -19,9 +18,9 @@ class TestClubAdapter(TestCase):
         self.adpt = TeamAdapter()
 
     def test_team_can_be_found_by_name_and_mapping(self):
-        assert self.team == self.adpt.match_name_or_mapping('XXX')
-        assert self.team == self.adpt.match_name_or_mapping('YYY')
-        assert self.team == self.adpt.match_name_or_mapping('TEAMX')
+        assert self.team == self.adpt.match_name_or_mapping("XXX")
+        assert self.team == self.adpt.match_name_or_mapping("YYY")
+        assert self.team == self.adpt.match_name_or_mapping("TEAMX")
 
 
 class ClubClubAdapter(TestCase):
@@ -30,6 +29,6 @@ class ClubClubAdapter(TestCase):
         self.adpt = ClubAdapter()
 
     def test_team_can_be_found_by_name_and_mapping(self):
-        assert self.club == self.adpt.match_name_or_mapping('XXX')
-        assert self.club == self.adpt.match_name_or_mapping('YYY')
-        assert self.club == self.adpt.match_name_or_mapping('CLUBX')
+        assert self.club == self.adpt.match_name_or_mapping("XXX")
+        assert self.club == self.adpt.match_name_or_mapping("YYY")
+        assert self.club == self.adpt.match_name_or_mapping("CLUBX")

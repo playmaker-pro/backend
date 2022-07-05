@@ -34,7 +34,7 @@ class Command(BaseCommand):
         players = models.PlayerProfile.objects.filter(
             user__declared_role=definitions.PLAYER_SHORT,
             data_mapper_id__isnull=False,
-            user__last_login__gt=datetime.now() - timedelta(days=30)
+            user__last_login__gt=datetime.now() - timedelta(days=30),
         )
 
         methods = [
@@ -71,7 +71,7 @@ class Command(BaseCommand):
                         elif selected_method == method:
                             self.execute_method(player, method, *args, **kwargs)
                     player.save()
-                    print('-----------')
+                    print("-----------")
 
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f"ERROR > : {e}"))
@@ -83,7 +83,9 @@ class Command(BaseCommand):
 
             reset_queries()
 
-    def execute_method(self, profile: models.ParentProfile, method: str, *args, **kwargs):
+    def execute_method(
+        self, profile: models.ParentProfile, method: str, *args, **kwargs
+    ):
         start = datetime.now()
         getattr(profile, method)(*args, **kwargs)
         print(f"> \t calc: {method}: {datetime.now() - start}")

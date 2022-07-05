@@ -6,18 +6,65 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0059_auto_20220211_0029'),
+        ("profiles", "0059_auto_20220211_0029"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='coachprofile',
-            name='voivodeship',
-            field=models.CharField(blank=True, choices=[('Dolnośląskie', 'Dolnośląskie'), ('Kujawsko-pomorskie', 'Kujawsko-pomorskie'), ('Lubelskie', 'Lubelskie'), ('Lubuskie', 'Lubuskie'), ('Łódzkie', 'Łódzkie'), ('Małopolskie', 'Małopolskie'), ('Mazowieckie', 'Mazowieckie'), ('Opolskie', 'Opolskie'), ('Podkarpackie', 'Podkarpackie'), ('Podlaskie', 'Podlaskie'), ('Pomorskie', 'Pomorskie'), ('Śląskie', 'Śląskie'), ('Świętokrzyskie', 'Świętokrzyskie'), ('Warmińsko-Mazurskie', 'Warmińsko-Mazurskie'), ('Wielkopolskie', 'Wielkopolskie'), ('Zachodniopomorskie', 'Zachodniopomorskie')], max_length=20, null=True, verbose_name='Województwo2'),
+            model_name="coachprofile",
+            name="voivodeship",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("Dolnośląskie", "Dolnośląskie"),
+                    ("Kujawsko-pomorskie", "Kujawsko-pomorskie"),
+                    ("Lubelskie", "Lubelskie"),
+                    ("Lubuskie", "Lubuskie"),
+                    ("Łódzkie", "Łódzkie"),
+                    ("Małopolskie", "Małopolskie"),
+                    ("Mazowieckie", "Mazowieckie"),
+                    ("Opolskie", "Opolskie"),
+                    ("Podkarpackie", "Podkarpackie"),
+                    ("Podlaskie", "Podlaskie"),
+                    ("Pomorskie", "Pomorskie"),
+                    ("Śląskie", "Śląskie"),
+                    ("Świętokrzyskie", "Świętokrzyskie"),
+                    ("Warmińsko-Mazurskie", "Warmińsko-Mazurskie"),
+                    ("Wielkopolskie", "Wielkopolskie"),
+                    ("Zachodniopomorskie", "Zachodniopomorskie"),
+                ],
+                max_length=20,
+                null=True,
+                verbose_name="Województwo2",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='voivodeship_raw',
-            field=models.CharField(blank=True, choices=[('Dolnośląskie', 'Dolnośląskie'), ('Kujawsko-pomorskie', 'Kujawsko-pomorskie'), ('Lubelskie', 'Lubelskie'), ('Lubuskie', 'Lubuskie'), ('Łódzkie', 'Łódzkie'), ('Małopolskie', 'Małopolskie'), ('Mazowieckie', 'Mazowieckie'), ('Opolskie', 'Opolskie'), ('Podkarpackie', 'Podkarpackie'), ('Podlaskie', 'Podlaskie'), ('Pomorskie', 'Pomorskie'), ('Śląskie', 'Śląskie'), ('Świętokrzyskie', 'Świętokrzyskie'), ('Warmińsko-Mazurskie', 'Warmińsko-Mazurskie'), ('Wielkopolskie', 'Wielkopolskie'), ('Zachodniopomorskie', 'Zachodniopomorskie')], help_text='Wojewódźtwo w którym grasz.', max_length=68, null=True, verbose_name='Wojewódźtwo (raw)'),
+            model_name="playerprofile",
+            name="voivodeship_raw",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("Dolnośląskie", "Dolnośląskie"),
+                    ("Kujawsko-pomorskie", "Kujawsko-pomorskie"),
+                    ("Lubelskie", "Lubelskie"),
+                    ("Lubuskie", "Lubuskie"),
+                    ("Łódzkie", "Łódzkie"),
+                    ("Małopolskie", "Małopolskie"),
+                    ("Mazowieckie", "Mazowieckie"),
+                    ("Opolskie", "Opolskie"),
+                    ("Podkarpackie", "Podkarpackie"),
+                    ("Podlaskie", "Podlaskie"),
+                    ("Pomorskie", "Pomorskie"),
+                    ("Śląskie", "Śląskie"),
+                    ("Świętokrzyskie", "Świętokrzyskie"),
+                    ("Warmińsko-Mazurskie", "Warmińsko-Mazurskie"),
+                    ("Wielkopolskie", "Wielkopolskie"),
+                    ("Zachodniopomorskie", "Zachodniopomorskie"),
+                ],
+                help_text="Wojewódźtwo w którym grasz.",
+                max_length=68,
+                null=True,
+                verbose_name="Wojewódźtwo (raw)",
+            ),
         ),
     ]

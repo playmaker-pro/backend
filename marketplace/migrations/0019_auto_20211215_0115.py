@@ -8,19 +8,27 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0045_auto_20211108_2309'),
-        ('marketplace', '0018_clubforcoachannouncement_coachforclubannouncement'),
+        ("clubs", "0045_auto_20211108_2309"),
+        ("marketplace", "0018_clubforcoachannouncement_coachforclubannouncement"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='coachforclubannouncement',
-            name='league',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='coach_for_club_announcement_league', to='clubs.league'),
+            model_name="coachforclubannouncement",
+            name="league",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="coach_for_club_announcement_league",
+                to="clubs.league",
+            ),
         ),
         migrations.AlterField(
-            model_name='coachforclubannouncement',
-            name='practice_distance',
-            field=models.CharField(max_length=3, validators=[django.core.validators.RegexValidator('^\\d{1,3}$')]),
+            model_name="coachforclubannouncement",
+            name="practice_distance",
+            field=models.CharField(
+                max_length=3,
+                validators=[django.core.validators.RegexValidator("^\\d{1,3}$")],
+            ),
         ),
     ]

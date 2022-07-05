@@ -6,27 +6,29 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0053_auto_20220108_1542'),
+        ("clubs", "0053_auto_20220108_1542"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='league',
-            old_name='search_index',
-            new_name='search_tokens',
+            model_name="league",
+            old_name="search_index",
+            new_name="search_tokens",
         ),
         migrations.RemoveField(
-            model_name='league',
-            name='_grouping_index',
+            model_name="league",
+            name="_grouping_index",
         ),
         migrations.AlterField(
-            model_name='league',
-            name='data_seasons',
-            field=models.ManyToManyField(blank=True, to='clubs.Season'),
+            model_name="league",
+            name="data_seasons",
+            field=models.ManyToManyField(blank=True, to="clubs.Season"),
         ),
         migrations.AlterField(
-            model_name='league',
-            name='visible',
-            field=models.BooleanField(default=False, help_text='Determine if that league will be visible'),
+            model_name="league",
+            name="visible",
+            field=models.BooleanField(
+                default=False, help_text="Determine if that league will be visible"
+            ),
         ),
     ]

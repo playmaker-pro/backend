@@ -6,38 +6,56 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0037_auto_20201210_1850'),
+        ("profiles", "0037_auto_20201210_1850"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='playerprofile',
-            name='video_description_second',
-            field=models.TextField(blank=True, null=True, verbose_name='Temat i opis nr 2'),
+            model_name="playerprofile",
+            name="video_description_second",
+            field=models.TextField(
+                blank=True, null=True, verbose_name="Temat i opis nr 2"
+            ),
         ),
         migrations.AddField(
-            model_name='playerprofile',
-            name='video_description_third',
-            field=models.TextField(blank=True, null=True, verbose_name='Temat i opis nagrania nr 3'),
+            model_name="playerprofile",
+            name="video_description_third",
+            field=models.TextField(
+                blank=True, null=True, verbose_name="Temat i opis nagrania nr 3"
+            ),
         ),
         migrations.AddField(
-            model_name='playerprofile',
-            name='video_title_second',
-            field=models.CharField(blank=True, max_length=235, null=True, verbose_name='Tytuł nagrania nr 2'),
+            model_name="playerprofile",
+            name="video_title_second",
+            field=models.CharField(
+                blank=True,
+                max_length=235,
+                null=True,
+                verbose_name="Tytuł nagrania nr 2",
+            ),
         ),
         migrations.AddField(
-            model_name='playerprofile',
-            name='video_title_third',
-            field=models.CharField(blank=True, max_length=235, null=True, verbose_name='Tytuł nagrania nr 3'),
+            model_name="playerprofile",
+            name="video_title_third",
+            field=models.CharField(
+                blank=True,
+                max_length=235,
+                null=True,
+                verbose_name="Tytuł nagrania nr 3",
+            ),
         ),
         migrations.AddField(
-            model_name='playerprofile',
-            name='video_url_second',
-            field=models.URLField(blank=True, null=True, verbose_name='Youtube url nr 2'),
+            model_name="playerprofile",
+            name="video_url_second",
+            field=models.URLField(
+                blank=True, null=True, verbose_name="Youtube url nr 2"
+            ),
         ),
         migrations.AddField(
-            model_name='playerprofile',
-            name='video_url_third',
-            field=models.URLField(blank=True, null=True, verbose_name='Youtube url nr 3'),
+            model_name="playerprofile",
+            name="video_url_third",
+            field=models.URLField(
+                blank=True, null=True, verbose_name="Youtube url nr 3"
+            ),
         ),
     ]

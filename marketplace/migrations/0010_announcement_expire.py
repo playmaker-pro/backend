@@ -7,13 +7,13 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('marketplace', '0009_announcement_disabled'),
+        ("marketplace", "0009_announcement_disabled"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='announcement',
-            name='expire',
+            model_name="announcement",
+            name="expire",
             field=models.DateTimeField(default=django.utils.timezone.now),
             preserve_default=False,
         ),

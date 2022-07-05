@@ -10,15 +10,15 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('address', '0003_auto_20200830_1851'),
-        ('profiles', '0057_coachprofile_data'),
-        ('clubs', '0045_auto_20211108_2309'),
-        ('marketplace', '0016_auto_20211125_1900'),
+        ("address", "0003_auto_20200830_1851"),
+        ("profiles", "0057_coachprofile_data"),
+        ("clubs", "0045_auto_20211108_2309"),
+        ("marketplace", "0016_auto_20211125_1900"),
     ]
 
     operations = [
         migrations.RenameModel(
-            old_name='Announcement',
-            new_name='ClubForPlayerAnnouncement',
+            old_name="Announcement",
+            new_name="ClubForPlayerAnnouncement",
         ),
     ]

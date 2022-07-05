@@ -6,20 +6,24 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('marketplace', '0010_announcement_expire'),
+        ("marketplace", "0010_announcement_expire"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='announcement',
-            name='year_from',
-            field=models.PositiveIntegerField(default=1900, help_text='Rocznik piłkarza od.. np. 1986'),
+            model_name="announcement",
+            name="year_from",
+            field=models.PositiveIntegerField(
+                default=1900, help_text="Rocznik piłkarza od.. np. 1986"
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='announcement',
-            name='year_to',
-            field=models.PositiveIntegerField(default=1900, help_text='Rocznik piłkarza ..do np. 1986'),
+            model_name="announcement",
+            name="year_to",
+            field=models.PositiveIntegerField(
+                default=1900, help_text="Rocznik piłkarza ..do np. 1986"
+            ),
             preserve_default=False,
         ),
     ]

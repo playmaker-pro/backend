@@ -9,19 +9,16 @@ from .utils import get_club_without_img, PATH_TO_FILE, PATH_TO_FLAGS
 
 
 class Command(BaseCommand):
-
     def handle(self, *args: any, **options: any) -> any:
-        """ Match clubs name with herb file names """
+        """Match clubs name with herb file names"""
 
         clubs = Club.objects.exclude(teams=None)
         clubs_dict = get_club_without_img(clubs)
 
-        re_pattern = '^\d\.'
+        re_pattern = "^\d\."
 
         club_pic_names = [
-            {
-                re.sub(re_pattern, '', file.split('.jpg')[0]).lower().strip(): file
-            }
+            {re.sub(re_pattern, "", file.split(".jpg")[0]).lower().strip(): file}
             for file in os.listdir(PATH_TO_FLAGS)
             if os.path.isfile(os.path.join(PATH_TO_FLAGS, file))
         ]
@@ -33,9 +30,9 @@ class Command(BaseCommand):
 
         for key, values in clubs_dict.items():
 
-            name = unidecode(values['name'])
-            name_length = len(name.split(' '))
-            url = values['picture']
+            name = unidecode(values["name"])
+            name_length = len(name.split(" "))
+            url = values["picture"]
 
             if not url:
                 # Check if club dont have picture url
@@ -52,14 +49,14 @@ class Command(BaseCommand):
                         # print(f'1: {file_name}, 2:{name.lower()}')
 
                         clubs_without_pic_matched[key] = {
-                            'club_name': name,
-                            'pic_name': file_name,
-                            'file_name': file_whole_name
+                            "club_name": name,
+                            "pic_name": file_name,
+                            "file_name": file_whole_name,
                         }
 
                         break
 
-                    file_name_splitted = file_name.split(' ')
+                    file_name_splitted = file_name.split(" ")
                     len_file_name = len(file_name)
 
                     if len_file_name in range(name_length, name_length + 2):
@@ -73,14 +70,14 @@ class Command(BaseCommand):
                                     # check if word from list isnt a short word like LKS/TS/GKS. If true, break loop
 
                                     clubs_without_pic_matched[key] = {
-                                        'club_name': name,
-                                        'pic_name': file_name,
-                                        'file_name': file_whole_name
+                                        "club_name": name,
+                                        "pic_name": file_name,
+                                        "file_name": file_whole_name,
                                     }
                                     break
 
             elif url:
                 clubs_with_pic += 1
 
-        with open(PATH_TO_FILE, 'w', encoding="utf-8") as f:
+        with open(PATH_TO_FILE, "w", encoding="utf-8") as f:
             f.write(json.dumps(clubs_without_pic_matched))

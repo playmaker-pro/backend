@@ -9,18 +9,25 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('marketplace', '0007_auto_20201223_1201'),
+        ("marketplace", "0007_auto_20201223_1201"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='announcement',
-            name='subscribers',
-            field=models.ManyToManyField(blank=True, null=True, to=settings.AUTH_USER_MODEL),
+            model_name="announcement",
+            name="subscribers",
+            field=models.ManyToManyField(
+                blank=True, null=True, to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AlterField(
-            model_name='announcementplan',
-            name='days',
-            field=models.DurationField(blank=True, default=datetime.timedelta, help_text='Number of days to set after which plan expires. Can be null which means is not activated.', null=True),
+            model_name="announcementplan",
+            name="days",
+            field=models.DurationField(
+                blank=True,
+                default=datetime.timedelta,
+                help_text="Number of days to set after which plan expires. Can be null which means is not activated.",
+                null=True,
+            ),
         ),
     ]

@@ -19,7 +19,7 @@ def resave(modeladmin, request, queryset):
         object.save()
 
 
-resave.short_description = 'Save objects again.'
+resave.short_description = "Save objects again."
 
 
 @admin.register(models.LeagueHistory)
@@ -192,7 +192,7 @@ class ClubAdmin(admin.ModelAdmin):
     autocomplete_fields = ("manager",)
     search_fields = ("name",)
     list_filter = ("voivodeship__name",)
-    exclude = ('voivodeship_raw',)
+    exclude = ("voivodeship_raw",)
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)

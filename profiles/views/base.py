@@ -474,11 +474,10 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
         kwargs["show_user"] = user
         kwargs["modals"] = self.modal_activity(request.user)
 
-        
         if user.is_player and user.profile.updated:
             # Activate verification modal - relates to task feature/PM-360
 
-            kwargs["modals"]['verification']['auto'] = True
+            kwargs["modals"]["verification"]["auto"] = True
             user.profile.updated = False
             user.profile.save()
 

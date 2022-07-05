@@ -7,33 +7,63 @@ import phonenumber_field.modelfields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0028_auto_20201201_0024'),
+        ("profiles", "0028_auto_20201201_0024"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='clubprofile',
-            name='phone',
-            field=phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128, null=True, region='PL', verbose_name='Telefon'),
+            model_name="clubprofile",
+            name="phone",
+            field=phonenumber_field.modelfields.PhoneNumberField(
+                blank=True,
+                max_length=128,
+                null=True,
+                region="PL",
+                verbose_name="Telefon",
+            ),
         ),
         migrations.AlterField(
-            model_name='coachprofile',
-            name='phone',
-            field=phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128, null=True, region='PL', verbose_name='Telefon'),
+            model_name="coachprofile",
+            name="phone",
+            field=phonenumber_field.modelfields.PhoneNumberField(
+                blank=True,
+                max_length=128,
+                null=True,
+                region="PL",
+                verbose_name="Telefon",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='agent_phone',
-            field=phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128, null=True, region='PL', verbose_name='Numer telefonu do agenta / agencji'),
+            model_name="playerprofile",
+            name="agent_phone",
+            field=phonenumber_field.modelfields.PhoneNumberField(
+                blank=True,
+                max_length=128,
+                null=True,
+                region="PL",
+                verbose_name="Numer telefonu do agenta / agencji",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='phone',
-            field=phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128, null=True, region='PL', verbose_name='Telefon'),
+            model_name="playerprofile",
+            name="phone",
+            field=phonenumber_field.modelfields.PhoneNumberField(
+                blank=True,
+                max_length=128,
+                null=True,
+                region="PL",
+                verbose_name="Telefon",
+            ),
         ),
         migrations.AlterField(
-            model_name='trainercontact',
-            name='phone',
-            field=phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128, null=True, region='PL', verbose_name='Telefon'),
+            model_name="trainercontact",
+            name="phone",
+            field=phonenumber_field.modelfields.PhoneNumberField(
+                blank=True,
+                max_length=128,
+                null=True,
+                region="PL",
+                verbose_name="Telefon",
+            ),
         ),
     ]

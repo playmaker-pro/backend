@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0048_coachprofile_licence'),
+        ("profiles", "0048_coachprofile_licence"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='profilevisithistory',
-            name='counter_scout',
+            model_name="profilevisithistory",
+            name="counter_scout",
             field=models.PositiveIntegerField(default=0),
         ),
     ]

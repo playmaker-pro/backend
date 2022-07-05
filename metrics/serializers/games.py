@@ -37,24 +37,29 @@ class GameSerializer:
                     "players": [ {}, {}]
                     "player_ids": []..
     """
+
     model = DGame
 
     @classmethod
     def serialize(cls, game, host_pic, guest_pic, league: CLeague):
         if isinstance(game, (cls.model, dict)):
             return cls.calculate(game, host_pic, guest_pic, league)
-        raise RuntimeError(f"Wrong data type. Expected is {cls.model} instance or dict.")
+        raise RuntimeError(
+            f"Wrong data type. Expected is {cls.model} instance or dict."
+        )
 
     @classmethod
     def calculate(cls, game, host_pic, guest_pic, league: CLeague):
 
         h_url, h_pic, h_name = TeamMapper.get_url_pic_for_club(
-            cls._get_attr(game, "host_team_name"), league)
+            cls._get_attr(game, "host_team_name"), league
+        )
         g_url, g_pic, g_name = TeamMapper.get_url_pic_for_club(
-            cls._get_attr(game, "guest_team_name"), league)
+            cls._get_attr(game, "guest_team_name"), league
+        )
 
-        guest_score = cls._get_attr(game, 'guest_score')
-        host_score = cls._get_attr(game, 'host_score')
+        guest_score = cls._get_attr(game, "guest_score")
+        host_score = cls._get_attr(game, "host_score")
         score = (
             f"{host_score} - {guest_score}"
             if host_score is not None and guest_score is not None
@@ -75,7 +80,12 @@ class GameSerializer:
             "guest_score": guest_score,
             "host_score": host_score,
             "players": SimplePlayerProfileSerializer.serialize(
-                [profile for _id in players_ids if (profile := PlayerMapper.get_player_profile_object(_id)) is not None]
+                [
+                    profile
+                    for _id in players_ids
+                    if (profile := PlayerMapper.get_player_profile_object(_id))
+                    is not None
+                ]
             ),
             # "player_ids": players_ids  # todo: disable that it is not needed right now.
         }
@@ -95,9 +105,12 @@ class GameSerializer:
             raise RuntimeError("Not supported data type.")
 
     @classmethod
-    def _add_timezone_to_datetime(cls, date: datetime, hours_shift: int = 2) -> datetime:
+    def _add_timezone_to_datetime(
+        cls, date: datetime, hours_shift: int = 2
+    ) -> datetime:
         """Two systems uses different date nottation. +2h is needed to shift"""
         from datetime import timedelta
+
         return date + timedelta(hours=hours_shift)
 
     @classmethod

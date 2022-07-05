@@ -7,14 +7,19 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0045_auto_20211108_2309'),
-        ('marketplace', '0020_auto_20211215_2355'),
+        ("clubs", "0045_auto_20211108_2309"),
+        ("marketplace", "0020_auto_20211215_2355"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='playerforclubannouncement',
-            name='league',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='player_for_club_announcement_league', to='clubs.league'),
+            model_name="playerforclubannouncement",
+            name="league",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="player_for_club_announcement_league",
+                to="clubs.league",
+            ),
         ),
     ]

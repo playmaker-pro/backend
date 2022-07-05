@@ -8,30 +8,36 @@ import django_countries.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0016_auto_20201210_1851'),
-        ('marketplace', '0002_auto_20201222_1246'),
+        ("clubs", "0016_auto_20201210_1851"),
+        ("marketplace", "0002_auto_20201222_1246"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='announcement',
-            name='country',
-            field=django_countries.fields.CountryField(default='PL', max_length=2, null=True, verbose_name='Country'),
+            model_name="announcement",
+            name="country",
+            field=django_countries.fields.CountryField(
+                default="PL", max_length=2, null=True, verbose_name="Country"
+            ),
         ),
         migrations.AddField(
-            model_name='announcement',
-            name='gender',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, to='clubs.gender'),
+            model_name="announcement",
+            name="gender",
+            field=models.ForeignKey(
+                default=1,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="clubs.gender",
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='announcement',
-            name='www',
+            model_name="announcement",
+            name="www",
             field=models.URLField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='announcement',
-            name='body',
+            model_name="announcement",
+            name="body",
             field=models.TextField(default=1),
             preserve_default=False,
         ),

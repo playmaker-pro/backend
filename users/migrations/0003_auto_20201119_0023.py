@@ -7,33 +7,81 @@ import django_fsm
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0002_auto_20201112_1223'),
+        ("users", "0002_auto_20201112_1223"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='declared_club',
-            field=models.CharField(blank=True, help_text='Users declaration in which club he plays.', max_length=355, null=True, verbose_name='Deklaracja klubu'),
+            model_name="user",
+            name="declared_club",
+            field=models.CharField(
+                blank=True,
+                help_text="Users declaration in which club he plays.",
+                max_length=355,
+                null=True,
+                verbose_name="Deklaracja klubu",
+            ),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='declared_role',
-            field=models.CharField(blank=True, choices=[('P', 'Piłkarz'), ('T', 'Trener'), ('G', 'Gość'), ('C', 'Klub / Szkółka'), ('SK', 'Scout'), ('R', 'Rodzic'), ('K', 'Kibic'), ('M', 'Manadżer'), ('S', 'Standardowe')], help_text='Users declaration in which role he has. It is main paramter.', max_length=355, null=True, verbose_name='Deklaracja roli'),
+            model_name="user",
+            name="declared_role",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("P", "Piłkarz"),
+                    ("T", "Trener"),
+                    ("G", "Gość"),
+                    ("C", "Klub / Szkółka"),
+                    ("SK", "Scout"),
+                    ("R", "Rodzic"),
+                    ("K", "Kibic"),
+                    ("M", "Manadżer"),
+                    ("S", "Standardowe"),
+                ],
+                help_text="Users declaration in which role he has. It is main paramter.",
+                max_length=355,
+                null=True,
+                verbose_name="Deklaracja roli",
+            ),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='email',
-            field=models.EmailField(max_length=254, unique=True, verbose_name='Adres email'),
+            model_name="user",
+            name="email",
+            field=models.EmailField(
+                max_length=254, unique=True, verbose_name="Adres email"
+            ),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='picture',
-            field=models.ImageField(blank=True, null=True, upload_to='profile_pics/%Y-%m-%d/', verbose_name='Zdjęcie'),
+            model_name="user",
+            name="picture",
+            field=models.ImageField(
+                blank=True,
+                null=True,
+                upload_to="profile_pics/%Y-%m-%d/",
+                verbose_name="Zdjęcie",
+            ),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='state',
-            field=django_fsm.FSMField(choices=[('New', 'New'), ('Authentication Verified', 'Authentication Verified'), ("Awaiting for user's verification input", "Awaiting for user's verification input"), ('Account Waiting For Verification', 'Account Waiting For Verification'), ('Account Verified', 'Account Verified'), ('Migrated Verified', 'Migrated Verified'), ('Migrated New', 'Migrated New')], default='New', max_length=50),
+            model_name="user",
+            name="state",
+            field=django_fsm.FSMField(
+                choices=[
+                    ("New", "New"),
+                    ("Authentication Verified", "Authentication Verified"),
+                    (
+                        "Awaiting for user's verification input",
+                        "Awaiting for user's verification input",
+                    ),
+                    (
+                        "Account Waiting For Verification",
+                        "Account Waiting For Verification",
+                    ),
+                    ("Account Verified", "Account Verified"),
+                    ("Migrated Verified", "Migrated Verified"),
+                    ("Migrated New", "Migrated New"),
+                ],
+                default="New",
+                max_length=50,
+            ),
         ),
     ]

@@ -7,28 +7,33 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0030_league_slug'),
+        ("clubs", "0030_league_slug"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='league',
-            name='index',
+            model_name="league",
+            name="index",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AddField(
-            model_name='league',
-            name='parent',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='clubs.league'),
+            model_name="league",
+            name="parent",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="clubs.league",
+            ),
         ),
         migrations.AddField(
-            model_name='league',
-            name='zpn',
+            model_name="league",
+            name="zpn",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AddField(
-            model_name='league',
-            name='zpn_mapped',
+            model_name="league",
+            name="zpn_mapped",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
     ]

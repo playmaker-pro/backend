@@ -9,32 +9,72 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Club',
+            name="Club",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('slug', models.UUIDField(blank=True, default=uuid.uuid4, editable=False)),
-                ('name', models.CharField(help_text='Displayed Name of club', max_length=255, verbose_name='Club name')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "slug",
+                    models.UUIDField(blank=True, default=uuid.uuid4, editable=False),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Displayed Name of club",
+                        max_length=255,
+                        verbose_name="Club name",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Club',
-                'verbose_name_plural': 'Clubs',
+                "verbose_name": "Club",
+                "verbose_name_plural": "Clubs",
             },
         ),
         migrations.CreateModel(
-            name='Team',
+            name="Team",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Displayed Name of club', max_length=255, verbose_name='Team name')),
-                ('club', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='teams', to='clubs.club')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Displayed Name of club",
+                        max_length=255,
+                        verbose_name="Team name",
+                    ),
+                ),
+                (
+                    "club",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="teams",
+                        to="clubs.club",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Team',
-                'verbose_name_plural': 'Teams',
+                "verbose_name": "Team",
+                "verbose_name_plural": "Teams",
             },
         ),
     ]

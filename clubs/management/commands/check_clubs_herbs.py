@@ -15,4 +15,3 @@ class Command(BaseCommand):
         clubs = get_club_without_img(clubs, herbs=True)
 
         print(clubs)
-

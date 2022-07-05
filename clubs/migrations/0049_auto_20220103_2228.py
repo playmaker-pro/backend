@@ -6,18 +6,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0048_auto_20220103_1934'),
+        ("clubs", "0048_auto_20220103_1934"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='league',
-            name='_grouping_index',
+            model_name="league",
+            name="_grouping_index",
             field=models.CharField(blank=True, max_length=555, null=True),
         ),
         migrations.AddField(
-            model_name='league',
-            name='section',
-            field=models.CharField(blank=True, help_text='CLJ19', max_length=355, null=True),
+            model_name="league",
+            name="section",
+            field=models.CharField(
+                blank=True, help_text="CLJ19", max_length=355, null=True
+            ),
         ),
     ]

@@ -6,62 +6,66 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0008_team_editors'),
+        ("clubs", "0008_team_editors"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='team',
-            name='diet_suplements',
-            field=models.BooleanField(default=False, verbose_name='Suplemnety / odżywki'),
+            model_name="team",
+            name="diet_suplements",
+            field=models.BooleanField(
+                default=False, verbose_name="Suplemnety / odżywki"
+            ),
         ),
         migrations.AlterField(
-            model_name='team',
-            name='fizo',
-            field=models.BooleanField(default=False, verbose_name='Fizjoterapeuta'),
+            model_name="team",
+            name="fizo",
+            field=models.BooleanField(default=False, verbose_name="Fizjoterapeuta"),
         ),
         migrations.AlterField(
-            model_name='team',
-            name='game_bonus',
-            field=models.BooleanField(default=False, verbose_name='Premie za mecze'),
+            model_name="team",
+            name="game_bonus",
+            field=models.BooleanField(default=False, verbose_name="Premie za mecze"),
         ),
         migrations.AlterField(
-            model_name='team',
-            name='gloves_shoes_refunds',
-            field=models.BooleanField(default=False, verbose_name='Zwroty za buty/rękawice'),
+            model_name="team",
+            name="gloves_shoes_refunds",
+            field=models.BooleanField(
+                default=False, verbose_name="Zwroty za buty/rękawice"
+            ),
         ),
         migrations.AlterField(
-            model_name='team',
-            name='regular_gear',
-            field=models.BooleanField(default=False, verbose_name='Sprzęt wyjściowy'),
+            model_name="team",
+            name="regular_gear",
+            field=models.BooleanField(default=False, verbose_name="Sprzęt wyjściowy"),
         ),
         migrations.AlterField(
-            model_name='team',
-            name='scolarships',
-            field=models.BooleanField(default=False, verbose_name='Stypendia'),
+            model_name="team",
+            name="scolarships",
+            field=models.BooleanField(default=False, verbose_name="Stypendia"),
         ),
         migrations.AlterField(
-            model_name='team',
-            name='secondary_trainer',
-            field=models.BooleanField(default=False, verbose_name='Drugi trener'),
+            model_name="team",
+            name="secondary_trainer",
+            field=models.BooleanField(default=False, verbose_name="Drugi trener"),
         ),
         migrations.AlterField(
-            model_name='team',
-            name='slug',
+            model_name="team",
+            name="slug",
             field=models.CharField(blank=True, editable=False, max_length=255),
         ),
         migrations.AlterField(
-            model_name='team',
-            name='traning_gear',
-            field=models.BooleanField(default=False, verbose_name='Sprzęt treningowy'),
+            model_name="team",
+            name="traning_gear",
+            field=models.BooleanField(default=False, verbose_name="Sprzęt treningowy"),
         ),
         migrations.AlterField(
-            model_name='team',
-            name='travel_refunds',
-            field=models.BooleanField(default=False, verbose_name='Zwrot za dojazdy'),
+            model_name="team",
+            name="travel_refunds",
+            field=models.BooleanField(default=False, verbose_name="Zwrot za dojazdy"),
         ),
         migrations.AlterUniqueTogether(
-            name='team',
-            unique_together={('name', 'club')},
+            name="team",
+            unique_together={("name", "club")},
         ),
     ]

@@ -6,13 +6,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0066_team_full_name'),
+        ("clubs", "0066_team_full_name"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='club',
-            name='voivodeship_raw',
-            field=models.CharField(blank=True, help_text='Wojewódźtwo w którym grasz.', max_length=255, null=True, verbose_name='Województwo'),
+            model_name="club",
+            name="voivodeship_raw",
+            field=models.CharField(
+                blank=True,
+                help_text="Wojewódźtwo w którym grasz.",
+                max_length=255,
+                null=True,
+                verbose_name="Województwo",
+            ),
         ),
     ]

@@ -12,13 +12,9 @@ class NewsPage(Page):
     body = RichTextField(blank=True)
 
     content_panels = Page.content_panels + [
-        FieldPanel('date'),
-        FieldPanel('intro'),
-        FieldPanel('body', classname="full"),
+        FieldPanel("date"),
+        FieldPanel("intro"),
+        FieldPanel("body", classname="full"),
     ]
 
-    api_fields = [
-        APIField('date'),
-        APIField('intro'),
-        APIField('body')
-    ]
+    api_fields = [APIField("date"), APIField("intro"), APIField("body")]

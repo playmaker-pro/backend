@@ -8,26 +8,74 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='InquiryPlan',
+            name="InquiryPlan",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Plan name', max_length=255, verbose_name='Plan Name')),
-                ('limit', models.PositiveIntegerField(help_text='Limit how many actions are allowed', verbose_name='Plan limit')),
-                ('sort', models.PositiveIntegerField(default=0, help_text='Used to sort plans low numbers threaded as lowest plans. Default=0 which means this is not set.', verbose_name='Soring')),
-                ('description', models.TextField(blank=True, help_text='Short description what is rationale behind plan. Used only for internal purpose.', null=True, verbose_name='Description')),
-                ('default', models.BooleanField(default=False, help_text='Defines if this is default plan selected during account creation.', verbose_name='Default Plan')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Plan name", max_length=255, verbose_name="Plan Name"
+                    ),
+                ),
+                (
+                    "limit",
+                    models.PositiveIntegerField(
+                        help_text="Limit how many actions are allowed",
+                        verbose_name="Plan limit",
+                    ),
+                ),
+                (
+                    "sort",
+                    models.PositiveIntegerField(
+                        default=0,
+                        help_text="Used to sort plans low numbers threaded as lowest plans. Default=0 which means this is not set.",
+                        verbose_name="Soring",
+                    ),
+                ),
+                (
+                    "description",
+                    models.TextField(
+                        blank=True,
+                        help_text="Short description what is rationale behind plan. Used only for internal purpose.",
+                        null=True,
+                        verbose_name="Description",
+                    ),
+                ),
+                (
+                    "default",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Defines if this is default plan selected during account creation.",
+                        verbose_name="Default Plan",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='InquiryRequest',
+            name="InquiryRequest",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', django_fsm.FSMField(default='NEW', max_length=50)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("status", django_fsm.FSMField(default="NEW", max_length=50)),
             ],
         ),
     ]

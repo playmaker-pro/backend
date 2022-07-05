@@ -6,16 +6,31 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0003_auto_20201119_0023'),
+        ("users", "0003_auto_20201119_0023"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='declared_role',
-            field=models.CharField(blank=True, choices=[('P', 'Piłkarz'), ('T', 'Trener'), ('C', 'Klub / Szkółka piłkarska'), ('M', 'Agent piłkarski'), ('S', 'Skout'), ('R', 'Rodzic małego piłkarza'), ('G', 'Kibic / Rodzic')], help_text='Users declaration in which role he has. It is main paramter.', max_length=355, null=True, verbose_name='Deklaracja roli'),
+            model_name="user",
+            name="declared_role",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("P", "Piłkarz"),
+                    ("T", "Trener"),
+                    ("C", "Klub / Szkółka piłkarska"),
+                    ("M", "Agent piłkarski"),
+                    ("S", "Skout"),
+                    ("R", "Rodzic małego piłkarza"),
+                    ("G", "Kibic / Rodzic"),
+                ],
+                help_text="Users declaration in which role he has. It is main paramter.",
+                max_length=355,
+                null=True,
+                verbose_name="Deklaracja roli",
+            ),
         ),
         migrations.DeleteModel(
-            name='UserVerification',
+            name="UserVerification",
         ),
     ]

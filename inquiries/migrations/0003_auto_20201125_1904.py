@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('inquiries', '0002_auto_20201108_2058'),
+        ("inquiries", "0002_auto_20201108_2058"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='userinquiry',
-            name='counter',
-            field=models.PositiveIntegerField(default=0, help_text='Current number of used inquiries.', verbose_name='Obecna ilość zapytań'),
+            model_name="userinquiry",
+            name="counter",
+            field=models.PositiveIntegerField(
+                default=0,
+                help_text="Current number of used inquiries.",
+                verbose_name="Obecna ilość zapytań",
+            ),
         ),
     ]

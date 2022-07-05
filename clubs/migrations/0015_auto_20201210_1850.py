@@ -7,76 +7,128 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0014_auto_20201209_2015'),
+        ("clubs", "0014_auto_20201209_2015"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Gender',
+            name="Gender",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=355, unique=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=355, unique=True)),
             ],
         ),
         migrations.CreateModel(
-            name='League',
+            name="League",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=355, unique=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=355, unique=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Seniority',
+            name="Seniority",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=355, unique=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=355, unique=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Voivodeship',
+            name="Voivodeship",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=455, unique=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=455, unique=True)),
             ],
         ),
         migrations.RemoveField(
-            model_name='club',
-            name='club',
+            model_name="club",
+            name="club",
         ),
         migrations.RemoveField(
-            model_name='club',
-            name='league',
+            model_name="club",
+            name="league",
         ),
         migrations.RemoveField(
-            model_name='club',
-            name='league_raw',
+            model_name="club",
+            name="league_raw",
         ),
         migrations.RemoveField(
-            model_name='club',
-            name='team',
+            model_name="club",
+            name="team",
         ),
         migrations.RemoveField(
-            model_name='club',
-            name='team_raw',
+            model_name="club",
+            name="team_raw",
         ),
         migrations.AddField(
-            model_name='team',
-            name='gender',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='clubs.gender'),
+            model_name="team",
+            name="gender",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="clubs.gender",
+            ),
         ),
         migrations.AddField(
-            model_name='team',
-            name='league',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='clubs.league'),
+            model_name="team",
+            name="league",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="clubs.league",
+            ),
         ),
         migrations.AddField(
-            model_name='team',
-            name='seniority',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='clubs.seniority'),
+            model_name="team",
+            name="seniority",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="clubs.seniority",
+            ),
         ),
         migrations.AlterField(
-            model_name='club',
-            name='voivodeship',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='clubs.voivodeship'),
+            model_name="club",
+            name="voivodeship",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="clubs.voivodeship",
+            ),
         ),
     ]

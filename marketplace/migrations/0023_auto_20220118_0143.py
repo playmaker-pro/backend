@@ -6,13 +6,30 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('marketplace', '0022_auto_20220118_0119'),
+        ("marketplace", "0022_auto_20220118_0119"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='clubforcoachannouncement',
-            name='lic_type',
-            field=models.IntegerField(blank=True, choices=[(1, 'UEFA PRO'), (2, 'UEFA A'), (3, 'UEFA EY A'), (4, 'UEFA B'), (5, 'UEFA C'), (6, 'GRASS C'), (7, 'GRASS D'), (8, 'UEFA Futsal B'), (9, 'PZPN A'), (10, 'PZPN B'), (11, 'W trakcie kursu')], null=True, verbose_name='Licencja'),
+            model_name="clubforcoachannouncement",
+            name="lic_type",
+            field=models.IntegerField(
+                blank=True,
+                choices=[
+                    (1, "UEFA PRO"),
+                    (2, "UEFA A"),
+                    (3, "UEFA EY A"),
+                    (4, "UEFA B"),
+                    (5, "UEFA C"),
+                    (6, "GRASS C"),
+                    (7, "GRASS D"),
+                    (8, "UEFA Futsal B"),
+                    (9, "PZPN A"),
+                    (10, "PZPN B"),
+                    (11, "W trakcie kursu"),
+                ],
+                null=True,
+                verbose_name="Licencja",
+            ),
         ),
     ]

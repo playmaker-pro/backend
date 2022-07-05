@@ -6,33 +6,79 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0021_auto_20201121_1303'),
+        ("profiles", "0021_auto_20201121_1303"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='coachprofile',
-            name='soccer_goal',
-            field=models.CharField(blank=True, choices=[('Profesjonalna kariera', 'Profesjonalna kariera'), ('Profesjonalna kariera', 'Kariera regionalna'), ('Profesjonalna kariera', 'Trenerka jako hobby')], max_length=60, null=True, verbose_name='soccer goal'),
+            model_name="coachprofile",
+            name="soccer_goal",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("Profesjonalna kariera", "Profesjonalna kariera"),
+                    ("Profesjonalna kariera", "Kariera regionalna"),
+                    ("Profesjonalna kariera", "Trenerka jako hobby"),
+                ],
+                max_length=60,
+                null=True,
+                verbose_name="soccer goal",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='league',
-            field=models.CharField(blank=True, help_text='Poziom rozgrywkowy', max_length=68, null=True, verbose_name='Rozgrywki'),
+            model_name="playerprofile",
+            name="league",
+            field=models.CharField(
+                blank=True,
+                help_text="Poziom rozgrywkowy",
+                max_length=68,
+                null=True,
+                verbose_name="Rozgrywki",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='position_raw_alt',
-            field=models.IntegerField(blank=True, choices=[(1, 'Bramkarz'), (2, 'Obrońca Lewy'), (3, 'Obrońca Prawy'), (4, 'Obrońca Środkowy'), (5, 'Pomocnik defensywny (6)'), (6, 'Pomocnik środkowy (8)'), (7, 'Pomocnik ofensywny (10)'), (8, 'Skrzydłowy'), (9, 'Napastnik')], null=True, verbose_name='Pozycja alternatywna'),
+            model_name="playerprofile",
+            name="position_raw_alt",
+            field=models.IntegerField(
+                blank=True,
+                choices=[
+                    (1, "Bramkarz"),
+                    (2, "Obrońca Lewy"),
+                    (3, "Obrońca Prawy"),
+                    (4, "Obrońca Środkowy"),
+                    (5, "Pomocnik defensywny (6)"),
+                    (6, "Pomocnik środkowy (8)"),
+                    (7, "Pomocnik ofensywny (10)"),
+                    (8, "Skrzydłowy"),
+                    (9, "Napastnik"),
+                ],
+                null=True,
+                verbose_name="Pozycja alternatywna",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='soccer_goal',
-            field=models.IntegerField(blank=True, choices=[(1, 'Poziom profesjonalny'), (2, 'Poziom półprofesjonalny'), (3, 'Poziom regionalny')], null=True, verbose_name='Piłkarski cel'),
+            model_name="playerprofile",
+            name="soccer_goal",
+            field=models.IntegerField(
+                blank=True,
+                choices=[
+                    (1, "Poziom profesjonalny"),
+                    (2, "Poziom półprofesjonalny"),
+                    (3, "Poziom regionalny"),
+                ],
+                null=True,
+                verbose_name="Piłkarski cel",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='voivodeship',
-            field=models.CharField(blank=True, help_text='Wojewódźtwo', max_length=68, null=True, verbose_name='Wojewódźtwo'),
+            model_name="playerprofile",
+            name="voivodeship",
+            field=models.CharField(
+                blank=True,
+                help_text="Wojewódźtwo",
+                max_length=68,
+                null=True,
+                verbose_name="Wojewódźtwo",
+            ),
         ),
     ]

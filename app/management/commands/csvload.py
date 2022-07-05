@@ -1,8 +1,10 @@
 from django.core.management.base import BaseCommand, CommandError
 import csv
 from data.models import Player
-from profiles import models 
-from profiles.views import get_profile_model   # @todo this shoudl goes to utilities, views and commands are using this utility
+from profiles import models
+from profiles.views import (
+    get_profile_model,
+)  # @todo this shoudl goes to utilities, views and commands are using this utility
 from django.contrib.auth import get_user_model
 import pprint
 from .base import BaseCsvDump, BaseCommandCsvHandler
@@ -13,7 +15,6 @@ User = get_user_model()
 
 class Command(BaseCommandCsvHandler, BaseCommand, BaseCsvDump):
     help = "Uploads data from csv"
-
 
     def handle(self, *args, **options):
 
@@ -35,7 +36,7 @@ class Command(BaseCommandCsvHandler, BaseCommand, BaseCsvDump):
             _marker += "_team_"
         csv_name = self.get_csv_name(_marker)
         print(f"Reading file: {csv_name}")
-        with open(csv_name, newline='') as csvfile:
+        with open(csv_name, newline="") as csvfile:
             data = csv.DictReader(csvfile)
             if _type == "player":
                 self.handle_player_changes(data, _dryrun)
@@ -57,10 +58,11 @@ class Command(BaseCommandCsvHandler, BaseCommand, BaseCsvDump):
                 checksum = self.calculate_checksum(structure)
                 previous_checksum = row.get(self._get_checksum_field())
                 if previous_checksum != checksum:
-                    print(f'Save for that row not possible. Checksums are different.')  
+                    print(f"Save for that row not possible. Checksums are different.")
                     continue
                 else:
                     from clubs.models import League, Club
+
                     if changed_data_mapper_id:
                         team.data_mapper_id = int(changed_data_mapper_id)
                     if changed_mapping:
@@ -72,7 +74,9 @@ class Command(BaseCommandCsvHandler, BaseCommand, BaseCsvDump):
                     if changed_club_object_id:
                         team.club = Club.objects.get(id=changed_club_object_id)
 
-                    print(f'Saving Team data {team} mapping={changed_mapping}, league_id={changed_league_object_id}, club_id={changed_club_object_id}')
+                    print(
+                        f"Saving Team data {team} mapping={changed_mapping}, league_id={changed_league_object_id}, club_id={changed_club_object_id}"
+                    )
                     if _dryrun:
                         print("skiping save...")
                     else:
@@ -89,10 +93,10 @@ class Command(BaseCommandCsvHandler, BaseCommand, BaseCsvDump):
                 checksum = self.calculate_checksum(structure)
                 previous_checksum = row.get(self._get_checksum_field())
                 if previous_checksum != checksum:
-                    print(f'Save that row not possible. Checksums are different.')  
+                    print(f"Save that row not possible. Checksums are different.")
                     continue
                 else:
-                    print(f'Saving new team with id={team_object_id} to {player}')
+                    print(f"Saving new team with id={team_object_id} to {player}")
                     msg = f"CSVDump changing team_object_id={player.team_object.id if player.team_object else None } to new one team_object_id={team_object_id}"
                     player.add_event_log_message(msg)
                     player.team_object = Team.objects.get(id=team_object_id)

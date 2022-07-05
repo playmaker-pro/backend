@@ -7,18 +7,49 @@ import django_fsm
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0001_initial'),
+        ("users", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='declared_role',
-            field=models.CharField(blank=True, choices=[('P', 'Piłkarz'), ('T', 'Trener'), ('G', 'Gość'), ('C', 'Klub / Szkółka'), ('SK', 'Scout'), ('R', 'Rodzic'), ('K', 'Kibic'), ('M', 'Manadżer'), ('S', 'Standardowe')], help_text='Users declaration in which role he has. It is main paramter.', max_length=355, null=True, verbose_name='declared role'),
+            model_name="user",
+            name="declared_role",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("P", "Piłkarz"),
+                    ("T", "Trener"),
+                    ("G", "Gość"),
+                    ("C", "Klub / Szkółka"),
+                    ("SK", "Scout"),
+                    ("R", "Rodzic"),
+                    ("K", "Kibic"),
+                    ("M", "Manadżer"),
+                    ("S", "Standardowe"),
+                ],
+                help_text="Users declaration in which role he has. It is main paramter.",
+                max_length=355,
+                null=True,
+                verbose_name="declared role",
+            ),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='state',
-            field=django_fsm.FSMField(choices=[('New', 'New'), ('Authentication Verified', 'Authentication Verified'), ('Account Waiting For Verification', 'Account Waiting For Verification'), ('Account Verified', 'Account Verified'), ('Migrated Verified', 'Migrated Verified'), ('Migrated New', 'Migrated New')], default='New', max_length=50),
+            model_name="user",
+            name="state",
+            field=django_fsm.FSMField(
+                choices=[
+                    ("New", "New"),
+                    ("Authentication Verified", "Authentication Verified"),
+                    (
+                        "Account Waiting For Verification",
+                        "Account Waiting For Verification",
+                    ),
+                    ("Account Verified", "Account Verified"),
+                    ("Migrated Verified", "Migrated Verified"),
+                    ("Migrated New", "Migrated New"),
+                ],
+                default="New",
+                max_length=50,
+            ),
         ),
     ]

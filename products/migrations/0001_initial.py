@@ -9,52 +9,90 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('users', '0007_auto_20210117_1508'),
+        ("users", "0007_auto_20210117_1508"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PageDescription',
+            name="PageDescription",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.TextField()),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("text", models.TextField()),
             ],
         ),
         migrations.CreateModel(
-            name='Product',
+            name="Product",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(blank=True, max_length=455, null=True)),
-                ('subtitle', models.CharField(blank=True, max_length=455, null=True)),
-                ('place', models.CharField(blank=True, max_length=455, null=True)),
-                ('person', models.CharField(blank=True, max_length=455, null=True)),
-                ('teaser', models.CharField(blank=True, max_length=455, null=True)),
-                ('description', models.TextField(blank=True, null=True)),
-                ('active', models.BooleanField(default=False)),
-                ('html_body', models.TextField(blank=True, null=True)),
-                ('html_form', models.TextField(blank=True, null=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(blank=True, max_length=455, null=True)),
+                ("subtitle", models.CharField(blank=True, max_length=455, null=True)),
+                ("place", models.CharField(blank=True, max_length=455, null=True)),
+                ("person", models.CharField(blank=True, max_length=455, null=True)),
+                ("teaser", models.CharField(blank=True, max_length=455, null=True)),
+                ("description", models.TextField(blank=True, null=True)),
+                ("active", models.BooleanField(default=False)),
+                ("html_body", models.TextField(blank=True, null=True)),
+                ("html_form", models.TextField(blank=True, null=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Tag',
+            name="Tag",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200)),
-                ('active', models.BooleanField(default=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=200)),
+                ("active", models.BooleanField(default=True)),
             ],
         ),
         migrations.CreateModel(
-            name='UserRequest',
+            name="UserRequest",
             fields=[
-                ('date', models.DateTimeField(auto_created=True, auto_now=True)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='users.user')),
-                ('raw_body', models.JSONField(blank=True, null=True)),
-                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='products.product')),
+                ("date", models.DateTimeField(auto_created=True, auto_now=True)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to="users.user",
+                    ),
+                ),
+                ("raw_body", models.JSONField(blank=True, null=True)),
+                (
+                    "product",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="products.product",
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='product',
-            name='tags',
-            field=models.ManyToManyField(to='products.Tag'),
+            model_name="product",
+            name="tags",
+            field=models.ManyToManyField(to="products.Tag"),
         ),
     ]

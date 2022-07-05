@@ -7,13 +7,15 @@ import django_countries.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0016_auto_20201210_1851'),
+        ("clubs", "0016_auto_20201210_1851"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='club',
-            name='country',
-            field=django_countries.fields.CountryField(default='PL', max_length=2, null=True, verbose_name='Kraj'),
+            model_name="club",
+            name="country",
+            field=django_countries.fields.CountryField(
+                default="PL", max_length=2, null=True, verbose_name="Kraj"
+            ),
         ),
     ]

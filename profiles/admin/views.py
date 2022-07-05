@@ -2,7 +2,13 @@ from django.contrib import admin
 from utils import linkify
 from app.utils.admin import json_filed_data_prettified
 from profiles import models
-from .filters import OnlyLastVerificationFilter, HasDataMapperIdFilter, HasTeamObjectFilter, HasClubObjectFilter, HasTextInputFilter
+from .filters import (
+    OnlyLastVerificationFilter,
+    HasDataMapperIdFilter,
+    HasTeamObjectFilter,
+    HasClubObjectFilter,
+    HasTextInputFilter,
+)
 
 
 @admin.register(models.ProfileVisitHistory)
@@ -12,8 +18,20 @@ class ProfileVisitHistoryAdmin(admin.ModelAdmin):
 
 @admin.register(models.PlayerMetrics)
 class PlayerMetricsAdmin(admin.ModelAdmin):
-    list_display = ['player', 'games_updated', 'games_summary_updated', 'fantasy_updated', 'fantasy_summary_updated', 'season_updated', 'season_summary_updated']
-    search_fields = ['player__user__email', 'player__user__first_name', 'player__user__last_name']
+    list_display = [
+        "player",
+        "games_updated",
+        "games_summary_updated",
+        "fantasy_updated",
+        "fantasy_summary_updated",
+        "season_updated",
+        "season_summary_updated",
+    ]
+    search_fields = [
+        "player__user__email",
+        "player__user__first_name",
+        "player__user__last_name",
+    ]
 
 
 @admin.register(models.PlayerPosition)
@@ -21,15 +39,21 @@ class PositionAdmin(admin.ModelAdmin):
     pass
 
 
-DEFAULT_PROFILE_SEARCHABLES = ('user__email', 'user__first_name', 'user__last_name')
-DEFAULT_PROFILE_DISPLAY_FIELDS = ('pk', linkify('user'), 'data_mapper_id', 'slug', 'active')
+DEFAULT_PROFILE_SEARCHABLES = ("user__email", "user__first_name", "user__last_name")
+DEFAULT_PROFILE_DISPLAY_FIELDS = (
+    "pk",
+    linkify("user"),
+    "data_mapper_id",
+    "slug",
+    "active",
+)
 
 
 class ProfileAdminBase(admin.ModelAdmin):
     search_fields = DEFAULT_PROFILE_SEARCHABLES
     display_fileds = DEFAULT_PROFILE_DISPLAY_FIELDS
-    readonly_fields = ('data_prettified',)
-    exclude = ('voivodeship_raw',)
+    readonly_fields = ("data_prettified",)
+    exclude = ("voivodeship_raw",)
 
     def active(self, obj):
         return obj.is_active
@@ -52,7 +76,7 @@ class ManagerProfileAdmin(ProfileAdminBase):
 
 @admin.register(models.ScoutProfile)
 class ScoutProfileAdmin(ProfileAdminBase):
-    exclude = ('voivodeship_raw',)
+    exclude = ("voivodeship_raw",)
 
 
 @admin.register(models.GuestProfile)
@@ -62,9 +86,12 @@ class GuestProfileAdmin(ProfileAdminBase):
 
 @admin.register(models.ClubProfile)
 class ClubProfileAdmin(ProfileAdminBase):
-    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + ('club_role', linkify('club_object'))
-    search_fields = DEFAULT_PROFILE_SEARCHABLES + ('club_object',)
-    autocomplete_fields = ('club_object',)
+    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
+        "club_role",
+        linkify("club_object"),
+    )
+    search_fields = DEFAULT_PROFILE_SEARCHABLES + ("club_object",)
+    autocomplete_fields = ("club_object",)
 
 
 def trigger_refresh_data_player_stats(modeladmin, request, queryset):
@@ -72,7 +99,9 @@ def trigger_refresh_data_player_stats(modeladmin, request, queryset):
         pp.trigger_refresh_data_player_stats()  # save comes inside
 
 
-trigger_refresh_data_player_stats.short_description = "1. Refresh metric data_player on -->  s38"
+trigger_refresh_data_player_stats.short_description = (
+    "1. Refresh metric data_player on -->  s38"
+)
 
 
 def calculate_metrics(modeladmin, request, queryset):
@@ -96,7 +125,7 @@ def fetch_data_player_meta(modeladmin, request, queryset):
         pp.fetch_data_player_meta()  # save comes inside
 
 
-fetch_data_player_meta.short_description = '3. update meta  <--- s38'
+fetch_data_player_meta.short_description = "3. update meta  <--- s38"
 
 
 def set_team_object_based_on_meta(modeladmin, request, queryset):
@@ -104,7 +133,7 @@ def set_team_object_based_on_meta(modeladmin, request, queryset):
         pp.set_team_object_based_on_meta()  # save comes inside
 
 
-set_team_object_based_on_meta.short_description = '4. set team_object based on .meta'
+set_team_object_based_on_meta.short_description = "4. set team_object based on .meta"
 
 
 def refresh(modeladmin, request, queryset):
@@ -115,7 +144,7 @@ def refresh(modeladmin, request, queryset):
         pp.playermetrics.refresh_metrics()  # save not relevant
 
 
-refresh.short_description = '0. Refresh( 1, 2,3,4 )'
+refresh.short_description = "0. Refresh( 1, 2,3,4 )"
 
 
 def update_with_profile_data(modeladmin, request, queryset):
@@ -123,13 +152,39 @@ def update_with_profile_data(modeladmin, request, queryset):
         ver.update_with_profile_data(requestor=request.user)
 
 
-update_with_profile_data.short_description = 'Updated selected verification object with Profles data'
+update_with_profile_data.short_description = (
+    "Updated selected verification object with Profles data"
+)
 
 
 @admin.register(models.ProfileVerificationStatus)
 class ProfileVerificationStatusAdmin(admin.ModelAdmin):
-    list_display = ('id', 'get_owner', 'has_team', 'team_not_found', 'club', 'team', 'text', 'status', 'set_by', 'created_at', 'updated_at', linkify('previous'), 'get_next')
-    list_filter = ('owner__declared_role', 'status', OnlyLastVerificationFilter, HasDataMapperIdFilter, HasTextInputFilter, ('has_team', admin.BooleanFieldListFilter), ('team_not_found', admin.BooleanFieldListFilter), HasTeamObjectFilter, HasClubObjectFilter)
+    list_display = (
+        "id",
+        "get_owner",
+        "has_team",
+        "team_not_found",
+        "club",
+        "team",
+        "text",
+        "status",
+        "set_by",
+        "created_at",
+        "updated_at",
+        linkify("previous"),
+        "get_next",
+    )
+    list_filter = (
+        "owner__declared_role",
+        "status",
+        OnlyLastVerificationFilter,
+        HasDataMapperIdFilter,
+        HasTextInputFilter,
+        ("has_team", admin.BooleanFieldListFilter),
+        ("team_not_found", admin.BooleanFieldListFilter),
+        HasTeamObjectFilter,
+        HasClubObjectFilter,
+    )
     actions = [update_with_profile_data]
 
     def get_next(self, obj):
@@ -139,27 +194,27 @@ class ProfileVerificationStatusAdmin(admin.ModelAdmin):
 
     def get_owner(self, obj):
         if obj.owner is None:
-            return linkify('owner')(obj)
-        return linkify('profile')(obj.owner)
+            return linkify("owner")(obj)
+        return linkify("profile")(obj.owner)
 
-    get_next.short_description = 'NEXT'
+    get_next.short_description = "NEXT"
 
 
 @admin.register(models.PlayerProfile)
 class PlayerProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
-            linkify('playermetrics'),
-            linkify('team_object'),
-            linkify('team_object_alt'),
-            'display_league',
-            'display_team',
-            'display_club',
-            'display_seniority',
-            'display_gender',
-            'meta_updated',
-            'meta_last',
-            linkify('verification'),
-        )
+        linkify("playermetrics"),
+        linkify("team_object"),
+        linkify("team_object_alt"),
+        "display_league",
+        "display_team",
+        "display_club",
+        "display_seniority",
+        "display_gender",
+        "meta_updated",
+        "meta_last",
+        linkify("verification"),
+    )
 
     def meta_last(self, obj):
         if obj.meta:
@@ -167,23 +222,40 @@ class PlayerProfileAdmin(ProfileAdminBase):
         else:
             obj.meta
 
-    autocomplete_fields = ('user', 'team_object', 'team_object_alt')
+    autocomplete_fields = ("user", "team_object", "team_object_alt")
 
-    actions = [refresh, calculate_metrics, trigger_refresh_data_player_stats, fetch_data_player_meta, set_team_object_based_on_meta, calculate_fantasy]
+    actions = [
+        refresh,
+        calculate_metrics,
+        trigger_refresh_data_player_stats,
+        fetch_data_player_meta,
+        set_team_object_based_on_meta,
+        calculate_fantasy,
+    ]
 
 
 @admin.register(models.CoachProfile)
 class CoachProfileAdmin(ProfileAdminBase):
-    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (linkify('team_object'),)
-    autocomplete_fields = ('team_object',)
+    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (linkify("team_object"),)
+    autocomplete_fields = ("team_object",)
 
 
 @admin.register(models.RoleChangeRequest)
 class RoleChangeRequestAdmin(admin.ModelAdmin):
-    readonly_fields = ('current', 'approver')
-    list_display = ('pk', 'user', 'approved', 'current', 'new', 'request_date', 'accepted_date')
-    list_filter = ('approved',)
-    actions = ['approve_requests', ]
+    readonly_fields = ("current", "approver")
+    list_display = (
+        "pk",
+        "user",
+        "approved",
+        "current",
+        "new",
+        "request_date",
+        "accepted_date",
+    )
+    list_filter = ("approved",)
+    actions = [
+        "approve_requests",
+    ]
 
     def approve_requests(self, request, queryset):
         queryset.update(approved=True)

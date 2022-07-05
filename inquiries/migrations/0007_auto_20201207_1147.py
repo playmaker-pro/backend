@@ -7,13 +7,23 @@ import django_fsm
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('inquiries', '0006_inquiryrequest_body'),
+        ("inquiries", "0006_inquiryrequest_body"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='inquiryrequest',
-            name='status',
-            field=django_fsm.FSMField(choices=[('NOWE', 'NOWE'), ('WYSŁANO', 'WYSŁANO'), ('PRZECZYTANE', 'PRZECZYTANE'), ('ZAAKCEPTOWANE', 'ZAAKCEPTOWANE'), ('ODRZUCONE', 'ODRZUCONE')], default='NOWE', max_length=50),
+            model_name="inquiryrequest",
+            name="status",
+            field=django_fsm.FSMField(
+                choices=[
+                    ("NOWE", "NOWE"),
+                    ("WYSŁANO", "WYSŁANO"),
+                    ("PRZECZYTANE", "PRZECZYTANE"),
+                    ("ZAAKCEPTOWANE", "ZAAKCEPTOWANE"),
+                    ("ODRZUCONE", "ODRZUCONE"),
+                ],
+                default="NOWE",
+                max_length=50,
+            ),
         ),
     ]

@@ -6,7 +6,7 @@ import pytz
 
 class Item(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='items')
+    image = models.ImageField(upload_to="items")
     source_url = models.TextField()
     message = models.TextField(blank=True, null=True)
     pin_count = models.IntegerField(default=0)
@@ -21,46 +21,45 @@ class Pin(models.Model):
     influencer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='influenced_pins')
+        related_name="influenced_pins",
+    )
     message = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def create_activity(self):
-        print('ere')
+        print("ere")
         from stream_framework.activity import Activity
         from .verbs import Pin as PinVerb
+
         activity = Activity(
             self.user.id,
             PinVerb,
             self.id,
             self.influencer.id,
             time=make_naive(self.created_at, pytz.utc),
-            extra_context=dict(item_id=200)
+            extra_context=dict(item_id=200),
         )
-        print('activity', activity)
+        print("activity", activity)
         return activity
 
 
 class Follow(models.Model):
 
-    '''
+    """
     A simple table mapping who a user is following.
     For example, if user is Kyle and Kyle is following Alex,
     the target would be Alex.
-    '''
+    """
 
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='following_set')
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="following_set"
+    )
 
     target = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='follower_set')
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="follower_set"
+    )
 
-    created_at = models.DateTimeField(
-        auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 from clubs.models import Team
@@ -68,24 +67,23 @@ from clubs.models import Team
 
 class FollowTeam(models.Model):
 
-    '''
+    """
     A simple table mapping who a user is following.
     For example, if user is Kyle and Kyle is following Alex,
     the target would be Alex.
-    '''
+    """
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='following_team_set')
+        related_name="following_team_set",
+    )
 
     target = models.ForeignKey(
-        Team,
-        on_delete=models.CASCADE,
-        related_name='follower_team_set')
+        Team, on_delete=models.CASCADE, related_name="follower_team_set"
+    )
 
-    created_at = models.DateTimeField(
-        auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 from . import verbs

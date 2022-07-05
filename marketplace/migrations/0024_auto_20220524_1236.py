@@ -7,24 +7,39 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0066_team_full_name'),
-        ('marketplace', '0023_auto_20220118_0143'),
+        ("clubs", "0066_team_full_name"),
+        ("marketplace", "0023_auto_20220118_0143"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='clubforplayerannouncement',
-            name='gender',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='clubs.gender'),
+            model_name="clubforplayerannouncement",
+            name="gender",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="clubs.gender",
+            ),
         ),
         migrations.AlterField(
-            model_name='clubforplayerannouncement',
-            name='league',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='clubs.league'),
+            model_name="clubforplayerannouncement",
+            name="league",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="clubs.league",
+            ),
         ),
         migrations.AlterField(
-            model_name='clubforplayerannouncement',
-            name='seniority',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='clubs.seniority'),
+            model_name="clubforplayerannouncement",
+            name="seniority",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="clubs.seniority",
+            ),
         ),
     ]

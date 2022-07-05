@@ -7,27 +7,39 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0016_auto_20201210_1851'),
-        ('marketplace', '0001_initial'),
+        ("clubs", "0016_auto_20201210_1851"),
+        ("marketplace", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='announcement',
-            name='league',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, to='clubs.league'),
+            model_name="announcement",
+            name="league",
+            field=models.ForeignKey(
+                default=1,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="clubs.league",
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='announcement',
-            name='seniority',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, to='clubs.seniority'),
+            model_name="announcement",
+            name="seniority",
+            field=models.ForeignKey(
+                default=1,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="clubs.seniority",
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='announcement',
-            name='voivodeship',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, to='clubs.voivodeship'),
+            model_name="announcement",
+            name="voivodeship",
+            field=models.ForeignKey(
+                default=1,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="clubs.voivodeship",
+            ),
             preserve_default=False,
         ),
     ]

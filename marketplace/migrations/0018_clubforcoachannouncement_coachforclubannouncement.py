@@ -13,63 +13,190 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('clubs', '0045_auto_20211108_2309'),
-        ('address', '0003_auto_20200830_1851'),
-        ('marketplace', '0017_auto_20211126_0029'),
+        ("clubs", "0045_auto_20211108_2309"),
+        ("address", "0003_auto_20200830_1851"),
+        ("marketplace", "0017_auto_20211126_0029"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='CoachForClubAnnouncement',
+            name="CoachForClubAnnouncement",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', django_fsm.FSMField(choices=[('NOWE', 'NOWE'), ('WYSŁANO', 'WYSŁANO'), ('PRZECZYTANE', 'PRZECZYTANE'), ('ZAAKCEPTOWANE', 'ZAAKCEPTOWANE'), ('ODRZUCONE', 'ODRZUCONE')], default='NOWE', max_length=50)),
-                ('disabled', models.BooleanField(default=False)),
-                ('expire', models.DateTimeField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('lic_type', models.TextField(blank=True)),
-                ('practice_distance', models.CharField(max_length=3)),
-                ('body', models.TextField()),
-                ('address', address.models.AddressField(blank=True, help_text='Adres', null=True, on_delete=django.db.models.deletion.SET_NULL, to='address.address')),
-                ('creator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='coach_for_club_announcement_creator', to=settings.AUTH_USER_MODEL)),
-                ('subscribers', models.ManyToManyField(blank=True, null=True, to=settings.AUTH_USER_MODEL)),
-                ('target_league', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='clubs.league')),
-                ('voivodeship', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='clubs.voivodeship')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "status",
+                    django_fsm.FSMField(
+                        choices=[
+                            ("NOWE", "NOWE"),
+                            ("WYSŁANO", "WYSŁANO"),
+                            ("PRZECZYTANE", "PRZECZYTANE"),
+                            ("ZAAKCEPTOWANE", "ZAAKCEPTOWANE"),
+                            ("ODRZUCONE", "ODRZUCONE"),
+                        ],
+                        default="NOWE",
+                        max_length=50,
+                    ),
+                ),
+                ("disabled", models.BooleanField(default=False)),
+                ("expire", models.DateTimeField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("lic_type", models.TextField(blank=True)),
+                ("practice_distance", models.CharField(max_length=3)),
+                ("body", models.TextField()),
+                (
+                    "address",
+                    address.models.AddressField(
+                        blank=True,
+                        help_text="Adres",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="address.address",
+                    ),
+                ),
+                (
+                    "creator",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="coach_for_club_announcement_creator",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "subscribers",
+                    models.ManyToManyField(
+                        blank=True, null=True, to=settings.AUTH_USER_MODEL
+                    ),
+                ),
+                (
+                    "target_league",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="clubs.league"
+                    ),
+                ),
+                (
+                    "voivodeship",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="clubs.voivodeship",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
             managers=[
-                ('active', django.db.models.manager.Manager()),
+                ("active", django.db.models.manager.Manager()),
             ],
         ),
         migrations.CreateModel(
-            name='ClubForCoachAnnouncement',
+            name="ClubForCoachAnnouncement",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', django_fsm.FSMField(choices=[('NOWE', 'NOWE'), ('WYSŁANO', 'WYSŁANO'), ('PRZECZYTANE', 'PRZECZYTANE'), ('ZAAKCEPTOWANE', 'ZAAKCEPTOWANE'), ('ODRZUCONE', 'ODRZUCONE')], default='NOWE', max_length=50)),
-                ('disabled', models.BooleanField(default=False)),
-                ('expire', models.DateTimeField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('country', django_countries.fields.CountryField(default='PL', max_length=2, null=True, verbose_name='Country')),
-                ('lic_type', models.TextField(blank=True)),
-                ('body', models.TextField()),
-                ('club', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='clubs.club')),
-                ('creator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='club_for_coach_announcement_creator', to=settings.AUTH_USER_MODEL)),
-                ('gender', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='clubs.gender')),
-                ('league', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='club_for_coach_announcement_league', to='clubs.league')),
-                ('seniority', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='clubs.seniority')),
-                ('subscribers', models.ManyToManyField(blank=True, null=True, to=settings.AUTH_USER_MODEL)),
-                ('target_league', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='club_for_coach_announcement_target_league', to='clubs.league')),
-                ('voivodeship', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='clubs.voivodeship')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "status",
+                    django_fsm.FSMField(
+                        choices=[
+                            ("NOWE", "NOWE"),
+                            ("WYSŁANO", "WYSŁANO"),
+                            ("PRZECZYTANE", "PRZECZYTANE"),
+                            ("ZAAKCEPTOWANE", "ZAAKCEPTOWANE"),
+                            ("ODRZUCONE", "ODRZUCONE"),
+                        ],
+                        default="NOWE",
+                        max_length=50,
+                    ),
+                ),
+                ("disabled", models.BooleanField(default=False)),
+                ("expire", models.DateTimeField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "country",
+                    django_countries.fields.CountryField(
+                        default="PL", max_length=2, null=True, verbose_name="Country"
+                    ),
+                ),
+                ("lic_type", models.TextField(blank=True)),
+                ("body", models.TextField()),
+                (
+                    "club",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="clubs.club"
+                    ),
+                ),
+                (
+                    "creator",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="club_for_coach_announcement_creator",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "gender",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="clubs.gender"
+                    ),
+                ),
+                (
+                    "league",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="club_for_coach_announcement_league",
+                        to="clubs.league",
+                    ),
+                ),
+                (
+                    "seniority",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="clubs.seniority",
+                    ),
+                ),
+                (
+                    "subscribers",
+                    models.ManyToManyField(
+                        blank=True, null=True, to=settings.AUTH_USER_MODEL
+                    ),
+                ),
+                (
+                    "target_league",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="club_for_coach_announcement_target_league",
+                        to="clubs.league",
+                    ),
+                ),
+                (
+                    "voivodeship",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="clubs.voivodeship",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
             managers=[
-                ('active', django.db.models.manager.Manager()),
+                ("active", django.db.models.manager.Manager()),
             ],
         ),
     ]

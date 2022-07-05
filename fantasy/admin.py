@@ -1,5 +1,3 @@
-
-
 from django.contrib import admin
 from users.queries import get_users_manger_roles
 from . import models
@@ -17,17 +15,26 @@ calculate.short_description = "przelicz metryke"
 
 @admin.register(models.PlayerFantasyRank)
 class PlayerFantasyRankAdmin(admin.ModelAdmin):
-    list_display = ('updated', linkify('season'), linkify('player'), 'get_profile_permalink', 'senior', 'score')
-    search_fields = ('player__email',)
-    autocomplete_fields = ('player',)
-    actions = [calculate, ]
+    list_display = (
+        "updated",
+        linkify("season"),
+        linkify("player"),
+        "get_profile_permalink",
+        "senior",
+        "score",
+    )
+    search_fields = ("player__email",)
+    autocomplete_fields = ("player",)
+    actions = [
+        calculate,
+    ]
 
     def get_profile_permalink(self, obj):
         url = obj.player.profile.get_permalink
         # Unicode hex b6 is the Pilcrow sign
         return format_html('<a href="{}">{}</a>'.format(url, "\xb6"))
 
-    get_profile_permalink.short_description = 'Profile Link'
+    get_profile_permalink.short_description = "Profile Link"
 
 
 @admin.register(models.FantasySettings)

@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0052_playerprofile_meta'),
+        ("profiles", "0052_playerprofile_meta"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='playerprofile',
-            name='meta_updated',
+            model_name="playerprofile",
+            name="meta_updated",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

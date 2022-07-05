@@ -7,76 +7,143 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0015_auto_20201113_2350'),
+        ("profiles", "0015_auto_20201113_2350"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ProfileVisitHistory',
+            name="ProfileVisitHistory",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('counter', models.PositiveIntegerField(default=0)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("counter", models.PositiveIntegerField(default=0)),
             ],
         ),
         migrations.CreateModel(
-            name='PlayerMetrics',
+            name="PlayerMetrics",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now_add=True)),
-                ('games_summary', models.JSONField(blank=True, null=True)),
-                ('fantasy_summary', models.JSONField(blank=True, null=True)),
-                ('season_summary', models.JSONField(blank=True, null=True)),
-                ('player', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='profiles.playerprofile')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now_add=True)),
+                ("games_summary", models.JSONField(blank=True, null=True)),
+                ("fantasy_summary", models.JSONField(blank=True, null=True)),
+                ("season_summary", models.JSONField(blank=True, null=True)),
+                (
+                    "player",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="profiles.playerprofile",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Metryka gracza',
-                'verbose_name_plural': 'Metryki graczy',
+                "verbose_name": "Metryka gracza",
+                "verbose_name_plural": "Metryki graczy",
             },
         ),
         migrations.AddField(
-            model_name='clubprofile',
-            name='history',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='profiles.profilevisithistory'),
+            model_name="clubprofile",
+            name="history",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="profiles.profilevisithistory",
+            ),
         ),
         migrations.AddField(
-            model_name='coachprofile',
-            name='history',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='profiles.profilevisithistory'),
+            model_name="coachprofile",
+            name="history",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="profiles.profilevisithistory",
+            ),
         ),
         migrations.AddField(
-            model_name='fanprofile',
-            name='history',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='profiles.profilevisithistory'),
+            model_name="fanprofile",
+            name="history",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="profiles.profilevisithistory",
+            ),
         ),
         migrations.AddField(
-            model_name='guestprofile',
-            name='history',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='profiles.profilevisithistory'),
+            model_name="guestprofile",
+            name="history",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="profiles.profilevisithistory",
+            ),
         ),
         migrations.AddField(
-            model_name='managerprofile',
-            name='history',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='profiles.profilevisithistory'),
+            model_name="managerprofile",
+            name="history",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="profiles.profilevisithistory",
+            ),
         ),
         migrations.AddField(
-            model_name='parentprofile',
-            name='history',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='profiles.profilevisithistory'),
+            model_name="parentprofile",
+            name="history",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="profiles.profilevisithistory",
+            ),
         ),
         migrations.AddField(
-            model_name='playerprofile',
-            name='history',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='profiles.profilevisithistory'),
+            model_name="playerprofile",
+            name="history",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="profiles.profilevisithistory",
+            ),
         ),
         migrations.AddField(
-            model_name='scoutprofile',
-            name='history',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='profiles.profilevisithistory'),
+            model_name="scoutprofile",
+            name="history",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="profiles.profilevisithistory",
+            ),
         ),
         migrations.AddField(
-            model_name='standardprofile',
-            name='history',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='profiles.profilevisithistory'),
+            model_name="standardprofile",
+            name="history",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="profiles.profilevisithistory",
+            ),
         ),
     ]

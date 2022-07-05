@@ -22,15 +22,15 @@ def get_profile_model(user):
 
 
 def get_profile_model_from_slug(slug):
-    default = models.GuestProfile,
+    default = (models.GuestProfile,)
     mapper = {
-        'player': models.PlayerProfile, # @todo te nazwy 'player' etc trzeba zastapic z roles.definitions...
-        'coach': models.CoachProfile,
-        'club': models.ClubProfile,
-        'scout': models.ScoutProfile,
-        'guest': models.GuestProfile,
-        'parent': models.ParentProfile,
-        'manager': models.ManagerProfile,
+        "player": models.PlayerProfile,  # @todo te nazwy 'player' etc trzeba zastapic z roles.definitions...
+        "coach": models.CoachProfile,
+        "club": models.ClubProfile,
+        "scout": models.ScoutProfile,
+        "guest": models.GuestProfile,
+        "parent": models.ParentProfile,
+        "manager": models.ManagerProfile,
     }
 
     for key, model in mapper.items():
