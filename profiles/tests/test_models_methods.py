@@ -1,6 +1,3 @@
-import logging
-
-import pytest
 from django.test import TestCase
 from profiles import models
 from roles import definitions
@@ -13,6 +10,7 @@ utils.silence_explamation_mark()
 
 class ChangeRoleTests(TestCase):
     def setUp(self):
+        utils.create_system_user()
         self.user = User.objects.create(
             email="username", declared_role=definitions.PLAYER_SHORT
         )
@@ -62,17 +60,11 @@ class ChangeRoleTests(TestCase):
         assert self.user.is_verified is True
         self.user.profile.bio = None
         self.user.profile.save()
-        assert self.user.is_verified is False
-        assert self.user.is_missing_verification_data is True
+        assert self.user.is_verified is True
         print(f"---->  before {self.user.state}")
         change = models.RoleChangeRequest.objects.create(
             user=self.user, new=definitions.SCOUT_SHORT
         )
-
-        # statuses should remain
-        assert self.user.is_verified is False
-        assert self.user.is_missing_verification_data is True
-
         change.approved = True
         change.save()
         self.user.refresh_from_db()
@@ -212,6 +204,7 @@ class ProfileVerificationExistingProfileWithReadyForVerificationTests(TestCase):
     """Freshly created user is modifing profile fields which are Verification fields."""
 
     def setUp(self):
+        utils.create_system_user()
         self.user = User.objects.create(email="username", declared_role="T")
         self.user.profile.VERIFICATION_FIELDS = ["bio"]
         self.user.profile.bio = "bbbb"
@@ -252,6 +245,7 @@ class ProfileVerificationExistingProfileWithReadyForVerificationTests(TestCase):
 
 class ProfileUserIsVerifiedAndModifiesVerificationFields(TestCase):
     def setUp(self):
+        utils.create_system_user()
         self.user = User.objects.create(email="username", declared_role="T")
         self.user.profile.VERIFICATION_FIELDS = ["bio"]
         self.user.profile.bio = "bbbb"
@@ -277,6 +271,7 @@ class ProfileUserIsVerifiedAndModifiesVerificationFields(TestCase):
 
 class ProfileCompletnesTests(TestCase):
     def test_profile_is_complete(self):
+        utils.create_system_user()
         user = User.objects.create(email="username", declared_role="T")
         user.profile.COMPLETE_FIELDS = ["bio"]
         user.profile.VERIFICATION_FIELDS = []

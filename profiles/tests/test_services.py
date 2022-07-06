@@ -1,6 +1,3 @@
-import logging
-
-import pytest
 from django.test import TestCase
 from profiles import models
 from roles import definitions
@@ -13,6 +10,7 @@ utils.silence_explamation_mark()
 
 class VerificationServiceTest(TestCase):
     def setUp(self):
+        utils.create_system_user()
         self.user = User.objects.create(
             email="username", declared_role=definitions.PLAYER_SHORT
         )
@@ -23,7 +21,6 @@ class VerificationServiceTest(TestCase):
         self.user.profile.save()
         self.user.verify(silent=True)
         assert self.user.is_verified is True
-        print(f"----> setUp {self.user.state}")
 
     def test__1__changing_role_to_coach_from_player_cause_user_sate_to_missing_verification_data(
         self,
@@ -42,4 +39,4 @@ class VerificationServiceTest(TestCase):
         self.user.refresh_from_db()
         print(f"----> after {self.user.state}")
         assert self.user.is_verified is False
-        assert self.user.is_missing_verification_data is True
+        assert self.user.is_waiting_for_verification is True

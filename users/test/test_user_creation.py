@@ -20,6 +20,7 @@ LAST_NAME = "T"
 
 class InitialUserCreationPlayerProfile(TestCase):
     def setUp(self):
+        utils.create_system_user()
         self.user = User.objects.create(
             email=TEST_MAIL,
             first_name=FIRST_NAME,
@@ -55,6 +56,9 @@ class InitialUserCreationPlayerProfile(TestCase):
 
 
 class ProfileAssigmentDuringUserCreationTests(TestCase):
+    def setUp(self):
+        utils.create_system_user()
+
     def test_users_profile_assigment(self):
         model_map = {
             definitions.COACH_SHORT: (pfs_models.CoachProfile, "is_coach"),

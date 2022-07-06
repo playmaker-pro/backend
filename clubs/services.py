@@ -1,4 +1,5 @@
 from .models import Team, Club, Season
+from typing import Optional
 
 
 class SeasonService:
@@ -8,22 +9,12 @@ class SeasonService:
 
 
 class AdapterBase:
-    def get_mapping_name(self, name):
+    def get_mapping_name(self, name: str) -> str:
         return f",,{name},,"
 
 
 class TeamAdapter(AdapterBase):
-    def match_name_or_mapping(self, name: str):
-        try:
-            return Team.objects.get(name__iexact=name)
-        except Team.DoesNotExist:
-            name = self.get_mapping_name(name)
-            try:
-                return Team.objects.get(mapping__icontains=name)
-            except Team.DoesNotExist:
-                return None
-
-    def match_name_or_mapping_with_code(self, name: str, code: str):
+    def match_name_or_mapping_with_code(self, name: str, code: str) -> Optional[Team]:
         try:
             return Team.objects.get(name__iexact=name, league__code=str(code))
         except Team.DoesNotExist:
@@ -31,16 +22,4 @@ class TeamAdapter(AdapterBase):
             try:
                 return Team.objects.get(mapping__icontains=name, league__code=str(code))
             except Team.DoesNotExist:
-                return None
-
-
-class ClubAdapter(AdapterBase):
-    def match_name_or_mapping(self, name: str):
-        try:
-            return Club.objects.get(name__iexact=name)
-        except Club.DoesNotExist:
-            name = self.get_mapping_name(name)
-            try:
-                return Club.objects.get(mapping__icontains=name)
-            except Club.DoesNotExist:
                 return None

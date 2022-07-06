@@ -545,16 +545,22 @@ from django.urls import include, path
 #     url(r'^some-page/$', RedirectView.as_view(url='/')),
 #     ...
 
+CONSTANTS_DIR = os.path.join(BASE_DIR, "constants")
+
+
+REDIRECTS_FILE_PATH = os.path.join(CONSTANTS_DIR, "redirects.yaml")
+
 
 def load_redirects_file():
     import yaml
 
-    filename = "redirects.yaml"
     try:
-        with open(filename) as f:
+        with open(REDIRECTS_FILE_PATH) as f:
             data = yaml.load(f, Loader=yaml.FullLoader)
     except Exception as e:
-        print(f"Loading redirects.yaml: No {filename} file failed due to {e}")
+        print(
+            f"Loading redirects.yaml: No {REDIRECTS_FILE_PATH} file failed due to {e}"
+        )
     return data
 
 
@@ -567,16 +573,19 @@ def build_redirections(redirects):
 
 REDIRECTS_LISTS = build_redirections(load_redirects_file())
 
+
+SEO_FILE_PATH = os.path.join(CONSTANTS_DIR, "seo.yaml")
+
 try:
     import yaml
 
-    with open("seo.yaml", encoding="utf8") as f:
+    with open(SEO_FILE_PATH, encoding="utf8") as f:
         SEO_DATA = yaml.load(f, Loader=yaml.FullLoader)
-        logger.info(f"SEO data loaded from seo.yaml")
-    print(f"SEO data loaded from seo.yaml")
+        logger.info(f"SEO data loaded from {SEO_FILE_PATH}")
+    print(f"SEO data loaded from {SEO_FILE_PATH}")
 except Exception as e:
-    print(f"Loading seo.yaml: Not possible to write SEO_DATA due to: {e}")
-    logger.info(f"Loading seo.yaml: Not possible to write SEO_DATA due to: {e}")
+    print(f"Loading {SEO_FILE_PATH}: Not possible to write SEO_DATA due to: {e}")
+    logger.info(f"Loading {SEO_FILE_PATH}: Not possible to write SEO_DATA due to: {e}")
     SEO_DATA = {}
 
 

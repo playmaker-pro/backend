@@ -23,10 +23,9 @@ class InitialClassCreationTest(TestCase):
     """
 
     def setUp(self):
-
         with pytest.raises(InquiryPlan.DoesNotExist):
             InquiryPlan.objects.get(default=True)
-
+        utils.create_system_user()
         self.player = User.objects.create(
             email="username-player", declared_role=definitions.PLAYER_SHORT
         )
@@ -44,10 +43,9 @@ class InitialClassCreationTest(TestCase):
 
 class ModelMethodsRequest(TestCase):
     def setUp(self):
-
         with pytest.raises(InquiryPlan.DoesNotExist):
             InquiryPlan.objects.get(default=True)
-
+        utils.create_system_user()
         self.player = User.objects.create(
             email="username-player", declared_role=definitions.PLAYER_SHORT
         )

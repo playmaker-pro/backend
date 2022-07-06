@@ -30,6 +30,7 @@ class ClubTeamDisplays(TestCase):
 
 class ProfileLevelDisplay(TestCase):
     def setUp(self):
+        utils.create_system_user()
         self.club = utils.get_verified_user_club()
         self.coach = utils.get_verified_user_coach()
 
