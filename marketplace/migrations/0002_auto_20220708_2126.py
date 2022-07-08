@@ -7,24 +7,28 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0068_alter_team_full_name'),
-        ('marketplace', '0001_squashed_0024_auto_20220524_1236'),
+        ("clubs", "0068_alter_team_full_name"),
+        ("marketplace", "0001_squashed_0024_auto_20220524_1236"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='clubforplayerannouncement',
-            name='body',
+            model_name="clubforplayerannouncement",
+            name="body",
             field=models.TextField(),
         ),
         migrations.AlterField(
-            model_name='clubforplayerannouncement',
-            name='club',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='clubs.club'),
+            model_name="clubforplayerannouncement",
+            name="club",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="clubs.club"
+            ),
         ),
         migrations.AlterField(
-            model_name='clubforplayerannouncement',
-            name='voivodeship',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='clubs.voivodeship'),
+            model_name="clubforplayerannouncement",
+            name="voivodeship",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="clubs.voivodeship"
+            ),
         ),
     ]

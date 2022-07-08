@@ -9,57 +9,185 @@ import django_fsm
 
 class Migration(migrations.Migration):
 
-    replaces = [('inquiries', '0001_initial'), ('inquiries', '0002_auto_20201108_2058'), ('inquiries', '0003_auto_20201125_1904'), ('inquiries', '0004_requesttype'), ('inquiries', '0005_auto_20201204_1901'), ('inquiries', '0006_inquiryrequest_body'), ('inquiries', '0007_auto_20201207_1147'), ('inquiries', '0008_inquiryrequest_body_recipient'), ('inquiries', '0009_inquiryrequest_category'), ('inquiries', '0010_auto_20210104_2255')]
+    replaces = [
+        ("inquiries", "0001_initial"),
+        ("inquiries", "0002_auto_20201108_2058"),
+        ("inquiries", "0003_auto_20201125_1904"),
+        ("inquiries", "0004_requesttype"),
+        ("inquiries", "0005_auto_20201204_1901"),
+        ("inquiries", "0006_inquiryrequest_body"),
+        ("inquiries", "0007_auto_20201207_1147"),
+        ("inquiries", "0008_inquiryrequest_body_recipient"),
+        ("inquiries", "0009_inquiryrequest_category"),
+        ("inquiries", "0010_auto_20210104_2255"),
+    ]
 
     initial = True
 
     dependencies = [
-        ('users', '0001_initial'),
+        ("users", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='InquiryPlan',
+            name="InquiryPlan",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Plan name', max_length=255, verbose_name='Plan Name')),
-                ('limit', models.PositiveIntegerField(help_text='Limit how many actions are allowed', verbose_name='Plan limit')),
-                ('sort', models.PositiveIntegerField(default=0, help_text='Used to sort plans low numbers threaded as lowest plans. Default=0 which means this is not set.', verbose_name='Soring')),
-                ('description', models.TextField(blank=True, help_text='Short description what is rationale behind plan. Used only for internal purpose.', null=True, verbose_name='Description')),
-                ('default', models.BooleanField(default=False, help_text='Defines if this is default plan selected during account creation.', verbose_name='Default Plan')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Plan name", max_length=255, verbose_name="Plan Name"
+                    ),
+                ),
+                (
+                    "limit",
+                    models.PositiveIntegerField(
+                        help_text="Limit how many actions are allowed",
+                        verbose_name="Plan limit",
+                    ),
+                ),
+                (
+                    "sort",
+                    models.PositiveIntegerField(
+                        default=0,
+                        help_text="Used to sort plans low numbers threaded as lowest plans. Default=0 which means this is not set.",
+                        verbose_name="Soring",
+                    ),
+                ),
+                (
+                    "description",
+                    models.TextField(
+                        blank=True,
+                        help_text="Short description what is rationale behind plan. Used only for internal purpose.",
+                        null=True,
+                        verbose_name="Description",
+                    ),
+                ),
+                (
+                    "default",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Defines if this is default plan selected during account creation.",
+                        verbose_name="Default Plan",
+                    ),
+                ),
             ],
             options={
-                'unique_together': {('name', 'limit')},
+                "unique_together": {("name", "limit")},
             },
         ),
         migrations.CreateModel(
-            name='UserInquiry',
+            name="UserInquiry",
             fields=[
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='users.user')),
-                ('counter', models.PositiveIntegerField(default=0, help_text='Current number of used inquiries.', verbose_name='Obecna ilość zapytań')),
-                ('plan', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='inquiries.inquiryplan')),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to="users.user",
+                    ),
+                ),
+                (
+                    "counter",
+                    models.PositiveIntegerField(
+                        default=0,
+                        help_text="Current number of used inquiries.",
+                        verbose_name="Obecna ilość zapytań",
+                    ),
+                ),
+                (
+                    "plan",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="inquiries.inquiryplan",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='RequestType',
+            name="RequestType",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=240)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=240)),
             ],
         ),
         migrations.CreateModel(
-            name='InquiryRequest',
+            name="InquiryRequest",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', django_fsm.FSMField(choices=[('NOWE', 'NOWE'), ('WYSŁANO', 'WYSŁANO'), ('PRZECZYTANE', 'PRZECZYTANE'), ('ZAAKCEPTOWANE', 'ZAAKCEPTOWANE'), ('ODRZUCONE', 'ODRZUCONE')], default='NOWE', max_length=50)),
-                ('recipient', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='inquiry_request_recipient', to=settings.AUTH_USER_MODEL)),
-                ('sender', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sender_request_recipient', to=settings.AUTH_USER_MODEL)),
-                ('created_at', models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('body', models.TextField(blank=True, null=True)),
-                ('body_recipient', models.TextField(blank=True, null=True)),
-                ('category', models.CharField(choices=[('user', 'user'), ('team', 'team'), ('club', 'club')], default='user', max_length=255)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "status",
+                    django_fsm.FSMField(
+                        choices=[
+                            ("NOWE", "NOWE"),
+                            ("WYSŁANO", "WYSŁANO"),
+                            ("PRZECZYTANE", "PRZECZYTANE"),
+                            ("ZAAKCEPTOWANE", "ZAAKCEPTOWANE"),
+                            ("ODRZUCONE", "ODRZUCONE"),
+                        ],
+                        default="NOWE",
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "recipient",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="inquiry_request_recipient",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "sender",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="sender_request_recipient",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True, default=django.utils.timezone.now
+                    ),
+                ),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("body", models.TextField(blank=True, null=True)),
+                ("body_recipient", models.TextField(blank=True, null=True)),
+                (
+                    "category",
+                    models.CharField(
+                        choices=[("user", "user"), ("team", "team"), ("club", "club")],
+                        default="user",
+                        max_length=255,
+                    ),
+                ),
             ],
         ),
     ]

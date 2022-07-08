@@ -6,13 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0067_alter_club_voivodeship_raw'),
+        ("clubs", "0067_alter_club_voivodeship_raw"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='team',
-            name='full_name',
-            field=models.CharField(blank=True, max_length=255, null=True, verbose_name='Pełna nazwa drużyny'),
+            model_name="team",
+            name="full_name",
+            field=models.CharField(
+                blank=True,
+                max_length=255,
+                null=True,
+                verbose_name="Pełna nazwa drużyny",
+            ),
         ),
     ]

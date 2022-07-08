@@ -9,40 +9,197 @@ import users.models
 
 class Migration(migrations.Migration):
 
-    replaces = [('users', '0001_initial'), ('users', '0002_auto_20201112_1223'), ('users', '0003_auto_20201119_0023'), ('users', '0004_auto_20201126_1845'), ('users', '0005_auto_20201128_1256'), ('users', '0006_auto_20201222_1256'), ('users', '0007_auto_20210117_1508')]
+    replaces = [
+        ("users", "0001_initial"),
+        ("users", "0002_auto_20201112_1223"),
+        ("users", "0003_auto_20201119_0023"),
+        ("users", "0004_auto_20201126_1845"),
+        ("users", "0005_auto_20201128_1256"),
+        ("users", "0006_auto_20201222_1256"),
+        ("users", "0007_auto_20210117_1508"),
+    ]
 
     initial = True
 
     dependencies = [
-        ('auth', '0012_alter_user_first_name_max_length'),
+        ("auth", "0012_alter_user_first_name_max_length"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='User',
+            name="User",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('password', models.CharField(max_length=128, verbose_name='password')),
-                ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
-                ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
-                ('username', models.CharField(error_messages={'unique': 'A user with that username already exists.'}, help_text='Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.', max_length=150, unique=True, validators=[django.contrib.auth.validators.UnicodeUsernameValidator()], verbose_name='username')),
-                ('first_name', models.CharField(blank=True, max_length=150, verbose_name='first name')),
-                ('last_name', models.CharField(blank=True, max_length=150, verbose_name='last name')),
-                ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status')),
-                ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
-                ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
-                ('state', django_fsm.FSMField(choices=[('New', 'New'), ('Authentication Verified', 'Authentication Verified'), ("Awaiting for user's verification input", "Awaiting for user's verification input"), ('Account Waiting For Verification', 'Account Waiting For Verification'), ('Account Verified', 'Account Verified'), ('Migrated Verified', 'Migrated Verified'), ('Migrated New', 'Migrated New')], default='New', max_length=50)),
-                ('finish_account_initial_setup', models.BooleanField(blank=True, null=True, verbose_name='Skip full setup')),
-                ('email', models.EmailField(max_length=254, unique=True, verbose_name='Adres email')),
-                ('picture', models.ImageField(blank=True, null=True, upload_to=users.models.User.get_file_path, verbose_name='Zdjęcie')),
-                ('declared_club', models.CharField(blank=True, help_text='Users declaration in which club he plays.', max_length=355, null=True, verbose_name='Deklaracja klubu')),
-                ('declared_role', models.CharField(blank=True, choices=[('P', 'Piłkarz'), ('T', 'Trener'), ('C', 'Klub / Szkółka piłkarska'), ('M', 'Agent piłkarski'), ('S', 'Skaut'), ('R', 'Rodzic małego piłkarza'), ('G', 'Kibic')], help_text='Users declaration in which role he has. It is main paramter.', max_length=355, null=True, verbose_name='Deklaracja roli')),
-                ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.Group', verbose_name='groups')),
-                ('user_permissions', models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.Permission', verbose_name='user permissions')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("password", models.CharField(max_length=128, verbose_name="password")),
+                (
+                    "last_login",
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="last login"
+                    ),
+                ),
+                (
+                    "is_superuser",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Designates that this user has all permissions without explicitly assigning them.",
+                        verbose_name="superuser status",
+                    ),
+                ),
+                (
+                    "username",
+                    models.CharField(
+                        error_messages={
+                            "unique": "A user with that username already exists."
+                        },
+                        help_text="Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+                        max_length=150,
+                        unique=True,
+                        validators=[
+                            django.contrib.auth.validators.UnicodeUsernameValidator()
+                        ],
+                        verbose_name="username",
+                    ),
+                ),
+                (
+                    "first_name",
+                    models.CharField(
+                        blank=True, max_length=150, verbose_name="first name"
+                    ),
+                ),
+                (
+                    "last_name",
+                    models.CharField(
+                        blank=True, max_length=150, verbose_name="last name"
+                    ),
+                ),
+                (
+                    "is_staff",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Designates whether the user can log into this admin site.",
+                        verbose_name="staff status",
+                    ),
+                ),
+                (
+                    "is_active",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Designates whether this user should be treated as active. Unselect this instead of deleting accounts.",
+                        verbose_name="active",
+                    ),
+                ),
+                (
+                    "date_joined",
+                    models.DateTimeField(
+                        default=django.utils.timezone.now, verbose_name="date joined"
+                    ),
+                ),
+                (
+                    "state",
+                    django_fsm.FSMField(
+                        choices=[
+                            ("New", "New"),
+                            ("Authentication Verified", "Authentication Verified"),
+                            (
+                                "Awaiting for user's verification input",
+                                "Awaiting for user's verification input",
+                            ),
+                            (
+                                "Account Waiting For Verification",
+                                "Account Waiting For Verification",
+                            ),
+                            ("Account Verified", "Account Verified"),
+                            ("Migrated Verified", "Migrated Verified"),
+                            ("Migrated New", "Migrated New"),
+                        ],
+                        default="New",
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "finish_account_initial_setup",
+                    models.BooleanField(
+                        blank=True, null=True, verbose_name="Skip full setup"
+                    ),
+                ),
+                (
+                    "email",
+                    models.EmailField(
+                        max_length=254, unique=True, verbose_name="Adres email"
+                    ),
+                ),
+                (
+                    "picture",
+                    models.ImageField(
+                        blank=True,
+                        null=True,
+                        upload_to=users.models.User.get_file_path,
+                        verbose_name="Zdjęcie",
+                    ),
+                ),
+                (
+                    "declared_club",
+                    models.CharField(
+                        blank=True,
+                        help_text="Users declaration in which club he plays.",
+                        max_length=355,
+                        null=True,
+                        verbose_name="Deklaracja klubu",
+                    ),
+                ),
+                (
+                    "declared_role",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("P", "Piłkarz"),
+                            ("T", "Trener"),
+                            ("C", "Klub / Szkółka piłkarska"),
+                            ("M", "Agent piłkarski"),
+                            ("S", "Skaut"),
+                            ("R", "Rodzic małego piłkarza"),
+                            ("G", "Kibic"),
+                        ],
+                        help_text="Users declaration in which role he has. It is main paramter.",
+                        max_length=355,
+                        null=True,
+                        verbose_name="Deklaracja roli",
+                    ),
+                ),
+                (
+                    "groups",
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text="The groups this user belongs to. A user will get all permissions granted to each of their groups.",
+                        related_name="user_set",
+                        related_query_name="user",
+                        to="auth.Group",
+                        verbose_name="groups",
+                    ),
+                ),
+                (
+                    "user_permissions",
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text="Specific permissions for this user.",
+                        related_name="user_set",
+                        related_query_name="user",
+                        to="auth.Permission",
+                        verbose_name="user permissions",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'User',
-                'verbose_name_plural': 'Users',
+                "verbose_name": "User",
+                "verbose_name_plural": "Users",
             },
             bases=(models.Model, users.models.UserRoleMixin),
         ),

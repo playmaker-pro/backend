@@ -7,65 +7,131 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    replaces = [('products', '0001_initial'), ('products', '0002_auto_20210219_1849'), ('products', '0003_auto_20210219_1924'), ('products', '0004_auto_20210224_1730'), ('products', '0005_product_picture'), ('products', '0006_product_html_body_footer'), ('products', '0007_product_slug'), ('products', '0008_auto_20210228_1136'), ('products', '0009_product_html_first'), ('products', '0010_product_extra_css')]
+    replaces = [
+        ("products", "0001_initial"),
+        ("products", "0002_auto_20210219_1849"),
+        ("products", "0003_auto_20210219_1924"),
+        ("products", "0004_auto_20210224_1730"),
+        ("products", "0005_product_picture"),
+        ("products", "0006_product_html_body_footer"),
+        ("products", "0007_product_slug"),
+        ("products", "0008_auto_20210228_1136"),
+        ("products", "0009_product_html_first"),
+        ("products", "0010_product_extra_css"),
+    ]
 
     initial = True
 
     dependencies = [
-        ('users', '0007_auto_20210117_1508'),
+        ("users", "0007_auto_20210117_1508"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PageDescription',
+            name="PageDescription",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.TextField()),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("text", models.TextField()),
             ],
         ),
         migrations.CreateModel(
-            name='Tag',
+            name="Tag",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200)),
-                ('active', models.BooleanField(default=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=200)),
+                ("active", models.BooleanField(default=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Product',
+            name="Product",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(blank=True, max_length=455, null=True)),
-                ('subtitle', models.CharField(blank=True, max_length=455, null=True)),
-                ('place', models.CharField(blank=True, max_length=455, null=True)),
-                ('person', models.CharField(blank=True, max_length=455, null=True)),
-                ('teaser', models.CharField(blank=True, max_length=455, null=True)),
-                ('description', models.TextField(blank=True, null=True)),
-                ('active', models.BooleanField(default=False)),
-                ('html_body', models.TextField(blank=True, null=True)),
-                ('html_form', models.TextField(blank=True, null=True)),
-                ('tags', models.ManyToManyField(to='products.Tag')),
-                ('picture', models.ImageField(blank=True, null=True, upload_to='product_pics/%Y-%m-%d/', verbose_name='Zdjęcie')),
-                ('html_body_footer', models.TextField(blank=True, null=True)),
-                ('slug', models.SlugField(blank=True, null=True)),
-                ('contact_email', models.EmailField(blank=True, max_length=254, null=True)),
-                ('send_email_to_admin', models.BooleanField(default=False)),
-                ('html_first', models.TextField(blank=True, null=True)),
-                ('extra_css', models.TextField(blank=True, null=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(blank=True, max_length=455, null=True)),
+                ("subtitle", models.CharField(blank=True, max_length=455, null=True)),
+                ("place", models.CharField(blank=True, max_length=455, null=True)),
+                ("person", models.CharField(blank=True, max_length=455, null=True)),
+                ("teaser", models.CharField(blank=True, max_length=455, null=True)),
+                ("description", models.TextField(blank=True, null=True)),
+                ("active", models.BooleanField(default=False)),
+                ("html_body", models.TextField(blank=True, null=True)),
+                ("html_form", models.TextField(blank=True, null=True)),
+                ("tags", models.ManyToManyField(to="products.Tag")),
+                (
+                    "picture",
+                    models.ImageField(
+                        blank=True,
+                        null=True,
+                        upload_to="product_pics/%Y-%m-%d/",
+                        verbose_name="Zdjęcie",
+                    ),
+                ),
+                ("html_body_footer", models.TextField(blank=True, null=True)),
+                ("slug", models.SlugField(blank=True, null=True)),
+                (
+                    "contact_email",
+                    models.EmailField(blank=True, max_length=254, null=True),
+                ),
+                ("send_email_to_admin", models.BooleanField(default=False)),
+                ("html_first", models.TextField(blank=True, null=True)),
+                ("extra_css", models.TextField(blank=True, null=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Request',
+            name="Request",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('date', models.DateTimeField(auto_created=True, auto_now=True)),
-                ('raw_body', models.JSONField(blank=True, null=True)),
-                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='products.product')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("date", models.DateTimeField(auto_created=True, auto_now=True)),
+                ("raw_body", models.JSONField(blank=True, null=True)),
+                (
+                    "product",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="products.product",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'unique_together': {('user', 'product', 'date')},
+                "unique_together": {("user", "product", "date")},
             },
         ),
     ]
