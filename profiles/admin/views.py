@@ -90,7 +90,7 @@ class ClubProfileAdmin(ProfileAdminBase):
         "club_role",
         linkify("club_object"),
     )
-    search_fields = DEFAULT_PROFILE_SEARCHABLES + ("club_object",)
+    search_fields = DEFAULT_PROFILE_SEARCHABLES + ("club_object__name",)
     autocomplete_fields = ("club_object",)
 
 
@@ -204,7 +204,7 @@ class ProfileVerificationStatusAdmin(admin.ModelAdmin):
 class PlayerProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
         linkify("playermetrics"),
-        linkify("team_object"),
+        "team_object_linkify",
         linkify("team_object_alt"),
         "display_league",
         "display_team",
@@ -215,6 +215,12 @@ class PlayerProfileAdmin(ProfileAdminBase):
         "meta_last",
         linkify("verification"),
     )
+
+    def team_object_linkify(self, obj=None):
+        name = obj.team_object.name_with_league_full
+        return linkify("team_object")(obj, name)
+    
+    team_object_linkify.short_description = "team_object"
 
     def meta_last(self, obj):
         if obj.meta:
@@ -236,8 +242,14 @@ class PlayerProfileAdmin(ProfileAdminBase):
 
 @admin.register(models.CoachProfile)
 class CoachProfileAdmin(ProfileAdminBase):
-    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (linkify("team_object"),)
+    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + ("team_object_linkify",)
     autocomplete_fields = ("team_object",)
+
+    def team_object_linkify(self, obj=None):
+        name = obj.team_object.name_with_league_full
+        return linkify("team_object")(obj, name)
+    
+    team_object_linkify.short_description = "team_object"
 
 
 @admin.register(models.RoleChangeRequest)

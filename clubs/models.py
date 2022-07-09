@@ -1,3 +1,4 @@
+from enum import unique
 from functools import cached_property, lru_cache
 from typing import List
 
@@ -558,6 +559,19 @@ class Team(models.Model, MappingMixin):
             return True
         else:
             return False
+
+    @property
+    def league_with_parents(self):
+        highest_parent = self.league.highest_parent
+        parent = self.league.parent
+        primary_league = self.league
+        values = list(filter(None, [highest_parent, parent, primary_league]))
+        return [value.name for value in set(values)]
+         
+    @property
+    def name_with_league_full(self):
+        leagues = ", ".join(self.league_with_parents)
+        return f"{self.name} ({leagues})"
 
     @property
     def display_team(self):
