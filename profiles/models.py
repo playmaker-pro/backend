@@ -24,7 +24,7 @@ from .mixins import TeamObjectsDisplayMixin
 import logging
 from .erros import VerificationCompletionFieldsWrongSetup
 from . import managers
-
+from voivodeships.models import Voivodeships
 
 User = get_user_model()
 
@@ -699,16 +699,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True,
     )
-    voivodeship_raw = models.CharField(
-        # TODO:(l.remkowicz):followup needed to see if that can be safely removed from database scheme follow-up: PM-365
-        _("Wojewódźtwo (raw)"),
-        help_text=_("Wojewódźtwo w którym grasz. Nie uzywane pole"),
-        max_length=68,
-        blank=True,
-        null=True,
-        choices=settings.VOIVODESHIP_CHOICES,
-    )
-
     birth_date = models.DateField(_("Data urodzenia"), blank=True, null=True)
     height = models.PositiveIntegerField(
         _("Wzrost"),
@@ -778,7 +768,25 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     transfermarket_url = models.URLField(_("TrasferMarket"), blank=True, null=True)
     voivodeship = models.CharField(
         _("Województwo zamieszkania"),
-        help_text="Wybierz województwo",
+        help_text="Wybierz województwo. Stare pole przygotowane do migracji.",
+        max_length=68,
+        blank=True,
+        null=True,
+        choices=settings.VOIVODESHIP_CHOICES,
+    )
+    new_voivodeship = models.ForeignKey(
+        Voivodeships,
+        verbose_name=_("Województwo zamieszkania"),
+        help_text="Wybierz województwo. Nowe pole.",
+        max_length=20,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
+    voivodeship_raw = models.CharField(
+        # TODO:(l.remkowicz):followup needed to see if that can be safely removed from database scheme follow-up: PM-365
+        _("Wojewódźtwo (raw)"),
+        help_text=_("Wojewódźtwo w którym grasz. Nie uzywane pole"),
         max_length=68,
         blank=True,
         null=True,
@@ -1342,13 +1350,22 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
 
     voivodeship = models.CharField(
-        _("Województwo zamieszkania"),
+        _("Województwo zamieszkania."),
+        help_text='Wybierz województwo. Stare pole przygotowane do migracji',
         max_length=68,
         blank=True,
         null=True,
         choices=settings.VOIVODESHIP_CHOICES,
     )
-
+    new_voivodeship = models.ForeignKey(
+        Voivodeships,
+        verbose_name=_("Województwo zamieszkania"),
+        help_text="Wybierz województwo. Nowe pole.",
+        max_length=20,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
     club_role = models.IntegerField(
         choices=CLUB_ROLE,
         default=1,  # trener

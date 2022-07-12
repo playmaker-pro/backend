@@ -1,5 +1,3 @@
-import itertools
-
 from django.conf import settings
 from django.db.models import F
 from app import mixins, utils
@@ -21,6 +19,7 @@ from django.db.models import Q, Value
 from app.mixins import FilterPlayerViewMixin
 from django.utils import timezone
 
+from voivodeships.models import Voivodeships
 
 TABLE_TYPE_PLAYER = definitions.PLAYER_SHORT
 TABLE_TYPE_TEAM = definitions.CLUB_SHORT
@@ -67,7 +66,7 @@ class TableView(
         kwargs["page_obj"] = page_obj
         kwargs["page_title"] = self.page_title
         kwargs["type"] = self.table_type
-        kwargs["vivos"] = settings.VOIVODESHIP_CHOICES
+        kwargs["vivos"] = Voivodeships.objects.all()
         kwargs["leagues"] = League.objects.is_top_parent()
         self.add_more_to_kwargs(kwargs)
         kwargs["modals"] = self.modal_activity(
@@ -108,14 +107,14 @@ class PlayersTable(TableView):
         if self.filter_vivo is not None:
             vivos = [i for i in self.filter_vivo]
 
-            clauses = (Q(playerprofile__voivodeship=p) for p in vivos)
+            clauses = (Q(playerprofile__new_voivodeship__name=p) for p in vivos)
             query = reduce(operator.or_, clauses)
 
             players_with_no_vivo = queryset.filter(
-                playerprofile__voivodeship__isnull=True
+                playerprofile__new_voivodeship__isnull=True
             )
             no_vivo_clause = (
-                Q(playerprofile__team_object__club__voivodeship__name=p) for p in vivos
+                Q(playerprofile__team_object__club__new_voivodeship__name=p) for p in vivos
             )
             no_vivo_query = reduce(operator.or_, no_vivo_clause)
 
@@ -169,7 +168,6 @@ class PlayerTalbeQuickFilter(
     template_name = "soccerbase/table.html"
     http_method_names = ["get"]
     paginate_limit = 25
-    table_type = None
     table_type = TABLE_TYPE_PLAYER
     page_title = "Baza piłkarzy"
 
@@ -211,14 +209,14 @@ class PlayerTalbeQuickFilter(
         if self.filter_vivo is not None:
             vivos = [i for i in self.filter_vivo]
 
-            clauses = (Q(playerprofile__voivodeship=p) for p in vivos)
+            clauses = (Q(playerprofile__new_voivodeship__name=p) for p in vivos)
             query = reduce(operator.or_, clauses)
 
             players_with_no_vivo = queryset.filter(
-                playerprofile__voivodeship__isnull=True
+                playerprofile__new_voivodeship__isnull=True
             )
             no_vivo_clause = (
-                Q(playerprofile__team_object__club__voivodeship__name=p) for p in vivos
+                Q(playerprofile__team_object__club__new_voivodeship__name=p) for p in vivos
             )
             no_vivo_query = reduce(operator.or_, no_vivo_clause)
 
@@ -298,8 +296,8 @@ class TeamsTable(TableView):
             queryset = queryset.filter(query)
 
         if self.filter_vivo is not None:
-            vivos = [i.replace("-", "").lower() for i in self.filter_vivo]
-            clauses = (Q(club__voivodeship__name=p) for p in vivos)
+            vivos = [i for i in self.filter_vivo]
+            clauses = (Q(club__new_voivodeship__name=p) for p in vivos)
             query = reduce(operator.or_, clauses)
             queryset = queryset.filter(query)
 
@@ -348,14 +346,14 @@ class CoachesTable(TableView):
         if self.filter_vivo is not None:
 
             vivos = [i for i in self.filter_vivo]
-            clauses = (Q(coachprofile__voivodeship=p) for p in vivos)
+            clauses = (Q(coachprofile__new_voivodeship__name=p) for p in vivos)
             query = reduce(operator.or_, clauses)
 
             coaches_with_no_vivo = queryset.filter(
-                coachprofile__voivodeship__isnull=True
+                coachprofile__new_voivodeship__isnull=True
             )
             no_vivo_clause = (
-                Q(coachprofile__team_object__club__voivodeship__name=p) for p in vivos
+                Q(coachprofile__team_object__club__new_voivodeship__name=p) for p in vivos
             )
             no_vivo_query = reduce(operator.or_, no_vivo_clause)
 

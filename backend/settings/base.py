@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "fantasy",
     "plays",
     "landingpage",
+    "voivodeships",
     "resources",
     "data",  # external repo
     "stats",  # external repo
