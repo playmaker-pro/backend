@@ -1,16 +1,14 @@
-import pytest
-
 from django.test import TestCase
 from notifications import models
 from users.models import User
 from roles import definitions
-import logging
-
+from utils import testutils as utils
 from users.models import User
 
 
 class ClubTeamDisplays(TestCase):
     def setUp(self):
+        utils.create_system_user()
         self.user = User.objects.create(
             email="username", declared_role=definitions.PLAYER_SHORT
         )

@@ -1,11 +1,15 @@
 import logging
-
+from django.conf import settings
 import pytest
 from clubs.models import Club, Gender, League, Seniority, Team, Voivodeship
 from django.test import TestCase
 from profiles import models
 from roles import definitions
 from users.models import User
+
+
+def create_system_user():
+    User.objects.get_or_create(email=settings.SYSTEM_USER_EMAIL)
 
 
 def get_team():
