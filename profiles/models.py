@@ -766,6 +766,8 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         _("90min portal"), max_length=500, blank=True, null=True
     )
     transfermarket_url = models.URLField(_("TrasferMarket"), blank=True, null=True)
+
+    # TODO Based on task PM-363. After migration on production, field can be deleted
     voivodeship = models.CharField(
         _("Województwo zamieszkania"),
         help_text="Wybierz województwo. Stare pole przygotowane do migracji.",
@@ -1349,6 +1351,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         help_text=_("Miasto z którego dojeżdżam na trening"), blank=True, null=True
     )
 
+    # TODO Based on task PM-363. After migration on production, field can be deleted
     voivodeship = models.CharField(
         _("Województwo zamieszkania."),
         help_text='Wybierz województwo. Stare pole przygotowane do migracji',

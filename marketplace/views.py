@@ -26,7 +26,6 @@ from profiles.models import PlayerPosition, ClubProfile, CoachProfile
 from profiles.utils import get_datetime_from_age
 from roles import definitions
 from stats import adapters
-from users.models import User
 
 from .forms import (
     PlayerForClubAnnouncementForm,
@@ -44,6 +43,7 @@ from .models import (
 from .utils import get_datetime_from_year
 
 from marketplace.models import get_licence_choice_number
+from voivodeships.models import Voivodeships
 
 User = get_user_model()
 
@@ -137,7 +137,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     profile = user.profile.team_object
                     club = profile.club if profile else ""
                     league = profile.league if profile else ""
-                    voivodeship = profile.club.voivodeship if profile else ""
+                    voivodeship = profile.club.new_voivodeship if profile else ""
                     seniority = profile.seniority if profile else ""
                     gender = profile.gender if profile else ""
 
@@ -145,7 +145,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                         initial={
                             "club": club,
                             "league": league,
-                            "voivodeship": voivodeship,
+                            "new_voivodeship": voivodeship,
                             "seniority": seniority,
                             "gender": gender,
                         }
@@ -167,13 +167,13 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     else None
                 )
                 if league:
-                    voivodeship = user.profile.team_object.club.voivodeship
+                    voivodeship = user.profile.team_object.club.new_voivodeship
                 else:
                     voivodeship = ""
                 form = CoachForClubAnnouncementForm(
                     initial={
                         "lic_type": user.profile.licence,
-                        "voivodeship": voivodeship,
+                        "new_voivodeship": voivodeship,
                         "address": user.profile.address,
                         "practice_distance": user.profile.practice_distance,
                         "league": league,
@@ -184,12 +184,12 @@ class AddAnnouncementView(LoginRequiredMixin, View):
             elif _action_name == "club_looking_for_player":
 
                 if user.profile.club_object:
-                    voivo = user.profile.club_object.voivodeship
+                    voivo = user.profile.club_object.new_voivodeship
 
                     form = ClubForPlayerAnnouncementForm(
                         initial={
                             "club": user.profile.club_object,
-                            "voivodeship": voivo,
+                            "new_voivodeship": voivo,
                         }
                     )
                     teams = user.profile.club_object.teams.all()
@@ -208,7 +208,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     form = ClubForCoachAnnouncementForm(
                         initial={
                             "club": user.profile.club_object,
-                            "voivodeship": user.profile.club_object.voivodeship,
+                            "new_voivodeship": user.profile.club_object.new_voivodeship,
                         }
                     )
                     form.fields["club"].queryset = Club.objects.filter(
@@ -221,7 +221,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
 
             elif user.is_player:
                 voivodeship = (
-                    user.profile.team_object.club.voivodeship
+                    user.profile.team_object.club.new_voivodeship
                     if user.profile.team_object
                     else None
                 )
@@ -233,8 +233,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 form = PlayerForClubAnnouncementForm(
                     initial={
                         "position": user.profile.position_raw,
-                        "voivodeship": voivodeship,
-                        # 'voivodeship': user.profile.team_object.club.voivodeship,
+                        "new_voivodeship": voivodeship,
                         "address": user.profile.address,
                         "practice_distance": user.profile.practice_distance,
                         "league": league.highest_parent,
@@ -388,7 +387,7 @@ class AnnouncementsMetaView(
             )
 
         if self.filter_vivo is not None:
-            queryset = queryset.filter(voivodeship__name__in=self.filter_vivo)
+            queryset = queryset.filter(new_voivodeship__name__in=self.filter_vivo)
 
         return queryset
 
@@ -399,7 +398,7 @@ class AnnouncementsMetaView(
         return {
             "seniority": list(Seniority.objects.values_list("name", flat=True)),
             "gender": list(Gender.objects.values_list("name", flat=True)),
-            "voivodeship": list(Voivodeship.objects.values_list("name", flat=True)),
+            "voivodeship": list(Voivodeships.objects.values_list("name", flat=True)),
             "league": list(League.objects.values_list("name", flat=True)),
             "position": list(PlayerPosition.objects.values_list("name", flat=True)),
             "licence": LICENCE_CHOICES,
@@ -446,7 +445,7 @@ class AnnouncementsMetaView(
         kwargs["filters"] = self.get_filters_values()
         kwargs["filters"] = self.get_filters_values()
         kwargs["leagues"] = League.objects.is_top_parent()
-        kwargs["voivodeships"] = Voivodeship.objects.all()
+        kwargs["voivodeships"] = Voivodeships.objects.all()
 
         self.prepare_kwargs(kwargs)
 

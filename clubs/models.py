@@ -79,6 +79,8 @@ class Club(models.Model, MappingMixin):
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name="club_managers", blank=True
     )
+
+    # TODO Based on task PM-363. After migration on production, field can be deleted
     voivodeship = models.ForeignKey(
         Voivodeship, on_delete=models.SET_NULL, null=True, blank=True,
         verbose_name=_("Województwo"),

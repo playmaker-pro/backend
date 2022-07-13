@@ -11,9 +11,7 @@
 >
 
     {% for voivo in voivodeships %}
-        {% if voivo.name != 'e' %}
-            <option {% if voivo.name in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>{{ voivo }}</option>
-        {% endif %}
+        <option {% if voivo.name in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>{{ voivo.name }}</option>
     {% endfor %}
 
 </select>
