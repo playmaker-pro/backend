@@ -497,8 +497,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         "team",
         # 'team_raw',
         "position_raw",
-        "voivodeship",
-        "voivodeship_raw",
+        "new_voivodeship",
     ]
 
     OPTIONAL_FIELDS = [
@@ -1520,7 +1519,7 @@ class ScoutProfile(BaseProfile):
         "practice_distance",
         "club_raw",
         "league_raw",
-        "voivodeship_raw",
+        "new_voivodeship",
     ]
 
     GOAL_CHOICES = (
@@ -1586,13 +1585,23 @@ class ScoutProfile(BaseProfile):
         blank=True,
         null=True,
     )
-
+    # TODO: (l.remkowicz): Based on task PM-363. After migration on production, field can be deleted
     voivodeship = models.CharField(
         _("Wojewódźtwo"),
-        help_text=_("Wojewódźtwo"),
+        help_text=_("Wojewódźtwo. Stare pole, czeka na migracje"),
         max_length=68,
         blank=True,
         null=True,
+    )
+
+    new_voivodeship = models.ForeignKey(
+        Voivodeships,
+        verbose_name=_("Województwo zamieszkania"),
+        help_text="Wybierz województwo. Nowe pole.",
+        max_length=20,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
     )
 
     voivodeship_raw = models.CharField(
@@ -1601,7 +1610,7 @@ class ScoutProfile(BaseProfile):
         max_length=68,
         blank=True,
         null=True,
-    )
+    )  # TODO:(l.remkowicz): followup needed to see if that can be safely removed from database scheme follow-up: PM-365
 
     class Meta:
         verbose_name = "Scout Profile"

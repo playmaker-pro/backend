@@ -13,7 +13,7 @@
             {% endif %}
             
             {% include template with key=_('Miasto')        value=profile.address|default:'-' %}
-            {% include template with key=_('Lokalizacja')   value=profile.voivodeship|default:'-' %}
+            {% include template with key=_('Lokalizacja')   value=profile.new_voivodeship|default:'-' %}
         {% endwith %}
         </div>
         <h2 class="card-title">{% trans 'Klub' %}</h2>

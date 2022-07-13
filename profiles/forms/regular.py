@@ -195,7 +195,7 @@ class CoachProfileForm(BaseProfileForm):
                 Field("address", wrapper_class="row"),
                 Field("licence", wrapper_class="row"),
                 Field("about", wrapper_class="row"),
-                Field("voivodeship", wrapper_class="row"),
+                Field("new_voivodeship", wrapper_class="row"),
                 css_class="col-md-6",
             ),
             Fieldset(
@@ -231,7 +231,7 @@ class CoachProfileForm(BaseProfileForm):
             "phone",
             "practice_distance",
             "licence",
-            "voivodeship",
+            "new_voivodeship",
             "team_club_league_voivodeship_ver",
         ]
 
@@ -294,7 +294,7 @@ class PlayerProfileForm(BaseProfileForm):
                     placeholder="Miasto z którego dojeżdżam na trening",
                     css_class="mandatory",
                 ),
-                Field("voivodeship", wrapper_class="row"),
+                Field("new_voivodeship", wrapper_class="row"),
                 Field("about", wrapper_class="row"),
                 css_class="col-md-6",
             ),
@@ -416,7 +416,7 @@ class ScoutProfileForm(BaseProfileForm):
         'practice_distance',
         'club',
         'league',
-        'voivodeship',
+        'new_voivodeship',
         ]
     """
 
@@ -429,8 +429,8 @@ class ScoutProfileForm(BaseProfileForm):
         self.fields["league_raw"].label = "Klub"
         self.fields["league_raw"].help_text = None
         self.fields["league_raw"].label = "Poziom rozgrywkowy"
-        self.fields["voivodeship_raw"].help_text = None
-        self.fields["voivodeship_raw"].label = "Wojewódźtwo"
+        self.fields["new_voivodeship"].help_text = None
+        self.fields["new_voivodeship"].label = "Wojewódźtwo"
         self.fields["practice_distance"].help_text = None
         self.fields["practice_distance"].label = "Odległość na treningi"
 
@@ -451,7 +451,7 @@ class ScoutProfileForm(BaseProfileForm):
                 Field("league_raw", wrapper_class="row", placeholder="deklarowany"),
                 Field("club_raw", wrapper_class="row", placeholder="reprezentowany"),
                 Field(
-                    "voivodeship_raw", wrapper_class="row", placeholder="deklarowane"
+                    "new_voivodeship", wrapper_class="row", placeholder="deklarowane"
                 ),
                 Field("country", wrapper_class="row"),
                 Field(
