@@ -7,34 +7,47 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0046_auto_20211226_1832'),
+        ("clubs", "0046_auto_20211226_1832"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Region',
+            name="Region",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
             ],
         ),
         migrations.AddField(
-            model_name='leaguegroup',
-            name='level',
+            model_name="leaguegroup",
+            name="level",
             field=models.IntegerField(default=0),
         ),
         migrations.AlterField(
-            model_name='league',
-            name='city_name',
+            model_name="league",
+            name="city_name",
             field=models.CharField(blank=True, default=None, max_length=255, null=True),
         ),
         migrations.AddField(
-            model_name='league',
-            name='region',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='clubs.region'),
+            model_name="league",
+            name="region",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="clubs.region",
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='league',
-            unique_together={('name', 'country', 'group', 'region', 'zpn')},
+            name="league",
+            unique_together={("name", "country", "group", "region", "zpn")},
         ),
     ]

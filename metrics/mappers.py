@@ -14,8 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class PlayerMapper:
-    """Found player in profile.PlayerProfile and connects with ID from s38
-    """
+    """Found player in profile.PlayerProfile and connects with ID from s38"""
 
     @classmethod
     @lru_cache()
@@ -44,8 +43,10 @@ class TeamMapper:
             )
             return team_obj
         except CTeam.MultipleObjectsReturned:
-            msg = f"input data: team_name={team_name} league_obj={league_obj} " \
-                  f"league_obj.id={league_obj.id} query used={team_name.lower()}"
+            msg = (
+                f"input data: team_name={team_name} league_obj={league_obj} "
+                f"league_obj.id={league_obj.id} query used={team_name.lower()}"
+            )
             logger.debug(msg)
             print(msg)
         except CTeam.DoesNotExist:
@@ -53,10 +54,10 @@ class TeamMapper:
 
     @classmethod
     @lru_cache()
-    def get_urls_pics(cls, team_name: str,
-                      league_obj: CLeague,
-                      club: Optional[bool] = False) -> tuple:
-        """ Helper method of get_url_pic_name and get_url_pic_for_club"""
+    def get_urls_pics(
+        cls, team_name: str, league_obj: CLeague, club: Optional[bool] = False
+    ) -> tuple:
+        """Helper method of get_url_pic_name and get_url_pic_for_club"""
 
         obj = TeamMapper.get_team_obj(team_name, league_obj)
         name = obj.name if obj else team_name

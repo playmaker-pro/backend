@@ -6,33 +6,77 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0034_auto_20201207_1412'),
+        ("profiles", "0034_auto_20201207_1412"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='playerprofile',
-            name='club',
-            field=models.CharField(blank=True, db_index=True, help_text='Klub w którym obecnie reprezentuejsz', max_length=68, null=True, verbose_name='Klub'),
+            model_name="playerprofile",
+            name="club",
+            field=models.CharField(
+                blank=True,
+                db_index=True,
+                help_text="Klub w którym obecnie reprezentuejsz",
+                max_length=68,
+                null=True,
+                verbose_name="Klub",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='league',
-            field=models.CharField(blank=True, db_index=True, help_text='Poziom rozgrywkowy', max_length=68, null=True, verbose_name='Rozgrywki'),
+            model_name="playerprofile",
+            name="league",
+            field=models.CharField(
+                blank=True,
+                db_index=True,
+                help_text="Poziom rozgrywkowy",
+                max_length=68,
+                null=True,
+                verbose_name="Rozgrywki",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='position_raw',
-            field=models.IntegerField(blank=True, choices=[(1, 'Bramkarz'), (2, 'Obrońca Lewy'), (3, 'Obrońca Prawy'), (4, 'Obrońca Środkowy'), (5, 'Pomocnik defensywny (6)'), (6, 'Pomocnik środkowy (8)'), (7, 'Pomocnik ofensywny (10)'), (8, 'Skrzydłowy'), (9, 'Napastnik')], db_index=True, null=True, verbose_name='Pozycja'),
+            model_name="playerprofile",
+            name="position_raw",
+            field=models.IntegerField(
+                blank=True,
+                choices=[
+                    (1, "Bramkarz"),
+                    (2, "Obrońca Lewy"),
+                    (3, "Obrońca Prawy"),
+                    (4, "Obrońca Środkowy"),
+                    (5, "Pomocnik defensywny (6)"),
+                    (6, "Pomocnik środkowy (8)"),
+                    (7, "Pomocnik ofensywny (10)"),
+                    (8, "Skrzydłowy"),
+                    (9, "Napastnik"),
+                ],
+                db_index=True,
+                null=True,
+                verbose_name="Pozycja",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='team',
-            field=models.CharField(blank=True, db_index=True, help_text='Drużyna w której obecnie grasz', max_length=68, null=True, verbose_name='Drużyna'),
+            model_name="playerprofile",
+            name="team",
+            field=models.CharField(
+                blank=True,
+                db_index=True,
+                help_text="Drużyna w której obecnie grasz",
+                max_length=68,
+                null=True,
+                verbose_name="Drużyna",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='voivodeship',
-            field=models.CharField(blank=True, db_index=True, help_text='Wojewódźtwo', max_length=68, null=True, verbose_name='Wojewódźtwo'),
+            model_name="playerprofile",
+            name="voivodeship",
+            field=models.CharField(
+                blank=True,
+                db_index=True,
+                help_text="Wojewódźtwo",
+                max_length=68,
+                null=True,
+                verbose_name="Wojewódźtwo",
+            ),
         ),
     ]

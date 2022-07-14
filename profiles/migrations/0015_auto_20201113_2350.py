@@ -6,18 +6,48 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0014_auto_20201113_2339'),
+        ("profiles", "0014_auto_20201113_2339"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='playerprofile',
-            name='position_raw',
-            field=models.IntegerField(blank=True, choices=[(1, 'Bramkarz'), (2, 'Obrońca Lewy'), (3, 'Obrońca Prawy'), (4, 'Obrońca Środkowy'), (5, 'Pomocnik defensywny (6)'), (6, 'Pomocnik środkowy (8)'), (7, 'Pomocnik ofensywny (10)'), (8, 'Skrzydłowy'), (9, 'Napastnik')], null=True, verbose_name='Pozycja'),
+            model_name="playerprofile",
+            name="position_raw",
+            field=models.IntegerField(
+                blank=True,
+                choices=[
+                    (1, "Bramkarz"),
+                    (2, "Obrońca Lewy"),
+                    (3, "Obrońca Prawy"),
+                    (4, "Obrońca Środkowy"),
+                    (5, "Pomocnik defensywny (6)"),
+                    (6, "Pomocnik środkowy (8)"),
+                    (7, "Pomocnik ofensywny (10)"),
+                    (8, "Skrzydłowy"),
+                    (9, "Napastnik"),
+                ],
+                null=True,
+                verbose_name="Pozycja",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='position_raw_alt',
-            field=models.IntegerField(blank=True, choices=[(1, 'Bramkarz'), (2, 'Obrońca Lewy'), (3, 'Obrońca Prawy'), (4, 'Obrońca Środkowy'), (5, 'Pomocnik defensywny (6)'), (6, 'Pomocnik środkowy (8)'), (7, 'Pomocnik ofensywny (10)'), (8, 'Skrzydłowy'), (9, 'Napastnik')], null=True, verbose_name='Pozycja alternat'),
+            model_name="playerprofile",
+            name="position_raw_alt",
+            field=models.IntegerField(
+                blank=True,
+                choices=[
+                    (1, "Bramkarz"),
+                    (2, "Obrońca Lewy"),
+                    (3, "Obrońca Prawy"),
+                    (4, "Obrońca Środkowy"),
+                    (5, "Pomocnik defensywny (6)"),
+                    (6, "Pomocnik środkowy (8)"),
+                    (7, "Pomocnik ofensywny (10)"),
+                    (8, "Skrzydłowy"),
+                    (9, "Napastnik"),
+                ],
+                null=True,
+                verbose_name="Pozycja alternat",
+            ),
         ),
     ]

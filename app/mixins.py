@@ -20,11 +20,11 @@ class PaginateMixin:
 
     @property
     def page(self):
-        return self.request.GET.get('page') or 1
+        return self.request.GET.get("page") or 1
 
-    def paginate(self,
-                 data: Union[QuerySet, List],
-                 limit: Union[int, None]) -> Paginator:
+    def paginate(
+        self, data: Union[QuerySet, List], limit: Union[int, None]
+    ) -> Paginator:
 
         limit = limit or self.paginate_limit
         paginator = Paginator(data, limit)
@@ -42,9 +42,7 @@ class PaginateMixin:
 
         page_obj.elements = page_object_elements_count(page_obj)
 
-        self.page_num_range = range(
-            paginator_pages - 3, paginator_pages + 1
-        )
+        self.page_num_range = range(paginator_pages - 3, paginator_pages + 1)
 
         # Adding right and left range of visible pages
         left_index = int(page_number) - 2
@@ -63,9 +61,10 @@ class PaginateMixin:
 
 class ViewFilterMixin:
     """
-        Adds properites with parsed filters
+    Adds properites with parsed filters
     """
-    any_name = ['dowolne']
+
+    any_name = ["dowolne"]
 
     def _get_param_value(self, name):
         return self.request.GET.get(name)
@@ -82,17 +81,17 @@ class ViewFilterMixin:
         if value in self.any_name:
             return None
         if value:
-            if value in [0, '0', 'false', 'FALSE', 'False', 'nie']:
+            if value in [0, "0", "false", "FALSE", "False", "nie"]:
                 return False
-            elif value in [1, '1', 'true', 'TRUE', 'True', 'tak']:
+            elif value in [1, "1", "true", "TRUE", "True", "tak"]:
                 return True
             else:
                 return None
 
     @property
     def filter_is_juniors(self):
-        '''bool to set if we are looking for junior players'''
-        is_juniors = self._param_bool_filter('is_junior')
+        """bool to set if we are looking for junior players"""
+        is_juniors = self._param_bool_filter("is_junior")
         if is_juniors is None:
             return False
         else:
@@ -100,8 +99,8 @@ class ViewFilterMixin:
 
     @property
     def filter_is_foregin(self):
-        '''bool to set if we are looking for foregin players'''
-        is_foregin = self._param_bool_filter('is_foregin')
+        """bool to set if we are looking for foregin players"""
+        is_foregin = self._param_bool_filter("is_foregin")
         if is_foregin is None:
             return False
         else:
@@ -109,12 +108,12 @@ class ViewFilterMixin:
 
     @property
     def filter_season_exact(self):
-        return self._param_filter('season')
+        return self._param_filter("season")
 
     @property
     def filter_is_senior(self):
-        '''bool to set if senior leagues'''
-        senior = self._param_bool_filter('is_senior')
+        """bool to set if senior leagues"""
+        senior = self._param_bool_filter("is_senior")
         if senior is None:
             return True
         else:
@@ -122,117 +121,117 @@ class ViewFilterMixin:
 
     @property
     def filter_seniority_exact(self):
-        '''Single value'''
-        return self._param_filter('seniority')
+        """Single value"""
+        return self._param_filter("seniority")
 
     @property
     def filter_gender_exact(self):
-        '''Single value'''
-        return self._param_filter('gender')
+        """Single value"""
+        return self._param_filter("gender")
 
     @property
     def filter_league(self):
-        value = self.request.GET.getlist('league')
+        value = self.request.GET.getlist("league")
         if value:
             return value
 
     @property
     def filter_names_of_team(self):
-        value = self.request.GET.getlist('team_names')
+        value = self.request.GET.getlist("team_names")
         if value:
             return value
 
     @property
     def filter_names_of_club(self):
-        value = self.request.GET.getlist('club_names')
+        value = self.request.GET.getlist("club_names")
         if value:
             return value
 
     @property
     def filter_name_of_team(self):
-        value = self.request.GET.get('team_name')
+        value = self.request.GET.get("team_name")
         if value:
             return value
 
     @property
     def filter_name_of_club(self):
-        value = self.request.GET.get('club_name')
+        value = self.request.GET.get("club_name")
         if value:
             return value
 
     @property
     def filter_vivo(self):
-        value = self.request.GET.getlist('vivo')
+        value = self.request.GET.getlist("vivo")
         if value:
             return value
 
     @property
     def filter_age_max(self):
-        value = self.request.GET.get('age_max')
+        value = self.request.GET.get("age_max")
         if value:
             return int(value)
 
     @property
     def filter_age_min(self):
-        value = self.request.GET.get('age_min')
+        value = self.request.GET.get("age_min")
         if value:
             return int(value)
 
     @property
     def filter_year_max(self):  # 2010 in (1990 - 2010)
-        value = self.request.GET.get('year_max')
+        value = self.request.GET.get("year_max")
         if value:
             return int(value)
 
     @property
     def filter_year_min(self):  # 1990 in (1990 - 2010)
-        value = self.request.GET.get('year_min')
+        value = self.request.GET.get("year_min")
         if value:
             return int(value)
 
     @property
     def filter_first_last(self):
-        value = self.request.GET.get('first_last')
+        value = self.request.GET.get("first_last")
         return value
 
     @property
     def filter_age_range(self):
-        value = self.request.GET.get('age_range')
-        if isinstance(value, str) and value != '' and value is not None:
-            if value == '----':
+        value = self.request.GET.get("age_range")
+        if isinstance(value, str) and value != "" and value is not None:
+            if value == "----":
                 return None
-            elif value == 'do 20 lat':
+            elif value == "do 20 lat":
                 return (0, 20)
-            elif value == 'od 21 do 26':
+            elif value == "od 21 do 26":
                 return (21, 26)
-            elif value == 'od 27 do 34':
+            elif value == "od 27 do 34":
                 return (27, 34)
-            elif value == 'powyżej 35':
+            elif value == "powyżej 35":
                 return (35, 199)
             else:
                 return None
 
     @property
     def filter_position_exact(self):
-        value = self.request.GET.get('position')
+        value = self.request.GET.get("position")
         if value:
             return value
 
     @property
     def filter_target_league_exact(self):
-        value = self.request.GET.get('target_league')
+        value = self.request.GET.get("target_league")
         if value:
             return value
 
     @property
     def filter_licence_type(self):
-        value = self.request.GET.get('licence')
+        value = self.request.GET.get("licence")
         if value:
             return value
 
     @property
     def filter_licence_list(self):
-        values = self.request.GET.getlist('licence')
+        values = self.request.GET.getlist("licence")
         if values:
             return values
 
@@ -240,18 +239,18 @@ class ViewFilterMixin:
     def filter_position(self):
 
         POSITION_CHOICES = {
-            'Bramkarz': 1,
-            'Obrońca Lewy': 2,
-            'Obrońca Prawy': 3,
-            'Obrońca Środkowy': 4,
-            'Pomocnik defensywny (6)': 5,
-            'Pomocnik środkowy (8)': 6,
-            'Pomocnik ofensywny (10)': 7,
-            'Skrzydłowy': 8,
-            'Napastnik': 9
+            "Bramkarz": 1,
+            "Obrońca Lewy": 2,
+            "Obrońca Prawy": 3,
+            "Obrońca Środkowy": 4,
+            "Pomocnik defensywny (6)": 5,
+            "Pomocnik środkowy (8)": 6,
+            "Pomocnik ofensywny (10)": 7,
+            "Skrzydłowy": 8,
+            "Napastnik": 9,
         }
 
-        values = self.request.GET.getlist('position')
+        values = self.request.GET.getlist("position")
 
         filtered_positions = []
         for value in values:
@@ -263,13 +262,13 @@ class ViewFilterMixin:
     def filter_fantasy_position(self) -> Union[list, None]:
 
         fantasy_positions = {
-            'Bramkarz': 1,
-            'Obrońca': [2, 3, 4],
-            'Pomocnik': [5, 6, 7, 8],
-            'Napastnik': 9
+            "Bramkarz": 1,
+            "Obrońca": [2, 3, 4],
+            "Pomocnik": [5, 6, 7, 8],
+            "Napastnik": 9,
         }
 
-        values = self.request.GET.getlist('fantasy_position')
+        values = self.request.GET.getlist("fantasy_position")
 
         filtered_positions = []
         for value in values:
@@ -283,26 +282,26 @@ class ViewFilterMixin:
     @property
     def filter_position_marketplace(self):
         POSITION_CHOICES = (
-            'Bramkarz',
-            'Obrońca Lewy',
-            'Obrońca Prawy',
-            'Obrońca Środkowy',
-            'Pomocnik defensywny (6)',
-            'Pomocnik środkowy (8)',
-            'Pomocnik ofensywny (10)',
-            'Skrzydłowy',
-            'Napastnik',
-            'Dowolna'
+            "Bramkarz",
+            "Obrońca Lewy",
+            "Obrońca Prawy",
+            "Obrońca Środkowy",
+            "Pomocnik defensywny (6)",
+            "Pomocnik środkowy (8)",
+            "Pomocnik ofensywny (10)",
+            "Skrzydłowy",
+            "Napastnik",
+            "Dowolna",
         )
 
-        values = self.request.GET.getlist('position')
+        values = self.request.GET.getlist("position")
 
         if "Dowolna" in values:
             return
         if not values:
             return
 
-        filtered_positions = ['Dowolna']
+        filtered_positions = ["Dowolna"]
         for value in values:
             if value in POSITION_CHOICES:
                 filtered_positions.append(value)
@@ -311,17 +310,17 @@ class ViewFilterMixin:
 
     @property
     def filter_leg(self):
-        '''
+        """
         LEG_CHOICES = (
         (1, 'Lewa'),
         (2, 'Prawa'),)
-        '''
-        value = self.request.GET.get('leg')
-        if value == '----':
+        """
+        value = self.request.GET.get("leg")
+        if value == "----":
             return None
-        elif value == 'lewa':
+        elif value == "lewa":
             return 1
-        elif value == 'prawa':
+        elif value == "prawa":
             return 2
 
 
@@ -330,168 +329,181 @@ class ViewModalLoadingMixin:
 
     def modal_activity(self, user, register_auto=None, verification_auto=None):
         modals = {
-            'action_limit_exceeded': {
-                'name': 'actionLimitExceedModal',
-                'template': 'profiles/modals/_limit_exceeded_modal.html',
-                'auto': False,
-                'load': False,
-                'async': False,
+            "action_limit_exceeded": {
+                "name": "actionLimitExceedModal",
+                "template": "profiles/modals/_limit_exceeded_modal.html",
+                "auto": False,
+                "load": False,
+                "async": False,
             },
-            'missing_name': {
-                'name': 'missingNameModal',
-                'template': 'profiles/modals/_missing_name_modal.html',
-                'auto': False,
-                'load': False,
-                'async': 'get_missingname_form',
+            "missing_name": {
+                "name": "missingNameModal",
+                "template": "profiles/modals/_missing_name_modal.html",
+                "auto": False,
+                "load": False,
+                "async": "get_missingname_form",
             },
-            'register': {
-                'name': 'registerModal',
-                'template': 'profiles/modals/_register_modal.html',
-                'auto': False,
-                'load': False,
-                'async': False
+            "register": {
+                "name": "registerModal",
+                "template": "profiles/modals/_register_modal.html",
+                "auto": False,
+                "load": False,
+                "async": False,
             },
-            'verification': {
-                'name': 'verificationModal',
-                'template': 'profiles/modals/_verification_modal.html',
-                'auto': False,
-                'load': False,
-                'async': 'get_verification_form',
+            "verification": {
+                "name": "verificationModal",
+                "template": "profiles/modals/_verification_modal.html",
+                "auto": False,
+                "load": False,
+                "async": "get_verification_form",
             },
-            'need_role': {
-                'name': 'missingBasicAccountModal',
-                'template': 'profiles/modals/_new_account_role_modal.html',
-                'auto': False,
-                'load': False,
-                'async': False
+            "need_role": {
+                "name": "missingBasicAccountModal",
+                "template": "profiles/modals/_new_account_role_modal.html",
+                "auto": False,
+                "load": False,
+                "async": False,
             },
-            'need_verification': {
-                'name': 'verificationNeededModal',
-                'template': 'profiles/modals/_need_verification.html',
-                'auto': False,
-                'load': False,
-                'async': False
+            "need_verification": {
+                "name": "verificationNeededModal",
+                "template": "profiles/modals/_need_verification.html",
+                "auto": False,
+                "load": False,
+                "async": False,
             },
-            'inquiry': {
-                'name': 'inquiryModal',
-                'template': 'profiles/modals/_inquiry_modal.html',
-                'auto': False,
-                'load': False,
-                'async': False
+            "inquiry": {
+                "name": "inquiryModal",
+                "template": "profiles/modals/_inquiry_modal.html",
+                "auto": False,
+                "load": False,
+                "async": False,
             },
-            'add_announcement': {
-                'name': 'inquiryModal',
-                'template': 'profiles/modals/_add_announcement_modal.html',
-                'auto': False,
-                'load': False,
-                'async': 'get_add_announcement_form'
+            "add_announcement": {
+                "name": "inquiryModal",
+                "template": "profiles/modals/_add_announcement_modal.html",
+                "auto": False,
+                "load": False,
+                "async": "get_add_announcement_form",
             },
-            'no_club': {
-                'name': 'noClubModal',
-                'template': 'profiles/modals/_no_club_assigned_modal.html',
-                'auto': False,
-                'load': False,
-                'async': False
+            "no_club": {
+                "name": "noClubModal",
+                "template": "profiles/modals/_no_club_assigned_modal.html",
+                "auto": False,
+                "load": False,
+                "async": False,
             },
-            'approve_announcement_modal': {
-                'name': 'approveAnnouncementModal',
-                'template': 'profiles/modals/_approve_announcement_modal.html',
-                'auto': False,
-                'load': False,
-                'async': False
+            "approve_announcement_modal": {
+                "name": "approveAnnouncementModal",
+                "template": "profiles/modals/_approve_announcement_modal.html",
+                "auto": False,
+                "load": False,
+                "async": False,
             },
-            'no_updated_profile_modal': {
-                'name': 'profileNotValidModal',
-                'template': 'profiles/modals/_profile_not_valid.html',
-                'auto': False,
-                'load': False,
-                'async': False
-            }
+            "no_updated_profile_modal": {
+                "name": "profileNotValidModal",
+                "template": "profiles/modals/_profile_not_valid.html",
+                "auto": False,
+                "load": False,
+                "async": False,
+            },
         }
         # Load custom settigs, if class attribute is being set to Ture
-        if getattr(self, 'modal_verification_force_loading'):
-            modals['verification']['load'] = True
+        if getattr(self, "modal_verification_force_loading"):
+            modals["verification"]["load"] = True
 
         if user.is_authenticated and not user.validate_last_name():
-            modals['no_updated_profile_modal']['load'] = True
+            modals["no_updated_profile_modal"]["load"] = True
 
         # Loading account specific modals (mandatory)
         if not user.is_authenticated:
-            modals['register']['load'] = True
-            modals['register']['auto'] = register_auto or True
+            modals["register"]["load"] = True
+            modals["register"]["auto"] = register_auto or True
 
-        elif user.first_name == user.email.split('@')[0] and user.last_name == user.email.split('@')[0]:
-            modals['missing_name']['load'] = True
-            modals['missing_name']['auto'] = True
+        elif (
+            user.first_name == user.email.split("@")[0]
+            and user.last_name == user.email.split("@")[0]
+        ):
+            modals["missing_name"]["load"] = True
+            modals["missing_name"]["auto"] = True
 
         elif user.is_missing_verification_data:
-            modals['verification']['load'] = True
+            modals["verification"]["load"] = True
             # When user is pending role change
 
             if user.is_pending_role_change and verification_auto is None:
-                modals['verification']['auto'] = False
+                modals["verification"]["auto"] = False
             else:
-                modals['verification']['auto'] = verification_auto if verification_auto is not None else True
+                modals["verification"]["auto"] = (
+                    verification_auto if verification_auto is not None else True
+                )
 
         elif user.is_roleless:
-            modals['need_role']['load'] = True
-            modals['need_role']['auto'] = True
+            modals["need_role"]["load"] = True
+            modals["need_role"]["auto"] = True
 
         elif user.is_waiting_for_verification:
-            modals['need_verification']['load'] = True
+            modals["need_verification"]["load"] = True
 
         # Loading action specific modals
         # here is case when we can perfom action, so here are the action that we can perform
         else:
             if user.is_club and not user.clubprofile.is_clubless:
-                modals['no_club']['load'] = True
+                modals["no_club"]["load"] = True
 
-            modals['inquiry']['load'] = True
-            modals['approve_announcement_modal']['load'] = True
+            modals["inquiry"]["load"] = True
+            modals["approve_announcement_modal"]["load"] = True
 
             if user.is_club or user.is_coach or user.is_player:
-                modals['add_announcement']['load'] = True
+                modals["add_announcement"]["load"] = True
             # if user.is_player:
             #     modals['add_announcement_player_for_club']['load'] = True
             if user.userinquiry.counter == user.userinquiry.limit:
-                modals['action_limit_exceeded']['load'] = True
+                modals["action_limit_exceeded"]["load"] = True
         return modals
 
 
 class FilterPlayerViewMixin:
-
     def filter_queryset(self, queryset):
 
         if self.filter_is_foregin:
-            queryset = queryset.exclude(playerprofile__country='PL')
+            queryset = queryset.exclude(playerprofile__country="PL")
 
         if self.filter_is_juniors:
             queryset = queryset.exclude(playerprofile__age__lt=timezone.now().year - 20)
 
         if self.filter_leg is not None:
-            queryset = queryset.filter(
-                playerprofile__prefered_leg=self.filter_leg)
+            queryset = queryset.filter(playerprofile__prefered_leg=self.filter_leg)
 
         if self.filter_league is not None:
-            queryset = queryset.filter(playerprofile__team_object__league__name__in=self.filter_league)
+            queryset = queryset.filter(
+                playerprofile__team_object__league__name__in=self.filter_league
+            )
 
         if self.filter_first_last is not None:
-            queryset = queryset.annotate(fullname=Concat('first_name', Value(' '), 'last_name'))
+            queryset = queryset.annotate(
+                fullname=Concat("first_name", Value(" "), "last_name")
+            )
             queryset = queryset.filter(fullname__icontains=self.filter_first_last)
 
         if self.filter_vivo is not None:
             vivos = [i for i in self.filter_vivo]
-            clauses = (Q(playerprofile__team_object__club__voivodeship__name=p) for p in vivos)
+            clauses = (
+                Q(playerprofile__team_object__club__voivodeship__name=p) for p in vivos
+            )
             query = reduce(operator.or_, clauses)
             queryset = queryset.filter(query)
 
         if self.filter_age_min is not None:
             mindate = get_datetime_from_age(self.filter_age_min)
-            queryset = queryset.filter(playerprofile__birth_date__year__lte=mindate.year)
+            queryset = queryset.filter(
+                playerprofile__birth_date__year__lte=mindate.year
+            )
 
         if self.filter_age_max is not None:
             maxdate = get_datetime_from_age(self.filter_age_max)
-            queryset = queryset.filter(playerprofile__birth_date__year__gte=maxdate.year)
+            queryset = queryset.filter(
+                playerprofile__birth_date__year__gte=maxdate.year
+            )
 
         # if self.filter_age_range is not None:
         #     mindate = get_datetime_from_age(self.filter_age_range[0])

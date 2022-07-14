@@ -173,7 +173,7 @@ class Club(models.Model, MappingMixin):
         verbose_name_plural = _("Kluby")
 
     def __str__(self):
-        vivo_str = f', {self.voivodeship}' if self.voivodeship else ''
+        vivo_str = f", {self.voivodeship}" if self.voivodeship else ""
         return f"{self.name} {vivo_str}"
 
     def save(self, *args, **kwargs):
@@ -613,7 +613,7 @@ class Team(models.Model, MappingMixin):
         if not group_name:
             return region
         elif not group_name and not region:
-            return ''
+            return ""
 
         return f"{group_name}, {region}"
 
@@ -638,7 +638,8 @@ class Team(models.Model, MappingMixin):
         return self.gender.display_gender
 
     name = models.CharField(
-        _("Nazwa drużyny"), max_length=255,
+        _("Nazwa drużyny"),
+        max_length=255,
     )
 
     # full_name will be calculated on save
@@ -655,13 +656,13 @@ class Team(models.Model, MappingMixin):
         )
         league_name = self.display_league_top_parent
         if not league_name:
-            suffix = ''
+            suffix = ""
         else:
-            suffix = f'({league_name}'
+            suffix = f"({league_name}"
             if region_name:
-                suffix += f', {region_name})'
+                suffix += f", {region_name})"
             else:
-                suffix += ')'
+                suffix += ")"
 
         return f"{self.name} {suffix}"
 

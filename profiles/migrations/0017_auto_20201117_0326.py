@@ -6,28 +6,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0016_auto_20201117_0244'),
+        ("profiles", "0016_auto_20201117_0244"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='playermetrics',
-            name='fantasy',
+            model_name="playermetrics",
+            name="fantasy",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='playermetrics',
-            name='games',
+            model_name="playermetrics",
+            name="games",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='playermetrics',
-            name='season',
+            model_name="playermetrics",
+            name="season",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='playermetrics',
-            name='updated_at',
+            model_name="playermetrics",
+            name="updated_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

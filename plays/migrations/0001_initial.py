@@ -9,15 +9,31 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('clubs', '0038_league_order'),
+        ("clubs", "0038_league_order"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PlaysConfig',
+            name="PlaysConfig",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('main_league', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='clubs.league')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "main_league",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="clubs.league",
+                    ),
+                ),
             ],
         ),
     ]

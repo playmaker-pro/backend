@@ -6,23 +6,35 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fantasy', '0001_initial'),
+        ("fantasy", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='fantasysettings',
-            name='excluded_leagues',
-            field=models.TextField(blank=True, help_text='Comma separated numbers eg. "20,21,23" ', null=True),
+            model_name="fantasysettings",
+            name="excluded_leagues",
+            field=models.TextField(
+                blank=True,
+                help_text='Comma separated numbers eg. "20,21,23" ',
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='fantasysettings',
-            name='junior_leagues',
-            field=models.TextField(blank=True, help_text='Comma separated numbers eg. "20,21,23" ', null=True),
+            model_name="fantasysettings",
+            name="junior_leagues",
+            field=models.TextField(
+                blank=True,
+                help_text='Comma separated numbers eg. "20,21,23" ',
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='fantasysettings',
-            name='senior_leagues',
-            field=models.TextField(blank=True, help_text='Comma separated numbers eg. "20,21,23" ', null=True),
+            model_name="fantasysettings",
+            name="senior_leagues",
+            field=models.TextField(
+                blank=True,
+                help_text='Comma separated numbers eg. "20,21,23" ',
+                null=True,
+            ),
         ),
     ]

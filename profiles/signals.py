@@ -18,7 +18,7 @@ from inquiries.models import InquiryPlan
 
 
 def create_default_basic_plan_if_not_present():
-    ''' In case when there is no Default plan we would like to create it at first time'''
+    """In case when there is no Default plan we would like to create it at first time"""
 
     args = settings.INQUIRIES_INITAL_PLAN
     try:
@@ -31,10 +31,12 @@ def create_default_basic_plan_if_not_present():
 def create_default_basic_plan_for_coach_if_not_present():
     args = settings.INQUIRIES_INITAL_PLAN_COACH
     try:
-        plan = InquiryPlan.objects.get(name=args['name'])
+        plan = InquiryPlan.objects.get(name=args["name"])
 
     except InquiryPlan.DoesNotExist:
-        logger.info('Initial InquiryPlan for coaches does not exists. Creating new one.')
+        logger.info(
+            "Initial InquiryPlan for coaches does not exists. Creating new one."
+        )
         plan = InquiryPlan.objects.create(**args)
     return plan
 
@@ -48,36 +50,42 @@ def set_user_inquiry_plan(user):
         else:
             default = create_default_basic_plan_if_not_present()
         UserInquiry.objects.create(plan=default, user=user)
-        logger.info(f'User {user.id} plan created.')
+        logger.info(f"User {user.id} plan created.")
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_profile_handler(sender, instance, created, **kwargs):
-    '''Signal reponsible for creating and attaching proper profile to user during creation process.
+    """Signal reponsible for creating and attaching proper profile to user during creation process.
 
     Based on declared role append proper role (profile)
-    '''
+    """
     service = ProfileService()
 
-    if not created:  # this place is point where we decide if we want to update user's profile each time.
+    if (
+        not created
+    ):  # this place is point where we decide if we want to update user's profile each time.
         # mechanism to prevent double db queries would be to detect if role has been requested to update.
-        msgprefix = 'Updated'
+        msgprefix = "Updated"
 
     if created:
-        logger.debug(f'Sending email to admins about new user {instance.username}')
+        logger.debug(f"Sending email to admins about new user {instance.username}")
         mail_admins_about_new_user(instance)
-        msgprefix = 'New'
+        msgprefix = "New"
     service.set_and_create_user_profile(instance)
     set_user_inquiry_plan(instance)
-    logger.info(f"{msgprefix} user profile for {instance} created with declared role {instance.declared_role}")
+    logger.info(
+        f"{msgprefix} user profile for {instance} created with declared role {instance.declared_role}"
+    )
 
 
 @receiver(post_save, sender=models.RoleChangeRequest)
 def change_profile_approved_handler(sender, instance, created, **kwargs):
-    '''users.User.declared_role is central point to navigate with role changes.
+    """users.User.declared_role is central point to navigate with role changes.
     admin can alter somees role just changing User.declared_role
-    '''
-    if created:  # we assume that when object is created RoleChangedRequest only admin shold recieve notifiaction.
+    """
+    if (
+        created
+    ):  # we assume that when object is created RoleChangedRequest only admin shold recieve notifiaction.
         mail_role_change_request(instance)
         return
 
@@ -87,4 +95,6 @@ def change_profile_approved_handler(sender, instance, created, **kwargs):
         user.unverify(silent=True)
         user.save()  # this should invoke create_profile_handler signal
         # set_and_create_user_profile(user)
-        logger.info(f"User {user} profile changed to {instance.new} sucessfully due to: accepted RoleChangeRequest")
+        logger.info(
+            f"User {user} profile changed to {instance.new} sucessfully due to: accepted RoleChangeRequest"
+        )

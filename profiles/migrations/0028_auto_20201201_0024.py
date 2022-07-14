@@ -6,122 +6,144 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0027_auto_20201128_1256'),
+        ("profiles", "0027_auto_20201128_1256"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='club_email',
+            model_name="clubprofile",
+            name="club_email",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='club_phone',
+            model_name="clubprofile",
+            name="club_phone",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='diet_suplements',
+            model_name="clubprofile",
+            name="diet_suplements",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='fizo',
+            model_name="clubprofile",
+            name="fizo",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='game_bonus',
+            model_name="clubprofile",
+            name="game_bonus",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='gloves_shoes_refunds',
+            model_name="clubprofile",
+            name="gloves_shoes_refunds",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='practice_stadion_address',
+            model_name="clubprofile",
+            name="practice_stadion_address",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='regular_gear',
+            model_name="clubprofile",
+            name="regular_gear",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='scolarships',
+            model_name="clubprofile",
+            name="scolarships",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='secondary_trainer',
+            model_name="clubprofile",
+            name="secondary_trainer",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='stadion_address',
+            model_name="clubprofile",
+            name="stadion_address",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='traning_gear',
+            model_name="clubprofile",
+            name="traning_gear",
         ),
         migrations.RemoveField(
-            model_name='clubprofile',
-            name='travel_refunds',
+            model_name="clubprofile",
+            name="travel_refunds",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='club_email',
+            model_name="coachprofile",
+            name="club_email",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='club_phone',
+            model_name="coachprofile",
+            name="club_phone",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='diet_suplements',
+            model_name="coachprofile",
+            name="diet_suplements",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='fizo',
+            model_name="coachprofile",
+            name="fizo",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='game_bonus',
+            model_name="coachprofile",
+            name="game_bonus",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='gloves_shoes_refunds',
+            model_name="coachprofile",
+            name="gloves_shoes_refunds",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='practice_stadion_address',
+            model_name="coachprofile",
+            name="practice_stadion_address",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='regular_gear',
+            model_name="coachprofile",
+            name="regular_gear",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='scolarships',
+            model_name="coachprofile",
+            name="scolarships",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='secondary_trainer',
+            model_name="coachprofile",
+            name="secondary_trainer",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='stadion_address',
+            model_name="coachprofile",
+            name="stadion_address",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='traning_gear',
+            model_name="coachprofile",
+            name="traning_gear",
         ),
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='travel_refunds',
+            model_name="coachprofile",
+            name="travel_refunds",
         ),
         migrations.AlterField(
-            model_name='clubprofile',
-            name='club_role',
-            field=models.IntegerField(blank=True, choices=[(1, 'Prezes'), (2, 'Kierownik'), (3, 'Członek zarządu'), (4, 'Sztab szkoleniowy'), (5, 'Inne')], help_text='Defines if admin approved change', null=True),
+            model_name="clubprofile",
+            name="club_role",
+            field=models.IntegerField(
+                blank=True,
+                choices=[
+                    (1, "Prezes"),
+                    (2, "Kierownik"),
+                    (3, "Członek zarządu"),
+                    (4, "Sztab szkoleniowy"),
+                    (5, "Inne"),
+                ],
+                help_text="Defines if admin approved change",
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='coachprofile',
-            name='club_role',
-            field=models.IntegerField(blank=True, choices=[(1, 'Prezes'), (2, 'Kierownik'), (3, 'Członek zarządu'), (4, 'Sztab szkoleniowy'), (5, 'Inne')], help_text='Defines if admin approved change', null=True),
+            model_name="coachprofile",
+            name="club_role",
+            field=models.IntegerField(
+                blank=True,
+                choices=[
+                    (1, "Prezes"),
+                    (2, "Kierownik"),
+                    (3, "Członek zarządu"),
+                    (4, "Sztab szkoleniowy"),
+                    (5, "Inne"),
+                ],
+                help_text="Defines if admin approved change",
+                null=True,
+            ),
         ),
     ]

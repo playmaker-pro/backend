@@ -46,8 +46,9 @@ class BasePMProductView(BasePMView, ProductFilterMixn):
 
 
 class SendRequestView(LoginRequiredMixin, View):
-    '''Fetch form for annoucments'''
-    http_method_names = ['post']
+    """Fetch form for annoucments"""
+
+    http_method_names = ["post"]
 
     def post(self, request, id, *args, **kwargs):
         user = self.request.user
@@ -58,31 +59,45 @@ class SendRequestView(LoginRequiredMixin, View):
                 raw_body=request.POST,
                 product=product,
             )
-        except:     
-            messages.error(request, _("Wybrany product nie jest dostępny"), extra_tags='alert-danger')
+        except:
+            messages.error(
+                request,
+                _("Wybrany product nie jest dostępny"),
+                extra_tags="alert-danger",
+            )
             return redirect("products:products")
 
-        messages.success(request, _("Dziękujemy! Twoje zgłoszenie zostało wysłane."), extra_tags='alert-success')
+        messages.success(
+            request,
+            _("Dziękujemy! Twoje zgłoszenie zostało wysłane."),
+            extra_tags="alert-success",
+        )
         try:
             r.send_notification_to_admin()
             r.send_notifcation_to_user()
         except Exception as e:
-            subject = 'Wysyłanie notifikacji mailowej do usera który wysłał zapytanie o produkt.'
-            message = f'Wysyłanie notifkacji do usera {r.user} nie powidoło się z powodu: {e}'
+            subject = "Wysyłanie notifikacji mailowej do usera który wysłał zapytanie o produkt."
+            message = (
+                f"Wysyłanie notifkacji do usera {r.user} nie powidoło się z powodu: {e}"
+            )
             mail_managers(subject, message)
 
         return redirect("products:products")
 
 
 class ProductView(BasePMProductView):
-    page_title = 'Produkty Piłkarskie'
+    page_title = "Produkty Piłkarskie"
     template_name = "products/detail.html"
 
     def get_filters_values(self):
-        return {'tags': list(Tag.objects.filter(active=True).values_list('name', flat=True)),}
+        return {
+            "tags": list(
+                Tag.objects.filter(active=True).values_list("name", flat=True)
+            ),
+        }
 
     def get(self, request, slug, *args, **kwargs):
-        kwargs['page_obj'] = get_object_or_404(Product, slug=slug)
+        kwargs["page_obj"] = get_object_or_404(Product, slug=slug)
         self.prepare_kwargs(kwargs)
         return super().get(request, *args, **kwargs)
 
@@ -92,7 +107,7 @@ class ProductTailsView(BasePMProductView):
     template_name = "products/base.html"
     paginate_limit = 9
     table_type = None
-    page_title = 'Produkty Piłkarskie'
+    page_title = "Produkty Piłkarskie"
 
     def filter_queryset(self, queryset):
         queryset = queryset.filter(active=True)
@@ -101,22 +116,26 @@ class ProductTailsView(BasePMProductView):
         return queryset
 
     def get_filters_values(self):  # @todo add cache from Redis here
-        return {'tags': list(Tag.objects.filter(active=True).values_list('name', flat=True)),}
+        return {
+            "tags": list(
+                Tag.objects.filter(active=True).values_list("name", flat=True)
+            ),
+        }
 
     def get(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
         paginator = Paginator(queryset, self.paginate_limit)
-        page_number = request.GET.get('page') or 1
+        page_number = request.GET.get("page") or 1
         page_obj = paginator.get_page(page_number)
-        kwargs['page_obj'] = page_obj
+        kwargs["page_obj"] = page_obj
         try:
             desc = PageDescription.objects.all().first()
         except Exception as e:
             desc = None
-        kwargs['page_desc'] = desc
-        kwargs['type'] = self.table_type
+        kwargs["page_desc"] = desc
+        kwargs["type"] = self.table_type
         self.prepare_kwargs(kwargs)
         page_obj.elements = page_obj.end_index() - page_obj.start_index() + 1
-        
+
         return super().get(request, *args, **kwargs)

@@ -9,13 +9,19 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('profiles', '0068_auto_20220324_1735'),
+        ("profiles", "0068_auto_20220324_1735"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='profileverificationstatus',
-            name='owner',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='verifications', to=settings.AUTH_USER_MODEL),
+            model_name="profileverificationstatus",
+            name="owner",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="verifications",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

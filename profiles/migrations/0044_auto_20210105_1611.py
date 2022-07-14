@@ -6,13 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0043_auto_20210105_1610'),
+        ("profiles", "0043_auto_20210105_1610"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='playerprofile',
-            name='agent_name',
-            field=models.CharField(blank=True, max_length=45, null=True, verbose_name='Imię i nazwisko agenta / Nazwa agencji'),
+            model_name="playerprofile",
+            name="agent_name",
+            field=models.CharField(
+                blank=True,
+                max_length=45,
+                null=True,
+                verbose_name="Imię i nazwisko agenta / Nazwa agencji",
+            ),
         ),
     ]

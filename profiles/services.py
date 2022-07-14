@@ -36,14 +36,18 @@ class ProfileVerificationService:
         elif self.user.is_club:
             self._verify_club()
 
-    def update_verification_data(self, data: dict, requestor: User = None) -> models.ProfileVerificationStatus:
+    def update_verification_data(
+        self, data: dict, requestor: User = None
+    ) -> models.ProfileVerificationStatus:
         """using dict-like data we can create new verification object"""
         logger.debug("New verification recieved for %s", self.user)
         team = None
         club = None
         text = None
-        
-        if team_club_league_voivodeship_ver := data.get('team_club_league_voivodeship_ver'):
+
+        if team_club_league_voivodeship_ver := data.get(
+            "team_club_league_voivodeship_ver"
+        ):
             text = team_club_league_voivodeship_ver
         if has_team := data.get("has_team"):
             if has_team == "tak mam klub":
@@ -56,7 +60,7 @@ class ProfileVerificationService:
         if data.get("team") and team_not_found is False:
             if self.user.is_club:
                 club = data.get("team")
-            else:  
+            else:
                 team = data.get("team")
         else:
             if self.user.is_club:
@@ -74,7 +78,7 @@ class ProfileVerificationService:
         if has_team is False:
             team = None
             club = None
-      
+
         set_by = requestor or User.get_system_user()
         new = models.ProfileVerificationStatus.objects.create(
             owner=self.user,
@@ -84,17 +88,19 @@ class ProfileVerificationService:
             club=club,
             team=team,
             text=text,
-            set_by=set_by
+            set_by=set_by,
         )
         self.profile.verification = new
         self.profile.save()
         return new
 
-    def update_verification_status(self, status: str, verification: models.ProfileVerificationStatus = None) -> None:
+    def update_verification_status(
+        self, status: str, verification: models.ProfileVerificationStatus = None
+    ) -> None:
         verification = self.profile.verification or verification
         verification.status = status
         verification.save()
-        
+
     def _verify_user(self) -> None:
         self.user.verify()
         self.user.save()
@@ -116,17 +122,11 @@ class ProfileVerificationService:
             profile.team_club_league_voivodeship_ver = profile.verification.text
             self._verify_user()
 
-        elif (
-            profile.verification.has_team is False
-            and not profile.verification.text
-        ):
+        elif profile.verification.has_team is False and not profile.verification.text:
             profile.team_object = None
             profile.team_club_league_voivodeship_ver = None
             self._verify_user()
-        elif (
-            profile.verification.has_team is False
-            and profile.verification.text
-        ):
+        elif profile.verification.has_team is False and profile.verification.text:
             profile.team_club_league_voivodeship_ver = profile.verification.text
             profile.team_object = None
         profile.save()
@@ -140,7 +140,7 @@ class ProfileVerificationService:
             profile.save()
 
             # remove managment of a team
-            if hasattr(profile.user, 'managed_team'):
+            if hasattr(profile.user, "managed_team"):
                 managed_team_id = profile.user.managed_team.id
                 team = CTeam.objects.get(id=managed_team_id)
                 team.visible = False
@@ -152,7 +152,7 @@ class ProfileVerificationService:
                 profile.team_object.visible = True
                 profile.team_object.save()
 
-            if hasattr(profile.user, 'managed_club'):
+            if hasattr(profile.user, "managed_club"):
                 managed_club_id = profile.user.managed_club.id
                 club = CClub.objects.get(id=managed_club_id)
                 club.manager = None
@@ -174,17 +174,11 @@ class ProfileVerificationService:
             profile.team_club_league_voivodeship_ver = profile.verification.text
             self._verify_user()
 
-        elif (
-            profile.verification.has_team is False
-            and not profile.verification.text
-        ):
+        elif profile.verification.has_team is False and not profile.verification.text:
             profile.team_object = None
             profile.team_club_league_voivodeship_ver = None
             self._verify_user()
-        elif (
-            profile.verification.has_team is False
-            and profile.verification.text
-        ):
+        elif profile.verification.has_team is False and profile.verification.text:
             profile.team_object = None
             profile.team_club_league_voivodeship_ver = profile.verification.text
 
@@ -202,7 +196,7 @@ class ProfileVerificationService:
                 t.visible = True
                 t.save()
 
-            if hasattr(profile.user, 'managed_club'):
+            if hasattr(profile.user, "managed_club"):
                 managed_club_id = profile.user.managed_club.id
                 clubb = CClub.objects.get(id=managed_club_id)
                 clubb.manager = None
@@ -223,7 +217,7 @@ class ProfileVerificationService:
         ):
             profile.team_club_league_voivodeship_ver = profile.verification.text
             profile.club_object = None
-            if hasattr(profile.user, 'managed_club'):
+            if hasattr(profile.user, "managed_club"):
                 managed_club_id = profile.user.managed_club.id
                 clubb = CClub.objects.get(id=managed_club_id)
                 clubb.manager = None
@@ -232,20 +226,14 @@ class ProfileVerificationService:
             profile.save()
             self._verify_user()
 
-        elif (
-            profile.verification.has_team is False
-            and not profile.verification.text
-        ):
+        elif profile.verification.has_team is False and not profile.verification.text:
             profile.club_object = None
             profile.team_club_league_voivodeship_ver = None
             self._verify_user()
-        elif (
-            profile.verification.has_team is False
-            and profile.verification.text
-        ):
+        elif profile.verification.has_team is False and profile.verification.text:
             profile.club_object = None
             profile.team_club_league_voivodeship_ver = profile.verification.text
-            if hasattr(profile.user, 'managed_club'):
+            if hasattr(profile.user, "managed_club"):
                 managed_club_id = profile.user.managed_club.id
                 clubb = CClub.objects.get(id=managed_club_id)
                 clubb.manager = None
@@ -260,7 +248,9 @@ class ProfileService:
     def set_initial_verification(self, profile: models.BaseProfile) -> None:
         # set initial verification status object if not present
         if profile.verification is None:
-            profile.verification = models.ProfileVerificationStatus.create_initial(profile.user)
+            profile.verification = models.ProfileVerificationStatus.create_initial(
+                profile.user
+            )
             profile.save()
 
     def set_and_create_user_profile(self, user: User) -> models.BaseProfile:
@@ -280,7 +270,7 @@ class ProfileService:
         # we need to attach metrics to PLayer's profile
         if user.is_player:
             models.PlayerMetrics.objects.get_or_create(player=profile)
-        
+
         # print('Profile ver:', profile.verification)
         # if not profile.verification:
         #     self.set_initial_verification(profile)

@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0026_auto_20210206_1612'),
+        ("clubs", "0026_auto_20210206_1612"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='team',
-            name='mapping',
-            field=models.TextField(blank=True, help_text='!Always keep commna at the end of each name!!!. Mapping names comma separated. eg "name X, name Xi,"', null=True),
+            model_name="team",
+            name="mapping",
+            field=models.TextField(
+                blank=True,
+                help_text='!Always keep commna at the end of each name!!!. Mapping names comma separated. eg "name X, name Xi,"',
+                null=True,
+            ),
         ),
     ]

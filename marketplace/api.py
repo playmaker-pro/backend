@@ -16,42 +16,44 @@ from notifications.mail import (
 from users.models import User
 
 # from marketplace.models import Announcement  # TODO: sprawdzic o co tu chodzi i podac prawdziwa klase!
-from marketplace.models import (PlayerForClubAnnouncement,
-                                ClubForPlayerAnnouncement,
-                                ClubForCoachAnnouncement,
-                                CoachForClubAnnouncement)
+from marketplace.models import (
+    PlayerForClubAnnouncement,
+    ClubForPlayerAnnouncement,
+    ClubForCoachAnnouncement,
+    CoachForClubAnnouncement,
+)
 
 class_mapper = {
-    'PlayerForClubAnnouncement': PlayerForClubAnnouncement,
-    'ClubForPlayerAnnouncement': ClubForPlayerAnnouncement,
-    'ClubForCoachAnnouncement': ClubForCoachAnnouncement,
-    'CoachForClubAnnouncement': CoachForClubAnnouncement,
+    "PlayerForClubAnnouncement": PlayerForClubAnnouncement,
+    "ClubForPlayerAnnouncement": ClubForPlayerAnnouncement,
+    "ClubForCoachAnnouncement": ClubForCoachAnnouncement,
+    "CoachForClubAnnouncement": CoachForClubAnnouncement,
 }
 
 announcement_mail_mapper = {
-    'PlayerForClubAnnouncement': announcement_notify_player,
-    'ClubForPlayerAnnouncement': announcement_notify_club_player,
-    'ClubForCoachAnnouncement': announcement_notify_club_coach,
-    'CoachForClubAnnouncement': announcement_notify_coach,
+    "PlayerForClubAnnouncement": announcement_notify_player,
+    "ClubForPlayerAnnouncement": announcement_notify_club_player,
+    "ClubForCoachAnnouncement": announcement_notify_club_coach,
+    "CoachForClubAnnouncement": announcement_notify_coach,
 }
 
 
 @login_required
 def approve_announcement(request):
-    response_data = {'status': False}
-    message = {'body': ''}
+    response_data = {"status": False}
+    message = {"body": ""}
     user = request.user
 
-    if request.POST.get('action') == 'post':
+    if request.POST.get("action") == "post":
 
         try:
-            _id = int(request.POST.get('id'))
+            _id = int(request.POST.get("id"))
         except ValueError:
-            response_data['message'] = 'Id have to be a number, not string'
-            response_data['error'] = True
+            response_data["message"] = "Id have to be a number, not string"
+            response_data["error"] = True
             return JsonResponse(response_data)
 
-        _announcement_type = request.POST.get('announcement_type')
+        _announcement_type = request.POST.get("announcement_type")
         if _id and _announcement_type:
             try:
                 club_name = user.profile.team_object.club.name
@@ -71,9 +73,9 @@ def approve_announcement(request):
 
             if club_name == ann_club:
 
-                message = 'Nie możesz wchodzić w interakcję z użytkownikami, którzy są z Tobą w klubie'
-                response_data['message'] = message
-                response_data['error'] = True
+                message = "Nie możesz wchodzić w interakcję z użytkownikami, którzy są z Tobą w klubie"
+                response_data["message"] = message
+                response_data["error"] = True
                 return JsonResponse(response_data)
 
             #  ann.history.increment()  # @todo 1 coomit to  @ todo zwieszkyc ilosc odwiedzajcych ogloszeniee
@@ -81,11 +83,11 @@ def approve_announcement(request):
             announcement_mail_mapper[_announcement_type](ann, user)
             announcement_notify_requester(_announcement_type, ann, user)
             ann.subscribers.add(user)
-            response_data['status'] = True
+            response_data["status"] = True
 
-            message = 'Zgłoszenie wysłane'
-            response_data['message'] = message
-            response_data['success'] = True
+            message = "Zgłoszenie wysłane"
+            response_data["message"] = message
+            response_data["success"] = True
             return JsonResponse(response_data)
         # else:
         #     return JsonResponse({'message': 'Błąd'})

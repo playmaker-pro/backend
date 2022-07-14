@@ -2,7 +2,14 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 
-from .serializers import CoachProfileSerializer, PlayerProfileSerializer, SimplePlayerProfileSerializer, GameSerializer, GameRawSerializer, TrendSerializer
+from .serializers import (
+    CoachProfileSerializer,
+    PlayerProfileSerializer,
+    SimplePlayerProfileSerializer,
+    GameSerializer,
+    GameRawSerializer,
+    TrendSerializer,
+)
 from django.contrib.postgres.aggregates import ArrayAgg
 from data.models import Game as DGame
 from clubs.models import League as CLeague
@@ -103,7 +110,7 @@ class SummarySerializer:
                 season__name=season_name,
                 date=datetime.today(),
             )
-            .annotate(players_ids=ArrayAgg('playerstat__player'))
+            .annotate(players_ids=ArrayAgg("playerstat__player"))
             .order_by("date")
         )
 
@@ -115,7 +122,7 @@ class SummarySerializer:
                 host_score__isnull=True,
                 guest_score__isnull=True,
             )
-            .annotate(players_ids=ArrayAgg('playerstat__player'))
+            .annotate(players_ids=ArrayAgg("playerstat__player"))
             .order_by("date")[:_number_of_last_games]
         )
 
@@ -127,7 +134,7 @@ class SummarySerializer:
                 host_score__isnull=False,
                 guest_score__isnull=False,
             )
-            .annotate(players_ids=ArrayAgg('playerstat__player'))
+            .annotate(players_ids=ArrayAgg("playerstat__player"))
             .order_by("-date")[:_number_of_last_games]
         )
 

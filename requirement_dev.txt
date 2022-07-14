@@ -2,3 +2,4 @@ django-debug-toolbar==2.2
 pytest-django
 pytest-sugar
 pytest-icdiff
+invoke

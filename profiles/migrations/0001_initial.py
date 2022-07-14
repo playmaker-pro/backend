@@ -14,175 +14,658 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('users', '0001_initial'),
+        ("users", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ClubProfile',
+            name="ClubProfile",
             fields=[
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='users.user')),
-                ('slug', models.CharField(blank=True, editable=False, max_length=255)),
-                ('bio', models.CharField(blank=True, max_length=200, null=True, verbose_name='Short Bio')),
-                ('email_verified', models.BooleanField(default=False, help_text='When user recieve confiramion and confirm it.', verbose_name='Email verified')),
-                ('account_verified', models.BooleanField(default=False, help_text='Manually confirmed by Admin. This means that user is participant of soocer community.', verbose_name='Account verified')),
-                ('phone', phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128, null=True, region=None)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to="users.user",
+                    ),
+                ),
+                ("slug", models.CharField(blank=True, editable=False, max_length=255)),
+                (
+                    "bio",
+                    models.CharField(
+                        blank=True, max_length=200, null=True, verbose_name="Short Bio"
+                    ),
+                ),
+                (
+                    "email_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="When user recieve confiramion and confirm it.",
+                        verbose_name="Email verified",
+                    ),
+                ),
+                (
+                    "account_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Manually confirmed by Admin. This means that user is participant of soocer community.",
+                        verbose_name="Account verified",
+                    ),
+                ),
+                (
+                    "phone",
+                    phonenumber_field.modelfields.PhoneNumberField(
+                        blank=True, max_length=128, null=True, region=None
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Club Profile',
-                'verbose_name_plural': 'Club Profiles',
+                "verbose_name": "Club Profile",
+                "verbose_name_plural": "Club Profiles",
             },
         ),
         migrations.CreateModel(
-            name='CoachProfile',
+            name="CoachProfile",
             fields=[
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='users.user')),
-                ('slug', models.CharField(blank=True, editable=False, max_length=255)),
-                ('bio', models.CharField(blank=True, max_length=200, null=True, verbose_name='Short Bio')),
-                ('email_verified', models.BooleanField(default=False, help_text='When user recieve confiramion and confirm it.', verbose_name='Email verified')),
-                ('account_verified', models.BooleanField(default=False, help_text='Manually confirmed by Admin. This means that user is participant of soocer community.', verbose_name='Account verified')),
-                ('phone', phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128, null=True, region=None)),
-                ('facebook_url', models.URLField(blank=True, null=True)),
-                ('soccer_goal', models.CharField(blank=True, choices=[('Profesjonalna kariera', 'Profesjonalna kariera'), ('Kariera regionalna', 'Kariera regionalna'), ('Trenerka jako hobby', 'Trenerka jako hobby')], max_length=60, null=True, verbose_name='soccer goal')),
-                ('birth_date', models.DateField(blank=True, null=True, verbose_name='birth date')),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to="users.user",
+                    ),
+                ),
+                ("slug", models.CharField(blank=True, editable=False, max_length=255)),
+                (
+                    "bio",
+                    models.CharField(
+                        blank=True, max_length=200, null=True, verbose_name="Short Bio"
+                    ),
+                ),
+                (
+                    "email_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="When user recieve confiramion and confirm it.",
+                        verbose_name="Email verified",
+                    ),
+                ),
+                (
+                    "account_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Manually confirmed by Admin. This means that user is participant of soocer community.",
+                        verbose_name="Account verified",
+                    ),
+                ),
+                (
+                    "phone",
+                    phonenumber_field.modelfields.PhoneNumberField(
+                        blank=True, max_length=128, null=True, region=None
+                    ),
+                ),
+                ("facebook_url", models.URLField(blank=True, null=True)),
+                (
+                    "soccer_goal",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("Profesjonalna kariera", "Profesjonalna kariera"),
+                            ("Kariera regionalna", "Kariera regionalna"),
+                            ("Trenerka jako hobby", "Trenerka jako hobby"),
+                        ],
+                        max_length=60,
+                        null=True,
+                        verbose_name="soccer goal",
+                    ),
+                ),
+                (
+                    "birth_date",
+                    models.DateField(blank=True, null=True, verbose_name="birth date"),
+                ),
             ],
             options={
-                'verbose_name': 'Coach Profile',
-                'verbose_name_plural': 'Coaches Profiles',
+                "verbose_name": "Coach Profile",
+                "verbose_name_plural": "Coaches Profiles",
             },
         ),
         migrations.CreateModel(
-            name='FanProfile',
+            name="FanProfile",
             fields=[
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='users.user')),
-                ('slug', models.CharField(blank=True, editable=False, max_length=255)),
-                ('bio', models.CharField(blank=True, max_length=200, null=True, verbose_name='Short Bio')),
-                ('email_verified', models.BooleanField(default=False, help_text='When user recieve confiramion and confirm it.', verbose_name='Email verified')),
-                ('account_verified', models.BooleanField(default=False, help_text='Manually confirmed by Admin. This means that user is participant of soocer community.', verbose_name='Account verified')),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to="users.user",
+                    ),
+                ),
+                ("slug", models.CharField(blank=True, editable=False, max_length=255)),
+                (
+                    "bio",
+                    models.CharField(
+                        blank=True, max_length=200, null=True, verbose_name="Short Bio"
+                    ),
+                ),
+                (
+                    "email_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="When user recieve confiramion and confirm it.",
+                        verbose_name="Email verified",
+                    ),
+                ),
+                (
+                    "account_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Manually confirmed by Admin. This means that user is participant of soocer community.",
+                        verbose_name="Account verified",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Fan Profile',
-                'verbose_name_plural': 'Fans Profiles',
+                "verbose_name": "Fan Profile",
+                "verbose_name_plural": "Fans Profiles",
             },
         ),
         migrations.CreateModel(
-            name='GuestProfile',
+            name="GuestProfile",
             fields=[
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='users.user')),
-                ('slug', models.CharField(blank=True, editable=False, max_length=255)),
-                ('bio', models.CharField(blank=True, max_length=200, null=True, verbose_name='Short Bio')),
-                ('email_verified', models.BooleanField(default=False, help_text='When user recieve confiramion and confirm it.', verbose_name='Email verified')),
-                ('account_verified', models.BooleanField(default=False, help_text='Manually confirmed by Admin. This means that user is participant of soocer community.', verbose_name='Account verified')),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to="users.user",
+                    ),
+                ),
+                ("slug", models.CharField(blank=True, editable=False, max_length=255)),
+                (
+                    "bio",
+                    models.CharField(
+                        blank=True, max_length=200, null=True, verbose_name="Short Bio"
+                    ),
+                ),
+                (
+                    "email_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="When user recieve confiramion and confirm it.",
+                        verbose_name="Email verified",
+                    ),
+                ),
+                (
+                    "account_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Manually confirmed by Admin. This means that user is participant of soocer community.",
+                        verbose_name="Account verified",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Guest Profile',
-                'verbose_name_plural': 'Guests Profiles',
+                "verbose_name": "Guest Profile",
+                "verbose_name_plural": "Guests Profiles",
             },
         ),
         migrations.CreateModel(
-            name='ManagerProfile',
+            name="ManagerProfile",
             fields=[
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='users.user')),
-                ('slug', models.CharField(blank=True, editable=False, max_length=255)),
-                ('bio', models.CharField(blank=True, max_length=200, null=True, verbose_name='Short Bio')),
-                ('email_verified', models.BooleanField(default=False, help_text='When user recieve confiramion and confirm it.', verbose_name='Email verified')),
-                ('account_verified', models.BooleanField(default=False, help_text='Manually confirmed by Admin. This means that user is participant of soocer community.', verbose_name='Account verified')),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to="users.user",
+                    ),
+                ),
+                ("slug", models.CharField(blank=True, editable=False, max_length=255)),
+                (
+                    "bio",
+                    models.CharField(
+                        blank=True, max_length=200, null=True, verbose_name="Short Bio"
+                    ),
+                ),
+                (
+                    "email_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="When user recieve confiramion and confirm it.",
+                        verbose_name="Email verified",
+                    ),
+                ),
+                (
+                    "account_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Manually confirmed by Admin. This means that user is participant of soocer community.",
+                        verbose_name="Account verified",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Manager Profile',
-                'verbose_name_plural': 'Managers Profiles',
+                "verbose_name": "Manager Profile",
+                "verbose_name_plural": "Managers Profiles",
             },
         ),
         migrations.CreateModel(
-            name='ParentProfile',
+            name="ParentProfile",
             fields=[
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='users.user')),
-                ('slug', models.CharField(blank=True, editable=False, max_length=255)),
-                ('bio', models.CharField(blank=True, max_length=200, null=True, verbose_name='Short Bio')),
-                ('email_verified', models.BooleanField(default=False, help_text='When user recieve confiramion and confirm it.', verbose_name='Email verified')),
-                ('account_verified', models.BooleanField(default=False, help_text='Manually confirmed by Admin. This means that user is participant of soocer community.', verbose_name='Account verified')),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to="users.user",
+                    ),
+                ),
+                ("slug", models.CharField(blank=True, editable=False, max_length=255)),
+                (
+                    "bio",
+                    models.CharField(
+                        blank=True, max_length=200, null=True, verbose_name="Short Bio"
+                    ),
+                ),
+                (
+                    "email_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="When user recieve confiramion and confirm it.",
+                        verbose_name="Email verified",
+                    ),
+                ),
+                (
+                    "account_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Manually confirmed by Admin. This means that user is participant of soocer community.",
+                        verbose_name="Account verified",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Parent Profile',
-                'verbose_name_plural': 'Parents Profiles',
+                "verbose_name": "Parent Profile",
+                "verbose_name_plural": "Parents Profiles",
             },
         ),
         migrations.CreateModel(
-            name='PlayerProfile',
+            name="PlayerProfile",
             fields=[
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='users.user')),
-                ('slug', models.CharField(blank=True, editable=False, max_length=255)),
-                ('bio', models.CharField(blank=True, max_length=200, null=True, verbose_name='Short Bio')),
-                ('email_verified', models.BooleanField(default=False, help_text='When user recieve confiramion and confirm it.', verbose_name='Email verified')),
-                ('account_verified', models.BooleanField(default=False, help_text='Manually confirmed by Admin. This means that user is participant of soocer community.', verbose_name='Account verified')),
-                ('birth_date', models.DateField(blank=True, null=True, verbose_name='Birth date')),
-                ('height', models.PositiveIntegerField(blank=True, help_text='Height (cm)', null=True, validators=[django.core.validators.MinValueValidator(130), django.core.validators.MaxValueValidator(210)], verbose_name='Height')),
-                ('weight', models.PositiveIntegerField(blank=True, help_text='Weight (kg)', null=True, validators=[django.core.validators.MinValueValidator(40), django.core.validators.MaxValueValidator(140)], verbose_name='Weight')),
-                ('country', django_countries.fields.CountryField(blank=True, max_length=2, null=True, verbose_name='Country')),
-                ('club_raw', models.CharField(blank=True, max_length=68, null=True, verbose_name='Club name')),
-                ('team_raw', models.CharField(blank=True, max_length=68, null=True, verbose_name='Team name')),
-                ('league_raw', models.CharField(blank=True, max_length=68, null=True, verbose_name='League name')),
-                ('voivodeship_raw', models.CharField(blank=True, max_length=68, null=True, verbose_name='Voivodeship name')),
-                ('position_raw', models.CharField(blank=True, choices=[('GK', 'Bramkarz'), ('DL', 'Obrońca Lewy')], max_length=30, null=True, verbose_name='Position name')),
-                ('formation', models.CharField(blank=True, choices=[('5-3-2', '5-3-2'), ('5-4-1', '5-4-1'), ('4-4-2', '4-4-2'), ('4-5-1', '4-5-1'), ('4-3-3', '4-3-3'), ('4-2-3-1', '4-2-3-1'), ('4-1-4-1', '4-1-4-1'), ('4-3-2-1', '4-3-2-1'), ('3-5-2', '3-5-2'), ('3-4-3', '3-4-3')], max_length=11, null=True, verbose_name='Formation')),
-                ('alt_formation', models.CharField(blank=True, choices=[('5-3-2', '5-3-2'), ('5-4-1', '5-4-1'), ('4-4-2', '4-4-2'), ('4-5-1', '4-5-1'), ('4-3-3', '4-3-3'), ('4-2-3-1', '4-2-3-1'), ('4-1-4-1', '4-1-4-1'), ('4-3-2-1', '4-3-2-1'), ('3-5-2', '3-5-2'), ('3-4-3', '3-4-3')], max_length=11, null=True, verbose_name='Formation')),
-                ('prefered_leg', models.CharField(blank=True, choices=[('Lewa', 'Lewa'), ('Prawa', 'Prawa')], max_length=30, null=True, verbose_name='prefered leg')),
-                ('transfer_status', models.CharField(blank=True, choices=[('SC', 'Szukam klubu'), ('RO', 'Rozważę wszelkie oferty'), ('NC', 'Nie szukam klubu')], max_length=45, null=True, verbose_name='transfer status')),
-                ('card', models.CharField(blank=True, choices=[('MKN', 'Mam kartę na ręku'), ('NCMKN', 'Nie wiem czy mam kartę na ręku'), ('NKN', 'Nie mam karty na ręku')], max_length=60, null=True, verbose_name='karta na ręku')),
-                ('soccer_goal', models.CharField(blank=True, choices=[(0, 'Ekstraklasa'), (1, '1 liga'), (2, '2 liga'), (3, '3 liga'), (4, '4 liga'), (5, '5 liga'), (6, 'A klasa'), (7, 'B klasa')], max_length=60, null=True, verbose_name='karta na ręku')),
-                ('phone', phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128, null=True, region=None)),
-                ('facebook_url', models.URLField(blank=True, null=True)),
-                ('lnp_url', models.URLField(blank=True, null=True)),
-                ('min90_url', models.URLField(blank=True, null=True)),
-                ('transfermarket_url', models.URLField(blank=True, null=True)),
-                ('practice_distance', models.PositiveIntegerField(blank=True, help_text='max practice distance', null=True, validators=[django.core.validators.MinValueValidator(10), django.core.validators.MaxValueValidator(500)], verbose_name='max practice distance')),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to="users.user",
+                    ),
+                ),
+                ("slug", models.CharField(blank=True, editable=False, max_length=255)),
+                (
+                    "bio",
+                    models.CharField(
+                        blank=True, max_length=200, null=True, verbose_name="Short Bio"
+                    ),
+                ),
+                (
+                    "email_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="When user recieve confiramion and confirm it.",
+                        verbose_name="Email verified",
+                    ),
+                ),
+                (
+                    "account_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Manually confirmed by Admin. This means that user is participant of soocer community.",
+                        verbose_name="Account verified",
+                    ),
+                ),
+                (
+                    "birth_date",
+                    models.DateField(blank=True, null=True, verbose_name="Birth date"),
+                ),
+                (
+                    "height",
+                    models.PositiveIntegerField(
+                        blank=True,
+                        help_text="Height (cm)",
+                        null=True,
+                        validators=[
+                            django.core.validators.MinValueValidator(130),
+                            django.core.validators.MaxValueValidator(210),
+                        ],
+                        verbose_name="Height",
+                    ),
+                ),
+                (
+                    "weight",
+                    models.PositiveIntegerField(
+                        blank=True,
+                        help_text="Weight (kg)",
+                        null=True,
+                        validators=[
+                            django.core.validators.MinValueValidator(40),
+                            django.core.validators.MaxValueValidator(140),
+                        ],
+                        verbose_name="Weight",
+                    ),
+                ),
+                (
+                    "country",
+                    django_countries.fields.CountryField(
+                        blank=True, max_length=2, null=True, verbose_name="Country"
+                    ),
+                ),
+                (
+                    "club_raw",
+                    models.CharField(
+                        blank=True, max_length=68, null=True, verbose_name="Club name"
+                    ),
+                ),
+                (
+                    "team_raw",
+                    models.CharField(
+                        blank=True, max_length=68, null=True, verbose_name="Team name"
+                    ),
+                ),
+                (
+                    "league_raw",
+                    models.CharField(
+                        blank=True, max_length=68, null=True, verbose_name="League name"
+                    ),
+                ),
+                (
+                    "voivodeship_raw",
+                    models.CharField(
+                        blank=True,
+                        max_length=68,
+                        null=True,
+                        verbose_name="Voivodeship name",
+                    ),
+                ),
+                (
+                    "position_raw",
+                    models.CharField(
+                        blank=True,
+                        choices=[("GK", "Bramkarz"), ("DL", "Obrońca Lewy")],
+                        max_length=30,
+                        null=True,
+                        verbose_name="Position name",
+                    ),
+                ),
+                (
+                    "formation",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("5-3-2", "5-3-2"),
+                            ("5-4-1", "5-4-1"),
+                            ("4-4-2", "4-4-2"),
+                            ("4-5-1", "4-5-1"),
+                            ("4-3-3", "4-3-3"),
+                            ("4-2-3-1", "4-2-3-1"),
+                            ("4-1-4-1", "4-1-4-1"),
+                            ("4-3-2-1", "4-3-2-1"),
+                            ("3-5-2", "3-5-2"),
+                            ("3-4-3", "3-4-3"),
+                        ],
+                        max_length=11,
+                        null=True,
+                        verbose_name="Formation",
+                    ),
+                ),
+                (
+                    "alt_formation",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("5-3-2", "5-3-2"),
+                            ("5-4-1", "5-4-1"),
+                            ("4-4-2", "4-4-2"),
+                            ("4-5-1", "4-5-1"),
+                            ("4-3-3", "4-3-3"),
+                            ("4-2-3-1", "4-2-3-1"),
+                            ("4-1-4-1", "4-1-4-1"),
+                            ("4-3-2-1", "4-3-2-1"),
+                            ("3-5-2", "3-5-2"),
+                            ("3-4-3", "3-4-3"),
+                        ],
+                        max_length=11,
+                        null=True,
+                        verbose_name="Formation",
+                    ),
+                ),
+                (
+                    "prefered_leg",
+                    models.CharField(
+                        blank=True,
+                        choices=[("Lewa", "Lewa"), ("Prawa", "Prawa")],
+                        max_length=30,
+                        null=True,
+                        verbose_name="prefered leg",
+                    ),
+                ),
+                (
+                    "transfer_status",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("SC", "Szukam klubu"),
+                            ("RO", "Rozważę wszelkie oferty"),
+                            ("NC", "Nie szukam klubu"),
+                        ],
+                        max_length=45,
+                        null=True,
+                        verbose_name="transfer status",
+                    ),
+                ),
+                (
+                    "card",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("MKN", "Mam kartę na ręku"),
+                            ("NCMKN", "Nie wiem czy mam kartę na ręku"),
+                            ("NKN", "Nie mam karty na ręku"),
+                        ],
+                        max_length=60,
+                        null=True,
+                        verbose_name="karta na ręku",
+                    ),
+                ),
+                (
+                    "soccer_goal",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            (0, "Ekstraklasa"),
+                            (1, "1 liga"),
+                            (2, "2 liga"),
+                            (3, "3 liga"),
+                            (4, "4 liga"),
+                            (5, "5 liga"),
+                            (6, "A klasa"),
+                            (7, "B klasa"),
+                        ],
+                        max_length=60,
+                        null=True,
+                        verbose_name="karta na ręku",
+                    ),
+                ),
+                (
+                    "phone",
+                    phonenumber_field.modelfields.PhoneNumberField(
+                        blank=True, max_length=128, null=True, region=None
+                    ),
+                ),
+                ("facebook_url", models.URLField(blank=True, null=True)),
+                ("lnp_url", models.URLField(blank=True, null=True)),
+                ("min90_url", models.URLField(blank=True, null=True)),
+                ("transfermarket_url", models.URLField(blank=True, null=True)),
+                (
+                    "practice_distance",
+                    models.PositiveIntegerField(
+                        blank=True,
+                        help_text="max practice distance",
+                        null=True,
+                        validators=[
+                            django.core.validators.MinValueValidator(10),
+                            django.core.validators.MaxValueValidator(500),
+                        ],
+                        verbose_name="max practice distance",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Player Profile',
-                'verbose_name_plural': 'Player Profiles',
+                "verbose_name": "Player Profile",
+                "verbose_name_plural": "Player Profiles",
             },
         ),
         migrations.CreateModel(
-            name='ScoutProfile',
+            name="ScoutProfile",
             fields=[
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='users.user')),
-                ('slug', models.CharField(blank=True, editable=False, max_length=255)),
-                ('bio', models.CharField(blank=True, max_length=200, null=True, verbose_name='Short Bio')),
-                ('email_verified', models.BooleanField(default=False, help_text='When user recieve confiramion and confirm it.', verbose_name='Email verified')),
-                ('account_verified', models.BooleanField(default=False, help_text='Manually confirmed by Admin. This means that user is participant of soocer community.', verbose_name='Account verified')),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to="users.user",
+                    ),
+                ),
+                ("slug", models.CharField(blank=True, editable=False, max_length=255)),
+                (
+                    "bio",
+                    models.CharField(
+                        blank=True, max_length=200, null=True, verbose_name="Short Bio"
+                    ),
+                ),
+                (
+                    "email_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="When user recieve confiramion and confirm it.",
+                        verbose_name="Email verified",
+                    ),
+                ),
+                (
+                    "account_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Manually confirmed by Admin. This means that user is participant of soocer community.",
+                        verbose_name="Account verified",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Scout Profile',
-                'verbose_name_plural': 'Scouts Profiles',
+                "verbose_name": "Scout Profile",
+                "verbose_name_plural": "Scouts Profiles",
             },
         ),
         migrations.CreateModel(
-            name='StandardProfile',
+            name="StandardProfile",
             fields=[
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='users.user')),
-                ('slug', models.CharField(blank=True, editable=False, max_length=255)),
-                ('bio', models.CharField(blank=True, max_length=200, null=True, verbose_name='Short Bio')),
-                ('email_verified', models.BooleanField(default=False, help_text='When user recieve confiramion and confirm it.', verbose_name='Email verified')),
-                ('account_verified', models.BooleanField(default=False, help_text='Manually confirmed by Admin. This means that user is participant of soocer community.', verbose_name='Account verified')),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to="users.user",
+                    ),
+                ),
+                ("slug", models.CharField(blank=True, editable=False, max_length=255)),
+                (
+                    "bio",
+                    models.CharField(
+                        blank=True, max_length=200, null=True, verbose_name="Short Bio"
+                    ),
+                ),
+                (
+                    "email_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="When user recieve confiramion and confirm it.",
+                        verbose_name="Email verified",
+                    ),
+                ),
+                (
+                    "account_verified",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Manually confirmed by Admin. This means that user is participant of soocer community.",
+                        verbose_name="Account verified",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Standard Profile',
-                'verbose_name_plural': 'Standard Profiles',
+                "verbose_name": "Standard Profile",
+                "verbose_name_plural": "Standard Profiles",
             },
         ),
         migrations.CreateModel(
-            name='RoleChangeRequest',
+            name="RoleChangeRequest",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('approved', models.BooleanField(default=False, help_text='Defines if admin approved change')),
-                ('request_date', models.DateTimeField(auto_now_add=True)),
-                ('accepted_date', models.DateTimeField(auto_now=True)),
-                ('new', models.CharField(choices=[('P', 'Piłkarz'), ('T', 'Trener'), ('G', 'Gość'), ('C', 'Klub')], max_length=100)),
-                ('approver', models.ForeignKey(help_text='Admin who verified.', null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ('user', models.ForeignKey(help_text='User who requested change', on_delete=django.db.models.deletion.CASCADE, related_name='changerolerequestor', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "approved",
+                    models.BooleanField(
+                        default=False, help_text="Defines if admin approved change"
+                    ),
+                ),
+                ("request_date", models.DateTimeField(auto_now_add=True)),
+                ("accepted_date", models.DateTimeField(auto_now=True)),
+                (
+                    "new",
+                    models.CharField(
+                        choices=[
+                            ("P", "Piłkarz"),
+                            ("T", "Trener"),
+                            ("G", "Gość"),
+                            ("C", "Klub"),
+                        ],
+                        max_length=100,
+                    ),
+                ),
+                (
+                    "approver",
+                    models.ForeignKey(
+                        help_text="Admin who verified.",
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        help_text="User who requested change",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="changerolerequestor",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'unique_together': {('user', 'request_date')},
+                "unique_together": {("user", "request_date")},
             },
         ),
     ]

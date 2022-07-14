@@ -7,45 +7,72 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0045_auto_20211108_2309'),
+        ("clubs", "0045_auto_20211108_2309"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='LeagueGroup',
+            name="LeagueGroup",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=25)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=25)),
             ],
         ),
         migrations.AddField(
-            model_name='league',
-            name='city_name',
+            model_name="league",
+            name="city_name",
             field=models.CharField(blank=True, default=True, max_length=255, null=True),
         ),
         migrations.AddField(
-            model_name='league',
-            name='gender',
-            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.SET_NULL, to='clubs.gender'),
+            model_name="league",
+            name="gender",
+            field=models.ForeignKey(
+                blank=True,
+                default=None,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="clubs.gender",
+            ),
         ),
         migrations.AddField(
-            model_name='league',
-            name='rw',
-            field=models.BooleanField(default=False, help_text='Spring round (runda wiosenna)'),
+            model_name="league",
+            name="rw",
+            field=models.BooleanField(
+                default=False, help_text="Spring round (runda wiosenna)"
+            ),
         ),
         migrations.AddField(
-            model_name='league',
-            name='seniority',
-            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.SET_NULL, to='clubs.seniority'),
+            model_name="league",
+            name="seniority",
+            field=models.ForeignKey(
+                blank=True,
+                default=None,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="clubs.seniority",
+            ),
         ),
         migrations.AlterField(
-            model_name='league',
-            name='name',
-            field=models.CharField(help_text='eg. Ekstraklasa', max_length=355),
+            model_name="league",
+            name="name",
+            field=models.CharField(help_text="eg. Ekstraklasa", max_length=355),
         ),
         migrations.AddField(
-            model_name='league',
-            name='group',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='clubs.leaguegroup'),
+            model_name="league",
+            name="group",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="clubs.leaguegroup",
+            ),
         ),
     ]

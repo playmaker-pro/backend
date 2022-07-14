@@ -7,13 +7,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0028_auto_20210228_1405'),
+        ("clubs", "0028_auto_20210228_1405"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='league',
-            name='picture',
-            field=models.ImageField(blank=True, null=True, upload_to=clubs.models.League.get_file_path, verbose_name='Zdjęcie'),
+            model_name="league",
+            name="picture",
+            field=models.ImageField(
+                blank=True,
+                null=True,
+                upload_to=clubs.models.League.get_file_path,
+                verbose_name="Zdjęcie",
+            ),
         ),
     ]

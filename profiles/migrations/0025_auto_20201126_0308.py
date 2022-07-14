@@ -6,23 +6,41 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0024_auto_20201126_0249'),
+        ("profiles", "0024_auto_20201126_0249"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='scoutprofile',
-            name='club',
-            field=models.CharField(blank=True, help_text='Klub w którym obecnie reprezentuejsz', max_length=68, null=True, verbose_name='Klub'),
+            model_name="scoutprofile",
+            name="club",
+            field=models.CharField(
+                blank=True,
+                help_text="Klub w którym obecnie reprezentuejsz",
+                max_length=68,
+                null=True,
+                verbose_name="Klub",
+            ),
         ),
         migrations.AddField(
-            model_name='scoutprofile',
-            name='league',
-            field=models.CharField(blank=True, help_text='Poziom rozgrywkowy', max_length=68, null=True, verbose_name='Rozgrywki'),
+            model_name="scoutprofile",
+            name="league",
+            field=models.CharField(
+                blank=True,
+                help_text="Poziom rozgrywkowy",
+                max_length=68,
+                null=True,
+                verbose_name="Rozgrywki",
+            ),
         ),
         migrations.AddField(
-            model_name='scoutprofile',
-            name='voivodeship',
-            field=models.CharField(blank=True, help_text='Wojewódźtwo', max_length=68, null=True, verbose_name='Wojewódźtwo'),
+            model_name="scoutprofile",
+            name="voivodeship",
+            field=models.CharField(
+                blank=True,
+                help_text="Wojewódźtwo",
+                max_length=68,
+                null=True,
+                verbose_name="Wojewódźtwo",
+            ),
         ),
     ]

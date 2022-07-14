@@ -6,13 +6,36 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0061_auto_20220213_1946'),
+        ("profiles", "0061_auto_20220213_1946"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='coachprofile',
-            name='voivodeship',
-            field=models.CharField(blank=True, choices=[('Dolnośląskie', 'Dolnośląskie'), ('Kujawsko-pomorskie', 'Kujawsko-pomorskie'), ('Lubelskie', 'Lubelskie'), ('Lubuskie', 'Lubuskie'), ('Łódzkie', 'Łódzkie'), ('Małopolskie', 'Małopolskie'), ('Mazowieckie', 'Mazowieckie'), ('Opolskie', 'Opolskie'), ('Podkarpackie', 'Podkarpackie'), ('Podlaskie', 'Podlaskie'), ('Pomorskie', 'Pomorskie'), ('Śląskie', 'Śląskie'), ('Świętokrzyskie', 'Świętokrzyskie'), ('Warmińsko-Mazurskie', 'Warmińsko-Mazurskie'), ('Wielkopolskie', 'Wielkopolskie'), ('Zachodniopomorskie', 'Zachodniopomorskie')], max_length=68, null=True, verbose_name='Województwo zamieszkania'),
+            model_name="coachprofile",
+            name="voivodeship",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("Dolnośląskie", "Dolnośląskie"),
+                    ("Kujawsko-pomorskie", "Kujawsko-pomorskie"),
+                    ("Lubelskie", "Lubelskie"),
+                    ("Lubuskie", "Lubuskie"),
+                    ("Łódzkie", "Łódzkie"),
+                    ("Małopolskie", "Małopolskie"),
+                    ("Mazowieckie", "Mazowieckie"),
+                    ("Opolskie", "Opolskie"),
+                    ("Podkarpackie", "Podkarpackie"),
+                    ("Podlaskie", "Podlaskie"),
+                    ("Pomorskie", "Pomorskie"),
+                    ("Śląskie", "Śląskie"),
+                    ("Świętokrzyskie", "Świętokrzyskie"),
+                    ("Warmińsko-Mazurskie", "Warmińsko-Mazurskie"),
+                    ("Wielkopolskie", "Wielkopolskie"),
+                    ("Zachodniopomorskie", "Zachodniopomorskie"),
+                ],
+                max_length=68,
+                null=True,
+                verbose_name="Województwo zamieszkania",
+            ),
         ),
     ]

@@ -7,17 +7,38 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0032_league_search_index'),
+        ("clubs", "0032_league_search_index"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='LeagueHistory',
+            name="LeagueHistory",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('index', models.CharField(blank=True, max_length=255, null=True)),
-                ('league', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='clubs.league')),
-                ('season', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='clubs.season')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("index", models.CharField(blank=True, max_length=255, null=True)),
+                (
+                    "league",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="clubs.league"
+                    ),
+                ),
+                (
+                    "season",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="clubs.season",
+                    ),
+                ),
             ],
         ),
     ]

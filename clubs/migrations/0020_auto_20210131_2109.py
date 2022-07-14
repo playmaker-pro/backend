@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0019_team_visible'),
+        ("clubs", "0019_team_visible"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='club',
-            name='autocreated',
-            field=models.BooleanField(default=False, help_text='Autocreated from s38'),
+            model_name="club",
+            name="autocreated",
+            field=models.BooleanField(default=False, help_text="Autocreated from s38"),
         ),
         migrations.AddField(
-            model_name='team',
-            name='autocreated',
-            field=models.BooleanField(default=False, help_text='Autocreated from s38'),
+            model_name="team",
+            name="autocreated",
+            field=models.BooleanField(default=False, help_text="Autocreated from s38"),
         ),
     ]

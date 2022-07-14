@@ -7,18 +7,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0017_club_country'),
+        ("clubs", "0017_club_country"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='club',
-            name='picture',
-            field=models.ImageField(blank=True, null=True, upload_to=clubs.models.Club.get_file_path, verbose_name='Zdjęcie'),
+            model_name="club",
+            name="picture",
+            field=models.ImageField(
+                blank=True,
+                null=True,
+                upload_to=clubs.models.Club.get_file_path,
+                verbose_name="Zdjęcie",
+            ),
         ),
         migrations.AlterField(
-            model_name='team',
-            name='picture',
-            field=models.ImageField(blank=True, null=True, upload_to=clubs.models.Team.get_file_path, verbose_name='Zdjęcie'),
+            model_name="team",
+            name="picture",
+            field=models.ImageField(
+                blank=True,
+                null=True,
+                upload_to=clubs.models.Team.get_file_path,
+                verbose_name="Zdjęcie",
+            ),
         ),
     ]

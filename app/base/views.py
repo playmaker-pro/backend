@@ -24,13 +24,17 @@ from app import mixins
 User = get_user_model()
 
 
-class BasePMView(generic.TemplateView,  mixins.ViewModalLoadingMixin, mixins.ViewFilterMixin):
+class BasePMView(
+    generic.TemplateView, mixins.ViewModalLoadingMixin, mixins.ViewFilterMixin
+):
     http_method_names = ["get"]
 
     def prepare_kwargs(self, kwargs):
-        kwargs['modals'] = self.modal_activity(self.request.user, register_auto=False, verification_auto=False)
-        kwargs['page_title'] = self.page_title
-        kwargs['filters'] = self.get_filters_values()
+        kwargs["modals"] = self.modal_activity(
+            self.request.user, register_auto=False, verification_auto=False
+        )
+        kwargs["page_title"] = self.page_title
+        kwargs["filters"] = self.get_filters_values()
 
     def get_queryset(self):
         return self.queryset

@@ -7,23 +7,37 @@ import django_countries.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0031_auto_20201205_1338'),
+        ("profiles", "0031_auto_20201205_1338"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='coachprofile',
-            name='country',
-            field=django_countries.fields.CountryField(blank=True, default='PL', max_length=2, null=True, verbose_name='Country'),
+            model_name="coachprofile",
+            name="country",
+            field=django_countries.fields.CountryField(
+                blank=True,
+                default="PL",
+                max_length=2,
+                null=True,
+                verbose_name="Country",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='country',
-            field=django_countries.fields.CountryField(default='PL', max_length=2, null=True, verbose_name='Country'),
+            model_name="playerprofile",
+            name="country",
+            field=django_countries.fields.CountryField(
+                default="PL", max_length=2, null=True, verbose_name="Country"
+            ),
         ),
         migrations.AlterField(
-            model_name='scoutprofile',
-            name='country',
-            field=django_countries.fields.CountryField(blank=True, default='PL', max_length=2, null=True, verbose_name='Country'),
+            model_name="scoutprofile",
+            name="country",
+            field=django_countries.fields.CountryField(
+                blank=True,
+                default="PL",
+                max_length=2,
+                null=True,
+                verbose_name="Country",
+            ),
         ),
     ]

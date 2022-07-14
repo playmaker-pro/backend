@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0050_league_virtual'),
+        ("clubs", "0050_league_virtual"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='league',
-            name='data_seasons',
-            field=models.ManyToManyField(to='clubs.Season'),
+            model_name="league",
+            name="data_seasons",
+            field=models.ManyToManyField(to="clubs.Season"),
         ),
     ]

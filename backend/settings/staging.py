@@ -25,14 +25,15 @@ MEMCACHED_CACHE_SOCK = None
 
 try:
     from .local import *
+
     print("::> Loading custom local settings (local.py)")
 except ImportError as e:
     print(f"[error] Cannot load local settings. Reason={e}")
 
 
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-        'LOCATION': MEMCACHED_CACHE_SOCK,
+    "default": {
+        "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
+        "LOCATION": MEMCACHED_CACHE_SOCK,
     }
 }

@@ -6,28 +6,39 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0032_auto_20201205_1411'),
+        ("profiles", "0032_auto_20201205_1411"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='clubprofile',
-            name='phone',
-            field=models.CharField(blank=True, max_length=15, null=True, verbose_name='Telefon'),
+            model_name="clubprofile",
+            name="phone",
+            field=models.CharField(
+                blank=True, max_length=15, null=True, verbose_name="Telefon"
+            ),
         ),
         migrations.AlterField(
-            model_name='coachprofile',
-            name='phone',
-            field=models.CharField(blank=True, max_length=15, null=True, verbose_name='Telefon'),
+            model_name="coachprofile",
+            name="phone",
+            field=models.CharField(
+                blank=True, max_length=15, null=True, verbose_name="Telefon"
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='agent_phone',
-            field=models.CharField(blank=True, max_length=15, null=True, verbose_name='Numer telefonu do agenta / agencji'),
+            model_name="playerprofile",
+            name="agent_phone",
+            field=models.CharField(
+                blank=True,
+                max_length=15,
+                null=True,
+                verbose_name="Numer telefonu do agenta / agencji",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='phone',
-            field=models.CharField(blank=True, max_length=15, null=True, verbose_name='Telefon'),
+            model_name="playerprofile",
+            name="phone",
+            field=models.CharField(
+                blank=True, max_length=15, null=True, verbose_name="Telefon"
+            ),
         ),
     ]

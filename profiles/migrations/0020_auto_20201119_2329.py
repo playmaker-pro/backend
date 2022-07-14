@@ -6,43 +6,67 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0019_auto_20201119_0026'),
+        ("profiles", "0019_auto_20201119_0026"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='playermetrics',
-            name='fantasy_updated',
+            model_name="playermetrics",
+            name="fantasy_updated",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='playermetrics',
-            name='games_updated',
+            model_name="playermetrics",
+            name="games_updated",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='playermetrics',
-            name='season_updated',
+            model_name="playermetrics",
+            name="season_updated",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='club_raw',
-            field=models.CharField(blank=True, help_text='Klub w którym deklarujesz że obecnie reprezentuejsz', max_length=68, null=True, verbose_name='Deklarowany Klub'),
+            model_name="playerprofile",
+            name="club_raw",
+            field=models.CharField(
+                blank=True,
+                help_text="Klub w którym deklarujesz że obecnie reprezentuejsz",
+                max_length=68,
+                null=True,
+                verbose_name="Deklarowany Klub",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='league_raw',
-            field=models.CharField(blank=True, help_text='Poziom rozgrywkowy który deklarujesz że grasz.', max_length=68, null=True, verbose_name='Rozgrywki'),
+            model_name="playerprofile",
+            name="league_raw",
+            field=models.CharField(
+                blank=True,
+                help_text="Poziom rozgrywkowy który deklarujesz że grasz.",
+                max_length=68,
+                null=True,
+                verbose_name="Rozgrywki",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='team_raw',
-            field=models.CharField(blank=True, help_text='Drużyna w której deklarujesz że obecnie grasz', max_length=68, null=True, verbose_name='Deklarowana Drużyna'),
+            model_name="playerprofile",
+            name="team_raw",
+            field=models.CharField(
+                blank=True,
+                help_text="Drużyna w której deklarujesz że obecnie grasz",
+                max_length=68,
+                null=True,
+                verbose_name="Deklarowana Drużyna",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='voivodeship_raw',
-            field=models.CharField(blank=True, help_text='Wojewódźtwo w którym grasz.', max_length=68, null=True, verbose_name='Wojewódźtwo'),
+            model_name="playerprofile",
+            name="voivodeship_raw",
+            field=models.CharField(
+                blank=True,
+                help_text="Wojewódźtwo w którym grasz.",
+                max_length=68,
+                null=True,
+                verbose_name="Wojewódźtwo",
+            ),
         ),
     ]

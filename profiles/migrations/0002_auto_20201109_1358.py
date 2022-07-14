@@ -6,53 +6,89 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0001_initial'),
+        ("profiles", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='clubprofile',
-            name='data_mapper_id',
-            field=models.PositiveIntegerField(blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.', null=True),
+            model_name="clubprofile",
+            name="data_mapper_id",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='coachprofile',
-            name='data_mapper_id',
-            field=models.PositiveIntegerField(blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.', null=True),
+            model_name="coachprofile",
+            name="data_mapper_id",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='fanprofile',
-            name='data_mapper_id',
-            field=models.PositiveIntegerField(blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.', null=True),
+            model_name="fanprofile",
+            name="data_mapper_id",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='guestprofile',
-            name='data_mapper_id',
-            field=models.PositiveIntegerField(blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.', null=True),
+            model_name="guestprofile",
+            name="data_mapper_id",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='managerprofile',
-            name='data_mapper_id',
-            field=models.PositiveIntegerField(blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.', null=True),
+            model_name="managerprofile",
+            name="data_mapper_id",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='parentprofile',
-            name='data_mapper_id',
-            field=models.PositiveIntegerField(blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.', null=True),
+            model_name="parentprofile",
+            name="data_mapper_id",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='playerprofile',
-            name='data_mapper_id',
-            field=models.PositiveIntegerField(blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.', null=True),
+            model_name="playerprofile",
+            name="data_mapper_id",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='scoutprofile',
-            name='data_mapper_id',
-            field=models.PositiveIntegerField(blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.', null=True),
+            model_name="scoutprofile",
+            name="data_mapper_id",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='standardprofile',
-            name='data_mapper_id',
-            field=models.PositiveIntegerField(blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.', null=True),
+            model_name="standardprofile",
+            name="data_mapper_id",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+                null=True,
+            ),
         ),
     ]

@@ -6,27 +6,38 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0025_auto_20201126_0308'),
+        ("profiles", "0025_auto_20201126_0308"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='standardprofile',
-            name='history',
+            model_name="standardprofile",
+            name="history",
         ),
         migrations.RemoveField(
-            model_name='standardprofile',
-            name='user',
+            model_name="standardprofile",
+            name="user",
         ),
         migrations.AlterField(
-            model_name='rolechangerequest',
-            name='new',
-            field=models.CharField(choices=[('P', 'Piłkarz'), ('T', 'Trener'), ('C', 'Klub / Szkółka piłkarska'), ('M', 'Agent piłkarski'), ('S', 'Skout'), ('R', 'Rodzic małego piłkarza'), ('G', 'Kibic / Rodzic')], max_length=100),
+            model_name="rolechangerequest",
+            name="new",
+            field=models.CharField(
+                choices=[
+                    ("P", "Piłkarz"),
+                    ("T", "Trener"),
+                    ("C", "Klub / Szkółka piłkarska"),
+                    ("M", "Agent piłkarski"),
+                    ("S", "Skout"),
+                    ("R", "Rodzic małego piłkarza"),
+                    ("G", "Kibic / Rodzic"),
+                ],
+                max_length=100,
+            ),
         ),
         migrations.DeleteModel(
-            name='FanProfile',
+            name="FanProfile",
         ),
         migrations.DeleteModel(
-            name='StandardProfile',
+            name="StandardProfile",
         ),
     ]

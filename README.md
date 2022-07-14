@@ -94,3 +94,27 @@ To set up a development environment quickly you need to have following prerequis
     Login into a Admin user (see step no 8)  
     Create new page as Main PlaymakerPage  
     Create servce with port :8000 and attach main page to that service.
+
+
+# Development
+
+Install dev requirements:  
+```bash
+pip install requirements_dev.txt  
+```  
+  
+Working with black formating:  
+
+```bash
+invoke black
+```
+
+Invoke tests:  
+
+```bash
+pytest . 
+```
+or 
+```bash
+invoke tests
+```

@@ -63,7 +63,7 @@ class Refresh:
             key,
             SummarySerializer.serialize,
             (league_history.league, league_history.season.name),
-            overwrite=overwrite
+            overwrite=overwrite,
         )
 
     @classmethod
@@ -74,7 +74,7 @@ class Refresh:
             key,
             LeagueAdvancedTableRawMetrics.serialize,
             (league_history.league, league_history),
-            overwrite=overwrite
+            overwrite=overwrite,
         )
 
     @classmethod
@@ -85,7 +85,7 @@ class Refresh:
             key,
             PlaymakerMetrics.calc,
             {league_history.league},
-            overwrite=overwrite
+            overwrite=overwrite,
         )
 
 
@@ -126,11 +126,15 @@ class PlaysBaseView(ComplexViews):
         options["league_obj"] = self.league
         # Only when filtering feature is on.
         if self.filter_on:
-            options["league_filters"] = League.objects.prefetch_related("data_seasons", "childs").filter(
-                Q(visible=True) &
-                Q(parent__isnull=True)          
-#                Q(data_seasons__in=[options["current_season_obj"]])
-            ).order_by("order")
+            options["league_filters"] = (
+                League.objects.prefetch_related("data_seasons", "childs")
+                .filter(
+                    Q(visible=True)
+                    & Q(parent__isnull=True)
+                    #                Q(data_seasons__in=[options["current_season_obj"]])
+                )
+                .order_by("order")
+            )
         return options
 
     def get(self, request, slug, *args, **kwargs):
@@ -188,9 +192,9 @@ class PlaysViews(PlaysBaseView):
         #     options['objects'] = SummarySerializer.serialize(self.league, self.season)
         #     data_index.data[data_index_key] = options['objects']
         #     data_index.save()
-        #print(f'..... {self.season}')
-        #print(options["objects"])
-    
+        # print(f'..... {self.season}')
+        # print(options["objects"])
+
         return options
 
 
@@ -247,6 +251,7 @@ class PlaysScoresViews(PlaysBaseView):
         # else:
         # options['objects'] = dict(LeagueMatchesMetrics().serialize(self.league, self.season, sort_up=True))
         from collections import OrderedDict
+
         data = dict(
             LeagueMatchesMetrics().calculate(self.league, self.season, sort_up=True)
         )
@@ -292,7 +297,7 @@ class PlaysListViews(ComplexViews):
         try:
             redirect_league = request.user.profile.get_league_object()
         except AttributeError:
-            redirect_league = ''
+            redirect_league = ""
 
         if redirect_league:
             return redirect("plays:summary", slug=redirect_league.slug)
@@ -320,15 +325,11 @@ class PlaysListViews(ComplexViews):
 
 
 class LeagueHistoryService:
-    allowed_keynames = [
-        "future-games",
-        "scores",
-        "playmakers",
-        "summary",
-        "table"
-    ]
+    allowed_keynames = ["future-games", "scores", "playmakers", "summary", "table"]
 
-    def refresh_data_from_s38(self, league_history: CLeagueHistory, keyname: str = None):
+    def refresh_data_from_s38(
+        self, league_history: CLeagueHistory, keyname: str = None
+    ):
         """
         Gets data from s38, serialize and saves into HistoryLeague object.
 
@@ -344,29 +345,21 @@ class LeagueHistoryService:
             "scores": (
                 LeagueMatchesMetrics().calculate,
                 (league, season.name),
-                {"league_history": league_history, "sort_up": True, "overwrite": True}
+                {"league_history": league_history, "sort_up": True, "overwrite": True},
             ),
             "future-games": (
                 LeagueMatchesMetrics().calculate,
                 (league, season.name),
-                {"league_history": league_history, "sort_up": False, "overwrite": True, "played": False}
+                {
+                    "league_history": league_history,
+                    "sort_up": False,
+                    "overwrite": True,
+                    "played": False,
+                },
             ),
-            "playmakers": (
-                Refresh.playmakers,
-                (league_history,),
-                {"overwrite": True}
-            ),
-            "summary": (
-                Refresh.summary,
-                (league_history,),
-                {"overwrite": True}
-            ),
-
-            "table": (
-                Refresh.table,
-                (league_history,),
-                {"overwrite": True}
-            ),
+            "playmakers": (Refresh.playmakers, (league_history,), {"overwrite": True}),
+            "summary": (Refresh.summary, (league_history,), {"overwrite": True}),
+            "table": (Refresh.table, (league_history,), {"overwrite": True}),
         }
 
         for task, (method, args, kwargs) in tasks.items():
@@ -383,7 +376,7 @@ class LeagueHistoryService:
 
 
 class LeagueHistoryRefreshManager:
-    """Updates whole or single """
+    """Updates whole or single"""
 
     service = LeagueHistoryService()
 

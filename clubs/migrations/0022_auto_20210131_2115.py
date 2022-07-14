@@ -6,18 +6,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0021_auto_20210131_2111'),
+        ("clubs", "0021_auto_20210131_2111"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='club',
-            name='mapping',
-            field=models.TextField(blank=True, help_text='Mapping names comma separated. eg "name X", "name Xi"', null=True),
+            model_name="club",
+            name="mapping",
+            field=models.TextField(
+                blank=True,
+                help_text='Mapping names comma separated. eg "name X", "name Xi"',
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='team',
-            name='mapping',
-            field=models.TextField(blank=True, help_text='Mapping names comma separated. eg "name X, name Xi"', null=True),
+            model_name="team",
+            name="mapping",
+            field=models.TextField(
+                blank=True,
+                help_text='Mapping names comma separated. eg "name X, name Xi"',
+                null=True,
+            ),
         ),
     ]

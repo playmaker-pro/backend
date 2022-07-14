@@ -9,28 +9,44 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('clubs', '0010_auto_20201202_2037'),
+        ("clubs", "0010_auto_20201202_2037"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='club',
-            name='manager',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='managed_club', to=settings.AUTH_USER_MODEL),
+            model_name="club",
+            name="manager",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="managed_club",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='team',
-            name='manager',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='managed_team', to=settings.AUTH_USER_MODEL),
+            model_name="team",
+            name="manager",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="managed_team",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='club',
-            name='editors',
-            field=models.ManyToManyField(related_name='club_managers', to=settings.AUTH_USER_MODEL),
+            model_name="club",
+            name="editors",
+            field=models.ManyToManyField(
+                related_name="club_managers", to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AlterField(
-            model_name='team',
-            name='editors',
-            field=models.ManyToManyField(related_name='teammanagers', to=settings.AUTH_USER_MODEL),
+            model_name="team",
+            name="editors",
+            field=models.ManyToManyField(
+                related_name="teammanagers", to=settings.AUTH_USER_MODEL
+            ),
         ),
     ]

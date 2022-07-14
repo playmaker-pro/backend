@@ -6,43 +6,43 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0055_auto_20210207_1326'),
+        ("profiles", "0055_auto_20210207_1326"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='clubprofile',
-            name='event_log',
+            model_name="clubprofile",
+            name="event_log",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='coachprofile',
-            name='event_log',
+            model_name="coachprofile",
+            name="event_log",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='guestprofile',
-            name='event_log',
+            model_name="guestprofile",
+            name="event_log",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='managerprofile',
-            name='event_log',
+            model_name="managerprofile",
+            name="event_log",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='parentprofile',
-            name='event_log',
+            model_name="parentprofile",
+            name="event_log",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='playerprofile',
-            name='event_log',
+            model_name="playerprofile",
+            name="event_log",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='scoutprofile',
-            name='event_log',
+            model_name="scoutprofile",
+            name="event_log",
             field=models.JSONField(blank=True, null=True),
         ),
     ]

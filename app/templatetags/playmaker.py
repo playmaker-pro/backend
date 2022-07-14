@@ -10,29 +10,34 @@ from django.urls import reverse
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
-from django.utils.translation import (gettext_lazy, ngettext, ngettext_lazy,
-                                      npgettext_lazy, pgettext,
-                                      round_away_from_one)
+from django.utils.translation import (
+    gettext_lazy,
+    ngettext,
+    ngettext_lazy,
+    npgettext_lazy,
+    pgettext,
+    round_away_from_one,
+)
 from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from profiles.utils import extract_video_id
 
 User = get_user_model()
 
-TEMPLATE_ACTION_SCRIPT = 'platform/buttons/action_script.html'
-TEMPLATE_ACTION_LINK = 'platform/buttons/action_link.html'
-TEMPLATE_ACTION_BUTTON = 'platform/buttons/action_button.html'
-TEMPLATE_SEO_TAGS = 'platform/seo/tags.html'
+TEMPLATE_ACTION_SCRIPT = "platform/buttons/action_script.html"
+TEMPLATE_ACTION_LINK = "platform/buttons/action_link.html"
+TEMPLATE_ACTION_BUTTON = "platform/buttons/action_button.html"
+TEMPLATE_SEO_TAGS = "platform/seo/tags.html"
 
-DEFAULT_BUTTON_CSS_CLASS = 'btn-pm btn-pm-sm'
-DEFAULT_TEAM_ICON = 'shield'
+DEFAULT_BUTTON_CSS_CLASS = "btn-pm btn-pm-sm"
+DEFAULT_TEAM_ICON = "shield"
 
-logger = logging.getLogger(f'project.{__name__}')
+logger = logging.getLogger(f"project.{__name__}")
 
 register = template.Library()
 
 
-@register.filter(name='jsonify')
+@register.filter(name="jsonify")
 def jsonify(data):
     if isinstance(data, dict):
         return json.dumps(data)
@@ -45,9 +50,9 @@ def classname(obj):
 
 
 class PageSeoTags:
-    DYNAMIC_KEY = 'dynamic'
-    DEFAULT_KEY = 'default'
-    DYNAMIC_PAGE_SPLITER = '*'
+    DYNAMIC_KEY = "dynamic"
+    DEFAULT_KEY = "default"
+    DYNAMIC_PAGE_SPLITER = "*"
 
     def __init__(self, dynamic_keywords=None, dynamic_keys_values=None, inherited=None):
         self.dynamic_keywords = dynamic_keywords
@@ -86,7 +91,7 @@ class PageSeoTags:
             return None
         if self.is_dynamic and self.dynamic_keywords is not None:
             for dtag in self.dynamic_keywords:
-                if '{' + dtag + '}' in tag_content:
+                if "{" + dtag + "}" in tag_content:
                     return tag_content.format(**{dtag: self.dynamic_keys_values[dtag]})
         else:
             return tag_content
@@ -94,39 +99,53 @@ class PageSeoTags:
 
 @register.inclusion_tag(TEMPLATE_SEO_TAGS, takes_context=True)
 def seo_tags(context):
-    '''Generates SEO tags'''
+    """Generates SEO tags"""
 
-    request = context['request']
-    seo_data = context['seo']
+    request = context["request"]
+    seo_data = context["seo"]
 
-    dynamic_keywords = seo_data.get('dynamic_keywords', [])
+    dynamic_keywords = seo_data.get("dynamic_keywords", [])
     dynamic_keys_values = {
-        'name': context.get('seo_object_name'),
-        'image_path': context.get('seo_object_image')
+        "name": context.get("seo_object_name"),
+        "image_path": context.get("seo_object_image"),
     }
 
-    inherited = seo_data.get('inherited', [])
+    inherited = seo_data.get("inherited", [])
 
     generator = PageSeoTags(
         dynamic_keywords=dynamic_keywords,
         dynamic_keys_values=dynamic_keys_values,
-        inherited=inherited)
+        inherited=inherited,
+    )
     data = generator.get_page_data(request.path, seo_data)
 
     if data is not None:
-        metas = ['robots', 'title', 'tags', 'description', 'fbapp', 'oglocale', 'ogtype', 'ogtitle', 'ogdescription',
-                 'ogurl', 'ogsite_name']
-        metas_data = {name: generator.get_seo_tag(name, data.get(name)) for name in metas}
-        logger.debug(f'SEO metadata produced for page {request.path}: {metas_data}')
+        metas = [
+            "robots",
+            "title",
+            "tags",
+            "description",
+            "fbapp",
+            "oglocale",
+            "ogtype",
+            "ogtitle",
+            "ogdescription",
+            "ogurl",
+            "ogsite_name",
+        ]
+        metas_data = {
+            name: generator.get_seo_tag(name, data.get(name)) for name in metas
+        }
+        logger.debug(f"SEO metadata produced for page {request.path}: {metas_data}")
         return metas_data
     else:
-        logger.debug(f'No SEO data for {request.path} data={data} seo_data: {seo_data}')
+        logger.debug(f"No SEO data for {request.path} data={data} seo_data: {seo_data}")
         return {}
 
 
 @register.filter
 def get_urls_with_no_page(value):
-    if 'page=' in value:
+    if "page=" in value:
         return value.replace("page", "non_falue")
     else:
         return value
@@ -145,7 +164,7 @@ def has_season_data(league: League, season_name: str) -> bool:
 @register.filter(expects_localtime=True)
 def days_since(value, arg=None):
     try:
-        tzinfo = getattr(value, 'tzinfo', None)
+        tzinfo = getattr(value, "tzinfo", None)
         value = date(value.year, value.month, value.day)
     except AttributeError:
         # Passed value wasn't a date object
@@ -171,7 +190,7 @@ def days_since(value, arg=None):
 @register.filter(expects_localtime=True)
 def days_until(exp_date, arg=None):
     try:
-        tzinfo = getattr(exp_date, 'tzinfo', None)
+        tzinfo = getattr(exp_date, "tzinfo", None)
         value = date(exp_date.year, exp_date.month, exp_date.day)
     except AttributeError:
         # Passed value wasn't a date object
@@ -192,7 +211,7 @@ def days_until(exp_date, arg=None):
 @register.filter
 def convert_to_embeded(url):
     """concatenate arg1 & arg2"""
-    return f'https://www.youtube.com/embed/{extract_video_id(url)}'
+    return f"https://www.youtube.com/embed/{extract_video_id(url)}"
 
 
 @register.filter
@@ -209,7 +228,7 @@ def addstr(arg1, arg2):
 
 @register.simple_tag
 def get_user_verification_modal_id(user: User) -> str:
-    if user.validate_last_name():      
+    if user.validate_last_name():
         return "#verificationModal"
     else:
         return "#profileNotValidModal"
@@ -217,34 +236,38 @@ def get_user_verification_modal_id(user: User) -> str:
 
 @register.simple_tag
 def get_title(user, ann):
-    """ get announcement modal title """
+    """get announcement modal title"""
 
     if user.is_authenticated:
-        if user.is_player and ann.__class__.__name__ == 'ClubForPlayerAnnouncement':
-            return 'Czy na pewno chcesz wykonać tą akcję?'  # club for player
-        elif user.is_club and ann.__class__.__name__ == 'CoachForClubAnnouncement':
-            return 'Czy na pewno chcesz wykonać tą akcję?'  # coach lf club
-        elif user.is_club and ann.__class__.__name__ == 'PlayerForClubAnnouncement':
-            return 'Czy na pewno chcesz wykonać tą akcję?'  # player lf club
+        if user.is_player and ann.__class__.__name__ == "ClubForPlayerAnnouncement":
+            return "Czy na pewno chcesz wykonać tą akcję?"  # club for player
+        elif user.is_club and ann.__class__.__name__ == "CoachForClubAnnouncement":
+            return "Czy na pewno chcesz wykonać tą akcję?"  # coach lf club
+        elif user.is_club and ann.__class__.__name__ == "PlayerForClubAnnouncement":
+            return "Czy na pewno chcesz wykonać tą akcję?"  # player lf club
         elif user.is_coach and ann.__class__.__name__ == "PlayerForClubAnnouncement":
-            return 'Czy na pewno chcesz wykonać tą akcję?'  # player lf club
+            return "Czy na pewno chcesz wykonać tą akcję?"  # player lf club
         elif user.is_coach and ann.__class__.__name__ == "ClubForCoachAnnouncement":
-            return 'Czy na pewno chcesz wykonać tą akcję?'  # player lf club
+            return "Czy na pewno chcesz wykonać tą akcję?"  # player lf club
 
         elif not user.is_player and not user.is_coach and not user.is_club:
-            return 'Nie masz uprawnień do wykonania tej akcji. ' \
-                   'W ogłoszeniach aktywnie mogą uczestniczyć użytkownicy o ' \
-                   'roli klub, trener i piłkarz.'
+            return (
+                "Nie masz uprawnień do wykonania tej akcji. "
+                "W ogłoszeniach aktywnie mogą uczestniczyć użytkownicy o "
+                "roli klub, trener i piłkarz."
+            )
         else:
-            return 'Błąd'
+            return "Błąd"
     else:
-        return "Musisz być zarejestrowanym użytkownikiem by odpowiedzieć na to ogłoszenie"
+        return (
+            "Musisz być zarejestrowanym użytkownikiem by odpowiedzieć na to ogłoszenie"
+        )
 
 
-@register.inclusion_tag('inquiries/partials/name.html', takes_context=True)
+@register.inclusion_tag("inquiries/partials/name.html", takes_context=True)
 def inquiry_display_name(context, inquiry):
-    user = context['user']
-    name = ''
+    user = context["user"]
+    name = ""
     flag = None
     picture = None
     link = None
@@ -253,8 +276,8 @@ def inquiry_display_name(context, inquiry):
     if inquiry.sender != user:
         if inquiry.sender.is_club:
             functional_name = {
-                'name': inquiry.sender.get_full_name,
-                'role': inquiry.sender.profile.get_club_role_display()
+                "name": inquiry.sender.get_full_name,
+                "role": inquiry.sender.profile.get_club_role_display(),
             }
 
     if inquiry.sender != user:
@@ -277,9 +300,9 @@ def inquiry_display_name(context, inquiry):
     elif inquiry.is_team_type:  # X -> sends to Team (shoudl be player)
         if obj.is_coach:
             if not obj.profile.team_object:
-                name = 'zapytanie nie aktualne'
+                name = "zapytanie nie aktualne"
                 link = None
-                picture = ''
+                picture = ""
             else:
                 name = obj.profile.display_team
                 link = obj.profile.team_object.get_permalink
@@ -293,9 +316,9 @@ def inquiry_display_name(context, inquiry):
                 link = obj.profile.club_object.get_permalink
                 picture = obj.profile.club_object.picture
             else:
-                name = 'zapytanie nie aktualne'
+                name = "zapytanie nie aktualne"
                 link = None
-                picture = ''
+                picture = ""
     elif inquiry.is_club_type:
         if obj.is_coach:
             name, link, picture = user_data(obj)
@@ -309,27 +332,35 @@ def inquiry_display_name(context, inquiry):
             link = obj.profile.club_object.get_permalink
             picture = obj.profile.club_object.picture
 
-    return {'name': name, 'link': link, 'flag': flag, 'picture': picture, 'functional_name': functional_name}
+    return {
+        "name": name,
+        "link": link,
+        "flag": flag,
+        "picture": picture,
+        "functional_name": functional_name,
+    }
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def profile_link(context, user, checks=True, text=None):
     if not user.is_authenticated:
-        return {'off': True}
-    button_text = text or ''
+        return {"off": True}
+    button_text = text or ""
     return {
-        'button_url': user.profile.get_permalink(),
-        'button_icon': 'user',
-        'button_class': 'btn-pm btn-pm-sm',
-        'button_text': button_text,
-        'modals': context['modals'],
-        'checks': checks,
+        "button_url": user.profile.get_permalink(),
+        "button_icon": "user",
+        "button_class": "btn-pm btn-pm-sm",
+        "button_text": button_text,
+        "modals": context["modals"],
+        "checks": checks,
     }
 
 
 def is_profile_requested(user, target):  # @todo to be placed in inquireis utils
     try:
-        InquiryRequest.objects.get(sender=user, recipient=target, status__in=InquiryRequest.ACTIVE_STATES)
+        InquiryRequest.objects.get(
+            sender=user, recipient=target, status__in=InquiryRequest.ACTIVE_STATES
+        )
         return True
     except InquiryRequest.DoesNotExist:
         return False
@@ -362,85 +393,92 @@ def add_announcement(context):
         when club user do not have any club attached we should tirgger no_club_assigned modal
     """
 
-    user = context['user']
+    user = context["user"]
 
     if not user.is_authenticated:
-        return {'off': True}
+        return {"off": True}
     if user.is_player:
         return {
-            'active_class': None,
+            "active_class": None,
             # 'button_script': 'inquiry',
-            'button_id': 'addAnnoucementButton',
-            'button_attrs': None,
-            'button_class': 'btn-request',
-            'button_actions': {
-                'modal': {'name': 'addAnnouncementModal'},
-                'onclick': {'name': 'get_add_announcement_form'},
+            "button_id": "addAnnoucementButton",
+            "button_attrs": None,
+            "button_class": "btn-request",
+            "button_actions": {
+                "modal": {"name": "addAnnouncementModal"},
+                "onclick": {"name": "get_add_announcement_form"},
             },
-            'button_action': {'modal': True, 'name': 'addAnnouncementModal'},
-            'button_action_onlick': {'onclick': True, 'name': 'get_add_announcement_form'},
-            'button_icon': 'plus',
-            'button_text': 'Dodaj ogłoszenie',
-            'modals': context['modals'],
+            "button_action": {"modal": True, "name": "addAnnouncementModal"},
+            "button_action_onlick": {
+                "onclick": True,
+                "name": "get_add_announcement_form",
+            },
+            "button_icon": "plus",
+            "button_text": "Dodaj ogłoszenie",
+            "modals": context["modals"],
         }
     elif user.is_club:
-        context = context['modals']
+        context = context["modals"]
         return {
-            'modals': context,
-            'multiple_options': True,
-            'options': [
+            "modals": context,
+            "multiple_options": True,
+            "options": [
                 {
-                    'flag': 'club_looking_for_player',
-                    'friendly_name': 'Klub szuka zawodnika'
+                    "flag": "club_looking_for_player",
+                    "friendly_name": "Klub szuka zawodnika",
                 },
                 {
-                    'flag': 'club_looking_for_coach',
-                    'friendly_name': 'Klub szuka trenera'
+                    "flag": "club_looking_for_coach",
+                    "friendly_name": "Klub szuka trenera",
                 },
-            ]
+            ],
         }
     elif user.is_coach:
-        context = context['modals']
+        context = context["modals"]
         multiple_options = True
         if not user.profile.display_club:
             multiple_options = False
-            context['no_club']['load'] = True
+            context["no_club"]["load"] = True
 
         return {
-            'modals': context,
-            'multiple_options': multiple_options,
-            'options': [
-                {'flag': 'coach_looking_for_player',
-                 'friendly_name': 'Trener szuka zawodnika',
-                 'no_club': True
-                 },
-                {'flag': 'coach_looking_for_club',
-                 'friendly_name': 'Trener szuka klubu',
-                 'no_club': False
-                 },
-            ]
+            "modals": context,
+            "multiple_options": multiple_options,
+            "options": [
+                {
+                    "flag": "coach_looking_for_player",
+                    "friendly_name": "Trener szuka zawodnika",
+                    "no_club": True,
+                },
+                {
+                    "flag": "coach_looking_for_club",
+                    "friendly_name": "Trener szuka klubu",
+                    "no_club": False,
+                },
+            ],
         }
 
-    return {'off': True}
+    return {"off": True}
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def profile_link(context, user, checks=True, text=None):
     if not user.is_authenticated:
-        return {'off': True}
-    button_text = text or ''
+        return {"off": True}
+    button_text = text or ""
     return {
-        'button_url': user.profile.get_permalink(),
-        'button_icon': 'user',
-        'button_class': 'btn-pm btn-pm-sm',
-        'button_text': button_text,
-        'modals': context['modals'],
-        'checks': checks,
+        "button_url": user.profile.get_permalink(),
+        "button_icon": "user",
+        "button_class": "btn-pm btn-pm-sm",
+        "button_text": button_text,
+        "modals": context["modals"],
+        "checks": checks,
     }
 
 
 class Button:
-    def __init__(self, context=None, url=None, checks=True, icon='', text='', css_class=''):
+    def __init__(
+        self, context=None, url=None, checks=True, icon="", text="", css_class=""
+    ):
         self.checks = checks
         self.context = context
         self.text = text
@@ -449,118 +487,117 @@ class Button:
 
     def get_json(self):
         return {
-            'checks': self.checks,
-            'button_icon': self.icon,
-            'button_class': self.css_class,
-            'button_text': self.text,
-            'modals': self.context['modals'],
+            "checks": self.checks,
+            "button_icon": self.icon,
+            "button_class": self.css_class,
+            "button_text": self.text,
+            "modals": self.context["modals"],
         }
 
 
 class ActionButton(Button):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.url = kwargs['url']
+        self.url = kwargs["url"]
 
     def get_json(self):
         data = super().get_json()
-        data['button_url'] = self.url
+        data["button_url"] = self.url
         return data
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def announcement_edit(context, ann):
-    user = context['user']
+    user = context["user"]
 
     if not user.is_authenticated or ann.creator != user:
-        return {'off': True}
+        return {"off": True}
 
     return {
-        'active_class': None,
+        "active_class": None,
         # 'button_script': 'inquiry',
-        'button_id': 'addAnnoucementButton',
-        'button_attrs': f'data-ann={ann.id} data-ann-type={ann.__class__.__name__}',
-        'button_class': 'btn-request',
-        'button_actions': {
-            'modal': {'name': 'addAnnouncementModal'},
-            'onclick': {'name': 'get_add_announcement_form',
-                        'param': f'{ann.id}',
-                        'param2': f'{ann.__class__.__name__}'},
+        "button_id": "addAnnoucementButton",
+        "button_attrs": f"data-ann={ann.id} data-ann-type={ann.__class__.__name__}",
+        "button_class": "btn-request",
+        "button_actions": {
+            "modal": {"name": "addAnnouncementModal"},
+            "onclick": {
+                "name": "get_add_announcement_form",
+                "param": f"{ann.id}",
+                "param2": f"{ann.__class__.__name__}",
+            },
         },
-        'button_action': {
-            'modal': True,
-            'name': 'addAnnouncementModal'
-        },
-        'button_icon': 'ui-edit',
-        'button_text': 'Edytuj',
-        'modals': context['modals'],
+        "button_action": {"modal": True, "name": "addAnnouncementModal"},
+        "button_icon": "ui-edit",
+        "button_text": "Edytuj",
+        "modals": context["modals"],
     }
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def announcement_response(context, ann):
 
-    user = context['user']
-    button_text = ''
-    button_action = {'modal': True, 'name': f'{ann.__class__.__name__}{ann.id}'}
+    user = context["user"]
+    button_text = ""
+    button_action = {"modal": True, "name": f"{ann.__class__.__name__}{ann.id}"}
 
     if ann.__class__.__name__ == "ClubForCoachAnnouncement":
-        button_text = 'Wyślij aplikację'
-    elif ann.__class__.__name__ == 'CoachForClubAnnouncement':
-        button_text = 'Zaproś na rozmowę'
-    elif ann.__class__.__name__ == 'PlayerForClubAnnouncement':
-        button_text = 'Zaproś na testy'
-    elif ann.__class__.__name__ == 'ClubForPlayerAnnouncement':
+        button_text = "Wyślij aplikację"
+    elif ann.__class__.__name__ == "CoachForClubAnnouncement":
+        button_text = "Zaproś na rozmowę"
+    elif ann.__class__.__name__ == "PlayerForClubAnnouncement":
+        button_text = "Zaproś na testy"
+    elif ann.__class__.__name__ == "ClubForPlayerAnnouncement":
         button_text = "Zgłaszam się na testy"
 
     if not user.is_authenticated:
-        button_action = {'modal': True, 'name': 'registerModal'}
+        button_action = {"modal": True, "name": "registerModal"}
 
-    button_class = 'btn-request'
-    button_attrs = f'data-ann={ann.id} data-ann-type={ann.__class__.__name__}'
+    button_class = "btn-request"
+    button_attrs = f"data-ann={ann.id} data-ann-type={ann.__class__.__name__}"
 
     if user in ann.subscribers.all():
-        button_text = 'Zgłoszenie wysłane'
-        button_class = 'btn-requested'
-        button_attrs += ' disabled'
+        button_text = "Zgłoszenie wysłane"
+        button_class = "btn-requested"
+        button_attrs += " disabled"
 
     return {
-        'active_class': None,
+        "active_class": None,
         # 'button_script': 'inquiry',
-        'button_id': 'approveAnnoucementButton',
-        'button_attrs': button_attrs,
-        'button_class': button_class,
-        'button_action': button_action,
-        'button_icon': '',
-        'button_text': button_text,
-        'modals': context['modals'],
+        "button_id": "approveAnnoucementButton",
+        "button_attrs": button_attrs,
+        "button_class": button_class,
+        "button_action": button_action,
+        "button_icon": "",
+        "button_text": button_text,
+        "modals": context["modals"],
     }
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def announcement_yes(context, obj, css_class=None):
 
-    user = context['user']
+    user = context["user"]
 
     if user.is_authenticated:
-        if user.is_player and obj.__class__.__name__ == 'ClubForPlayerAnnouncement':
-            title = 'TAK, wysyłam zgłoszenie' ''  # club lf player
+        if user.is_player and obj.__class__.__name__ == "ClubForPlayerAnnouncement":
+            title = "TAK, wysyłam zgłoszenie" ""  # club lf player
         elif user.is_coach and obj.__class__.__name__ == "ClubForCoachAnnouncement":
-            title = 'TAK, wysyłam zgłoszenie'  # club lf coach
+            title = "TAK, wysyłam zgłoszenie"  # club lf coach
         elif user.is_coach and obj.__class__.__name__ == "PlayerForClubAnnouncement":
-            title = 'TAK, wysyłam zaproszenie'  # player lf club
+            title = "TAK, wysyłam zaproszenie"  # player lf club
         elif user.is_club and obj.__class__.__name__ == "PlayerForClubAnnouncement":
-            title = 'TAK, wysyłam zaproszenie'  # player lf club
+            title = "TAK, wysyłam zaproszenie"  # player lf club
         elif user.is_club and obj.__class__.__name__ == "CoachForClubAnnouncement":
-            title = 'TAK, wysyłam zaproszenie'  # coach lf club
+            title = "TAK, wysyłam zaproszenie"  # coach lf club
         else:
-            title = 'Zmień rolę'
+            title = "Zmień rolę"
     else:
-        title = 'Zarejestruj się tutaj (Rejestracja)'
+        title = "Zarejestruj się tutaj (Rejestracja)"
         return {
-            'link_href': '#',
-            'link_body': title,
-            'link_class': 'btn-request',
+            "link_href": "#",
+            "link_body": title,
+            "link_class": "btn-request",
         }
     if not isinstance(obj, str):
         obj_id = obj.id
@@ -568,45 +605,45 @@ def announcement_yes(context, obj, css_class=None):
         obj_id = obj
 
     return {
-        'active_class': None,
+        "active_class": None,
         # 'button_script': 'inquiry',
-        'button_id': 'approveAnnoucementButton',
-        'button_attrs': None,
-        'button_class': 'btn-request',
-        'button_action': {
-            'onclick': True,
-            'name': 'approve_annoucement',
-            'param': obj_id,
-            'param2': obj.__class__.__name__
+        "button_id": "approveAnnoucementButton",
+        "button_attrs": None,
+        "button_class": "btn-request",
+        "button_action": {
+            "onclick": True,
+            "name": "approve_annoucement",
+            "param": obj_id,
+            "param2": obj.__class__.__name__,
         },
-        'button_icon': '',
-        'button_text': title,
-        'modals': context['modals'],
+        "button_icon": "",
+        "button_text": title,
+        "modals": context["modals"],
     }
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_LINK, takes_context=True)
 def other_roles_button(context, text=None, css_class=None):
-    user = context['user']
+    user = context["user"]
 
     if not user.is_authenticated:
 
-        title = 'Zarejestruj się tutaj (Rejestracja)'
-        link = '/signup/'
+        title = "Zarejestruj się tutaj (Rejestracja)"
+        link = "/signup/"
 
     elif not user.is_club and not user.is_player and not user.is_coach:
 
-        title = 'Zmień rolę'
-        link = '/users/me/edit/settings/'
+        title = "Zmień rolę"
+        link = "/users/me/edit/settings/"
 
     else:
-        link = '#'
-        title = 'Nieznany błąd, spróbuj ponownie później'
+        link = "#"
+        title = "Nieznany błąd, spróbuj ponownie później"
 
     return {
-        'link_href': link,
-        'link_body': title,
-        'link_class': 'btn-pm',
+        "link_href": link,
+        "link_body": title,
+        "link_class": "btn-pm",
     }
 
 
@@ -615,21 +652,21 @@ def filter_button(context, user, mobile=False):
     """Creates button to send apply filters"""
     button_attrs = 'type="submit"'
     if mobile:
-        button_id = 'filter-button-mobile'
+        button_id = "filter-button-mobile"
     else:
-        button_id = 'filter-button'
+        button_id = "filter-button"
 
-    button_class = 'btn-pm'
-    button_text = 'Filtruj'
+    button_class = "btn-pm"
+    button_text = "Filtruj"
     if not user.is_authenticated:
-        button_attrs = 'type=button'
+        button_attrs = "type=button"
     return {
-        'button_id': button_id,
-        'button_attrs': button_attrs,
-        'button_class': button_class,
-        'button_icon': None,
-        'button_text': button_text,
-        'modals': context['modals'],
+        "button_id": button_id,
+        "button_attrs": button_attrs,
+        "button_class": button_class,
+        "button_icon": None,
+        "button_text": button_text,
+        "modals": context["modals"],
     }
 
 
@@ -641,7 +678,7 @@ def is_same_club(user, showed_user):
     if showed_user is not None:
         showed_club = showed_user.profile.get_club_object()
     if club is not None and showed_club is not None:
-        print(f'debug: {club} {showed_club}')
+        print(f"debug: {club} {showed_club}")
         return showed_club == club
     else:
         return None
@@ -651,8 +688,8 @@ def is_same_club(user, showed_user):
 def request_link(context, user, showed_user):
     """Creates button to open inquiry"""
 
-    button_text = ''
-    off = {'off': True}
+    button_text = ""
+    off = {"off": True}
 
     # Check permissions
     if not user.is_authenticated:
@@ -665,7 +702,7 @@ def request_link(context, user, showed_user):
         if not showed_user.manager:
             return off
         if isinstance(showed_user, Team):
-            # we do not want to allow to click on button when 
+            # we do not want to allow to click on button when
             # Team should not be visible in database
             if not showed_user.visible:
                 return off
@@ -675,171 +712,178 @@ def request_link(context, user, showed_user):
                 showed_user = showed_user.club.manager
         else:
             showed_user = showed_user.manager
-            logger.info(f'Appending new show_user {showed_user}')
+            logger.info(f"Appending new show_user {showed_user}")
     if showed_user:
         if is_same_club(user, showed_user):
             return off
         if (user.is_coach or user.is_club) and showed_user.is_player:
-            button_text = 'Zaproś na testy'
+            button_text = "Zaproś na testy"
         elif user.is_player and (showed_user.is_coach or showed_user.is_club):
-            button_text = 'Zapytaj o testy'
+            button_text = "Zapytaj o testy"
         elif user.is_club and showed_user.is_coach:
-            button_text = 'Zaproś na rozmowę'
+            button_text = "Zaproś na rozmowę"
         elif user.is_coach and showed_user.is_club:
-            button_text = 'Zapytaj o rozmowę'
+            button_text = "Zapytaj o rozmowę"
         else:
             return off
 
     try:
-        request = InquiryRequest.objects.get(sender=user, recipient=showed_user,
-                                             status__in=InquiryRequest.ACTIVE_STATES)
+        request = InquiryRequest.objects.get(
+            sender=user, recipient=showed_user, status__in=InquiryRequest.ACTIVE_STATES
+        )
         requested = True
     except InquiryRequest.DoesNotExist:
         requested = False
         request = None
 
     if requested:
-        active_class = 'btn-requested'
+        active_class = "btn-requested"
     else:
         active_class = None
 
     if request is not None and request.is_active():
-        button_text = 'Wysłano'
-        attrs = 'disabled'
+        button_text = "Wysłano"
+        attrs = "disabled"
     else:
         attrs = None
 
     if user.is_verified:
-        context['modals']['verification'] = False
+        context["modals"]["verification"] = False
 
     return {
-        'show_user': showed_user,
-        'active_class': active_class,
+        "show_user": showed_user,
+        "active_class": active_class,
         # 'button_script': 'inquiry',
-        'button_id': 'requestButton',
-        'button_attrs': attrs,
-        'button_class': 'btn-request',
-        'button_action': {'modal': True, 'name': 'inquiryModal'},
-        'button_icon': 'kick',
-        'button_text': button_text,
-        'modals': context['modals'],
+        "button_id": "requestButton",
+        "button_attrs": attrs,
+        "button_class": "btn-request",
+        "button_action": {"modal": True, "name": "inquiryModal"},
+        "button_icon": "kick",
+        "button_text": button_text,
+        "modals": context["modals"],
     }
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
-def send_request(context, user, showed_user, category='user'):
+def send_request(context, user, showed_user, category="user"):
     if not showed_user:
-        logger.info('showed user not defined.')
+        logger.info("showed user not defined.")
         showed_user = user  # @todo this should be erased
     if user.userinquiry.left <= 0:
-        attrs = 'disabled'
+        attrs = "disabled"
     else:
-        attrs = ''
+        attrs = ""
 
     if isinstance(showed_user, Team) or isinstance(showed_user, Club):
         if isinstance(showed_user, Team):
-            category = 'team'
+            category = "team"
             if showed_user.manager is not None:
                 showed_user = showed_user.manager
             else:
                 showed_user = showed_user.club.manager
         else:
-            category = 'club'
+            category = "club"
             showed_user = showed_user.manager
-            logger.info(f'Appending new show_user {showed_user}')
+            logger.info(f"Appending new show_user {showed_user}")
 
     if showed_user:
         btn_param = showed_user.profile.slug
     else:
-        btn_param = ''
+        btn_param = ""
 
     return {
-        'show_user': showed_user,
-        'button_attrs': attrs,
-        'button_text': 'Tak, wyślij',
-        'button_class': 'btn btn-success',
-        'button_action': {'onclick': True, 'name': 'inquiry', 'param': btn_param, 'param2': category},
-        'modals': context['modals'],
+        "show_user": showed_user,
+        "button_attrs": attrs,
+        "button_text": "Tak, wyślij",
+        "button_class": "btn btn-success",
+        "button_action": {
+            "onclick": True,
+            "name": "inquiry",
+            "param": btn_param,
+            "param2": category,
+        },
+        "modals": context["modals"],
     }
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def update_request_button(context, request, accept=False):
 
-    button_text = 'Akceptuj' if accept else 'Odrzuć'
-    param = f'{request.id}---1' if accept else f'{request.id}---0'
-    button_class = 'btn-request btn-requested inquiryAnswerButtons'
+    button_text = "Akceptuj" if accept else "Odrzuć"
+    param = f"{request.id}---1" if accept else f"{request.id}---0"
+    button_class = "btn-request btn-requested inquiryAnswerButtons"
     if accept:
-        button_class += ' bg-success'
+        button_class += " bg-success"
     return {
-        'button_text': button_text,
-        'button_class': button_class,
-        'button_action': {'onclick': True, 'name': 'inquiryUpdate', 'param': param},
-        'modals': context['modals'],
+        "button_text": button_text,
+        "button_class": button_class,
+        "button_action": {"onclick": True, "name": "inquiryUpdate", "param": param},
+        "modals": context["modals"],
     }
 
 
-@register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)  # TEMPLATE_ACTION_SCRIPT
-def observed_link(context, user, showed_user, text=False, otype='user', icon=None):
+@register.inclusion_tag(
+    TEMPLATE_ACTION_BUTTON, takes_context=True
+)  # TEMPLATE_ACTION_SCRIPT
+def observed_link(context, user, showed_user, text=False, otype="user", icon=None):
     if not user.is_authenticated:
-        return {'off': True}
+        return {"off": True}
     active_class = None
 
-    button_text = 'obserwuj'
+    button_text = "obserwuj"
 
-    if context.get('observed'):
-        active_class = 'observed'
-        button_text = 'obserwujesz'
+    if context.get("observed"):
+        active_class = "observed"
+        button_text = "obserwujesz"
     else:
-        if otype == 'user':
+        if otype == "user":
             if is_profile_observed(user, showed_user):
-                active_class = 'observed'
-                button_text = 'obserwujesz'
-        if otype == 'team':
+                active_class = "observed"
+                button_text = "obserwujesz"
+        if otype == "team":
             if is_team_observed(user, showed_user):
-                active_class = 'observed'
-                button_text = 'obserwujesz'
+                active_class = "observed"
+                button_text = "obserwujesz"
 
-    if otype == 'user':
+    if otype == "user":
         param = showed_user.profile.slug
-    elif otype == 'team':
+    elif otype == "team":
         param = showed_user.slug
     else:
-        param = ''
+        param = ""
 
     if showed_user == user:
-        return {'off': True}
+        return {"off": True}
 
-    if otype == 'user':
-        script_func = 'observe'
-    elif otype == 'team':
-        script_func = 'observeTeam'
+    if otype == "user":
+        script_func = "observe"
+    elif otype == "team":
+        script_func = "observeTeam"
     else:
-        script_func = ''
+        script_func = ""
 
     return {
-
-        'active_class': active_class,
-        'button_text': button_text,
-        'button_class': 'btn-obs',
-        'button_action': {'onclick': True, 'name': script_func, 'param': param},
-        'button_icon': icon,  # 'eye',
-        'modals': context['modals'],
+        "active_class": active_class,
+        "button_text": button_text,
+        "button_class": "btn-obs",
+        "button_action": {"onclick": True, "name": script_func, "param": param},
+        "button_icon": icon,  # 'eye',
+        "modals": context["modals"],
     }
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def seemore_link(context, link, checks=True):
-    if not context['user'].is_authenticated:
+    if not context["user"].is_authenticated:
         pass
     return {
-        'button_class': DEFAULT_BUTTON_CSS_CLASS,
-        'checks': checks,
-        'button_icon': None,
-        'button_text': 'zobacz więcej',
-        'button_url': link,
-        'modals': context['modals'],
-        'user': context['user']
+        "button_class": DEFAULT_BUTTON_CSS_CLASS,
+        "checks": checks,
+        "button_icon": None,
+        "button_text": "zobacz więcej",
+        "button_url": link,
+        "modals": context["modals"],
+        "user": context["user"],
     }
 
 
@@ -847,53 +891,61 @@ def seemore_link(context, link, checks=True):
 def get_team_link(context, team, text=None, css_class=None, checks=True):
 
     css_class = css_class or DEFAULT_BUTTON_CSS_CLASS
-    button = ActionButton(url=team.get_permalink, text=text, context=context, css_class=css_class,
-                          icon=DEFAULT_TEAM_ICON, checks=checks)
+    button = ActionButton(
+        url=team.get_permalink,
+        text=text,
+        context=context,
+        css_class=css_class,
+        icon=DEFAULT_TEAM_ICON,
+        checks=checks,
+    )
     return button.get_json()
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def get_team_edit_link(context, team, text=None, css_class=None, checks=True):
     css_class = css_class or DEFAULT_BUTTON_CSS_CLASS
-    payload_off = {'off': True}
-    user = context['user']
+    payload_off = {"off": True}
+    user = context["user"]
     if not user.is_authenticated:
         payload_off
     editable = team.is_editor(user)
     if not editable:
         return payload_off
 
-    link = reverse('clubs:edit_team', kwargs={'slug': team.slug})
+    link = reverse("clubs:edit_team", kwargs={"slug": team.slug})
 
     button = ActionButton(
         url=link,
-        text='Edytuj',
+        text="Edytuj",
         context=context,
         css_class=css_class,
-        icon='edit',
-        checks=checks)
+        icon="edit",
+        checks=checks,
+    )
     return button.get_json()
 
 
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def get_club_edit_link(context, club, text=None, css_class=None, checks=True):
-    payload_off = {'off': True}
-    user = context['user']
+    payload_off = {"off": True}
+    user = context["user"]
     if not user.is_authenticated:
         payload_off
     editable = club.is_editor(user)
     if not editable:
         return payload_off
 
-    link = reverse('clubs:edit_club', kwargs={'slug': club.slug})
+    link = reverse("clubs:edit_club", kwargs={"slug": club.slug})
     css_class = css_class or DEFAULT_BUTTON_CSS_CLASS
     button = ActionButton(
         url=link,
-        text='Edytuj',
+        text="Edytuj",
         context=context,
         css_class=css_class,
-        icon='edit',
-        checks=checks)
+        icon="edit",
+        checks=checks,
+    )
     return button.get_json()
 
 
@@ -903,12 +955,12 @@ def get_club_link(context, object, text=None, css_class=None, checks=True):
     css_class = css_class or DEFAULT_BUTTON_CSS_CLASS
 
     return {
-        'checks': checks,
-        'button_class': css_class,
-        'button_icon': 'shield',
-        'button_url': object.get_permalink,
-        'button_text': text,
-        'modals': context['modals'],
+        "checks": checks,
+        "button_class": css_class,
+        "button_icon": "shield",
+        "button_url": object.get_permalink,
+        "button_text": text,
+        "modals": context["modals"],
     }
 
 
@@ -917,26 +969,26 @@ def get_my_team_link(context, text=None, css_class=None):
     if text:
         link_body = text
     else:
-        link_body = 'Moja Drużyna'
-    user = context['user']
+        link_body = "Moja Drużyna"
+    user = context["user"]
 
     if not user.is_authenticated or not user.is_verified:
-        link = '#'
+        link = "#"
     else:
         try:
             link = user.managed_team.get_permalink
         except Exception as e:
             logger.error(e)
-            link = '#'
+            link = "#"
 
-    link_class = css_class or ''
-    link_attrs = ''
+    link_class = css_class or ""
+    link_attrs = ""
 
     return {
-        'link_attrs': link_attrs,
-        'link_class': link_class,
-        'link_href': link,
-        'link_body': link_body,
+        "link_attrs": link_attrs,
+        "link_class": link_class,
+        "link_href": link,
+        "link_body": link_body,
     }
 
 
@@ -945,20 +997,22 @@ def get_my_club_link(context, text=None, css_class=None):
     if text:
         link_body = text
     else:
-        link_body = 'Mój klub'
-    user = context['user']
+        link_body = "Mój klub"
+    user = context["user"]
 
     if not user.is_authenticated or not user.is_verified:
-        link = '#'
+        link = "#"
     else:
         try:
-            link = user.managed_club.get_permalink  # this works because this bound method is passed to template, funny..
+            link = (
+                user.managed_club.get_permalink
+            )  # this works because this bound method is passed to template, funny..
         except Exception as e:
             logger.error(e)
-            link = '#'
-    link_class = css_class or ''
+            link = "#"
+    link_class = css_class or ""
     return {
-        'link_href': link,
-        'link_body': link_body,
-        'link_class': link_class,
+        "link_href": link,
+        "link_body": link_body,
+        "link_class": link_class,
     }

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def _post_save_league(sender, instance, created, **kwargs):
     # Identify and set highest parent
 
-    if hasattr(instance, '_skip_post_save'):
+    if hasattr(instance, "_skip_post_save"):
         return
 
     if highest_parent := instance.get_highest_parent():

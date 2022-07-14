@@ -6,18 +6,29 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0026_auto_20201126_1845'),
+        ("profiles", "0026_auto_20201126_1845"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='profilevisithistory',
-            name='counter_coach',
+            model_name="profilevisithistory",
+            name="counter_coach",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AlterField(
-            model_name='rolechangerequest',
-            name='new',
-            field=models.CharField(choices=[('P', 'Piłkarz'), ('T', 'Trener'), ('C', 'Klub / Szkółka piłkarska'), ('M', 'Agent piłkarski'), ('S', 'Skaut'), ('R', 'Rodzic małego piłkarza'), ('G', 'Kibic / Rodzic')], max_length=100),
+            model_name="rolechangerequest",
+            name="new",
+            field=models.CharField(
+                choices=[
+                    ("P", "Piłkarz"),
+                    ("T", "Trener"),
+                    ("C", "Klub / Szkółka piłkarska"),
+                    ("M", "Agent piłkarski"),
+                    ("S", "Skaut"),
+                    ("R", "Rodzic małego piłkarza"),
+                    ("G", "Kibic / Rodzic"),
+                ],
+                max_length=100,
+            ),
         ),
     ]

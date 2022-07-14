@@ -1,8 +1,25 @@
 from __future__ import unicode_literals
 from django import forms
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, Div, Submit, HTML, Button, Row, Field, MultiField
-from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions, Tab, TabHolder, Alert
+from crispy_forms.layout import (
+    Layout,
+    Fieldset,
+    Div,
+    Submit,
+    HTML,
+    Button,
+    Row,
+    Field,
+    MultiField,
+)
+from crispy_forms.bootstrap import (
+    AppendedText,
+    PrependedText,
+    FormActions,
+    Tab,
+    TabHolder,
+    Alert,
+)
 from django.contrib.auth import get_user_model
 from . import models
 
@@ -20,11 +37,11 @@ class NotificationSettingsForm(forms.ModelForm):
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Fieldset(
-                '',
-                Div(             
+                "",
+                Div(
                     Div(
-                        Field('weekly_report', css_class="col-sm-6"),
-                        css_class='row',
+                        Field("weekly_report", css_class="col-sm-6"),
+                        css_class="row",
                     ),
                     # css_class='card',
                 ),
@@ -33,4 +50,4 @@ class NotificationSettingsForm(forms.ModelForm):
 
     class Meta:
         model = models.NotificationSetting
-        fields = ['weekly_report']
+        fields = ["weekly_report"]

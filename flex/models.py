@@ -7,14 +7,16 @@ from wagtail.core.blocks import RawHTMLBlock
 
 
 class FlexPage(Page):
-    '''Flexibile page class'''
-    template = 'flex/flex_page.html'
+    """Flexibile page class"""
+
+    template = "flex/flex_page.html"
     # content = StreamField()
     subtitle = models.CharField(max_length=100, null=True, blank=True)
     # extra_js = RawHTMLBlock()
     # extra_css = RawHTMLBlock()
-    content = StreamField([
-            ('html', RawHTMLBlock()),
+    content = StreamField(
+        [
+            ("html", RawHTMLBlock()),
             ("title_and_text", blocks.TitleAndTextBlock()),
             ("full_richtext", blocks.RichtextBlock()),
             ("simple_richtext", blocks.SimpleRichtextBlock()),
@@ -26,7 +28,7 @@ class FlexPage(Page):
         FieldPanel("subtitle"),
         # FieldPanel("extra_js"),
         # FieldPanel("extra_css"),
-        StreamFieldPanel("content")
+        StreamFieldPanel("content"),
     ]
 
     class Meta:  # noqa

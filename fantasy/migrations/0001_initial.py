@@ -10,33 +10,81 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('clubs', '0028_auto_20210228_1405'),
+        ("clubs", "0028_auto_20210228_1405"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='FantasySettings',
+            name="FantasySettings",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('excluded_leagues', models.TextField(help_text='Comma separated numbers eg. "20,21,23" ')),
-                ('senior_leagues', models.TextField(help_text='Comma separated numbers eg. "20,21,23" ')),
-                ('junior_leagues', models.TextField(help_text='Comma separated numbers eg. "20,21,23" ')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "excluded_leagues",
+                    models.TextField(
+                        help_text='Comma separated numbers eg. "20,21,23" '
+                    ),
+                ),
+                (
+                    "senior_leagues",
+                    models.TextField(
+                        help_text='Comma separated numbers eg. "20,21,23" '
+                    ),
+                ),
+                (
+                    "junior_leagues",
+                    models.TextField(
+                        help_text='Comma separated numbers eg. "20,21,23" '
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='PlayerFantasyRank',
+            name="PlayerFantasyRank",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('updated', models.DateTimeField(auto_created=True, auto_now=True)),
-                ('score', models.IntegerField(db_index=True, default=0)),
-                ('games_played', models.IntegerField(blank=True, default=None, null=True)),
-                ('senior', models.BooleanField(default=False)),
-                ('player', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ('season', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='clubs.season')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("updated", models.DateTimeField(auto_created=True, auto_now=True)),
+                ("score", models.IntegerField(db_index=True, default=0)),
+                (
+                    "games_played",
+                    models.IntegerField(blank=True, default=None, null=True),
+                ),
+                ("senior", models.BooleanField(default=False)),
+                (
+                    "player",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "season",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="clubs.season",
+                    ),
+                ),
             ],
             options={
-                'unique_together': {('player', 'season', 'senior')},
+                "unique_together": {("player", "season", "senior")},
             },
         ),
     ]

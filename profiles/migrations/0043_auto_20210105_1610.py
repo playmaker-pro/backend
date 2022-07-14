@@ -6,18 +6,30 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0042_auto_20210104_2255'),
+        ("profiles", "0042_auto_20210104_2255"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='playerprofile',
-            name='agent_foreign',
-            field=models.BooleanField(blank=True, null=True, verbose_name='Otwarty na propozycje zagraniczne'),
+            model_name="playerprofile",
+            name="agent_foreign",
+            field=models.BooleanField(
+                blank=True, null=True, verbose_name="Otwarty na propozycje zagraniczne"
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='agent_name',
-            field=models.CharField(blank=True, choices=[(1, 'Mam agenta'), (2, 'Szukam agenta'), (3, 'Nie szukam agenta')], max_length=45, null=True, verbose_name='Imię i nazwisko agenta / Nazwa agencji'),
+            model_name="playerprofile",
+            name="agent_name",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    (1, "Mam agenta"),
+                    (2, "Szukam agenta"),
+                    (3, "Nie szukam agenta"),
+                ],
+                max_length=45,
+                null=True,
+                verbose_name="Imię i nazwisko agenta / Nazwa agencji",
+            ),
         ),
     ]

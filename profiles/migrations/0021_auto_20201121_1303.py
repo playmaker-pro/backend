@@ -6,33 +6,47 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0020_auto_20201119_2329'),
+        ("profiles", "0020_auto_20201119_2329"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='playermetrics',
-            name='fantasy_summary_updated',
+            model_name="playermetrics",
+            name="fantasy_summary_updated",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='playermetrics',
-            name='games_summary_updated',
+            model_name="playermetrics",
+            name="games_summary_updated",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='playermetrics',
-            name='season_summary_updated',
+            model_name="playermetrics",
+            name="season_summary_updated",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='agent_status',
-            field=models.IntegerField(blank=True, choices=[(1, 'Mam agenta'), (2, 'Szukam agenta'), (3, 'Nie szukam agenta')], null=True, verbose_name='Czy Agent'),
+            model_name="playerprofile",
+            name="agent_status",
+            field=models.IntegerField(
+                blank=True,
+                choices=[
+                    (1, "Mam agenta"),
+                    (2, "Szukam agenta"),
+                    (3, "Nie szukam agenta"),
+                ],
+                null=True,
+                verbose_name="Czy Agent",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='training_ready',
-            field=models.IntegerField(blank=True, choices=[(1, '1-2 treningi'), (2, '3-4 treningi'), (3, '5-6 treningi')], null=True, verbose_name='Gotowość do treningu'),
+            model_name="playerprofile",
+            name="training_ready",
+            field=models.IntegerField(
+                blank=True,
+                choices=[(1, "1-2 treningi"), (2, "3-4 treningi"), (3, "5-6 treningi")],
+                null=True,
+                verbose_name="Gotowość do treningu",
+            ),
         ),
     ]

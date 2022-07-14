@@ -10,18 +10,29 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('clubs', '0063_league_highest_parent'),
+        ("clubs", "0063_league_highest_parent"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='club',
-            name='manager',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='managed_club', to=settings.AUTH_USER_MODEL),
+            model_name="club",
+            name="manager",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="managed_club",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='club',
-            name='picture',
-            field=models.ImageField(blank=True, null=True, upload_to=clubs.models.Club.get_file_path, verbose_name='Herb klubu'),
+            model_name="club",
+            name="picture",
+            field=models.ImageField(
+                blank=True,
+                null=True,
+                upload_to=clubs.models.Club.get_file_path,
+                verbose_name="Herb klubu",
+            ),
         ),
     ]

@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0070_auto_20220324_2203'),
+        ("profiles", "0070_auto_20220324_2203"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='profileverificationstatus',
-            name='text',
+            model_name="profileverificationstatus",
+            name="text",
             field=models.CharField(blank=True, max_length=355, null=True),
         ),
     ]

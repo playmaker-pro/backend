@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class FantasyConfig(AppConfig):
-    name = 'fantasy'
+    name = "fantasy"

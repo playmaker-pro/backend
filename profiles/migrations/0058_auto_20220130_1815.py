@@ -6,13 +6,32 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0057_coachprofile_data'),
+        ("profiles", "0057_coachprofile_data"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='clubprofile',
-            name='club_role',
-            field=models.IntegerField(blank=True, choices=[(5, 'Trener'), (1, 'Prezes'), (2, 'Kierownik'), (3, 'Członek zarządu'), (4, 'Sztab szkoleniowy'), (6, 'V-ce prezes'), (7, 'II trener'), (8, 'Dyrektor sportowy'), (9, 'Analityk'), (10, 'Dyrektor skautingu'), (11, 'Skaut'), (12, 'Trener bramkarzy'), (13, 'Koordynator')], help_text='Defines if admin approved change', null=True),
+            model_name="clubprofile",
+            name="club_role",
+            field=models.IntegerField(
+                blank=True,
+                choices=[
+                    (5, "Trener"),
+                    (1, "Prezes"),
+                    (2, "Kierownik"),
+                    (3, "Członek zarządu"),
+                    (4, "Sztab szkoleniowy"),
+                    (6, "V-ce prezes"),
+                    (7, "II trener"),
+                    (8, "Dyrektor sportowy"),
+                    (9, "Analityk"),
+                    (10, "Dyrektor skautingu"),
+                    (11, "Skaut"),
+                    (12, "Trener bramkarzy"),
+                    (13, "Koordynator"),
+                ],
+                help_text="Defines if admin approved change",
+                null=True,
+            ),
         ),
     ]

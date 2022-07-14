@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0051_playerprofile_team_object'),
+        ("profiles", "0051_playerprofile_team_object"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='playerprofile',
-            name='meta',
+            model_name="playerprofile",
+            name="meta",
             field=models.TextField(blank=True, null=True),
         ),
     ]

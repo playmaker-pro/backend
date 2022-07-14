@@ -8,24 +8,46 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('address', '0003_auto_20200830_1851'),
-        ('profiles', '0011_auto_20201112_1825'),
+        ("address", "0003_auto_20200830_1851"),
+        ("profiles", "0011_auto_20201112_1825"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='playerprofile',
-            name='address',
-            field=address.models.AddressField(blank=True, help_text='Adres', null=True, on_delete=django.db.models.deletion.SET_NULL, to='address.address'),
+            model_name="playerprofile",
+            name="address",
+            field=address.models.AddressField(
+                blank=True,
+                help_text="Adres",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="address.address",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='agent_status',
-            field=models.IntegerField(blank=True, choices=[(1, 'Mam agenta'), (2, 'Szukam agenta'), (3, 'Nie szukam agenta')], max_length=45, null=True, verbose_name='Czy Agent'),
+            model_name="playerprofile",
+            name="agent_status",
+            field=models.IntegerField(
+                blank=True,
+                choices=[
+                    (1, "Mam agenta"),
+                    (2, "Szukam agenta"),
+                    (3, "Nie szukam agenta"),
+                ],
+                max_length=45,
+                null=True,
+                verbose_name="Czy Agent",
+            ),
         ),
         migrations.AlterField(
-            model_name='playerprofile',
-            name='training_ready',
-            field=models.IntegerField(blank=True, choices=[(1, '1-2 treningi'), (2, '3-4 treningi'), (3, '5-6 treningi')], max_length=250, null=True, verbose_name='Gotowość do treningu'),
+            model_name="playerprofile",
+            name="training_ready",
+            field=models.IntegerField(
+                blank=True,
+                choices=[(1, "1-2 treningi"), (2, "3-4 treningi"), (3, "5-6 treningi")],
+                max_length=250,
+                null=True,
+                verbose_name="Gotowość do treningu",
+            ),
         ),
     ]

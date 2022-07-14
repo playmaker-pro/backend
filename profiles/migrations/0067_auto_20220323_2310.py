@@ -7,19 +7,31 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0065_auto_20220323_2310'),
-        ('profiles', '0066_auto_20220306_2350'),
+        ("clubs", "0065_auto_20220323_2310"),
+        ("profiles", "0066_auto_20220306_2350"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='profileverificationstatus',
-            name='club',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='club', to='clubs.club'),
+            model_name="profileverificationstatus",
+            name="club",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="club",
+                to="clubs.club",
+            ),
         ),
         migrations.AddField(
-            model_name='profileverificationstatus',
-            name='previous_club',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='previous_club', to='clubs.club'),
+            model_name="profileverificationstatus",
+            name="previous_club",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="previous_club",
+                to="clubs.club",
+            ),
         ),
     ]

@@ -6,18 +6,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0003_auto_20201125_2309'),
+        ("clubs", "0003_auto_20201125_2309"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='club',
-            name='data_mapper_id',
-            field=models.PositiveIntegerField(blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.', null=True),
+            model_name="club",
+            name="data_mapper_id",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='team',
-            name='data_mapper_id',
-            field=models.PositiveIntegerField(blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.', null=True),
+            model_name="team",
+            name="data_mapper_id",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+                null=True,
+            ),
         ),
     ]

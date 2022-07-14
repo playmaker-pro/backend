@@ -1,6 +1,3 @@
-import logging
-
-import pytest
 from django.test import TestCase
 from profiles import models
 from roles import definitions
@@ -13,27 +10,33 @@ utils.silence_explamation_mark()
 
 class VerificationServiceTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create(email='username', declared_role=definitions.PLAYER_SHORT)
-        self.user.profile.VERIFICATION_FIELDS = ['bio']
-        self.user.profile.COMPLETE_FIELDS = ['team_raw']  # , 'club_raw']
-        self.user.profile.bio = 'Lubie Herbate'
+        utils.create_system_user()
+        self.user = User.objects.create(
+            email="username", declared_role=definitions.PLAYER_SHORT
+        )
+        self.user.profile.VERIFICATION_FIELDS = ["bio"]
+        self.user.profile.COMPLETE_FIELDS = ["team_raw"]  # , 'club_raw']
+        self.user.profile.bio = "Lubie Herbate"
 
         self.user.profile.save()
         self.user.verify(silent=True)
         assert self.user.is_verified is True
-        print(f'----> setUp {self.user.state}')
 
-    def test__1__changing_role_to_coach_from_player_cause_user_sate_to_missing_verification_data(self):
+    def test__1__changing_role_to_coach_from_player_cause_user_sate_to_missing_verification_data(
+        self,
+    ):
         assert self.user.is_verified is True
-        print(f'----> before  {self.user.state}')
+        print(f"----> before  {self.user.state}")
 
-        change = models.RoleChangeRequest.objects.create(user=self.user, new=definitions.COACH_SHORT)
+        change = models.RoleChangeRequest.objects.create(
+            user=self.user, new=definitions.COACH_SHORT
+        )
 
         assert self.user.is_verified is True
 
         change.approved = True
         change.save()
         self.user.refresh_from_db()
-        print(f'----> after {self.user.state}')
+        print(f"----> after {self.user.state}")
         assert self.user.is_verified is False
-        assert self.user.is_missing_verification_data is True
+        assert self.user.is_waiting_for_verification is True

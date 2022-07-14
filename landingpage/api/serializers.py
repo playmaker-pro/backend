@@ -7,4 +7,4 @@ class TestFormSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Request
-        fields = ['product', 'user', 'raw_body']
+        fields = ["product", "user", "raw_body"]

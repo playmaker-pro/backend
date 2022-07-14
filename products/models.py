@@ -1,9 +1,11 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
 # Create your models here.
 from django.conf import settings
 from django_fsm import FSMField, transition
 from notifications.mail import request_new, request_accepted, request_declined
+
 # This can be extracted to models.User.
 from django_countries.fields import CountryField
 from django.utils import timezone
@@ -35,18 +37,16 @@ class Product(models.Model):
     html_form = models.TextField(null=True, blank=True)
     html_body = models.TextField(null=True, blank=True)
     html_body_footer = models.TextField(null=True, blank=True)
-    tags = models.ManyToManyField('Tag')
+    tags = models.ManyToManyField("Tag")
     contact_email = models.EmailField(null=True, blank=True)
     send_email_to_admin = models.BooleanField(default=False)
 
     picture = models.ImageField(
-        _("Zdjęcie"),
-        upload_to="product_pics/%Y-%m-%d/",
-        null=True,
-        blank=True)
+        _("Zdjęcie"), upload_to="product_pics/%Y-%m-%d/", null=True, blank=True
+    )
 
     def __unicode__(self):
-        return f'{self.title}'
+        return f"{self.title}"
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -59,7 +59,7 @@ class Tag(models.Model):
     active = models.BooleanField(default=True)
 
     def __unicode__(self):
-        return f'{self.name}'
+        return f"{self.name}"
 
 
 class Request(models.Model):
@@ -70,21 +70,18 @@ class Request(models.Model):
 
     date = models.DateTimeField(auto_created=True, auto_now=True)
 
-    product = models.ForeignKey(
-        Product,
-        on_delete=models.CASCADE
-    )
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     raw_body = models.JSONField(null=True, blank=True)
 
     class Meta:
-        unique_together = ('user', 'product', 'date')
+        unique_together = ("user", "product", "date")
 
     @property
     def body_pretty(self):
         return self.raw_body
 
     def __unicode__(self):
-        return f'{self.user} {self.product}'
+        return f"{self.user} {self.product}"
 
     def send_notifcation_to_user(self):
         ProductMail.mail_user_about_his_request(self)

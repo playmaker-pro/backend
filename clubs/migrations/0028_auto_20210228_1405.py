@@ -6,20 +6,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0027_auto_20210207_1326'),
+        ("clubs", "0027_auto_20210207_1326"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Season',
+            name="Season",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=9, unique=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=9, unique=True)),
             ],
         ),
         migrations.AddField(
-            model_name='seniority',
-            name='is_senior',
+            model_name="seniority",
+            name="is_senior",
             field=models.BooleanField(default=True),
         ),
     ]
