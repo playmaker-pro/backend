@@ -37,9 +37,8 @@ from stats.utilites import (
     translate_team_name,
 )
 from clubs.models import Seniority, Season
-
 from .models import PlayerFantasyRank
-from voivodeships.models import Voivodeships
+from voivodeships.services import VoivodeshipService
 
 User = get_user_model()
 
@@ -139,12 +138,13 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
                 ],
             )
         )
+        vivos = VoivodeshipService()
         queryset = self.filter_queryset(queryset)
         paginator = Paginator(queryset, self.paginate_limit)
         page_number = request.GET.get("page") or 1
         page_obj = paginator.get_page(page_number)
         kwargs["page_obj"] = page_obj
-        kwargs["vivos"] = Voivodeships.objects.all()
+        kwargs["vivos"] = vivos.get_voivodeships
         kwargs["filters"] = self.get_filters_values()
         kwargs["leagues"] = League.objects.is_top_parent()
         kwargs["positions"] = FANTASY_CHOICES

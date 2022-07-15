@@ -29,9 +29,7 @@
 
                 <div class="col-6 col-md-3 text-center">
                     <h5>
-                        {% if object.new_voivodeship.name %}
-                            {{ object.new_voivodeship.name }},
-                        {% endif %}
+                        {{ object|display_voivodeship }}
                         {{ object.address }} +{{ object.practice_distance }}km
                     </h5>
                     Region

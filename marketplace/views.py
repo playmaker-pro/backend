@@ -43,7 +43,8 @@ from .models import (
 from .utils import get_datetime_from_year
 
 from marketplace.models import get_licence_choice_number
-from voivodeships.models import Voivodeships
+
+from voivodeships.services import VoivodeshipService
 
 User = get_user_model()
 
@@ -395,10 +396,12 @@ class AnnouncementsMetaView(
         return queried_class.objects.all()
 
     def get_filters_values(self):  # @todo add cache from Redis here
+        vivos = VoivodeshipService()
+
         return {
             "seniority": list(Seniority.objects.values_list("name", flat=True)),
             "gender": list(Gender.objects.values_list("name", flat=True)),
-            "voivodeship": list(Voivodeships.objects.values_list("name", flat=True)),
+            "voivodeship": list(vivos.voivodeships_model.objects.values_list("name", flat=True)),
             "league": list(League.objects.values_list("name", flat=True)),
             "position": list(PlayerPosition.objects.values_list("name", flat=True)),
             "licence": LICENCE_CHOICES,
@@ -411,6 +414,7 @@ class AnnouncementsMetaView(
         kwargs["my"] = False
 
     def get(self, request, *args, **kwargs):
+
         lista = []
 
         total_items = request.GET.get("total_items")
@@ -443,9 +447,7 @@ class AnnouncementsMetaView(
         kwargs["page_title"] = self.page_title
         kwargs["type"] = self.table_type
         kwargs["filters"] = self.get_filters_values()
-        kwargs["filters"] = self.get_filters_values()
         kwargs["leagues"] = League.objects.is_top_parent()
-        kwargs["voivodeships"] = Voivodeships.objects.all()
 
         self.prepare_kwargs(kwargs)
 

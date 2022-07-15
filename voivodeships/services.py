@@ -1,0 +1,65 @@
+import json
+from typing import Union
+
+from voivodeships.models import Voivodeships
+
+
+class VoivodeshipService:
+
+    def __init__(self):
+        self.voivodeships_model = Voivodeships
+
+    @property
+    def voivodeship_choices(self):
+        return self.voivodeships_model.voivodeships_choices()
+
+    @staticmethod
+    def display_voivodeship(obj) -> Union[str, None]:
+        """ displaying name of voivodeship """
+
+        # if not obj.voivodeship_obj:
+        #     return None
+        # return obj.voivodeship_obj
+
+        if not obj.new_voivodeship:
+
+            return None
+        return obj.new_voivodeship
+
+    @staticmethod
+    def get_voivodeship(obj) -> Voivodeships:
+        """ Returning Voivodeship object """
+
+        if not obj.voivodeship_obj:
+            return None
+        return obj.voivodeship_obj
+
+    @property
+    def get_voivodeships(self):
+        return self.voivodeships_model.objects.all()
+
+    def save_to_db(self):
+        """ Fill voivodeships model with data written in voivodeships.json file """
+
+        with open('voivodeships.json', 'r', encoding="utf8") as f:
+            data = json.loads(f.read())
+
+            for voivodeship in data:
+
+                assert isinstance(voivodeship, dict), "element is not a dict"
+                voivodeship = voivodeship['name']
+
+                try:
+
+                    assert isinstance(voivodeship, str), f"{voivodeship} is not a string"
+                    obj, created = self.voivodeships_model.objects.get_or_create(
+                        name=voivodeship
+                    )
+
+                    if created:
+                        print(f'voivodeship {voivodeship} has been added')
+                    else:
+                        print(f'voivodeship {voivodeship} already exists in database')
+
+                except Exception as e:
+                    print(f'{voivodeship}', e)

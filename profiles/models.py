@@ -1,6 +1,8 @@
 from collections import Counter
 from datetime import datetime
 from random import choices
+from typing import Union
+
 from stats import adapters
 from address.models import AddressField
 from django.conf import settings

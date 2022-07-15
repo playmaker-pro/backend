@@ -22,6 +22,8 @@ from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from profiles.utils import extract_video_id
 
+from voivodeships.services import VoivodeshipService
+
 User = get_user_model()
 
 TEMPLATE_ACTION_SCRIPT = "platform/buttons/action_script.html"
@@ -1016,3 +1018,15 @@ def get_my_club_link(context, text=None, css_class=None):
         "link_body": link_body,
         "link_class": link_class,
     }
+
+
+@register.filter
+def display_voivodeship(obj):
+
+    manager = VoivodeshipService
+    voivodeship = manager.display_voivodeship(obj)
+
+    if voivodeship:
+        return f'{voivodeship}, '
+    else:
+        return ''

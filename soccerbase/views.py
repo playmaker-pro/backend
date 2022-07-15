@@ -21,6 +21,8 @@ from django.utils import timezone
 
 from voivodeships.models import Voivodeships
 
+from voivodeships.services import VoivodeshipService
+
 TABLE_TYPE_PLAYER = definitions.PLAYER_SHORT
 TABLE_TYPE_TEAM = definitions.CLUB_SHORT
 TABLE_TYPE_COACH = definitions.COACH_SHORT
@@ -48,6 +50,8 @@ class TableView(
         pass
 
     def get(self, request, *args, **kwargs):
+
+        vivos = VoivodeshipService()
         self.is_foregin = False
         self.is_juniors = False
 
@@ -66,7 +70,7 @@ class TableView(
         kwargs["page_obj"] = page_obj
         kwargs["page_title"] = self.page_title
         kwargs["type"] = self.table_type
-        kwargs["vivos"] = Voivodeships.objects.all()
+        kwargs["vivos"] = vivos.get_voivodeships
         kwargs["leagues"] = League.objects.is_top_parent()
         self.add_more_to_kwargs(kwargs)
         kwargs["modals"] = self.modal_activity(
