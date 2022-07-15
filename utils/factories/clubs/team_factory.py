@@ -1,6 +1,5 @@
 import factory
 from .club_factory import ClubFactory
-from clubs.models import Team
 
 TEAM_MOCK = [
     "FC Barca",
