@@ -3,33 +3,7 @@ from rest_framework.test import APITestCase
 from clubs.models import Team
 from rest_framework.status import HTTP_200_OK
 from parameterized import parameterized
-from .test_club_search import ClubFactory
-
-class TeamFactory(ClubFactory):
-
-    def __init__(self):
-        super().__init__()
-
-        self.team1 = Team.objects.create(
-            name="Barca",
-            club=self.club1
-            )
-        self.team2 = Team.objects.create(
-            name="ManUtd",
-            club=self.club2
-            )
-        self.team3 = Team.objects.create(
-            name="Bayern",
-            club=self.club3
-            )
-        self.team4 = Team.objects.create(
-            name="FC Bayern",
-            club=self.club3
-            )
-        self.team5 = Team.objects.create(
-            name="jakisfcKlub",
-            club=self.club1
-            )
+from utils.factories.clubs.team_factory import TeamFactory
 
 
 class TeamSearchTest(APITestCase):
@@ -37,20 +11,19 @@ class TeamSearchTest(APITestCase):
     team_search_url = reverse("resources:teams_search")
 
     def setUp(self):
-        self.teams = TeamFactory()        
+        TeamFactory.create_batch(5)    
 
     def test_response_200(self):
         self.assertEqual(self.client.get(self.team_search_url).status_code, HTTP_200_OK)
 
     @parameterized.expand([
-        ("Barca", 1),
         ("FC", 2),
         ("", 5),
-        ("Bayern", 2),
+        ("Bayern", 1),
         ("randomtext", 0),
-        (0, 0),
-        (True, 0),
-        ("a", 5),
+        ("fc T", 1),
+        ("ŁśćŻźąęó", 1),
+        ("a", 4),
         ("Team.objects.all()", 0),
         ("Team.objects.get(id=1)", 0)
     ])
