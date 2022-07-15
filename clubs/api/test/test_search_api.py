@@ -3,23 +3,7 @@ from rest_framework.test import APITestCase
 from clubs.models import Club
 from rest_framework.status import HTTP_200_OK
 from parameterized import parameterized
-
-
-class ClubFactory():
-
-    def __init__(self):
-        self.club1 = Club.objects.create(
-                    name="FC Barcelona",
-                    country="ES"
-                )
-        self.club2 = Club.objects.create(
-                    name="Manchester United F.C.",
-                    country="EN"
-                )
-        self.club3 = Club.objects.create(
-                    name="FC Bayern Munchen",
-                    country="DE"
-                )
+from utils.factories.clubs.club_factory import ClubFactory
 
 
 class ClubSearchTest(APITestCase):
@@ -27,7 +11,7 @@ class ClubSearchTest(APITestCase):
     club_search_url = reverse("resources:clubs_search")
     
     def setUp(self):
-        self.clubs = ClubFactory()
+        ClubFactory.create_batch(5)
 
     def test_response_200(self):
         self.assertEqual(self.client.get(self.club_search_url).status_code, HTTP_200_OK)        
@@ -37,10 +21,10 @@ class ClubSearchTest(APITestCase):
         ("FC", 2),
         ("Manchesterr", 0),
         ("man", 1),
-        ("che", 2),
-        ("", 3),
-        (True, 0),
-        (3, 0),
+        ("che", 1),
+        ("", 5),
+        ("ków", 1),
+        ("śćężźłó", 1),
         ("Club.objects.all()", 0),
         ("Club.objects.get(id=1)", 0)
     ])
@@ -52,5 +36,5 @@ class ClubSearchTest(APITestCase):
             )
 
     def test_objects_created_successfully(self):
-        self.assertEqual(Club.objects.all().count(), 3)
+        self.assertEqual(Club.objects.all().count(), 5)
 
