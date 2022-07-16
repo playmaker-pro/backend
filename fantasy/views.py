@@ -92,7 +92,7 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
             vivos = [i for i in self.filter_vivo]
             clauses = (
                 Q(
-                    player__playerprofile__team_object__club__new_voivodeship__name=p
+                    player__playerprofile__team_object__club__voivodeship_obj__name=p
                 )
                 for p in vivos
             )

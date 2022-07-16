@@ -10,7 +10,7 @@
             {% include template with key=_('Rocznik')            value=profile.birth_date.year|default:'-'|upper            %}
 
             {% include template with key=_('Miasto ') value=profile.address|default:'-' %}
-            {% include template with key=_('Lokalizacja') value=profile.new_voivodeship|default:'-' %}
+            {% include template with key=_('Lokalizacja') value=profile|display_voivodeship|default:'-' %}
         {% endwith %}
     </div>
 
@@ -23,7 +23,7 @@
             {% if profile.display_name_junior %}
                 {% include template with key=_('Poziom')       value=profile.display_name_junior|default:'-'|upper        %} 
             {% endif %}
-            {% include template with key=_('Województwo')      value=profile.display_voivodeship|default:'-' %}
+            {% include template with key=_('Województwo')      value=profile|display_voivodeship|default:'-' %}
         {% endwith %}
     </div>
 </div>

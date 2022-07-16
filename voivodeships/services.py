@@ -76,7 +76,7 @@ class VoivodeshipService:
     def save_to_db(self):
         """ Fill voivodeships model with data written in voivodeships.json file """
 
-        with open('voivodeships.json', 'r', encoding="utf8") as f:
+        with open('constants/voivodeships.json', 'r', encoding="utf8") as f:
             data = json.loads(f.read())
 
             for voivodeship in data:
