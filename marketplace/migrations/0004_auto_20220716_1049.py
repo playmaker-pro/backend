@@ -9,7 +9,7 @@ from voivodeships.services import VoivodeshipService
 def map_vivos(apps, schema_editor):
 
     vivos_manager = VoivodeshipService()
-    # from django.apps import apps
+    from django.apps import apps
 
     announcements = [
         'ClubForPlayerAnnouncement', 'PlayerForClubAnnouncement', 'CoachForClubAnnouncement', 'ClubForCoachAnnouncement'

@@ -36,13 +36,13 @@ class VoivodeshipService:
         return obj.voivodeship_obj
 
     @property
-    def get_voivodeships(self):
+    def get_voivodeships(self) -> QuerySet:
         return self.voivodeships_model.objects.all()
 
     def get_voivodeship_by_name(self, name) -> QuerySet:
         qry = self.voivodeships_model.objects.filter(name=name)
 
-        if qry.exists:
+        if qry.exists():
             return qry
 
         return self.voivodeships_model.objects.filter(name=self._map_name(name))
@@ -73,10 +73,13 @@ class VoivodeshipService:
 
         return result
 
-    def save_to_db(self):
+    def save_to_db(self, file_path: Union[str, None] = None) -> None:
         """ Fill voivodeships model with data written in voivodeships.json file """
 
-        with open('constants/voivodeships.json', 'r', encoding="utf8") as f:
+        if not file_path:
+            file_path = 'constants/voivodeships.json'
+
+        with open(file_path, 'r', encoding="utf8") as f:
             data = json.loads(f.read())
 
             for voivodeship in data:
