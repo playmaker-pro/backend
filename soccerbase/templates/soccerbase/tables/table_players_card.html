@@ -54,10 +54,10 @@
                     {{ object.profile.display_league_top_parent|default:'-'|title }}
                 </a>
 
-                {% if object.profile.new_voivodeship %}
-                     , {{ object.profile.new_voivodeship|default:''|truncatechars:25 }}
-                {% elif  object.profile.get_team_object.club.new_voivodeship %}
-                     , {{ object.profile.get_team_object.club.new_voivodeship.name|truncatechars:25 }}
+                {% if object.profile.voivodeship_obj %}
+                     , {{ object.profile|display_voivodeship|default:''|truncatechars:25 }}
+                {% elif  object.profile.get_team_object.club.voivodeship_obj %}
+                     , {{ object.profile.get_team_object.club.voivodeship_obj.name|truncatechars:25 }}
                 {% else %}
                     ,
                 {% endif %}
@@ -86,10 +86,10 @@
                                                             </a>
                                                         </div >
                                                         <div class="sc-cell d-none d-md-flex col-5 col-md-2  text-left">
-                                                            {% if object.profile.new_voivodeship != None %}
-                                                                {{ object.profile.new_voivodeship.name|default:''|truncatechars:25 }}
-                                                            {% elif object.profile.get_team_object.club.new_voivodeship %}
-                                                                 {{ object.profile.get_team_object.club.new_voivodeship.name|truncatechars:25 }}
+                                                            {% if object.profile.voivodeship_obj %}
+                                                                {{ object.profile|display_voivodeship|default:''|truncatechars:25 }}
+                                                            {% elif object.profile.get_team_object.club.voivodeship_obj %}
+                                                                 {{ object.profile.get_team_object.club|display_voivodeship|truncatechars:25 }}
                                                             {% endif %}
                                                         </div>
                                                         

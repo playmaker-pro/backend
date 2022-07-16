@@ -111,14 +111,14 @@ class PlayersTable(TableView):
         if self.filter_vivo is not None:
             vivos = [i for i in self.filter_vivo]
 
-            clauses = (Q(playerprofile__new_voivodeship__name=p) for p in vivos)
+            clauses = (Q(playerprofile__voivodeship_obj__name=p) for p in vivos)
             query = reduce(operator.or_, clauses)
 
             players_with_no_vivo = queryset.filter(
-                playerprofile__new_voivodeship__isnull=True
+                playerprofile__voivodeship_obj__isnull=True
             )
             no_vivo_clause = (
-                Q(playerprofile__team_object__club__new_voivodeship__name=p) for p in vivos
+                Q(playerprofile__team_object__club__voivodeship_obj__name=p) for p in vivos
             )
             no_vivo_query = reduce(operator.or_, no_vivo_clause)
 
@@ -213,14 +213,14 @@ class PlayerTalbeQuickFilter(
         if self.filter_vivo is not None:
             vivos = [i for i in self.filter_vivo]
 
-            clauses = (Q(playerprofile__new_voivodeship__name=p) for p in vivos)
+            clauses = (Q(playerprofile__voivodeship_obj__name=p) for p in vivos)
             query = reduce(operator.or_, clauses)
 
             players_with_no_vivo = queryset.filter(
-                playerprofile__new_voivodeship__isnull=True
+                playerprofile__voivodeship_obj__isnull=True
             )
             no_vivo_clause = (
-                Q(playerprofile__team_object__club__new_voivodeship__name=p) for p in vivos
+                Q(playerprofile__team_object__club__voivodeship_obj__name=p) for p in vivos
             )
             no_vivo_query = reduce(operator.or_, no_vivo_clause)
 
@@ -301,7 +301,7 @@ class TeamsTable(TableView):
 
         if self.filter_vivo is not None:
             vivos = [i for i in self.filter_vivo]
-            clauses = (Q(club__new_voivodeship__name=p) for p in vivos)
+            clauses = (Q(club__voivodeship_obj__name=p) for p in vivos)
             query = reduce(operator.or_, clauses)
             queryset = queryset.filter(query)
 
@@ -350,14 +350,14 @@ class CoachesTable(TableView):
         if self.filter_vivo is not None:
 
             vivos = [i for i in self.filter_vivo]
-            clauses = (Q(coachprofile__new_voivodeship__name=p) for p in vivos)
+            clauses = (Q(coachprofile__voivodeship_obj__name=p) for p in vivos)
             query = reduce(operator.or_, clauses)
 
             coaches_with_no_vivo = queryset.filter(
-                coachprofile__new_voivodeship__isnull=True
+                coachprofile__voivodeship_obj__isnull=True
             )
             no_vivo_clause = (
-                Q(coachprofile__team_object__club__new_voivodeship__name=p) for p in vivos
+                Q(coachprofile__team_object__club__voivodeship_obj__name=p) for p in vivos
             )
             no_vivo_query = reduce(operator.or_, no_vivo_clause)
 

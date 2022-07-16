@@ -4,6 +4,8 @@ from typing import Union
 from django.db.models import QuerySet
 from voivodeships.models import Voivodeships
 
+from clubs.models import Team
+
 
 class VoivodeshipService:
 
@@ -17,6 +19,9 @@ class VoivodeshipService:
     @staticmethod
     def display_voivodeship(obj) -> Union[str, None]:
         """ displaying name of voivodeship """
+
+        if isinstance(obj, Team):
+            obj = obj.club
 
         if not obj.voivodeship_obj:
             return None
@@ -35,6 +40,11 @@ class VoivodeshipService:
         return self.voivodeships_model.objects.all()
 
     def get_voivodeship_by_name(self, name) -> QuerySet:
+        qry = self.voivodeships_model.objects.filter(name=name)
+
+        if qry.exists:
+            return qry
+
         return self.voivodeships_model.objects.filter(name=self._map_name(name))
 
     def _map_name(self, name):

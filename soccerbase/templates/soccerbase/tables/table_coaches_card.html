@@ -66,10 +66,10 @@
                               <a href="{{ object.profile.team_object.get_league_permalink }}">
                                 {{ object.profile.display_league_top_parent|default:''|title  }}
                               </a>
-                                {% if object.profile.new_voivodeship %}
-                                    , {{ object.profile.new_voivodeship|default:''|truncatechars:24 }}
-                                {% elif  object.profile.get_team_object.club.new_voivodeship %}
-                                     {{ object.profile.get_team_object.club.new_voivodeship.name|truncatechars:25 }}
+                                {% if object.profile.voivodeship_obj %}
+                                    , {{ object.profile|display_voivodeship|default:''|truncatechars:24 }}
+                                {% elif  object.profile.get_team_object.club.voivodeship_obj %}
+                                     {{ object.profile.get_team_object.club|display_voivodeship|truncatechars:25 }}
                                 {% endif %}
 
                             </div>
@@ -95,10 +95,10 @@
               </a>
             </div >
             <div class="sc-cell d-none d-md-flex col-3 col-md-2 text-left">
-                {% if object.profile.new_voivodeship %}
-                    {{ object.profile.new_voivodeship|default:''  }}
-                {% elif  object.profile.get_team_object.club.new_voivodeship %}
-                     {{ object.profile.get_team_object.club.new_voivodeship.name|truncatechars:25 }}
+                {% if object.profile.voivodeship_obj %}
+                    {{ object.profile|display_voivodeship|default:''  }}
+                {% elif  object.profile.get_team_object.club.voivodeship_obj %}
+                     {{ object.profile.get_team_object.club|display_voivodeship|truncatechars:25 }}
                 {% endif %}
             </div>
             <div class=" sc-cell d-none d-md-flex col-3 col-md-1 text-left">

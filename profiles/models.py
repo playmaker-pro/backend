@@ -499,7 +499,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         "team",
         # 'team_raw',
         "position_raw",
-        "new_voivodeship",
+        "voivodeship_obj",
     ]
 
     OPTIONAL_FIELDS = [
@@ -777,10 +777,10 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         choices=settings.VOIVODESHIP_CHOICES,
     )
-    new_voivodeship = models.ForeignKey(
+    voivodeship_obj = models.ForeignKey(
         Voivodeships,
         verbose_name=_("Województwo zamieszkania"),
-        help_text="Wybierz województwo. Nowe pole.",
+        help_text="Wybierz województwo.",
         max_length=20,
         blank=True,
         null=True,
@@ -1361,10 +1361,10 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         choices=settings.VOIVODESHIP_CHOICES,
     )
-    new_voivodeship = models.ForeignKey(
+    voivodeship_obj = models.ForeignKey(
         Voivodeships,
         verbose_name=_("Województwo zamieszkania"),
-        help_text="Wybierz województwo. Nowe pole.",
+        help_text="Wybierz województwo.",
         max_length=20,
         blank=True,
         null=True,
@@ -1521,7 +1521,7 @@ class ScoutProfile(BaseProfile):
         "practice_distance",
         "club_raw",
         "league_raw",
-        "new_voivodeship",
+        "voivodeship_obj",
     ]
 
     GOAL_CHOICES = (
@@ -1596,10 +1596,10 @@ class ScoutProfile(BaseProfile):
         null=True,
     )
 
-    new_voivodeship = models.ForeignKey(
+    voivodeship_obj = models.ForeignKey(
         Voivodeships,
         verbose_name=_("Województwo zamieszkania"),
-        help_text="Wybierz województwo. Nowe pole.",
+        help_text="Wybierz województwo.",
         max_length=20,
         blank=True,
         null=True,
