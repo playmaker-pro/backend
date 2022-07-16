@@ -241,9 +241,9 @@ class ClubForPlayerAnnouncement(AnnouncementMeta):
         null=True,
         blank=True
     )
-    new_voivodeship = models.ForeignKey(
+    voivodeship_obj = models.ForeignKey(
         Voivodeships,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         verbose_name=_('Województwo'),
         help_text='Wybierz województwo. Nowe pole',
         null=True,
@@ -274,9 +274,9 @@ class PlayerForClubAnnouncement(AnnouncementMeta):
         null=True,
         blank=True
     )
-    new_voivodeship = models.ForeignKey(
+    voivodeship_obj = models.ForeignKey(
         Voivodeships,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         verbose_name=_('Województwo'),
         help_text='Wybierz województwo. Nowe pole',
         null=True,
@@ -326,9 +326,9 @@ class ClubForCoachAnnouncement(AnnouncementMeta):
         null=True,
         blank=True
     )
-    new_voivodeship = models.ForeignKey(
+    voivodeship_obj = models.ForeignKey(
         Voivodeships,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         verbose_name=_('Województwo'),
         help_text='Wybierz województwo. Nowe pole',
         null=True,
@@ -369,9 +369,9 @@ class CoachForClubAnnouncement(AnnouncementMeta):
         null=True,
         blank=True
     )
-    new_voivodeship = models.ForeignKey(
+    voivodeship_obj = models.ForeignKey(
         Voivodeships,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         verbose_name=_('Województwo'),
         help_text='Wybierz województwo. Nowe pole',
         null=True,

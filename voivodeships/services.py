@@ -1,6 +1,7 @@
 import json
 from typing import Union
 
+from django.db.models import QuerySet
 from voivodeships.models import Voivodeships
 
 
@@ -17,14 +18,9 @@ class VoivodeshipService:
     def display_voivodeship(obj) -> Union[str, None]:
         """ displaying name of voivodeship """
 
-        # if not obj.voivodeship_obj:
-        #     return None
-        # return obj.voivodeship_obj
-
-        if not obj.new_voivodeship:
-
+        if not obj.voivodeship_obj:
             return None
-        return obj.new_voivodeship
+        return obj.voivodeship_obj
 
     @staticmethod
     def get_voivodeship(obj) -> Voivodeships:
@@ -37,6 +33,35 @@ class VoivodeshipService:
     @property
     def get_voivodeships(self):
         return self.voivodeships_model.objects.all()
+
+    def get_voivodeship_by_name(self, name) -> QuerySet:
+        return self.voivodeships_model.objects.filter(name=self._map_name(name))
+
+    def _map_name(self, name):
+        data = {
+            "pomorskie": 'Pomorskie',
+            "śląskie": 'Śląskie',
+            "dolnośląskie": 'Dolnośląskie',
+            "opolskie": 'Opolskie',
+            "małopolskie": 'Małopolskie',
+            "świętokrzyskie": 'Świętokrzyskie',
+            "mazowieckie": 'Mazowieckie',
+            "warmińskomazurskie": 'Warmińsko-Mazurskie',
+            "zachodniopomorskie": 'Zachodniopomorskie',
+            "podkarpackie": 'Podkarpackie',
+            "podlaskie": 'Podlaskie',
+            "wielkopolskie": 'Wielkopolskie',
+            "lubuskie": 'Lubuskie',
+            "lubelskie": 'Lubelskie',
+            "łódzkie": 'Łódzkie',
+            "kujawskopomorskie": 'Kujawsko-pomorskie'
+        }
+        try:
+            result = data[name]
+        except:
+            result = ''
+
+        return result
 
     def save_to_db(self):
         """ Fill voivodeships model with data written in voivodeships.json file """

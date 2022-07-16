@@ -86,10 +86,10 @@ class Club(models.Model, MappingMixin):
         verbose_name=_("Województwo"),
         help_text="Wybierz województwo. Stare pole, czeka na migracje",
     )
-    new_voivodeship = models.ForeignKey(
+    voivodeship_obj = models.ForeignKey(
         Voivodeships,
         verbose_name=_("Województwo"),
-        help_text="Wybierz województwo. Nowe pole.",
+        help_text="Wybierz województwo.",
         max_length=20,
         blank=True,
         null=True,
@@ -117,7 +117,7 @@ class Club(models.Model, MappingMixin):
     @property
     @supress_exception
     def display_voivodeship(self):
-        return conver_vivo_for_api(self.new_voivodeship.name)
+        return conver_vivo_for_api(self.voivodeship_obj.name)
 
     def get_file_path(instance, filename):
         """Replcae server language code mapping"""
@@ -187,7 +187,7 @@ class Club(models.Model, MappingMixin):
         verbose_name_plural = _("Kluby")
 
     def __str__(self):
-        vivo_str = f", {self.new_voivodeship}" if self.new_voivodeship else ""
+        vivo_str = f", {self.voivodeship_obj}" if self.voivodeship_obj else ""
         return f"{self.name} {vivo_str}"
 
     def save(self, *args, **kwargs):

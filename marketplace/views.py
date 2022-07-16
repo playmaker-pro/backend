@@ -138,7 +138,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     profile = user.profile.team_object
                     club = profile.club if profile else ""
                     league = profile.league if profile else ""
-                    voivodeship = profile.club.new_voivodeship if profile else ""
+                    voivodeship = profile.club.voivodeship_obj if profile else ""
                     seniority = profile.seniority if profile else ""
                     gender = profile.gender if profile else ""
 
@@ -146,7 +146,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                         initial={
                             "club": club,
                             "league": league,
-                            "new_voivodeship": voivodeship,
+                            "voivodeship_obj": voivodeship,
                             "seniority": seniority,
                             "gender": gender,
                         }
@@ -168,13 +168,13 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     else None
                 )
                 if league:
-                    voivodeship = user.profile.team_object.club.new_voivodeship
+                    voivodeship = user.profile.team_object.club.voivodeship_obj
                 else:
                     voivodeship = ""
                 form = CoachForClubAnnouncementForm(
                     initial={
                         "lic_type": user.profile.licence,
-                        "new_voivodeship": voivodeship,
+                        "voivodeship_obj": voivodeship,
                         "address": user.profile.address,
                         "practice_distance": user.profile.practice_distance,
                         "league": league,
@@ -185,12 +185,12 @@ class AddAnnouncementView(LoginRequiredMixin, View):
             elif _action_name == "club_looking_for_player":
 
                 if user.profile.club_object:
-                    voivo = user.profile.club_object.new_voivodeship
+                    voivo = user.profile.club_object.voivodeship_obj
 
                     form = ClubForPlayerAnnouncementForm(
                         initial={
                             "club": user.profile.club_object,
-                            "new_voivodeship": voivo,
+                            "voivodeship_obj": voivo,
                         }
                     )
                     teams = user.profile.club_object.teams.all()
@@ -209,7 +209,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     form = ClubForCoachAnnouncementForm(
                         initial={
                             "club": user.profile.club_object,
-                            "new_voivodeship": user.profile.club_object.new_voivodeship,
+                            "voivodeship_obj": user.profile.club_object.voivodeship_obj,
                         }
                     )
                     form.fields["club"].queryset = Club.objects.filter(
@@ -222,7 +222,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
 
             elif user.is_player:
                 voivodeship = (
-                    user.profile.team_object.club.new_voivodeship
+                    user.profile.team_object.club.voivodeship_obj
                     if user.profile.team_object
                     else None
                 )
@@ -234,7 +234,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 form = PlayerForClubAnnouncementForm(
                     initial={
                         "position": user.profile.position_raw,
-                        "new_voivodeship": voivodeship,
+                        "voivodeship_obj": voivodeship,
                         "address": user.profile.address,
                         "practice_distance": user.profile.practice_distance,
                         "league": league.highest_parent,
@@ -388,7 +388,7 @@ class AnnouncementsMetaView(
             )
 
         if self.filter_vivo is not None:
-            queryset = queryset.filter(new_voivodeship__name__in=self.filter_vivo)
+            queryset = queryset.filter(voivodeship_obj__name__in=self.filter_vivo)
 
         return queryset
 
