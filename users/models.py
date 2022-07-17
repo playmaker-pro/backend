@@ -175,6 +175,17 @@ class User(AbstractUser, UserRoleMixin):
         return self.email_username
 
     @property
+    def display_full_name(self):
+        if self.first_name and self.last_name:
+            return f'{self.first_name} {self.last_name}'
+        elif self.first_name and not self.last_name:
+            return f'{self.first_name}'
+        elif not self.first_name and self.last_name:
+            return f'{self.last_name}'
+        else:
+            return ''
+
+    @property
     def role(self):
         return self.declared_role
 

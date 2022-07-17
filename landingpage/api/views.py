@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 
@@ -37,24 +38,33 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
         product = Product.objects.filter(title=name)
         user = User.objects.filter(pk=data["user"])
 
-        if not user or not product or (len(user) >= 2 or len(product) >= 2):
-            logger.error("User or product couldnt be find")
+        if not user or not product.exists() or (len(user) >= 2 or len(product) >= 2):
+            logger.error("User or product couldn't be find")
             return Response(
-                {"error": "User or product couldnt be find"},
+                {"error": "User or product couldn't be find"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+        date_now = datetime.datetime.now().strftime("%Y-%m-%d")
+        user = user[0]
+        product_id = product[0].id
+        user_team = user.profile.get_team() if user.profile.get_team() else None
 
         try:
             data = {
-                "product": product[0].id,
-                "user": user[0].id,
+                "product": product_id,
+                "user": user.id,
                 "raw_body": {
+                    "nr": f"{user.id}{product_id}{date_now}".replace("-", ''),
+                    "name": user.display_full_name,
+                    "team": user_team.name if user_team else '',
+                    "parent_league": user_team.display_league_top_parent if user_team else '',
                     "city": data["city"],
                     "leagues": data["leagues"],
                     "distance": data["distance"],
-                    "email": user[0].email,
-                    "profile": f"{request.META['HTTP_HOST']}/users/{user[0].profile.slug}",
-                    "phone": user[0].profile.phone,
+                    "email": user.email,
+                    "profile": f"{request.META['HTTP_HOST']}/users/{user.profile.slug}",
+                    "phone": user.profile.phone,
+                    "date": date_now
                 },
             }
         except Exception as e:
