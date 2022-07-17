@@ -1,5 +1,5 @@
 from functools import cached_property, lru_cache
-from typing import List
+from typing import List, Union
 
 from address.models import AddressField
 from django.conf import settings
@@ -605,17 +605,19 @@ class Team(models.Model, MappingMixin):
 
     @property
     @supress_exception
-    def display_league_region_and_group_name(self) -> str:
+    def display_league_region_and_group_name(self) -> Union[str, None]:
 
         region = self.league.region if self.league and self.league.region else ""
         group_name = self.league.display_league_group_name
 
-        if not group_name:
+        if region and not group_name:
             return region
-        elif not group_name and not region:
-            return ""
-
-        return f"{group_name}, {region}"
+        elif not region and group_name:
+            return group_name
+        elif region and group_name:
+            return f"{group_name}, {region}"
+        else:
+            return None
 
     @property
     @supress_exception
