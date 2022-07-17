@@ -345,6 +345,7 @@ svg text{
 
 .second__navbar_fixed a{
     color: var(--dark__color);
+    cursor: pointer;
 }
 
 .second__navbar_fixed:after{
