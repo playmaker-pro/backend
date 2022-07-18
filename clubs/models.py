@@ -363,7 +363,7 @@ class League(models.Model):
 
     @property
     def display_name_junior(self) -> str:
-        if self.name_junior:
+        if self.name_junior and not self.name_junior.name.isspace():
             return self.name_junior.name
 
     @cached_property
