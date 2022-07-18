@@ -173,8 +173,7 @@ class TeamAdmin(admin.ModelAdmin):
     autocomplete_fields = ("manager", "club", "league",)
 
     def full_league_linkify(self, obj=None):
-        value = ", ".join(obj.league_with_parents)
-        return linkify("league")(obj, value)        
+        return linkify("league")(obj, obj.league_with_parents)        
 
     full_league_linkify.short_description = "league"
 

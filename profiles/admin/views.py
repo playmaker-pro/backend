@@ -217,8 +217,11 @@ class PlayerProfileAdmin(ProfileAdminBase):
     )
 
     def team_object_linkify(self, obj=None):
-        name = obj.team_object.name_with_league_full
-        return linkify("team_object")(obj, name)
+        if obj.team_object: 
+            return linkify("team_object")(
+                obj, obj.team_object.name_with_league_full
+            )
+        else: return "-"
     
     team_object_linkify.short_description = "team_object"
 
@@ -246,8 +249,11 @@ class CoachProfileAdmin(ProfileAdminBase):
     autocomplete_fields = ("team_object",)
 
     def team_object_linkify(self, obj=None):
-        name = obj.team_object.name_with_league_full
-        return linkify("team_object")(obj, name)
+        if obj.team_object: 
+            return linkify("team_object")(
+                obj, obj.team_object.name_with_league_full
+            )
+        else: return "-"
     
     team_object_linkify.short_description = "team_object"
 

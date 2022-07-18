@@ -54,7 +54,7 @@ def linkify(field_name):
     Link will be admin url for the admin url for obj.parent.id:change
     """
 
-    def _linkify(obj, formatted_value=None):
+    def _linkify(obj, formatted_value: str = None):
         linked_obj = getattr(obj, field_name)
         if linked_obj is None:
             return "-"

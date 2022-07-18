@@ -451,7 +451,7 @@ class League(models.Model):
         return " ".join(filter(None, fields))
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.get_upper_parent_names()}"
 
     class Meta:
         unique_together = ("name", "country", "parent")
@@ -561,16 +561,16 @@ class Team(models.Model, MappingMixin):
 
     @property
     def league_with_parents(self):
-        highest_parent = self.league.highest_parent
-        parent = self.league.parent
-        primary_league = self.league
-        values = list(filter(None, [highest_parent, parent, primary_league]))
-        return [value.name for value in set(values)]
+        return self.league.get_upper_parent_names(", ")
+        # highest_parent = self.league.highest_parent
+        # parent = self.league.parent
+        # primary_league = self.league
+        # values = list(filter(None, [highest_parent, parent, primary_league]))
+        # return [value.name for value in set(values)]
          
     @property
     def name_with_league_full(self):
-        leagues = ", ".join(self.league_with_parents)
-        return f"{self.name} ({leagues})"
+        return f"{self.name} ({self.league_with_parents})"
 
     @property
     def display_team(self):
@@ -667,7 +667,7 @@ class Team(models.Model, MappingMixin):
         region_name = (
             self.league.region.name if self.league and self.league.region else ""
         )
-        league_name = self.display_league_top_parent
+        league_name = self.full
         if not league_name:
             suffix = ""
         else:
@@ -734,4 +734,4 @@ class Team(models.Model, MappingMixin):
     )
 
     def __str__(self):
-        return self.get_pretty_name()
+        return self.name_with_league_full
