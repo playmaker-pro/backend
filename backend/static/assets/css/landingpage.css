@@ -79,6 +79,22 @@ a:hover{
     grid-gap: 1rem;
 }
 
+.main__btn{
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -100;
+    opacity: 0;
+}
+
+.main__btn a{
+    color: var(--white__color) !important;
+    width: 50%;
+    text-shadow: none;
+    border: none;
+}
+
 /* navbar */
 
 #header .container-fluid{
@@ -726,6 +742,14 @@ svg text{
 @keyframes fadeIn {
     from { opacity: 0; }
       to { opacity: 1; display: flex}
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+      to {
+          opacity: 0;
+          z-index: -100;
+      }
 }
 
 /* second slider */

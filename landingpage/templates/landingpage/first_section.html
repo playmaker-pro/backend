@@ -5,6 +5,15 @@
 {% block body_class %}template-homepage{% endblock %}
 
 {% block content %}
+
+    <div class="d-none justify-content-center mt-2 w-50 m-auto align-items-center main__btn">
+        {% if user.is_authenticated %}
+            <a href="#test__section" class="text-center reach_us_btn dark__background ">Zgłoś się</a>
+        {% else %}
+           <a href="{% url 'account_login' %}?next={{ request.path }}" class="text-center reach_us_btn dark__background">Zaloguj się i zgłoś</a>
+        {% endif %}
+    </div>
+
     <div class="dark__background">
         <div class="container d-flex justify-content-center">
             <div class="second__navbar p-2 w-100">
@@ -91,6 +100,7 @@
     </section>
 
     {% include 'landingpage/rest_sections.html' %}
+    <script src="{% static 'assets/js/landingpage/observe_btn.js' %}"></script>
 
 {% endblock content %}
 
