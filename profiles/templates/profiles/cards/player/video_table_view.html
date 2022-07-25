@@ -1,0 +1,49 @@
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load index %}
+
+<table class="table" style="table-layout: fixed;">
+    <thead class="thead-light">
+        <tr>
+        <th scope="col" class="col-md-1">#</th>
+        <th scope="col" class="col-md-3">{% trans "Wideo" %}</th>
+        <th scope="col" class="col-md-3">{% trans "Tytuł" %}</th>          
+        <th scope="col" class="col-md-4">{% trans "Opis" %}</th>
+        {% if editable %}<th scope="col" class="col-md-1"></th>{% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for video in queryset %}
+        <tr>
+            <td scope="row" class="font-weight-bold">{{ forloop.counter }}</td>
+            <td> 
+                <a  target="_blank"
+                    rel="noopener noreferrer"
+                    href="{{ video.url }}">
+                    <img src="{{ thumbnails|index:forloop.counter0 }}" class="col">
+                </a>
+            <td>{{ video.title }}</td>
+            <td>{{ video.description }}</td>
+            {% if editable %}
+                <td>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input hidden name="id" value="{{ video.id }}">
+                        <button type="submit" 
+                                class="btn btn-danger"
+                                name="action"
+                                value="delete">
+                                <span class="d-md-none d-lg-block">
+                                    {% trans "Usuń" %}
+                                </span>
+                                <span class="d-md-block d-lg-none"><i class="fa fa-solid fa-ban"></i></span>
+                        </button>
+                    </form>                       
+                </td>     
+            {% endif %}           
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
