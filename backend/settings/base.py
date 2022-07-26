@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "products",
     "fqa",
     "fantasy",
+    "crm",
     "plays",
     "landingpage",
     "resources",
