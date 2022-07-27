@@ -1,6 +1,10 @@
 from django.contrib import admin
-from .models import LeadStatus
+from .models import *
 from utils import linkify
+
+@admin.register(Role)
+class RoleAdmin(admin.ModelAdmin):
+    pass
 
 @admin.register(LeadStatus)
 class LeadStatusAdmin(admin.ModelAdmin):
