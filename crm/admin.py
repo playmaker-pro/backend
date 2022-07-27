@@ -6,6 +6,10 @@ from utils import linkify
 class RoleAdmin(admin.ModelAdmin):
     pass
 
+@admin.register(ContactPurpose)
+class ContactPurposeAdmin(admin.ModelAdmin):
+    pass
+
 @admin.register(LeadStatus)
 class LeadStatusAdmin(admin.ModelAdmin):
     fieldsets = (

@@ -159,3 +159,14 @@ class LeadStatus(models.Model):
         verbose_name = "Kontakt"
         verbose_name_plural = "Kontakty"
         ordering = ["-is_actual"]
+
+
+class ContactPurpose(models.Model):
+    name = models.CharField(max_length=150, unique=True)
+
+    @property
+    def display_purpose(self):
+        return self.name
+
+    def __str__(self):
+        return f"{self.name}"
