@@ -89,11 +89,12 @@ class LeadStatus(models.Model):
     )
     is_actual = models.BooleanField(default=True)
     previous = models.OneToOneField(
-        "self", on_delete=models.SET_NULL, blank=True, null=True, related_name="previous_version"
+        "self", on_delete=models.SET_NULL, blank=True, null=True, related_name="next"
     )
-    next = models.OneToOneField(
-        "self", on_delete=models.SET_NULL, blank=True, null=True, related_name="next_version"
-    )
+
+    @property
+    def full_name(self):
+        return f"{self.first_name or ''} {self.last_name or ''}"
 
     @classmethod
     def from_db(cls, db, field_names, values):
@@ -102,26 +103,20 @@ class LeadStatus(models.Model):
         return instance
 
     def save(self, *args, **kwargs):
-        cleaned_data = model_to_dict(self, fields=self.FOLLOWED_FIELDS)
         if not self._state.adding:
-            data_changed = self.is_model_changed(self._loaded_values, cleaned_data)
+            cleaned_data = model_to_dict(self, fields=self.FOLLOWED_FIELDS)            
+            data_changed = self.is_model_changed(cleaned_data)
             if data_changed:
-                previous_obj = self
-                if self.has_next():
-                    previous_obj = self.get_child()
-                new_model = LeadStatus.objects.create(
+                LeadStatus.objects.create(
                     **self.parse_input(cleaned_data),
-                    is_actual=True,
                     created_by=self.updated_by,
                     date_created=datetime.now(),
-                    previous=previous_obj
+                    previous=self
                     )
-                previous_obj.is_actual = False
-                previous_obj.next = new_model
-                previous_obj.date_updated = datetime.now()                
-                previous_obj.save(*args, **kwargs)
+                self.is_actual = False
+                self.date_updated = datetime.now()
+                kwargs["update_fields"]=["is_actual", "date_updated", "updated_by"]
         super().save(*args, **kwargs)
-
 
     def parse_input(self, input):
         input.pop("id")
@@ -130,14 +125,19 @@ class LeadStatus(models.Model):
         input["team_id"] = input.pop("team")
         return input
 
-    def is_model_changed(self, pre_data, post_data):
-        return pre_data != post_data
+    def is_model_changed(self, post_data):
+        return self._loaded_values != post_data
 
     def has_next(self):
-        return self.next
+        return self.next is not None
 
-    def get_child(self):
-        if self.next:
+    def get_child_lead(self):
+        if self.has_next():
             obj = self.next   
-            return obj.get_child()
+            return obj.get_child_lead()
         return self
+
+    class Meta:
+        verbose_name = "Kontakt"
+        verbose_name_plural = "Kontakty"
+        ordering = ["-is_actual"]
