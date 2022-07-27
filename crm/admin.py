@@ -79,7 +79,7 @@ class LeadStatusAdmin(admin.ModelAdmin):
 
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
-
+    
     def save_model(self, request, obj, form, change):
         if obj.id == None:
             obj.created_by = request.user

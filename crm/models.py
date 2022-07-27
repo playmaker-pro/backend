@@ -193,6 +193,7 @@ class Conversation(models.Model):
         related_name="lead",
         )
     contact_method = models.CharField(
+        max_length=20,
         choices=CONTACT_METHODS,
         null=True,
         blank=True,
@@ -204,26 +205,29 @@ class Conversation(models.Model):
         blank=True,
         related_name="contact_method",
         )
-    note = models.TextField()
-    todo = models.TextField()
+    note = models.TextField(null=True, blank=True)
+    todo = models.TextField(null=True, blank=True)
     by_who = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
         blank=True,
         null=True,
         related_name="responsible_user"
     )
     is_done = models.BooleanField(default=False)
-    reminding_contact = models.DateTimeField()
+    reminding_contact = models.DateTimeField(null=True, blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
         blank=True,
         null=True,
         related_name="created_by"
     )
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
         blank=True,
         null=True,
         related_name="updated_by"
