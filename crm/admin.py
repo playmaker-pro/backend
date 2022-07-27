@@ -40,7 +40,7 @@ class LeadStatusAdmin(admin.ModelAdmin):
         linkify("user"),
         "phone",
         "email",
-        "get_user_role",
+        "user_role",
         linkify("team"),
         linkify("club"),
         "is_actual",
@@ -62,11 +62,6 @@ class LeadStatusAdmin(admin.ModelAdmin):
 
     list_filter = ["is_actual"]
 
-    def get_user_role(self, obj):
-        return obj.user.get_declared_role_display() if obj.user else None
-
-    get_user_role.short_description = "User Role"
-    
     def save_model(self, request, obj, form, change):
         if obj.id == None:
             obj.created_by = request.user

@@ -6,6 +6,17 @@ from django.forms.models import model_to_dict
 from datetime import datetime
 
 
+class Role(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    @property
+    def display_role(self):
+        return self.name
+
+    def __str__(self):
+        return f"{self.name}"
+
+
 class LeadStatus(models.Model):    
 
     FOLLOWED_FIELDS = [
@@ -30,6 +41,13 @@ class LeadStatus(models.Model):
         null=True,
         blank=True,
         related_name="lead",
+        )
+    user_role = models.ForeignKey(
+        Role,
+        null=True,
+        blank=True,
+        related_name="lead_role",
+        on_delete=models.SET_NULL
         )
     club = models.ForeignKey(
         Club,
