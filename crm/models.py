@@ -170,3 +170,65 @@ class ContactPurpose(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+
+
+class Conversation(models.Model):
+
+    CONTACT_METHODS = (
+        ("Phone call", "Phone call"),
+        ("Live", "Live"),
+        ("Mail", "Mail"),
+        ("Twitter", "Twitter"),
+        ("Facebook", "Facebook"),
+        ("LinkedIn", "LinkedIn"),
+        ("Instagram", "Instagram"),
+        ("Website", "Website"),
+    )
+
+    lead = models.ForeignKey(
+        LeadStatus,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="lead",
+        )
+    contact_method = models.CharField(
+        max_length=20,
+        choices=CONTACT_METHODS,
+        null=True,
+        blank=True,
+        )
+    contact_purpose = models.ForeignKey(
+        ContactPurpose,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="contact_method",
+        )
+    note = models.TextField(null=True, blank=True)
+    todo = models.TextField(null=True, blank=True)
+    by_who = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="responsible_user"
+    )
+    is_done = models.BooleanField(default=False)
+    reminding_contact = models.DateTimeField(null=True, blank=True)
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_updated = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="created_by"
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="updated_by"
+    )

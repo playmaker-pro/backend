@@ -76,3 +76,13 @@ class LeadStatusAdmin(admin.ModelAdmin):
         else:
             obj.updated_by = request.user
         return super().save_model(request, obj, form, change)
+
+@admin.register(Conversation)
+class ConversationAdmin(admin.ModelAdmin):
+    
+    def save_model(self, request, obj, form, change):
+        if obj.id == None:
+            obj.created_by = request.user
+        else:
+            obj.updated_by = request.user
+        return super().save_model(request, obj, form, change)
