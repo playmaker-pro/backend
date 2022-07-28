@@ -86,13 +86,20 @@ a:hover{
     transform: translate(-50%, -50%);
     z-index: -100;
     opacity: 0;
+    width: 20%;
 }
 
 .main__btn a{
     color: var(--white__color) !important;
-    width: 50%;
+    /*width: 100%;*/
     text-shadow: none;
     border: none;
+}
+
+.main__btn__toggle{
+    display: flex;
+    z-index: 100;
+    opacity: 1;
 }
 
 /* navbar */
@@ -219,6 +226,21 @@ svg text{
   dominant-baseline: middle;
 }
 
+.second__navbar{
+    height: 18px;
+    font-family: var(--font-inter);
+    font-style: normal;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 18px;
+    letter-spacing: 0.002em;
+}
+
+.second__navbar .support{
+    color: rgba(255, 255, 255, 0.72);
+
+}
+
 .second__navbar span:nth-child(odd){
     padding: 0.5rem;
 }
@@ -271,6 +293,26 @@ svg text{
     letter-spacing: 0.1px;
 }
 
+.header__div .header__text{
+    font-family: var(--font-inter);
+    font-style: normal;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 28px;
+    letter-spacing: 0.1px;
+    color: var(--light__color);
+}
+
+.header__div h1{
+    font-family: var(--font-poppins);
+    font-style: normal;
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 56px;
+    letter-spacing: 0.4px;
+    color: #FFFFFF;
+}
+
 .promo__section p{
     font-size: 1rem;
     line-height: 1.5rem;
@@ -284,6 +326,15 @@ svg text{
 
 .promo_div > div:nth-child(even){
     width: 85%;
+}
+
+.promo_div > div:nth-child(even) p{
+    font-family: var(--font-inter);
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: 0.1px;
 }
 
 .promo_div > div:nth-child(odd){
@@ -311,16 +362,14 @@ svg text{
     font-size: 16px;
     line-height: 22px;
     letter-spacing: 0.2px;
+    width: 50%;
 }
 
 .observe-div{
-    position: sticky;
     bottom: -1px;
     padding-top: calc(1em + 1px);
-}
-
-.observe-div.is-pinned{
-    opacity: 0.8;
+    display: flex;
+    justify-items: center;
 }
 
 .reach_us_btn:hover {
@@ -335,11 +384,11 @@ svg text{
     color: var(--light__color);
     font-style: normal;
     font-weight: 500;
-    font-size: 1rem;
+    font-size: 12px;
     line-height: 18px;
     text-align: center;
     letter-spacing: 0.1px;
-    opacity: 0.6;
+    opacity: 0.76;
 }
 
 .color__change{
@@ -632,7 +681,10 @@ svg text{
     font-size: 14px;
     line-height: 20px;
     letter-spacing: 0.2px;
-    color: #141414;
+}
+
+.player__card p, .player__card a{
+    color: var(--dark__color) !important;
 }
 
 .player__card p:last-child{
@@ -706,7 +758,7 @@ svg text{
 .carousel_item_desktop{
     box-shadow: 0 1px 4px rgba(7, 15, 26, 0.08), 0 4px 16px rgba(7, 15, 26, 0.08);
     border: none;
-    min-width: 19rem !important;
+    min-width: 23rem !important;
     max-width: 20rem;
 }
 
@@ -1236,20 +1288,23 @@ svg text{
     opacity: 0.72;
 }
 
+#test__section .ready_for_tests_unauthenticated a{
+    visibility: hidden;
+}
+
 #test__section .ready_for_tests_unauthenticated button,
 #test__section .user_is_authenticated{
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    /*padding: 13px 48px;*/
     gap: 4px;
-    /*width: 300px;*/
     height: 48px;
-    width: 100%;
+    width: 80%;
     background: #141414;
     border-radius: 24px;
-    color: var(--white__color)
+    color: var(--white__color);
+    margin: 0 auto;
 }
 
 #test__section .terms{
@@ -1380,8 +1435,8 @@ svg text{
     font-weight: 700;
     font-size: 12px;
     line-height: 18px;
-    /* identical to box height, or 150% */
     letter-spacing: 0.1px;
+    color: var(--dark__color)
 }
 
 .back__to__home a:hover,
@@ -1482,6 +1537,23 @@ svg text{
     color: rgba(20, 20, 20, 0.24);
 }
 
+@media (min-width: 2400px) {
+    .main__btn a{
+        width: 30%;
+    }
+}
+
+@media (min-width: 1300px) {
+    .main__btn{
+        width: 30%;
+    }
+}
+
+@media (min-width: 1201px) {
+    .main__btn{
+        width: 40%;
+    }
+}
 
 @media (max-width: 1200px) {
     #header .navbar-nav{
@@ -1491,6 +1563,9 @@ svg text{
 
     #header .fixed-top{
         max-width: 100%;
+    }
+    .main__btn{
+        width: 50%;
     }
 }
 
@@ -1518,6 +1593,10 @@ svg text{
         justify-content: space-between;
         display: flex;
         flex-direction: column;
+    }
+
+     .main__btn{
+        width: 70%;
     }
 
 }
@@ -1592,12 +1671,6 @@ svg text{
 
 }
 
-@media (max-width: 230px) {
-    .test__form__register span{
-        display: none;
-    }
-}
-
 @media (max-width: 768px) {
     #faq__section .container{
         width: 100% !important;
@@ -1614,5 +1687,36 @@ svg text{
 
     .promo_div > div:nth-child(odd){
         width: 15%;
+    }
+
+     .main__btn{
+        width: 90%;
+    }
+}
+
+@media (max-width: 560px) {
+    .main__btn a{
+        width: 80%;
+    }
+
+     .main__btn{
+        width: 100%;
+    }
+}
+
+@media (max-width: 300px) {
+    .main__btn a{
+        width: 100%;
+    }
+}
+
+
+@media (max-width: 230px) {
+    .test__form__register span{
+        display: none;
+    }
+
+    .main__btn a{
+        width: 100%;
     }
 }
