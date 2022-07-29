@@ -146,15 +146,6 @@ class LeadStatus(models.Model):
     def is_model_changed(self, post_data):
         return self._loaded_values != post_data
 
-    def has_next(self):
-        return self.next is not None
-
-    def get_child_lead(self):
-        if self.has_next():
-            obj = self.next   
-            return obj.get_child_lead()
-        return self
-
     class Meta:
         verbose_name = "Kontakt"
         verbose_name_plural = "Kontakty"
@@ -212,7 +203,8 @@ class Conversation(models.Model):
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name="responsible_user"
+        related_name="responsible_user",
+        verbose_name="Responsible user"
     )
     is_done = models.BooleanField(default=False)
     reminding_contact = models.DateTimeField(null=True, blank=True)
