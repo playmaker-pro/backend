@@ -15,7 +15,7 @@ from django_countries.fields import CountryField
 # from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
 from roles import definitions
 from stats.adapters import PlayerAdapter
-from .utils import make_choices
+from utils.utils import make_choices
 from .utils import unique_slugify
 import utils as utilites
 from .utils import conver_vivo_for_api, supress_exception

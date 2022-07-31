@@ -180,14 +180,6 @@ def _slug_strip(value, separator="-"):
     return value
 
 
-def make_choices(choices):
-    """
-    Returns tuples of localized choices based on the dict choices parameter.
-    Uses lazy translation for choices names.
-    """
-    return tuple([(k, _(v)) for k, v in choices])
-
-
 PARAMETERS_MAPPING = {
     "game__host_team_name": "host_name",
     "host_team_name": "host_name",
