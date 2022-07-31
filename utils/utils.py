@@ -2,6 +2,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils import timezone
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 
 
 def is_allowed_interact_with_s38():
@@ -67,6 +68,14 @@ def linkify(field_name):
 
     _linkify.short_description = field_name  # Sets column name
     return _linkify
+
+
+def make_choices(choices):
+    """
+    Returns tuples of localized choices based on the dict choices parameter.
+    Uses lazy translation for choices names.
+    """
+    return tuple([(k, _(v)) for k, v in choices])
 
 
 def generate_map(filename):

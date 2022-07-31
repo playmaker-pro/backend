@@ -4,6 +4,8 @@ from clubs.models import Team, Club
 from django.utils.translation import gettext_lazy as _
 from django.forms.models import model_to_dict
 from datetime import datetime
+from utils import make_choices
+from clubs.models import League
 
 
 class Role(models.Model):
@@ -151,6 +153,11 @@ class LeadStatus(models.Model):
         verbose_name_plural = "Kontakty"
         ordering = ["-is_actual"]
 
+    def __str__(self):
+        return str(
+            self.full_name if self.first_name and self.last_name
+            else self.user or self.team or self.club)
+
 
 class ContactPurpose(models.Model):
     name = models.CharField(max_length=150, unique=True)
@@ -223,4 +230,59 @@ class Conversation(models.Model):
         blank=True,
         null=True,
         related_name="updated_by"
+    )
+    financial_conditions_from = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+    )
+    financial_conditions_to = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+    )
+    city = models.CharField(
+        _("Miasto"),
+        max_length=200,
+        blank=True,
+        null=True
+    )
+    range = models.PositiveIntegerField(
+        _("Promień odległości w kilometrach"),
+        null=True,
+        blank=True
+    )
+    
+
+class Demand(models.Model):
+    POSITION_CHOICES = [
+        (1, "Bramkarz"),
+        (2, "Obrońca Lewy"),
+        (3, "Obrońca Prawy"),
+        (4, "Obrońca Środkowy"),
+        (5, "Pomocnik defensywny"),
+        (6, "Pomocnik środkowy"),
+        (7, "Pomocnik ofensywny"),
+        (8, "Skrzydłowy"),
+        (9, "Napastnik"),
+    ]
+    
+    conversation = models.ForeignKey(Conversation,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    position = models.IntegerField(
+        _("Pozycja"),
+        choices=make_choices(POSITION_CHOICES),
+        blank=True,
+        null=True,
+    )
+    league = models.ManyToManyField(
+        League,
+        null=True,
+        blank=True,
+        verbose_name="Poziom rozgrywkowy"
+    )
+    is_junior = models.BooleanField(
+        _("Młodzieżówka"),
+        default=False,
     )
