@@ -647,6 +647,13 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         blank=True,
     )
+    team_history_object = models.ForeignKey(
+        clubs_models.TeamHistory,
+        on_delete=models.SET_NULL,
+        related_name="players",
+        null=True,
+        blank=True,
+    )
     team_object_alt = models.ForeignKey(
         clubs_models.Team,
         on_delete=models.SET_NULL,
@@ -949,7 +956,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         self.playermetrics.refresh_metrics(*args, **kwargs)
 
     def save(self, *args, **kwargs):
-        """ 'Nie jest wyświetlana na profilu.
+        """'Nie jest wyświetlana na profilu.
         Pole wykorzystywane wyłącznie do gry Fantasy.
         Użytkownik nie ingeruje w nie, bo ustawiony jest trigger przy wyborze pozycji z A18.
         Bramkarz' -> 'bramkarz'; 'Obrońca%' ->  'obronca';  '%pomocnik' -> pomocnik; 'Skrzydłowy' -> 'pomocnik'; 'Napastnik' -> 'napastnik'
@@ -1305,7 +1312,13 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         blank=True,
     )
-
+    team_history_object = models.ForeignKey(
+        clubs_models.TeamHistory,
+        on_delete=models.SET_NULL,
+        related_name="players_history",
+        null=True,
+        blank=True,
+    )
     birth_date = models.DateField(_("Data urodzenia"), blank=True, null=True)
     soccer_goal = models.IntegerField(
         _("Piłkarski cel"), choices=make_choices(GOAL_CHOICES), null=True, blank=True
@@ -1613,6 +1626,13 @@ class ProfileVerificationStatus(models.Model):
         blank=True,
         related_name="team",
     )
+    team_history = models.ForeignKey(
+        "clubs.TeamHistory",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="team_history",
+    )
     club = models.ForeignKey(
         "clubs.Club",
         on_delete=models.SET_NULL,
@@ -1662,4 +1682,5 @@ class ProfileVerificationStatus(models.Model):
         self.team_not_found = defaults.get("team_not_found")
         self.club = defaults.get("club")
         self.team = defaults.get("team")
+        self.team_history = defaults.get("team_history")
         self.save()

@@ -507,6 +507,7 @@ class Team(models.Model, MappingMixin):
     autocreated = models.BooleanField(default=False, help_text="Autocreated from s38")
     gender = models.ForeignKey(Gender, on_delete=models.SET_NULL, null=True, blank=True)
 
+    # That would be deprecated since TeamHistory introduction
     league = models.ForeignKey(League, on_delete=models.SET_NULL, null=True, blank=True)
 
     seniority = models.ForeignKey(
@@ -722,3 +723,41 @@ class Team(models.Model, MappingMixin):
 
     def __str__(self):
         return self.get_pretty_name()
+
+
+class TeamHistory(models.Model):
+    """Definition of a  team history object
+
+    Keeps track of a team history in a past
+    """
+
+    team = models.ForeignKey(
+        "Team", on_delete=models.CASCADE, related_name="historical"
+    )
+
+    data_mapper_id = models.PositiveIntegerField(
+        help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+    )
+
+    season = models.ForeignKey(
+        "Season", on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+    league = models.ForeignKey(
+        "League",
+        on_delete=models.CASCADE,
+        related_name="team_historical",
+        null=True,
+        blank=True,
+    )
+
+    visible = models.BooleanField(default=True)
+
+    data = models.JSONField(null=True, blank=True)
+    autocreated = models.BooleanField(default=False, help_text="Autocreated")
+
+    def __str__(self):
+        return f"{self.team.name} ({self.season.name})"
+
+    class Meta:
+        unique_together = ("team", "season")
