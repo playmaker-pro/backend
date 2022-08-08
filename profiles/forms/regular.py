@@ -348,51 +348,6 @@ class PlayerProfileForm(BaseProfileForm):
                 Field("transfermarket_url", wrapper_class="row"),
                 css_class="col-md-6",
             ),
-            Fieldset(
-                _('<h2 class="form-section-title">Promo Video</h2>'),
-                Field("video_url", wrapper_class="row", placeholder=_("youtube url")),
-                Field("video_title", wrapper_class="row", placeholder=_("Tytuł")),
-                Field(
-                    "video_description",
-                    wrapper_class="row",
-                    placeholder=_("Opisz w której minucie dzieją się istotne rzeczy"),
-                ),
-                Field(
-                    "video_url_second",
-                    wrapper_class="row",
-                    placeholder=_("youtube url nr 2"),
-                ),
-                Field(
-                    "video_title_second",
-                    wrapper_class="row",
-                    placeholder=_("Tytuł nr 2"),
-                ),
-                Field(
-                    "video_description_second",
-                    wrapper_class="row",
-                    placeholder=_(
-                        "Nr 2 Opisz w której minucie dzieją się istotne rzeczy"
-                    ),
-                ),
-                Field(
-                    "video_url_third",
-                    wrapper_class="row",
-                    placeholder=_("youtube url nr 3"),
-                ),
-                Field(
-                    "video_title_third",
-                    wrapper_class="row",
-                    placeholder=_("Tytuł nr 3"),
-                ),
-                Field(
-                    "video_description_third",
-                    wrapper_class="row",
-                    placeholder=_(
-                        "Nr 3 Opisz w której minucie dzieją się istotne rzeczy"
-                    ),
-                ),
-                css_class="col-md-6",
-            ),
         )  # layout
 
     class Meta:
@@ -404,6 +359,28 @@ class PlayerProfileForm(BaseProfileForm):
             + ["country", "birth_date"]
         )
 
+class PlayerVideoForm(BaseProfileForm):
+
+    def __init__(self, *args, **kwargs):        
+        super().__init__(*args, **kwargs)
+        self.helper.layout = Layout(
+            Fieldset(
+                _(f''),
+                Field("url", wrapper_class="row", placeholder=_("youtube url")),
+                Field("title", wrapper_class="row", placeholder=_("Tytuł")),
+                Field(
+                    "description",
+                    wrapper_class="row",
+                    placeholder=_("Opisz w której minucie dzieją się istotne rzeczy"),
+                ),
+            ),
+        )
+    
+    class Meta:
+        model = models.PlayerVideo
+        exclude = [
+            "player",      
+        ]
 
 class ScoutProfileForm(BaseProfileForm):
     """

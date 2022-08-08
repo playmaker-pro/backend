@@ -511,16 +511,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         "agent_status",
         "agent_name",
         "agent_phone",
-        "agent_foreign",
-        "video_url",
-        "video_title",
-        "video_description",
-        "video_url_second",
-        "video_title_second",
-        "video_description_second",
-        "video_url_third",
-        "video_title_third",
-        "video_description_third",
+        "agent_foreign",   
     ]
 
     POSITION_CHOICES = [
@@ -619,6 +610,10 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             )
         else:
             return None
+
+    @property
+    def has_videos(self):
+        return PlayerVideo.objects.filter(player=self).count() > 0
 
     @property
     def attached(self):
@@ -829,25 +824,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
     agent_foreign = models.BooleanField(
         _("Otwarty na propozycje zagraniczne"), blank=True, null=True
-    )
-    video_url = models.URLField(_("Youtube url"), blank=True, null=True)
-    video_title = models.CharField(
-        _("Tytuł nagrania"), max_length=235, blank=True, null=True
-    )
-    video_description = models.TextField(_("Temat i opis"), null=True, blank=True)
-    video_url_second = models.URLField(_("Youtube url nr 2"), blank=True, null=True)
-    video_title_second = models.CharField(
-        _("Tytuł nagrania nr 2"), max_length=235, blank=True, null=True
-    )
-    video_description_second = models.TextField(
-        _("Temat i opis nr 2"), null=True, blank=True
-    )
-    video_url_third = models.URLField(_("Youtube url nr 3"), blank=True, null=True)
-    video_title_third = models.CharField(
-        _("Tytuł nagrania nr 3"), max_length=235, blank=True, null=True
-    )
-    video_description_third = models.TextField(
-        _("Temat i opis nagrania nr 3"), null=True, blank=True
     )
     updated = models.BooleanField(default=False)
 
@@ -1684,3 +1660,28 @@ class ProfileVerificationStatus(models.Model):
         self.team = defaults.get("team")
         self.team_history = defaults.get("team_history")
         self.save()
+
+class PlayerVideo(models.Model):
+    player = models.ForeignKey(
+        PlayerProfile,
+        on_delete=models.CASCADE,
+        related_name="player_video"
+    )
+    url = models.URLField(
+        _("Youtube url"),
+    )
+    title = models.CharField(
+        _("Tytuł nagrania"),
+        max_length=235,
+        blank=True,
+        null=True
+    )
+    description = models.TextField(
+        _("Opis"),
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        verbose_name = "Player Video"
+        verbose_name_plural = "Player Videos"
