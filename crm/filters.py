@@ -119,7 +119,7 @@ class CreatedBy(SimpleListFilter):
     def lookups(self, request, model_admin):
         return [
             (i+1, user) for i, user in 
-                enumerate(User.objects.filter(is_staff=True))
+                enumerate(User.objects.filter(groups__name__in=["CRM Admin"]))
             ]
 
     def queryset(self, request, queryset):
