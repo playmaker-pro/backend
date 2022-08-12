@@ -665,7 +665,7 @@ class Team(models.Model, MappingMixin):
         region_name = (
             self.league.region.name if self.league and self.league.region else ""
         )
-        league_name = self.full
+        league_name = self.full_name
         if not league_name:
             suffix = ""
         else:
