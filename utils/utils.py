@@ -56,7 +56,7 @@ def linkify(field_name):
     Link will be admin url for the admin url for obj.parent.id:change
     """
 
-    def _linkify(obj):
+    def _linkify(obj, formatted_value: str = None):
         linked_obj = getattr(obj, field_name)
         if linked_obj is None:
             return "-"
@@ -65,7 +65,7 @@ def linkify(field_name):
         model_name = linked_obj._meta.model_name
         view_name = f"admin:{app_label}_{model_name}_change"
         link_url = reverse(view_name, args=[linked_obj.pk])
-        return format_html('<a href="{}">{}</a>', link_url, linked_obj)
+        return format_html('<a href="{}">{}</a>', link_url, formatted_value or linked_obj)
 
     _linkify.short_description = field_name  # Sets column name
     return _linkify

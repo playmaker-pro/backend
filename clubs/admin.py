@@ -171,14 +171,19 @@ class TeamAdmin(admin.ModelAdmin):
         "visible",
         "autocreated",
         linkify("club"),
-        linkify("league"),
+        "full_league_linkify",
         linkify("gender"),
         linkify("seniority"),
         linkify("manager"),
     )
-    search_fields: Sequence[str] = ("name",)
-    list_filter: Sequence[str] = ("league__name", "gender__name", "seniority__name")
-    autocomplete_fields: Sequence[str] = ("manager",)
+    search_fields = ("name",)
+    list_filter = ("league__name", "gender__name", "seniority__name")
+    autocomplete_fields = ("manager", "club", "league",)
+
+    def full_league_linkify(self, obj=None):
+        return linkify("league")(obj, obj.league_with_parents)        
+
+    full_league_linkify.short_description = "league"
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
