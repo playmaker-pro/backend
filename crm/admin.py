@@ -107,6 +107,10 @@ class LeadStatusAdmin(admin.ModelAdmin):
             obj.updated_by = request.user
         return super().save_model(request, obj, form, change)
 
+# @admin.register(Demand)
+class DemandAdminInline(admin.StackedInline):
+    model = Demand
+
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
     
@@ -132,7 +136,16 @@ class ConversationAdmin(admin.ModelAdmin):
                 "todo"
                 )
             }
-        ),        
+        ),
+        ("Demand conditions", {
+            "fields": (
+                "financial_conditions_from",
+                "financial_conditions_to",
+                "city",
+                "range",
+                )
+            }
+        ),     
     )
 
     search_fields = ["lead__first_name", "lead__last_name",]
@@ -163,7 +176,9 @@ class ConversationAdmin(admin.ModelAdmin):
         HasTeam,
         HasUser,
         CreatedBy,
-        )
+    )
+
+    inlines = [DemandAdminInline,]
 
     def get_search_results(self, request, queryset, search_term):
         original_qs = queryset
@@ -187,3 +202,7 @@ class ConversationAdmin(admin.ModelAdmin):
         else:
             obj.updated_by = request.user
         return super().save_model(request, obj, form, change)
+
+@admin.register(Demand)
+class DemandAdmin(admin.ModelAdmin):
+    pass
