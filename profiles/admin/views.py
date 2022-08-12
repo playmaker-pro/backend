@@ -1,3 +1,4 @@
+from os import link
 from django.contrib import admin
 from utils import linkify
 from app.utils.admin import json_filed_data_prettified
@@ -204,7 +205,8 @@ class ProfileVerificationStatusAdmin(admin.ModelAdmin):
 class PlayerProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
         linkify("playermetrics"),
-        "team_object_linkify",
+        linkify("team_object"),
+        linkify("team_history_object"),
         linkify("team_object_alt"),
         "display_league",
         "display_team",
@@ -231,7 +233,12 @@ class PlayerProfileAdmin(ProfileAdminBase):
         else:
             obj.meta
 
-    autocomplete_fields = ("user", "team_object", "team_object_alt")
+    autocomplete_fields = (
+        "user",
+        "team_object",
+        "team_history_object",
+        "team_object_alt",
+    )
 
     actions = [
         refresh,
@@ -245,8 +252,12 @@ class PlayerProfileAdmin(ProfileAdminBase):
 
 @admin.register(models.CoachProfile)
 class CoachProfileAdmin(ProfileAdminBase):
-    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + ("team_object_linkify",)
-    autocomplete_fields = ("team_object",)
+    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
+        linkify("team_object_linkify"),
+        linkify("team_history_object"),
+        linkify("team_history_object"),
+    )
+    autocomplete_fields = ("team_object", "team_history_object", "team_history_object")
 
     def team_object_linkify(self, obj=None):
         if obj.team_object: 

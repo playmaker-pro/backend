@@ -105,6 +105,48 @@ function get_missingname_form(slug) {
   })
 }
 
+function reloadClubsSearch(season = null) {
+
+  let url;
+  if (season == null) {
+    url = '/resources/clubs_search'
+  } else {
+    url = '/resources/clubs_search?season=' + season
+  }
+
+  $('#id_team').select2({
+    width: '100%',
+    placeholder: "Wybierz klub",
+    ajax: {
+      url: url,
+      dataType: 'json',
+      cache: true
+    }
+  });
+}
+
+
+function reloadTeamsSearch(season = null) {
+  let team_id = '#id_team'
+  let url;
+  if (season == null) {
+    url = '/resources/teams_history_search'
+  } else {
+    url = '/resources/teams_history_search?season=' + season
+  }
+
+    $(team_id).select2({
+      width: '100%',
+      placeholder: "Wybierz klub",
+      ajax: {
+        url: url,
+        dataType: 'json',
+        cache: true
+      }
+      });
+}
+
+
 function get_verification_form(slug) {
     $.ajax({
       url: "/users/me/verification/",
@@ -112,30 +154,26 @@ function get_verification_form(slug) {
       data: {slug: slug},
       success: function(json) {
           $("#verification-form-body").html(json.form);
-          //$("#verification-form-body select").addClass("selectpicker").selectpicker('refresh'); 
+          // Just to reload selectpicker after getting data from api.
           $("#id_position_raw").addClass("selectpicker").selectpicker('refresh'); 
           $("#id_country").addClass("selectpicker").selectpicker('refresh'); 
+          $("#id_season").addClass("selectpicker").selectpicker('refresh');
+
+
+          $('#id_season').on('change', function() {
+            let season = $(this).find(":selected").text() 
+            if (json.is_club) {
+              reloadClubsSearch(season)
+            } else {
+            reloadTeamsSearch(season);   
+            }
+          });
+
           if (json.is_club) {
-            $('#id_team').select2({
-              width: '100%',
-              placeholder: "Wybierz klub",
-              ajax: {
-                url: '/resources/clubs_search?i=' + json.id,
-                dataType: 'json',
-                cache: true
-              }
-            });
+            reloadClubsSearch(json.season)
           } else {
-            $('#id_team').select2({
-              width: '100%',
-              placeholder: "Wybierz klub",
-              ajax: {
-                url: '/resources/teams_search?i=' + json.id,
-                dataType:  'json',
-                cache: true
-              }
-            });
-        }
+            reloadTeamsSearch(json.season)
+          }
 
           if(json.preselected) { 
               var newOption = new Option(json.preselected.text, json.preselected.id, false, true);
@@ -143,7 +181,6 @@ function get_verification_form(slug) {
           }
 
           if($('#id_has_team_1').is(':checked')) { 
-            console.log('=', $("#select_team_div"))
             $("#select_team_div").fadeIn()
             $("#text_team_div").hide()
     }
@@ -171,11 +208,8 @@ function updateSettings(event) {
 }
 
 
-
 $(document).on('submit', '#missingname-form', function(e){
-
     e.preventDefault(); // avoid to execute the actual submit of the form.
-
     var form = $(this);
     var url = form.attr('action');
 
@@ -187,33 +221,32 @@ $(document).on('submit', '#missingname-form', function(e){
            {
                 if (json.success == true ) {
                     location.reload();
-                } else { 
-                 
+                } else {                  
                         $("#missingname-form-body").html(json.form);
                 }
            }
          });
-
-    
 });
+
 
 function checkIfTeamNotFound() {
   if($('#id_team_not_found').is(':checked')) {
 
     $("#text_team_div").fadeIn()
     $("#div_id_team").hide()
+    $("#div_id_season").hide()
     $("#hint_id_team_club_league_voivodeship_ver").text("Wprowadź ręcznie nazwę klubu, poziom rozgrywkowy, region i kraj jeśli jest inny niż Polska")
     $('label[for="id_team_not_found"]').text('odznacz jeśli chesz wybrać klub z listy')
     
   } else {
     $("#text_team_div").hide()
     $("#div_id_team").fadeIn()
+    $("#div_id_season").fadeIn()
     $('label[for="id_team_not_found"]').text('zaznacz jeśli nie znalazłeś swojego klubu na liście')
   }
 }
 
 function setHasClubDefaults() {
-  console.log('xxx')
   $("#select_team_div").fadeIn()
   $("#text_team_div").hide()
   checkIfTeamNotFound()
@@ -238,10 +271,7 @@ function setVerificationDefaults() {
 }
 
 $(document).on("click", "#div_id_team_not_found", function(){ 
-
   checkIfTeamNotFound()
-
-
 });
 
 $(document).on("click", "#id_has_team_1", function(){
@@ -278,9 +308,8 @@ $(document).on('submit', '#verification-form', function(e){
                 }
            }
          });
-
-    
 });
+
 
 $(document).on('submit', '#add-announcement-form', function(e){
 
@@ -291,18 +320,16 @@ $(document).on('submit', '#add-announcement-form', function(e){
   var data = form.serialize() + '&id=' + $('#add-ann-number').val() + '&announcement_type=' + $('#add-ann-type').val() + '&action_name=' + $('#add-ann-action-name').val();
 
   $.ajax({
-         type: "POST",
-         url: url,
-         data:  data, // serializes the form's elements.
-         success: function(json)
-         {
-              if (json.success == true ) {
-                  location.reload();
-              } else { 
-                      $("#add-announcement-form-body").html(json.form);
-              }
-         }
-       });
-
-  
+    type: "POST",
+    url: url,
+    data:  data, // serializes the form's elements.
+    success: function(json)
+    {
+        if (json.success == true ) {
+            location.reload();
+        } else { 
+                $("#add-announcement-form-body").html(json.form);
+        }
+    }
+  });
 });

@@ -1,7 +1,9 @@
-from django.utils.html import format_html
+import collections
+
+from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
-from django.conf import settings
+from django.utils.html import format_html
 
 
 def is_allowed_interact_with_s38():
@@ -156,3 +158,13 @@ def generate_vivo_options():
 
     with open("filteroptions_vivo", "w+") as filterfile:
         filterfile.write(out)
+
+
+def update_dict_depth(d, u):
+    """Update value of a nested dictionary of varying depth """
+    for k, v in u.items():
+        if isinstance(v, collections.abc.Mapping):
+            d[k] = update_dict_depth(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d

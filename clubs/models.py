@@ -1,5 +1,5 @@
 from functools import cached_property, lru_cache
-from typing import List
+from typing import List, Union
 
 from address.models import AddressField
 from django.conf import settings
@@ -363,7 +363,7 @@ class League(models.Model):
 
     @property
     def display_name_junior(self) -> str:
-        if self.name_junior:
+        if self.name_junior and not self.name_junior.name.isspace():
             return self.name_junior.name
 
     @cached_property
@@ -507,6 +507,7 @@ class Team(models.Model, MappingMixin):
     autocreated = models.BooleanField(default=False, help_text="Autocreated from s38")
     gender = models.ForeignKey(Gender, on_delete=models.SET_NULL, null=True, blank=True)
 
+    # That would be deprecated since TeamHistory introduction
     league = models.ForeignKey(League, on_delete=models.SET_NULL, null=True, blank=True)
 
     seniority = models.ForeignKey(
@@ -562,11 +563,6 @@ class Team(models.Model, MappingMixin):
     @property
     def league_with_parents(self):
         return self.league.get_upper_parent_names(", ")
-        # highest_parent = self.league.highest_parent
-        # parent = self.league.parent
-        # primary_league = self.league
-        # values = list(filter(None, [highest_parent, parent, primary_league]))
-        # return [value.name for value in set(values)]
          
     @property
     def name_with_league_full(self):
@@ -618,17 +614,19 @@ class Team(models.Model, MappingMixin):
 
     @property
     @supress_exception
-    def display_league_region_and_group_name(self) -> str:
+    def display_league_region_and_group_name(self) -> Union[str, None]:
 
         region = self.league.region if self.league and self.league.region else ""
         group_name = self.league.display_league_group_name
 
-        if not group_name:
+        if region and not group_name:
             return region
-        elif not group_name and not region:
-            return ""
-
-        return f"{group_name}, {region}"
+        elif not region and group_name:
+            return group_name
+        elif region and group_name:
+            return f"{group_name}, {region}"
+        else:
+            return None
 
     @property
     @supress_exception
@@ -735,3 +733,41 @@ class Team(models.Model, MappingMixin):
 
     def __str__(self):
         return self.name_with_league_full
+
+
+class TeamHistory(models.Model):
+    """Definition of a  team history object
+
+    Keeps track of a team history in a past
+    """
+
+    team = models.ForeignKey(
+        "Team", on_delete=models.CASCADE, related_name="historical"
+    )
+
+    data_mapper_id = models.PositiveIntegerField(
+        help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+    )
+
+    season = models.ForeignKey(
+        "Season", on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+    league = models.ForeignKey(
+        "League",
+        on_delete=models.CASCADE,
+        related_name="team_historical",
+        null=True,
+        blank=True,
+    )
+
+    visible = models.BooleanField(default=True)
+
+    data = models.JSONField(null=True, blank=True)
+    autocreated = models.BooleanField(default=False, help_text="Autocreated")
+
+    def __str__(self):
+        return f"{self.team.name} ({self.season.name})"
+
+    class Meta:
+        unique_together = ("team", "season")
