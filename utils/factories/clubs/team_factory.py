@@ -2,14 +2,14 @@ import factory
 from .club_factory import ClubFactory
 
 TEAM_MOCK = [
-    "Barca",
+    "FC Barca",
     "ManUtd",
     "Bayern",
     "Jakisfc Team",
     "ŁśćŻźąęó"
 ]
 
-class TeamFactory(factory.Factory):
+class TeamFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'clubs.Team'
