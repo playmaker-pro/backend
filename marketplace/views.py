@@ -446,6 +446,8 @@ class AnnouncementsMetaView(
         kwargs["filters"] = self.get_filters_values()
         kwargs["filters"] = self.get_filters_values()
         kwargs["leagues"] = League.objects.is_top_parent()
+        kwargs["voivodeships"] = Voivodeship.objects.all()
+
         self.prepare_kwargs(kwargs)
 
         kwargs["modals"] = self.modal_activity(
