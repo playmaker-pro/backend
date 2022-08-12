@@ -205,7 +205,7 @@ class ProfileVerificationStatusAdmin(admin.ModelAdmin):
 class PlayerProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
         linkify("playermetrics"),
-        linkify("team_object"),
+        linkify("team_object_linkify"),
         linkify("team_history_object"),
         linkify("team_object_alt"),
         "display_league",
