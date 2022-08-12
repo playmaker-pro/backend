@@ -7,20 +7,55 @@
 
     <div class="d-flex position-relative slideshow_container_main_desktop">
 
-
         <!-- Full-width images with number and caption text -->
 
-        {% with club_name='Spartakus Daleszyce' player_name='Patryk Raczyński' league='4 liga' player='Lewy obrońca / skrzydłowy' content='landingpage/partials/history/history_first.html' club_herb='assets/img/landingpage/history/spartakus.png' dest_name='Neptun Końskie' dest_herb='assets/img/landingpage/history/neptun.png' dest_league='4 liga' player_url='https://www.playmaker.pro/users/player-patryk-raczynski/' player_photo='assets/img/landingpage/history/patryk_raczynski.jpg' %}
-            {% include 'landingpage/partials/history_card.html' %}
-        {% endwith %}
+        <!-- First card -->
 
-        {% with club_name='Foto-Higiena Gać' player_name='Sebastian Jaroszyński' league='3 liga' player='Napastnik' content='landingpage/partials/history/history_second.html' club_herb='assets/img/landingpage/history/foto-higiena-gac.png' dest_name='Polonia Świdnica' dest_herb='assets/img/landingpage/history/polonia_sparta_swidnica.jpg' dest_league='3 liga' player_url='https://www.playmaker.pro/users/player-sebastian-jaroszynski/' player_photo='assets/img/landingpage/history/sebastian1.jpg' %}
+        {% with club_name='Spartakus Daleszyce' %}
+        {% with player_name='Patryk Raczyński' %}
+        {% with league='4 liga' %}
+        {% with player='Lewy obrońca / skrzydłowy' %}
+        {% with content='landingpage/partials/history/history_first.html' %}
+        {% with club_herb='assets/img/landingpage/history/spartakus.png' %}
+        {% with dest_name='Neptun Końskie' %}
+        {% with dest_herb='assets/img/landingpage/history/neptun.png' %}
+        {% with dest_league='4 liga' %}
+        {% with player_url='https://www.playmaker.pro/users/player-patryk-raczynski/' %}
+        {% with player_photo='assets/img/landingpage/history/patryk_raczynski.jpg' %}
             {% include 'landingpage/partials/history_card.html' %}
-        {% endwith %}
+        {% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}
 
-        {% with club_name='Yeclano Deportivo' player_name='Grzegorz Kleemann' league='3 liga' player='Bramkarz' content='landingpage/partials/history/history_third.html' club_herb='assets/img/landingpage/history/yeclano-deportivo.png' dest_name='Kotwica Kołobrzeg' dest_herb='assets/img/landingpage/history/Kotwica Kolobrzeg.jpg' dest_league='3 liga' player_url='https://www.transfermarkt.pl/grzegorz-kleemann/profil/spieler/332027' player_photo='assets/img/landingpage/history/grzegorz_kleemann.jpg'  %}
+        <!-- Second card -->
+
+        {% with club_name='Foto-Higiena Gać' %}
+        {% with player_name='Sebastian Jaroszyński' %}
+        {% with league='3 liga' %}
+        {% with player='Napastnik' %}
+        {% with content='landingpage/partials/history/history_second.html' %}
+        {% with club_herb='assets/img/landingpage/history/foto-higiena-gac.png' %}
+        {% with dest_name='Polonia Świdnica' %}
+        {% with dest_herb='assets/img/landingpage/history/polonia_sparta_swidnica.jpg' %}
+        {% with dest_league='3 liga' %}
+        {% with player_url='https://www.playmaker.pro/users/player-sebastian-jaroszynski/' %}
+        {% with player_photo='assets/img/landingpage/history/sebastian1.jpg' %}
             {% include 'landingpage/partials/history_card.html' %}
-        {% endwith %}
+        {% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}
+
+        <!-- Third card -->
+
+        {% with club_name='Yeclano Deportivo' %}
+        {% with player_name='Grzegorz Kleemann' %}
+        {% with league='3 liga' %}
+        {% with player='Bramkarz' %}
+        {% with content='landingpage/partials/history/history_third.html' %}
+        {% with club_herb='assets/img/landingpage/history/yeclano-deportivo.png' %}
+        {% with dest_name='Kotwica Kołobrzeg' %}
+        {% with dest_herb='assets/img/landingpage/history/Kotwica Kolobrzeg.jpg' %}
+        {% with dest_league='3 liga' %}
+        {% with player_url='https://www.transfermarkt.pl/grzegorz-kleemann/profil/spieler/332027' %}
+        {% with player_photo='assets/img/landingpage/history/grzegorz_kleemann.jpg'  %}
+            {% include 'landingpage/partials/history_card.html' %}
+        {% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}
 
 
     </div>

@@ -1,7 +1,7 @@
 from .views import WebhookPlayer
 from django.urls import path, include
 from rest_framework.authtoken import views
-from clubs.api.views import TeamViewSet, TeamSearchApi, ClubSearchApi
+from clubs.api.views import TeamViewSet, TeamSearchApi, ClubSearchApi, TeamHistorySearchApi
 from rest_framework import routers
 
 
@@ -13,7 +13,8 @@ api_router.register(r"teams", TeamViewSet)
 
 urlpatterns = [
     path("", include(api_router.urls)),
-    path("teams_search", TeamSearchApi.as_view(), name="teams_search"),
+    path("teams_search", TeamSearchApi.as_view()),
+    path("teams_history_search", TeamHistorySearchApi.as_view()),
     path("clubs_search", ClubSearchApi.as_view()),
     path("playerupdate", WebhookPlayer.as_view(), name="player_webhook"),
     path("api-token-auth/", views.obtain_auth_token),

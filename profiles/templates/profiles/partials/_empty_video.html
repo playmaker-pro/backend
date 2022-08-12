@@ -1,0 +1,11 @@
+{% load i18n %}
+
+{% include 'platform/partials/_empty.html' %}
+
+{% if editable %}
+    <h4>{% trans 'Nie przypisałeś jeszcze żadnych wideo do swojego profilu.' %}</h4>
+    <p>{% trans 'Dodanie wideo do swojego profilu wzbogaci Twoje CV.' %}</p>
+{% else %}
+    <h4>{% trans 'Użytkownik nie dodał żadnych wideo' %}</h4>
+{% endif %}
+

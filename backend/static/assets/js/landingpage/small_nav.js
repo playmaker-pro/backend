@@ -9,5 +9,10 @@ anchors.forEach(anchor => {
         })
 
         anchor.querySelector('p').classList.add('active__border');
+
+        // Scroll up 120px to clicked div.
+        const getElement = document.querySelector(anchor.dataset.href)
+        const newY = getElement.getBoundingClientRect().top + window.scrollY - 120;
+        window.scrollTo({top: newY, behavior: 'smooth'});
     });
 })
