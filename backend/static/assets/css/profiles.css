@@ -225,6 +225,11 @@ section.profile {
 
 }
 
+section.profile-video td {
+  white-space: normal; 
+  word-wrap: break-word;  
+}
+
 #profile .table td, #profile-carrier .table td, #profile-games .table td {
   vertical-align: middle;
 }

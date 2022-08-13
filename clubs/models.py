@@ -1,5 +1,5 @@
 from functools import cached_property, lru_cache
-from typing import List
+from typing import List, Union
 
 from address.models import AddressField
 from django.conf import settings
@@ -363,7 +363,7 @@ class League(models.Model):
 
     @property
     def display_name_junior(self) -> str:
-        if self.name_junior:
+        if self.name_junior and not self.name_junior.name.isspace():
             return self.name_junior.name
 
     @cached_property
@@ -431,9 +431,7 @@ class League(models.Model):
     def get_upper_parent_names(self, spliter=", "):
         name = self.name
         if self.parent:
-            name = (
-                f"{self.parent.get_upper_parent_names(spliter=spliter)}{spliter}{name}"
-            )
+            name = f"{self.parent.get_upper_parent_names(spliter=spliter)}{spliter}{name}"
         return name
 
     def set_league_season(self, seasons: List[Season]):
@@ -451,7 +449,7 @@ class League(models.Model):
         return " ".join(filter(None, fields))
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.get_upper_parent_names()}"
 
     class Meta:
         unique_together = ("name", "country", "parent")
@@ -507,6 +505,7 @@ class Team(models.Model, MappingMixin):
     autocreated = models.BooleanField(default=False, help_text="Autocreated from s38")
     gender = models.ForeignKey(Gender, on_delete=models.SET_NULL, null=True, blank=True)
 
+    # That would be deprecated since TeamHistory introduction
     league = models.ForeignKey(League, on_delete=models.SET_NULL, null=True, blank=True)
 
     seniority = models.ForeignKey(
@@ -564,6 +563,14 @@ class Team(models.Model, MappingMixin):
             return False
 
     @property
+    def league_with_parents(self):
+        return self.league.get_upper_parent_names(spliter=", ")
+         
+    @property
+    def name_with_league_full(self):
+        return f"{self.name} ({self.league_with_parents})"
+
+    @property
     def display_team(self):
         return self.name
 
@@ -609,17 +616,19 @@ class Team(models.Model, MappingMixin):
 
     @property
     @supress_exception
-    def display_league_region_and_group_name(self) -> str:
+    def display_league_region_and_group_name(self) -> Union[str, None]:
 
         region = self.league.region if self.league and self.league.region else ""
         group_name = self.league.display_league_group_name
 
-        if not group_name:
+        if region and not group_name:
             return region
-        elif not group_name and not region:
-            return ""
-
-        return f"{group_name}, {region}"
+        elif not region and group_name:
+            return group_name
+        elif region and group_name:
+            return f"{group_name}, {region}"
+        else:
+            return None
 
     @property
     @supress_exception
@@ -658,7 +667,7 @@ class Team(models.Model, MappingMixin):
         region_name = (
             self.league.region.name if self.league and self.league.region else ""
         )
-        league_name = self.display_league_top_parent
+        league_name = self.full_name
         if not league_name:
             suffix = ""
         else:
@@ -725,4 +734,42 @@ class Team(models.Model, MappingMixin):
     )
 
     def __str__(self):
-        return self.get_pretty_name()
+        return f"{self.name}" + (f" ({self.league})" if self.league else "")
+
+
+class TeamHistory(models.Model):
+    """Definition of a  team history object
+
+    Keeps track of a team history in a past
+    """
+
+    team = models.ForeignKey(
+        "Team", on_delete=models.CASCADE, related_name="historical"
+    )
+
+    data_mapper_id = models.PositiveIntegerField(
+        help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+    )
+
+    season = models.ForeignKey(
+        "Season", on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+    league = models.ForeignKey(
+        "League",
+        on_delete=models.CASCADE,
+        related_name="team_historical",
+        null=True,
+        blank=True,
+    )
+   
+    visible = models.BooleanField(default=True)
+
+    data = models.JSONField(null=True, blank=True)
+    autocreated = models.BooleanField(default=False, help_text="Autocreated")
+
+    def __str__(self):
+        return f"{self.team.name} ({self.season.name})"
+
+    class Meta:
+        unique_together = ("team", "season")
