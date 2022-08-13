@@ -158,7 +158,17 @@ class VoivodeshipAdmin(admin.ModelAdmin):
 
 @admin.register(models.TeamHistory)
 class TeamHistoryAdmin(admin.ModelAdmin):
-    list_display: Sequence[str] = ("season", "league")
+    list_display: Sequence[str] = (
+        "id",
+        linkify("team"),
+        "data_mapper_id",
+        linkify("league_history"),
+        "season",
+        linkify("league"),
+        "visible",
+        "autocreated",
+        "data"
+        )
     search_fields: Sequence[str]  = ("team__name",)
     autocomplete_fields: Sequence[str] = ("team", "league", "season")
 
