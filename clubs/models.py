@@ -429,7 +429,6 @@ class League(models.Model):
         super().save(*args, **kwargs)
 
     def get_upper_parent_names(self, spliter=", "):
-        print(self.name, self.parent)
         name = self.name
         if self.parent:
             name = f"{self.parent.get_upper_parent_names(spliter=spliter)}{spliter}{name}"
@@ -759,7 +758,7 @@ class TeamHistory(models.Model):
         null=True,
         blank=True,
     )
-
+   
     visible = models.BooleanField(default=True)
 
     data = models.JSONField(null=True, blank=True)
