@@ -176,6 +176,11 @@ class TeamHistoryAdmin(admin.ModelAdmin):
         )
     search_fields: Sequence[str]  = ("team__name",)
     autocomplete_fields: Sequence[str] = ("team", "league", "season")
+    list_filter: Sequence[str]  = (
+        "season",
+        "league__highest_parent__name",
+        "team__club__voivodeship",
+        )
 
     def get_season(self, obj):
         return obj.season or obj.league_history.season
