@@ -758,7 +758,15 @@ class TeamHistory(models.Model):
         null=True,
         blank=True,
     )
-   
+    
+    league_history = models.ForeignKey(
+        "LeagueHistory",
+        on_delete=models.SET_NULL,
+        related_name="league_history",
+        null=True,
+        blank=True,
+    )
+
     visible = models.BooleanField(default=True)
 
     data = models.JSONField(null=True, blank=True)
