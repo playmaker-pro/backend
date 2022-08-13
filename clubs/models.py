@@ -429,11 +429,10 @@ class League(models.Model):
         super().save(*args, **kwargs)
 
     def get_upper_parent_names(self, spliter=", "):
+        print(self.name, self.parent)
         name = self.name
         if self.parent:
-            name = (
-                f"{self.parent.get_upper_parent_names(spliter=spliter)}{spliter}{name}"
-            )
+            name = f"{self.parent.get_upper_parent_names(spliter=spliter)}{spliter}{name}"
         return name
 
     def set_league_season(self, seasons: List[Season]):
@@ -562,7 +561,7 @@ class Team(models.Model, MappingMixin):
 
     @property
     def league_with_parents(self):
-        return self.league.get_upper_parent_names(", ")
+        return self.league.get_upper_parent_names(spliter=", ")
          
     @property
     def name_with_league_full(self):
@@ -732,7 +731,7 @@ class Team(models.Model, MappingMixin):
     )
 
     def __str__(self):
-        return self.name_with_league_full
+        return f"{self.name}" + (f" ({self.league})" if self.league else "")
 
 
 class TeamHistory(models.Model):
