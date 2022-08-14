@@ -1,0 +1,45 @@
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load index %}
+
+{% for video in queryset %}
+
+    <div class="card m-4 row">
+        <div class="card-body text-center">
+            <div class="col">
+                <a  target="_blank"
+                    rel="noopener noreferrer"
+                    href="{{ video.url }}">
+                    <img src="{{ thumbnails|index:forloop.counter0 }}" style="width: 15rem">
+                </a>
+            </div>
+            {% if video.title %}
+                <div class="col text-wrap text-break">
+                    <p class="m-0 mt-4 font-weight-bold">{% trans "Tytuł" %}:</p> 
+                    <p>{{ video.title }}</p>
+                </div>
+            {% endif %}
+            {% if video.description %}
+                <div class="col text-wrap text-break">
+                    <p class="m-0 mt-4 font-weight-bold">{% trans "Opis" %}:</p> 
+                    <p>{{ video.description }}</p>
+                </div>
+            {% endif %}             
+            {% if editable %}        
+                <p class="col">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input hidden name="id" value="{{ video.id }}">
+                        <button type="submit" 
+                                class="btn btn-danger m-1"
+                                name="action"
+                                value="delete">
+                                {% trans "Usuń" %}
+                        </button>
+                    </form>      
+                </p>
+            {% endif %} 
+        </div>
+    </div>
+{% endfor %}

@@ -512,16 +512,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         "agent_status",
         "agent_name",
         "agent_phone",
-        "agent_foreign",
-        "video_url",
-        "video_title",
-        "video_description",
-        "video_url_second",
-        "video_title_second",
-        "video_description_second",
-        "video_url_third",
-        "video_title_third",
-        "video_description_third",
+        "agent_foreign",   
     ]
 
     POSITION_CHOICES = [
@@ -622,6 +613,10 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             return None
 
     @property
+    def has_videos(self):
+        return PlayerVideo.objects.filter(player=self).count() > 0
+
+    @property
     def attached(self):
         return self.data_mapper_id is not None
 
@@ -643,6 +638,13 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
     team_object = models.ForeignKey(
         clubs_models.Team,
+        on_delete=models.SET_NULL,
+        related_name="players",
+        null=True,
+        blank=True,
+    )
+    team_history_object = models.ForeignKey(
+        clubs_models.TeamHistory,
         on_delete=models.SET_NULL,
         related_name="players",
         null=True,
@@ -834,25 +836,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     agent_foreign = models.BooleanField(
         _("Otwarty na propozycje zagraniczne"), blank=True, null=True
     )
-    video_url = models.URLField(_("Youtube url"), blank=True, null=True)
-    video_title = models.CharField(
-        _("Tytuł nagrania"), max_length=235, blank=True, null=True
-    )
-    video_description = models.TextField(_("Temat i opis"), null=True, blank=True)
-    video_url_second = models.URLField(_("Youtube url nr 2"), blank=True, null=True)
-    video_title_second = models.CharField(
-        _("Tytuł nagrania nr 2"), max_length=235, blank=True, null=True
-    )
-    video_description_second = models.TextField(
-        _("Temat i opis nr 2"), null=True, blank=True
-    )
-    video_url_third = models.URLField(_("Youtube url nr 3"), blank=True, null=True)
-    video_title_third = models.CharField(
-        _("Tytuł nagrania nr 3"), max_length=235, blank=True, null=True
-    )
-    video_description_third = models.TextField(
-        _("Temat i opis nagrania nr 3"), null=True, blank=True
-    )
     updated = models.BooleanField(default=False)
 
     def display_position_fantasy(self):
@@ -960,7 +943,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         self.playermetrics.refresh_metrics(*args, **kwargs)
 
     def save(self, *args, **kwargs):
-        """ 'Nie jest wyświetlana na profilu.
+        """'Nie jest wyświetlana na profilu.
         Pole wykorzystywane wyłącznie do gry Fantasy.
         Użytkownik nie ingeruje w nie, bo ustawiony jest trigger przy wyborze pozycji z A18.
         Bramkarz' -> 'bramkarz'; 'Obrońca%' ->  'obronca';  '%pomocnik' -> pomocnik; 'Skrzydłowy' -> 'pomocnik'; 'Napastnik' -> 'napastnik'
@@ -1316,7 +1299,13 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         blank=True,
     )
-
+    team_history_object = models.ForeignKey(
+        clubs_models.TeamHistory,
+        on_delete=models.SET_NULL,
+        related_name="players_history",
+        null=True,
+        blank=True,
+    )
     birth_date = models.DateField(_("Data urodzenia"), blank=True, null=True)
     soccer_goal = models.IntegerField(
         _("Piłkarski cel"), choices=make_choices(GOAL_CHOICES), null=True, blank=True
@@ -1644,6 +1633,13 @@ class ProfileVerificationStatus(models.Model):
         blank=True,
         related_name="team",
     )
+    team_history = models.ForeignKey(
+        "clubs.TeamHistory",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="team_history",
+    )
     club = models.ForeignKey(
         "clubs.Club",
         on_delete=models.SET_NULL,
@@ -1693,4 +1689,30 @@ class ProfileVerificationStatus(models.Model):
         self.team_not_found = defaults.get("team_not_found")
         self.club = defaults.get("club")
         self.team = defaults.get("team")
+        self.team_history = defaults.get("team_history")
         self.save()
+
+class PlayerVideo(models.Model):
+    player = models.ForeignKey(
+        PlayerProfile,
+        on_delete=models.CASCADE,
+        related_name="player_video"
+    )
+    url = models.URLField(
+        _("Youtube url"),
+    )
+    title = models.CharField(
+        _("Tytuł nagrania"),
+        max_length=235,
+        blank=True,
+        null=True
+    )
+    description = models.TextField(
+        _("Opis"),
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        verbose_name = "Player Video"
+        verbose_name_plural = "Player Videos"

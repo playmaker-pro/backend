@@ -4,6 +4,7 @@ from app.utils.admin import json_filed_data_prettified
 from . import models
 from utils import linkify
 from django.utils.safestring import mark_safe
+from typing import Sequence, Optional, Union
 
 
 def reset_history(modeladmin, request, queryset):
@@ -35,7 +36,7 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
         "data_updated",
         "is_data",
     )
-    ordering = ("-league",)
+    ordering:Optional[Sequence[str]] = ("-league",)
     readonly_fields = ("data_prettified",)
     actions = [
         reset_history,
@@ -57,43 +58,43 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
 
 @admin.register(models.Season)
 class SeasonAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    search_fields: Sequence = ("name",)
 
 
 @admin.register(models.LeagueGroup)
 class LeagueGroupAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    search_fields: Sequence = ("name",)
 
 
 @admin.register(models.Seniority)
 class SeniorityAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    search_fields: Sequence = ("name",)
 
 
 @admin.register(models.Region)
 class RegionAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    search_fields: Sequence = ("name",)
 
 
 @admin.register(models.Gender)
 class GenderAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    search_fields: Sequence = ("name",)
 
 
 @admin.register(models.JuniorLeague)
 class JuniorLeagueAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    search_fields: Sequence = ("name",)
 
 
 @admin.register(models.SectionGrouping)
 class SectionGroupingAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    search_fields: Sequence = ("name",)
 
 
 @admin.register(models.League)
 class LeagueAdmin(admin.ModelAdmin):
-    search_fields = ("name", "slug")
-    readonly_fields = ("slug", "search_tokens", "virtual", "is_parent")
+    search_fields: Sequence[str]  = ("name", "slug")
+    readonly_fields: Sequence[str]  = ("slug", "search_tokens", "virtual", "is_parent")
     actions = [resave]
     list_display = (
         "get_slicer",
@@ -152,7 +153,14 @@ class LeagueAdmin(admin.ModelAdmin):
 
 @admin.register(models.Voivodeship)
 class VoivodeshipAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    search_fields: Sequence[str]  = ("name",)
+
+
+@admin.register(models.TeamHistory)
+class TeamHistoryAdmin(admin.ModelAdmin):
+    list_display: Sequence[str] = ("season", "league")
+    search_fields: Sequence[str]  = ("team__name",)
+    autocomplete_fields: Sequence[str] = ("team", "league", "season")
 
 
 @admin.register(models.Team)
@@ -163,14 +171,20 @@ class TeamAdmin(admin.ModelAdmin):
         "visible",
         "autocreated",
         linkify("club"),
-        linkify("league"),
+        "full_league_linkify",
         linkify("gender"),
         linkify("seniority"),
         linkify("manager"),
     )
     search_fields = ("name",)
     list_filter = ("league__name", "gender__name", "seniority__name")
-    autocomplete_fields = ("manager",)
+    autocomplete_fields = ("manager", "club", "league",)
+
+    def full_league_linkify(self, obj=None):
+        if obj:
+            return linkify("league")(obj)        
+
+    full_league_linkify.short_description = "league"
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -189,10 +203,10 @@ class ClubAdmin(admin.ModelAdmin):
         linkify("voivodeship"),
         "slug",
     )
-    autocomplete_fields = ("manager",)
-    search_fields = ("name",)
-    list_filter = ("voivodeship__name",)
-    exclude = ("voivodeship_raw",)
+    autocomplete_fields: Sequence[str]  = ("manager",)
+    search_fields: Sequence[str]  = ("name",)
+    list_filter: Sequence[str]  = ("voivodeship__name",)
+    exclude: Sequence[str]  = ("voivodeship_raw",)
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)

@@ -327,7 +327,7 @@ class ViewFilterMixin:
 class ViewModalLoadingMixin:
     modal_verification_force_loading = False
 
-    def modal_activity(self, user, register_auto=None, verification_auto=None):
+    def modal_activity(self, user, register_auto=None, verification_auto=None, *args, **kwargs):
         modals = {
             "action_limit_exceeded": {
                 "name": "actionLimitExceedModal",
@@ -406,6 +406,13 @@ class ViewModalLoadingMixin:
                 "load": False,
                 "async": False,
             },
+            "add_video_modal": {
+                "name": "addVideo",
+                "template": "profiles/modals/_add_video.html",
+                "auto": False,
+                "load": False,
+                "async": False,
+            },
         }
         # Load custom settigs, if class attribute is being set to Ture
         if getattr(self, "modal_verification_force_loading"):
@@ -413,6 +420,10 @@ class ViewModalLoadingMixin:
 
         if user.is_authenticated and not user.validate_last_name():
             modals["no_updated_profile_modal"]["load"] = True
+
+        if kwargs.get("add_video"):
+            modals["add_video_modal"]["load"] = True
+            modals["add_video_modal"]["auto"] = True
 
         # Loading account specific modals (mandatory)
         if not user.is_authenticated:
