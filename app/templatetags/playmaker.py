@@ -1,5 +1,7 @@
 import logging
 import json
+from typing import Any
+
 import django
 from datetime import date, datetime
 from django.contrib.auth import get_user_model
@@ -21,6 +23,8 @@ from django.utils.translation import (
 from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from profiles.utils import extract_video_id
+
+from voivodeships.services import VoivodeshipService
 
 User = get_user_model()
 
@@ -1016,3 +1020,23 @@ def get_my_club_link(context, text=None, css_class=None):
         "link_body": link_body,
         "link_class": link_class,
     }
+
+
+@register.filter
+def display_voivodeship(obj: Any) -> str:
+
+    manager = VoivodeshipService
+    voivodeship = manager.display_voivodeship(obj)
+
+    announcements = [
+        'ClubForPlayerAnnouncement', 'PlayerForClubAnnouncement', 'ClubForCoachAnnouncement', 'CoachForClubAnnouncement'
+    ]
+
+    if voivodeship:
+
+        if type(obj).__name__ in announcements:
+
+            return f'{voivodeship}, '
+        return voivodeship
+    else:
+        return ''

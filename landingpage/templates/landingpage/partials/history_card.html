@@ -10,7 +10,7 @@
                 <div class="herb__container text-center position-relative">
                     <img class="px-1 py-2 white__background border__rounded" src="{% static club_herb %}" alt="">
                     <div class="vector__herb"></div>
-                    <img class="vector__herb__arrow" src="{% static 'assets/img/landingpage/history/arrow.png' %}" alt="">
+                        <img class="vector__herb__arrow" src="{% static 'assets/img/landingpage/history/arrow.png' %}" alt="">
                 </div>
             </div>
 
@@ -40,9 +40,11 @@
                     <div class="league__title leag__dest d-flex align-items-center">
                         <p>{{ dest_league }}</p>
                     </div>
-                    <div class="league__arrow">
-                        <img src="{% static 'assets/img/landingpage/history/frame.png' %}" alt="">
-                    </div>
+                    {% if league !=  dest_league %}
+                        <div class="league__arrow">
+                            <img src="{% static 'assets/img/landingpage/history/frame.png' %}" alt="">
+                        </div>
+                    {% endif %}
                 </div>
 
             </div>

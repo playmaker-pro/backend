@@ -32,7 +32,10 @@
                 </div>
 
                 <div class="col-6 col-md-3 text-center">
-                    <h5>{{ object.voivodeship }}, {{ object.address }}</h5>
+                    <h5>
+                        {{ object|display_voivodeship }}
+                        {{ object.address }}
+                    </h5>
                     Region
                 </div>
                 <div class="card-text col-md-12">
