@@ -26,7 +26,6 @@ from profiles.models import PlayerPosition, ClubProfile, CoachProfile
 from profiles.utils import get_datetime_from_age
 from roles import definitions
 from stats import adapters
-from users.models import User
 
 from .forms import (
     PlayerForClubAnnouncementForm,
@@ -44,6 +43,8 @@ from .models import (
 from .utils import get_datetime_from_year
 
 from marketplace.models import get_licence_choice_number
+
+from voivodeships.services import VoivodeshipService
 
 User = get_user_model()
 
@@ -137,7 +138,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     profile = user.profile.team_object
                     club = profile.club if profile else ""
                     league = profile.league if profile else ""
-                    voivodeship = profile.club.voivodeship if profile else ""
+                    voivodeship = profile.club.voivodeship_obj if profile else ""
                     seniority = profile.seniority if profile else ""
                     gender = profile.gender if profile else ""
 
@@ -145,7 +146,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                         initial={
                             "club": club,
                             "league": league,
-                            "voivodeship": voivodeship,
+                            "voivodeship_obj": voivodeship,
                             "seniority": seniority,
                             "gender": gender,
                         }
@@ -167,13 +168,13 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     else None
                 )
                 if league:
-                    voivodeship = user.profile.team_object.club.voivodeship
+                    voivodeship = user.profile.team_object.club.voivodeship_obj
                 else:
                     voivodeship = ""
                 form = CoachForClubAnnouncementForm(
                     initial={
                         "lic_type": user.profile.licence,
-                        "voivodeship": voivodeship,
+                        "voivodeship_obj": voivodeship,
                         "address": user.profile.address,
                         "practice_distance": user.profile.practice_distance,
                         "league": league,
@@ -184,12 +185,12 @@ class AddAnnouncementView(LoginRequiredMixin, View):
             elif _action_name == "club_looking_for_player":
 
                 if user.profile.club_object:
-                    voivo = user.profile.club_object.voivodeship
+                    voivo = user.profile.club_object.voivodeship_obj
 
                     form = ClubForPlayerAnnouncementForm(
                         initial={
                             "club": user.profile.club_object,
-                            "voivodeship": voivo,
+                            "voivodeship_obj": voivo,
                         }
                     )
                     teams = user.profile.club_object.teams.all()
@@ -208,7 +209,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     form = ClubForCoachAnnouncementForm(
                         initial={
                             "club": user.profile.club_object,
-                            "voivodeship": user.profile.club_object.voivodeship,
+                            "voivodeship_obj": user.profile.club_object.voivodeship_obj,
                         }
                     )
                     form.fields["club"].queryset = Club.objects.filter(
@@ -221,7 +222,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
 
             elif user.is_player:
                 voivodeship = (
-                    user.profile.team_object.club.voivodeship
+                    user.profile.team_object.club.voivodeship_obj
                     if user.profile.team_object
                     else None
                 )
@@ -233,8 +234,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 form = PlayerForClubAnnouncementForm(
                     initial={
                         "position": user.profile.position_raw,
-                        "voivodeship": voivodeship,
-                        # 'voivodeship': user.profile.team_object.club.voivodeship,
+                        "voivodeship_obj": voivodeship,
                         "address": user.profile.address,
                         "practice_distance": user.profile.practice_distance,
                         "league": league.highest_parent,
@@ -388,7 +388,7 @@ class AnnouncementsMetaView(
             )
 
         if self.filter_vivo is not None:
-            queryset = queryset.filter(voivodeship__name__in=self.filter_vivo)
+            queryset = queryset.filter(voivodeship_obj__name__in=self.filter_vivo)
 
         return queryset
 
@@ -396,10 +396,12 @@ class AnnouncementsMetaView(
         return queried_class.objects.all()
 
     def get_filters_values(self):  # @todo add cache from Redis here
+        vivos = VoivodeshipService()
+
         return {
             "seniority": list(Seniority.objects.values_list("name", flat=True)),
             "gender": list(Gender.objects.values_list("name", flat=True)),
-            "voivodeship": list(Voivodeship.objects.values_list("name", flat=True)),
+            "voivodeship": list(vivos.voivodeships_model.objects.values_list("name", flat=True)),
             "league": list(League.objects.values_list("name", flat=True)),
             "position": list(PlayerPosition.objects.values_list("name", flat=True)),
             "licence": LICENCE_CHOICES,
@@ -412,6 +414,7 @@ class AnnouncementsMetaView(
         kwargs["my"] = False
 
     def get(self, request, *args, **kwargs):
+
         lista = []
 
         total_items = request.GET.get("total_items")
@@ -444,9 +447,7 @@ class AnnouncementsMetaView(
         kwargs["page_title"] = self.page_title
         kwargs["type"] = self.table_type
         kwargs["filters"] = self.get_filters_values()
-        kwargs["filters"] = self.get_filters_values()
         kwargs["leagues"] = League.objects.is_top_parent()
-        kwargs["voivodeships"] = Voivodeship.objects.all()
 
         self.prepare_kwargs(kwargs)
 

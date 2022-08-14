@@ -7,9 +7,10 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
-from profiles.utils import conver_vivo_for_api, supress_exception, unique_slugify
 
+from profiles.utils import conver_vivo_for_api, supress_exception, unique_slugify
 from .managers import LeagueManager
+from voivodeships.models import Voivodeships
 
 
 class Season(models.Model):
@@ -78,8 +79,21 @@ class Club(models.Model, MappingMixin):
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name="club_managers", blank=True
     )
+
+    # TODO Based on task PM-363. After migration on production, field can be deleted
     voivodeship = models.ForeignKey(
-        Voivodeship, on_delete=models.SET_NULL, null=True, blank=True
+        Voivodeship, on_delete=models.SET_NULL, null=True, blank=True,
+        verbose_name=_("Województwo"),
+        help_text="Wybierz województwo. Stare pole, czeka na migracje",
+    )
+    voivodeship_obj = models.ForeignKey(
+        Voivodeships,
+        verbose_name=_("Województwo"),
+        help_text="Wybierz województwo.",
+        max_length=20,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
     )
 
     def is_editor(self, user):
@@ -103,7 +117,7 @@ class Club(models.Model, MappingMixin):
     @property
     @supress_exception
     def display_voivodeship(self):
-        return conver_vivo_for_api(self.voivodeship.name)
+        return conver_vivo_for_api(self.voivodeship_obj.name)
 
     def get_file_path(instance, filename):
         """Replcae server language code mapping"""
@@ -173,7 +187,7 @@ class Club(models.Model, MappingMixin):
         verbose_name_plural = _("Kluby")
 
     def __str__(self):
-        vivo_str = f", {self.voivodeship}" if self.voivodeship else ""
+        vivo_str = f", {self.voivodeship_obj}" if self.voivodeship_obj else ""
         return f"{self.name} {vivo_str}"
 
     def save(self, *args, **kwargs):

@@ -1,6 +1,8 @@
 from collections import Counter
 from datetime import datetime
 from random import choices
+from typing import Union
+
 from stats import adapters
 from address.models import AddressField
 from django.conf import settings
@@ -24,7 +26,7 @@ from .mixins import TeamObjectsDisplayMixin
 import logging
 from .erros import VerificationCompletionFieldsWrongSetup
 from . import managers
-
+from voivodeships.models import Voivodeships
 
 User = get_user_model()
 
@@ -497,8 +499,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         "team",
         # 'team_raw',
         "position_raw",
-        "voivodeship",
-        "voivodeship_raw",
+        "voivodeship_obj",
     ]
 
     OPTIONAL_FIELDS = [
@@ -701,16 +702,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True,
     )
-    voivodeship_raw = models.CharField(
-        # TODO:(l.remkowicz):followup needed to see if that can be safely removed from database scheme follow-up: PM-365
-        _("Wojewódźtwo (raw)"),
-        help_text=_("Wojewódźtwo w którym grasz. Nie uzywane pole"),
-        max_length=68,
-        blank=True,
-        null=True,
-        choices=settings.VOIVODESHIP_CHOICES,
-    )
-
     birth_date = models.DateField(_("Data urodzenia"), blank=True, null=True)
     height = models.PositiveIntegerField(
         _("Wzrost"),
@@ -778,9 +769,29 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         _("90min portal"), max_length=500, blank=True, null=True
     )
     transfermarket_url = models.URLField(_("TrasferMarket"), blank=True, null=True)
+
+    # TODO Based on task PM-363. After migration on production, field can be deleted
     voivodeship = models.CharField(
         _("Województwo zamieszkania"),
-        help_text="Wybierz województwo",
+        help_text="Wybierz województwo. Stare pole przygotowane do migracji.",
+        max_length=68,
+        blank=True,
+        null=True,
+        choices=settings.VOIVODESHIP_CHOICES,
+    )
+    voivodeship_obj = models.ForeignKey(
+        Voivodeships,
+        verbose_name=_("Województwo zamieszkania"),
+        help_text="Wybierz województwo.",
+        max_length=20,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
+    voivodeship_raw = models.CharField(
+        # TODO:(l.remkowicz):followup needed to see if that can be safely removed from database scheme follow-up: PM-365
+        _("Wojewódźtwo (raw)"),
+        help_text=_("Wojewódźtwo w którym grasz. Nie uzywane pole"),
         max_length=68,
         blank=True,
         null=True,
@@ -1330,14 +1341,24 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         help_text=_("Miasto z którego dojeżdżam na trening"), blank=True, null=True
     )
 
+    # TODO Based on task PM-363. After migration on production, field can be deleted
     voivodeship = models.CharField(
-        _("Województwo zamieszkania"),
+        _("Województwo zamieszkania."),
+        help_text='Wybierz województwo. Stare pole przygotowane do migracji',
         max_length=68,
         blank=True,
         null=True,
         choices=settings.VOIVODESHIP_CHOICES,
     )
-
+    voivodeship_obj = models.ForeignKey(
+        Voivodeships,
+        verbose_name=_("Województwo zamieszkania"),
+        help_text="Wybierz województwo.",
+        max_length=20,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
     club_role = models.IntegerField(
         choices=CLUB_ROLE,
         default=1,  # trener
@@ -1489,7 +1510,7 @@ class ScoutProfile(BaseProfile):
         "practice_distance",
         "club_raw",
         "league_raw",
-        "voivodeship_raw",
+        "voivodeship_obj",
     ]
 
     GOAL_CHOICES = (
@@ -1555,13 +1576,23 @@ class ScoutProfile(BaseProfile):
         blank=True,
         null=True,
     )
-
+    # TODO: (l.remkowicz): Based on task PM-363. After migration on production, field can be deleted
     voivodeship = models.CharField(
         _("Wojewódźtwo"),
-        help_text=_("Wojewódźtwo"),
+        help_text=_("Wojewódźtwo. Stare pole, czeka na migracje"),
         max_length=68,
         blank=True,
         null=True,
+    )
+
+    voivodeship_obj = models.ForeignKey(
+        Voivodeships,
+        verbose_name=_("Województwo zamieszkania"),
+        help_text="Wybierz województwo.",
+        max_length=20,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
     )
 
     voivodeship_raw = models.CharField(
@@ -1570,7 +1601,7 @@ class ScoutProfile(BaseProfile):
         max_length=68,
         blank=True,
         null=True,
-    )
+    )  # TODO:(l.remkowicz): followup needed to see if that can be safely removed from database scheme follow-up: PM-365
 
     class Meta:
         verbose_name = "Scout Profile"
