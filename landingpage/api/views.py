@@ -48,7 +48,6 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
         user = user[0]
         product_id = product[0].id
         user_team = user.profile.get_team() if user.profile.get_team() else None
-
         try:
             data = {
                 "product": product_id,
@@ -58,9 +57,10 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
                     "name": user.display_full_name,
                     "team": user_team.name if user_team else '',
                     "parent_league": user_team.display_league_top_parent if user_team else '',
-                    "city": data["city"],
-                    "leagues": data["leagues"],
-                    "distance": data["distance"],
+                    "user voivodeship": user.profile.voivodeship_obj.name if user.profile.voivodeship_obj else '',
+                    "city": data.get("city"),
+                    "leagues": data.get("leagues"),
+                    "distance": data.get("distance"),
                     "email": user.email,
                     "profile": f"{request.META['HTTP_HOST']}/users/{user.profile.slug}",
                     "phone": user.profile.phone,
@@ -80,7 +80,7 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
             logger.info(f"Mail sent: {serializer.data}")
 
         except Exception as e:
-            logger.error(f"Mail could not be sent")
+            logger.error(f"Mail could not be sent {e}")
 
         return Response({"success": new_data.id}, status=status.HTTP_201_CREATED)
 
@@ -103,7 +103,7 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
             logger.info(f"Mail sent: {data}")
 
         except Exception as e:
-            logger.error(f"Mail could not be sent")
+            logger.error(f"Mail could not be sent {e}")
 
         return Response(
             {"success": "Successfully updated"}, status=status.HTTP_201_CREATED
