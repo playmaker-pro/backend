@@ -3,6 +3,9 @@ from clubs.models import Team
 from crm.models import *
 import pandas as pd
 
+###                         ###
+###     REQUIRE PANDAS      ###
+###                         ###
    
 class ConversationImport(CrmXmlImport):
     
@@ -205,11 +208,3 @@ class ImportFromXlsx(pd.ExcelFile):
                 elif cls == LeadStatusImport: cls(df, team_df=self.teams)
                 else: cls(df)
                 
-                
-"""
-Odpalane na sztywno, pliki w crm/scripts
->> python manage.py shell < crm/scripts/xlsx_import.py 
-"""
-ImportFromXlsx("crm/scripts/CRM.xlsx")
-ImportFromXlsx("crm/scripts/CRM - kluby profesjonalne.xlsx")
-ImportFromXlsx("crm/scripts/CRM - wsparcie transferowe klubów.xlsx")
