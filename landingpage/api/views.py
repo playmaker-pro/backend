@@ -53,18 +53,22 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
                 "product": product_id,
                 "user": user.id,
                 "raw_body": {
-                    "nr": f"{user.id}{product_id}{date_now}".replace("-", ''),
+                    "nr": f"{user.id}{product_id}{date_now}".replace("-", ""),
                     "name": user.display_full_name,
-                    "team": user_team.name if user_team else '',
-                    "parent_league": user_team.display_league_top_parent if user_team else '',
-                    "user voivodeship": user.profile.voivodeship_obj.name if user.profile.voivodeship_obj else '',
+                    "team": user_team.name if user_team else "",
+                    "parent_league": user_team.display_league_top_parent
+                    if user_team
+                    else "",
+                    "user voivodeship": user.profile.voivodeship_obj.name
+                    if user.profile.voivodeship_obj
+                    else "",
                     "city": data.get("city"),
                     "leagues": data.get("leagues"),
                     "distance": data.get("distance"),
                     "email": user.email,
                     "profile": f"{request.META['HTTP_HOST']}/users/{user.profile.slug}",
                     "phone": user.profile.phone,
-                    "date": date_now
+                    "date": date_now,
                 },
             }
         except Exception as e:
