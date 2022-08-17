@@ -1,50 +1,66 @@
 [
   {
-    "name": "Dolnośląskie"
+    "name": "Dolnośląskie",
+    "code": 16
   },
   {
-    "name":  "Kujawsko-pomorskie"
+    "name":  "Kujawsko-pomorskie",
+    "code": 3
   },
   {
-    "name":  "Lubelskie"
+    "name":  "Lubelskie",
+    "code": 7
   },
   {
-    "name":  "Lubuskie"
+    "name":  "Lubuskie",
+    "code": 6
   },
   {
-    "name":  "Łódzkie"
+    "name":  "Łódzkie",
+    "code": 15
   },
   {
-    "name":  "Małopolskie"
+    "name":  "Małopolskie",
+    "code": 13
   },
   {
-    "name":  "Mazowieckie"
+    "name":  "Mazowieckie",
+    "code": 1
   },
   {
-    "name":  "Opolskie"
+    "name":  "Opolskie",
+    "code": 12
   },
   {
-    "name":  "Podkarpackie"
+    "name":  "Podkarpackie",
+    "code": 14
   },
   {
-    "name":  "Podlaskie"
+    "name":  "Podlaskie",
+    "code": 11
   },
   {
-    "name":  "Pomorskie"
+    "name":  "Pomorskie",
+    "code": 10
   },
   {
-    "name":  "Śląskie"
+    "name":  "Śląskie",
+    "code": 18
   },
   {
-    "name":  "Świętokrzyskie"
+    "name":  "Świętokrzyskie",
+    "code": 17
   },
   {
-    "name":  "Warmińsko-Mazurskie"
+    "name":  "Warmińsko-Mazurskie",
+    "code": 8
   },
   {
-    "name":  "Wielkopolskie"
+    "name":  "Wielkopolskie",
+    "code": 2
   },
   {
-    "name":  "Zachodniopomorskie"
+    "name":  "Zachodniopomorskie",
+    "code": 9
   }
 ]
