@@ -39,15 +39,15 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
         user = User.objects.filter(pk=data["user"])
 
         if not user or not product.exists() or (len(user) >= 2 or len(product) >= 2):
-            logger.error("User or product couldn't be find")
+            logger.error("User or product couldn't be found")
             return Response(
-                {"error": "User or product couldn't be find"},
+                {"error": "User or product couldn't be found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
         date_now = datetime.datetime.now().strftime("%Y-%m-%d")
-        user = user[0]
-        product_id = product[0].id
-        user_team = user.profile.get_team() if user.profile.get_team() else None
+        user = user.first()
+        product_id = product.first().id
+        user_team = user.profile.get_team()
         try:
             data = {
                 "product": product_id,
