@@ -58,8 +58,9 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
 
 @admin.register(models.Season)
 class SeasonAdmin(admin.ModelAdmin):
+    list_display: Sequence = ("name", "is_current", "is_in_verify_form",)
     search_fields: Sequence = ("name",)
-
+    exclude: Optional[Sequence[str]] = ("is_current",)
 
 @admin.register(models.LeagueGroup)
 class LeagueGroupAdmin(admin.ModelAdmin):

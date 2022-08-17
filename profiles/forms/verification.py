@@ -60,7 +60,7 @@ def get_all_clubs():
 
 
 def get_season_with_team_history():
-    ths = [th.season.name for th in TeamHistory.objects.all().distinct("season")]
+    ths = [th.season.name for th in TeamHistory.objects.all().distinct("season") if th.season is not None]
     return Season.objects.filter(name__in=ths).order_by("name")
 
 
