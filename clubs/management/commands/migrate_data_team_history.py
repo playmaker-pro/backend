@@ -1,8 +1,7 @@
 from django.core.management import BaseCommand
-from clubs.models import Team, TeamHistory, Season
+from clubs.models import Team, TeamHistory, Season, LeagueHistory
 from profiles.models import PlayerProfile, CoachProfile
 from django.db.models import Q
-
 
 class Command(BaseCommand):
     """
@@ -35,10 +34,15 @@ class Command(BaseCommand):
         teams = Team.objects.filter(data_mapper_id__isnull=False)
         season, _ = Season.objects.get_or_create(name="2021/2022")
         for team in teams:
+            league = team.league
+            try:
+                league_history = LeagueHistory.objects.get(league=league)
+            except: league_history = None
             TeamHistory.objects.get_or_create(
                 team=team,
                 autocreated=True,
                 season=season,
-                league=team.league,
+                league=league,
                 data_mapper_id=team.data_mapper_id,
+                league_history=league_history,
             )
