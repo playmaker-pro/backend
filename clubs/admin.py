@@ -14,6 +14,11 @@ def reset_history(modeladmin, request, queryset):
 
 reset_history.short_description = "Reset history league data."
 
+@admin.action(description="Aktualizuj visible team")
+def update_team_visibility(modeladmin, request, queryset):
+    for object in queryset:
+        object.visible = object.should_be_visible
+        object.save()
 
 def resave(modeladmin, request, queryset):
     for object in queryset:
@@ -171,20 +176,15 @@ class TeamAdmin(admin.ModelAdmin):
         "visible",
         "autocreated",
         linkify("club"),
-        "full_league_linkify",
+        linkify("league"),
         linkify("gender"),
         linkify("seniority"),
         linkify("manager"),
     )
     search_fields = ("name",)
     list_filter = ("league__name", "gender__name", "seniority__name")
+    actions = [update_team_visibility,]
     autocomplete_fields = ("manager", "club", "league",)
-
-    def full_league_linkify(self, obj=None):
-        if obj:
-            return linkify("league")(obj)        
-
-    full_league_linkify.short_description = "league"
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
