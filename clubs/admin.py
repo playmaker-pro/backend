@@ -17,7 +17,7 @@ reset_history.short_description = "Reset history league data."
 @admin.action(description="Aktualizuj visible team")
 def update_team_visibility(modeladmin, request, queryset):
     for object in queryset:
-        object.visible = object.should_be_visible
+        object.visible = object.should_be_visible or False
         object.save()
 
 def resave(modeladmin, request, queryset):
