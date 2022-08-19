@@ -159,10 +159,14 @@ class VoivodeshipAdmin(admin.ModelAdmin):
 
 @admin.register(models.TeamHistory)
 class TeamHistoryAdmin(admin.ModelAdmin):
-    list_display: Sequence[str] = ("season", "league")
+    list_display: Sequence[str] = ("get_season", "team", "league")
     search_fields: Sequence[str]  = ("team__name",)
     autocomplete_fields: Sequence[str] = ("team", "league", "season")
 
+    def get_season(self, obj):
+        return obj.season or obj.league_history.season
+    
+    get_season.short_description = "Season"
 
 @admin.register(models.Team)
 class TeamAdmin(admin.ModelAdmin):

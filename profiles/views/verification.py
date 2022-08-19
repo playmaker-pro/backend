@@ -13,7 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View
 from clubs.api.serizalizer import ClubSelect2Serializer, TeamHistorySelect2Serializer
 from clubs.models import Season
-
+from utils import get_current_season
 
 User = get_user_model()
 
@@ -25,13 +25,10 @@ class AccountVerification(LoginRequiredMixin, View):
 
     http_method_names = ["post", "get"]
 
-    def get_default_verification_season(self):
-        return settings.VERIFICATION_FORM.get("DEFAULT_SEASON_NAME")
-
     def get(self, request, *args, **kwargs):
         user = request.user
         preselected = None
-        season_name = self.get_default_verification_season()
+        season_name = get_current_season()
         season = Season.objects.get(name=season_name)
         profile = user.profile
 
@@ -51,7 +48,6 @@ class AccountVerification(LoginRequiredMixin, View):
                     request.user.profile.team_history_object
                 ).data
                 season_name = request.user.profile.team_history_object.season.name
-
         # Selecting right form
         if request.user.is_coach:
             form = forms.CoachVerificationForm(
@@ -79,7 +75,7 @@ class AccountVerification(LoginRequiredMixin, View):
         user = self.request.user
         profile = user.profile
         preselected = None
-        season_name = self.get_default_verification_season()
+        season_name = get_current_season()
 
         if request.user.is_club:
             if request.user.profile.club_object:

@@ -35,6 +35,9 @@ class Season(models.Model):
         else:
             season = f"{date.year - 1}/{date.year}"
         return season
+    
+    class Meta:
+        ordering = ('-is_current',)
   
     def current_season_update(self, *args, **kwargs):
         current_season = self.define_current_season()
@@ -244,7 +247,7 @@ class LeagueHistory(models.Model):
     data_updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.season} {self.league} {self.index}"
+        return f"{self.season} ({self.league}) {self.index or ''}"
 
     def check_and_set_if_data_exists(self):
         from data.models import League as Dleague
@@ -610,7 +613,7 @@ class Team(models.Model, MappingMixin):
          
     @property
     def name_with_league_full(self):
-        return f"{self.name} ({self.league_with_parents})"
+        return f"{self.name}" + (f" ({self.league_with_parents})" if self.league else "")
 
     @property
     def display_team(self):
@@ -776,8 +779,7 @@ class Team(models.Model, MappingMixin):
     )
 
     def __str__(self):
-        return f"{self.name}" + (f" ({self.league})" if self.league else "")
-
+        return self.name_with_league_full
 
 class TeamHistory(models.Model):
     """Definition of a  team history object
@@ -819,7 +821,7 @@ class TeamHistory(models.Model):
     autocreated = models.BooleanField(default=False, help_text="Autocreated")
 
     def __str__(self):
-        return f"{self.team.name} "
+        return self.team.name_with_league_full
 
     class Meta:
         unique_together = ("team", "season")
