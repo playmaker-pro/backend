@@ -66,7 +66,7 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         ("club", "Klub", None, {}),
         ("league", "Poziom rozgrywkowy", None, {}),
         ("positions", "Pozycje", "multiple", {"data-actions-box": "true"}),
-        ("voivodeship", "Województwo", None, {}),
+        ("voivodeship_obj", "Województwo", None, {}),
         ("year_from", "Rocznik od", None, {}),
         ("year_to", "Rocznik do", None, {}),
         ("address", "np. Wroclaw, Polska", None, {}),
@@ -134,9 +134,9 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         self.fields["country"].label = "Kraj"
         self.fields["country"].help_text = False
 
-        self.fields["voivodeship"].widget = forms.HiddenInput()
-        self.fields["voivodeship"].label = "Województwo"
-        self.fields["voivodeship"].help_text = False
+        self.fields["voivodeship_obj"].widget = forms.HiddenInput()
+        self.fields["voivodeship_obj"].label = "Województwo"
+        self.fields["voivodeship_obj"].help_text = False
 
         self.fields["seniority"].widget = forms.HiddenInput()
         self.fields["seniority"].label = "Rozgrywki młodzieżowe / Rozgrywki seniorskie"
@@ -201,7 +201,7 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
             "country",
             "club",
             "league",
-            "voivodeship",
+            "voivodeship_obj",
             "seniority",
             "gender",
             "www",
@@ -217,7 +217,7 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
 class PlayerForClubAnnouncementForm(forms.ModelForm):
     building_fields = [
         ("position", "Pozycja", None, {}),
-        ("voivodeship", "Województwo", None, {}),
+        ("voivodeship_obj", "Województwo", None, {}),
         ("league", "Poziom rozgrywkowy", None, {}),
         ("target_league", "Cel poszukiwań", None, {}),
         ("address", "np. Wrocław", None, {}),
@@ -245,9 +245,9 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
         self.fields["position"].label = "Pozycja"
         self.fields["position"].help_text = False
 
-        self.fields["voivodeship"].required = True
-        self.fields["voivodeship"].label = "Województwo"
-        self.fields["voivodeship"].help_text = False
+        self.fields["voivodeship_obj"].required = True
+        self.fields["voivodeship_obj"].label = "Województwo"
+        self.fields["voivodeship_obj"].help_text = False
 
         self.fields["address"].required = True
         self.fields["address"].label = "Miejscowość z której dojeżdżasz na trening"
@@ -297,7 +297,7 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
         model = models.PlayerForClubAnnouncement
         fields = [
             "position",
-            "voivodeship",
+            "voivodeship_obj",
             "address",
             "practice_distance",
             "target_league",
@@ -311,7 +311,7 @@ class CoachForClubAnnouncementForm(forms.ModelForm):
 
     building_fields = [
         ("lic_type", "Typ licencji", None, {}),
-        ("voivodeship", "Województwo", None, {}),
+        ("voivodeship_obj", "Województwo", None, {}),
         ("address", "np. Wrocław", None, {}),
         ("practice_distance", "Maksymalna odległość dojazdu", None, {}),
         ("league", "Obecna liga", None, {}),
@@ -345,9 +345,9 @@ class CoachForClubAnnouncementForm(forms.ModelForm):
         self.fields["lic_type"].label = "Typ licencji"
         self.fields["lic_type"].help_text = False
 
-        self.fields["voivodeship"].required = True
-        self.fields["voivodeship"].label = "Województwo"
-        self.fields["voivodeship"].help_text = False
+        self.fields["voivodeship_obj"].required = True
+        self.fields["voivodeship_obj"].label = "Województwo"
+        self.fields["voivodeship_obj"].help_text = False
 
         self.fields["address"].required = True
         self.fields["address"].label = "Miejscowość z której dojeżdżasz na trening"
@@ -394,7 +394,7 @@ class CoachForClubAnnouncementForm(forms.ModelForm):
         model = models.CoachForClubAnnouncement
         fields = [
             "lic_type",
-            "voivodeship",
+            "voivodeship_obj",
             "address",
             "practice_distance",
             "target_league",
@@ -408,7 +408,7 @@ class ClubForCoachAnnouncementForm(forms.ModelForm):
     building_fields = [
         ("club", "Klub", None, {}),
         ("league", "Poziom rozgrywkowy", None, {}),
-        ("voivodeship", "Województwo", None, {}),
+        ("voivodeship_obj", "Województwo", None, {}),
         ("lic_type", "Typ licencji", None, {}),
         ("seniority", "Rozgrywki młodzieżowe / Rozgrywki seniorskie", None, {}),
         ("gender", "Mężczyźni / Kobiety", None, {}),
@@ -441,9 +441,9 @@ class ClubForCoachAnnouncementForm(forms.ModelForm):
         ].label = "Poziom rozgrywkowy"  # '<i class="icofont-ui-user-group"></i>'
         self.fields["league"].help_text = False
 
-        self.fields["voivodeship"].required = True
-        self.fields["voivodeship"].label = "Województwo"
-        self.fields["voivodeship"].help_text = False
+        self.fields["voivodeship_obj"].required = True
+        self.fields["voivodeship_obj"].label = "Województwo"
+        self.fields["voivodeship_obj"].help_text = False
 
         # self.fields['lic_type'] = forms.ChoiceField(widget=forms.Select(), choices=CoachProfile.LICENCE_CHOICES)
         self.fields["lic_type"].required = True
@@ -485,7 +485,7 @@ class ClubForCoachAnnouncementForm(forms.ModelForm):
             "club",
             "league",
             "lic_type",
-            "voivodeship",
+            "voivodeship_obj",
             "seniority",
             "gender",
             "body",

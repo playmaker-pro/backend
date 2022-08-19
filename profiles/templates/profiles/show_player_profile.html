@@ -28,16 +28,7 @@
       <div class="col-sm-6 {% if not user.profile.about %}d-none {% else %} d-block{% endif %}">
         {% include 'profiles/cards/player/card_about.html' %}
       </div>
-      <div class="col-sm-6">{% include 'profiles/cards/player/card_fantasy.html' %}</div>
-      <div class="col-sm-6">{% include 'profiles/cards/player/card_video_1.html' %}</div>
-      {% if show_user.profile.video_url %}
-        {% if show_user.profile.video_url_second %}
-          <div class="col-sm-6">{% include 'profiles/cards/player/card_video_2.html' %}</div>
-        {% endif %}
-        {% if show_user.profile.video_url_third %}
-          <div class="col-sm-6">{% include 'profiles/cards/player/card_video_3.html' %}</div>
-        {% endif %}
-      {% endif %}
+      <div class="col-sm-6">{% include 'profiles/cards/player/card_fantasy.html' %}</div>      
     </div>
   </div>
 </section>

@@ -1,5 +1,5 @@
 from functools import cached_property, lru_cache
-from typing import List
+from typing import List, Union
 
 from address.models import AddressField
 from django.conf import settings
@@ -7,9 +7,10 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
-from profiles.utils import conver_vivo_for_api, supress_exception, unique_slugify
 
+from profiles.utils import conver_vivo_for_api, supress_exception, unique_slugify
 from .managers import LeagueManager
+from voivodeships.models import Voivodeships
 
 
 class Season(models.Model):
@@ -78,8 +79,21 @@ class Club(models.Model, MappingMixin):
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name="club_managers", blank=True
     )
+
+    # TODO Based on task PM-363. After migration on production, field can be deleted
     voivodeship = models.ForeignKey(
-        Voivodeship, on_delete=models.SET_NULL, null=True, blank=True
+        Voivodeship, on_delete=models.SET_NULL, null=True, blank=True,
+        verbose_name=_("Województwo"),
+        help_text="Wybierz województwo. Stare pole, czeka na migracje",
+    )
+    voivodeship_obj = models.ForeignKey(
+        Voivodeships,
+        verbose_name=_("Województwo"),
+        help_text="Wybierz województwo.",
+        max_length=20,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
     )
 
     def is_editor(self, user):
@@ -103,7 +117,7 @@ class Club(models.Model, MappingMixin):
     @property
     @supress_exception
     def display_voivodeship(self):
-        return conver_vivo_for_api(self.voivodeship.name)
+        return conver_vivo_for_api(self.voivodeship_obj.name)
 
     def get_file_path(instance, filename):
         """Replcae server language code mapping"""
@@ -173,7 +187,7 @@ class Club(models.Model, MappingMixin):
         verbose_name_plural = _("Kluby")
 
     def __str__(self):
-        vivo_str = f", {self.voivodeship}" if self.voivodeship else ""
+        vivo_str = f", {self.voivodeship_obj}" if self.voivodeship_obj else ""
         return f"{self.name} {vivo_str}"
 
     def save(self, *args, **kwargs):
@@ -363,7 +377,7 @@ class League(models.Model):
 
     @property
     def display_name_junior(self) -> str:
-        if self.name_junior:
+        if self.name_junior and not self.name_junior.name.isspace():
             return self.name_junior.name
 
     @cached_property
@@ -431,9 +445,7 @@ class League(models.Model):
     def get_upper_parent_names(self, spliter=", "):
         name = self.name
         if self.parent:
-            name = (
-                f"{self.parent.get_upper_parent_names(spliter=spliter)}{spliter}{name}"
-            )
+            name = f"{self.parent.get_upper_parent_names(spliter=spliter)}{spliter}{name}"
         return name
 
     def set_league_season(self, seasons: List[Season]):
@@ -451,7 +463,7 @@ class League(models.Model):
         return " ".join(filter(None, fields))
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.get_upper_parent_names()}"
 
     class Meta:
         unique_together = ("name", "country", "parent")
@@ -507,6 +519,7 @@ class Team(models.Model, MappingMixin):
     autocreated = models.BooleanField(default=False, help_text="Autocreated from s38")
     gender = models.ForeignKey(Gender, on_delete=models.SET_NULL, null=True, blank=True)
 
+    # That would be deprecated since TeamHistory introduction
     league = models.ForeignKey(League, on_delete=models.SET_NULL, null=True, blank=True)
 
     seniority = models.ForeignKey(
@@ -548,6 +561,10 @@ class Team(models.Model, MappingMixin):
     )
 
     @property
+    def should_be_visible(self):
+        return (self.manager is not None or self.club.manager is not None) and self.seniority.is_senior
+
+    @property
     def get_club_pic(self):
         if self.club:
             return self.club.picture.url
@@ -558,6 +575,14 @@ class Team(models.Model, MappingMixin):
             return True
         else:
             return False
+
+    @property
+    def league_with_parents(self):
+        return self.league.get_upper_parent_names(spliter=", ")
+         
+    @property
+    def name_with_league_full(self):
+        return f"{self.name} ({self.league_with_parents})"
 
     @property
     def display_team(self):
@@ -605,17 +630,19 @@ class Team(models.Model, MappingMixin):
 
     @property
     @supress_exception
-    def display_league_region_and_group_name(self) -> str:
+    def display_league_region_and_group_name(self) -> Union[str, None]:
 
         region = self.league.region if self.league and self.league.region else ""
         group_name = self.league.display_league_group_name
 
-        if not group_name:
+        if region and not group_name:
             return region
-        elif not group_name and not region:
-            return ""
-
-        return f"{group_name}, {region}"
+        elif not region and group_name:
+            return group_name
+        elif region and group_name:
+            return f"{group_name}, {region}"
+        else:
+            return None
 
     @property
     @supress_exception
@@ -654,7 +681,7 @@ class Team(models.Model, MappingMixin):
         region_name = (
             self.league.region.name if self.league and self.league.region else ""
         )
-        league_name = self.display_league_top_parent
+        league_name = self.full_name
         if not league_name:
             suffix = ""
         else:
@@ -721,4 +748,42 @@ class Team(models.Model, MappingMixin):
     )
 
     def __str__(self):
-        return self.get_pretty_name()
+        return f"{self.name}" + (f" ({self.league})" if self.league else "")
+
+
+class TeamHistory(models.Model):
+    """Definition of a  team history object
+
+    Keeps track of a team history in a past
+    """
+
+    team = models.ForeignKey(
+        "Team", on_delete=models.CASCADE, related_name="historical"
+    )
+
+    data_mapper_id = models.PositiveIntegerField(
+        help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+    )
+
+    season = models.ForeignKey(
+        "Season", on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+    league = models.ForeignKey(
+        "League",
+        on_delete=models.CASCADE,
+        related_name="team_historical",
+        null=True,
+        blank=True,
+    )
+   
+    visible = models.BooleanField(default=True)
+
+    data = models.JSONField(null=True, blank=True)
+    autocreated = models.BooleanField(default=False, help_text="Autocreated")
+
+    def __str__(self):
+        return f"{self.team.name} ({self.season.name})"
+
+    class Meta:
+        unique_together = ("team", "season")
