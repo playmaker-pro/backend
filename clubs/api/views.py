@@ -79,10 +79,6 @@ class ClubSearchApi(APIView):
         else:
             queryset = Club.objects.all()
 
-        q_season = request.query_params.get("season")
-        if q_season:
-            queryset = Club.objects.filter(teams__historical__season__name__in=[q_season]).order_by("name")
-
         q_name = request.query_params.get("q")
         if q_name:
             queryset = queryset.filter(name__icontains=q_name)
