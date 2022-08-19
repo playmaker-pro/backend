@@ -163,7 +163,7 @@ class TeamHistoryAdmin(admin.ModelAdmin):
         linkify("team"),
         "data_mapper_id",
         linkify("league_history"),
-        "season",
+        "get_season",
         linkify("league"),
         "visible",
         "autocreated",
@@ -172,7 +172,12 @@ class TeamHistoryAdmin(admin.ModelAdmin):
     search_fields: Sequence[str]  = ("team__name",)
     autocomplete_fields: Sequence[str] = ("team", "league", "season")
 
+    def get_season(self, obj):
+        return obj.season or obj.league_history.season
+    
+    get_season.short_description = "Season"
 
+    
 @admin.register(models.Team)
 class TeamAdmin(admin.ModelAdmin):
     list_display = (
