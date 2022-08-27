@@ -2649,3 +2649,10 @@ section {
 .footer-logos{
   max-width: 100% !important;
 }
+
+.horizontal-pipe-red {
+  border-top: 3px solid #e03a3c;
+  width: 94%;
+  margin: 1rem auto;
+  display: block;
+}
