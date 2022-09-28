@@ -2,6 +2,7 @@
 
 {% load i18n %}
 {% load static %}
+{% load playmaker %}
 
 {% block extra_css %}
     {% comment %} <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.css" /> {% endcomment %}
@@ -22,22 +23,23 @@
 {% endblock content_header %}
 
 {% block header %}
+    {% is_scrapper_enabled as scrapper %}
     {% if user.is_authenticated %}
         {% url 'profiles:show' slug=user.profile.slug as porfile_url %}
         {% if user.is_coach %}
-            {% with menuitems_template="platform/navigation/_nav_coach.html" menus_logo_url=porfile_url menus_heading_title=page_title %}
+            {% with menuitems_template="platform/navigation/_nav_coach.html" menus_logo_url=porfile_url menus_heading_title=page_title is_scrapper_enabled=scrapper %}
                 {{ block.super }}
             {% endwith %}
         {% elif user.is_player %}
-            {% with menuitems_template="platform/navigation/_nav_player.html" menus_logo_url=porfile_url menus_heading_title=page_title%}
+            {% with menuitems_template="platform/navigation/_nav_player.html" menus_logo_url=porfile_url menus_heading_title=page_title is_scrapper_enabled=scrapper %}
                 {{ block.super }}
             {% endwith %}
         {% elif user.is_club %}
-            {% with menuitems_template="platform/navigation/_nav_club.html" menus_logo_url=porfile_url menus_heading_title=page_title%}
+            {% with menuitems_template="platform/navigation/_nav_club.html" menus_logo_url=porfile_url menus_heading_title=page_title is_scrapper_enabled=scrapper %}
                 {{ block.super }}
             {% endwith %}
         {% else %}
-            {% with menuitems_template="platform/navigation/_nav_other.html" menus_logo_url=porfile_url menus_heading_title=page_title%}
+            {% with menuitems_template="platform/navigation/_nav_other.html" menus_logo_url=porfile_url menus_heading_title=page_title is_scrapper_enabled=scrapper %}
                 {{ block.super }}
             {% endwith %}
         {% endif %}
