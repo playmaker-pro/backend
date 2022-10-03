@@ -416,7 +416,7 @@ class League(models.Model):
         return self.zpn
 
     def get_permalink(self):
-        return reverse("plays:summary", kwargs={"slug": self.slug})
+        return reverse("plays:summary", kwargs={"slug": self.slug}) if settings.SCRAPPER else "#"
 
     def get_slug_value(self):
         return self.get_upper_parent_names(spliter="--")
@@ -560,6 +560,10 @@ class Team(models.Model, MappingMixin):
         help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
     )
 
+    @property
+    def should_be_visible(self):
+        return (self.manager or self.club.manager) and (self.seniority and self.seniority.is_senior)
+    
     @property
     def get_club_pic(self):
         if self.club:
