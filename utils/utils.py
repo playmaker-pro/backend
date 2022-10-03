@@ -22,6 +22,9 @@ def get_current_season(date=None) -> str:
     if date is None:
         date = timezone.now()
 
+    if not settings.SCRAPPER:
+        return "2021/2022"
+
     if date.month >= season_middle:
         season = f"{date.year}/{date.year + 1}"
     else:

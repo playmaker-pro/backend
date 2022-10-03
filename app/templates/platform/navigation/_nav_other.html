@@ -4,7 +4,9 @@
 <li class="nav-item"><a class="nav-link" href="{% url 'marketplace:announcements'%}">{% trans 'Ogłoszenia' %}</a></li>
 <li class="nav-item"><a class="nav-link" href="https://www.scoutmaker.pro/">{% trans 'Skauting' %}</a></li>
 <li class="nav-item"><a class="nav-link" href="/transfer/">Transfer</a></li>
-<li class="nav-item"><a class="nav-link" href="{% url 'plays:list'%}">{% trans 'Rozgrywki' %}</a></li>
-<li class="nav-item"><a class="nav-link" href="/fantasy?season={{current_season}}&is_senior=true">{% trans 'Fantasy' %}</a></li>
+{% if is_scrapper_enabled %}
+    <li class="nav-item"><a class="nav-link" href="{% url 'plays:list'%}">{% trans 'Rozgrywki' %}</a></li>
+    <li class="nav-item"><a class="nav-link" href="/fantasy?season={{current_season}}&is_senior=true">{% trans 'Fantasy' %}</a></li>
+{% endif %}
 <li class="nav-item"><a class="nav-link" href="{% url 'products:products'%}?tag=dlaKibica">{% trans 'Produkty' %}</a></li>
 {% include 'platform/navigation/_nav_icons.html' %}
