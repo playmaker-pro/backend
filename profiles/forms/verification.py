@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 import collections.abc
 from dataclasses import dataclass
 
+import django.db.utils
+
 from clubs.models import Club, Season, TeamHistory
 from clubs.models import TeamHistory as Team
 from crispy_forms.bootstrap import (
@@ -60,8 +62,11 @@ def get_all_clubs():
 
 
 def get_season_with_team_history():
-    ths = [th.season.name for th in TeamHistory.objects.all().distinct("season")]
-    return Season.objects.filter(name__in=ths).order_by("name")
+    try:
+        ths = [th.season.name for th in TeamHistory.objects.all().distinct("season")]
+        return Season.objects.filter(name__in=ths).order_by("name")
+    except django.db.utils.ProgrammingError:
+        return
 
 
 @dataclass
