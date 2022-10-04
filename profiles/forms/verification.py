@@ -60,8 +60,8 @@ def get_all_clubs():
 
 
 def get_season_with_team_history():
-    # ths = [th.season.name for th in TeamHistory.objects.all().distinct("season")]
-    return Season.objects.filter(name__in="ths").order_by("name")
+    ths = [th.season.name for th in TeamHistory.objects.all().distinct("season")]
+    return Season.objects.filter(name__in=ths).order_by("name")
 
 
 @dataclass
