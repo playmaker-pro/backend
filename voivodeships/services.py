@@ -1,10 +1,26 @@
 import json
-from typing import Union
+import logging
+from typing import Union, TYPE_CHECKING, Tuple
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import QuerySet
-from voivodeships.models import Voivodeships
+from voivodeships.models import Voivodeships  # noqa
 
-from clubs.models import Team
+from clubs.models import Team  # noqa
+from django.apps import apps
+
+from profiles.models import PlayerProfile, CoachProfile, ScoutProfile  # noqa
+from marketplace.models import (  # noqa
+    ClubForPlayerAnnouncement, PlayerForClubAnnouncement, ClubForCoachAnnouncement, CoachForClubAnnouncement  # noqa
+)
+from clubs.models import Club  # noqa
+
+ModelsToMap = Union[
+    PlayerProfile, CoachProfile, ScoutProfile, ClubForPlayerAnnouncement, PlayerForClubAnnouncement,
+    CoachForClubAnnouncement, ClubForCoachAnnouncement, Club
+]
+
+logger = logging.getLogger(__name__)
 
 
 class VoivodeshipService:
@@ -107,3 +123,46 @@ class VoivodeshipService:
 
                 except Exception as e:
                     print(f'{voivodeship_name}', e)
+
+    def map_old_field_to_new(self) -> None:
+        model_name: Tuple[Tuple[str, str], ...] = (
+            ('PlayerProfile', 'profiles'), ('CoachProfile', 'profiles'), ('ScoutProfile', 'profiles'),
+            ('ClubForPlayerAnnouncement', 'marketplace'), ('PlayerForClubAnnouncement', 'marketplace'),
+            ('CoachForClubAnnouncement', 'marketplace'), ('ClubForCoachAnnouncement', 'marketplace'),
+            ('Club', 'clubs')
+        )
+
+        for name in model_name:
+            model: ModelsToMap = apps.get_model(name[1], name[0])
+
+            for profile in model.objects.all():
+
+                try:
+                    if name[1] == 'profiles':
+                        voivodeship: QuerySet = self.get_voivodeship_by_name(profile.voivodeship)
+                    elif name[1] == 'marketplace' and profile.voivodeship:
+                        voivodeship: QuerySet = self.get_voivodeship_by_name(profile.voivodeship.name)
+                    elif name[1] == 'clubs' and profile.voivodeship:
+                        voivodeship: QuerySet = self.get_voivodeship_by_name(profile.voivodeship.name)
+                    else:
+                        break
+
+                    if voivodeship.exists():
+
+                        voivodeship_model: Voivodeships = apps.get_model('voivodeships', 'Voivodeships')
+                        voivodeship_obj: Voivodeships = voivodeship_model.objects.get(id=voivodeship.first().id)
+
+                        profile.voivodeship_obj = voivodeship_obj
+                        profile.save()
+                        logger.info(
+                            f'[LOGER VOIVODESHIPS] '
+                            f'Model {name[0]} with id {profile.id if name[1] != "profiles" else profile.user_id} '
+                            f'updated'
+                        )
+                        print(
+                            f'Model {name[0]} with id {profile.id if name[1] != "profiles" else profile.user_id} '
+                            f'updated'
+                        )
+                except (ObjectDoesNotExist, AttributeError):
+
+                    print(f'Something went wrong with {profile}')
