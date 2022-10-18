@@ -402,7 +402,7 @@ class League(models.Model):
         return self.zpn
 
     def get_permalink(self):
-        return reverse("plays:summary", kwargs={"slug": self.slug})
+        return reverse("plays:summary", kwargs={"slug": self.slug}) if settings.SCRAPPER else "#"
 
     def get_slug_value(self):
         return self.get_upper_parent_names(spliter="--")
