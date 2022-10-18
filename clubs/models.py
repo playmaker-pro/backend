@@ -562,7 +562,8 @@ class Team(models.Model, MappingMixin):
 
     @property
     def should_be_visible(self):
-        return (self.manager or self.club.manager) and (self.seniority and self.seniority.is_senior)
+        return (self.manager or self.club.manager) \
+               and ((self.seniority and self.seniority.is_senior) or not self.seniority)
     
     @property
     def get_club_pic(self):
