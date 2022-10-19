@@ -635,3 +635,7 @@ VOIVODESHIP_CHOICES = (
     ("Wielkopolskie", "Wielkopolskie"),
     ("Zachodniopomorskie", "Zachodniopomorskie"),
 )
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+SCRAPPER = False

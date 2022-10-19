@@ -96,6 +96,9 @@ class PageSeoTags:
         else:
             return tag_content
 
+@register.simple_tag
+def logger500(url: str) -> None:
+    logger.debug(f"500HANDLER on url: {url}")
 
 @register.inclusion_tag(TEMPLATE_SEO_TAGS, takes_context=True)
 def seo_tags(context):
@@ -212,6 +215,11 @@ def days_until(exp_date, arg=None):
 def convert_to_embeded(url):
     """concatenate arg1 & arg2"""
     return f"https://www.youtube.com/embed/{extract_video_id(url)}"
+
+
+@register.simple_tag
+def is_scrapper_enabled() -> bool:
+    return settings.SCRAPPER
 
 
 @register.filter
