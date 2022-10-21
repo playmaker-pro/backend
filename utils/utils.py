@@ -9,9 +9,11 @@ def is_allowed_interact_with_s38():
     return settings.CONFIGURATION == "production" and not settings.DEBUG
 
 def get_current_season():
+    if not settings.SCRAPPER:
+        return "2021/2022"
     from clubs.models import Season
     try:
-        return Season.objects.get(is_current=True).name #Season.define_current_season() in case ProgrammingError
+        return Season.objects.get(is_current=True).name
     except ObjectDoesNotExist:
         return Season.define_current_season()
 

@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 import collections.abc
 from dataclasses import dataclass
 
+import django.db.utils
+
 from clubs.models import Club, Season, TeamHistory
 from clubs.models import TeamHistory as Team
 from crispy_forms.bootstrap import (
@@ -60,9 +62,13 @@ def get_all_clubs():
 
 
 def get_season_with_team_history():
-    ths = [th.season.name for th in TeamHistory.objects.all() if th.season] \
-        + [th.league_history.season.name for th in TeamHistory.objects.all() if th.league_history and th.league_history.season]
-    return Season.objects.filter(name__in=set(ths), is_in_verify_form=True).order_by("name")
+    try:
+        ths = [th.season.name for th in TeamHistory.objects.all() if th.season] \
+            + [th.league_history.season.name for th in TeamHistory.objects.all() if th.league_history and th.league_history.season]
+        return Season.objects.filter(name__in=set(ths), is_in_verify_form=True).order_by("name")
+    except django.db.utils.ProgrammingError:
+        return
+
 
 @dataclass
 class FieldConfig:
@@ -76,6 +82,7 @@ class VerificationForm(forms.ModelForm):
     """
     settings describes how filed will be build.
     """
+
     CHOICES_HAS_TEAM = (
         ("tak mam klub", "tak mam klub"),
         ("Nie mam klubu", "Nie mam klubu"),
@@ -103,10 +110,7 @@ class VerificationForm(forms.ModelForm):
     team_not_found = forms.BooleanField()
     season = forms.ModelChoiceField(
         queryset=get_season_with_team_history(),
-        widget=forms.Select(attrs={
-            "data-live-search": "true",
-            "onchange": "document.getElementById('id_team').value = '';"
-            }),
+        widget=forms.Select(attrs={"data-live-search": "true"}),
     )
 
     def __init__(self, *args, **kwargs):

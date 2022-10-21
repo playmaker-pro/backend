@@ -14,6 +14,11 @@ def reset_history(modeladmin, request, queryset):
 
 reset_history.short_description = "Reset history league data."
 
+@admin.action(description="Aktualizuj visible team")
+def update_team_visibility(modeladmin, request, queryset):
+    for object in queryset:
+        object.visible = object.should_be_visible or False
+        object.save()
 
 def resave(modeladmin, request, queryset):
     for object in queryset:
@@ -159,14 +164,30 @@ class VoivodeshipAdmin(admin.ModelAdmin):
 
 @admin.register(models.TeamHistory)
 class TeamHistoryAdmin(admin.ModelAdmin):
-    list_display: Sequence[str] = ("get_season", "team", "league")
+    list_display: Sequence[str] = (
+        "id",
+        linkify("team"),
+        "data_mapper_id",
+        linkify("league_history"),
+        "get_season",
+        linkify("league"),
+        "visible",
+        "autocreated",
+        "data"
+        )
     search_fields: Sequence[str]  = ("team__name",)
     autocomplete_fields: Sequence[str] = ("team", "league", "season")
+    list_filter: Sequence[str]  = (
+        "season",
+        "league__highest_parent__name",
+        "team__club__voivodeship",
+        )
 
     def get_season(self, obj):
         return obj.season or obj.league_history.season
-    
+
     get_season.short_description = "Season"
+
 
 @admin.register(models.Team)
 class TeamAdmin(admin.ModelAdmin):
@@ -183,6 +204,7 @@ class TeamAdmin(admin.ModelAdmin):
     )
     search_fields = ("name",)
     list_filter = ("league__name", "gender__name", "seniority__name")
+    actions = [update_team_visibility,]
     autocomplete_fields = ("manager", "club", "league",)
 
     def full_league_linkify(self, obj=None):

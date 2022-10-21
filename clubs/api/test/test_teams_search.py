@@ -3,7 +3,7 @@ from rest_framework.test import APITestCase
 from clubs.models import Team
 from rest_framework.status import HTTP_200_OK
 from parameterized import parameterized
-from utils.factories.clubs.team_factory import TeamFactory
+from utils.factories.clubs_factories import TeamFactory
 
 
 class TeamSearchTest(APITestCase):

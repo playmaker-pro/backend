@@ -3,6 +3,8 @@
 {% load playmaker %}
 {% load i18n %}
 
+{% is_scrapper_enabled as scrapper %}
+
 {% block header %}
     <style>
     /* ditch the ugle blue outline */
@@ -70,7 +72,7 @@
 
                                 <!--li class="active"><a href="#header">Home</a></li-->
                                 <div class="d-flex flex-column flex-lg-row">
-                                    {% include "landingpage/partials/menu.html" %}
+                                    {% include "landingpage/partials/menu.html" with is_scrapper_enabled=scrapper %}
                                 </div>
                                 <div class="menu__dropdown d-flex flex-column flex-lg-row">
                                     {% include "landingpage/partials/_menuitems.html" %}

@@ -85,19 +85,25 @@ class VoivodeshipService:
             for voivodeship in data:
 
                 assert isinstance(voivodeship, dict), "element is not a dict"
-                voivodeship = voivodeship['name']
+
+                voivodeship_name = voivodeship.get('name')
+                voivodeship_code = voivodeship.get('code')
 
                 try:
 
-                    assert isinstance(voivodeship, str), f"{voivodeship} is not a string"
+                    assert isinstance(voivodeship_name, str), f"{voivodeship_name} is not a string"
+
                     obj, created = self.voivodeships_model.objects.get_or_create(
-                        name=voivodeship
+                        name=voivodeship_name
                     )
 
                     if created:
-                        print(f'voivodeship {voivodeship} has been added')
+                        print(f'voivodeship {voivodeship_name} has been added')
                     else:
-                        print(f'voivodeship {voivodeship} already exists in database')
+                        print(f'voivodeship {voivodeship_name} already exists in database')
+
+                    obj.code = voivodeship_code
+                    obj.save()
 
                 except Exception as e:
-                    print(f'{voivodeship}', e)
+                    print(f'{voivodeship_name}', e)
