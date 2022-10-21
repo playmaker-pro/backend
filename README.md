@@ -90,11 +90,15 @@ To set up a development environment quickly you need to have following prerequis
     ```
     python manage.py runserver
     ```
-11. Go to http://localhost:8000/admin/  (wagtail admin)  
+10. Go to http://localhost:8000/admin/  (wagtail admin)  
     Login into a Admin user (see step no 8)  
     Create new page as Main PlaymakerPage  
-    Create servce with port :8000 and attach main page to that service.
+    Create servce with port :8000 and attach main page to that service. 
 
+11. To have database synced with production or staging, you have to fill DB with voivodeships.
+    ```
+    python manage.py add_voivodeships
+    ```
 
 # Development
 
