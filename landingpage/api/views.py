@@ -1,18 +1,14 @@
-import datetime
-import json
 import logging
 
-from django.core.mail import mail_managers
 from django.shortcuts import get_object_or_404
-
-from rest_framework import permissions, status
-from rest_framework import generics
-from rest_framework.response import Response
+from django.utils import timezone
+from rest_framework import permissions, status    # noqa
+from rest_framework import generics    # noqa
+from rest_framework.response import Response    # noqa
 from .serializers import TestFormSerializer
 
-from products.models import Product, Request
-from users.models import User
-
+from products.models import Product, Request  # noqa
+from users.models import User  # noqa
 from .decorators import is_owner
 
 logger = logging.getLogger(__name__)
@@ -44,7 +40,7 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
                 {"error": "User or product couldn't be found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        date_now = datetime.datetime.now().strftime("%Y-%m-%d")
+        date_now = timezone.now().strftime("%Y-%m-%d")
         user = user.first()
         product_id = product.first().id
         user_team = user.profile.get_team()
