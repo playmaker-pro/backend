@@ -562,7 +562,8 @@ class Team(models.Model, MappingMixin):
 
     @property
     def should_be_visible(self):
-        return (self.manager or self.club.manager) and (self.seniority and self.seniority.is_senior)
+        return (self.manager or self.club.manager) \
+               and ((self.seniority and self.seniority.is_senior) or not self.seniority)
     
     @property
     def get_club_pic(self):
@@ -696,7 +697,7 @@ class Team(models.Model, MappingMixin):
     def save(self, *args, **kwargs):
         slug_str = "%s %s %s" % (self.PROFILE_TYPE, self.name, self.club.name)
         unique_slugify(self, slug_str)
-        self.full_name = self.get_pretty_name()
+        self.full_name = self.__str__()
         super().save(*args, **kwargs)
 
     class Meta:
