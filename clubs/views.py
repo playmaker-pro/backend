@@ -6,27 +6,39 @@ from django.utils.translation import gettext_lazy as _
 from . import models, forms
 from app import mixins
 from roles import definitions
-
+from utils import get_current_season
 from django.contrib.auth import get_user_model
-
+from django.db.models import Q
 
 User = get_user_model()
 
 
 class ClubShow(generic.TemplateView, mixins.ViewModalLoadingMixin):
     template_name = "clubs/show_club.html"
-    http_method_names = ["get"]
+    http_method_names = ["get", "post"]
     page_title = "PROFIL KLUBU"
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request, selected_season=None, *args, **kwargs):
         slug = self.kwargs.get("slug")
         self.editable = False
         user = self.request.user
+        seasons = [season.name for season in models.Season.objects.filter().order_by("name")]
+        if not selected_season:
+            selected_season = get_current_season()
+        previous_season = seasons[seasons.index(selected_season)-1] if seasons.index(selected_season) > 0 else None
+        try: next_season = seasons[seasons.index(selected_season)+1]
+        except IndexError: next_season = None
+        kwargs["seasons"] = {
+            "previous": previous_season,
+            "selected": selected_season,
+            "next": next_season
+        }
         if slug:
             club = get_object_or_404(models.Club, slug=slug)
 
             teams = club.teams.all()
-            kwargs["teams"] = teams
+            teams_history = [th.team for th in models.TeamHistory.objects.filter(team__in=teams).filter(Q(season__name=selected_season)|Q(league_history__season__name=selected_season))]
+            kwargs["teams"] = teams_history
 
         if club.is_editor(user):
             kwargs["editable"] = self.editable
@@ -44,6 +56,10 @@ class ClubShow(generic.TemplateView, mixins.ViewModalLoadingMixin):
         kwargs["page_title"] = self.page_title
 
         return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        selected_season = request.POST.get("change-season")
+        return self.get(request, selected_season, *args, **kwargs)
 
 
 class ClubEdit(LoginRequiredMixin, generic.TemplateView, mixins.ViewModalLoadingMixin):
