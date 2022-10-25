@@ -122,3 +122,10 @@ or
 ```bash
 invoke tests
 ```
+
+#### Extra scripts:
+
+- Migrate old voivodeship field to new one (Voivodeships model)
+```bash
+python manage.py map_vivos
+```
