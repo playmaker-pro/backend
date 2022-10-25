@@ -6,7 +6,7 @@ class TeamSelect2Serializer(serializers.HyperlinkedModelSerializer):
     text = serializers.SerializerMethodField()
 
     def get_text(self, obj: Team) -> str:
-        return obj.full_name or obj.name
+        return obj.name_with_league_full
 
     class Meta:
         model = Team
@@ -20,7 +20,7 @@ class TeamHistorySelect2Serializer(serializers.HyperlinkedModelSerializer):
     text = serializers.SerializerMethodField()
 
     def get_text(self, obj: TeamHistory) -> str:
-        return obj.team.full_name or obj.team.name
+        return obj.team.name_with_league_full
 
     class Meta:
         model = TeamHistory

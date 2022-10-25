@@ -2,35 +2,20 @@ import collections
 
 from django.conf import settings
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.html import format_html
-
+from django.core.exceptions import ObjectDoesNotExist
 
 def is_allowed_interact_with_s38():
     return settings.CONFIGURATION == "production" and not settings.DEBUG
 
-
-def get_current_season(date=None) -> str:
-    """
-    JJ:
-    Definicja aktualnego sezonu
-    (wyznaczamy go za pomocą:
-        jeśli miesiąc daty systemowej jest >= 7 to pokaż sezon (aktualny rok/ aktualny rok + 1).
-        Jeśli < 7 th (aktualny rok - 1 / aktualny rok)
-    """
-    season_middle = settings.SEASON_DEFINITION.get("middle", 7)
-    if date is None:
-        date = timezone.now()
-
+def get_current_season():
     if not settings.SCRAPPER:
         return "2021/2022"
-
-    if date.month >= season_middle:
-        season = f"{date.year}/{date.year + 1}"
-    else:
-        season = f"{date.year - 1}/{date.year}"
-    return season
-
+    from clubs.models import Season
+    try:
+        return Season.objects.get(is_current=True).name
+    except ObjectDoesNotExist:
+        return Season.define_current_season()
 
 def calculate_prev_season(season: str):
     """2019/2020 ->   2018/2019"""

@@ -63,8 +63,9 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
 
 @admin.register(models.Season)
 class SeasonAdmin(admin.ModelAdmin):
+    list_display: Sequence = ("name", "is_current", "is_in_verify_form",)
     search_fields: Sequence = ("name",)
-
+    exclude: Optional[Sequence[str]] = ("is_current",)
 
 @admin.register(models.LeagueGroup)
 class LeagueGroupAdmin(admin.ModelAdmin):
@@ -184,10 +185,10 @@ class TeamHistoryAdmin(admin.ModelAdmin):
 
     def get_season(self, obj):
         return obj.season or obj.league_history.season
-    
+
     get_season.short_description = "Season"
 
-    
+
 @admin.register(models.Team)
 class TeamAdmin(admin.ModelAdmin):
     list_display = (
@@ -196,7 +197,7 @@ class TeamAdmin(admin.ModelAdmin):
         "visible",
         "autocreated",
         linkify("club"),
-        linkify("league"),
+        "full_league_linkify",
         linkify("gender"),
         linkify("seniority"),
         linkify("manager"),
@@ -205,6 +206,12 @@ class TeamAdmin(admin.ModelAdmin):
     list_filter = ("league__name", "gender__name", "seniority__name")
     actions = [update_team_visibility,]
     autocomplete_fields = ("manager", "club", "league",)
+
+    def full_league_linkify(self, obj=None):
+        if obj:
+            return linkify("league")(obj)        
+
+    full_league_linkify.short_description = "league"
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)

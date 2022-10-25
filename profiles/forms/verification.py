@@ -63,8 +63,9 @@ def get_all_clubs():
 
 def get_season_with_team_history():
     try:
-        ths = [th.season.name for th in TeamHistory.objects.all().distinct("season")]
-        return Season.objects.filter(name__in=ths).order_by("name")
+        ths = [th.season.name for th in TeamHistory.objects.all() if th.season] \
+            + [th.league_history.season.name for th in TeamHistory.objects.all() if th.league_history and th.league_history.season]
+        return Season.objects.filter(name__in=set(ths), is_in_verify_form=True).order_by("name")
     except django.db.utils.ProgrammingError:
         return
 

@@ -7,15 +7,50 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
-
 from profiles.utils import conver_vivo_for_api, supress_exception, unique_slugify
 from .managers import LeagueManager
 from voivodeships.models import Voivodeships
-
+from django.utils import timezone
 
 class Season(models.Model):
     name = models.CharField(max_length=9, unique=True)
+    is_current = models.BooleanField(null=True, blank=True)
+    is_in_verify_form = models.BooleanField(default=True)
 
+    @classmethod
+    def define_current_season(self, date=None) -> str:
+        """
+        JJ:
+        Definicja aktualnego sezonu
+        (wyznaczamy go za pomocą:
+            jeśli miesiąc daty systemowej jest >= 7 to pokaż sezon (aktualny rok/ aktualny rok + 1).
+            Jeśli < 7 th (aktualny rok - 1 / aktualny rok)
+        """
+        season_middle = settings.SEASON_DEFINITION.get("middle", 7)
+        if date is None:
+            date = timezone.now()
+
+        if date.month >= season_middle:
+            season = f"{date.year}/{date.year + 1}"
+        else:
+            season = f"{date.year - 1}/{date.year}"
+        return season
+    
+    class Meta:
+        ordering = ('-is_current',)
+  
+    def current_season_update(self, *args, **kwargs):
+        current_season = self.define_current_season()
+        for season in self._meta.model.objects.all():
+            season.is_current = season.name == current_season
+            season.save(updated=True)
+    
+    def save(self, updated=False, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not updated:
+            self.current_season_update()
+        
+        
     @property
     def display_season(self):
         return self.name
@@ -212,7 +247,7 @@ class LeagueHistory(models.Model):
     data_updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.season} {self.league} {self.index}"
+        return f"{self.season} ({self.league}) {self.index or ''}"
 
     def check_and_set_if_data_exists(self):
         from data.models import League as Dleague
@@ -583,7 +618,7 @@ class Team(models.Model, MappingMixin):
          
     @property
     def name_with_league_full(self):
-        return f"{self.name} ({self.league_with_parents})"
+        return f"{self.name}" + (f" ({self.league_with_parents})" if self.league else "")
 
     @property
     def display_team(self):
@@ -749,8 +784,7 @@ class Team(models.Model, MappingMixin):
     )
 
     def __str__(self):
-        return f"{self.name}" + (f" ({self.league})" if self.league else "")
-
+        return self.name_with_league_full
 
 class TeamHistory(models.Model):
     """Definition of a  team history object
@@ -792,7 +826,7 @@ class TeamHistory(models.Model):
     autocreated = models.BooleanField(default=False, help_text="Autocreated")
 
     def __str__(self):
-        return f"{self.team.name} ({self.season.name})"
+        return self.team.name_with_league_full
 
     class Meta:
         unique_together = ("team", "season")
