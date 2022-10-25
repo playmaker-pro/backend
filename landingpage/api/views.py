@@ -1,17 +1,14 @@
-import json
 import logging
 
-from django.core.mail import mail_managers
 from django.shortcuts import get_object_or_404
-
-from rest_framework import permissions, status
-from rest_framework import generics
-from rest_framework.response import Response
+from django.utils import timezone
+from rest_framework import permissions, status    # noqa
+from rest_framework import generics    # noqa
+from rest_framework.response import Response    # noqa
 from .serializers import TestFormSerializer
 
-from products.models import Product, Request
-from users.models import User
-
+from products.models import Product, Request  # noqa
+from users.models import User  # noqa
 from .decorators import is_owner
 
 logger = logging.getLogger(__name__)
@@ -37,24 +34,37 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
         product = Product.objects.filter(title=name)
         user = User.objects.filter(pk=data["user"])
 
-        if not user or not product or (len(user) >= 2 or len(product) >= 2):
-            logger.error("User or product couldnt be find")
+        if not user or not product.exists() or (len(user) >= 2 or len(product) >= 2):
+            logger.error("User or product couldn't be found")
             return Response(
-                {"error": "User or product couldnt be find"},
+                {"error": "User or product couldn't be found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-
+        date_now = timezone.now().strftime("%Y-%m-%d")
+        user = user.first()
+        product_id = product.first().id
+        user_team = user.profile.get_team()
         try:
             data = {
-                "product": product[0].id,
-                "user": user[0].id,
+                "product": product_id,
+                "user": user.id,
                 "raw_body": {
-                    "city": data["city"],
-                    "leagues": data["leagues"],
-                    "distance": data["distance"],
-                    "email": user[0].email,
-                    "profile": f"{request.META['HTTP_HOST']}/users/{user[0].profile.slug}",
-                    "phone": user[0].profile.phone,
+                    "nr": f"{user.id}{product_id}{date_now}".replace("-", ""),
+                    "name": user.display_full_name,
+                    "team": user_team.name if user_team else "",
+                    "parent_league": user_team.display_league_top_parent
+                    if user_team
+                    else "",
+                    "user voivodeship": user.profile.voivodeship_obj.name
+                    if user.profile.voivodeship_obj
+                    else "",
+                    "city": data.get("city"),
+                    "leagues": data.get("leagues"),
+                    "distance": data.get("distance"),
+                    "email": user.email,
+                    "profile": f"{request.META['HTTP_HOST']}/users/{user.profile.slug}",
+                    "phone": user.profile.phone,
+                    "date": date_now,
                 },
             }
         except Exception as e:
@@ -70,7 +80,7 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
             logger.info(f"Mail sent: {serializer.data}")
 
         except Exception as e:
-            logger.error(f"Mail could not be sent")
+            logger.error(f"Mail could not be sent {e}")
 
         return Response({"success": new_data.id}, status=status.HTTP_201_CREATED)
 
@@ -93,7 +103,7 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
             logger.info(f"Mail sent: {data}")
 
         except Exception as e:
-            logger.error(f"Mail could not be sent")
+            logger.error(f"Mail could not be sent {e}")
 
         return Response(
             {"success": "Successfully updated"}, status=status.HTTP_201_CREATED

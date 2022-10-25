@@ -175,6 +175,10 @@ class User(AbstractUser, UserRoleMixin):
         return self.email_username
 
     @property
+    def display_full_name(self):
+        return ' '.join(filter(None, [self.first_name,  self.last_name]))
+
+    @property
     def role(self):
         return self.declared_role
 
