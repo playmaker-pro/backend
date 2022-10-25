@@ -9,4 +9,4 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         manager = VoivodeshipService()
-        manager.save_to_db()
+        manager.map_old_field_to_new()
