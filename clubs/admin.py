@@ -184,7 +184,12 @@ class TeamHistoryAdmin(admin.ModelAdmin):
         )
 
     def get_season(self, obj):
-        return obj.season or obj.league_history.season
+        if obj.season:
+            return obj.season
+        elif obj.league_history.season:
+            return obj.league_history.season
+        else:
+            return None
 
     get_season.short_description = "Season"
 
