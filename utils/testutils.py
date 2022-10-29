@@ -1,21 +1,21 @@
 import logging
 from django.conf import settings
 import pytest
-from clubs.models import Club, Gender, League, Seniority, Team, Voivodeship
+from clubs.models import Club, Gender, League, Seniority, Team
 from django.test import TestCase
 from profiles import models
 from roles import definitions
 from users.models import User
-
+from voivodeships.models import Voivodeships
 
 def create_system_user():
     User.objects.get_or_create(email=settings.SYSTEM_USER_EMAIL)
 
 
 def get_team():
-    vivo, _ = Voivodeship.objects.get_or_create(name="VIVOX")
+    vivo, _ = Voivodeships.objects.get_or_create(name="VIVOX")
     club, _ = Club.objects.get_or_create(
-        name="CLUBX", voivodeship=vivo, defaults={"mapping": "XXX, YYY,"}
+        name="CLUBX", voivodeship_obj=vivo, defaults={"mapping": "XXX, YYY,"}
     )
     league, _ = League.objects.get_or_create(name="LEAGUEX")
     seniority, _ = Seniority.objects.get_or_create(name="SENIORITYX")

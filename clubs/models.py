@@ -12,6 +12,7 @@ from .managers import LeagueManager
 from voivodeships.models import Voivodeships
 from django.utils import timezone
 
+
 class Season(models.Model):
     name = models.CharField(max_length=9, unique=True)
     is_current = models.BooleanField(null=True, blank=True)

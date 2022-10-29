@@ -63,9 +63,14 @@ def get_all_clubs():
 
 def get_season_with_team_history():
     try:
-        ths = [th.season.name for th in TeamHistory.objects.all() if th.season] \
-            + [th.league_history.season.name for th in TeamHistory.objects.all() if th.league_history and th.league_history.season]
-        return Season.objects.filter(name__in=set(ths), is_in_verify_form=True).order_by("name")
+        ths = [th.season.name for th in TeamHistory.objects.all() if th.season] + [
+            th.league_history.season.name
+            for th in TeamHistory.objects.all()
+            if th.league_history and th.league_history.season
+        ]
+        return Season.objects.filter(
+            name__in=set(ths), is_in_verify_form=True
+        ).order_by("name")
     except django.db.utils.ProgrammingError:
         return
 
@@ -110,7 +115,12 @@ class VerificationForm(forms.ModelForm):
     team_not_found = forms.BooleanField()
     season = forms.ModelChoiceField(
         queryset=get_season_with_team_history(),
-        widget=forms.Select(attrs={"data-live-search": "true"}),
+        widget=forms.Select(
+            attrs={
+                "data-live-search": "true",
+                "onchange": "document.getElementById('id_team').value = '';",
+            }
+        ),
     )
 
     def __init__(self, *args, **kwargs):

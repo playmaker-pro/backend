@@ -26,8 +26,10 @@ class ClubShow(generic.TemplateView, mixins.ViewModalLoadingMixin):
         if not selected_season:
             selected_season = get_current_season()
         previous_season = seasons[seasons.index(selected_season)-1] if seasons.index(selected_season) > 0 else None
-        try: next_season = seasons[seasons.index(selected_season)+1]
-        except IndexError: next_season = None
+        try:
+            next_season = seasons[seasons.index(selected_season)+1]
+        except IndexError:
+            next_season = None
         kwargs["seasons"] = {
             "previous": previous_season,
             "selected": selected_season,

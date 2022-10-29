@@ -31,23 +31,27 @@
                 </div>
                 <div class="horizontal-pipe-red"></div>
                 <div class="col-sm-12 ml-2 mt-2">
-                    <h3 class="float-left">{% trans 'Drużyny sezonu ' %}{{ seasons.selected }}</h3>
-                    <form method="post" class="float-right">
-                        {% csrf_token %}
-                       <button
-                               type="submit"
-                               class="btn btn-danger"
-                               name="change-season"
-                               value="{{ seasons.previous }}"
-                               {% if not seasons.previous %}disabled{% endif %}><strong><</strong></button>
-                            <span class="mx-2 font-weight-bold">{{ seasons.selected }}</span>
-                       <button
-                               type="submit"
-                               class="btn btn-danger"
-                               name="change-season"
-                               value="{{ seasons.next }}"
-                               {% if not seasons.next %}disabled{% endif %}><strong>></strong></button>
-                    </form>
+                    <div class="col-sm-12 col">
+                        <h3 class="float-left">{% trans 'Drużyny sezonu ' %}{{ seasons.selected }}</h3>
+                    </div>
+                    <div class="col-sm-12 col">
+                        <form method="post" class="float-right mr-3">
+                            {% csrf_token %}
+                           <button
+                                   type="submit"
+                                   class="btn btn-danger"
+                                   name="change-season"
+                                   value="{{ seasons.previous }}"
+                                   {% if not seasons.previous %}disabled{% endif %}><strong><</strong></button>
+                                <span class="mx-2 font-weight-bold">{{ seasons.selected }}</span>
+                           <button
+                                   type="submit"
+                                   class="btn btn-danger"
+                                   name="change-season"
+                                   value="{{ seasons.next }}"
+                                   {% if not seasons.next %}disabled{% endif %}><strong>></strong></button>
+                        </form>
+                    </div>
                 </div>
                     {% for team in teams %}
                         <div class="col-md-4">
