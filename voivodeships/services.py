@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Union, TYPE_CHECKING, Tuple
+from typing import Union, Tuple
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import QuerySet
@@ -102,7 +102,7 @@ class VoivodeshipService:
 
                 assert isinstance(voivodeship, dict), "element is not a dict"
 
-                voivodeship_name = voivodeship.get('name')
+                voivodeship_name = voivodeship.get('name').capitalize()
                 voivodeship_code = voivodeship.get('code')
 
                 try:
