@@ -33,7 +33,7 @@ window.onscroll = function () {
             document.querySelector('.email-logo').style.filter = 'invert(1)'
         }
         try{
-            // document.querySelector('.menu__dropdown .dropdown-menu').style.backgroundColor = '#FFFFFF'
+            document.querySelector('.menu__dropdown .dropdown-menu').style.backgroundColor = '#FFFFFF'
             document.querySelector('#header .dropdown-menu a').style.color = '#141414'
 
             document.querySelector('.nav-item .dropdown-menu').style.backgroundColor = '#FFFFFF'
@@ -76,7 +76,7 @@ window.onscroll = function () {
         }
 
         try{
-            // document.querySelector('.menu__dropdown .dropdown-menu').style.backgroundColor = '#141414'
+            document.querySelector('.menu__dropdown .dropdown-menu').style.backgroundColor = '#141414'
             document.querySelector('#header .dropdown-menu a').style.color = '#FFFFFF'
             document.querySelector('.nav-item .dropdown-menu').style.backgroundColor = '#141414'
         }catch(e){

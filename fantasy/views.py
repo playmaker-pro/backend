@@ -37,9 +37,8 @@ from stats.utilites import (
     translate_team_name,
 )
 from clubs.models import Seniority, Season
-
 from .models import PlayerFantasyRank
-
+from voivodeships.services import VoivodeshipService
 
 User = get_user_model()
 
@@ -90,10 +89,10 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
             queryset = queryset.filter(fullname__icontains=self.filter_first_last)
 
         if self.filter_vivo is not None:
-            vivos = [i.replace("-", "") for i in self.filter_vivo]
+            vivos = [i for i in self.filter_vivo]
             clauses = (
                 Q(
-                    player__playerprofile__team_object__club__voivodeship__name__icontains=p
+                    player__playerprofile__team_object__club__voivodeship_obj__name=p
                 )
                 for p in vivos
             )
@@ -139,12 +138,13 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
                 ],
             )
         )
+        vivos = VoivodeshipService()
         queryset = self.filter_queryset(queryset)
         paginator = Paginator(queryset, self.paginate_limit)
         page_number = request.GET.get("page") or 1
         page_obj = paginator.get_page(page_number)
         kwargs["page_obj"] = page_obj
-        kwargs["vivos"] = settings.VOIVODESHIP_CHOICES
+        kwargs["vivos"] = vivos.get_voivodeships
         kwargs["filters"] = self.get_filters_values()
         kwargs["leagues"] = League.objects.is_top_parent()
         kwargs["positions"] = FANTASY_CHOICES

@@ -1,6 +1,8 @@
 from collections import Counter
 from datetime import datetime
 from random import choices
+from typing import Union
+
 from stats import adapters
 from address.models import AddressField
 from django.conf import settings
@@ -24,7 +26,7 @@ from .mixins import TeamObjectsDisplayMixin
 import logging
 from .erros import VerificationCompletionFieldsWrongSetup
 from . import managers
-
+from voivodeships.models import Voivodeships
 
 User = get_user_model()
 
@@ -497,8 +499,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         "team",
         # 'team_raw',
         "position_raw",
-        "voivodeship",
-        "voivodeship_raw",
+        "voivodeship_obj",
     ]
 
     OPTIONAL_FIELDS = [
@@ -511,16 +512,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         "agent_status",
         "agent_name",
         "agent_phone",
-        "agent_foreign",
-        "video_url",
-        "video_title",
-        "video_description",
-        "video_url_second",
-        "video_title_second",
-        "video_description_second",
-        "video_url_third",
-        "video_title_third",
-        "video_description_third",
+        "agent_foreign",   
     ]
 
     POSITION_CHOICES = [
@@ -621,6 +613,10 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             return None
 
     @property
+    def has_videos(self):
+        return PlayerVideo.objects.filter(player=self).count() > 0
+
+    @property
     def attached(self):
         return self.data_mapper_id is not None
 
@@ -642,6 +638,13 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
     team_object = models.ForeignKey(
         clubs_models.Team,
+        on_delete=models.SET_NULL,
+        related_name="players",
+        null=True,
+        blank=True,
+    )
+    team_history_object = models.ForeignKey(
+        clubs_models.TeamHistory,
         on_delete=models.SET_NULL,
         related_name="players",
         null=True,
@@ -699,16 +702,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True,
     )
-    voivodeship_raw = models.CharField(
-        # TODO:(l.remkowicz):followup needed to see if that can be safely removed from database scheme follow-up: PM-365
-        _("Wojewódźtwo (raw)"),
-        help_text=_("Wojewódźtwo w którym grasz. Nie uzywane pole"),
-        max_length=68,
-        blank=True,
-        null=True,
-        choices=settings.VOIVODESHIP_CHOICES,
-    )
-
     birth_date = models.DateField(_("Data urodzenia"), blank=True, null=True)
     height = models.PositiveIntegerField(
         _("Wzrost"),
@@ -776,9 +769,29 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         _("90min portal"), max_length=500, blank=True, null=True
     )
     transfermarket_url = models.URLField(_("TrasferMarket"), blank=True, null=True)
+
+    # TODO Based on task PM-363. After migration on production, field can be deleted
     voivodeship = models.CharField(
         _("Województwo zamieszkania"),
-        help_text="Wybierz województwo",
+        help_text="Wybierz województwo. Stare pole przygotowane do migracji.",
+        max_length=68,
+        blank=True,
+        null=True,
+        choices=settings.VOIVODESHIP_CHOICES,
+    )
+    voivodeship_obj = models.ForeignKey(
+        Voivodeships,
+        verbose_name=_("Województwo zamieszkania"),
+        help_text="Wybierz województwo.",
+        max_length=20,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
+    voivodeship_raw = models.CharField(
+        # TODO:(l.remkowicz):followup needed to see if that can be safely removed from database scheme follow-up: PM-365
+        _("Wojewódźtwo (raw)"),
+        help_text=_("Wojewódźtwo w którym grasz. Nie uzywane pole"),
         max_length=68,
         blank=True,
         null=True,
@@ -822,25 +835,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
     agent_foreign = models.BooleanField(
         _("Otwarty na propozycje zagraniczne"), blank=True, null=True
-    )
-    video_url = models.URLField(_("Youtube url"), blank=True, null=True)
-    video_title = models.CharField(
-        _("Tytuł nagrania"), max_length=235, blank=True, null=True
-    )
-    video_description = models.TextField(_("Temat i opis"), null=True, blank=True)
-    video_url_second = models.URLField(_("Youtube url nr 2"), blank=True, null=True)
-    video_title_second = models.CharField(
-        _("Tytuł nagrania nr 2"), max_length=235, blank=True, null=True
-    )
-    video_description_second = models.TextField(
-        _("Temat i opis nr 2"), null=True, blank=True
-    )
-    video_url_third = models.URLField(_("Youtube url nr 3"), blank=True, null=True)
-    video_title_third = models.CharField(
-        _("Tytuł nagrania nr 3"), max_length=235, blank=True, null=True
-    )
-    video_description_third = models.TextField(
-        _("Temat i opis nagrania nr 3"), null=True, blank=True
     )
     updated = models.BooleanField(default=False)
 
@@ -949,7 +943,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         self.playermetrics.refresh_metrics(*args, **kwargs)
 
     def save(self, *args, **kwargs):
-        """ 'Nie jest wyświetlana na profilu.
+        """'Nie jest wyświetlana na profilu.
         Pole wykorzystywane wyłącznie do gry Fantasy.
         Użytkownik nie ingeruje w nie, bo ustawiony jest trigger przy wyborze pozycji z A18.
         Bramkarz' -> 'bramkarz'; 'Obrońca%' ->  'obronca';  '%pomocnik' -> pomocnik; 'Skrzydłowy' -> 'pomocnik'; 'Napastnik' -> 'napastnik'
@@ -1305,7 +1299,13 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         blank=True,
     )
-
+    team_history_object = models.ForeignKey(
+        clubs_models.TeamHistory,
+        on_delete=models.SET_NULL,
+        related_name="players_history",
+        null=True,
+        blank=True,
+    )
     birth_date = models.DateField(_("Data urodzenia"), blank=True, null=True)
     soccer_goal = models.IntegerField(
         _("Piłkarski cel"), choices=make_choices(GOAL_CHOICES), null=True, blank=True
@@ -1341,14 +1341,24 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         help_text=_("Miasto z którego dojeżdżam na trening"), blank=True, null=True
     )
 
+    # TODO Based on task PM-363. After migration on production, field can be deleted
     voivodeship = models.CharField(
-        _("Województwo zamieszkania"),
+        _("Województwo zamieszkania."),
+        help_text='Wybierz województwo. Stare pole przygotowane do migracji',
         max_length=68,
         blank=True,
         null=True,
         choices=settings.VOIVODESHIP_CHOICES,
     )
-
+    voivodeship_obj = models.ForeignKey(
+        Voivodeships,
+        verbose_name=_("Województwo zamieszkania"),
+        help_text="Wybierz województwo.",
+        max_length=20,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
     club_role = models.IntegerField(
         choices=CLUB_ROLE,
         default=1,  # trener
@@ -1500,7 +1510,7 @@ class ScoutProfile(BaseProfile):
         "practice_distance",
         "club_raw",
         "league_raw",
-        "voivodeship_raw",
+        "voivodeship_obj",
     ]
 
     GOAL_CHOICES = (
@@ -1566,13 +1576,23 @@ class ScoutProfile(BaseProfile):
         blank=True,
         null=True,
     )
-
+    # TODO: (l.remkowicz): Based on task PM-363. After migration on production, field can be deleted
     voivodeship = models.CharField(
         _("Wojewódźtwo"),
-        help_text=_("Wojewódźtwo"),
+        help_text=_("Wojewódźtwo. Stare pole, czeka na migracje"),
         max_length=68,
         blank=True,
         null=True,
+    )
+
+    voivodeship_obj = models.ForeignKey(
+        Voivodeships,
+        verbose_name=_("Województwo zamieszkania"),
+        help_text="Wybierz województwo.",
+        max_length=20,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
     )
 
     voivodeship_raw = models.CharField(
@@ -1581,7 +1601,7 @@ class ScoutProfile(BaseProfile):
         max_length=68,
         blank=True,
         null=True,
-    )
+    )  # TODO:(l.remkowicz): followup needed to see if that can be safely removed from database scheme follow-up: PM-365
 
     class Meta:
         verbose_name = "Scout Profile"
@@ -1612,6 +1632,13 @@ class ProfileVerificationStatus(models.Model):
         null=True,
         blank=True,
         related_name="team",
+    )
+    team_history = models.ForeignKey(
+        "clubs.TeamHistory",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="team_history",
     )
     club = models.ForeignKey(
         "clubs.Club",
@@ -1662,4 +1689,30 @@ class ProfileVerificationStatus(models.Model):
         self.team_not_found = defaults.get("team_not_found")
         self.club = defaults.get("club")
         self.team = defaults.get("team")
+        self.team_history = defaults.get("team_history")
         self.save()
+
+class PlayerVideo(models.Model):
+    player = models.ForeignKey(
+        PlayerProfile,
+        on_delete=models.CASCADE,
+        related_name="player_video"
+    )
+    url = models.URLField(
+        _("Youtube url"),
+    )
+    title = models.CharField(
+        _("Tytuł nagrania"),
+        max_length=235,
+        blank=True,
+        null=True
+    )
+    description = models.TextField(
+        _("Opis"),
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        verbose_name = "Player Video"
+        verbose_name_plural = "Player Videos"

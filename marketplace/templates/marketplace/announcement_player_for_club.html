@@ -45,11 +45,13 @@
                 </div>
 
                 <div class="col-6 col-md-3 text-center">
-                    {% if not player.profile.voivodeship and not player.profile.address %}
+                    {% if not player.profile.voivodeship_obj.name and not player.profile.address %}
                     <h5>-</h5>
                     {% else %}
-                    <h5> {{ object.voivodeship }},
-                        {{ object.address }} +{{ object.practice_distance }}km </h5>
+                        <h5>
+                            {{ object|display_voivodeship }}
+                            {{ object.address }} +{{ object.practice_distance }}km
+                        </h5>
                     {% endif %}
                     Region
                 </div>

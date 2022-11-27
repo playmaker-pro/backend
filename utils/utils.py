@@ -1,32 +1,25 @@
-from django.utils.html import format_html
+import collections
+
+from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
+from django.utils.html import format_html
+from django.core.exceptions import ObjectDoesNotExist
 
 def is_allowed_interact_with_s38():
     return settings.CONFIGURATION == "production" and not settings.DEBUG
 
-
-def get_current_season(date=None) -> str:
-    """
-    JJ:
-    Definicja aktualnego sezonu
-    (wyznaczamy go za pomocą:
-        jeśli miesiąc daty systemowej jest >= 7 to pokaż sezon (aktualny rok/ aktualny rok + 1).
-        Jeśli < 7 th (aktualny rok - 1 / aktualny rok)
-    """
-    season_middle = settings.SEASON_DEFINITION.get("middle", 7)
-    if date is None:
-        date = timezone.now()
-
-    if date.month >= season_middle:
-        season = f"{date.year}/{date.year + 1}"
-    else:
-        season = f"{date.year - 1}/{date.year}"
-    return season
-
+def get_current_season():
+    if not settings.SCRAPPER:
+        return "2021/2022"
+    from clubs.models import Season
+    try:
+        return Season.objects.get(is_current=True).name
+    except ObjectDoesNotExist:
+        return Season.define_current_season()
 
 def calculate_prev_season(season: str):
     """2019/2020 ->   2018/2019"""
@@ -165,3 +158,13 @@ def generate_vivo_options():
 
     with open("filteroptions_vivo", "w+") as filterfile:
         filterfile.write(out)
+
+
+def update_dict_depth(d, u):
+    """Update value of a nested dictionary of varying depth """
+    for k, v in u.items():
+        if isinstance(v, collections.abc.Mapping):
+            d[k] = update_dict_depth(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d

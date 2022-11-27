@@ -12,5 +12,7 @@
     
     <a class="pm-nav {% if request.get_full_path == profile_url %}pm-nav-active{% endif %} m-2" href="{{ profile_url }}">Profil</a>
     <a class="pm-nav {% if request.get_full_path == carrier_url %}pm-nav-active{% endif %} m-2" href="{{ carrier_url }}">Kariera</a>
-    <a class="pm-nav {% if request.get_full_path == fantasy_url %}pm-nav-active{% endif %} m-2" href="{{ fantasy_url }}">Fantasy</a>
+    {% if is_scrapper_enabled %}
+        <a class="pm-nav {% if request.get_full_path == fantasy_url %}pm-nav-active{% endif %} m-2" href="{{ fantasy_url }}">Fantasy</a>
+    {% endif %}
     <a class="pm-nav {% if request.get_full_path == games_url %}pm-nav-active{% endif %} m-2" href="{{ games_url }}">Mecze</a>

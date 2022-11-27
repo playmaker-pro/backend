@@ -1,0 +1,168 @@
+import json
+import logging
+from typing import Union, TYPE_CHECKING, Tuple
+
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import QuerySet
+from voivodeships.models import Voivodeships  # noqa
+
+from clubs.models import Team  # noqa
+from django.apps import apps
+
+from profiles.models import PlayerProfile, CoachProfile, ScoutProfile  # noqa
+from marketplace.models import (  # noqa
+    ClubForPlayerAnnouncement, PlayerForClubAnnouncement, ClubForCoachAnnouncement, CoachForClubAnnouncement  # noqa
+)
+from clubs.models import Club  # noqa
+
+ModelsToMap = Union[
+    PlayerProfile, CoachProfile, ScoutProfile, ClubForPlayerAnnouncement, PlayerForClubAnnouncement,
+    CoachForClubAnnouncement, ClubForCoachAnnouncement, Club
+]
+
+logger = logging.getLogger(__name__)
+
+
+class VoivodeshipService:
+
+    def __init__(self):
+        self.voivodeships_model = Voivodeships
+
+    @property
+    def voivodeship_choices(self):
+        return self.voivodeships_model.voivodeships_choices()
+
+    @staticmethod
+    def display_voivodeship(obj) -> Union[str, None]:
+        """ displaying name of voivodeship """
+
+        if isinstance(obj, Team):
+            obj = obj.club
+
+        if not obj.voivodeship_obj:
+            return None
+        return obj.voivodeship_obj
+
+    @staticmethod
+    def get_voivodeship(obj) -> Voivodeships:
+        """ Returning Voivodeship object """
+
+        if not obj.voivodeship_obj:
+            return None
+        return obj.voivodeship_obj
+
+    @property
+    def get_voivodeships(self) -> QuerySet:
+        return self.voivodeships_model.objects.all()
+
+    def get_voivodeship_by_name(self, name) -> QuerySet:
+        qry = self.voivodeships_model.objects.filter(name=name)
+
+        if qry.exists():
+            return qry
+
+        return self.voivodeships_model.objects.filter(name=self._map_name(name))
+
+    def _map_name(self, name):
+        data = {
+            "pomorskie": 'Pomorskie',
+            "śląskie": 'Śląskie',
+            "dolnośląskie": 'Dolnośląskie',
+            "opolskie": 'Opolskie',
+            "małopolskie": 'Małopolskie',
+            "świętokrzyskie": 'Świętokrzyskie',
+            "mazowieckie": 'Mazowieckie',
+            "warmińskomazurskie": 'Warmińsko-Mazurskie',
+            "zachodniopomorskie": 'Zachodniopomorskie',
+            "podkarpackie": 'Podkarpackie',
+            "podlaskie": 'Podlaskie',
+            "wielkopolskie": 'Wielkopolskie',
+            "lubuskie": 'Lubuskie',
+            "lubelskie": 'Lubelskie',
+            "łódzkie": 'Łódzkie',
+            "kujawskopomorskie": 'Kujawsko-pomorskie'
+        }
+        try:
+            result = data[name]
+        except:
+            result = ''
+
+        return result
+
+    def save_to_db(self, file_path: Union[str, None] = None) -> None:
+        """ Fill voivodeships model with data written in voivodeships.json file """
+
+        if not file_path:
+            file_path = 'constants/voivodeships.json'
+
+        with open(file_path, 'r', encoding="utf8") as f:
+            data = json.loads(f.read())
+
+            for voivodeship in data:
+
+                assert isinstance(voivodeship, dict), "element is not a dict"
+
+                voivodeship_name = voivodeship.get('name')
+                voivodeship_code = voivodeship.get('code')
+
+                try:
+
+                    assert isinstance(voivodeship_name, str), f"{voivodeship_name} is not a string"
+
+                    obj, created = self.voivodeships_model.objects.get_or_create(
+                        name=voivodeship_name
+                    )
+
+                    if created:
+                        print(f'voivodeship {voivodeship_name} has been added')
+                    else:
+                        print(f'voivodeship {voivodeship_name} already exists in database')
+
+                    obj.code = voivodeship_code
+                    obj.save()
+
+                except Exception as e:
+                    print(f'{voivodeship_name}', e)
+
+    def map_old_field_to_new(self) -> None:
+        model_name: Tuple[Tuple[str, str], ...] = (
+            ('PlayerProfile', 'profiles'), ('CoachProfile', 'profiles'), ('ScoutProfile', 'profiles'),
+            ('ClubForPlayerAnnouncement', 'marketplace'), ('PlayerForClubAnnouncement', 'marketplace'),
+            ('CoachForClubAnnouncement', 'marketplace'), ('ClubForCoachAnnouncement', 'marketplace'),
+            ('Club', 'clubs')
+        )
+
+        for name in model_name:
+            model: ModelsToMap = apps.get_model(name[1], name[0])
+
+            for profile in model.objects.all():
+
+                try:
+                    if name[1] == 'profiles':
+                        voivodeship: QuerySet = self.get_voivodeship_by_name(profile.voivodeship)
+                    elif name[1] == 'marketplace' and profile.voivodeship:
+                        voivodeship: QuerySet = self.get_voivodeship_by_name(profile.voivodeship.name)
+                    elif name[1] == 'clubs' and profile.voivodeship:
+                        voivodeship: QuerySet = self.get_voivodeship_by_name(profile.voivodeship.name)
+                    else:
+                        break
+
+                    if voivodeship.exists():
+
+                        voivodeship_model: Voivodeships = apps.get_model('voivodeships', 'Voivodeships')
+                        voivodeship_obj: Voivodeships = voivodeship_model.objects.get(id=voivodeship.first().id)
+
+                        profile.voivodeship_obj = voivodeship_obj
+                        profile.save()
+                        logger.info(
+                            f'[LOGER VOIVODESHIPS] '
+                            f'Model {name[0]} with id {profile.id if name[1] != "profiles" else profile.user_id} '
+                            f'updated'
+                        )
+                        print(
+                            f'Model {name[0]} with id {profile.id if name[1] != "profiles" else profile.user_id} '
+                            f'updated'
+                        )
+                except (ObjectDoesNotExist, AttributeError):
+
+                    print(f'Something went wrong with {profile}')

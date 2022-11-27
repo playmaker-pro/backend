@@ -3,7 +3,7 @@ import re
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
-from utils import get_current_season
+from utils.utils import get_current_season
 from django.conf import settings
 
 # from . import models

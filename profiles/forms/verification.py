@@ -1,51 +1,56 @@
 from __future__ import unicode_literals
-from django.core.cache import cache
-from email.policy import default
-from django import forms
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import (
-    Layout,
-    Fieldset,
-    Div,
-    Submit,
-    HTML,
-    Button,
-    Row,
-    Field,
-    MultiField,
-)
+
+import collections.abc
+from dataclasses import dataclass
+
+import django.db.utils
+
+from clubs.models import Club, Season, TeamHistory
+from clubs.models import TeamHistory as Team
 from crispy_forms.bootstrap import (
+    Alert,
     AppendedText,
-    PrependedText,
     FormActions,
+    InlineRadios,
+    PrependedText,
     Tab,
     TabHolder,
-    Alert,
 )
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import (
+    HTML,
+    Button,
+    Div,
+    Field,
+    Fieldset,
+    Layout,
+    MultiField,
+    Row,
+    Submit,
+)
+from django import forms
 from django.contrib.auth import get_user_model
-from profiles import models
-from django_countries.widgets import CountrySelectWidget
+from django.core.cache import cache
 from django.utils.translation import gettext_lazy as _
-from profiles import widgets
-from crispy_forms.bootstrap import InlineRadios
-from clubs.models import Team, Club
+from django_countries.widgets import CountrySelectWidget
+from profiles import models, widgets
+from profiles.forms.fields.custom import (
+    ClubModelChoiceFieldNoValidation,
+    ModelChoiceFieldNoValidation,
+)
 from profiles.services import ProfileVerificationService
-
-from dataclasses import dataclass
-import collections.abc
-from django.core.exceptions import ValidationError
+from utils import update_dict_depth
 
 
 User = get_user_model()
 
 
+CSS_MANDATORY_FIELD_CLASS = "mandatory"
+
+
+# A short cut to hide query logic behind function
 def get_all_teams():
     return Team.objects.all()
-    # teams = cache.get('all_teams')
-    # if not teams:
-    #     teams = Team.objects.all()
-    #     cache.set('all_teams', teams)
-    # return teams
 
 
 def get_all_clubs():
@@ -56,16 +61,18 @@ def get_all_clubs():
     return teams
 
 
-def update(d, u):
-    for k, v in u.items():
-        if isinstance(v, collections.abc.Mapping):
-            d[k] = update(d.get(k, {}), v)
-        else:
-            d[k] = v
-    return d
-
-
-CSS_MANDATORY_FIELD_CLASS = "mandatory"
+def get_season_with_team_history():
+    try:
+        ths = [th.season.name for th in TeamHistory.objects.all() if th.season] + [
+            th.league_history.season.name
+            for th in TeamHistory.objects.all()
+            if th.league_history and th.league_history.season
+        ]
+        return Season.objects.filter(
+            name__in=set(ths), is_in_verify_form=True
+        ).order_by("name")
+    except django.db.utils.ProgrammingError:
+        return
 
 
 @dataclass
@@ -76,56 +83,15 @@ class FieldConfig:
     placeholder = ""
 
 
-class ModelChoiceFieldNoValidation(forms.ChoiceField):
-    def to_python(self, value):
-        if value in self.empty_values:
-            return None
-        try:
-            key = "pk"
-            if isinstance(value, Team):
-                value = getattr(value, key)
-            value = Team.objects.get(**{key: value})
-        except (ValueError, TypeError, Team.DoesNotExist):
-            raise ValidationError(
-                self.error_messages["invalid_choice"], code="invalid_choice"
-            )
-        return value
-
-    def validate(self, value):
-        return True
-
-    def valid_value(self, value):
-        """Check to see if the provided value is a valid choice."""
-        return True
-
-
-class ClubModelChoiceFieldNoValidation(forms.ChoiceField):
-    def to_python(self, value):
-        if value in self.empty_values:
-            return None
-        try:
-            key = "pk"
-            if isinstance(value, Club):
-                value = getattr(value, key)
-            value = Club.objects.get(**{key: value})
-        except (ValueError, TypeError, Club.DoesNotExist):
-            raise ValidationError(
-                self.error_messages["invalid_choice"], code="invalid_choice"
-            )
-        return value
-
-    def validate(self, value):
-        return True
-
-    def valid_value(self, value):
-        """Check to see if the provided value is a valid choice."""
-        return True
-
-
 class VerificationForm(forms.ModelForm):
     """
     settings describes how filed will be build.
     """
+
+    CHOICES_HAS_TEAM = (
+        ("tak mam klub", "tak mam klub"),
+        ("Nie mam klubu", "Nie mam klubu"),
+    )
 
     settings = {
         "team_club_league_voivodeship_ver": {
@@ -133,27 +99,31 @@ class VerificationForm(forms.ModelForm):
             "required": False,
         },
         "team": {"required": False},
+        "season": {"required": False},
         "has_team": {"initial": "tak mam klub", "required": False},
         "team_not_found": {
             "label": "zaznacz jeśli nie znalazłeś swojego klubu na liście",
             "required": False,
         },
     }
-
     custom_settings = None
 
     building_fields = []
 
-    CHOICES = (("tak mam klub", "tak mam klub"), ("Nie mam klubu", "Nie mam klubu"))
-
     team = ModelChoiceFieldNoValidation()
-    has_team = forms.ChoiceField(choices=CHOICES, widget=forms.RadioSelect)
+    has_team = forms.ChoiceField(choices=CHOICES_HAS_TEAM, widget=forms.RadioSelect)
     team_not_found = forms.BooleanField()
+    season = forms.ModelChoiceField(
+        queryset=get_season_with_team_history(),
+        widget=forms.Select(
+            attrs={
+                "data-live-search": "true",
+                "onchange": "document.getElementById('id_team').value = '';",
+            }
+        ),
+    )
 
     def __init__(self, *args, **kwargs):
-        data = args[0] if args else kwargs.get("data", None)
-        if data:
-            print("data=", data)
         super().__init__(*args, **kwargs)
         self.default_field_settings = FieldConfig()
         self.helper = FormHelper(self)
@@ -166,8 +136,8 @@ class VerificationForm(forms.ModelForm):
         self.helper.layout = self.build_layout()
 
     def save(self, commit=True):
+        """saves verification using verification service."""
         instance = super().save(commit=False)
-        # user = instance.user
         service = ProfileVerificationService(instance)
         data = self.cleaned_data
 
@@ -180,7 +150,7 @@ class VerificationForm(forms.ModelForm):
         return instance
 
     def clean(self):
-
+        """Clean some of the fields"""
         cleaned_data = super().clean()
         team = cleaned_data.get("team")
         text_club = cleaned_data.get("team_club_league_voivodeship_ver")
@@ -194,7 +164,7 @@ class VerificationForm(forms.ModelForm):
         """Configure fields"""
         settings = self.settings.copy()
         if self.custom_settings:
-            update(settings, self.custom_settings)
+            update_dict_depth(settings, self.custom_settings)
         for field_name, options in settings.items():
             self.fields[field_name].required = options.get(
                 "required", self.default_field_settings.required
@@ -222,7 +192,12 @@ class VerificationForm(forms.ModelForm):
         return Layout(
             Fieldset(*common_fields),
             InlineRadios("has_team", id="team_choice"),
-            Div(Field("team"), Field("team_not_found"), css_id="select_team_div"),
+            Div(
+                Field("season"),
+                Field("team"),
+                Field("team_not_found"),
+                css_id="select_team_div",
+            ),
             Div(Field("team_club_league_voivodeship_ver"), css_id="text_team_div"),
         )
 
@@ -235,6 +210,7 @@ class ClubVerificationForm(VerificationForm):
     }
 
     team = ClubModelChoiceFieldNoValidation()
+    # rkesik: I've left that just as a reference
     # team = forms.ModelChoiceField(
     #     queryset=Club.objects.all(),
     #     widget=forms.Select(attrs={"data-live-search": "true"}),
