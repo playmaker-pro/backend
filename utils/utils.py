@@ -1,25 +1,27 @@
 import collections
-
-from django.conf import settings
+from django.utils.safestring import mark_safe
 from django.urls import reverse
-from django.utils import timezone
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from django.utils.html import format_html
 from django.core.exceptions import ObjectDoesNotExist
 
+
 def is_allowed_interact_with_s38():
     return settings.CONFIGURATION == "production" and not settings.DEBUG
+
 
 def get_current_season():
     if not settings.SCRAPPER:
         return "2021/2022"
     from clubs.models import Season
+
     try:
         return Season.objects.get(is_current=True).name
     except ObjectDoesNotExist:
         return Season.define_current_season()
+
 
 def calculate_prev_season(season: str):
     """2019/2020 ->   2018/2019"""
@@ -61,6 +63,23 @@ def linkify(field_name):
 
     _linkify.short_description = field_name  # Sets column name
     return _linkify
+
+
+def html_link_ref(field_name):
+    """
+    Make href out of field
+    """
+
+    def _make_ahref(obj):
+        linked_obj = getattr(obj, field_name)
+        if linked_obj is None:
+            return "-"
+        return format_html(
+            '<a href="{}" target="_blank">{}</a>', linked_obj, linked_obj
+        )
+
+    _make_ahref.short_description = field_name
+    return _make_ahref
 
 
 def make_choices(choices):
@@ -161,7 +180,7 @@ def generate_vivo_options():
 
 
 def update_dict_depth(d, u):
-    """Update value of a nested dictionary of varying depth """
+    """Update value of a nested dictionary of varying depth"""
     for k, v in u.items():
         if isinstance(v, collections.abc.Mapping):
             d[k] = update_dict_depth(d.get(k, {}), v)

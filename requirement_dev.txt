@@ -5,3 +5,4 @@ pytest-icdiff
 invoke
 parameterized==0.8.1
 factory-boy==3.2.1
+pandas==1.5.2

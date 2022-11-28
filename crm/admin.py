@@ -1,55 +1,62 @@
 from django.contrib import admin
 from .models import *
-from utils import linkify
-from django.utils.translation import gettext_lazy as _
+from utils import linkify, html_link_ref
 from .filters import *
+
 
 @admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):
     pass
 
+
 @admin.register(ContactPurpose)
 class ContactPurposeAdmin(admin.ModelAdmin):
     pass
 
+
 @admin.register(LeadStatus)
 class LeadStatusAdmin(admin.ModelAdmin):
     fieldsets = (
-        ("Lead information", {
-            "fields": (
-                "first_name",
-                "last_name",
-                "user",
-                "club",
-                "team",
-                "created_by",
-                "date_created",
-                "updated_by",
-                "date_updated",
+        (
+            "Lead information",
+            {
+                "fields": (
+                    "first_name",
+                    "last_name",
+                    "user",
+                    "club",
+                    "team",
+                    "user_role",
+                    "created_by",
+                    "date_created",
+                    "updated_by",
+                    "date_updated",
                 )
-            }
+            },
         ),
-        ("Contact", {
-            "fields": (
-                "phone",
-                "email"
+        ("Contact", {"fields": ("phone", "email")}),
+        (
+            "Socials",
+            {
+                "fields": (
+                    "facebook_url",
+                    "twitter_url",
+                    "linkedin_url",
+                    "instagram_url",
+                    "website_url",
                 )
-            }
-        ),
-        ("Socials", {
-            "fields": (
-                "facebook_url",
-                "twitter_url",
-                "linkedin_url",
-                "instagram_url",
-                "website_url",
-                )
-            }
+            },
         ),
     )
 
-    readonly_fields = ("created_by", "date_created", "updated_by", "date_updated",)
-    
+    readonly_fields = (
+        "created_by",
+        "date_created",
+        "updated_by",
+        "date_updated",
+    )
+    from django.utils.safestring import mark_safe
+
     list_display = (
         "id",
         "full_name",
@@ -61,26 +68,31 @@ class LeadStatusAdmin(admin.ModelAdmin):
         linkify("club"),
         "is_actual",
         "data_mapper_id",
-        "twitter_url",
-        "facebook_url",
-        "linkedin_url",
-        "instagram_url",
-        "website_url",
+        html_link_ref("twitter_url"),
+        html_link_ref("facebook_url"),
+        html_link_ref("linkedin_url"),
+        html_link_ref("instagram_url"),
+        html_link_ref("website_url"),
         linkify("created_by"),
         "date_created",
         linkify("updated_by"),
-        "date_updated",        
+        "date_updated",
         linkify("previous"),
         linkify("next"),
     )
 
-    search_fields = ["first_name", "last_name",]
+    search_fields = [
+        "first_name",
+        "last_name",
+    ]
+
+    autocomplete_fields = ["user", "club", "team"]
 
     list_display_links = ("id", "full_name")
 
     list_filter = (
         IsActual,
-        "club__voivodeship", 
+        "club__voivodeship",
         "team__league__highest_parent",
         HasPhone,
         HasEmail,
@@ -88,13 +100,17 @@ class LeadStatusAdmin(admin.ModelAdmin):
         HasTeam,
         HasUser,
         CreatedBy,
-        )
+    )
 
     def get_search_results(self, request, queryset, search_term):
         original_qs = queryset
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        if search_term:            
-            get_clubs_from_team_term = [team.club for team in Team.objects.filter(name__icontains=search_term)]
+        queryset, use_distinct = super().get_search_results(
+            request, queryset, search_term
+        )
+        if search_term:
+            get_clubs_from_team_term = [
+                team.club for team in Team.objects.filter(name__icontains=search_term)
+            ]
             get_all_teams = Team.objects.filter(club__in=get_clubs_from_team_term)
             queryset |= self.model.objects.filter(team__in=get_all_teams)
         queryset = queryset & original_qs
@@ -107,50 +123,58 @@ class LeadStatusAdmin(admin.ModelAdmin):
             obj.updated_by = request.user
         return super().save_model(request, obj, form, change)
 
+
 # @admin.register(Demand)
 class DemandAdminInline(admin.StackedInline):
     model = Demand
 
+
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
-    
+
     fieldsets = (
-        ("Contact data", {
-            "fields": (
-                "lead",
-                "contact_method",
-                "contact_purpose",
-                "by_who",
-                "is_done",
-                "reminding_contact",
-                "created_by",
-                "date_created",
-                "updated_by",
-                "date_updated",
+        (
+            "Contact data",
+            {
+                "fields": (
+                    "lead",
+                    "contact_method",
+                    "contact_purpose",
+                    "by_who",
+                    "is_done",
+                    "reminding_contact",
+                    "created_by",
+                    "date_created",
+                    "updated_by",
+                    "date_updated",
                 )
-            }
+            },
         ),
-        ("Details", {
-            "fields": (
-                "note",
-                "todo"
+        ("Details", {"fields": ("note", "todo")}),
+        (
+            "Demand conditions",
+            {
+                "fields": (
+                    "financial_conditions_from",
+                    "financial_conditions_to",
+                    "city",
+                    "range",
                 )
-            }
+            },
         ),
-        ("Demand conditions", {
-            "fields": (
-                "financial_conditions_from",
-                "financial_conditions_to",
-                "city",
-                "range",
-                )
-            }
-        ),     
     )
 
-    search_fields = ["lead__first_name", "lead__last_name",]
+    search_fields = [
+        "lead__first_name",
+        "lead__last_name",
+    ]
 
-    readonly_fields = ("created_by", "date_created", "updated_by", "date_updated",)
+    readonly_fields = (
+        "created_by",
+        "date_created",
+        "updated_by",
+        "date_updated",
+    )
 
     list_display = (
         "id",
@@ -166,9 +190,11 @@ class ConversationAdmin(admin.ModelAdmin):
         "date_updated",
     )
 
+    autocomplete_fields = ["lead", "by_who",]
+
     list_filter = (
         IsActual,
-        "lead__club__voivodeship", 
+        "lead__club__voivodeship",
         "lead__team__league__highest_parent",
         HasPhone,
         HasEmail,
@@ -178,13 +204,19 @@ class ConversationAdmin(admin.ModelAdmin):
         CreatedBy,
     )
 
-    inlines = [DemandAdminInline,]
+    inlines = [
+        DemandAdminInline,
+    ]
 
     def get_search_results(self, request, queryset, search_term):
         original_qs = queryset
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        if search_term:            
-            get_clubs_from_team_term = [team.club for team in Team.objects.filter(name__icontains=search_term)]
+        queryset, use_distinct = super().get_search_results(
+            request, queryset, search_term
+        )
+        if search_term:
+            get_clubs_from_team_term = [
+                team.club for team in Team.objects.filter(name__icontains=search_term)
+            ]
             get_all_teams = Team.objects.filter(club__in=get_clubs_from_team_term)
             queryset |= self.model.objects.filter(lead__team__in=get_all_teams)
         queryset = queryset & original_qs
@@ -203,6 +235,7 @@ class ConversationAdmin(admin.ModelAdmin):
             obj.updated_by = request.user
         return super().save_model(request, obj, form, change)
 
+
 @admin.register(Demand)
 class DemandAdmin(admin.ModelAdmin):
-    pass
+    autocomplete_fields = ["conversation"]
