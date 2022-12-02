@@ -331,7 +331,7 @@ class League(models.Model):
 
     code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
     parent = models.ForeignKey(
-        "self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs"
+        "self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs",
     )
     highest_parent = models.ForeignKey(
         "self", on_delete=models.SET_NULL, blank=True, null=True
@@ -497,6 +497,11 @@ class League(models.Model):
         group_name = self.group.name if self.group else ""
         fields = [self.name, self.zpn, self.city_name, group_name]
         return " ".join(filter(None, fields))
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.parent and self.id == self.parent.id:
+            raise ValidationError({'parent': ["You cant have yourself as a parent!"]})
 
     def __str__(self):
         return f"{self.get_upper_parent_names()}"
