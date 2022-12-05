@@ -828,7 +828,4 @@ class TeamHistory(models.Model):
         unique_together = ("scrapper_team_uuid", "league_history")
 
     def save(self, *args, **kwargs):
-        if self.league_history:
-            self.league = self.league_history.league
-            self.season = self.league_history.season
         super().save(*args, **kwargs)
