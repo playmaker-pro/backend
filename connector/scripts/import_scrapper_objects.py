@@ -105,11 +105,11 @@ class Command(BaseCommand):
         "2020/2021",
     ]
 
-    SENIOR = Seniority.objects.get(name="seniorzy")
-    JUNIOR = Seniority.objects.get(name="juniorzy")
+    SENIOR, _ = Seniority.objects.get_or_create(name="seniorzy")
+    JUNIOR, _ = Seniority.objects.get_or_create(name="juniorzy")
 
-    MALE = Gender.objects.get(name="mężczyźni")
-    FEMALE = Gender.objects.get(name="kobiety")
+    MALE, _ = Gender.objects.get_or_create(name="mężczyźni")
+    FEMALE, _ = Gender.objects.get_or_create(name="kobiety")
 
     def handle(self) -> None:
         scrapper_leagues: List[LeagueEntity] = self.http.get_leagues()
@@ -507,7 +507,7 @@ class Command(BaseCommand):
                         )
                     except django.core.exceptions.ObjectDoesNotExist:
                         continue
-                    TeamHistory.objects.create(
+                    TeamHistory.objects.get_or_create(
                         team=team_obj,
                         team_name_raw=team.name,
                         scrapper_team_uuid=team.id,

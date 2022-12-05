@@ -11,7 +11,6 @@ if __name__ == "__main__":
     except:
         pass
 
-    sys.path.append("/")
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", f"backend.settings.{config}")
 
     try:
