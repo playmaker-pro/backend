@@ -219,7 +219,7 @@ class PlayerProfileAdmin(ProfileAdminBase):
     )
 
     def team_object_linkify(self, obj=None):
-        if obj.team_object: 
+        if obj.team_object:
             return linkify("team_object")(obj)
         else: return "-"
     
@@ -246,6 +246,8 @@ class PlayerProfileAdmin(ProfileAdminBase):
         set_team_object_based_on_meta,
         calculate_fantasy,
     ]
+
+    readonly_fields = ("data_prettified", "mapper")
 
 
 @admin.register(models.CoachProfile)
@@ -288,3 +290,18 @@ class RoleChangeRequestAdmin(admin.ModelAdmin):
 @admin.register(models.PlayerVideo)
 class PlayerVideoAdmin(admin.ModelAdmin):
     pass
+
+
+class MapperEntityAdmin(admin.TabularInline):
+    model = models.MapperEntity
+    extra = 4
+    max_num = 4
+    readonly_fields = ("created_at", "updated_at")
+
+
+class MapperAdmin(admin.ModelAdmin):
+    inlines = [MapperEntityAdmin, ]
+    readonly_fields = ("created_at", "updated_at")
+
+
+admin.site.register(models.Mapper, MapperAdmin)

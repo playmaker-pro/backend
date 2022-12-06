@@ -512,7 +512,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         "agent_status",
         "agent_name",
         "agent_phone",
-        "agent_foreign",   
+        "agent_foreign",
     ]
 
     POSITION_CHOICES = [
@@ -764,6 +764,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
     phone = models.CharField(_("Telefon"), max_length=15, blank=True, null=True)
     facebook_url = models.URLField(_("Facebook"), max_length=500, blank=True, null=True)
+
+    mapper = models.OneToOneField("Mapper", on_delete=models.CASCADE, blank=True, null=True, related_name="mapper")
+    # laczynaspilka_url, min90_url, transfermarket_url data will be migrated into PlayerMapper and then those fields will be deleted
     laczynaspilka_url = models.URLField(_("LNP"), max_length=500, blank=True, null=True)
     min90_url = models.URLField(
         _("90min portal"), max_length=500, blank=True, null=True
@@ -786,7 +789,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         max_length=20,
         blank=True,
         null=True,
-        on_delete=models.SET_NULL
+        on_delete=models.SET_NULL,
     )
     voivodeship_raw = models.CharField(
         # TODO:(l.remkowicz):followup needed to see if that can be safely removed from database scheme follow-up: PM-365
@@ -942,6 +945,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         )
         self.playermetrics.refresh_metrics(*args, **kwargs)
 
+    def create_mapper_obj(self):
+        self.mapper = Mapper.objects.create()
+
     def save(self, *args, **kwargs):
         """'Nie jest wyświetlana na profilu.
         Pole wykorzystywane wyłącznie do gry Fantasy.
@@ -962,6 +968,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         """
         if self.position_raw is not None:
             self.position_fantasy = self.FANTASY_MAPPING.get(self.position_raw, None)
+
+        if not self.mapper:
+            self.create_mapper_obj()
 
         adpt = None
         # Each time actions
@@ -1344,7 +1353,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     # TODO Based on task PM-363. After migration on production, field can be deleted
     voivodeship = models.CharField(
         _("Województwo zamieszkania."),
-        help_text='Wybierz województwo. Stare pole przygotowane do migracji',
+        help_text="Wybierz województwo. Stare pole przygotowane do migracji",
         max_length=68,
         blank=True,
         null=True,
@@ -1357,7 +1366,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         max_length=20,
         blank=True,
         null=True,
-        on_delete=models.SET_NULL
+        on_delete=models.SET_NULL,
     )
     club_role = models.IntegerField(
         choices=CLUB_ROLE,
@@ -1592,7 +1601,7 @@ class ScoutProfile(BaseProfile):
         max_length=20,
         blank=True,
         null=True,
-        on_delete=models.SET_NULL
+        on_delete=models.SET_NULL,
     )
 
     voivodeship_raw = models.CharField(
@@ -1692,27 +1701,48 @@ class ProfileVerificationStatus(models.Model):
         self.team_history = defaults.get("team_history")
         self.save()
 
+
 class PlayerVideo(models.Model):
     player = models.ForeignKey(
-        PlayerProfile,
-        on_delete=models.CASCADE,
-        related_name="player_video"
+        PlayerProfile, on_delete=models.CASCADE, related_name="player_video"
     )
     url = models.URLField(
         _("Youtube url"),
     )
-    title = models.CharField(
-        _("Tytuł nagrania"),
-        max_length=235,
-        blank=True,
-        null=True
-    )
-    description = models.TextField(
-        _("Opis"),
-        null=True,
-        blank=True
-    )
+    title = models.CharField(_("Tytuł nagrania"), max_length=235, blank=True, null=True)
+    description = models.TextField(_("Opis"), null=True, blank=True)
 
     class Meta:
         verbose_name = "Player Video"
         verbose_name_plural = "Player Videos"
+
+
+class Mapper(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.mapper.__str__()
+
+
+class MapperEntity(models.Model):
+
+    SOURCES = (
+        ("OLD_LNP", "OLD_LPN"),
+        ("NEW_LNP", "NEW_LPN"),
+        ("TRANSFERMARKT", "TRANSFERMARKT"),
+        ("90MINUT", "90MINUT"),
+    )
+
+    target = models.ForeignKey(Mapper, on_delete=models.CASCADE, null=False, blank=False)
+    mapper_id = models.CharField(max_length=100, null=False, blank=False)
+    source = models.CharField(choices=SOURCES, null=False, blank=False, max_length=20)
+    url = models.CharField(max_length=300)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.source
+
+    class Meta:
+        unique_together = ("target", "source")
