@@ -11,6 +11,7 @@ from profiles.utils import conver_vivo_for_api, supress_exception, unique_slugif
 from .managers import LeagueManager
 from voivodeships.models import Voivodeships
 from django.utils import timezone
+from mapper.models import Mapper
 
 
 class Season(models.Model):
@@ -104,6 +105,8 @@ class Club(models.Model, MappingMixin):
         help_text='Mapping names comma separated. eg "name X", "name Xi"',
     )
 
+    mapper = models.OneToOneField(Mapper, on_delete=models.CASCADE, blank=True, null=True)
+
     manager = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -167,7 +170,6 @@ class Club(models.Model, MappingMixin):
         help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
     )
 
-    scrapper_uuid = models.CharField(max_length=255, blank=True, null=True, unique=True)
     scrapper_autocreated = models.BooleanField(default=False, help_text="Autocreated from new scrapper")
 
     slug = models.CharField(max_length=255, blank=True, editable=False)
@@ -219,8 +221,15 @@ class Club(models.Model, MappingMixin):
         vivo_str = f", {self.voivodeship_obj}" if self.voivodeship_obj else ""
         return f"{self.name} {vivo_str}"
 
+    def create_mapper_obj(self):
+        self.mapper = Mapper.objects.create()
+
     def save(self, *args, **kwargs):
         slug_str = "%s %s" % (self.PROFILE_TYPE, self.name)
+
+        if not self.mapper:
+            self.create_mapper_obj()
+
         unique_slugify(self, slug_str)
         super().save(*args, **kwargs)
 
@@ -239,13 +248,15 @@ class LeagueHistory(models.Model):
     is_matches_data = models.BooleanField(default=False)
     data = models.JSONField(null=True, blank=True)
     data_updated = models.DateTimeField(auto_now=True)
+    mapper = models.OneToOneField(Mapper, on_delete=models.CASCADE, blank=True, null=True)
 
-    scrapper_uuid = models.CharField(max_length=36, blank=True, null=True, help_text="League(play) uuid of an object from mongodb", unique=True)
-    scrapper_parent_uuid = models.CharField(max_length=36, blank=True, null=True, help_text="Parent league uuid, important for higher leagues like Eklstraklasa, 1 Liga etc.")
-    scrapper_obj_name = models.CharField(max_length=255, blank=True, null=True, help_text="League(play) name straight from scrapped object")
+   league_name_raw = models.CharField(max_length=255, blank=True, null=True, help_text="League(play) name straight from scrapped object")
 
     def __str__(self):
         return f"{self.season} ({self.league}) {self.index or ''}"
+
+    def create_mapper_obj(self):
+        self.mapper = Mapper.objects.create()
 
     def check_and_set_if_data_exists(self):
         from data.models import League as Dleague
@@ -266,6 +277,9 @@ class LeagueHistory(models.Model):
     def save(self, *args, **kwargs):
         # self.check_and_set_if_data_exists()
         self.league.set_league_season([self.season])
+
+        if not self.mapper:
+            self.create_mapper_obj()
 
         super().save(*args, **kwargs)
 
@@ -328,7 +342,7 @@ class League(models.Model):
 
     code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
     parent = models.ForeignKey(
-        "self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs"
+        "self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs",
     )
     highest_parent = models.ForeignKey(
         "self", on_delete=models.SET_NULL, blank=True, null=True
@@ -497,6 +511,11 @@ class League(models.Model):
         fields = [self.name, self.zpn, self.city_name, group_name]
         return " ".join(filter(None, fields))
 
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.parent and self.id == self.parent.id:
+            raise ValidationError({'parent': ["You cant have yourself as a parent!"]})
+
     def __str__(self):
         return f"{self.get_upper_parent_names()}"
 
@@ -572,6 +591,8 @@ class Team(models.Model, MappingMixin):
         blank=True,
     )
 
+    mapper = models.OneToOneField(Mapper, on_delete=models.CASCADE, blank=True, null=True)
+
     slug = models.CharField(max_length=255, blank=True, editable=False)
 
     def get_file_path(instance, filename):
@@ -590,7 +611,6 @@ class Team(models.Model, MappingMixin):
         help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
     )
 
-    scrapper_teamhistory_id = models.CharField(max_length=24, blank=True, null=True, unique=True)
     scrapper_autocreated = models.BooleanField(default=False, help_text="Autocreated from new scrapper")
 
     @property
@@ -722,9 +742,16 @@ class Team(models.Model, MappingMixin):
 
         return f"{self.name} {suffix}"
 
+    def create_mapper_obj(self):
+        self.mapper = Mapper.objects.create()
+
     def save(self, *args, **kwargs):
         slug_str = "%s %s %s" % (self.PROFILE_TYPE, self.name, self.club.name if self.club else "")
         unique_slugify(self, slug_str)
+
+        if not self.mapper:
+            self.create_mapper_obj()
+
         super().save(*args, **kwargs)
 
     class Meta:
@@ -793,7 +820,6 @@ class TeamHistory(models.Model):
         help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.", blank=True, null=True
     )
 
-    scrapper_team_uuid = models.CharField(max_length=36, blank=True, null=True, help_text="Team uuid from scrapper.")
     team_name_raw = models.CharField(max_length=250, blank=True, null=True, help_text="Team name from scrapper.")
 
     season = models.ForeignKey(
@@ -816,6 +842,8 @@ class TeamHistory(models.Model):
         blank=True,
     )
 
+    mapper = models.OneToOneField(Mapper, on_delete=models.CASCADE, blank=True, null=True)
+
     visible = models.BooleanField(default=True)
 
     data = models.JSONField(null=True, blank=True)
@@ -824,8 +852,13 @@ class TeamHistory(models.Model):
     def __str__(self):
         return self.team.name_with_league_full
 
-    class Meta:
-        unique_together = ("scrapper_team_uuid", "league_history")
+    def create_mapper_obj(self):
+        self.mapper = Mapper.objects.create()
 
     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
+        if not self.mapper:
+            self.create_mapper_obj()
+        super().save()
+
+    class Meta:
+        unique_together = ("scrapper_team_uuid", "league_history")
