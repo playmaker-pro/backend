@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List
 from django.contrib.postgres.search import SearchVector
 import django.core.exceptions
 
@@ -75,11 +75,11 @@ LEAGUE_HIGHEST_PARENT_NAME_MAPPER = {
     "Centralna Liga Juniorek U-17": "Clj U-17 K",
     "Centralna Liga Juniorek U-15": "Clj U-15 K",
     "A1": "Junior A1",
-    # "A2": "Junior A2",
+    "A2": "Junior A2",
     "B1": "Junior Młodszy B1",
-    # "B2": "Junior Młodszy B2",
+    "B2": "Junior Młodszy B2",
     "C1": "Trampkarz C1",
-    # "C2": "Trampkarz C2",
+    "C2": "Trampkarz C2",
     # "D1": "Młodzik D1 U-13", # We don't need them yet
     # "D2": "Młodzik D2 U-12",
     # "E1": "Orlik E1 U-11",
@@ -101,9 +101,9 @@ class Command(BaseCommand):
     """
 
     SEASONS_TO_FETCH = [
-        # "2022/2023",
+        "2022/2023",
         "2021/2022",
-        # "2020/2021",
+        "2020/2021",
     ]
 
     SENIOR, _ = Seniority.objects.get_or_create(name="seniorzy")
@@ -113,10 +113,10 @@ class Command(BaseCommand):
     FEMALE, _ = Gender.objects.get_or_create(name="kobiety")
 
     def handle(self) -> None:
-        scrapper_leagues: List[LeagueEntity] = self.http.get_leagues()
+        scrapper_leagues: List[LeagueEntity] = self.service.get_leagues()
         scrapper_team_histories: List[
             TeamHistoryEntity
-        ] = self.http.get_team_histories()
+        ] = self.service.get_team_histories()
 
         RestoreDatabase()
 
@@ -374,7 +374,6 @@ class Command(BaseCommand):
                     try:
                         league_history = LeagueHistory.objects.get(
                             mapper=get_mapper(play.id)
-                            # scrapper_uuid=play.id
                         )
                     except django.core.exceptions.ObjectDoesNotExist:
                         try:
@@ -390,32 +389,25 @@ class Command(BaseCommand):
                                     NEW_LNP={"id": play.id, "desc": "LNP play uuid"},
                                     NEW_ADDITIONAL_LNP={"id": league_obj.id, "desc": "LNP league uuid (highest parent)"}
                                 ),
-                                # scrapper_uuid=play.id,
-                                # scrapper_parent_uuid=league_obj.id,
                                 league_name_raw=play.name,
                             )
                     if (
                         league_history.mapper
                         and league_history.mapper.get_entity(source=NEW_LNP_SOURCE)
-                            # league_history.scrapper_uuid
-                            # and league_history.scrapper_uuid != play.id
                     ):
                         lh_mapper_entity = league_history.mapper.get_entity(source=NEW_LNP_SOURCE)
                         curr_teams_count = len(
-                            self.http.get_play_teams(lh_mapper_entity.mapper_id)
-                        # self.http.get_play_teams(league_history.scrapper_uuid)
+                            self.service.get_play_teams(lh_mapper_entity.mapper_id)
                         )
-                        new_teams_count = len(self.http.get_play_teams(play.id))
+                        new_teams_count = len(self.service.get_play_teams(play.id))
                         if new_teams_count < curr_teams_count:
                             continue
                         lh_mapper_entity.mapper_id = play.id
                         lh_mapper_entity.save()
-                        # league_history.scrapper_uuid = play.id
                         if highest_parent in PARENT_UUID_REQUIRED:
                             lh_mapper_additional_entity = league_history.mapper.get_entity(source=NEW_ADDITIONAL_LNP_SOURCE)
                             lh_mapper_additional_entity.mapper_id = league_obj.id
                             lh_mapper_additional_entity.save()
-                            # league_history.scrapper_parent_uuid = league_obj.id
                         league_history.league_name_raw = play.name
                         league_history.save()
 
@@ -453,7 +445,7 @@ class Command(BaseCommand):
                 )
 
                 club_name = unify_name(club.name)
-                club_details = self.http.get_club_details(club.id)
+                club_details = self.service.get_club_details(club.id)
                 club_address = club_details.address
                 voivo = club_details.voivodeship
                 club_voivo = None
@@ -469,7 +461,6 @@ class Command(BaseCommand):
                     return Club.objects.create(
                         name=club_name,
                         mapper=create_mapper(NEW_LNP={"id": club.id, "desc": "LNP club uuid"}),
-                        # scrapper_uuid=club.id,
                         scrapper_autocreated=True,
                         mapping=club.name,
                         voivodeship_obj=club_voivo,
@@ -480,7 +471,6 @@ class Command(BaseCommand):
                     if not obj.mapper:
                         obj.create_mapper_obj()
                     MapperEntity.objects.get_or_create(target=obj.mapper, source=NEW_LNP_SOURCE, mapper_id=club.id)
-                    # obj.scrapper_uuid = club.id
                     obj.mapping = club.name
                     if not obj.stadion_address:
                         obj.stadion_address = club_address
@@ -502,7 +492,6 @@ class Command(BaseCommand):
                                 "desc": "TeamHistory id as ObjectId in mongodb, immutable between seasons"
                             }
                         ),
-                        # scrapper_teamhistory_id=team_history.obj_id,
                         scrapper_autocreated=True,
                         mapping=f"{team.name}; ",
                         visible=False,
@@ -530,19 +519,12 @@ class Command(BaseCommand):
                         )
                     team_obj.save()
 
-                # if not team_obj.scrapper_teamhistory_id:
-                #     team_obj.scrapper_teamhistory_id = team_history.obj_id
-                #     team_obj.save()
-
-                team_plays = self.http.get_team_plays(team.id)
+                team_plays = self.service.get_team_plays(team.id)
                 for league in team_plays:
                     try:
                         league_history = LeagueHistory.objects.get(
                             mapper=get_mapper(league.id)
                         )
-                        # league_history = LeagueHistory.objects.get(
-                        #     scrapper_uuid=league.id
-                        # )
                     except django.core.exceptions.ObjectDoesNotExist:
                         continue
                     try:

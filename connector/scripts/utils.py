@@ -1,5 +1,5 @@
 import re
-
+from django.core.exceptions import ObjectDoesNotExist
 from mapper.models import MapperSource, MapperEntity, Mapper
 
 #mapper sources
@@ -48,9 +48,8 @@ TO_CUT = [
 
 def get_mapper(target_id: str):
     try:
-        print(target_id)
         entity = MapperEntity.objects.get(mapper_id=target_id)
-    except django.core.exceptions.ObjectDoesNotExist:
+    except ObjectDoesNotExist:
         pass
     else:
         return Mapper.objects.get(mapperentity=entity)

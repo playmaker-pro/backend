@@ -1,3 +1,4 @@
+import json
 from typing import List, Union
 import requests
 from connector.entities import (
@@ -8,6 +9,12 @@ from connector.entities import (
     LeagueEntity,
 )
 from .urls import URL
+
+# paths
+TEAM_HISTORY_FILEPATH = "connector/scripts/teamhistories.json"
+LEAGUES_FILEPATH = "connector/scripts/leagues.json"
+CLUBS_FILEPATH = "connector/scripts/clubs.json"
+TABLES_FILEPATH = "connector/scripts/tables.json"
 
 
 class HttpService:
@@ -54,3 +61,37 @@ class HttpService:
         if not response.json():
             return []
         return [LeagueEntity(**league) for league in response.json()]
+
+
+class JsonService:
+
+    def get_team_histories(self) -> List[TeamHistoryEntity]:
+        return [TeamHistoryEntity(**th) for th in json.load(open(TEAM_HISTORY_FILEPATH))]
+
+    def get_team_plays(self, team_id: str) -> List[PlayEntity]:
+        tables = json.load(open(TABLES_FILEPATH))
+
+        plays = []
+        for table in tables:
+            result = list(filter(lambda row: row["team"]["id"] == team_id, table["rows"]))
+            if result:
+                plays.append(table["play"])
+
+        return [PlayEntity(**play) for play in plays]
+
+    def get_club_details(self, club_id: str) -> Union[ClubEntity, None]:
+        clubs = json.load(open(CLUBS_FILEPATH))
+        result = list(filter(lambda club: club["id"] == club_id, clubs))
+        if result:
+            return ClubEntity(**result[0])
+
+    def get_play_teams(self, play_id: str) -> List[BaseTeamEntity]:
+        tables = json.load(open(TABLES_FILEPATH))
+        result = list(filter(lambda table: table["play"]["id"] == play_id, tables))
+        if result:
+            return [BaseTeamEntity(**row["team"]) for row in result[0]["rows"]]
+        else:
+            return []
+
+    def get_leagues(self) -> List[LeagueEntity]:
+        return [LeagueEntity(**league) for league in json.load(open(LEAGUES_FILEPATH))]

@@ -1,16 +1,17 @@
 import django
-from .service import HttpService
+from .service import HttpService, JsonService
+from django.conf import settings
 
 
 class Manager:
 
     def __init__(self, command: str, *args, **kwargs):
         django.setup()
-        self.http = HttpService()
+        self.service = HttpService() if settings.SCRAPPER else JsonService()
         getattr(self, command)(args, kwargs)
 
     def run_action(self, action, *args, **kwargs) -> None:
-        action.Command(self.http, *args, **kwargs)
+        action.Command(self.service, *args, **kwargs)
 
     def import_scrapper_objects(self, *args, **kwargs) -> None:
         from .scripts import import_scrapper_objects
