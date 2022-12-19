@@ -1,0 +1,41 @@
+from clubs.models import Team, Club, LeagueHistory, TeamHistory, League
+from connector.scripts.base import BaseCommand
+from mapper.models import MapperEntity
+
+
+class Command(BaseCommand):
+    """
+    Restore database from scrapper changes
+    """
+    def handle(self, *args, **kwargs):
+
+        for team in Team.objects.filter(scrapper_autocreated=True):
+            team.mapper.delete()
+            team.delete()
+
+        for club in Club.objects.filter(scrapper_autocreated=True):
+            club.mapper.delete()
+            club.delete()
+
+        for team in Team.objects.filter(mapper__isnull=False):
+            entities = MapperEntity.objects.filter(target=team.mapper)
+            for entity in entities:
+                entity.delete()
+
+        for club in Club.objects.filter(mapper__isnull=False):
+            entities = MapperEntity.objects.filter(target=club.mapper)
+            for entity in entities:
+                entity.delete()
+
+        for league in League.objects.filter(scrapper_autocreated=True):
+            league.delete()
+
+        for lh in LeagueHistory.objects.all():
+            if lh.mapper:
+                lh.mapper.delete()
+            lh.delete()
+
+        for th in TeamHistory.objects.all():
+            if th.mapper:
+                th.mapper.delete()
+            th.delete()
