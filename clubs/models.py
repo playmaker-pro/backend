@@ -11,6 +11,7 @@ from profiles.utils import conver_vivo_for_api, supress_exception, unique_slugif
 from .managers import LeagueManager
 from voivodeships.models import Voivodeships
 from django.utils import timezone
+from mapper.models import Mapper
 
 
 class Season(models.Model):
@@ -103,6 +104,8 @@ class Club(models.Model, MappingMixin):
         blank=True,
         help_text='Mapping names comma separated. eg "name X", "name Xi"',
     )
+
+    mapper = models.OneToOneField(Mapper, on_delete=models.CASCADE, blank=True, null=True)
 
     manager = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -226,8 +229,15 @@ class Club(models.Model, MappingMixin):
         vivo_str = f", {self.voivodeship_obj}" if self.voivodeship_obj else ""
         return f"{self.name} {vivo_str}"
 
+    def create_mapper_obj(self):
+        self.mapper = Mapper.objects.create()
+
     def save(self, *args, **kwargs):
         slug_str = "%s %s" % (self.PROFILE_TYPE, self.name)
+
+        if not self.mapper:
+            self.create_mapper_obj()
+
         unique_slugify(self, slug_str)
         super().save(*args, **kwargs)
 
@@ -246,9 +256,13 @@ class LeagueHistory(models.Model):
     is_matches_data = models.BooleanField(default=False)
     data = models.JSONField(null=True, blank=True)
     data_updated = models.DateTimeField(auto_now=True)
+    mapper = models.OneToOneField(Mapper, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return f"{self.season} ({self.league}) {self.index or ''}"
+
+    def create_mapper_obj(self):
+        self.mapper = Mapper.objects.create()
 
     def check_and_set_if_data_exists(self):
         from data.models import League as Dleague
@@ -269,6 +283,9 @@ class LeagueHistory(models.Model):
     def save(self, *args, **kwargs):
         self.check_and_set_if_data_exists()
         self.league.set_league_season([self.season])
+
+        if not self.mapper:
+            self.create_mapper_obj()
 
         super().save(*args, **kwargs)
 
@@ -579,6 +596,8 @@ class Team(models.Model, MappingMixin):
         blank=True,
     )
 
+    mapper = models.OneToOneField(Mapper, on_delete=models.CASCADE, blank=True, null=True)
+
     slug = models.CharField(max_length=255, blank=True, editable=False)
 
     def get_file_path(instance, filename):
@@ -735,10 +754,17 @@ class Team(models.Model, MappingMixin):
 
         return f"{self.name} {suffix}"
 
+    def create_mapper_obj(self):
+        self.mapper = Mapper.objects.create()
+
     def save(self, *args, **kwargs):
         slug_str = "%s %s %s" % (self.PROFILE_TYPE, self.name, self.club.name)
         unique_slugify(self, slug_str)
         self.full_name = self.__str__()
+
+        if not self.mapper:
+            self.create_mapper_obj()
+
         super().save(*args, **kwargs)
 
     class Meta:
@@ -792,6 +818,7 @@ class Team(models.Model, MappingMixin):
     def __str__(self):
         return self.name_with_league_full
 
+
 class TeamHistory(models.Model):
     """Definition of a  team history object
 
@@ -826,6 +853,8 @@ class TeamHistory(models.Model):
         blank=True,
     )
 
+    mapper = models.OneToOneField(Mapper, on_delete=models.CASCADE, blank=True, null=True)
+
     visible = models.BooleanField(default=True)
 
     data = models.JSONField(null=True, blank=True)
@@ -833,6 +862,14 @@ class TeamHistory(models.Model):
 
     def __str__(self):
         return self.team.name_with_league_full
+
+    def create_mapper_obj(self):
+        self.mapper = Mapper.objects.create()
+
+    def save(self, *args, **kwargs):
+        if not self.mapper:
+            self.create_mapper_obj()
+        super().save()
 
     class Meta:
         unique_together = ("team", "season")

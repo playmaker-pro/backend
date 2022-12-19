@@ -219,9 +219,10 @@ class PlayerProfileAdmin(ProfileAdminBase):
     )
 
     def team_object_linkify(self, obj=None):
-        if obj.team_object: 
+        if obj.team_object:
             return linkify("team_object")(obj)
-        else: return "-"
+        else:
+            return "-"
     
     team_object_linkify.short_description = "team_object"
 
@@ -246,6 +247,8 @@ class PlayerProfileAdmin(ProfileAdminBase):
         set_team_object_based_on_meta,
         calculate_fantasy,
     ]
+
+    readonly_fields = ("data_prettified", "mapper")
 
 
 @admin.register(models.CoachProfile)
