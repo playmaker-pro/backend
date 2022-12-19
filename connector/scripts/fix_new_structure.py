@@ -41,9 +41,12 @@ class Command(BaseCommand):
         """
         Merge teams that have not been assigned correctly
         """
-        teams_to_fix = Team.objects.filter(scrapper_teamhistory_id__isnull=True).filter(
+        teams_to_fix = Team.objects.filter(mapper__isnull=True).filter(
             league__isnull=False
         )
+        # teams_to_fix = Team.objects.filter(scrapper_teamhistory_id__isnull=True).filter(
+        #     league__isnull=False
+        # )
         for team in teams_to_fix:
             team_name = unify_name(team.name, False)
             team_name_partial = team_name.split(" ")
@@ -78,11 +81,14 @@ class Command(BaseCommand):
                         ]
                         if not any(final_check):
                             continue
-                    th_id = target_team_history.team.scrapper_teamhistory_id
+                    t_mapper = target_team_history.team.mapper
+
+                    # th_id = target_team_history.team.scrapper_teamhistory_id
                     target_team_history.team.delete()
                     target_team_history.delete()
                     target_team_history.team = team
-                    team.scrapper_teamhistory_id = th_id
+                    team.mapper = t_mapper
+                    # team.scrapper_teamhistory_id = th_id
                     team.save()
                     target_team_history.save()
                     break

@@ -1,5 +1,11 @@
 import re
 
+from mapper.models import MapperSource, MapperEntity, Mapper
+
+#mapper sources
+NEW_LNP_SOURCE, _ = MapperSource.objects.get_or_create(name="NEW_LNP")
+NEW_ADDITIONAL_LNP_SOURCE, _ = MapperSource.objects.get_or_create(name="NEW_ADDITIONAL_LNP")
+
 NAMES_BLACKLISTED_PHRASES = (
     ("/", " "),
     ('"', ""),
@@ -12,6 +18,7 @@ NAMES_BLACKLISTED_PHRASES = (
 )
 
 TO_CUT = [
+        "KSAP",
         "GLKS",
         "CWKS",
         "MLKS",
@@ -37,6 +44,28 @@ TO_CUT = [
         "(RW)",
         "(RJ)",
     ]
+
+
+def get_mapper(target_id: str):
+    try:
+        print(target_id)
+        entity = MapperEntity.objects.get(mapper_id=target_id)
+    except django.core.exceptions.ObjectDoesNotExist:
+        pass
+    else:
+        return Mapper.objects.get(mapperentity=entity)
+
+
+def create_mapper(**kwargs):
+    mapper = Mapper.objects.create()
+    for source, value in kwargs.items():
+        MapperEntity.objects.create(
+            target=mapper,
+            source=MapperSource.objects.get(name=source),
+            mapper_id=value["id"],
+            description=value["desc"],
+        )
+    return mapper
 
 
 def unify_name(obj_name: str, remove_roman_signs: bool = True) -> str:

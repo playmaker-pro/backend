@@ -1,9 +1,18 @@
+from typing import Union
+
+import django.core.exceptions
 from django.db import models
 
 
 class Mapper(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def get_entity(self, **kwargs) -> Union["MapperEntity", None]:
+        try:
+            return MapperEntity.objects.get(target=self, **kwargs)
+        except django.core.exceptions.ObjectDoesNotExist:
+            pass
 
 
 class MapperSource(models.Model):

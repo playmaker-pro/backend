@@ -1,7 +1,8 @@
-from typing import List
+from typing import List, Union
 from django.contrib.postgres.search import SearchVector
 import django.core.exceptions
-from .utils import unify_name
+
+from .utils import unify_name, NEW_LNP_SOURCE, NEW_ADDITIONAL_LNP_SOURCE, create_mapper, get_mapper, MapperEntity
 from .base import BaseCommand
 from .restore_database import Command as RestoreDatabase
 from clubs.models import (
@@ -74,11 +75,11 @@ LEAGUE_HIGHEST_PARENT_NAME_MAPPER = {
     "Centralna Liga Juniorek U-17": "Clj U-17 K",
     "Centralna Liga Juniorek U-15": "Clj U-15 K",
     "A1": "Junior A1",
-    "A2": "Junior A2",
+    # "A2": "Junior A2",
     "B1": "Junior Młodszy B1",
-    "B2": "Junior Młodszy B2",
+    # "B2": "Junior Młodszy B2",
     "C1": "Trampkarz C1",
-    "C2": "Trampkarz C2",
+    # "C2": "Trampkarz C2",
     # "D1": "Młodzik D1 U-13", # We don't need them yet
     # "D2": "Młodzik D2 U-12",
     # "E1": "Orlik E1 U-11",
@@ -100,9 +101,9 @@ class Command(BaseCommand):
     """
 
     SEASONS_TO_FETCH = [
-        "2022/2023",
+        # "2022/2023",
         "2021/2022",
-        "2020/2021",
+        # "2020/2021",
     ]
 
     SENIOR, _ = Seniority.objects.get_or_create(name="seniorzy")
@@ -234,10 +235,12 @@ class Command(BaseCommand):
             return model_obj
 
         try:
-            if model is Club:
-                return model.objects.get(scrapper_uuid=unique_id)
-            elif model is Team:
-                return model.objects.get(scrapper_teamhistory_id=unique_id)
+            target_mapper = get_mapper(unique_id)
+            if target_mapper:
+                if model is Club:
+                    return model.objects.get(mapper=target_mapper)
+                elif model is Team:
+                    return model.objects.get(mapper=target_mapper)
         except django.core.exceptions.ObjectDoesNotExist:
             return partial_search()
 
@@ -370,7 +373,8 @@ class Command(BaseCommand):
 
                     try:
                         league_history = LeagueHistory.objects.get(
-                            scrapper_uuid=play.id
+                            mapper=get_mapper(play.id)
+                            # scrapper_uuid=play.id
                         )
                     except django.core.exceptions.ObjectDoesNotExist:
                         try:
@@ -382,26 +386,38 @@ class Command(BaseCommand):
                             league_history = LeagueHistory.objects.create(
                                 league=target_league,
                                 season=local_season,
-                                scrapper_uuid=play.id,
-                                scrapper_parent_uuid=league_obj.id,
-                                scrapper_obj_name=play.name,
+                                mapper=create_mapper(
+                                    NEW_LNP={"id": play.id, "desc": "LNP play uuid"},
+                                    NEW_ADDITIONAL_LNP={"id": league_obj.id, "desc": "LNP league uuid (highest parent)"}
+                                ),
+                                # scrapper_uuid=play.id,
+                                # scrapper_parent_uuid=league_obj.id,
+                                league_name_raw=play.name,
                             )
-
                     if (
-                            league_history.scrapper_uuid
-                            and league_history.scrapper_uuid != play.id
+                        league_history.mapper
+                        and league_history.mapper.get_entity(source=NEW_LNP_SOURCE)
+                            # league_history.scrapper_uuid
+                            # and league_history.scrapper_uuid != play.id
                     ):
+                        lh_mapper_entity = league_history.mapper.get_entity(source=NEW_LNP_SOURCE)
                         curr_teams_count = len(
-                            self.http.get_play_teams(league_history.scrapper_uuid)
+                            self.http.get_play_teams(lh_mapper_entity.mapper_id)
+                        # self.http.get_play_teams(league_history.scrapper_uuid)
                         )
                         new_teams_count = len(self.http.get_play_teams(play.id))
                         if new_teams_count < curr_teams_count:
                             continue
-                    league_history.scrapper_uuid = play.id
-                    if highest_parent in PARENT_UUID_REQUIRED:
-                        league_history.scrapper_parent_uuid = league_obj.id
-                    league_history.scrapper_obj_name = play.name
-                    league_history.save()
+                        lh_mapper_entity.mapper_id = play.id
+                        lh_mapper_entity.save()
+                        # league_history.scrapper_uuid = play.id
+                        if highest_parent in PARENT_UUID_REQUIRED:
+                            lh_mapper_additional_entity = league_history.mapper.get_entity(source=NEW_ADDITIONAL_LNP_SOURCE)
+                            lh_mapper_additional_entity.mapper_id = league_obj.id
+                            lh_mapper_additional_entity.save()
+                            # league_history.scrapper_parent_uuid = league_obj.id
+                        league_history.league_name_raw = play.name
+                        league_history.save()
 
     def map_teamhistory(self, team_histories: List[TeamHistoryEntity]) -> None:
         """
@@ -452,7 +468,8 @@ class Command(BaseCommand):
                 def create_club():
                     return Club.objects.create(
                         name=club_name,
-                        scrapper_uuid=club.id,
+                        mapper=create_mapper(NEW_LNP={"id": club.id, "desc": "LNP club uuid"}),
+                        # scrapper_uuid=club.id,
                         scrapper_autocreated=True,
                         mapping=club.name,
                         voivodeship_obj=club_voivo,
@@ -460,7 +477,10 @@ class Command(BaseCommand):
                     )
 
                 def configure_club(obj: Club):
-                    obj.scrapper_uuid = club.id
+                    if not obj.mapper:
+                        obj.create_mapper_obj()
+                    MapperEntity.objects.get_or_create(target=obj.mapper, source=NEW_LNP_SOURCE, mapper_id=club.id)
+                    # obj.scrapper_uuid = club.id
                     obj.mapping = club.name
                     if not obj.stadion_address:
                         obj.stadion_address = club_address
@@ -476,7 +496,13 @@ class Command(BaseCommand):
                     team_obj = Team.objects.create(
                         club=club_obj,
                         name=team_name,
-                        scrapper_teamhistory_id=team_history.obj_id,
+                        mapper=create_mapper(
+                            NEW_LNP={
+                                "id": team_history.obj_id,
+                                "desc": "TeamHistory id as ObjectId in mongodb, immutable between seasons"
+                            }
+                        ),
+                        # scrapper_teamhistory_id=team_history.obj_id,
                         scrapper_autocreated=True,
                         mapping=f"{team.name}; ",
                         visible=False,
@@ -495,25 +521,41 @@ class Command(BaseCommand):
                     )
                     configure_club(club_obj)
 
-                if not team_obj.scrapper_teamhistory_id:
-                    team_obj.scrapper_teamhistory_id = team_history.obj_id
+                if not team_obj.mapper:
+                    team_obj.mapper = create_mapper(
+                            NEW_LNP={
+                                "id": team_history.obj_id,
+                                "desc": "TeamHistory id as ObjectId in mongodb, immutable between seasons"
+                            }
+                        )
                     team_obj.save()
+
+                # if not team_obj.scrapper_teamhistory_id:
+                #     team_obj.scrapper_teamhistory_id = team_history.obj_id
+                #     team_obj.save()
 
                 team_plays = self.http.get_team_plays(team.id)
                 for league in team_plays:
                     try:
                         league_history = LeagueHistory.objects.get(
-                            scrapper_uuid=league.id
+                            mapper=get_mapper(league.id)
                         )
+                        # league_history = LeagueHistory.objects.get(
+                        #     scrapper_uuid=league.id
+                        # )
                     except django.core.exceptions.ObjectDoesNotExist:
                         continue
-                    TeamHistory.objects.get_or_create(
-                        team=team_obj,
-                        team_name_raw=team.name,
-                        scrapper_team_uuid=team.id,
-                        league_history=league_history,
-                        visible=False,
-                    )
+                    try:
+                        TeamHistory.objects.get(mapper=get_mapper(team.id))
+                    except django.core.exceptions.ObjectDoesNotExist:
+                        TeamHistory.objects.create(
+                            team=team_obj,
+                            team_name_raw=team.name,
+                            mapper=create_mapper(NEW_LNP={"id": team.id, "desc": "LNP team uuid"}),
+                            # scrapper_team_uuid=team.id,
+                            league_history=league_history,
+                            visible=False,
+                        )
 
     def merge_clubs(self) -> None:
         """
