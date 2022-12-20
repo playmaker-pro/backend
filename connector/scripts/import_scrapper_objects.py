@@ -1,6 +1,7 @@
 from typing import List
 from django.contrib.postgres.search import SearchVector
 import django.core.exceptions
+from collections import Counter
 
 from .utils import unify_name, NEW_LNP_SOURCE, NEW_ADDITIONAL_LNP_SOURCE, create_mapper, get_mapper, MapperEntity
 from .base import BaseCommand
@@ -310,9 +311,15 @@ class Command(BaseCommand):
                             partial_name[index_in] = "Grupa"
                         except ValueError:
                             pass
-                    if "grupa" in name and "Grupa" not in name:
+                    if "grupa" in name:
                         try:
                             index_in = partial_name.index("grupa")
+                            partial_name[index_in] = "Grupa"
+                        except ValueError:
+                            pass
+                    if "GRUPA" in name:
+                        try:
+                            index_in = partial_name.index("GRUPA")
                             partial_name[index_in] = "Grupa"
                         except ValueError:
                             pass
@@ -324,11 +331,12 @@ class Command(BaseCommand):
                         params.append("Południe")
                     elif "płn." in partial_name or "północna" in partial_name:
                         params.append("Północ")
-                    else:
-                        if "Grupa" in partial_name:
-                            index_in = partial_name.index("Grupa")
-                            group = " ".join(partial_name[index_in: (index_in + 2)])
-                            params.append(self.unify_roman_decimals(group))
+
+                    if "Grupa" in partial_name:
+                        for index_in, phrase in enumerate(partial_name):
+                            if phrase == "Grupa":
+                                group = " ".join(partial_name[index_in: (index_in + 2)])
+                                params.append(self.unify_roman_decimals(group))
 
                     if "baraż" in name.lower():
                         params.append("baraż")
@@ -339,10 +347,12 @@ class Command(BaseCommand):
                     elif "spad" in name.lower():
                         params.append("spadkowa")
 
-                    if '"RW"' in name or '"RW ' in name or "(RW)" in name:
+                    if '"RW"' in name or '"RW ' in name or "(RW)" in name or "WIOSNA" in name or "WIOSENNA" in name:
                         params.append("RW")
-                    elif '"RJ"' in name or '"RJ ' in name or "(RJ)" in name:
+                    elif '"RJ"' in name or '"RJ ' in name or "(RJ)" in name or "JESIEŃ" in name:
                         params.append("RJ")
+
+                    params = list(Counter(params))
 
                     try:
                         target_league = League.objects.get(name=highest_parent)
@@ -391,9 +401,11 @@ class Command(BaseCommand):
                                 ),
                                 league_name_raw=play.name,
                             )
+                    target_mapper_entity = league_history.mapper.get_entity(source=NEW_LNP_SOURCE)
                     if (
                         league_history.mapper
-                        and league_history.mapper.get_entity(source=NEW_LNP_SOURCE)
+                        and target_mapper_entity
+                        and target_mapper_entity.mapper_id != play.id
                     ):
                         lh_mapper_entity = league_history.mapper.get_entity(source=NEW_LNP_SOURCE)
                         curr_teams_count = len(
