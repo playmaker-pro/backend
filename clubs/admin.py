@@ -14,11 +14,20 @@ def reset_history(modeladmin, request, queryset):
 
 reset_history.short_description = "Reset history league data."
 
+
 @admin.action(description="Aktualizuj visible team")
 def update_team_visibility(modeladmin, request, queryset):
     for object in queryset:
         object.visible = object.should_be_visible or False
         object.save()
+
+
+@admin.action(description="Zaznacz visible = True")
+def set_visibility(modeladmin, request, queryset):
+    for object in queryset:
+        object.visible = True
+        object.save()
+
 
 def resave(modeladmin, request, queryset):
     for object in queryset:
@@ -211,7 +220,7 @@ class TeamAdmin(admin.ModelAdmin):
     )
     search_fields = ("name",)
     list_filter = ("league__name", "gender__name", "seniority__name")
-    actions = [update_team_visibility,]
+    actions = [update_team_visibility, set_visibility]
     autocomplete_fields = ("manager", "club", "league",)
 
     def full_league_linkify(self, obj=None):
