@@ -41,7 +41,9 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
         "data_updated",
         "is_data",
     )
-    ordering:Optional[Sequence[str]] = ("-league",)
+    ordering: Optional[Sequence[str]] = ("-league",)
+    search_fields = ("league",)
+    autocomplete_fields = ("league",)
     readonly_fields = ("data_prettified",)
     actions = [
         reset_history,
@@ -176,7 +178,7 @@ class TeamHistoryAdmin(admin.ModelAdmin):
         "data"
         )
     search_fields: Sequence[str]  = ("team__name",)
-    autocomplete_fields: Sequence[str] = ("team", "league", "season")
+    autocomplete_fields: Sequence[str] = ("team", "league", "season", "league_history")
     list_filter: Sequence[str]  = (
         "season",
         "league__highest_parent__name",

@@ -11,6 +11,7 @@ from profiles.utils import conver_vivo_for_api, supress_exception, unique_slugif
 from .managers import LeagueManager
 from voivodeships.models import Voivodeships
 from django.utils import timezone
+from mapper.models import Mapper
 
 
 class Season(models.Model):
@@ -36,22 +37,21 @@ class Season(models.Model):
         else:
             season = f"{date.year - 1}/{date.year}"
         return season
-    
+
     class Meta:
-        ordering = ('-is_current',)
-  
+        ordering = ("-is_current",)
+
     def current_season_update(self, *args, **kwargs):
         current_season = self.define_current_season()
         for season in self._meta.model.objects.all():
             season.is_current = season.name == current_season
             season.save(updated=True)
-    
+
     def save(self, updated=False, *args, **kwargs):
         super().save(*args, **kwargs)
         if not updated:
             self.current_season_update()
-        
-        
+
     @property
     def display_season(self):
         return self.name
@@ -104,6 +104,10 @@ class Club(models.Model, MappingMixin):
         help_text='Mapping names comma separated. eg "name X", "name Xi"',
     )
 
+    mapper = models.OneToOneField(
+        Mapper, on_delete=models.CASCADE, blank=True, null=True
+    )
+
     manager = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -118,7 +122,10 @@ class Club(models.Model, MappingMixin):
 
     # TODO Based on task PM-363. After migration on production, field can be deleted
     voivodeship = models.ForeignKey(
-        Voivodeship, on_delete=models.SET_NULL, null=True, blank=True,
+        Voivodeship,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         verbose_name=_("Województwo"),
         help_text="Wybierz województwo. Stare pole, czeka na migracje",
     )
@@ -129,7 +136,7 @@ class Club(models.Model, MappingMixin):
         max_length=20,
         blank=True,
         null=True,
-        on_delete=models.SET_NULL
+        on_delete=models.SET_NULL,
     )
 
     def is_editor(self, user):
@@ -146,8 +153,6 @@ class Club(models.Model, MappingMixin):
     @property
     @supress_exception
     def display_club(self):
-        if self.club_raw:
-            return self.club_raw
         return self.name
 
     @property
@@ -169,18 +174,14 @@ class Club(models.Model, MappingMixin):
         help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
     )
 
+    scrapper_autocreated = models.BooleanField(
+        default=False, help_text="Autocreated from new scrapper"
+    )
+
     slug = models.CharField(max_length=255, blank=True, editable=False)
 
     name = models.CharField(
         _("Club name"), max_length=255, help_text="Displayed Name of club"
-    )
-
-    club_raw = models.CharField(
-        _("Deklarowany Klub"),
-        max_length=255,
-        help_text=_("Klub w którym deklarujesz że obecnie reprezentuejsz"),
-        blank=True,
-        null=True,
     )
 
     voivodeship_raw = models.CharField(
@@ -226,8 +227,15 @@ class Club(models.Model, MappingMixin):
         vivo_str = f", {self.voivodeship_obj}" if self.voivodeship_obj else ""
         return f"{self.name} {vivo_str}"
 
+    def create_mapper_obj(self):
+        self.mapper = Mapper.objects.create()
+
     def save(self, *args, **kwargs):
         slug_str = "%s %s" % (self.PROFILE_TYPE, self.name)
+
+        if not self.mapper:
+            self.create_mapper_obj()
+
         unique_slugify(self, slug_str)
         super().save(*args, **kwargs)
 
@@ -246,9 +254,22 @@ class LeagueHistory(models.Model):
     is_matches_data = models.BooleanField(default=False)
     data = models.JSONField(null=True, blank=True)
     data_updated = models.DateTimeField(auto_now=True)
+    mapper = models.OneToOneField(
+        Mapper, on_delete=models.CASCADE, blank=True, null=True
+    )
+
+    league_name_raw = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="League(play) name straight from scrapped object",
+    )
 
     def __str__(self):
         return f"{self.season} ({self.league}) {self.index or ''}"
+
+    def create_mapper_obj(self):
+        self.mapper = Mapper.objects.create()
 
     def check_and_set_if_data_exists(self):
         from data.models import League as Dleague
@@ -267,8 +288,11 @@ class LeagueHistory(models.Model):
         )
 
     def save(self, *args, **kwargs):
-        self.check_and_set_if_data_exists()
+        # self.check_and_set_if_data_exists()
         self.league.set_league_season([self.season])
+
+        if not self.mapper:
+            self.create_mapper_obj()
 
         super().save(*args, **kwargs)
 
@@ -331,7 +355,11 @@ class League(models.Model):
 
     code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
     parent = models.ForeignKey(
-        "self", on_delete=models.SET_NULL, blank=True, null=True, related_name="childs",
+        "self",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="childs",
     )
     highest_parent = models.ForeignKey(
         "self", on_delete=models.SET_NULL, blank=True, null=True
@@ -364,6 +392,8 @@ class League(models.Model):
     index = models.CharField(max_length=255, null=True, blank=True)
 
     search_tokens = models.CharField(max_length=255, null=True, blank=True)
+
+    scrapper_autocreated = models.BooleanField(default=False)
 
     def has_season_data(self, season_name: str) -> bool:
         """Just a helper function to know if historical object has data for given season"""
@@ -452,7 +482,11 @@ class League(models.Model):
         return self.zpn
 
     def get_permalink(self):
-        return reverse("plays:summary", kwargs={"slug": self.slug}) if settings.SCRAPPER else "#"
+        return (
+            reverse("plays:summary", kwargs={"slug": self.slug})
+            if settings.SCRAPPER
+            else "#"
+        )
 
     def get_slug_value(self):
         return self.get_upper_parent_names(spliter="--")
@@ -481,7 +515,9 @@ class League(models.Model):
     def get_upper_parent_names(self, spliter=", "):
         name = self.name
         if self.parent:
-            name = f"{self.parent.get_upper_parent_names(spliter=spliter)}{spliter}{name}"
+            name = (
+                f"{self.parent.get_upper_parent_names(spliter=spliter)}{spliter}{name}"
+            )
         return name
 
     def set_league_season(self, seasons: List[Season]):
@@ -500,8 +536,9 @@ class League(models.Model):
 
     def clean(self):
         from django.core.exceptions import ValidationError
+
         if self.parent and self.id == self.parent.id:
-            raise ValidationError({'parent': ["You cant have yourself as a parent!"]})
+            raise ValidationError({"parent": ["You cant have yourself as a parent!"]})
 
     def __str__(self):
         return f"{self.get_upper_parent_names()}"
@@ -539,7 +576,6 @@ class Team(models.Model, MappingMixin):
 
     EDITABLE_FIELDS = [
         "name",
-        "picture",
         "travel_refunds",
         "game_bonus",
         "scolarships",
@@ -579,14 +615,14 @@ class Team(models.Model, MappingMixin):
         blank=True,
     )
 
+    mapper = models.OneToOneField(
+        Mapper, on_delete=models.CASCADE, blank=True, null=True
+    )
+
     slug = models.CharField(max_length=255, blank=True, editable=False)
 
     def get_file_path(instance, filename):
         return f"team_pics/%Y-%m-%d/{remove_polish_chars(filename)}"
-
-    picture = models.ImageField(
-        _("Zdjęcie"), upload_to=get_file_path, null=True, blank=True
-    )
 
     club = models.ForeignKey(
         Club,
@@ -601,11 +637,16 @@ class Team(models.Model, MappingMixin):
         help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
     )
 
+    scrapper_autocreated = models.BooleanField(
+        default=False, help_text="Autocreated from new scrapper"
+    )
+
     @property
     def should_be_visible(self):
-        return (self.manager or self.club.manager) \
-               and ((self.seniority and self.seniority.is_senior) or not self.seniority)
-    
+        return (self.manager or self.club.manager) and (
+            (self.seniority and self.seniority.is_senior) or not self.seniority
+        )
+
     @property
     def get_club_pic(self):
         if self.club:
@@ -621,10 +662,12 @@ class Team(models.Model, MappingMixin):
     @property
     def league_with_parents(self):
         return self.league.get_upper_parent_names(spliter=", ")
-         
+
     @property
     def name_with_league_full(self):
-        return f"{self.name}" + (f" ({self.league_with_parents})" if self.league else "")
+        return f"{self.name}" + (
+            f" ({self.league_with_parents})" if self.league else ""
+        )
 
     @property
     def display_team(self):
@@ -711,11 +754,6 @@ class Team(models.Model, MappingMixin):
         max_length=255,
     )
 
-    # full_name will be calculated on save
-    full_name = models.CharField(
-        _("Pełna nazwa drużyny"), max_length=255, null=True, blank=True
-    )
-
     def get_permalink(self):
         return reverse("clubs:show_team", kwargs={"slug": self.slug})
 
@@ -735,10 +773,20 @@ class Team(models.Model, MappingMixin):
 
         return f"{self.name} {suffix}"
 
+    def create_mapper_obj(self):
+        self.mapper = Mapper.objects.create()
+
     def save(self, *args, **kwargs):
-        slug_str = "%s %s %s" % (self.PROFILE_TYPE, self.name, self.club.name)
+        slug_str = "%s %s %s" % (
+            self.PROFILE_TYPE,
+            self.name,
+            self.club.name if self.club else "",
+        )
         unique_slugify(self, slug_str)
-        self.full_name = self.__str__()
+
+        if not self.mapper:
+            self.create_mapper_obj()
+
         super().save(*args, **kwargs)
 
     class Meta:
@@ -792,6 +840,7 @@ class Team(models.Model, MappingMixin):
     def __str__(self):
         return self.name_with_league_full
 
+
 class TeamHistory(models.Model):
     """Definition of a  team history object
 
@@ -804,6 +853,12 @@ class TeamHistory(models.Model):
 
     data_mapper_id = models.PositiveIntegerField(
         help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+        blank=True,
+        null=True,
+    )
+
+    team_name_raw = models.CharField(
+        max_length=250, blank=True, null=True, help_text="Team name from scrapper."
     )
 
     season = models.ForeignKey(
@@ -817,13 +872,17 @@ class TeamHistory(models.Model):
         null=True,
         blank=True,
     )
-    
+
     league_history = models.ForeignKey(
         "LeagueHistory",
         on_delete=models.SET_NULL,
         related_name="league_history",
         null=True,
         blank=True,
+    )
+
+    mapper = models.OneToOneField(
+        Mapper, on_delete=models.CASCADE, blank=True, null=True
     )
 
     visible = models.BooleanField(default=True)
@@ -834,5 +893,13 @@ class TeamHistory(models.Model):
     def __str__(self):
         return self.team.name_with_league_full
 
+    def create_mapper_obj(self):
+        self.mapper = Mapper.objects.create()
+
+    def save(self, *args, **kwargs):
+        if not self.mapper:
+            self.create_mapper_obj()
+        super().save()
+
     class Meta:
-        unique_together = ("team", "season")
+        unique_together = ("mapper", "league_history")

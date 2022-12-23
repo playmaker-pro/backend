@@ -167,7 +167,9 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     if user.profile.team_object
                     else None
                 )
-                if league:
+                if user.profile.voivodeship_obj:
+                    voivodeship = user.profile.voivodeship_obj
+                elif not user.profile.voivodeship_obj and league:
                     voivodeship = user.profile.team_object.club.voivodeship_obj
                 else:
                     voivodeship = ""
@@ -221,11 +223,13 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 form.fields["league"].queryset = League.objects.is_top_parent()
 
             elif user.is_player:
-                voivodeship = (
-                    user.profile.team_object.club.voivodeship_obj
-                    if user.profile.team_object
-                    else None
-                )
+                if user.profile.voivodeship_obj:
+                    voivodeship = user.profile.voivodeship_obj
+                elif not user.profile.voivodeship_obj and user.profile.team_object:
+                    voivodeship = user.profile.team_object.club.voivodeship_obj
+                else:
+                    voivodeship = ""
+
                 league = (
                     user.profile.team_object.league
                     if user.profile.team_object

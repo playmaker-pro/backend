@@ -24,7 +24,7 @@
             {% with profile=show_user.profile template='platform/tables/two_table.html' %}
                 {% include template with key=_('Obecna drużyna')  value=profile.display_team|default:'-'|upper  link=profile.get_team_permalink %}
                 {% include template with key=_('Rozgrywki')       value=profile.display_league_top_parent|default:'-'|upper   link=profile.get_league_permalink %}
-                {% include template with key=_('Wojewodźtwo')     value=profile|display_voivodeship|default:'-' %}
+                {% include template with key=_('Wojewodźtwo')     value=profile.display_voivodeship|default:'-' %}
             {% endwith %}
         </div>
     </div>
