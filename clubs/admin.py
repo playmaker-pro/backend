@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.admin import SimpleListFilter
 from users.queries import get_users_manger_roles
 from app.utils.admin import json_filed_data_prettified
 from . import models
@@ -196,6 +197,24 @@ class TeamHistoryAdmin(admin.ModelAdmin):
     get_season.short_description = "Season"
 
 
+class HasManagerFilter(SimpleListFilter):
+    title = "hasManager"
+    parameter_name = "manager"
+
+    def lookups(self, request, model_admin):
+
+        return [
+            ("true", "True"),
+            ("false", "False"),
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value() == "true":
+            return queryset.distinct().filter(manager__isnull=False)
+        if self.value():
+            return queryset.distinct().filter(manager__isnull=True)
+
+
 @admin.register(models.Team)
 class TeamAdmin(admin.ModelAdmin):
     list_display = (
@@ -210,7 +229,7 @@ class TeamAdmin(admin.ModelAdmin):
         "autocreated",
     )
     search_fields = ("name",)
-    list_filter = ("gender__name", "seniority__name", "visible", ("manager", admin.EmptyFieldListFilter),)
+    list_filter = ("gender__name", "seniority__name", "visible", HasManagerFilter,)
     actions = [update_team_visibility,]
     autocomplete_fields = ("manager", "club", "league",)
 
