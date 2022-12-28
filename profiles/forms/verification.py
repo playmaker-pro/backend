@@ -63,7 +63,7 @@ def get_all_clubs():
 
 def get_season_with_team_history():
     try:
-        ths = [th.season.name for th in TeamHistory.objects.all() if th.season] + [
+        ths = [
             th.league_history.season.name
             for th in TeamHistory.objects.all()
             if th.league_history and th.league_history.season

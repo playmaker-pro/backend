@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.admin import SimpleListFilter
 from users.queries import get_users_manger_roles
 from app.utils.admin import json_filed_data_prettified
 from . import models
@@ -172,28 +173,43 @@ class TeamHistoryAdmin(admin.ModelAdmin):
         "data_mapper_id",
         linkify("league_history"),
         "get_season",
-        linkify("league"),
         "visible",
         "autocreated",
         "data"
         )
-    search_fields: Sequence[str]  = ("team__name",)
-    autocomplete_fields: Sequence[str] = ("team", "league", "season", "league_history")
-    list_filter: Sequence[str]  = (
-        "season",
-        "league__highest_parent__name",
+    search_fields: Sequence[str] = ("team__name",)
+    autocomplete_fields: Sequence[str] = ("team", "league_history")
+    list_filter: Sequence[str] = (
+        "league_history__season",
+        "league_history__league__highest_parent__name",
         "team__club__voivodeship",
         )
 
     def get_season(self, obj):
-        if obj.season:
-            return obj.season
-        elif obj.league_history.season:
+        if obj.league_history.season:
             return obj.league_history.season
         else:
             return None
 
     get_season.short_description = "Season"
+
+
+class HasManagerFilter(SimpleListFilter):
+    title = "hasManager"
+    parameter_name = "manager"
+
+    def lookups(self, request, model_admin):
+
+        return [
+            ("true", "True"),
+            ("false", "False"),
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value() == "true":
+            return queryset.distinct().filter(manager__isnull=False)
+        if self.value():
+            return queryset.distinct().filter(manager__isnull=True)
 
 
 @admin.register(models.Team)
@@ -234,12 +250,12 @@ class ClubAdmin(admin.ModelAdmin):
         "mapping",
         "autocreated",
         linkify("manager"),
-        linkify("voivodeship"),
+        linkify("voivodeship_obj"),
         "slug",
     )
     autocomplete_fields: Sequence[str]  = ("manager",)
     search_fields: Sequence[str]  = ("name",)
-    list_filter: Sequence[str]  = ("voivodeship__name",)
+    list_filter: Sequence[str]  = ("voivodeship_obj__name", HasManagerFilter,)
     exclude: Sequence[str]  = ("voivodeship_raw",)
 
     def get_form(self, request, obj=None, **kwargs):
