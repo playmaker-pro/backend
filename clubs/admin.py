@@ -173,23 +173,20 @@ class TeamHistoryAdmin(admin.ModelAdmin):
         "data_mapper_id",
         linkify("league_history"),
         "get_season",
-        linkify("league"),
         "visible",
         "autocreated",
         "data"
         )
-    search_fields: Sequence[str]  = ("team__name",)
-    autocomplete_fields: Sequence[str] = ("team", "league", "season", "league_history")
-    list_filter: Sequence[str]  = (
-        "season",
-        "league__highest_parent__name",
+    search_fields: Sequence[str] = ("team__name",)
+    autocomplete_fields: Sequence[str] = ("team", "league_history")
+    list_filter: Sequence[str] = (
+        "league_history__season",
+        "league_history__league__highest_parent__name",
         "team__club__voivodeship",
         )
 
     def get_season(self, obj):
-        if obj.season:
-            return obj.season
-        elif obj.league_history.season:
+        if obj.league_history.season:
             return obj.league_history.season
         else:
             return None
