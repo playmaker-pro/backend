@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.admin import SimpleListFilter
 from users.queries import get_users_manger_roles
 from app.utils.admin import json_filed_data_prettified
 from . import models
@@ -196,6 +197,24 @@ class TeamHistoryAdmin(admin.ModelAdmin):
     get_season.short_description = "Season"
 
 
+class HasManagerFilter(SimpleListFilter):
+    title = "hasManager"
+    parameter_name = "manager"
+
+    def lookups(self, request, model_admin):
+
+        return [
+            ("true", "True"),
+            ("false", "False"),
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value() == "true":
+            return queryset.distinct().filter(manager__isnull=False)
+        if self.value():
+            return queryset.distinct().filter(manager__isnull=True)
+
+
 @admin.register(models.Team)
 class TeamAdmin(admin.ModelAdmin):
     list_display = (
@@ -234,12 +253,12 @@ class ClubAdmin(admin.ModelAdmin):
         "mapping",
         "autocreated",
         linkify("manager"),
-        linkify("voivodeship"),
+        linkify("voivodeship_obj"),
         "slug",
     )
     autocomplete_fields: Sequence[str]  = ("manager",)
     search_fields: Sequence[str]  = ("name",)
-    list_filter: Sequence[str]  = ("voivodeship__name",)
+    list_filter: Sequence[str]  = ("voivodeship_obj__name", HasManagerFilter,)
     exclude: Sequence[str]  = ("voivodeship_raw",)
 
     def get_form(self, request, obj=None, **kwargs):
