@@ -170,12 +170,10 @@ class TeamHistoryAdmin(admin.ModelAdmin):
     list_display: Sequence[str] = (
         "id",
         linkify("team"),
-        "data_mapper_id",
         linkify("league_history"),
         "get_season",
         "visible",
         "autocreated",
-        "data"
         )
     search_fields: Sequence[str] = ("team__name",)
     autocomplete_fields: Sequence[str] = ("team", "league_history")
@@ -192,6 +190,7 @@ class TeamHistoryAdmin(admin.ModelAdmin):
             return None
 
     get_season.short_description = "Season"
+    get_season.admin_order_field = 'league_history__season__name'
 
 
 class HasManagerFilter(SimpleListFilter):
