@@ -15,6 +15,7 @@ class Command(BaseCommand):
         self.fix_clubs()
         self.fix_rounds()
         # self.fix_teams_numeration()
+        ## RESET SOFT
 
     def fix_rounds(self) -> None:
         """
@@ -55,6 +56,11 @@ class Command(BaseCommand):
             for team in teams:
                 team.club = base_club
                 team.save()
+            editors = to_remove.editors.all()
+            for editor in editors:
+                base_club.editors.add(editor)
+            if not base_club.manager and to_remove.manager:
+                base_club.manager = to_remove.manager
             if not base_club.voivodeship and to_remove.voivodeship_obj:
                 base_club.voivodeship_obj = to_remove.voivodeship_obj
             if not base_club.stadion_address and to_remove.stadion_address:
@@ -159,9 +165,12 @@ class Command(BaseCommand):
 
         index = 2
         for team, _ in sorted_teams[1:]:
-            parted_team_name = team.name.split()
-            if not list(filter(lambda word: re.match(r"([IΙ]X|[IΙ]V|V?[IΙ]{0,3})?", word).group(), parted_team_name)):
-                print(team.name + " " + self.decimal_to_roman(index))
+            team_name = team.name
+            parted_team_name = team_name.split()
+            roman_counter = self.decimal_to_roman(index)
+            if roman_counter not in parted_team_name:
+                team_name = re.sub(r"\b([IΙ]X|[IΙ]V|V?[IΙ]{0,3})\b\.?", "", team_name)
+                # print(team_name + " " + roman_counter)
                 # team.name = team.name + " " + self.decimal_to_roman(index)
                 # team.save()
             index += 1
@@ -181,23 +190,24 @@ class Command(BaseCommand):
             teams = club.teams.all()
             senior_male = []
             senior_female = []
-            # junior = []
+            junior = []
             futsal_male = []
             futsal_female = []
             for team in teams:
                 th = TeamHistory.objects.filter(team=team)\
                     .order_by("-league_history__season")
                 if not th:
-                    print(team.id)
-                    input()
                     continue
-                l_highest_parent = th[0].league_history.league.highest_parent.name
+                try:
+                    l_highest_parent = th[0].league_history.league.highest_parent.name
+                except AttributeError:
+                    l_highest_parent = th[0].league_history.league.get_highest_parent()
                 if l_highest_parent in SENIOR_MALE_LEAGUE_NAMES:
                     senior_male.append((team, l_highest_parent))
                 elif l_highest_parent in SENIOR_FEMALE_LEAGUE_NAMES:
                     senior_female.append((team, l_highest_parent))
-                # elif l_highest_parent in JUNIOR_LEAGUE_NAMES:
-                #     junior.append((team, l_highest_parent))
+                elif l_highest_parent in JUNIOR_LEAGUE_NAMES:
+                    junior.append((team, l_highest_parent))
                 elif l_highest_parent in FUTSAL_MALE_LEAGUE_NAMES:
                     futsal_male.append((team, l_highest_parent))
                 elif l_highest_parent in FUTSAL_FEMALE_LEAGUE_NAMES:
@@ -205,6 +215,6 @@ class Command(BaseCommand):
 
             self.rename_teams_based_on_league(senior_male, SENIOR_MALE_LEAGUE_NAMES)
             self.rename_teams_based_on_league(senior_female, SENIOR_FEMALE_LEAGUE_NAMES)
-            # self.rename_teams_based_on_league(junior, JUNIOR_LEAGUE_NAMES)
+            self.rename_teams_based_on_league(junior, JUNIOR_LEAGUE_NAMES)
             self.rename_teams_based_on_league(futsal_male, FUTSAL_MALE_LEAGUE_NAMES)
             self.rename_teams_based_on_league(futsal_female, FUTSAL_FEMALE_LEAGUE_NAMES)
