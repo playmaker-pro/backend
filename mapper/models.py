@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 
 import django.core.exceptions
 from django.db import models
@@ -14,6 +14,9 @@ class Mapper(models.Model):
         except django.core.exceptions.ObjectDoesNotExist:
             pass
 
+    def get_entities(self) -> List[Union["MapperEntity", None]]:
+        return MapperEntity.objects.filter(target=self)
+
 
 class MapperSource(models.Model):
     name = models.CharField(max_length=30)
@@ -23,10 +26,29 @@ class MapperSource(models.Model):
 
 
 class MapperEntity(models.Model):
+
+    RELATED_MODELS = (
+        ("team", "team"),
+        ("player", "playerprofile"),
+        ("club", "club"),
+        ("team history", "teamhistory"),
+        ("league", "league_history__league"),
+        ("play", "league_history"),
+    )
+
+    DATA_SOURCES = (
+        ("scrapper_mongodb", "scrapper_mongodb"),
+        ("s38", "s38"),
+        ("external", "external"),
+        ("xlsx", "xlsx"),
+    )
+
     target = models.ForeignKey(Mapper, on_delete=models.CASCADE)
     mapper_id = models.CharField(max_length=100, null=True, blank=True)
     source = models.ForeignKey(MapperSource, on_delete=models.CASCADE)
     url = models.URLField(max_length=300, null=True, blank=True)
+    related_type = models.CharField(max_length=100, choices=RELATED_MODELS)
+    database_source = models.CharField(max_length=100, choices=DATA_SOURCES)
     description = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -35,4 +57,4 @@ class MapperEntity(models.Model):
         return self.source.name
 
     class Meta:
-        unique_together = ("target", "source")
+        unique_together = ("target", "related_type")

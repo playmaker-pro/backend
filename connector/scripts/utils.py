@@ -1,10 +1,9 @@
 import re
 from django.core.exceptions import ObjectDoesNotExist
 from mapper.models import MapperSource, MapperEntity, Mapper
+from mapper.enums import RE_ROMAN
 
-#mapper sources
-NEW_LNP_SOURCE, _ = MapperSource.objects.get_or_create(name="NEW_LNP")
-NEW_ADDITIONAL_LNP_SOURCE, _ = MapperSource.objects.get_or_create(name="NEW_ADDITIONAL_LNP")
+LNP_SOURCE, _ = MapperSource.objects.get_or_create(name="LNP")
 
 NAMES_BLACKLISTED_PHRASES = (
     ("/", " "),
@@ -45,6 +44,8 @@ TO_CUT = [
         "(RJ)",
     ]
 
+MAPPER_ENTITY_SOURCE, _ = MapperSource.objects.get_or_create(name="LNP")
+
 
 def get_mapper(target_id: str):
     try:
@@ -55,14 +56,16 @@ def get_mapper(target_id: str):
         return Mapper.objects.get(mapperentity=entity)
 
 
-def create_mapper(**kwargs):
+def create_mapper(*args):
     mapper = Mapper.objects.create()
-    for source, value in kwargs.items():
+    for entity in args:
         MapperEntity.objects.create(
             target=mapper,
-            source=MapperSource.objects.get(name=source),
-            mapper_id=value["id"],
-            description=value["desc"],
+            source=MAPPER_ENTITY_SOURCE,
+            mapper_id=entity["id"],
+            description=entity["desc"],
+            related_type=entity["related_type"],
+            database_source=entity["database_source"],
         )
     return mapper
 
@@ -71,16 +74,20 @@ def unify_name(obj_name: str, remove_roman_signs: bool = True) -> str:
     """
     Remove redundant phrases from Club/Team name
     """
+
     for t_from, t_to in NAMES_BLACKLISTED_PHRASES:
         obj_name = obj_name.replace(t_from, t_to)
     if remove_roman_signs:
         obj_name = re.sub(r"\b([IΙ]X|[IΙ]V|V?[IΙ]{0,3})\b\.?", "", obj_name)
     unified_name = list(
         filter(
-            lambda word: len(word) > 3 and word not in TO_CUT,
+            lambda word: (len(word) > 3 and word not in TO_CUT) or re.match(RE_ROMAN, word).group(),
             re.sub(" +", " ", re.sub("[0-9]", "", obj_name)).strip().split(),
         )
     )
+    if unified_name:
+        if re.match(RE_ROMAN, unified_name[0]).group():
+            unified_name[0], unified_name[-1] = unified_name[-1], unified_name[0]
     capitalized = " ".join(
         [word.capitalize() if len(word) > 3 else word for word in unified_name]
     )

@@ -1,14 +1,20 @@
-from clubs.models import LeagueHistory, TeamHistory, Team, Season
+from typing import List, Tuple
+import re
+from clubs.models import LeagueHistory, TeamHistory, Team, Season, Club
 from connector.scripts.base import BaseCommand
 from django.core.exceptions import ObjectDoesNotExist
 from .utils import unify_name
+from mapper.enums import SENIOR_MALE_LEAGUES, SENIOR_FEMALE_LEAGUES, JUNIOR_LNP_LEAGUES, FUTSAL_MALE_LEAGUES, \
+    FUTSAL_FEMALE_LEAGUES, JUNIOR_MALE_LEAGUES
 
 
 class Command(BaseCommand):
 
     def handle(self) -> None:
         self.fix_teams()
+        self.fix_clubs()
         self.fix_rounds()
+        # self.fix_teams_numeration()
 
     def fix_rounds(self) -> None:
         """
@@ -37,17 +43,59 @@ class Command(BaseCommand):
                 for th in TeamHistory.objects.filter(league_history=parent_lh):
                     th.save()
 
+    def fix_clubs(self) -> None:
+        def merge(base_club: Club, to_remove: Club):
+            if not base_club.mapper:
+                club.create_mapper_obj()
+            entities = to_remove.mapper.get_entities()
+            for entity in entities:
+                entity.target = base_club.mapper
+                entity.save()
+            teams = to_remove.teams.all()
+            for team in teams:
+                team.club = base_club
+                team.save()
+            if not base_club.voivodeship and to_remove.voivodeship_obj:
+                base_club.voivodeship_obj = to_remove.voivodeship_obj
+            if not base_club.stadion_address and to_remove.stadion_address:
+                base_club.stadion_address = to_remove.stadion_address
+            base_club.save()
+            to_remove.delete()
+
+        clubs_to_fix = []
+        for club in Club.objects.all():
+            if not club.mapper or (club.mapper and not club.mapper.get_entities()):
+                clubs_to_fix.append(club)
+        for club in clubs_to_fix:
+            partial_club_name = list(reversed(sorted(club.name.split(), key=len)))
+            base_filter = Club.objects.exclude(id=club.id)
+            direct_search = base_filter.filter(mapping__icontains=club.name)
+            if len(direct_search) == 1:
+                merge(club, direct_search[0])
+            else:
+                for n, phrase in enumerate(partial_club_name):
+                    result = base_filter.filter(mapping__icontains=phrase)
+                    if len(result) > 1:
+                        try:
+                            result = result.filter(mapping__icontains=partial_club_name[n + 1])
+                        except IndexError:
+                            try:
+                                result = result.filter(mapping__icontains=partial_club_name[n - 1])
+                            except IndexError:
+                                pass
+                    if len(result) == 1:
+                        merge(club, result[0])
+
     def fix_teams(self) -> None:
         """
         Merge teams that have not been assigned correctly
         """
-        teams_to_fix = Team.objects.filter(mapper__isnull=True).filter(
-            league__isnull=False
-        )
-        # teams_to_fix = Team.objects.filter(scrapper_teamhistory_id__isnull=True).filter(
-        #     league__isnull=False
-        # )
+        teams_to_fix = Team.objects.filter(historical__isnull=True)
         for team in teams_to_fix:
+            if not team.mapper:
+                team.create_mapper_obj()
+            if team.mapper.get_entities():
+                continue
             team_name = unify_name(team.name, False)
             team_name_partial = team_name.split(" ")
             if "Warszawa" in team_name_partial:
@@ -81,14 +129,82 @@ class Command(BaseCommand):
                         ]
                         if not any(final_check):
                             continue
-                    t_mapper = target_team_history.team.mapper
-
-                    # th_id = target_team_history.team.scrapper_teamhistory_id
-                    target_team_history.team.delete()
-                    target_team_history.delete()
-                    target_team_history.team = team
-                    team.mapper = t_mapper
-                    # team.scrapper_teamhistory_id = th_id
+                    entities = target_team_history.team.mapper.get_entities()
+                    for entity in entities:
+                        entity.target = team.mapper
+                        entity.save()
                     team.save()
+                    target_team_history.team.delete()
+                    target_team_history.team = team
                     target_team_history.save()
                     break
+
+    def decimal_to_roman(self, number: int) -> str:
+        mapper = {
+            2: "II",
+            3: "III",
+            4: "IV",
+            5: "V",
+            6: "VI",
+            7: "VII",
+            8: "VIII",
+            9: "IX",
+        }
+        return mapper[number]
+
+    def rename_teams_based_on_league(self, teams: List[Tuple[Team, str]], ordering: List[str]) -> None:
+
+        sorted_teams = sorted(teams, key=(lambda tup: ordering.index(tup[1])))
+        print(sorted_teams, ordering)
+
+        index = 2
+        for team, _ in sorted_teams[1:]:
+            parted_team_name = team.name.split()
+            if not list(filter(lambda word: re.match(r"([IΙ]X|[IΙ]V|V?[IΙ]{0,3})?", word).group(), parted_team_name)):
+                print(team.name + " " + self.decimal_to_roman(index))
+                # team.name = team.name + " " + self.decimal_to_roman(index)
+                # team.save()
+            index += 1
+
+    def fix_teams_numeration(self):
+        """
+        Apply team hierarchy numeration based on league - "GKS Bełchatów", "GKS Bełchatów II" etc.
+        """
+        SENIOR_MALE_LEAGUE_NAMES = list(SENIOR_MALE_LEAGUES.values())
+        SENIOR_FEMALE_LEAGUE_NAMES = list(SENIOR_FEMALE_LEAGUES.values())
+        JUNIOR_LEAGUE_NAMES = list(JUNIOR_MALE_LEAGUES.values())
+        FUTSAL_MALE_LEAGUE_NAMES = list(FUTSAL_MALE_LEAGUES.values())
+        FUTSAL_FEMALE_LEAGUE_NAMES = list(FUTSAL_FEMALE_LEAGUES.values())
+
+        clubs = Club.objects.filter(teams__isnull=False)
+        for club in clubs:
+            teams = club.teams.all()
+            senior_male = []
+            senior_female = []
+            # junior = []
+            futsal_male = []
+            futsal_female = []
+            for team in teams:
+                th = TeamHistory.objects.filter(team=team)\
+                    .order_by("-league_history__season")
+                if not th:
+                    print(team.id)
+                    input()
+                    continue
+                l_highest_parent = th[0].league_history.league.highest_parent.name
+                if l_highest_parent in SENIOR_MALE_LEAGUE_NAMES:
+                    senior_male.append((team, l_highest_parent))
+                elif l_highest_parent in SENIOR_FEMALE_LEAGUE_NAMES:
+                    senior_female.append((team, l_highest_parent))
+                # elif l_highest_parent in JUNIOR_LEAGUE_NAMES:
+                #     junior.append((team, l_highest_parent))
+                elif l_highest_parent in FUTSAL_MALE_LEAGUE_NAMES:
+                    futsal_male.append((team, l_highest_parent))
+                elif l_highest_parent in FUTSAL_FEMALE_LEAGUE_NAMES:
+                    futsal_female.append((team, l_highest_parent))
+
+            self.rename_teams_based_on_league(senior_male, SENIOR_MALE_LEAGUE_NAMES)
+            self.rename_teams_based_on_league(senior_female, SENIOR_FEMALE_LEAGUE_NAMES)
+            # self.rename_teams_based_on_league(junior, JUNIOR_LEAGUE_NAMES)
+            self.rename_teams_based_on_league(futsal_male, FUTSAL_MALE_LEAGUE_NAMES)
+            self.rename_teams_based_on_league(futsal_female, FUTSAL_FEMALE_LEAGUE_NAMES)

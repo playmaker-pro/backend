@@ -1,8 +1,9 @@
 from typing import List
 from django.contrib.postgres.search import SearchVector
 import django.core.exceptions
+from collections import Counter
 
-from .utils import unify_name, NEW_LNP_SOURCE, NEW_ADDITIONAL_LNP_SOURCE, create_mapper, get_mapper, MapperEntity
+from .utils import unify_name, LNP_SOURCE, create_mapper, get_mapper, MapperEntity
 from .base import BaseCommand
 from .restore_database import Command as RestoreDatabase
 from clubs.models import (
@@ -28,71 +29,7 @@ from connector.entities import (
     TeamEntity,
     BaseClubEntity,
 )
-
-PARENT_UUID_REQUIRED = ["Ekstraklasa", "Ekstraliga K", "1 Liga", "2 liga"]
-
-JUNIOR_LEAGUES = [
-    "A1",
-    "A2",
-    "B1",
-    "B2",
-    "C1",
-    "C2",
-    "D1",
-    "D2",
-    "E1",
-    "E2",
-    "F1",
-    "F2",
-    "G1",
-    "G2",
-    "CLJ U-19",
-    "CLJ U-18",
-    "CLJ U-17",
-    "CLJ U-15",
-]
-
-LEAGUE_HIGHEST_PARENT_NAME_MAPPER = {
-    "Ekstraklasa": "Ekstraklasa",
-    "Ekstraliga kobiet": "Ekstraliga K",
-    "Pierwsza liga": "1 Liga",
-    "Pierwsza liga kobiet": "1 Liga K",
-    "Druga liga": "2 liga",
-    "Druga liga kobiet": "2 Liga K",
-    "Trzecia liga": "3 Liga",
-    "Trzecia liga kobiet": "3 Liga K",
-    "Czwarta liga": "4 Liga",
-    "Czwarta liga kobiet": "4 Liga K",
-    "Piąta liga": "5 Liga",
-    "Klasa okręgowa": "Klasa Okręgowa",
-    "Klasa A": "A Klasa",
-    "Klasa B": "B Klasa",
-    "Klasa C": "C Klasa",
-    "CLJ U-19": "Clj U-19",
-    "CLJ U-18": "Clj U-18",
-    "CLJ U-17": "Clj U-17",
-    "CLJ U-15": "Clj U-15",
-    "Centralna Liga Juniorek U-17": "Clj U-17 K",
-    "Centralna Liga Juniorek U-15": "Clj U-15 K",
-    "A1": "Junior A1",
-    "A2": "Junior A2",
-    "B1": "Junior Młodszy B1",
-    "B2": "Junior Młodszy B2",
-    "C1": "Trampkarz C1",
-    "C2": "Trampkarz C2",
-    # "D1": "Młodzik D1 U-13", # We don't need them yet
-    # "D2": "Młodzik D2 U-12",
-    # "E1": "Orlik E1 U-11",
-    # "E2": "Orlik E2 U-10",
-    # "F1": "Żak F1 U-9",
-    # "F2": "Żak F2 U-8",
-    # "G1": "Skrzat G1 U-7",
-    # "G2": "Skrzat G2 U-6",
-    "Futsal Ekstraklasa": "Futsal Ekstraklasa",
-    "I Liga PLF": "I Liga PLF",
-    "II Liga PLF": "II Liga PLF",
-    "III Liga PLF": "III Liga PLF",
-}
+from mapper.enums import LEAGUE_HIGHEST_PARENT_NAME_MAPPER, JUNIOR_LNP_LEAGUES, PARENT_UUID_REQUIRED
 
 
 class Command(BaseCommand):
@@ -215,6 +152,8 @@ class Command(BaseCommand):
             model_obj = None
             base = model.objects.annotate(search_name=SearchVector("name"))
             result = base.filter(search_name=name)
+            if len(result) == 1:
+                return result[0]
             if l_highest_parent:
                 result = result.filter(league__highest_parent__name=l_highest_parent)
             else:
@@ -310,9 +249,15 @@ class Command(BaseCommand):
                             partial_name[index_in] = "Grupa"
                         except ValueError:
                             pass
-                    if "grupa" in name and "Grupa" not in name:
+                    if "grupa" in name:
                         try:
                             index_in = partial_name.index("grupa")
+                            partial_name[index_in] = "Grupa"
+                        except ValueError:
+                            pass
+                    if "GRUPA" in name:
+                        try:
+                            index_in = partial_name.index("GRUPA")
                             partial_name[index_in] = "Grupa"
                         except ValueError:
                             pass
@@ -324,11 +269,12 @@ class Command(BaseCommand):
                         params.append("Południe")
                     elif "płn." in partial_name or "północna" in partial_name:
                         params.append("Północ")
-                    else:
-                        if "Grupa" in partial_name:
-                            index_in = partial_name.index("Grupa")
-                            group = " ".join(partial_name[index_in: (index_in + 2)])
-                            params.append(self.unify_roman_decimals(group))
+
+                    if "Grupa" in partial_name:
+                        for index_in, phrase in enumerate(partial_name):
+                            if phrase == "Grupa":
+                                group = " ".join(partial_name[index_in: (index_in + 2)])
+                                params.append(self.unify_roman_decimals(group))
 
                     if "baraż" in name.lower():
                         params.append("baraż")
@@ -339,10 +285,12 @@ class Command(BaseCommand):
                     elif "spad" in name.lower():
                         params.append("spadkowa")
 
-                    if '"RW"' in name or '"RW ' in name or "(RW)" in name:
+                    if '"RW"' in name or '"RW ' in name or "(RW)" in name or "WIOSNA" in name or "WIOSENNA" in name:
                         params.append("RW")
-                    elif '"RJ"' in name or '"RJ ' in name or "(RJ)" in name:
+                    elif '"RJ"' in name or '"RJ ' in name or "(RJ)" in name or "JESIEŃ" in name:
                         params.append("RJ")
+
+                    params = list(Counter(params))
 
                     try:
                         target_league = League.objects.get(name=highest_parent)
@@ -386,28 +334,28 @@ class Command(BaseCommand):
                                 league=target_league,
                                 season=local_season,
                                 mapper=create_mapper(
-                                    NEW_LNP={"id": play.id, "desc": "LNP play uuid"},
-                                    NEW_ADDITIONAL_LNP={"id": league_obj.id, "desc": "LNP league uuid (highest parent)"}
+                                    {"id": play.id, "related_type": "play", "database_source": "scrapper_mongodb", "desc": "LNP play uuid"},
+                                    {"id": league_obj.id, "related_type": "league", "database_source": "scrapper_mongodb", "desc": "LNP league uuid (highest parent)"}
                                 ),
                                 league_name_raw=play.name,
                             )
+                    target_mapper_entity = league_history.mapper.get_entity(source=LNP_SOURCE, related_type="play")
                     if (
-                        league_history.mapper
-                        and league_history.mapper.get_entity(source=NEW_LNP_SOURCE)
+                        target_mapper_entity
+                        and target_mapper_entity.mapper_id != play.id
                     ):
-                        lh_mapper_entity = league_history.mapper.get_entity(source=NEW_LNP_SOURCE)
                         curr_teams_count = len(
-                            self.service.get_play_teams(lh_mapper_entity.mapper_id)
+                            self.service.get_play_teams(target_mapper_entity.mapper_id)
                         )
                         new_teams_count = len(self.service.get_play_teams(play.id))
                         if new_teams_count < curr_teams_count:
                             continue
-                        lh_mapper_entity.mapper_id = play.id
-                        lh_mapper_entity.save()
+                        target_mapper_entity.mapper_id = play.id
+                        target_mapper_entity.save()
                         if highest_parent in PARENT_UUID_REQUIRED:
-                            lh_mapper_additional_entity = league_history.mapper.get_entity(source=NEW_ADDITIONAL_LNP_SOURCE)
-                            lh_mapper_additional_entity.mapper_id = league_obj.id
-                            lh_mapper_additional_entity.save()
+                            lh_mapper_highest_parent_entity = league_history.mapper.get_entity(source=LNP_SOURCE, related_type="league")
+                            lh_mapper_highest_parent_entity.mapper_id = league_obj.id
+                            lh_mapper_highest_parent_entity.save()
                         league_history.league_name_raw = play.name
                         league_history.save()
 
@@ -430,7 +378,7 @@ class Command(BaseCommand):
                     continue
                 team_name = unify_name(team.name, False)
                 seniority = (
-                    self.JUNIOR if team_league.name in JUNIOR_LEAGUES else self.SENIOR
+                    self.JUNIOR if team_league.name in JUNIOR_LNP_LEAGUES else self.SENIOR
                 )
                 gender = (
                     self.FEMALE
@@ -460,7 +408,7 @@ class Command(BaseCommand):
                 def create_club():
                     return Club.objects.create(
                         name=club_name,
-                        mapper=create_mapper(NEW_LNP={"id": club.id, "desc": "LNP club uuid"}),
+                        mapper=create_mapper({"id": club.id, "related_type": "club", "database_source": "scrapper_mongodb", "desc": "LNP club uuid"}),
                         scrapper_autocreated=True,
                         mapping=club.name,
                         voivodeship_obj=club_voivo,
@@ -470,7 +418,7 @@ class Command(BaseCommand):
                 def configure_club(obj: Club):
                     if not obj.mapper:
                         obj.create_mapper_obj()
-                    MapperEntity.objects.get_or_create(target=obj.mapper, source=NEW_LNP_SOURCE, mapper_id=club.id)
+                    MapperEntity.objects.get_or_create(target=obj.mapper, source=LNP_SOURCE, mapper_id=club.id)
                     obj.mapping = club.name
                     if not obj.stadion_address:
                         obj.stadion_address = club_address
@@ -487,13 +435,15 @@ class Command(BaseCommand):
                         club=club_obj,
                         name=team_name,
                         mapper=create_mapper(
-                            NEW_LNP={
+                            {
                                 "id": team_history.obj_id,
+                                "related_type": "team",
+                                "database_source": "scrapper_mongodb",
                                 "desc": "TeamHistory id as ObjectId in mongodb, immutable between seasons"
                             }
                         ),
                         scrapper_autocreated=True,
-                        mapping=f"{team.name}; ",
+                        mapping=f"{team.name};",
                         visible=False,
                         seniority=seniority,
                         gender=gender,
@@ -512,8 +462,10 @@ class Command(BaseCommand):
 
                 if not team_obj.mapper:
                     team_obj.mapper = create_mapper(
-                            NEW_LNP={
+                            {
                                 "id": team_history.obj_id,
+                                "related_type": "team",
+                                "database_source": "scrapper_mongodb",
                                 "desc": "TeamHistory id as ObjectId in mongodb, immutable between seasons"
                             }
                         )
@@ -533,8 +485,7 @@ class Command(BaseCommand):
                         TeamHistory.objects.create(
                             team=team_obj,
                             team_name_raw=team.name,
-                            mapper=create_mapper(NEW_LNP={"id": team.id, "desc": "LNP team uuid"}),
-                            # scrapper_team_uuid=team.id,
+                            mapper=create_mapper({"id": team.id, "related_type": "team history", "database_source": "scrapper_mongodb", "desc": "LNP team uuid"}),
                             league_history=league_history,
                             visible=False,
                         )
@@ -543,25 +494,35 @@ class Command(BaseCommand):
         """
         Merge clubs which are a single instance
         """
+        def define_base_club(qs: List[Club]) -> Club:
+            for club_obj in qs:
+                if club_obj.mapper:
+                    if club_obj.mapper.get_entities():
+                        return club_obj
+            else:
+                return qs[0]
+
         club_list = Club.objects.all()
         for club in club_list:
             same_club_qs = list(Club.objects.filter(name__icontains=club.name))
             if len(same_club_qs) > 1:
-                base_club = same_club_qs[0]
+                base_club = define_base_club(same_club_qs)
                 teams = []
                 editors = []
                 for c in same_club_qs:
                     for team in c.teams.all():
-                        teams.append(team) if team not in teams else False
+                        teams.append(team)
                     for editor in c.editors.all():
-                        editors.append(editor) if editor not in editors else False
-                    editors.append(c.manager) if c.manager else False
-                for team in set(teams):
+                        editors.append(editor)
+                    if c.manager:
+                        editors.append(c.manager)
+                for team in teams:
                     team.club = base_club
                     team.save()
-                for editor in set(editors):
-                    base_club.editors.add(editor)
+                for editor in editors:
+                    if editor not in base_club.editors.all():
+                        base_club.editors.add(editor)
                 base_club.save()
-                same_club_qs.pop(0)
                 for club_to_delete in same_club_qs:
-                    club_to_delete.delete()
+                    if club_to_delete is not base_club:
+                        club_to_delete.delete()
