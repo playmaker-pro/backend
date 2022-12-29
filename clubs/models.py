@@ -861,18 +861,6 @@ class TeamHistory(models.Model):
         max_length=250, blank=True, null=True, help_text="Team name from scrapper."
     )
 
-    season = models.ForeignKey(
-        "Season", on_delete=models.SET_NULL, null=True, blank=True
-    )
-
-    league = models.ForeignKey(
-        "League",
-        on_delete=models.CASCADE,
-        related_name="team_historical",
-        null=True,
-        blank=True,
-    )
-
     league_history = models.ForeignKey(
         "LeagueHistory",
         on_delete=models.SET_NULL,
