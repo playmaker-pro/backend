@@ -216,16 +216,16 @@ class TeamAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "mapping",
-        "visible",
-        "autocreated",
         linkify("club"),
         "full_league_linkify",
         linkify("gender"),
         linkify("seniority"),
         linkify("manager"),
+        "visible",
+        "autocreated",
     )
     search_fields = ("name",)
-    list_filter = ("league__name", "gender__name", "seniority__name")
+    list_filter = ("gender__name", "seniority__name", "visible", HasManagerFilter,)
     actions = [update_team_visibility,]
     autocomplete_fields = ("manager", "club", "league",)
 
