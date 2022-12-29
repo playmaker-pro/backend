@@ -211,24 +211,6 @@ class HasManagerFilter(SimpleListFilter):
             return queryset.distinct().filter(manager__isnull=True)
 
 
-class HasManagerFilter(SimpleListFilter):
-    title = "hasManager"
-    parameter_name = "manager"
-
-    def lookups(self, request, model_admin):
-
-        return [
-            ("true", "True"),
-            ("false", "False"),
-        ]
-
-    def queryset(self, request, queryset):
-        if self.value() == "true":
-            return queryset.distinct().filter(manager__isnull=False)
-        if self.value():
-            return queryset.distinct().filter(manager__isnull=True)
-
-
 @admin.register(models.Team)
 class TeamAdmin(admin.ModelAdmin):
     list_display = (
