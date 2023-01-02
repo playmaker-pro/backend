@@ -3,7 +3,7 @@ from django.contrib.postgres.search import SearchVector
 import django.core.exceptions
 from collections import Counter
 
-from .utils import unify_name, LNP_SOURCE, create_mapper, get_mapper, MapperEntity
+from .utils import LNP_SOURCE, create_mapper, get_mapper, unify_team_name, unify_club_name
 from .base import BaseCommand
 from .restore_database import Command as RestoreDatabase
 from clubs.models import (
@@ -152,25 +152,14 @@ class Command(BaseCommand):
             model_obj = None
             base = model.objects.annotate(search_name=SearchVector("name"))
             result = base.filter(search_name=name)
-            if len(result) == 1:
-                return result[0]
             if l_highest_parent:
                 result = result.filter(league__highest_parent__name=l_highest_parent)
-            else:
-                try:
-                    direct = model.objects.get(name=name)
-                    return direct
-                except (
-                        django.core.exceptions.MultipleObjectsReturned,
-                        django.core.exceptions.ObjectDoesNotExist,
-                ):
-                    pass
-            if len(result) > 1:
+            if len(result) == 1:
+                return result[0]
+            elif len(result) > 1:
                 res_list = [res.name for res in result]
                 if res_list and res_list.count(res_list[0]) == len(res_list):
                     return result[0]
-            elif len(result) == 1:
-                model_obj = result[0]
             return model_obj
 
         try:
@@ -180,6 +169,8 @@ class Command(BaseCommand):
                     return model.objects.get(mapper=target_mapper)
                 elif model is Team:
                     return model.objects.get(mapper=target_mapper)
+            else:
+                return partial_search()
         except django.core.exceptions.ObjectDoesNotExist:
             return partial_search()
 
@@ -320,7 +311,7 @@ class Command(BaseCommand):
                         self.swap_lh_round("RW", target_league, local_season)
 
                     try:
-                        league_history = LeagueHistory.objects.get(
+                        LeagueHistory.objects.get(
                             mapper=get_mapper(play.id)
                         )
                     except django.core.exceptions.ObjectDoesNotExist:
@@ -329,35 +320,35 @@ class Command(BaseCommand):
                                 league=target_league,
                                 season=local_season,
                             )
+                            target_mapper_entity = league_history.mapper.get_entity(source=LNP_SOURCE,
+                                                                                    related_type="play")
+                            if (
+                                    target_mapper_entity
+                                    and target_mapper_entity.mapper_id != play.id
+                            ):
+                                additional_phrases = re.findall('"([^"]*)"', play.name)
+                                if additional_phrases:
+                                    new_child = additional_phrases[0].capitalize()
+                                    if new_child == "Ekstraliga":
+                                        new_child += f" {league_obj.name}"
+                                else:
+                                    new_child = "II"
+                                target_league, _ = League.objects.get_or_create(
+                                    name=new_child,
+                                    highest_parent=highest_parent_object,
+                                    parent=target_league,
+                                    scrapper_autocreated=True,)
                         except django.core.exceptions.ObjectDoesNotExist:
-                            league_history = LeagueHistory.objects.create(
-                                league=target_league,
-                                season=local_season,
-                                mapper=create_mapper(
-                                    {"id": play.id, "related_type": "play", "database_source": "scrapper_mongodb", "desc": "LNP play uuid"},
-                                    {"id": league_obj.id, "related_type": "league", "database_source": "scrapper_mongodb", "desc": "LNP league uuid (highest parent)"}
-                                ),
-                                league_name_raw=play.name,
-                            )
-                    target_mapper_entity = league_history.mapper.get_entity(source=LNP_SOURCE, related_type="play")
-                    if (
-                        target_mapper_entity
-                        and target_mapper_entity.mapper_id != play.id
-                    ):
-                        curr_teams_count = len(
-                            self.service.get_play_teams(target_mapper_entity.mapper_id)
-                        )
-                        new_teams_count = len(self.service.get_play_teams(play.id))
-                        if new_teams_count < curr_teams_count:
-                            continue
-                        target_mapper_entity.mapper_id = play.id
-                        target_mapper_entity.save()
-                        if highest_parent in PARENT_UUID_REQUIRED:
-                            lh_mapper_highest_parent_entity = league_history.mapper.get_entity(source=LNP_SOURCE, related_type="league")
-                            lh_mapper_highest_parent_entity.mapper_id = league_obj.id
-                            lh_mapper_highest_parent_entity.save()
-                        league_history.league_name_raw = play.name
-                        league_history.save()
+                            pass
+                    LeagueHistory.objects.create(
+                        league=target_league,
+                        season=local_season,
+                        mapper=create_mapper(
+                            {"id": play.id, "related_type": "play", "database_source": "scrapper_mongodb", "desc": "LNP play uuid"},
+                            {"id": league_obj.id, "related_type": "league", "database_source": "scrapper_mongodb", "desc": "LNP league uuid (highest parent)"}
+                        ),
+                        league_name_raw=play.name,
+                    )
 
     def map_teamhistory(self, team_histories: List[TeamHistoryEntity]) -> None:
         """
@@ -376,7 +367,7 @@ class Command(BaseCommand):
                     ]
                 except KeyError:
                     continue
-                team_name = unify_name(team.name, False)
+                team_name = unify_team_name(team.name)
                 seniority = (
                     self.JUNIOR if team_league.name in JUNIOR_LNP_LEAGUES else self.SENIOR
                 )
@@ -392,7 +383,7 @@ class Command(BaseCommand):
                     unique_id=team_history.obj_id,
                 )
 
-                club_name = unify_name(club.name)
+                club_name = unify_club_name(club.name)
                 club_details = self.service.get_club_details(club.id)
                 club_address = club_details.address
                 voivo = club_details.voivodeship
@@ -416,9 +407,8 @@ class Command(BaseCommand):
                     )
 
                 def configure_club(obj: Club):
-                    if not obj.mapper:
-                        obj.create_mapper_obj()
-                    MapperEntity.objects.get_or_create(target=obj.mapper, source=LNP_SOURCE, mapper_id=club.id)
+                    if not obj.mapper or not obj.mapper.get_entities():
+                        obj.mapper = create_mapper({"id": obj.id, "related_type": "club", "database_source": "scrapper_mongodb", "desc": "LNP club uuid"})
                     obj.mapping = club.name
                     if not obj.stadion_address:
                         obj.stadion_address = club_address

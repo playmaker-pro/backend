@@ -3,7 +3,7 @@ import re
 from clubs.models import LeagueHistory, TeamHistory, Team, Season, Club
 from connector.scripts.base import BaseCommand
 from django.core.exceptions import ObjectDoesNotExist
-from .utils import unify_name
+from .utils import unify_team_name
 from mapper.enums import SENIOR_MALE_LEAGUES, SENIOR_FEMALE_LEAGUES, JUNIOR_LNP_LEAGUES, FUTSAL_MALE_LEAGUES, \
     FUTSAL_FEMALE_LEAGUES, JUNIOR_MALE_LEAGUES
 
@@ -11,11 +11,10 @@ from mapper.enums import SENIOR_MALE_LEAGUES, SENIOR_FEMALE_LEAGUES, JUNIOR_LNP_
 class Command(BaseCommand):
 
     def handle(self) -> None:
-        self.fix_teams()
+        # self.fix_teams()
         self.fix_clubs()
         self.fix_rounds()
-        # self.fix_teams_numeration()
-        ## RESET SOFT
+        # self.fix_teams_numeration()  NOT READY DONT USE
 
     def fix_rounds(self) -> None:
         """
@@ -47,7 +46,7 @@ class Command(BaseCommand):
     def fix_clubs(self) -> None:
         def merge(base_club: Club, to_remove: Club):
             if not base_club.mapper:
-                club.create_mapper_obj()
+                base_club.create_mapper_obj()
             entities = to_remove.mapper.get_entities()
             for entity in entities:
                 entity.target = base_club.mapper
@@ -88,21 +87,20 @@ class Command(BaseCommand):
                             try:
                                 result = result.filter(mapping__icontains=partial_club_name[n - 1])
                             except IndexError:
-                                pass
-                    if len(result) == 1:
-                        merge(club, result[0])
+                                continue
+                            if len(result) == 1:
+                                merge(club, result[0])
 
     def fix_teams(self) -> None:
         """
         Merge teams that have not been assigned correctly
         """
-        teams_to_fix = Team.objects.filter(historical__isnull=True)
+        teams_to_fix = Team.objects.filter(historical__isnull=True)\
+            .filter(league__isnull=False)
         for team in teams_to_fix:
-            if not team.mapper:
-                team.create_mapper_obj()
-            if team.mapper.get_entities():
+            if team.mapper and team.mapper.get_entities():
                 continue
-            team_name = unify_name(team.name, False)
+            team_name = unify_team_name(team.name)
             team_name_partial = team_name.split(" ")
             if "Warszawa" in team_name_partial:
                 team_name_partial.append("W-Wa")
@@ -116,7 +114,7 @@ class Command(BaseCommand):
             team_league = team.league
             try:
                 league_history = LeagueHistory.objects.get(
-                    league=team_league, season=Season.objects.get(name="2021/2022")
+                    league=team_league, season__name="2021/2022"
                 )
             except ObjectDoesNotExist:
                 continue
@@ -139,6 +137,7 @@ class Command(BaseCommand):
                     for entity in entities:
                         entity.target = team.mapper
                         entity.save()
+                    team.mapper.save()
                     team.save()
                     target_team_history.team.delete()
                     target_team_history.team = team
@@ -175,7 +174,7 @@ class Command(BaseCommand):
                 # team.save()
             index += 1
 
-    def fix_teams_numeration(self):
+    def fix_teams_numeration(self): ## NOT READY, DONT USE
         """
         Apply team hierarchy numeration based on league - "GKS Bełchatów", "GKS Bełchatów II" etc.
         """

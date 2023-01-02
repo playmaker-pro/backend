@@ -29,11 +29,11 @@ class MapperEntity(models.Model):
 
     RELATED_MODELS = (
         ("team", "team"),
-        ("player", "playerprofile"),
+        ("player", "player profile"),
         ("club", "club"),
-        ("team history", "teamhistory"),
-        ("league", "league_history__league"),
-        ("play", "league_history"),
+        ("team history", "team history"),
+        ("league", "league history highest parent"),
+        ("play", "league history"),
     )
 
     DATA_SOURCES = (
