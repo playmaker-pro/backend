@@ -15,11 +15,20 @@ def reset_history(modeladmin, request, queryset):
 
 reset_history.short_description = "Reset history league data."
 
+
 @admin.action(description="Aktualizuj visible team")
 def update_team_visibility(modeladmin, request, queryset):
     for object in queryset:
         object.visible = object.should_be_visible or False
         object.save()
+
+
+@admin.action(description="Zaznacz visible = True")
+def set_visibility(modeladmin, request, queryset):
+    for object in queryset:
+        object.visible = True
+        object.save()
+
 
 def resave(modeladmin, request, queryset):
     for object in queryset:
@@ -226,7 +235,7 @@ class TeamAdmin(admin.ModelAdmin):
     )
     search_fields = ("name",)
     list_filter = ("gender__name", "seniority__name", "visible", HasManagerFilter,)
-    actions = [update_team_visibility,]
+    actions = [update_team_visibility, set_visibility]
     autocomplete_fields = ("manager", "club", "league",)
 
     def full_league_linkify(self, obj=None):
@@ -252,10 +261,10 @@ class ClubAdmin(admin.ModelAdmin):
         linkify("voivodeship_obj"),
         "slug",
     )
-    autocomplete_fields: Sequence[str]  = ("manager",)
-    search_fields: Sequence[str]  = ("name",)
-    list_filter: Sequence[str]  = ("voivodeship_obj__name", HasManagerFilter,)
-    exclude: Sequence[str]  = ("voivodeship_raw",)
+    autocomplete_fields: Sequence[str] = ("manager",)
+    search_fields: Sequence[str] = ("name",)
+    list_filter: Sequence[str] = ("voivodeship_obj__name", HasManagerFilter,)
+    exclude: Sequence[str] = ("voivodeship_raw",)
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
