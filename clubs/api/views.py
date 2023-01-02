@@ -51,7 +51,7 @@ class TeamHistorySearchApi(APIView):
 
     def get(self, request):
         teams = (
-            TeamHistory.objects.select_related("team", "season")
+            TeamHistory.objects.select_related("team", "league_history__season")
             .all()
             .order_by("team__name")
         )
@@ -60,7 +60,7 @@ class TeamHistorySearchApi(APIView):
         if q_name:
             teams = teams.filter(team__name__icontains=q_name)
         if q_season:
-            teams = teams.filter(Q(season__name=q_season) | Q(league_history__season__name=q_season))
+            teams = teams.filter(league_history__season__name=q_season)
         serializer = TeamHistorySelect2Serializer(
             teams, many=True, context={"request": request}
         )
