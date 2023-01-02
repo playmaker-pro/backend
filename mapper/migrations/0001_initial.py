@@ -7,9 +7,7 @@ import django.db.models.deletion
 def init_schema(apps, schema_editor):
     db_alias = schema_editor.connection.alias
     model = apps.get_model("mapper", "MapperSource")
-    model.objects.using(db_alias).get_or_create(name="OLD_LNP")
-    model.objects.using(db_alias).get_or_create(name="NEW_LNP")
-    model.objects.using(db_alias).get_or_create(name="NEW_ADDITIONAL_LNP")
+    model.objects.using(db_alias).get_or_create(name="LNP")
     model.objects.using(db_alias).get_or_create(name="TRANSFERMARKT")
     model.objects.using(db_alias).get_or_create(name="90MINUT")
 
