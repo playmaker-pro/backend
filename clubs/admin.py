@@ -187,7 +187,7 @@ class TeamHistoryAdmin(admin.ModelAdmin):
     search_fields: Sequence[str] = ("team__name",)
     autocomplete_fields: Sequence[str] = ("team", "league_history")
     list_filter: Sequence[str] = (
-        "league_history__season",
+        "league_history__season__name",
         "league_history__league__highest_parent__name",
         "team__club__voivodeship",
         )
