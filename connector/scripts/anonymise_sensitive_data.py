@@ -1,6 +1,7 @@
 import random
 import string
 
+import django.core.exceptions
 from django.contrib.auth import get_user_model
 from connector.scripts.base import BaseCommand
 from allauth.account.models import EmailAddress
@@ -35,22 +36,37 @@ class Command(BaseCommand):
         users = User.objects.filter(is_staff=False, is_superuser=False)
         for user in users:
             user.email = self.random_email_address()
-            user.save()
+            try:
+                user.save()
+            except django.core.exceptions.ObjectDoesNotExist:
+                pass
 
         for email_obj in EmailAddress.objects.all():
             email_obj.email = self.random_email_address()
-            email_obj.save()
+            try:
+                email_obj.save()
+            except django.core.exceptions.ObjectDoesNotExist:
+                pass
 
         for playerprofile in PlayerProfile.objects.all():
             playerprofile.phone = self.PHONE_NR
             playerprofile.agent_phone = self.PHONE_NR
-            playerprofile.save()
+            try:
+                playerprofile.save()
+            except django.core.exceptions.ObjectDoesNotExist:
+                pass
 
         for coachprofile in CoachProfile.objects.all():
             coachprofile.phone = self.PHONE_NR
-            coachprofile.save()
+            try:
+                coachprofile.save()
+            except django.core.exceptions.ObjectDoesNotExist:
+                pass
 
         for clubprofile in ClubProfile.objects.all():
             clubprofile.phone = self.PHONE_NR
-            clubprofile.save()
+            try:
+                clubprofile.save()
+            except django.core.exceptions.ObjectDoesNotExist:
+                pass
 
