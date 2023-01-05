@@ -232,6 +232,7 @@ class TeamAdmin(admin.ModelAdmin):
         linkify("manager"),
         "visible",
         "autocreated",
+        "scrapper_autocreated",
     )
     search_fields = ("name",)
     list_filter = ("gender__name", "seniority__name", "visible", HasManagerFilter,)
@@ -257,6 +258,7 @@ class ClubAdmin(admin.ModelAdmin):
         "name",
         "mapping",
         "autocreated",
+        "scrapper_autocreated",
         linkify("manager"),
         linkify("voivodeship_obj"),
         "slug",
