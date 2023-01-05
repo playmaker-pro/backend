@@ -641,6 +641,8 @@ class Team(models.Model, MappingMixin):
         default=False, help_text="Autocreated from new scrapper"
     )
 
+    junior_group = models.ForeignKey("JuniorAgeGroup", null=True, blank=True, on_delete=models.SET_NULL)
+
     @property
     def should_be_visible(self):
         return (self.manager or self.club.manager) and (
@@ -891,3 +893,10 @@ class TeamHistory(models.Model):
 
     class Meta:
         unique_together = ("mapper", "league_history")
+
+
+class JuniorAgeGroup(models.Model):
+    name = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.name
