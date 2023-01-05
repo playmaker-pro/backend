@@ -1,12 +1,15 @@
 import collections
 
+import django.db.utils
 from django.conf import settings
 from django.urls import reverse
 from django.utils.html import format_html
 from django.core.exceptions import ObjectDoesNotExist
 
+
 def is_allowed_interact_with_s38():
     return settings.CONFIGURATION == "production" and not settings.DEBUG
+
 
 def get_current_season():
     if not settings.SCRAPPER:
@@ -16,6 +19,9 @@ def get_current_season():
         return Season.objects.get(is_current=True).name
     except ObjectDoesNotExist:
         return Season.define_current_season()
+    except django.db.utils.ProgrammingError:
+        return "2021/2022"
+
 
 def calculate_prev_season(season: str):
     """2019/2020 ->   2018/2019"""
