@@ -226,6 +226,7 @@ class TeamAdmin(admin.ModelAdmin):
         "name",
         "mapping",
         linkify("club"),
+        "junior_group",
         "full_league_linkify",
         linkify("gender"),
         linkify("seniority"),
@@ -271,3 +272,8 @@ class ClubAdmin(admin.ModelAdmin):
         form.base_fields["manager"].queryset = get_users_manger_roles()
         form.base_fields["editors"].queryset = get_users_manger_roles()
         return form
+
+
+@admin.register(models.JuniorAgeGroup)
+class JuniorAgeGroupAdmin(admin.ModelAdmin):
+    ...
