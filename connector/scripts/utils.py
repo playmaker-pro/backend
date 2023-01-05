@@ -1,7 +1,7 @@
 import re
 from django.core.exceptions import ObjectDoesNotExist
 from mapper.models import MapperSource, MapperEntity, Mapper
-from mapper.enums import RE_ROMAN
+from connector.enums import RE_ROMAN
 
 LNP_SOURCE, _ = MapperSource.objects.get_or_create(name="LNP")
 

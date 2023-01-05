@@ -4,7 +4,7 @@ from clubs.models import LeagueHistory, TeamHistory, Team, Season, Club
 from connector.scripts.base import BaseCommand
 from django.core.exceptions import ObjectDoesNotExist
 from .utils import unify_team_name
-from mapper.enums import SENIOR_MALE_LEAGUES, SENIOR_FEMALE_LEAGUES, JUNIOR_LNP_LEAGUES, FUTSAL_MALE_LEAGUES, \
+from connector.enums import SENIOR_MALE_LEAGUES, SENIOR_FEMALE_LEAGUES, JUNIOR_LNP_LEAGUES, FUTSAL_MALE_LEAGUES, \
     FUTSAL_FEMALE_LEAGUES, JUNIOR_MALE_LEAGUES
 
 

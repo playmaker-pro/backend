@@ -67,6 +67,7 @@ JUNIOR_LNP_LEAGUES = [
     "G1",
     "G2",
     "CLJ U-19",
+    "Liga Makroregionalna U-19",
     "CLJ U-18",
     "CLJ U-17",
     "CLJ U-15",
