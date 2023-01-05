@@ -56,14 +56,14 @@ class Command(BaseCommand):
             except django.core.exceptions.ObjectDoesNotExist:
                 pass
 
-        for coachprofile in CoachProfile.objects.all():
+        for coachprofile in CoachProfile.objects.filter(phone__isnull=False):
             coachprofile.phone = self.PHONE_NR
             try:
                 coachprofile.save()
             except django.core.exceptions.ObjectDoesNotExist:
                 pass
 
-        for clubprofile in ClubProfile.objects.all():
+        for clubprofile in ClubProfile.objects.filter(phone__isnull=False):
             clubprofile.phone = self.PHONE_NR
             try:
                 clubprofile.save()
