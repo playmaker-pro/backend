@@ -1,4 +1,4 @@
-
+from clubs.models import JuniorAgeGroup
 
 SENIOR_MALE_LEAGUES = {
     "Ekstraklasa": "Ekstraklasa",
@@ -74,6 +74,7 @@ JUNIOR_LNP_LEAGUES = [
 
 CLJ_LEAGUES = {
     "CLJ U-19": "Clj U-19",
+    "Liga Makroregionalna U-19": "Liga Makroregionalna U-19",
     "CLJ U-18": "Clj U-18",
     "CLJ U-17": "Clj U-17",
     "CLJ U-15": "Clj U-15",
@@ -88,6 +89,30 @@ LEAGUE_HIGHEST_PARENT_NAME_MAPPER = {
     **SENIOR_FEMALE_LEAGUES,
     **CLJ_LEAGUES,
     **FUTSAL_FEMALE_LEAGUES
+}
+
+U19 = JuniorAgeGroup.objects.get(name="u19")
+U18 = JuniorAgeGroup.objects.get(name="u18")
+U17 = JuniorAgeGroup.objects.get(name="u17")
+U16 = JuniorAgeGroup.objects.get(name="u16")
+U15 = JuniorAgeGroup.objects.get(name="u15")
+U14 = JuniorAgeGroup.objects.get(name="u14")
+
+
+JUNIOR_AGE_GROUPS = {
+    "A1": U19,
+    "A2": U18,
+    "B1": U17,
+    "B2": U16,
+    "C1": U15,
+    "C2": U14,
+    "CLJ U-19": U19,
+    "Liga Makroregionalna U-19": U19,
+    "CLJ U-18": U18,
+    "CLJ U-17": U17,
+    "CLJ U-15": U15,
+    "Centralna Liga Juniorek U-17": U17,
+    "Centralna Liga Juniorek U-15": U15,
 }
 
 PARENT_UUID_REQUIRED = ["Ekstraklasa", "Ekstraliga K", "1 Liga", "2 liga"]

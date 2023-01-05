@@ -29,7 +29,7 @@ from connector.entities import (
     TeamEntity,
     BaseClubEntity,
 )
-from mapper.enums import LEAGUE_HIGHEST_PARENT_NAME_MAPPER, JUNIOR_LNP_LEAGUES, PARENT_UUID_REQUIRED
+from mapper.enums import LEAGUE_HIGHEST_PARENT_NAME_MAPPER, JUNIOR_LNP_LEAGUES, PARENT_UUID_REQUIRED, JUNIOR_AGE_GROUPS
 
 
 class Command(BaseCommand):
@@ -432,6 +432,7 @@ class Command(BaseCommand):
                                 "desc": "TeamHistory id as ObjectId in mongodb, immutable between seasons"
                             }
                         ),
+                        junior_group=JUNIOR_AGE_GROUPS[team_league.name],
                         scrapper_autocreated=True,
                         mapping=f"{team.name};",
                         visible=False,
@@ -442,6 +443,7 @@ class Command(BaseCommand):
                     team_obj.mapping = str(team_obj.mapping) + (
                         team.name if team.name not in str(team_obj.mapping) else ""
                     )
+                    team_obj.junior_group = JUNIOR_AGE_GROUPS[team_league.name]
                     team_obj.seniority = seniority
                     team_obj.gender = gender
                     club_obj = (
@@ -459,7 +461,7 @@ class Command(BaseCommand):
                                 "desc": "TeamHistory id as ObjectId in mongodb, immutable between seasons"
                             }
                         )
-                    team_obj.save()
+                team_obj.save()
 
                 team_plays = self.service.get_team_plays(team.id)
                 for league in team_plays:
