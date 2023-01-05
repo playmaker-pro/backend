@@ -24,3 +24,7 @@ class Manager:
     def fix_new_structure(self, *args, **kwargs):
         from .scripts import fix_new_structure
         self.run_action(fix_new_structure, *args, **kwargs)
+
+    def anonymise_sensitive_data(self, *args, **kwargs):
+        from .scripts import anonymise_sensitive_data
+        self.run_action(anonymise_sensitive_data, *args, **kwargs)
