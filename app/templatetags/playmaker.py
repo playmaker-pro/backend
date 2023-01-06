@@ -1033,6 +1033,9 @@ def get_my_club_link(context, text=None, css_class=None):
 @register.filter
 def display_voivodeship(obj: Any) -> str:
 
+    if not obj:
+        return ""
+
     manager = VoivodeshipService
     voivodeship = manager.display_voivodeship(obj)
 

@@ -39,9 +39,8 @@ class VoivodeshipService:
         if isinstance(obj, Team):
             obj = obj.club
 
-        if not obj.voivodeship_obj:
-            return None
-        return obj.voivodeship_obj
+        if obj and obj.voivodeship_obj:
+            return obj.voivodeship_obj
 
     @staticmethod
     def get_voivodeship(obj) -> Voivodeships:

@@ -31,7 +31,7 @@
 <div class="card item-card" style="">
   <div class="card-header d-md-none">
     <span class="object-title"> 
-      <a href="{{object.get_permalink}}"><strong>{{ object.name|upper }}</strong></a>
+      <a href="{{object.get_permalink}}"><strong>{{ object.name|upper }} {{ object.latest_league_history }}</strong></a>
     </span>
     <span class="float-right"> 
         {% observed_link user object text='obserwuj' otype='team'%}
@@ -55,14 +55,14 @@
                 <a href="{{ object.get_league_permalink }}">
                     {{ object.display_league_top_parent|default:''|title  }}
                 </a>,
-                {{ object|display_voivodeship|default:''|truncatechars:24 }}
+                {{ object|display_voivodeship|truncatechars:24 }}
             </div>
         </div>
                            <div class="sc-cell d-none d-md-flex col-md-4">
                             <a href="{{ object.get_permalink }}"> 
                               <img class="avatar rounded img-responsive"
                                    src="{% thumbnail object.club.picture|default:'default_team.png' 'tables_avatar_show_medium' %}">
-                              <strong style="padding-left:15px;">{{ object.name|upper}}</strong>
+                              <strong style="padding-left:15px;">{{ object.name|upper}} {{ object.latest_league_history }}</strong>
                             </a>
                           </div>
 
@@ -73,7 +73,7 @@
                               </div>
 
                               <div class="sc-cell d-none d-md-flex col-5 col-md-2 text-left">
-                                  {{ object|display_voivodeship|default:''|truncatechars:25 }}
+                                  {{ object|display_voivodeship|truncatechars:25 }}
                               </div>
 
                               <div class="sc-cell d-none d-md-flex col-6 col-md-2  text-left">
