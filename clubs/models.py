@@ -660,6 +660,18 @@ class Team(models.Model, MappingMixin):
             return False
 
     @property
+    def latest_league_history(self):
+        ths = TeamHistory.objects.filter(team=self).order_by("-league_history__season__name")
+        if ths:
+            return f"({ths[0].league_history.league})"
+        else:
+            return ''
+
+    @property
+    def team_name_with_current_league(self):
+        return f"{self.display_team} {self.latest_league_history}"
+
+    @property
     def league_with_parents(self):
         return self.league.get_upper_parent_names(spliter=", ")
 
@@ -696,6 +708,9 @@ class Team(models.Model, MappingMixin):
     @property
     @supress_exception
     def display_league_top_parent(self):
+        ths = TeamHistory.objects.filter(team=self).order_by("-league_history__season__name")
+        if ths:
+            return ths[0].league_history.league.display_league_top_parent
         return self.league.display_league_top_parent
 
     @property
@@ -838,7 +853,7 @@ class Team(models.Model, MappingMixin):
     )
 
     def __str__(self):
-        return self.name_with_league_full
+        return self.team_name_with_current_league
 
 
 class TeamHistory(models.Model):
