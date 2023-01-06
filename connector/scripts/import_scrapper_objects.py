@@ -166,12 +166,14 @@ class Command(BaseCommand):
             if l_highest_parent:
                 result = result.filter(league__highest_parent__name=l_highest_parent)
             if len(result) == 1:
-                return result[0]
+                model_obj = result[0]
             elif len(result) > 1:
                 res_list = [res.name for res in result]
                 if res_list and res_list.count(res_list[0]) == len(res_list):
-                    return result[0]
-            return model_obj
+                    model_obj = result[0]
+            if model_obj:
+                if not model_obj.mapper or (model_obj.mapper and not model_obj.mapper.has_entities):
+                    return model_obj
 
         try:
             target_mapper = get_mapper(unique_id)

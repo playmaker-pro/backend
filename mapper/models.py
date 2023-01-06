@@ -17,6 +17,10 @@ class Mapper(models.Model):
     def get_entities(self) -> List[Union["MapperEntity", None]]:
         return MapperEntity.objects.filter(target=self)
 
+    @property
+    def has_entities(self) -> bool:
+        return bool(self.get_entities())
+
 
 class MapperSource(models.Model):
     name = models.CharField(max_length=30)
