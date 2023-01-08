@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
+from django.contrib.admin.filters import FieldListFilter
 from users.queries import get_users_manger_roles
 from app.utils.admin import json_filed_data_prettified
 from . import models
@@ -115,6 +116,39 @@ class SectionGroupingAdmin(admin.ModelAdmin):
     search_fields: Sequence = ("name",)
 
 
+class IsParentFilter(SimpleListFilter):
+    title = "is highest parent"
+    parameter_name = "isparent"
+
+    def lookups(self, request, model_admin):
+
+        return [
+            ("true", "True"),
+            ("false", "False"),
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value() == "true":
+            return queryset.distinct().filter(parent__isnull=True)
+        if self.value() == 'false':
+            return queryset.distinct().filter(parent__isnull=False)
+
+
+class CountryListFilter(admin.SimpleListFilter):
+    title = 'Country'
+    parameter_name = 'country'
+
+    def lookups(self, request, model_admin):
+        countries = set([c.country for c in model_admin.model.objects.all()])
+        return [(country, country.name) for country in countries]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(country=self.value())
+        else:
+            return queryset
+
+
 @admin.register(models.League)
 class LeagueAdmin(admin.ModelAdmin):
     search_fields: Sequence[str]  = ("name", "slug")
@@ -143,6 +177,10 @@ class LeagueAdmin(admin.ModelAdmin):
         "slug",
         "search_tokens",
         linkify("highest_parent"),
+    )
+    list_filter = (
+        "zpn", ("highest_parent", admin.RelatedOnlyFieldListFilter), IsParentFilter,
+        "visible", "gender", "seniority", CountryListFilter,
     )
 
     def get_slicer(self, obj):
