@@ -59,7 +59,7 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
         "is_data",
     )
     ordering: Optional[Sequence[str]] = ("-league",)
-    search_fields = ("league",)
+    search_fields = ("league__name",)
     autocomplete_fields = ("league",)
     readonly_fields = ("data_prettified",)
     actions = [
@@ -85,6 +85,7 @@ class SeasonAdmin(admin.ModelAdmin):
     list_display: Sequence = ("name", "is_current", "is_in_verify_form",)
     search_fields: Sequence = ("name",)
     exclude: Optional[Sequence[str]] = ("is_current",)
+
 
 @admin.register(models.LeagueGroup)
 class LeagueGroupAdmin(admin.ModelAdmin):
