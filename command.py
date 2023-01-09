@@ -22,5 +22,3 @@ if __name__ == "__main__":
         Manager(command, sys.argv[2:])
     except IndexError:
         Manager(command)
-
-
