@@ -73,6 +73,8 @@ def get_season_with_team_history():
         ).order_by("name")
     except django.db.utils.ProgrammingError:
         return
+    except Exception as e:
+        return
 
 
 @dataclass
