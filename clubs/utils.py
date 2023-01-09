@@ -59,10 +59,15 @@ class ZpnListFilter(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         zpns = set([z.league.zpn for z in model_admin.model.objects.exclude(league__zpn__isnull=True)])
-        return [(zpn, zpn) for zpn in zpns]
+        lookups = [(zpn, zpn) for zpn in zpns]
+        lookups.append(("-", "-"))
+        return lookups
 
     def queryset(self, request, queryset):
         if self.value():
-            return queryset.filter(league__zpn=self.value())
+            if self.value() == '-':
+                return queryset.filter(league__zpn=None)
+            else:
+                return queryset.filter(league__zpn=self.value())
         else:
             return queryset
