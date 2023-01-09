@@ -1,6 +1,5 @@
 from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.filters import FieldListFilter
-from django.db.models import Q
 
 
 class IsParentFilter(SimpleListFilter):
