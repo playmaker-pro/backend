@@ -1,5 +1,6 @@
 from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.filters import FieldListFilter
+from django.db.models import Q
 
 
 class IsParentFilter(SimpleListFilter):
@@ -51,3 +52,18 @@ class HasManagerFilter(SimpleListFilter):
             return queryset.distinct().filter(manager__isnull=False)
         if self.value():
             return queryset.distinct().filter(manager__isnull=True)
+
+
+class ZpnListFilter(SimpleListFilter):
+    title = "Zpn"
+    parameter_name = 'zpn'
+
+    def lookups(self, request, model_admin):
+        zpns = set([z.league.zpn for z in model_admin.model.objects.exclude(league__zpn__isnull=True)])
+        return [(zpn, zpn) for zpn in zpns]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(league__zpn=self.value())
+        else:
+            return queryset

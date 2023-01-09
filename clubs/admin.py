@@ -5,7 +5,7 @@ from . import models
 from utils import linkify
 from django.utils.safestring import mark_safe
 from typing import Sequence, Optional, Union
-from clubs.utils import IsParentFilter, CountryListFilter, HasManagerFilter
+from clubs.utils import IsParentFilter, CountryListFilter, HasManagerFilter, ZpnListFilter
 
 
 def reset_history(modeladmin, request, queryset):
@@ -57,6 +57,10 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
         "is_matches_data",
         "data_updated",
         "is_data",
+    )
+    list_filter = (
+        ZpnListFilter, ("league__highest_parent", admin.RelatedOnlyFieldListFilter),
+        "season", "league__gender", "league__seniority",
     )
     ordering: Optional[Sequence[str]] = ("-league",)
     search_fields = ("league__name",)
