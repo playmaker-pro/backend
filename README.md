@@ -129,3 +129,7 @@ invoke tests
 ```bash
 python manage.py map_vivos
 ```
+
+#### Run docker
+
+docker compose -f compose/docker-compose-pg-only.yml up -d
