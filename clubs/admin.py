@@ -4,8 +4,8 @@ from app.utils.admin import json_filed_data_prettified
 from . import models
 from utils import linkify
 from django.utils.safestring import mark_safe
-from typing import Sequence, Optional, Union
-from clubs.utils import IsParentFilter, CountryListFilter, HasManagerFilter, ZpnListFilter
+from typing import Sequence, Optional
+from clubs.filters import IsParentFilter, CountryListFilter, HasManagerFilter, ZpnListFilter
 
 
 def reset_history(modeladmin, request, queryset):

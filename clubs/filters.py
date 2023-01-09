@@ -1,5 +1,4 @@
 from django.contrib.admin import SimpleListFilter
-from django.contrib.admin.filters import FieldListFilter
 
 
 class IsParentFilter(SimpleListFilter):
@@ -54,16 +53,28 @@ class HasManagerFilter(SimpleListFilter):
 
 
 class ZpnListFilter(SimpleListFilter):
+    """
+    A Django SimpleListFilter subclass that allows the user
+    to filter the queryset based on the Zpn field.
+    """
     title = "Zpn"
     parameter_name = 'zpn'
 
     def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples with the values to filter by
+        and the display names for the filter. Zpn for
+        the option will appear in the right sidebar.
+        """
         zpns = set([z.league.zpn for z in model_admin.model.objects.exclude(league__zpn__isnull=True)])
         lookups = [(zpn, zpn) for zpn in zpns]
         lookups.append(("-", "-"))
         return lookups
 
     def queryset(self, request, queryset):
+        """
+        Returns the filtered queryset based on the selected value in the filter.
+        """
         if self.value():
             if self.value() == '-':
                 return queryset.filter(league__zpn=None)
