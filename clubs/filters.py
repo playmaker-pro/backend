@@ -22,7 +22,10 @@ class IsParentFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         """
-        Returns the filtered queryset based on the selected value in the filter.
+        Based on selected filter value validate value if it is string „true”, then filter out queryset uniquely
+        (league) dataset who has null `parent` field, it means that these are highest parent.
+        If the selected value is "false" then it will return queryset containing
+        objects that have non-null `parent` fields.
         """
         if self.value() == "true":
             return queryset.distinct().filter(parent__isnull=True)
@@ -49,7 +52,9 @@ class CountryListFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         """
-        Returns the filtered queryset based on the selected value in the filter.
+        Based on selected filter value returns the queryset containing objects that have
+        `country` field with the selected value. If no value is selected in the filter
+        then return the original queryset.
         """
         if self.value():
             return queryset.filter(country=self.value())
@@ -79,7 +84,8 @@ class HasManagerFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         """
-        Returns the filtered queryset based on the selected value in the filter.
+        Based on selected filter value validate value if it is string „true”
+        then filter out queryset uniquely (club/team) dataset who has manager.
         """
         if self.value() == "true":
             return queryset.distinct().filter(manager__isnull=False)
@@ -108,7 +114,11 @@ class ZpnListFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         """
-        Returns the filtered queryset based on the selected value in the filter.
+        Based on the selected value in the filter, if it is string'-',
+        returns the queryset containing objects that have
+        `league` field with None as 'zpn' value, otherwise returns the
+        queryset containing objects that have 'zpn' value equal to the selected
+        value. If no value is selected in the filter then return the original queryset.
         """
         if self.value():
             if self.value() == '-':
