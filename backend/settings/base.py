@@ -638,9 +638,7 @@ VOIVODESHIP_CHOICES = (
     ("Zachodniopomorskie", "Zachodniopomorskie"),
 )
 
-
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
-
 
 VERIFICATION_FORM = {"DEFAULT_SEASON_NAME": "2021/2022"}
 

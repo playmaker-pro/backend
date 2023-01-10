@@ -12,6 +12,9 @@ def is_allowed_interact_with_s38():
 
 
 def get_current_season():
+    """
+    Return current season based on season stored in database
+    """
     if not settings.SCRAPPER:
         return "2021/2022"
     from clubs.models import Season
