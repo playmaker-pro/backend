@@ -292,8 +292,13 @@ class TeamsTable(TableView):
     def filter_queryset(self, queryset):
 
         if self.filter_league is not None:
+            """
+            Based on selected filter value returns the queryset containing objects (teams)
+            that are associated with the specified league and only in the current season
+            """
             league = (
-                Q(league__highest_parent__name__icontains=league)
+                Q(historical__league_history__league__highest_parent__name=league)
+                & Q(historical__league_history__season__is_current=True)
                 for league in self.filter_league
             )
             query = reduce(operator.or_, league)
