@@ -225,7 +225,7 @@ class TeamAdmin(admin.ModelAdmin):
         "mapping",
         linkify("club"),
         "junior_group",
-        "full_league_linkify",
+        "current_league",
         linkify("gender"),
         linkify("seniority"),
         linkify("manager"),
@@ -236,13 +236,17 @@ class TeamAdmin(admin.ModelAdmin):
     search_fields = ("name",)
     list_filter = ("gender__name", "seniority__name", "visible", HasManagerFilter,)
     actions = [update_team_visibility, set_visibility, set_invisibility]
-    autocomplete_fields = ("manager", "club", "league",)
+    autocomplete_fields = ("manager", "club",)
 
-    def full_league_linkify(self, obj=None):
+    def current_league(self, obj=None):
+        """
+            Returns the current league highest parent of a given team. If the team has no team history related
+            to a current season, returns league from latest team history.
+        """
         if obj:
-            return linkify("league")(obj)        
-
-    full_league_linkify.short_description = "league"
+            team_history = obj.historical.filter(team=obj).order_by("-league_history__season__name")
+            current_league = f"{team_history[0].league_history.league.highest_parent}"
+            return current_league
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
