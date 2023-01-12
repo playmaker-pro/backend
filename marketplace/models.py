@@ -17,6 +17,8 @@ from clubs.models import League, Voivodeship, Seniority, Gender, Club
 from datetime import timedelta
 from django.core.validators import RegexValidator
 
+from voivodeships.models import Voivodeships
+
 LICENCE_CHOICES = (
     (1, "UEFA PRO"),
     (2, "UEFA A"),
@@ -230,7 +232,23 @@ class ClubForPlayerAnnouncement(AnnouncementMeta):
 
     gender = models.ForeignKey(Gender, on_delete=models.CASCADE, null=True, blank=True)
 
-    voivodeship = models.ForeignKey(Voivodeship, on_delete=models.CASCADE)
+    # TODO Based on task PM-363. After migration on production, field can be deleted
+    voivodeship = models.ForeignKey(
+        Voivodeship,
+        on_delete=models.CASCADE,
+        verbose_name=_('Województwo'),
+        help_text='Wybierz województwo. Stare pole, gotowe do migracji',
+        null=True,
+        blank=True
+    )
+    voivodeship_obj = models.ForeignKey(
+        Voivodeships,
+        on_delete=models.SET_NULL,
+        verbose_name=_('Województwo'),
+        help_text='Wybierz województwo. Nowe pole',
+        null=True,
+        blank=True
+    )
 
     body = models.TextField()
 
@@ -247,7 +265,23 @@ class PlayerForClubAnnouncement(AnnouncementMeta):
     )
     position = models.ForeignKey(PlayerPosition, on_delete=models.CASCADE)
 
-    voivodeship = models.ForeignKey(Voivodeship, on_delete=models.CASCADE)
+    # TODO Based on task PM-363. After migration on production, field can be deleted
+    voivodeship = models.ForeignKey(
+        Voivodeship,
+        on_delete=models.CASCADE,
+        verbose_name=_('Województwo'),
+        help_text='Wybierz województwo. Stare pole, gotowe do migracji',
+        null=True,
+        blank=True
+    )
+    voivodeship_obj = models.ForeignKey(
+        Voivodeships,
+        on_delete=models.SET_NULL,
+        verbose_name=_('Województwo'),
+        help_text='Wybierz województwo. Nowe pole',
+        null=True,
+        blank=True
+    )
 
     address = AddressField(help_text=_("Adres"), blank=True, null=True)
 
@@ -283,7 +317,23 @@ class ClubForCoachAnnouncement(AnnouncementMeta):
         related_name="club_for_coach_announcement_league",
     )
 
-    voivodeship = models.ForeignKey(Voivodeship, on_delete=models.CASCADE)
+    # TODO Based on task PM-363. After migration on production, field can be deleted
+    voivodeship = models.ForeignKey(
+        Voivodeship,
+        on_delete=models.CASCADE,
+        verbose_name=_('Województwo'),
+        help_text='Wybierz województwo. Stare pole, gotowe do migracji',
+        null=True,
+        blank=True
+    )
+    voivodeship_obj = models.ForeignKey(
+        Voivodeships,
+        on_delete=models.SET_NULL,
+        verbose_name=_('Województwo'),
+        help_text='Wybierz województwo. Nowe pole',
+        null=True,
+        blank=True
+    )
 
     lic_type = models.IntegerField(
         _("Licencja"), choices=LICENCE_CHOICES, blank=True, null=True
@@ -311,7 +361,22 @@ class CoachForClubAnnouncement(AnnouncementMeta):
         _("Licencja"), choices=LICENCE_CHOICES, blank=True, null=True
     )
 
-    voivodeship = models.ForeignKey(Voivodeship, on_delete=models.CASCADE)
+    # TODO Based on task PM-363. After migration on production, field can be deleted
+    voivodeship = models.ForeignKey(
+        Voivodeship, on_delete=models.CASCADE,
+        verbose_name=_('Województwo'),
+        help_text='Wybierz województwo. Stare pole, gotowe do migracji',
+        null=True,
+        blank=True
+    )
+    voivodeship_obj = models.ForeignKey(
+        Voivodeships,
+        on_delete=models.SET_NULL,
+        verbose_name=_('Województwo'),
+        help_text='Wybierz województwo. Nowe pole',
+        null=True,
+        blank=True
+    )
 
     address = AddressField(help_text=_("Adres"), blank=True, null=True)
 

@@ -4,6 +4,8 @@ from app.utils.admin import json_filed_data_prettified
 from . import models
 from utils import linkify
 from django.utils.safestring import mark_safe
+from typing import Sequence, Optional
+from clubs.filters import IsParentFilter, CountryListFilter, HasManagerFilter, ZpnListFilter
 
 
 def reset_history(modeladmin, request, queryset):
@@ -12,6 +14,27 @@ def reset_history(modeladmin, request, queryset):
 
 
 reset_history.short_description = "Reset history league data."
+
+
+@admin.action(description="Ustaw visible dla teamów z managerem")
+def update_team_visibility(modeladmin, request, queryset):
+    for object in queryset:
+        object.visible = object.should_be_visible or False
+        object.save()
+
+
+@admin.action(description="Zaznacz visible = True")
+def set_visibility(modeladmin, request, queryset):
+    for object in queryset:
+        object.visible = True
+        object.save()
+
+
+@admin.action(description="Zaznacz visible = False")
+def set_invisibility(modeladmin, request, queryset):
+    for object in queryset:
+        object.visible = False
+        object.save()
 
 
 def resave(modeladmin, request, queryset):
@@ -35,7 +58,13 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
         "data_updated",
         "is_data",
     )
-    ordering = ("-league",)
+    list_filter = (
+        ZpnListFilter, ("league__highest_parent", admin.RelatedOnlyFieldListFilter),
+        "season", "league__gender", "league__seniority",
+    )
+    ordering: Optional[Sequence[str]] = ("-league",)
+    search_fields = ("league__name",)
+    autocomplete_fields = ("league",)
     readonly_fields = ("data_prettified",)
     actions = [
         reset_history,
@@ -57,43 +86,45 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
 
 @admin.register(models.Season)
 class SeasonAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    list_display: Sequence = ("name", "is_current", "is_in_verify_form",)
+    search_fields: Sequence = ("name",)
+    exclude: Optional[Sequence[str]] = ("is_current",)
 
 
 @admin.register(models.LeagueGroup)
 class LeagueGroupAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    search_fields: Sequence = ("name",)
 
 
 @admin.register(models.Seniority)
 class SeniorityAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    search_fields: Sequence = ("name",)
 
 
 @admin.register(models.Region)
 class RegionAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    search_fields: Sequence = ("name",)
 
 
 @admin.register(models.Gender)
 class GenderAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    search_fields: Sequence = ("name",)
 
 
 @admin.register(models.JuniorLeague)
 class JuniorLeagueAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    search_fields: Sequence = ("name",)
 
 
 @admin.register(models.SectionGrouping)
 class SectionGroupingAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    search_fields: Sequence = ("name",)
 
 
 @admin.register(models.League)
 class LeagueAdmin(admin.ModelAdmin):
-    search_fields = ("name", "slug")
-    readonly_fields = ("slug", "search_tokens", "virtual", "is_parent")
+    search_fields: Sequence[str]  = ("name", "slug")
+    readonly_fields: Sequence[str]  = ("slug", "search_tokens", "virtual", "is_parent")
     actions = [resave]
     list_display = (
         "get_slicer",
@@ -118,6 +149,10 @@ class LeagueAdmin(admin.ModelAdmin):
         "slug",
         "search_tokens",
         linkify("highest_parent"),
+    )
+    list_filter = (
+        "zpn", ("highest_parent", admin.RelatedOnlyFieldListFilter), IsParentFilter,
+        "visible", "gender", "seniority", CountryListFilter,
     )
 
     def get_slicer(self, obj):
@@ -152,7 +187,35 @@ class LeagueAdmin(admin.ModelAdmin):
 
 @admin.register(models.Voivodeship)
 class VoivodeshipAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
+    search_fields: Sequence[str]  = ("name",)
+
+
+@admin.register(models.TeamHistory)
+class TeamHistoryAdmin(admin.ModelAdmin):
+    list_display: Sequence[str] = (
+        "id",
+        linkify("team"),
+        linkify("league_history"),
+        "get_season",
+        "visible",
+        "autocreated",
+        )
+    search_fields: Sequence[str] = ("team__name",)
+    autocomplete_fields: Sequence[str] = ("team", "league_history")
+    list_filter: Sequence[str] = (
+        "league_history__season__name",
+        ("league_history__league__highest_parent", admin.RelatedOnlyFieldListFilter),
+        "team__club__voivodeship",
+        )
+
+    def get_season(self, obj):
+        if obj.league_history.season:
+            return obj.league_history.season
+        else:
+            return None
+
+    get_season.short_description = "Season"
+    get_season.admin_order_field = 'league_history__season__name'
 
 
 @admin.register(models.Team)
@@ -160,17 +223,30 @@ class TeamAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "mapping",
-        "visible",
-        "autocreated",
         linkify("club"),
-        linkify("league"),
+        "junior_group",
+        "current_league",
         linkify("gender"),
         linkify("seniority"),
         linkify("manager"),
+        "visible",
+        "autocreated",
+        "scrapper_autocreated",
     )
     search_fields = ("name",)
-    list_filter = ("league__name", "gender__name", "seniority__name")
-    autocomplete_fields = ("manager",)
+    list_filter = ("gender__name", "seniority__name", "visible", HasManagerFilter,)
+    actions = [update_team_visibility, set_visibility, set_invisibility]
+    autocomplete_fields = ("manager", "club",)
+
+    def current_league(self, obj=None):
+        """
+            Returns the current league highest parent of a given team. If the team has no team history related
+            to a current season, returns league from latest team history.
+        """
+        if obj:
+            team_history = obj.historical.filter(team=obj).order_by("-league_history__season__name")
+            current_league = f"{team_history[0].league_history.league.highest_parent}"
+            return current_league
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -185,17 +261,23 @@ class ClubAdmin(admin.ModelAdmin):
         "name",
         "mapping",
         "autocreated",
+        "scrapper_autocreated",
         linkify("manager"),
-        linkify("voivodeship"),
+        linkify("voivodeship_obj"),
         "slug",
     )
-    autocomplete_fields = ("manager",)
-    search_fields = ("name",)
-    list_filter = ("voivodeship__name",)
-    exclude = ("voivodeship_raw",)
+    autocomplete_fields: Sequence[str] = ("manager",)
+    search_fields: Sequence[str] = ("name",)
+    list_filter: Sequence[str] = ("voivodeship_obj__name", HasManagerFilter,)
+    exclude: Sequence[str] = ("voivodeship_raw",)
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         form.base_fields["manager"].queryset = get_users_manger_roles()
         form.base_fields["editors"].queryset = get_users_manger_roles()
         return form
+
+
+@admin.register(models.JuniorAgeGroup)
+class JuniorAgeGroupAdmin(admin.ModelAdmin):
+    ...

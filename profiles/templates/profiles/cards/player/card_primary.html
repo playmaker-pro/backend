@@ -1,4 +1,6 @@
 {% load i18n %}
+{% load playmaker %}
+
 <div class="card">
 <div class="card-body">
     <h2 class="card-title">{% trans 'Podstawowe informacje' %}</h2>
@@ -10,7 +12,7 @@
             {% include template with key=_('Rocznik')            value=profile.birth_date.year|default:'-'|upper            %}
 
             {% include template with key=_('Miasto ') value=profile.address|default:'-' %}
-            {% include template with key=_('Lokalizacja') value=profile.voivodeship|default:'-' %}
+            {% include template with key=_('Lokalizacja') value=profile|display_voivodeship|default:'-' %}
         {% endwith %}
     </div>
 

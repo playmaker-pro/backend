@@ -55,7 +55,7 @@
                 <a href="{{ object.get_league_permalink }}">
                     {{ object.display_league_top_parent|default:''|title  }}
                 </a>,
-                {{ object.display_voivodeship|default:''|lower|truncatechars:24 }}
+                {{ object|display_voivodeship|truncatechars:24 }}
             </div>
         </div>
                            <div class="sc-cell d-none d-md-flex col-md-4">
@@ -73,7 +73,7 @@
                               </div>
 
                               <div class="sc-cell d-none d-md-flex col-5 col-md-2 text-left">
-                                  {{ object.display_voivodeship|default:''|lower|truncatechars:25 }}
+                                  {{ object|display_voivodeship|truncatechars:25 }}
                               </div>
 
                               <div class="sc-cell d-none d-md-flex col-6 col-md-2  text-left">

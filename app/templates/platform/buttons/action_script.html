@@ -88,6 +88,17 @@
             {{ button_text_prefix }} {{ button_text }} {{ button_text_suffix}}
         </button>
 
+    {% elif modals.edit_video_modal.load %}
+        <button 
+            {{ button_attrs }} 
+            {% if button_id %} id="{{ button_id }}" {% endif %}  
+            class="{{ button_class }} {% if active_class %}{{ active_class }}{% endif %} {% if button_icon %} icofont-{{ button_icon }} {% endif %}" 
+            data-toggle="modal" 
+            data-target="#{{ modals.need_role.name }}"
+        >
+            {{ button_text_prefix }} {{ button_text }} {{ button_text_suffix}}
+        </button>
+
     {% else %}
         <button 
             {{ button_attrs }} 

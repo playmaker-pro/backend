@@ -1,3 +1,4 @@
+from os import link
 from django.contrib import admin
 from utils import linkify
 from app.utils.admin import json_filed_data_prettified
@@ -90,7 +91,7 @@ class ClubProfileAdmin(ProfileAdminBase):
         "club_role",
         linkify("club_object"),
     )
-    search_fields = DEFAULT_PROFILE_SEARCHABLES + ("club_object",)
+    search_fields = DEFAULT_PROFILE_SEARCHABLES + ("club_object__name",)
     autocomplete_fields = ("club_object",)
 
 
@@ -205,6 +206,7 @@ class PlayerProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
         linkify("playermetrics"),
         linkify("team_object"),
+        linkify("team_history_object"),
         linkify("team_object_alt"),
         "display_league",
         "display_team",
@@ -216,13 +218,26 @@ class PlayerProfileAdmin(ProfileAdminBase):
         linkify("verification"),
     )
 
+    def team_object_linkify(self, obj=None):
+        if obj.team_object:
+            return linkify("team_object")(obj)
+        else:
+            return "-"
+    
+    team_object_linkify.short_description = "team_object"
+
     def meta_last(self, obj):
         if obj.meta:
             return list(obj.meta.items())[-1]
         else:
             obj.meta
 
-    autocomplete_fields = ("user", "team_object", "team_object_alt")
+    autocomplete_fields = (
+        "user",
+        "team_object",
+        "team_history_object",
+        "team_object_alt",
+    )
 
     actions = [
         refresh,
@@ -233,11 +248,17 @@ class PlayerProfileAdmin(ProfileAdminBase):
         calculate_fantasy,
     ]
 
+    readonly_fields = ("data_prettified", "mapper")
+
 
 @admin.register(models.CoachProfile)
 class CoachProfileAdmin(ProfileAdminBase):
-    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (linkify("team_object"),)
-    autocomplete_fields = ("team_object",)
+    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
+        linkify("team_object"),
+        linkify("team_history_object"),
+        linkify("team_history_object"),
+    )
+    autocomplete_fields = ("team_object", "team_history_object", "team_history_object")
 
 
 @admin.register(models.RoleChangeRequest)
@@ -265,3 +286,8 @@ class RoleChangeRequestAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         obj.approver = request.user
         super().save_model(request, obj, form, change)
+
+
+@admin.register(models.PlayerVideo)
+class PlayerVideoAdmin(admin.ModelAdmin):
+    pass

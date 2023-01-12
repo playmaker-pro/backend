@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load playmaker %}
 
   <table class="table">
     <thead>
@@ -44,7 +45,7 @@
                     <a href="{{ object.player.profile.get_league_permalink }}">
                        {{ object.player.profile.display_league_top_parent|default:'' }}
                     </a>,
-                    {{ object.player.profile.display_voivodeship|default:''|lower }}
+                    {{ object.player.profile.display_voivodeship|default:'' }}
                 </small>
             </td>
             <td class="d-none d-md-table-cell">{{ object.place }}</td>
@@ -67,9 +68,9 @@
                 <a href="{{ object.player.profile.get_league_permalink }}">
                    {{ object.player.profile.display_league_top_parent|default:'' }}
                 </a>
-            </td>
+            </td>`
             <td class="d-none d-md-table-cell">
-                {{ object.player.profile.display_voivodeship|default:''|lower }}
+                {{ object.player.profile.display_voivodeship|default:'' }}
             </td>
 
         </tr>

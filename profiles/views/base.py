@@ -473,6 +473,7 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
         kwargs["observed"] = self.is_profile_observed(request.user, user)
         kwargs["show_user"] = user
         kwargs["modals"] = self.modal_activity(request.user)
+        kwargs["current_season"] = self.season_name
 
         if user.is_player and user.profile.updated:
             # Activate verification modal - relates to task feature/PM-360
