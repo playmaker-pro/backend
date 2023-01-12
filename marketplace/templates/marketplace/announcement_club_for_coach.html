@@ -13,7 +13,6 @@
             </h4>
             {% comment %}  due to PM-141
             <h5>{{ object.voivodeship.name|lower }} </h5> {% endcomment %}
-<!--            <h5>{{ object.league.name|title }}, {{ object.voivodeship.name|lower }} </h5> -->
     </div>
         <div class="section-heading-line-left"></div>
     <div class="card-body row no-gutters">
@@ -33,7 +32,7 @@
                 </div>
 
                 <div class="col-6 col-md-3 text-center">
-                    <h5>{{ object.voivodeship }}</h5>
+                    <h5>{{ object.voivodeship_obj.name }}</h5>
                     Województwo
                 </div>
                 <div class="card-text col-md-12">

@@ -10,10 +10,8 @@
         data-selected-text-format="count > 1"
 >
 
-    {% for voivo in voivodeships %}
-        {% if voivo.name != 'e' %}
-            <option {% if voivo.name in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>{{ voivo }}</option>
-        {% endif %}
+    {% for voivo in options %}
+        <option {% if voivo in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>{{ voivo }}</option>
     {% endfor %}
 
 </select>

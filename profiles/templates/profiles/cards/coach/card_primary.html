@@ -1,4 +1,6 @@
 {% load i18n %}
+{% load playmaker %}
+
 <div class="card">
     <div class="card-body">
         <h2 class="card-title">{% trans 'Podstawowe informacje' %}</h2>
@@ -13,7 +15,7 @@
             {% endif %}
             
             {% include template with key=_('Miasto')        value=profile.address|default:'-' %}
-            {% include template with key=_('Lokalizacja')   value=profile.voivodeship|default:'-' %}
+            {% include template with key=_('Lokalizacja')   value=profile|display_voivodeship|default:'-' %}
         {% endwith %}
         </div>
         <h2 class="card-title">{% trans 'Klub' %}</h2>

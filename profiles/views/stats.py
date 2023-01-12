@@ -1,6 +1,8 @@
 import logging
+from random import randint
 from typing_extensions import runtime
-
+from django.shortcuts import get_object_or_404, redirect
+from rest_framework.views import View
 from app import mixins
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -8,9 +10,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.translation import gettext_lazy as _
 from django.views import generic
 from utils import get_current_season
-
+from profiles.models import PlayerVideo
 from stats import adapters, utilites
-
+from profiles.forms.regular import PlayerVideoForm
 from .base import SlugyViewMixin
 
 User = get_user_model()
@@ -223,3 +225,52 @@ class ProfileGames(ProfileStatsPageView, mixins.PaginateMixin):
             else:
                 data = []
             return self.paginate(data, limit=self.paginate_limit)
+
+
+class PlayerVideosView(generic.TemplateView, SlugyViewMixin, mixins.ViewModalLoadingMixin, View):
+    template_name = "profiles/video.html"
+    http_method_names = ["get", "post"]
+    page_title = _("Video")
+
+    def get(self, request, *args, **kwargs):
+        user = self.select_user_to_show()
+
+        if self._is_owner(user):
+            kwargs["editable"] = True
+        kwargs["show_user"] = user
+        kwargs["page_title"] = self.page_title
+        kwargs["modals"] = self.modal_activity(request.user, add_video=True)
+        kwargs["queryset"] = PlayerVideo.objects.filter(player=user.profile)
+        kwargs["thumbnails"] = self.get_thumbnails(kwargs["queryset"])
+        kwargs["form"] = PlayerVideoForm()       
+        return super().get(request, *args, **kwargs)
+
+    def get_thumbnails(self, qs): #for youtube links only with domain youtube.*/
+        
+        def get_id(url):
+            return url[32:43]
+
+        def thumbnail_link(id):
+            thumbnail_id = randint(1, 3)
+            return f"https://img.youtube.com/vi/{id}/{thumbnail_id}.jpg"
+
+        video_ids = [get_id(video.url) if video.url else "" for video in qs]
+        thumbnail_urls = [thumbnail_link(id) if id else "" for id in video_ids]
+        return thumbnail_urls
+
+    def post(self, request, *args, **kwargs):
+        action = request.POST.get("action")        
+        if action == "create":
+            data = {
+                "url": request.POST.get("url"),
+                "title": request.POST.get("title"),
+                "description": request.POST.get("description"),
+                "player": request.user.profile
+            }
+            form_create = PlayerVideoForm(data=data)
+            if form_create.is_valid():
+                PlayerVideo.objects.create(**data)
+        elif action == "delete":
+            video = get_object_or_404(PlayerVideo, pk=request.POST.get("id"))
+            video.delete()
+        return redirect("profiles:my_videos")

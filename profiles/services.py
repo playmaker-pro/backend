@@ -42,6 +42,7 @@ class ProfileVerificationService:
         """using dict-like data we can create new verification object"""
         logger.debug("New verification recieved for %s", self.user)
         team = None
+        team_history = None
         club = None
         text = None
 
@@ -61,22 +62,26 @@ class ProfileVerificationService:
             if self.user.is_club:
                 club = data.get("team")
             else:
-                team = data.get("team")
+                team_history = data.get("team")
+                team = team_history.team
         else:
             if self.user.is_club:
                 club = data.get("team")
             else:
                 team = None
+                team_history = None
 
         if has_team is True:
             if team_not_found:
                 team = None
+                team_history = None
                 club = None
             else:
                 text = None
 
         if has_team is False:
             team = None
+            team_history = None
             club = None
 
         set_by = requestor or User.get_system_user()
@@ -87,6 +92,7 @@ class ProfileVerificationService:
             team_not_found=team_not_found,
             club=club,
             team=team,
+            team_history=team_history,
             text=text,
             set_by=set_by,
         )
@@ -134,8 +140,9 @@ class ProfileVerificationService:
     def _verify_coach(self) -> None:
         profile = self.profile
 
-        if profile.verification.has_team and profile.verification.team:
+        if profile.verification.has_team and profile.verification.team_history:
             profile.team_object = profile.verification.team
+            profile.team_history_object = profile.verification.team_history
             profile.team_club_league_voivodeship_ver = None
             profile.save()
 
@@ -176,10 +183,13 @@ class ProfileVerificationService:
 
         elif profile.verification.has_team is False and not profile.verification.text:
             profile.team_object = None
+            profile.team_history_object = None
             profile.team_club_league_voivodeship_ver = None
             self._verify_user()
+
         elif profile.verification.has_team is False and profile.verification.text:
             profile.team_object = None
+            profile.team_history_object = None
             profile.team_club_league_voivodeship_ver = profile.verification.text
 
             self._verify_user()
