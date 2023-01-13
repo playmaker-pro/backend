@@ -1,14 +1,15 @@
 {% load i18n %}
 
 {% if user.is_verified and editable %}
-<span class="inquiry-text">
-    {% if user.is_player  %}
-    <div class="text-muted">
-        {% trans 'Możesz wysłać na platformie do innych użytkowników' %} <strong>{{ user.userinquiry.left }}</strong> {% trans 'zapytania o testy do 31.12.2022. By zwiększyć limity' %}  {% include 'profiles/partials/_limit_link.html' %}
-    </div>
-    {% elif user.is_coach or user.is_club %}
+    <span class="inquiry-text">
+        {% if user.is_player  %}
         <div class="text-muted">
-            {% trans 'Możesz wysłać na platformie do innych użytkowników' %} <strong>{{ user.userinquiry.left }}</strong> {% trans 'zaproszenia na testy do 31.12.2022. By zwiększyć limity' %}  {% include 'profiles/partials/_limit_link.html' %}
-        </div>  
-    {% endif %}
-</span>
+            {% trans 'Możesz wysłać na platformie do innych użytkowników' %} <strong>{{ user.userinquiry.left }}</strong> {% trans 'zapytania o testy do 31.12.2022. By zwiększyć limity' %}  {% include 'profiles/partials/_limit_link.html' %}
+        </div>
+        {% elif user.is_coach or user.is_club %}
+            <div class="text-muted">
+                {% trans 'Możesz wysłać na platformie do innych użytkowników' %} <strong>{{ user.userinquiry.left }}</strong> {% trans 'zaproszenia na testy do 31.12.2022. By zwiększyć limity' %}  {% include 'profiles/partials/_limit_link.html' %}
+            </div>
+        {% endif %}
+    </span>
+{% endif %}
