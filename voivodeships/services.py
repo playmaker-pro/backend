@@ -62,28 +62,46 @@ class VoivodeshipService:
 
         return self.voivodeships_model.objects.filter(name=self._map_name(name))
 
-    def _map_name(self, name):
+    @staticmethod
+    def _map_name(name):
         data = {
+            "POMORSKI": 'Pomorskie',
             "pomorskie": 'Pomorskie',
+            "ŚLĄSKI": 'Śląskie',
             "śląskie": 'Śląskie',
+            "DOLNOŚLĄSKI": 'Dolnośląskie',
             "dolnośląskie": 'Dolnośląskie',
+            "OPOLSKI": 'Opolskie',
             "opolskie": 'Opolskie',
             "małopolskie": 'Małopolskie',
+            "MAŁOPOLSKI": 'Małopolskie',
+            "ŚWIĘTOKRZYSKI": 'Świętokrzyskie',
             "świętokrzyskie": 'Świętokrzyskie',
+            "MAZOWIECKI": 'Mazowieckie',
             "mazowieckie": 'Mazowieckie',
+            "WARMIŃSKOMAZURSKI": 'Warmińsko-Mazurskie',
+            "Warmińsko-Mazurskie": 'Warmińsko-Mazurskie',
             "warmińskomazurskie": 'Warmińsko-Mazurskie',
             "zachodniopomorskie": 'Zachodniopomorskie',
+            "ZACHODNIOPOMORSKI": 'Zachodniopomorskie',
+            "PODKARPACKI": 'Podkarpackie',
             "podkarpackie": 'Podkarpackie',
+            "PODLASKI": 'Podlaskie',
             "podlaskie": 'Podlaskie',
+            "WIELKOPOLSKI": 'Wielkopolskie',
             "wielkopolskie": 'Wielkopolskie',
+            "LUBUSKI": 'Lubuskie',
             "lubuskie": 'Lubuskie',
+            "LUBELSKI": 'Lubelskie',
             "lubelskie": 'Lubelskie',
+            "ŁÓDZKI": 'Łódzkie',
             "łódzkie": 'Łódzkie',
-            "kujawskopomorskie": 'Kujawsko-pomorskie'
+            "KUJAWSKOPOMORSKI": 'Kujawsko-pomorskie',
+            "kujawskopomorskie": 'Kujawsko-pomorskie',
         }
         try:
             result = data[name]
-        except:
+        except KeyError:
             result = ''
 
         return result
