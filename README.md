@@ -64,7 +64,7 @@ To set up a development environment quickly you need to have following prerequis
     ...
 
     ```
-7. Create local env file
+6. Create local env file
     If you use defauly postgres settings, ofc you need to create database (for example: local_pm)  and allow user to use it.
 
     `backend/settings/local.py`
@@ -82,25 +82,25 @@ To set up a development environment quickly you need to have following prerequis
    }
    SYSTEM_USER_EMAIL = "your_admin_email"
     ```
-8. Run migrations:
+7. Run migrations:
     ```
     python manage.py migrate
     ```
-9. Create super-user (and follow pop-ups)
+8. Create super-user (and follow pop-ups)
     ```
     python manage.py createsuperuser
     ```
 
-10. Run development server
-     ```
-     python manage.py runserver
-     ```
-11. Go to http://localhost:8000/admin/  (wagtail admin)  
+9. Run development server
+    ```
+    python manage.py runserver
+    ```
+10. Go to http://localhost:8000/admin/  (wagtail admin)  
     Login into a Admin user (see step no 8)  
     Create new page as Main PlaymakerPage  
     Create servce with port :8000 and attach main page to that service. 
 
-12. To have database synced with production or staging, you have to fill DB with voivodeships.
+11. To have database synced with production or staging, you have to fill DB with voivodeships.
     ```
     python manage.py add_voivodeships
     ```
