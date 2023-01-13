@@ -20,7 +20,7 @@ class TeamHistorySelect2Serializer(serializers.HyperlinkedModelSerializer):
     text = serializers.SerializerMethodField()
 
     def get_text(self, obj: TeamHistory) -> str:
-        return f"{obj.team} ({obj.league_history.league})"
+        return f"{obj.team}"
 
     class Meta:
         model = TeamHistory

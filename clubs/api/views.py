@@ -6,11 +6,8 @@ from .serizalizer import (
     ClubSelect2Serializer,
     TeamHistorySelect2Serializer,
 )
-from django.db.models import Q
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 
 User = get_user_model()
 
@@ -62,7 +59,7 @@ class TeamHistorySearchApi(APIView):
         if q_season:
             teams = teams.filter(league_history__season__name=q_season)
         serializer = TeamHistorySelect2Serializer(
-            teams, many=True, context={"request": request}
+            teams[:20], many=True, context={"request": request}
         )
 
         return Response({"results": serializer.data})
