@@ -34,8 +34,10 @@ To set up a development environment quickly you need to have following prerequis
 
 5. Install all dependencies:  
     **Please follow order of installation!**
+    > Note that use_2to3 not working with newest setuptools, so before installing dependencies, you have to install lower version 
     ```
     cd webapp
+    (vn) pip install "setuptools<58.0" 
     (vn) pip install -r requirements.txt
     (vn) pip install celery==3.1.26.post2
     (vn) pip install -r requirement_dev.txt
@@ -49,6 +51,7 @@ To set up a development environment quickly you need to have following prerequis
     ```
 
     note: ignore error about django-celery incompatibility.
+    > Note: If you are Windows user, you have to install additional library: (vn)  pip install windows-curses
 
     Now you can verify if everything is fine you should see:
     ```
@@ -61,7 +64,7 @@ To set up a development environment quickly you need to have following prerequis
     ...
 
     ```
-6. Create local env file
+7. Create local env file
     If you use defauly postgres settings, ofc you need to create database (for example: local_pm)  and allow user to use it.
 
     `backend/settings/local.py`
@@ -76,26 +79,28 @@ To set up a development environment quickly you need to have following prerequis
             'HOST': 'localhost',
             'PORT': '5432',
         },
+   }
+   SYSTEM_USER_EMAIL = "your_admin_email"
     ```
-7. Run migrations:
+8. Run migrations:
     ```
     python manage.py migrate
     ```
-8. Create super-user (and follow pop-ups)
+9. Create super-user (and follow pop-ups)
     ```
     python manage.py createsuperuser
     ```
 
-9. Run development server
-    ```
-    python manage.py runserver
-    ```
-10. Go to http://localhost:8000/admin/  (wagtail admin)  
+10. Run development server
+     ```
+     python manage.py runserver
+     ```
+11. Go to http://localhost:8000/admin/  (wagtail admin)  
     Login into a Admin user (see step no 8)  
     Create new page as Main PlaymakerPage  
     Create servce with port :8000 and attach main page to that service. 
 
-11. To have database synced with production or staging, you have to fill DB with voivodeships.
+12. To have database synced with production or staging, you have to fill DB with voivodeships.
     ```
     python manage.py add_voivodeships
     ```
