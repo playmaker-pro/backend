@@ -11,20 +11,28 @@ from django.apps import apps
 
 from profiles.models import PlayerProfile, CoachProfile, ScoutProfile  # noqa
 from marketplace.models import (  # noqa
-    ClubForPlayerAnnouncement, PlayerForClubAnnouncement, ClubForCoachAnnouncement, CoachForClubAnnouncement  # noqa
+    ClubForPlayerAnnouncement,
+    PlayerForClubAnnouncement,
+    ClubForCoachAnnouncement,
+    CoachForClubAnnouncement,  # noqa
 )
 from clubs.models import Club  # noqa
 
 ModelsToMap = Union[
-    PlayerProfile, CoachProfile, ScoutProfile, ClubForPlayerAnnouncement, PlayerForClubAnnouncement,
-    CoachForClubAnnouncement, ClubForCoachAnnouncement, Club
+    PlayerProfile,
+    CoachProfile,
+    ScoutProfile,
+    ClubForPlayerAnnouncement,
+    PlayerForClubAnnouncement,
+    CoachForClubAnnouncement,
+    ClubForCoachAnnouncement,
+    Club,
 ]
 
 logger = logging.getLogger(__name__)
 
 
 class VoivodeshipService:
-
     def __init__(self):
         self.voivodeships_model = Voivodeships
 
@@ -34,7 +42,7 @@ class VoivodeshipService:
 
     @staticmethod
     def display_voivodeship(obj) -> Union[str, None]:
-        """ displaying name of voivodeship """
+        """displaying name of voivodeship"""
 
         if isinstance(obj, Team):
             obj = obj.club
@@ -44,7 +52,7 @@ class VoivodeshipService:
 
     @staticmethod
     def get_voivodeship(obj) -> Voivodeships:
-        """ Returning Voivodeship object """
+        """Returning Voivodeship object"""
 
         if not obj.voivodeship_obj:
             return None
@@ -65,89 +73,97 @@ class VoivodeshipService:
     @staticmethod
     def _map_name(name):
         data = {
-            "POMORSKI": 'Pomorskie',
-            "pomorskie": 'Pomorskie',
-            "ŚLĄSKI": 'Śląskie',
-            "śląskie": 'Śląskie',
-            "DOLNOŚLĄSKI": 'Dolnośląskie',
-            "dolnośląskie": 'Dolnośląskie',
-            "OPOLSKI": 'Opolskie',
-            "opolskie": 'Opolskie',
-            "małopolskie": 'Małopolskie',
-            "MAŁOPOLSKI": 'Małopolskie',
-            "ŚWIĘTOKRZYSKI": 'Świętokrzyskie',
-            "świętokrzyskie": 'Świętokrzyskie',
-            "MAZOWIECKI": 'Mazowieckie',
-            "mazowieckie": 'Mazowieckie',
-            "WARMIŃSKOMAZURSKI": 'Warmińsko-Mazurskie',
-            "Warmińsko-Mazurskie": 'Warmińsko-Mazurskie',
-            "warmińskomazurskie": 'Warmińsko-Mazurskie',
-            "zachodniopomorskie": 'Zachodniopomorskie',
-            "ZACHODNIOPOMORSKI": 'Zachodniopomorskie',
-            "PODKARPACKI": 'Podkarpackie',
-            "podkarpackie": 'Podkarpackie',
-            "PODLASKI": 'Podlaskie',
-            "podlaskie": 'Podlaskie',
-            "WIELKOPOLSKI": 'Wielkopolskie',
-            "wielkopolskie": 'Wielkopolskie',
-            "LUBUSKI": 'Lubuskie',
-            "lubuskie": 'Lubuskie',
-            "LUBELSKI": 'Lubelskie',
-            "lubelskie": 'Lubelskie',
-            "ŁÓDZKI": 'Łódzkie',
-            "łódzkie": 'Łódzkie',
-            "Kujawsko-pomorskie": 'Kujawsko-Pomorskie',
-            "KUJAWSKOPOMORSKI": 'Kujawsko-Pomorskie',
-            "kujawskopomorskie": 'Kujawsko-Pomorskie',
+            "POMORSKI": "Pomorskie",
+            "pomorskie": "Pomorskie",
+            "ŚLĄSKI": "Śląskie",
+            "śląskie": "Śląskie",
+            "DOLNOŚLĄSKI": "Dolnośląskie",
+            "dolnośląskie": "Dolnośląskie",
+            "OPOLSKI": "Opolskie",
+            "opolskie": "Opolskie",
+            "małopolskie": "Małopolskie",
+            "MAŁOPOLSKI": "Małopolskie",
+            "ŚWIĘTOKRZYSKI": "Świętokrzyskie",
+            "świętokrzyskie": "Świętokrzyskie",
+            "MAZOWIECKI": "Mazowieckie",
+            "mazowieckie": "Mazowieckie",
+            "WARMIŃSKOMAZURSKI": "Warmińsko-Mazurskie",
+            "Warmińsko-Mazurskie": "Warmińsko-Mazurskie",
+            "warmińskomazurskie": "Warmińsko-Mazurskie",
+            "zachodniopomorskie": "Zachodniopomorskie",
+            "ZACHODNIOPOMORSKI": "Zachodniopomorskie",
+            "PODKARPACKI": "Podkarpackie",
+            "podkarpackie": "Podkarpackie",
+            "PODLASKI": "Podlaskie",
+            "podlaskie": "Podlaskie",
+            "WIELKOPOLSKI": "Wielkopolskie",
+            "wielkopolskie": "Wielkopolskie",
+            "LUBUSKI": "Lubuskie",
+            "lubuskie": "Lubuskie",
+            "LUBELSKI": "Lubelskie",
+            "lubelskie": "Lubelskie",
+            "ŁÓDZKI": "Łódzkie",
+            "łódzkie": "Łódzkie",
+            "Kujawsko-pomorskie": "Kujawsko-Pomorskie",
+            "KUJAWSKOPOMORSKI": "Kujawsko-Pomorskie",
+            "kujawskopomorskie": "Kujawsko-Pomorskie",
         }
         try:
             result = data[name]
         except KeyError:
-            result = ''
+            result = ""
 
         return result
 
     def save_to_db(self, file_path: Union[str, None] = None) -> None:
-        """ Fill voivodeships model with data written in voivodeships.json file """
+        """Fill voivodeships model with data written in voivodeships.json file"""
 
         if not file_path:
-            file_path = 'constants/voivodeships.json'
+            file_path = "constants/voivodeships.json"
 
-        with open(file_path, 'r', encoding="utf8") as f:
+        with open(file_path, "r", encoding="utf8") as f:
             data = json.loads(f.read())
 
             for voivodeship in data:
 
                 assert isinstance(voivodeship, dict), "element is not a dict"
 
-                voivodeship_name = voivodeship.get('name').capitalize()
-                voivodeship_code = voivodeship.get('code')
+                voivodeship_name = voivodeship.get("name").capitalize()
+                voivodeship_code = voivodeship.get("code")
 
                 try:
 
-                    assert isinstance(voivodeship_name, str), f"{voivodeship_name} is not a string"
+                    assert isinstance(
+                        voivodeship_name, str
+                    ), f"{voivodeship_name} is not a string"
 
                     obj, created = self.voivodeships_model.objects.get_or_create(
                         name=voivodeship_name
                     )
 
                     if created:
-                        print(f'voivodeship {voivodeship_name} has been added')
+                        print(f"voivodeship {voivodeship_name} has been added")
                     else:
-                        print(f'voivodeship {voivodeship_name} already exists in database')
+                        print(
+                            f"voivodeship {voivodeship_name} already exists in database"
+                        )
 
                     obj.code = voivodeship_code
                     obj.save()
 
                 except Exception as e:
-                    print(f'{voivodeship_name}', e)
+                    print(f"{voivodeship_name}", e)
 
     def map_old_field_to_new(self) -> None:
         model_name: Tuple[Tuple[str, str], ...] = (
-            ('PlayerProfile', 'profiles'), ('CoachProfile', 'profiles'), ('ScoutProfile', 'profiles'),
-            ('ClubForPlayerAnnouncement', 'marketplace'), ('PlayerForClubAnnouncement', 'marketplace'),
-            ('CoachForClubAnnouncement', 'marketplace'), ('ClubForCoachAnnouncement', 'marketplace'),
-            ('Club', 'clubs')
+            ("PlayerProfile", "profiles"),
+            ("CoachProfile", "profiles"),
+            ("ScoutProfile", "profiles"),
+            ("ClubForPlayerAnnouncement", "marketplace"),
+            ("PlayerForClubAnnouncement", "marketplace"),
+            ("CoachForClubAnnouncement", "marketplace"),
+            ("ClubForCoachAnnouncement", "marketplace"),
+            ("Club", "clubs"),
         )
 
         for name in model_name:
@@ -156,31 +172,41 @@ class VoivodeshipService:
             for profile in model.objects.all():
 
                 try:
-                    if name[1] == 'profiles':
-                        voivodeship: QuerySet = self.get_voivodeship_by_name(profile.voivodeship)
-                    elif name[1] == 'marketplace' and profile.voivodeship:
-                        voivodeship: QuerySet = self.get_voivodeship_by_name(profile.voivodeship.name)
-                    elif name[1] == 'clubs' and profile.voivodeship:
-                        voivodeship: QuerySet = self.get_voivodeship_by_name(profile.voivodeship.name)
+                    if name[1] == "profiles":
+                        voivodeship: QuerySet = self.get_voivodeship_by_name(
+                            profile.voivodeship
+                        )
+                    elif name[1] == "marketplace" and profile.voivodeship:
+                        voivodeship: QuerySet = self.get_voivodeship_by_name(
+                            profile.voivodeship.name
+                        )
+                    elif name[1] == "clubs" and profile.voivodeship:
+                        voivodeship: QuerySet = self.get_voivodeship_by_name(
+                            profile.voivodeship.name
+                        )
                     else:
-                        break
+                        continue
 
                     if voivodeship.exists():
 
-                        voivodeship_model: Voivodeships = apps.get_model('voivodeships', 'Voivodeships')
-                        voivodeship_obj: Voivodeships = voivodeship_model.objects.get(id=voivodeship.first().id)
+                        voivodeship_model: Voivodeships = apps.get_model(
+                            "voivodeships", "Voivodeships"
+                        )
+                        voivodeship_obj: Voivodeships = voivodeship_model.objects.get(
+                            id=voivodeship.first().id
+                        )
 
                         profile.voivodeship_obj = voivodeship_obj
                         profile.save()
                         logger.info(
-                            f'[LOGER VOIVODESHIPS] '
+                            f"[LOGER VOIVODESHIPS] "
                             f'Model {name[0]} with id {profile.id if name[1] != "profiles" else profile.user_id} '
-                            f'updated'
+                            f"updated"
                         )
                         print(
                             f'Model {name[0]} with id {profile.id if name[1] != "profiles" else profile.user_id} '
-                            f'updated'
+                            f"updated"
                         )
                 except (ObjectDoesNotExist, AttributeError):
 
-                    print(f'Something went wrong with {profile}')
+                    print(f"Something went wrong with {profile}")
