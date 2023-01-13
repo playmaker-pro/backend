@@ -96,8 +96,9 @@ class VoivodeshipService:
             "lubelskie": 'Lubelskie',
             "ŁÓDZKI": 'Łódzkie',
             "łódzkie": 'Łódzkie',
-            "KUJAWSKOPOMORSKI": 'Kujawsko-pomorskie',
-            "kujawskopomorskie": 'Kujawsko-pomorskie',
+            "Kujawsko-pomorskie": 'Kujawsko-Pomorskie',
+            "KUJAWSKOPOMORSKI": 'Kujawsko-Pomorskie',
+            "kujawskopomorskie": 'Kujawsko-Pomorskie',
         }
         try:
             result = data[name]
