@@ -235,6 +235,8 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                     if user.profile.team_object
                     else None
                 )
+                if not league:
+                    return JsonResponse({'error': 'Your team has no league'})
                 form = PlayerForClubAnnouncementForm(
                     initial={
                         "position": user.profile.position_raw,
@@ -405,7 +407,9 @@ class AnnouncementsMetaView(
         return {
             "seniority": list(Seniority.objects.values_list("name", flat=True)),
             "gender": list(Gender.objects.values_list("name", flat=True)),
-            "voivodeship": list(vivos.voivodeships_model.objects.values_list("name", flat=True)),
+            "voivodeship": list(
+                vivos.voivodeships_model.objects.values_list("name", flat=True)
+            ),
             "league": list(League.objects.values_list("name", flat=True)),
             "position": list(PlayerPosition.objects.values_list("name", flat=True)),
             "licence": LICENCE_CHOICES,

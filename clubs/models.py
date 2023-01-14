@@ -634,11 +634,11 @@ class Team(models.Model, MappingMixin):
     data_mapper_id = models.PositiveIntegerField(
         null=True,
         blank=True,
-        help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+        help_text="ID of object placed in data_ database. It should always reflect scheme which represents.",
     )
 
     scrapper_autocreated = models.BooleanField(
-        default=False, help_text="Autocreated from new scrapper"
+        default=False, help_text="Auto-created from new scrapper"
     )
 
     junior_group = models.ForeignKey("JuniorAgeGroup", null=True, blank=True, on_delete=models.SET_NULL)
