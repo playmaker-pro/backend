@@ -7,6 +7,9 @@ from mapper.models import Mapper, MapperEntity, MapperSource
 from profiles.models import PlayerProfile
 
 
+MAPPER_SOURCE = MapperSource.objects.get_or_create(name="LNP")
+
+
 class Command(BaseCommand):
     """
     Import player ids/urls from xlsx to new mapper
@@ -45,24 +48,32 @@ class Command(BaseCommand):
             or a slug value that matches the last element in the PM_URL value split by the '/' character. 
             The resulting queryset is stored in the variable player_qs.
             """
-            player_qs = PlayerProfile.objects.filter(
-                Q(data_mapper_id=row[OLD_ID]) | Q(slug=row[PM_URL].split("/")[-1])
-            )
+            player_qs = PlayerProfile.objects.filter(data_mapper_id=row[OLD_ID])
+            if not player_qs.exists():
+                player_qs = PlayerProfile.objects.filter(slug=row[PM_URL].split("/")[-1])
+            if not player_qs.exists():
+                continue
+            if player_qs.mapper is not None:
+                continue
             for player_obj in player_qs:
                 mapper = Mapper.objects.create()
                 MapperEntity.objects.create(
                     target=mapper,
                     mapper_id=row[OLD_ID],
+                    source=MAPPER_SOURCE,
                     description="player id from OLD scrapper",
                     url=row[OLD_URL],
+                    related_type="player",
                     database_source="s38"
-                )
+                    )
                 MapperEntity.objects.create(
                     target=mapper,
                     mapper_id=row[NEW_ID],
+                    source=MAPPER_SOURCE,
                     description="player uuid from NEW scrapper",
                     url=row[NEW_URL],
+                    related_type="player",
                     database_source="scrapper_mongodb"
-                )
+                    )
                 player_obj.mapper = mapper
                 player_obj.save()
