@@ -230,20 +230,20 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 else:
                     voivodeship = ""
 
-                league = (
-                    user.profile.team_object.league
-                    if user.profile.team_object
-                    else None
-                )
-                if not league:
-                    return JsonResponse({'error': 'Your team has no league'})
+                league = None
+
+                if user.profile.team_object:
+                    team_history = user.profile.team_object.get_latest_team_history()
+                    if team_history:
+                        league = team_history.league_history.league.get_highest_parent()
+
                 form = PlayerForClubAnnouncementForm(
                     initial={
                         "position": user.profile.position_raw,
                         "voivodeship_obj": voivodeship,
                         "address": user.profile.address,
                         "practice_distance": user.profile.practice_distance,
-                        "league": league.highest_parent,
+                        "league": league,
                     }
                 )
                 form.fields["target_league"].queryset = League.objects.is_top_parent()

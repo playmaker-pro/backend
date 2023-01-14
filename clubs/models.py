@@ -662,16 +662,14 @@ class Team(models.Model, MappingMixin):
             return False
 
     @property
-    def latest_league_history(self):
-        ths = TeamHistory.objects.filter(team=self).order_by("-league_history__season__name")
+    def latest_league_from_lh(self):
+        ths = self.get_latest_team_history()
         if ths:
-            return f"({ths[0].league_history.league})"
-        else:
-            return ''
+            return ths.league_history.league
 
     @property
     def team_name_with_current_league(self):
-        return f"{self.display_team} {self.latest_league_history}"
+        return self.display_team + (" " + f"({self.latest_league_from_lh})") if self.latest_league_from_lh else ""
 
     @property
     def league_with_parents(self):
@@ -707,12 +705,17 @@ class Team(models.Model, MappingMixin):
     def display_league(self):
         return self.league.display_league
 
+    def get_latest_team_history(self) -> List["TeamHistory"]:
+        sorted_team_histories = self.historical.all().order_by("-league_history__season__name")
+        if sorted_team_histories:
+            return sorted_team_histories[0]
+
     @property
     @supress_exception
     def display_league_top_parent(self):
-        ths = TeamHistory.objects.filter(team=self).order_by("-league_history__season__name")
-        if ths:
-            return ths[0].league_history.league.display_league_top_parent
+        th = self.get_latest_team_history()
+        if th:
+            return th.league_history.league.display_league_top_parent
         return self.league.display_league_top_parent
 
     @property

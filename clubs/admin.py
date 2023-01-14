@@ -268,17 +268,14 @@ class TeamAdmin(admin.ModelAdmin):
         Returns the current league highest parent of a given team. If the team has no team history related
         to a current season, returns league from latest team history.
         """
+        current_league = "-"
         if obj:
-            team_history = obj.historical.filter(team=obj).order_by(
-                "-league_history__season__name"
-            )
-            try:
+            latest_league = obj.latest_league_from_lh
+            if latest_league:
                 current_league = (
-                    f"{team_history[0].league_history.league.highest_parent}"
+                    f"{latest_league.get_highest_parent()}"
                 )
-            except IndexError:
-                current_league = ""
-            return current_league
+        return current_league
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
