@@ -1,9 +1,13 @@
 from django.core.management import BaseCommand
 from os.path import abspath, isfile
 import pandas as pd
+from django.db.models import Q
 
 from mapper.models import Mapper, MapperEntity, MapperSource
 from profiles.models import PlayerProfile
+
+
+MAPPER_SOURCE = MapperSource.objects.get_or_create(name="LNP")
 
 
 class Command(BaseCommand):
@@ -28,34 +32,48 @@ class Command(BaseCommand):
 
     def import_xlsx(self, file: str) -> None:
 
-        OLD_LNP_SOURCE_OBJ, _ = MapperSource.objects.get_or_create(name="OLD_LNP")
-        NEW_LNP_SOURCE_OBJ, _ = MapperSource.objects.get_or_create(name="NEW_LNP")
-
         OLD_ID = "mapper id s51 s38"
         OLD_URL = "old link laczynaspilka"
         NEW_ID = "new id from laczynaspilka"
         NEW_URL = "new_link"
+        PM_URL = "link playmaker pro"
 
         excel_data = pd.read_excel(file, header=[0])
         data = pd.DataFrame(excel_data)
 
         for index, row in data.iterrows():
+            """
+            For each row, the script is querying the PlayerProfile model to retrieve any player objects 
+            that have a data_mapper_id value that matches the OLD_ID value in the current row, 
+            or a slug value that matches the last element in the PM_URL value split by the '/' character. 
+            The resulting queryset is stored in the variable player_qs.
+            """
             player_qs = PlayerProfile.objects.filter(data_mapper_id=row[OLD_ID])
+            if not player_qs.exists():
+                player_qs = PlayerProfile.objects.filter(slug=row[PM_URL].split("/")[-1])
+            if not player_qs.exists():
+                continue
+            if player_qs.mapper is not None:
+                continue
             for player_obj in player_qs:
                 mapper = Mapper.objects.create()
                 MapperEntity.objects.create(
                     target=mapper,
                     mapper_id=row[OLD_ID],
-                    source=OLD_LNP_SOURCE_OBJ,
+                    source=MAPPER_SOURCE,
                     description="player id from OLD scrapper",
-                    url=row[OLD_URL]
-                )
+                    url=row[OLD_URL],
+                    related_type="player",
+                    database_source="s38"
+                    )
                 MapperEntity.objects.create(
                     target=mapper,
                     mapper_id=row[NEW_ID],
-                    source=NEW_LNP_SOURCE_OBJ,
+                    source=MAPPER_SOURCE,
                     description="player uuid from NEW scrapper",
-                    url=row[NEW_URL]
-                )
+                    url=row[NEW_URL],
+                    related_type="player",
+                    database_source="scrapper_mongodb"
+                    )
                 player_obj.mapper = mapper
                 player_obj.save()
