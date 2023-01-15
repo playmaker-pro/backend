@@ -1,3 +1,4 @@
+import django.core.exceptions
 from django.core.management import BaseCommand
 from os.path import abspath, isfile
 import pandas as pd
@@ -27,18 +28,23 @@ class Command(BaseCommand):
     def import_xlsx(self, file: str) -> None:
 
         PLAYER_ID = "new id from laczynaspilka"
-        TEAM_ID = "teamid"
+        TEAM_ID = "teamId"
 
         excel_data = pd.read_excel(file, header=[0])
         data = pd.DataFrame(excel_data)
 
         for index, row in data.iterrows():
 
-            team_mapper = MapperEntity.objects.get(mapper_id=row[TEAM_ID])
+            try:
+                team_mapper = MapperEntity.objects.get(mapper_id=row[TEAM_ID])
+            except django.core.exceptions.ObjectDoesNotExist:
+                continue
             team = team_mapper.target.teamhistory.team
 
-            player_mapper = MapperEntity.objects.get(mapper_id=row[PLAYER_ID])
-            player = player_mapper.target.playerprofile
+            players_mapper = MapperEntity.objects.filter(mapper_id=row[PLAYER_ID])
 
-            player.team = team
-            player.save()
+            # loop due players duplicates
+            for player_mapper_entity in players_mapper:
+                player = player_mapper_entity.target.playerprofile
+                player.team_object = team
+                player.save()

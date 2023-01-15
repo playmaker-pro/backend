@@ -1,13 +1,12 @@
 from django.core.management import BaseCommand
 from os.path import abspath, isfile
 import pandas as pd
-from django.db.models import Q
 
 from mapper.models import Mapper, MapperEntity, MapperSource
 from profiles.models import PlayerProfile
 
 
-MAPPER_SOURCE = MapperSource.objects.get_or_create(name="LNP")
+MAPPER_SOURCE, _ = MapperSource.objects.get_or_create(name="LNP")
 
 
 class Command(BaseCommand):
@@ -49,13 +48,13 @@ class Command(BaseCommand):
             The resulting queryset is stored in the variable player_qs.
             """
             player_qs = PlayerProfile.objects.filter(data_mapper_id=row[OLD_ID])
-            if not player_qs.exists():
+            if not player_qs:
                 player_qs = PlayerProfile.objects.filter(slug=row[PM_URL].split("/")[-1])
-            if not player_qs.exists():
-                continue
-            if player_qs.mapper is not None:
+            if not player_qs:
                 continue
             for player_obj in player_qs:
+                if player_obj.mapper:
+                    continue
                 mapper = Mapper.objects.create()
                 MapperEntity.objects.create(
                     target=mapper,
