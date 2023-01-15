@@ -72,7 +72,7 @@ class ClubSearchApi(APIView):
     def get(self, request):
         q_season = request.query_params.get("season")
         if q_season:
-            queryset = Club.objects.filter(teams__historical__season__name__in=[q_season]).order_by("name")
+            queryset = Club.objects.filter(teams__historical__league_history__season__name__in=[q_season]).distinct().order_by("name")
         else:
             queryset = Club.objects.all()
 
@@ -81,7 +81,7 @@ class ClubSearchApi(APIView):
             queryset = queryset.filter(name__icontains=q_name)
 
         serializer = ClubSelect2Serializer(
-            queryset, many=True, context={"request": request}
+            queryset[:10], many=True, context={"request": request}
         )
 
         return Response({"results": serializer.data})
