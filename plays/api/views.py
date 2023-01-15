@@ -19,11 +19,11 @@ class LeagueMenu(APIView):
                 Q(Q(isparent=True) | Q(parent__isnull=True))
                 & Q(
                     Q(
-                        Q(historical__season__name=season_name)
+                        Q(historical__league_history__season__name=season_name)
                         & Q(historical__visible=True)
                     )
                     | Q(
-                        Q(childs__historical__season__name=season_name)
+                        Q(childs__historical__league_history__season__name=season_name)
                         & Q(childs__historical__visible=True)
                     )
                 )
