@@ -21,8 +21,7 @@ djangorestframework==3.12.1
 django_compressor==2.4
 django-user-agents==0.4.0
 pygments==2.10.0
-typing_extensions==3.10.0.0
+typing_extensions==4.1.0
 poetry==1.1.11
 django-select2==7.10.0
-setuptools<58.0.0
 pydantic==1.10.2

@@ -61,4 +61,4 @@ class MapperEntity(models.Model):
         return self.source.name
 
     class Meta:
-        unique_together = ("target", "related_type")
+        unique_together = ("target", "related_type", "database_source")

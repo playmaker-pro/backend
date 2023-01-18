@@ -61,20 +61,8 @@ def get_all_clubs():
     return teams
 
 
-def get_season_with_team_history():
-    try:
-        ths = [
-            th.league_history.season.name
-            for th in TeamHistory.objects.all()
-            if th.league_history and th.league_history.season
-        ]
-        return Season.objects.filter(
-            name__in=set(ths), is_in_verify_form=True
-        ).order_by("name")
-    except django.db.utils.ProgrammingError:
-        return
-    except Exception as e:
-        return
+def get_agreed_seasons():
+    return Season.objects.filter(is_in_verify_form=True).order_by("-name")
 
 
 @dataclass
@@ -91,7 +79,7 @@ class VerificationForm(forms.ModelForm):
     """
 
     CHOICES_HAS_TEAM = (
-        ("tak mam klub", "tak mam klub"),
+        ("tak mam klub", "Tak, mam klub"),
         ("Nie mam klubu", "Nie mam klubu"),
     )
 
@@ -116,7 +104,7 @@ class VerificationForm(forms.ModelForm):
     has_team = forms.ChoiceField(choices=CHOICES_HAS_TEAM, widget=forms.RadioSelect)
     team_not_found = forms.BooleanField()
     season = forms.ModelChoiceField(
-        queryset=get_season_with_team_history(),
+        queryset=get_agreed_seasons(),
         widget=forms.Select(
             attrs={
                 "data-live-search": "true",

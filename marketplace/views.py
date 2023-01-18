@@ -230,18 +230,20 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 else:
                     voivodeship = ""
 
-                league = (
-                    user.profile.team_object.league
-                    if user.profile.team_object
-                    else None
-                )
+                league = None
+
+                if user.profile.team_object:
+                    team_history = user.profile.team_object.get_latest_team_history()
+                    if team_history:
+                        league = team_history.league_history.league.get_highest_parent()
+
                 form = PlayerForClubAnnouncementForm(
                     initial={
                         "position": user.profile.position_raw,
                         "voivodeship_obj": voivodeship,
                         "address": user.profile.address,
                         "practice_distance": user.profile.practice_distance,
-                        "league": league.highest_parent,
+                        "league": league,
                     }
                 )
                 form.fields["target_league"].queryset = League.objects.is_top_parent()
@@ -405,7 +407,9 @@ class AnnouncementsMetaView(
         return {
             "seniority": list(Seniority.objects.values_list("name", flat=True)),
             "gender": list(Gender.objects.values_list("name", flat=True)),
-            "voivodeship": list(vivos.voivodeships_model.objects.values_list("name", flat=True)),
+            "voivodeship": list(
+                vivos.voivodeships_model.objects.values_list("name", flat=True)
+            ),
             "league": list(League.objects.values_list("name", flat=True)),
             "position": list(PlayerPosition.objects.values_list("name", flat=True)),
             "licence": LICENCE_CHOICES,

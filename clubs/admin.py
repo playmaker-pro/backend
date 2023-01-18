@@ -5,7 +5,12 @@ from . import models
 from utils import linkify
 from django.utils.safestring import mark_safe
 from typing import Sequence, Optional
-from clubs.filters import IsParentFilter, CountryListFilter, HasManagerFilter, ZpnListFilter
+from clubs.filters import (
+    IsParentFilter,
+    CountryListFilter,
+    HasManagerFilter,
+    ZpnListFilter,
+)
 
 
 def reset_history(modeladmin, request, queryset):
@@ -59,8 +64,11 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
         "is_data",
     )
     list_filter = (
-        ZpnListFilter, ("league__highest_parent", admin.RelatedOnlyFieldListFilter),
-        "season", "league__gender", "league__seniority",
+        ZpnListFilter,
+        ("league__highest_parent", admin.RelatedOnlyFieldListFilter),
+        "season",
+        "league__gender",
+        "league__seniority",
     )
     ordering: Optional[Sequence[str]] = ("-league",)
     search_fields = ("league__name",)
@@ -86,7 +94,11 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
 
 @admin.register(models.Season)
 class SeasonAdmin(admin.ModelAdmin):
-    list_display: Sequence = ("name", "is_current", "is_in_verify_form",)
+    list_display: Sequence = (
+        "name",
+        "is_current",
+        "is_in_verify_form",
+    )
     search_fields: Sequence = ("name",)
     exclude: Optional[Sequence[str]] = ("is_current",)
 
@@ -123,8 +135,8 @@ class SectionGroupingAdmin(admin.ModelAdmin):
 
 @admin.register(models.League)
 class LeagueAdmin(admin.ModelAdmin):
-    search_fields: Sequence[str]  = ("name", "slug")
-    readonly_fields: Sequence[str]  = ("slug", "search_tokens", "virtual", "is_parent")
+    search_fields: Sequence[str] = ("name", "slug")
+    readonly_fields: Sequence[str] = ("slug", "search_tokens", "virtual", "is_parent")
     actions = [resave]
     list_display = (
         "get_slicer",
@@ -151,8 +163,13 @@ class LeagueAdmin(admin.ModelAdmin):
         linkify("highest_parent"),
     )
     list_filter = (
-        "zpn", ("highest_parent", admin.RelatedOnlyFieldListFilter), IsParentFilter,
-        "visible", "gender", "seniority", CountryListFilter,
+        "zpn",
+        ("highest_parent", admin.RelatedOnlyFieldListFilter),
+        IsParentFilter,
+        "visible",
+        "gender",
+        "seniority",
+        CountryListFilter,
     )
 
     def get_slicer(self, obj):
@@ -187,7 +204,7 @@ class LeagueAdmin(admin.ModelAdmin):
 
 @admin.register(models.Voivodeship)
 class VoivodeshipAdmin(admin.ModelAdmin):
-    search_fields: Sequence[str]  = ("name",)
+    search_fields: Sequence[str] = ("name",)
 
 
 @admin.register(models.TeamHistory)
@@ -199,14 +216,14 @@ class TeamHistoryAdmin(admin.ModelAdmin):
         "get_season",
         "visible",
         "autocreated",
-        )
+    )
     search_fields: Sequence[str] = ("team__name",)
     autocomplete_fields: Sequence[str] = ("team", "league_history")
     list_filter: Sequence[str] = (
         "league_history__season__name",
         ("league_history__league__highest_parent", admin.RelatedOnlyFieldListFilter),
         "team__club__voivodeship",
-        )
+    )
 
     def get_season(self, obj):
         if obj.league_history.season:
@@ -215,7 +232,7 @@ class TeamHistoryAdmin(admin.ModelAdmin):
             return None
 
     get_season.short_description = "Season"
-    get_season.admin_order_field = 'league_history__season__name'
+    get_season.admin_order_field = "league_history__season__name"
 
 
 @admin.register(models.Team)
@@ -234,24 +251,39 @@ class TeamAdmin(admin.ModelAdmin):
         "scrapper_autocreated",
     )
     search_fields = ("name",)
-    list_filter = ("gender__name", "seniority__name", "visible", HasManagerFilter,)
+    list_filter = (
+        "gender__name",
+        "seniority__name",
+        "visible",
+        HasManagerFilter,
+    )
     actions = [update_team_visibility, set_visibility, set_invisibility]
-    autocomplete_fields = ("manager", "club",)
+    autocomplete_fields = (
+        "manager",
+        "club",
+    )
 
     def current_league(self, obj=None):
         """
-            Returns the current league highest parent of a given team. If the team has no team history related
-            to a current season, returns league from latest team history.
+        Returns the current league highest parent of a given team. If the team has no team history related
+        to a current season, returns league from latest team history.
         """
+        current_league = "-"
         if obj:
-            team_history = obj.historical.filter(team=obj).order_by("-league_history__season__name")
-            current_league = f"{team_history[0].league_history.league.highest_parent}"
-            return current_league
+            latest_league = obj.latest_league_from_lh
+            if latest_league:
+                current_league = (
+                    f"{latest_league.get_highest_parent()}"
+                )
+        return current_league
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         form.base_fields["manager"].queryset = get_users_manger_roles()
         form.base_fields["editors"].queryset = get_users_manger_roles()
+        new_form_order = {'name': form.base_fields.pop("name")}
+        new_form_order.update(form.base_fields)
+        form.base_fields = new_form_order
         return form
 
 
@@ -266,9 +298,13 @@ class ClubAdmin(admin.ModelAdmin):
         linkify("voivodeship_obj"),
         "slug",
     )
+    readonly_fields = ("mapper",)
     autocomplete_fields: Sequence[str] = ("manager",)
     search_fields: Sequence[str] = ("name",)
-    list_filter: Sequence[str] = ("voivodeship_obj__name", HasManagerFilter,)
+    list_filter: Sequence[str] = (
+        "voivodeship_obj__name",
+        HasManagerFilter,
+    )
     exclude: Sequence[str] = ("voivodeship_raw",)
 
     def get_form(self, request, obj=None, **kwargs):

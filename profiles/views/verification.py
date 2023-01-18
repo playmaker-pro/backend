@@ -47,7 +47,7 @@ class AccountVerification(LoginRequiredMixin, View):
                 preselected = TeamHistorySelect2Serializer(
                     request.user.profile.team_history_object
                 ).data
-                season_name = request.user.profile.team_history_object.season.name
+                season_name = request.user.profile.team_history_object.leaguehistory.season.name
         # Selecting right form
         if request.user.is_coach:
             form = forms.CoachVerificationForm(
@@ -87,7 +87,7 @@ class AccountVerification(LoginRequiredMixin, View):
                 preselected = TeamHistorySelect2Serializer(
                     request.user.profile.team_history_object
                 ).data
-                season_name = request.user.profile.team_history_object.season.name
+                season_name = request.user.profile.team_history_object.leaguehistory.season.name
 
         season = Season.objects.get(name=season_name)
         if request.user.is_coach:
