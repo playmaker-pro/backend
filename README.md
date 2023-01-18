@@ -34,8 +34,10 @@ To set up a development environment quickly you need to have following prerequis
 
 5. Install all dependencies:  
     **Please follow order of installation!**
+    > Note that use_2to3 not working with newest setuptools, so before installing dependencies, you have to install lower version 
     ```
     cd webapp
+    (vn) pip install "setuptools<58.0" 
     (vn) pip install -r requirements.txt
     (vn) pip install celery==3.1.26.post2
     (vn) pip install -r requirement_dev.txt
@@ -49,6 +51,7 @@ To set up a development environment quickly you need to have following prerequis
     ```
 
     note: ignore error about django-celery incompatibility.
+    > Note: If you are Windows user, you have to install additional library: (vn)  pip install windows-curses
 
     Now you can verify if everything is fine you should see:
     ```
@@ -76,6 +79,8 @@ To set up a development environment quickly you need to have following prerequis
             'HOST': 'localhost',
             'PORT': '5432',
         },
+   }
+   SYSTEM_USER_EMAIL = "your_admin_email"
     ```
 7. Run migrations:
     ```

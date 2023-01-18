@@ -51,26 +51,30 @@ function get_add_announcement_form(event, id = null, announcement_type = null, a
   $("#add-announcement-form-body").empty();
   $('#add-ann-out').hide();
   $('#add-ann-left').hide();
+
   $.ajax({
       url: "/marketplace/add/",
       type: "get",
       data: {'id': id, 'announcement_type': announcement_type, 'action_name': action_name},
       success: function(json) {
-        if (json.form === null) {
-          $('#add-ann-out').show();
-          $('#add-ann-left').hide();
-          $("#add-announcement-form-body").empty();
-        } else if(Object.keys(json).length > 0) {
-          $('#add-ann-out').hide();
-          $('#add-ann-left').show();
-          $("#add-announcement-form-body").html(json.form);
-          try{
-            $('#addAnnouncementModalLabel').html(json.modal.title);
-            $('#add-announcement-submit').html(json.modal.button.name);
-            $('#add-announcement-form-body select').addClass("selectpicker").selectpicker('refresh'); 
-          } catch(e){}
-        }
-      
+          if (json.error){
+              showToastErrorMessage(json.error);
+          }
+          else if (json.form === null) {
+              $('#add-ann-out').show();
+              $('#add-ann-left').hide();
+              $("#add-announcement-form-body").empty();
+          }
+          else if(Object.keys(json).length > 0) {
+              $('#add-ann-out').hide();
+              $('#add-ann-left').show();
+              $("#add-announcement-form-body").html(json.form);
+              try{
+                $('#addAnnouncementModalLabel').html(json.modal.title);
+                $('#add-announcement-submit').html(json.modal.button.name);
+                $('#add-announcement-form-body select').addClass("selectpicker").selectpicker('refresh');
+              } catch(e){}
+          }
       },
       error: function (xhr, ajaxOptions, thrownError) {
         $("#add-announcement-form-body select").addClass("selectpicker").selectpicker('refresh'); 
