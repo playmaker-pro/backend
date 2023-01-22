@@ -43,11 +43,15 @@ class Command(BaseCommand):
         for index, row in data.iterrows():
             """
             For each row, the script is querying the PlayerProfile model to retrieve any player objects 
-            that have a data_mapper_id value that matches the OLD_ID value in the current row, 
+            that have an old mapper value (database s38) that matches the OLD_ID value in the current row, 
             or a slug value that matches the last element in the PM_URL value split by the '/' character. 
             The resulting queryset is stored in the variable player_qs.
             """
-            player_qs = PlayerProfile.objects.filter(data_mapper_id=row[OLD_ID])
+            player_qs = PlayerProfile.objects.filter(
+                mapper__mapperentity__related_type='player',
+                mapper__mapperentity__database_source='s38',
+                mapper__mapperentity__mapper_id=row[OLD_ID]
+                                                     )
             if not player_qs:
                 player_qs = PlayerProfile.objects.filter(slug=row[PM_URL].split("/")[-1])
             if not player_qs:

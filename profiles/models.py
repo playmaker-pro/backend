@@ -494,11 +494,8 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         "about",
         "training_ready",
         "league",
-        # 'league_raw',
-        # 'club_raw',
         # 'club',  # @todo this is kicked-off waiting for club mapping implementation
         "team",
-        # 'team_raw',
         "position_raw",
         "voivodeship_obj",
     ]
@@ -666,13 +663,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True,
     )
-    club_raw = models.CharField(
-        _("Deklarowany Klub"),
-        max_length=68,
-        help_text=_("Klub w którym deklarujesz że obecnie reprezentuejsz"),
-        blank=True,
-        null=True,
-    )
+
     team = models.CharField(
         _("Drużyna"),
         db_index=True,
@@ -681,13 +672,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True,
     )
-    team_raw = models.CharField(
-        _("Deklarowana Drużyna"),
-        max_length=68,
-        help_text=_("Drużyna w której deklarujesz że obecnie grasz"),
-        blank=True,
-        null=True,
-    )
+
     league = models.CharField(
         _("Rozgrywki"),
         max_length=68,
@@ -696,13 +681,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True,
     )
-    league_raw = models.CharField(
-        _("Rozgrywki"),
-        max_length=68,
-        help_text=_("Poziom rozgrywkowy który deklarujesz że grasz."),
-        blank=True,
-        null=True,
-    )
+
     birth_date = models.DateField(_("Data urodzenia"), blank=True, null=True)
     height = models.PositiveIntegerField(
         _("Wzrost"),
@@ -1269,8 +1248,6 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         (3, "Trenerka jako hobby"),
     )
 
-    TRAINING_READY_CHOCIES = GLOBAL_TRAINING_READY_CHOCIES
-
     LICENCE_CHOICES = (
         (1, "UEFA PRO"),
         (2, "UEFA A"),
@@ -1339,13 +1316,6 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
 
     about = models.TextField(_("O sobie"), null=True, blank=True)
-
-    training_ready = models.IntegerField(
-        _("Gotowość do treningu"),
-        choices=make_choices(TRAINING_READY_CHOCIES),
-        null=True,
-        blank=True,
-    )
 
     address = AddressField(
         help_text=_("Miasto z którego dojeżdżam na trening"), blank=True, null=True
@@ -1555,14 +1525,6 @@ class ScoutProfile(BaseProfile):
         validators=[MinValueValidator(10), MaxValueValidator(500)],
     )
 
-    club = models.CharField(
-        _("Klub"),
-        max_length=68,
-        help_text=_("Klub, który obecnie reprezentuejsz"),
-        blank=True,
-        null=True,
-    )
-
     club_raw = models.CharField(
         _("Deklarowany klub"),
         max_length=68,
@@ -1571,26 +1533,10 @@ class ScoutProfile(BaseProfile):
         null=True,
     )
 
-    league = models.CharField(
-        _("Rozgrywki"),
-        max_length=68,
-        help_text=_("Poziom rozgrywkowy"),
-        blank=True,
-        null=True,
-    )
-
     league_raw = models.CharField(
         _("Deklarowany poziom rozgrywkowy"),
         max_length=68,
         help_text=_("Poziom rozgrywkowy"),
-        blank=True,
-        null=True,
-    )
-    # TODO: (l.remkowicz): Based on task PM-363. After migration on production, field can be deleted
-    voivodeship = models.CharField(
-        _("Wojewódźtwo"),
-        help_text=_("Wojewódźtwo. Stare pole, czeka na migracje"),
-        max_length=68,
         blank=True,
         null=True,
     )

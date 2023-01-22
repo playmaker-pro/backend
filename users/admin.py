@@ -231,6 +231,12 @@ class UserAdminPanel(UserAdmin):
             return ""
 
     def get_data_mapper_id(self, obj):
+        if hasattr(obj.profile, 'mapper'):
+            if obj.profile.mapper is not None:
+                old_mapper = obj.profile.mapper.mapperentity_set.filter(related_type='player', database_source='s38')\
+                    .values_list('mapper_id', flat=True)
+                if len(old_mapper) > 0:
+                    return old_mapper[0]
         return obj.profile.data_mapper_id
 
     def get_profile_percentage(self, obj):

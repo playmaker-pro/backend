@@ -33,7 +33,9 @@ class Command(BaseCommand):
 
         players = models.PlayerProfile.objects.filter(
             user__declared_role=definitions.PLAYER_SHORT,
-            data_mapper_id__isnull=False,
+            mapper__mapperentity__related_type='player',
+            mapper__mapperentity__database_source='s38',
+            mapper__mapperentity__mapper_id__isnull=False,
             user__last_login__gt=datetime.now() - timedelta(days=30),
         )
 
@@ -52,17 +54,17 @@ class Command(BaseCommand):
                 )
                 continue
 
-            if not player.data_mapper_id and player.league:
+            if not player.mapper and player.league:
                 self.stdout.write(
                     self.style.ERROR(
-                        f" ERROR > That user profile do not have data_mapper_id={player.data_mapper_id} set or it has league={player.league}"
+                        f" ERROR > That user profile do not have mapper={player.mapper} set or it has league={player.league}"
                     )
                 )
                 continue
             try:
                 self.stdout.write(f"updating {player}")
                 try:
-                    print(f"mapper_id = {player.data_mapper_id}")
+                    print(f"mapper_id = {player.mapper}")
                     start = datetime.now()
 
                     for method, args, kwargs in methods:
