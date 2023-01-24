@@ -301,7 +301,12 @@ def inquiry_display_name(context, inquiry):
         return obj.get_full_name(), obj.profile.get_permalink, obj.picture
 
     if inquiry.is_user_type:
-        name, link, picture = user_data(obj)
+        if hasattr(obj, 'playerprofile'):
+            name, link, picture = user_data(obj)
+        else:
+            name = obj.get_full_name()
+            link = ""
+            picture = obj.picture
 
         if obj.is_club:
             name = obj.profile.display_club
@@ -474,7 +479,7 @@ def add_announcement(context):
 
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def profile_link(context, user, checks=True, text=None):
-    if not user.is_authenticated:
+    if not user.is_authenticated or not hasattr(user, 'playerprofile'):
         return {"off": True}
     button_text = text or ""
     return {
