@@ -190,9 +190,9 @@ DATABASES = {
     },
     "datadb": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "adapter_testowa",
-        "USER": "postgres",
-        "PASSWORD": "coderslab",
+        "NAME": "local_data",
+        "USER": "arsen",
+        "PASSWORD": "postgres",
         "HOST": "localhost",
         "PORT": "5432",
     },
