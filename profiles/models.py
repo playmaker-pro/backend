@@ -985,7 +985,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             self.data_mapper_changed and self.attached
         ):  # if datamapper changed after save and it is not None
             logger.info(f"Calculating metrics for player {self}")
-            adpt = PlayerAdapter(self.data_mapper_id)  # commonly use adpt
+            adpt = PlayerAdapter(int(self.mapper.get_entity(
+                related_type='player', database_source='s38'
+            ).mapper_id))  # commonly use adpt
             if utilites.is_allowed_interact_with_s38():  # are we on PROD and not Debug
                 self.update_data_player_object(adpt)  # send data to s38
                 self.trigger_refresh_data_player_stats(adpt)  # send trigger to s38
