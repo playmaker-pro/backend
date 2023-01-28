@@ -93,7 +93,7 @@ def calculate_player_metrics():
     for user in qs:
         if user.profile.has_data_id:
             season_name = get_current_season()
-            _id = user.profile.data_mapper_id
+            _id = int(user.profile.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
             games_summary = adapters.PlayerLastGamesAdapter(_id).get(
                 season=season_name, limit=3
             )  # should be profile.playermetrics.refresh_games_summary() and putted to celery.
@@ -264,7 +264,7 @@ def create_from_data():
         if profile.has_data_id:
 
             # print('get from s38')
-            adpt = PlayerAdapter(profile.data_mapper_id)
+            adpt = PlayerAdapter(int(profile.mapper.get_entity(related_type='player', database_source='s38').mapper_id))
             # print('adapt')
             if adpt.player.meta is None:
                 print("This player dont have META yet... {adpt.player} ")

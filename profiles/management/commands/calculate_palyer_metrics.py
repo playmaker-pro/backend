@@ -47,6 +47,7 @@ class Command(BaseCommand):
             ("calculate_fantasy_object", (), {}),
         ]
         for player in players.iterator():
+            player_mapper = player.mapper.get_entity(related_type='player', database_source='s38').mapper_id
             self.stdout.write(f"###> {player}")
             if not player.user.is_player:
                 self.stdout.write(
@@ -54,17 +55,17 @@ class Command(BaseCommand):
                 )
                 continue
 
-            if not player.mapper and player.league:
+            if not player_mapper and player.league:
                 self.stdout.write(
                     self.style.ERROR(
-                        f" ERROR > That user profile do not have mapper={player.mapper} set or it has league={player.league}"
+                        f" ERROR > That user profile do not have mapper={player_mapper} set or it has league={player.league}"
                     )
                 )
                 continue
             try:
                 self.stdout.write(f"updating {player}")
                 try:
-                    print(f"mapper_id = {player.mapper}")
+                    print(f"mapper_id = {player_mapper}")
                     start = datetime.now()
 
                     for method, args, kwargs in methods:

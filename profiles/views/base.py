@@ -495,11 +495,10 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
             kwargs["seo_object_image"] = None
 
         if user.profile.has_data_id and user.profile.PROFILE_TYPE == "player":
-            _id = user.profile.data_mapper_id
+            _id = int(user.profile.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
             # kwargs["last_games"] = adapters.PlayerAdapter._get_user_last_games(_id)
             season_name = get_current_season()
             metrics = user.profile.playermetrics
-
             if (
                 metrics.how_old_days(games_summary=True) >= 7
                 or metrics.how_old_days(fantasy_summary=True) >= 7

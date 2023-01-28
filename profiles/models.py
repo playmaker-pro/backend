@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -265,7 +266,13 @@ class BaseProfile(models.Model, EventLogMixin):
 
     @property
     def has_data_id(self):
-        return self.data_mapper_id is not None
+        if self.mapper is not None:
+            mapper_entity = self.mapper.get_entity(
+                related_type__in=['player', 'coach'], database_source='s38'
+            )
+            if mapper_entity is not None:
+                return mapper_entity.mapper_id is not None
+        return False
 
     @property
     def is_not_complete(self):
@@ -616,7 +623,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     @property
     def attached(self):
-        return self.data_mapper_id is not None
+        return self.mapper.get_entity(related_type='player', database_source='s38').mapper_id is not None
 
     @property
     def get_team_object(self):
@@ -852,7 +859,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def calculate_data_from_data_models(self, adpt=None, *args, **kwargs):
         """Interaction with s38: league, vivo, team <- s38"""
         if self.attached:
-            adpt = adpt or PlayerAdapter(self.data_mapper_id)
+            adpt = adpt or PlayerAdapter(
+                int(self.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
+            )
             if adpt.has_player:
                 self.league = adpt.get_current_league()
                 self.voivodeship = adpt.get_current_voivodeship()
@@ -862,7 +871,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def update_data_player_object(self, adpt=None):
         """Interaction with s38: updates --> s38 wix_id and fantasy position"""
         if self.attached:
-            adpt = adpt or PlayerAdapter(self.data_mapper_id)
+            adpt = adpt or PlayerAdapter(
+                int(self.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
+            )
             adpt.update_wix_id_and_position(
                 email=self.user.email, position=self.position_fantasy
             )
@@ -870,7 +881,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def fetch_data_player_meta(self, adpt=None, save=True, *args, **kwargs):
         """Interaction with s38: updates meta from <--- s38"""
         if self.attached:
-            adpt = adpt or PlayerAdapter(self.data_mapper_id)
+            adpt = adpt or PlayerAdapter(
+                int(self.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
+            )
             self.meta = adpt.player.meta
             self.meta_updated = timezone.now()
             if save:
@@ -879,7 +892,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def trigger_refresh_data_player_stats(self, adpt=None, *args, **kwargs):
         """Trigger update of player stats --> s38"""
         if self.attached:
-            adpt = adpt or PlayerAdapter(self.data_mapper_id)
+            adpt = adpt or PlayerAdapter(
+                int(self.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
+            )
             adpt.calculate_stats(season_name=utilites.get_current_season())
 
     def get_team_object_based_on_meta(self, season_name, retries: int = 3):
@@ -1019,7 +1034,7 @@ class PlayerMetrics(models.Model):
         if not self.player.has_data_id:
             return
         season_name = utilites.get_current_season()
-        _id = self.player.data_mapper_id
+        _id = int(self.player.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
 
         # user.profile.set_team_object_based_on_meta()  # saving
         start = datetime.now()
@@ -1299,6 +1314,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
     phone = models.CharField(_("Telefon"), max_length=15, blank=True, null=True)
     facebook_url = models.URLField(_("Facebook"), max_length=500, blank=True, null=True)
+    mapper = models.OneToOneField(Mapper, on_delete=models.CASCADE, blank=True, null=True)
     country = CountryField(
         _("Country"),
         blank=True,
@@ -1396,7 +1412,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
 
         if not self.has_data_id:
             return
-        _id = self.data_mapper_id
+        _id = int(self.mapper.get_entity(related_type='coach', database_source='s38').mapper_id)
         season_name = season_name or utilites.get_current_season()
 
         def _calculate(season_name):
@@ -1422,6 +1438,14 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         msg = "Coach stats updated."
         self.add_event_log_message(msg, commit=False)
         self.save()
+
+    def create_mapper_obj(self):
+        self.mapper = Mapper.objects.create()
+
+    def save(self, *args, **kwargs):
+        if not self.mapper:
+            self.create_mapper_obj()
+        super().save(*args, **kwargs)
 
     @property
     def has_attachemnt(self):

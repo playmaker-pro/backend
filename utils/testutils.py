@@ -42,9 +42,7 @@ def get_verified_user_player():
         email="usernameplayer", declared_role=definitions.PLAYER_SHORT
     )
     user.profile.team_object = team
-    user.profile.VERIFICATION_FIELDS = ["bio"]
-    user.profile.COMPLETE_FIELDS = ["team_raw"]  # , 'club_raw']
-    user.profile.bio = "Lubie Herbate"
+    user.profile.COMPLETE_FIELDS = ["team"]  # , 'club_raw']
     user.profile.save()
     user.verify(silent=True)
     return user
@@ -56,9 +54,7 @@ def get_verified_user_coach():
         email="usernamecoach", declared_role=definitions.COACH_SHORT
     )
     user.profile.team_object = team
-    user.profile.VERIFICATION_FIELDS = ["bio"]
-    user.profile.COMPLETE_FIELDS = ["team_raw"]  # , 'club_raw']
-    user.profile.bio = "Lubie Herbate"
+    user.profile.COMPLETE_FIELDS = ["team"]  # , 'club_raw']
     user.profile.save()
     user.verify(silent=True)
     return user
@@ -70,9 +66,7 @@ def get_verified_user_club():
         email="usernameclub", declared_role=definitions.CLUB_SHORT
     )
     user.profile.club_object = club
-    user.profile.VERIFICATION_FIELDS = ["bio"]
-    user.profile.COMPLETE_FIELDS = ["team_raw"]  # , 'club_raw']
-    user.profile.bio = "Lubie Herbate"
+    user.profile.COMPLETE_FIELDS = ["team"]  # , 'club_raw']
     user.profile.save()
     user.verify(silent=True)
     return user

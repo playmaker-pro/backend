@@ -120,7 +120,6 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
             queryset = queryset.filter(
                 player__playerprofile__position_raw__in=self.filter_fantasy_position
             )
-
         return queryset
 
     def get_filters_values(self):  # @todo add cache from Redis here
