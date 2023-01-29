@@ -22,7 +22,6 @@ from django.utils.translation import (
 )
 from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
-from profiles.models import CoachProfile
 from profiles.utils import extract_video_id
 
 from voivodeships.services import VoivodeshipService
@@ -480,6 +479,7 @@ def add_announcement(context):
 
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def profile_link(context, user, checks=True, text=None):
+
     if not user.is_authenticated or not hasattr(user, 'profile'):
         return {"off": True}
     button_text = text or ""
