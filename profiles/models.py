@@ -265,7 +265,13 @@ class BaseProfile(models.Model, EventLogMixin):
 
     @property
     def has_data_id(self):
-        return self.data_mapper_id is not None
+        if self.mapper is not None:
+            mapper_entity = self.mapper.get_entity(
+                related_type__in=['player', 'coach'], database_source='s38'
+            )
+            if mapper_entity is not None:
+                return mapper_entity.mapper_id is not None
+        return False
 
     @property
     def is_not_complete(self):
@@ -494,11 +500,8 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         "about",
         "training_ready",
         "league",
-        # 'league_raw',
-        # 'club_raw',
         # 'club',  # @todo this is kicked-off waiting for club mapping implementation
         "team",
-        # 'team_raw',
         "position_raw",
         "voivodeship_obj",
     ]
@@ -619,7 +622,13 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     @property
     def attached(self):
-        return self.data_mapper_id is not None
+        if self.mapper is not None:
+            mapper_entity = self.mapper.get_entity(
+                related_type__in=['player', 'coach'], database_source='s38'
+            )
+            if mapper_entity is not None:
+                return mapper_entity.mapper_id is not None
+        return False
 
     @property
     def get_team_object(self):
@@ -666,13 +675,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True,
     )
-    club_raw = models.CharField(
-        _("Deklarowany Klub"),
-        max_length=68,
-        help_text=_("Klub w którym deklarujesz że obecnie reprezentuejsz"),
-        blank=True,
-        null=True,
-    )
+
     team = models.CharField(
         _("Drużyna"),
         db_index=True,
@@ -681,13 +684,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True,
     )
-    team_raw = models.CharField(
-        _("Deklarowana Drużyna"),
-        max_length=68,
-        help_text=_("Drużyna w której deklarujesz że obecnie grasz"),
-        blank=True,
-        null=True,
-    )
+
     league = models.CharField(
         _("Rozgrywki"),
         max_length=68,
@@ -696,13 +693,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True,
     )
-    league_raw = models.CharField(
-        _("Rozgrywki"),
-        max_length=68,
-        help_text=_("Poziom rozgrywkowy który deklarujesz że grasz."),
-        blank=True,
-        null=True,
-    )
+
     birth_date = models.DateField(_("Data urodzenia"), blank=True, null=True)
     height = models.PositiveIntegerField(
         _("Wzrost"),
@@ -873,7 +864,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def calculate_data_from_data_models(self, adpt=None, *args, **kwargs):
         """Interaction with s38: league, vivo, team <- s38"""
         if self.attached:
-            adpt = adpt or PlayerAdapter(self.data_mapper_id)
+            adpt = adpt or PlayerAdapter(
+                int(self.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
+            )
             if adpt.has_player:
                 self.league = adpt.get_current_league()
                 self.voivodeship = adpt.get_current_voivodeship()
@@ -883,7 +876,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def update_data_player_object(self, adpt=None):
         """Interaction with s38: updates --> s38 wix_id and fantasy position"""
         if self.attached:
-            adpt = adpt or PlayerAdapter(self.data_mapper_id)
+            adpt = adpt or PlayerAdapter(
+                self.mapper.get_entity(related_type='player', database_source='s38').mapper_id
+            )
             adpt.update_wix_id_and_position(
                 email=self.user.email, position=self.position_fantasy
             )
@@ -891,7 +886,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def fetch_data_player_meta(self, adpt=None, save=True, *args, **kwargs):
         """Interaction with s38: updates meta from <--- s38"""
         if self.attached:
-            adpt = adpt or PlayerAdapter(self.data_mapper_id)
+            adpt = adpt or PlayerAdapter(
+                int(self.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
+            )
             self.meta = adpt.player.meta
             self.meta_updated = timezone.now()
             if save:
@@ -900,7 +897,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def trigger_refresh_data_player_stats(self, adpt=None, *args, **kwargs):
         """Trigger update of player stats --> s38"""
         if self.attached:
-            adpt = adpt or PlayerAdapter(self.data_mapper_id)
+            adpt = adpt or PlayerAdapter(
+                int(self.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
+            )
             adpt.calculate_stats(season_name=utilites.get_current_season())
 
     def get_team_object_based_on_meta(self, season_name, retries: int = 3):
@@ -991,7 +990,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             self.data_mapper_changed and self.attached
         ):  # if datamapper changed after save and it is not None
             logger.info(f"Calculating metrics for player {self}")
-            adpt = PlayerAdapter(self.data_mapper_id)  # commonly use adpt
+            adpt = PlayerAdapter(int(self.mapper.get_entity(
+                related_type='player', database_source='s38'
+            ).mapper_id))  # commonly use adpt
             if utilites.is_allowed_interact_with_s38():  # are we on PROD and not Debug
                 self.update_data_player_object(adpt)  # send data to s38
                 self.trigger_refresh_data_player_stats(adpt)  # send trigger to s38
@@ -1040,7 +1041,7 @@ class PlayerMetrics(models.Model):
         if not self.player.has_data_id:
             return
         season_name = utilites.get_current_season()
-        _id = self.player.data_mapper_id
+        _id = int(self.player.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
 
         # user.profile.set_team_object_based_on_meta()  # saving
         start = datetime.now()
@@ -1269,8 +1270,6 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         (3, "Trenerka jako hobby"),
     )
 
-    TRAINING_READY_CHOCIES = GLOBAL_TRAINING_READY_CHOCIES
-
     LICENCE_CHOICES = (
         (1, "UEFA PRO"),
         (2, "UEFA A"),
@@ -1322,6 +1321,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
     phone = models.CharField(_("Telefon"), max_length=15, blank=True, null=True)
     facebook_url = models.URLField(_("Facebook"), max_length=500, blank=True, null=True)
+    mapper = models.OneToOneField(Mapper, on_delete=models.CASCADE, blank=True, null=True)
     country = CountryField(
         _("Country"),
         blank=True,
@@ -1339,13 +1339,6 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
 
     about = models.TextField(_("O sobie"), null=True, blank=True)
-
-    training_ready = models.IntegerField(
-        _("Gotowość do treningu"),
-        choices=make_choices(TRAINING_READY_CHOCIES),
-        null=True,
-        blank=True,
-    )
 
     address = AddressField(
         help_text=_("Miasto z którego dojeżdżam na trening"), blank=True, null=True
@@ -1426,7 +1419,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
 
         if not self.has_data_id:
             return
-        _id = self.data_mapper_id
+        _id = int(self.mapper.get_entity(related_type='coach', database_source='s38').mapper_id)
         season_name = season_name or utilites.get_current_season()
 
         def _calculate(season_name):
@@ -1452,6 +1445,14 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         msg = "Coach stats updated."
         self.add_event_log_message(msg, commit=False)
         self.save()
+
+    def create_mapper_obj(self):
+        self.mapper = Mapper.objects.create()
+
+    def save(self, *args, **kwargs):
+        if not self.mapper:
+            self.create_mapper_obj()
+        super().save(*args, **kwargs)
 
     @property
     def has_attachemnt(self):
@@ -1555,14 +1556,6 @@ class ScoutProfile(BaseProfile):
         validators=[MinValueValidator(10), MaxValueValidator(500)],
     )
 
-    club = models.CharField(
-        _("Klub"),
-        max_length=68,
-        help_text=_("Klub, który obecnie reprezentuejsz"),
-        blank=True,
-        null=True,
-    )
-
     club_raw = models.CharField(
         _("Deklarowany klub"),
         max_length=68,
@@ -1571,26 +1564,10 @@ class ScoutProfile(BaseProfile):
         null=True,
     )
 
-    league = models.CharField(
-        _("Rozgrywki"),
-        max_length=68,
-        help_text=_("Poziom rozgrywkowy"),
-        blank=True,
-        null=True,
-    )
-
     league_raw = models.CharField(
         _("Deklarowany poziom rozgrywkowy"),
         max_length=68,
         help_text=_("Poziom rozgrywkowy"),
-        blank=True,
-        null=True,
-    )
-    # TODO: (l.remkowicz): Based on task PM-363. After migration on production, field can be deleted
-    voivodeship = models.CharField(
-        _("Wojewódźtwo"),
-        help_text=_("Wojewódźtwo. Stare pole, czeka na migracje"),
-        max_length=68,
         blank=True,
         null=True,
     )

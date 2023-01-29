@@ -15,7 +15,7 @@ class VerificationServiceTest(TestCase):
             email="username", declared_role=definitions.PLAYER_SHORT
         )
         self.user.profile.VERIFICATION_FIELDS = ["bio"]
-        self.user.profile.COMPLETE_FIELDS = ["team_raw"]  # , 'club_raw']
+        self.user.profile.COMPLETE_FIELDS = ["team"]  # , 'club_raw']
         self.user.profile.bio = "Lubie Herbate"
 
         self.user.profile.save()

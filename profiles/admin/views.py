@@ -44,7 +44,6 @@ DEFAULT_PROFILE_SEARCHABLES = ("user__email", "user__first_name", "user__last_na
 DEFAULT_PROFILE_DISPLAY_FIELDS = (
     "pk",
     linkify("user"),
-    "data_mapper_id",
     "slug",
     "active",
 )
@@ -204,6 +203,7 @@ class ProfileVerificationStatusAdmin(admin.ModelAdmin):
 @admin.register(models.PlayerProfile)
 class PlayerProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
+        'get_mapper',
         linkify("playermetrics"),
         linkify("team_object"),
         linkify("team_history_object"),
@@ -232,6 +232,14 @@ class PlayerProfileAdmin(ProfileAdminBase):
         else:
             obj.meta
 
+    def get_mapper(self, obj):
+        if hasattr(obj, 'mapper'):
+            if obj.mapper is not None:
+                old_mapper = obj.mapper.get_entity(related_type='player', database_source='s38')
+                if old_mapper is not None:
+                    return old_mapper.mapper_id
+        return None
+
     autocomplete_fields = (
         "user",
         "team_object",
@@ -254,11 +262,22 @@ class PlayerProfileAdmin(ProfileAdminBase):
 @admin.register(models.CoachProfile)
 class CoachProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
+        'get_mapper',
         linkify("team_object"),
         linkify("team_history_object"),
         linkify("team_history_object"),
     )
     autocomplete_fields = ("team_object", "team_history_object", "team_history_object")
+
+    def get_mapper(self, obj):
+        if hasattr(obj, 'mapper'):
+            if obj.mapper is not None:
+                old_mapper = obj.mapper.get_entity(related_type='coach', database_source='s38')
+                if old_mapper is not None:
+                    return old_mapper.mapper_id
+        return None
+
+    readonly_fields = ("mapper",)
 
 
 @admin.register(models.RoleChangeRequest)

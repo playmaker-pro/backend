@@ -15,7 +15,7 @@ class ChangeRoleTests(TestCase):
             email="username", declared_role=definitions.PLAYER_SHORT
         )
         self.user.profile.VERIFICATION_FIELDS = ["bio"]
-        self.user.profile.COMPLETE_FIELDS = ["team_raw"]  # , 'club_raw']
+        self.user.profile.COMPLETE_FIELDS = ["team"]  # , 'club_raw']
         self.user.profile.bio = "Lubie Herbate"
 
         self.user.profile.save()
@@ -102,7 +102,7 @@ class TestProfilePercentageTests(TestCase):
         utils.create_system_user()
         user = User.objects.create(email="username", declared_role="P")
         user.profile.VERIFICATION_FIELDS = ["bio"]
-        user.profile.COMPLETE_FIELDS = ["team_raw"]  # , 'club_raw']
+        user.profile.COMPLETE_FIELDS = ["team"]  # , 'club_raw']
         self.profile = user.profile
 
     def test_initialy_percentages(self):
@@ -135,20 +135,20 @@ class TestProfilePercentageTests(TestCase):
         assert self.profile.percentage_left_verified == 0
 
     def test_fill_only_complete_field(self):
-        self.profile.team_raw = "Team Hello"
+        self.profile.team = "Team Hello"
         self.profile.save()
         assert self.profile.percentage_completion == 50
         assert self.profile.percentage_left_verified == 50
 
     def test_all_filed(self):
-        self.profile.team_raw = "Team Hello"
+        self.profile.team = "Team Hello"
         self.profile.bio = "My aweseome bio"
         self.profile.save()
         assert self.profile.percentage_completion == 100
         assert self.profile.percentage_left_verified == 0
 
     def test_summary_of_left_verify_and_completion_need_to_give_100(self):
-        self.profile.team_raw = "Team Hello"  # complete 50%
+        self.profile.team = "Team Hello"  # complete 50%
         # left ver 50%
         self.profile.save()
         assert (

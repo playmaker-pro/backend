@@ -34,6 +34,7 @@ class MapperEntity(models.Model):
     RELATED_MODELS = (
         ("team", "team"),
         ("player", "player profile"),
+        ("coach", "coach profile"),
         ("club", "club"),
         ("team history", "team history"),
         ("league", "league history highest parent"),

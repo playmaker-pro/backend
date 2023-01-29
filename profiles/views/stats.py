@@ -68,7 +68,7 @@ class ProfileFantasy(ProfileStatsPageView):
 
     def get_data_or_calculate(self, user):
         season_name = get_current_season()
-        _id = user.profile.data_mapper_id
+        _id = int(user.profile.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
         if (
             user.profile.playermetrics.how_old_days(fantasy=True) >= 7
             and user.profile.has_data_id
@@ -85,7 +85,7 @@ class ProfileCarrierRows(ProfileStatsPageView):
     page_title = _("Twoja kariera")
 
     def get_data_or_calculate(self, user):
-        _id = user.profile.data_mapper_id
+        _id = int(user.profile.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
         if (
             user.profile.playermetrics.how_old_days(games=True) >= 7
             and user.profile.has_data_id
@@ -117,7 +117,7 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
     def get_data_or_calculate(self, user):
         data = []
         if user.is_player:
-            _id = user.profile.data_mapper_id
+            _id = int(user.profile.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
             if (
                 user.profile.playermetrics.how_old_days(season=True) >= 7
                 and user.profile.has_data_id
@@ -206,7 +206,7 @@ class ProfileGames(ProfileStatsPageView, mixins.PaginateMixin):
 
     def get_data_or_calculate(self, user):
         if user.is_player:
-            _id = user.profile.data_mapper_id
+            _id = int(user.profile.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
             if (
                 user.profile.playermetrics.how_old_days(games=True) >= 7
                 and user.profile.has_data_id

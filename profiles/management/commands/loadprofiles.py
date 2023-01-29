@@ -483,7 +483,7 @@ class Command(BaseCommand):
 
                 profile = user.profile
 
-                profile.data_mapper_id = mapper_id
+                profile.mapper.get_entity(related_type='player', database_source='s38').mapper_id = mapper_id
                 profile.height = height
                 motivation = ""
                 if (
