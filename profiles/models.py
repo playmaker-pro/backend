@@ -622,7 +622,13 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     @property
     def attached(self):
-        return self.mapper.get_entity(related_type='player', database_source='s38').mapper_id is not None
+        if self.mapper is not None:
+            mapper_entity = self.mapper.get_entity(
+                related_type__in=['player', 'coach'], database_source='s38'
+            )
+            if mapper_entity is not None:
+                return mapper_entity.mapper_id is not None
+        return False
 
     @property
     def get_team_object(self):
@@ -871,7 +877,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         """Interaction with s38: updates --> s38 wix_id and fantasy position"""
         if self.attached:
             adpt = adpt or PlayerAdapter(
-                int(self.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
+                self.mapper.get_entity(related_type='player', database_source='s38').mapper_id
             )
             adpt.update_wix_id_and_position(
                 email=self.user.email, position=self.position_fantasy
