@@ -6,7 +6,7 @@ from pm_core.services.models.models import (
     BaseLeagueSchema,
 )
 from adapters.player_adapter import PlayerDataAdapter
-from pm_core.stubs.player_stub import PlayerApiServiceBaseApiServiceStub
+from pm_core.stubs.player_stub import PlayerApiServiceStub
 from adapters.strategy import JustGet
 from .utils import create_valid_player, _ID
 
@@ -16,7 +16,7 @@ class PlayerDataAdapterUnitTest(TestCase):
         fake_player = create_valid_player()
 
         self.adapter = PlayerDataAdapter(
-            fake_player, api_method=PlayerApiServiceBaseApiServiceStub, strategy=JustGet
+            fake_player, api_method=PlayerApiServiceStub, strategy=JustGet
         )
 
     def test_get_player_uuid(self) -> None:
