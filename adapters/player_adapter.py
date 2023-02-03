@@ -6,8 +6,8 @@ from pm_core.services.models import (
     BaseLeagueSchema,
     GameSchema,
     EventSchema,
+    PlayerSeasonStatsSchema,
 )
-
 from clubs.models import Season
 from mapper.models import Mapper
 from profiles.models import PlayerProfile
@@ -175,3 +175,30 @@ class PlayerGamesAdapter(PlayerAdapterBase):
 
             if game.minutes > 90:
                 game.minutes = 90
+
+
+class PlayerSeasonStatsAdapter(PlayerAdapterBase):
+    def get_season_stats(
+        self, season: str = get_current_season()
+    ) -> PlayerSeasonStatsSchema:
+        """get predefined player stats"""
+        player_id = self.player_uuid
+        params = self.resolve_strategy()
+        params["season"] = season.replace("/", "%2F")
+        data = self.api.get_player_season_stats(player_id=player_id, params=params)
+
+        if not data:
+            raise ObjectNotFoundException(player_id, PlayerSeasonStatsSchema)
+
+        if len(data) > 1:
+            stats = self.resolve_stats_list(data)
+        else:
+            stats = data[0]
+
+        return stats
+
+    def resolve_stats_list(
+        self, data: typing.List[PlayerSeasonStatsSchema]
+    ) -> PlayerSeasonStatsSchema:
+        """get most accurate stats based on played minutes in different leagues"""
+        return max(data, key=lambda stat: stat.minutes_played)
