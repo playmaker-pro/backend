@@ -9,6 +9,7 @@ from pm_core.services.models import (
     PlayerSeasonStatsSchema,
 )
 from clubs.models import Season
+from .serializers import GameSerializer
 from mapper.models import Mapper
 from profiles.models import PlayerProfile
 from utils import get_current_season
@@ -175,6 +176,10 @@ class PlayerGamesAdapter(PlayerAdapterBase):
 
             if game.minutes > 90:
                 game.minutes = 90
+
+    def serialize(self, limit: int = None):
+        """serialize games data, set limit(int) to limitate games count"""
+        return GameSerializer(self.games, limit)
 
 
 class PlayerSeasonStatsAdapter(PlayerAdapterBase):

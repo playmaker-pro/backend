@@ -42,3 +42,18 @@ class ObjectNotFoundException(Exception):
 
     def __str__(self) -> str:
         return self.msg
+
+
+class WrongDataFormatException(Exception):
+    """
+    Exception raised if object got incorrect data schema
+    """
+
+    def __init__(
+        self, obj: object, _need: Type[BaseModel], _got: Type[BaseModel]
+    ) -> None:
+        self.msg = f"Wrong data format raised by {obj}, correct: {_need}, got: {_got}."
+        logger.error(self.msg)
+
+    def __str__(self) -> str:
+        return self.msg
