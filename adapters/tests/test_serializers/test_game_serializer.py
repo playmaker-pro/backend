@@ -3,25 +3,18 @@ from pm_core.services.models import EventSchema
 
 from adapters.serializers import GameSerializer
 from adapters.player_adapter import PlayerGamesAdapter
-from pm_core.stubs.player_stub import PlayerApiServiceStub
-from adapters.strategy import JustGet
-from .utils import create_valid_player
+from adapters.tests.base import BasePlayerUnitTest
 
 
-class GameSerializerUnitTest(TestCase):
+class GameSerializerUnitTest(TestCase, BasePlayerUnitTest):
     serializer = None
     games = None
     adapter = None
 
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
         super(GameSerializerUnitTest, cls).setUpClass()
-        fake_player = create_valid_player()
-
-        cls.adapter = PlayerGamesAdapter(
-            fake_player, api_method=PlayerApiServiceStub, strategy=JustGet
-        )
-        cls.adapter.get_player_games()
+        cls.adapter = cls.define_adapter(PlayerGamesAdapter)
         cls.games = cls.adapter.games
         cls.serializer = GameSerializer(cls.games)
         cls.data = cls.serializer.data

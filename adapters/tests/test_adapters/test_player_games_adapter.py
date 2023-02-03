@@ -5,22 +5,18 @@ from pm_core.services.models import (
     EventSchema,
     BaseTeamSchema,
 )
-
 from adapters.player_adapter import PlayerGamesAdapter
-from pm_core.stubs.player_stub import PlayerApiServiceStub
-from adapters.strategy import JustGet
-from .utils import create_valid_player
+from adapters.tests.base import BasePlayerUnitTest
 
 
-class PlayerDataAdapterUnitTest(TestCase):
-    def setUp(self) -> None:
-        fake_player = create_valid_player()
+class PlayerGamesAdapterUnitTest(TestCase, BasePlayerUnitTest):
 
-        self.adapter = PlayerGamesAdapter(
-            fake_player, api_method=PlayerApiServiceStub, strategy=JustGet
-        )
-        self.adapter.get_player_games()
-        self.games = self.adapter.games
+    @classmethod
+    def setUpClass(cls) -> None:
+        super(PlayerGamesAdapterUnitTest, cls).setUpClass()
+        cls.adapter = cls.define_adapter(PlayerGamesAdapter)
+        cls.adapter.get_player_games()
+        cls.games = cls.adapter.games
 
     def test_games_structure(self):
         assert all(isinstance(game.league, BaseLeagueSchema) for game in self.games)
