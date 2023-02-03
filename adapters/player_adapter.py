@@ -1,7 +1,17 @@
-from pm_core.services.models import PlayerBaseSchema, TeamSchema, BaseLeagueSchema
+import typing
 
+from pm_core.services.models import (
+    PlayerBaseSchema,
+    TeamSchema,
+    BaseLeagueSchema,
+    GameSchema,
+    EventSchema,
+)
+
+from clubs.models import Season
 from mapper.models import Mapper
 from profiles.models import PlayerProfile
+from utils import get_current_season
 from .exceptions import (
     PlayerHasNoMapperException,
     PlayerMapperEntityNotFoundException,
@@ -12,6 +22,7 @@ import logging
 from django.core.exceptions import ObjectDoesNotExist
 
 logger = logging.getLogger(__name__)
+LATEST_SEASONS = Season.objects.all().order_by("-name")[:4]
 
 
 class PlayerAdapterBase(BaseAdapter):
@@ -99,3 +110,68 @@ class PlayerDataAdapter(PlayerAdapterBase):
         Check if player data exists
         """
         return bool(self.data)
+
+
+class PlayerGamesAdapter(PlayerAdapterBase):
+
+    games: typing.List[GameSchema] = []
+
+    def get_player_games(self, season: str = get_current_season()) -> None:
+        """get player games based on season"""
+        player_id = self.player_uuid
+        params = self.resolve_strategy()
+        params["season"] = season.replace("/", "%2F")
+
+        games = self.api.get_player_participant_games(
+            player_id=player_id, params=params
+        )
+
+        if not games:
+            raise ObjectNotFoundException(player_id, GameSchema)
+
+        self.games += games
+        self.clean_game_minutes()
+
+    def get_latest_seasons_player_games(self):
+        for season in LATEST_SEASONS:
+            self.get_player_games(season.name)
+
+    def parse_events_time(self, game: GameSchema):
+        """remove ' sign from timestamps presented on events by lnp"""
+        event_types = (game.cards, game.goals, game.substitutions)
+
+        for event_list in event_types:
+            if event_list:
+                for event in event_list:
+                    if type(event.minute) is int:
+                        continue
+                    event.minute = int(event.minute.replace("'", ""))
+
+    def resolve_minutes_on_substitutions(
+        self, substitutions: typing.List[EventSchema]
+    ) -> int:
+        """resolve timestamps of player substitutions"""
+        _in, _out = None, None
+        for sub in substitutions:
+            if sub.type == "In":
+                _in = int(sub.minute)
+            elif sub.type == "Out":
+                _out = int(sub.minute)
+
+        if _in and _out:
+            return _out - _in
+        if _in:
+            return 90 - _in
+        if _out:
+            return _out
+
+    def clean_game_minutes(self) -> None:
+        """reformat each played by player game minutes"""
+        for game in self.games:
+            self.parse_events_time(game)
+
+            if not game.minutes:
+                game.minutes = self.resolve_minutes_on_substitutions(game.substitutions)
+
+            if game.minutes > 90:
+                game.minutes = 90
