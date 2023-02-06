@@ -60,7 +60,6 @@ class PlayerAdapterBase(BaseAdapter):
         mapper = self.get_player_mapper()
         params = {"database_source": "scrapper_mongodb", "related_type": "player"}
         mapper_entity = mapper.get_entity(**params)
-
         if not mapper_entity:
             raise PlayerMapperEntityNotFoundException(self.player.user.id, params)
 

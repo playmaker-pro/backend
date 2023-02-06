@@ -6,18 +6,15 @@ from pm_core.services.models.models import (
     BaseLeagueSchema,
 )
 from adapters.player_adapter import PlayerDataAdapter
-from pm_core.stubs.player_stub import PlayerApiServiceStub
-from adapters.strategy import JustGet
-from .utils import create_valid_player, _ID
+from adapters.tests.base import BasePlayerUnitTest
+from adapters.tests.factories import _ID
 
 
-class PlayerDataAdapterUnitTest(TestCase):
-    def setUp(self) -> None:
-        fake_player = create_valid_player()
-
-        self.adapter = PlayerDataAdapter(
-            fake_player, api_method=PlayerApiServiceStub, strategy=JustGet
-        )
+class PlayerDataAdapterUnitTest(TestCase, BasePlayerUnitTest):
+    @classmethod
+    def setUpClass(cls) -> None:
+        super(PlayerDataAdapterUnitTest, cls).setUpClass()
+        cls.adapter = cls.define_adapter(PlayerDataAdapter)
 
     def test_get_player_uuid(self) -> None:
         """test user has uuid"""
