@@ -26,10 +26,10 @@ To set up a development environment quickly you need to have following prerequis
     git clone https://gitlab.com/playmaker1/webapp --recurse-submodules
     ```
 
-4. Clone streamer package and install as a in-develop package
+4. Clone additional packages and install as a in-develop packages
     ````
     git clone https://gitlab.com/playmaker1/packages/pm-stream-framework
-
+    git clone https://gitlab.com/playmaker1/packages/pm-core
     ````
 
 5. Install all dependencies:  
@@ -48,10 +48,12 @@ To set up a development environment quickly you need to have following prerequis
     cd ..
     cd package/pm-stream-framework 
     (vn) pip install -e .
+    cd ../pm-core
+    (vn) pip install -e .
     ```
-
-    note: ignore error about django-celery incompatibility.
-    > Note: If you are Windows user, you have to install additional library: (vn)  pip install windows-curses
+    > **pm-core package installation in this case is a temporary solution until proper pypi server will be setup<br><br>**
+    Note: ignore error about django-celery incompatibility. <br>
+    Note: If you are Windows user, you have to install additional library: (vn)  pip install windows-curses
 
     Now you can verify if everything is fine you should see:
     ```
