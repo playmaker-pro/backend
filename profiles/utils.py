@@ -14,6 +14,7 @@ from stats import adapters
 from roles import definitions
 import functools
 import logging
+import pandas as pd
 
 from urllib.parse import urlparse, parse_qs
 
@@ -399,3 +400,28 @@ def create_from_data():
             ids += 1
 
     print(ids)
+
+
+def match_player_videos(csv_file: str):
+    """
+    Matches player videos with data from csv_file.
+    """
+    from profiles.models import PlayerVideo, PlayerProfile
+
+    player_profiles = PlayerProfile.objects.all()
+    df = pd.read_csv(csv_file)
+
+    for index, row in df.iterrows():
+        player_profile = player_profiles.get(user=row['player'])
+        player_video, created = PlayerVideo.objects.get_or_create(
+            player=player_profile,
+            url=row['url'],
+            defaults={
+                'title': row['title'] if not pd.isna(row['title']) else "",
+                'description': row['description'] if not pd.isna(row['description']) else '',
+            }
+        )
+        if not created:
+            print(f"{player_profile.user} video with url {row['url']} already exists")
+        else:
+            print(f"{player_profile.user} video with url {row['url']} created")
