@@ -1,7 +1,8 @@
+import typing
 from collections import Counter
 from datetime import datetime
 from random import choices
-from typing import Union
+
 
 from stats import adapters
 from address.models import AddressField
@@ -264,14 +265,19 @@ class BaseProfile(models.Model, EventLogMixin):
         return True
 
     @property
-    def has_data_id(self):
-        if self.mapper is not None:
-            mapper_entity = self.mapper.get_entity(
-                related_type__in=['player', 'coach'], database_source='s38'
-            )
-            if mapper_entity is not None:
-                return mapper_entity.mapper_id is not None
-        return False
+    def has_data_id(self) -> typing.Optional[bool]:
+        """By default we retrun False if not implemented"""
+        if self.PROFILE_TYPE in [
+            definitions.PROFILE_TYPE_COACH,
+            definitions.PROFILE_TYPE_PLAYER,
+        ]:
+            if self.mapper is not None:
+                mapper_entity = self.mapper.get_entity(
+                    related_type__in=['player', 'coach'], database_source='s38'
+                )
+                if mapper_entity is not None:
+                    return mapper_entity.mapper_id is not None
+            return False
 
     @property
     def is_not_complete(self):
@@ -622,13 +628,8 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     @property
     def attached(self):
-        if self.mapper is not None:
-            mapper_entity = self.mapper.get_entity(
-                related_type__in=['player', 'coach'], database_source='s38'
-            )
-            if mapper_entity is not None:
-                return mapper_entity.mapper_id is not None
-        return False
+        """proxy method to pass if profile has id"""
+        return self.has_data_id()
 
     @property
     def get_team_object(self):
