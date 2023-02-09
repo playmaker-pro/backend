@@ -7,6 +7,7 @@ from metrics.mappers import PlayerMapper, TeamMapper
 
 from .users import SimplePlayerProfileSerializer
 
+
 logger = logging.getLogger(__name__)
 
 
