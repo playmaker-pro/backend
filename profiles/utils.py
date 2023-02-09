@@ -402,9 +402,14 @@ def create_from_data():
     print(ids)
 
 
-def match_player_videos(csv_file: str):
+def match_player_videos(csv_file: str) -> None:
     """
     Matches player videos with data from csv_file.
+    Expects the csv_file to have the following columns:
+            player - the user id,
+            url - the URL of the video,
+            title - the title of the video,
+            description - the description of the video.
     """
     from profiles.models import PlayerVideo, PlayerProfile
 

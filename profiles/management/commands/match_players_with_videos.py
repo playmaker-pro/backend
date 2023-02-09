@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
 from profiles.utils import match_player_videos
-import argparse
 
 
 class Command(BaseCommand):
