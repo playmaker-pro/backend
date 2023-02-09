@@ -28,3 +28,7 @@ class Manager:
     def anonymise_sensitive_data(self, *args, **kwargs):
         from .scripts import anonymise_sensitive_data
         self.run_action(anonymise_sensitive_data, *args, **kwargs)
+
+    def compose_urls(self, *args, **kwargs):
+        from .scripts import compose_urls
+        self.run_action(compose_urls, *args, **kwargs)

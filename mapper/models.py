@@ -50,7 +50,7 @@ class MapperEntity(models.Model):
     target = models.ForeignKey(Mapper, on_delete=models.CASCADE)
     mapper_id = models.CharField(max_length=100, null=True, blank=True)
     source = models.ForeignKey(MapperSource, on_delete=models.CASCADE)
-    url = models.URLField(max_length=300, null=True, blank=True)
+    url = models.URLField(max_length=500, null=True, blank=True)
     related_type = models.CharField(max_length=100, choices=RELATED_MODELS)
     database_source = models.CharField(max_length=100, choices=DATA_SOURCES)
     description = models.CharField(max_length=100, null=True, blank=True)
