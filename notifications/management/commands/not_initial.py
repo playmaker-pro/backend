@@ -1,10 +1,5 @@
-import csv
-import pprint
-
-from data.models import Player
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand, CommandError
-from notifications.mail import weekly_account_report
+from django.core.management.base import BaseCommand
 from notifications import models
 
 
