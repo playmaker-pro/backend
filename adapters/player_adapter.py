@@ -9,7 +9,7 @@ from pm_core.services.models import (
     PlayerSeasonStatsSchema,
 )
 from clubs.models import Season
-from .serializers import GameSerializer
+from .serializers import GameSerializer, StatsSerializer
 from mapper.models import Mapper
 from profiles.models import PlayerProfile
 from utils import get_current_season
@@ -21,6 +21,7 @@ from .exceptions import (
 from .base_adapter import BaseAdapter
 import logging
 from django.core.exceptions import ObjectDoesNotExist
+from .utils import resolve_stats_list
 
 logger = logging.getLogger(__name__)
 LATEST_SEASONS = Season.objects.all().order_by("-name")[:4]
@@ -133,6 +134,7 @@ class PlayerGamesAdapter(PlayerAdapterBase):
         self.clean_game_minutes()
 
     def get_latest_seasons_player_games(self):
+        """get games from last 4 seasons"""
         for season in LATEST_SEASONS:
             self.get_player_games(season.name)
 
@@ -143,9 +145,7 @@ class PlayerGamesAdapter(PlayerAdapterBase):
         for event_list in event_types:
             if event_list:
                 for event in event_list:
-                    if type(event.minute) is int:
-                        continue
-                    event.minute = int(event.minute.replace("'", ""))
+                    event.minute = int(str(event.minute).replace("'", ""))
 
     def resolve_minutes_on_substitutions(
         self, substitutions: typing.List[EventSchema]
@@ -176,15 +176,22 @@ class PlayerGamesAdapter(PlayerAdapterBase):
             if game.minutes > 90:
                 game.minutes = 90
 
-    def serialize(self, limit: int = None):
+    def serialize(self, limit: int = None) -> GameSerializer:
         """serialize games data, set limit(int) to limitate games count"""
         return GameSerializer(self.games, limit)
 
+    def clean(self) -> None:
+        """clear cached games data"""
+        self.games = []
+
 
 class PlayerSeasonStatsAdapter(PlayerAdapterBase):
+
+    stats: typing.List[PlayerSeasonStatsSchema] = []
+
     def get_season_stats(
-        self, season: str = get_current_season()
-    ) -> PlayerSeasonStatsSchema:
+        self, season: str = get_current_season(), primary_league: bool = True
+    ) -> None:
         """get predefined player stats"""
         player_id = self.player_uuid
         params = self.resolve_strategy()
@@ -194,15 +201,20 @@ class PlayerSeasonStatsAdapter(PlayerAdapterBase):
         if not data:
             raise ObjectNotFoundException(player_id, PlayerSeasonStatsSchema)
 
-        if len(data) > 1:
-            stats = self.resolve_stats_list(data)
+        if primary_league:
+            self.stats += [resolve_stats_list(data)]
         else:
-            stats = data[0]
+            self.stats += data
 
-        return stats
+    def get_latest_seasons_stats(self, primary_league: bool = True) -> None:
+        """get stats from last 4 seasons"""
+        for season in LATEST_SEASONS:
+            self.get_season_stats(season.name, primary_league)
 
-    def resolve_stats_list(
-        self, data: typing.List[PlayerSeasonStatsSchema]
-    ) -> PlayerSeasonStatsSchema:
-        """get most accurate stats based on played minutes in different leagues"""
-        return max(data, key=lambda stat: stat.minutes_played)
+    def serialize(self) -> StatsSerializer:
+        """Serialize stored by adapter stats"""
+        return StatsSerializer(self.stats)
+
+    def clean(self) -> None:
+        """clear cached games data"""
+        self.stats = []

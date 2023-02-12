@@ -6,17 +6,14 @@ from pm_core.services.models import (
     BaseTeamSchema,
 )
 from adapters.player_adapter import PlayerGamesAdapter
-from adapters.tests.base import BasePlayerUnitTest
+from adapters.tests.utils import get_adapter
 
 
-class PlayerGamesAdapterUnitTest(TestCase, BasePlayerUnitTest):
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        super(PlayerGamesAdapterUnitTest, cls).setUpClass()
-        cls.adapter = cls.define_adapter(PlayerGamesAdapter)
-        cls.adapter.get_player_games()
-        cls.games = cls.adapter.games
+class PlayerGamesAdapterUnitTest(TestCase):
+    def setUp(self) -> None:
+        self.adapter = get_adapter(PlayerGamesAdapter)
+        self.adapter.get_player_games()
+        self.games = self.adapter.games
 
     def test_games_structure(self):
         assert all(isinstance(game.league, BaseLeagueSchema) for game in self.games)
