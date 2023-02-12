@@ -1,13 +1,46 @@
 import typing
+from abc import abstractmethod
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
-from pm_core.services.models import GameSchema, BaseTeamSchema, EventSchema
-from adapters.exceptions import ObjectNotFoundException, WrongDataFormatException
-
+from pm_core.services.models import (
+    GameSchema,
+    EventSchema,
+    PlayerSeasonStatsSchema,
+)
+from adapters.exceptions import (
+    WrongDataFormatException,
+    DataShortageException,
+)
+from adapters.utils import resolve_stats_list
+from itertools import groupby
 from mapper.models import MapperEntity
+from utils import get_current_season
 
 
-class GameSerializer:
+class BasePlayerSerializer:
+    @property
+    @abstractmethod
+    def data(self) -> typing.Dict:
+        """data property abstract method"""
+        ...
+
+    def resolve_team_name(self, team_id: str) -> typing.Union[str, None]:
+        """get team name from s51"""
+        try:
+            team_entity = MapperEntity.objects.get(mapper_id=team_id)
+        except ObjectDoesNotExist:  # maybe display name from api in case?
+            return
+
+        return team_entity.target.teamhistory.team.name
+
+    def get_league_name(self, _id: str) -> str:
+        """get league name from s51 (scrapper has different league names)"""
+        entity = MapperEntity.objects.filter(mapper_id=_id).first()
+        if entity:
+            return entity.target.league_history.league.highest_parent.name
+
+
+class GameSerializer(BasePlayerSerializer):
     def __init__(self, data: typing.List[GameSchema], limit: int = None):
         """
         data - array of games
@@ -18,15 +51,6 @@ class GameSerializer:
 
         self.games = data
         self.limit = limit
-
-    def resolve_team_name(self, team_id: str) -> str:
-        """get team name from s51"""
-        try:
-            team_entity = MapperEntity.objects.get(mapper_id=team_id)
-        except ObjectDoesNotExist:  # maybe display name from api in case?
-            raise ObjectNotFoundException(team_id, BaseTeamSchema)
-
-        return team_entity.target.teamhistory.team.name
 
     def resolve_cards(self, cards: typing.List[EventSchema]) -> typing.Tuple[int, int]:
         """get count of cards from game"""
@@ -50,12 +74,6 @@ class GameSerializer:
             return self.parse_games()[: self.limit]
         return self.parse_games()
 
-    def league_name(self, _id: str) -> str:
-        """get league name from s51 (scrapper has different league names)"""
-        entity = MapperEntity.objects.filter(mapper_id=_id).first()
-        if entity:
-            return entity.target.league_history.league.highest_parent.name
-
     def parse_games(self):
         """translate new games data like old serializer"""
         games = []
@@ -71,9 +89,11 @@ class GameSerializer:
             team_goals = {game.host.name: host_score, game.guest.name: guest_score}
 
             parsed_game = {
-                "host_team_name": game.host.name,
-                "guest_team_name": game.guest.name,
-                "league_name": self.league_name(game.league.id) or game.league.name,
+                "host_team_name": self.resolve_team_name(game.host.id)
+                or game.host.name,
+                "guest_team_name": self.resolve_team_name(game.guest.id)
+                or game.guest.name,
+                "league_name": self.get_league_name(game.league.id) or game.league.name,
                 "goals": len(game.goals),
                 "date": self.format_date(game.dateTime, "%Y-%m-%d"),
                 "date_short": self.format_date(game.dateTime, "%m/%d"),
@@ -82,8 +102,14 @@ class GameSerializer:
                 "guest_score": guest_score,
                 "minutes_played": game.minutes,
                 "team_name": player_team.name,
-                "team_goals": team_goals[player_team.name],
+                "team_goals": len(game.goals),
+                "clear_goal": None,
             }
+
+            if game.minutes > 45 and team_goals[enemy_team.name] == 0:
+                parsed_game["clear_goal"] = True
+            elif game.minutes > 45 and team_goals[enemy_team.name] != 0:
+                parsed_game["clear_goal"] = False
 
             if team_goals[player_team.name] > team_goals[enemy_team.name]:
                 parsed_game["result"] = {"name": "W", "type": "won"}
@@ -102,3 +128,95 @@ class GameSerializer:
 
         games.sort(key=lambda g: g["date"], reverse=True)
         return games
+
+
+class StatsSerializer(BasePlayerSerializer):
+    def __init__(self, stats: typing.List[PlayerSeasonStatsSchema]) -> None:
+        """serializer responsible for preparing stats"""
+        self.stats = stats
+        if not stats:
+            raise DataShortageException(self, stats=stats)
+        if not isinstance(stats[0], PlayerSeasonStatsSchema):
+            raise WrongDataFormatException(
+                self, PlayerSeasonStatsSchema, type(stats[0])
+            )
+
+    @property
+    def data(self) -> typing.Dict:
+        """get all season stats based on data collected by adapter"""
+        return self.parse_season_stats()
+
+    @property
+    def data_summary(self) -> typing.Dict:
+        """get season summary stats based on data collected by adapter"""
+        return self.parse_season_summary_stats()
+
+    def calculate_percentages(self, var: int, total: int) -> float:
+        """return float value of percentage"""
+        return (var / total) * 100
+
+    def parse_season_summary_stats(
+        self, season: str = get_current_season()
+    ) -> typing.Dict:
+        """get season summary stats based on data collected by adapter"""
+        stats = list(filter(lambda stat: stat.season == "2022/2023", self.stats))
+        if len(stats) > 1:
+            stats = resolve_stats_list(stats)
+        elif len(stats) == 1:
+            stats = stats[0]
+        else:
+            raise DataShortageException(
+                obj=self, func_name="parse_season_summary_stats()", season=season
+            )
+
+        return {
+            "bench": stats.substitute,
+            "from_bench": stats.substitute_played,
+            "first_squad_games_played": stats.played_starter,
+            "red_cards": stats.red_cards,
+            "yellow_cards": stats.yellow_cards,
+            "team_goals": stats.goals,
+            "lost_goals": stats.goals_lost or 0,
+            "season_name": stats.season,
+            "games_played": stats.games_count,
+            "bench_percent": self.calculate_percentages(
+                stats.substitute, stats.games_count
+            ),
+            "first_percent": self.calculate_percentages(
+                stats.played_starter, stats.games_count
+            ),
+            "minutes_played": stats.minutes_played,
+            "from_bench_percent": self.calculate_percentages(
+                stats.substitute_played, stats.games_count
+            ),
+        }
+
+    def parse_season_stats(self) -> typing.Dict:
+        """get all season stats based on data collected by adapter"""
+        prepared_stats = {}
+
+        if len(self.stats) < 1:
+            raise DataShortageException(
+                obj=self, func_name="parse_season_stats()", stats=self.stats
+            )
+
+        for season, stats in groupby(self.stats, lambda stat: stat.season):
+            prepared_stats[season] = {}
+            for seq in list(stats):
+                league_name = self.get_league_name(seq.league.id) or seq.league.name
+                try:
+                    prepared_stats[season][league_name]
+                except KeyError:
+                    prepared_stats[season][league_name] = {}
+
+                prepared_stats[season][league_name][seq.team.name] = {
+                    "red_cards": seq.red_cards,
+                    "yellow_cards": seq.yellow_cards,
+                    "lost_goals": seq.goals_lost,
+                    "team_goals": seq.goals,
+                    "games_played": seq.games_count,
+                    "minutes_played": seq.minutes_played,
+                    "first_squad_games_played": seq.played_starter,
+                }
+
+        return prepared_stats

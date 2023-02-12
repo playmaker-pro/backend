@@ -1,23 +1,18 @@
 from django.test import TestCase
 from pm_core.services.models import EventSchema
-
 from adapters.serializers import GameSerializer
 from adapters.player_adapter import PlayerGamesAdapter
-from adapters.tests.base import BasePlayerUnitTest
+from adapters.tests.utils import get_adapter
 
 
-class GameSerializerUnitTest(TestCase, BasePlayerUnitTest):
-    serializer = None
-    games = None
-    adapter = None
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        super(GameSerializerUnitTest, cls).setUpClass()
-        cls.adapter = cls.define_adapter(PlayerGamesAdapter)
-        cls.games = cls.adapter.games
-        cls.serializer = GameSerializer(cls.games)
-        cls.data = cls.serializer.data
+class GameSerializerUnitTest(TestCase):
+    def setUp(self) -> None:
+        self.adapter = get_adapter(PlayerGamesAdapter)
+        self.adapter.clean()
+        self.adapter.get_player_games()
+        self.games = self.adapter.games
+        self.serializer = GameSerializer(self.games)
+        self.data = self.serializer.data
 
     def test_structure(self) -> None:
         """test structure of games"""

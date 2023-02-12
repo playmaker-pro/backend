@@ -5,7 +5,14 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 
 
-class PlayerHasNoMapperException(Exception):
+class BaseAdapterException(Exception):
+    msg = ""
+
+    def __str__(self) -> str:
+        return self.msg
+
+
+class PlayerHasNoMapperException(BaseAdapterException):
     """
     Exception if player has no mapper
     """
@@ -14,11 +21,8 @@ class PlayerHasNoMapperException(Exception):
         self.msg = f"Player with user id = {user_id} has no mapper."
         logger.error(self.msg)
 
-    def __str__(self) -> str:
-        return self.msg
 
-
-class PlayerMapperEntityNotFoundException(Exception):
+class PlayerMapperEntityNotFoundException(BaseAdapterException):
     """
     Exception if player's mapper has no desired entity
     """
@@ -27,11 +31,8 @@ class PlayerMapperEntityNotFoundException(Exception):
         self.msg = f"MapperEntity for params: {params} and player with user id = {user_id} not found."
         logger.error(self.msg)
 
-    def __str__(self) -> str:
-        return self.msg
 
-
-class ObjectNotFoundException(Exception):
+class ObjectNotFoundException(BaseAdapterException):
     """
     Exception if object was not found
     """
@@ -40,11 +41,8 @@ class ObjectNotFoundException(Exception):
         self.msg = f"{_type} with id = {_id} not found in database."
         logger.error(self.msg)
 
-    def __str__(self) -> str:
-        return self.msg
 
-
-class WrongDataFormatException(Exception):
+class WrongDataFormatException(BaseAdapterException):
     """
     Exception raised if object got incorrect data schema
     """
@@ -55,5 +53,12 @@ class WrongDataFormatException(Exception):
         self.msg = f"Wrong data format raised by {obj}, correct: {_need}, got: {_got}."
         logger.error(self.msg)
 
-    def __str__(self) -> str:
-        return self.msg
+
+class DataShortageException(BaseAdapterException):
+    """
+    Exception raised if there is not enough data to perform the action
+    """
+
+    def __init__(self, obj: object, func_name: str = "", **kwargs) -> None:
+        self.msg = f"Method {func_name} of object {obj} has not enough data for params {kwargs} to perfom the action."
+        logger.error(self.msg)

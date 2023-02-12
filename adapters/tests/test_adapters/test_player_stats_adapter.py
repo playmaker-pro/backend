@@ -1,22 +1,27 @@
 from django.test import TestCase
 from pm_core.services.models import PlayerSeasonStatsSchema
-
 from adapters.player_adapter import PlayerSeasonStatsAdapter
-from adapters.tests.base import BasePlayerUnitTest
+from adapters.tests.utils import get_adapter
 
 
-class PlayerStatsAdapterUnitTest(TestCase, BasePlayerUnitTest):
-    @classmethod
-    def setUpClass(cls) -> None:
-        super(PlayerStatsAdapterUnitTest, cls).setUpClass()
-        cls.adapter = cls.define_adapter(PlayerSeasonStatsAdapter)
-        cls.stats = cls.adapter.get_season_stats()
+class PlayerStatsAdapterUnitTest(TestCase):
+    def setUp(self) -> None:
+        self.adapter = get_adapter(PlayerSeasonStatsAdapter)
+        self.adapter.clean()
 
-    def test_structure(self):
-        assert (
-            self.stats.percentage_substitute
-            + self.stats.percentage_substitute_played
-            + self.stats.percentage_played_starter
-            == 100
-        )
-        assert isinstance(self.stats, PlayerSeasonStatsSchema)
+    def test_season_stats_structure(self):
+        """test structure of data stored by adapter"""
+        self.adapter.get_season_stats(primary_league=False)
+        stats = self.adapter.stats
+
+        for stat in stats:
+            assert (
+                stat.played_starter + stat.substitute_played + stat.substitute
+                == stat.games_count
+            )
+            assert isinstance(stat, PlayerSeasonStatsSchema)
+
+    def test_season_summary_stats_structure(self):
+        self.adapter.get_season_stats()
+        stats = self.adapter.stats
+        assert isinstance(stats[0], PlayerSeasonStatsSchema)
