@@ -6,10 +6,12 @@ from pm_core.services.models.models import (
     BaseLeagueSchema,
 )
 from adapters.player_adapter import PlayerDataAdapter
-from adapters.tests.factories import _ID
+from utils.factories.mapper_factories import ID
 from adapters.tests.utils import get_adapter
+import pytest
 
 
+@pytest.mark.django_db
 class PlayerDataAdapterUnitTest(TestCase):
     def setUp(self) -> None:
         self.adapter = get_adapter(PlayerDataAdapter)
@@ -17,7 +19,7 @@ class PlayerDataAdapterUnitTest(TestCase):
     def test_get_player_uuid(self) -> None:
         """test user has uuid"""
         _id = self.adapter.player_uuid
-        assert _id == _ID
+        assert _id == ID
 
     def test_player_data(self) -> None:
         """test player data is correct"""

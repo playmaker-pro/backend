@@ -3,8 +3,10 @@ from pm_core.services.models import EventSchema
 from adapters.serializers import GameSerializer
 from adapters.player_adapter import PlayerGamesAdapter
 from adapters.tests.utils import get_adapter
+import pytest
 
 
+@pytest.mark.django_db
 class GameSerializerUnitTest(TestCase):
     def setUp(self) -> None:
         self.adapter = get_adapter(PlayerGamesAdapter)

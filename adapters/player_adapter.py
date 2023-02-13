@@ -1,5 +1,4 @@
 import typing
-
 from pm_core.services.models import (
     PlayerBaseSchema,
     TeamSchema,
@@ -59,7 +58,10 @@ class PlayerAdapterBase(BaseAdapter):
         uuid straight from LNP
         """
         mapper = self.get_player_mapper()
-        params = {"database_source": "scrapper_mongodb", "related_type": "player"}
+        params = {
+            "database_source": "scrapper_mongodb",
+            "related_type": "player",
+        }
         mapper_entity = mapper.get_entity(**params)
         if not mapper_entity:
             raise PlayerMapperEntityNotFoundException(self.player.user.id, params)
@@ -131,7 +133,18 @@ class PlayerGamesAdapter(PlayerAdapterBase):
             raise ObjectNotFoundException(player_id, GameSchema)
 
         self.games += games
+        self.unique()
         self.clean_game_minutes()
+
+    def unique(self):
+        """filter unique games object from array"""
+        unique_ids = []
+        unique_objects = []
+        for game in self.games:
+            if game.matchId not in unique_ids:
+                unique_objects.append(game)
+                unique_ids.append(game.matchId)
+        self.games = unique_objects
 
     def get_latest_seasons_player_games(self):
         """get games from last 4 seasons"""
@@ -205,6 +218,18 @@ class PlayerSeasonStatsAdapter(PlayerAdapterBase):
             self.stats += [resolve_stats_list(data)]
         else:
             self.stats += data
+
+        self.unique()
+
+    def unique(self):
+        """filter unique stats object from array"""
+        unique_ids = []
+        unique_objects = []
+        for stat in self.stats:
+            if stat.team.id not in unique_ids:
+                unique_objects.append(stat)
+                unique_ids.append(stat.team.id)
+        self.stats = unique_objects
 
     def get_latest_seasons_stats(self, primary_league: bool = True) -> None:
         """get stats from last 4 seasons"""

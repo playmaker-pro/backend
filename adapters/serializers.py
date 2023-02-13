@@ -86,7 +86,10 @@ class GameSerializer(BasePlayerSerializer):
             enemy_team = game.guest if player_team is game.host else game.host
             host_score, guest_score = final_result.split(":")
 
-            team_goals = {game.host.name: host_score, game.guest.name: guest_score}
+            team_goals = {
+                game.host.name: host_score,
+                game.guest.name: guest_score,
+            }
 
             parsed_game = {
                 "host_team_name": self.resolve_team_name(game.host.id)
@@ -159,14 +162,16 @@ class StatsSerializer(BasePlayerSerializer):
         self, season: str = get_current_season()
     ) -> typing.Dict:
         """get season summary stats based on data collected by adapter"""
-        stats = list(filter(lambda stat: stat.season == "2022/2023", self.stats))
+        stats = list(filter(lambda stat: stat.season == season, self.stats))
         if len(stats) > 1:
             stats = resolve_stats_list(stats)
         elif len(stats) == 1:
             stats = stats[0]
         else:
             raise DataShortageException(
-                obj=self, func_name="parse_season_summary_stats()", season=season
+                obj=self,
+                func_name="parse_season_summary_stats()",
+                season=season,
             )
 
         return {

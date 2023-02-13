@@ -3,6 +3,8 @@ from pm_core.stubs.base import BaseApiServiceStub
 from adapters.strategy import Strategy
 from pm_core.services.scrapper_service import ScrapperAPI
 
+API_METHOD = typing.Union[ScrapperAPI, BaseApiServiceStub]
+
 
 class BaseAdapter:
     """Base adapter class"""
@@ -10,14 +12,12 @@ class BaseAdapter:
     def __init__(
         self,
         strategy: typing.Type[Strategy],
-        api_method: typing.Type[
-            typing.Union[ScrapperAPI, BaseApiServiceStub]
-        ] = ScrapperAPI,
+        api_method: typing.Type[API_METHOD] = ScrapperAPI,
         meta: typing.Dict = None,
     ) -> None:
         self.strategy: Strategy = strategy()
         self.meta: typing.Dict = meta
-        self.api: typing.Union[ScrapperAPI, BaseApiServiceStub] = api_method()
+        self.api: API_METHOD = api_method()
 
     def resolve_strategy(self) -> typing.Dict:
         """
