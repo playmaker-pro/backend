@@ -4,7 +4,7 @@ import logging
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
-
+import pkg_resources
 
 # This loads additional settings for our environemnt
 CONFIGURATION = "dev"  # following options are allowed ['dev', 'production', 'staging']
@@ -19,7 +19,7 @@ BASE_URL = "http://localhost:8000"
 
 
 VERSION = "1.3.16"
-
+PM_CORE_VERSION = "1.0.0"
 
 SYSTEM_USER_EMAIL = "rafal.kesik@gmail.com"
 
@@ -606,6 +606,14 @@ try:
 except Exception as e:
     print(f"No local settings. {e}")
 
+try:
+    local_pm_core_version = pkg_resources.get_distribution("pm-core").version
+    if local_pm_core_version != PM_CORE_VERSION:
+        print(
+            f"Webapp depends on pm-core({PM_CORE_VERSION}), found: pm-core({local_pm_core_version})."
+        )
+except ModuleNotFoundError as e:
+    print(e, "\nSee README.md how to install.")
 
 try:
     from backend.settings.data_settings import *
