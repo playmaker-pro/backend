@@ -1,9 +1,11 @@
 from django.test import TestCase
 from adapters.player_adapter import PlayerSeasonStatsAdapter
 from adapters.tests.utils import get_adapter
+import pytest
 
 
-class GameSerializerUnitTest(TestCase):
+@pytest.mark.django_db
+class StatsSerializerUnitTest(TestCase):
     def setUp(self) -> None:
         self.adapter = get_adapter(PlayerSeasonStatsAdapter)
         self.adapter.get_season_stats()

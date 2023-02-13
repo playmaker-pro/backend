@@ -8,7 +8,8 @@ from adapters.player_adapter import (
     PlayerSeasonStatsAdapter,
 )
 from adapters.strategy import JustGet
-from adapters.tests.factories import PlayerProfileFactory, MapperEntityFactory
+from utils.factories.profiles_factories import PlayerProfileFactory
+from utils.factories.mapper_factories import MapperEntityFactory
 
 PLAYER_DEFAULT_TYPEHINT = typing.Union[
     PlayerSeasonStatsAdapter, PlayerDataAdapter, PlayerGamesAdapter
@@ -25,5 +26,7 @@ def get_adapter(
     adapter: typing.Type[PLAYER_DEFAULT_TYPEHINT],
 ) -> PLAYER_DEFAULT_TYPEHINT:
     return adapter(
-        player=dummy_player(), api_method=PlayerApiServiceStub, strategy=JustGet
+        player=dummy_player(),
+        api_method=PlayerApiServiceStub,
+        strategy=JustGet,
     )

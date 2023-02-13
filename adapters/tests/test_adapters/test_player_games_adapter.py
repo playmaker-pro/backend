@@ -7,8 +7,10 @@ from pm_core.services.models import (
 )
 from adapters.player_adapter import PlayerGamesAdapter
 from adapters.tests.utils import get_adapter
+import pytest
 
 
+@pytest.mark.django_db
 class PlayerGamesAdapterUnitTest(TestCase):
     def setUp(self) -> None:
         self.adapter = get_adapter(PlayerGamesAdapter)
@@ -16,6 +18,7 @@ class PlayerGamesAdapterUnitTest(TestCase):
         self.games = self.adapter.games
 
     def test_games_structure(self):
+        """test games structure"""
         assert all(isinstance(game.league, BaseLeagueSchema) for game in self.games)
         assert all(isinstance(game.host, BaseTeamSchema) for game in self.games)
         assert all(isinstance(game.guest, BaseTeamSchema) for game in self.games)
