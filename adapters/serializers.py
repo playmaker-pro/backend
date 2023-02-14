@@ -6,6 +6,7 @@ from pm_core.services.models import (
     GameSchema,
     EventSchema,
     PlayerSeasonStatsSchema,
+    PlayersSeasonStatsSchema,
 )
 from adapters.exceptions import (
     WrongDataFormatException,
@@ -37,7 +38,7 @@ class BasePlayerSerializer:
         """get league name from s51 (scrapper has different league names)"""
         entity = MapperEntity.objects.filter(mapper_id=_id).first()
         if entity:
-            return entity.target.league_history.league.highest_parent.name
+            return entity.target.leaguehistory.league.highest_parent.name
 
 
 class GameSerializer(BasePlayerSerializer):
@@ -134,7 +135,7 @@ class GameSerializer(BasePlayerSerializer):
 
 
 class StatsSerializer(BasePlayerSerializer):
-    def __init__(self, stats: typing.List[PlayerSeasonStatsSchema]) -> None:
+    def __init__(self, stats: PlayersSeasonStatsSchema) -> None:
         """serializer responsible for preparing stats"""
         self.stats = stats
         if not stats:
@@ -162,11 +163,13 @@ class StatsSerializer(BasePlayerSerializer):
         self, season: str = get_current_season()
     ) -> typing.Dict:
         """get season summary stats based on data collected by adapter"""
-        stats = list(filter(lambda stat: stat.season == season, self.stats))
-        if len(stats) > 1:
-            stats = resolve_stats_list(stats)
-        elif len(stats) == 1:
-            stats = stats[0]
+        stats_list: PlayersSeasonStatsSchema = PlayersSeasonStatsSchema(
+            __root__=list(filter(lambda stat: stat.season == season, self.stats))
+        )
+        if len(stats_list) > 1:
+            stats = resolve_stats_list(stats_list)
+        elif len(stats_list) == 1:
+            stats = stats_list[0]
         else:
             raise DataShortageException(
                 obj=self,
