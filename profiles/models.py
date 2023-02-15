@@ -757,7 +757,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     facebook_url = models.URLField(_("Facebook"), max_length=500, blank=True, null=True)
 
     mapper = models.OneToOneField(
-        Mapper, on_delete=models.CASCADE, blank=True, null=True
+        Mapper, on_delete=models.SET_NULL, blank=True, null=True
     )
     # laczynaspilka_url, min90_url, transfermarket_url data will be migrated into PlayerMapper and then those fields will be deleted
     laczynaspilka_url = models.URLField(_("LNP"), max_length=500, blank=True, null=True)
@@ -1344,7 +1344,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     phone = models.CharField(_("Telefon"), max_length=15, blank=True, null=True)
     facebook_url = models.URLField(_("Facebook"), max_length=500, blank=True, null=True)
     mapper = models.OneToOneField(
-        Mapper, on_delete=models.CASCADE, blank=True, null=True
+        Mapper, on_delete=models.SET_NULL, blank=True, null=True
     )
     country = CountryField(
         _("Country"),
