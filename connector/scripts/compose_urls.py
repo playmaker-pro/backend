@@ -22,6 +22,7 @@ FEMALE_LEAGUE_IDs = {
 ZPNs = {
     "Dolnośląskie": "eaa01464-22b2-422a-835f-7835bb50990a",
     "Kujawsko-pomorskie": "f8bd567f-72de-4328-8326-187ad4da031e",
+    "Kujawsko-Pomorskie": "f8bd567f-72de-4328-8326-187ad4da031e",
     "Łódzkie": "15b4a3b3-b787-440e-9282-ee5549a97d76",
     "Lubelskie": "76fb0431-52a4-4106-9a5c-cf5af80c11a9",
     "Lubuskie": "48722694-be4b-44d6-b5af-320308f84f50",
@@ -34,6 +35,7 @@ ZPNs = {
     "Śląskie": "52600a9d-dc9e-4002-9798-52d1ad8c0181",
     "Świętokrzyskie": "8e6b2e2a-2c6f-46a5-8ab6-642c3a4661d0",
     "Warmińsko-mazurskie": "e838d72f-747e-4904-942b-8dafb5bb41b5",
+    "Warmińsko-Mazurskie": "e838d72f-747e-4904-942b-8dafb5bb41b5",
     "Wielkopolskie": "f3211030-22aa-4549-ab47-c99376281ac8",
     "Zachodniopomorskie": "a2d6b609-b11a-46c8-bced-fe2ebe51e9db",
 }
@@ -244,6 +246,7 @@ class Command(BaseCommand):
     Create mocked LNP urls for mappers (club, team, league)
     Based on enums above
     """
+
     def handle(self) -> None:
         self.map_urls()
         self.map_league_urls(MALE_LEAGUES, "Male")
@@ -324,7 +327,10 @@ class Command(BaseCommand):
                         if not teams_in_lh:
                             continue
                         zpn = teams_in_lh[0].team.club.voivodeship_obj
-                        params["voivodeship"] = ZPNs[zpn.name]
+                        try:
+                            params["voivodeship"] = ZPNs[zpn.name]
+                        except KeyError:
+                            continue
 
                     elif required_params == "Play":
                         params["group"] = play_entity.mapper_id
