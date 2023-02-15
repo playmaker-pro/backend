@@ -7,6 +7,7 @@ from pm_core.services.models import (
     EventSchema,
     PlayerSeasonStatsSchema,
 )
+from pm_core.services.models.consts import ExcludedLeague, DEFAULT_LEAGUE_EXCLUDE
 from clubs.models import Season
 from .serializers import GameSerializer, StatsSerializer
 from mapper.models import Mapper
@@ -119,12 +120,16 @@ class PlayerGamesAdapter(PlayerAdapterBase):
 
     games: typing.List[GameSchema] = []
 
-    def get_player_games(self, season: str = get_current_season()) -> None:
+    def get_player_games(
+        self,
+        season: str = get_current_season(),
+        exlude_leagues: typing.List[ExcludedLeague] = DEFAULT_LEAGUE_EXCLUDE,
+    ) -> None:
         """get player games based on season"""
         player_id = self.player_uuid
         params = self.resolve_strategy()
         params["season"] = season.replace("/", "%2F")
-
+        params["exclude_leagues"] = "+".join([league.name for league in exlude_leagues])
         games = self.api.get_player_participant_games(
             player_id=player_id, params=params
         )
@@ -203,12 +208,17 @@ class PlayerSeasonStatsAdapter(PlayerAdapterBase):
     stats: typing.List[PlayerSeasonStatsSchema] = []
 
     def get_season_stats(
-        self, season: str = get_current_season(), primary_league: bool = True
+        self,
+        season: str = get_current_season(),
+        primary_league: bool = True,
+        exlude_leagues: typing.List[ExcludedLeague] = DEFAULT_LEAGUE_EXCLUDE,
     ) -> None:
         """get predefined player stats"""
         player_id = self.player_uuid
         params = self.resolve_strategy()
         params["season"] = season.replace("/", "%2F")
+        params["exclude_leagues"] = "+".join([league.name for league in exlude_leagues])
+
         data = self.api.get_player_season_stats(player_id=player_id, params=params)
 
         if not data:
