@@ -105,7 +105,7 @@ class Club(models.Model, MappingMixin):
     )
 
     mapper = models.OneToOneField(
-        Mapper, on_delete=models.CASCADE, blank=True, null=True
+        Mapper, on_delete=models.SET_NULL, blank=True, null=True
     )
 
     manager = models.OneToOneField(
@@ -255,7 +255,7 @@ class LeagueHistory(models.Model):
     data = models.JSONField(null=True, blank=True)
     data_updated = models.DateTimeField(auto_now=True)
     mapper = models.OneToOneField(
-        Mapper, on_delete=models.CASCADE, blank=True, null=True
+        Mapper, on_delete=models.SET_NULL, blank=True, null=True
     )
 
     league_name_raw = models.CharField(
@@ -616,7 +616,7 @@ class Team(models.Model, MappingMixin):
     )
 
     mapper = models.OneToOneField(
-        Mapper, on_delete=models.CASCADE, blank=True, null=True
+        Mapper, on_delete=models.SET_NULL, blank=True, null=True
     )
 
     slug = models.CharField(max_length=255, blank=True, editable=False)
@@ -890,7 +890,7 @@ class TeamHistory(models.Model):
     )
 
     mapper = models.OneToOneField(
-        Mapper, on_delete=models.CASCADE, blank=True, null=True
+        Mapper, on_delete=models.SET_NULL, blank=True, null=True
     )
 
     visible = models.BooleanField(default=True)
