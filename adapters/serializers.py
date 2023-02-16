@@ -122,11 +122,9 @@ class GameSerializer(BasePlayerSerializer):
             else:
                 parsed_game["result"] = {"name": "R", "type": "draw"}
 
-            if game.cards:
-                (
-                    parsed_game["yellow_cards"],
-                    parsed_game["red_cards"],
-                ) = self.resolve_cards(game.cards)
+            parsed_game["yellow_cards"], parsed_game["red_cards"] = self.resolve_cards(
+                game.cards
+            )
 
             games.append(parsed_game)
 
