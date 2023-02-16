@@ -6,7 +6,7 @@ from pm_core.services.models import (
     GameSchema,
     EventSchema,
     PlayerSeasonStatsSchema,
-    PlayersSeasonStatsSchema,
+    PlayerSeasonStatsListSchema,
 )
 from adapters.exceptions import (
     WrongDataFormatException,
@@ -135,7 +135,7 @@ class GameSerializer(BasePlayerSerializer):
 
 
 class StatsSerializer(BasePlayerSerializer):
-    def __init__(self, stats: PlayersSeasonStatsSchema) -> None:
+    def __init__(self, stats: PlayerSeasonStatsListSchema) -> None:
         """serializer responsible for preparing stats"""
         self.stats = stats
         if not stats:
@@ -163,7 +163,7 @@ class StatsSerializer(BasePlayerSerializer):
         self, season: str = get_current_season()
     ) -> typing.Dict:
         """get season summary stats based on data collected by adapter"""
-        stats_list: PlayersSeasonStatsSchema = PlayersSeasonStatsSchema(
+        stats_list: PlayerSeasonStatsListSchema = PlayerSeasonStatsListSchema(
             __root__=list(filter(lambda stat: stat.season == season, self.stats))
         )
         if len(stats_list) > 1:
