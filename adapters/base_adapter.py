@@ -1,9 +1,9 @@
 import typing
-from pm_core.stubs.base import BaseApiServiceStub
+from pm_core.stubs.base import ScrapperAPIStub
 from adapters.strategy import Strategy
 from pm_core.services.scrapper_service import ScrapperAPI
 
-API_METHOD = typing.Union[ScrapperAPI, BaseApiServiceStub]
+API_METHOD = typing.Union[ScrapperAPI, ScrapperAPIStub]
 
 
 class BaseAdapter:

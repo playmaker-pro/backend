@@ -123,7 +123,7 @@ class PlayerGamesAdapter(PlayerAdapterBase):
         """get player games based on season"""
         player_id = self.player_uuid
         params = self.resolve_strategy()
-        params["season"] = season.replace("/", "%2F")
+        params["season"] = season
 
         games = self.api.get_player_participant_games(
             player_id=player_id, params=params
@@ -208,7 +208,7 @@ class PlayerSeasonStatsAdapter(PlayerAdapterBase):
         """get predefined player stats"""
         player_id = self.player_uuid
         params = self.resolve_strategy()
-        params["season"] = season.replace("/", "%2F")
+        params["season"] = season
         data = self.api.get_player_season_stats(player_id=player_id, params=params)
 
         if not data:
