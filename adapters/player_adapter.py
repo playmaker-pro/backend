@@ -158,6 +158,7 @@ class PlayerGamesAdapter(PlayerAdapterBase):
         for event_list in event_types:
             if event_list:
                 for event in event_list:
+                    event.minute = str(event.minute).split("+")[0]
                     event.minute = int(str(event.minute).replace("'", ""))
 
     def resolve_minutes_on_substitutions(
@@ -183,7 +184,7 @@ class PlayerGamesAdapter(PlayerAdapterBase):
         for game in self.games:
             self.parse_events_time(game)
 
-            if not game.minutes:
+            if game.minutes is None:
                 game.minutes = self.resolve_minutes_on_substitutions(game.substitutions)
 
             if game.minutes > 90:
