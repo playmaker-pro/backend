@@ -495,29 +495,36 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
             kwargs["seo_object_image"] = None
 
         if user.profile.has_data_id and user.profile.PROFILE_TYPE == "player":
-            _id = int(user.profile.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
+            # _id = int(
+            #     user.profile.mapper.get_entity(
+            #         related_type="player", database_source="s38"
+            #     ).mapper_id
+            # )
             # kwargs["last_games"] = adapters.PlayerAdapter._get_user_last_games(_id)
-            season_name = get_current_season()
+            # season_name = get_current_season()
             metrics = user.profile.playermetrics
-            if (
-                metrics.how_old_days(games_summary=True) >= 7
-                or metrics.how_old_days(fantasy_summary=True) >= 7
-                or metrics.how_old_days(season_summary=True) >= 7
-            ):
-                games_summary = adapters.PlayerLastGamesAdapter(_id).get(
-                    season=season_name, limit=3
-                )  # should be profile.playermetrics.refresh_games_summary() and putted to celery.
-                fantasy_summary = adapters.PlayerFantasyDataAdapter(_id).get(
-                    season=season_name
-                )
-                season_summary = adapters.PlayerStatsSeasonAdapter(_id).get(
-                    season=season_name
-                )
-                metrics.update_summaries(games_summary, season_summary, fantasy_summary)
-            else:
-                games_summary = metrics.games_summary
-                fantasy_summary = metrics.fantasy_summary
-                season_summary = metrics.season_summary
+
+            # TODO: Temporary, w przyszłości zostanie rozwiązane przez Strategy
+
+            # if (
+            #     metrics.how_old_days(games_summary=True) >= 7
+            #     # or metrics.how_old_days(fantasy_summary=True) >= 7
+            #     or metrics.how_old_days(season_summary=True) >= 7
+            # ):
+            #     games_summary = adapters.PlayerLastGamesAdapter(_id).get(
+            #         season=season_name, limit=3
+            #     )  # should be profile.playermetrics.refresh_games_summary() and putted to celery.
+            #     fantasy_summary = adapters.PlayerFantasyDataAdapter(_id).get(
+            #         season=season_name
+            #     )
+            #     season_summary = adapters.PlayerStatsSeasonAdapter(_id).get(
+            #         season=season_name
+            #     )
+            #     metrics.update_summaries(games_summary, season_summary, fantasy_summary)
+            # else:
+            games_summary = metrics.games_summary
+            fantasy_summary = metrics.fantasy_summary
+            season_summary = metrics.season_summary
 
             kwargs["last_games"] = games_summary
             kwargs["fantasy"] = fantasy_summary

@@ -128,7 +128,7 @@ class PlayerGamesAdapter(PlayerAdapterBase):
         """get player games based on season"""
         player_id = self.player_uuid
         params = self.resolve_strategy()
-        params["season"] = season.replace("/", "%2F")
+        params["season"] = season
         params["exclude_leagues"] = "+".join([league.name for league in exlude_leagues])
         games = self.api.get_player_participant_games(
             player_id=player_id, params=params
@@ -163,6 +163,7 @@ class PlayerGamesAdapter(PlayerAdapterBase):
         for event_list in event_types:
             if event_list:
                 for event in event_list:
+                    event.minute = str(event.minute).split("+")[0]
                     event.minute = int(str(event.minute).replace("'", ""))
 
     def resolve_minutes_on_substitutions(
@@ -188,7 +189,7 @@ class PlayerGamesAdapter(PlayerAdapterBase):
         for game in self.games:
             self.parse_events_time(game)
 
-            if not game.minutes:
+            if game.minutes is None:
                 game.minutes = self.resolve_minutes_on_substitutions(game.substitutions)
 
             if game.minutes > 90:
@@ -216,7 +217,7 @@ class PlayerSeasonStatsAdapter(PlayerAdapterBase):
         """get predefined player stats"""
         player_id = self.player_uuid
         params = self.resolve_strategy()
-        params["season"] = season.replace("/", "%2F")
+        params["season"] = season
         params["exclude_leagues"] = "+".join([league.name for league in exlude_leagues])
 
         data = self.api.get_player_season_stats(player_id=player_id, params=params)
