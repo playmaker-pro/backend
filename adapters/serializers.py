@@ -16,7 +16,6 @@ from adapters.exceptions import (
 from adapters.utils import resolve_stats_list
 from itertools import groupby
 from mapper.models import MapperEntity
-from utils import get_current_season
 
 
 class BasePlayerSerializer:
@@ -158,9 +157,13 @@ class StatsSerializer(BasePlayerSerializer):
         return (var / total) * 100
 
     def parse_season_summary_stats(
-        self, season: str = get_current_season()
+        self, season: str = None
     ) -> typing.Optional[typing.Dict]:
         """get season summary stats based on data collected by adapter"""
+        from utils import get_current_season
+
+        if not season:
+            season = get_current_season()
         stats_list: PlayerSeasonStatsListSchema = PlayerSeasonStatsListSchema(
             __root__=list(filter(lambda stat: stat.season == season, self.stats))
         )

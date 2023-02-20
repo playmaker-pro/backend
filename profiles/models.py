@@ -651,21 +651,21 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
     )
     team_object = models.ForeignKey(
-        clubs_models.Team,
+        "clubs.Team",
         on_delete=models.SET_NULL,
         related_name="players",
         null=True,
         blank=True,
     )
     team_history_object = models.ForeignKey(
-        clubs_models.TeamHistory,
+        "clubs.TeamHistory",
         on_delete=models.SET_NULL,
         related_name="players",
         null=True,
         blank=True,
     )
     team_object_alt = models.ForeignKey(
-        clubs_models.Team,
+        "clubs.Team",
         on_delete=models.SET_NULL,
         related_name="players_alt",
         null=True,
@@ -1263,7 +1263,7 @@ class ClubProfile(BaseProfile):
         return False
 
     club_object = models.ForeignKey(
-        clubs_models.Club,
+        "clubs.Club",
         on_delete=models.SET_NULL,
         related_name="clubowners",
         db_index=True,
@@ -1354,14 +1354,14 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
 
     team_object = models.ForeignKey(
-        clubs_models.Team,
+        "clubs.Team",
         on_delete=models.SET_NULL,
         related_name="coaches",
         null=True,
         blank=True,
     )
     team_history_object = models.ForeignKey(
-        clubs_models.TeamHistory,
+        "clubs.TeamHistory",
         on_delete=models.SET_NULL,
         related_name="players_history",
         null=True,
