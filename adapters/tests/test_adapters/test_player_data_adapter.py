@@ -15,6 +15,7 @@ import pytest
 class PlayerDataAdapterUnitTest(TestCase):
     def setUp(self) -> None:
         self.adapter = get_adapter(PlayerDataAdapter)
+        self.adapter.get_player_data()
 
     def test_get_player_uuid(self) -> None:
         """test user has uuid"""

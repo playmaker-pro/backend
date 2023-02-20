@@ -14,6 +14,11 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 
+from adapters.player_adapter import (
+    PlayerGamesAdapter,
+    PlayerSeasonStatsAdapter,
+)
+
 # from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
 from roles import definitions
 from stats.adapters import PlayerAdapter
@@ -1051,6 +1056,8 @@ class PlayerMetrics(models.Model):
     season_updated = models.DateTimeField(null=True, blank=True)
 
     def _update_cached_field(self, attr: str, data, commit=True):
+        if not data:
+            return
         setattr(self, attr, data)
         setattr(self, f"{attr}_updated", timezone.now())
         if commit:
@@ -1063,41 +1070,64 @@ class PlayerMetrics(models.Model):
         get metrics from api and save into model
         fantasy is currently unavailable
         """
-        from adapters.player_adapter import (
-            PlayerGamesAdapter,
-            PlayerSeasonStatsAdapter,
-        )
-
-        player_obj = getattr(self, "player")
-
         start = datetime.now()
-        stats_adapter = PlayerSeasonStatsAdapter(
-            player=player_obj,
-            strategy=strategy.AlwaysUpdate,
-            api_method=method,
-        )
-        stats_adapter.get_latest_seasons_stats(primary_league=False)
-        serializer = stats_adapter.serialize()
-        stats = serializer.data
-        stats_summary = serializer.data_summary
+        stats = self.get_season_data(method)
+        stats_summary = self.get_season_summary_data(method)
         self.update_season(stats)
         print(f"\t> PlayerStatsSeasonAdapter: {datetime.now() - start}")
 
         start = datetime.now()
-        games_adapter = PlayerGamesAdapter(
-            player=player_obj,
-            strategy=strategy.AlwaysUpdate,
-            api_method=method,
-        )
-        games_adapter.get_latest_seasons_player_games()
-        serializer = games_adapter.serialize()
-        games = serializer.data
+        games = self.get_games_data(method)
         games_summary = games[:3]
         self.update_games(games)
         print(f"\t> PlayerLastGamesAdapter: {datetime.now() - start}")
 
         self.update_summaries(games_summary, stats_summary, None)
         self.save()
+
+    def get_games_data(
+        self, method: typing.Type[API_METHOD] = ScrapperAPI
+    ) -> typing.List:
+        player_obj = getattr(self, "player")
+        games_adapter = PlayerGamesAdapter(
+            player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
+        )
+        games_adapter.get_latest_seasons_player_games()
+        serializer = games_adapter.serialize()
+        return serializer.data
+
+    def get_games_summary_data(
+        self, method: typing.Type[API_METHOD] = ScrapperAPI
+    ) -> typing.List:
+        player_obj = getattr(self, "player")
+        games_adapter = PlayerGamesAdapter(
+            player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
+        )
+        games_adapter.get_player_games()
+        serializer = games_adapter.serialize(limit=3)
+        return serializer.data
+
+    def get_season_data(
+        self, method: typing.Type[API_METHOD] = ScrapperAPI
+    ) -> typing.Dict:
+        player_obj = getattr(self, "player")
+        stats_adapter = PlayerSeasonStatsAdapter(
+            player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
+        )
+        stats_adapter.get_latest_seasons_stats(primary_league=False)
+        serializer = stats_adapter.serialize()
+        return serializer.data
+
+    def get_season_summary_data(
+        self, method: typing.Type[API_METHOD] = ScrapperAPI
+    ) -> typing.Dict:
+        player_obj = getattr(self, "player")
+        stats_adapter = PlayerSeasonStatsAdapter(
+            player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
+        )
+        stats_adapter.get_season_stats()
+        serializer = stats_adapter.serialize()
+        return serializer.data_summary
 
     def update_summaries(self, games, season, fantasy):
         self.update_games_summary(games, commit=False)

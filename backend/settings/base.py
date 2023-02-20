@@ -471,6 +471,12 @@ def get_logging_structure(LOGFILE_ROOT):
                 "filename": join(LOGFILE_ROOT, "route.updater.log"),
                 "formatter": "verbose",
             },
+            "adapters": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "adapters.log"),
+                "formatter": "verbose",
+            },
             "console": {
                 "level": "DEBUG",
                 "class": "logging.StreamHandler",
@@ -485,6 +491,10 @@ def get_logging_structure(LOGFILE_ROOT):
             "django": {
                 "handlers": ["django_log_file"],
                 "propagate": True,
+                "level": "ERROR",
+            },
+            "adapters": {
+                "handlers": ["adapters"],
                 "level": "ERROR",
             },
             "project": {
