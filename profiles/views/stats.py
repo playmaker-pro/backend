@@ -68,7 +68,11 @@ class ProfileFantasy(ProfileStatsPageView):
 
     def get_data_or_calculate(self, user):
         season_name = get_current_season()
-        _id = int(user.profile.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
+        _id = int(
+            user.profile.mapper.get_entity(
+                related_type="player", database_source="s38"
+            ).mapper_id
+        )
         if (
             user.profile.playermetrics.how_old_days(fantasy=True) >= 7
             and user.profile.has_data_id
@@ -85,13 +89,13 @@ class ProfileCarrierRows(ProfileStatsPageView):
     page_title = _("Twoja kariera")
 
     def get_data_or_calculate(self, user):
-        _id = int(user.profile.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
         if (
             user.profile.playermetrics.how_old_days(games=True) >= 7
             and user.profile.has_data_id
         ):
-            season = adapters.PlayerStatsSeasonAdapter(_id).get(groupped=True)
+            season = user.profile.playermetrics.get_season_data()
             user.profile.playermetrics.update_season(season)
+
         user.profile.playermetrics.refresh_from_db()
         if user.profile.playermetrics.season is None:
             return []
@@ -117,13 +121,13 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
     def get_data_or_calculate(self, user):
         data = []
         if user.is_player:
-            _id = int(user.profile.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
             if (
                 user.profile.playermetrics.how_old_days(season=True) >= 7
                 and user.profile.has_data_id
             ):
-                season = adapters.PlayerStatsSeasonAdapter(_id).get(groupped=True)
+                season = user.profile.playermetrics.get_season_data()
                 user.profile.playermetrics.update_season(season)
+
             user.profile.playermetrics.refresh_from_db()
             data = user.profile.playermetrics.season
             if data is None:
@@ -206,14 +210,14 @@ class ProfileGames(ProfileStatsPageView, mixins.PaginateMixin):
 
     def get_data_or_calculate(self, user):
         if user.is_player:
-            _id = int(user.profile.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
             if (
                 user.profile.playermetrics.how_old_days(games=True) >= 7
                 and user.profile.has_data_id
             ):
-                games = adapters.PlayerLastGamesAdapter(_id).get()
+                games = user.profile.playermetrics.get_games_data()
                 user.profile.playermetrics.update_games(games)
             # user.profile.playermetrics.refresh_from_db()
+
             data = user.profile.playermetrics.games
             if data is None:
                 data = []
@@ -227,7 +231,9 @@ class ProfileGames(ProfileStatsPageView, mixins.PaginateMixin):
             return self.paginate(data, limit=self.paginate_limit)
 
 
-class PlayerVideosView(generic.TemplateView, SlugyViewMixin, mixins.ViewModalLoadingMixin, View):
+class PlayerVideosView(
+    generic.TemplateView, SlugyViewMixin, mixins.ViewModalLoadingMixin, View
+):
     template_name = "profiles/video.html"
     http_method_names = ["get", "post"]
     page_title = _("Video")
@@ -242,11 +248,10 @@ class PlayerVideosView(generic.TemplateView, SlugyViewMixin, mixins.ViewModalLoa
         kwargs["modals"] = self.modal_activity(request.user, add_video=True)
         kwargs["queryset"] = PlayerVideo.objects.filter(player=user.profile)
         kwargs["thumbnails"] = self.get_thumbnails(kwargs["queryset"])
-        kwargs["form"] = PlayerVideoForm()       
+        kwargs["form"] = PlayerVideoForm()
         return super().get(request, *args, **kwargs)
 
-    def get_thumbnails(self, qs): #for youtube links only with domain youtube.*/
-        
+    def get_thumbnails(self, qs):  # for youtube links only with domain youtube.*/
         def get_id(url):
             return url[32:43]
 
@@ -259,13 +264,13 @@ class PlayerVideosView(generic.TemplateView, SlugyViewMixin, mixins.ViewModalLoa
         return thumbnail_urls
 
     def post(self, request, *args, **kwargs):
-        action = request.POST.get("action")        
+        action = request.POST.get("action")
         if action == "create":
             data = {
                 "url": request.POST.get("url"),
                 "title": request.POST.get("title"),
                 "description": request.POST.get("description"),
-                "player": request.user.profile
+                "player": request.user.profile,
             }
             form_create = PlayerVideoForm(data=data)
             if form_create.is_valid():

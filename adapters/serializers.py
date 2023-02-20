@@ -7,10 +7,11 @@ from pm_core.services.models import (
     EventSchema,
     PlayerSeasonStatsSchema,
     PlayerSeasonStatsListSchema,
+    GamesSchema,
 )
 from adapters.exceptions import (
     WrongDataFormatException,
-    DataShortageException,
+    DataShortageLogger,
 )
 from adapters.utils import resolve_stats_list
 from itertools import groupby
@@ -42,16 +43,16 @@ class BasePlayerSerializer:
 
 
 class GameSerializer(BasePlayerSerializer):
-    def __init__(self, data: typing.List[GameSchema], limit: int = None):
+    def __init__(self, data: GamesSchema, limit: int = None) -> None:
         """
         data - array of games
         limit - determine how many games do you want to get (sort desc by date)
         """
-        if not isinstance(data[0], GameSchema):
+        if data and not isinstance(data[0], GameSchema):
             raise WrongDataFormatException(self, GameSchema, type(data[0]))
 
-        self.games = data
-        self.limit = limit
+        self.games: GamesSchema = data
+        self.limit: int = limit
 
     def resolve_cards(self, cards: typing.List[EventSchema]) -> typing.Tuple[int, int]:
         """get count of cards from game"""
@@ -69,17 +70,17 @@ class GameSerializer(BasePlayerSerializer):
         return date.strftime(pattern)
 
     @property
-    def data(self):
+    def data(self) -> typing.List:
         """get serialized list of games (desc sort)"""
         if self.limit:
             return self.parse_games()[: self.limit]
         return self.parse_games()
 
-    def parse_games(self):
+    def parse_games(self) -> typing.List:
         """translate new games data like old serializer"""
         games = []
 
-        for game in self.games:
+        for game in self.games.__root__:
             final_result = game.scores.final
             player_team = (
                 game.host if game.player_current_team == game.host.id else game.guest
@@ -136,9 +137,8 @@ class StatsSerializer(BasePlayerSerializer):
     def __init__(self, stats: PlayerSeasonStatsListSchema) -> None:
         """serializer responsible for preparing stats"""
         self.stats = stats
-        if not stats:
-            raise DataShortageException(self, stats=stats)
-        if not isinstance(stats[0], PlayerSeasonStatsSchema):
+
+        if stats and not isinstance(stats[0], PlayerSeasonStatsSchema):
             raise WrongDataFormatException(
                 self, PlayerSeasonStatsSchema, type(stats[0])
             )
@@ -159,7 +159,7 @@ class StatsSerializer(BasePlayerSerializer):
 
     def parse_season_summary_stats(
         self, season: str = get_current_season()
-    ) -> typing.Dict:
+    ) -> typing.Optional[typing.Dict]:
         """get season summary stats based on data collected by adapter"""
         stats_list: PlayerSeasonStatsListSchema = PlayerSeasonStatsListSchema(
             __root__=list(filter(lambda stat: stat.season == season, self.stats))
@@ -169,11 +169,12 @@ class StatsSerializer(BasePlayerSerializer):
         elif len(stats_list) == 1:
             stats = stats_list[0]
         else:
-            raise DataShortageException(
+            DataShortageLogger(
                 obj=self,
                 func_name="parse_season_summary_stats()",
                 season=season,
             )
+            return
 
         return {
             "bench": stats.substitute,
@@ -202,11 +203,11 @@ class StatsSerializer(BasePlayerSerializer):
         prepared_stats = {}
 
         if len(self.stats) < 1:
-            raise DataShortageException(
-                obj=self, func_name="parse_season_stats()", stats=self.stats
+            DataShortageLogger(
+                obj=self, func_name="parse_season_stats()", stats=self.stats.__root__
             )
 
-        for season, stats in groupby(self.stats, lambda stat: stat.season):
+        for season, stats in groupby(self.stats.__root__, lambda stat: stat.season):
             prepared_stats[season] = {}
             for seq in list(stats):
                 league_name = self.get_league_name(seq.league.id) or seq.league.name
@@ -214,8 +215,9 @@ class StatsSerializer(BasePlayerSerializer):
                     prepared_stats[season][league_name]
                 except KeyError:
                     prepared_stats[season][league_name] = {}
+                team_name = self.resolve_team_name(seq.team.id) or seq.team.name
 
-                prepared_stats[season][league_name][seq.team.name] = {
+                prepared_stats[season][league_name][team_name] = {
                     "red_cards": seq.red_cards,
                     "yellow_cards": seq.yellow_cards,
                     "lost_goals": seq.goals_lost,

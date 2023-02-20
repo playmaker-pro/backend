@@ -1,22 +1,24 @@
 import typing
+
+from pm_core.services.errors import ServiceRaisedException
 from pm_core.services.models import (
     PlayerBaseSchema,
     TeamSchema,
     BaseLeagueSchema,
     GameSchema,
     EventSchema,
-    PlayerSeasonStatsSchema,
+    PlayerSeasonStatsListSchema,
+    GamesSchema,
 )
 from pm_core.services.models.consts import ExcludedLeague, DEFAULT_LEAGUE_EXCLUDE
 from clubs.models import Season
 from .serializers import GameSerializer, StatsSerializer
 from mapper.models import Mapper
-from profiles.models import PlayerProfile
 from utils import get_current_season
 from .exceptions import (
     PlayerHasNoMapperException,
-    PlayerMapperEntityNotFoundException,
-    ObjectNotFoundException,
+    PlayerMapperEntityNotFoundLogger,
+    DataShortageLogger,
 )
 from .base_adapter import BaseAdapter
 import logging
@@ -28,9 +30,11 @@ LATEST_SEASONS = Season.objects.all().order_by("-name")[:4]
 
 
 class PlayerAdapterBase(BaseAdapter):
-    def __init__(self, player: PlayerProfile, *args, **kwargs) -> None:
+    data: PlayerBaseSchema = None
+
+    def __init__(self, player, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.player: PlayerProfile = player
+        self.player = player
 
     def get_player_mapper(self) -> Mapper:
         """
@@ -41,20 +45,22 @@ class PlayerAdapterBase(BaseAdapter):
         except ObjectDoesNotExist:
             raise PlayerHasNoMapperException(self.player.user.id)
 
-    def get_player_data(self) -> PlayerBaseSchema:
+    def get_player_data(self) -> typing.Optional[DataShortageLogger]:
         """
         Get player data
         """
         params = self.resolve_strategy()
-        obj = self.api.get_player_data(self.player_uuid, params)
+        try:
+            obj = self.api.get_player_data(self.player_uuid, params)
+        except ServiceRaisedException:
+            return DataShortageLogger(
+                self, "get_player_data()", player_id=self.player_uuid, params=params
+            )
 
-        if not obj:
-            raise ObjectNotFoundException(self.player_uuid, PlayerBaseSchema)
-
-        return obj
+        self.data: PlayerBaseSchema = obj
 
     @property
-    def player_uuid(self) -> str:
+    def player_uuid(self) -> typing.Optional[str]:
         """
         uuid straight from LNP
         """
@@ -65,7 +71,8 @@ class PlayerAdapterBase(BaseAdapter):
         }
         mapper_entity = mapper.get_entity(**params)
         if not mapper_entity:
-            raise PlayerMapperEntityNotFoundException(self.player.user.id, params)
+            PlayerMapperEntityNotFoundLogger(self.player.user.id, params)
+            return
 
         return mapper_entity.mapper_id
 
@@ -73,18 +80,19 @@ class PlayerAdapterBase(BaseAdapter):
 class PlayerDataAdapter(PlayerAdapterBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.data: PlayerBaseSchema = self.get_player_data()
 
-    def get_current_team(self) -> TeamSchema:
+    def get_current_team(self) -> typing.Union[TeamSchema, DataShortageLogger]:
         """
         Get more information about player's team
         """
         params = self.resolve_strategy()
         team_id = self.data.team_id
-        obj = self.api.get_team_data(team_id, params)
-
-        if not obj:
-            raise ObjectNotFoundException(team_id, PlayerBaseSchema)
+        try:
+            obj = self.api.get_team_data(team_id, params)
+        except ServiceRaisedException:
+            return DataShortageLogger(
+                self, "get_current_team()", team_id=team_id, params=params
+            )
 
         return obj
 
@@ -118,7 +126,7 @@ class PlayerDataAdapter(PlayerAdapterBase):
 
 class PlayerGamesAdapter(PlayerAdapterBase):
 
-    games: typing.List[GameSchema] = []
+    games: GamesSchema = GamesSchema(__root__=[])
 
     def get_player_games(
         self,
@@ -130,14 +138,18 @@ class PlayerGamesAdapter(PlayerAdapterBase):
         params = self.resolve_strategy()
         params["season"] = season
         params["exclude_leagues"] = "+".join([league.name for league in exlude_leagues])
-        games = self.api.get_player_participant_games(
-            player_id=player_id, params=params
-        )
+        games = []
 
-        if not games:
-            raise ObjectNotFoundException(player_id, GameSchema)
+        try:
+            games = self.api.get_player_participant_games(
+                player_id=player_id, params=params
+            )
+        except ServiceRaisedException:
+            DataShortageLogger(
+                self, "get_player_games()", player_id=player_id, params=params
+            )
 
-        self.games += games
+        self.games.__root__ += games
         self.unique()
         self.clean_game_minutes()
 
@@ -145,11 +157,11 @@ class PlayerGamesAdapter(PlayerAdapterBase):
         """filter unique games object from array"""
         unique_ids = []
         unique_objects = []
-        for game in self.games:
+        for game in self.games.__root__:
             if game.matchId not in unique_ids:
                 unique_objects.append(game)
                 unique_ids.append(game.matchId)
-        self.games = unique_objects
+        self.games.__root__ = unique_objects
 
     def get_latest_seasons_player_games(self):
         """get games from last 4 seasons"""
@@ -186,7 +198,7 @@ class PlayerGamesAdapter(PlayerAdapterBase):
 
     def clean_game_minutes(self) -> None:
         """reformat each played by player game minutes"""
-        for game in self.games:
+        for game in self.games.__root__:
             self.parse_events_time(game)
 
             if game.minutes is None:
@@ -197,38 +209,42 @@ class PlayerGamesAdapter(PlayerAdapterBase):
 
     def serialize(self, limit: int = None) -> GameSerializer:
         """serialize games data, set limit(int) to limitate games count"""
-        return GameSerializer(self.games, limit)
+        serializer = GameSerializer(self.games.copy(), limit)
+        self.clean()
+
+        return serializer
 
     def clean(self) -> None:
         """clear cached games data"""
-        self.games = []
+        self.games.__root__ = []
 
 
 class PlayerSeasonStatsAdapter(PlayerAdapterBase):
 
-    stats: typing.List[PlayerSeasonStatsSchema] = []
+    stats: PlayerSeasonStatsListSchema = PlayerSeasonStatsListSchema(__root__=[])
 
     def get_season_stats(
         self,
         season: str = get_current_season(),
         primary_league: bool = True,
         exlude_leagues: typing.List[ExcludedLeague] = DEFAULT_LEAGUE_EXCLUDE,
-    ) -> None:
+    ) -> typing.Optional[DataShortageLogger]:
         """get predefined player stats"""
         player_id = self.player_uuid
         params = self.resolve_strategy()
         params["season"] = season
         params["exclude_leagues"] = "+".join([league.name for league in exlude_leagues])
-
-        data = self.api.get_player_season_stats(player_id=player_id, params=params)
-
-        if not data:
-            raise ObjectNotFoundException(player_id, PlayerSeasonStatsSchema)
+        try:
+            data = self.api.get_player_season_stats(player_id=player_id, params=params)
+        except ServiceRaisedException:
+            return DataShortageLogger(
+                self, "get_season_stats()", player_id=player_id, params=params
+            )
 
         if primary_league:
-            self.stats += [resolve_stats_list(data)]
+            self.stats.__root__ += [resolve_stats_list(data)]
         else:
-            self.stats += data
+            self.stats.__root__ += data
 
         self.unique()
 
@@ -236,11 +252,11 @@ class PlayerSeasonStatsAdapter(PlayerAdapterBase):
         """filter unique stats object from array"""
         unique_ids = []
         unique_objects = []
-        for stat in self.stats:
+        for stat in self.stats.__root__:
             if stat.team.id not in unique_ids:
                 unique_objects.append(stat)
                 unique_ids.append(stat.team.id)
-        self.stats = unique_objects
+        self.stats.__root__ = unique_objects
 
     def get_latest_seasons_stats(self, primary_league: bool = True) -> None:
         """get stats from last 4 seasons"""
@@ -249,8 +265,11 @@ class PlayerSeasonStatsAdapter(PlayerAdapterBase):
 
     def serialize(self) -> StatsSerializer:
         """Serialize stored by adapter stats"""
-        return StatsSerializer(self.stats)
+        serializer = StatsSerializer(self.stats.copy())
+        self.clean()
+
+        return serializer
 
     def clean(self) -> None:
         """clear cached games data"""
-        self.stats = []
+        self.stats.__root__ = []
