@@ -129,8 +129,9 @@ class PlayerDataAdapter(PlayerAdapterBase):
 
 
 class PlayerGamesAdapter(PlayerAdapterBase):
-
-    games: GamesSchema = GamesSchema(__root__=[])
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.games: GamesSchema = GamesSchema(__root__=[])
 
     def get_player_games(
         self,
@@ -213,10 +214,7 @@ class PlayerGamesAdapter(PlayerAdapterBase):
 
     def serialize(self, limit: int = None) -> GameSerializer:
         """serialize games data, set limit(int) to limitate games count"""
-        serializer = GameSerializer(self.games.copy(), limit)
-        self.clean()
-
-        return serializer
+        return GameSerializer(self.games, limit)
 
     def clean(self) -> None:
         """clear cached games data"""
@@ -224,8 +222,11 @@ class PlayerGamesAdapter(PlayerAdapterBase):
 
 
 class PlayerSeasonStatsAdapter(PlayerAdapterBase):
-
-    stats: PlayerSeasonStatsListSchema = PlayerSeasonStatsListSchema(__root__=[])
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.stats: PlayerSeasonStatsListSchema = PlayerSeasonStatsListSchema(
+            __root__=[]
+        )
 
     def get_season_stats(
         self,
@@ -273,10 +274,7 @@ class PlayerSeasonStatsAdapter(PlayerAdapterBase):
 
     def serialize(self) -> StatsSerializer:
         """Serialize stored by adapter stats"""
-        serializer = StatsSerializer(self.stats.copy())
-        self.clean()
-
-        return serializer
+        return StatsSerializer(self.stats)
 
     def clean(self) -> None:
         """clear cached games data"""
