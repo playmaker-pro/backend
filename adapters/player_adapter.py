@@ -11,10 +11,8 @@ from pm_core.services.models import (
     GamesSchema,
 )
 from pm_core.services.models.consts import ExcludedLeague, DEFAULT_LEAGUE_EXCLUDE
-from clubs.models import Season
 from .serializers import GameSerializer, StatsSerializer
 from mapper.models import Mapper
-from utils import get_current_season
 from .exceptions import (
     PlayerHasNoMapperException,
     PlayerMapperEntityNotFoundLogger,
@@ -26,15 +24,21 @@ from django.core.exceptions import ObjectDoesNotExist
 from .utils import resolve_stats_list
 
 logger = logging.getLogger(__name__)
-LATEST_SEASONS = Season.objects.all().order_by("-name")[:4]
 
 
 class PlayerAdapterBase(BaseAdapter):
+
     data: PlayerBaseSchema = None
 
     def __init__(self, player, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.player = player
+        self.season_range = self.get_season_range()
+
+    def get_season_range(self):
+        from clubs.models import Season
+
+        return Season.objects.all().order_by("-name")[:4]
 
     def get_player_mapper(self) -> Mapper:
         """
@@ -130,7 +134,7 @@ class PlayerGamesAdapter(PlayerAdapterBase):
 
     def get_player_games(
         self,
-        season: str = get_current_season(),
+        season: str = None,
         exlude_leagues: typing.List[ExcludedLeague] = DEFAULT_LEAGUE_EXCLUDE,
     ) -> None:
         """get player games based on season"""
@@ -165,7 +169,7 @@ class PlayerGamesAdapter(PlayerAdapterBase):
 
     def get_latest_seasons_player_games(self):
         """get games from last 4 seasons"""
-        for season in LATEST_SEASONS:
+        for season in self.season_range:
             self.get_player_games(season.name)
 
     def parse_events_time(self, game: GameSchema):
@@ -225,11 +229,15 @@ class PlayerSeasonStatsAdapter(PlayerAdapterBase):
 
     def get_season_stats(
         self,
-        season: str = get_current_season(),
+        season: str = None,
         primary_league: bool = True,
         exlude_leagues: typing.List[ExcludedLeague] = DEFAULT_LEAGUE_EXCLUDE,
     ) -> typing.Optional[DataShortageLogger]:
         """get predefined player stats"""
+        if not season:
+            from utils import get_current_season
+
+            season = get_current_season()
         player_id = self.player_uuid
         params = self.resolve_strategy()
         params["season"] = season
@@ -260,7 +268,7 @@ class PlayerSeasonStatsAdapter(PlayerAdapterBase):
 
     def get_latest_seasons_stats(self, primary_league: bool = True) -> None:
         """get stats from last 4 seasons"""
-        for season in LATEST_SEASONS:
+        for season in self.season_range:
             self.get_season_stats(season.name, primary_league)
 
     def serialize(self) -> StatsSerializer:

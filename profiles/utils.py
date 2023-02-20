@@ -3,7 +3,6 @@ import re
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
-from utils.utils import get_current_season
 from django.conf import settings
 
 # from . import models
@@ -89,13 +88,19 @@ def get_datetime_from_year(year):
 
 
 def calculate_player_metrics():
+    from utils import get_current_season
+
     qs = User.objects.filter(
         declared_role=definitions.PLAYER_SHORT, state=User.STATE_ACCOUNT_VERIFIED
     )
     for user in qs:
         if user.profile.has_data_id:
             season_name = get_current_season()
-            _id = int(user.profile.mapper.get_entity(related_type='player', database_source='s38').mapper_id)
+            _id = int(
+                user.profile.mapper.get_entity(
+                    related_type="player", database_source="s38"
+                ).mapper_id
+            )
             games_summary = adapters.PlayerLastGamesAdapter(_id).get(
                 season=season_name, limit=3
             )  # should be profile.playermetrics.refresh_games_summary() and putted to celery.
@@ -251,6 +256,7 @@ def create_from_data():
     from league_filter_map import LEAGUE_MAP
     from stats.utilites import LEAGUES_CODES_MAP
     from teams_map import TEAM_MAP
+    from utils import get_current_season
 
     print("getting sys user")
 
@@ -266,7 +272,13 @@ def create_from_data():
         if profile.has_data_id:
 
             # print('get from s38')
-            adpt = PlayerAdapter(int(profile.mapper.get_entity(related_type='player', database_source='s38').mapper_id))
+            adpt = PlayerAdapter(
+                int(
+                    profile.mapper.get_entity(
+                        related_type="player", database_source="s38"
+                    ).mapper_id
+                )
+            )
             # print('adapt')
             if adpt.player.meta is None:
                 print("This player dont have META yet... {adpt.player} ")
@@ -416,14 +428,16 @@ def match_player_videos(csv_file: str) -> None:
     df = pd.read_csv(csv_file)
 
     for index, row in df.iterrows():
-        player_profile = player_profiles.get(user=row['player'])
+        player_profile = player_profiles.get(user=row["player"])
         player_video, created = profiles.models.PlayerVideo.objects.get_or_create(
             player=player_profile,
-            url=row['url'],
+            url=row["url"],
             defaults={
-                'title': row['title'] if not pd.isna(row['title']) else "",
-                'description': row['description'] if not pd.isna(row['description']) else '',
-            }
+                "title": row["title"] if not pd.isna(row["title"]) else "",
+                "description": row["description"]
+                if not pd.isna(row["description"])
+                else "",
+            },
         )
         if not created:
             print(f"{player_profile.user} video with url {row['url']} already exists")

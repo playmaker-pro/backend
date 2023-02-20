@@ -1,16 +1,9 @@
-import logging
-from datetime import datetime
-
-from unittest import mock
 from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
-from profiles import models
-from profiles.utils import get_current_season
-from roles import definitions
-from users.models import User
 from utils import testutils as utils
 from clubs.models import Season
+
 utils.silence_explamation_mark()
 
 
