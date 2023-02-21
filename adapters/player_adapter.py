@@ -141,7 +141,9 @@ class PlayerGamesAdapter(PlayerAdapterBase):
         player_id = self.player_uuid
         params = self.resolve_strategy()
         params["season"] = season
-        params["exclude_leagues"] = "+".join([league.name for league in exlude_leagues])
+        params["excluded_leagues"] = " ".join(
+            [league.name for league in exlude_leagues]
+        )
         games = []
 
         try:
@@ -241,7 +243,9 @@ class PlayerSeasonStatsAdapter(PlayerAdapterBase):
         player_id = self.player_uuid
         params = self.resolve_strategy()
         params["season"] = season
-        params["exclude_leagues"] = "+".join([league.name for league in exlude_leagues])
+        params["excluded_leagues"] = " ".join(
+            [league.name for league in exlude_leagues]
+        )
         try:
             data = self.api.get_player_season_stats(player_id=player_id, params=params)
         except ServiceRaisedException:
