@@ -608,6 +608,7 @@ FORCED_SEASON_NAME = None
 # User agents settings
 USER_AGENTS_CACHE = "default"
 
+SCRAPPER = True
 
 # Loading of locally stored settings.
 
@@ -652,4 +653,3 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 VERIFICATION_FORM = {"DEFAULT_SEASON_NAME": "2021/2022"}
 
-SCRAPPER = False
