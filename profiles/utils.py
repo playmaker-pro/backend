@@ -15,6 +15,7 @@ import functools
 import logging
 import pandas as pd
 import profiles
+import datetime
 
 from urllib.parse import urlparse, parse_qs
 
@@ -443,3 +444,24 @@ def match_player_videos(csv_file: str) -> None:
             print(f"{player_profile.user} video with url {row['url']} already exists")
         else:
             print(f"{player_profile.user} video with url {row['url']} created")
+
+
+def get_metrics_update_date(metrics_updated_date):
+    """
+        Returns the date when player metrics were last updated.
+        If the metrics were updated after 15 February 2023, returns the date portion of the
+        playermetrics games_updated argument. Otherwise, returns 1 August 2022.
+        Parameters:
+        metrics_date (datetime.datetime): A datetime object representing the last time player metrics
+            were updated.
+        Returns:
+        datetime.date: The date when player metrics were last updated.
+    """
+    threshold_date = datetime.datetime(2023, 2, 15, tzinfo=metrics_updated_date.tzinfo)
+
+    # Check if the metrics were updated after the threshold date
+    if metrics_updated_date > threshold_date:
+        return metrics_updated_date.date().strftime("%d-%m-%Y")
+    else:
+        # If the metrics were not updated after the threshold date, return an older date
+        return datetime.date(2022, 8, 1).strftime("%d-%m-%Y")

@@ -10,6 +10,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.translation import gettext_lazy as _
 from django.views import generic
 from utils import get_current_season
+from profiles.utils import get_metrics_update_date
 from profiles.models import PlayerVideo
 from stats import adapters, utilites
 from profiles.forms.regular import PlayerVideoForm
@@ -39,6 +40,7 @@ class ProfileStatsPageView(
     def get(self, request, *args, **kwargs):
         user = self.select_user_to_show()
         season_name = get_current_season()
+        metrics_updated_date = user.profile.playermetrics.games_updated
 
         if self._is_owner(user):
             kwargs["editable"] = True
@@ -47,6 +49,7 @@ class ProfileStatsPageView(
         kwargs["page_obj"] = self.dispatch_get_or_calculate(user)
         kwargs["page_title"] = self.page_title
         kwargs["modals"] = self.modal_activity(request.user)
+        kwargs["metrics_updated_date"] = get_metrics_update_date(metrics_updated_date) if metrics_updated_date else ''
         return super().get(request, *args, **kwargs)
 
     def dispatch_get_or_calculate(self, user):

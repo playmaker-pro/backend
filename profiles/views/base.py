@@ -25,6 +25,7 @@ from profiles.model_utils import (
 )
 from roles import definitions
 from utils import calculate_prev_season, get_current_season
+from profiles.utils import get_metrics_update_date
 
 from stats import adapters
 
@@ -505,15 +506,14 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
                 season_summary = user.profile.playermetrics.get_season_summary_data()
 
                 metrics.update_summaries(games_summary, season_summary, None)
-
             games_summary = metrics.games_summary
             fantasy_summary = metrics.fantasy_summary
             season_summary = metrics.season_summary
-
+            metrics_updated_date = metrics.games_updated
+            kwargs['metrics_updated_date'] = get_metrics_update_date(metrics_updated_date)
             kwargs["last_games"] = games_summary
             kwargs["fantasy"] = fantasy_summary
             kwargs["season_stat"] = season_summary
-
             # bigger query.
             # kwargs["fantasy_more"] = adapters.PlayersGameficationAdapter().get(filters={'player_id': _id, 'season': '2020/2021', 'position': 'pomocnik'})
             season_stat = kwargs["season_stat"]
