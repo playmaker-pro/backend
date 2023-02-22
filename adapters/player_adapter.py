@@ -155,6 +155,8 @@ class PlayerGamesAdapter(PlayerAdapterBase):
             DataShortageLogger(
                 self, "get_player_games()", player_id=player_id, params=params
             )
+        if not games:
+            return
 
         self.games.__root__ += games
         self.unique()
@@ -253,6 +255,8 @@ class PlayerSeasonStatsAdapter(PlayerAdapterBase):
             return DataShortageLogger(
                 self, "get_season_stats()", player_id=player_id, params=params
             )
+        if not data:
+            return
 
         if primary_league:
             self.stats.__root__ += [resolve_stats_list(data)]

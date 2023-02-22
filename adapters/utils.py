@@ -5,4 +5,5 @@ def resolve_stats_list(
     stats: PlayerSeasonStatsListSchema,
 ) -> PlayerSeasonStatsSchema:
     """get most accurate stats based on played minutes in different leagues"""
-    return max(stats, key=lambda obj: obj.minutes_played)
+    if stats:
+        return max(stats, key=lambda obj: obj.minutes_played)
