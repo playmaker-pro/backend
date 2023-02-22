@@ -92,3 +92,6 @@ custom_script_*.py
 # zips
 *.zip
 .idea/
+
+# pm
+default.env
