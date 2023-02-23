@@ -108,6 +108,7 @@ class GameSerializer(BasePlayerSerializer):
                 "team_name": player_team.name,
                 "team_goals": len(game.goals),
                 "clear_goal": None,
+                "season": game.season,
             }
 
             if game.minutes > 45 and team_goals[enemy_team.name] == 0:
