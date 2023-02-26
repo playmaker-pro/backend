@@ -1,5 +1,5 @@
 import collections
-
+from clubs.models import Season
 import django.db.utils
 from django.conf import settings
 from django.urls import reverse
@@ -17,7 +17,6 @@ def get_current_season():
     """
     if not settings.SCRAPPER:
         return "2021/2022"
-    from clubs.models import Season
     try:
         return Season.objects.get(is_current=True).name
     except ObjectDoesNotExist:
@@ -33,16 +32,6 @@ def calculate_prev_season(season: str):
     first_updated = int(first) - 1
     second_updated = int(second) - 1
     return f"{first_updated}/{second_updated}"
-
-
-if settings.FORCED_SEASON_NAME:
-    get_current_season_string = settings.FORCED_SEASON_NAME
-else:
-    get_current_season_string = get_current_season()
-
-get_season_string = get_current_season()
-
-get_prev_season_string = calculate_prev_season(get_season_string)
 
 
 def linkify(field_name):
@@ -158,7 +147,7 @@ def generate_vivo_options():
 
 
 def update_dict_depth(d, u):
-    """Update value of a nested dictionary of varying depth """
+    """Update value of a nested dictionary of varying depth"""
     for k, v in u.items():
         if isinstance(v, collections.abc.Mapping):
             d[k] = update_dict_depth(d.get(k, {}), v)

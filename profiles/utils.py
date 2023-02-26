@@ -3,7 +3,6 @@ import re
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
-from utils.utils import get_current_season
 from django.conf import settings
 
 # from . import models
@@ -14,8 +13,13 @@ from stats import adapters
 from roles import definitions
 import functools
 import logging
+import pandas as pd
+import profiles
+import datetime
 
 from urllib.parse import urlparse, parse_qs
+from profiles import models
+
 
 
 logger = logging.getLogger(__name__)
@@ -87,13 +91,19 @@ def get_datetime_from_year(year):
 
 
 def calculate_player_metrics():
+    from utils import get_current_season
+
     qs = User.objects.filter(
         declared_role=definitions.PLAYER_SHORT, state=User.STATE_ACCOUNT_VERIFIED
     )
     for user in qs:
         if user.profile.has_data_id:
             season_name = get_current_season()
-            _id = user.profile.data_mapper_id
+            _id = int(
+                user.profile.mapper.get_entity(
+                    related_type="player", database_source="s38"
+                ).mapper_id
+            )
             games_summary = adapters.PlayerLastGamesAdapter(_id).get(
                 season=season_name, limit=3
             )  # should be profile.playermetrics.refresh_games_summary() and putted to celery.
@@ -249,6 +259,7 @@ def create_from_data():
     from league_filter_map import LEAGUE_MAP
     from stats.utilites import LEAGUES_CODES_MAP
     from teams_map import TEAM_MAP
+    from utils import get_current_season
 
     print("getting sys user")
 
@@ -264,7 +275,13 @@ def create_from_data():
         if profile.has_data_id:
 
             # print('get from s38')
-            adpt = PlayerAdapter(profile.data_mapper_id)
+            adpt = PlayerAdapter(
+                int(
+                    profile.mapper.get_entity(
+                        related_type="player", database_source="s38"
+                    ).mapper_id
+                )
+            )
             # print('adapt')
             if adpt.player.meta is None:
                 print("This player dont have META yet... {adpt.player} ")
@@ -399,3 +416,59 @@ def create_from_data():
             ids += 1
 
     print(ids)
+
+
+def match_player_videos(csv_file: str) -> None:
+    """
+    Matches player videos with data from csv_file.
+    Expects the csv_file to have the following columns:
+            player - the user id,
+            url - the URL of the video,
+            title - the title of the video,
+            description - the description of the video.
+    """
+    player_profiles = profiles.models.PlayerProfile.objects.all()
+    df = pd.read_csv(csv_file)
+
+    for index, row in df.iterrows():
+        player_profile = player_profiles.get(user=row["player"])
+        player_video, created = profiles.models.PlayerVideo.objects.get_or_create(
+            player=player_profile,
+            url=row["url"],
+            defaults={
+                "title": row["title"] if not pd.isna(row["title"]) else "",
+                "description": row["description"]
+                if not pd.isna(row["description"])
+                else "",
+            },
+        )
+        if not created:
+            print(f"{player_profile.user} video with url {row['url']} already exists")
+        else:
+            print(f"{player_profile.user} video with url {row['url']} created")
+
+
+def get_metrics_update_date(metrics: 'models.PlayerMetrics') -> str:
+    """
+    Returns the date when player metrics were last updated.
+    If the metrics were updated after 15 February 2023, returns the date portion of the
+    newest update_date argument. Otherwise, returns 1 August 2022.
+    Parameters:
+    metrics (dict): A dictionary containing the different metrics update dates.
+    Returns:
+    datetime.date: The date when player metrics were last updated.
+    """
+    # Check which update_date is the newest
+    newest_update_date = max(
+                        metrics.games_updated,
+                        metrics.games_summary_updated,
+                        metrics.season_updated,
+                        metrics.season_summary_updated,
+    )
+    threshold_date = datetime.datetime(2023, 2, 15, tzinfo=newest_update_date.tzinfo)
+    # Check if the metrics were updated after the threshold date
+    if newest_update_date > threshold_date:
+        return newest_update_date.date().strftime("%d-%m-%Y")
+    else:
+        # If the metrics were not updated after the threshold date, return an older date
+        return datetime.date(2022, 8, 1).strftime("%d-%m-%Y")

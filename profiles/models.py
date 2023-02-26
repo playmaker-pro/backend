@@ -1,9 +1,9 @@
+import typing
 from collections import Counter
 from datetime import datetime
+from adapters import strategy
+from adapters.base_adapter import API_METHOD, ScrapperAPI
 from random import choices
-from typing import Union
-
-from stats import adapters
 from address.models import AddressField
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -14,18 +14,22 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 
+from adapters.player_adapter import (
+    PlayerGamesAdapter,
+    PlayerSeasonStatsAdapter,
+)
+
 # from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
 from roles import definitions
 from stats.adapters import PlayerAdapter
 from .utils import make_choices
 from .utils import unique_slugify
 import utils as utilites
-from .utils import conver_vivo_for_api, supress_exception
+from .utils import supress_exception
 from clubs import models as clubs_models
 from .mixins import TeamObjectsDisplayMixin
 import logging
 from .erros import VerificationCompletionFieldsWrongSetup
-from . import managers
 from voivodeships.models import Voivodeships
 from mapper.models import Mapper
 
@@ -264,8 +268,19 @@ class BaseProfile(models.Model, EventLogMixin):
         return True
 
     @property
-    def has_data_id(self):
-        return self.data_mapper_id is not None
+    def has_data_id(self) -> typing.Optional[bool]:
+        """By default we retrun False if not implemented"""
+        if self.PROFILE_TYPE in [
+            definitions.PROFILE_TYPE_COACH,
+            definitions.PROFILE_TYPE_PLAYER,
+        ]:
+            if self.mapper is not None:
+                mapper_entity = self.mapper.get_entity(
+                    related_type__in=["player", "coach"], database_source="s38"
+                )
+                if mapper_entity is not None:
+                    return mapper_entity.mapper_id is not None
+            return False
 
     @property
     def is_not_complete(self):
@@ -494,11 +509,8 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         "about",
         "training_ready",
         "league",
-        # 'league_raw',
-        # 'club_raw',
         # 'club',  # @todo this is kicked-off waiting for club mapping implementation
         "team",
-        # 'team_raw',
         "position_raw",
         "voivodeship_obj",
     ]
@@ -619,7 +631,8 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     @property
     def attached(self):
-        return self.data_mapper_id is not None
+        """proxy method to pass if profile has id"""
+        return self.has_data_id()
 
     @property
     def get_team_object(self):
@@ -638,21 +651,21 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
     )
     team_object = models.ForeignKey(
-        clubs_models.Team,
+        "clubs.Team",
         on_delete=models.SET_NULL,
         related_name="players",
         null=True,
         blank=True,
     )
     team_history_object = models.ForeignKey(
-        clubs_models.TeamHistory,
+        "clubs.TeamHistory",
         on_delete=models.SET_NULL,
         related_name="players",
         null=True,
         blank=True,
     )
     team_object_alt = models.ForeignKey(
-        clubs_models.Team,
+        "clubs.Team",
         on_delete=models.SET_NULL,
         related_name="players_alt",
         null=True,
@@ -666,13 +679,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True,
     )
-    club_raw = models.CharField(
-        _("Deklarowany Klub"),
-        max_length=68,
-        help_text=_("Klub w którym deklarujesz że obecnie reprezentuejsz"),
-        blank=True,
-        null=True,
-    )
+
     team = models.CharField(
         _("Drużyna"),
         db_index=True,
@@ -681,13 +688,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True,
     )
-    team_raw = models.CharField(
-        _("Deklarowana Drużyna"),
-        max_length=68,
-        help_text=_("Drużyna w której deklarujesz że obecnie grasz"),
-        blank=True,
-        null=True,
-    )
+
     league = models.CharField(
         _("Rozgrywki"),
         max_length=68,
@@ -696,13 +697,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True,
     )
-    league_raw = models.CharField(
-        _("Rozgrywki"),
-        max_length=68,
-        help_text=_("Poziom rozgrywkowy który deklarujesz że grasz."),
-        blank=True,
-        null=True,
-    )
+
     birth_date = models.DateField(_("Data urodzenia"), blank=True, null=True)
     height = models.PositiveIntegerField(
         _("Wzrost"),
@@ -766,7 +761,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     phone = models.CharField(_("Telefon"), max_length=15, blank=True, null=True)
     facebook_url = models.URLField(_("Facebook"), max_length=500, blank=True, null=True)
 
-    mapper = models.OneToOneField(Mapper, on_delete=models.CASCADE, blank=True, null=True)
+    mapper = models.OneToOneField(
+        Mapper, on_delete=models.SET_NULL, blank=True, null=True
+    )
     # laczynaspilka_url, min90_url, transfermarket_url data will be migrated into PlayerMapper and then those fields will be deleted
     laczynaspilka_url = models.URLField(_("LNP"), max_length=500, blank=True, null=True)
     min90_url = models.URLField(
@@ -873,7 +870,13 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def calculate_data_from_data_models(self, adpt=None, *args, **kwargs):
         """Interaction with s38: league, vivo, team <- s38"""
         if self.attached:
-            adpt = adpt or PlayerAdapter(self.data_mapper_id)
+            adpt = adpt or PlayerAdapter(
+                int(
+                    self.mapper.get_entity(
+                        related_type="player", database_source="s38"
+                    ).mapper_id
+                )
+            )
             if adpt.has_player:
                 self.league = adpt.get_current_league()
                 self.voivodeship = adpt.get_current_voivodeship()
@@ -883,7 +886,11 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def update_data_player_object(self, adpt=None):
         """Interaction with s38: updates --> s38 wix_id and fantasy position"""
         if self.attached:
-            adpt = adpt or PlayerAdapter(self.data_mapper_id)
+            adpt = adpt or PlayerAdapter(
+                self.mapper.get_entity(
+                    related_type="player", database_source="s38"
+                ).mapper_id
+            )
             adpt.update_wix_id_and_position(
                 email=self.user.email, position=self.position_fantasy
             )
@@ -891,7 +898,13 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def fetch_data_player_meta(self, adpt=None, save=True, *args, **kwargs):
         """Interaction with s38: updates meta from <--- s38"""
         if self.attached:
-            adpt = adpt or PlayerAdapter(self.data_mapper_id)
+            adpt = adpt or PlayerAdapter(
+                int(
+                    self.mapper.get_entity(
+                        related_type="player", database_source="s38"
+                    ).mapper_id
+                )
+            )
             self.meta = adpt.player.meta
             self.meta_updated = timezone.now()
             if save:
@@ -900,7 +913,13 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def trigger_refresh_data_player_stats(self, adpt=None, *args, **kwargs):
         """Trigger update of player stats --> s38"""
         if self.attached:
-            adpt = adpt or PlayerAdapter(self.data_mapper_id)
+            adpt = adpt or PlayerAdapter(
+                int(
+                    self.mapper.get_entity(
+                        related_type="player", database_source="s38"
+                    ).mapper_id
+                )
+            )
             adpt.calculate_stats(season_name=utilites.get_current_season())
 
     def get_team_object_based_on_meta(self, season_name, retries: int = 3):
@@ -991,7 +1010,13 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             self.data_mapper_changed and self.attached
         ):  # if datamapper changed after save and it is not None
             logger.info(f"Calculating metrics for player {self}")
-            adpt = PlayerAdapter(self.data_mapper_id)  # commonly use adpt
+            adpt = PlayerAdapter(
+                int(
+                    self.mapper.get_entity(
+                        related_type="player", database_source="s38"
+                    ).mapper_id
+                )
+            )  # commonly use adpt
             if utilites.is_allowed_interact_with_s38():  # are we on PROD and not Debug
                 self.update_data_player_object(adpt)  # send data to s38
                 self.trigger_refresh_data_player_stats(adpt)  # send trigger to s38
@@ -1031,54 +1056,82 @@ class PlayerMetrics(models.Model):
     season_updated = models.DateTimeField(null=True, blank=True)
 
     def _update_cached_field(self, attr: str, data, commit=True):
+        if not data:
+            return
         setattr(self, attr, data)
         setattr(self, f"{attr}_updated", timezone.now())
         if commit:
             self.save()
 
-    def refresh_metrics(self, *args, **kwargs):
-        if not self.player.has_data_id:
-            return
-        season_name = utilites.get_current_season()
-        _id = self.player.data_mapper_id
-
-        # user.profile.set_team_object_based_on_meta()  # saving
+    def refresh_metrics(
+        self, method: typing.Type[API_METHOD] = ScrapperAPI, *args, **kwargs
+    ) -> None:
+        """
+        get metrics from api and save into model
+        fantasy is currently unavailable
+        """
         start = datetime.now()
-        fantasy = adapters.PlayerFantasyDataAdapter(_id).get(
-            season=season_name, full=True
-        )
-        self.update_fantasy(fantasy)
-        print(f"\t> PlayerFantasyDataAdapter: {datetime.now()-start}")
-
-        start = datetime.now()
-        season = adapters.PlayerStatsSeasonAdapter(_id).get(groupped=True)
-        self.update_season(season)
-        print(f"\t> PlayerStatsSeasonAdapter: {datetime.now()-start}")
+        stats = self.get_season_data(method)
+        stats_summary = self.get_season_summary_data(method)
+        self.update_season(stats)
+        print(f"\t> PlayerStatsSeasonAdapter: {datetime.now() - start}")
 
         start = datetime.now()
-        games = adapters.PlayerLastGamesAdapter(_id).get()
+        games = self.get_games_data(method)
+        games_summary = games[:3]
         self.update_games(games)
         print(f"\t> PlayerLastGamesAdapter: {datetime.now() - start}")
 
-        start = datetime.now()
-        games_summary = adapters.PlayerLastGamesAdapter(_id).get(
-            season=season_name, limit=3
-        )  # should be profile.playermetrics.refresh_games_summary() and putted to celery.
-        print(f"\t> PlayerLastGamesAdapter: {datetime.now() - start}")
-
-        start = datetime.now()
-        fantasy_summary = adapters.PlayerFantasyDataAdapter(_id).get(season=season_name)
-        print(f"\t> PlayerFantasyDataAdapter: {datetime.now() - start}")
-
-        start = datetime.now()
-        season_summary = adapters.PlayerStatsSeasonAdapter(_id).get(season=season_name)
-        print(f"\t> PlayerStatsSeasonAdapter: {datetime.now() - start}")
-        self.update_summaries(games_summary, season_summary, fantasy_summary)
+        self.update_summaries(games_summary, stats_summary, None)
         self.save()
+
+    def get_games_data(
+        self, method: typing.Type[API_METHOD] = ScrapperAPI
+    ) -> typing.List:
+        player_obj = getattr(self, "player")
+        games_adapter = PlayerGamesAdapter(
+            player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
+        )
+        games_adapter.get_latest_seasons_player_games()
+        serializer = games_adapter.serialize()
+        return serializer.data
+
+    def get_games_summary_data(
+        self, method: typing.Type[API_METHOD] = ScrapperAPI
+    ) -> typing.List:
+        player_obj = getattr(self, "player")
+        games_adapter = PlayerGamesAdapter(
+            player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
+        )
+        games_adapter.get_player_games()
+        serializer = games_adapter.serialize(limit=3)
+        return serializer.data
+
+    def get_season_data(
+        self, method: typing.Type[API_METHOD] = ScrapperAPI
+    ) -> typing.Dict:
+        player_obj = getattr(self, "player")
+        stats_adapter = PlayerSeasonStatsAdapter(
+            player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
+        )
+        stats_adapter.get_latest_seasons_stats(primary_league=False)
+        serializer = stats_adapter.serialize()
+        return serializer.data
+
+    def get_season_summary_data(
+        self, method: typing.Type[API_METHOD] = ScrapperAPI
+    ) -> typing.Dict:
+        player_obj = getattr(self, "player")
+        stats_adapter = PlayerSeasonStatsAdapter(
+            player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
+        )
+        stats_adapter.get_season_stats()
+        serializer = stats_adapter.serialize()
+        return serializer.data_summary
 
     def update_summaries(self, games, season, fantasy):
         self.update_games_summary(games, commit=False)
-        self.update_fantasy_summary(fantasy, commit=False)
+        # self.update_fantasy_summary(fantasy, commit=False)
         self.update_season_summary(season)
 
     def update_games(self, *args, **kwargs):
@@ -1210,7 +1263,7 @@ class ClubProfile(BaseProfile):
         return False
 
     club_object = models.ForeignKey(
-        clubs_models.Club,
+        "clubs.Club",
         on_delete=models.SET_NULL,
         related_name="clubowners",
         db_index=True,
@@ -1269,8 +1322,6 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         (3, "Trenerka jako hobby"),
     )
 
-    TRAINING_READY_CHOCIES = GLOBAL_TRAINING_READY_CHOCIES
-
     LICENCE_CHOICES = (
         (1, "UEFA PRO"),
         (2, "UEFA A"),
@@ -1303,14 +1354,14 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
 
     team_object = models.ForeignKey(
-        clubs_models.Team,
+        "clubs.Team",
         on_delete=models.SET_NULL,
         related_name="coaches",
         null=True,
         blank=True,
     )
     team_history_object = models.ForeignKey(
-        clubs_models.TeamHistory,
+        "clubs.TeamHistory",
         on_delete=models.SET_NULL,
         related_name="players_history",
         null=True,
@@ -1322,6 +1373,9 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
     phone = models.CharField(_("Telefon"), max_length=15, blank=True, null=True)
     facebook_url = models.URLField(_("Facebook"), max_length=500, blank=True, null=True)
+    mapper = models.OneToOneField(
+        Mapper, on_delete=models.SET_NULL, blank=True, null=True
+    )
     country = CountryField(
         _("Country"),
         blank=True,
@@ -1339,13 +1393,6 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
 
     about = models.TextField(_("O sobie"), null=True, blank=True)
-
-    training_ready = models.IntegerField(
-        _("Gotowość do treningu"),
-        choices=make_choices(TRAINING_READY_CHOCIES),
-        null=True,
-        blank=True,
-    )
 
     address = AddressField(
         help_text=_("Miasto z którego dojeżdżam na trening"), blank=True, null=True
@@ -1426,7 +1473,11 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
 
         if not self.has_data_id:
             return
-        _id = self.data_mapper_id
+        _id = int(
+            self.mapper.get_entity(
+                related_type="coach", database_source="s38"
+            ).mapper_id
+        )
         season_name = season_name or utilites.get_current_season()
 
         def _calculate(season_name):
@@ -1452,6 +1503,14 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         msg = "Coach stats updated."
         self.add_event_log_message(msg, commit=False)
         self.save()
+
+    def create_mapper_obj(self):
+        self.mapper = Mapper.objects.create()
+
+    def save(self, *args, **kwargs):
+        if not self.mapper:
+            self.create_mapper_obj()
+        super().save(*args, **kwargs)
 
     @property
     def has_attachemnt(self):
@@ -1555,14 +1614,6 @@ class ScoutProfile(BaseProfile):
         validators=[MinValueValidator(10), MaxValueValidator(500)],
     )
 
-    club = models.CharField(
-        _("Klub"),
-        max_length=68,
-        help_text=_("Klub, który obecnie reprezentuejsz"),
-        blank=True,
-        null=True,
-    )
-
     club_raw = models.CharField(
         _("Deklarowany klub"),
         max_length=68,
@@ -1571,26 +1622,10 @@ class ScoutProfile(BaseProfile):
         null=True,
     )
 
-    league = models.CharField(
-        _("Rozgrywki"),
-        max_length=68,
-        help_text=_("Poziom rozgrywkowy"),
-        blank=True,
-        null=True,
-    )
-
     league_raw = models.CharField(
         _("Deklarowany poziom rozgrywkowy"),
         max_length=68,
         help_text=_("Poziom rozgrywkowy"),
-        blank=True,
-        null=True,
-    )
-    # TODO: (l.remkowicz): Based on task PM-363. After migration on production, field can be deleted
-    voivodeship = models.CharField(
-        _("Wojewódźtwo"),
-        help_text=_("Wojewódźtwo. Stare pole, czeka na migracje"),
-        max_length=68,
         blank=True,
         null=True,
     )

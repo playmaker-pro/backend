@@ -117,8 +117,8 @@ class HasTextInputFilter(SimpleListFilter):
 
 
 class HasDataMapperIdFilter(SimpleListFilter):
-    title = "Data mapper id"
-    parameter_name = "data_mapper_id"
+    title = "mapper Id"
+    parameter_name = "mapper_id"
 
     def lookups(self, request, model_admin):
         return [
@@ -127,19 +127,20 @@ class HasDataMapperIdFilter(SimpleListFilter):
         ]
 
     def queryset(self, request, queryset):
-        queryset = queryset.select_related(
-            "clubprofile", "coachprofile", "playerprofile"
-        ).annotate(
-            data_mapper_id=Case(
-                When(owner__declared_role="C", then=F("clubprofile__data_mapper_id")),
-                When(owner__declared_role="T", then=F("coachprofile__data_mapper_id")),
-                When(owner__declared_role="P", then=F("playerprofile__data_mapper_id")),
-                default=None,
-            )
-        )
-
+        queryset = queryset.distinct()
         if self.value() == "1":
-            queryset = queryset.filter(Q(data_mapper_id__isnull=False))
+            queryset = queryset.filter(
+                Q(owner__declared_role="T", coachprofile__mapper__mapperentity__mapper_id__isnull=False,
+                  coachprofile__mapper__mapperentity__database_source='s38') |
+                Q(owner__declared_role="P", playerprofile__mapper__mapperentity__mapper_id__isnull=False,
+                  playerprofile__mapper__mapperentity__database_source='s38')
+            )
         elif self.value() == "2":
-            queryset = queryset.filter(Q(data_mapper_id__isnull=True))
+            queryset = queryset.exclude(
+                Q(owner__declared_role="T", coachprofile__mapper__mapperentity__mapper_id__isnull=False) &
+                Q(coachprofile__mapper__mapperentity__database_source='s38')
+            ).exclude(
+                Q(owner__declared_role="P", playerprofile__mapper__mapperentity__mapper_id__isnull=False) &
+                Q(playerprofile__mapper__mapperentity__database_source='s38')
+            )
         return queryset

@@ -1,12 +1,8 @@
-from django.core.management.base import BaseCommand, CommandError
-import csv
-from data.models import Player
-from profiles import models
-from profiles.views import (
-    get_profile_model,
-)  # @todo this shoudl goes to utilities, views and commands are using this utility
 from django.contrib.auth import get_user_model
-import pprint
+from django.core.management.base import BaseCommand
+
+from profiles import models
+
 
 User = get_user_model()
 
@@ -27,7 +23,11 @@ class Command(BaseCommand):
         deep = options.get("deep")
         season_name = options.get("season")
 
-        profiles = models.CoachProfile.objects.filter(data_mapper_id__isnull=False)
+        profiles = models.CoachProfile.objects.filter(
+            mapper__mapperentity__related_type='coach',
+            mapper__mapperentity__database_source='s38',
+            mapper__mapperentity__mapper_id__isnull=False
+        )
         counter = profiles.count()
         if counter == 0:
             self.stdout.write("No profiles to update...")
