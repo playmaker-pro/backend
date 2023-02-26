@@ -34,6 +34,7 @@ class MapperEntity(models.Model):
     RELATED_MODELS = (
         ("team", "team"),
         ("player", "player profile"),
+        ("coach", "coach profile"),
         ("club", "club"),
         ("team history", "team history"),
         ("league", "league history highest parent"),
@@ -47,10 +48,12 @@ class MapperEntity(models.Model):
         ("xlsx", "xlsx"),
     )
 
-    target = models.ForeignKey(Mapper, on_delete=models.CASCADE)
+    target = models.ForeignKey(Mapper, on_delete=models.SET_NULL, null=True, blank=True)
     mapper_id = models.CharField(max_length=100, null=True, blank=True)
-    source = models.ForeignKey(MapperSource, on_delete=models.CASCADE)
-    url = models.URLField(max_length=300, null=True, blank=True)
+    source = models.ForeignKey(
+        MapperSource, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    url = models.URLField(max_length=500, null=True, blank=True)
     related_type = models.CharField(max_length=100, choices=RELATED_MODELS)
     database_source = models.CharField(max_length=100, choices=DATA_SOURCES)
     description = models.CharField(max_length=100, null=True, blank=True)

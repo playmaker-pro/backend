@@ -5,19 +5,16 @@ from datetime import datetime
 from .serializers import (
     CoachProfileSerializer,
     PlayerProfileSerializer,
-    SimplePlayerProfileSerializer,
     GameSerializer,
     GameRawSerializer,
     TrendSerializer,
 )
 from django.contrib.postgres.aggregates import ArrayAgg
-from data.models import Game as DGame
-from clubs.models import League as CLeague
-from clubs.models import LeagueHistory as CLeagueHistory
-from data.models import Game, League, Team, TeamStat
-from django.db.models import Avg, Count, Min, Q, Sum
+
+from data.models import Game, League, TeamStat
+from django.db.models import Q, Sum
 from django.urls import reverse
-from .mappers import TeamMapper, PlayerMapper
+from .mappers import TeamMapper
 from profiles.models import CoachProfile, PlayerProfile
 
 

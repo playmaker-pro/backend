@@ -471,6 +471,12 @@ def get_logging_structure(LOGFILE_ROOT):
                 "filename": join(LOGFILE_ROOT, "route.updater.log"),
                 "formatter": "verbose",
             },
+            "adapters": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "adapters.log"),
+                "formatter": "verbose",
+            },
             "console": {
                 "level": "DEBUG",
                 "class": "logging.StreamHandler",
@@ -485,6 +491,10 @@ def get_logging_structure(LOGFILE_ROOT):
             "django": {
                 "handlers": ["django_log_file"],
                 "propagate": True,
+                "level": "ERROR",
+            },
+            "adapters": {
+                "handlers": ["adapters"],
                 "level": "ERROR",
             },
             "project": {
@@ -598,6 +608,7 @@ FORCED_SEASON_NAME = None
 # User agents settings
 USER_AGENTS_CACHE = "default"
 
+SCRAPPER = True
 
 # Loading of locally stored settings.
 
@@ -642,4 +653,3 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 VERIFICATION_FORM = {"DEFAULT_SEASON_NAME": "2021/2022"}
 
-SCRAPPER = False

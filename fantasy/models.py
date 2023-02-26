@@ -96,7 +96,9 @@ class CalculateFantasyStats:
             )
             return
 
-        player = PlayerAdapter(user_profile.data_mapper_id).get_player_object()
+        player = PlayerAdapter(int(user_profile.mapper.get_entity(
+            related_type='player', database_source='s38'
+        ).mapper_id)).get_player_object()
         points = 0
         ps = player.playerstats.select_related(
             "game", "gamefication", "league", "season"

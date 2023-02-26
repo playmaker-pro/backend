@@ -25,6 +25,7 @@ from profiles.model_utils import (
 )
 from roles import definitions
 from utils import calculate_prev_season, get_current_season
+from profiles.utils import get_metrics_update_date
 
 from stats import adapters
 
@@ -495,35 +496,23 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
             kwargs["seo_object_image"] = None
 
         if user.profile.has_data_id and user.profile.PROFILE_TYPE == "player":
-            _id = user.profile.data_mapper_id
-            # kwargs["last_games"] = adapters.PlayerAdapter._get_user_last_games(_id)
-            season_name = get_current_season()
             metrics = user.profile.playermetrics
 
             if (
                 metrics.how_old_days(games_summary=True) >= 7
-                or metrics.how_old_days(fantasy_summary=True) >= 7
                 or metrics.how_old_days(season_summary=True) >= 7
             ):
-                games_summary = adapters.PlayerLastGamesAdapter(_id).get(
-                    season=season_name, limit=3
-                )  # should be profile.playermetrics.refresh_games_summary() and putted to celery.
-                fantasy_summary = adapters.PlayerFantasyDataAdapter(_id).get(
-                    season=season_name
-                )
-                season_summary = adapters.PlayerStatsSeasonAdapter(_id).get(
-                    season=season_name
-                )
-                metrics.update_summaries(games_summary, season_summary, fantasy_summary)
-            else:
-                games_summary = metrics.games_summary
-                fantasy_summary = metrics.fantasy_summary
-                season_summary = metrics.season_summary
+                games_summary = user.profile.playermetrics.get_games_summary_data()
+                season_summary = user.profile.playermetrics.get_season_summary_data()
 
+                metrics.update_summaries(games_summary, season_summary, None)
+            games_summary = metrics.games_summary
+            fantasy_summary = metrics.fantasy_summary
+            season_summary = metrics.season_summary
+            kwargs['metrics_updated_date'] = get_metrics_update_date(metrics)
             kwargs["last_games"] = games_summary
             kwargs["fantasy"] = fantasy_summary
             kwargs["season_stat"] = season_summary
-
             # bigger query.
             # kwargs["fantasy_more"] = adapters.PlayersGameficationAdapter().get(filters={'player_id': _id, 'season': '2020/2021', 'position': 'pomocnik'})
             season_stat = kwargs["season_stat"]

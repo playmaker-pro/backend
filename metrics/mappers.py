@@ -23,7 +23,11 @@ class PlayerMapper:
         :player_id: s38 data mapper id
         """
         try:
-            obj = PlayerProfile.objects.get(data_mapper_id=player_id)
+            obj = PlayerProfile.objects.get(
+                mapper__mapperentity__related_type='player',
+                mapper__mapperentity__database_source='s38',
+                mapper__mapperentity__mapper_id=player_id
+            )
             return obj
         except PlayerProfile.DoesNotExist:
             return None
