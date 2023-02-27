@@ -211,7 +211,9 @@ class PlayerGamesAdapter(PlayerAdapterBase):
             self.parse_events_time(game)
 
             if game.minutes is None:
-                game.minutes = self.resolve_minutes_on_substitutions(game.substitutions)
+                game.minutes = (
+                    self.resolve_minutes_on_substitutions(game.substitutions) or 90
+                )
 
             if game.minutes > 90:
                 game.minutes = 90
