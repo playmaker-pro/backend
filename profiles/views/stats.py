@@ -1,5 +1,8 @@
 import logging
+from os.path import basename
 from random import randint
+from urllib.parse import parse_qs, urlparse
+import typing
 from typing_extensions import runtime
 from django.shortcuts import get_object_or_404, redirect
 from rest_framework.views import View
@@ -40,9 +43,16 @@ class ProfileStatsPageView(
     def get(self, request, *args, **kwargs):
         user = self.select_user_to_show()
         season_name = get_current_season()
-        metrics = user.profile.playermetrics if user.profile.playermetrics and \
-            (user.profile.playermetrics.games_updated or user.profile.playermetrics.games_summary_updated or
-                user.profile.playermetrics.season_updated) else None
+        metrics = (
+            user.profile.playermetrics
+            if user.profile.playermetrics
+            and (
+                user.profile.playermetrics.games_updated
+                or user.profile.playermetrics.games_summary_updated
+                or user.profile.playermetrics.season_updated
+            )
+            else None
+        )
         if self._is_owner(user):
             kwargs["editable"] = True
         kwargs["season_name"] = season_name
@@ -50,7 +60,9 @@ class ProfileStatsPageView(
         kwargs["page_obj"] = self.dispatch_get_or_calculate(user)
         kwargs["page_title"] = self.page_title
         kwargs["modals"] = self.modal_activity(request.user)
-        kwargs["metrics_updated_date"] = get_metrics_update_date(metrics) if metrics else None
+        kwargs["metrics_updated_date"] = (
+            get_metrics_update_date(metrics) if metrics else None
+        )
 
         return super().get(request, *args, **kwargs)
 
@@ -256,16 +268,30 @@ class PlayerVideosView(
         kwargs["form"] = PlayerVideoForm()
         return super().get(request, *args, **kwargs)
 
-    def get_thumbnails(self, qs):  # for youtube links only with domain youtube.*/
-        def get_id(url):
-            return url[32:43]
+    def get_thumbnails(self, qs) -> typing.List:
+        """
+        get thumbnail urls
+        youtube links only, for domains youtube.com or youtu.be
+        Otherwise, there will be not thumbnail but regular button
+        """
 
         def thumbnail_link(id):
             thumbnail_id = randint(1, 3)
             return f"https://img.youtube.com/vi/{id}/{thumbnail_id}.jpg"
 
-        video_ids = [get_id(video.url) if video.url else "" for video in qs]
-        thumbnail_urls = [thumbnail_link(id) if id else "" for id in video_ids]
+        vid_urls = [video.url for video in qs]
+        thumbnail_urls = []
+
+        for url in vid_urls:
+            if "youtube.com" in url:
+                thumbnail_urls.append(
+                    thumbnail_link(parse_qs(urlparse(url).query).get("v", [""])[0])
+                )
+            elif "youtu.be" in url:
+                thumbnail_urls.append(thumbnail_link(basename(url)))
+            else:
+                thumbnail_urls.append(None)
+
         return thumbnail_urls
 
     def post(self, request, *args, **kwargs):
