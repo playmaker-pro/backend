@@ -1,6 +1,8 @@
+import datetime
 import logging
 from typing import Dict, Type
 from pydantic import BaseModel
+from django.conf import settings
 
 logger = logging.getLogger("adapters")
 
@@ -52,3 +54,30 @@ class PlayerMapperEntityNotFoundLogger:
     def __init__(self, user_id: int, params: Dict) -> None:
         msg = f"MapperEntity for params: {params} and player with user id = {user_id} not found."
         logger.error(msg)
+
+
+class ScrapperIsNotRespongingLogger:
+    """
+    Log on each minute if there is no connection with scrapper
+    Create log in prod/stg env, print out in dev env
+    """
+
+    last_log = None
+
+    def __call__(self) -> None:
+        _now = datetime.datetime.now()
+
+        if (
+            self.last_log is None
+            or self.last_log + datetime.timedelta(minutes=1) < _now
+        ):
+            self.last_log = _now
+            self.log()
+
+    def log(self):
+        msg = f"!!! Scrapper is not responding ({self.last_log}) !!!"
+
+        if settings.CONFIGURATION == "dev":
+            print(msg)
+        else:
+            logger.error(msg)
