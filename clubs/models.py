@@ -184,6 +184,13 @@ class Club(models.Model, MappingMixin):
         _("Club name"), max_length=255, help_text="Displayed Name of club"
     )
 
+    short_name = models.CharField(
+        _("Skrócona nazwa klubu"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+
     voivodeship_raw = models.CharField(
         _("Województwo"),
         help_text=_("Wojewódźtwo w którym grasz."),
@@ -772,6 +779,12 @@ class Team(models.Model, MappingMixin):
     name = models.CharField(
         _("Nazwa drużyny"),
         max_length=255,
+    )
+    short_name = models.CharField(
+        _("Skrócona nazwa drużyny"),
+        max_length=255,
+        null=True,
+        blank=True,
     )
 
     def get_permalink(self):

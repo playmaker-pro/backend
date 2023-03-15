@@ -3,6 +3,7 @@ from users.queries import get_users_manger_roles
 from app.utils.admin import json_filed_data_prettified
 from . import models
 from utils import linkify
+from clubs.management.commands.utils import modify_name
 from django.utils.safestring import mark_safe
 from typing import Sequence, Optional
 from clubs.filters import (
@@ -40,6 +41,20 @@ def set_invisibility(modeladmin, request, queryset):
     for object in queryset:
         object.visible = False
         object.save()
+
+
+@admin.action(description="Modify names")
+def modify_names(modeladmin, request, queryset):
+    # Loop through the selected objects and modify their names
+    for obj in queryset:
+        if isinstance(obj, models.Club):
+            modified_name = modify_name(obj)
+            obj.short_name = modified_name
+            obj.save()
+        elif isinstance(obj, models.Team):
+            modified_name = modify_name(obj)
+            obj.short_name = modified_name
+            obj.save()
 
 
 def resave(modeladmin, request, queryset):
@@ -239,6 +254,7 @@ class TeamHistoryAdmin(admin.ModelAdmin):
 class TeamAdmin(admin.ModelAdmin):
     list_display = (
         "name",
+        'short_name',
         "mapping",
         linkify("club"),
         "junior_group",
@@ -257,7 +273,7 @@ class TeamAdmin(admin.ModelAdmin):
         "visible",
         HasManagerFilter,
     )
-    actions = [update_team_visibility, set_visibility, set_invisibility]
+    actions = [update_team_visibility, set_visibility, set_invisibility, modify_names]
     autocomplete_fields = (
         "manager",
         "club",
@@ -291,6 +307,7 @@ class TeamAdmin(admin.ModelAdmin):
 class ClubAdmin(admin.ModelAdmin):
     list_display = (
         "name",
+        "short_name",
         "mapping",
         "autocreated",
         "scrapper_autocreated",
@@ -299,6 +316,7 @@ class ClubAdmin(admin.ModelAdmin):
         "slug",
     )
     readonly_fields = ("mapper",)
+    actions = [modify_names]
     autocomplete_fields: Sequence[str] = ("manager",)
     search_fields: Sequence[str] = ("name",)
     list_filter: Sequence[str] = (
