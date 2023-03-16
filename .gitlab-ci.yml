@@ -1,0 +1,57 @@
+image: python:3.8-slim
+
+cache:
+  paths:
+    - deps_cache
+    - venv
+
+before_script:
+  - apt-get update
+  - apt-get install -y gcc
+  - python -m venv venv
+  - source venv/bin/activate
+  - mkdir _logs
+  - pip install wheel "setuptools<58.0" --cache-dir deps_cache
+  - pip install -r requirements.txt --cache-dir deps_cache
+  - pip install celery==3.1.26.post2 --cache-dir deps_cache
+  - pip install -r requirement_dev.txt --cache-dir deps_cache
+  - pip install pm_core --index-url http://jacekplaymaker.usermd.net:56258/simple/ --trusted-host jacekplaymaker.usermd.net --cache-dir .
+  - pip install stream_framework --index-url http://jacekplaymaker.usermd.net:56258/simple/ --trusted-host jacekplaymaker.usermd.net --cache-dir .
+
+stages:
+  - analysis
+  - test
+
+#flake8:
+#  stage: analysis
+#  only:
+#    - merge_requests
+#  allow_failure: true
+#  script:
+#    - flake8 . --ignore=E501,W503
+#
+#black:
+#  stage: analysis
+#  only:
+#    - master
+#    - merge_requests
+#  allow_failure: true
+#  script:
+#    - black . --check
+#
+#mypy:
+#  stage: analysis
+#  only:
+#    - merge_requests
+#  allow_failure: true
+#  script:
+#    - python3 -m pip install types-requests
+#    - mypy pm_core --ignore-missing-imports
+
+pytest:
+  stage: test
+  only:
+    - master
+    - merge_requests
+  script:
+    - pytest .
