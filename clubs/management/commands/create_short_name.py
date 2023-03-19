@@ -12,10 +12,13 @@ class Command(BaseCommand):
 
         data = []
         for team in teams:
-
             modified_club_name = modify_name(team.club)
+            team.club.short_name = modified_club_name
+            team.club.save()
 
             modified_team_name = modify_name(team)
+            team.short_name = modified_team_name
+            team.save()
 
             data.append({'club_id': team.club.id, 'club_name': team.club.name, 'modified_club_name': modified_club_name,
                          'team_id': team.id, 'team_name': team.name, 'modified_team_name': modified_team_name})

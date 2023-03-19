@@ -120,6 +120,8 @@ def modify_name(obj: Union[Team, Club]) -> str:
         'Klub Sportowy Stowarzyszenie Piłkarskie Widzew Łódź': 'Kssp Widzew Łódź',
         'MKS Limanovia W Limanowej': 'Limanovia Limanowa',
         'KS Brochów (Wrocław)': 'KS Brochów',
+        'MKS Pilica Przedbórz': 'Pilica Przedbórz',
+        'MKS Pilica': 'Pilica Białobrzegi',
         'Bocheński Klub Sportowy': 'BKS Bochnia',
         'Konstantynowska Akademia Sport': 'KAS Konstantynów',
         'mechanik brzezina': 'Mechanik Brzezina',
@@ -146,6 +148,7 @@ def modify_name(obj: Union[Team, Club]) -> str:
         'ŁĘK': 'Łęk',
         'SÓL': 'Sól',
         'Kobiecy KP': 'KKP',
+        'Prochowiczanka': 'Prochowiczanka Prochowice',
         'GKS - Zarzecze': 'GKS Zarzecze',
         'Babicha': 'LKS Babicha',
         'Bemowska Szkoła Sport': 'BSS',
@@ -368,10 +371,10 @@ def modify_name(obj: Union[Team, Club]) -> str:
         modified_club_name = ' '.join(unique_words)
 
     """ 
-        Check if all teams assigned to the given Club object play in the Futsal league. 
-        If they do, modify the Club's name to indicate that it is a Futsal club by appending 
-        the string "(Futsal)" to the Club name.
-        """
+    Check if all teams assigned to the given Club object play in the Futsal league. 
+    If they do, modify the Club's name to indicate that it is a Futsal club by appending 
+    the string "(Futsal)" to the Club name.
+    """
     if isinstance(obj, Club):
         teams = obj.teams.all()
         futsal_leagues = ['Futsal', 'PLF']
