@@ -22,14 +22,15 @@ EXT_LINK_MODEL = Union[
 
 
 def create_or_update_player_external_links(obj: EXT_LINK_MODEL) -> None:
-
-    # Update or create ExternalLinks instances for a given profile object, which can be any of the following types:
-    # 'PlayerProfile', 'CoachProfile', 'ScoutProfile', 'ManagerProfile', 'Club', 'Team', or 'League'. The function
-    # first updates or creates the ExternalLinks instance that represents the profile's external links. If the instance
-    # is created, it is associated with the profile object. It then retrieves all LinkSource objects from the database
-    # and collects all links from the given profile object by iterating through its fields and adding those that
-    # end in "_url" and have a non-empty value. For each link, it creates or updates an ExternalLinksEntity instance
-    # with the corresponding LinkSource and adds it to the ExternalLinks instance.
+    """
+    Update or create ExternalLinks instances for a given profile object, which can be any of the following types:
+    'PlayerProfile', 'CoachProfile', 'ScoutProfile', 'ManagerProfile', 'Club', 'Team', or 'League'. The function
+    first updates or creates the ExternalLinks instance that represents the profile's external links. If the instance
+    is created, it is associated with the profile object. It then retrieves all LinkSource objects from the database
+    and collects all links from the given profile object by iterating through its fields and adding those that
+    end in "_url" and have a non-empty value. For each link, it creates or updates an ExternalLinksEntity instance
+    with the corresponding LinkSource and adds it to the ExternalLinks instance.
+    """
 
     # "Update or create the ExternalLinks instance for the profile"
     model_name = type(obj).__name__.lower()

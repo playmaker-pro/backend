@@ -12,16 +12,17 @@ class Command(BaseCommand):
         parser.add_argument('profile_type', type=str, help='The type of profile to update or create external links for')
 
     def handle(self, *args, **options: Dict[str, Any]) -> None:
-
-        # This method updates or creates ExternalLink objects for a specified profile type. It first checks if the
-        # specified profile_type is valid by comparing it to a list of allowed types. If it is not valid, an error
-        # message is printed and the method exits. Otherwise, the method creates a mapping between the profile_type and
-        # the corresponding model. It then retrieves all objects of that model and iterates through them, calling the
-        # create_or_update_player_external_links function. This function updates or creates ExternalLink object for a
-        # given profile by collecting all external links from the profile instance and adding them to the corresponding
-        # ExternalLinksEntity. If the profile has no existing external links, the create_or_update_player_external_links
-        # function will still create an empty ExternalLink object, which can later be updated with new links if
-        # necessary. Finally, a success message is printed to the console.
+        """
+        This method updates or creates ExternalLink objects for a specified profile type. It first checks if the
+        specified profile_type is valid by comparing it to a list of allowed types. If it is not valid, an error
+        message is printed and the method exits. Otherwise, the method creates a mapping between the profile_type and
+        the corresponding model. It then retrieves all objects of that model and iterates through them, calling the
+        create_or_update_player_external_links function. This function updates or creates ExternalLink object for a
+        given profile by collecting all external links from the profile instance and adding them to the corresponding
+        ExternalLinksEntity. If the profile has no existing external links, the create_or_update_player_external_links
+        function will still create an empty ExternalLink object, which can later be updated with new links if
+        necessary. Finally, a success message is printed to the console.
+        """
 
         profile_type = options.get('profile_type', '').lower()
         valid_types = ['player', 'coach', 'scout', 'manager', 'club', 'team', 'league']
