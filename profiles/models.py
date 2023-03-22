@@ -976,6 +976,22 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def create_external_links_obj(self):
         self.external_links = ExternalLinks.objects.create()
 
+    def create_positions(self):
+        if self.position_raw:
+            main_position = PlayerPositions.objects.create(
+                player=self,
+                playmaker_position=PlayerProfile.POSITION_CHOICES[(self.position_raw)-1][1],
+                is_main=True,
+                score_position=PlayerPositions.SCORE_POSITION_DICT.get(self.position_raw, "")
+            )
+        if self.position_raw_alt:
+            alt_position = PlayerPositions.objects.create(
+                player=self,
+                playmaker_position=PlayerProfile.POSITION_CHOICES[(self.position_raw_alt)-1][1],
+                is_main=False,
+                score_position=PlayerPositions.SCORE_POSITION_DICT.get(self.position_raw_alt, "")
+            )
+
     def save(self, *args, **kwargs):
         """'Nie jest wyświetlana na profilu.
         Pole wykorzystywane wyłącznie do gry Fantasy.
@@ -1002,6 +1018,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
 
         if not self.external_links:
             self.create_external_links_obj()
+
+        if not self.playerpositions_set.exists():
+            self.create_positions()
 
 
         adpt = None
@@ -1799,3 +1818,46 @@ class PlayerVideo(models.Model):
     class Meta:
         verbose_name = "Player Video"
         verbose_name_plural = "Player Videos"
+
+
+class PlayerProfilePosition(models.Model):
+    SCORE_POSITION_DICT = {
+        "Bramkarz": "Bramkarz",
+        "Obrońca Lewy": "Obronca",
+        "Obrońca Prawy": "Obronca",
+        "Obrońca Środkowy": "Obronca",
+        "Pomocnik defensywny (6)": "Pomocnik",
+        "Pomocnik środkowy (8)": "Pomocnik",
+        "Pomocnik ofensywny (10)": "Pomocnik",
+        "Skrzydłowy": "Napastnik",
+        "Napastnik": "Napastnik",
+    }
+
+    player = models.ForeignKey(PlayerProfile, on_delete=models.CASCADE)
+    playmaker_position = models.IntegerField(
+        choices=make_choices(PlayerProfile.POSITION_CHOICES),
+        blank=True,
+        null=True,
+    )
+    is_main = models.BooleanField(default=False)
+    score_position = models.CharField(max_length=50)
+
+    class Meta:
+        verbose_name = "Player Profile Position"
+        verbose_name_plural = "Player Profile Positions"
+
+    def __str__(self):
+        return f"{self.player} - {self.get_playmaker_position_display()}"
+
+    def get_score_position(self) -> str:
+        """
+        Gets the corresponding score_position for the player's playmaker_position, as defined in the
+        SCORE_POSITION_DICT dictionary. If no score_position is found, returns an empty string.
+        """
+        return self.SCORE_POSITION_DICT.get(self.get_playmaker_position_display(), "")
+
+    def save(self, *args, **kwargs):
+        # set the score_position field based on the playmaker_position value
+        self.score_position = self.get_score_position()
+
+        super().save(*args, **kwargs)

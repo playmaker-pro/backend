@@ -313,3 +313,8 @@ class RoleChangeRequestAdmin(admin.ModelAdmin):
 @admin.register(models.PlayerVideo)
 class PlayerVideoAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(models.PlayerProfilePosition)
+class PlayerProfilePositionAdmin(admin.ModelAdmin):
+    readonly_fields = ("score_position",)
