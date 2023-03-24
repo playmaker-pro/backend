@@ -317,4 +317,4 @@ class PlayerVideoAdmin(admin.ModelAdmin):
 
 @admin.register(models.PlayerProfilePosition)
 class PlayerProfilePositionAdmin(admin.ModelAdmin):
-    readonly_fields = ("score_position",)
+    pass
