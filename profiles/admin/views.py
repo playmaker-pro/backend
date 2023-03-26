@@ -318,3 +318,8 @@ class PlayerVideoAdmin(admin.ModelAdmin):
 @admin.register(models.PlayerProfilePosition)
 class PlayerProfilePositionAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(models.Language)
+class LanguageAdmin(admin.ModelAdmin):
+    pass

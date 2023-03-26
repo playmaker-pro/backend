@@ -1818,3 +1818,16 @@ class PlayerProfilePosition(models.Model):
         verbose_name = "Player Profile Position"
         verbose_name_plural = "Player Profile Positions"
         unique_together = ("player_position", "player_profile")
+
+
+class Language(models.Model):
+    name = models.CharField(max_length=50)
+    native_name = models.CharField(max_length=50)
+    code = models.CharField(max_length=10)
+    priority = models.IntegerField(default=2)
+
+    def __str__(self):
+        return f'{self.name} ({self.native_name})'
+
+    class Meta:
+        ordering = ['priority', 'name']
