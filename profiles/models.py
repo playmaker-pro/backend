@@ -478,6 +478,7 @@ class TrainerContact(models.Model):
 
 class PlayerPosition(models.Model):
     name = models.CharField(max_length=255)
+    score_position = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return f"{self.name}"
@@ -1002,7 +1003,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
 
         if not self.external_links:
             self.create_external_links_obj()
-
 
         adpt = None
         # Each time actions
@@ -1799,3 +1799,22 @@ class PlayerVideo(models.Model):
     class Meta:
         verbose_name = "Player Video"
         verbose_name_plural = "Player Videos"
+
+
+class PlayerProfilePosition(models.Model):
+    player_position = models.ForeignKey(PlayerPosition, on_delete=models.CASCADE)
+    player_profile = models.ForeignKey(
+        PlayerProfile, on_delete=models.CASCADE, related_name="player_positions"
+    )
+    is_main = models.BooleanField(
+        default=False,
+        help_text="Indicates whether this is the player's main position.",
+    )
+
+    def __str__(self):
+        return f"{self.player_profile.user} - {self.player_position}"
+
+    class Meta:
+        verbose_name = "Player Profile Position"
+        verbose_name_plural = "Player Profile Positions"
+        unique_together = ("player_position", "player_profile")
