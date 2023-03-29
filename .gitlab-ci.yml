@@ -1,8 +1,5 @@
 image: python:3.8-slim
 
-variables:
-  GIT_SUBMODULE_STRATEGY: recursive
-
 cache:
   paths:
     - venv
@@ -10,7 +7,10 @@ cache:
 
 before_script:
   - apt-get update
-  - apt-get install -y gcc tree flake8 black mypy
+  - apt-get install -y gcc tree flake8 black mypy git
+  - git config submodule.data.url https://bartnyk:${GITLAB_PRIVATE_KEY}@gitlab.com/playmaker1/data.git
+  - git config submodule.stats.url https://bartnyk:${GITLAB_PRIVATE_KEY}@gitlab.com/playmaker1/packages/pm-stats.git
+  - git submodule update --init --recursive --remote
   - python -m venv venv
   - source venv/bin/activate
   - mkdir _logs
