@@ -8,8 +8,8 @@ cache:
 before_script:
   - apt-get update
   - apt-get install -y gcc tree flake8 black mypy git
-  - git config submodule.data.url https://bartnyk:${GITLAB_PRIVATE_KEY}@gitlab.com/playmaker1/data.git
-  - git config submodule.stats.url https://bartnyk:${GITLAB_PRIVATE_KEY}@gitlab.com/playmaker1/packages/pm-stats.git
+  - git config submodule.data.url $DATA_REPO
+  - git config submodule.stats.url $STATS_REPO
   - git submodule update --init --recursive --remote
   - python -m venv venv
   - source venv/bin/activate
