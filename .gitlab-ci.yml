@@ -47,7 +47,7 @@ mypy:
   allow_failure: true
   script:
     - python3 -m pip install types-requests
-    - mypy pm_core --ignore-missing-imports
+    - mypy .
 
 pytest:
   stage: test
