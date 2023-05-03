@@ -1,12 +1,11 @@
-from django.db import models
-from clubs.models import Season, Seniority
-from clubs.services import SeasonService
-
-from utils import get_current_season
 from django.contrib.auth import get_user_model
-from stats.adapters.player import PlayerAdapter
+from django.db import models
 from django.db.models import Sum
 
+from clubs.models import Season, Seniority
+from clubs.services import SeasonService
+from stats.adapters.player import PlayerAdapter
+from utils import get_current_season
 
 User = get_user_model()
 
@@ -96,9 +95,13 @@ class CalculateFantasyStats:
             )
             return
 
-        player = PlayerAdapter(int(user_profile.mapper.get_entity(
-            related_type='player', database_source='s38'
-        ).mapper_id)).get_player_object()
+        player = PlayerAdapter(
+            int(
+                user_profile.mapper.get_entity(
+                    related_type="player", database_source="s38"
+                ).mapper_id
+            )
+        ).get_player_object()
         points = 0
         ps = player.playerstats.select_related(
             "game", "gamefication", "league", "season"

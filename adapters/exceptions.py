@@ -1,8 +1,9 @@
 import datetime
 import logging
 from typing import Dict, Type
-from pydantic import BaseModel
+
 from django.conf import settings
+from pydantic import BaseModel
 
 logger = logging.getLogger("adapters")
 

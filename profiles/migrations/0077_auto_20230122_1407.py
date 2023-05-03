@@ -4,38 +4,37 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('profiles', '0076_playerprofile_mapper'),
+        ("profiles", "0076_playerprofile_mapper"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='coachprofile',
-            name='training_ready',
+            model_name="coachprofile",
+            name="training_ready",
         ),
         migrations.RemoveField(
-            model_name='playerprofile',
-            name='club_raw',
+            model_name="playerprofile",
+            name="club_raw",
         ),
         migrations.RemoveField(
-            model_name='playerprofile',
-            name='league_raw',
+            model_name="playerprofile",
+            name="league_raw",
         ),
         migrations.RemoveField(
-            model_name='playerprofile',
-            name='team_raw',
+            model_name="playerprofile",
+            name="team_raw",
         ),
         migrations.RemoveField(
-            model_name='scoutprofile',
-            name='club',
+            model_name="scoutprofile",
+            name="club",
         ),
         migrations.RemoveField(
-            model_name='scoutprofile',
-            name='league',
+            model_name="scoutprofile",
+            name="league",
         ),
         migrations.RemoveField(
-            model_name='scoutprofile',
-            name='voivodeship',
+            model_name="scoutprofile",
+            name="voivodeship",
         ),
     ]

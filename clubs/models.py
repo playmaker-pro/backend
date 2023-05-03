@@ -5,15 +5,17 @@ from address.models import AddressField
 from django.conf import settings
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
-from profiles.utils import conver_vivo_for_api, supress_exception, unique_slugify
-from .managers import LeagueManager
-from voivodeships.models import Voivodeships
-from django.utils import timezone
-from mapper.models import Mapper
+
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_player_external_links
+from mapper.models import Mapper
+from profiles.utils import conver_vivo_for_api, supress_exception, unique_slugify
+from voivodeships.models import Voivodeships
+
+from .managers import LeagueManager
 
 
 class Season(models.Model):
@@ -235,7 +237,6 @@ class Club(models.Model, MappingMixin):
 
     def create_mapper_obj(self):
         self.mapper = Mapper.objects.create()
-
 
     def create_external_links_obj(self):
         self.external_links = ExternalLinks.objects.create()
@@ -667,7 +668,9 @@ class Team(models.Model, MappingMixin):
         default=False, help_text="Auto-created from new scrapper"
     )
 
-    junior_group = models.ForeignKey("JuniorAgeGroup", null=True, blank=True, on_delete=models.SET_NULL)
+    junior_group = models.ForeignKey(
+        "JuniorAgeGroup", null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     @property
     def should_be_visible(self):
@@ -695,7 +698,11 @@ class Team(models.Model, MappingMixin):
 
     @property
     def team_name_with_current_league(self):
-        return self.display_team + (" " + f"({self.latest_league_from_lh})") if self.latest_league_from_lh else ""
+        return (
+            self.display_team + (" " + f"({self.latest_league_from_lh})")
+            if self.latest_league_from_lh
+            else ""
+        )
 
     @property
     def league_with_parents(self):
@@ -732,7 +739,9 @@ class Team(models.Model, MappingMixin):
         return self.league.display_league
 
     def get_latest_team_history(self) -> List["TeamHistory"]:
-        sorted_team_histories = self.historical.all().order_by("-league_history__season__name")
+        sorted_team_histories = self.historical.all().order_by(
+            "-league_history__season__name"
+        )
         if sorted_team_histories:
             return sorted_team_histories[0]
 
@@ -762,7 +771,6 @@ class Team(models.Model, MappingMixin):
     @property
     @supress_exception
     def display_league_region_and_group_name(self) -> Union[str, None]:
-
         region = self.league.region if self.league and self.league.region else ""
         group_name = self.league.display_league_group_name
 

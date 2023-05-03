@@ -20,7 +20,6 @@ from django.views import View, generic
 
 from app import mixins
 
-
 User = get_user_model()
 
 

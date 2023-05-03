@@ -1,12 +1,15 @@
-from django.db import models
-from django.contrib.auth.models import AbstractUser
 from django.conf import settings
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
-from notifications.mail import mail_user_waiting_for_verification
-from django.urls import reverse
+
+from notifications.mail import (
+    mail_user_waiting_for_verification,
+    verification_notification,
+)
 from roles import definitions
-from notifications.mail import verification_notification
 from users.managers import CustomUserManager
 
 
@@ -68,7 +71,6 @@ class UserRoleMixin:
 
 
 class User(AbstractUser, UserRoleMixin):
-
     ROLE_CHOICES = definitions.ACCOUNT_ROLES
 
     STATE_NEW = "New"
@@ -176,7 +178,7 @@ class User(AbstractUser, UserRoleMixin):
 
     @property
     def display_full_name(self):
-        return ' '.join(filter(None, [self.first_name,  self.last_name]))
+        return " ".join(filter(None, [self.first_name, self.last_name]))
 
     @property
     def role(self):
@@ -290,7 +292,6 @@ class User(AbstractUser, UserRoleMixin):
         return f"{self.get_full_name()} ({self.get_declared_role_display()})"
 
     def save(self, *args, **kwargs):
-
         if self.role in [
             definitions.GUEST_SHORT,
             definitions.SCOUT_SHORT,

@@ -1,5 +1,6 @@
 from functools import cached_property, lru_cache
-from .utils import supress_exception, conver_vivo_for_api
+
+from .utils import conver_vivo_for_api, supress_exception
 
 
 class SoccerDisplayMixin:

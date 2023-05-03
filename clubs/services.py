@@ -1,5 +1,6 @@
-from .models import Team, Club, Season
 from typing import Optional
+
+from .models import Club, Season, Team
 
 
 class SeasonService:

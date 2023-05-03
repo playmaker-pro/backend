@@ -1,35 +1,36 @@
 from __future__ import unicode_literals
-from django import forms
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import (
-    Layout,
-    Fieldset,
-    Div,
-    Submit,
-    HTML,
-    Button,
-    Row,
-    Field,
-    MultiField,
-)
+
 from crispy_forms.bootstrap import (
+    Alert,
     AppendedText,
-    PrependedText,
     FormActions,
+    PrependedText,
     Tab,
     TabHolder,
-    Alert,
 )
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import (
+    HTML,
+    Button,
+    Div,
+    Field,
+    Fieldset,
+    Layout,
+    MultiField,
+    Row,
+    Submit,
+)
+from django import forms
 from django.contrib.auth import get_user_model
-
-from clubs.models import Voivodeship, Team
-from profiles.models import CoachProfile
-from . import models
-from django_countries.widgets import CountrySelectWidget
-from django.utils.translation import gettext_lazy as _
-from profiles import widgets
-from django_countries.widgets import CountrySelectWidget
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+from django_countries.widgets import CountrySelectWidget
+
+from clubs.models import Team, Voivodeship
+from profiles import widgets
+from profiles.models import CoachProfile
+
+from . import models
 
 User = get_user_model()
 
@@ -60,7 +61,6 @@ def year_choices():
 
 
 class ClubForPlayerAnnouncementForm(forms.ModelForm):
-
     building_fields = [
         ("country", "Kraj", None, {}),
         ("club", "Klub", None, {}),
@@ -87,7 +87,6 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -104,7 +103,6 @@ class ClubForPlayerAnnouncementForm(forms.ModelForm):
         self.helper.layout = self.build_verification_form()
 
     def set_fields_rules(self):
-
         self.fields["team"].required = True
         self.fields["team"].label = "Drużyna"
 
@@ -308,7 +306,6 @@ class PlayerForClubAnnouncementForm(forms.ModelForm):
 
 
 class CoachForClubAnnouncementForm(forms.ModelForm):
-
     building_fields = [
         ("lic_type", "Typ licencji", None, {}),
         ("voivodeship_obj", "Województwo", None, {}),
@@ -340,7 +337,6 @@ class CoachForClubAnnouncementForm(forms.ModelForm):
         self.helper.layout = self.build_verification_form()
 
     def set_fields_rules(self):
-
         self.fields["lic_type"].required = True
         self.fields["lic_type"].label = "Typ licencji"
         self.fields["lic_type"].help_text = False

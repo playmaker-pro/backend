@@ -1,9 +1,11 @@
 from unittest import TestCase
-from pm_core.stubs.player_stub import PlayerApiServiceStub
-from utils.factories.profiles_factories import PlayerMetricsFactory
-from utils.factories.clubs_factories import SeasonFactory
-from adapters.tests.utils import dummy_player
+
 import pytest
+from pm_core.services.stubs.player_stub import PlayerApiServiceStub
+
+from adapters.tests.utils import dummy_player
+from utils.factories.clubs_factories import SeasonFactory
+from utils.factories.profiles_factories import PlayerMetricsFactory
 
 
 @pytest.mark.django_db

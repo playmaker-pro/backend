@@ -1,26 +1,23 @@
+import datetime
+import functools
+import logging
 import re
+from urllib.parse import parse_qs, urlparse
 
-from django.template.defaultfilters import slugify
-from django.utils.translation import gettext_lazy as _
-from django.utils import timezone
+import pandas as pd
 from django.conf import settings
+from django.template.defaultfilters import slugify
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+
+import profiles
+from profiles import models
+from roles import definitions
+from stats import adapters
 
 # from . import models
 # from profiles import forms  # todo teog importu tu nie moze być bo sie robi rekurencja
 from users.models import User
-from stats import adapters
-
-from roles import definitions
-import functools
-import logging
-import pandas as pd
-import profiles
-import datetime
-
-from urllib.parse import urlparse, parse_qs
-from profiles import models
-
-
 
 logger = logging.getLogger(__name__)
 
@@ -254,11 +251,12 @@ def create_from_data():
     players = User.objects.filter(declared_role=definitions.PLAYER_SHORT)
     print(f"Number of players to update {players.count()}")
     ids = 0
-    from clubs.models import Club, Team, League, Seniority, Gender, Voivodeship
-    from stats.adapters import PlayerAdapter
     from league_filter_map import LEAGUE_MAP
-    from stats.utilites import LEAGUES_CODES_MAP
     from teams_map import TEAM_MAP
+
+    from clubs.models import Club, Gender, League, Seniority, Team, Voivodeship
+    from stats.adapters import PlayerAdapter
+    from stats.utilites import LEAGUES_CODES_MAP
     from utils import get_current_season
 
     print("getting sys user")
@@ -273,7 +271,6 @@ def create_from_data():
             print("do not have related object", player)
             continue
         if profile.has_data_id:
-
             # print('get from s38')
             adpt = PlayerAdapter(
                 int(
@@ -379,7 +376,6 @@ def create_from_data():
                 clubo = cqs.first()
                 createdc = False
             elif cqs.count() == 0:
-
                 clubo, createdc = Club.objects.update_or_create(
                     name=club, defaults={"manager": sysuser, "voivodeship": vivoo}
                 )
@@ -448,12 +444,10 @@ def match_player_videos(csv_file: str) -> None:
             )
             print(f"{player_profile.user} video with url {row['url']} created")
         else:
-            print(
-                f"{player_profile.user} video with url {row['url']} already exists"
-            )
+            print(f"{player_profile.user} video with url {row['url']} already exists")
 
 
-def get_metrics_update_date(metrics: 'models.PlayerMetrics') -> str:
+def get_metrics_update_date(metrics: "models.PlayerMetrics") -> str:
     """
     Returns the date when player metrics were last updated.
     If the metrics were updated after 15 February 2023, returns the date portion of the

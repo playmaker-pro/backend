@@ -1,15 +1,15 @@
-from django.shortcuts import render
+import json
 
-from followers import forms
-from followers.models import Item
-from django.contrib.auth import authenticate, get_user_model, login as auth_login
+from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.template.context import RequestContext
-from followers.models import Pin
+
+from followers import forms
+from followers.models import Item, Pin
 from followers.pin_managers import manager
-import json
 
 
 def trending(request):

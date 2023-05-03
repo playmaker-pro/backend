@@ -1,9 +1,9 @@
+import logging
 import typing
 from collections import Counter
 from datetime import datetime
-from adapters import strategy
-from adapters.base_adapter import API_METHOD, ScrapperAPI
 from random import choices
+
 from address.models import AddressField
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -14,26 +14,23 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 
-from adapters.player_adapter import (
-    PlayerGamesAdapter,
-    PlayerSeasonStatsAdapter,
-)
+import utils as utilites
+from adapters import strategy
+from adapters.base_adapter import API_METHOD, ScrapperAPI
+from adapters.player_adapter import PlayerGamesAdapter, PlayerSeasonStatsAdapter
+from clubs import models as clubs_models
+from external_links.models import ExternalLinks
+from external_links.utils import create_or_update_player_external_links
+from mapper.models import Mapper
 
 # from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
 from roles import definitions
 from stats.adapters import PlayerAdapter
-from .utils import make_choices
-from .utils import unique_slugify
-import utils as utilites
-from .utils import supress_exception
-from clubs import models as clubs_models
-from .mixins import TeamObjectsDisplayMixin
-import logging
-from .erros import VerificationCompletionFieldsWrongSetup
 from voivodeships.models import Voivodeships
-from mapper.models import Mapper
-from external_links.models import ExternalLinks
-from external_links.utils import create_or_update_player_external_links
+
+from .erros import VerificationCompletionFieldsWrongSetup
+from .mixins import TeamObjectsDisplayMixin
+from .utils import make_choices, supress_exception, unique_slugify
 
 User = get_user_model()
 
@@ -112,7 +109,6 @@ class RoleChangeRequest(models.Model):
 
 
 class ProfileVisitHistory(models.Model):
-
     counter = models.PositiveIntegerField(default=0)
     counter_coach = models.PositiveIntegerField(default=0)
     counter_scout = models.PositiveIntegerField(default=0)
@@ -235,14 +231,12 @@ class BaseProfile(models.Model, EventLogMixin):
             definitions.PROFILE_TYPE_COACH,
             definitions.PROFILE_TYPE_PLAYER,
         ]:
-
             if self.PROFILE_TYPE == definitions.PROFILE_TYPE_CLUB:
                 return self.club_object
             elif (
                 self.PROFILE_TYPE == definitions.PROFILE_TYPE_COACH
                 or definitions.PROFILE_TYPE_PLAYER
             ):
-
                 if self.team_object is None:
                     return None
                 else:
@@ -1174,7 +1168,6 @@ class PlayerMetrics(models.Model):
         season_summary=False,
         fantasy_summary=False,
     ):
-
         if games:
             date = self.games_updated
         elif games_summary:
@@ -1485,7 +1478,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         Za wygrany mecz 3 pkt, za remis 1 pkt, za porażkę 0 pkt.
 
         """
-        from metrics.coach import CoachGamesAdapter, CoachCarrierAdapterPercentage
+        from metrics.coach import CoachCarrierAdapterPercentage, CoachGamesAdapter
 
         if not self.has_data_id:
             return
@@ -1583,7 +1576,6 @@ class ManagerProfile(BaseProfile):
             self.create_external_links_obj()
         super().save(*args, **kwargs)
         create_or_update_player_external_links(self)
-
 
     class Meta:
         verbose_name = "Manager Profile"
@@ -1827,7 +1819,7 @@ class Language(models.Model):
     priority = models.IntegerField(default=2)
 
     def __str__(self):
-        return f'{self.name} ({self.native_name})'
+        return f"{self.name} ({self.native_name})"
 
     class Meta:
-        ordering = ['priority', 'name']
+        ordering = ["priority", "name"]

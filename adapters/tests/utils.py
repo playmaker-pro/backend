@@ -1,6 +1,6 @@
 import typing
 
-from pm_core.stubs.player_stub import PlayerApiServiceStub
+from pm_core.services.stubs.player_stub import PlayerApiServiceStub
 
 from adapters.player_adapter import (
     PlayerDataAdapter,
@@ -8,8 +8,8 @@ from adapters.player_adapter import (
     PlayerSeasonStatsAdapter,
 )
 from adapters.strategy import JustGet
-from utils.factories.profiles_factories import PlayerProfileFactory
 from utils.factories.mapper_factories import MapperEntityFactory
+from utils.factories.profiles_factories import PlayerProfileFactory
 
 PLAYER_DEFAULT_TYPEHINT = typing.Union[
     PlayerSeasonStatsAdapter, PlayerDataAdapter, PlayerGamesAdapter

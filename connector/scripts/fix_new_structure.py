@@ -1,15 +1,23 @@
-from typing import List, Tuple
 import re
-from clubs.models import LeagueHistory, TeamHistory, Team, Season, Club
-from connector.scripts.base import BaseCommand
+from typing import List, Tuple
+
 from django.core.exceptions import ObjectDoesNotExist
+
+from clubs.models import Club, LeagueHistory, Season, Team, TeamHistory
+from connector.enums import (
+    FUTSAL_FEMALE_LEAGUES,
+    FUTSAL_MALE_LEAGUES,
+    JUNIOR_LNP_LEAGUES,
+    JUNIOR_MALE_LEAGUES,
+    SENIOR_FEMALE_LEAGUES,
+    SENIOR_MALE_LEAGUES,
+)
+from connector.scripts.base import BaseCommand
+
 from .utils import unify_team_name
-from connector.enums import SENIOR_MALE_LEAGUES, SENIOR_FEMALE_LEAGUES, JUNIOR_LNP_LEAGUES, FUTSAL_MALE_LEAGUES, \
-    FUTSAL_FEMALE_LEAGUES, JUNIOR_MALE_LEAGUES
 
 
 class Command(BaseCommand):
-
     def handle(self) -> None:
         # self.fix_teams()
         self.fix_clubs()
@@ -34,9 +42,9 @@ class Command(BaseCommand):
             except ObjectDoesNotExist:
                 continue
             if (
-                    TeamHistory.objects.filter(league_history=parent_lh)
-                    and not TeamHistory.objects.filter(league_history=rj_lh)
-                    and TeamHistory.objects.filter(league_history=rw_lh)
+                TeamHistory.objects.filter(league_history=parent_lh)
+                and not TeamHistory.objects.filter(league_history=rj_lh)
+                and TeamHistory.objects.filter(league_history=rw_lh)
             ):
                 parent_lh.league = rj_l
                 parent_lh.save()
@@ -82,10 +90,14 @@ class Command(BaseCommand):
                     result = base_filter.filter(mapping__icontains=phrase)
                     if len(result) > 1:
                         try:
-                            result = result.filter(mapping__icontains=partial_club_name[n + 1])
+                            result = result.filter(
+                                mapping__icontains=partial_club_name[n + 1]
+                            )
                         except IndexError:
                             try:
-                                result = result.filter(mapping__icontains=partial_club_name[n - 1])
+                                result = result.filter(
+                                    mapping__icontains=partial_club_name[n - 1]
+                                )
                             except IndexError:
                                 continue
                             if len(result) == 1:
@@ -95,8 +107,9 @@ class Command(BaseCommand):
         """
         Merge teams that have not been assigned correctly
         """
-        teams_to_fix = Team.objects.filter(historical__isnull=True)\
-            .filter(league__isnull=False)
+        teams_to_fix = Team.objects.filter(historical__isnull=True).filter(
+            league__isnull=False
+        )
         for team in teams_to_fix:
             if team.mapper and team.mapper.get_entities():
                 continue
@@ -157,8 +170,9 @@ class Command(BaseCommand):
         }
         return mapper[number]
 
-    def rename_teams_based_on_league(self, teams: List[Tuple[Team, str]], ordering: List[str]) -> None:
-
+    def rename_teams_based_on_league(
+        self, teams: List[Tuple[Team, str]], ordering: List[str]
+    ) -> None:
         sorted_teams = sorted(teams, key=(lambda tup: ordering.index(tup[1])))
         print(sorted_teams, ordering)
 
@@ -174,7 +188,7 @@ class Command(BaseCommand):
                 # team.save()
             index += 1
 
-    def fix_teams_numeration(self): ## NOT READY, DONT USE
+    def fix_teams_numeration(self):  ## NOT READY, DONT USE
         """
         Apply team hierarchy numeration based on league - "GKS Bełchatów", "GKS Bełchatów II" etc.
         """
@@ -193,8 +207,9 @@ class Command(BaseCommand):
             futsal_male = []
             futsal_female = []
             for team in teams:
-                th = TeamHistory.objects.filter(team=team)\
-                    .order_by("-league_history__season")
+                th = TeamHistory.objects.filter(team=team).order_by(
+                    "-league_history__season"
+                )
                 if not th:
                     continue
                 try:

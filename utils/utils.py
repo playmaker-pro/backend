@@ -1,10 +1,12 @@
 import collections
-from clubs.models import Season
+
 import django.db.utils
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django.utils.html import format_html
-from django.core.exceptions import ObjectDoesNotExist
+
+from clubs.models import Season
 
 
 def is_allowed_interact_with_s38():
@@ -95,7 +97,6 @@ def generate_teams_map(filename):
 
 
 def generate_league_options():
-
     from league_filter_map import LEAGUE_MAP
 
     out = ""
@@ -122,13 +123,11 @@ def generate_league_options():
 
 
 def generate_vivo_options():
-
     from league_filter_map import LEAGUE_MAP
 
     out = ""
     lgs = []
     for item in LEAGUE_MAP:
-
         vivo_name = item.get("województwo")
 
         lgs.append(vivo_name)

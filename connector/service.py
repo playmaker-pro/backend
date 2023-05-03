@@ -1,13 +1,16 @@
 import json
 from typing import List, Union
+
 import requests
+
 from connector.entities import (
-    TeamHistoryEntity,
-    PlayEntity,
-    ClubEntity,
     BaseTeamEntity,
+    ClubEntity,
     LeagueEntity,
+    PlayEntity,
+    TeamHistoryEntity,
 )
+
 from .urls import URL
 
 # paths
@@ -23,7 +26,6 @@ class HttpService:
         self.urls: URL = URL()
 
     def get(self, url) -> Union[requests.Response, None]:
-
         response = self.session.get(url)
         response.raise_for_status()
 
@@ -64,16 +66,19 @@ class HttpService:
 
 
 class JsonService:
-
     def get_team_histories(self) -> List[TeamHistoryEntity]:
-        return [TeamHistoryEntity(**th) for th in json.load(open(TEAM_HISTORY_FILEPATH))]
+        return [
+            TeamHistoryEntity(**th) for th in json.load(open(TEAM_HISTORY_FILEPATH))
+        ]
 
     def get_team_plays(self, team_id: str) -> List[PlayEntity]:
         tables = json.load(open(TABLES_FILEPATH))
 
         plays = []
         for table in tables:
-            result = list(filter(lambda row: row["team"]["id"] == team_id, table["rows"]))
+            result = list(
+                filter(lambda row: row["team"]["id"] == team_id, table["rows"])
+            )
             if result:
                 plays.append(table["play"])
 

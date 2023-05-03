@@ -1,8 +1,9 @@
 from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
-from utils import testutils as utils
+
 from clubs.models import Season
+from utils import testutils as utils
 
 utils.silence_explamation_mark()
 

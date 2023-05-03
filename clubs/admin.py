@@ -1,16 +1,19 @@
+from typing import Optional, Sequence
+
 from django.contrib import admin
-from users.queries import get_users_manger_roles
-from app.utils.admin import json_filed_data_prettified
-from . import models
-from utils import linkify
 from django.utils.safestring import mark_safe
-from typing import Sequence, Optional
+
+from app.utils.admin import json_filed_data_prettified
 from clubs.filters import (
-    IsParentFilter,
     CountryListFilter,
     HasManagerFilter,
+    IsParentFilter,
     ZpnListFilter,
 )
+from users.queries import get_users_manger_roles
+from utils import linkify
+
+from . import models
 
 
 def reset_history(modeladmin, request, queryset):
@@ -274,16 +277,14 @@ class TeamAdmin(admin.ModelAdmin):
         if obj:
             latest_league = obj.latest_league_from_lh
             if latest_league:
-                current_league = (
-                    f"{latest_league.get_highest_parent()}"
-                )
+                current_league = f"{latest_league.get_highest_parent()}"
         return current_league
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         form.base_fields["manager"].queryset = get_users_manger_roles()
         form.base_fields["editors"].queryset = get_users_manger_roles()
-        new_form_order = {'name': form.base_fields.pop("name")}
+        new_form_order = {"name": form.base_fields.pop("name")}
         new_form_order.update(form.base_fields)
         form.base_fields = new_form_order
         return form
@@ -301,7 +302,7 @@ class ClubAdmin(admin.ModelAdmin):
         "slug",
         linkify("external_links"),
     )
-    readonly_fields = ("mapper", )
+    readonly_fields = ("mapper",)
     autocomplete_fields: Sequence[str] = ("manager",)
     search_fields: Sequence[str] = ("name",)
     list_filter: Sequence[str] = (

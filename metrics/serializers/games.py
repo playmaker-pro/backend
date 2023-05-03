@@ -7,7 +7,6 @@ from metrics.mappers import PlayerMapper, TeamMapper
 
 from .users import SimplePlayerProfileSerializer
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -51,7 +50,6 @@ class GameSerializer:
 
     @classmethod
     def calculate(cls, game, host_pic, guest_pic, league: CLeague):
-
         h_url, h_pic, h_name = TeamMapper.get_url_pic_for_club(
             cls._get_attr(game, "host_team_name"), league
         )

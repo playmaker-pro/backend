@@ -1,23 +1,24 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.admin import ChoicesFieldListFilter, SimpleListFilter
 from django.contrib.auth.admin import UserAdmin  # as BaseUserAdmin
+from django.db.models import (
+    BooleanField,
+    Case,
+    F,
+    ForeignKey,
+    IntegerField,
+    Q,
+    Value,
+    When,
+)
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from profiles.models import CoachProfile
 from utils import linkify
-from django.contrib.admin import SimpleListFilter, ChoicesFieldListFilter
+
 from . import models
-from django.db.models import (
-    Q,
-    Value,
-    BooleanField,
-    Case,
-    When,
-    ForeignKey,
-    IntegerField,
-    F,
-)
 
 
 def verify_one(modeladmin, request, queryset):
@@ -47,12 +48,16 @@ class VerificationFilter(ChoicesFieldListFilter):
         ]
 
     def queryset(self, request, queryset):
-        queryset = queryset.select_related(
-            "coachprofile", "playerprofile"
-        ).annotate(
+        queryset = queryset.select_related("coachprofile", "playerprofile").annotate(
             mapper_id=Case(
-                When(declared_role="T", then=F("coachprofile__mapper__mapperentity__mapper_id")),
-                When(declared_role="P", then=F("playerprofile__mapper__mapperentity__mapper_id")),
+                When(
+                    declared_role="T",
+                    then=F("coachprofile__mapper__mapperentity__mapper_id"),
+                ),
+                When(
+                    declared_role="P",
+                    then=F("playerprofile__mapper__mapperentity__mapper_id"),
+                ),
             ),
             team_club_league_voivodeship_ver=Case(
                 When(
@@ -148,21 +153,32 @@ class HasDataMapperIdFilter(SimpleListFilter):
         queryset = queryset.distinct()
         if self.value() == "1":
             queryset = queryset.filter(
-                Q(declared_role="T", coachprofile__mapper__mapperentity__mapper_id__isnull=False,
-                  coachprofile__mapper__mapperentity__database_source='s38') |
-                Q(declared_role="P", playerprofile__mapper__mapperentity__mapper_id__isnull=False,
-                  playerprofile__mapper__mapperentity__database_source='s38')
+                Q(
+                    declared_role="T",
+                    coachprofile__mapper__mapperentity__mapper_id__isnull=False,
+                    coachprofile__mapper__mapperentity__database_source="s38",
+                )
+                | Q(
+                    declared_role="P",
+                    playerprofile__mapper__mapperentity__mapper_id__isnull=False,
+                    playerprofile__mapper__mapperentity__database_source="s38",
+                )
             )
         elif self.value() == "2":
             queryset = queryset.exclude(
-                Q(declared_role="T", coachprofile__mapper__mapperentity__mapper_id__isnull=False) &
-                Q(coachprofile__mapper__mapperentity__database_source='s38')
+                Q(
+                    declared_role="T",
+                    coachprofile__mapper__mapperentity__mapper_id__isnull=False,
+                )
+                & Q(coachprofile__mapper__mapperentity__database_source="s38")
             ).exclude(
-                Q(declared_role="P", playerprofile__mapper__mapperentity__mapper_id__isnull=False) &
-                Q(playerprofile__mapper__mapperentity__database_source='s38')
+                Q(
+                    declared_role="P",
+                    playerprofile__mapper__mapperentity__mapper_id__isnull=False,
+                )
+                & Q(playerprofile__mapper__mapperentity__database_source="s38")
             )
         return queryset
-
 
 
 @admin.register(models.User)
@@ -234,10 +250,11 @@ class UserAdminPanel(UserAdmin):
             return ""
 
     def get_mapper(self, obj):
-        if hasattr(obj.profile, 'mapper'):
+        if hasattr(obj.profile, "mapper"):
             if obj.profile.mapper is not None:
                 old_mapper = obj.profile.mapper.get_entity(
-                    related_type__in=['player', 'coach'], database_source='s38')
+                    related_type__in=["player", "coach"], database_source="s38"
+                )
                 if old_mapper is not None:
                     return old_mapper.mapper_id
         return None

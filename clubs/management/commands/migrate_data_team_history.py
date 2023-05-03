@@ -1,7 +1,9 @@
 from django.core.management import BaseCommand
-from clubs.models import Team, TeamHistory, Season, LeagueHistory
-from profiles.models import PlayerProfile, CoachProfile
 from django.db.models import Q
+
+from clubs.models import LeagueHistory, Season, Team, TeamHistory
+from profiles.models import CoachProfile, PlayerProfile
+
 
 class Command(BaseCommand):
     """
@@ -37,7 +39,8 @@ class Command(BaseCommand):
             league = team.league
             try:
                 league_history = LeagueHistory.objects.get(league=league)
-            except: league_history = None
+            except:
+                league_history = None
             TeamHistory.objects.get_or_create(
                 team=team,
                 autocreated=True,

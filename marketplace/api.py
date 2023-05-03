@@ -1,27 +1,27 @@
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext_lazy as _
-from inquiries.models import InquiryRequest
-from django.contrib.auth.decorators import login_required
-from followers.models import FollowTeam
+
 from clubs.models import Team
-from followers.models import Follow
-from notifications.mail import (
-    announcement_notify_requester,
-    announcement_notify_player,
-    announcement_notify_coach,
-    announcement_notify_club_player,
-    announcement_notify_club_coach,
-)
-from users.models import User
+from followers.models import Follow, FollowTeam
+from inquiries.models import InquiryRequest
 
 # from marketplace.models import Announcement  # TODO: sprawdzic o co tu chodzi i podac prawdziwa klase!
 from marketplace.models import (
-    PlayerForClubAnnouncement,
-    ClubForPlayerAnnouncement,
     ClubForCoachAnnouncement,
+    ClubForPlayerAnnouncement,
     CoachForClubAnnouncement,
+    PlayerForClubAnnouncement,
 )
+from notifications.mail import (
+    announcement_notify_club_coach,
+    announcement_notify_club_player,
+    announcement_notify_coach,
+    announcement_notify_player,
+    announcement_notify_requester,
+)
+from users.models import User
 
 class_mapper = {
     "PlayerForClubAnnouncement": PlayerForClubAnnouncement,
@@ -45,7 +45,6 @@ def approve_announcement(request):
     user = request.user
 
     if request.POST.get("action") == "post":
-
         try:
             _id = int(request.POST.get("id"))
         except ValueError:
@@ -72,7 +71,6 @@ def approve_announcement(request):
                 ann_club = ann_club.name
 
             if club_name == ann_club:
-
                 message = "Nie możesz wchodzić w interakcję z użytkownikami, którzy są z Tobą w klubie"
                 response_data["message"] = message
                 response_data["error"] = True

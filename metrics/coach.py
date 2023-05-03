@@ -1,8 +1,7 @@
-from data.models import TeamStat
-
-from stats import utilites as utils
 from collections import defaultdict
 
+from data.models import TeamStat
+from stats import utilites as utils
 
 # class CoachSeasonSerializer:
 #     def serialize(self, queryset):

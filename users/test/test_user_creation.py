@@ -2,6 +2,7 @@ import logging
 
 import pytest
 from django.test import TestCase
+
 from inquiries import models as inquiries_models
 from profiles import models as pfs_models
 from roles import definitions

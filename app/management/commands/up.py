@@ -1,11 +1,10 @@
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
 from profiles import models
 from profiles.views import (
     get_profile_model,
 )  # @todo this shoudl goes to utilities, views and commands are using this utility
-from django.contrib.auth import get_user_model
-
 
 User = get_user_model()
 
@@ -27,9 +26,9 @@ class Command(BaseCommand):
         season_name = options.get("season")
 
         profiles = models.CoachProfile.objects.filter(
-            mapper__mapperentity__related_type='coach',
-            mapper__mapperentity__database_source='s38',
-            mapper__mapperentity__mapper_id__isnull=False
+            mapper__mapperentity__related_type="coach",
+            mapper__mapperentity__database_source="s38",
+            mapper__mapperentity__mapper_id__isnull=False,
         )
         counter = profiles.count()
         if counter == 0:

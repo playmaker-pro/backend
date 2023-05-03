@@ -1,10 +1,9 @@
-import os
 import logging
+import os
 
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
-
 
 # This loads additional settings for our environemnt
 CONFIGURATION = "dev"  # following options are allowed ['dev', 'production', 'staging']
@@ -383,7 +382,6 @@ ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 
 ACCOUNT_FORMS = {"signup": "users.forms.CustomSignupForm"}
-# ACCOUNT_ADAPTER = 'users.adapter.CustomAccountAdapter'
 
 
 # Provider specific settings
@@ -426,8 +424,8 @@ ACCOUNT_FORMS = {"signup": "users.forms.CustomSignupForm"}
 BLOG_PAGINATION_PER_PAGE = 4
 
 
-from os.path import join
 import logging.config
+from os.path import join
 
 
 def get_logging_structure(LOGFILE_ROOT):
@@ -551,8 +549,8 @@ JQUERY_URL = False
 
 COUNTRIES_FIRST = ["PL", "GER", "CZ", "UA", "GB"]
 
-from django.views.generic import RedirectView
 from django.urls import include, path
+from django.views.generic import RedirectView
 
 # urlpatterns = patterns('',
 #     url(r'^some-page/$', RedirectView.as_view(url='/')),

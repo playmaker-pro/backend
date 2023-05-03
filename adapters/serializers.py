@@ -1,20 +1,19 @@
 import typing
 from abc import abstractmethod
 from datetime import datetime
+from itertools import groupby
+
 from django.core.exceptions import ObjectDoesNotExist
 from pm_core.services.models import (
-    GameSchema,
     EventSchema,
-    PlayerSeasonStatsSchema,
-    PlayerSeasonStatsListSchema,
+    GameSchema,
     GamesSchema,
+    PlayerSeasonStatsListSchema,
+    PlayerSeasonStatsSchema,
 )
-from adapters.exceptions import (
-    WrongDataFormatException,
-    DataShortageLogger,
-)
+
+from adapters.exceptions import DataShortageLogger, WrongDataFormatException
 from adapters.utils import resolve_stats_list
-from itertools import groupby
 from mapper.models import MapperEntity
 
 

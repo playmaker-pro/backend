@@ -1,9 +1,10 @@
 import logging
 from re import T
 
+from django.contrib.auth import get_user_model
+
 from clubs.models import Club as CClub
 from clubs.models import Team as CTeam
-from django.contrib.auth import get_user_model
 from roles import definitions
 
 from . import models

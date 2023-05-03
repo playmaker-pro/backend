@@ -3,18 +3,18 @@ import logging
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from notifications.mail import mail_role_change_request, mail_admins_about_new_user
+
+from notifications.mail import mail_admins_about_new_user, mail_role_change_request
 from roles import definitions
+
 from . import models
 from .services import ProfileService
-
 
 logger = logging.getLogger(__name__)
 
 
-# @todo this shoudl be moved to another place (inquires)
-from inquiries.models import UserInquiry
-from inquiries.models import InquiryPlan
+# @todo(rkesik) this shoudl be moved to another place (inquires)
+from inquiries.models import InquiryPlan, UserInquiry
 
 
 def create_default_basic_plan_if_not_present():

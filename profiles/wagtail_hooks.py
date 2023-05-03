@@ -1,11 +1,11 @@
+from django.urls import reverse
 from django.utils.html import format_html
-
 from wagtail.contrib.modeladmin.options import (
     ModelAdmin,
     ModelAdminGroup,
     modeladmin_register,
 )
-from django.urls import reverse
+
 from . import models
 
 

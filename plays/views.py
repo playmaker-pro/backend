@@ -1,11 +1,5 @@
 import logging
 
-from clubs.models import LeagueHistory as CLeagueHistory
-from app import mixins, utils
-from app.mixins import FilterPlayerViewMixin
-from clubs.models import Club, League, Season
-from clubs.models import LeagueHistory as CLeagueHistory
-from clubs.models import Team
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
@@ -14,6 +8,13 @@ from django.db.models.functions import Concat
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View, generic
+
+from app import mixins, utils
+from app.mixins import FilterPlayerViewMixin
+from clubs.models import Club, League
+from clubs.models import LeagueHistory as CLeagueHistory
+from clubs.models import Season, Team
+from metrics.matches import LeagueMatchesMetrics
 from metrics.team import (
     LeagueAdvancedTableRawMetrics,
     LeagueChildrenSerializer,
@@ -21,12 +22,10 @@ from metrics.team import (
     PlaymakerMetrics,
     SummarySerializer,
 )
-from metrics.matches import LeagueMatchesMetrics
 from profiles.utils import get_datetime_from_age
 from roles import definitions
 from users.models import User
 from utils import get_current_season
-
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +137,6 @@ class PlaysBaseView(ComplexViews):
         return options
 
     def get(self, request, slug, *args, **kwargs):
-
         self.set_kwargs(kwargs, slug)
         return super().get(request, *args, **kwargs)
 

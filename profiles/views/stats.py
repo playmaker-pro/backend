@@ -1,22 +1,25 @@
 import logging
+import typing
 from os.path import basename
 from random import randint
 from urllib.parse import parse_qs, urlparse
-import typing
-from typing_extensions import runtime
-from django.shortcuts import get_object_or_404, redirect
-from rest_framework.views import View
-from app import mixins
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext_lazy as _
 from django.views import generic
-from utils import get_current_season
-from profiles.utils import get_metrics_update_date
-from profiles.models import PlayerVideo
-from stats import adapters, utilites
+from rest_framework.views import View
+from typing_extensions import runtime
+
+from app import mixins
 from profiles.forms.regular import PlayerVideoForm
+from profiles.models import PlayerVideo
+from profiles.utils import get_metrics_update_date
+from stats import adapters, utilites
+from utils import get_current_season
+
 from .base import SlugyViewMixin
 
 User = get_user_model()
@@ -164,7 +167,6 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
     def flattern_coach_carrier_structure(self, data: dict) -> list:
         out = []
         for season, season_data in data.items():
-
             if not season_data.get("carrier"):
                 continue
             if not season_data.get("carrier").get("teams"):

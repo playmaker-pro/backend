@@ -1,15 +1,14 @@
 import logging
+from unittest.mock import patch
 
 import pytest
+from django.conf import settings
 from django.test import TestCase
-from inquiries.models import InquiryRequest, InquiryPlan, UserInquiry
+
+from inquiries.models import InquiryPlan, InquiryRequest, UserInquiry
 from roles import definitions
 from users.models import User
 from utils import testutils as utils
-
-from django.conf import settings
-
-from unittest.mock import patch
 
 utils.silence_explamation_mark()
 

@@ -1,31 +1,32 @@
 from __future__ import unicode_literals
-from django import forms
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import (
-    Layout,
-    Fieldset,
-    Div,
-    Submit,
-    HTML,
-    Button,
-    Row,
-    Field,
-    MultiField,
-)
+
 from crispy_forms.bootstrap import (
+    Alert,
     AppendedText,
-    PrependedText,
     FormActions,
+    PrependedText,
     Tab,
     TabHolder,
-    Alert,
 )
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import (
+    HTML,
+    Button,
+    Div,
+    Field,
+    Fieldset,
+    Layout,
+    MultiField,
+    Row,
+    Submit,
+)
+from django import forms
 from django.contrib.auth import get_user_model
-from . import models
-
 from django.utils.translation import gettext_lazy as _
+
 from profiles import widgets
 
+from . import models
 
 User = get_user_model()
 

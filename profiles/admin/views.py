@@ -1,14 +1,17 @@
 from os import link
+
 from django.contrib import admin
-from utils import linkify
+
 from app.utils.admin import json_filed_data_prettified
 from profiles import models
+from utils import linkify
+
 from .filters import (
-    OnlyLastVerificationFilter,
+    HasClubObjectFilter,
     HasDataMapperIdFilter,
     HasTeamObjectFilter,
-    HasClubObjectFilter,
     HasTextInputFilter,
+    OnlyLastVerificationFilter,
 )
 
 
@@ -204,7 +207,7 @@ class ProfileVerificationStatusAdmin(admin.ModelAdmin):
 @admin.register(models.PlayerProfile)
 class PlayerProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
-        'get_mapper',
+        "get_mapper",
         linkify("playermetrics"),
         linkify("team_object"),
         linkify("team_history_object"),
@@ -225,7 +228,7 @@ class PlayerProfileAdmin(ProfileAdminBase):
             return linkify("team_object")(obj)
         else:
             return "-"
-    
+
     team_object_linkify.short_description = "team_object"
 
     def meta_last(self, obj):
@@ -235,9 +238,11 @@ class PlayerProfileAdmin(ProfileAdminBase):
             obj.meta
 
     def get_mapper(self, obj):
-        if hasattr(obj, 'mapper'):
+        if hasattr(obj, "mapper"):
             if obj.mapper is not None:
-                old_mapper = obj.mapper.get_entity(related_type='player', database_source='s38')
+                old_mapper = obj.mapper.get_entity(
+                    related_type="player", database_source="s38"
+                )
                 if old_mapper is not None:
                     return old_mapper.mapper_id
         return None
@@ -264,7 +269,7 @@ class PlayerProfileAdmin(ProfileAdminBase):
 @admin.register(models.CoachProfile)
 class CoachProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
-        'get_mapper',
+        "get_mapper",
         linkify("team_object"),
         linkify("team_history_object"),
         linkify("team_history_object"),
@@ -273,9 +278,11 @@ class CoachProfileAdmin(ProfileAdminBase):
     autocomplete_fields = ("team_object", "team_history_object", "team_history_object")
 
     def get_mapper(self, obj):
-        if hasattr(obj, 'mapper'):
+        if hasattr(obj, "mapper"):
             if obj.mapper is not None:
-                old_mapper = obj.mapper.get_entity(related_type='coach', database_source='s38')
+                old_mapper = obj.mapper.get_entity(
+                    related_type="coach", database_source="s38"
+                )
                 if old_mapper is not None:
                     return old_mapper.mapper_id
         return None

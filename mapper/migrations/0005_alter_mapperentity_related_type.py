@@ -4,15 +4,25 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('mapper', '0004_alter_mapperentity_unique_together'),
+        ("mapper", "0004_alter_mapperentity_unique_together"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='mapperentity',
-            name='related_type',
-            field=models.CharField(choices=[('team', 'team'), ('player', 'player profile'), ('coach', 'coach profile'), ('club', 'club'), ('team history', 'team history'), ('league', 'league history highest parent'), ('play', 'league history')], max_length=100),
+            model_name="mapperentity",
+            name="related_type",
+            field=models.CharField(
+                choices=[
+                    ("team", "team"),
+                    ("player", "player profile"),
+                    ("coach", "coach profile"),
+                    ("club", "club"),
+                    ("team history", "team history"),
+                    ("league", "league history highest parent"),
+                    ("play", "league history"),
+                ],
+                max_length=100,
+            ),
         ),
     ]

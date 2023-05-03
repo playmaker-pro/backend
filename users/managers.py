@@ -1,6 +1,7 @@
-from django.contrib.auth.base_user import BaseUserManager
 from datetime import datetime as dt
 from datetime import timedelta
+
+from django.contrib.auth.base_user import BaseUserManager
 
 
 class CustomUserManager(BaseUserManager):

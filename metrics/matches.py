@@ -1,15 +1,17 @@
 import logging
-from .serializers import GameSerializer
+
 from django.contrib.postgres.aggregates import ArrayAgg
+
 from clubs.models import League as CLeague
 from clubs.models import LeagueHistory as CLeagueHistory
 from data.models import Game, League
+
+from .serializers import GameSerializer
 
 logger = logging.getLogger(__name__)
 
 
 class LeagueMatchesMetrics:
-
     _default_pic = "default_profile.png"
 
     def calculate(
@@ -21,7 +23,6 @@ class LeagueMatchesMetrics:
         sort_up: bool = True,
         overwrite: bool = False,
     ):
-
         print(f">> Param passed league: {type(league)}, ({league})")
         print(f">> Param passed season_name: {type(season_name)}, ({season_name})")
         print(
@@ -143,7 +144,6 @@ class LeagueMatchesMetrics:
         overwrite: bool = False,
         sort_by: str = "date",
     ):
-
         keyname = "matches_played"
         season_name = league_history.season.name
 

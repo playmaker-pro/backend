@@ -5,7 +5,6 @@ import math
 import operator
 from functools import reduce
 
-from clubs.models import Club, Team, Seniority, League, Gender, Voivodeship
 from crispy_forms.utils import render_crispy_form
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -19,17 +18,19 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
+
+from app import mixins
+from clubs.models import Club, Gender, League, Seniority, Team, Voivodeship
 from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
-from app import mixins
+from notifications import message
+from profiles.models import PlayerPosition
 from profiles.utils import get_datetime_from_age
 from roles import definitions
 from stats import adapters
 from users.models import User
-from notifications import message
-from profiles.models import PlayerPosition
-from .models import QuestionAnswer
 
+from .models import QuestionAnswer
 
 User = get_user_model()
 

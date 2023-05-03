@@ -1,5 +1,6 @@
 import factory
-from mapper.models import Mapper, MapperSource, MapperEntity
+
+from mapper.models import Mapper, MapperEntity, MapperSource
 
 ID = "111222333"
 MAPPER_DATABASE_SOURCE = "scrapper_mongodb"
@@ -17,7 +18,6 @@ class MapperSourceFactory(factory.django.DjangoModelFactory):
 
 
 class MapperEntityFactory(factory.django.DjangoModelFactory):
-
     mapper_id = ID
     target = factory.SubFactory(MapperSourceFactory)
     source = factory.SubFactory(MapperSourceFactory)

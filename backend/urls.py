@@ -1,31 +1,28 @@
+import allauth.account.urls
 from django.conf import settings
-from django.urls import include, path
 from django.contrib import admin
-from django.views.generic import TemplateView
 from django.contrib.sitemaps.views import sitemap
-
+from django.urls import include, path
+from django.views.generic import TemplateView
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.core import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 
-from search import views as search_views
-from .api import api_router
-
 import app.urls
-import soccerbase.urls
-import plays.urls
 import clubs.urls
-import profiles.urls
-import marketplace.urls
-import products.urls
-import fqa.urls
 import fantasy.urls
-import landingpage.urls
-import allauth.account.urls
 import followers.urls  # @to be removed
-from django.views.generic import TemplateView
-from django.conf import settings
+import fqa.urls
+import landingpage.urls
+import marketplace.urls
+import plays.urls
+import products.urls
+import profiles.urls
+import soccerbase.urls
+from api import urls as api_urls
+from search import views as search_views
 
+from .api import api_router
 
 admin.site.site_header = "PlayMaker.pro - development"
 admin.site.site_title = "PlayMaker.pro - Admin site"
@@ -55,11 +52,13 @@ urlpatterns = [
     path("terms/", TemplateView.as_view(template_name="subpgaes/terms.html")),
     path("blog/", include("blog.urls", namespace="blog")),
     path("api/v2/", api_router.urls),
+    path("api/v3/", include(api_urls)),
     path("resources/", include("resources.urls", namespace="resources")),
     path("select2/", include("django_select2.urls")),
     path("transfer/", include(landingpage.urls, namespace="landingpage")),
     path("select2/", include("django_select2.urls")),
     path("", include("allauth.urls")),
+    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 ] + settings.REDIRECTS_LISTS
 
 
@@ -88,10 +87,10 @@ urlpatterns = urlpatterns + [
     #    path("pages/", include(wagtail_urls)),
 ]
 
-from .sitemaps import sitemaps
 from django.urls import path
 from django.views.generic.base import TemplateView
 
+from .sitemaps import sitemaps
 
 urlpatterns = urlpatterns + [
     path(

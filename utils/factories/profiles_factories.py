@@ -1,7 +1,7 @@
-from profiles.models import PlayerProfile, PlayerMetrics
-from django.contrib.auth import get_user_model
 import factory
+from django.contrib.auth import get_user_model
 
+from profiles.models import PlayerMetrics, PlayerProfile
 from utils.factories.mapper_factories import MapperFactory
 
 user = get_user_model()

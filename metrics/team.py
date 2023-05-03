@@ -2,21 +2,21 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 
-from .serializers import (
-    CoachProfileSerializer,
-    PlayerProfileSerializer,
-    GameSerializer,
-    GameRawSerializer,
-    TrendSerializer,
-)
 from django.contrib.postgres.aggregates import ArrayAgg
-
-from data.models import Game, League, TeamStat
 from django.db.models import Q, Sum
 from django.urls import reverse
-from .mappers import TeamMapper
+
+from data.models import Game, League, TeamStat
 from profiles.models import CoachProfile, PlayerProfile
 
+from .mappers import TeamMapper
+from .serializers import (
+    CoachProfileSerializer,
+    GameRawSerializer,
+    GameSerializer,
+    PlayerProfileSerializer,
+    TrendSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +79,6 @@ class LeagueChildrenSerializer:
     def serialize(self, league):
         output = []
         for leg in league.league_set.all():
-
             output.append(
                 {
                     "url": reverse("plays:summary", kwargs={"slug": leg.slug}),
@@ -246,7 +245,6 @@ class LeagueMatchesRawMetrics:
     serializer = GameRawSerializer()
 
     def serialize(self, league, season_name):
-
         url = League.get_url_based_on_id(league.index)
         league = League.objects.get(_url=url)
 

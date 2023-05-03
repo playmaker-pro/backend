@@ -15,6 +15,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
+
 from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from profiles import forms, models
@@ -23,11 +24,10 @@ from profiles.model_utils import (
     get_profile_model,
     get_profile_model_from_slug,
 )
-from roles import definitions
-from utils import calculate_prev_season, get_current_season
 from profiles.utils import get_metrics_update_date
-
+from roles import definitions
 from stats import adapters
+from utils import calculate_prev_season, get_current_season
 
 User = get_user_model()
 from clubs.models import Team
@@ -509,7 +509,7 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
             games_summary = metrics.games_summary
             fantasy_summary = metrics.fantasy_summary
             season_summary = metrics.season_summary
-            kwargs['metrics_updated_date'] = get_metrics_update_date(metrics)
+            kwargs["metrics_updated_date"] = get_metrics_update_date(metrics)
             kwargs["last_games"] = games_summary
             kwargs["fantasy"] = fantasy_summary
             kwargs["season_stat"] = season_summary
@@ -748,7 +748,6 @@ class EditProfile(
 
 
 class AccountMissingFirstLastName(LoginRequiredMixin, View):
-
     http_method_names = ["post", "get"]
 
     def get(self, request, *args, **kwargs):
