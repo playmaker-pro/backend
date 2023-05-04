@@ -86,69 +86,255 @@ def change_club_image(clubs: Club, clubs_matched: dict) -> None:
                 pass
 
 
-def modify_name(obj: Union[Team, Club]) -> str:
-    excluded_parts = ['AKS', 'SPK', 'AZS', 'WKS', 'KP', 'KS', 'BKS', 'GKS', 'GLKS', 'KKS', 'Tkkf', 'Uokp',
+def create_short_name(obj: Union[Team, Club]) -> str:
+
+    excluded_parts = ['Kspn','Gmina','AS','LZS','AKS', 'SPK', 'AZS', 'WKS', 'KP', 'KS', 'BKS', 'GKS', 'GLKS', 'KKS', 'Tkkf', 'Uokp',
                       'FC', 'LKS', 'MLKS', 'KTS-K', 'MUKS', 'AKS','OKS', 'TS', 'JUN', 'MKP', 'HKS', 'Tlks',
                       'ZKS', 'I', 'II', 'III', 'Mmks', 'KLUB', 'SPORTOWY', 'PIŁKARSKI', 'ROBOTNICZY', 'SKS', 'RKS',
-                      'ŁKS', 'MKS', 'AFC', 'MOS', 'OSIR', 'BKP', 'GTS', 'DKS', 'DTS', 'FKS', 'GKP', 'ZLKS', 'Gmlks',
-                      'ZGKS', 'MGKS', 'MGHKS', 'GTS', 'Mgks', 'Luks', 'Glzs', 'Glkr', 'LKP', 'Mglks', 'Klks',
-                      'Stowarzyszenie', 'LZS', 'UKS', 'GRANIT', 'LGKS', 'CHKS', 'ŁKP', 'GSS', 'UMKS', 'CKS', 'Mosir', 'Mksr',
+                      'ŁKS', 'MKS', 'AFC', 'MOS', 'OSIR', 'BKP', 'Gts', 'DKS', 'DTS', 'FKS', 'GKP', 'ZLKS', 'Gmlks',
+                      'ZGKS', 'MGKS', 'MGHKS', 'GTS', 'Mgks', 'Luks', 'LUKS', 'Glzs', 'Glkr', 'LKP', 'Mglks', 'Klks',
+                      'Stowarzyszenie', 'UKS', 'GRANIT', 'LGKS', 'CHKS', 'ŁKP', 'GSS', 'UMKS', 'CKS', 'Mosir', 'Mksr',
                       'Mbks','Plks', 'SL', 'AMSPN', 'Amspn', 'SKP', 'Guks', 'KSS', 'Uplks', 'APN', 'AP', 'TKS', 'GAS',
                       'GZS', 'ZS', 'STS', 'PTS', 'AF', 'PKS', 'TP', 'KRS', 'NKS', 'Osppn', 'SMP', 'LGKS', 'Skfkp',
                       'SSR', 'SS', 'Smpn', 'Swmp', 'TMS', 'goksir', 'Granit', 'SR', 'Sapn', 'Otps', 'Mgts', 'Ksgc',
                       'Goldengranit', 'Kkpk', 'Mzlks', 'KKP', 'Aspn', 'ŚKS', 'PSS', 'RTS', 'SKF', 'Zlks', 'MTS','KOS',
-                      'SFC', 'Mguks', 'Smks', 'ZKS', 'Kkpn', 'Pwks', 'Mluks', 'OSP', 'Orkan', 'Glkst', 'Chks']
+                      'SFC', 'Mguks', 'Smks', 'ZKS', 'Kkpn', 'Pwks', 'Mluks', 'OSP','Glkst', 'Chks', 'TKP', 'Mzks',
+                      'Pgks', 'Kssp', 'Pluks', 'Rędzinianka', 'Moks', 'Lgks', 'PUKS', 'Lwks', 'Gts-k', 'Oskf', 'Wulks',
+                      'Uwks', 'Gluks', 'KOP', 'FUN', 'Klzs', 'ROW', 'GPSZ', 'MGTS', 'KUKS', 'MOSM',
+                      'Glks-t', 'SAS', 'JKS', 'SRS', 'WSS'
+                      ]
 
-    words_to_remove = ['Agrotex', 'Stihl','WSS', '37', '1910', 'K', 'JUN', 'Enea',
-                       'Spółka', 'Akcyjna', 'Sportowe', 'Mmks', 'Muks', 'SSA', 'SPZ', 'OO',
+    words_to_remove = ['OHI','Gieksa', 'Iławski','Agrotex', 'Stihl', '37', '1910', 'K', 'JUN', 'Enea',
+                       'Spółka', 'Akcyjna', 'Sportowe', 'Mmks', 'Muks', 'SSA', 'SPZ', 'OO', 'Dar'
                        'Piłkarski', 'Brax', 'TON', 'Gminny', 'Ludowy', '38', 'Z', 'A', 'P', '1917', 'CEZ', 'AMSPN',
                        'Az-bud', 'Wg-skałka', 'ZSP', 'WAMAG', 'Foto', 'Higiena', 'Gealan', 'N-w-ch', 'WOY',
-                       '„konfeks”', 'Filsport', '&', 'Pwsz', 'Jelcz', 'Gmina', 'Srwsio','ZA',
+                       '„konfeks”', 'Filsport', '&', 'Pwsz', 'Jelcz', 'Srwsio','ZA',
                        'Wamag', 'FMS', 'SA', 'ECO', 'Video', 'MAX', 'ROL', 'DLN', 'San-bud', 'Miejsko-gminny', 'N',
-                       'Ino', 'Mal', 'W', 'Tir', 'J-aw', 'FA', 'Fair', 'Pol',  'ATB', 'SP', 'Gtstir',
+                       'Ino', 'Mal', 'W', 'Tir', 'J-aw', 'Pol',  'ATB', 'SP', 'Gtstir',
                        'Osiedlowy', 'TG', 'IKS','EBE', 'SHR', 'KLB', 'CUP', 'S', 'Smwsir', 'Geyer&hosaja',
-                       'TAN', 'Towsportowe', 'Ar-tig', 'L', 'GAZ', 'ZEM', 'Steico', 'Elektrobut', 'Kombud',
-                       'Farmutil', 'VSB', 'Polomarket', 'Mitex', 'SC', 'Fundacja', 'MK', 'Mal-bud']
-    words_to_replace = {
+                       'TAN', 'Towsportowe', 'L', 'GAZ', 'ZEM', 'Steico', 'Elektrobut', 'Kombud',
+                       'Farmutil', 'VSB', 'Polomarket', 'Mitex', 'SC', 'Fundacja', 'MK', 'Mal-bud', 'Aldo', 'Albud',
+                       'Świat', 'Drzewa', 'Zjednoczeni-gmina', 'Tylicz', 'Obid', 'Sport', 'SCS', 'CSP',
+                       'Tspn', 'Ognisko', '1953', 'Kwts', 'Stow', 'DP', 'PSW']
+
+    phrase_to_replace = {
+        'Stowarzyszenie Turystyczno Sportowe Start Gmina Frampol': 'Start Gmina Frampol',
+        'Miejski Klub Sportowy Włókniarz Mirsk': 'Włókniarz Mirsk',
+        'Klub Sportowy Włókniarz': 'Włókniarz Białystok',
+        'Fundacja Akademia Piłkarska Junior': 'AP Junior Białystok',
+        'KS 94 Rachowice': 'KS Rachowice',
+        'Grom W Pracach Małych': 'Grom Prace Małe',
+        'UKS W Pleśnej': 'UKS Pleśna',
+        'LKS Ursus Dachnów': 'Ursus Dachnów',
+        'Wejherowska Akademia Piłki Nożnej Błękitni Wejherowo': 'Błękitni Wejherowo',
+        'Ostrowski Klub Sportowy': 'OKS',
+        'Football Club': 'FC',
+        'Parafialny Uczniowski Klub Sportowy': 'PUKS',
+        'Gdańska AP Sparta': 'Sparta Gdańsk',
+        'Odrzykoń KS Zamczysko': 'Zamczysko Odrzykoń',
+        'Wiślańskie Stowarzyszenie Sportowe': 'WSS Wisła',
+        'Uczniowski Klub Sportowy Błyskawica W Myślachowicach': 'Błyskawica Myślachowice',
+        'Luks Sport Z Kulturą Wydminy': 'Luks Wydminy',
+        'Ludowy Klub Sportowy Jutrzenka W Ostrężnicy': 'Jutrzenka Ostrężnica',
+        'Stowarzyszenie Akademia Sportu Milan Sport': 'Milan Sport Pruszków',
+        'Ludowy Zespół Sportowypolanka Nieszkowice Wielkie': 'LZS Polanka Nieszkowice Wielkie',
+        'Grodziska AP Grodzisk Wlkp': 'GAP Grodzisk Wielkopolski',
+        'Strażacki KS': 'SKS',
+        'Klub Sportowy SKS Sieradz W Sieradzu': 'SKS Sieradz',
+        'Woskar Szklarska Poręba-wojcieszyce': 'Woskar Wojcieszyce',
+        'Football Academy Mezar Nakło N Notecią': 'Football Academy Nakło nad Notecią',
+        'Ludowy Zespół Sportowy DĄB W Nagłowicach': 'Dąb Nagłowice',
+        'Jasielskie Stowarzyszenie Sportowe Akademia Piłkarska Jasło': 'AP Czarni Jasło',
+        'Klub Sportowy Filkówka W Barwałdzie Średnim': 'Filkówka Barwałd Średni',
+        'Gminny Uczniowski Klub Sportowy Terpol Sieradz W Sieradzu': 'Terpol Sieradz',
+        'Mosir Łomża': 'ŁKS 1926 Łomża',
+        'KS Płomień W Lgocie Małej': 'Płomień Lgota Mała',
+        'PS Football Dreams Passion Ostrów Mazowiecka': 'Piłkarskie Stowarzyszenie Football Dreams Passion',
+        'Ludowy Uczniowski Klub Sportowy Maraton Przy SP W Czajkowie': 'LUKS Maraton Czajków',
+        'Glks-t Agrosport Leśna Podl': 'Agrosport Leśna Podlaska',
+        'Wiejski Klub Sportowy': 'WKS',
+        'Wiki Sport Centrum Sanok': 'Wiki Sanok',
+        'Ludowy Zespół Sportowyostrowianka Ostrów Królewski': 'LZS Ostrowianka Ostrów Królewski',
+        'Uczniowski Miejski Klub Sportowy': 'UMKS',
+        'MKS Concordia Murowanagoślina': 'Concordia Murowana Goślina',
+        'Akademia Piłkarska Młody MKS Kluczbork': 'MKS Kluczbork',
+        'UKS Galewice W Galewicach': 'UKS Galewice',
+        'Akademia Piłkarska Profi Sport Duda': 'AP Profi-Sport Duda',
+        'UKS Wisełka Centrum Dobrzyń N Wisłą': 'UKS Wisełka Centrum',
+        'Akademia Piłkarskie': 'AP',
+        'Stowarzyszenie Akademia Sportowa Lubliniec': 'AS Lubliniec',
+        'UKS Akademia Piłkarska Nowe Skalmierzyce': 'AP Nowe Skalmierzyce',
+        'Wielkopolski Klub Sportowy': 'WKS',
+        'Gminna Akademia Piłkarska Czacz': 'Czacz Śmigiel',
+        'LZS W Kuczkowie': 'Las Kuczków',
+        'Płomień UKS Zagorzyce': 'Płomień Zagorzyce',
+        'Różyny': 'GLKS Różyny',
+        'UKS Mini Soccer Academy': 'Mini Soccer Academy',
+        'Mgts': 'MGTS',
+        'KS ROW Rybnik': 'ROW 1964 Rybnik',
+        'Korfantowskie Towarzystwo Sportowe Czarni Korfantów': 'KTS Czarni Korfantów',
+        'Femgol': 'FemGol',
+        'Stowarzyszenie Klub Piłkarski DUE Soccer': 'Due Soccer Świebodzice',
+        'Mkrs Wisła': 'Wisła Maciejowice',
+        'Zasów-mokre': 'LKS Zasów-Mokre',
+        'Klub Sportowy Vulcan Wólka ML': 'Wulkan Wólka Mlądzka',
+        'Ubiad': 'LKS Ubiad',
+        'LZS KS Kruszyna-prędocin': 'LZS Kruszyna-Prędocin',
+        'Świniarsko': 'LKS Świniarsko',
+        'Sokolica Krościenko N Dunajcem': 'Sokolica Krościenko',
+        'Niedźwiedź Niedźwiedź': 'LKS Niedźwiedź',
+        'Otmęt Fans Klub Sportowy': 'Otmęt FKS Krapkowice',
+        'Kuks': 'KUKS',
+        'Łęki Górne': 'LKS Łęki Górne',
+        'KS Wołczkowo-bezrzecze': 'Wołczkowo Bezrzecze',
+        'Miejski Klub Sportowy': 'MKS',
+        'LZS Biestrzykowice-miodary': 'LZS Orzeł Biestrzykowice',
+        'Łódzki Klub Sportowy': 'ŁKS Łódź',
+        'GKS Gietrzwałd-unieszewo': 'GKS Gietrzwałd-Unieszewo',
+        'Stilon I Gorzów Wielkopolski': 'Stilon Gorzów Wielkopolski',
+        'Stowarzyszenie Klub Sportowy Dąbrowa': 'KS Dąbrowa',
+        'Międzygminny Klub Sportowy': 'MGKS',
+        'MKS Radziejów Popielów': 'MKS Radziejów',
+        'Stowarzyszenie Klub Sportowygórnik Siedlec': 'Górnik Siedlec',
+        'Gminno-uczniowski Klub Sportowy': 'GUKS',
+        'STS Czarni - Sucha Góra': 'Czarni Sucha Góra',
+        'Ludowy KLB Sportowy': 'LKS',
+        'Mordarka': 'LKS Mordarka',
+        'Siemiechów': 'WKS Siemiechów',
+        'Wietrzychowice': 'LKS Wietrzychowice',
+        'Nowa Karczma LKP': 'LKP Nowa Karczma',
+        'KS PCC Brzeg Dolny': 'KS Brzeg Dolny',
+        'Eko-prod': 'Eko-Prod',
+        'TS Gminy': 'TSG',
+        'Luszowice Luszowice': 'LZS Luszowice',
+        'Wójcina Wójcina': 'LZS Wójcina',
+        'Mędrzechów': 'LZS Mędrzechów',
+        'Hucina': 'LKS Hucina',
+        'Stowarzyszenie Kulturalno - Oświatowo - Sportowe KOS': 'GKS Rutki',
+        'Gromnik': 'GLKS Gromnik',
+        'UKS Rotuz - Bronów': 'Rotuz-Bronów',
+        'GKS Naprzód- Rydułtowy': 'Naprzód Rydułtowy',
+        'Gminna Akademia Piłkarska Gminy Dębica Chemik Pustków': 'Chemik Pustków',
+        'Śmigno': 'KS Śmigno',
+        'Łęki Strzyżowskie LKS': 'LKS Łęki Strzyżowskie',
+        'Ryglice Ryglice': 'KS Ryglice',
+        'Wierzchosławice-ostrów': 'LKS Wierzchosławice-Ostrów',
+        'Jodłownik': 'LKS Jodłownik',
+        'Zgłobice Zgłobice': 'LKS Zgłobice',
+        'Rupniów': 'LKS Rupniów',
+        'Koszyce Wielkie': 'KS Koszyce Wielkie',
+        'Głębowice': 'LKS Głębowice',
+        'Bulowice Bulowice': 'LKS Bulowice',
+        'GKS Start-Regent': 'Start Regent Pawłów',
+        'Dzierzkowice': 'ULKS Dzierzkowice',
+        'Tymon-tymowa': 'Tymon tymowa',
+        'Szymbark Szymbark': 'LKS Szymbark',
+        'POM Iskra Piotrowice': 'POM-Iskra Piotrowice',
+        'KS Delta Tir-gum Stare Polichn': 'Delta Stare Polichno',
+        'Akademia Futbolu Spółka Z OO': 'Łódzka Akademia Futbolu',
         'Uczniowski Ludowy Klub Sportowy': 'ULKS',
+        'Miejski Ludowy Klub Sportowy Światowid Łobez': 'Światowid 63 Łobez',
+        'KU AZS UAM Poznań': 'AZS UAM Poznań',
+        'Głusk': 'GLKS Głusk',
+        'Lwówecki Klub Sportowy Czarni': 'Czarni Lwówek Śląski',
         'Stowarzyszenie Sportowo - Edukacyjne Petrus IM KS Henryka Bagińskiego Przy Parafii ŚW AP Piotra Pawła W Łapach': 'Petrus Łapy',
         'Fundacja Sportu Dzieci Akademia Malucha Akademia Młodego Piłkarza Białystok': 'Akademia Malucha Białystok',
         'Jarosławskie Stowarzyszenie Rozwoju Regionalnego W Jarosławiu': 'JKS Jarosław',
         'Stowarzyszenie Szkółka Piłkarska Gminy Lipce Reymontowskie': 'Lipce Reymontowskie',
         'Akademia Piłkarskich Talentów Brylant Włodzimierz Pawluczuk': 'APT Brylant Bielsk Podlaski',
-        'Gminna Akademia Piłkarska Gminy Dębica Chemik Pustków':'Gapg Dębica Chemik Pustków',
         'Klub Sportowy Stowarzyszenie Piłkarskie Widzew Łódź': 'Kssp Widzew Łódź',
         'MKS Limanovia W Limanowej': 'Limanovia Limanowa',
         'KS Brochów (Wrocław)': 'KS Brochów',
+        'Kobiecy Klub Sportowy Wisła W Skoczowie': 'Wisła Skoczów',
+        'Spółdzielnia Break-team LZS Roztocznik': 'LKS Roztocznik',
+        'Przybyszówka': 'KS Przybyszówka',
+        'Klub Sportowy Trenera Łukasza Kościelskiego': 'KSTŁK Wola Chorzelowska',
+        r'\bZagłębie\b': 'Zagłębie Sosnowiec',
+        'Potok Wielki': 'LKS Potok Wielki',
+        'Wiewiórka': 'LKS Wiewiórka',
+        'Mosir': 'MOSiR',
+        'Semp': 'SEMP',
+        'Polichna': 'Kamex Polichna',
+        'UKS Orlik- Radom': 'Orlik Radom',
+        'Stowarzyszenie Towarzystwo Sportowe Tuchovia': 'Tuchovia Tuchów',
+        'Kobiecy Klub Piłkarski': 'KKP',
+        'Juna-trans Stare Oborzyska': 'LZS Stare Oborzyska',
+        'Kobiece Stpiłkarskie': 'KSP',
+        'Luks': 'LUKS',
+        'Puks': 'PUKS',
+        'Lgks': 'LGKS',
+        'Ukks': 'UKKS',
+        'Wilkowice': 'GLKS Wilkowice',
+        'Kosynierzymdm Strzelec Łuczyce': 'Kosynierzy Łuczyce',
+        'Towarzystwo Sportowe Stal-śrubiarnia': 'Stal-Śrubiarnia Żywiec',
+        'Parafialny Klub Sportowy Arka': 'Arka Babice',
         'MKS Pilica Przedbórz': 'Pilica Przedbórz',
+        'Kwiatonowice': 'LKS Kwiatonowice',
+        'Moto - Jelcz Oława': 'Moto-Jelcz Oława',
+        'MKS Polonia Świdnica': 'Polonia-Stal Świdnica',
+        'MKS Korona': 'Korona Góra Kalwaria',
+        'Niepołomicki Sport SPZ OO': 'Puszcza Niepołomice',
+        'KS Dar-bol Alfa Jaromirowice': 'Alfa Jaromirowice',
+        'Wiśnicki Klub Sportowy Szreniawa Nowy Wiśnicz': 'Szreniawa Nowy Wiśnicz',
+        'Slzs KS Włodzice': 'KS Włodzice',
+        'Zagórzany Zagórzany': 'LKS Zagórzany',
+        'Korzenna Korzenna': 'LKS Korzenna',
+        'KS WDA Świecie': 'Wda Świecie',
+        'Piłkarski Uczniowski Klub Sportowy Victoria': 'Victoria Wałbrzych',
+        'KS Gołkowice': 'KS 27 Gołkowice',
+        'Wola Dalsza': 'LKS Wola Dalsza',
+        'Foto Higiena Błyskawica GAĆ': 'Foto-Higiena Błyskawica Gać',
+        'Gzlzs Złotów - Skic': 'LZS Skic',
+        'Pub-gol': 'Pub Gol',
         'MKS Pilica': 'Pilica Białobrzegi',
+        'Klub Piłkarski KP Gwarek Wałbrzych': 'Gwarek Wałbrzych',
+        'MKS - SMS Kraków': 'MKS Kraków',
         'Bocheński Klub Sportowy': 'BKS Bochnia',
+        'KS Leżenica-nowy Dwór': 'KS Leżenica',
+        'Mulks': 'MULKS',
+        'Polanica Zdrój': 'KS Polanica Zdrój',
         'Konstantynowska Akademia Sport': 'KAS Konstantynów',
         'mechanik brzezina': 'Mechanik Brzezina',
         'Budowlany KS Bydgoszcz': 'BKS Bydgoszcz',
         'Międzypokoleniowy KP Powiat Pilski Piła': 'MKP Piła',
         'Miejsko Gminny Uczniowski Klub Sportowy': 'Mguks',
         'Międzyzakładowy Klub Sportowy': 'MKS',
-        'POM Iskra Piotrowice': 'Iskra Piotrowice',
         'MKS Tęcza Krosno Odrz': 'Tęcza Krosno Odrzańskie',
         'Mlksvictoria Sulejówek': 'MLKS Victoria Sulejówek',
         'LKS Sokół W Popowie': 'Sokół Popów',
         'BKS Bobrzanie Bolesławiec': 'BKS Bolesławiec',
+        'JSP Szczakowianka': 'Szczakowianka Jaworzno',
+        'Jędrzychowice': 'Apis Jędrzychowice',
         'Sportis SFC Łochowo': 'Sportis Łochowo',
-        'Mrks Czechowice-dziedzice': 'Mrks Czechowice-Dziedzice',
+        'Mrks Czechowice-dziedzice': 'MRKS Czechowice-Dziedzice',
+        'AKS Busko-zdrój': 'AKS 1947 Busko-zdrój',
         'Zbąszynecka Akademia Piłkarska':'ZAP Zbąszynek',
         'Koluszkowski Klub Sportowy Koluszki': 'KKS Koluszki',
         'Łosicki DOM Kultury': 'ŁDK Łosice',
+        'KS Syrena-grot Rymań': 'Syrena-Grot Rymań',
+        'Krzyżanowice': 'LKS Krzyżanowice',
+        'Grodziskie SS': 'GSS',
         'Uczniowski LKS': 'ULKS',
+        'RSS Centrum': 'Centrum Random',
+        'Gołąbek': 'ULKS Gołąbek',
+        'Białe Orły': 'Białe Orły Warszawa',
+        'Akademicki Związek Sportowy Kraków': 'AZS UJ Kraków',
         'Błękitn ': 'Błękitni',
-        'SAN': 'San',
-        'DAR': 'Dar',
-        'LEW': 'Lew',
-        'TUR': 'Tur',
-        'ŁĘK': 'Łęk',
-        'SÓL': 'Sól',
+        'Nowy Hutnik': 'Hutnik Kraków',
+        'KS Legionovia': 'Legionovia Legionowo',
+        'KS Błonianka': 'Błonianka Błonie',
+        'Chełmski Klub Sportowy Spółka Z OO': 'Chełmianka Chełm',
+        'Kszo': 'KSZO',
+        'SMS Resovia Rzeszów': 'Resovia Rzeszów',
+        'Fundacja Akademia GKS Bełchatów': 'GKS Bełchatów',
+        'TS Podbeskidzie': 'Podbeskidzie Bielsko-Biała',
+        'KS Mosir Huragan Międzyrzec': 'Huragan Międzyrzec Podlaski',
+        'UKS Gracja': 'Gracja Tczów',
+        'Raszowa-daniec': 'Raszowa-Daniec',
         'Kobiecy KP': 'KKP',
         'Prochowiczanka': 'Prochowiczanka Prochowice',
+        'GZ LZS Karsin': 'Gwiazda Karsin',
+        'Radziechowy - Wieprz': 'Radziechowy-Wieprz',
         'GKS - Zarzecze': 'GKS Zarzecze',
         'Babicha': 'LKS Babicha',
         'Bemowska Szkoła Sport': 'BSS',
@@ -159,7 +345,10 @@ def modify_name(obj: Union[Team, Club]) -> str:
         'Stowarzyszenie KLB Sportowytrzciana': 'SKS Trzciana',
         'Ostrołęcka Akademia Piłki Nożnej Ostrołęka': 'APN Ostrołęka',
         'Młodzieżowy Klub Sportowy Zaborze Z Siedzibą W Zabrzu': 'Mks Zaborze',
-        'Gminny Ośrodek Szkolenia Dzieci Młodzieży': 'Gosdim',
+        'Gminny Ośrodek Szkolenia Dzieci Młodzieży': 'GOSDIM',
+        'Rzeszowska Akademia Futsalu Heiro': 'Heiro Rzeszów',
+        'Trzebownisko': 'LKS Trzebownisko',
+        'SKS Grodkowska AS Grodków': 'GKS Grodków',
         'Międzyszkolne Gminne Towarzystwo Sportowe': 'Mgts',
         'Szkółka Piłkarska Soccer Ropczyce': 'SP Soccer Ropczyce',
         'Luks Radłovia Radłów Miejsko Gminna Akademia Sportu W Radłowie': 'Radłovia Radłów',
@@ -167,6 +356,8 @@ def modify_name(obj: Union[Team, Club]) -> str:
         'Grodziskie Towarzystwo Sportowe Grodzisk Mazowiecki': 'GTS Grodzisk Mazowiecki',
         'Stowarzyszenie Szkółka Piłkarska Borekkraków': 'SP Borek Kraków',
         'Bieruńska Akademia Piłkarska': 'BAP',
+        'Stowsportumłodz Wisła Płock': 'Wisła Płock',
+        'Row Rybnik': 'ROW 1964 Rybnik',
         'Wieluński Klub Sportowy W Wieluniu': 'WKS Wieluń',
         'Płońska Akademia Futbolu': 'AF Płońsk',
         'Ludowy Klub Sportowyodrzechowa': 'Ludowy Klub Sportowy Odrzechowa',
@@ -178,7 +369,7 @@ def modify_name(obj: Union[Team, Club]) -> str:
         'LKS Sokół Dąbrówka Wlkp': 'Sokół Dąbrówka Wielkopolska',
         'Dziecięca Akademia Piłkarska' : 'DAP',
         'Gminna Akademia Piłkarska': 'GAP',
-        'RKP SP ROW W Rybniku': 'ROW Rybnik',
+        'RKP SP ROW W Rybniku': 'ROW 1964 Rybnik',
         'KS LZS Gryf Piaseczno KS Skarpa': 'Gryf Piaseczno',
         'Iskra Góra ŚW Małgorzaty': 'Iskra Góra Świętej Małgorzaty',
         'Ludowy Klub Sportowy Korona W Lgocie': 'LKS Korona Lgota',
@@ -186,20 +377,18 @@ def modify_name(obj: Union[Team, Club]) -> str:
         'Ludowy Klub Sportowyraba Książnice': 'Ludowy Klub Sportowy Raba Książnice',
         'Stowsportumłodz': 'SSM',
         'Gminny Ludowwy KS Lelis': 'GLKS Lelis',
+        'DĄB Stowarzyszenie Siedliska': 'Dąb Stowarzyszenie Siedliska',
         'Akademia Piłki Nożnej': 'APN',
         'POM': 'pomorskie',
-        'Podl ': 'Podlaski',
+        'Radzyń Podl': 'Radzyń Podlaski',
         'Zakładowy Klub Sportowy': 'ZKS',
         'W-W': 'Wrocław',
         'Iks': 'LKS',
-        'DĄB': 'Dąb',
-        'GAĆ': 'Gać',
         'LUB': 'Lubelski',
         'Kulturalny Klub Sportowy': 'KKS',
         'Uczniowski Młodzieżowy Klub Sportowy':'UMKS',
         'Kaliski Klub Sportowy': 'KKS',
         'Miejski Klub Sportowy Znicz W Pruszkowie': 'Znicz Pruszków',
-        'Miejski Klub Sportowy': 'MKS',
         'KS Polonia Środa Wlkp': 'Polonia Środa Wielkopolska',
         'Wlkp': 'Wielkopolski',
         'Łaskarzewski Klub Sportowy': 'ŁKS',
@@ -211,24 +400,26 @@ def modify_name(obj: Union[Team, Club]) -> str:
         'MKS Podlasie Biała Podlaska': 'Podlasie Biała Podlaska',
         'LKS Polonia Łódź - Andrzejów': 'Polonia Andrzejów',
         'KS Ursus': 'Ursus Warszawa',
+        'Zwierzyniecki Kraków': 'Zwierzyniecki KS Kraków',
         'Akad Piłk': 'AP',
         'Akademia Piłkarska': 'AP',
+        'IVA': 'Iva',
         'Ludowy Klub Sportowy': 'LKS',
-        'LG': 'Lotos Gdańsk',
         'Beniaminek Starogard GD': 'Beniaminek Starogard Gdański',
         'W-wy': 'Warszawy',
         'Bobowa Bobowa': 'KS Bobowa',
         'Akademia Piłk ': 'AP ',
         'Akademia Piłk': 'AP',
         'Akademia Futbolu': 'AF',
+        'Amatorski KS Granit Strzegom': 'AKS Strzegom',
         'Amatorski KS': 'AKS',
+        'Czarni Jelcz Laskowice': 'Czarni Jelcz-Laskowice',
         'ŚWI': 'Świdwin',
         'Akademia Sportu': 'AS',
         'Alternatywny Klub Sportowy': 'AKS',
         'Ciechanowieckie Stowarzyszenie Piłkarskie Unia': 'CSP Unia Ciechanowiec',
         'Cieszyński Klub Sportowy Piast': 'CKS Piast Cieszyn',
         'Dęblińska Szkoła Piłkarska UKS Orlik Dęblin': 'UKS Orlik Dęblin',
-        'GKS Gietrzwałd-unieszewo': 'GKS Gietrzwałd',
         'Gminny Klub Sportowy': 'GKS',
         'W-wa': 'Warszawa',
         'Wm-sport': 'Escola Varsovia',
@@ -236,51 +427,69 @@ def modify_name(obj: Union[Team, Club]) -> str:
         'Gminny Ośrodek Sportu Rekreacji Novi-rzezawianka': 'Gosir Novi Rzezawianka',
         'Miejski Górniczo-hutniczy Klub Sportowy Bolesław W Bukownie': 'MGHKS Bolesław Bukowno',
         'GZ LZS W Łubnianach': 'LZS Łubniany',
-        'FC Chronstau - Chrząstowice': 'FC Chronstau Chrząstowice',
+        'FC Chronstau - Chrząstowice': '1.FC Chronstau-Chrząstowice',
         'Fundacja Kujawsko-pomorskich Akademii Piłkarskich JSS Toruń': 'JSS Toruń',
         'Miejsko-gminny Klub Sportowy': 'MGKS',
         'Towarzystwo Sportowe': 'TS',
         'Gminno-uczniowski Klub Sportowy Gorzkowice': 'Guks Gorzkowice',
         'K-koźle': 'Kędzierzyn-Koźle',
+        'KP Byszewy Przy SGN': 'KP Byszewy',
+        'Kędzierzyn-koźle': 'Kędzierzyn-Koźle',
+        'Az-bud Komarówka Podlaska': 'Az-Bud Komarówka Podlaska',
+        'Józefovia': 'Józefovia Józefów',
+        'KS Lotnik- Poznań': 'Lotnik Poznań',
+        'Błękitni Pustkow Wilczkowski': 'Błękitni Pustków Wilczkowski',
+        'Gszs Rybno': 'Delfin Rybno',
+        'SS NAD Cybiną': 'Meblorz Swarzędz',
+        'KS Ino-Term Brzoza': 'KS Brzoza',
+        'Stowarzyszenie Sportowe Górnik': 'Górnik Lubin',
+        'Wołucza': 'GLKS Wołucza',
+        'Dobrcz': 'GLKS Dobrcz',
+        'KS Wisła Dobrzyń N Wisłą': 'Wisła Dobrzyń',
         'KS Pro- Wietlin': 'KS Wietlin',
-        'Glks-t Agrosport Leśna Podl': 'Glks-t Agrosport Leśna Podlaska',
-        'UKS FA Fair-play Złotów': 'UKS Złotów',
         'Międzyszkolny Uczniowski Klub Sportowy': 'MUKS',
         'Gminny Młodzieżowy KS': 'GMKS',
         'U- Bytów': 'Bytów',
         'LZS Kolbark-błyskawica Kolbark': 'LZS Kolbark',
         'Ludowy Zespół Sportowy': 'LZS',
-        'Wiejskie Towarzystwo Kulturalno-sportowe ': 'WTKS',
+        'Wiejskie Towarzystwo Kulturalno-sportowe': 'WTKS',
+        'Akademia Piłkarska Brzeg Dolny': 'AP Brzeg Dolny',
         'M-glks': 'Mglks',
+        'Umks': 'UMKS',
+        'Barciński Osir Barcin': 'BOSiR Barcin',
+        'Golub-dobrzyń': 'Golub-Dobrzyń',
+        'Fundacja Akademia Sandecja': 'Sandecja Nowy Sącz',
+        'Termalica Bruk-bet Nieciecza Klub Sportowy': 'Bruk-Bet Termalica Nieciecza',
+        'LZS Łazowski KS Łazy': 'ŁKS Łazy',
+        'Klub Sportowy BAD Boys': 'Bad Boys Zastawie',
         'Uczniowski Klub Sportowy': 'UKS',
         'LKS Perła Szczaki - Złotokłos': 'Perła Złotokłos',
         'BTS Rekord': 'Rekord Bielsko-Biała',
         ' - ': '-',
+        'Płowce-Stróże Małe': 'LKS Płowce - Stróże Małe',
+        'KS Bodzanów-nowy Świętów': 'KS Bodzanów - Nowy Swiętów',
+        'Drzewica': 'MGKS Drzewica',
         'pomorskie': 'Pomorskie',
-        'RYŚ': 'Ryś',
-        'ŁĘG': 'Łęg',
-        'BÓR': 'Bór',
+        'LZS Dobryń Duży': 'LZS Dobryń',
+        'Bruk-bet': 'Bruk-Bet',
         'Toruńska Akademia Futsalu': 'TAF',
         'ŚW' : 'Świętokrzyski',
         'MŁP': 'Małopolski',
         'Klub Sportowy': 'KS',
         'KS Gmchełmża Cyklon Kończewice': 'Chełmża Cyklon Kończewice',
-        'Międzygminny Klub Sportowy': 'MGKS',
-        'Glks-t': 'GLKS',
         'Miejski Uczniowski Klub Sportowy': 'MUKS',
         'Klub Piłkarski': 'KP',
-        'Stowarzyszenie Przyjaciół Regulic Nieporazu Regulice': 'Sprin Regulice',
+        'UKS AP Reissa Piła': 'AP Reissa Piła',
+        'Stowarzyszenie Przyjaciół Regulic Nieporazu Regulice': 'SPRiN Regulice',
+        'Stowarzyszenie Klub Sportowy Unia W Kaletach': 'Unia Kalety',
         'MAZ': 'Mazowiecki',
-        'Klub Sportowy Vulcan Wólka ML': 'Vulcan Wólka Mlądzka',
         'Gminna Akademia Sportu': 'GAS',
-        'Fundacja GES Sport Academy Poznań': 'GES Sport Academy Poznań',
-        'Łódzki Klub Sportowy': 'ŁKS Łódź',
         'Indywidualna Szkoła Futbolu': 'ISF',
         'Lot-balice': 'Lot Balice',
         'ŚL': 'Śląskie',
         'Niemieckie Towarzystwo Szkolne W Warszawie': 'NTS Warszawa',
         'Akademia Kreatywnego Futbolu': 'AKF',
-        'Fundacja Bydgoskiej Szkółki Piłkarskiej Jacademy Bydgoszcz':'Jacademy Bydgoszcz',
+        'Fundacja Bydgoskiej Szkółki Piłkarskiej Jacademy Bydgoszcz':'Juventus Academy Bydgoszcz',
         'Akademia Młodego Piłkarza': 'AMP',
         'Uczniowski Klub Piłkarski': 'UKS',
         'Akademia Kobiecego Futbolu': 'AKF',
@@ -290,6 +499,8 @@ def modify_name(obj: Union[Team, Club]) -> str:
         'Dziecięca Szkółka PN': 'DSPN',
         'Stowarzyszenie Klutury Fizycznej': 'SKF',
         'Tryb': 'Trybunalski ',
+        'Mosm': 'MOSM',
+        'Ropa Ropa': 'KS Ropa',
         'Stowarzyszenie Zjednoczonego Klubu Sportowego Parafialnego Amicus Mórka': 'Amicus Mórka',
         'Szkółka Piłkarska Junior Kalisz Pomorski': 'Junior Kalisz Pomorski',
         'Zaczernie': 'KS Zaczernie',
@@ -297,28 +508,88 @@ def modify_name(obj: Union[Team, Club]) -> str:
         'Śledziejowice Śledziejowice': 'LKS Śledziejowice',
         'Blks Granit Bychawa': 'Granit Bychawa',
         'NAD': 'nad',
+        'LZS GKS Piomar Tarnów-przywory': 'GKS Piomar Tarnów Opolski',
+        'LZS Gks Piomar Tarnów-Przywory': 'GKS Piomar Tarnów Opolski',
+        'LZS Ścinawa Nyska-korfantów': 'LZS Ścinawa Nyska',
         'Iławski Klub Sportowy Jeziorak Iława': 'Jeziorak Iława',
+        'Sygneczów Sygneczów': 'UKS Sygneczów',
         'Mareckie Inwestycje Miejskie': 'Marcovia Marki',
         'Rylowa': 'Rylovia Rylowa',
         'LKS Plon Garbatka-letnisko': 'Plon Garbatka-Letnisko',
         'LKS Wisła Główina-sobowo': 'LKS Wisła Główina-Sobowo',
         'LKS Czarni Kalinów-kalinowice': 'Czarni Kalinów-Kalinowice',
         'Ruch Popkowice-zadworze': 'Ruch Popkowice-Zadworze',
-        'BUK': 'Buk',
-        'LAS': 'Las',
+        'Dąb Sława-Przybyszów': 'Dąb Sława - Przybyszów',
+        'Starawieś': 'LZS Starawieś',
+        'LKS Wola Wola Chojnata': 'Wola Wola Chojnata',
+        'Gpsz': 'GPSZ',
+        'Ciółkowo': 'ULKS Ciółkowo',
         'Rudołtowice-ćwiklice': 'Rudołtowice-Ćwiklice',
         'LKS Babia Góra Koszarawa': 'Koszarawa Babia Góra',
         'LKS WEL Lidzbark Welski': 'Wel Lidzbark',
+        'MKS Odra Bytom Odrz': 'Odra Bytom Odrzański',
+        'KS Gminy Brodnica Manieczki': 'KSGB Manieczki',
         'Rywal-klon': 'Rywal-Klon',
         'Grądy-malerzowice': 'Grądy-Malerzowice',
-        'RÓJ': 'Rój',
-        'Porajów-kopaczów': 'Porajów-Kopaczów'
+        'Porajów-kopaczów': 'Porajów-Kopaczów',
+        'AP LG': 'Lotos Gdańsk',
+        'UKS Czapla W Kryrach': 'Czapla Kyry',
+        'Elżbieta': 'LKS Elżbieta',
+        'SKS Poznańska Poznań': 'SKS Poznańska 13 Poznań',
+        'Luboński KS Luboń': 'Luboński KS',
+        'Akademia Sportowa': 'AS',
+        'Czarna Dąbrówka GTS': 'GTS Czarna Dąbrówka',
+        'UKS Bieruńska Akademia Piłkarska Piast GOL': 'Piast GOL Bieruń',
+        'Osir': 'OSiR',
+        'Gokis': 'GOKiS',
+        'Podbeskidzie': 'Podbeskidzie Bielsko-Biała',
+        'UKS AP Reissa Konin': 'AP Reissa Konin',
+        'LKS Orzeł Psary-babienica': 'LKS Orzeł Psary-Babienica',
+        'KS ROW 1964 Rybnik': 'ROW 1964 Rybnik',
+        'Wambierzycki LKS Wambierzyce': 'LKS Wambierzyce',
+        'LKS Nafta GAZ Jodłówka': 'Nafta-Gaz Jodłówka',
+        'LKS Zryw Jastrzębie-bzie': 'Zryw Bzie',
+        'UKS AP Reissa Jarocin': 'AP Reissa Jarocin',
+        'Football Academy': 'FA',
+        'Association Football Club': 'AFC'
     }
-    excluded_strings = ['Bielsko-Biała', 'Busko-zdrój', 'Bruk-bet', 'Kędzierzyn-Koźle', 'Golub-dobrzyń', 'Soccer-calcio',
-                        'Start-Regent', 'Kruszyna-prędocin', 'Hat-trick', 'Szklarska-Poręba', 'GKS-Zarzecze', 'Pub-gol',
-                        'Tymon-tymowa', 'Popkowice-Zadworze', 'Kalinów-kalinowice', 'Główina-sobowo', 'Garbatka-Letnisko',
-                        'Kalinów-Kalinowice', 'Rudołtowice-Ćwiklice', 'Rywal-Klon', 'Psary-Babienica', 'Porajów-Kopaczów',
-                        'Juna-trans']
+
+    exceptions = ['KP Starogard Gdański', 'AKS SMS Łódź', 'Moto-Jelcz Oława', 'Foto-Higiena Błyskawica Gać', 'Polonia-Stal Świdnica',
+                  'MRKS Czechowice-Dziedzice', 'Dąb Sława - Przybyszów', 'POM-Iskra Piotrowice', 'Dąb Sława-Przybyszów',
+                  'AKS 1947 Busko-zdrój', 'FC Wrocław Academy', 'KS 27 Gołkowice', 'KS CK Troszyn', 'DKS Dobre Miasto',
+                  'LZS Starowice Dolne', 'ŁKS 1926 Łomża', 'AP Reissa Poznań', 'Dąb Stowarzyszenie Siedliska',
+                  'UKS SMS Łódź', 'Az-Bud Komarówka Podlaska', 'AZS UJ Kraków', 'KS Polanica Zdrój',
+                  'AP Brzeg Dolny', 'Czarni Jelcz-Laskowice', 'GSS Grodzisk Wielkopolski', 'GKS Pławanice Kamień',
+                  'Zwierzyniecki KS Kraków', 'LZS Stare Oborzyska', 'WKS Żarki Średnie', 'UKS SAP Brzeg',
+                  'KP Brzeg Dolny', 'LKS Wola Dalsza', 'UKS Gminy Miękinia', 'AP Czarni Jasło', 'MKS Gmina Lubomia',
+                  'LGKS Charłupia Mała', 'LKS Potok Wielki', 'LKS Elżbieta', 'SKS Poznańska 13 Poznań', 'AP Reissa Poznań',
+                  'Łódzka Akademia Futbolu', 'Luboński KS', 'AZS UAM Poznań', 'Gminna AS Łęg', 'OKS Prawobrzeże Szczecin',
+                  'Start Gmina Frampol', 'KS Nowiny Wielkie', 'MKS Nowe Miasteczko', 'KS Koszyce Wielkie', 'MOSiR Mińsk Mazowiecki',
+                  'LKP Nowa Karczma', 'WKS Lignowy Szlacheckie', 'KS Stradom Częstochowa', 'GKS Gietrzwałd-Unieszewo',
+                  'Dąb Sława-Przybyszów', 'LUKS Stare Bojanowo', 'AP Reissa Piła', 'Syrena-Grot Rymań',
+                  'LZS Ścinawa Nyska', 'LZS Ligota Oleska', 'LZS Ligota Wołczyńska', 'Otmęt FKS Krapkowice', 'LZS Polski Świętów',
+                  'KS Bodzanów - Nowy Swiętów', 'LKS Płowce - Stróże Małe', 'LKS Łęki Górne', 'LKS Zasów-Mokre',
+                  'GTS Pruszcz Gdański', 'LZS Rzeczyca Długa', 'GTS Mokry Dwór', 'UKS MOSiR Myszków', 'GTS Czarna Dąbrówka',
+                  'AP Nowe Skalmierzyce', 'AP Talenty Poznań', 'AP OSiR Lwówek', 'Kamiennogórska AP Kamienna Góra',
+                  'LZS Solniki Małe', 'Jelczańska APN Orzeł', 'Juventus Academy Bydgoszcz', 'AP Profi-Sport Duda',
+                  'Fair-Play Wrocław', 'Football Academy Nakło nad Notecią', 'AP Reissa Konin', 'AP Progres Lidzbark Warmiński',
+                  'AP Wyzwolenie Chorzów', 'UKS Wisełka Centrum', 'AP Drawsko Pomorskie', 'LZS Orzeł Biestrzykowice',
+                  'KS Brzeg Dolny', 'LZS Ostrowianka Ostrów Królewski', 'AP Junior Białystok', 'Mini Soccer Academy',
+                  'LKS Brzyska Wola', 'LKS Świnice Warckie', 'Wola Wola Chojnata', 'LKS Ligota Centrum', 'LKS Kończyce Małe',
+                  'LKS Łęki Strzyżowskie', 'LKS Miękisz Nowy', 'LKS Kamienica Polska', 'LKS Sieraków Śląski',
+                  'LKS Wisła Wielka', 'LKS Piotrowice Świdnickie', 'ROW 1964 Rybnik', 'LKS Biała Nyska', 'LKS Ruda Kozielska',
+                  'LKS Kraśnik Dolny', 'KUKS Zębców Ostrów Wielkopolski', 'KSZO', 'PUKS Francesco Jelna', 'SKR',
+                  'Sskf KS Dąbrowa', 'GAP', 'LUKS Maraton Czajków', 'SMS', 'AS Falcon Sokółka', 'CF',
+                  'PFT', 'Stowarzyszenie Rozwoju Gminy Dobre', 'Polany-Berest', 'LZS Polanka Nieszkowice Wielkie',
+                  'OKS Ostrów Wielkopolski', 'AP Reissa Jarocin', 'AP Jarosława Lato', 'FA', 'Radziechowy-Wieprz',
+                  'Bruk-Bet', 'Didi-GOL', 'Stal-Śrubiarnia Żywiec', 'Nafta-Gaz', 'Bielsko-Biała', 'Busko-zdrój',
+                  'Start-Regent', 'Kruszyna-Prędocin', 'Hat-trick', 'Szklarska-Poręba', 'GKS-Zarzecze', 'Pub-gol',
+                  'Tymon-tymowa', 'Popkowice-Zadworze', 'Kalinów-kalinowice', 'Główina-sobowo', 'Polanowice Polanowice',
+                  'Garbatka-Letnisko', 'Kalinów-Kalinowice', 'Rudołtowice-Ćwiklice', 'Rywal-Klon',
+                  'Psary-Babienica', 'Porajów-Kopaczów', 'Raszowa-Daniec', 'Jordan-Sum','Chronstau-Chrząstowice',
+                  'Golub-Dobrzyń', 'Mroczków-dzielna', 'Wierzchosławice-Ostrów', 'Piłkarskie Stowarzyszenie Football Dreams Passion',
+                  'Eko-Prod', 'Rotuz-Bronów', 'Ostrów-Kamionka', 'Łucznik-Żywiec', 'Ar-tig', 'Psary-Babienica',
+                  'Główina-Sobowo',  'Fair-play',  'Wap-młodzi', 'Kędzierzyn-Koźle', 'Golub-dobrzyń', 'Soccer-calcio',]
 
     name_to_modify = obj.name
     club_name = obj.club.name if isinstance(obj, Team) else name_to_modify
@@ -327,48 +598,60 @@ def modify_name(obj: Union[Team, Club]) -> str:
     Replace the words in the given club_name with their corresponding replacements, 
     which can be used to create shortcuts for common prefixes or phrases.
     """
-    club_name = reduce(lambda s, kv: s.replace(*kv), words_to_replace.items(), club_name)
+    club_name = reduce(lambda s, kv: s.replace(*kv), phrase_to_replace.items(), club_name)
 
     """
     Remove common unnecessary phrases specified in words_to_remove from club_name 
-    and join the remaining words into a new modified club name."
+    and join the remaining words into a new Club short name."
     """
-    club_name = ' '.join([w for w in club_name.split() if w not in words_to_remove])
-    modified_club_name = club_name
+    club_short_name = ' '.join([w for w in club_name.split() if w not in words_to_remove])
+    # modified_club_name = club_name
 
     """
-    Rearrange and modify the given club name by moving certain excluded parts (e.g. common sport club prefixes) 
+    Rearrange and modify the given Club name by moving certain excluded parts (e.g. common sport Club prefixes) 
     to the beginning of the name and removing any duplicate or unnecessary words. 
-    Specifically, this code checks if any excluded part is present in the club name and, if so, 
+    Specifically, this code checks if any excluded part is present in the Club name and, if so, 
     moves it to the front of the name while maintaining the order of the other words. 
-    It also removes any duplicates and ensures that only unique words remain in the final modified club name.
+    It also removes any duplicates and ensures that only unique words remain in the final modified Club name.
     """
-    parts = modified_club_name.split('-')
-    if len(parts) > 1 and not any(exclude in modified_club_name for exclude in excluded_strings):
+    parts = club_short_name.split('-')
+    if len(parts) > 1 and not any(exclude in club_short_name for exclude in exceptions):
         _, *rest_parts = parts[1].split()
-        modified_club_name = f"{parts[0]} {' '.join(rest_parts)}"
+        club_short_name = f"{parts[0]} {' '.join(rest_parts)}"
 
-    split_modified_club_name = modified_club_name.split()
-    for part in excluded_parts:
-        if part in split_modified_club_name:
-            part_index = split_modified_club_name.index(part)
-            modified_club_name = ' '.join(
-                [*split_modified_club_name[part_index:],
-                 *split_modified_club_name[:part_index]]
-            )
-        else:
-            modified_club_name = ' '.join(split_modified_club_name)
-
-        split_modified_club_name = modified_club_name.split()
-        if len(split_modified_club_name) > 2:
+    split_modified_club_name = club_short_name.split()
+    if club_short_name not in exceptions:
+        for part in excluded_parts:
             if part in split_modified_club_name:
-                split_modified_club_name.remove(part)
+                part_index = split_modified_club_name.index(part)
+                club_short_name = ' '.join(
+                    [*split_modified_club_name[part_index:],
+                     *split_modified_club_name[:part_index]]
+                )
+            else:
+                club_short_name = ' '.join(split_modified_club_name)
 
-        unique_words = []
-        for w in split_modified_club_name:
-            if w not in unique_words:
-                unique_words.append(w)
-        modified_club_name = ' '.join(unique_words)
+            split_modified_club_name = club_short_name.split()
+            if len(split_modified_club_name) > 2:
+                if part in split_modified_club_name:
+                    split_modified_club_name.remove(part)
+
+            unique_words = []
+            for w in split_modified_club_name:
+                if w not in unique_words:
+                    unique_words.append(w)
+            club_short_name = ' '.join(unique_words)
+
+    """
+    Checks each word to see if it is in all-uppercase format.
+    If a word is all-uppercase and not in a list of excluded parts or exceptions,
+    the function capitalizes the word and updates the modified Club name string
+    """
+    split_modified_club_name = club_short_name.split()
+    for i, word in enumerate(split_modified_club_name):
+        if word.isupper() and word not in excluded_parts and word not in exceptions:
+            split_modified_club_name[i] = word.capitalize()
+    club_short_name = ' '.join(split_modified_club_name)
 
     """ 
     Check if all teams assigned to the given Club object play in the Futsal league. 
@@ -382,19 +665,19 @@ def modify_name(obj: Union[Team, Club]) -> str:
         for league in futsal_leagues:
             query |= Q(historical__league_history__league__highest_parent__name__contains=league)
 
-        if teams.filter(query).distinct().count() == teams.count():
+        if 0 < teams.count() == teams.filter(query).distinct().count():
             if 'Futsal' not in club_name:
-                modified_club_name = modified_club_name + ' (Futsal)'
+                club_short_name = club_short_name + ' (Futsal)'
 
     """
-    Extracts the team number from the given team name, if it includes a Roman numeral from I to IV. 
-    This helps distinguish teams within a club that share a similar name.
+    Extracts the Team number from the given Team name, if it includes a Roman numeral from I to IV. 
+    This helps distinguish Teams within a Club that share a similar name.
     """
     team_number = next((part for part in name_to_modify.split() if part in ['I', 'II', 'III', 'IV']), '')
 
     """
-    Add a suffix to a team name indicating that the team is playing in a futsal league if the team's 
-    club is not defined as a futsal club and the team is playing in a futsal league.
+    Add a suffix to a Team name indicating that the Team is playing in a futsal league if the team's 
+    Club is not defined as a futsal Club and the team is playing in a futsal league.
     """
     if isinstance(obj, Team) and not all(
             'Futsal' in team.team_name_with_current_league or 'PLF' in team.team_name_with_current_league for team in
@@ -403,6 +686,6 @@ def modify_name(obj: Union[Team, Club]) -> str:
             league_name in obj.team_name_with_current_league for league_name in ['Futsal', 'PLF']
         ) and 'Futsal' not in obj.club.name else team_number
 
-    modified_name = modified_club_name + " " + team_number if team_number else modified_club_name
+    short_name = club_short_name + " " + team_number if team_number else club_short_name
 
-    return modified_name
+    return short_name

@@ -1,30 +1,32 @@
 from django.core.management import BaseCommand
-from clubs.models import Club, Team
-import pandas as pd
-from clubs.management.commands.utils import modify_name
+from clubs.models import Team, Club
+from clubs.management.commands.utils import create_short_name
 
 
 class Command(BaseCommand):
 
-    def handle(self, *args: any, **options: any) -> None:
-        '''+ flaga ze przekonwerttowane'''
-        teams = Team.objects.all()
+    def handle(self, *args, **kwargs) -> None:
+        """
+        Modify the club and team name for each team in the database.
+        This function uses the `modify_name` method to create a short name for the club and team.
+        The short names are saved to the `club.short_name` and `team.short_name` fields.
+        A success message is written to the console for each updated Club and Team.
+        """
+        clubs = Club.objects.all()
+        for club in clubs:
+            club_short_name = create_short_name(club)
+            club.short_name = club_short_name
+            club.save()
 
-        data = []
-        for team in teams:
-            modified_club_name = modify_name(team.club)
-            team.club.short_name = modified_club_name
-            team.club.save()
+            teams = Team.objects.filter(club=club)
+            for team in teams:
+                team_short_name = create_short_name(team)
+                team.short_name = team_short_name
+                team.save()
 
-            modified_team_name = modify_name(team)
-            team.short_name = modified_team_name
-            team.save()
+                message = f"Created Team short name {team.short_name} for {team} ({team.id})"
+                self.stdout.write(self.style.SUCCESS(message))
 
-            data.append({'club_id': team.club.id, 'club_name': team.club.name, 'modified_club_name': modified_club_name,
-                         'team_id': team.id, 'team_name': team.name, 'modified_team_name': modified_team_name})
+            message = f"Created Club short name {club.short_name} for {club} ({club.id})"
+            self.stdout.write(self.style.SUCCESS(message))
 
-        df = pd.DataFrame(data)
-        df.to_csv('output.csv', index=False)
-        # df_lks = df[df['club_name'].str.contains('LKS')]
-        df_not_lks = df[~df['club_name'].str.contains('LKS')]
-        df_not_lks.to_csv('output_without_lks.csv', index=False)

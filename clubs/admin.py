@@ -3,7 +3,7 @@ from users.queries import get_users_manger_roles
 from app.utils.admin import json_filed_data_prettified
 from . import models
 from utils import linkify
-from clubs.management.commands.utils import modify_name
+from clubs.management.commands.utils import create_short_name
 from django.utils.safestring import mark_safe
 from typing import Sequence, Optional
 from clubs.filters import (
@@ -48,12 +48,12 @@ def modify_names(modeladmin, request, queryset):
     # Loop through the selected objects and modify their names
     for obj in queryset:
         if isinstance(obj, models.Club):
-            modified_name = modify_name(obj)
-            obj.short_name = modified_name
+            club_short_name = create_short_name(obj)
+            obj.short_name = club_short_name
             obj.save()
         elif isinstance(obj, models.Team):
-            modified_name = modify_name(obj)
-            obj.short_name = modified_name
+            team_short_name = create_short_name(obj)
+            obj.short_name = team_short_name
             obj.save()
 
 
