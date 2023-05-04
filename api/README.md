@@ -3,7 +3,7 @@
 
 
 # Ustalenia:
-1. Cała praca idze na poczet tego brancha.  CIF-new-fe
+1. Cała praca idze na poczet tego brancha.  CIF-new-fe  --> CIF-nazwa
 
 Skupcie się na tym co się dzieje w:  `api/` oraz `users/apis.py`  oraz `users/api_urls.py` oraz `users/serializers.py`
 
@@ -44,7 +44,13 @@ W nawiasie (api) oznacza tą część domeny/appki która pasuje do przeniesieni
 W przypadku gdy TeamSearchApi pochodzi z clubs (importujemy z clubs.api.TeamSearchAPI) mam na mysli przenieśc url'e
 
 
-    Task0:
+    Task(-1): [Kuba]
+    -----
+    tests need to work.
+
+
+
+    Task0:  [Krzysiek]
     ------
 
     do przeniesienia:
@@ -55,12 +61,11 @@ W przypadku gdy TeamSearchApi pochodzi z clubs (importujemy z clubs.api.TeamSear
     path("playerupdate", WebhookPlayer.as_view(), name="player_webhook"),  --> profiles/ (api)
     path("api-token-auth/", views.obtain_auth_token),                      --> api/
 
-    Robimy rejestracje i weryfikacje
 
 
 
-
-    Task1: POST users/register  {..}  - fizycznie tworzymy usera.
+    Task1: POST users/register  {..}     [Lukasz]
+    fizycznie tworzymy usera.
     -------
         w RESPONSE zwracamy { ... } usera ze-serializowanego (chodzi o dostanie ID)
 
@@ -149,7 +154,7 @@ W przypadku gdy TeamSearchApi pochodzi z clubs (importujemy z clubs.api.TeamSear
 
 
 
-    Task5:
+    Task5:  [Kuba]
     -------
     POST /profiles  {user_id: xxx:  rola: xxx ... }
     W tym kroku możemy dać wszyskie dane albo tylko stworzyć empty profile dla danej roli.
@@ -196,6 +201,15 @@ W przypadku gdy TeamSearchApi pochodzi z clubs (importujemy z clubs.api.TeamSear
 
 
     -------Nie na teraz -------------
+    Task:
+    ----
+    Budowa API teams-search
+
+    Task:
+    Budowa API countries
+
+    Task:
+    Budowa
 
     Task:
     -----
