@@ -1,5 +1,5 @@
 import typing
-
+from requests.exceptions import ConnectionError
 from pm_core.services.errors import ServiceRaisedException
 from pm_core.services.models import (
     PlayerBaseSchema,
@@ -17,6 +17,7 @@ from .exceptions import (
     PlayerHasNoMapperException,
     PlayerMapperEntityNotFoundLogger,
     DataShortageLogger,
+    ScrapperIsNotRespongingLogger,
 )
 from .base_adapter import BaseAdapter
 import logging
@@ -24,6 +25,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from .utils import resolve_stats_list
 
 logger = logging.getLogger(__name__)
+NO_CONNECTION_LOG = ScrapperIsNotRespongingLogger()
 
 
 class PlayerAdapterBase(BaseAdapter):
@@ -60,6 +62,9 @@ class PlayerAdapterBase(BaseAdapter):
             return DataShortageLogger(
                 self, "get_player_data()", player_id=self.player_uuid, params=params
             )
+        except ConnectionError:
+            NO_CONNECTION_LOG()
+            return None
 
         self.data: PlayerBaseSchema = obj
 
@@ -85,7 +90,9 @@ class PlayerDataAdapter(PlayerAdapterBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def get_current_team(self) -> typing.Union[TeamSchema, DataShortageLogger]:
+    def get_current_team(
+        self,
+    ) -> typing.Optional[typing.Union[TeamSchema, DataShortageLogger]]:
         """
         Get more information about player's team
         """
@@ -97,6 +104,9 @@ class PlayerDataAdapter(PlayerAdapterBase):
             return DataShortageLogger(
                 self, "get_current_team()", team_id=team_id, params=params
             )
+        except ConnectionError:
+            NO_CONNECTION_LOG()
+            return None
 
         return obj
 
@@ -155,6 +165,10 @@ class PlayerGamesAdapter(PlayerAdapterBase):
             DataShortageLogger(
                 self, "get_player_games()", player_id=player_id, params=params
             )
+        except ConnectionError:
+            NO_CONNECTION_LOG()
+            return None
+
         if not games:
             return
 
@@ -257,8 +271,13 @@ class PlayerSeasonStatsAdapter(PlayerAdapterBase):
             return DataShortageLogger(
                 self, "get_season_stats()", player_id=player_id, params=params
             )
+        except ConnectionError:
+            NO_CONNECTION_LOG()
+            return None
+
         if not data:
             return
+
 
         if primary_league:
             self.stats.__root__ += [resolve_stats_list(data)]

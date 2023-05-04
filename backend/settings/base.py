@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "followers",
     "inquiries",
     "clubs",
+    "external_links",
     "soccerbase",
     "notifications",
     "app",
@@ -652,4 +653,3 @@ VOIVODESHIP_CHOICES = (
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 VERIFICATION_FORM = {"DEFAULT_SEASON_NAME": "2021/2022"}
-

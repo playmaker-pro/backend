@@ -12,6 +12,8 @@ from .managers import LeagueManager
 from voivodeships.models import Voivodeships
 from django.utils import timezone
 from mapper.models import Mapper
+from external_links.models import ExternalLinks
+from external_links.utils import create_or_update_player_external_links
 
 
 class Season(models.Model):
@@ -106,6 +108,10 @@ class Club(models.Model, MappingMixin):
 
     mapper = models.OneToOneField(
         Mapper, on_delete=models.SET_NULL, blank=True, null=True
+    )
+
+    external_links = models.OneToOneField(
+        ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
     )
 
     manager = models.OneToOneField(
@@ -237,11 +243,18 @@ class Club(models.Model, MappingMixin):
     def create_mapper_obj(self):
         self.mapper = Mapper.objects.create()
 
+
+    def create_external_links_obj(self):
+        self.external_links = ExternalLinks.objects.create()
+
     def save(self, *args, **kwargs):
         slug_str = "%s %s" % (self.PROFILE_TYPE, self.name)
 
         if not self.mapper:
             self.create_mapper_obj()
+
+        if not self.external_links:
+            self.create_external_links_obj()
 
         unique_slugify(self, slug_str)
         super().save(*args, **kwargs)
@@ -264,6 +277,9 @@ class LeagueHistory(models.Model):
     mapper = models.OneToOneField(
         Mapper, on_delete=models.SET_NULL, blank=True, null=True
     )
+    external_links = models.OneToOneField(
+        ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
+    )
 
     league_name_raw = models.CharField(
         max_length=255,
@@ -277,6 +293,9 @@ class LeagueHistory(models.Model):
 
     def create_mapper_obj(self):
         self.mapper = Mapper.objects.create()
+
+    def create_external_links_obj(self):
+        self.external_links = ExternalLinks.objects.create()
 
     def check_and_set_if_data_exists(self):
         from data.models import League as Dleague
@@ -300,6 +319,9 @@ class LeagueHistory(models.Model):
 
         if not self.mapper:
             self.create_mapper_obj()
+
+        if not self.external_links:
+            self.create_external_links_obj()
 
         super().save(*args, **kwargs)
 
@@ -626,6 +648,10 @@ class Team(models.Model, MappingMixin):
         Mapper, on_delete=models.SET_NULL, blank=True, null=True
     )
 
+    external_links = models.OneToOneField(
+        ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
+    )
+
     slug = models.CharField(max_length=255, blank=True, editable=False)
 
     def get_file_path(instance, filename):
@@ -809,6 +835,9 @@ class Team(models.Model, MappingMixin):
     def create_mapper_obj(self):
         self.mapper = Mapper.objects.create()
 
+    def create_external_links_obj(self):
+        self.external_links = ExternalLinks.objects.create()
+
     def save(self, *args, **kwargs):
         slug_str = "%s %s %s" % (
             self.PROFILE_TYPE,
@@ -819,6 +848,9 @@ class Team(models.Model, MappingMixin):
 
         if not self.mapper:
             self.create_mapper_obj()
+
+        if not self.external_links:
+            self.create_external_links_obj()
 
         super().save(*args, **kwargs)
 

@@ -32,6 +32,8 @@ import logging
 from .erros import VerificationCompletionFieldsWrongSetup
 from voivodeships.models import Voivodeships
 from mapper.models import Mapper
+from external_links.models import ExternalLinks
+from external_links.utils import create_or_update_player_external_links
 
 User = get_user_model()
 
@@ -476,6 +478,7 @@ class TrainerContact(models.Model):
 
 class PlayerPosition(models.Model):
     name = models.CharField(max_length=255)
+    score_position = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return f"{self.name}"
@@ -764,6 +767,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     mapper = models.OneToOneField(
         Mapper, on_delete=models.SET_NULL, blank=True, null=True
     )
+    external_links = models.OneToOneField(
+        ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
+    )
     # laczynaspilka_url, min90_url, transfermarket_url data will be migrated into PlayerMapper and then those fields will be deleted
     laczynaspilka_url = models.URLField(_("LNP"), max_length=500, blank=True, null=True)
     min90_url = models.URLField(
@@ -968,6 +974,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def create_mapper_obj(self):
         self.mapper = Mapper.objects.create()
 
+    def create_external_links_obj(self):
+        self.external_links = ExternalLinks.objects.create()
+
     def save(self, *args, **kwargs):
         """'Nie jest wyświetlana na profilu.
         Pole wykorzystywane wyłącznie do gry Fantasy.
@@ -991,6 +1000,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
 
         if not self.mapper:
             self.create_mapper_obj()
+
+        if not self.external_links:
+            self.create_external_links_obj()
 
         adpt = None
         # Each time actions
@@ -1024,6 +1036,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
                 adpt
             )  # update league, vivo, team from Players meta
             self.fetch_data_player_meta(adpt)  # update update meta
+        create_or_update_player_external_links(self)
 
     class Meta:
         verbose_name = "Player Profile"
@@ -1376,6 +1389,9 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     mapper = models.OneToOneField(
         Mapper, on_delete=models.SET_NULL, blank=True, null=True
     )
+    external_links = models.OneToOneField(
+        ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
+    )
     country = CountryField(
         _("Country"),
         blank=True,
@@ -1507,10 +1523,16 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     def create_mapper_obj(self):
         self.mapper = Mapper.objects.create()
 
+    def create_external_links_obj(self):
+        self.external_links = ExternalLinks.objects.create()
+
     def save(self, *args, **kwargs):
         if not self.mapper:
             self.create_mapper_obj()
+        if not self.external_links:
+            self.create_external_links_obj()
         super().save(*args, **kwargs)
+        create_or_update_player_external_links(self)
 
     @property
     def has_attachemnt(self):
@@ -1549,6 +1571,19 @@ class ManagerProfile(BaseProfile):
     PROFILE_TYPE = definitions.PROFILE_TYPE_MANAGER
     AUTO_VERIFY = True
     facebook_url = models.URLField(_("Facebook"), max_length=500, blank=True, null=True)
+    external_links = models.OneToOneField(
+        ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
+    )
+
+    def create_external_links_obj(self):
+        self.external_links = ExternalLinks.objects.create()
+
+    def save(self, *args, **kwargs):
+        if not self.external_links:
+            self.create_external_links_obj()
+        super().save(*args, **kwargs)
+        create_or_update_player_external_links(self)
+
 
     class Meta:
         verbose_name = "Manager Profile"
@@ -1606,6 +1641,10 @@ class ScoutProfile(BaseProfile):
 
     address = AddressField(max_length=100, help_text=_("Adres"), blank=True, null=True)
 
+    external_links = models.OneToOneField(
+        ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
+    )
+
     practice_distance = models.PositiveIntegerField(
         _("Maksymalna odległość na trening"),
         blank=True,
@@ -1647,6 +1686,15 @@ class ScoutProfile(BaseProfile):
         blank=True,
         null=True,
     )  # TODO:(l.remkowicz): followup needed to see if that can be safely removed from database scheme follow-up: PM-365
+
+    def create_external_links_obj(self):
+        self.external_links = ExternalLinks.objects.create()
+
+    def save(self, *args, **kwargs):
+        if not self.external_links:
+            self.create_external_links_obj()
+        super().save(*args, **kwargs)
+        create_or_update_player_external_links(self)
 
     class Meta:
         verbose_name = "Scout Profile"
@@ -1751,3 +1799,35 @@ class PlayerVideo(models.Model):
     class Meta:
         verbose_name = "Player Video"
         verbose_name_plural = "Player Videos"
+
+
+class PlayerProfilePosition(models.Model):
+    player_position = models.ForeignKey(PlayerPosition, on_delete=models.CASCADE)
+    player_profile = models.ForeignKey(
+        PlayerProfile, on_delete=models.CASCADE, related_name="player_positions"
+    )
+    is_main = models.BooleanField(
+        default=False,
+        help_text="Indicates whether this is the player's main position.",
+    )
+
+    def __str__(self):
+        return f"{self.player_profile.user} - {self.player_position}"
+
+    class Meta:
+        verbose_name = "Player Profile Position"
+        verbose_name_plural = "Player Profile Positions"
+        unique_together = ("player_position", "player_profile")
+
+
+class Language(models.Model):
+    name = models.CharField(max_length=50)
+    native_name = models.CharField(max_length=50)
+    code = models.CharField(max_length=10)
+    priority = models.IntegerField(default=2)
+
+    def __str__(self):
+        return f'{self.name} ({self.native_name})'
+
+    class Meta:
+        ordering = ['priority', 'name']

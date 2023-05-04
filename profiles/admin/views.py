@@ -71,12 +71,13 @@ class ParentProfileAdmin(ProfileAdminBase):
 
 @admin.register(models.ManagerProfile)
 class ManagerProfileAdmin(ProfileAdminBase):
-    pass
+    readonly_fields = ("external_links",)
 
 
 @admin.register(models.ScoutProfile)
 class ScoutProfileAdmin(ProfileAdminBase):
     exclude = ("voivodeship_raw",)
+    readonly_fields = ("external_links",)
 
 
 @admin.register(models.GuestProfile)
@@ -216,6 +217,7 @@ class PlayerProfileAdmin(ProfileAdminBase):
         "meta_updated",
         "meta_last",
         linkify("verification"),
+        linkify("external_links"),
     )
 
     def team_object_linkify(self, obj=None):
@@ -256,7 +258,7 @@ class PlayerProfileAdmin(ProfileAdminBase):
         calculate_fantasy,
     ]
 
-    readonly_fields = ("data_prettified", "mapper")
+    readonly_fields = ("data_prettified", "mapper", "external_links")
 
 
 @admin.register(models.CoachProfile)
@@ -266,6 +268,7 @@ class CoachProfileAdmin(ProfileAdminBase):
         linkify("team_object"),
         linkify("team_history_object"),
         linkify("team_history_object"),
+        linkify("external_links"),
     )
     autocomplete_fields = ("team_object", "team_history_object", "team_history_object")
 
@@ -277,7 +280,7 @@ class CoachProfileAdmin(ProfileAdminBase):
                     return old_mapper.mapper_id
         return None
 
-    readonly_fields = ("mapper",)
+    readonly_fields = ("mapper", "external_links")
 
 
 @admin.register(models.RoleChangeRequest)
@@ -309,4 +312,14 @@ class RoleChangeRequestAdmin(admin.ModelAdmin):
 
 @admin.register(models.PlayerVideo)
 class PlayerVideoAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.PlayerProfilePosition)
+class PlayerProfilePositionAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.Language)
+class LanguageAdmin(admin.ModelAdmin):
     pass

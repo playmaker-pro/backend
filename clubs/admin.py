@@ -77,6 +77,7 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
         "is_matches_data",
         "data_updated",
         "is_data",
+        linkify("external_links"),
     )
     list_filter = (
         ZpnListFilter,
@@ -265,6 +266,7 @@ class TeamAdmin(admin.ModelAdmin):
         "visible",
         "autocreated",
         "scrapper_autocreated",
+        linkify("external_links"),
     )
     search_fields = ("name",)
     list_filter = (
@@ -314,6 +316,7 @@ class ClubAdmin(admin.ModelAdmin):
         linkify("manager"),
         linkify("voivodeship_obj"),
         "slug",
+        linkify("external_links"),
     )
     readonly_fields = ("mapper",)
     actions = [modify_names]
