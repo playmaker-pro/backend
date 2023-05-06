@@ -43,9 +43,9 @@ def set_invisibility(modeladmin, request, queryset):
         object.save()
 
 
-@admin.action(description="Modify names")
-def modify_names(modeladmin, request, queryset):
-    # Loop through the selected objects and modify their names
+@admin.action(description="Create short names")
+def create_short_names(modeladmin, request, queryset):
+    # Loop through the selected objects and create short names for each of them
     for obj in queryset:
         if isinstance(obj, models.Club):
             club_short_name = create_short_name(obj)
@@ -275,7 +275,7 @@ class TeamAdmin(admin.ModelAdmin):
         "visible",
         HasManagerFilter,
     )
-    actions = [update_team_visibility, set_visibility, set_invisibility, modify_names]
+    actions = [update_team_visibility, set_visibility, set_invisibility, create_short_names]
     autocomplete_fields = (
         "manager",
         "club",
@@ -319,7 +319,7 @@ class ClubAdmin(admin.ModelAdmin):
         linkify("external_links"),
     )
     readonly_fields = ("mapper",)
-    actions = [modify_names]
+    actions = [create_short_names]
     autocomplete_fields: Sequence[str] = ("manager",)
     search_fields: Sequence[str] = ("name",)
     list_filter: Sequence[str] = (
