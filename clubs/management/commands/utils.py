@@ -110,7 +110,6 @@ def create_short_name(obj: Union[Team, Club]) -> str:
     club_short_name = " ".join(
         [w for w in club_name.split() if w not in words_to_remove]
     )
-    print(club_short_name)
 
     # Rearrange and modify the given Club name by moving certain excluded parts (e.g. common sport Club prefixes)
     # to the beginning of the name and removing any duplicate or unnecessary words.
@@ -121,7 +120,7 @@ def create_short_name(obj: Union[Team, Club]) -> str:
     if len(parts) > 1 and not any(exclude in club_short_name for exclude in exceptions):
         _, *rest_parts = parts[1].split()
         club_short_name = f"{parts[0]} {' '.join(rest_parts)}"
-    print(club_short_name)
+
     split_modified_club_name = club_short_name.split()
     if club_short_name not in exceptions:
         for part in excluded_parts:
@@ -146,7 +145,7 @@ def create_short_name(obj: Union[Team, Club]) -> str:
                 if w not in unique_words:
                     unique_words.append(w)
             club_short_name = " ".join(unique_words)
-    print(club_short_name)
+
     # Checks each word to see if it is in all-uppercase format.
     # If a word is all-uppercase and not in a list of excluded parts or exceptions,
     # the function capitalizes the word and updates the modified Club name string
