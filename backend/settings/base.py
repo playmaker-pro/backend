@@ -651,3 +651,11 @@ VOIVODESHIP_CHOICES = (
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 VERIFICATION_FORM = {"DEFAULT_SEASON_NAME": "2021/2022"}
+
+
+try:
+    from .local import *
+
+    print("::> Loading custom local settings (local.py)")
+except ImportError as e:
+    print(f"[error] Cannot load local settings. Reason={e}")

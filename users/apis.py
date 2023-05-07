@@ -1,9 +1,8 @@
-from pydantic import BaseModel
+from rest_framework.permissions import AllowAny, BasePermission
 from rest_framework.response import Response
 
 from api.views import EndpointView
 from users import serializers
-from users.errors import AccessForbiddenException
 from users.models import User
 
 # Definicja enpointów nie musi być skoncentrowana tylko i wyłącznie w jedenj klasie.
@@ -14,6 +13,22 @@ from users.models import User
 # logika jest super-thin to nam nie szkodzi.
 
 # Jednak zdaje sobie sprawe ze nie uniknimy sytuacji "if" pod jednm API jak się da to robmy w miare czysto.
+from users.serializers import UserRegisterSerializer
+from users.services import UserService
+
+user_service = UserService()
+
+
+class AllowAnyPermission(BasePermission):
+    """
+    Allow any access
+    """
+
+    def has_permission(self, request, view):
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        return True
 
 
 class UsersAPI(EndpointView):
@@ -21,8 +36,28 @@ class UsersAPI(EndpointView):
     serializer_class = serializers.UserSerializer
     allowed_methods = ("list", "post", "put", "update")
 
-    def register(self, request):
-        ...
+    def register(self, request) -> Response:
+        """
+        Validate given data and send them to service for register user.
+        Returns serialized User data.
+        If player with given email already exists, raises ValidationError from serializer.
+        """
+
+        user_data: UserRegisterSerializer = UserRegisterSerializer(data=request.data)
+        user_data.is_valid(raise_exception=True)
+        user: User = user_service.register(user_data.data)
+        serialized_data: dict = UserRegisterSerializer(instance=user).data
+        serialized_data.pop("password")
+
+        return Response(serialized_data)
+
+    def get_permissions(self):
+        """Exclude register endpoint from permission_classes."""
+        if self.action == "register":
+            retrieve_permission_list = [AllowAny]
+            return [permission() for permission in retrieve_permission_list]
+        else:
+            return super().get_permissions()
 
     def list(self, request):
         # if not user_allowed_to_do that _acction(
