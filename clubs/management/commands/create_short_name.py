@@ -7,8 +7,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs) -> None:
         """
-        Modify the club and team name for each team in the database.
-        This function uses the `modify_name` method to create a short name for the club and team.
+        This function uses the `create_short_name` method to create a short name for each Club and Team
+        in the database.
         The short names are saved to the `club.short_name` and `team.short_name` fields.
         A success message is written to the console for each updated Club and Team.
         """

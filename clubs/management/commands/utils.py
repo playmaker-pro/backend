@@ -89,22 +89,21 @@ def change_club_image(clubs: Club, clubs_matched: dict) -> None:
 
 def create_short_name(obj: Union[Team, Club]) -> str:
     """
-    Given a Club or Team object, create a short name that is easier to read and remember
+    Given a Club or Team object, create a short name that is easier to display and read
     than the original name. The short name is created by removing common phrases or words
-    found in Club/Team names that are often not specific to the team itself, and by using
+    found in Club/Team names that are often not specific to the Club/Team itself, and by using
     shortcuts for commonly used phrases in Club/Team names. Certain phrases can be excluded
-    from removal or replacement if they are necessary for team/club recognizability.
+    from removal or replacement if they are necessary for Club/Team recognizability.
     """
 
-    name_to_modify = obj.name
-    club_name = obj.club.name if isinstance(obj, Team) else name_to_modify
+    name_to_shorten = obj.name
+    club_name = obj.club.name if isinstance(obj, Team) else name_to_shorten
 
-    # Replace the words in the given club_name with their corresponding replacements,
+    # Replace the words in the given Club name with their corresponding replacements,
     # which can be used to create shortcuts for common prefixes or phrases.
     club_name = reduce(
         lambda s, kv: s.replace(*kv), phrase_to_replace.items(), club_name
     )
-    print(club_name)
 
     # Remove common unnecessary phrases specified in words_to_remove from club_name
     # and join the remaining words into a new Club short name.
@@ -122,7 +121,7 @@ def create_short_name(obj: Union[Team, Club]) -> str:
     if len(parts) > 1 and not any(exclude in club_short_name for exclude in exceptions):
         _, *rest_parts = parts[1].split()
         club_short_name = f"{parts[0]} {' '.join(rest_parts)}"
-
+    print(club_short_name)
     split_modified_club_name = club_short_name.split()
     if club_short_name not in exceptions:
         for part in excluded_parts:
@@ -147,7 +146,7 @@ def create_short_name(obj: Union[Team, Club]) -> str:
                 if w not in unique_words:
                     unique_words.append(w)
             club_short_name = " ".join(unique_words)
-
+    print(club_short_name)
     # Checks each word to see if it is in all-uppercase format.
     # If a word is all-uppercase and not in a list of excluded parts or exceptions,
     # the function capitalizes the word and updates the modified Club name string
@@ -176,7 +175,7 @@ def create_short_name(obj: Union[Team, Club]) -> str:
     # Extracts the Team number from the given Team name, if it includes a Roman numeral from I to IV.
     # This helps distinguish Teams within a Club that share a similar name.
     team_number = next(
-        (part for part in name_to_modify.split() if part in ["I", "II", "III", "IV"]),
+        (part for part in name_to_shorten.split() if part in ["I", "II", "III", "IV"]),
         "",
     )
 
