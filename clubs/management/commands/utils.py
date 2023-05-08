@@ -87,6 +87,103 @@ def change_club_image(clubs: Club, clubs_matched: dict) -> None:
                 pass
 
 
+def modify_club_name(club_name: str, excluded_parts: list, exceptions: list) -> str:
+    """
+    Rearrange and modify the given Club name by moving certain excluded parts (e.g. common sport Club prefixes)
+    to the beginning of the name and removing any duplicate or unnecessary words.
+    Specifically, this code checks if any excluded part is present in the Club name and, if so,
+    moves it to the front of the name while maintaining the order of the other words.
+    It also removes any duplicates and ensures that only unique words remain in the final modified Club name.
+    """
+
+    parts = club_name.split("-")
+    if len(parts) > 1 and not any(exclude in club_name for exclude in exceptions):
+        _, *rest_parts = parts[1].split()
+        club_name = f"{parts[0]} {' '.join(rest_parts)}"
+
+    split_modified_club_name = club_name.split()
+    if club_name not in exceptions:
+        for part in excluded_parts:
+            if part in split_modified_club_name:
+                part_index = split_modified_club_name.index(part)
+                club_name = " ".join(
+                    [
+                        *split_modified_club_name[part_index:],
+                        *split_modified_club_name[:part_index],
+                    ]
+                )
+            else:
+                club_name = " ".join(split_modified_club_name)
+
+            split_modified_club_name = club_name.split()
+            if len(split_modified_club_name) > 2:
+                if part in split_modified_club_name:
+                    split_modified_club_name.remove(part)
+
+            unique_words = []
+            for w in split_modified_club_name:
+                if w not in unique_words:
+                    unique_words.append(w)
+            club_name = " ".join(unique_words)
+
+    return club_name
+
+
+def is_futsal(obj: Union[Team, Club], club_short_name: str) -> str:
+    """
+    Checks whether a Club or Team is playing in a futsal league, and adds a suffix to the name to indicate that it is
+    playing in such a league if necessary. Also extracts the Team number from the given Team name, if it includes a Roman
+    numeral from I to IV, to help distinguish Teams within a Club that share a similar name.
+    """
+
+    name_to_shorten = obj.name
+    club_name = obj.club.name if isinstance(obj, Team) else name_to_shorten
+
+    # Extracts the Team number from the given Team name, if it includes a Roman numeral from I to IV.
+    team_number = next(
+        (part for part in name_to_shorten.split() if part in ["I", "II", "III", "IV"]),
+        "",
+    )
+
+    futsal = ""  # Initialize futsal suffix with an empty string
+
+    # Check if all teams assigned to the given Club object play in the Futsal league.
+    if isinstance(obj, Club):
+        teams = obj.teams.all()
+        futsal_leagues = ["Futsal", "PLF"]
+        query = Q()
+        for league in futsal_leagues:
+            query |= Q(
+                historical__league_history__league__highest_parent__name__contains=league
+            )
+
+        if 0 < teams.count() == teams.filter(query).distinct().count():
+            if "Futsal" not in club_name:
+                club_short_name = club_short_name + " (Futsal)"
+
+    # Add a suffix to a Team name indicating that the Team is playing in a futsal league if the team's
+    # Club is not defined as a futsal Club and the team is playing in a futsal league.
+    if isinstance(obj, Team) and not all(
+        "Futsal" in team.team_name_with_current_league
+        or "PLF" in team.team_name_with_current_league
+        for team in obj.club.teams.all()
+        if team.team_name_with_current_league
+    ):
+        futsal = (
+            "(Futsal)"
+            if any(
+                league_name in obj.team_name_with_current_league
+                for league_name in ["Futsal", "PLF"]
+            )
+            and "Futsal" not in club_short_name
+            else ""
+        )
+
+    short_name = f"{club_short_name}{(' ' + team_number) if team_number else ''}{(' ' + futsal) if futsal else ''}"
+
+    return short_name
+
+
 def create_short_name(obj: Union[Team, Club]) -> str:
     """
     Given a Club or Team object, create a short name that is easier to display and read
@@ -113,38 +210,7 @@ def create_short_name(obj: Union[Team, Club]) -> str:
 
     # Rearrange and modify the given Club name by moving certain excluded parts (e.g. common sport Club prefixes)
     # to the beginning of the name and removing any duplicate or unnecessary words.
-    # Specifically, this code checks if any excluded part is present in the Club name and, if so,
-    # moves it to the front of the name while maintaining the order of the other words.
-    # It also removes any duplicates and ensures that only unique words remain in the final modified Club name.
-    parts = club_short_name.split("-")
-    if len(parts) > 1 and not any(exclude in club_short_name for exclude in exceptions):
-        _, *rest_parts = parts[1].split()
-        club_short_name = f"{parts[0]} {' '.join(rest_parts)}"
-
-    split_modified_club_name = club_short_name.split()
-    if club_short_name not in exceptions:
-        for part in excluded_parts:
-            if part in split_modified_club_name:
-                part_index = split_modified_club_name.index(part)
-                club_short_name = " ".join(
-                    [
-                        *split_modified_club_name[part_index:],
-                        *split_modified_club_name[:part_index],
-                    ]
-                )
-            else:
-                club_short_name = " ".join(split_modified_club_name)
-
-            split_modified_club_name = club_short_name.split()
-            if len(split_modified_club_name) > 2:
-                if part in split_modified_club_name:
-                    split_modified_club_name.remove(part)
-
-            unique_words = []
-            for w in split_modified_club_name:
-                if w not in unique_words:
-                    unique_words.append(w)
-            club_short_name = " ".join(unique_words)
+    club_short_name = modify_club_name(club_short_name, excluded_parts, exceptions)
 
     # Checks each word to see if it is in all-uppercase format.
     # If a word is all-uppercase and not in a list of excluded parts or exceptions,
@@ -158,44 +224,6 @@ def create_short_name(obj: Union[Team, Club]) -> str:
     # Check if all teams assigned to the given Club object play in the Futsal league.
     # If they do, modify the Club's name to indicate that it is a Futsal club by appending
     # the string "(Futsal)" to the Club name.
-    if isinstance(obj, Club):
-        teams = obj.teams.all()
-        futsal_leagues = ["Futsal", "PLF"]
-        query = Q()
-        for league in futsal_leagues:
-            query |= Q(
-                historical__league_history__league__highest_parent__name__contains=league
-            )
-
-        if 0 < teams.count() == teams.filter(query).distinct().count():
-            if "Futsal" not in club_name:
-                club_short_name = club_short_name + " (Futsal)"
-
-    # Extracts the Team number from the given Team name, if it includes a Roman numeral from I to IV.
-    # This helps distinguish Teams within a Club that share a similar name.
-    team_number = next(
-        (part for part in name_to_shorten.split() if part in ["I", "II", "III", "IV"]),
-        "",
-    )
-
-    # Add a suffix to a Team name indicating that the Team is playing in a futsal league if the team's
-    # Club is not defined as a futsal Club and the team is playing in a futsal league.
-    if isinstance(obj, Team) and not all(
-        "Futsal" in team.team_name_with_current_league
-        or "PLF" in team.team_name_with_current_league
-        for team in obj.club.teams.all()
-        if team.team_name_with_current_league
-    ):
-        team_number = (
-            "(Futsal)"
-            if any(
-                league_name in obj.team_name_with_current_league
-                for league_name in ["Futsal", "PLF"]
-            )
-            and "Futsal" not in obj.club.name
-            else team_number
-        )
-
-    short_name = club_short_name + " " + team_number if team_number else club_short_name
+    short_name = is_futsal(obj, club_short_name)
 
     return short_name
