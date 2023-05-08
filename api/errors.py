@@ -1,5 +1,6 @@
 import json
 import traceback
+from typing import Dict
 
 from rest_framework.exceptions import APIException
 from rest_framework.views import exception_handler
@@ -21,9 +22,10 @@ class CoreAPIException(APIException):
         else:
             self.detail = details
 
-        self.__str__()
+        super().__init__(self._prepare_content())
 
-    def __str__(self):
+    def _prepare_content(self) -> Dict[str, str]:
+        """Prepare content for the API response."""
         data = {
             "success": False,
             "detail": self.detail
@@ -40,7 +42,11 @@ class CoreAPIException(APIException):
         if self.pointer is not None:
             data["pointer"] = self.pointer
 
-        return json.dumps(data)
+        return data
+
+    def __str__(self) -> str:
+        """Prepare string representation of the exception."""
+        return json.dumps(self._prepare_content())
 
 
 def custom_exception_handler(exc, context) -> exception_handler:

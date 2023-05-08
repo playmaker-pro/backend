@@ -1,4 +1,4 @@
-from rest_framework.permissions import AllowAny, BasePermission
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from api.views import EndpointView
@@ -19,28 +19,16 @@ from users.services import UserService
 user_service = UserService()
 
 
-class AllowAnyPermission(BasePermission):
-    """
-    Allow any access
-    """
-
-    def has_permission(self, request, view):
-        return True
-
-    def has_object_permission(self, request, view, obj):
-        return True
-
-
 class UsersAPI(EndpointView):
     # permission_classes = (IsAuthenticated, HasRoleUserPermission)
     serializer_class = serializers.UserSerializer
     allowed_methods = ("list", "post", "put", "update")
 
-    def register(self, request) -> Response:
+    @staticmethod
+    def register(request) -> Response:
         """
         Validate given data and send them to service for register user.
         Returns serialized User data.
-        If player with given email already exists, raises ValidationError from serializer.
         """
 
         user_data: UserRegisterSerializer = UserRegisterSerializer(data=request.data)
@@ -51,9 +39,12 @@ class UsersAPI(EndpointView):
 
         return Response(serialized_data)
 
-    def get_permissions(self):
-        """Exclude register endpoint from permission_classes."""
-        if self.action == "register":
+    def get_permissions(self) -> list:
+        """
+        Exclude register endpoint from permission_classes.
+        Note: You can't use 'self.action' here because it's not set when calling not accepted method.
+        """
+        if "register" in self.request.path:
             retrieve_permission_list = [AllowAny]
             return [permission() for permission in retrieve_permission_list]
         else:

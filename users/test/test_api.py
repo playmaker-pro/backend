@@ -21,12 +21,6 @@ class TestUserCreationEndpoint(TestCase):
             "email": "test_email@test.com",
         }
 
-    def invalid_email(self) -> None:
-        self.data["email"] = "test_email"
-
-    def valid_email(self) -> None:
-        self.data["email"] = "test_email@test.com"
-
     def test_method_get_not_allowed(self) -> None:
         """Test if GET method is not allowed"""
 
@@ -68,16 +62,17 @@ class TestUserCreationEndpoint(TestCase):
     def test_register_endpoint_invalid_mail(self) -> None:
         """Test register endpoint with invalid email field"""
 
-        self.invalid_email()
+        self.data["email"] = "test_email"
         res: Response = self.client.post(
             self.url,
             data=self.data,
         )
 
         assert res.status_code == 400
-        assert "email" in res.data
+        data: dict = res.json()  # type: ignore
 
-        self.valid_email()
+        assert data.get("success") == "False"
+        assert data.get('fields') == 'email'
 
     def test_password_not_returned(self) -> None:
         """Test if password field is not returned"""
@@ -98,8 +93,11 @@ class TestUserCreationEndpoint(TestCase):
             self.url,
             data=self.data,
         )
+        data: dict = res.json()  # type: ignore
 
         assert res.status_code == 400
+        assert data.get("success") == "False"
+        assert data.get("fields") == "email"
 
     def test_response_data(self) -> None:
         """Test if response data contains all required fields from RegisterSchema"""

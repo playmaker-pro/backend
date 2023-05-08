@@ -3,14 +3,7 @@ from typing import Set, Dict, List, Optional
 
 
 @dataclass
-class BaseSchema:
-    @classmethod
-    def values(cls):
-        return {field.name for field in fields(cls)}
-
-
-@dataclass
-class RegisterSchema(BaseSchema):
+class RegisterSchema:
     """Schema represents data which have to be used by register endpoint"""
     email: str
     first_name: str
@@ -21,7 +14,7 @@ class RegisterSchema(BaseSchema):
 
     def user_creation_data(self) -> Dict[str, str]:
         """
-        Return data which have to be used to create User instance.
+        Return data which have to be used for create User instance.
         Password should not be included to avoid saving plain text password
         """
         excluded_fields_for_creation: List[str] = ["password", "id", "username"]
