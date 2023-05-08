@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from inquiries.services import InquireService
 from notifications.mail import mail_admins_about_new_user, mail_role_change_request
 from roles import definitions
 
@@ -13,53 +14,14 @@ from .services import ProfileService
 logger = logging.getLogger(__name__)
 
 
-# @todo(rkesik) this shoudl be moved to another place (inquires)
-from inquiries.models import InquiryPlan, UserInquiry
-
-
-def create_default_basic_plan_if_not_present():
-    """In case when there is no Default plan we would like to create it at first time"""
-
-    args = settings.INQUIRIES_INITAL_PLAN
-    try:
-        default = InquiryPlan.objects.get(default=True)
-    except InquiryPlan.DoesNotExist:
-        default = InquiryPlan.objects.create(**args)
-    return default
-
-
-def create_default_basic_plan_for_coach_if_not_present():
-    args = settings.INQUIRIES_INITAL_PLAN_COACH
-    try:
-        plan = InquiryPlan.objects.get(name=args["name"])
-
-    except InquiryPlan.DoesNotExist:
-        logger.info(
-            "Initial InquiryPlan for coaches does not exists. Creating new one."
-        )
-        plan = InquiryPlan.objects.create(**args)
-    return plan
-
-
-def set_user_inquiry_plan(user):
-    try:
-        UserInquiry.objects.get(user=user)
-    except UserInquiry.DoesNotExist:
-        if user.is_coach or user.is_club:
-            default = create_default_basic_plan_for_coach_if_not_present()
-        else:
-            default = create_default_basic_plan_if_not_present()
-        UserInquiry.objects.create(plan=default, user=user)
-        logger.info(f"User {user.id} plan created.")
-
-
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_profile_handler(sender, instance, created, **kwargs):
     """Signal reponsible for creating and attaching proper profile to user during creation process.
 
     Based on declared role append proper role (profile)
     """
-    service = ProfileService()
+    profile_service = ProfileService()
+    inquire_service = InquireService()
 
     if (
         not created
@@ -71,8 +33,8 @@ def create_profile_handler(sender, instance, created, **kwargs):
         logger.debug(f"Sending email to admins about new user {instance.username}")
         mail_admins_about_new_user(instance)
         msgprefix = "New"
-    service.set_and_create_user_profile(instance)
-    set_user_inquiry_plan(instance)
+    profile_service.set_and_create_user_profile(instance)
+    inquire_service.set_user_inquiry_plan(instance)
     logger.info(
         f"{msgprefix} user profile for {instance} created with declared role {instance.declared_role}"
     )
