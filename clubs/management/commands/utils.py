@@ -87,7 +87,9 @@ def change_club_image(clubs: Club, clubs_matched: dict) -> None:
                 pass
 
 
-def modify_club_name(club_name: str, excluded_parts: list, exceptions: list) -> str:
+def modify_club_name(
+    club_name: str, parts_to_exclude: list, persistent_names: list
+) -> str:
     """
     Rearrange and modify the given Club name by moving certain excluded parts (e.g. common sport Club prefixes)
     to the beginning of the name and removing any duplicate or unnecessary words.
@@ -96,14 +98,18 @@ def modify_club_name(club_name: str, excluded_parts: list, exceptions: list) -> 
     It also removes any duplicates and ensures that only unique words remain in the final modified Club name.
     """
 
+    # Remove the first word after the hyphen if club name contains a hyphen and is not in the list of persistent names
     parts = club_name.split("-")
-    if len(parts) > 1 and not any(exclude in club_name for exclude in exceptions):
+    if len(parts) > 1 and not any(
+        exception in club_name for exception in persistent_names
+    ):
         _, *rest_parts = parts[1].split()
         club_name = f"{parts[0]} {' '.join(rest_parts)}"
 
+    # Move any common prefixes to the beginning of the name, remove duplicates, and ensure only unique words remain
     split_modified_club_name = club_name.split()
-    if club_name not in exceptions:
-        for part in excluded_parts:
+    if club_name not in persistent_names:
+        for part in parts_to_exclude:
             if part in split_modified_club_name:
                 part_index = split_modified_club_name.index(part)
                 club_name = " ".join(
@@ -129,11 +135,11 @@ def modify_club_name(club_name: str, excluded_parts: list, exceptions: list) -> 
     return club_name
 
 
-def is_futsal(obj: Union[Team, Club], club_short_name: str) -> str:
+def add_suffix_to_name(obj: Union[Team, Club], club_short_name: str) -> str:
     """
     Checks whether a Club or Team is playing in a futsal league, and adds a suffix to the name to indicate that it is
-    playing in such a league if necessary. Also extracts the Team number from the given Team name, if it includes a Roman
-    numeral from I to IV, to help distinguish Teams within a Club that share a similar name.
+    playing in such a league if necessary. Also extracts the Team number from the given Team name, if it includes a
+    Roman numeral from I to IV, to help distinguish Teams within a Club that share a similar name.
     """
 
     name_to_shorten = obj.name
@@ -147,7 +153,8 @@ def is_futsal(obj: Union[Team, Club], club_short_name: str) -> str:
 
     futsal = ""  # Initialize futsal suffix with an empty string
 
-    # Check if all teams assigned to the given Club object play in the Futsal league.
+    # Check if all teams assigned to the given Club object play in the Futsal league. If so, add a suffix to define
+    # Club as a futsal Club
     if isinstance(obj, Club):
         teams = obj.teams.all()
         futsal_leagues = ["Futsal", "PLF"]
@@ -184,6 +191,26 @@ def is_futsal(obj: Union[Team, Club], club_short_name: str) -> str:
     return short_name
 
 
+def capitalize_uppercase_words(
+    club_name: str, parts_to_exclude: list, persistent_names: list
+) -> str:
+    """
+    Checks each word of given Club name to see if it is in all-uppercase format.
+    If a word is all-uppercase and not in a list of excluded parts or exceptions,
+    the function capitalizes the word and updates the modified Club name string
+    """
+    split_modified_club_name = club_name.split()
+    for i, word in enumerate(split_modified_club_name):
+        if (
+            word.isupper()
+            and word not in parts_to_exclude
+            and word not in persistent_names
+        ):
+            split_modified_club_name[i] = word.capitalize()
+    club_short_name = " ".join(split_modified_club_name)
+    return club_short_name
+
+
 def create_short_name(obj: Union[Team, Club]) -> str:
     """
     Given a Club or Team object, create a short name that is easier to display and read
@@ -208,22 +235,13 @@ def create_short_name(obj: Union[Team, Club]) -> str:
         [w for w in club_name.split() if w not in words_to_remove]
     )
 
-    # Rearrange and modify the given Club name by moving certain excluded parts (e.g. common sport Club prefixes)
-    # to the beginning of the name and removing any duplicate or unnecessary words.
+    # Modify club name by rearranging excluded parts and removing duplicates
     club_short_name = modify_club_name(club_short_name, excluded_parts, exceptions)
 
-    # Checks each word to see if it is in all-uppercase format.
-    # If a word is all-uppercase and not in a list of excluded parts or exceptions,
-    # the function capitalizes the word and updates the modified Club name string
-    split_modified_club_name = club_short_name.split()
-    for i, word in enumerate(split_modified_club_name):
-        if word.isupper() and word not in excluded_parts and word not in exceptions:
-            split_modified_club_name[i] = word.capitalize()
-    club_short_name = " ".join(split_modified_club_name)
+    # Capitalizes all uppercase words in club_short_name that are not in excluded_parts or exceptions
+    club_short_name = capitalize_uppercase_words(club_short_name, excluded_parts, exceptions)
 
-    # Check if all teams assigned to the given Club object play in the Futsal league.
-    # If they do, modify the Club's name to indicate that it is a Futsal club by appending
-    # the string "(Futsal)" to the Club name.
-    short_name = is_futsal(obj, club_short_name)
+    # Adds a futsal suffix and extracts team number (if applicable) for the given object's name
+    short_name = add_suffix_to_name(obj, club_short_name)
 
     return short_name
