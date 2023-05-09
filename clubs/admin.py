@@ -47,14 +47,9 @@ def set_invisibility(modeladmin, request, queryset):
 def create_short_names(modeladmin, request, queryset):
     # Loop through the selected objects and create short names for each of them
     for obj in queryset:
-        if isinstance(obj, models.Club):
-            club_short_name = create_short_name(obj)
-            obj.short_name = club_short_name
-            obj.save()
-        elif isinstance(obj, models.Team):
-            team_short_name = create_short_name(obj)
-            obj.short_name = team_short_name
-            obj.save()
+        club_short_name = create_short_name(obj)
+        obj.short_name = club_short_name
+        obj.save()
 
 
 def resave(modeladmin, request, queryset):
