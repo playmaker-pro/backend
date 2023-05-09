@@ -19,7 +19,7 @@ class TestUserService(TestCase):
             "email": "test_email@test.com",
             "password": "super secret password",
             "first_name": "first_name",
-            "last_name": "last_name"
+            "last_name": "last_name",
         }
         user: User = self.user_service.register(data)
 

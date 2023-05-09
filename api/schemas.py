@@ -5,6 +5,7 @@ from typing import Set, Dict, List, Optional
 @dataclass
 class RegisterSchema:
     """Schema represents data which have to be used by register endpoint"""
+
     email: str
     first_name: str
     last_name: str
@@ -18,7 +19,11 @@ class RegisterSchema:
         Password should not be included to avoid saving plain text password
         """
         excluded_fields_for_creation: List[str] = ["password", "id", "username"]
-        return {key: val for key, val in self.__dict__.items() if key not in excluded_fields_for_creation}
+        return {
+            key: val
+            for key, val in self.__dict__.items()
+            if key not in excluded_fields_for_creation
+        }
 
     def values_fields(self) -> Set[str]:
         """

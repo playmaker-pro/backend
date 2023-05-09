@@ -1,5 +1,3 @@
-from typing import Dict
-
 from rest_framework import status
 
 from api.errors import CoreAPIException

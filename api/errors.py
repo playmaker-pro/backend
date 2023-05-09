@@ -1,13 +1,13 @@
 import json
 import traceback
-from typing import Dict
+from typing import Dict, Union, Optional
 
 from rest_framework.exceptions import APIException
 from rest_framework.views import exception_handler
 
 
 class CoreAPIException(APIException):
-    fields = None
+    fields: Optional[str] = None
     pointer = None
     detail = ""
     default_detail = ""
@@ -24,7 +24,7 @@ class CoreAPIException(APIException):
 
         super().__init__(self._prepare_content())
 
-    def _prepare_content(self) -> Dict[str, str]:
+    def _prepare_content(self) -> Dict:
         """Prepare content for the API response."""
         data = {
             "success": False,
@@ -51,7 +51,8 @@ class CoreAPIException(APIException):
 
 def custom_exception_handler(exc, context) -> exception_handler:
     """
-    Log DRF errors to the console. As a default, DRF logs only a caught in code exception to the console.
+    Log DRF errors to the console.
+    As a default, DRF logs only a caught in code exception to the console.
     We want to log all exceptions (in DEV), so we override the default exception handler.
     Usage: add this to the local.py file in the backend/settings folder:
     REST_FRAMEWORK = {

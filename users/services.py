@@ -1,8 +1,6 @@
-from django.contrib.auth import get_user_model
-
 from api.schemas import RegisterSchema
 
-User = get_user_model()
+from profiles.models import User
 
 
 class UserService:

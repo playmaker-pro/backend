@@ -9,7 +9,8 @@ from users.models import User
 # jesli poniższe metody będą super-cieńkie (logika będzie poza tymi views)
 # to wówczas można już na tym poziomie rozdzielić:
 #   AdminUsersAPI  i UsersAPI jeśli byśmy np. chceli podzielic sobie API na to co widzi admin a to co zwykly user
-# unikniemy wówczas if... if... i zaszytej logiki row-column-permission w samym widoku. Wiadomo jakieś powtorzenia w kodzie są ale przez to że
+# unikniemy wówczas if... if... i zaszytej logiki
+# row-column-permission w samym widoku. Wiadomo jakieś powtorzenia w kodzie są ale przez to że
 # logika jest super-thin to nam nie szkodzi.
 
 # Jednak zdaje sobie sprawe ze nie uniknimy sytuacji "if" pod jednm API jak się da to robmy w miare czysto.
@@ -42,7 +43,8 @@ class UsersAPI(EndpointView):
     def get_permissions(self) -> list:
         """
         Exclude register endpoint from permission_classes.
-        Note: You can't use 'self.action' here because it's not set when calling not accepted method.
+        Note: You can't use 'self.action' here because it's not set
+        when calling not accepted method.
         """
         if "register" in self.request.path:
             retrieve_permission_list = [AllowAny]

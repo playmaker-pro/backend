@@ -4,7 +4,10 @@ from users.errors import InvalidEmailException, UserAlreadyExists
 
 
 def validate_serialized_email(error: ValidationError) -> None:
-    """Validate given error and return specific Exceptions. Function used in serializers."""
+    """
+    Validate given error and return specific Exceptions.
+    Function used in serializers.
+    """
 
     error_dict: dict = error.detail
 

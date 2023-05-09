@@ -72,7 +72,7 @@ class TestUserCreationEndpoint(TestCase):
         data: dict = res.json()  # type: ignore
 
         assert data.get("success") == "False"
-        assert data.get('fields') == 'email'
+        assert data.get("fields") == "email"
 
     def test_password_not_returned(self) -> None:
         """Test if password field is not returned"""
@@ -102,7 +102,7 @@ class TestUserCreationEndpoint(TestCase):
     def test_response_data(self) -> None:
         """Test if response data contains all required fields from RegisterSchema"""
 
-        user_schema: RegisterSchema = RegisterSchema(**self.data)
+        user_schema: RegisterSchema = RegisterSchema(**self.data)  # type: ignore
         fields: Set[str] = user_schema.values_fields()
         res: Response = self.client.post(self.url, data=self.data)
 
