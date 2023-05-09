@@ -197,7 +197,16 @@ W przypadku gdy TeamSearchApi pochodzi z clubs (importujemy z clubs.api.TeamSear
 
 
 
+    Task8
+    -----
 
+    Przemodelowanie API pod atuh i odświeżanie toekna.
+
+    obecnie tu jest to: resources/api-token-auth/
+
+    POST /login
+    POST /logout
+    POST /login/refresh token
 
 
     -------Nie na teraz -------------

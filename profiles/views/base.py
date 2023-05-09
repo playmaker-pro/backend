@@ -34,7 +34,7 @@ from clubs.models import Team
 
 logger = logging.getLogger(__name__)
 from app import mixins, utils
-from inquiries.services import unseen_requests, update_requests_with_read_status
+from inquiries.services import InquireService
 
 
 def redirect_to_profile_with_full_name(request):
@@ -166,7 +166,7 @@ def build_request_tab(user, name, title, qs, empty_text, empty_header, actions=T
         actions=actions,
         unseen=",".join(unseen),
     )
-    tab.add_badge(number=unseen_requests(qs, user).count())
+    tab.add_badge(number=InquireService.unseen_requests(qs, user).count())
     tab.add_empty(text=empty_text, header=empty_header)
     return tab.get()
 
