@@ -1,6 +1,6 @@
 import typing
 
-from pm_core.stubs.player_stub import PlayerApiServiceStub
+from pm_core.services.stubs.player_stub import PlayerApiServiceStub
 
 from adapters.player_adapter import (
     PlayerDataAdapter,
