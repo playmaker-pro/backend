@@ -8,7 +8,7 @@ from utils.factories.clubs_factories import ClubFactory
 
 
 class ClubSearchTest(APITestCase):
-    club_search_url = reverse("resources:clubs_search")
+    club_search_url = reverse("api:clubs:clubs_search")
 
     def setUp(self):
         ClubFactory.create_batch(5)

@@ -8,6 +8,7 @@ from roles.api_urls import urlpatterns as roles_urls
 
 from rest_framework.authtoken import views
 
+app_name = "api"
 
 urlpatterns = [
     url(r"^users/", include((users_urls, "users"))),

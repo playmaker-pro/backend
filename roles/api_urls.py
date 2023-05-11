@@ -10,5 +10,5 @@ router.register("", apis.RolesAPI, basename="roles")
 
 
 urlpatterns = [
-    path("", apis.RolesAPI.as_view({"get": "list"}), name="roles"),
+    path("get-roles/", apis.RolesAPI.as_view({"get": "list"}), name="get_roles"),
 ]
