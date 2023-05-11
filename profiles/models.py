@@ -1693,6 +1693,16 @@ class ScoutProfile(BaseProfile):
         verbose_name_plural = "Scouts Profiles"
 
 
+class OtherProfile(BaseProfile):
+    PROFILE_TYPE = definitions.PROFILE_TYPE_OTHER
+    AUTO_VERIFY = True
+    # TODO: Add specific fields if needed in the future
+
+    class Meta:
+        verbose_name = "Other Profile"
+        verbose_name_plural = "Other Profiles"
+
+
 class ProfileVerificationStatus(models.Model):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
