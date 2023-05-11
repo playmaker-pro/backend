@@ -1,5 +1,4 @@
 import collections
-
 import django.db.utils
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -7,6 +6,10 @@ from django.urls import reverse
 from django.utils.html import format_html
 
 from clubs.models import Season
+
+
+def translate_league_name(code, name):
+    return settings.LEAGUES_CODES_MAP.get(code, name)
 
 
 def is_allowed_interact_with_s38():

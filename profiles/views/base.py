@@ -26,7 +26,8 @@ from profiles.model_utils import (
 )
 from profiles.utils import get_metrics_update_date
 from roles import definitions
-from stats import adapters
+
+# from stats import adapters     DEPRECATED: PM-1015
 from utils import calculate_prev_season, get_current_season
 
 User = get_user_model()

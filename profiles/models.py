@@ -2,8 +2,6 @@ import logging
 import typing
 from collections import Counter
 from datetime import datetime
-from random import choices
-
 from address.models import AddressField
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -13,21 +11,15 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
-
 import utils as utilites
 from adapters import strategy
 from adapters.base_adapter import API_METHOD, ScrapperAPI
 from adapters.player_adapter import PlayerGamesAdapter, PlayerSeasonStatsAdapter
-from clubs import models as clubs_models
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_player_external_links
 from mapper.models import Mapper
-
-# from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
 from roles import definitions
-from stats.adapters import PlayerAdapter
 from voivodeships.models import Voivodeships
-
 from .erros import VerificationCompletionFieldsWrongSetup
 from .mixins import TeamObjectsDisplayMixin
 from .utils import make_choices, supress_exception, unique_slugify
@@ -867,60 +859,64 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         f.calculate_fantasy_for_player(self, season, is_senior=True)
         f.calculate_fantasy_for_player(self, season, is_senior=False)
 
-    def calculate_data_from_data_models(self, adpt=None, *args, **kwargs):
-        """Interaction with s38: league, vivo, team <- s38"""
-        if self.attached:
-            adpt = adpt or PlayerAdapter(
-                int(
-                    self.mapper.get_entity(
-                        related_type="player", database_source="s38"
-                    ).mapper_id
-                )
-            )
-            if adpt.has_player:
-                self.league = adpt.get_current_league()
-                self.voivodeship = adpt.get_current_voivodeship()
-                # self.club = adpt.get_current_club()  # not yet implemented. Maybe after 1.12
-                self.team = adpt.get_current_team()
+    # DEPRECATED: PM-1015
+    # def calculate_data_from_data_models(self, adpt=None, *args, **kwargs):
+    #     """Interaction with s38: league, vivo, team <- s38"""
+    #     if self.attached:
+    #         adpt = adpt or PlayerAdapter(
+    #             int(
+    #                 self.mapper.get_entity(
+    #                     related_type="player", database_source="s38"
+    #                 ).mapper_id
+    #             )
+    #         )
+    #         if adpt.has_player:
+    #             self.league = adpt.get_current_league()
+    #             self.voivodeship = adpt.get_current_voivodeship()
+    #             # self.club = adpt.get_current_club()  # not yet implemented. Maybe after 1.12
+    #             self.team = adpt.get_current_team()
 
-    def update_data_player_object(self, adpt=None):
-        """Interaction with s38: updates --> s38 wix_id and fantasy position"""
-        if self.attached:
-            adpt = adpt or PlayerAdapter(
-                self.mapper.get_entity(
-                    related_type="player", database_source="s38"
-                ).mapper_id
-            )
-            adpt.update_wix_id_and_position(
-                email=self.user.email, position=self.position_fantasy
-            )
+    # DEPRECATED: PM-1015
+    # def update_data_player_object(self, adpt=None):
+    #     """Interaction with s38: updates --> s38 wix_id and fantasy position"""
+    #     if self.attached:
+    #         adpt = adpt or PlayerAdapter(
+    #             self.mapper.get_entity(
+    #                 related_type="player", database_source="s38"
+    #             ).mapper_id
+    #         )
+    #         adpt.update_wix_id_and_position(
+    #             email=self.user.email, position=self.position_fantasy
+    #         )
 
-    def fetch_data_player_meta(self, adpt=None, save=True, *args, **kwargs):
-        """Interaction with s38: updates meta from <--- s38"""
-        if self.attached:
-            adpt = adpt or PlayerAdapter(
-                int(
-                    self.mapper.get_entity(
-                        related_type="player", database_source="s38"
-                    ).mapper_id
-                )
-            )
-            self.meta = adpt.player.meta
-            self.meta_updated = timezone.now()
-            if save:
-                self.save()
+    # DEPRECATED: PM-1015
+    # def fetch_data_player_meta(self, adpt=None, save=True, *args, **kwargs):
+    #     """Interaction with s38: updates meta from <--- s38"""
+    #     if self.attached:
+    #         adpt = adpt or PlayerAdapter(
+    #             int(
+    #                 self.mapper.get_entity(
+    #                     related_type="player", database_source="s38"
+    #                 ).mapper_id
+    #             )
+    #         )
+    #         self.meta = adpt.player.meta
+    #         self.meta_updated = timezone.now()
+    #         if save:
+    #             self.save()
 
-    def trigger_refresh_data_player_stats(self, adpt=None, *args, **kwargs):
-        """Trigger update of player stats --> s38"""
-        if self.attached:
-            adpt = adpt or PlayerAdapter(
-                int(
-                    self.mapper.get_entity(
-                        related_type="player", database_source="s38"
-                    ).mapper_id
-                )
-            )
-            adpt.calculate_stats(season_name=utilites.get_current_season())
+    # DEPRECATED: PM-1015
+    # def trigger_refresh_data_player_stats(self, adpt=None, *args, **kwargs):
+    #     """Trigger update of player stats --> s38"""
+    #     if self.attached:
+    #         adpt = adpt or PlayerAdapter(
+    #             int(
+    #                 self.mapper.get_entity(
+    #                     related_type="player", database_source="s38"
+    #                 ).mapper_id
+    #             )
+    #         )
+    #         adpt.calculate_stats(season_name=utilites.get_current_season())
 
     def get_team_object_based_on_meta(self, season_name, retries: int = 3):
         """set TeamObject based on meta data"""
@@ -998,7 +994,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         if not self.external_links:
             self.create_external_links_obj()
 
-        adpt = None
+        # adpt = None
         # Each time actions
         # if self.attached:
         #     old = self.playermetrics.how_old_days
@@ -1011,26 +1007,27 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         super().save(*args, **kwargs)
         # print(f'---------- Datamapper: {self.data_mapper_changed}')
 
+        # DEPRECATED: PM-1015
         # Onetime actions:
-        if (
-            self.data_mapper_changed and self.attached
-        ):  # if datamapper changed after save and it is not None
-            logger.info(f"Calculating metrics for player {self}")
-            adpt = PlayerAdapter(
-                int(
-                    self.mapper.get_entity(
-                        related_type="player", database_source="s38"
-                    ).mapper_id
-                )
-            )  # commonly use adpt
-            if utilites.is_allowed_interact_with_s38():  # are we on PROD and not Debug
-                self.update_data_player_object(adpt)  # send data to s38
-                self.trigger_refresh_data_player_stats(adpt)  # send trigger to s38
-            self.calculate_data_from_data_models(
-                adpt
-            )  # update league, vivo, team from Players meta
-            self.fetch_data_player_meta(adpt)  # update update meta
-        create_or_update_player_external_links(self)
+        # if (
+        #     self.data_mapper_changed and self.attached
+        # ):  # if datamapper changed after save and it is not None
+        #     logger.info(f"Calculating metrics for player {self}")
+        #     adpt = PlayerAdapter(
+        #         int(
+        #             self.mapper.get_entity(
+        #                 related_type="player", database_source="s38"
+        #             ).mapper_id
+        #         )
+        #     )  # commonly use adpt
+        #     if utilites.is_allowed_interact_with_s38():  # are we on PROD and not Debug
+        #         self.update_data_player_object(adpt)  # send data to s38
+        #         self.trigger_refresh_data_player_stats(adpt)  # send trigger to s38
+        #     self.calculate_data_from_data_models(
+        #         adpt
+        #     )  # update league, vivo, team from Players meta
+        #     self.fetch_data_player_meta(adpt)  # update update meta
+        # create_or_update_player_external_links(self)
 
     class Meta:
         verbose_name = "Player Profile"

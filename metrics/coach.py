@@ -1,7 +1,8 @@
 from collections import defaultdict
-
 from data.models import TeamStat
-from stats import utilites as utils
+import utils
+
+# from stats import utilites as utils    DEPRECATED: PM-1015
 
 # class CoachSeasonSerializer:
 #     def serialize(self, queryset):

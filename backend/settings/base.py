@@ -64,7 +64,7 @@ INSTALLED_APPS = [
     "mapper",
     "resources",
     "data",  # external repo
-    "stats",  # external repo
+    # "stats",  # external repo DEPRECATED: PM-1015
     "django_countries",
     "crispy_forms",
     "easy_thumbnails",
