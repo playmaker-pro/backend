@@ -10,7 +10,7 @@ from . import definitions
 class RolesAPITest(TestCase):
     def setUp(self) -> None:
         self.client: Client = Client()
-        self.url: str = reverse("api:roles:get_roles")
+        self.url: str = reverse("api:roles:get-roles")
 
     def test_method_post_not_allowed(self) -> None:
         """Test if GET method is not allowed"""
@@ -37,6 +37,7 @@ class RolesAPITest(TestCase):
         assert res.status_code == 405
 
     def test_get_roles_endpoint(self) -> None:
+        """Test get-roles endpoint"""
         res: Response = self.client.get(
             self.url,
         )
