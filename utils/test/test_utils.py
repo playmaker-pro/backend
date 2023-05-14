@@ -1,6 +1,10 @@
+from contextlib import contextmanager
+
 from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
+from django.db.models import signals
+from factory.django import mute_signals
 
 from clubs.models import Season
 from utils import testutils as utils
@@ -13,7 +17,8 @@ class GetCurrentSeasonTest(TestCase):
     JJ:
     Definicja aktualnego sezonu
     (wyznaczamy go za pomocą:
-        jeśli miesiąc daty systemowej jest >= 7 to pokaż sezon (aktualny rok/ aktualny rok + 1).
+        jeśli miesiąc daty systemowej jest >= 7
+        to pokaż sezon (aktualny rok/ aktualny rok + 1).
         Jeśli < 7 th (aktualny rok - 1 / aktualny rok)
     """
 
@@ -31,3 +36,10 @@ class GetCurrentSeasonTest(TestCase):
             assert (
                 Season.define_current_season(date) == result
             ), f"Input data:{date_settings} date={date}"
+
+
+@contextmanager
+def mute_post_save_signal():
+    """Mute post save signal. We don't want to test it in some cases."""
+    with mute_signals(signals.post_save):
+        yield

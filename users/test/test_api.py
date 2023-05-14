@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from rest_framework.test import APITestCase
 from rest_framework.test import APIClient
 
-from profiles.tests.utils import mute_post_save_signal
 from users.models import User
+from utils.test.test_utils import mute_post_save_signal
 
 
 @pytest.mark.django_db
