@@ -14,6 +14,4 @@ api_router.register(r"teams", TeamViewSet, basename="teams")
 
 urlpatterns = [
     path("", include(api_router.urls)),
-    # path("api-auth/", include("rest_framework.urls")),
-    # path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 ]

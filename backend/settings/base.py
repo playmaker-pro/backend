@@ -655,6 +655,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 VERIFICATION_FORM = {"DEFAULT_SEASON_NAME": "2021/2022"}
 
 
+# Setup token and refresh token lifetime. Refresh token is used to get new token,
+# if auth token is expired. If refresh token is expired, user need to send login/ request again.
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=2),

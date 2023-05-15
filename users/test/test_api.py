@@ -11,7 +11,7 @@ from utils.test.test_utils import mute_post_save_signal
 
 
 @pytest.mark.django_db
-class TestTokenEndpoint(APITestCase):
+class TestAuth(APITestCase):
     """Test login, refresh and logout endpoints. Basically JWT token endpoints"""
 
     def setUp(self) -> None:
