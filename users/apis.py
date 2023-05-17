@@ -1,9 +1,8 @@
-from pydantic import BaseModel
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from api.views import EndpointView
 from users import serializers
-from users.errors import AccessForbiddenException
 from users.models import User
 
 # Definicja enpointów nie musi być skoncentrowana tylko i wyłącznie w jedenj klasie.
@@ -17,7 +16,7 @@ from users.models import User
 
 
 class UsersAPI(EndpointView):
-    # permission_classes = (IsAuthenticated, HasRoleUserPermission)
+    permission_classes = (IsAuthenticated,)
     serializer_class = serializers.UserSerializer
     allowed_methods = ("list", "post", "put", "update")
 

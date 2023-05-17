@@ -56,7 +56,6 @@ urlpatterns = [
     path("resources/", include("resources.urls", namespace="resources")),
     path("select2/", include("django_select2.urls")),
     path("transfer/", include(landingpage.urls, namespace="landingpage")),
-    path("select2/", include("django_select2.urls")),
     path("", include("allauth.urls")),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 ] + settings.REDIRECTS_LISTS

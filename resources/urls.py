@@ -9,11 +9,9 @@ from clubs.api.views import (
 app_name = "resources"
 
 api_router = routers.DefaultRouter()
-api_router.register(r"teams", TeamViewSet)
+api_router.register(r"teams", TeamViewSet, basename="teams")
 
 
 urlpatterns = [
     path("", include(api_router.urls)),
-    # path("api-auth/", include("rest_framework.urls")),
-    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 ]
