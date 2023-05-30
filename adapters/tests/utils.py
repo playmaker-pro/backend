@@ -1,18 +1,17 @@
 import typing
-
 from pm_core.services.stubs.player_stub import PlayerApiServiceStub
-
 from adapters.player_adapter import (
     PlayerDataAdapter,
     PlayerGamesAdapter,
     PlayerSeasonStatsAdapter,
+    PlayerScoreAdapter,
 )
 from adapters.strategy import JustGet
-from utils.factories.profiles_factories import PlayerProfileFactory
-from utils.factories.mapper_factories import MapperEntityFactory
+from utils.factories import PlayerProfileFactory, MapperEntityFactory, SeasonFactory
+
 
 PLAYER_DEFAULT_TYPEHINT = typing.Union[
-    PlayerSeasonStatsAdapter, PlayerDataAdapter, PlayerGamesAdapter
+    PlayerSeasonStatsAdapter, PlayerDataAdapter, PlayerGamesAdapter, PlayerScoreAdapter
 ]
 
 
@@ -30,3 +29,11 @@ def get_adapter(
         api_method=PlayerApiServiceStub,
         strategy=JustGet,
     )
+
+
+def create_seasons() -> None:
+    """Mock 4 different seasons"""
+    [
+        SeasonFactory(name=name)
+        for name in ["2019/2020", "2020/2021", "2021/2022", "2022/2023"]
+    ]

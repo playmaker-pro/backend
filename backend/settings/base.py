@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "landingpage",
     "voivodeships",
     "mapper",
+    "premium",
     "resources",
     "data",  # external repo
     "stats",  # external repo

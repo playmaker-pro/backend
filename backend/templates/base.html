@@ -106,7 +106,7 @@ onReady(function() {
   {% include 'partials/action_messages.html' %}
 
   {% block header %}
-      {% if 'transfer' in request.path %}
+      {% if 'transfer' or 'premium' in request.path %}
           {% include 'landingpage/navbar.html' %}
       {% else %}
         {% include 'partials/navbar.html' %}
