@@ -509,7 +509,13 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
             games_summary = metrics.games_summary
             fantasy_summary = metrics.fantasy_summary
             season_summary = metrics.season_summary
-            kwargs['metrics_updated_date'] = get_metrics_update_date(metrics)
+
+            # TODO(bartnyk): temporary show no stats
+            games_summary = None
+            fantasy_summary = None
+            season_summary = None
+
+            kwargs["metrics_updated_date"] = get_metrics_update_date(metrics)
             kwargs["last_games"] = games_summary
             kwargs["fantasy"] = fantasy_summary
             kwargs["season_stat"] = season_summary

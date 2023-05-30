@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
+from pydantic import typing
 from notifications.mail import mail_user_waiting_for_verification
 from django.urls import reverse
 from roles import definitions
@@ -176,7 +177,7 @@ class User(AbstractUser, UserRoleMixin):
 
     @property
     def display_full_name(self):
-        return ' '.join(filter(None, [self.first_name,  self.last_name]))
+        return " ".join(filter(None, [self.first_name, self.last_name]))
 
     @property
     def role(self):
@@ -229,6 +230,14 @@ class User(AbstractUser, UserRoleMixin):
     @classmethod
     def get_system_user(cls):
         return cls.objects.get(email=settings.SYSTEM_USER_EMAIL)
+
+    @property
+    def pm_score(self) -> typing.Optional[int]:
+        """Get PlayMaker Score of given user (players only)"""
+        try:
+            return self.playerprofile.playermetrics.pm_score or None
+        except models.ObjectDoesNotExist:
+            return None
 
     finish_account_initial_setup = (
         models.BooleanField(  # @todo - remove this, it is deprecated.

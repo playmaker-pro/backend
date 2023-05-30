@@ -25,6 +25,9 @@ class PageDescription(models.Model):
 
 class Product(models.Model):
     slug = models.SlugField(null=True, blank=True)
+    raw_slug = models.BooleanField(
+        default=False, help_text="if so, slug will not include /products/... subdir"
+    )
     title = models.CharField(max_length=455, null=True, blank=True)
     subtitle = models.CharField(max_length=455, null=True, blank=True)
     place = models.CharField(max_length=455, null=True, blank=True)
@@ -60,6 +63,9 @@ class Tag(models.Model):
 
     def __unicode__(self):
         return f"{self.name}"
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class Request(models.Model):

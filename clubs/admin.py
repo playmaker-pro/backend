@@ -62,6 +62,7 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
         "is_matches_data",
         "data_updated",
         "is_data",
+        linkify("external_links"),
     )
     list_filter = (
         ZpnListFilter,
@@ -135,7 +136,10 @@ class SectionGroupingAdmin(admin.ModelAdmin):
 
 @admin.register(models.League)
 class LeagueAdmin(admin.ModelAdmin):
-    search_fields: Sequence[str] = ("name", "slug")
+    search_fields: Sequence[str] = (
+        "name",
+        "slug",
+    )
     readonly_fields: Sequence[str] = ("slug", "search_tokens", "virtual", "is_parent")
     actions = [resave]
     list_display = (
@@ -171,6 +175,7 @@ class LeagueAdmin(admin.ModelAdmin):
         "seniority",
         CountryListFilter,
     )
+    autocomplete_fields = ["parent", "highest_parent"]
 
     def get_slicer(self, obj):
         return f"{obj.get_upper_parent_names()}"
@@ -249,6 +254,7 @@ class TeamAdmin(admin.ModelAdmin):
         "visible",
         "autocreated",
         "scrapper_autocreated",
+        linkify("external_links"),
     )
     search_fields = ("name",)
     list_filter = (
@@ -272,16 +278,14 @@ class TeamAdmin(admin.ModelAdmin):
         if obj:
             latest_league = obj.latest_league_from_lh
             if latest_league:
-                current_league = (
-                    f"{latest_league.get_highest_parent()}"
-                )
+                current_league = f"{latest_league.get_highest_parent()}"
         return current_league
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         form.base_fields["manager"].queryset = get_users_manger_roles()
         form.base_fields["editors"].queryset = get_users_manger_roles()
-        new_form_order = {'name': form.base_fields.pop("name")}
+        new_form_order = {"name": form.base_fields.pop("name")}
         new_form_order.update(form.base_fields)
         form.base_fields = new_form_order
         return form
@@ -297,6 +301,7 @@ class ClubAdmin(admin.ModelAdmin):
         linkify("manager"),
         linkify("voivodeship_obj"),
         "slug",
+        linkify("external_links"),
     )
     readonly_fields = ("mapper",)
     autocomplete_fields: Sequence[str] = ("manager",)

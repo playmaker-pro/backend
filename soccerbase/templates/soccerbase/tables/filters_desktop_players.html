@@ -51,6 +51,25 @@
         </button>
     </div>
 
+    <button class="btn-request" type="button" data-toggle="collapse" data-target="#filterForm">
+            PlayMaker Score
+        </button>
+        <div id="filterForm" class="collapse mt-3">
+            <form>
+                <div class="form-group">
+                    <label for="fromInput">Od:</label>
+                    <input type="text" class="form-control" id="fromInput" name="from">
+                </div>
+                <div class="form-group">
+                    <label for="toInput">Do:</label>
+                    <input type="text" class="form-control" id="toInput" name="to">
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+
+
+
 <script src="{% static 'assets/js/filters.js' %}"></script>
 
 {% endblock desktop_filters_body %}

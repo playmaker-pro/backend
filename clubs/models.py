@@ -12,6 +12,8 @@ from .managers import LeagueManager
 from voivodeships.models import Voivodeships
 from django.utils import timezone
 from mapper.models import Mapper
+from external_links.models import ExternalLinks
+from external_links.utils import create_or_update_player_external_links
 
 
 class Season(models.Model):
@@ -106,6 +108,10 @@ class Club(models.Model, MappingMixin):
 
     mapper = models.OneToOneField(
         Mapper, on_delete=models.SET_NULL, blank=True, null=True
+    )
+
+    external_links = models.OneToOneField(
+        ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
     )
 
     manager = models.OneToOneField(
@@ -230,11 +236,18 @@ class Club(models.Model, MappingMixin):
     def create_mapper_obj(self):
         self.mapper = Mapper.objects.create()
 
+
+    def create_external_links_obj(self):
+        self.external_links = ExternalLinks.objects.create()
+
     def save(self, *args, **kwargs):
         slug_str = "%s %s" % (self.PROFILE_TYPE, self.name)
 
         if not self.mapper:
             self.create_mapper_obj()
+
+        if not self.external_links:
+            self.create_external_links_obj()
 
         unique_slugify(self, slug_str)
         super().save(*args, **kwargs)
@@ -257,6 +270,9 @@ class LeagueHistory(models.Model):
     mapper = models.OneToOneField(
         Mapper, on_delete=models.SET_NULL, blank=True, null=True
     )
+    external_links = models.OneToOneField(
+        ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
+    )
 
     league_name_raw = models.CharField(
         max_length=255,
@@ -270,6 +286,9 @@ class LeagueHistory(models.Model):
 
     def create_mapper_obj(self):
         self.mapper = Mapper.objects.create()
+
+    def create_external_links_obj(self):
+        self.external_links = ExternalLinks.objects.create()
 
     def check_and_set_if_data_exists(self):
         from data.models import League as Dleague
@@ -293,6 +312,9 @@ class LeagueHistory(models.Model):
 
         if not self.mapper:
             self.create_mapper_obj()
+
+        if not self.external_links:
+            self.create_external_links_obj()
 
         super().save(*args, **kwargs)
 
@@ -540,8 +562,12 @@ class League(models.Model):
         if self.parent and self.id == self.parent.id:
             raise ValidationError({"parent": ["You cant have yourself as a parent!"]})
 
+    @property
+    def full_name(self):
+        return self.get_upper_parent_names()
+
     def __str__(self):
-        return f"{self.get_upper_parent_names()}"
+        return self.full_name
 
     class Meta:
         unique_together = ("name", "country", "parent")
@@ -619,6 +645,10 @@ class Team(models.Model, MappingMixin):
         Mapper, on_delete=models.SET_NULL, blank=True, null=True
     )
 
+    external_links = models.OneToOneField(
+        ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
+    )
+
     slug = models.CharField(max_length=255, blank=True, editable=False)
 
     def get_file_path(instance, filename):
@@ -641,7 +671,9 @@ class Team(models.Model, MappingMixin):
         default=False, help_text="Auto-created from new scrapper"
     )
 
-    junior_group = models.ForeignKey("JuniorAgeGroup", null=True, blank=True, on_delete=models.SET_NULL)
+    junior_group = models.ForeignKey(
+        "JuniorAgeGroup", null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     @property
     def should_be_visible(self):
@@ -669,7 +701,11 @@ class Team(models.Model, MappingMixin):
 
     @property
     def team_name_with_current_league(self):
-        return self.display_team + (" " + f"({self.latest_league_from_lh})") if self.latest_league_from_lh else ""
+        return (
+            self.display_team + (" " + f"({self.latest_league_from_lh})")
+            if self.latest_league_from_lh
+            else ""
+        )
 
     @property
     def league_with_parents(self):
@@ -706,7 +742,9 @@ class Team(models.Model, MappingMixin):
         return self.league.display_league
 
     def get_latest_team_history(self) -> List["TeamHistory"]:
-        sorted_team_histories = self.historical.all().order_by("-league_history__season__name")
+        sorted_team_histories = self.historical.all().order_by(
+            "-league_history__season__name"
+        )
         if sorted_team_histories:
             return sorted_team_histories[0]
 
@@ -796,6 +834,9 @@ class Team(models.Model, MappingMixin):
     def create_mapper_obj(self):
         self.mapper = Mapper.objects.create()
 
+    def create_external_links_obj(self):
+        self.external_links = ExternalLinks.objects.create()
+
     def save(self, *args, **kwargs):
         slug_str = "%s %s %s" % (
             self.PROFILE_TYPE,
@@ -806,6 +847,9 @@ class Team(models.Model, MappingMixin):
 
         if not self.mapper:
             self.create_mapper_obj()
+
+        if not self.external_links:
+            self.create_external_links_obj()
 
         super().save(*args, **kwargs)
 
