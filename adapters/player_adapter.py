@@ -1,5 +1,5 @@
 import typing
-
+from requests.exceptions import ConnectionError
 from pm_core.services.errors import ServiceRaisedException
 from pm_core.services.models import (
     PlayerBaseSchema,
@@ -9,14 +9,17 @@ from pm_core.services.models import (
     EventSchema,
     PlayerSeasonStatsListSchema,
     GamesSchema,
+    PlayerScoreSchema,
+    PlayerSeasonScoreListSchema,
 )
 from pm_core.services.models.consts import ExcludedLeague, DEFAULT_LEAGUE_EXCLUDE
-from .serializers import GameSerializer, StatsSerializer
+from .serializers import GameSerializer, StatsSerializer, ScoreSerializer
 from mapper.models import Mapper
 from .exceptions import (
     PlayerHasNoMapperException,
     PlayerMapperEntityNotFoundLogger,
     DataShortageLogger,
+    ScrapperIsNotRespongingLogger,
 )
 from .base_adapter import BaseAdapter
 import logging
@@ -24,6 +27,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from .utils import resolve_stats_list
 
 logger = logging.getLogger(__name__)
+NO_CONNECTION_LOG = ScrapperIsNotRespongingLogger()
 
 
 class PlayerAdapterBase(BaseAdapter):
@@ -39,6 +43,13 @@ class PlayerAdapterBase(BaseAdapter):
         from clubs.models import Season
 
         return Season.objects.all().order_by("-name")[:4]
+
+    @property
+    def current_season(self) -> str:
+        """Get current season"""
+        from utils import get_current_season
+
+        return get_current_season()
 
     def get_player_mapper(self) -> Mapper:
         """
@@ -60,6 +71,9 @@ class PlayerAdapterBase(BaseAdapter):
             return DataShortageLogger(
                 self, "get_player_data()", player_id=self.player_uuid, params=params
             )
+        except ConnectionError:
+            NO_CONNECTION_LOG()
+            return None
 
         self.data: PlayerBaseSchema = obj
 
@@ -85,7 +99,9 @@ class PlayerDataAdapter(PlayerAdapterBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def get_current_team(self) -> typing.Union[TeamSchema, DataShortageLogger]:
+    def get_current_team(
+        self,
+    ) -> typing.Optional[typing.Union[TeamSchema, DataShortageLogger]]:
         """
         Get more information about player's team
         """
@@ -97,6 +113,9 @@ class PlayerDataAdapter(PlayerAdapterBase):
             return DataShortageLogger(
                 self, "get_current_team()", team_id=team_id, params=params
             )
+        except ConnectionError:
+            NO_CONNECTION_LOG()
+            return None
 
         return obj
 
@@ -131,7 +150,7 @@ class PlayerDataAdapter(PlayerAdapterBase):
 class PlayerGamesAdapter(PlayerAdapterBase):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.games: GamesSchema = GamesSchema(__root__=[])
+        self.games: GamesSchema = GamesSchema()
 
     def get_player_games(
         self,
@@ -155,6 +174,10 @@ class PlayerGamesAdapter(PlayerAdapterBase):
             DataShortageLogger(
                 self, "get_player_games()", player_id=player_id, params=params
             )
+        except ConnectionError:
+            NO_CONNECTION_LOG()
+            return None
+
         if not games:
             return
 
@@ -211,7 +234,9 @@ class PlayerGamesAdapter(PlayerAdapterBase):
             self.parse_events_time(game)
 
             if game.minutes is None:
-                game.minutes = self.resolve_minutes_on_substitutions(game.substitutions)
+                game.minutes = (
+                    self.resolve_minutes_on_substitutions(game.substitutions) or 90
+                )
 
             if game.minutes > 90:
                 game.minutes = 90
@@ -228,9 +253,7 @@ class PlayerGamesAdapter(PlayerAdapterBase):
 class PlayerSeasonStatsAdapter(PlayerAdapterBase):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.stats: PlayerSeasonStatsListSchema = PlayerSeasonStatsListSchema(
-            __root__=[]
-        )
+        self.stats: PlayerSeasonStatsListSchema = PlayerSeasonStatsListSchema()
 
     def get_season_stats(
         self,
@@ -239,22 +262,23 @@ class PlayerSeasonStatsAdapter(PlayerAdapterBase):
         exlude_leagues: typing.List[ExcludedLeague] = DEFAULT_LEAGUE_EXCLUDE,
     ) -> typing.Optional[DataShortageLogger]:
         """get predefined player stats"""
-        if not season:
-            from utils import get_current_season
-
-            season = get_current_season()
         player_id = self.player_uuid
         params = self.resolve_strategy()
-        params["season"] = season
+        params["season"] = season or self.current_season
         params["excluded_leagues"] = " ".join(
             [league.name for league in exlude_leagues]
         )
+
         try:
             data = self.api.get_player_season_stats(player_id=player_id, params=params)
         except ServiceRaisedException:
             return DataShortageLogger(
                 self, "get_season_stats()", player_id=player_id, params=params
             )
+        except ConnectionError:
+            NO_CONNECTION_LOG()
+            return None
+
         if not data:
             return
 
@@ -287,3 +311,72 @@ class PlayerSeasonStatsAdapter(PlayerAdapterBase):
     def clean(self) -> None:
         """clear cached games data"""
         self.stats.__root__ = []
+
+
+class PlayerScoreAdapter(PlayerAdapterBase):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.pm_score: typing.Optional[PlayerScoreSchema] = None
+        self.season_score: PlayerSeasonScoreListSchema = PlayerSeasonScoreListSchema()
+
+    def get_pm_score(self) -> None:
+        """
+        Prepare params and call service to get PlayMaker Score.
+        Log if something went wrong.
+        """
+        params = self.resolve_strategy()
+
+        try:
+            self.pm_score = self.api.get_pm_score(
+                player_id=self.player_uuid, params=params
+            )
+        except ServiceRaisedException:
+            DataShortageLogger(
+                self, "get_pm_score()", player_id=self.player_uuid, params=params
+            )
+        except ConnectionError:
+            NO_CONNECTION_LOG()
+
+    def get_season_score(self, season: str = None) -> None:
+        """
+        Prepare params and call service to get Season Score.
+        Log if something went wrong.
+        """
+        params = self.resolve_strategy()
+        params["season"] = season or self.current_season
+
+        try:
+            season_score = self.api.get_season_score(
+                player_id=self.player_uuid, params=params
+            )
+
+            if season_score.season_name not in self.stored_seasons:
+                self.season_score.__root__.append(season_score)
+        except ServiceRaisedException:
+            DataShortageLogger(
+                self, "get_season_score()", player_id=self.player_uuid, params=params
+            )
+        except ConnectionError:
+            NO_CONNECTION_LOG()
+
+    def get_latest_seasons_scores(self) -> None:
+        """get player season scores from last 4 seasons"""
+        for season in self.season_range:
+            self.get_season_score(season.name)
+
+    def serialize(self) -> ScoreSerializer:
+        """Return serializer based on data collected by adapter"""
+        return ScoreSerializer(self.pm_score, self.season_score)
+
+    @property
+    def stored_seasons(self) -> typing.List[str]:
+        """get list of already collected seasons within season scores"""
+        return [season_score.season_name for season_score in self.season_score]
+
+    def get_scoring(self) -> None:
+        """
+        Method used to fetch everything related with scoring for player
+        """
+        # Add here new getters related to scoring
+        self.get_pm_score()
+        self.get_latest_seasons_scores()

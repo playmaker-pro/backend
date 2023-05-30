@@ -21,7 +21,11 @@
                 <a  target="_blank"
                     rel="noopener noreferrer"
                     href="{{ video.url }}">
-                    <img src="{{ thumbnails|index:forloop.counter0 }}" class="col">
+                    {% if thumbnails|index:forloop.counter0 %}
+                        <img src="{{ thumbnails|index:forloop.counter0 }}" class="col">
+                    {% else %}
+                        <button class="btn btn-danger" data-toggle="tooltip" data-placement="right" title="{{ video.url|truncatechars:100 }}">Zobacz</button>
+                    {% endif %}
                 </a>
             <td>{{ video.title }}</td>
             <td>{{ video.description }}</td>

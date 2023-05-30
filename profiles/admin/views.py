@@ -1,4 +1,3 @@
-from os import link
 from django.contrib import admin
 from utils import linkify
 from app.utils.admin import json_filed_data_prettified
@@ -10,6 +9,7 @@ from .filters import (
     HasClubObjectFilter,
     HasTextInputFilter,
 )
+from .actions import *
 
 
 @admin.register(models.ProfileVisitHistory)
@@ -33,6 +33,7 @@ class PlayerMetricsAdmin(admin.ModelAdmin):
         "player__user__first_name",
         "player__user__last_name",
     ]
+    autocomplete_fields = ("player",)
 
 
 @admin.register(models.PlayerPosition)
@@ -71,12 +72,13 @@ class ParentProfileAdmin(ProfileAdminBase):
 
 @admin.register(models.ManagerProfile)
 class ManagerProfileAdmin(ProfileAdminBase):
-    pass
+    readonly_fields = ("external_links",)
 
 
 @admin.register(models.ScoutProfile)
 class ScoutProfileAdmin(ProfileAdminBase):
     exclude = ("voivodeship_raw",)
+    readonly_fields = ("external_links",)
 
 
 @admin.register(models.GuestProfile)
@@ -92,69 +94,6 @@ class ClubProfileAdmin(ProfileAdminBase):
     )
     search_fields = DEFAULT_PROFILE_SEARCHABLES + ("club_object__name",)
     autocomplete_fields = ("club_object",)
-
-
-def trigger_refresh_data_player_stats(modeladmin, request, queryset):
-    for pp in queryset:
-        pp.trigger_refresh_data_player_stats()  # save comes inside
-
-
-trigger_refresh_data_player_stats.short_description = (
-    "1. Refresh metric data_player on -->  s38"
-)
-
-
-def calculate_metrics(modeladmin, request, queryset):
-    for pp in queryset:
-        pp.playermetrics.refresh_metrics()  # save comes inside
-
-
-calculate_metrics.short_description = "2. Calculate Playermeteics <-- s38"
-
-
-def calculate_fantasy(modeladmin, request, queryset):
-    for pp in queryset:
-        pp.calculate_fantasy_object()  # save comes inside
-
-
-calculate_fantasy.short_description = "Calculate fantasy"
-
-
-def fetch_data_player_meta(modeladmin, request, queryset):
-    for pp in queryset:
-        pp.fetch_data_player_meta()  # save comes inside
-
-
-fetch_data_player_meta.short_description = "3. update meta  <--- s38"
-
-
-def set_team_object_based_on_meta(modeladmin, request, queryset):
-    for pp in queryset:
-        pp.set_team_object_based_on_meta()  # save comes inside
-
-
-set_team_object_based_on_meta.short_description = "4. set team_object based on .meta"
-
-
-def refresh(modeladmin, request, queryset):
-    for pp in queryset:
-        pp.trigger_refresh_data_player_stats()  # save not relevant
-        pp.fetch_data_player_meta(save=False)  # save comes inside
-        pp.set_team_object_based_on_meta()  # saving
-        pp.playermetrics.refresh_metrics()  # save not relevant
-
-
-refresh.short_description = "0. Refresh( 1, 2,3,4 )"
-
-
-def update_with_profile_data(modeladmin, request, queryset):
-    for ver in queryset:
-        ver.update_with_profile_data(requestor=request.user)
-
-
-update_with_profile_data.short_description = (
-    "Updated selected verification object with Profles data"
-)
 
 
 @admin.register(models.ProfileVerificationStatus)
@@ -203,7 +142,7 @@ class ProfileVerificationStatusAdmin(admin.ModelAdmin):
 @admin.register(models.PlayerProfile)
 class PlayerProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
-        'get_mapper',
+        "get_mapper",
         linkify("playermetrics"),
         linkify("team_object"),
         linkify("team_history_object"),
@@ -216,6 +155,7 @@ class PlayerProfileAdmin(ProfileAdminBase):
         "meta_updated",
         "meta_last",
         linkify("verification"),
+        linkify("external_links"),
     )
 
     def team_object_linkify(self, obj=None):
@@ -223,7 +163,7 @@ class PlayerProfileAdmin(ProfileAdminBase):
             return linkify("team_object")(obj)
         else:
             return "-"
-    
+
     team_object_linkify.short_description = "team_object"
 
     def meta_last(self, obj):
@@ -233,9 +173,11 @@ class PlayerProfileAdmin(ProfileAdminBase):
             obj.meta
 
     def get_mapper(self, obj):
-        if hasattr(obj, 'mapper'):
+        if hasattr(obj, "mapper"):
             if obj.mapper is not None:
-                old_mapper = obj.mapper.get_entity(related_type='player', database_source='s38')
+                old_mapper = obj.mapper.get_entity(
+                    related_type="player", database_source="s38"
+                )
                 if old_mapper is not None:
                     return old_mapper.mapper_id
         return None
@@ -248,6 +190,9 @@ class PlayerProfileAdmin(ProfileAdminBase):
     )
 
     actions = [
+        update_pm_score,
+        update_season_score,
+        update_scoring,
         refresh,
         calculate_metrics,
         trigger_refresh_data_player_stats,
@@ -256,28 +201,31 @@ class PlayerProfileAdmin(ProfileAdminBase):
         calculate_fantasy,
     ]
 
-    readonly_fields = ("data_prettified", "mapper")
+    readonly_fields = ("data_prettified", "mapper", "external_links")
 
 
 @admin.register(models.CoachProfile)
 class CoachProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
-        'get_mapper',
+        "get_mapper",
         linkify("team_object"),
         linkify("team_history_object"),
         linkify("team_history_object"),
+        linkify("external_links"),
     )
     autocomplete_fields = ("team_object", "team_history_object", "team_history_object")
 
     def get_mapper(self, obj):
-        if hasattr(obj, 'mapper'):
+        if hasattr(obj, "mapper"):
             if obj.mapper is not None:
-                old_mapper = obj.mapper.get_entity(related_type='coach', database_source='s38')
+                old_mapper = obj.mapper.get_entity(
+                    related_type="coach", database_source="s38"
+                )
                 if old_mapper is not None:
                     return old_mapper.mapper_id
         return None
 
-    readonly_fields = ("mapper",)
+    readonly_fields = ("mapper", "external_links")
 
 
 @admin.register(models.RoleChangeRequest)
@@ -309,4 +257,14 @@ class RoleChangeRequestAdmin(admin.ModelAdmin):
 
 @admin.register(models.PlayerVideo)
 class PlayerVideoAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.PlayerProfilePosition)
+class PlayerProfilePositionAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.Language)
+class LanguageAdmin(admin.ModelAdmin):
     pass

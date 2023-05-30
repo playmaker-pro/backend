@@ -432,20 +432,25 @@ def match_player_videos(csv_file: str) -> None:
 
     for index, row in df.iterrows():
         player_profile = player_profiles.get(user=row["player"])
-        player_video, created = profiles.models.PlayerVideo.objects.get_or_create(
-            player=player_profile,
-            url=row["url"],
-            defaults={
-                "title": row["title"] if not pd.isna(row["title"]) else "",
-                "description": row["description"]
+
+        vids = profiles.models.PlayerVideo.objects.filter(
+            player=player_profile, url=row["url"]
+        )
+
+        if not vids:
+            profiles.models.PlayerVideo.objects.create(
+                player=player_profile,
+                url=row["url"],
+                title=row["title"] if not pd.isna(row["title"]) else "",
+                description=row["description"]
                 if not pd.isna(row["description"])
                 else "",
-            },
-        )
-        if not created:
-            print(f"{player_profile.user} video with url {row['url']} already exists")
-        else:
+            )
             print(f"{player_profile.user} video with url {row['url']} created")
+        else:
+            print(
+                f"{player_profile.user} video with url {row['url']} already exists"
+            )
 
 
 def get_metrics_update_date(metrics: 'models.PlayerMetrics') -> str:
@@ -459,16 +464,26 @@ def get_metrics_update_date(metrics: 'models.PlayerMetrics') -> str:
     datetime.date: The date when player metrics were last updated.
     """
     # Check which update_date is the newest
-    newest_update_date = max(
-                        metrics.games_updated,
-                        metrics.games_summary_updated,
-                        metrics.season_updated,
-                        metrics.season_summary_updated,
+    dates = list(
+        filter(
+            lambda date: date is not None,
+            [
+                metrics.games_updated,
+                metrics.games_summary_updated,
+                metrics.season_updated,
+                metrics.season_summary_updated,
+            ],
+        )
     )
-    threshold_date = datetime.datetime(2023, 2, 15, tzinfo=newest_update_date.tzinfo)
-    # Check if the metrics were updated after the threshold date
-    if newest_update_date > threshold_date:
-        return newest_update_date.date().strftime("%d-%m-%Y")
-    else:
-        # If the metrics were not updated after the threshold date, return an older date
-        return datetime.date(2022, 8, 1).strftime("%d-%m-%Y")
+
+    if dates:
+        newest_update_date = max(dates)
+        threshold_date = datetime.datetime(
+            2023, 2, 15, tzinfo=newest_update_date.tzinfo
+        )
+        # Check if the metrics were updated after the threshold date
+        if newest_update_date and newest_update_date > threshold_date:
+            return newest_update_date.date().strftime("%d-%m-%Y")
+        else:
+            # If the metrics were not updated after the threshold date, return an older date
+            return datetime.date(2022, 8, 1).strftime("%d-%m-%Y")
