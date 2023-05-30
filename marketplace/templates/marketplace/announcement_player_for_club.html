@@ -12,6 +12,21 @@
     </div>
         <div class="section-heading-line-left"></div>
     <div class="card-body row no-gutters">
+
+        {% if object.creator.pm_score %}
+            <div>
+                <div class="score-box">
+                    <div class="score-pointer">
+                        {{ object.creator.pm_score }}
+                    </div>
+                </div>
+                <span style="font-size: 14px">
+                    PlayMaker Score
+                </span>
+            </div>
+            <div class="grey-dashed-line-divider col-12"></div>
+        {% endif %}
+
         <div class="row centered-div">
             <div class="card-text">
             <img class="flag pl-3" src="{{ player.profile.country.flag }}" alt="flag">

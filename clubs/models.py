@@ -562,8 +562,12 @@ class League(models.Model):
         if self.parent and self.id == self.parent.id:
             raise ValidationError({"parent": ["You cant have yourself as a parent!"]})
 
+    @property
+    def full_name(self):
+        return self.get_upper_parent_names()
+
     def __str__(self):
-        return f"{self.get_upper_parent_names()}"
+        return self.full_name
 
     class Meta:
         unique_together = ("name", "country", "parent")
@@ -667,7 +671,9 @@ class Team(models.Model, MappingMixin):
         default=False, help_text="Auto-created from new scrapper"
     )
 
-    junior_group = models.ForeignKey("JuniorAgeGroup", null=True, blank=True, on_delete=models.SET_NULL)
+    junior_group = models.ForeignKey(
+        "JuniorAgeGroup", null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     @property
     def should_be_visible(self):
@@ -695,7 +701,11 @@ class Team(models.Model, MappingMixin):
 
     @property
     def team_name_with_current_league(self):
-        return self.display_team + (" " + f"({self.latest_league_from_lh})") if self.latest_league_from_lh else ""
+        return (
+            self.display_team + (" " + f"({self.latest_league_from_lh})")
+            if self.latest_league_from_lh
+            else ""
+        )
 
     @property
     def league_with_parents(self):
@@ -732,7 +742,9 @@ class Team(models.Model, MappingMixin):
         return self.league.display_league
 
     def get_latest_team_history(self) -> List["TeamHistory"]:
-        sorted_team_histories = self.historical.all().order_by("-league_history__season__name")
+        sorted_team_histories = self.historical.all().order_by(
+            "-league_history__season__name"
+        )
         if sorted_team_histories:
             return sorted_team_histories[0]
 

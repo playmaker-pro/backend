@@ -21,6 +21,7 @@ import products.urls
 import fqa.urls
 import fantasy.urls
 import landingpage.urls
+import premium.urls
 import allauth.account.urls
 import followers.urls  # @to be removed
 from django.views.generic import TemplateView
@@ -59,6 +60,7 @@ urlpatterns = [
     path("select2/", include("django_select2.urls")),
     path("transfer/", include(landingpage.urls, namespace="landingpage")),
     path("select2/", include("django_select2.urls")),
+    path("premium/", include(premium.urls, namespace="premium")),
     path("", include("allauth.urls")),
 ] + settings.REDIRECTS_LISTS
 
