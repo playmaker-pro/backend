@@ -35,8 +35,13 @@
 
 
         <div class="card-text text-center d-inline-flex justify-content-center align-content-center flex-wrap">
-           
-            <a class="btn-pm" href="{% url 'products:detail' slug=object.slug %}"> Sprawdz ofertę </a>
+            {% if object.raw_slug %}
+                <a class="btn-pm" href="../{{ object.slug }}">
+            {% else %}
+                <a class="btn-pm" href="{% url 'products:detail' slug=object.slug %}">
+            {% endif %}
+                Sprawdź ofertę
+            </a>
 
         </div>
     </div>
