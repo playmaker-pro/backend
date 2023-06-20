@@ -1,5 +1,10 @@
 from django.urls import path
 from rest_framework import routers
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenBlacklistView,
+)
 
 from users import apis
 
@@ -20,4 +25,10 @@ urlpatterns = [
         name="admin-view",
     ),
     path("register/", apis.UsersAPI.as_view({"post": "register"}), name="api-register"),
+    path("login/", TokenObtainPairView.as_view(), name="api-login"),
+    # Logout is basically a blacklist of the token, because JWT is stateless.
+    # Token will expire after given (in settings) time.
+    # It means that token will be valid for API calls for that time.
+    path("logout/", TokenBlacklistView.as_view(), name="api-logout"),
+    path("refresh-token/", TokenRefreshView.as_view(), name="api-token-refresh"),
 ]

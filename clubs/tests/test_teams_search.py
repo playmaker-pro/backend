@@ -8,7 +8,7 @@ from utils.factories.clubs_factories import TeamFactory
 
 
 class TeamSearchTest(APITestCase):
-    team_search_url = reverse("resources:teams_search")
+    team_search_url = reverse("api:clubs:teams_search")
 
     def setUp(self):
         TeamFactory.create_batch(5)

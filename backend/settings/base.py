@@ -1,5 +1,5 @@
-import logging
 import os
+from datetime import timedelta
 
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -106,7 +106,9 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "django.contrib.humanize",
     "rest_framework",
+    # TODO deprecated. Changed to jwt
     "rest_framework.authtoken",  # <-- Here
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "allauth",
     "allauth.account",
@@ -533,7 +535,7 @@ STREAM_REDIS_CONFIG = {
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_RENDERER_CLASSES": [
@@ -651,6 +653,14 @@ VOIVODESHIP_CHOICES = (
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 VERIFICATION_FORM = {"DEFAULT_SEASON_NAME": "2021/2022"}
+
+
+# Setup token and refresh token lifetime. Refresh token is used to get new token,
+# if auth token is expired. If refresh token is expired, user need to send login/ request again.
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=2),
+}
 
 
 try:

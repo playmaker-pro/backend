@@ -1,4 +1,4 @@
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from api.views import EndpointView
@@ -21,7 +21,7 @@ user_service = UserService()
 
 
 class UsersAPI(EndpointView):
-    # permission_classes = (IsAuthenticated, HasRoleUserPermission)
+    permission_classes = (IsAuthenticated,)
     serializer_class = serializers.UserSerializer
     allowed_methods = ("list", "post", "put", "update")
 
