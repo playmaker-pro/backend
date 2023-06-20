@@ -1,7 +1,6 @@
 from typing import Dict, Set
 from unittest import TestCase
 
-from django.test.client import Client
 from django.urls import reverse
 import pytest
 from rest_framework.response import Response
@@ -118,8 +117,8 @@ class TestAuth(APITestCase):
 @pytest.mark.django_db
 class TestUserCreationEndpoint(TestCase):
     def setUp(self) -> None:
-        self.client: Client = Client()
-        self.url: str = reverse("users:api-register")
+        self.client: APIClient = APIClient()
+        self.url: str = reverse("api:users:api-register")
         self.data: Dict[str, str] = {
             "password": "super secret password",
             "first_name": "first_name",

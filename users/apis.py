@@ -1,4 +1,6 @@
-from rest_framework.permissions import IsAuthenticated
+from typing import Sequence
+
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from api.views import EndpointView
@@ -40,7 +42,7 @@ class UsersAPI(EndpointView):
 
         return Response(serialized_data)
 
-    def get_permissions(self) -> list:
+    def get_permissions(self) -> Sequence:
         """
         Exclude register endpoint from permission_classes.
         Note: You can't use 'self.action' here because it's not set
