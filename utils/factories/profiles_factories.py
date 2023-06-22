@@ -1,5 +1,6 @@
 import factory
 from django.contrib.auth import get_user_model
+from django.db.models import signals
 
 from profiles.models import PlayerMetrics, PlayerProfile
 from utils.factories.mapper_factories import MapperFactory
@@ -15,6 +16,15 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     email = _USER_EMAIL
 
+    @classmethod
+    @factory.django.mute_signals(signals.post_save)
+    def create(cls, *args, **kwargs) -> user:
+        """Override create() method to hash user password"""
+        instance: user = super().create(*args, **kwargs)
+        instance.set_password("test")
+        instance.save()
+        return instance
+
 
 class PlayerProfileFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -28,8 +38,5 @@ class PlayerProfileFactory(factory.django.DjangoModelFactory):
 class PlayerMetricsFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = PlayerMetrics
-
-    def __init__(self, player: PlayerProfile):
-        self.player = player
 
     player = factory.SubFactory(PlayerProfileFactory)
