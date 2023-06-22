@@ -2,12 +2,18 @@ from contextlib import contextmanager
 
 from django.conf import settings
 from django.test import TestCase
+from django.test.client import Client
 from django.utils import timezone
 from django.db.models import signals
 from factory.django import mute_signals
 
 from clubs.models import Season
+from users.models import User
+
 from utils import testutils as utils
+
+from typing import Optional
+from django.urls import reverse
 
 utils.silence_explamation_mark()
 
@@ -43,3 +49,48 @@ def mute_post_save_signal():
     """Mute post save signal. We don't want to test it in some cases."""
     with mute_signals(signals.post_save):
         yield
+
+
+class UserManager:
+    """
+    Utility class for managing user-related operations in tests.
+    This class provides convenient methods to create a test user, generate an access token for authentication,
+    and retrieve headers with the access token for making authenticated requests.
+    """
+    def __init__(self, client: Optional[Client] = None) -> None:
+        self.email = "test_email@test.com"
+        self.password = "super secret password"
+
+        if client:
+            self.client = client
+
+        self.login_url = reverse("api:users:api-login")
+
+    def create_superuser(self) -> User:
+        """Create a superuser in the test database."""
+        user = User.objects.create_superuser(
+          email=self.email, password=self.password
+        )
+        user.is_activated = True
+        user.save()
+
+        return user
+
+    @property
+    def get_access_token(self) -> str:
+        """Get the authentication access token for the created superuser."""
+        res = self.client.post(
+            self.login_url, {"email": self.email, "password": self.password}
+        )
+        return res.data.get("access")
+
+    def get_headers(self) -> dict:
+        """Get the headers containing the authentication token for API requests."""
+        headers = {
+            "Content-Type": "application/json",
+            "content_type": "application/json",
+            # "Authorization": "Bearer " + self.get_access_token,
+            "HTTP_AUTHORIZATION": f"Bearer {self.get_access_token}",
+        }
+
+        return headers

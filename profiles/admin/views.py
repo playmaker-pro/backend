@@ -88,6 +88,11 @@ class GuestProfileAdmin(ProfileAdminBase):
     pass
 
 
+@admin.register(models.OtherProfile)
+class OtherProfileAdmin(ProfileAdminBase):
+    pass
+
+
 @admin.register(models.ClubProfile)
 class ClubProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
