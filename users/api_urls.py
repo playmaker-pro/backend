@@ -24,6 +24,7 @@ urlpatterns = [
         apis.UsersAPI.as_view({"get": "list"}),
         name="admin-view",
     ),
+    path("register/", apis.UsersAPI.as_view({"post": "register"}), name="api-register"),
     path("login/", TokenObtainPairView.as_view(), name="api-login"),
     # Logout is basically a blacklist of the token, because JWT is stateless.
     # Token will expire after given (in settings) time.

@@ -661,3 +661,11 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=2),
 }
+
+
+try:
+    from .local import *
+
+    print("::> Loading custom local settings (local.py)")
+except ImportError as e:
+    print(f"[error] Cannot load local settings. Reason={e}")

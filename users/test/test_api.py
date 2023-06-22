@@ -1,13 +1,15 @@
-from typing import Dict
+from typing import Dict, Set
+from unittest import TestCase
 
 from django.urls import reverse
 import pytest
 from rest_framework.response import Response
 from rest_framework.test import APITestCase
 from rest_framework.test import APIClient
-
 from users.models import User
 from utils.test.test_utils import mute_post_save_signal
+
+from api.schemas import RegisterSchema
 
 
 @pytest.mark.django_db
@@ -110,3 +112,104 @@ class TestAuth(APITestCase):
             data={"refresh": refresh_token},
         )
         assert refresh_res.status_code == 200
+
+
+@pytest.mark.django_db
+class TestUserCreationEndpoint(TestCase):
+    def setUp(self) -> None:
+        self.client: APIClient = APIClient()
+        self.url: str = reverse("api:users:api-register")
+        self.data: Dict[str, str] = {
+            "password": "super secret password",
+            "first_name": "first_name",
+            "last_name": "last_name",
+            "email": "test_email@test.com",
+        }
+
+    def test_method_get_not_allowed(self) -> None:
+        """Test if GET method is not allowed"""
+
+        res: Response = self.client.get(self.url)
+        assert res.status_code == 405
+
+    def test_method_put_not_allowed(self) -> None:
+        """Test if PUT method is not allowed"""
+
+        res: Response = self.client.put(self.url)
+        assert res.status_code == 405
+
+    def test_method_patch_not_allowed(self) -> None:
+        """Test if PATCH method is not allowed"""
+
+        res: Response = self.client.patch(self.url)
+        assert res.status_code == 405
+
+    def test_method_delete_not_allowed(self) -> None:
+        """Test if DELETE method is not allowed"""
+
+        res: Response = self.client.delete(self.url)
+        assert res.status_code == 405
+
+    def test_register_endpoint_response_ok(self) -> None:
+        """Test register endpoint. Response OK"""
+
+        res: Response = self.client.post(
+            self.url,
+            data=self.data,
+        )
+
+        assert res.status_code == 200
+        assert isinstance(res.data, dict)
+        assert res.data["email"] == self.data.get("email")
+        assert res.data["id"]
+        assert res.data["username"] == self.data.get("email")
+
+    def test_register_endpoint_invalid_mail(self) -> None:
+        """Test register endpoint with invalid email field"""
+
+        self.data["email"] = "test_email"
+        res: Response = self.client.post(
+            self.url,
+            data=self.data,
+        )
+
+        assert res.status_code == 400
+        data: dict = res.json()  # type: ignore
+
+        assert data.get("success") == "False"
+        assert data.get("fields") == "email"
+
+    def test_password_not_returned(self) -> None:
+        """Test if password field is not returned"""
+
+        res: Response = self.client.post(
+            self.url,
+            data=self.data,
+        )
+
+        assert "password" not in res.data
+
+    def test_doubled_user(self) -> None:
+        """Test if user can register account for the second time using the same email"""
+
+        self.client.post(self.url, data=self.data)
+
+        res: Response = self.client.post(
+            self.url,
+            data=self.data,
+        )
+        data: dict = res.json()  # type: ignore
+
+        assert res.status_code == 400
+        assert data.get("success") == "False"
+        assert data.get("fields") == "email"
+
+    def test_response_data(self) -> None:
+        """Test if response data contains all required fields from RegisterSchema"""
+
+        user_schema: RegisterSchema = RegisterSchema(**self.data)  # type: ignore
+        fields: Set[str] = user_schema.values_fields()
+        res: Response = self.client.post(self.url, data=self.data)
+
+        for field in fields:
+            assert field in res.data

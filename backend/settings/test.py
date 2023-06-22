@@ -1,3 +1,4 @@
-from .dev import *
+from .dev import *  # type: ignore
+
 
 CONFIGURATION = "test"
