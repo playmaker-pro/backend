@@ -291,15 +291,16 @@ class LeagueHistory(models.Model):
     def create_external_links_obj(self):
         self.external_links = ExternalLinks.objects.create()
 
-    def check_and_set_if_data_exists(self):
-        from data.models import League as Dleague
-
-        url = Dleague.get_url_based_on_id(self.index)
-        l = Dleague.objects.get(_url=url)
-        if l.advanced_json:
-            self.is_table_data = True
-        if l.games_snapshot:
-            self.is_matches_data = True
+    # DEPRECATED: PM-1015
+    # def check_and_set_if_data_exists(self):
+    #     from data.models import League as Dleague
+    #
+    #     url = Dleague.get_url_based_on_id(self.index)
+    #     l = Dleague.objects.get(_url=url)
+    #     if l.advanced_json:
+    #         self.is_table_data = True
+    #     if l.games_snapshot:
+    #         self.is_matches_data = True
 
     def get_admin_url(self):
         return reverse(
