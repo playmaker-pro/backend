@@ -1,5 +1,6 @@
 from collections import defaultdict
-from data.models import TeamStat
+
+# from data.models import TeamStat  DEPRECATED: PM-1015
 import utils
 
 # from stats import utilites as utils    DEPRECATED: PM-1015
