@@ -76,6 +76,7 @@ urlpatterns = [
     path("terms/", TemplateView.as_view(template_name="subpgaes/terms.html")),
     path("blog/", include("blog.urls", namespace="blog")),
     path("api/v2/", api_router.urls),
+    path("api/v3/", include(api_urls, namespace="api")),
     path(
         "api/v3/swagger/",
         schema_view.with_ui("swagger", cache_timeout=0),

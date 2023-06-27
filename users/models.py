@@ -232,6 +232,11 @@ class User(AbstractUser, UserRoleMixin):
     def get_system_user(cls):
         return cls.objects.get(email=settings.SYSTEM_USER_EMAIL)
 
+    def set_role(self, role: str) -> None:
+        """set role and save, role need to be validated!"""
+        self.declared_role = role
+        self.save()
+
     finish_account_initial_setup = (
         models.BooleanField(  # @todo - remove this, it is deprecated.
             _("Skip full setup"),

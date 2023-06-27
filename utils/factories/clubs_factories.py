@@ -31,5 +31,29 @@ class TeamFactory(factory.django.DjangoModelFactory):
 class SeasonFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = "clubs.Season"
+        django_get_or_create = ("name",)
 
     name = factory.Iterator(SEASON_MOCK)
+
+
+class LeagueFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = "clubs.League"
+
+    name = "Ekstraklasa"
+
+
+class LeagueHistoryFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = "clubs.LeagueHistory"
+
+    league = factory.SubFactory(LeagueFactory)
+    season = factory.SubFactory(SeasonFactory)
+
+
+class TeamHistoryFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = "clubs.TeamHistory"
+
+    team = factory.SubFactory(TeamFactory)
+    league_history = factory.SubFactory(LeagueHistoryFactory)

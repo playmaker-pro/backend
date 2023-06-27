@@ -1834,3 +1834,26 @@ class Language(models.Model):
 
     class Meta:
         ordering = ["priority", "name"]
+
+
+PROFILES = (
+    "BaseProfile",
+    "PlayerProfile",
+    "CoachProfile",
+    "ClubProfile",
+    "GuestProfile",
+    "ManagerProfile",
+    "ParentProfile",
+    "ScoutProfile",
+)
+PROFILE_TYPE = typing.Union[PROFILES]
+
+MODEL_MAP = {
+    definitions.PLAYER_SHORT: PlayerProfile,
+    definitions.COACH_SHORT: CoachProfile,
+    definitions.CLUB_SHORT: ClubProfile,
+    definitions.SCOUT_SHORT: ScoutProfile,
+    definitions.MANAGER_SHORT: ManagerProfile,
+    definitions.PARENT_SHORT: ParentProfile,
+    definitions.GUEST_SHORT: GuestProfile,
+}
