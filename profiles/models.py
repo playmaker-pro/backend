@@ -2,8 +2,6 @@ import logging
 import typing
 from collections import Counter
 from datetime import datetime
-from random import choices
-
 from address.models import AddressField
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -22,6 +20,7 @@ from clubs import models as clubs_models
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_player_external_links
 from mapper.models import Mapper
+import uuid
 
 # from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
 from roles import definitions
@@ -199,6 +198,7 @@ class BaseProfile(models.Model, EventLogMixin):
     )
     event_log = models.JSONField(null=True, blank=True)
     step = models.IntegerField(default=None, null=True, blank=True)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
 
     def get_absolute_url(self):
         return self.get_permalink()
