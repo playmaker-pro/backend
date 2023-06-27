@@ -1,13 +1,22 @@
 from django.urls import path
 from rest_framework import routers
 
-from clubs.api.views import TeamSearchApi, TeamHistorySearchApi, ClubSearchApi
+from clubs.api import views
 
 router = routers.SimpleRouter(trailing_slash=False)
 
 
 urlpatterns = [
-    path("teams_search", TeamSearchApi.as_view(), name="teams_search"),
-    path("teams_history_search", TeamHistorySearchApi.as_view()),
-    path("clubs_search", ClubSearchApi.as_view(), name="clubs_search"),
+    path("teams/search/", views.TeamSearchApi.as_view(), name="teams_search"),
+    path(
+        "team-histories/search/",
+        views.TeamHistorySearchApi.as_view(),
+        name="team_histories_search",
+    ),
+    path("clubs/search/", views.ClubSearchApi.as_view(), name="clubs_search"),
+    path(
+        "club-teams/search/",
+        views.ClubTeamsSearchApi.as_view(),
+        name="club_teams_search",
+    ),
 ]

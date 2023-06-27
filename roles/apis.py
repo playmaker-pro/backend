@@ -8,6 +8,8 @@ from . import definitions
 
 class RolesAPI(EndpointView):
     allowed_methods = ("list",)
+    authentication_classes = []
+    permission_classes = []
 
     def list(self, request: Request) -> Response:
         """Return a dictionary of available roles."""
