@@ -10,7 +10,7 @@ from rest_framework.exceptions import ErrorDetail
 from rest_framework.response import Response
 from rest_framework.test import APIClient
 
-from utils.factories.profiles_factories import UserFactory
+from utils.factories.user_factories import UserFactory
 from utils.test.test_utils import mute_post_save_signal
 
 user = get_user_model()

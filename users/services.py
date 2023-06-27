@@ -1,10 +1,31 @@
+from typing import Optional
+from django.contrib.auth import get_user_model
+from profiles.models import PROFILE_TYPE
 from api.schemas import RegisterSchema
 
-from profiles.models import User
+User = get_user_model()
 
 
 class UserService:
     """User service class for handling user operations"""
+
+    def get_user(self, user_id: int) -> Optional[User]:
+        """return User or None if it doesn't exist"""
+        try:
+            return User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return
+
+    def set_role(self, user: User, role: str) -> None:
+        """Set role to user"""
+        user.set_role(role)
+
+    def user_has_profile(self, user: User, profile: PROFILE_TYPE) -> bool:
+        """Check if given user already has profile on given type"""
+        try:
+            return profile.objects.get(user=user)
+        except profile.DoesNotExist:
+            return False
 
     @staticmethod
     def register(data: dict) -> User:
