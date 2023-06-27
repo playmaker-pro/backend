@@ -198,6 +198,7 @@ class BaseProfile(models.Model, EventLogMixin):
         _("Krótki opis o sobie"), max_length=455, blank=True, null=True
     )
     event_log = models.JSONField(null=True, blank=True)
+    step = models.IntegerField(default=None, null=True, blank=True)
 
     def get_absolute_url(self):
         return self.get_permalink()
