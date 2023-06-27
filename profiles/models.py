@@ -1541,7 +1541,10 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         super().save(*args, **kwargs)
         create_or_update_player_external_links(self)
 
-    def display_licence(self):
+    def display_licence(self) -> typing.Optional[str]:
+        """
+        Returns a string representation of the licences associated with the coach profile.
+        """
         licences = self.licences.values_list('licence__name', flat=True)
         return ", ".join(licences) if licences else None
 
