@@ -1297,12 +1297,12 @@ class ClubProfile(BaseProfile):
         verbose_name_plural = "Club Profiles"
 
 
-class Licence(models.Model):
+class LicenceType(models.Model):
     name = models.CharField(
         _("Licencja"),
         max_length=17,
-        blank=True,
-        null=True,
+        unique=True,
+        help_text=_("Type of the licence")
     )
 
     def __str__(self):
@@ -1572,9 +1572,12 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
 
 
 class CoachLicence(models.Model):
-    licence = models.ForeignKey(Licence, on_delete=models.CASCADE)
-    coach_profile = models.ForeignKey(CoachProfile, on_delete=models.CASCADE, related_name="licences")
-    expiry_date = models.DateField(blank=True, null=True)
+    licence = models.ForeignKey(LicenceType, on_delete=models.CASCADE, help_text=_("The type of licence held by the coach"),)
+    coach_profile = models.ForeignKey(CoachProfile, on_delete=models.CASCADE, related_name="licences", help_text=_("Coach profile holding this license"),)
+    expiry_date = models.DateField(blank=True, null=True, help_text=_("The expiry date of the licence (optional)"))
+
+    class Meta:
+        unique_together = ('licence', 'coach_profile')
 
     def __str__(self):
         return f"{self.licence.name}"
