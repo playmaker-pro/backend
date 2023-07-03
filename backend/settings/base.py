@@ -116,6 +116,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "allauth.socialaccount.providers.facebook",
     "drf_yasg",
+    "cities_light",
 ]
 
 SWAGGER_SETTINGS = {
@@ -245,6 +246,10 @@ LANGUAGES = (
     ("pl", _("Polski")),
     ("en-us", _("Angielski")),
 )
+
+CITIES_LIGHT_TRANSLATION_LANGUAGES = ['pl']
+CITIES_LIGHT_INCLUDE_COUNTRIES = ['PL']
+
 
 TIME_ZONE = "Europe/Warsaw"
 
