@@ -3,6 +3,11 @@
 
 Backend side for PlayMaker project.
 
+#### Applications and their roles
+1. Features
+    * Application for managing user features permissions. Core job is to provide a way to manage user permissions for features.
+    * Basically application says, what role can access what feature. For example, we can define there limitations for viewing specific views
+
 # Installation
 
 To set up a development environment quickly you need to have following prerequisits:
