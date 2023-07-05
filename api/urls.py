@@ -1,4 +1,5 @@
 from django.conf.urls import include, url
+from api.views import CitiesView
 from api.views import CountriesView
 from users.api_urls import urlpatterns as users_urls
 from clubs.api.api_urls import urlpatterns as clubs_urls
@@ -16,5 +17,10 @@ urlpatterns = [
         r"^countries/",
         CountriesView.as_view({"get": "list_countries"}),
         name="countries_list",
+    ),
+    url(
+        r"^cities/",
+        CitiesView.as_view({"get": "list_cities"}),
+        name="cities_list",
     ),
 ]
