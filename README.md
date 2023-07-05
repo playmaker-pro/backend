@@ -137,6 +137,11 @@ invoke tests
 python manage.py map_vivos
 ```
 
+- To update the cities data, run the following command provided by django-cities-light
+```bash
+python manage.py cities_light
+```
+
 #### Run docker
 
 docker compose -f compose/docker-compose-pg-only.yml up -d

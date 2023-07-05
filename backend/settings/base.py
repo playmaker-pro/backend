@@ -247,7 +247,14 @@ LANGUAGES = (
     ("en-us", _("Angielski")),
 )
 
+# Configuration for django-cities-light library.
+# For more information, refer to the documentation:
+# https://django-cities-light.readthedocs.io/en/stable-3.x.x/
+
+# This setting specifies the translation languages to be included for city names.
 CITIES_LIGHT_TRANSLATION_LANGUAGES = ['pl']
+
+# This setting specifies the countries to include when importing city data.
 CITIES_LIGHT_INCLUDE_COUNTRIES = ['PL']
 
 
