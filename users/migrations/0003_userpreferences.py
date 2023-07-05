@@ -37,6 +37,9 @@ def update_user_preferences_from_profile(
         user_preferences_model: UserPreferences,
         user: User
 ) -> None:
+    """
+    Update the localization field in the User Preferences model based on the address field of the provided profile.
+    """
     localization = get_address_from_profile(profile)
     if localization:
         city_id = get_localization_from_address(localization)
