@@ -11,6 +11,7 @@ from notifications.mail import (
 )
 from roles import definitions
 from users.managers import CustomUserManager
+from app.utils import cities
 
 
 class UserRoleMixin:
@@ -344,10 +345,14 @@ class UserPreferences(models.Model):
         if self.localization:
             city_name = self.localization.name
             voivodeship_name = self.localization.region.name
-            mapped_city_name = CUSTOM_CITY_MAPPING.get(city_name, city_name)
-            mapped_voivodeship_name = VOIVODESHIP_MAPPING.get(voivodeship_name, voivodeship_name)
+            mapped_city_name = cities.CUSTOM_CITY_MAPPING.get(city_name, city_name)
+            mapped_voivodeship_name = cities.VOIVODESHIP_MAPPING.get(voivodeship_name, voivodeship_name)
             return f"{mapped_city_name}, woj. {mapped_voivodeship_name}"
         return ""
 
     def get_languages_display(self):
         return ", ".join(str(language) for language in self.language.all())
+
+    class Meta:
+        verbose_name = "User Preference"
+        verbose_name_plural = "User Preferences"
