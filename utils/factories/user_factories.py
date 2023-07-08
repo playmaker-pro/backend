@@ -20,7 +20,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     def create(cls, *args, **kwargs) -> User:
         """Override create() method to hash user password"""
         instance: User = super().create(*args, **kwargs)
-        instance.set_password("test")
+        instance.set_password(kwargs.get("password", "test"))
         instance.save()
         return instance
 

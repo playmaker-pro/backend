@@ -6,8 +6,15 @@ import pytest
 from rest_framework.response import Response
 from rest_framework.test import APITestCase
 from rest_framework.test import APIClient
+
+from features.models import Feature
 from users.models import User
-from utils.test.test_utils import mute_post_save_signal
+from utils.factories.feature_sets_factories import FeatureFactory, FeatureElementFactory
+from utils.test.test_utils import (
+    mute_post_save_signal,
+    MethodsNotAllowedTestsMixin,
+    UserManager,
+)
 
 from api.schemas import RegisterSchema
 
@@ -213,3 +220,94 @@ class TestUserCreationEndpoint(TestCase):
 
         for field in fields:
             assert field in res.data
+
+
+@pytest.mark.django_db
+class TestUserFeatureSetsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
+    NOT_ALLOWED_METHODS = ["post", "put", "patch", "delete"]
+
+    def setUp(self) -> None:
+        """Setup method for UserFeatureSetsEndpoint tests"""
+        self.client: APIClient = APIClient()
+        user_manager: UserManager = UserManager(self.client)
+        self.user: User = user_manager.create_superuser()
+        self.headers: dict = user_manager.get_headers()
+        self.url: str = reverse("api:users:feature-sets")
+
+    def test_unauthorized_user(self) -> None:
+        """Test if only authenticated user can access endpoint"""
+        res: Response = self.client.get(self.url)
+        assert res.status_code == 401
+
+    def test_method_get_ok(self) -> None:
+        """Test if response is OK"""
+        feature_set: Feature = FeatureFactory.create()
+
+        expected_access = {
+            "role": feature_set.elements.first().access_permissions.first().role,
+            "access": feature_set.elements.first().access_permissions.first().access,
+        }
+        feature_elements = {
+            "name": feature_set.elements.first().name,
+            "access_permissions": [expected_access],
+            "permissions": feature_set.elements.first().permissions,
+        }
+        expected_response = [
+            {
+                "name": feature_set.name,
+                "keyname": feature_set.keyname,
+                "enabled": feature_set.enabled,
+                "elements": [feature_elements],
+            }
+        ]
+        res: Response = self.client.get(self.url, **self.headers)
+
+        assert res.status_code == 200
+        assert res.json() == expected_response
+
+    def test_no_feature_sets_found(self):
+        """Test if response is 404 when no feature sets are found"""
+        res: Response = self.client.get(self.url, **self.headers)
+        assert res.status_code == 404
+
+
+@pytest.mark.django_db
+class TestUserFeatureElementsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
+    NOT_ALLOWED_METHODS = ["post", "put", "patch", "delete"]
+
+    def setUp(self) -> None:
+        """Setup method for UserFeatureElementsEndpoint tests"""
+        self.client: APIClient = APIClient()
+        user_manager: UserManager = UserManager(self.client)
+        self.user: User = user_manager.create_superuser()
+        self.headers = user_manager.get_headers()
+        self.url: str = reverse("api:users:feature-elements")
+
+    def test_unauthorized_user(self) -> None:
+        """Test if only authenticated user can access endpoint"""
+        res: Response = self.client.get(self.url)
+        assert res.status_code == 401
+
+    def test_method_get_ok(self) -> None:
+        """Test if response is OK"""
+        feature_element = FeatureElementFactory.create()
+
+        expected_access = {
+            "role": feature_element.access_permissions.first().role,
+            "access": feature_element.access_permissions.first().access,
+        }
+        feature_elements = {
+            "name": feature_element.name,
+            "access_permissions": [expected_access],
+            "permissions": feature_element.permissions,
+        }
+        expected_response = [feature_elements]
+        res: Response = self.client.get(self.url, **self.headers)
+
+        assert res.status_code == 200
+        assert res.json() == expected_response
+
+    def test_no_feature_elements_found(self):
+        """Test if response is 404 when no feature elements are found"""
+        res: Response = self.client.get(self.url, **self.headers)
+        assert res.status_code == 404
