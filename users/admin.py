@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin
+from app.utils import cities
 from django.contrib.admin import ChoicesFieldListFilter, SimpleListFilter
 from django.contrib.auth.admin import UserAdmin  # as BaseUserAdmin
 from django.db.models import (
@@ -290,15 +291,6 @@ class UserAdminPanel(UserAdmin):
 class UserPreferencesAdminPanel(admin.ModelAdmin):
     list_display = (
         "user",
-        "display_localization",
-        "get_languages_display"
+        "localization"
     )
-    search_fields = ("user__id", "user__last_name",)
-
-    def display_localization(self, obj):
-        return obj.get_localization_display()
-
-    def get_languages_display(self, obj):
-        return obj.get_languages_display()
-
-    display_localization.short_description = "Localization"
+    search_fields = ("user__last_name",)

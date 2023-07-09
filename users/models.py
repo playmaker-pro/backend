@@ -335,23 +335,11 @@ class UserPreferences(models.Model):
         null=True,
         help_text="User's citizenship (country of citizenship)"
     )
-    language = models.ManyToManyField(
+    spoken_languages = models.ManyToManyField(
         'profiles.Language',
         blank=True,
         help_text="User's known languages (languages spoken by the user)"
     )
-
-    def get_localization_display(self):
-        if self.localization:
-            city_name = self.localization.name
-            voivodeship_name = self.localization.region.name
-            mapped_city_name = cities.CUSTOM_CITY_MAPPING.get(city_name, city_name)
-            mapped_voivodeship_name = cities.VOIVODESHIP_MAPPING.get(voivodeship_name, voivodeship_name)
-            return f"{mapped_city_name}, woj. {mapped_voivodeship_name}"
-        return ""
-
-    def get_languages_display(self):
-        return ", ".join(str(language) for language in self.language.all())
 
     class Meta:
         verbose_name = "User Preference"

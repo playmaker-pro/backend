@@ -5,7 +5,7 @@ from django.db import migrations, models
 import django.db.models.deletion
 from cities_light.models import City
 from unidecode import unidecode
-from typing import Optional, Union
+from typing import Optional, Union, Any
 from app.utils.cities import CUSTOM_CITY_MAPPING
 from profiles.models import PlayerProfile, ScoutProfile, CoachProfile
 from users.models import User, UserPreferences
@@ -41,14 +41,13 @@ def update_user_preferences_from_profile(
     Update the localization field in the User Preferences model based on the address field of the provided profile.
     """
     localization = get_address_from_profile(profile)
-    if localization:
-        city_id = get_localization_from_address(localization)
-        user_preferences, created = user_preferences_model.objects.get_or_create(user=user)
-        user_preferences.localization_id = city_id
-        user_preferences.save()
+    city_id = get_localization_from_address(localization) if localization else None
+    user_preferences, created = user_preferences_model.objects.get_or_create(user=user)
+    user_preferences.localization_id = city_id
+    user_preferences.save()
 
 
-def populate_localization(apps, schema_editor):
+def populate_localization(apps: Any, schema_editor: Any) -> None:
     """
     Populate the localization field of user objects based on profile addresses.
     """
@@ -89,7 +88,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('citizenship', models.CharField(blank=True, help_text="User's citizenship (country of citizenship)", max_length=50, null=True)),
-                ('language', models.ManyToManyField(blank=True, help_text="User's known languages (languages spoken by the user)", to='profiles.Language')),
+                ('spoken_languages', models.ManyToManyField(blank=True, help_text="User's known languages (languages spoken by the user)", to='profiles.Language')),
                 ('localization', models.ForeignKey(blank=True, help_text="User's localization (city and voivodeship)", null=True, on_delete=django.db.models.deletion.SET_NULL, to='cities_light.city', verbose_name='Localization')),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
