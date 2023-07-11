@@ -291,6 +291,12 @@ class UserAdminPanel(UserAdmin):
 class UserPreferencesAdminPanel(admin.ModelAdmin):
     list_display = (
         "user",
-        "localization"
+        "localization",
+        "display_languages"
     )
     search_fields = ("user__last_name",)
+
+    def display_languages(self, obj):
+        return ", ".join([str(language) for language in obj.spoken_languages.all()])
+
+    display_languages.short_description = "Spoken Languages"
