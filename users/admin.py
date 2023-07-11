@@ -1,6 +1,5 @@
 from django import forms
 from django.contrib import admin
-from app.utils import cities
 from django.contrib.admin import ChoicesFieldListFilter, SimpleListFilter
 from django.contrib.auth.admin import UserAdmin  # as BaseUserAdmin
 from django.db.models import (

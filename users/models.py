@@ -11,7 +11,6 @@ from notifications.mail import (
 )
 from roles import definitions
 from users.managers import CustomUserManager
-from app.utils import cities
 
 
 class UserRoleMixin:
