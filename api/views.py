@@ -105,7 +105,7 @@ class GenderAndPreferredLegView(EndpointView):
 
     def list_preference_choices(self, request: Request) -> Response:
         """
-        Retrieve the choices for gender and preferred leg choices and return as a response
+        Retrieve the choices for gender and preferred leg fields and return as a response
         """
 
         gender_choices = [
