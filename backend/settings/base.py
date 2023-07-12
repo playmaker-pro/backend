@@ -247,10 +247,10 @@ LANGUAGES = (
 # https://django-cities-light.readthedocs.io/en/stable-3.x.x/
 
 # This setting specifies the translation languages to be included for city names.
-CITIES_LIGHT_TRANSLATION_LANGUAGES = ['pl']
+CITIES_LIGHT_TRANSLATION_LANGUAGES = ["pl"]
 
 # This setting specifies the countries to include when importing city data.
-CITIES_LIGHT_INCLUDE_COUNTRIES = ['PL']
+CITIES_LIGHT_INCLUDE_COUNTRIES = ["PL"]
 
 
 TIME_ZONE = "Europe/Warsaw"
@@ -499,6 +499,12 @@ def get_logging_structure(LOGFILE_ROOT):
                 "filename": join(LOGFILE_ROOT, "adapters.log"),
                 "formatter": "verbose",
             },
+            "mocker": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "mocker.log"),
+                "formatter": "verbose",
+            },
             "console": {
                 "level": "DEBUG",
                 "class": "logging.StreamHandler",
@@ -518,6 +524,10 @@ def get_logging_structure(LOGFILE_ROOT):
             "adapters": {
                 "handlers": ["adapters"],
                 "level": "ERROR",
+            },
+            "mocker": {
+                "handlers": ["mocker", "console"],
+                "level": "INFO",
             },
             "project": {
                 "handlers": ["proj_log_file"],

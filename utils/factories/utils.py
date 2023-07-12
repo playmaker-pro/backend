@@ -1,0 +1,36 @@
+from voivodeships.models import Voivodeships
+from faker import Faker
+import datetime
+import random
+
+fake: Faker = Faker()
+
+
+def get_random_voivo() -> Voivodeships:
+    """Get random voivodeship"""
+    return Voivodeships.objects.all().order_by("?").first()
+
+
+def get_random_int(_min: int, _max: int) -> int:
+    """Get random int on range"""
+    return fake.random_int(min=_min, max=_max)
+
+
+def get_random_date(start_date: str, end_date: str) -> datetime.date:
+    """Get random date on range"""
+    return fake.date_between(start_date=start_date, end_date=end_date)
+
+
+def get_random_phone_number() -> str:
+    """Get random phone number with Polish pattern"""
+    return fake.numerify(text="###-###-###")
+
+
+def get_random_address() -> str:
+    """Get random address with street"""
+    return fake.address().replace("\n", ", ")
+
+
+def get_random_bool() -> int:
+    """Get random bool value (0, 1)"""
+    return random.getrandbits(1)
