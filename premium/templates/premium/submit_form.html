@@ -1,0 +1,135 @@
+{% load static %}
+
+<div id="submitForm" class="row mt-5">
+    <div class="col">
+        <div class="col">
+            <div class="mt-3">
+                <h3 style="margin:0;">Zgłoś się już teraz!</h3>
+            </div>
+        </div>
+        <span class="terms">Wybierz interesującą opcję</span>
+        <div class="col d-flex justify-content-center">
+            <div id="subscription" class="premium-type" onclick="changeState(this)"><p>Subskrypcja</p></div>
+            <div id="service" class="premium-type" onclick="changeState(this)"><p>Usługa</p></div>
+        </div>
+        <div id="noTypeSelected" class="terms d-none" style="color: red;">
+            <p>Nie zaznaczono żadnej opcji.</p>
+        </div>
+        {% if user.is_authenticated %}
+            <div class="col">
+                <button class="submit-button" onclick="submit()">Zgłoś się</button>
+            </div>
+        {% else %}
+           <a href="{% url 'account_login' %}?next={{ request.path }}"><button class="submit-button">Zaloguj się i zgłoś</button></a>
+        {% endif %}
+        <div class="">
+            <p class="terms mt-3">
+                Klikając w ‘Zgłoś się’ zgadzasz się z naszym
+                <a href="/rules/"><span> Regulaminem świadczenia usług</span></a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'assets/js/landingpage/form.js' %}"></script>
+<script>
+    const user = '{{ request.user.id }}';
+
+    function changeState(element) {
+        if (element.classList.contains("premium-type-active")) {
+            element.classList.remove("premium-type-active");
+        } else {
+            element.classList.add("premium-type-active");
+            document.getElementById("noTypeSelected").classList.add("d-none");
+        }
+    }
+
+    function validate() {
+        const errorElement = document.getElementById("noTypeSelected");
+        if (!document.getElementsByClassName("premium-type-active").length) {
+            errorElement.classList.remove("d-none");
+            return false;
+        }
+        return true;
+    }
+
+    function boolFromElement(element) {
+        return element.classList.contains("premium-type-active");
+    }
+
+    function submit() {
+        if (validate()) {
+            const data = {
+                user: "{{ request.user.id }}",
+                subscription: boolFromElement(document.getElementById("subscription")),
+                service: boolFromElement(document.getElementById("service"))
+            };
+            const url = "{{ request.build_absolute_uri }}create/"
+
+            fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(data),
+            })
+              .then(_ => showToastMessage("Dziękujemy za zgłoszenie, odezwiemy się do Ciebie niebawem!"))
+              .then(_ => {
+              })
+              .catch(_ => {
+                    showToastErrorMessage("Coś poszło nie tak, spróbuj ponownie później!");
+              });
+        }
+
+    }
+
+</script>
+
+<style>
+    .premium-type {
+    margin:1rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: .7rem 1rem;
+    gap: 4px;
+    background-color: var(--white__color);
+    box-shadow: 0px 1px 4px rgb(7 15 26 / 8%), 0px 4px 16px rgb(7 15 26 / 8%);
+    border-radius: 20px;
+    cursor: pointer;
+    }
+
+    .premium-type-active {
+    border: 2px solid #F00E0E;
+    background: linear-gradient(0deg, rgba(240, 14, 14, 0.08), rgba(240, 14, 14, 0.08)), #FFFFFF;
+    color: var(--primary__color)
+    }
+
+    .submit-button {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+        height: 48px;
+        width: 40%;
+        background: #141414;
+        border-radius: 24px;
+        color: var(--white__color);
+        margin: 0 auto;
+    }
+
+    .terms {
+    font-family: var(--font-inter);
+    font-style: normal;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 18px;
+    text-align: center;
+    letter-spacing: 0.1px;
+    color: #141414;
+    opacity: 0.76;
+    }
+
+</style>

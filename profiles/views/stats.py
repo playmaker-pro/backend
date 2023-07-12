@@ -84,6 +84,9 @@ class ProfileFantasy(ProfileStatsPageView):
     page_title = _("Twoje fantasy")
 
     def get_data_or_calculate(self, user):
+        # TODO(bartnyk): temporary show no stats
+        return None
+
         season_name = get_current_season()
         _id = int(
             user.profile.mapper.get_entity(
@@ -106,6 +109,9 @@ class ProfileCarrierRows(ProfileStatsPageView):
     page_title = _("Twoja kariera")
 
     def get_data_or_calculate(self, user):
+        # TODO(bartnyk): temporary show no stats
+        return []
+
         if (
             user.profile.playermetrics.how_old_days(games=True) >= 7
             and user.profile.has_data_id
@@ -136,6 +142,9 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
     page_title = _("Twoja kariera")
 
     def get_data_or_calculate(self, user):
+        # TODO(bartnyk): temporary show no stats
+        return self.paginate([], limit=self.paginate_limit)
+
         data = []
         if user.is_player:
             if (
@@ -226,6 +235,9 @@ class ProfileGames(ProfileStatsPageView, mixins.PaginateMixin):
     page_title = _("Twoje mecze")
 
     def get_data_or_calculate(self, user):
+        # TODO(bartnyk): temporary show no stats
+        return self.paginate([], limit=self.paginate_limit)
+
         if user.is_player:
             if (
                 user.profile.playermetrics.how_old_days(games=True) >= 7

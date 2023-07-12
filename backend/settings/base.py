@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "landingpage",
     "voivodeships",
     "mapper",
+    "premium",
     "resources",
     "data",  # external repo
     "stats",  # external repo
@@ -653,3 +654,4 @@ VOIVODESHIP_CHOICES = (
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 VERIFICATION_FORM = {"DEFAULT_SEASON_NAME": "2021/2022"}
+

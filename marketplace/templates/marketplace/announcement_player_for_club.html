@@ -1,6 +1,9 @@
 {% load playmaker %}
 {% load thumbnail %}
 {% load i18n %}
+{% load static %}
+
+{% include 'marketplace/pm_score_tooltip.html' %}
 
 {% with player=object.creator %}
 <div class="card announcement-card m-1 serv-section-2">
@@ -12,6 +15,26 @@
     </div>
         <div class="section-heading-line-left"></div>
     <div class="card-body row no-gutters">
+
+        <div>
+            <div class="score-box">
+                <div class="score-pointer">
+                    {% if object.creator.pm_score %}
+                        {{ object.creator.pm_score | default:"-" }}
+                    {% else %}
+                        <img data-toggle="modal" data-target="#noPmScore" src="{% static 'assets/img/landingpage/question_mark.png' %}" alt="question mark">
+                    {% endif %}
+                </div>
+            </div>
+            <span style="font-size: 14px">
+                PlayMaker Score
+            </span>
+{#            {% if not object.creator.pm_score %}#}
+{#                <img data-toggle="modal" data-target="#questionModal1" src="{% static 'assets/img/landingpage/question_mark.png' %}" alt="question mark">#}
+{#            {% endif %}#}
+        </div>
+        <div class="grey-dashed-line-divider col-12"></div>
+
         <div class="row centered-div">
             <div class="card-text">
             <img class="flag pl-3" src="{{ player.profile.country.flag }}" alt="flag">
@@ -50,7 +73,7 @@
                     {% else %}
                         <h5>
                             {{ object|display_voivodeship }}
-                            {{ object.address }} +{{ object.practice_distance }}km
+                            {{ object.address|default:"" }} +{{ object.practice_distance }}km
                         </h5>
                     {% endif %}
                     Region

@@ -17,6 +17,7 @@ from django_countries.fields import CountryField
 from adapters.player_adapter import (
     PlayerGamesAdapter,
     PlayerSeasonStatsAdapter,
+    PlayerScoreAdapter,
 )
 
 # from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
@@ -971,6 +972,13 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         )
         self.playermetrics.refresh_metrics(*args, **kwargs)
 
+    def refresh_scoring(self, *args, **kwargs) -> None:
+        """Call metrics method to refresh scoring for player"""
+        self.add_event_log_message(
+            kwargs.get("event_log_msg", "Refresh scoring started.")
+        )
+        self.playermetrics.refresh_scoring(*args, **kwargs)
+
     def create_mapper_obj(self):
         self.mapper = Mapper.objects.create()
 
@@ -1068,6 +1076,18 @@ class PlayerMetrics(models.Model):
     season = models.JSONField(null=True, blank=True)
     season_updated = models.DateTimeField(null=True, blank=True)
 
+    pm_score = models.IntegerField(
+        null=True, blank=True, verbose_name="PlayMaker Score"
+    )
+    pm_score_updated = models.DateTimeField(
+        null=True, blank=True, verbose_name="PlayMaker Score date updated"
+    )
+
+    season_score = models.JSONField(null=True, blank=True, verbose_name="Season Score")
+    season_score_updated = models.DateTimeField(
+        null=True, blank=True, verbose_name="Season Score date updated"
+    )
+
     def _update_cached_field(self, attr: str, data, commit=True):
         if not data:
             return
@@ -1097,6 +1117,30 @@ class PlayerMetrics(models.Model):
 
         self.update_summaries(games_summary, stats_summary, None)
         self.save()
+
+    def refresh_scoring(self, method: typing.Type[API_METHOD] = ScrapperAPI) -> None:
+        """Refresh scoring section"""
+        data = self.get_score(method)
+        pm_score, season_score = data.get("pm_score"), data.get("season_score")
+
+        self.update_pm_score(pm_score, commit=False)
+        self.update_season_score(season_score, commit=False)
+        # add here new updaters related to scoring
+        self.save()
+
+    def get_and_update_pm_score(
+        self, method: typing.Type[API_METHOD] = ScrapperAPI
+    ) -> None:
+        """Get and update PlaymakerScore only"""
+        data = self.get_score(method)
+        self.update_pm_score(data.get("pm_score"))
+
+    def get_and_update_season_score(
+        self, method: typing.Type[API_METHOD] = ScrapperAPI
+    ) -> None:
+        """Get and update Season only"""
+        data = self.get_score(method)
+        self.update_season_score(data.get("season_score"))
 
     def get_games_data(
         self, method: typing.Type[API_METHOD] = ScrapperAPI
@@ -1142,10 +1186,29 @@ class PlayerMetrics(models.Model):
         serializer = stats_adapter.serialize()
         return serializer.data_summary
 
+    def get_score(self, method: typing.Type[API_METHOD] = ScrapperAPI) -> dict:
+        """get scoring for player"""
+        player_obj = getattr(self, "player")
+        score_adapter = PlayerScoreAdapter(
+            player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
+        )
+        score_adapter.get_scoring()
+
+        serializer = score_adapter.serialize()
+        return serializer.data
+
     def update_summaries(self, games, season, fantasy):
         self.update_games_summary(games, commit=False)
         # self.update_fantasy_summary(fantasy, commit=False)
-        self.update_season_summary(season)
+        self.update_season_summary(season, commit=False)
+
+    def update_pm_score(self, *args, **kwargs) -> None:
+        """Update PlayMaker Score"""
+        self._update_cached_field("pm_score", *args, **kwargs)
+
+    def update_season_score(self, *args, **kwargs) -> None:
+        """Update Season Score"""
+        self._update_cached_field("season_score", *args, **kwargs)
 
     def update_games(self, *args, **kwargs):
         self._update_cached_field("games", *args, **kwargs)
@@ -1584,7 +1647,6 @@ class ManagerProfile(BaseProfile):
         super().save(*args, **kwargs)
         create_or_update_player_external_links(self)
 
-
     class Meta:
         verbose_name = "Manager Profile"
         verbose_name_plural = "Managers Profiles"
@@ -1827,7 +1889,7 @@ class Language(models.Model):
     priority = models.IntegerField(default=2)
 
     def __str__(self):
-        return f'{self.name} ({self.native_name})'
+        return f"{self.name} ({self.native_name})"
 
     class Meta:
-        ordering = ['priority', 'name']
+        ordering = ["priority", "name"]
