@@ -8,6 +8,8 @@ from django.db.models import Q
 from unidecode import unidecode
 from cities_light.models import City
 from app.utils import cities
+from users.models import UserPreferences
+from profiles.models import PlayerProfile
 
 
 class EndpointView(viewsets.GenericViewSet):
@@ -93,3 +95,29 @@ class CitiesView(EndpointView):
         ]
 
         return Response(cities_list, status=status.HTTP_200_OK)
+
+
+class GenderAndPreferredLegView(EndpointView):
+    """View for listing gender and preferred leg choices"""
+
+    authentication_classes = []
+    permission_classes = []
+
+    def list_preference_choices(self, request: Request) -> Response:
+        """
+        Retrieve the choices for gender and preferred leg choices and return as a response
+        """
+
+        gender_choices = [
+            {"value": choice[0], "label": choice[1]}
+            for choice in UserPreferences.GENDER_CHOICES
+        ]
+        leg_choices = [
+            {"value": choice[0], "label": choice[1]}
+            for choice in PlayerProfile.LEG_CHOICES
+        ]
+        preference_choices = {
+            "gender": gender_choices,
+            "player_preferred_leg": leg_choices
+        }
+        return Response(preference_choices, status=status.HTTP_200_OK)

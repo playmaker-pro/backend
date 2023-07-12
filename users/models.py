@@ -319,6 +319,10 @@ class User(AbstractUser, UserRoleMixin):
 
 
 class UserPreferences(models.Model):
+    GENDER_CHOICES = (
+        ("M", _("Mężczyzna")),
+        ("K", _("Kobieta")),
+    )
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     localization = models.ForeignKey(
         'cities_light.City',
@@ -338,6 +342,14 @@ class UserPreferences(models.Model):
         'profiles.Language',
         blank=True,
         help_text="User's known languages (languages spoken by the user)"
+    )
+    gender = models.CharField(
+        _("Gender"),
+        choices=GENDER_CHOICES,
+        max_length=1,
+        blank=True,
+        null=True,
+        help_text="User's gender (represents the gender identity of the user)",
     )
 
     class Meta:
