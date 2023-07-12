@@ -20,11 +20,11 @@ class TeamSearchTest(APITestCase):
         [
             ("FC", 2),
             ("", 5),
-            ("Bayern", 1),
+            ("Amatorzy", 1),
             ("randomtext", 0),
-            ("fc T", 1),
+            ("wy d", 1),
             ("ŁśćŻźąęó", 1),
-            ("a", 4),
+            ("a", 3),
             ("Team.objects.all()", 0),
             ("Team.objects.get(id=1)", 0),
         ]

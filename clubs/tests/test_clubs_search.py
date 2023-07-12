@@ -18,13 +18,13 @@ class ClubSearchTest(APITestCase):
 
     @parameterized.expand(
         [
-            ("Bayern", 1),
+            ("Lipinki", 1),
             ("FC", 2),
             ("Manchesterr", 0),
-            ("man", 1),
-            ("che", 1),
+            ("RKS", 1),
+            ("lig", 1),
             ("", 5),
-            ("ków", 1),
+            ("Łuż", 1),
             ("śćężźłó", 1),
             ("Club.objects.all()", 0),
             ("Club.objects.get(id=1)", 0),
