@@ -1,4 +1,5 @@
 from .dev import *  # type: ignore
+from .config import Configuration
 
-
-CONFIGURATION = "test"
+CONFIGURATION = Configuration.TEST
+LOGGING, logger = CONFIGURATION.logger

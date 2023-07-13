@@ -1,5 +1,5 @@
 import collections
-
+from backend.settings.config import Configuration
 import django.db.utils
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -10,7 +10,7 @@ from clubs.models import Season
 
 
 def is_allowed_interact_with_s38():
-    return settings.CONFIGURATION == "production" and not settings.DEBUG
+    return settings.CONFIGURATION is Configuration.PRODUCTION and not settings.DEBUG
 
 
 def get_current_season():

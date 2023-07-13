@@ -1,7 +1,7 @@
 import os
-
 from .base import *  # noqa
 
+CONFIGURATION = Configuration.STAGING
 DEBUG = False
 
 BASE_URL = "https://staging.playmakerpro.usermd.net"
@@ -22,7 +22,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "public", "media")
 
 MEMCACHED_CACHE_SOCK = None
 
-
 try:
     from .local import *
 
@@ -37,3 +36,5 @@ CACHES = {
         "LOCATION": MEMCACHED_CACHE_SOCK,
     }
 }
+
+LOGGING, logger = CONFIGURATION.logger

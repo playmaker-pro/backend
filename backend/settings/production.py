@@ -1,7 +1,7 @@
 import os
-
 from .base import *  # noqa
 
+CONFIGURATION = Configuration.PRODUCTION
 DEBUG = False
 
 
@@ -46,3 +46,5 @@ CACHES = {
         "LOCATION": MEMCACHED_CACHE_SOCK,
     }
 }
+
+LOGGING, logger = CONFIGURATION.logger

@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand, CommandParser
 from pydantic import typing
+from backend.settings.config import Configuration
 from utils import factories
 from utils.factories import CustomObjectFactory, clubs_models
 from voivodeships.services import VoivodeshipService
@@ -154,7 +155,7 @@ class Command(BaseCommand):
         Raise exception if so
         """
         print(f"---\tDATABASE: {self.database_name}, ENVIRONMENT: {self.env}\t---")
-        if self.env == "production":
+        if self.env is Configuration.PRODUCTION:
             raise errors.ForbiddenInProduction
         if self.database_name == "p1008_production":
             raise errors.ForbiddenWithProductionDatabase

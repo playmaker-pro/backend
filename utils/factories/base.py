@@ -4,6 +4,7 @@ from faker import Faker
 from django.db.models import Model
 from django.conf import settings
 from pydantic import typing
+from backend.settings.config import Configuration
 
 logger: logging.Logger = logging.getLogger("mocker")
 fake: Faker = Faker()
@@ -27,7 +28,7 @@ class CustomObjectFactory(factory.django.DjangoModelFactory):
     def _create(cls, model_class, *args, **kwargs) -> Model:
         """Overwrite _create() method to log results"""
         obj: Model = super()._create(model_class, *args, **kwargs)
-        if env() != "test":
+        if env() is not Configuration.TEST:
             logger.info(
                 f"[Factory: {cls.__name__}, model: {type(obj)}] Object: ID={obj.pk} | {obj}",
             )
@@ -36,7 +37,7 @@ class CustomObjectFactory(factory.django.DjangoModelFactory):
     @classmethod
     def random_object(cls, **kwargs) -> Model:
         """get random object from factory's model, unuseable on tests"""
-        if env() != "test":
+        if env() is not Configuration.TEST:
             return cls._meta.model.objects.filter(**kwargs).order_by("?").first()
 
     @classmethod
@@ -47,6 +48,6 @@ class CustomObjectFactory(factory.django.DjangoModelFactory):
         random_object: Model = cls.random_object(**kwargs)
         return (
             random_object or factory.SubFactory(cls, **kwargs)
-            if env() == "test"
+            if env() is Configuration.TEST
             else None
         )

@@ -2,7 +2,7 @@ from .base import *
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
+CONFIGURATION = Configuration.DEV
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "*hnsl_ifoyr)sj@)vp*yrdnu!k!2&%onnx3ms(wi_a&((z_gov"
@@ -54,3 +54,5 @@ try:
     print("::> Loading custom local settings (local.py)")
 except ImportError as e:
     print(f"[error] Cannot load local settings. Reason={e}")
+
+LOGGING, logger = CONFIGURATION.logger

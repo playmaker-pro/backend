@@ -14,6 +14,7 @@
 #
 
 
+from os.path import join
 import logging
 
 
@@ -46,3 +47,175 @@ class StyleAdapter(logging.LoggerAdapter):
 logger = StyleAdapter(logging.getLogger("project"))
 #   Emits "Lazily formatted log entry: 123 foo" in log
 # logger.debug('Lazily formatted entry: {0} {keyword}', 123, keyword='foo')
+
+
+def get_base_logging_structure(logfile_root: str) -> dict:
+    """Logging structure used as initial logging structure (production)"""
+    return {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "verbose": {
+                "format": "[%(asctime)s] %(levelname)s [%(pathname)s:%(lineno)s] %(message)s",
+                "datefmt": "%d/%b/%Y %H:%M:%S",
+            },
+            "simple": {"format": "%(levelname)s %(message)s"},
+        },
+        "handlers": {
+            "profiles_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(logfile_root, "profiles.log"),
+                "formatter": "verbose",
+            },
+            "data_log_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(logfile_root, "data.log"),
+                "formatter": "verbose",
+            },
+            "django_log_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(logfile_root, "django.log"),
+                "formatter": "verbose",
+            },
+            "proj_log_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(logfile_root, "project.log"),
+                "formatter": "verbose",
+            },
+            "route_updater": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(logfile_root, "route.updater.log"),
+                "formatter": "verbose",
+            },
+            "adapters": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(logfile_root, "adapters.log"),
+                "formatter": "verbose",
+            },
+            "console": {
+                "level": "DEBUG",
+                "class": "logging.StreamHandler",
+                "formatter": "simple",
+            },
+        },
+        "loggers": {
+            "profiles": {
+                "handlers": ["console", "profiles_file"],
+                "level": "DEBUG",
+            },
+            "django": {
+                "handlers": ["django_log_file"],
+                "propagate": True,
+                "level": "ERROR",
+            },
+            "adapters": {
+                "handlers": ["adapters"],
+                "level": "ERROR",
+            },
+            "project": {
+                "handlers": ["proj_log_file"],
+                "level": "DEBUG",
+            },
+            "route_updater": {
+                "handlers": ["console", "route_updater"],
+                "level": "DEBUG",
+            },
+        },
+    }
+
+
+def get_dev_logging_structure(LOGFILE_ROOT: str) -> dict:
+    """Logging structure for development/staging"""
+    return {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "verbose": {
+                "format": "[%(asctime)s] %(levelname)s [%(pathname)s:%(lineno)s] %(message)s",
+                "datefmt": "%d/%b/%Y %H:%M:%S",
+            },
+            "simple": {"format": "%(levelname)s %(message)s"},
+        },
+        "handlers": {
+            "profiles_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "profiles.log"),
+                "formatter": "verbose",
+            },
+            "data_log_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "data.log"),
+                "formatter": "verbose",
+            },
+            "django_log_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "django.log"),
+                "formatter": "verbose",
+            },
+            "proj_log_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "project.log"),
+                "formatter": "verbose",
+            },
+            "route_updater": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "route.updater.log"),
+                "formatter": "verbose",
+            },
+            "adapters": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "adapters.log"),
+                "formatter": "verbose",
+            },
+            "mocker": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "mocker.log"),
+                "formatter": "verbose",
+            },
+            "console": {
+                "level": "DEBUG",
+                "class": "logging.StreamHandler",
+                "formatter": "simple",
+            },
+        },
+        "loggers": {
+            "profiles": {
+                "handlers": ["console", "profiles_file"],
+                "level": "DEBUG",
+            },
+            "django": {
+                "handlers": ["django_log_file"],
+                "propagate": True,
+                "level": "ERROR",
+            },
+            "adapters": {
+                "handlers": ["adapters"],
+                "level": "ERROR",
+            },
+            "mocker": {
+                "handlers": ["mocker", "console"],
+                "level": "INFO",
+            },
+            "project": {
+                "handlers": ["proj_log_file"],
+                "level": "DEBUG",
+            },
+            "route_updater": {
+                "handlers": ["console", "route_updater"],
+                "level": "DEBUG",
+            },
+        },
+    }

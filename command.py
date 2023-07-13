@@ -1,10 +1,10 @@
 import os
 import sys
-
+from backend.settings.config import Configuration
 from connector.commander import Manager
 
 if __name__ == "__main__":
-    config = "dev"
+    config = Configuration.DEV
 
     try:
         from backend.settings import local

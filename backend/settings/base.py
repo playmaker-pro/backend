@@ -1,12 +1,12 @@
 import os
 from datetime import timedelta
-
+from .config import Configuration
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 
 # This loads additional settings for our environemnt
-CONFIGURATION = "dev"  # following options are allowed ['dev', 'production', 'staging']
+CONFIGURATION = Configuration.DEV
 
 # This flag allow us to see debug panel on each page.
 DEBUG_PANEL = False
@@ -450,105 +450,8 @@ BLOG_PAGINATION_PER_PAGE = 4
 import logging.config
 from os.path import join
 
-
-def get_logging_structure(LOGFILE_ROOT):
-    return {
-        "version": 1,
-        "disable_existing_loggers": False,
-        "formatters": {
-            "verbose": {
-                "format": "[%(asctime)s] %(levelname)s [%(pathname)s:%(lineno)s] %(message)s",
-                "datefmt": "%d/%b/%Y %H:%M:%S",
-            },
-            "simple": {"format": "%(levelname)s %(message)s"},
-        },
-        "handlers": {
-            "profiles_file": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "profiles.log"),
-                "formatter": "verbose",
-            },
-            "data_log_file": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "data.log"),
-                "formatter": "verbose",
-            },
-            "django_log_file": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "django.log"),
-                "formatter": "verbose",
-            },
-            "proj_log_file": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "project.log"),
-                "formatter": "verbose",
-            },
-            "route_updater": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "route.updater.log"),
-                "formatter": "verbose",
-            },
-            "adapters": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "adapters.log"),
-                "formatter": "verbose",
-            },
-            "mocker": {
-                "level": "DEBUG",
-                "class": "logging.FileHandler",
-                "filename": join(LOGFILE_ROOT, "mocker.log"),
-                "formatter": "verbose",
-            },
-            "console": {
-                "level": "DEBUG",
-                "class": "logging.StreamHandler",
-                "formatter": "simple",
-            },
-        },
-        "loggers": {
-            "profiles": {
-                "handlers": ["console", "profiles_file"],
-                "level": "DEBUG",
-            },
-            "django": {
-                "handlers": ["django_log_file"],
-                "propagate": True,
-                "level": "ERROR",
-            },
-            "adapters": {
-                "handlers": ["adapters"],
-                "level": "ERROR",
-            },
-            "mocker": {
-                "handlers": ["mocker", "console"],
-                "level": "INFO",
-            },
-            "project": {
-                "handlers": ["proj_log_file"],
-                "level": "DEBUG",
-            },
-            "route_updater": {
-                "handlers": ["console", "route_updater"],
-                "level": "DEBUG",
-            },
-        },
-    }
-
-
-# Reset logging
-# (see http://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/)
 LOGGING_CONFIG = None
-LOGGING = get_logging_structure("_logs")
-logging.config.dictConfig(LOGGING)
-
-logger = logging.getLogger(f"project.{__name__}")
-
+LOGGING, logger = CONFIGURATION.logger
 
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
 CELERY_ALWAYS_EAGER = True
@@ -573,7 +476,6 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
 }
-
 
 GOOGLE_API_KEY = "AIzaSyAwISspDEfhVel-fTYm18Dh1EKtrD0xDH0xxxxx"
 JQUERY_URL = False

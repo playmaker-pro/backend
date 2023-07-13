@@ -7,6 +7,7 @@ from clubs import models as clubs_models
 from profiles import models as profiles_models
 from typing import List
 from django.db import connection
+from backend.settings.config import Configuration
 
 User = get_user_model()
 
@@ -20,8 +21,8 @@ class RunWithProdEnv:
     """
 
     def __enter__(self):
-        self.old_value: str = settings.CONFIGURATION
-        settings.CONFIGURATION = "production"
+        self.old_value: Configuration = settings.CONFIGURATION
+        settings.CONFIGURATION = Configuration.PRODUCTION
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
