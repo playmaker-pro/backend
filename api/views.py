@@ -80,7 +80,8 @@ class CitiesView(EndpointView):
 
         # Filter cities based on the decoded query (matching city names) or matched voivodeships
         filtered_cities = City.objects.filter(
-            Q(name_ascii__icontains=mapped_city_query) | Q(region__name__in=matched_voivodeships)
+            Q(name_ascii__icontains=mapped_city_query)
+            | Q(region__name__in=matched_voivodeships)
         )
 
         # Iterate over the results and create a list of city-voivodeship pairs
@@ -89,7 +90,7 @@ class CitiesView(EndpointView):
                 # Get the mapped city name from the CUSTOM_CITY_MAPPING if available, otherwise use the original city name
                 cities.CUSTOM_CITY_MAPPING.get(city.name, city.name),
                 # Map the voivodeship name to its corresponding Polish name for display
-                cities.VOIVODESHIP_MAPPING.get(city.region.name, city.region.name)
+                cities.VOIVODESHIP_MAPPING.get(city.region.name, city.region.name),
             ]
             for city in filtered_cities
         ]
@@ -97,7 +98,7 @@ class CitiesView(EndpointView):
         return Response(cities_list, status=status.HTTP_200_OK)
 
 
-class GenderAndPreferredLegView(EndpointView):
+class PreferenceChoicesView(EndpointView):
     """View for listing gender and preferred leg choices"""
 
     authentication_classes = []
@@ -118,6 +119,6 @@ class GenderAndPreferredLegView(EndpointView):
         ]
         preference_choices = {
             "gender": gender_choices,
-            "player_preferred_leg": leg_choices
+            "player_preferred_leg": leg_choices,
         }
         return Response(preference_choices, status=status.HTTP_200_OK)

@@ -1,5 +1,5 @@
 from django.conf.urls import include, url
-from api.views import CountriesView, CitiesView, GenderAndPreferredLegView
+from api.views import CountriesView, CitiesView, PreferenceChoicesView
 from users.api_urls import urlpatterns as users_urls
 from clubs.api.api_urls import urlpatterns as clubs_urls
 from roles.api_urls import urlpatterns as roles_urls
@@ -24,7 +24,7 @@ urlpatterns = [
     ),
     url(
         r"^preference-choices/",
-        GenderAndPreferredLegView.as_view({"get": "list_preference_choices"}),
+        PreferenceChoicesView.as_view({"get": "list_preference_choices"}),
         name="preference_choices_list",
     ),
 ]

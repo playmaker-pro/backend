@@ -4,15 +4,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0003_userpreferences'),
+        ("users", "0003_userpreferences"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='userpreferences',
-            name='gender',
-            field=models.CharField(blank=True, choices=[('M', 'Mężczyzna'), ('K', 'Kobieta')], help_text="User's gender (represents the gender identity of the user)", max_length=1, null=True, verbose_name='Gender'),
+            model_name="userpreferences",
+            name="gender",
+            field=models.CharField(
+                blank=True,
+                choices=[("M", "Mężczyzna"), ("K", "Kobieta")],
+                help_text="User's gender (represents the gender identity of the user)",
+                max_length=1,
+                null=True,
+                verbose_name="Gender",
+            ),
         ),
     ]
