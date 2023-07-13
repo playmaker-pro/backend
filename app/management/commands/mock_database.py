@@ -157,8 +157,6 @@ class Command(BaseCommand):
         print(f"---\tDATABASE: {self.database_name}, ENVIRONMENT: {self.env}\t---")
         if self.env is Configuration.PRODUCTION:
             raise errors.ForbiddenInProduction
-        if self.database_name == "p1008_production":
-            raise errors.ForbiddenWithProductionDatabase
 
     def create_admin_user(self) -> None:
         """
