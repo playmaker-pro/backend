@@ -284,3 +284,18 @@ class UserAdminPanel(UserAdmin):
             return "missing profile"
 
     get_profile.short_description = "Profile Type"
+
+
+@admin.register(models.UserPreferences)
+class UserPreferencesAdminPanel(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "localization",
+        "display_languages"
+    )
+    search_fields = ("user__last_name",)
+
+    def display_languages(self, obj):
+        return ", ".join([str(language) for language in obj.spoken_languages.all()])
+
+    display_languages.short_description = "Spoken Languages"

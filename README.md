@@ -142,6 +142,11 @@ invoke tests
 python manage.py map_vivos
 ```
 
+- Migrate the cities_light app
+```bash
+python manage.py migrate cities_light
+```
+
 - To update the cities data, run the following command provided by django-cities-light
 ```bash
 python manage.py cities_light
