@@ -8,6 +8,7 @@ from profiles import models
 from roles import definitions
 from users.models import User
 from voivodeships.models import Voivodeships
+from backend.settings.config import Configuration
 
 
 class RunWithDifferentEnvironment:
@@ -18,11 +19,14 @@ class RunWithDifferentEnvironment:
     """
 
     def __init__(
-        self, destination_env: str, call: typing.Callable, catch_exception: bool = True
+        self,
+        destination_env: Configuration,
+        call: typing.Callable,
+        catch_exception: bool = True,
     ) -> None:
         self.call: typing.Callable = call
         self.catch_exception: bool = catch_exception
-        self.destination_env: str = destination_env
+        self.destination_env: Configuration = destination_env
 
     def __enter__(
         self,
@@ -31,8 +35,7 @@ class RunWithDifferentEnvironment:
         destination_env - environment to run something with
         call - function to call with different environment
         """
-        # TODO(bartnyk): env will be changed to enum, here: https://gitlab.com/playmaker1/webapp/-/merge_requests/313
-        self.current_environment: str = (
+        self.current_environment: Configuration = (
             settings.CONFIGURATION
         )  # save current environment
         settings.CONFIGURATION = self.destination_env  # set different environment

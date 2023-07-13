@@ -6,6 +6,7 @@ from clubs import models as clubs_models
 from profiles import models as profiles_models
 from typing import List
 from utils.testutils import RunWithDifferentEnvironment
+from backend.settings.config import Configuration
 
 User = get_user_model()
 
@@ -86,7 +87,9 @@ class TestMockDatabaseCommand(TestCase):
 
     def test_stop_if_production_env(self) -> None:
         """Set production environment temporarily, script should fail"""
-        with RunWithDifferentEnvironment("production", self.call) as _script:
+        with RunWithDifferentEnvironment(
+            Configuration.PRODUCTION, self.call
+        ) as _script:
             assert isinstance(_script.run(), errors.ForbiddenInProduction)
         assert not self.script_passed
 
