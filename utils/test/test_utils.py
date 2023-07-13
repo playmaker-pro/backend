@@ -6,6 +6,7 @@ from django.test.client import Client
 from django.utils import timezone
 from django.db.models import signals
 from factory.django import mute_signals
+from requests import Response
 
 from clubs.models import Season
 from users.models import User
@@ -14,6 +15,8 @@ from utils import testutils as utils
 
 from typing import Optional
 from django.urls import reverse
+
+from utils.factories.user_factories import UserFactory
 
 utils.silence_explamation_mark()
 
@@ -54,9 +57,11 @@ def mute_post_save_signal():
 class UserManager:
     """
     Utility class for managing user-related operations in tests.
-    This class provides convenient methods to create a test user, generate an access token for authentication,
-    and retrieve headers with the access token for making authenticated requests.
+    This class provides convenient methods to create a test user,
+    generate an access token for authentication, and retrieve headers with the access
+    token for making authenticated requests.
     """
+
     def __init__(self, client: Optional[Client] = None) -> None:
         self.email = "test_email@test.com"
         self.password = "super secret password"
@@ -66,11 +71,10 @@ class UserManager:
 
         self.login_url = reverse("api:users:api-login")
 
+    @mute_post_save_signal()
     def create_superuser(self) -> User:
         """Create a superuser in the test database."""
-        user = User.objects.create_superuser(
-          email=self.email, password=self.password
-        )
+        user = UserFactory.create(email=self.email, password=self.password)
         user.is_activated = True
         user.save()
 
@@ -79,7 +83,7 @@ class UserManager:
     @property
     def get_access_token(self) -> str:
         """Get the authentication access token for the created superuser."""
-        res = self.client.post(
+        res: Response = self.client.post(
             self.login_url, {"email": self.email, "password": self.password}
         )
         return res.data.get("access")
@@ -94,3 +98,55 @@ class UserManager:
         }
 
         return headers
+
+
+class MethodsNotAllowedTestsMixin:
+    """Test mixin for not allowed methods"""
+
+    NOT_ALLOWED_METHODS = []
+
+    def test_request_methods_not_allowed(self) -> None:
+        """Test request methods not allowed"""
+
+        for element in self.NOT_ALLOWED_METHODS:
+            getattr(self, f"{element}_not_allowed")()
+
+    def get_not_allowed(self) -> None:
+        """Test if GET method is not allowed"""
+
+        res: Response = self.client.get(self.url, **self.headers)  # noqa
+        assert (
+            res.status_code == 405
+        ), f"Actual response status code is: {res.status_code}, method: GET"
+
+    def post_not_allowed(self) -> None:
+        """Test if POST method is not allowed"""
+
+        res: Response = self.client.post(self.url, **self.headers)  # noqa
+        assert (
+            res.status_code == 405
+        ), f"Actual response status code is: {res.status_code}, method: POST"
+
+    def put_not_allowed(self) -> None:
+        """Test if PUT method is not allowed"""
+
+        res: Response = self.client.put(self.url, **self.headers)  # noqa
+        assert (
+            res.status_code == 405
+        ), f"Actual response status code is: {res.status_code}, method: PUT"
+
+    def patch_not_allowed(self) -> None:
+        """Test if PATCH method is not allowed"""
+
+        res: Response = self.client.patch(self.url, **self.headers)  # noqa
+        assert (
+            res.status_code == 405
+        ), f"Actual response status code is: {res.status_code}, method: PATCH"
+
+    def delete_not_allowed(self) -> None:
+        """Test if DELETE method is not allowed"""
+
+        res: Response = self.client.delete(self.url, **self.headers)  # noqa
+        assert (
+            res.status_code == 405
+        ), f"Actual response status code is: {res.status_code}, method: DELETE"

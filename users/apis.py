@@ -1,10 +1,12 @@
-from typing import Sequence
+from typing import Sequence, List
 
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from api.views import EndpointView
+from features.models import FeatureElement, Feature
 from users import serializers
+from users.errors import FeatureSetsNotFoundException, FeatureElementsNotFoundException
 from users.models import User
 
 # Definicja enpointów nie musi być skoncentrowana tylko i wyłącznie w jedenj klasie.
@@ -16,10 +18,14 @@ from users.models import User
 # logika jest super-thin to nam nie szkodzi.
 
 # Jednak zdaje sobie sprawe ze nie uniknimy sytuacji "if" pod jednm API jak się da to robmy w miare czysto.
-from users.serializers import UserRegisterSerializer
+from users.serializers import (
+    UserRegisterSerializer,
+    FeaturesSerializer,
+    FeatureElementSerializer,
+)
 from users.services import UserService
 
-user_service = UserService()
+user_service: UserService = UserService()
 
 
 class UsersAPI(EndpointView):
@@ -72,3 +78,23 @@ class UsersAPI(EndpointView):
 
     def get_queryset(self):
         ...
+
+    @staticmethod
+    def feature_sets(request) -> Response:
+        """Return all user feature sets."""
+        data: List[Feature] = user_service.get_user_features(request.user)
+        if not data:
+            raise FeatureSetsNotFoundException()
+        serializer = FeaturesSerializer(instance=data, many=True)
+        return Response(serializer.data)
+
+    @staticmethod
+    def feature_elements(request) -> Response:
+        """Return all user feature elements."""
+        data: List[FeatureElement] = user_service.get_user_feature_elements(
+            request.user
+        )
+        if not data:
+            raise FeatureElementsNotFoundException()
+        serializer = FeatureElementSerializer(instance=data, many=True)
+        return Response(serializer.data)

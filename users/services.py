@@ -1,5 +1,7 @@
-from typing import Optional
+from typing import Optional, List, Set
 from django.contrib.auth import get_user_model
+
+from features.models import AccessPermission, FeatureElement, Feature
 from profiles.models import PROFILE_TYPE
 from api.schemas import RegisterSchema
 
@@ -41,3 +43,52 @@ class UserService:
 
         user.save()
         return user
+
+    @staticmethod
+    def access_permission_filtered_by_user_role(**kwargs) -> Set[int]:
+        #  TODO Access permission is a "Mock", because there is no Role model in user application.
+        #   If model will be created, we should get role from request: requests.user.role
+        #   In addition, AccessPermission model has and attribute called role (not a table field),
+        #   that's why we can't filter by this name.
+        #   access_permissions_ids = {
+        #   obj.id for obj in AccessPermission.objects.filter(role__id=kwargs.get('role_id'))
+        #   }
+
+        access_permissions_ids: Set[int] = {
+            obj.id for obj in AccessPermission.objects.all()
+        }
+        return access_permissions_ids
+
+    def get_user_features(self, user: User) -> List[Feature]:
+        """Returns user features by his role"""
+        # map_roles = {key: val for key, val in ACCOUNT_ROLES}
+        # user_role: str = map_roles.get(user.declared_role)
+
+        access_permissions_ids: Set[int] = self.access_permission_filtered_by_user_role(
+            role_id=user.declared_role
+        )
+        feature_elements_ids: Set[int] = {
+            obj.id
+            for obj in FeatureElement.objects.filter(
+                access_permissions__in=access_permissions_ids
+            )
+        }
+        features: List[Feature] = [
+            obj for obj in Feature.objects.filter(elements__in=feature_elements_ids)
+        ]
+
+        return features
+
+    def get_user_feature_elements(self, user: User) -> List[FeatureElement]:
+        """Returns user feature elements"""
+
+        access_permissions_ids: Set[int] = self.access_permission_filtered_by_user_role(
+            role_id=user.declared_role
+        )
+
+        return [
+            obj
+            for obj in FeatureElement.objects.filter(
+                access_permissions__in=access_permissions_ids
+            )
+        ]

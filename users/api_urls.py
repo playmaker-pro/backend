@@ -15,10 +15,6 @@ router.register("", apis.UsersAPI, basename="users")
 
 
 urlpatterns = [
-    # path(
-    #     r"users/",
-    #     include(router.urls),
-    # ),
     path(
         r"hello/",
         apis.UsersAPI.as_view({"get": "list"}),
@@ -31,4 +27,14 @@ urlpatterns = [
     # It means that token will be valid for API calls for that time.
     path("logout/", TokenBlacklistView.as_view(), name="api-logout"),
     path("refresh-token/", TokenRefreshView.as_view(), name="api-token-refresh"),
+    path(
+        "feature-sets/",
+        apis.UsersAPI.as_view({"get": "feature_sets"}),
+        name="feature-sets",
+    ),
+    path(
+        "feature-elements/",
+        apis.UsersAPI.as_view({"get": "feature_elements"}),
+        name="feature-elements",
+    ),
 ]
