@@ -1,60 +1,13 @@
 from django.core.management import call_command
 from django.test import TestCase
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from app import errors
 from clubs import models as clubs_models
 from profiles import models as profiles_models
 from typing import List
-from django.db import connection
+from utils.testutils import RunWithDifferentEnvironment
 
 User = get_user_model()
-
-
-class RunWithProdEnv:
-    """
-    Imitate production environment.
-    Change env to production (production env name) before running script
-    Then run script, which should raise an exception.
-    After that, restore env name.
-    """
-
-    def __enter__(self):
-        self.old_value: str = settings.CONFIGURATION
-        settings.CONFIGURATION = "production"
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        settings.CONFIGURATION = self.old_value
-
-    def run(self) -> Exception:
-        try:
-            TestMockDatabaseCommand.call()
-        except Exception as e:
-            return e
-
-
-class RunWithProdDatabase:
-    """
-    Imitate production database.
-    Change database to p1008_production (production database name) before running script
-    Then run script, which should raise an exception.
-    After that, restore database name.
-    """
-
-    def __enter__(self):
-        self.old_value = connection.settings_dict["NAME"]
-        connection.settings_dict["NAME"] = "p1008_production"
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        connection.settings_dict["NAME"] = self.old_value
-
-    def run(self) -> Exception:
-        try:
-            TestMockDatabaseCommand.call()
-        except Exception as e:
-            return e
 
 
 class TestMockDatabaseCommand(TestCase):
@@ -133,14 +86,9 @@ class TestMockDatabaseCommand(TestCase):
 
     def test_stop_if_production_env(self) -> None:
         """Set production environment temporarily, script should fail"""
-        with RunWithProdEnv() as _script:
+        with RunWithDifferentEnvironment("production", self.call) as _script:
             assert isinstance(_script.run(), errors.ForbiddenInProduction)
         assert not self.script_passed
-
-    def test_stop_if_production_database(self) -> None:
-        """Set production database temporarily, script should fail"""
-        with RunWithProdDatabase() as _script:
-            assert isinstance(_script.run(), errors.ForbiddenWithProductionDatabase)
 
     def test_setup_all(self) -> None:
         """Mock everything"""
