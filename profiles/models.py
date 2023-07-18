@@ -29,7 +29,7 @@ from voivodeships.models import Voivodeships
 
 from .erros import VerificationCompletionFieldsWrongSetup
 from .mixins import TeamObjectsDisplayMixin
-from .utils import make_choices, supress_exception, unique_slugify
+from .utils import make_choices, supress_exception, unique_slugify, calculate_age
 
 User = get_user_model()
 
@@ -612,16 +612,8 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         return None
 
     @property
-    def age(self):  # todo przeniesc to do uzywania z profile.utils.
-        if self.birth_date:
-            now = timezone.now()
-            return (
-                now.year
-                - self.birth_date.year
-                - ((now.month, now.day) < (self.birth_date.month, self.birth_date.day))
-            )
-        else:
-            return None
+    def age(self) -> typing.Optional[int]:
+        return calculate_age(self.user.userpreferences.birth_date)
 
     @property
     def has_videos(self):
@@ -696,6 +688,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
     )
 
+    # DEPRECATED: Migrated to UserPreferences PM20-148
     birth_date = models.DateField(_("Data urodzenia"), blank=True, null=True)
     height = models.PositiveIntegerField(
         _("Wzrost"),
@@ -1299,10 +1292,7 @@ class ClubProfile(BaseProfile):
 
 class LicenceType(models.Model):
     name = models.CharField(
-        _("Licencja"),
-        max_length=17,
-        unique=True,
-        help_text=_("Type of the licence")
+        _("Licencja"), max_length=17, unique=True, help_text=_("Type of the licence")
     )
 
     def __str__(self):
@@ -1387,6 +1377,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         blank=True,
     )
+    # DEPRECATED: Migrated to UserPreferences PM20-148
     birth_date = models.DateField(_("Data urodzenia"), blank=True, null=True)
     soccer_goal = models.IntegerField(
         _("Piłkarski cel"), choices=make_choices(GOAL_CHOICES), null=True, blank=True
@@ -1545,7 +1536,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         """
         Returns a string representation of the licences associated with the coach profile.
         """
-        licences = self.licences.values_list('licence__name', flat=True)
+        licences = self.licences.values_list("licence__name", flat=True)
         return ", ".join(licences) if licences else None
 
     @property
@@ -1555,16 +1546,8 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         return False
 
     @property
-    def age(self):  # todo przeniesc to do uzywania z profile.utils.
-        if self.birth_date:
-            now = timezone.now()
-            return (
-                now.year
-                - self.birth_date.year
-                - ((now.month, now.day) < (self.birth_date.month, self.birth_date.day))
-            )
-        else:
-            return None
+    def age(self) -> typing.Optional[int]:
+        return calculate_age(self.user.userpreferences.birth_date)
 
     class Meta:
         verbose_name = "Coach Profile"
@@ -1572,12 +1555,23 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
 
 
 class CoachLicence(models.Model):
-    licence = models.ForeignKey(LicenceType, on_delete=models.CASCADE, help_text=_("The type of licence held by the coach"),)
-    coach_profile = models.ForeignKey(CoachProfile, on_delete=models.CASCADE, related_name="licences", help_text=_("Coach profile holding this license"),)
-    expiry_date = models.DateField(blank=True, null=True, help_text=_("The expiry date of the licence (optional)"))
+    licence = models.ForeignKey(
+        LicenceType,
+        on_delete=models.CASCADE,
+        help_text=_("The type of licence held by the coach"),
+    )
+    coach_profile = models.ForeignKey(
+        CoachProfile,
+        on_delete=models.CASCADE,
+        related_name="licences",
+        help_text=_("Coach profile holding this license"),
+    )
+    expiry_date = models.DateField(
+        blank=True, null=True, help_text=_("The expiry date of the licence (optional)")
+    )
 
     class Meta:
-        unique_together = ('licence', 'coach_profile')
+        unique_together = ("licence", "coach_profile")
 
     def __str__(self):
         return f"{self.licence.name}"
