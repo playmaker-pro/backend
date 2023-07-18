@@ -1,12 +1,27 @@
-from typing import Sequence, List
+import logging
+import traceback
+from typing import Sequence, List, Union
 
+from django.db.models import QuerySet
+from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
+from oauthlib.oauth2 import InvalidGrantError
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.views import EndpointView
 from features.models import FeatureElement, Feature
 from users import serializers
-from users.errors import FeatureSetsNotFoundException, FeatureElementsNotFoundException
+from users.errors import (
+    FeatureSetsNotFoundException,
+    FeatureElementsNotFoundException,
+    NoUserCredentialFetchedException,
+    GoogleInvalidGrantError,
+    ApplicationError,
+)
+from users.managers import GoogleManager
 from users.models import User
 
 # Definicja enpointów nie musi być skoncentrowana tylko i wyłącznie w jedenj klasie.
@@ -22,10 +37,12 @@ from users.serializers import (
     UserRegisterSerializer,
     FeaturesSerializer,
     FeatureElementSerializer,
+    GoogleGmailAuthSerializer,
 )
 from users.services import UserService
 
 user_service: UserService = UserService()
+logger = logging.getLogger("django")
 
 
 class UsersAPI(EndpointView):
@@ -54,7 +71,7 @@ class UsersAPI(EndpointView):
         Note: You can't use 'self.action' here because it's not set
         when calling not accepted method.
         """
-        if "register" in self.request.path:
+        if "register" in self.request.path or "google-oauth2" in self.request.path:
             retrieve_permission_list = [AllowAny]
             return [permission() for permission in retrieve_permission_list]
         else:
@@ -98,3 +115,138 @@ class UsersAPI(EndpointView):
             raise FeatureElementsNotFoundException()
         serializer = FeatureElementSerializer(instance=data, many=True)
         return Response(serializer.data)
+
+    @staticmethod
+    def google_auth(request):
+        """FE -> BE FLOW"""
+        google_serializer = GoogleGmailAuthSerializer(data=request.POST)
+        google_serializer.is_valid(raise_exception=True)
+
+        validated_data = google_serializer.validated_data
+        google_login_flow = GoogleManager()
+
+        try:
+            user_info = google_login_flow.get_user_info(
+                google_tokens=validated_data.get("token_id")
+            )
+        except ValueError:
+            msg = "Failed to obtain user info from Google."
+            logger.error(str(traceback.format_exc()) + f"\n{msg}")
+            raise ApplicationError(details=msg)
+
+        user_email = user_info.get("email")
+        users: QuerySet = User.objects.filter(email=user_email)
+        redirect_path: str = "landing page"
+
+        if users.exists():
+            user: User = users.first()
+        else:
+            redirect_path = "register"
+            user: User = user_service.register_from_google(user_info)
+
+            if not user:
+                raise NoUserCredentialFetchedException()
+
+        instance, _ = user_service.create_social_account(user=user, data=user_info)
+        if not instance:
+            raise NoUserCredentialFetchedException()
+
+        refresh: RefreshToken = RefreshToken.for_user(user)
+        response = {
+            "success": True,
+            "redirect": redirect_path,
+            "refresh_token": str(refresh),
+            "access_token": str(refresh.access_token),
+        }
+
+        return Response(response, status=status.HTTP_200_OK)
+
+    @staticmethod
+    def google_redirect_url(request):
+        # TODO BE flow
+        google_login_flow = GoogleManager()
+
+        authorization_url, state = google_login_flow.get_authorization_url()
+
+        # request.session["google_oauth2_state"] = state
+        a = redirect(authorization_url)
+
+        return Response({"auth_url": authorization_url})
+        # return a
+
+    @staticmethod
+    def google_callback(request) -> Union[HttpResponseRedirect, Response]:
+        """Google OAuth2 callback endpoint. BE FLOW"""
+
+        input_serializer = GoogleGmailAuthSerializer(data=request.GET)
+        input_serializer.is_valid(raise_exception=True)
+
+        validated_data = input_serializer.validated_data
+
+        code = validated_data.get("code")
+        # error = validated_data.get("error")
+        state = validated_data.get("state")
+        #
+        # if error is not None:
+        #     return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
+        #
+        # if code is None or state is None:
+        #     return Response(
+        #         {"error": "Code and state are required."},
+        #         status=status.HTTP_400_BAD_REQUEST,
+        #     )
+
+        # session_state = request.session.get("google_oauth2_state")
+        # if session_state is None:
+        #     return Response(
+        #         {"error": "CSRF check failed."}, status=status.HTTP_400_BAD_REQUEST
+        #     )
+
+        # del request.session["google_oauth2_state"]
+        #
+        # if state != session_state:
+        #     return Response(
+        #         {"error": "CSRF check failed."}, status=status.HTTP_400_BAD_REQUEST
+        #     )
+
+        google_login_flow = GoogleManager()
+        try:
+            google_tokens = google_login_flow.get_tokens(code=code, state=state)
+        except InvalidGrantError:
+            raise GoogleInvalidGrantError
+        except ValueError:
+            raise ApplicationError
+
+        try:
+            user_info = google_login_flow.get_user_info(google_tokens=google_tokens)
+        except ValueError:
+            msg = "Failed to obtain user info from Google."
+            logger.error(str(traceback.format_exc()) + f"\n{msg}")
+            raise ApplicationError(details=msg)
+
+        user_email = user_info.get("email")
+        users: QuerySet = User.objects.filter(email=user_email)
+        redirect_path: str = "landing page"
+
+        if users.exists():
+            user: User = users.first()
+        else:
+            redirect_path = "register"
+            user: User = user_service.register_from_google(user_info)
+
+            if not user:
+                raise NoUserCredentialFetchedException()
+
+        instance, _ = user_service.create_social_account(user=user, data=user_info)
+        if not instance:
+            raise NoUserCredentialFetchedException()
+
+        refresh: RefreshToken = RefreshToken.for_user(user)
+        response = {
+            "success": True,
+            "redirect": redirect_path,
+            "refresh_token": str(refresh),
+            "access_token": str(refresh.access_token),
+        }
+
+        return Response(response, status=status.HTTP_200_OK)

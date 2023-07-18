@@ -1,6 +1,8 @@
 from typing import Dict, Set
 from unittest import TestCase
+from unittest.mock import patch
 
+from allauth.socialaccount.models import SocialAccount
 from django.urls import reverse
 import pytest
 from rest_framework.response import Response
@@ -8,6 +10,7 @@ from rest_framework.test import APITestCase
 from rest_framework.test import APIClient
 
 from features.models import Feature
+from users.managers import GoogleAccessToken, GoogleManager, GoogleSdkLoginCredentials
 from users.models import User
 from utils.factories.feature_sets_factories import FeatureFactory, FeatureElementFactory
 from utils.test.test_utils import (
@@ -311,3 +314,99 @@ class TestUserFeatureElementsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         """Test if response is 404 when no feature elements are found"""
         res: Response = self.client.get(self.url, **self.headers)
         assert res.status_code == 404
+
+
+@pytest.mark.django_db
+class GoogleAuthTestEndpoint(TestCase, MethodsNotAllowedTestsMixin):
+    """Integration tests for google-oauth2 endpoint"""
+
+    NOT_ALLOWED_METHODS = ["get", "put", "patch", "delete"]
+
+    def setUp(self) -> None:
+        self.client: APIClient = APIClient()
+        self.url: str = reverse("api:users:google-oauth2")
+        self.unregistered_user_data: dict = {
+            "email": "test@playmayker.com",
+            "token_id": "example_token_id",
+        }
+
+    @mute_post_save_signal()
+    def test_endpoint_ok(self) -> None:
+        """
+        Test if response is OK. User doesn't exist in db,
+        so the response should include a register value
+        """
+        user_email: str = self.unregistered_user_data.get('email')
+
+        expected_res = {
+            "success": True,
+            "redirect": "register",
+            "access_token": "test_access_token",
+            "refresh_token": "test_refresh_token",
+        }
+        user_info_mock = {
+            "sub": "106746665020843434121824568902",
+            "name": "Test User",
+            "given_name": "Test",
+            "family_name": "User",
+            "picture": "example_url",
+            "email": user_email,
+            "email_verified": True,
+            "locale": "pl"
+        }
+        google_auth_credentials_mock = GoogleSdkLoginCredentials(
+            client_id="client_id", client_secret="client_secret", project_id="project_id"
+        )
+
+        google_dataclass: GoogleAccessToken = GoogleAccessToken(
+            id_token="test_token", access_token="example_token"
+        )
+
+        google_credentials_patcher = patch.object(
+            GoogleManager,
+            "google_sdk_login_get_credentials",
+            return_value=google_auth_credentials_mock
+        )
+        token_patcher = patch.object(
+            GoogleAccessToken,
+            "decode_id_token",
+            return_value={"email": user_email}
+        )
+        get_tokens_patcher = patch.object(
+            GoogleManager,
+            "get_tokens",
+            return_value=google_dataclass
+        )
+        get_user_info_patcher = patch.object(
+            GoogleManager,
+            "get_user_info",
+            return_value=user_info_mock
+        )
+        social_account = SocialAccount.objects.filter(user__email=user_email)
+
+        assert not social_account.exists()
+
+        with get_tokens_patcher, get_user_info_patcher, \
+                token_patcher, google_credentials_patcher:
+
+            res: Response = self.client.post(  # type: ignore
+                self.url, data=self.unregistered_user_data
+            )
+
+            data: dict = res.json()  # type: ignore
+
+            assert res.status_code == 200
+
+            for elements in expected_res.keys():
+                assert elements in data
+
+            assert data.get("redirect") == expected_res.get("redirect")
+            assert data.get("success") == expected_res.get("success")
+
+            user_qry = User.objects.filter(email=user_email)
+
+            assert user_qry.exists()
+            assert isinstance(user := user_qry.first(), User)
+            assert user.email == user_email
+
+            assert social_account.exists()

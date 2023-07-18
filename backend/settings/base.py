@@ -118,7 +118,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "cities_light",
     "features",
-    "django_extensions"
+    "django_extensions",
 ]
 
 SWAGGER_SETTINGS = {
@@ -683,6 +683,8 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=2),
 }
+
+GOOGLE_OAUTH2_PROJECT_ID = "playmaker-pro"
 
 
 try:

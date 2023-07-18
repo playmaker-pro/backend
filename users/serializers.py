@@ -64,3 +64,11 @@ class FeaturesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Feature
         fields = ("name", "keyname", "elements", "enabled")
+
+
+class GoogleGmailAuthSerializer(serializers.Serializer):
+    """Serializer for Google auth."""
+
+    code = serializers.CharField(required=False)
+    error = serializers.CharField(required=False)
+    state = serializers.CharField(required=False)

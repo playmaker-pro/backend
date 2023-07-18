@@ -104,6 +104,7 @@ class MethodsNotAllowedTestsMixin:
     """Test mixin for not allowed methods"""
 
     NOT_ALLOWED_METHODS = []
+    headers = {}
 
     def test_request_methods_not_allowed(self) -> None:
         """Test request methods not allowed"""
@@ -113,7 +114,6 @@ class MethodsNotAllowedTestsMixin:
 
     def get_not_allowed(self) -> None:
         """Test if GET method is not allowed"""
-
         res: Response = self.client.get(self.url, **self.headers)  # noqa
         assert (
             res.status_code == 405

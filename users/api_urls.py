@@ -37,4 +37,22 @@ urlpatterns = [
         apis.UsersAPI.as_view({"get": "feature_elements"}),
         name="feature-elements",
     ),
+    # TODO needed for Backend Flow
+    path(
+        "google-oauth2/",
+        apis.UsersAPI.as_view({"get": "google_redirect_url"}),
+        name="feature-elements",
+    ),
+    # TODO needed for Backend Flow
+    path(
+        "google-oauth2/login/callback",
+        apis.UsersAPI.as_view({"get": "google_callback"}),
+        name="google-oauth2-sdk-callback",
+    ),
+    # TODO Frontend + Backend FLOW
+    path(
+        "google-oauth22/",
+        apis.UsersAPI.as_view({"post": "google_auth"}),
+        name="google-oauth2",
+    ),
 ]
