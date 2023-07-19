@@ -1,6 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.request import Request
-from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from api.views import EndpointView
 
 from . import definitions
@@ -8,8 +9,8 @@ from . import definitions
 
 class RolesAPI(EndpointView):
     allowed_methods = ("list",)
-    authentication_classes = []
-    permission_classes = []
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def list(self, request: Request) -> Response:
         """Return a dictionary of available roles."""

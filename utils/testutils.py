@@ -78,3 +78,8 @@ def get_verified_user_club():
 def silence_explamation_mark():
     logger = logging.getLogger("django.db.backends.schema")
     logger.propagate = False
+
+
+def get_random_user() -> User:
+    """get random user from db"""
+    return User.objects.order_by("?")[0]
