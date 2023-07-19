@@ -27,7 +27,7 @@ from roles import definitions
 from stats.adapters import PlayerAdapter
 from voivodeships.models import Voivodeships
 
-from .erros import VerificationCompletionFieldsWrongSetup
+from .errors import VerificationCompletionFieldsWrongSetup
 from .mixins import TeamObjectsDisplayMixin
 from .utils import make_choices, supress_exception, unique_slugify
 
@@ -1868,19 +1868,19 @@ class Language(models.Model):
         ordering = ["priority", "name"]
 
 
-PROFILES = (
-    "BaseProfile",
-    "PlayerProfile",
-    "CoachProfile",
-    "ClubProfile",
-    "GuestProfile",
-    "ManagerProfile",
-    "ParentProfile",
-    "ScoutProfile",
+PROFILE_MODELS = (
+    BaseProfile,
+    PlayerProfile,
+    CoachProfile,
+    ClubProfile,
+    GuestProfile,
+    ManagerProfile,
+    ParentProfile,
+    ScoutProfile,
 )
-PROFILE_TYPE = typing.Union[PROFILES]
+PROFILE_TYPE = typing.Union[PROFILE_MODELS]
 
-MODEL_MAP = {
+PROFILE_MODEL_MAP = {
     definitions.PLAYER_SHORT: PlayerProfile,
     definitions.COACH_SHORT: CoachProfile,
     definitions.CLUB_SHORT: ClubProfile,
@@ -1888,4 +1888,8 @@ MODEL_MAP = {
     definitions.MANAGER_SHORT: ManagerProfile,
     definitions.PARENT_SHORT: ParentProfile,
     definitions.GUEST_SHORT: GuestProfile,
+}
+
+REVERSED_MODEL_MAP = {
+    model: definition for (definition, model) in PROFILE_MODEL_MAP.items()
 }

@@ -1,21 +1,41 @@
+import uuid
 from api.views import EndpointView
-from profiles.api_serializers import CreateProfileSerializer, ProfileSerializer
+from profiles.api_serializers import (
+    CreateProfileSerializer,
+    profiles_service,
+    ProfileSerializer,
+    UpdateProfileSerializer,
+)
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.request import Request
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 
 class ProfileAPI(EndpointView):
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-    serializer_class = ProfileSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    allowed_methods = ["post", "patch", "get"]
 
-    def create(self, request: Request) -> Response:
+    def create_profile(self, request: Request) -> Response:
         """Create initial profile for user"""
         serializer = CreateProfileSerializer(data=request.data)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def get_profile_by_uuid(
+        self, request: Request, profile_uuid: uuid.UUID
+    ) -> Response:
+        profile_object = profiles_service.get_profile_by_uuid(profile_uuid)
+        serializer: ProfileSerializer = ProfileSerializer(profile_object)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def update_profile(self, request: Request) -> Response:
+        serializer = UpdateProfileSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+
+        return Response(serializer.data)
