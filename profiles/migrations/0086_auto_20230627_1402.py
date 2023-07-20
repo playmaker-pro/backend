@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
             field=models.UUIDField(blank=True, null=True),
         ),
         migrations.RunPython(partial(create_uuid, profile_type="ClubProfile")),
-        migrations.AddField(
+        migrations.AlterField(
             model_name="clubprofile",
             name="uuid",
             field=models.UUIDField(default=uuid.uuid4, editable=False),
@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
             field=models.UUIDField(blank=True, null=True),
         ),
         migrations.RunPython(partial(create_uuid, profile_type="CoachProfile")),
-        migrations.AddField(
+        migrations.AlterField(
             model_name="coachprofile",
             name="uuid",
             field=models.UUIDField(default=uuid.uuid4, editable=False),
@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
             field=models.UUIDField(blank=True, null=True),
         ),
         migrations.RunPython(partial(create_uuid, profile_type="GuestProfile")),
-        migrations.AddField(
+        migrations.AlterField(
             model_name="guestprofile",
             name="uuid",
             field=models.UUIDField(default=uuid.uuid4, editable=False),
@@ -56,7 +56,7 @@ class Migration(migrations.Migration):
             field=models.UUIDField(blank=True, null=True),
         ),
         migrations.RunPython(partial(create_uuid, profile_type="ManagerProfile")),
-        migrations.AddField(
+        migrations.AlterField(
             model_name="managerprofile",
             name="uuid",
             field=models.UUIDField(default=uuid.uuid4, editable=False),
@@ -67,7 +67,7 @@ class Migration(migrations.Migration):
             field=models.UUIDField(blank=True, null=True),
         ),
         migrations.RunPython(partial(create_uuid, profile_type="OtherProfile")),
-        migrations.AddField(
+        migrations.AlterField(
             model_name="otherprofile",
             name="uuid",
             field=models.UUIDField(default=uuid.uuid4, editable=False),
@@ -78,7 +78,7 @@ class Migration(migrations.Migration):
             field=models.UUIDField(blank=True, null=True),
         ),
         migrations.RunPython(partial(create_uuid, profile_type="ParentProfile")),
-        migrations.AddField(
+        migrations.AlterField(
             model_name="parentprofile",
             name="uuid",
             field=models.UUIDField(default=uuid.uuid4, editable=False),
@@ -89,7 +89,7 @@ class Migration(migrations.Migration):
             field=models.UUIDField(blank=True, null=True),
         ),
         migrations.RunPython(partial(create_uuid, profile_type="PlayerProfile")),
-        migrations.AddField(
+        migrations.AlterField(
             model_name="playerprofile",
             name="uuid",
             field=models.UUIDField(default=uuid.uuid4, editable=False),
@@ -100,7 +100,7 @@ class Migration(migrations.Migration):
             field=models.UUIDField(blank=True, null=True),
         ),
         migrations.RunPython(partial(create_uuid, profile_type="ScoutProfile")),
-        migrations.AddField(
+        migrations.AlterField(
             model_name="scoutprofile",
             name="uuid",
             field=models.UUIDField(default=uuid.uuid4, editable=False),
