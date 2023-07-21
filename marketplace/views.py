@@ -1,33 +1,19 @@
-import json
 import logging
-from copy import deepcopy
-from functools import reduce
-from hashlib import new
 from itertools import chain
-
 from crispy_forms.utils import render_crispy_form
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.paginator import Paginator
-from django.db.models import Q, QuerySet
+from django.db.models import QuerySet
 from django.http import JsonResponse
-from django.http.response import HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
-
 from app import mixins
-from clubs.models import Club, Gender, League, Seniority, Team, Voivodeship
-from followers.models import Follow, FollowTeam
-from inquiries.models import InquiryRequest
+from clubs.models import Club, Gender, League, Seniority, Team
 from marketplace.models import get_licence_choice_number
-from profiles.models import ClubProfile, CoachProfile, PlayerPosition
-from profiles.utils import get_datetime_from_age
-from roles import definitions
-from stats import adapters
+from profiles.models import PlayerPosition
 from voivodeships.services import VoivodeshipService
 
 from .forms import (

@@ -10,6 +10,10 @@ from backend.settings.environment import Environment
 from clubs.models import Season
 
 
+def translate_league_name(code, name):
+    return settings.LEAGUES_CODES_MAP.get(code, name)
+
+
 def load_json(path: str, catch_exception: bool = True) -> typing.Union[dict, Exception]:
     """
     Read json file with given abspath and return as dictionary.
