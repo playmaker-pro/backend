@@ -65,8 +65,8 @@ INSTALLED_APPS = [
     "voivodeships",
     "mapper",
     "resources",
-    "data",  # external repo
-    "stats",  # external repo
+    # "data",  # external repo DEPRECATED: PM-1015
+    # "stats",  # external repo DEPRECATED: PM-1015
     "django_countries",
     "crispy_forms",
     "easy_thumbnails",
@@ -186,8 +186,8 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-
-DATABASE_ROUTERS = ["data.routers.DataRouter", "data.routers.DefaultDBRouter"]
+# DEPRECATED: PM-1015
+# DATABASE_ROUTERS = ["data.routers.DataRouter", "data.routers.DefaultDBRouter"]
 
 # DB_ITERATOR = '11'
 DATABASES = {
@@ -203,14 +203,15 @@ DATABASES = {
         "HOST": "localhost",
         "PORT": "5432",
     },
-    "datadb": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "local_data",
-        "USER": "arsen",
-        "PASSWORD": "postgres",
-        "HOST": "localhost",
-        "PORT": "5432",
-    },
+    # DEPRECATED: PM-1015
+    # "datadb": {
+    #     "ENGINE": "django.db.backends.postgresql_psycopg2",
+    #     "NAME": "local_data",
+    #     "USER": "arsen",
+    #     "PASSWORD": "postgres",
+    #     "HOST": "localhost",
+    #     "PORT": "5432",
+    # },
 }
 
 # Password validation
