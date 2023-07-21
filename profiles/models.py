@@ -206,6 +206,15 @@ class BaseProfile(models.Model, EventLogMixin):
     def get_permalink(self):
         return reverse("profiles:show", kwargs={"slug": self.slug})
 
+    def generate_uuid(self, force: bool = False) -> None:
+        """
+        Set/overwrite new uuid for object
+        May cause data incoherence, make sure you want to use it
+        """
+        if force:
+            self.uuid = uuid.uuid4()
+            super().save()
+
     def get_team(self):
         if self.PROFILE_TYPE in [
             definitions.PROFILE_TYPE_COACH,
