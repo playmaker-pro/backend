@@ -698,8 +698,8 @@ class Team(models.Model, MappingMixin):
 
     @property
     def team_name_with_current_league(self):
-        return (
-            self.display_team + (" " + f"({self.latest_league_from_lh})")
+        return self.display_team + (
+            " " + f"({self.latest_league_from_lh})"
             if self.latest_league_from_lh
             else ""
         )

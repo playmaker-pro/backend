@@ -1,9 +1,9 @@
 import datetime
 import logging
 from typing import Dict, Type
-
 from django.conf import settings
 from pydantic import BaseModel
+from backend.settings.environment import Environment
 
 logger = logging.getLogger("adapters")
 
@@ -78,7 +78,7 @@ class ScrapperIsNotRespongingLogger:
     def log(self):
         msg = f"!!! Scrapper is not responding ({self.last_log}) !!!"
 
-        if settings.CONFIGURATION == "dev":
+        if settings.CONFIGURATION is Environment.PRODUCTION:
             print(msg)
         else:
             logger.error(msg)
