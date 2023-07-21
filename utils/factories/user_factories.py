@@ -1,11 +1,14 @@
 import factory
 from django.contrib.auth import get_user_model
 from django.db.models import signals
+from .base import CustomObjectFactory
+from django.contrib.auth.hashers import make_password
 
 User = get_user_model()
 
 
-class UserFactory(factory.django.DjangoModelFactory):
+@factory.django.mute_signals(signals.post_save)
+class UserFactory(CustomObjectFactory):
     class Meta:
         model = User
         django_get_or_create = ("email",)
@@ -14,6 +17,19 @@ class UserFactory(factory.django.DjangoModelFactory):
     username = factory.Faker("user_name")
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
+    password = make_password("test")
+
+    @classmethod
+    def create_admin_user(
+        cls, email: str = "admin@playmaker.pro", password: str = "admin", **kwargs
+    ):
+        cls.create(
+            email=email,
+            is_superuser=True,
+            is_staff=True,
+            password=make_password(password),
+            **kwargs
+        )
 
     @classmethod
     @factory.django.mute_signals(signals.post_save)

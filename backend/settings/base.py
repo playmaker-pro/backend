@@ -1,12 +1,14 @@
 import os
 from datetime import timedelta
-
+from .environment import Environment
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 
 # This loads additional settings for our environemnt
-CONFIGURATION = "dev"  # following options are allowed ['dev', 'production', 'staging']
+CONFIGURATION = (
+    Environment.DEV
+)  # following options are allowed ['dev', 'production', 'staging']
 
 # This flag allow us to see debug panel on each page.
 DEBUG_PANEL = False
@@ -118,7 +120,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "cities_light",
     "features",
-    "django_extensions"
+    "django_extensions",
 ]
 
 SWAGGER_SETTINGS = {
@@ -451,8 +453,10 @@ BLOG_PAGINATION_PER_PAGE = 4
 import logging.config
 from os.path import join
 
+LOGGING_ROOTDIR = "_logs"
 
-def get_logging_structure(LOGFILE_ROOT):
+
+def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
     return {
         "version": 1,
         "disable_existing_loggers": False,
@@ -535,9 +539,8 @@ def get_logging_structure(LOGFILE_ROOT):
 # Reset logging
 # (see http://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/)
 LOGGING_CONFIG = None
-LOGGING = get_logging_structure("_logs")
+LOGGING = get_logging_structure()
 logging.config.dictConfig(LOGGING)
-
 logger = logging.getLogger(f"project.{__name__}")
 
 

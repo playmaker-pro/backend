@@ -1308,10 +1308,7 @@ class ClubProfile(BaseProfile):
 
 class LicenceType(models.Model):
     name = models.CharField(
-        _("Licencja"),
-        max_length=17,
-        unique=True,
-        help_text=_("Type of the licence")
+        _("Licencja"), max_length=17, unique=True, help_text=_("Type of the licence")
     )
 
     def __str__(self):
@@ -1554,7 +1551,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         """
         Returns a string representation of the licences associated with the coach profile.
         """
-        licences = self.licences.values_list('licence__name', flat=True)
+        licences = self.licences.values_list("licence__name", flat=True)
         return ", ".join(licences) if licences else None
 
     @property
@@ -1581,12 +1578,23 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
 
 
 class CoachLicence(models.Model):
-    licence = models.ForeignKey(LicenceType, on_delete=models.CASCADE, help_text=_("The type of licence held by the coach"),)
-    coach_profile = models.ForeignKey(CoachProfile, on_delete=models.CASCADE, related_name="licences", help_text=_("Coach profile holding this license"),)
-    expiry_date = models.DateField(blank=True, null=True, help_text=_("The expiry date of the licence (optional)"))
+    licence = models.ForeignKey(
+        LicenceType,
+        on_delete=models.CASCADE,
+        help_text=_("The type of licence held by the coach"),
+    )
+    coach_profile = models.ForeignKey(
+        CoachProfile,
+        on_delete=models.CASCADE,
+        related_name="licences",
+        help_text=_("Coach profile holding this license"),
+    )
+    expiry_date = models.DateField(
+        blank=True, null=True, help_text=_("The expiry date of the licence (optional)")
+    )
 
     class Meta:
-        unique_together = ('licence', 'coach_profile')
+        unique_together = ("licence", "coach_profile")
 
     def __str__(self):
         return f"{self.licence.name}"
