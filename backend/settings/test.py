@@ -1,11 +1,4 @@
-from .dev import *
-
-CONFIGURATION = "test"
+from .dev import *  # type: ignore
 
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": f"{BASE_DIR}/db.test.sqlite3",
-    }
-}
+CONFIGURATION = Environment.TEST

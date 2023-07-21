@@ -2,9 +2,8 @@ from django.urls import reverse
 from parameterized import parameterized
 from rest_framework.status import HTTP_200_OK
 from rest_framework.test import APITestCase
-
 from clubs.models import Club
-from utils.factories.clubs_factories import ClubFactory
+from utils.factories import ClubFactory, consts
 
 
 class ClubSearchTest(APITestCase):
@@ -18,14 +17,9 @@ class ClubSearchTest(APITestCase):
 
     @parameterized.expand(
         [
-            ("Bayern", 1),
-            ("FC", 2),
-            ("Manchesterr", 0),
-            ("man", 1),
-            ("che", 1),
-            ("", 5),
-            ("ków", 1),
-            ("śćężźłó", 1),
+            *[(club_name, 1) for club_name in consts.CLUB_NAMES],
+            (consts.CLUB_NAMES[0] + "random_string", 0),
+            ("random_string", 0),
             ("Club.objects.all()", 0),
             ("Club.objects.get(id=1)", 0),
         ]

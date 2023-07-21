@@ -18,9 +18,13 @@ from adapters.player_adapter import PlayerGamesAdapter, PlayerSeasonStatsAdapter
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_player_external_links
 from mapper.models import Mapper
+import uuid
+
+# from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
 from roles import definitions
 from voivodeships.models import Voivodeships
-from .erros import VerificationCompletionFieldsWrongSetup
+
+from .errors import VerificationCompletionFieldsWrongSetup
 from .mixins import TeamObjectsDisplayMixin
 from .utils import make_choices, supress_exception, unique_slugify
 
@@ -190,12 +194,23 @@ class BaseProfile(models.Model, EventLogMixin):
         _("Krótki opis o sobie"), max_length=455, blank=True, null=True
     )
     event_log = models.JSONField(null=True, blank=True)
+    step = models.IntegerField(default=None, null=True, blank=True)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
 
     def get_absolute_url(self):
         return self.get_permalink()
 
     def get_permalink(self):
         return reverse("profiles:show", kwargs={"slug": self.slug})
+
+    def generate_uuid(self, force: bool = False) -> None:
+        """
+        Set/overwrite new uuid for object
+        May cause data incoherence, make sure you want to use it
+        """
+        if force:
+            self.uuid = uuid.uuid4()
+            super().save()
 
     def get_team(self):
         if self.PROFILE_TYPE in [
@@ -1293,6 +1308,15 @@ class ClubProfile(BaseProfile):
         verbose_name_plural = "Club Profiles"
 
 
+class LicenceType(models.Model):
+    name = models.CharField(
+        _("Licencja"), max_length=17, unique=True, help_text=_("Type of the licence")
+    )
+
+    def __str__(self):
+        return f"{self.name}"
+
+
 class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     PROFILE_TYPE = definitions.PROFILE_TYPE_COACH
     DATA_KEY_GAMES = "games"
@@ -1341,6 +1365,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     DATA_KEYS = ("metrics",)
 
+    # Deprecated PM20-79
     licence = models.IntegerField(
         _("Licencja"),
         choices=LICENCE_CHOICES,
@@ -1524,6 +1549,13 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         super().save(*args, **kwargs)
         create_or_update_player_external_links(self)
 
+    def display_licence(self) -> typing.Optional[str]:
+        """
+        Returns a string representation of the licences associated with the coach profile.
+        """
+        licences = self.licences.values_list("licence__name", flat=True)
+        return ", ".join(licences) if licences else None
+
     @property
     def has_attachemnt(self):
         if self.team_object is not None:
@@ -1545,6 +1577,29 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     class Meta:
         verbose_name = "Coach Profile"
         verbose_name_plural = "Coaches Profiles"
+
+
+class CoachLicence(models.Model):
+    licence = models.ForeignKey(
+        LicenceType,
+        on_delete=models.CASCADE,
+        help_text=_("The type of licence held by the coach"),
+    )
+    coach_profile = models.ForeignKey(
+        CoachProfile,
+        on_delete=models.CASCADE,
+        related_name="licences",
+        help_text=_("Coach profile holding this license"),
+    )
+    expiry_date = models.DateField(
+        blank=True, null=True, help_text=_("The expiry date of the licence (optional)")
+    )
+
+    class Meta:
+        unique_together = ("licence", "coach_profile")
+
+    def __str__(self):
+        return f"{self.licence.name}"
 
 
 class GuestProfile(BaseProfile):  # @todo to be removed
@@ -1690,6 +1745,16 @@ class ScoutProfile(BaseProfile):
         verbose_name_plural = "Scouts Profiles"
 
 
+class OtherProfile(BaseProfile):
+    PROFILE_TYPE = definitions.PROFILE_TYPE_OTHER
+    AUTO_VERIFY = True
+    # TODO: Add specific fields if needed in the future
+
+    class Meta:
+        verbose_name = "Other Profile"
+        verbose_name_plural = "Other Profiles"
+
+
 class ProfileVerificationStatus(models.Model):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -1820,3 +1885,30 @@ class Language(models.Model):
 
     class Meta:
         ordering = ["priority", "name"]
+
+
+PROFILE_MODELS = (
+    BaseProfile,
+    PlayerProfile,
+    CoachProfile,
+    ClubProfile,
+    GuestProfile,
+    ManagerProfile,
+    ParentProfile,
+    ScoutProfile,
+)
+PROFILE_TYPE = typing.Union[PROFILE_MODELS]
+
+PROFILE_MODEL_MAP = {
+    definitions.PLAYER_SHORT: PlayerProfile,
+    definitions.COACH_SHORT: CoachProfile,
+    definitions.CLUB_SHORT: ClubProfile,
+    definitions.SCOUT_SHORT: ScoutProfile,
+    definitions.MANAGER_SHORT: ManagerProfile,
+    definitions.PARENT_SHORT: ParentProfile,
+    definitions.GUEST_SHORT: GuestProfile,
+}
+
+REVERSED_MODEL_MAP = {
+    model: definition for (definition, model) in PROFILE_MODEL_MAP.items()
+}
