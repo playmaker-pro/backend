@@ -4,9 +4,6 @@ import collections.abc
 from dataclasses import dataclass
 
 import django.db.utils
-
-from clubs.models import Club, Season, TeamHistory
-from clubs.models import TeamHistory as Team
 from crispy_forms.bootstrap import (
     Alert,
     AppendedText,
@@ -33,6 +30,10 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.utils.translation import gettext_lazy as _
 from django_countries.widgets import CountrySelectWidget
+
+from clubs.models import Club, Season
+from clubs.models import TeamHistory
+from clubs.models import TeamHistory as Team
 from profiles import models, widgets
 from profiles.forms.fields.custom import (
     ClubModelChoiceFieldNoValidation,
@@ -40,7 +41,6 @@ from profiles.forms.fields.custom import (
 )
 from profiles.services import ProfileVerificationService
 from utils import update_dict_depth
-
 
 User = get_user_model()
 

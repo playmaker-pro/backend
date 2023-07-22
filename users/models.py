@@ -1,13 +1,15 @@
-from django.db import models
-from django.contrib.auth.models import AbstractUser
 from django.conf import settings
+from django.contrib.auth.models import AbstractUser
+from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 from pydantic import typing
-from notifications.mail import mail_user_waiting_for_verification
 from django.urls import reverse
+from notifications.mail import (
+    mail_user_waiting_for_verification,
+    verification_notification,
+)
 from roles import definitions
-from notifications.mail import verification_notification
 from users.managers import CustomUserManager
 
 
@@ -69,7 +71,6 @@ class UserRoleMixin:
 
 
 class User(AbstractUser, UserRoleMixin):
-
     ROLE_CHOICES = definitions.ACCOUNT_ROLES
 
     STATE_NEW = "New"
@@ -231,6 +232,11 @@ class User(AbstractUser, UserRoleMixin):
     def get_system_user(cls):
         return cls.objects.get(email=settings.SYSTEM_USER_EMAIL)
 
+    def set_role(self, role: str) -> None:
+        """set role and save, role need to be validated!"""
+        self.declared_role = role
+        self.save()
+
     @property
     def pm_score(self) -> typing.Optional[int]:
         """Get PlayMaker Score of given user (players only)"""
@@ -299,7 +305,6 @@ class User(AbstractUser, UserRoleMixin):
         return f"{self.get_full_name()} ({self.get_declared_role_display()})"
 
     def save(self, *args, **kwargs):
-
         if self.role in [
             definitions.GUEST_SHORT,
             definitions.SCOUT_SHORT,
@@ -319,3 +324,42 @@ class User(AbstractUser, UserRoleMixin):
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
+
+
+class UserPreferences(models.Model):
+    GENDER_CHOICES = (
+        ("M", _("Mężczyzna")),
+        ("K", _("Kobieta")),
+    )
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    localization = models.ForeignKey(
+        "cities_light.City",
+        verbose_name=_("Localization"),
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        help_text="User's localization (city and voivodeship)",
+    )
+    citizenship = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="User's citizenship (country of citizenship)",
+    )
+    spoken_languages = models.ManyToManyField(
+        "profiles.Language",
+        blank=True,
+        help_text="User's known languages (languages spoken by the user)",
+    )
+    gender = models.CharField(
+        _("Gender"),
+        choices=GENDER_CHOICES,
+        max_length=1,
+        blank=True,
+        null=True,
+        help_text="User's gender (represents the gender identity of the user)",
+    )
+
+    class Meta:
+        verbose_name = "User Preference"
+        verbose_name_plural = "User Preferences"

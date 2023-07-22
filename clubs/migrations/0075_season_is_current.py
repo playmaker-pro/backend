@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('clubs', '0074_teamhistory_league_history'),
+        ("clubs", "0074_teamhistory_league_history"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='season',
-            name='is_current',
+            model_name="season",
+            name="is_current",
             field=models.BooleanField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='season',
-            name='is_in_verify_form',
+            model_name="season",
+            name="is_in_verify_form",
             field=models.BooleanField(default=True),
         ),
     ]

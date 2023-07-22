@@ -1,2 +1,0 @@
-class VerificationCompletionFieldsWrongSetup(Exception):
-    pass

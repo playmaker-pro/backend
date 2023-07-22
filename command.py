@@ -1,5 +1,6 @@
 import os
 import sys
+
 from connector.commander import Manager
 
 if __name__ == "__main__":
@@ -7,6 +8,7 @@ if __name__ == "__main__":
 
     try:
         from backend.settings import local
+
         config = local.CONFIGURATION
     except:
         pass

@@ -1,4 +1,4 @@
-from typing import Union, List
+from typing import List, Union
 
 import django.core.exceptions
 from django.db import models
@@ -30,7 +30,6 @@ class MapperSource(models.Model):
 
 
 class MapperEntity(models.Model):
-
     RELATED_MODELS = (
         ("team", "team"),
         ("player", "player profile"),

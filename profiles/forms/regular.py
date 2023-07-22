@@ -1,33 +1,34 @@
 from __future__ import unicode_literals
+
 from curses import wrapper
-from django import forms
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import (
-    Layout,
-    Fieldset,
-    Div,
-    Submit,
-    HTML,
-    Button,
-    Row,
-    Field,
-    MultiField,
-)
+
 from crispy_forms.bootstrap import (
+    Alert,
     AppendedText,
-    PrependedText,
     FormActions,
+    PrependedText,
     Tab,
     TabHolder,
-    Alert,
 )
-from django.contrib.auth import get_user_model
-from profiles import models
-from django_countries.widgets import CountrySelectWidget
-from django.utils.translation import gettext_lazy as _
-from profiles import widgets
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import (
+    HTML,
+    Button,
+    Div,
+    Field,
+    Fieldset,
+    Layout,
+    MultiField,
+    Row,
+    Submit,
+)
+from django import forms
 from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.utils.translation import gettext_lazy as _
+from django_countries.widgets import CountrySelectWidget
 
+from profiles import models, widgets
 
 User = get_user_model()
 
@@ -359,13 +360,13 @@ class PlayerProfileForm(BaseProfileForm):
             + ["country", "birth_date"]
         )
 
-class PlayerVideoForm(BaseProfileForm):
 
-    def __init__(self, *args, **kwargs):        
+class PlayerVideoForm(BaseProfileForm):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper.layout = Layout(
             Fieldset(
-                _(f''),
+                _(f""),
                 Field("url", wrapper_class="row", placeholder=_("youtube url")),
                 Field("title", wrapper_class="row", placeholder=_("Tytuł")),
                 Field(
@@ -375,12 +376,13 @@ class PlayerVideoForm(BaseProfileForm):
                 ),
             ),
         )
-    
+
     class Meta:
         model = models.PlayerVideo
         exclude = [
-            "player",      
+            "player",
         ]
+
 
 class ScoutProfileForm(BaseProfileForm):
     """

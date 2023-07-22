@@ -1,8 +1,8 @@
-from followers.models import Follow, Pin
 from django import forms
-from followers.pin_managers import manager
-
 from django.template.defaultfilters import slugify
+
+from followers.models import Follow, Pin
+from followers.pin_managers import manager
 
 
 class PinForm(forms.ModelForm):

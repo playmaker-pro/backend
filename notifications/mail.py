@@ -1,8 +1,8 @@
-from django.core.mail import mail_managers, send_mail
-from django.conf import settings
-from django.urls import reverse
 import logging
 
+from django.conf import settings
+from django.core.mail import mail_managers, send_mail
+from django.urls import reverse
 
 logger = logging.getLogger(__name__)
 
@@ -207,7 +207,7 @@ Wiele działo się na Twoim profilu w zeszłym tygodniu
 Otrzymane zapytania: {instance.sender_request_recipient.count()}
 Wysłane zapytania: {instance.inquiry_request_recipient.count()}
 
-Aktualnie pozostało Ci {instance.userinquiry.left} zaproszeń. Jeśli chcesz zwiększyć swoje limity, kliknij w poniższy 
+Aktualnie pozostało Ci {instance.userinquiry.left} zaproszeń. Jeśli chcesz zwiększyć swoje limity, kliknij w poniższy
 
 Zwieksz limity: {absurl('/' + settings.CUSTOM_URL_ENDPOINTS['limits'])}
 
@@ -329,7 +329,6 @@ def request_new(instance, extra_body=""):
 
 
 def resetpassword(instance, extra_body=""):
-
     subject = "Twój profil został zweryfikowany"
     message = ""
     message += "Cześć, z tej strony Zespół PlayMaker.pro!\n\n"
@@ -351,7 +350,6 @@ def resetpassword(instance, extra_body=""):
 
 
 def verification_notification(instance, extra_body=""):
-
     subject = "Twój profil został zweryfikowany"
     message = ""
     message += "Cześć, z tej strony Zespół PlayMaker.pro!\n\n"

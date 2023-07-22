@@ -1,7 +1,9 @@
 import re
+
 from django.core.exceptions import ObjectDoesNotExist
-from mapper.models import MapperSource, MapperEntity, Mapper
+
 from connector.enums import RE_ROMAN
+from mapper.models import Mapper, MapperEntity, MapperSource
 
 LNP_SOURCE, _ = MapperSource.objects.get_or_create(name="LNP")
 
@@ -17,32 +19,32 @@ NAMES_BLACKLISTED_PHRASES = (
 )
 
 TO_CUT = [
-        "KSAP",
-        "GLKS",
-        "CWKS",
-        "MLKS",
-        "MUKS",
-        "APIS",
-        "MOSP",
-        "KTS-K",
-        "CWZS",
-        "ULKS",
-        "GMKS",
-        "WRKS",
-        "MGKS",
-        "BPAP",
-        "MŁKS",
-        "BBTS",
-        "SSIR",
-        "GSKS",
-        "LMKS",
-        "ZZPD",
-        "LPFA",
-        "ELPA",
-        "GZPN",
-        "(RW)",
-        "(RJ)",
-    ]
+    "KSAP",
+    "GLKS",
+    "CWKS",
+    "MLKS",
+    "MUKS",
+    "APIS",
+    "MOSP",
+    "KTS-K",
+    "CWZS",
+    "ULKS",
+    "GMKS",
+    "WRKS",
+    "MGKS",
+    "BPAP",
+    "MŁKS",
+    "BBTS",
+    "SSIR",
+    "GSKS",
+    "LMKS",
+    "ZZPD",
+    "LPFA",
+    "ELPA",
+    "GZPN",
+    "(RW)",
+    "(RJ)",
+]
 
 MAPPER_ENTITY_SOURCE, _ = MapperSource.objects.get_or_create(name="LNP")
 

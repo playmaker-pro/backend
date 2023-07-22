@@ -1,7 +1,7 @@
-from django.db import models
-from django.conf import settings
-from django.utils.timezone import make_naive
 import pytz
+from django.conf import settings
+from django.db import models
+from django.utils.timezone import make_naive
 
 
 class Item(models.Model):
@@ -29,6 +29,7 @@ class Pin(models.Model):
     def create_activity(self):
         print("ere")
         from stream_framework.activity import Activity
+
         from .verbs import Pin as PinVerb
 
         activity = Activity(

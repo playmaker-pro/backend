@@ -1,7 +1,9 @@
-import django.core.exceptions
-from django.core.management import BaseCommand
 from os.path import abspath, isfile
+
+import django.core.exceptions
 import pandas as pd
+from django.core.management import BaseCommand
+
 from mapper.models import MapperEntity
 
 
@@ -11,10 +13,9 @@ class Command(BaseCommand):
     """
 
     def add_arguments(self, parser) -> None:
-        parser.add_argument('file_name', type=str)
+        parser.add_argument("file_name", type=str)
 
     def handle(self, *args: any, **options: any) -> None:
-
         try:
             file_path = abspath(options["file_name"])
         except KeyError:
@@ -26,7 +27,6 @@ class Command(BaseCommand):
         self.import_xlsx(file_path)
 
     def import_xlsx(self, file: str) -> None:
-
         PLAYER_ID = "new id from laczynaspilka"
         TEAM_ID = "teamId"
 
@@ -34,7 +34,6 @@ class Command(BaseCommand):
         data = pd.DataFrame(excel_data)
 
         for index, row in data.iterrows():
-
             try:
                 team_mapper = MapperEntity.objects.get(mapper_id=row[TEAM_ID])
             except django.core.exceptions.ObjectDoesNotExist:

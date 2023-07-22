@@ -1,13 +1,14 @@
 import os
-import logging
-
+from datetime import timedelta
+from .environment import Environment
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 
-
 # This loads additional settings for our environemnt
-CONFIGURATION = "dev"  # following options are allowed ['dev', 'production', 'staging']
+CONFIGURATION = (
+    Environment.DEV
+)  # following options are allowed ['dev', 'production', 'staging']
 
 # This flag allow us to see debug panel on each page.
 DEBUG_PANEL = False
@@ -65,8 +66,8 @@ INSTALLED_APPS = [
     "mapper",
     "premium",
     "resources",
-    "data",  # external repo
-    "stats",  # external repo
+    # "data",  # external repo DEPRECATED: PM-1015
+    # "stats",  # external repo DEPRECATED: PM-1015
     "django_countries",
     "crispy_forms",
     "easy_thumbnails",
@@ -108,14 +109,27 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "django.contrib.humanize",
     "rest_framework",
+    # TODO deprecated. Changed to jwt
     "rest_framework.authtoken",  # <-- Here
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
     "allauth.socialaccount.providers.facebook",
+    "drf_yasg",
+    "cities_light",
+    "features",
+    "django_extensions",
 ]
+
+SWAGGER_SETTINGS = {
+    "SECURITY_DEFINITIONS": {
+        "Basic": {"type": "basic"},
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"},
+    }
+}
 
 
 SITE_ID = 1
@@ -173,8 +187,8 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-
-DATABASE_ROUTERS = ["data.routers.DataRouter", "data.routers.DefaultDBRouter"]
+# DEPRECATED: PM-1015
+# DATABASE_ROUTERS = ["data.routers.DataRouter", "data.routers.DefaultDBRouter"]
 
 # DB_ITERATOR = '11'
 DATABASES = {
@@ -190,14 +204,15 @@ DATABASES = {
         "HOST": "localhost",
         "PORT": "5432",
     },
-    "datadb": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "local_data",
-        "USER": "arsen",
-        "PASSWORD": "postgres",
-        "HOST": "localhost",
-        "PORT": "5432",
-    },
+    # DEPRECATED: PM-1015
+    # "datadb": {
+    #     "ENGINE": "django.db.backends.postgresql_psycopg2",
+    #     "NAME": "local_data",
+    #     "USER": "arsen",
+    #     "PASSWORD": "postgres",
+    #     "HOST": "localhost",
+    #     "PORT": "5432",
+    # },
 }
 
 # Password validation
@@ -231,6 +246,17 @@ LANGUAGES = (
     ("pl", _("Polski")),
     ("en-us", _("Angielski")),
 )
+
+# Configuration for django-cities-light library.
+# For more information, refer to the documentation:
+# https://django-cities-light.readthedocs.io/en/stable-3.x.x/
+
+# This setting specifies the translation languages to be included for city names.
+CITIES_LIGHT_TRANSLATION_LANGUAGES = ["pl"]
+
+# This setting specifies the countries to include when importing city data.
+CITIES_LIGHT_INCLUDE_COUNTRIES = ["PL"]
+
 
 TIME_ZONE = "Europe/Warsaw"
 
@@ -427,11 +453,13 @@ ACCOUNT_FORMS = {"signup": "users.forms.CustomSignupForm"}
 BLOG_PAGINATION_PER_PAGE = 4
 
 
-from os.path import join
 import logging.config
+from os.path import join
+
+LOGGING_ROOTDIR = "_logs"
 
 
-def get_logging_structure(LOGFILE_ROOT):
+def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
     return {
         "version": 1,
         "disable_existing_loggers": False,
@@ -514,9 +542,8 @@ def get_logging_structure(LOGFILE_ROOT):
 # Reset logging
 # (see http://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/)
 LOGGING_CONFIG = None
-LOGGING = get_logging_structure("_logs")
+LOGGING = get_logging_structure()
 logging.config.dictConfig(LOGGING)
-
 logger = logging.getLogger(f"project.{__name__}")
 
 
@@ -536,7 +563,7 @@ STREAM_REDIS_CONFIG = {
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_RENDERER_CLASSES": [
@@ -552,8 +579,8 @@ JQUERY_URL = False
 
 COUNTRIES_FIRST = ["PL", "GER", "CZ", "UA", "GB"]
 
-from django.views.generic import RedirectView
 from django.urls import include, path
+from django.views.generic import RedirectView
 
 # urlpatterns = patterns('',
 #     url(r'^some-page/$', RedirectView.as_view(url='/')),
@@ -655,3 +682,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 VERIFICATION_FORM = {"DEFAULT_SEASON_NAME": "2021/2022"}
 
+
+# Setup token and refresh token lifetime. Refresh token is used to get new token,
+# if auth token is expired. If refresh token is expired, user need to send login/ request again.
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=2),
+}

@@ -1,15 +1,18 @@
 import logging
-from .serializers import GameSerializer
+
 from django.contrib.postgres.aggregates import ArrayAgg
+
 from clubs.models import League as CLeague
 from clubs.models import LeagueHistory as CLeagueHistory
-from data.models import Game, League
+
+# from data.models import Game, League  DEPRECATED: PM-1015
+
+from .serializers import GameSerializer
 
 logger = logging.getLogger(__name__)
 
 
 class LeagueMatchesMetrics:
-
     _default_pic = "default_profile.png"
 
     def calculate(
@@ -21,64 +24,64 @@ class LeagueMatchesMetrics:
         sort_up: bool = True,
         overwrite: bool = False,
     ):
-
-        print(f">> Param passed league: {type(league)}, ({league})")
-        print(f">> Param passed season_name: {type(season_name)}, ({season_name})")
-        print(
-            f">> Param passed league_history: {type(league_history)}, ({league_history})"
-        )
-        print(f">> Param passed played: {type(played)}, ({played})")
-
-        if sort_up:
-            date_sort = "-date"
-        else:
-            date_sort = "date"
-
-        league_history = self.get_league_history(league, season_name, league_history)
-        if league_history is None:
-            return []
-
-        if played:
-            keyname = "matches_played"
-            matches, calculated = self.calculate_matches_played(
-                league_history, overwrite=overwrite, sort_by=date_sort
-            )
-        else:
-            keyname = "matches"
-            matches, calculated = self.calculate_matches(
-                league_history, overwrite=overwrite, sort_by=date_sort
-            )
-        if calculated:
-            output = dict()  # OrderedDict()
-            for game in matches:
-                # q = game.queue  # if we do not do values ealier
-                q = game["queue"]
-                guest_pic = self._default_pic
-                host_pic = self._default_pic
-                if not output.get(q):
-                    output[q] = list()
-                output[q].append(
-                    GameSerializer.serialize(
-                        game, host_pic, guest_pic, league_history.league
-                    )
-                )
-
-            if league_history.data is None:
-                print("........Data_index is None, making empty one.")
-                league_history.data = {}
-
-            print("........setting matches")
-            league_history.data[keyname] = output  # OrderedDict(output)
-            # data_index.data = data
-
-            print(
-                f"........Saving... data_index....{league_history} {type(league_history)}"
-            )
-            league_history.save()
-
-            return output
-        else:
-            return matches
+        # print(f">> Param passed league: {type(league)}, ({league})")
+        # print(f">> Param passed season_name: {type(season_name)}, ({season_name})")
+        # print(
+        #     f">> Param passed league_history: {type(league_history)}, ({league_history})"
+        # )
+        # print(f">> Param passed played: {type(played)}, ({played})")
+        #
+        # if sort_up:
+        #     date_sort = "-date"
+        # else:
+        #     date_sort = "date"
+        #
+        # league_history = self.get_league_history(league, season_name, league_history)
+        # if league_history is None:
+        #     return []
+        #
+        # if played:
+        #     keyname = "matches_played"
+        #     matches, calculated = self.calculate_matches_played(
+        #         league_history, overwrite=overwrite, sort_by=date_sort
+        #     )
+        # else:
+        #     keyname = "matches"
+        #     matches, calculated = self.calculate_matches(
+        #         league_history, overwrite=overwrite, sort_by=date_sort
+        #     )
+        # if calculated:
+        #     output = dict()  # OrderedDict()
+        #     for game in matches:
+        #         # q = game.queue  # if we do not do values ealier
+        #         q = game["queue"]
+        #         guest_pic = self._default_pic
+        #         host_pic = self._default_pic
+        #         if not output.get(q):
+        #             output[q] = list()
+        #         output[q].append(
+        #             GameSerializer.serialize(
+        #                 game, host_pic, guest_pic, league_history.league
+        #             )
+        #         )
+        #
+        #     if league_history.data is None:
+        #         print("........Data_index is None, making empty one.")
+        #         league_history.data = {}
+        #
+        #     print("........setting matches")
+        #     league_history.data[keyname] = output  # OrderedDict(output)
+        #     # data_index.data = data
+        #
+        #     print(
+        #         f"........Saving... data_index....{league_history} {type(league_history)}"
+        #     )
+        #     league_history.save()
+        #
+        #     return output
+        # else:
+        #     return matches
+        return
 
     def get_league_history(
         self, league: CLeague, season_name: str, league_history: CLeagueHistory = None
@@ -102,40 +105,41 @@ class LeagueMatchesMetrics:
         overwrite: bool = False,
         sort_by: str = "date",
     ):
-        keyname = "matches"
-        season_name = league_history.season.name
-        if (
-            league_history.data is not None
-            and keyname in league_history.data
-            and not overwrite
-        ):
-            print(f"Geting data for matches. overwrite={overwrite}")
-            return league_history.data["matches"], False
-        else:
-            print(
-                f"===> Calculating Game data for {league_history.league} season={season_name}"
-            )
-            matches = (
-                Game.objects.select_related("league", "season")
-                .filter(
-                    league___url=League.get_url_based_on_id(league_history.index),
-                    season__name=season_name,
-                    host_score__isnull=True,
-                    guest_score__isnull=True,
-                )
-                .annotate(players_ids=ArrayAgg("playerstat__player"))
-                .order_by(sort_by)
-                .values(
-                    "queue",
-                    "date",
-                    "host_score",
-                    "guest_score",
-                    "host_team_name",
-                    "guest_team_name",
-                    "players_ids",
-                )
-            )
-            return matches, True
+        # keyname = "matches"
+        # season_name = league_history.season.name
+        # if (
+        #     league_history.data is not None
+        #     and keyname in league_history.data
+        #     and not overwrite
+        # ):
+        #     print(f"Geting data for matches. overwrite={overwrite}")
+        #     return league_history.data["matches"], False
+        # else:
+        #     print(
+        #         f"===> Calculating Game data for {league_history.league} season={season_name}"
+        #     )
+        #     matches = (
+        #         Game.objects.select_related("league", "season")
+        #         .filter(
+        #             league___url=League.get_url_based_on_id(league_history.index),
+        #             season__name=season_name,
+        #             host_score__isnull=True,
+        #             guest_score__isnull=True,
+        #         )
+        #         .annotate(players_ids=ArrayAgg("playerstat__player"))
+        #         .order_by(sort_by)
+        #         .values(
+        #             "queue",
+        #             "date",
+        #             "host_score",
+        #             "guest_score",
+        #             "host_team_name",
+        #             "guest_team_name",
+        #             "players_ids",
+        #         )
+        #     )
+        #     return matches, True
+        return None, None
 
     def calculate_matches_played(
         self,
@@ -143,39 +147,39 @@ class LeagueMatchesMetrics:
         overwrite: bool = False,
         sort_by: str = "date",
     ):
-
-        keyname = "matches_played"
-        season_name = league_history.season.name
-
-        if (
-            league_history.data is not None
-            and keyname in league_history.data
-            and not overwrite
-        ):
-            print(f"Geting data for matches. overwrite={overwrite}")
-            return league_history.data[keyname], False
-        else:
-            matches = (
-                Game.objects.select_related("league", "season")
-                .filter(
-                    league___url=League.get_url_based_on_id(league_history.index),
-                    season__name=season_name,
-                    host_score__isnull=False,
-                    guest_score__isnull=False,
-                )
-                .annotate(players_ids=ArrayAgg("playerstat__player"))
-                .order_by(sort_by)
-                .values(
-                    "queue",
-                    "date",
-                    "host_score",
-                    "guest_score",
-                    "host_team_name",
-                    "guest_team_name",
-                    "players_ids",
-                )
-            )
-            return matches, True
+        # keyname = "matches_played"
+        # season_name = league_history.season.name
+        #
+        # if (
+        #     league_history.data is not None
+        #     and keyname in league_history.data
+        #     and not overwrite
+        # ):
+        #     print(f"Geting data for matches. overwrite={overwrite}")
+        #     return league_history.data[keyname], False
+        # else:
+        #     matches = (
+        #         Game.objects.select_related("league", "season")
+        #         .filter(
+        #             league___url=League.get_url_based_on_id(league_history.index),
+        #             season__name=season_name,
+        #             host_score__isnull=False,
+        #             guest_score__isnull=False,
+        #         )
+        #         .annotate(players_ids=ArrayAgg("playerstat__player"))
+        #         .order_by(sort_by)
+        #         .values(
+        #             "queue",
+        #             "date",
+        #             "host_score",
+        #             "guest_score",
+        #             "host_team_name",
+        #             "guest_team_name",
+        #             "players_ids",
+        #         )
+        #     )
+        #     return matches, True
+        return None, None
 
     # def serialize(
     #     self,

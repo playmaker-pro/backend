@@ -1,13 +1,13 @@
 from django.contrib import admin
-from utils import linkify
 from app.utils.admin import json_filed_data_prettified
 from profiles import models
+from utils import linkify
 from .filters import (
-    OnlyLastVerificationFilter,
+    HasClubObjectFilter,
     HasDataMapperIdFilter,
     HasTeamObjectFilter,
-    HasClubObjectFilter,
     HasTextInputFilter,
+    OnlyLastVerificationFilter,
 )
 from .actions import *
 
@@ -83,6 +83,11 @@ class ScoutProfileAdmin(ProfileAdminBase):
 
 @admin.register(models.GuestProfile)
 class GuestProfileAdmin(ProfileAdminBase):
+    pass
+
+
+@admin.register(models.OtherProfile)
+class OtherProfileAdmin(ProfileAdminBase):
     pass
 
 

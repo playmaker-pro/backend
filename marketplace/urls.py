@@ -1,7 +1,6 @@
 from django.urls import path
-from . import views
-from . import api
 
+from . import api, views
 
 app_name = "marketplace"
 
