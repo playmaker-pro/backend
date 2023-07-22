@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('mapper', '0005_alter_mapperentity_related_type'),
-        ('mapper', '0005_alter_mapperentity_url'),
+        ("mapper", "0005_alter_mapperentity_related_type"),
+        ("mapper", "0005_alter_mapperentity_url"),
     ]
 
-    operations = [
-    ]
+    operations = []

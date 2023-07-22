@@ -1,12 +1,12 @@
 import logging
-from .notify import notify_duplicated_default_annoucement_plan
+from datetime import timedelta
+
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from .models import AnnouncementPlan, AnnouncementUserQuota
-from datetime import timedelta
-
+from .notify import notify_duplicated_default_annoucement_plan
 
 logger = logging.getLogger(__name__)
 

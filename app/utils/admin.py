@@ -1,8 +1,9 @@
 import json
-from pygments import highlight
-from pygments.lexers import JsonLexer
-from pygments.formatters import HtmlFormatter
+
 from django.utils.safestring import mark_safe
+from pygments import highlight
+from pygments.formatters import HtmlFormatter
+from pygments.lexers import JsonLexer
 
 
 def json_filed_data_prettified(field, reverse=False, limit=5000):

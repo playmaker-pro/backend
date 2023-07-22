@@ -1,12 +1,61 @@
 import logging
-from django.conf import settings
+import typing
 import pytest
-from clubs.models import Club, Gender, League, Seniority, Team
+from django.conf import settings
 from django.test import TestCase
+from clubs.models import Club, Gender, League, Seniority, Team
 from profiles import models
 from roles import definitions
 from users.models import User
 from voivodeships.models import Voivodeships
+from backend.settings.environment import Environment
+
+
+class RunWithDifferentEnvironment:
+    """
+    Imitate different environment for testing.
+    Allows to change environment before running given function.
+    After that, restore environment variable.
+    """
+
+    def __init__(
+        self,
+        destination_env: Environment,
+        call: typing.Callable,
+        catch_exception: bool = True,
+    ) -> None:
+        self.call: typing.Callable = call
+        self.catch_exception: bool = catch_exception
+        self.destination_env: Environment = destination_env
+
+    def __enter__(
+        self,
+    ):
+        """
+        destination_env - environment to run something with
+        call - function to call with different environment
+        """
+        # TODO(bartnyk): env will be changed to enum, here: https://gitlab.com/playmaker1/webapp/-/merge_requests/313
+        self.current_environment: Environment = (
+            settings.CONFIGURATION
+        )  # save current environment
+        settings.CONFIGURATION = self.destination_env  # set different environment
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Restore environment"""
+        settings.CONFIGURATION = self.current_environment
+
+    def run(self) -> Exception:
+        """Run defined, callable function"""
+        try:
+            return self.call()
+        except Exception as e:
+            if self.catch_exception:
+                return e
+            else:
+                raise e
+
 
 def create_system_user():
     User.objects.get_or_create(email=settings.SYSTEM_USER_EMAIL)
@@ -75,3 +124,8 @@ def get_verified_user_club():
 def silence_explamation_mark():
     logger = logging.getLogger("django.db.backends.schema")
     logger.propagate = False
+
+
+def get_random_user() -> User:
+    """get random user from db"""
+    return User.objects.order_by("?")[0]

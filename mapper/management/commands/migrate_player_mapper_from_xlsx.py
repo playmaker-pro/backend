@@ -1,10 +1,10 @@
-from django.core.management import BaseCommand
 from os.path import abspath, isfile
+
 import pandas as pd
+from django.core.management import BaseCommand
 
 from mapper.models import Mapper, MapperEntity, MapperSource
 from profiles.models import PlayerProfile
-
 
 MAPPER_SOURCE, _ = MapperSource.objects.get_or_create(name="LNP")
 
@@ -18,7 +18,6 @@ class Command(BaseCommand):
         parser.add_argument("file_name", type=str)
 
     def handle(self, *args: any, **options: any) -> None:
-
         try:
             file_path = abspath(options["file_name"])
         except KeyError:
@@ -30,7 +29,6 @@ class Command(BaseCommand):
         self.import_xlsx(file_path)
 
     def import_xlsx(self, file: str) -> None:
-
         OLD_ID = "mapper id s51 s38"
         OLD_URL = "old link laczynaspilka"
         NEW_ID = "new id from laczynaspilka"

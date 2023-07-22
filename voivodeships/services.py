@@ -1,22 +1,21 @@
 import json
 import logging
-from typing import Union, Tuple
+from typing import Tuple, Union
 
+from django.apps import apps
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import QuerySet
-from voivodeships.models import Voivodeships  # noqa
 
+from clubs.models import Club  # noqa
 from clubs.models import Team  # noqa
-from django.apps import apps
-
-from profiles.models import PlayerProfile, CoachProfile, ScoutProfile  # noqa
-from marketplace.models import (  # noqa
+from marketplace.models import CoachForClubAnnouncement  # noqa
+from marketplace.models import (
+    ClubForCoachAnnouncement,  # noqa
     ClubForPlayerAnnouncement,
     PlayerForClubAnnouncement,
-    ClubForCoachAnnouncement,
-    CoachForClubAnnouncement,  # noqa
 )
-from clubs.models import Club  # noqa
+from profiles.models import CoachProfile, PlayerProfile, ScoutProfile  # noqa
+from voivodeships.models import Voivodeships  # noqa
 
 ModelsToMap = Union[
     PlayerProfile,
@@ -125,14 +124,12 @@ class VoivodeshipService:
             data = json.loads(f.read())
 
             for voivodeship in data:
-
                 assert isinstance(voivodeship, dict), "element is not a dict"
 
                 voivodeship_name = voivodeship.get("name").capitalize()
                 voivodeship_code = voivodeship.get("code")
 
                 try:
-
                     assert isinstance(
                         voivodeship_name, str
                     ), f"{voivodeship_name} is not a string"
@@ -170,7 +167,6 @@ class VoivodeshipService:
             model: ModelsToMap = apps.get_model(name[1], name[0])
 
             for profile in model.objects.all():
-
                 try:
                     if name[1] == "profiles":
                         voivodeship: QuerySet = self.get_voivodeship_by_name(
@@ -188,7 +184,6 @@ class VoivodeshipService:
                         continue
 
                     if voivodeship.exists():
-
                         voivodeship_model: Voivodeships = apps.get_model(
                             "voivodeships", "Voivodeships"
                         )
@@ -208,5 +203,4 @@ class VoivodeshipService:
                             f"updated"
                         )
                 except (ObjectDoesNotExist, AttributeError):
-
                     print(f"Something went wrong with {profile}")

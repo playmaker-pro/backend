@@ -1,22 +1,21 @@
-from django.db import models
-from django.utils.translation import gettext_lazy as _
+from datetime import timedelta
+
+from address.models import AddressField
 
 # Create your models here.
 from django.conf import settings
-from django_fsm import FSMField, transition
-from notifications.mail import request_new, request_accepted, request_declined
+from django.core.validators import RegexValidator
+from django.db import models
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 # This can be extracted to models.User.
 from django_countries.fields import CountryField
-from django.utils import timezone
-from address.models import AddressField
+from django_fsm import FSMField, transition
 
+from clubs.models import Club, Gender, League, Seniority, Voivodeship
+from notifications.mail import request_accepted, request_declined, request_new
 from profiles.models import PlayerPosition
-
-from clubs.models import League, Voivodeship, Seniority, Gender, Club
-from datetime import timedelta
-from django.core.validators import RegexValidator
-
 from voivodeships.models import Voivodeships
 
 LICENCE_CHOICES = (
@@ -236,18 +235,18 @@ class ClubForPlayerAnnouncement(AnnouncementMeta):
     voivodeship = models.ForeignKey(
         Voivodeship,
         on_delete=models.CASCADE,
-        verbose_name=_('Województwo'),
-        help_text='Wybierz województwo. Stare pole, gotowe do migracji',
+        verbose_name=_("Województwo"),
+        help_text="Wybierz województwo. Stare pole, gotowe do migracji",
         null=True,
-        blank=True
+        blank=True,
     )
     voivodeship_obj = models.ForeignKey(
         Voivodeships,
         on_delete=models.SET_NULL,
-        verbose_name=_('Województwo'),
-        help_text='Wybierz województwo. Nowe pole',
+        verbose_name=_("Województwo"),
+        help_text="Wybierz województwo. Nowe pole",
         null=True,
-        blank=True
+        blank=True,
     )
 
     body = models.TextField()
@@ -269,18 +268,18 @@ class PlayerForClubAnnouncement(AnnouncementMeta):
     voivodeship = models.ForeignKey(
         Voivodeship,
         on_delete=models.CASCADE,
-        verbose_name=_('Województwo'),
-        help_text='Wybierz województwo. Stare pole, gotowe do migracji',
+        verbose_name=_("Województwo"),
+        help_text="Wybierz województwo. Stare pole, gotowe do migracji",
         null=True,
-        blank=True
+        blank=True,
     )
     voivodeship_obj = models.ForeignKey(
         Voivodeships,
         on_delete=models.SET_NULL,
-        verbose_name=_('Województwo'),
-        help_text='Wybierz województwo. Nowe pole',
+        verbose_name=_("Województwo"),
+        help_text="Wybierz województwo. Nowe pole",
         null=True,
-        blank=True
+        blank=True,
     )
 
     address = AddressField(help_text=_("Adres"), blank=True, null=True)
@@ -321,18 +320,18 @@ class ClubForCoachAnnouncement(AnnouncementMeta):
     voivodeship = models.ForeignKey(
         Voivodeship,
         on_delete=models.CASCADE,
-        verbose_name=_('Województwo'),
-        help_text='Wybierz województwo. Stare pole, gotowe do migracji',
+        verbose_name=_("Województwo"),
+        help_text="Wybierz województwo. Stare pole, gotowe do migracji",
         null=True,
-        blank=True
+        blank=True,
     )
     voivodeship_obj = models.ForeignKey(
         Voivodeships,
         on_delete=models.SET_NULL,
-        verbose_name=_('Województwo'),
-        help_text='Wybierz województwo. Nowe pole',
+        verbose_name=_("Województwo"),
+        help_text="Wybierz województwo. Nowe pole",
         null=True,
-        blank=True
+        blank=True,
     )
 
     lic_type = models.IntegerField(
@@ -350,7 +349,6 @@ class ClubForCoachAnnouncement(AnnouncementMeta):
 
 
 class CoachForClubAnnouncement(AnnouncementMeta):
-
     creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="coach_for_club_announcement_creator",
@@ -363,19 +361,20 @@ class CoachForClubAnnouncement(AnnouncementMeta):
 
     # TODO Based on task PM-363. After migration on production, field can be deleted
     voivodeship = models.ForeignKey(
-        Voivodeship, on_delete=models.CASCADE,
-        verbose_name=_('Województwo'),
-        help_text='Wybierz województwo. Stare pole, gotowe do migracji',
+        Voivodeship,
+        on_delete=models.CASCADE,
+        verbose_name=_("Województwo"),
+        help_text="Wybierz województwo. Stare pole, gotowe do migracji",
         null=True,
-        blank=True
+        blank=True,
     )
     voivodeship_obj = models.ForeignKey(
         Voivodeships,
         on_delete=models.SET_NULL,
-        verbose_name=_('Województwo'),
-        help_text='Wybierz województwo. Nowe pole',
+        verbose_name=_("Województwo"),
+        help_text="Wybierz województwo. Nowe pole",
         null=True,
-        blank=True
+        blank=True,
     )
 
     address = AddressField(help_text=_("Adres"), blank=True, null=True)

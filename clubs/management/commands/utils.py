@@ -1,9 +1,10 @@
 import os
 from typing import Union
 
-from clubs.models import Club
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
+
+from clubs.models import Club
 
 LEAGUES = [
     "Ekstraklasa",
@@ -68,12 +69,10 @@ def get_club_without_img(clubs: Club, herbs: bool = False) -> Union[list, dict]:
 
 
 def change_club_image(clubs: Club, clubs_matched: dict) -> None:
-
     for club in clubs:
         club_id = str(club.id)
 
         if clubs_matched.get(club_id) and not club.picture:
-
             try:
                 file_name = clubs_matched[club_id]["file_name"]
                 club.picture.save(

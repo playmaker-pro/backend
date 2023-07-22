@@ -4,10 +4,8 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('voivodeships', '0002_alter_voivodeships_name'),
+        ("voivodeships", "0002_alter_voivodeships_name"),
     ]
 
-    operations = [
-    ]
+    operations = []
