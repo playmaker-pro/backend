@@ -1,5 +1,8 @@
-from typing import Optional, List, Set
+from typing import Optional, List, Set, Tuple, Union
+
+from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth import get_user_model
+from django.db.models import QuerySet
 
 from features.models import AccessPermission, FeatureElement, Feature
 from profiles.models import PROFILE_TYPE
@@ -92,3 +95,44 @@ class UserService:
                 access_permissions__in=access_permissions_ids
             )
         ]
+
+    @staticmethod
+    def register_from_google(data: dict) -> Optional[User]:
+        """Save User instance with given data taken from Google."""
+
+        if not data:
+            return None
+
+        password = User.objects.make_random_password()
+        user: User = User(
+            email=data.get("email"),
+            first_name=data.get("given_name"),
+            last_name=data.get("family_name"),
+        )
+        user.set_password(password)
+        user.save()
+        return user
+
+    @staticmethod
+    def create_social_account(
+        user: User, data: dict
+    ) -> Tuple[Optional[SocialAccount], Optional[bool]]:
+        """Check if user has social account, if not create one."""
+
+        result: QuerySet = SocialAccount.objects.filter(user=user)
+        response: SocialAccount
+        created: bool
+
+        if not result.exists():
+            if not data:
+                return None, None
+
+            response = SocialAccount.objects.create(
+                user=user, provider="google", uid=data.get("sub"), extra_data=data
+            )
+            created = True
+        else:
+            response = result.first()
+            created = False
+
+        return response, created

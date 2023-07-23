@@ -28,3 +28,32 @@ class FeatureSetsNotFoundException(CoreAPIException):
 class FeatureElementsNotFoundException(CoreAPIException):
     status_code = status.HTTP_404_NOT_FOUND
     default_detail = "Feature sets for user not found"
+
+
+class NoUserCredentialFetchedException(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "No user credential fetched from Google. Please try again."
+
+
+class GoogleInvalidGrantError(CoreAPIException):
+    """
+    Invalid grant error from Google.
+    This can happen if the user try access to log in via Google, but params in url are wrong (out-dated).
+    """
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = (
+        "The provided authorization grant (e.g., authorization code, resource owner credentials) "
+        "or refresh token is invalid, expired, revoked, does not match the redirection "
+        "URI used in the authorization request, or was issued to another client"
+    )
+
+
+class ApplicationError(CoreAPIException):
+    """
+    Application error.
+    This can happen if the user try access to log in via Google, but api didn't return requested data
+    """
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Failed to obtain tokens from Google."
