@@ -5,6 +5,7 @@ from typing import Set, Dict, List, Optional
 @dataclass
 class RegisterSchema:
     """Schema represents data which have to be used by register endpoint"""
+    # TODO has to be changed to Pydantic Model with email field validation.
 
     email: str
     first_name: str

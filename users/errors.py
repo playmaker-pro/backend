@@ -32,7 +32,8 @@ class FeatureElementsNotFoundException(CoreAPIException):
 
 class NoUserCredentialFetchedException(CoreAPIException):
     status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = "No user credential fetched from Google. Please try again."
+    default_detail = "No user data fetched from Google or data is not valid. " \
+                     "Please try again."
 
 
 class GoogleInvalidGrantError(CoreAPIException):

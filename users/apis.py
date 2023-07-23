@@ -1,27 +1,26 @@
 import logging
 import traceback
-from typing import Sequence, List
+from typing import List, Optional, Sequence
 
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models import QuerySet
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.swagger_schemas import GOOGLE_AUTH_SWAGGER_SCHEMA
 from api.views import EndpointView
-from features.models import FeatureElement, Feature
+from features.models import Feature, FeatureElement
 from users import serializers
-from users.errors import (
-    FeatureSetsNotFoundException,
-    FeatureElementsNotFoundException,
-    NoUserCredentialFetchedException,
-    ApplicationError,
-)
+from users.errors import (ApplicationError, FeatureElementsNotFoundException,
+                          FeatureSetsNotFoundException,
+                          NoUserCredentialFetchedException)
 from users.managers import GoogleManager
 from users.models import User
+# Jednak zdaje sobie sprawe ze nie uniknimy sytuacji "if" pod jednm API jak się da to robmy w miare czysto.
+from users.serializers import (FeatureElementSerializer, FeaturesSerializer,
+                               UserRegisterSerializer)
+from users.services import UserService
 
 # Definicja enpointów nie musi być skoncentrowana tylko i wyłącznie w jedenj klasie.
 # jesli poniższe metody będą super-cieńkie (logika będzie poza tymi views)
@@ -31,13 +30,6 @@ from users.models import User
 # row-column-permission w samym widoku. Wiadomo jakieś powtorzenia w kodzie są ale przez to że
 # logika jest super-thin to nam nie szkodzi.
 
-# Jednak zdaje sobie sprawe ze nie uniknimy sytuacji "if" pod jednm API jak się da to robmy w miare czysto.
-from users.serializers import (
-    UserRegisterSerializer,
-    FeaturesSerializer,
-    FeatureElementSerializer,
-)
-from users.services import UserService
 
 user_service: UserService = UserService()
 logger = logging.getLogger("django")
@@ -141,12 +133,11 @@ class UsersAPI(EndpointView):
             raise ApplicationError(details=msg)
 
         user_email: str = user_info.get("email")
-        users: QuerySet = User.objects.filter(email=user_email)
+        user: Optional[User] = user_service.filter(email=user_email)
+
         redirect_path: str = "landing page"
 
-        if users.exists():
-            user: User = users.first()
-        else:
+        if not user:
             redirect_path = "register"
             user: User = user_service.register_from_google(user_info)
 
@@ -157,12 +148,10 @@ class UsersAPI(EndpointView):
         if not instance:
             raise NoUserCredentialFetchedException()
 
-        refresh: RefreshToken = RefreshToken.for_user(user)
         response = {
             "success": True,
             "redirect": redirect_path,
-            "refresh_token": str(refresh),
-            "access_token": str(refresh.access_token),
+            **user_service.create_tokens(user),
         }
 
         return Response(response, status=status.HTTP_200_OK)

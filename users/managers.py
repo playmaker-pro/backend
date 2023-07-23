@@ -3,25 +3,36 @@ import traceback
 from dataclasses import dataclass
 from datetime import datetime as dt
 from datetime import timedelta
-from typing import Dict, Any, Tuple, TYPE_CHECKING, Union
+from typing import Any, Dict, Optional
 
-import jwt
 import requests
 from allauth.socialaccount.models import SocialApp
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
-from django.core.exceptions import ImproperlyConfigured
-from django.db.models import QuerySet
-from django.urls import reverse_lazy
+from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 from django.utils.translation import ugettext_lazy as _
-import google_auth_oauthlib.flow
+from pydantic import BaseModel
 from requests import Response
 
-if TYPE_CHECKING:
-    from google_auth_oauthlib.flow import Flow
-
-
 logger = logging.getLogger("django")
+
+
+class SocialAppPydantic(BaseModel):
+    client_id: Optional[str]
+    client_secret: Optional[str]
+
+
+class SocialAppManager:
+    @staticmethod
+    def get_social_app(provider: str) -> Optional[SocialAppPydantic]:
+        """Get social app by provider. Returns custom pydantic object."""
+        try:
+            instance: SocialApp = SocialApp.objects.get(provider=provider)
+            return SocialAppPydantic(
+                client_id=instance.client_id, client_secret=instance.secret
+            )
+        except ObjectDoesNotExist:
+            return None
 
 
 class CustomUserManager(BaseUserManager):
@@ -70,26 +81,10 @@ class GoogleSdkLoginCredentials:
     project_id: str
 
 
-@dataclass
-class GoogleAccessToken:
-    id_token: str
-    access_token: str
-
-    def decode_id_token(self) -> Dict[str, Any]:
-        id_token = self.id_token
-        decoded_token = jwt.decode(jwt=id_token, options={"verify_signature": False})
-        return decoded_token
-
-
 class GoogleManager:
     """Google manager for Google OAuth2 SDK."""
 
     GOOGLE_USER_INFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
-    SCOPES = [
-        "https://www.googleapis.com/auth/userinfo.email",
-        "https://www.googleapis.com/auth/userinfo.profile",
-        "openid",
-    ]
 
     def __init__(self):
         self._credentials = self.google_sdk_login_get_credentials()
@@ -97,16 +92,18 @@ class GoogleManager:
     @staticmethod
     def google_sdk_login_get_credentials() -> GoogleSdkLoginCredentials:
         """Get Google credentials from DB and settings."""
-        google_qry: QuerySet = SocialApp.objects.filter(provider="google")
+        # TODO not used right now. Have to be removed in future.
+        google: Optional[SocialAppPydantic] = SocialAppManager.get_social_app(
+            provider="google"
+        )
 
-        if not google_qry.exists:
+        if not google:
             msg = "Google provider is missing in DB."
             logger.critical(msg)
             raise ImproperlyConfigured(msg)
 
-        google: SocialApp = google_qry.first()
         client_id: str = google.client_id
-        client_secret: str = google.secret
+        client_secret: str = google.client_secret
         project_id: str = settings.GOOGLE_OAUTH2_PROJECT_ID
 
         if not client_id:
@@ -130,7 +127,7 @@ class GoogleManager:
 
         return credentials
 
-    def get_user_info(self, access_token: str):
+    def get_user_info(self, access_token: str) -> Dict[str, Any]:
         """Returns user info from Google."""
         response: Response = requests.get(
             self.GOOGLE_USER_INFO_URL, params={"access_token": access_token}

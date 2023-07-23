@@ -1,28 +1,24 @@
 from typing import Dict, Set, Tuple
-from unittest import TestCase, mock
+from unittest import TestCase
 from unittest.mock import patch
 
-from allauth.socialaccount.models import SocialAccount, SocialApp
+import pytest
+from allauth.socialaccount.models import SocialAccount
 from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse
-import pytest
 from rest_framework.response import Response
-from rest_framework.test import APITestCase
-from rest_framework.test import APIClient
-
-from features.models import Feature
-from users.managers import GoogleAccessToken, GoogleManager, GoogleSdkLoginCredentials
-from users.models import User
-from users.services import UserService
-from utils.factories.feature_sets_factories import FeatureFactory, FeatureElementFactory
-from utils.factories.user_factories import UserFactory
-from utils.test.test_utils import (
-    mute_post_save_signal,
-    MethodsNotAllowedTestsMixin,
-    UserManager,
-)
+from rest_framework.test import APIClient, APITestCase
 
 from api.schemas import RegisterSchema
+from features.models import Feature
+from users.managers import GoogleManager, GoogleSdkLoginCredentials
+from users.models import User
+from users.services import UserService
+from utils.factories.feature_sets_factories import (FeatureElementFactory,
+                                                    FeatureFactory)
+from utils.factories.user_factories import UserFactory
+from utils.test.test_utils import (TEST_EMAIL, MethodsNotAllowedTestsMixin,
+                                   UserManager, mute_post_save_signal)
 
 
 @pytest.mark.django_db
@@ -136,7 +132,7 @@ class TestUserCreationEndpoint(TestCase):
             "password": "super secret password",
             "first_name": "first_name",
             "last_name": "last_name",
-            "email": "test_email@test.com",
+            "email": TEST_EMAIL,
         }
 
     def test_method_get_not_allowed(self) -> None:
@@ -329,9 +325,13 @@ class GoogleAuthTestEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         self.client: APIClient = APIClient()
         self.url: str = reverse("api:users:google-oauth2")
         self.unregistered_user_data: dict = {
-            "email": "test@playmayker.com",
+            "email": TEST_EMAIL,
             "token_id": "example_token_id",
         }
+
+    def tearDown(self) -> None:
+        """Stop all patches."""
+        patch.stopall()
 
     @mute_post_save_signal()
     def test_endpoint_ok(self) -> None:
@@ -339,7 +339,7 @@ class GoogleAuthTestEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         Test if response is OK. User doesn't exist in db,
         so the response should include a register value
         """
-        user_email: str = self.unregistered_user_data.get('email')
+        user_email: str = self.unregistered_user_data.get("email")
 
         expected_res = {
             "success": True,
@@ -355,31 +355,26 @@ class GoogleAuthTestEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             "picture": "example_url",
             "email": user_email,
             "email_verified": True,
-            "locale": "pl"
+            "locale": "pl",
         }
         google_auth_credentials_mock = GoogleSdkLoginCredentials(
-            client_id="client_id", client_secret="client_secret", project_id="project_id"
+            client_id="client_id",
+            client_secret="client_secret",
+            project_id="project_id",
         )
         google_credentials_patcher = patch.object(
             GoogleManager,
             "google_sdk_login_get_credentials",
-            return_value=google_auth_credentials_mock
-        )
-        token_patcher = patch.object(
-            GoogleAccessToken,
-            "decode_id_token",
-            return_value={"email": user_email}
+            return_value=google_auth_credentials_mock,
         )
         get_user_info_patcher = patch.object(
-            GoogleManager,
-            "get_user_info",
-            return_value=user_info_mock
+            GoogleManager, "get_user_info", return_value=user_info_mock
         )
         social_account = SocialAccount.objects.filter(user__email=user_email)
 
         assert not social_account.exists()
 
-        with get_user_info_patcher, token_patcher, google_credentials_patcher:
+        with get_user_info_patcher, google_credentials_patcher:
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
@@ -413,10 +408,10 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         self.client: APIClient = APIClient()
         self.url: str = reverse("api:users:google-oauth2")
         self.unregistered_user_data: dict = {
-            "email": "test@playmayker.com",
+            "email": TEST_EMAIL,
             "token_id": "example_token_id",
         }
-        self.user_info_mock = {
+        self.user_info_mock: dict = {
             "sub": "106746665020843434121824568902",
             "name": "Test User",
             "given_name": "Test",
@@ -424,8 +419,11 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             "picture": "example_url",
             "email": "example_email",
             "email_verified": True,
-            "locale": "pl"
+            "locale": "pl",
         }
+
+    def tearDown(self):
+        patch.stopall()
 
     def patch_methods(self) -> Tuple[patch, patch, patch]:
         """
@@ -434,37 +432,34 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         """
 
         google_auth_credentials_mock = GoogleSdkLoginCredentials(
-            client_id="client_id", client_secret="client_secret", project_id="project_id"
+            client_id="client_id",
+            client_secret="client_secret",
+            project_id="project_id",
         )
         get_user_info_patcher = patch.object(
-            GoogleManager,
-            "get_user_info",
-            return_value=self.user_info_mock
+            GoogleManager, "get_user_info", return_value=self.user_info_mock
         )
         google_credentials_patcher = patch.object(
             GoogleManager,
             "google_sdk_login_get_credentials",
-            return_value=google_auth_credentials_mock
+            return_value=google_auth_credentials_mock,
         )
         register_from_google_patcher = patch.object(
-            UserService,
-            "register_from_google",
-            return_value=UserFactory.create()
+            UserService, "register_from_google", return_value=UserFactory.create()
         )
-        patch.object(
-            UserService,
-            "create_social_account",
-            return_value=(True, True)
-        ).start()
 
-        return google_credentials_patcher, get_user_info_patcher, register_from_google_patcher
+        return (
+            google_credentials_patcher,
+            get_user_info_patcher,
+            register_from_google_patcher,
+        )
 
     def test_google_manager_improperly_configured_exception(self) -> None:
         """Test if response is 400 when ImproperlyConfigured exception is raised"""
         google_credentials_patcher = patch.object(
             GoogleManager,
             "google_sdk_login_get_credentials",
-            side_effect=ImproperlyConfigured()
+            side_effect=ImproperlyConfigured(),
         )
 
         with google_credentials_patcher:
@@ -472,14 +467,12 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
                 self.url, data=self.unregistered_user_data
             )
             assert res.status_code == 400
-            assert res.json().get('detail') == "Failed to obtain Google credentials."
+            assert res.json().get("detail") == "Failed to obtain Google credentials."
 
     def test_google_manager_value_exception(self) -> None:
         """Test if response is 400 when ValueError exception is raised"""
         google_credentials_patcher = patch.object(
-            GoogleManager,
-            "google_sdk_login_get_credentials",
-            side_effect=ValueError()
+            GoogleManager, "google_sdk_login_get_credentials", side_effect=ValueError()
         )
 
         with google_credentials_patcher:
@@ -487,7 +480,7 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
                 self.url, data=self.unregistered_user_data
             )
             assert res.status_code == 400
-            assert res.json().get('detail') == "Failed to obtain user info from Google."
+            assert res.json().get("detail") == "Failed to obtain user info from Google."
 
     def test_response_ok_register_page(self) -> None:
         """
@@ -498,16 +491,19 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         (
             get_user_info_patcher,
             google_credentials_patcher,
-            register_from_google_patcher
+            register_from_google_patcher,
         ) = self.patch_methods()
+        patch.object(
+            UserService, "create_social_account", return_value=(True, True)
+        ).start()
 
         with get_user_info_patcher, google_credentials_patcher, register_from_google_patcher:
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
             assert res.status_code == 200
-            assert res.json().get('redirect') == "register"
-            assert res.json().get('success') is True
+            assert res.json().get("redirect") == "register"
+            assert res.json().get("success") is True
 
     def test_response_ok_landing_page(self) -> None:
         """
@@ -519,13 +515,37 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         (
             get_user_info_patcher,
             google_credentials_patcher,
-            register_from_google_patcher
+            register_from_google_patcher,
         ) = self.patch_methods()
+        patch.object(
+            UserService, "create_social_account", return_value=(True, True)
+        ).start()
 
         with get_user_info_patcher, google_credentials_patcher, register_from_google_patcher:
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
             assert res.status_code == 200
-            assert res.json().get('redirect') == "landing page"
-            assert res.json().get('success') is True
+            assert res.json().get("redirect") == "landing page"
+            assert res.json().get("success") is True
+
+    def test_response_no_user_credentials_exception(self) -> None:
+        """Test if response is 400 when no data is fetched from Google"""
+
+        UserFactory.create(email=self.user_info_mock.get("email"))
+        (
+            get_user_info_patcher,
+            google_credentials_patcher,
+            register_from_google_patcher,
+        ) = self.patch_methods()
+        patch.object(
+            UserService, "create_social_account", return_value=(False, True)
+        ).start()
+        with get_user_info_patcher, google_credentials_patcher, register_from_google_patcher:
+            res: Response = self.client.post(  # type: ignore
+                self.url, data=self.unregistered_user_data
+            )
+            assert res.status_code == 400
+
+            msg = "No user data fetched from Google or data is not valid. Please try again."
+            assert res.json().get("detail") == msg

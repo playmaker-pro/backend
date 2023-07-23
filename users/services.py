@@ -1,12 +1,14 @@
-from typing import Optional, List, Set, Tuple, Union
+from typing import Dict, List, Optional, Set, Tuple
 
 from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth import get_user_model
-from django.db.models import QuerySet
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.validators import validate_email
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from features.models import AccessPermission, FeatureElement, Feature
-from profiles.models import PROFILE_TYPE
 from api.schemas import RegisterSchema
+from features.models import AccessPermission, Feature, FeatureElement
+from profiles.models import PROFILE_TYPE
 
 User = get_user_model()
 
@@ -20,6 +22,23 @@ class UserService:
             return User.objects.get(id=user_id)
         except User.DoesNotExist:
             return
+
+    @staticmethod
+    def filter(**kwargs) -> Optional[User]:
+        try:
+            user = User.objects.get(**kwargs)
+            return user
+        except ObjectDoesNotExist:
+            return None
+
+    @staticmethod
+    def create_tokens(user: User) -> Dict[str, str]:
+        """Create tokens for given user"""
+        tokens: RefreshToken = RefreshToken.for_user(user)
+        return {
+            "refresh_token": str(tokens),
+            "access_token": str(tokens.access_token),
+        }
 
     def set_role(self, user: User, role: str) -> None:
         """Set role to user"""
@@ -100,15 +119,20 @@ class UserService:
     def register_from_google(data: dict) -> Optional[User]:
         """Save User instance with given data taken from Google."""
 
-        if not data:
+        if not data or not isinstance(data.get("email"), str):
             return None
 
-        password = User.objects.make_random_password()
+        password: str = User.objects.make_random_password()
         user: User = User(
             email=data.get("email"),
             first_name=data.get("given_name"),
             last_name=data.get("family_name"),
         )
+        try:
+            validate_email(user.email)
+        except ValidationError:
+            return None
+
         user.set_password(password)
         user.save()
         return user
@@ -119,11 +143,11 @@ class UserService:
     ) -> Tuple[Optional[SocialAccount], Optional[bool]]:
         """Check if user has social account, if not create one."""
 
-        result: QuerySet = SocialAccount.objects.filter(user=user)
-        response: SocialAccount
+        result: SocialAccount = SocialAccount.objects.filter(user=user).first()
+        response: SocialAccount = result
         created: bool
 
-        if not result.exists():
+        if not result:
             if not data:
                 return None, None
 
@@ -132,7 +156,6 @@ class UserService:
             )
             created = True
         else:
-            response = result.first()
             created = False
 
         return response, created
