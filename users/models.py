@@ -351,6 +351,9 @@ class UserPreferences(models.Model):
         null=True,
         help_text="User's gender (represents the gender identity of the user)",
     )
+    birth_date = models.DateField(
+        _("Data urodzenia"), blank=True, null=True, help_text="User's date of birth"
+    )
 
     class Meta:
         verbose_name = "User Preference"
