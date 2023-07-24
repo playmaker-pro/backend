@@ -1,6 +1,5 @@
+from clubs.models import Team, Club, TeamHistory
 from rest_framework import serializers
-
-from clubs.models import Club, Team, TeamHistory
 
 
 class TeamSelect2Serializer(serializers.HyperlinkedModelSerializer):

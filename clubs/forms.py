@@ -1,31 +1,30 @@
 from __future__ import unicode_literals
-
-from crispy_forms.bootstrap import (
-    Alert,
-    AppendedText,
-    FormActions,
-    PrependedText,
-    Tab,
-    TabHolder,
-)
+from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
+    Layout,
+    Fieldset,
+    Div,
+    Submit,
     HTML,
     Button,
-    Div,
-    Field,
-    Fieldset,
-    Layout,
-    MultiField,
     Row,
-    Submit,
+    Field,
+    MultiField,
 )
-from django import forms
+from crispy_forms.bootstrap import (
+    AppendedText,
+    PrependedText,
+    FormActions,
+    Tab,
+    TabHolder,
+    Alert,
+)
 from django.contrib.auth import get_user_model
-from django.utils.translation import gettext_lazy as _
-from django_countries.widgets import CountrySelectWidget
-
 from . import models
+from django_countries.widgets import CountrySelectWidget
+from django.utils.translation import gettext_lazy as _
+
 
 User = get_user_model()
 

@@ -1,6 +1,5 @@
-from roles import definitions as d
-
 from . import models
+from roles import definitions as d
 
 
 def get_users_manger_roles():

@@ -33,4 +33,7 @@ def get_adapter(
 
 def create_seasons() -> None:
     """Mock 4 different seasons"""
-    SeasonFactory.create_batch(4)
+    [
+        SeasonFactory(name=name)
+        for name in ["2019/2020", "2020/2021", "2021/2022", "2022/2023"]
+    ]

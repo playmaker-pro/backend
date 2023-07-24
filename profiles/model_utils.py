@@ -1,6 +1,5 @@
-from profiles import forms
-
 from . import models
+from profiles import forms
 
 
 def get_profile_model(user):

@@ -1,5 +1,4 @@
-from typing import Any, List, Optional
-
+from typing import List, Any, Optional
 from pydantic import BaseModel
 
 #
@@ -8,7 +7,7 @@ from pydantic import BaseModel
 
 
 class Model(BaseModel):
-    obj_id: Optional[str]  # _id from mongo
+    obj_id: Optional[str] # _id from mongo
 
     def __init__(self, **data: Any):
         self.update_forward_refs()

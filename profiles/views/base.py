@@ -15,7 +15,6 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
-
 from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from profiles import forms, models
@@ -24,18 +23,18 @@ from profiles.model_utils import (
     get_profile_model,
     get_profile_model_from_slug,
 )
-from profiles.utils import get_metrics_update_date
 from roles import definitions
-
-# from stats import adapters     DEPRECATED: PM-1015
 from utils import calculate_prev_season, get_current_season
+from profiles.utils import get_metrics_update_date
+
+from stats import adapters
 
 User = get_user_model()
 from clubs.models import Team
 
 logger = logging.getLogger(__name__)
 from app import mixins, utils
-from inquiries.services import InquireService
+from inquiries.services import unseen_requests, update_requests_with_read_status
 
 
 def redirect_to_profile_with_full_name(request):
@@ -167,7 +166,7 @@ def build_request_tab(user, name, title, qs, empty_text, empty_header, actions=T
         actions=actions,
         unseen=",".join(unseen),
     )
-    tab.add_badge(number=InquireService.unseen_requests(qs, user).count())
+    tab.add_badge(number=unseen_requests(qs, user).count())
     tab.add_empty(text=empty_text, header=empty_header)
     return tab.get()
 

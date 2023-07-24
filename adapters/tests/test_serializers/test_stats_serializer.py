@@ -1,8 +1,7 @@
-import pytest
 from django.test import TestCase
-
 from adapters.player_adapter import PlayerSeasonStatsAdapter
 from adapters.tests.utils import get_adapter
+import pytest
 
 
 @pytest.mark.django_db

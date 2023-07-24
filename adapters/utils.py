@@ -1,4 +1,4 @@
-from pm_core.services.models import PlayerSeasonStatsListSchema, PlayerSeasonStatsSchema
+from pm_core.services.models import PlayerSeasonStatsSchema, PlayerSeasonStatsListSchema
 
 
 def resolve_stats_list(

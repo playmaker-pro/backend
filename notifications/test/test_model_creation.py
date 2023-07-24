@@ -1,9 +1,9 @@
 from django.test import TestCase
-
 from notifications import models
-from roles import definitions
 from users.models import User
+from roles import definitions
 from utils import testutils as utils
+from users.models import User
 
 
 class ClubTeamDisplays(TestCase):

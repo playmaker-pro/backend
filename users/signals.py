@@ -6,12 +6,13 @@ from django.contrib.auth import get_user_model
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
+
 logger = logging.getLogger("project")
 
 
 User = get_user_model()
 
-# TODO(rkesik): deprecated - do wywalenia - zostawiamy do konca budowy API pod FE
+
 # @receiver(email_confirmed)
 # def email_confirmed_(request, email_address, **kwargs):
 #     '''Set User.state to email verified'''

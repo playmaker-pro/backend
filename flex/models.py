@@ -1,10 +1,9 @@
 from django.db import models
-from wagtail.admin.edit_handlers import FieldPanel, StreamFieldPanel
-from wagtail.core.blocks import RawHTMLBlock
-from wagtail.core.fields import StreamField
 from wagtail.core.models import Page
-
+from wagtail.admin.edit_handlers import FieldPanel, StreamFieldPanel
+from wagtail.core.fields import StreamField
 from streams import blocks
+from wagtail.core.blocks import RawHTMLBlock
 
 
 class FlexPage(Page):

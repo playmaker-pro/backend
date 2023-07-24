@@ -1,9 +1,9 @@
+from .base import *  # noqa
 import os
 
-from .base import *  # noqa
 
 DEBUG = False
-CONFIGURATION = Environment.PRODUCTION
+
 
 BASE_URL = "https://playmaker.pro"
 

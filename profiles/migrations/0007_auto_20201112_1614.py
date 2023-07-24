@@ -2,12 +2,13 @@
 
 import address.models
 import django.core.validators
+from django.db import migrations, models
 import django.db.models.deletion
 import phonenumber_field.modelfields
-from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
         ("address", "0003_auto_20200830_1851"),
         ("profiles", "0006_auto_20201112_1330"),

@@ -3,16 +3,11 @@ from abc import abstractmethod
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from pm_core.services.models import (
+    GameSchema,
     EventSchema,
     PlayerSeasonStatsSchema,
     PlayerSeasonStatsListSchema,
     GamesSchema,
-    GameSchema,
-    PlayerScoreSchema,
-    PlayerSeasonScoreSchema,
-    PlayerSeasonScoreListSchema,
-    PlayerSeasonStatsListSchema,
-    PlayerSeasonStatsSchema,
     PlayerScoreSchema,
     PlayerSeasonScoreSchema,
     PlayerSeasonScoreListSchema,

@@ -1,5 +1,4 @@
 from django.conf import settings
-
 from utils import get_current_season
 
 

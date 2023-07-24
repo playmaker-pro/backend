@@ -7,35 +7,37 @@ from voivodeships.services import VoivodeshipService
 
 
 def map_vivos(apps, schema_editor):
+
     vivos_manager = VoivodeshipService()
     from django.apps import apps
 
     announcements = [
-        "ClubForPlayerAnnouncement",
-        "PlayerForClubAnnouncement",
-        "CoachForClubAnnouncement",
-        "ClubForCoachAnnouncement",
+        'ClubForPlayerAnnouncement', 'PlayerForClubAnnouncement', 'CoachForClubAnnouncement', 'ClubForCoachAnnouncement'
     ]
 
     for announcement in announcements:
-        model = apps.get_model("marketplace", announcement)
+
+        model = apps.get_model('marketplace', announcement)
 
         for ann in model.objects.all():
+
             try:
                 get_voivo = vivos_manager.get_voivodeship_by_name(ann.voivodeship.name)
                 if get_voivo.exists():
-                    vivo = apps.get_model("voivodeships", "Voivodeships")
+
+                    vivo = apps.get_model('voivodeships', 'Voivodeships')
                     vivo = vivo.objects.get(id=get_voivo[0].id)
 
                     ann.voivodeship_obj = vivo
                     ann.save()
             except (ObjectDoesNotExist, AttributeError):
-                print(f"Something went wrong with {ann}")
+                print(f'Something went wrong with {ann}')
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("marketplace", "0003_auto_20220716_1048"),
+        ('marketplace', '0003_auto_20220716_1048'),
     ]
 
     operations = [

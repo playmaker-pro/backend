@@ -1,4 +1,6 @@
+
 class URL:
+
     BASE = "http://localhost:8000/"
 
     # List of team histories

@@ -1,19 +1,16 @@
-from typing import Optional, Sequence
-
 from django.contrib import admin
-from django.utils.safestring import mark_safe
-
+from users.queries import get_users_manger_roles
 from app.utils.admin import json_filed_data_prettified
+from . import models
+from utils import linkify
+from django.utils.safestring import mark_safe
+from typing import Sequence, Optional
 from clubs.filters import (
+    IsParentFilter,
     CountryListFilter,
     HasManagerFilter,
-    IsParentFilter,
     ZpnListFilter,
 )
-from users.queries import get_users_manger_roles
-from utils import linkify
-
-from . import models
 
 
 def reset_history(modeladmin, request, queryset):

@@ -1,12 +1,13 @@
-import json
 import logging
-from datetime import date, datetime
+import json
 from typing import Any
 
 import django
+from datetime import date, datetime
+from django.contrib.auth import get_user_model
+from clubs.models import Club, Team, League
 from django import template
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
@@ -19,11 +20,10 @@ from django.utils.translation import (
     pgettext,
     round_away_from_one,
 )
-
-from clubs.models import Club, League, Team
 from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from profiles.utils import extract_video_id
+
 from voivodeships.services import VoivodeshipService
 
 User = get_user_model()
@@ -100,11 +100,9 @@ class PageSeoTags:
         else:
             return tag_content
 
-
 @register.simple_tag
 def logger500(url: str) -> None:
     logger.debug(f"500HANDLER on url: {url}")
-
 
 @register.inclusion_tag(TEMPLATE_SEO_TAGS, takes_context=True)
 def seo_tags(context):
@@ -303,7 +301,7 @@ def inquiry_display_name(context, inquiry):
         return obj.get_full_name(), obj.profile.get_permalink, obj.picture
 
     if inquiry.is_user_type:
-        if hasattr(obj, "profile"):
+        if hasattr(obj, 'profile'):
             name, link, picture = user_data(obj)
         else:
             name = obj.get_full_name()
@@ -481,7 +479,8 @@ def add_announcement(context):
 
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def profile_link(context, user, checks=True, text=None):
-    if not user.is_authenticated or not hasattr(user, "profile"):
+
+    if not user.is_authenticated or not hasattr(user, 'profile'):
         return {"off": True}
     button_text = text or ""
     return {
@@ -555,6 +554,7 @@ def announcement_edit(context, ann):
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def announcement_response(context, ann):
+
     user = context["user"]
     button_text = ""
     button_action = {"modal": True, "name": f"{ann.__class__.__name__}{ann.id}"}
@@ -594,6 +594,7 @@ def announcement_response(context, ann):
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def announcement_yes(context, obj, css_class=None):
+
     user = context["user"]
 
     if user.is_authenticated:
@@ -644,10 +645,12 @@ def other_roles_button(context, text=None, css_class=None):
     user = context["user"]
 
     if not user.is_authenticated:
+
         title = "Zarejestruj się tutaj (Rejestracja)"
         link = "/signup/"
 
     elif not user.is_club and not user.is_player and not user.is_coach:
+
         title = "Zmień rolę"
         link = "/users/me/edit/settings/"
 
@@ -823,6 +826,7 @@ def send_request(context, user, showed_user, category="user"):
 
 @register.inclusion_tag(TEMPLATE_ACTION_SCRIPT, takes_context=True)
 def update_request_button(context, request, accept=False):
+
     button_text = "Akceptuj" if accept else "Odrzuć"
     param = f"{request.id}---1" if accept else f"{request.id}---0"
     button_class = "btn-request btn-requested inquiryAnswerButtons"
@@ -903,6 +907,7 @@ def seemore_link(context, link, checks=True):
 
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def get_team_link(context, team, text=None, css_class=None, checks=True):
+
     css_class = css_class or DEFAULT_BUTTON_CSS_CLASS
     button = ActionButton(
         url=team.get_permalink,
@@ -964,6 +969,7 @@ def get_club_edit_link(context, club, text=None, css_class=None, checks=True):
 
 @register.inclusion_tag(TEMPLATE_ACTION_BUTTON, takes_context=True)
 def get_club_link(context, object, text=None, css_class=None, checks=True):
+
     css_class = css_class or DEFAULT_BUTTON_CSS_CLASS
 
     return {
@@ -1032,6 +1038,7 @@ def get_my_club_link(context, text=None, css_class=None):
 
 @register.filter
 def display_voivodeship(obj: Any) -> str:
+
     if not obj:
         return ""
 
@@ -1039,15 +1046,14 @@ def display_voivodeship(obj: Any) -> str:
     voivodeship = manager.display_voivodeship(obj)
 
     announcements = [
-        "ClubForPlayerAnnouncement",
-        "PlayerForClubAnnouncement",
-        "ClubForCoachAnnouncement",
-        "CoachForClubAnnouncement",
+        'ClubForPlayerAnnouncement', 'PlayerForClubAnnouncement', 'ClubForCoachAnnouncement', 'CoachForClubAnnouncement'
     ]
 
     if voivodeship:
+
         if type(obj).__name__ in announcements:
-            return f"{voivodeship}, "
+
+            return f'{voivodeship}, '
         return voivodeship
     else:
-        return ""
+        return ''

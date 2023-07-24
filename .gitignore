@@ -95,5 +95,3 @@ custom_script_*.py
 
 # pm
 default.env
-
-/static

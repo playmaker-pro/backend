@@ -1,22 +1,8 @@
-from contextlib import contextmanager
-
 from django.conf import settings
 from django.test import TestCase
-from django.test.client import Client
 from django.utils import timezone
-from django.db.models import signals
-from factory.django import mute_signals
-from requests import Response
-
-from clubs.models import Season
-from users.models import User
-
 from utils import testutils as utils
-
-from typing import Optional
-from django.urls import reverse
-
-from utils.factories.user_factories import UserFactory
+from clubs.models import Season
 
 utils.silence_explamation_mark()
 
@@ -26,8 +12,7 @@ class GetCurrentSeasonTest(TestCase):
     JJ:
     Definicja aktualnego sezonu
     (wyznaczamy go za pomocą:
-        jeśli miesiąc daty systemowej jest >= 7
-        to pokaż sezon (aktualny rok/ aktualny rok + 1).
+        jeśli miesiąc daty systemowej jest >= 7 to pokaż sezon (aktualny rok/ aktualny rok + 1).
         Jeśli < 7 th (aktualny rok - 1 / aktualny rok)
     """
 
@@ -45,108 +30,3 @@ class GetCurrentSeasonTest(TestCase):
             assert (
                 Season.define_current_season(date) == result
             ), f"Input data:{date_settings} date={date}"
-
-
-@contextmanager
-def mute_post_save_signal():
-    """Mute post save signal. We don't want to test it in some cases."""
-    with mute_signals(signals.post_save):
-        yield
-
-
-class UserManager:
-    """
-    Utility class for managing user-related operations in tests.
-    This class provides convenient methods to create a test user,
-    generate an access token for authentication, and retrieve headers with the access
-    token for making authenticated requests.
-    """
-
-    def __init__(self, client: Optional[Client] = None) -> None:
-        self.email = "test_email@test.com"
-        self.password = "super secret password"
-
-        if client:
-            self.client = client
-
-        self.login_url = reverse("api:users:api-login")
-
-    @mute_post_save_signal()
-    def create_superuser(self) -> User:
-        """Create a superuser in the test database."""
-        user = UserFactory.create(email=self.email, password=self.password)
-        user.is_activated = True
-        user.save()
-
-        return user
-
-    @property
-    def get_access_token(self) -> str:
-        """Get the authentication access token for the created superuser."""
-        res: Response = self.client.post(
-            self.login_url, {"email": self.email, "password": self.password}
-        )
-        return res.data.get("access")
-
-    def get_headers(self) -> dict:
-        """Get the headers containing the authentication token for API requests."""
-        headers = {
-            "Content-Type": "application/json",
-            "content_type": "application/json",
-            # "Authorization": "Bearer " + self.get_access_token,
-            "HTTP_AUTHORIZATION": f"Bearer {self.get_access_token}",
-        }
-
-        return headers
-
-
-class MethodsNotAllowedTestsMixin:
-    """Test mixin for not allowed methods"""
-
-    NOT_ALLOWED_METHODS = []
-
-    def test_request_methods_not_allowed(self) -> None:
-        """Test request methods not allowed"""
-
-        for element in self.NOT_ALLOWED_METHODS:
-            getattr(self, f"{element}_not_allowed")()
-
-    def get_not_allowed(self) -> None:
-        """Test if GET method is not allowed"""
-
-        res: Response = self.client.get(self.url, **self.headers)  # noqa
-        assert (
-            res.status_code == 405
-        ), f"Actual response status code is: {res.status_code}, method: GET"
-
-    def post_not_allowed(self) -> None:
-        """Test if POST method is not allowed"""
-
-        res: Response = self.client.post(self.url, **self.headers)  # noqa
-        assert (
-            res.status_code == 405
-        ), f"Actual response status code is: {res.status_code}, method: POST"
-
-    def put_not_allowed(self) -> None:
-        """Test if PUT method is not allowed"""
-
-        res: Response = self.client.put(self.url, **self.headers)  # noqa
-        assert (
-            res.status_code == 405
-        ), f"Actual response status code is: {res.status_code}, method: PUT"
-
-    def patch_not_allowed(self) -> None:
-        """Test if PATCH method is not allowed"""
-
-        res: Response = self.client.patch(self.url, **self.headers)  # noqa
-        assert (
-            res.status_code == 405
-        ), f"Actual response status code is: {res.status_code}, method: PATCH"
-
-    def delete_not_allowed(self) -> None:
-        """Test if DELETE method is not allowed"""
-
-        res: Response = self.client.delete(self.url, **self.headers)  # noqa
-        assert (
-            res.status_code == 405
-        ), f"Actual response status code is: {res.status_code}, method: DELETE"

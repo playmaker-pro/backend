@@ -1,9 +1,7 @@
-import logging
-
-from django.conf import settings
 from django.core.mail import mail_managers, send_mail
+from django.conf import settings
 from django.urls import reverse
-
+import logging
 from notifications.base import PMMailBase
 
 logger = logging.getLogger(__name__)

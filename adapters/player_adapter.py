@@ -1,11 +1,11 @@
 import typing
+from requests.exceptions import ConnectionError
 from pm_core.services.errors import ServiceRaisedException
 from pm_core.services.models import (
     PlayerBaseSchema,
     TeamSchema,
     BaseLeagueSchema,
     GameSchema,
-    GamesSchema,
     EventSchema,
     PlayerSeasonStatsListSchema,
     GamesSchema,
@@ -14,12 +14,11 @@ from pm_core.services.models import (
 )
 from pm_core.services.models.consts import ExcludedLeague, DEFAULT_LEAGUE_EXCLUDE
 from .serializers import GameSerializer, StatsSerializer, ScoreSerializer
-from requests.exceptions import ConnectionError
 from mapper.models import Mapper
 from .exceptions import (
-    DataShortageLogger,
     PlayerHasNoMapperException,
     PlayerMapperEntityNotFoundLogger,
+    DataShortageLogger,
     ScrapperIsNotRespongingLogger,
 )
 from .base_adapter import BaseAdapter
@@ -32,6 +31,7 @@ NO_CONNECTION_LOG = ScrapperIsNotRespongingLogger()
 
 
 class PlayerAdapterBase(BaseAdapter):
+
     data: PlayerBaseSchema = None
 
     def __init__(self, player, *args, **kwargs) -> None:

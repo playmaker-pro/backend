@@ -2,20 +2,20 @@ import logging
 
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from rest_framework import generics  # noqa
-from rest_framework import permissions, status  # noqa
-from rest_framework.response import Response  # noqa
+from rest_framework import permissions, status    # noqa
+from rest_framework import generics    # noqa
+from rest_framework.response import Response    # noqa
+from .serializers import TestFormSerializer
 
 from products.models import Product, Request  # noqa
 from users.models import User  # noqa
-
 from .decorators import is_owner
-from .serializers import TestFormSerializer
 
 logger = logging.getLogger(__name__)
 
 
 class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
+
     serializer_class = TestFormSerializer
     permission_classes = (permissions.AllowAny,)
     http_method_names = ["post", "patch"]
@@ -26,6 +26,7 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
         return serializer.save()
 
     def post(self, request, *args, **kwargs):
+
         data = request.data
 
         name = "Wsparcie transferowe dla piłkarza"
@@ -85,6 +86,7 @@ class TestFormAPIView(generics.CreateAPIView, generics.UpdateAPIView):
 
     @is_owner(query=queryset)
     def patch(self, request, *args, **kwargs):
+
         request_help = get_object_or_404(self.queryset, id=kwargs.get("pk"))
         data = request_help.raw_body
 

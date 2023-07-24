@@ -1,14 +1,15 @@
 import logging
-from unittest.mock import patch
 
 import pytest
-from django.conf import settings
 from django.test import TestCase
-
-from inquiries.models import InquiryPlan, InquiryRequest, UserInquiry
+from inquiries.models import InquiryRequest, InquiryPlan, UserInquiry
 from roles import definitions
 from users.models import User
 from utils import testutils as utils
+
+from django.conf import settings
+
+from unittest.mock import patch
 
 utils.silence_explamation_mark()
 
@@ -53,10 +54,9 @@ class ModelMethodsRequest(TestCase):
         )
         self.request = InquiryRequest(sender=self.coach, recipient=self.player)
 
-    # DEPRECATED: PM-1015
-    # @patch("stats.adapters.player.PlayerAdapter.__init__", "")
-    # def test__status_display(self):
-    #     assert self.request.status == InquiryRequest.STATUS_NEW
+    @patch("stats.adapters.player.PlayerAdapter.__init__", "")
+    def test__status_display(self):
+        assert self.request.status == InquiryRequest.STATUS_NEW
 
     def test__send_status_differs_from_role(self):
         self.request.send()

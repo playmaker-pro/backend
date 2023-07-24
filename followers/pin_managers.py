@@ -1,4 +1,5 @@
-from stream_framework.feed_managers.base import FanoutPriority, Manager
+from stream_framework.feed_managers.base import Manager
+from stream_framework.feed_managers.base import FanoutPriority
 
 from .models import Follow
 from .pin_feed import AggregatedPinFeed, PinFeed, UserPinFeed

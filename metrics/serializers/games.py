@@ -2,11 +2,11 @@ import logging
 from datetime import datetime
 
 from clubs.models import League as CLeague
-
-# from data.models import Game as DGame     DEPRECATED: PM-1015
+from data.models import Game as DGame
 from metrics.mappers import PlayerMapper, TeamMapper
 
 from .users import SimplePlayerProfileSerializer
+
 
 logger = logging.getLogger(__name__)
 
@@ -39,85 +39,84 @@ class GameSerializer:
                     "player_ids": []..
     """
 
-    ...
-    # DEPRECATED: PM-1015
-    # model = DGame
-    #
-    # @classmethod
-    # def serialize(cls, game, host_pic, guest_pic, league: CLeague):
-    #     if isinstance(game, (cls.model, dict)):
-    #         return cls.calculate(game, host_pic, guest_pic, league)
-    #     raise RuntimeError(
-    #         f"Wrong data type. Expected is {cls.model} instance or dict."
-    #     )
-    #
-    # @classmethod
-    # def calculate(cls, game, host_pic, guest_pic, league: CLeague):
-    #     h_url, h_pic, h_name = TeamMapper.get_url_pic_for_club(
-    #         cls._get_attr(game, "host_team_name"), league
-    #     )
-    #     g_url, g_pic, g_name = TeamMapper.get_url_pic_for_club(
-    #         cls._get_attr(game, "guest_team_name"), league
-    #     )
-    #
-    #     guest_score = cls._get_attr(game, "guest_score")
-    #     host_score = cls._get_attr(game, "host_score")
-    #     score = (
-    #         f"{host_score} - {guest_score}"
-    #         if host_score is not None and guest_score is not None
-    #         else None
-    #     )
-    #
-    #     players_ids = cls._get_attr(game, "players_ids")
-    #
-    #     return {
-    #         "guest_pic": g_pic,
-    #         "host_pic": h_pic,
-    #         "date": cls.clean_date(cls._get_attr(game, "date")),
-    #         "score": score,
-    #         "host_url": h_url,
-    #         "host": h_name,
-    #         "guest": g_name,
-    #         "guest_url": g_url,
-    #         "guest_score": guest_score,
-    #         "host_score": host_score,
-    #         "players": SimplePlayerProfileSerializer.serialize(
-    #             [
-    #                 profile
-    #                 for _id in players_ids
-    #                 if (profile := PlayerMapper.get_player_profile_object(_id))
-    #                 is not None
-    #             ]
-    #         ),
-    #         # "player_ids": players_ids  # todo: disable that it is not needed right now.
-    #     }
-    #
-    # @classmethod
-    # def clean_date(cls, date: datetime) -> str:
-    #     date = cls._add_timezone_to_datetime(date)
-    #     return cls._convert_datetime_to_string(date)
-    #
-    # @classmethod
-    # def _get_attr(cls, obj, name: str):
-    #     if isinstance(obj, cls.model):
-    #         return getattr(obj, name)
-    #     elif isinstance(obj, dict):
-    #         return obj.get(name)
-    #     else:
-    #         raise RuntimeError("Not supported data type.")
-    #
-    # @classmethod
-    # def _add_timezone_to_datetime(
-    #     cls, date: datetime, hours_shift: int = 2
-    # ) -> datetime:
-    #     """Two systems uses different date nottation. +2h is needed to shift"""
-    #     from datetime import timedelta
-    #
-    #     return date + timedelta(hours=hours_shift)
-    #
-    # @classmethod
-    # def _convert_datetime_to_string(cls, date: datetime) -> str:
-    #     return date.strftime("%Y/%d/%m, %H:%M")
+    model = DGame
+
+    @classmethod
+    def serialize(cls, game, host_pic, guest_pic, league: CLeague):
+        if isinstance(game, (cls.model, dict)):
+            return cls.calculate(game, host_pic, guest_pic, league)
+        raise RuntimeError(
+            f"Wrong data type. Expected is {cls.model} instance or dict."
+        )
+
+    @classmethod
+    def calculate(cls, game, host_pic, guest_pic, league: CLeague):
+
+        h_url, h_pic, h_name = TeamMapper.get_url_pic_for_club(
+            cls._get_attr(game, "host_team_name"), league
+        )
+        g_url, g_pic, g_name = TeamMapper.get_url_pic_for_club(
+            cls._get_attr(game, "guest_team_name"), league
+        )
+
+        guest_score = cls._get_attr(game, "guest_score")
+        host_score = cls._get_attr(game, "host_score")
+        score = (
+            f"{host_score} - {guest_score}"
+            if host_score is not None and guest_score is not None
+            else None
+        )
+
+        players_ids = cls._get_attr(game, "players_ids")
+
+        return {
+            "guest_pic": g_pic,
+            "host_pic": h_pic,
+            "date": cls.clean_date(cls._get_attr(game, "date")),
+            "score": score,
+            "host_url": h_url,
+            "host": h_name,
+            "guest": g_name,
+            "guest_url": g_url,
+            "guest_score": guest_score,
+            "host_score": host_score,
+            "players": SimplePlayerProfileSerializer.serialize(
+                [
+                    profile
+                    for _id in players_ids
+                    if (profile := PlayerMapper.get_player_profile_object(_id))
+                    is not None
+                ]
+            ),
+            # "player_ids": players_ids  # todo: disable that it is not needed right now.
+        }
+
+    @classmethod
+    def clean_date(cls, date: datetime) -> str:
+        date = cls._add_timezone_to_datetime(date)
+        return cls._convert_datetime_to_string(date)
+
+    @classmethod
+    def _get_attr(cls, obj, name: str):
+        if isinstance(obj, cls.model):
+            return getattr(obj, name)
+        elif isinstance(obj, dict):
+            return obj.get(name)
+        else:
+            raise RuntimeError("Not supported data type.")
+
+    @classmethod
+    def _add_timezone_to_datetime(
+        cls, date: datetime, hours_shift: int = 2
+    ) -> datetime:
+        """Two systems uses different date nottation. +2h is needed to shift"""
+        from datetime import timedelta
+
+        return date + timedelta(hours=hours_shift)
+
+    @classmethod
+    def _convert_datetime_to_string(cls, date: datetime) -> str:
+        return date.strftime("%Y/%d/%m, %H:%M")
 
 
 class GameRawSerializer:

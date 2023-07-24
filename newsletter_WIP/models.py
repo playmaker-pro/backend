@@ -1,5 +1,4 @@
 from django.db import models
-from django.shortcuts import redirect
 from modelcluster.fields import ParentalKey
 from wagtail.admin.edit_handlers import (
     FieldPanel,
@@ -9,6 +8,7 @@ from wagtail.admin.edit_handlers import (
 )
 from wagtail.contrib.forms.models import AbstractEmailForm, AbstractFormField
 from wagtail.core.fields import RichTextField
+from django.shortcuts import redirect
 
 
 class FormField(AbstractFormField):
@@ -20,6 +20,7 @@ class FormField(AbstractFormField):
 
 
 class NewsletterPage(AbstractEmailForm):
+
     template = "newsletter/newsletter_page.html"
     # This is the default path.
     # If ignored, Wagtail adds _landing.html to your template name

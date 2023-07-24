@@ -2,10 +2,9 @@ import json
 import os
 
 from django.core.management import BaseCommand
-
 from clubs.models import Club
 
-from .utils import PATH_TO_FLAGS, PATH_TO_LOG, change_club_image
+from .utils import PATH_TO_FLAGS, change_club_image, PATH_TO_LOG
 
 PATH_TO_FLAGS = f"{PATH_TO_FLAGS}\\"
 

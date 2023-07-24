@@ -1,10 +1,9 @@
-from blog.models import BlogPage
 from django.contrib import sitemaps
-from django.contrib.sitemaps import GenericSitemap
 from django.urls import reverse
-
+from blog.models import BlogPage
 from profiles.models import PlayerProfile
 from users.models import User
+from django.contrib.sitemaps import GenericSitemap
 
 
 class StaticViewSitemap(sitemaps.Sitemap):

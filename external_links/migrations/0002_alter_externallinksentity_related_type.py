@@ -4,25 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("external_links", "0001_initial"),
+        ('external_links', '0001_initial'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="externallinksentity",
-            name="related_type",
-            field=models.CharField(
-                choices=[
-                    ("player", "player profile"),
-                    ("coach", "coach profile"),
-                    ("scout", "scout profile"),
-                    ("manager", "manager profile"),
-                    ("club", "club"),
-                    ("team", "team"),
-                    ("league", "league history highest parent"),
-                ],
-                max_length=100,
-            ),
+            model_name='externallinksentity',
+            name='related_type',
+            field=models.CharField(choices=[('player', 'player profile'), ('coach', 'coach profile'), ('scout', 'scout profile'), ('manager', 'manager profile'), ('club', 'club'), ('team', 'team'), ('league', 'league history highest parent')], max_length=100),
         ),
     ]

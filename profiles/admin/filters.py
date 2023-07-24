@@ -1,13 +1,13 @@
-from django.contrib.admin import BooleanFieldListFilter, SimpleListFilter
+from django.contrib.admin import SimpleListFilter, BooleanFieldListFilter
 from django.db.models import (
-    BooleanField,
-    Case,
-    F,
-    ForeignKey,
-    IntegerField,
     Q,
     Value,
+    BooleanField,
+    Case,
     When,
+    ForeignKey,
+    IntegerField,
+    F,
 )
 
 
@@ -130,29 +130,17 @@ class HasDataMapperIdFilter(SimpleListFilter):
         queryset = queryset.distinct()
         if self.value() == "1":
             queryset = queryset.filter(
-                Q(
-                    owner__declared_role="T",
-                    coachprofile__mapper__mapperentity__mapper_id__isnull=False,
-                    coachprofile__mapper__mapperentity__database_source="s38",
-                )
-                | Q(
-                    owner__declared_role="P",
-                    playerprofile__mapper__mapperentity__mapper_id__isnull=False,
-                    playerprofile__mapper__mapperentity__database_source="s38",
-                )
+                Q(owner__declared_role="T", coachprofile__mapper__mapperentity__mapper_id__isnull=False,
+                  coachprofile__mapper__mapperentity__database_source='s38') |
+                Q(owner__declared_role="P", playerprofile__mapper__mapperentity__mapper_id__isnull=False,
+                  playerprofile__mapper__mapperentity__database_source='s38')
             )
         elif self.value() == "2":
             queryset = queryset.exclude(
-                Q(
-                    owner__declared_role="T",
-                    coachprofile__mapper__mapperentity__mapper_id__isnull=False,
-                )
-                & Q(coachprofile__mapper__mapperentity__database_source="s38")
+                Q(owner__declared_role="T", coachprofile__mapper__mapperentity__mapper_id__isnull=False) &
+                Q(coachprofile__mapper__mapperentity__database_source='s38')
             ).exclude(
-                Q(
-                    owner__declared_role="P",
-                    playerprofile__mapper__mapperentity__mapper_id__isnull=False,
-                )
-                & Q(playerprofile__mapper__mapperentity__database_source="s38")
+                Q(owner__declared_role="P", playerprofile__mapper__mapperentity__mapper_id__isnull=False) &
+                Q(playerprofile__mapper__mapperentity__database_source='s38')
             )
         return queryset

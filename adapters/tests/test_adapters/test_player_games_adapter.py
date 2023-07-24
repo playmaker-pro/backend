@@ -1,14 +1,13 @@
-import pytest
 from django.test import TestCase
 from pm_core.services.models import (
     BaseLeagueSchema,
-    BaseTeamSchema,
-    EventSchema,
     GameScoreSchema,
+    EventSchema,
+    BaseTeamSchema,
 )
-
 from adapters.player_adapter import PlayerGamesAdapter
 from adapters.tests.utils import get_adapter
+import pytest
 
 
 @pytest.mark.django_db

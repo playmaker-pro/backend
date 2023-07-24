@@ -4,6 +4,7 @@ from django.utils.translation import gettext as _
 
 from clubs.models import League
 
+
 register = template.Library()
 
 

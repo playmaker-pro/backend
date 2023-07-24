@@ -1,12 +1,13 @@
 import logging
+
 from functools import lru_cache
 from typing import Optional
 
 import easy_thumbnails
-from easy_thumbnails.files import get_thumbnailer
-
 from clubs.models import League as CLeague
 from clubs.models import Team as CTeam
+
+from easy_thumbnails.files import get_thumbnailer
 from profiles.models import PlayerProfile
 
 logger = logging.getLogger(__name__)
@@ -23,9 +24,9 @@ class PlayerMapper:
         """
         try:
             obj = PlayerProfile.objects.get(
-                mapper__mapperentity__related_type="player",
-                mapper__mapperentity__database_source="s38",
-                mapper__mapperentity__mapper_id=player_id,
+                mapper__mapperentity__related_type='player',
+                mapper__mapperentity__database_source='s38',
+                mapper__mapperentity__mapper_id=player_id
             )
             return obj
         except PlayerProfile.DoesNotExist:
@@ -39,6 +40,7 @@ class TeamMapper:
     @classmethod
     @lru_cache()
     def get_team_obj(cls, team_name: str, league_obj: CLeague) -> CTeam:
+
         try:
             team_obj = CTeam.objects.get(
                 league=league_obj, mapping__icontains=team_name.lower()

@@ -3,11 +3,6 @@
 
 Backend side for PlayMaker project.
 
-#### Applications and their roles
-1. Features
-    * Application for managing user features permissions. Core job is to provide a way to manage user permissions for features.
-    * Basically application says, what role can access what feature. For example, we can define there limitations for viewing specific views
-
 # Installation
 
 To set up a development environment quickly you need to have following prerequisits:
@@ -140,16 +135,6 @@ invoke tests
 - Migrate old voivodeship field to new one (Voivodeships model)
 ```bash
 python manage.py map_vivos
-```
-
-- Migrate the cities_light app
-```bash
-python manage.py migrate cities_light
-```
-
-- To update the cities data, run the following command provided by django-cities-light
-```bash
-python manage.py cities_light
 ```
 
 #### Run docker

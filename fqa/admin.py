@@ -1,15 +1,16 @@
-import json
+from django.contrib import admin
 
 # Register your models here.
 from django.contrib import admin
-from django.utils.safestring import mark_safe
-from pygments import highlight
-from pygments.formatters import HtmlFormatter
-from pygments.lexers import JsonLexer
-
-from utils import linkify
-
 from . import models
+from utils import linkify
+import json
+from pygments import highlight
+from pygments.lexers import JsonLexer
+from pygments.formatters import HtmlFormatter
+
+from django.contrib import admin
+from django.utils.safestring import mark_safe
 
 
 @admin.register(models.QuestionAnswer)

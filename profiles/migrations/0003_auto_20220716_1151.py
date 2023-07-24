@@ -7,29 +7,37 @@ from voivodeships.services import VoivodeshipService
 
 
 def map_vivos(apps, schema_editor):
+
     vivos_manager = VoivodeshipService()
 
-    models = ["PlayerProfile", "CoachProfile", "ScoutProfile"]
+    models = [
+        'PlayerProfile', 'CoachProfile', 'ScoutProfile'
+    ]
 
     for model in models:
-        profiles = apps.get_model("profiles", model)
+
+        profiles = apps.get_model('profiles', model)
 
         for profile in profiles.objects.all():
+
             try:
+
                 get_voivo = vivos_manager.get_voivodeship_by_name(profile.voivodeship)
                 if get_voivo.exists():
-                    vivo = apps.get_model("voivodeships", "Voivodeships")
+
+                    vivo = apps.get_model('voivodeships', 'Voivodeships')
                     vivo = vivo.objects.get(id=get_voivo[0].id)
 
                     profile.voivodeship_obj = vivo
                     profile.save()
             except (ObjectDoesNotExist, AttributeError):
-                print(f"Something went wrong with {profile}")
+                print(f'Something went wrong with {profile}')
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("profiles", "0002_auto_20220716_1146"),
+        ('profiles', '0002_auto_20220716_1146'),
     ]
 
     operations = [

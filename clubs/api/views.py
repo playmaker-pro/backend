@@ -1,15 +1,13 @@
-from django.contrib.auth import get_user_model
-from rest_framework import viewsets
-from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
-from clubs.models import Club, Team, TeamHistory
-
+from clubs.models import Team, Club, TeamHistory
+from rest_framework import viewsets
 from .serizalizer import (
+    TeamSelect2Serializer,
     ClubSelect2Serializer,
     TeamHistorySelect2Serializer,
-    TeamSelect2Serializer,
 )
+from rest_framework.response import Response
+from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -20,6 +18,7 @@ class TeamViewSet(viewsets.ModelViewSet):
     serializer_class = TeamSelect2Serializer
 
     def get_queryset(self):
+
         q_name = self.request.query_params.get("q")
         if q_name:
             return self.queryset.filter(name__icontains=q_name)
@@ -73,13 +72,7 @@ class ClubSearchApi(APIView):
     def get(self, request):
         q_season = request.query_params.get("season")
         if q_season:
-            queryset = (
-                Club.objects.filter(
-                    teams__historical__league_history__season__name__in=[q_season]
-                )
-                .distinct()
-                .order_by("name")
-            )
+            queryset = Club.objects.filter(teams__historical__league_history__season__name__in=[q_season]).distinct().order_by("name")
         else:
             queryset = Club.objects.all()
 
@@ -92,9 +85,3 @@ class ClubSearchApi(APIView):
         )
 
         return Response({"results": serializer.data})
-
-
-class ClubTeamsSearchApi(APIView):
-    def get(self, request) -> Response:
-        # TODO(bartnyk): create logic for getting teams of given club
-        return Response({}, status=status.HTTP_200_OK)

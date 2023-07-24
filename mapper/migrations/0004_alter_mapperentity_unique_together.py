@@ -4,13 +4,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("mapper", "0003_alter_mapperentity_related_type"),
+        ('mapper', '0003_alter_mapperentity_related_type'),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name="mapperentity",
-            unique_together={("target", "related_type", "database_source")},
+            name='mapperentity',
+            unique_together={('target', 'related_type', 'database_source')},
         ),
     ]

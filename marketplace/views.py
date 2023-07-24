@@ -1,35 +1,50 @@
+from hashlib import new
+import json
 import logging
+
+from functools import reduce
 from itertools import chain
+from copy import deepcopy
+from app import mixins
+from clubs.models import Club, Gender, League, Seniority, Team, Voivodeship
 from crispy_forms.utils import render_crispy_form
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import QuerySet
+from django.core.paginator import Paginator
+from django.db.models import Q, QuerySet
 from django.http import JsonResponse
+from django.http.response import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
-from app import mixins
-from clubs.models import Club, Gender, League, Seniority, Team
-from marketplace.models import get_licence_choice_number
-from profiles.models import PlayerPosition
-from voivodeships.services import VoivodeshipService
+from followers.models import Follow, FollowTeam
+from inquiries.models import InquiryRequest
+from profiles.models import PlayerPosition, ClubProfile, CoachProfile
+from profiles.utils import get_datetime_from_age
+from roles import definitions
+from stats import adapters
 
 from .forms import (
-    ClubForCoachAnnouncementForm,
+    PlayerForClubAnnouncementForm,
     ClubForPlayerAnnouncementForm,
     CoachForClubAnnouncementForm,
-    PlayerForClubAnnouncementForm,
+    ClubForCoachAnnouncementForm,
 )
 from .models import (
-    AnnouncementMeta,
-    ClubForCoachAnnouncement,
     ClubForPlayerAnnouncement,
-    CoachForClubAnnouncement,
     PlayerForClubAnnouncement,
+    CoachForClubAnnouncement,
+    ClubForCoachAnnouncement,
+    AnnouncementMeta,
 )
 from .utils import get_datetime_from_year
+
+from marketplace.models import get_licence_choice_number
+
+from voivodeships.services import VoivodeshipService
 
 User = get_user_model()
 
@@ -119,6 +134,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
         else:
             if _action_name == "coach_looking_for_player":
                 if user.profile.club_object:
+
                     profile = user.profile.team_object
                     club = profile.club if profile else ""
                     league = profile.league if profile else ""
@@ -169,6 +185,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 form.fields["target_league"].queryset = League.objects.is_top_parent()
 
             elif _action_name == "club_looking_for_player":
+
                 if user.profile.club_object:
                     voivo = user.profile.club_object.voivodeship_obj
 
@@ -190,6 +207,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
 
             elif _action_name == "club_looking_for_coach":
                 if user.profile.club_object:
+
                     form = ClubForCoachAnnouncementForm(
                         initial={
                             "club": user.profile.club_object,
@@ -288,6 +306,7 @@ class AddAnnouncementView(LoginRequiredMixin, View):
                 data["redirection_url"] = reverse("marketplace:announcements")
                 return JsonResponse(data)
             else:
+
                 data["form"] = render_crispy_form(form)
                 return JsonResponse(data)
         else:
@@ -403,6 +422,7 @@ class AnnouncementsMetaView(
         kwargs["my"] = False
 
     def get(self, request, *args, **kwargs):
+
         lista = []
 
         total_items = request.GET.get("total_items")

@@ -1,47 +1,45 @@
-import re
-from collections import Counter
 from typing import List
-
-import django.core.exceptions
 from django.contrib.postgres.search import SearchVector
-from django.db.models import Q
+import django.core.exceptions
+from collections import Counter
 
-from clubs.models import (
-    Club,
-    Gender,
-    League,
-    LeagueHistory,
-    Season,
-    Seniority,
-    Team,
-    TeamHistory,
-)
-from connector.entities import (
-    BaseClubEntity,
-    LeagueEntity,
-    PlayEntity,
-    TeamEntity,
-    TeamHistoryEntity,
-)
-from connector.enums import (
-    JUNIOR_AGE_GROUPS,
-    JUNIOR_LNP_LEAGUES,
-    LEAGUE_HIGHEST_PARENT_NAME_MAPPER,
-    PARENT_UUID_REQUIRED,
-)
-from inquiries.models import InquiryRequest
-from voivodeships.management.commands.add_voivodeships import Command as VoivoImport
-from voivodeships.models import Voivodeships
-
-from .base import BaseCommand
-from .fix_new_structure import Command as FixNewStructure
-from .restore_database import Command as RestoreDatabase
 from .utils import (
     LNP_SOURCE,
     create_mapper,
     get_mapper,
-    unify_club_name,
     unify_team_name,
+    unify_club_name,
+)
+from .base import BaseCommand
+from .restore_database import Command as RestoreDatabase
+from clubs.models import (
+    Club,
+    Team,
+    TeamHistory,
+    LeagueHistory,
+    League,
+    Season,
+    Seniority,
+    Gender,
+)
+import re
+from django.db.models import Q
+from .fix_new_structure import Command as FixNewStructure
+from voivodeships.management.commands.add_voivodeships import Command as VoivoImport
+from inquiries.models import InquiryRequest
+from voivodeships.models import Voivodeships
+from connector.entities import (
+    TeamHistoryEntity,
+    LeagueEntity,
+    PlayEntity,
+    TeamEntity,
+    BaseClubEntity,
+)
+from connector.enums import (
+    LEAGUE_HIGHEST_PARENT_NAME_MAPPER,
+    JUNIOR_LNP_LEAGUES,
+    PARENT_UUID_REQUIRED,
+    JUNIOR_AGE_GROUPS,
 )
 
 
@@ -174,9 +172,7 @@ class Command(BaseCommand):
                 if res_list and res_list.count(res_list[0]) == len(res_list):
                     model_obj = result[0]
             if model_obj:
-                if not model_obj.mapper or (
-                    model_obj.mapper and not model_obj.mapper.has_entities
-                ):
+                if not model_obj.mapper or (model_obj.mapper and not model_obj.mapper.has_entities):
                     return model_obj
 
         try:

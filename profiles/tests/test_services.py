@@ -1,9 +1,9 @@
 from django.test import TestCase
-
 from profiles import models
 from roles import definitions
 from users.models import User
 from utils import testutils as utils
+
 
 utils.silence_explamation_mark()
 

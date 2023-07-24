@@ -32,11 +32,7 @@ class SimplePlayerProfileSerializer:
     def serialize(cls, objects):
         return [
             {
-                "data_mapper_id": int(
-                    obj.mapper.get_entity(
-                        related_type="player", database_source="s38"
-                    ).mapper_id
-                ),
+                "data_mapper_id": int(obj.mapper.get_entity(related_type='player', database_source='s38').mapper_id),
                 "name": obj.user.get_full_name(),
                 "url": obj.get_permalink(),
             }

@@ -1,14 +1,12 @@
-import csv
-import pprint
-
-from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
-
-# from data.models import Player    DEPRECATED: PM-1015
+import csv
+from data.models import Player
 from profiles import models
 from profiles.views import (
     get_profile_model,
 )  # @todo this shoudl goes to utilities, views and commands are using this utility
+from django.contrib.auth import get_user_model
+import pprint
 
 User = get_user_model()
 
@@ -337,7 +335,8 @@ class Command(BaseCommand):
         if param == "O":
             return 0
         try:
-            return int(param)
+            pram_int = int(param)
+            return param_int
         except:
             param = param.replace("km", "")
             param = param.replace("  ", " ")
@@ -476,18 +475,15 @@ class Command(BaseCommand):
                     f"{club} activePZPN:{active_pznpn} IDLNP:{idlnp} {region}  {wix_id}"
                 )
 
-                # DEPRECATED: PM-1015
-                # try:
-                #     player = Player.objects.get(wix_id=wix_id)
-                #     mapper_id = player.id
-                # except Player.DoesNotExist:
-                mapper_id = None
+                try:
+                    player = Player.objects.get(wix_id=wix_id)
+                    mapper_id = player.id
+                except Player.DoesNotExist:
+                    mapper_id = None
 
                 profile = user.profile
 
-                profile.mapper.get_entity(
-                    related_type="player", database_source="s38"
-                ).mapper_id = mapper_id
+                profile.mapper.get_entity(related_type='player', database_source='s38').mapper_id = mapper_id
                 profile.height = height
                 motivation = ""
                 if (

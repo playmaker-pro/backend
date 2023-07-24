@@ -1,5 +1,4 @@
 from django.core.management.base import BaseCommand
-
 from profiles.utils import match_player_videos
 
 
@@ -9,11 +8,7 @@ class Command(BaseCommand):
     """
 
     def add_arguments(self, parser) -> None:
-        parser.add_argument(
-            "csv_file",
-            type=str,
-            help="Path to the CSV file to import player videos from",
-        )
+        parser.add_argument('csv_file', type=str, help='Path to the CSV file to import player videos from')
 
     def handle(self, *args, **kwargs) -> None:
         """
@@ -29,5 +24,5 @@ class Command(BaseCommand):
         object was created, a message is printed indicating the creation of the object.
         If it already existed, a message is printed indicating that the object already exists.
         """
-        csv_file = kwargs["csv_file"]
+        csv_file = kwargs['csv_file']
         match_player_videos(csv_file)

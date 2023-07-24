@@ -4,9 +4,11 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("profiles", "0074_merge_20220814_1130"),
-        ("profiles", "0074_merge_20220928_1427"),
+        ('profiles', '0074_merge_20220814_1130'),
+        ('profiles', '0074_merge_20220928_1427'),
     ]
 
-    operations = []
+    operations = [
+    ]

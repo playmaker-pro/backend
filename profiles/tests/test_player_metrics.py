@@ -1,15 +1,17 @@
 from unittest import TestCase
-import pytest
 from pm_core.services.stubs.player_stub import PlayerApiServiceStub
+from utils.factories.profiles_factories import PlayerMetricsFactory
+from utils.factories.clubs_factories import SeasonFactory
 from adapters.tests.utils import dummy_player
-from utils.factories import SeasonFactory, PlayerMetricsFactory
+import pytest
 
 
 @pytest.mark.django_db
 class PlayerMetricsTest(TestCase):
     def setUp(self) -> None:
         self.player = dummy_player()
-        SeasonFactory.create_batch(4)
+        PlayerMetricsFactory(player=self.player)
+        [SeasonFactory() for _ in range(4)]
         self.player.refresh_metrics(PlayerApiServiceStub)
         self.metrics = self.player.playermetrics
 

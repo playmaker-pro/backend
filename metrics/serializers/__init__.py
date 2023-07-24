@@ -1,7 +1,7 @@
-from .games import GameRawSerializer, GameSerializer
-from .trend import TrendSerializer
 from .users import (
-    CoachProfileSerializer,
-    PlayerProfileSerializer,
     SimplePlayerProfileSerializer,
+    PlayerProfileSerializer,
+    CoachProfileSerializer,
 )
+from .games import GameSerializer, GameRawSerializer
+from .trend import TrendSerializer

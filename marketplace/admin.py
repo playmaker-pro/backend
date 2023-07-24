@@ -1,8 +1,6 @@
 from django.contrib import admin
-
-from utils import linkify
-
 from . import models
+from utils import linkify
 
 
 @admin.register(models.PlayerForClubAnnouncement)

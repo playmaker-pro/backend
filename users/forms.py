@@ -1,5 +1,11 @@
-from allauth.account.adapter import get_adapter
 from allauth.account.forms import SignupForm
+from django import forms
+from django.utils.translation import gettext_lazy as _
+from wagtail.users.forms import UserCreationForm, UserEditForm
+from .models import User
+from django.conf import settings
+
+from allauth.account.adapter import get_adapter
 from allauth.account.utils import (
     filter_users_by_email,
     get_user_model,
@@ -11,16 +17,11 @@ from allauth.account.utils import (
     user_pk_to_url_str,
     user_username,
 )
-from django import forms
-from django.conf import settings
-from django.utils.translation import gettext_lazy as _
-from wagtail.users.forms import UserCreationForm, UserEditForm
-
-from .models import User
 
 
 # allauth custom forms
 class CustomSignupForm(SignupForm):
+
     first_name = forms.CharField(max_length=20, label="First Name")
     last_name = forms.CharField(max_length=20, label="Last Name")
     role = forms.ChoiceField(choices=User.ROLE_CHOICES)

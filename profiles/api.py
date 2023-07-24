@@ -1,17 +1,16 @@
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect
-from django.utils.translation import gettext_lazy as _
-
-from clubs.models import Team
-from followers.models import Follow, FollowTeam
-from inquiries.models import InquiryRequest
-
 from .model_utils import (
     get_profile_form_model,
     get_profile_model,
     get_profile_model_from_slug,
 )
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect
+from django.utils.translation import gettext_lazy as _
+from inquiries.models import InquiryRequest
+from django.contrib.auth.decorators import login_required
+from followers.models import FollowTeam
+from clubs.models import Team
+from followers.models import Follow
 
 
 def get_modal_action(user):
@@ -89,6 +88,7 @@ def inquiry(request):
             recipient = profile.user
 
         if user.userinquiry.can_make_request and action_modal is None:
+
             if (
                 InquiryRequest.objects.filter(sender=user, recipient=recipient)
                 .exclude(

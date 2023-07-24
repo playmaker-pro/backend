@@ -1,21 +1,15 @@
-from typing import Any, Dict
-
+from typing import Dict, Any
 from django.core.management.base import BaseCommand
-
-from clubs.models import Club, LeagueHistory, Team
+from profiles.models import PlayerProfile, CoachProfile, ScoutProfile, ManagerProfile
+from clubs.models import Club, Team, LeagueHistory
 from external_links.utils import create_or_update_player_external_links
-from profiles.models import CoachProfile, ManagerProfile, PlayerProfile, ScoutProfile
 
 
 class Command(BaseCommand):
-    help = "Update or create external links for specified profile type"
+    help = 'Update or create external links for specified profile type'
 
     def add_arguments(self, parser) -> None:
-        parser.add_argument(
-            "profile_type",
-            type=str,
-            help="The type of profile to update or create external links for",
-        )
+        parser.add_argument('profile_type', type=str, help='The type of profile to update or create external links for')
 
     def handle(self, *args, **options: Dict[str, Any]) -> None:
         """
@@ -30,21 +24,21 @@ class Command(BaseCommand):
         necessary. Finally, a success message is printed to the console.
         """
 
-        profile_type = options.get("profile_type", "").lower()
-        valid_types = ["player", "coach", "scout", "manager", "club", "team", "league"]
+        profile_type = options.get('profile_type', '').lower()
+        valid_types = ['player', 'coach', 'scout', 'manager', 'club', 'team', 'league']
 
         if profile_type not in valid_types:
             self.stdout.write(self.style.ERROR(f"Invalid profile type: {profile_type}"))
             return
 
         model_mapping = {
-            "player": PlayerProfile,
-            "coach": CoachProfile,
-            "scout": ScoutProfile,
-            "manager": ManagerProfile,
-            "club": Club,
-            "team": Team,
-            "league": LeagueHistory,
+            'player': PlayerProfile,
+            'coach': CoachProfile,
+            'scout': ScoutProfile,
+            'manager': ManagerProfile,
+            'club': Club,
+            'team': Team,
+            'league': LeagueHistory
         }
 
         model = model_mapping[profile_type]
@@ -54,7 +48,5 @@ class Command(BaseCommand):
             create_or_update_player_external_links(profile)
 
         self.stdout.write(
-            self.style.SUCCESS(
-                f"External links for {len(profiles)} {profile_type}s created successfully."
-            )
+            self.style.SUCCESS(f"External links for {len(profiles)} {profile_type}s created successfully.")
         )

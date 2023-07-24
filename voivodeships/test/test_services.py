@@ -1,13 +1,13 @@
 import json
 import tempfile
 
-from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.contrib.auth import get_user_model
 
-from roles import definitions
-from utils import testutils as utils
 from voivodeships.models import Voivodeships
 from voivodeships.services import VoivodeshipService
+from roles import definitions
+from utils import testutils as utils
 
 
 class TestVoivodeshipService(TestCase):

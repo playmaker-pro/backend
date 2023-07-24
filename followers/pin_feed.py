@@ -1,6 +1,6 @@
 from stream_framework.aggregators.base import RecentVerbAggregator
-from stream_framework.feeds.aggregated_feed.redis import RedisAggregatedFeed
 from stream_framework.feeds.redis import RedisFeed
+from stream_framework.feeds.aggregated_feed.redis import RedisAggregatedFeed
 
 
 class PinFeed(RedisFeed):

@@ -1,19 +1,19 @@
 from functools import cached_property, lru_cache
 from typing import List, Union
+
 from address.models import AddressField
 from django.conf import settings
 from django.db import models
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
+from profiles.utils import conver_vivo_for_api, supress_exception, unique_slugify
+from .managers import LeagueManager
+from voivodeships.models import Voivodeships
+from django.utils import timezone
+from mapper.models import Mapper
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_player_external_links
-from mapper.models import Mapper
-from profiles.utils import conver_vivo_for_api, supress_exception, unique_slugify
-from voivodeships.models import Voivodeships
-
-from .managers import LeagueManager
 
 
 class Season(models.Model):
@@ -236,6 +236,7 @@ class Club(models.Model, MappingMixin):
     def create_mapper_obj(self):
         self.mapper = Mapper.objects.create()
 
+
     def create_external_links_obj(self):
         self.external_links = ExternalLinks.objects.create()
 
@@ -289,16 +290,15 @@ class LeagueHistory(models.Model):
     def create_external_links_obj(self):
         self.external_links = ExternalLinks.objects.create()
 
-    # DEPRECATED: PM-1015
-    # def check_and_set_if_data_exists(self):
-    #     from data.models import League as Dleague
-    #
-    #     url = Dleague.get_url_based_on_id(self.index)
-    #     l = Dleague.objects.get(_url=url)
-    #     if l.advanced_json:
-    #         self.is_table_data = True
-    #     if l.games_snapshot:
-    #         self.is_matches_data = True
+    def check_and_set_if_data_exists(self):
+        from data.models import League as Dleague
+
+        url = Dleague.get_url_based_on_id(self.index)
+        l = Dleague.objects.get(_url=url)
+        if l.advanced_json:
+            self.is_table_data = True
+        if l.games_snapshot:
+            self.is_matches_data = True
 
     def get_admin_url(self):
         return reverse(
@@ -701,8 +701,8 @@ class Team(models.Model, MappingMixin):
 
     @property
     def team_name_with_current_league(self):
-        return self.display_team + (
-            " " + f"({self.latest_league_from_lh})"
+        return (
+            self.display_team + (" " + f"({self.latest_league_from_lh})")
             if self.latest_league_from_lh
             else ""
         )
@@ -774,6 +774,7 @@ class Team(models.Model, MappingMixin):
     @property
     @supress_exception
     def display_league_region_and_group_name(self) -> Union[str, None]:
+
         region = self.league.region if self.league and self.league.region else ""
         group_name = self.league.display_league_group_name
 

@@ -4,10 +4,12 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("profiles", "0003_auto_20220716_1151"),
-        ("profiles", "0004_profileverificationstatus_team_history"),
-        ("profiles", "0073_playervideo"),
+        ('profiles', '0003_auto_20220716_1151'),
+        ('profiles', '0004_profileverificationstatus_team_history'),
+        ('profiles', '0073_playervideo'),
     ]
 
-    operations = []
+    operations = [
+    ]

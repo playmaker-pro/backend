@@ -3,6 +3,7 @@ import csv
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
+
 User = get_user_model()
 
 
@@ -13,6 +14,7 @@ class Command(BaseCommand):
         parser.add_argument("path", type=str)
 
     def handle(self, *args, **options):
+
         with open(options["path"], newline="") as csvfile:
             reader = csv.DictReader(csvfile)
 
@@ -24,6 +26,7 @@ class Command(BaseCommand):
                 try:
                     user = User.objects.get(email=email)
                 except User.DoesNotExist:
+
                     user = User.objects.create_user(
                         email=email.lower(),
                         first_name=first_name,

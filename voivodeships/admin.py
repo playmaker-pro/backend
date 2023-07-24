@@ -5,4 +5,4 @@ from .models import Voivodeships
 
 @admin.register(Voivodeships)
 class VoivodeshipsAdmin(admin.ModelAdmin):
-    list_display = ("name", "code")
+    list_display = ('name', 'code')

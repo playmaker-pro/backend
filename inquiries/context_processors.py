@@ -1,9 +1,10 @@
-from .services import InquireService
+from .services import unseen_user_requests
 
 
 def get_user_info(request):
+
     if request.user.is_authenticated:
-        unseen_req = InquireService.unseen_user_requests(request.user)
+        unseen_req = unseen_user_requests(request.user)
         return {
             "requests_app": {
                 "number": unseen_req.count(),

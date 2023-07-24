@@ -1,6 +1,5 @@
 from django.contrib import admin
-
-from .models import Mapper, MapperEntity, MapperSource
+from .models import MapperEntity, MapperSource, Mapper
 
 
 class MapperEntityAdmin(admin.TabularInline):
@@ -10,9 +9,7 @@ class MapperEntityAdmin(admin.TabularInline):
 
 
 class MapperAdmin(admin.ModelAdmin):
-    inlines = [
-        MapperEntityAdmin,
-    ]
+    inlines = [MapperEntityAdmin, ]
     readonly_fields = ("created_at", "updated_at")
 
     def has_add_permission(self, request, obj=None):

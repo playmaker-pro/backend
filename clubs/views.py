@@ -1,15 +1,13 @@
 from django.contrib import messages
-from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
-from django.utils.translation import gettext_lazy as _
 from django.views import generic
-
+from django.utils.translation import gettext_lazy as _
+from . import models, forms
 from app import mixins
 from roles import definitions
 from utils import get_current_season
-
-from . import forms, models
+from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -23,35 +21,24 @@ class ClubShow(generic.TemplateView, mixins.ViewModalLoadingMixin):
         slug = self.kwargs.get("slug")
         self.editable = False
         user = self.request.user
-        seasons = [
-            season.name for season in models.Season.objects.filter().order_by("name")
-        ]
+        seasons = [season.name for season in models.Season.objects.filter().order_by("name")]
         if not selected_season:
             selected_season = get_current_season()
-        previous_season = (
-            seasons[seasons.index(selected_season) - 1]
-            if seasons.index(selected_season) > 0
-            else None
-        )
+        previous_season = seasons[seasons.index(selected_season)-1] if seasons.index(selected_season) > 0 else None
         try:
-            next_season = seasons[seasons.index(selected_season) + 1]
+            next_season = seasons[seasons.index(selected_season)+1]
         except IndexError:
             next_season = None
         kwargs["seasons"] = {
             "previous": previous_season,
             "selected": selected_season,
-            "next": next_season,
+            "next": next_season
         }
         if slug:
             club = get_object_or_404(models.Club, slug=slug)
 
             teams = club.teams.all()
-            teams_history = [
-                th.team
-                for th in models.TeamHistory.objects.filter(team__in=teams).filter(
-                    league_history__season__name=selected_season
-                )
-            ]
+            teams_history = [th.team for th in models.TeamHistory.objects.filter(team__in=teams).filter(league_history__season__name=selected_season)]
             kwargs["teams"] = teams_history
 
         if club.is_editor(user):

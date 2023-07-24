@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("mapper", "0004_alter_mapperentity_unique_together"),
+        ('mapper', '0004_alter_mapperentity_unique_together'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="mapperentity",
-            name="url",
+            model_name='mapperentity',
+            name='url',
             field=models.URLField(blank=True, max_length=500, null=True),
         ),
     ]
