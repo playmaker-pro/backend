@@ -1,11 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models import Sum
-
 from clubs.models import Season, Seniority
 from clubs.services import SeasonService
-from stats.adapters.player import PlayerAdapter
-from utils import get_current_season
+
+# from stats.adapters.player import PlayerAdapter    DEPRECATED: PM-1015
 
 User = get_user_model()
 
@@ -88,44 +86,46 @@ class CalculateFantasyStats:
         self, user_profile, season: str, is_senior: bool = True
     ):
         """need to be player"""
-        if not user_profile.user.is_player:
-            user_profile.add_event_log_message(
-                f"Cannot calculate Fantasy Metrics for {season} for senior={is_senior} this user is not Player!",
-                type="err",
-            )
-            return
-
-        player = PlayerAdapter(
-            int(
-                user_profile.mapper.get_entity(
-                    related_type="player", database_source="s38"
-                ).mapper_id
-            )
-        ).get_player_object()
-        points = 0
-        ps = player.playerstats.select_related(
-            "game", "gamefication", "league", "season"
-        ).filter(season__name=season)
-        ps = self._filter_players_stats(ps, is_senior=is_senior)
-        games_count = ps.count()
-
-        if games_count != 0:
-            points = (
-                ps.aggregate(Sum("gamefication__score")).get("gamefication__score__sum")
-                or 0
-            )
-            self.create_or_update_fantasy_object(
-                season, points, games_count, user_profile.user, is_senior
-            )
-            user_profile.add_event_log_message(
-                f"Fantasy calculated sucesfully and got {points} points for {season} for senior={is_senior}"
-            )
-        else:
-            self.try_to_remove_fantasy_object(season, user_profile.user, is_senior)
-            user_profile.add_event_log_message(
-                f"Player got 0 points for {season} for senior={is_senior}"
-            )
-            return
+        return
+        # DEPRECATED: PM-1015
+        # if not user_profile.user.is_player:
+        #     user_profile.add_event_log_message(
+        #         f"Cannot calculate Fantasy Metrics for {season} for senior={is_senior} this user is not Player!",
+        #         type="err",
+        #     )
+        #     return
+        #
+        # player = PlayerAdapter(
+        #     int(
+        #         user_profile.mapper.get_entity(
+        #             related_type="player", database_source="s38"
+        #         ).mapper_id
+        #     )
+        # ).get_player_object()
+        # points = 0
+        # ps = player.playerstats.select_related(
+        #     "game", "gamefication", "league", "season"
+        # ).filter(season__name=season)
+        # ps = self._filter_players_stats(ps, is_senior=is_senior)
+        # games_count = ps.count()
+        #
+        # if games_count != 0:
+        #     points = (
+        #         ps.aggregate(Sum("gamefication__score")).get("gamefication__score__sum")
+        #         or 0
+        #     )
+        #     self.create_or_update_fantasy_object(
+        #         season, points, games_count, user_profile.user, is_senior
+        #     )
+        #     user_profile.add_event_log_message(
+        #         f"Fantasy calculated sucesfully and got {points} points for {season} for senior={is_senior}"
+        #     )
+        # else:
+        #     self.try_to_remove_fantasy_object(season, user_profile.user, is_senior)
+        #     user_profile.add_event_log_message(
+        #         f"Player got 0 points for {season} for senior={is_senior}"
+        #     )
+        #     return
 
     def try_to_remove_fantasy_object(self, season, user, is_senior):
         ss = SeasonService()
