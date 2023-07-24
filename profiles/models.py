@@ -5,7 +5,7 @@ from datetime import datetime
 from address.models import AddressField
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -1939,6 +1939,30 @@ class PlayerProfilePosition(models.Model):
         verbose_name = "Player Profile Position"
         verbose_name_plural = "Player Profile Positions"
         unique_together = ("player_position", "player_profile")
+
+    def clean(self):
+        if self.is_main:
+            main_positions = self.player_profile.player_positions.filter(is_main=True)
+            if self.pk:
+                main_positions = main_positions.exclude(pk=self.pk)
+            if main_positions.exists():
+                raise ValidationError("A player can have only one main position.")
+
+        non_main_positions = self.player_profile.player_positions.filter(is_main=False)
+        if self.pk:
+            non_main_positions = non_main_positions.exclude(pk=self.pk)
+
+        # To allow updating an existing position's is_main attribute,
+        # we need to check whether the is_main value has changed.
+        if self.is_main and non_main_positions.count() >= 3:
+            raise ValidationError("A player can have a maximum of two non-main positions.")
+
+        if not self.is_main and non_main_positions.count() >= 2:
+            raise ValidationError("A player can have a maximum of two non-main positions.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
 
 class Language(models.Model):

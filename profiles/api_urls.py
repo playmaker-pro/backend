@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework import routers
-from .apis import ProfileAPI
+from .apis import ProfileAPI, PlayerPositionAPI
 from resources.views import WebhookPlayer
 
 router = routers.SimpleRouter(trailing_slash=False)
@@ -18,4 +18,5 @@ urlpatterns = [
         name="get_profile",
     ),
     path(r"playerupdate/", WebhookPlayer.as_view(), name="player_webhook"),
+    path(r"player_positions/", PlayerPositionAPI.as_view({"get": "list_positions"}), name='positions_list')
 ]

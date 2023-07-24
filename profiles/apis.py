@@ -11,6 +11,7 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from .models import PlayerPosition
 
 
 class ProfileAPI(EndpointView):
@@ -39,3 +40,17 @@ class ProfileAPI(EndpointView):
             serializer.save()
 
         return Response(serializer.data)
+
+
+class PlayerPositionAPI(EndpointView):
+    authentication_classes = []
+    permission_classes = []
+
+    def list_positions(self, request: Request) -> Response:
+        positions = PlayerPosition.objects.all().order_by('id')
+        positions_list = [
+            {'position_id': position.id,
+             'position_name': position.name}
+            for position in positions
+        ]
+        return Response(positions_list, status=status.HTTP_200_OK)

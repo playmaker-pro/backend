@@ -5,11 +5,12 @@ from django.contrib.auth import get_user_model
 from clubs import errors as clubs_errors
 from clubs.services import ClubService
 from profiles import errors as profile_errors
-from profiles.services import ProfileService
-from .models import PROFILE_TYPE
+from profiles.services import ProfileService, PlayerPositionService
+from .models import PROFILE_TYPE, PlayerProfilePosition, PlayerProfile, PlayerPosition
 from roles.definitions import PROFILE_TYPE_SHORT_MAP
 from users.services import UserService
 from django.http import QueryDict
+from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
@@ -29,6 +30,21 @@ TYPE_TO_SERIALIZER_MAPPING = {
     str: serializers.CharField(),
 }
 SERIALIZED_VALUE_TYPES = typing.Union[tuple(TYPE_TO_SERIALIZER_MAPPING.keys())]
+
+
+class PlayerProfilePositionSerializer(serializers.ModelSerializer):
+    position_name = serializers.CharField(source='player_position.name', read_only=True)
+
+    class Meta:
+        model = PlayerProfilePosition
+        fields = ['player_position', 'position_name', 'is_main']
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        return {
+            'player_position': ret['player_position'],
+            'is_main': ret['is_main']
+        }
 
 
 class ProfileSerializer(serializers.Serializer):
@@ -62,6 +78,9 @@ class ProfileSerializer(serializers.Serializer):
             ret[field_name] = serializer_field.to_representation(field_value)
 
         ret["role"] = self.profile_role
+        # Only serialize player_positions if the profile is a PlayerProfile
+        if player_positions := self.get_player_positions():
+            ret['player_positions'] = player_positions
         return ret
 
     def get_serializer_field(
@@ -75,6 +94,12 @@ class ProfileSerializer(serializers.Serializer):
     def get_role(self) -> str:
         """get and pop role from data"""
         return profiles_service.get_role_by_model(type(self.instance))
+
+    def get_player_positions(self):
+        if isinstance(self.instance, PlayerProfile):
+            player_positions = self.instance.player_positions.all()
+            return PlayerProfilePositionSerializer(player_positions, many=True).data
+        return None
 
     def save(self) -> None:
         """This serializer should not be able to save anything"""
@@ -154,6 +179,13 @@ class CreateProfileSerializer(ProfileSerializer):
         if users_service.user_has_profile(user_obj, self.model):
             raise profile_errors.UserAlreadyHasProfile
 
+    def handle_positions(self, positions_data: list) -> None:
+        """Handles the creation of player positions."""
+        positions_service = PlayerPositionService()
+        for position_data in positions_data:
+            positions_service.create_position(self.instance, position_data["player_position"],
+                                              position_data["is_main"])
+
     def validate_data(self) -> None:
         """Validate data"""
         super().validate_data()
@@ -163,7 +195,11 @@ class CreateProfileSerializer(ProfileSerializer):
         """create profile and set role for given user, need to validate data first"""
         self.validate_data()
         self.initial_data.pop("role")
+        positions_data = self.initial_data.pop("player_positions", None)
         self.instance = self.model.objects.create(**self.initial_data)
+
+        if positions_data and isinstance(self.instance, PlayerProfile):
+            self.handle_positions(positions_data)
 
 
 class UpdateProfileSerializer(ProfileSerializer):
@@ -183,9 +219,11 @@ class UpdateProfileSerializer(ProfileSerializer):
     def update_fields(self) -> None:
         """Update fields given in payload"""
         for attr, value in self.initial_data.items():
-            setattr(self.instance, attr, value) if hasattr(
-                self.instance, attr
-            ) else None
+            if attr == "player_positions":
+                player_position_service = PlayerPositionService()
+                player_position_service.update_positions(self.instance, value)
+            elif hasattr(self.instance, attr):
+                setattr(self.instance, attr, value)
 
     def save(self) -> None:
         """If data is valid, update fields and save profile instance"""

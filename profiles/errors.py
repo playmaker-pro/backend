@@ -46,3 +46,13 @@ class IncompleteRequestData(CoreAPIException):
         super().__init__()
 
     status_code = status.HTTP_400_BAD_REQUEST
+
+
+class AlternatePositionValidationError(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "A player can have a maximum of two alternate positions."
+
+
+class MainPositionValidationError(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "A player can have only one main position."
