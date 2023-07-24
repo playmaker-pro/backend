@@ -1,23 +1,23 @@
 import factory
-
 from mapper.models import Mapper, MapperEntity, MapperSource
+from utils.factories import CustomObjectFactory
 
 ID = "111222333"
 MAPPER_DATABASE_SOURCE = "scrapper_mongodb"
 MAPPER_PLAYER_TYPE = "player"
 
 
-class MapperFactory(factory.django.DjangoModelFactory):
+class MapperFactory(CustomObjectFactory):
     class Meta:
         model = Mapper
 
 
-class MapperSourceFactory(factory.django.DjangoModelFactory):
+class MapperSourceFactory(CustomObjectFactory):
     class Meta:
         model = MapperSource
 
 
-class MapperEntityFactory(factory.django.DjangoModelFactory):
+class MapperEntityFactory(CustomObjectFactory):
     mapper_id = ID
     target = factory.SubFactory(MapperSourceFactory)
     source = factory.SubFactory(MapperSourceFactory)

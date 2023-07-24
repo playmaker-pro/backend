@@ -22,20 +22,22 @@ class Command(BaseCommand):
         parser.add_argument("-s", "--season", type=str, default=None)
 
     def handle(self, *args, **options):
-        deep = options.get("deep")
-        season_name = options.get("season")
-
-        profiles = models.CoachProfile.objects.filter(
-            mapper__mapperentity__related_type="coach",
-            mapper__mapperentity__database_source="s38",
-            mapper__mapperentity__mapper_id__isnull=False,
-        )
-        counter = profiles.count()
-        if counter == 0:
-            self.stdout.write("No profiles to update...")
-        for profile in profiles:
-            self.stdout.write(
-                self.style.SUCCESS(f"Updating... {profile.user} profile: {profile}")
-            )
-            profile.calculate_metrics(seasons_behind=deep, season_name=season_name)
-            self.stdout.write(self.style.SUCCESS("Done :)"))
+        # DEPRECATED: PM-1015       we can't update metrics for coaches yet
+        # deep = options.get("deep")
+        # season_name = options.get("season")
+        #
+        # profiles = models.CoachProfile.objects.filter(
+        #     mapper__mapperentity__related_type="coach",
+        #     mapper__mapperentity__database_source="s38",
+        #     mapper__mapperentity__mapper_id__isnull=False,
+        # )
+        # counter = profiles.count()
+        # if counter == 0:
+        #     self.stdout.write("No profiles to update...")
+        # for profile in profiles:
+        #     self.stdout.write(
+        #         self.style.SUCCESS(f"Updating... {profile.user} profile: {profile}")
+        #     )
+        #     profile.calculate_metrics(seasons_behind=deep, season_name=season_name)
+        #     self.stdout.write(self.style.SUCCESS("Done :)"))
+        return

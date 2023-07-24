@@ -1,12 +1,14 @@
 import os
 from datetime import timedelta
-
+from .environment import Environment
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 
 # This loads additional settings for our environemnt
-CONFIGURATION = "dev"  # following options are allowed ['dev', 'production', 'staging']
+CONFIGURATION = (
+    Environment.DEV
+)  # following options are allowed ['dev', 'production', 'staging']
 
 # This flag allow us to see debug panel on each page.
 DEBUG_PANEL = False
@@ -63,8 +65,8 @@ INSTALLED_APPS = [
     "voivodeships",
     "mapper",
     "resources",
-    "data",  # external repo
-    "stats",  # external repo
+    # "data",  # external repo DEPRECATED: PM-1015
+    # "stats",  # external repo DEPRECATED: PM-1015
     "django_countries",
     "crispy_forms",
     "easy_thumbnails",
@@ -184,8 +186,8 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-
-DATABASE_ROUTERS = ["data.routers.DataRouter", "data.routers.DefaultDBRouter"]
+# DEPRECATED: PM-1015
+# DATABASE_ROUTERS = ["data.routers.DataRouter", "data.routers.DefaultDBRouter"]
 
 # DB_ITERATOR = '11'
 DATABASES = {
@@ -201,14 +203,15 @@ DATABASES = {
         "HOST": "localhost",
         "PORT": "5432",
     },
-    "datadb": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "local_data",
-        "USER": "arsen",
-        "PASSWORD": "postgres",
-        "HOST": "localhost",
-        "PORT": "5432",
-    },
+    # DEPRECATED: PM-1015
+    # "datadb": {
+    #     "ENGINE": "django.db.backends.postgresql_psycopg2",
+    #     "NAME": "local_data",
+    #     "USER": "arsen",
+    #     "PASSWORD": "postgres",
+    #     "HOST": "localhost",
+    #     "PORT": "5432",
+    # },
 }
 
 # Password validation
@@ -451,8 +454,10 @@ BLOG_PAGINATION_PER_PAGE = 4
 import logging.config
 from os.path import join
 
+LOGGING_ROOTDIR = "_logs"
 
-def get_logging_structure(LOGFILE_ROOT):
+
+def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
     return {
         "version": 1,
         "disable_existing_loggers": False,
@@ -535,9 +540,8 @@ def get_logging_structure(LOGFILE_ROOT):
 # Reset logging
 # (see http://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/)
 LOGGING_CONFIG = None
-LOGGING = get_logging_structure("_logs")
+LOGGING = get_logging_structure()
 logging.config.dictConfig(LOGGING)
-
 logger = logging.getLogger(f"project.{__name__}")
 
 
