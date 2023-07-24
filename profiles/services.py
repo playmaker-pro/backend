@@ -1,11 +1,12 @@
 import logging
-from typing import Optional, Type
+from typing import Optional, Type, Union
+import uuid
 from django.contrib.auth import get_user_model
 from clubs.models import Club as CClub
 from clubs.models import Team as CTeam
 from . import models
 from clubs import models as clubs_models
-from .models import PROFILE_TYPE, MODEL_MAP
+from .errors import ProfileDoesNotExist
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -256,7 +257,7 @@ class ProfileVerificationService:
 
 
 class ProfileService:
-    def set_initial_verification(self, profile: Type[PROFILE_TYPE]) -> None:
+    def set_initial_verification(self, profile: models.PROFILE_TYPE) -> None:
         """set initial verification status object if not present"""
         if profile.verification is None:
             profile.verification = models.ProfileVerificationStatus.create_initial(
@@ -264,9 +265,9 @@ class ProfileService:
             )
             profile.save()
 
-    def set_and_create_user_profile(self, user: User) -> Type[PROFILE_TYPE]:
+    def set_and_create_user_profile(self, user: User) -> models.PROFILE_TYPE:
         """get type of profile and create profile"""
-        profile_model = MODEL_MAP.get(user.role, models.GuestProfile)
+        profile_model = models.PROFILE_MODEL_MAP.get(user.role, models.GuestProfile)
         profile, _ = profile_model.objects.get_or_create(user=user)
         if user.is_player:
             models.PlayerMetrics.objects.get_or_create(player=profile)
@@ -274,11 +275,38 @@ class ProfileService:
         return profile
 
     def create_profile_with_initial_data(
-        self, profile_type: Type[PROFILE_TYPE], data: dict
-    ) -> None:
+        self, profile_type: models.PROFILE_TYPE, data: dict
+    ) -> models.PROFILE_TYPE:
         """Create profile based on type, save with initial data"""
-        profile_type.objects.create(**data)
+        return profile_type.objects.create(**data)
 
-    def get_model_by_role(self, role: str) -> Type[PROFILE_TYPE]:
+    def get_model_by_role(self, role: str) -> models.PROFILE_TYPE:
         """Get and return type of profile based on role (i.e.: 'S', 'P', 'C')"""
-        return MODEL_MAP[role]
+        return models.PROFILE_MODEL_MAP[role]
+
+    def get_role_by_model(self, model: Type[models.PROFILE_TYPE]) -> str:
+        """Get and return role shortcut based on profile type"""
+        return models.REVERSED_MODEL_MAP[model]
+
+    def get_profile_by_uuid(
+        self, profile_uuid: Union[uuid.UUID, str]
+    ) -> models.PROFILE_TYPE:
+        """
+        Get profile object using uuid
+        Need to iterate through each profile type
+        Iterated object (PROFILE_MODEL_MAP) has to include each subclass of BaseProfile
+        Raise ProfileDoesNotExist if no any profile with given uuid exist
+        """
+        for profile_type in models.PROFILE_MODEL_MAP.values():
+            try:
+                return profile_type.objects.get(uuid=profile_uuid)
+            except profile_type.DoesNotExist:
+                continue
+        raise ProfileDoesNotExist
+
+    def is_valid_uuid(self, value: str) -> bool:
+        try:
+            uuid_obj = uuid.UUID(value)
+        except ValueError:
+            return False
+        return str(uuid_obj) == value

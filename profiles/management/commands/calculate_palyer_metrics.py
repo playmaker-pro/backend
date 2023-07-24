@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import reset_queries
 
-from data.models import Player
+# from data.models import Player    DEPRECATED: PM-1015
 from profiles import models
 from profiles.views import (
     get_profile_model,

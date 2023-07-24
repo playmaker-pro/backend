@@ -9,8 +9,13 @@ router.register("", ProfileAPI, basename="profiles")
 urlpatterns = [
     path(
         r"",
-        ProfileAPI.as_view({"post": "create"}),
-        name="create_profile",
+        ProfileAPI.as_view({"post": "create_profile", "patch": "update_profile"}),
+        name="create_or_update_profile",
+    ),
+    path(
+        r"<uuid:profile_uuid>/",
+        ProfileAPI.as_view({"get": "get_profile_by_uuid"}),
+        name="get_profile",
     ),
     path(r"playerupdate/", WebhookPlayer.as_view(), name="player_webhook"),
 ]

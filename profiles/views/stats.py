@@ -3,21 +3,18 @@ import typing
 from os.path import basename
 from random import randint
 from urllib.parse import parse_qs, urlparse
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext_lazy as _
 from django.views import generic
 from rest_framework.views import View
-from typing_extensions import runtime
-
 from app import mixins
 from profiles.forms.regular import PlayerVideoForm
 from profiles.models import PlayerVideo
 from profiles.utils import get_metrics_update_date
-from stats import adapters, utilites
+
+# from stats import adapters, utilites   DEPRECATED: PM-1015
 from utils import get_current_season
 
 from .base import SlugyViewMixin
@@ -87,20 +84,21 @@ class ProfileFantasy(ProfileStatsPageView):
     page_title = _("Twoje fantasy")
 
     def get_data_or_calculate(self, user):
-        season_name = get_current_season()
-        _id = int(
-            user.profile.mapper.get_entity(
-                related_type="player", database_source="s38"
-            ).mapper_id
-        )
-        if (
-            user.profile.playermetrics.how_old_days(fantasy=True) >= 7
-            and user.profile.has_data_id
-        ):
-            fantasy = adapters.PlayerFantasyDataAdapter(_id).get(
-                season=season_name, full=True
-            )
-            user.profile.playermetrics.update_fantasy(fantasy)
+        # DEPRECATED: PM-1015
+        # season_name = get_current_season()
+        # _id = int(
+        #     user.profile.mapper.get_entity(
+        #         related_type="player", database_source="s38"
+        #     ).mapper_id
+        # )
+        # if (
+        #     user.profile.playermetrics.how_old_days(fantasy=True) >= 7
+        #     and user.profile.has_data_id
+        # ):
+        #     fantasy = adapters.PlayerFantasyDataAdapter(_id).get(
+        #         season=season_name, full=True
+        #     )
+        #     user.profile.playermetrics.update_fantasy(fantasy)
         return user.profile.playermetrics.fantasy
 
 

@@ -5,16 +5,15 @@ import re
 from urllib.parse import parse_qs, urlparse
 
 import pandas as pd
-from django.conf import settings
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 import profiles
 from profiles import models
-from roles import definitions
-from stats import adapters
 from typing import Optional
+
+# from stats import adapters DEPRECATED: PM-1015
 
 # from . import models
 # from profiles import forms  # todo teog importu tu nie moze być bo sie robi rekurencja
@@ -88,32 +87,33 @@ def get_datetime_from_year(year):
     return timezone.datetime(year, 1, 1)
 
 
-def calculate_player_metrics():
-    from utils import get_current_season
-
-    qs = User.objects.filter(
-        declared_role=definitions.PLAYER_SHORT, state=User.STATE_ACCOUNT_VERIFIED
-    )
-    for user in qs:
-        if user.profile.has_data_id:
-            season_name = get_current_season()
-            _id = int(
-                user.profile.mapper.get_entity(
-                    related_type="player", database_source="s38"
-                ).mapper_id
-            )
-            games_summary = adapters.PlayerLastGamesAdapter(_id).get(
-                season=season_name, limit=3
-            )  # should be profile.playermetrics.refresh_games_summary() and putted to celery.
-            fantasy_summary = adapters.PlayerFantasyDataAdapter(_id).get(
-                season=season_name
-            )
-            season_summary = adapters.PlayerStatsSeasonAdapter(_id).get(
-                season=season_name
-            )
-            user.profile.playermetrics.update_summaries(
-                games_summary, season_summary, fantasy_summary
-            )
+# DEPRECATED: PM-1015
+# def calculate_player_metrics():
+#     from utils import get_current_season
+#
+#     qs = User.objects.filter(
+#         declared_role=definitions.PLAYER_SHORT, state=User.STATE_ACCOUNT_VERIFIED
+#     )
+#     for user in qs:
+#         if user.profile.has_data_id:
+#             season_name = get_current_season()
+#             _id = int(
+#                 user.profile.mapper.get_entity(
+#                     related_type="player", database_source="s38"
+#                 ).mapper_id
+#             )
+#             games_summary = adapters.PlayerLastGamesAdapter(_id).get(
+#                 season=season_name, limit=3
+#             )  # should be profile.playermetrics.refresh_games_summary() and putted to celery.
+#             fantasy_summary = adapters.PlayerFantasyDataAdapter(_id).get(
+#                 season=season_name
+#             )
+#             season_summary = adapters.PlayerStatsSeasonAdapter(_id).get(
+#                 season=season_name
+#             )
+#             user.profile.playermetrics.update_summaries(
+#                 games_summary, season_summary, fantasy_summary
+#             )
 
 
 # @(rkesik): that can be moved to /app/utils.py
@@ -238,181 +238,182 @@ def make_jj_manago():
         i.save()
 
 
-def create_from_data():
-    """Create and attach League,Season,Seniority,Team,Club - based on data_Plater.meta
-    operation should be run once
-    """
-
-    def seniority_translate(name):
-        if name == "seniorskie":
-            return "seniorzy"
-        elif name == "młodzieżowe":
-            return "juniorzy"
-
-    players = User.objects.filter(declared_role=definitions.PLAYER_SHORT)
-    print(f"Number of players to update {players.count()}")
-    ids = 0
-    from league_filter_map import LEAGUE_MAP
-    from teams_map import TEAM_MAP
-
-    from clubs.models import Club, Gender, League, Seniority, Team, Voivodeship
-    from stats.adapters import PlayerAdapter
-    from stats.utilites import LEAGUES_CODES_MAP
-    from utils import get_current_season
-
-    print("getting sys user")
-
-    sysuser = User.get_system_user()
-    print("loop")
-    for player in players:
-        try:
-            profile = player.profile
-
-        except:
-            print("do not have related object", player)
-            continue
-        if profile.has_data_id:
-            # print('get from s38')
-            adpt = PlayerAdapter(
-                int(
-                    profile.mapper.get_entity(
-                        related_type="player", database_source="s38"
-                    ).mapper_id
-                )
-            )
-            # print('adapt')
-            if adpt.player.meta is None:
-                print("This player dont have META yet... {adpt.player} ")
-                continue
-            meta_new = adpt.player.meta.get(get_current_season(), None)
-            if meta_new is None:
-                print(f"--------------------- {adpt.player}")
-                print("\t\tWarning.......... no meta for platyer")
-                profile.trigger_refresh_data_player_stats()
-                adpt.player.refresh_from_db()
-                meta_new = adpt.player.meta.get(get_current_season(), None)
-                if meta_new is None:
-                    print(
-                        f"\t\tno meta for 2020/2021 {adpt.player}  -- taking older season."
-                    )
-                    meta_new = adpt.player.meta.get("2019/2020", None)
-                    if meta_new is None:
-                        print(
-                            f"\t\tno meta  for 2019/2020 {adpt.player}  -- taking older season."
-                        )
-                        meta_new = adpt.player.meta.get("2018/2019", None)
-
-                        if meta_new is None:
-                            print(
-                                f"!!!!!! PlayerProfile {profile} still do not have yet meta for 2018/2019 /{adpt.player} meta: {adpt.player.meta}"
-                            )
-                            continue
-
-                            # print(f'\t\tPlayer do not have yet meta  for 2018/2019 {adpt.player}  -- taking older season.')
-                            # meta_new = adpt.player.meta.get('2017/2018', None)
-                            # if meta_new is None:
-                else:
-                    print(f"FIXED")
-            else:
-                profile.meta = meta_new
-                profile.save()
-
-            lc = meta_new["league_code"]
-            tn = meta_new["team"]
-            # print(meta_new)
-            # print('--------------------------------------------')
-            # print('meta=', meta_new)
-            # print('ll=', LEAGUE_MAP)
-            for m in LEAGUE_MAP:
-                if (
-                    meta_new["zpn"].lower() + "e" in m["województwo"]
-                    and str(lc) == m["league_code"]
-                ):
-                    x = m
-                    # print('xxx=', x)
-                    break
-
-            # print('--------------------------------------------')
-            # print(TEAM_MAP[tn])
-            if TEAM_MAP.get(tn) is None:
-                print(
-                    f"!!!!!!! Not mapped TEAM {tn} for player Player do not have yet meta {adpt.player}"
-                )
-                continue
-            if TEAM_MAP[tn]["name"]:
-                team = TEAM_MAP[tn]["name"]
-                club = TEAM_MAP[tn]["club"] or TEAM_MAP[tn]["name"]
-            else:
-                team = tn
-                club = tn
-            vivo = meta_new["zpn"].lower() + "e"
-            vivo = conver_vivo_for_api(vivo)
-            league_name = LEAGUES_CODES_MAP[int(lc)]
-            gen = x["plec"]
-            sen = seniority_translate(x["seniority"])
-            # print('------')
-            # print('league=', league_name)
-            # print('seniority=', sen)
-            # print('vivo=', vivo)
-            # print('gen=', gen)
-            # print('lc=', lc)
-            # print('team=', team)
-            # print('club=', club)
-            try:
-                leagueo, _ = League.objects.update_or_create(
-                    name=league_name.title(), defaults={"code": str(lc)}
-                )
-            except Exception as e:
-                print(e)
-                print("lc=", str(lc), meta_new)
-
-            if vivo is not None:
-                vivoo, _ = Voivodeship.objects.update_or_create(name=vivo.lower())
-            else:
-                vivoo = None
-
-            cqs = Club.objects.filter(name__icontains=club)
-            # print(f'club is present: cqs {cqs.count()}')
-            if cqs.count() > 0:
-                clubo = cqs.first()
-                createdc = False
-            elif cqs.count() == 0:
-                clubo, createdc = Club.objects.update_or_create(
-                    name=club, defaults={"manager": sysuser, "voivodeship": vivoo}
-                )
-
-            if createdc:
-                # print('Club created..')
-                clubo.autocreated = True
-                clubo.save()
-            # teams
-
-            seno, _ = Seniority.objects.update_or_create(name=sen)
-            geno, _ = Gender.objects.update_or_create(name=gen)
-
-            tqs = Team.objects.filter(name__icontains=Team)
-            if tqs.count() > 0:
-                teamo = tqs.first()
-                createdt = False
-            elif tqs.count() == 0:
-                teamo, createdt = Team.objects.update_or_create(
-                    name=team,
-                    league=leagueo,
-                    seniority=seno,
-                    club=clubo,
-                    defaults={"gender": geno},
-                )
-            if createdt:
-                # print('Team created..')
-                teamo.visible = False
-                teamo.autocreated = True
-                teamo.save()
-            profile.team_object = teamo
-            profile.save()
-
-            ids += 1
-
-    print(ids)
+# DEPRECATED: PM-1015
+# def create_from_data():
+#     """Create and attach League,Season,Seniority,Team,Club - based on data_Plater.meta
+#     operation should be run once
+#     """
+#
+#     def seniority_translate(name):
+#         if name == "seniorskie":
+#             return "seniorzy"
+#         elif name == "młodzieżowe":
+#             return "juniorzy"
+#
+#     players = User.objects.filter(declared_role=definitions.PLAYER_SHORT)
+#     print(f"Number of players to update {players.count()}")
+#     ids = 0
+#     from league_filter_map import LEAGUE_MAP
+#     from teams_map import TEAM_MAP
+#
+#     from clubs.models import Club, Gender, League, Seniority, Team, Voivodeship
+#     from stats.adapters import PlayerAdapter
+#     from stats.utilites import LEAGUES_CODES_MAP
+#     from utils import get_current_season
+#
+#     print("getting sys user")
+#
+#     sysuser = User.get_system_user()
+#     print("loop")
+#     for player in players:
+#         try:
+#             profile = player.profile
+#
+#         except:
+#             print("do not have related object", player)
+#             continue
+#         if profile.has_data_id:
+#             # print('get from s38')
+#             adpt = PlayerAdapter(
+#                 int(
+#                     profile.mapper.get_entity(
+#                         related_type="player", database_source="s38"
+#                     ).mapper_id
+#                 )
+#             )
+#             # print('adapt')
+#             if adpt.player.meta is None:
+#                 print("This player dont have META yet... {adpt.player} ")
+#                 continue
+#             meta_new = adpt.player.meta.get(get_current_season(), None)
+#             if meta_new is None:
+#                 print(f"--------------------- {adpt.player}")
+#                 print("\t\tWarning.......... no meta for platyer")
+#                 profile.trigger_refresh_data_player_stats()
+#                 adpt.player.refresh_from_db()
+#                 meta_new = adpt.player.meta.get(get_current_season(), None)
+#                 if meta_new is None:
+#                     print(
+#                         f"\t\tno meta for 2020/2021 {adpt.player}  -- taking older season."
+#                     )
+#                     meta_new = adpt.player.meta.get("2019/2020", None)
+#                     if meta_new is None:
+#                         print(
+#                             f"\t\tno meta  for 2019/2020 {adpt.player}  -- taking older season."
+#                         )
+#                         meta_new = adpt.player.meta.get("2018/2019", None)
+#
+#                         if meta_new is None:
+#                             print(
+#                                 f"!!!!!! PlayerProfile {profile} still do not have yet meta for 2018/2019 /{adpt.player} meta: {adpt.player.meta}"
+#                             )
+#                             continue
+#
+#                             # print(f'\t\tPlayer do not have yet meta  for 2018/2019 {adpt.player}  -- taking older season.')
+#                             # meta_new = adpt.player.meta.get('2017/2018', None)
+#                             # if meta_new is None:
+#                 else:
+#                     print(f"FIXED")
+#             else:
+#                 profile.meta = meta_new
+#                 profile.save()
+#
+#             lc = meta_new["league_code"]
+#             tn = meta_new["team"]
+#             # print(meta_new)
+#             # print('--------------------------------------------')
+#             # print('meta=', meta_new)
+#             # print('ll=', LEAGUE_MAP)
+#             for m in LEAGUE_MAP:
+#                 if (
+#                     meta_new["zpn"].lower() + "e" in m["województwo"]
+#                     and str(lc) == m["league_code"]
+#                 ):
+#                     x = m
+#                     # print('xxx=', x)
+#                     break
+#
+#             # print('--------------------------------------------')
+#             # print(TEAM_MAP[tn])
+#             if TEAM_MAP.get(tn) is None:
+#                 print(
+#                     f"!!!!!!! Not mapped TEAM {tn} for player Player do not have yet meta {adpt.player}"
+#                 )
+#                 continue
+#             if TEAM_MAP[tn]["name"]:
+#                 team = TEAM_MAP[tn]["name"]
+#                 club = TEAM_MAP[tn]["club"] or TEAM_MAP[tn]["name"]
+#             else:
+#                 team = tn
+#                 club = tn
+#             vivo = meta_new["zpn"].lower() + "e"
+#             vivo = conver_vivo_for_api(vivo)
+#             league_name = LEAGUES_CODES_MAP[int(lc)]
+#             gen = x["plec"]
+#             sen = seniority_translate(x["seniority"])
+#             # print('------')
+#             # print('league=', league_name)
+#             # print('seniority=', sen)
+#             # print('vivo=', vivo)
+#             # print('gen=', gen)
+#             # print('lc=', lc)
+#             # print('team=', team)
+#             # print('club=', club)
+#             try:
+#                 leagueo, _ = League.objects.update_or_create(
+#                     name=league_name.title(), defaults={"code": str(lc)}
+#                 )
+#             except Exception as e:
+#                 print(e)
+#                 print("lc=", str(lc), meta_new)
+#
+#             if vivo is not None:
+#                 vivoo, _ = Voivodeship.objects.update_or_create(name=vivo.lower())
+#             else:
+#                 vivoo = None
+#
+#             cqs = Club.objects.filter(name__icontains=club)
+#             # print(f'club is present: cqs {cqs.count()}')
+#             if cqs.count() > 0:
+#                 clubo = cqs.first()
+#                 createdc = False
+#             elif cqs.count() == 0:
+#                 clubo, createdc = Club.objects.update_or_create(
+#                     name=club, defaults={"manager": sysuser, "voivodeship": vivoo}
+#                 )
+#
+#             if createdc:
+#                 # print('Club created..')
+#                 clubo.autocreated = True
+#                 clubo.save()
+#             # teams
+#
+#             seno, _ = Seniority.objects.update_or_create(name=sen)
+#             geno, _ = Gender.objects.update_or_create(name=gen)
+#
+#             tqs = Team.objects.filter(name__icontains=Team)
+#             if tqs.count() > 0:
+#                 teamo = tqs.first()
+#                 createdt = False
+#             elif tqs.count() == 0:
+#                 teamo, createdt = Team.objects.update_or_create(
+#                     name=team,
+#                     league=leagueo,
+#                     seniority=seno,
+#                     club=clubo,
+#                     defaults={"gender": geno},
+#                 )
+#             if createdt:
+#                 # print('Team created..')
+#                 teamo.visible = False
+#                 teamo.autocreated = True
+#                 teamo.save()
+#             profile.team_object = teamo
+#             profile.save()
+#
+#             ids += 1
+#
+#     print(ids)
 
 
 def match_player_videos(csv_file: str) -> None:

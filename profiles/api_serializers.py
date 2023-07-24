@@ -1,14 +1,15 @@
-from datetime import date
-from typing import List, Type
+import typing
+from datetime import date, datetime
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from clubs.errors import TeamDoesNotExist, ClubDoesNotExist, TeamHistoryDoesNotExist
+from clubs import errors as clubs_errors
 from clubs.services import ClubService
-from profiles.erros import UserAlreadyHasProfile, InvalidUserRole, InvalidUser
+from profiles import errors as profile_errors
 from profiles.services import ProfileService
-from .models import PROFILES, PROFILE_TYPE
+from .models import PROFILE_TYPE
 from roles.definitions import PROFILE_TYPE_SHORT_MAP
 from users.services import UserService
+from django.http import QueryDict
 
 User = get_user_model()
 
@@ -16,105 +17,97 @@ profiles_service: ProfileService = ProfileService()
 clubs_service: ClubService = ClubService()
 users_service: UserService = UserService()
 
+TYPE_TO_SERIALIZER_MAPPING = {
+    int: serializers.IntegerField(),
+    float: serializers.FloatField(),
+    bool: serializers.BooleanField(),
+    type(None): serializers.BooleanField(allow_null=True),
+    datetime: serializers.DateTimeField(),
+    date: serializers.DateField(),
+    list: serializers.ListField(),
+    dict: serializers.DictField(),
+    str: serializers.CharField(),
+}
+SERIALIZED_VALUE_TYPES = typing.Union[tuple(TYPE_TO_SERIALIZER_MAPPING.keys())]
+
 
 class ProfileSerializer(serializers.Serializer):
+    serialize_fields = []  # if empty -> serialize all fields
+    required_fields = []  # fields required as 'data'
+
     def __init__(
         self,
-        instance: PROFILE_TYPE = None,
-        model: Type[PROFILE_TYPE] = None,
         *args,
         **kwargs,
     ) -> None:
-        super().__init__(instance, *args, **kwargs)
-
-        self.user_obj: User = self.get_user()
-        self.user_role: str = self.get_role()
-        self.model: Type[PROFILE_TYPE] = model or self.define_model()
-        if not self.model:
-            raise AttributeError(f"No model defined, options: {PROFILES}")
-
-    def define_model(self) -> Type[PROFILE_TYPE]:
-        return profiles_service.get_model_by_role(self.user_role)
-
-    def get_user(self) -> User:
-        """get user with given user_id, raise exception if no user_id or user doesn't exist"""
-        try:
-            user_id: int = self.initial_data.get("user_id")
-        except AttributeError:
-            raise InvalidUser()
-
-        user_obj: User = users_service.get_user(user_id)
-        if not user_obj:
-            raise InvalidUser()
-
-        return user_obj
+        super().__init__(*args, **kwargs)
+        self.profile_role: str = self.get_role()
+        self.model: PROFILE_TYPE = self.define_model()
 
     @property
     def data(self) -> dict:
         """return whole serialized object"""
         return self.to_representation()
 
-    def to_representation(self, fields_pool: List[str] = None) -> dict:
+    def to_representation(self, *args, **kwargs) -> dict:
         """serialize each attr of given model into json"""
         ret = {}
-        fields: list[str] = fields_pool or self.instance.__dict__
+        fields: list[str] = self.serialize_fields or self.instance.__dict__
         for field_name in fields:
             if field_name.startswith("_") or field_name == "_state":
                 continue
 
             field_value = getattr(self.instance, field_name)
-            serializer_field = self.get_serializer_field(field_value)
+            serializer_field: serializers.Field = self.get_serializer_field(field_value)
             ret[field_name] = serializer_field.to_representation(field_value)
 
-        ret["role"] = self.user_role
+        ret["role"] = self.profile_role
         return ret
 
-    def get_serializer_field(self, field_value) -> serializers.Field:
+    def get_serializer_field(
+        self, field_value: SERIALIZED_VALUE_TYPES
+    ) -> serializers.Field:
         """parse serialized fields"""
-        if isinstance(field_value, str):
-            return serializers.CharField()
-        elif isinstance(field_value, int):
-            return serializers.IntegerField()
-        elif isinstance(field_value, float):
-            return serializers.FloatField()
-        elif isinstance(field_value, bool):
-            return serializers.BooleanField()
-        elif isinstance(field_value, date):
-            return serializers.DateTimeField()
-        return serializers.CharField()
+        return TYPE_TO_SERIALIZER_MAPPING.get(
+            type(field_value), serializers.CharField()
+        )
+
+    def get_role(self) -> str:
+        """get and pop role from data"""
+        return profiles_service.get_role_by_model(type(self.instance))
+
+    def save(self) -> None:
+        """This serializer should not be able to save anything"""
+        raise profile_errors.SerializerError(
+            f"{self.__class__.__name__} should not be able to save anything!"
+        )
+
+    def define_model(self) -> PROFILE_TYPE:
+        """Define profile model based on role shortcut"""
+        return profiles_service.get_model_by_role(self.profile_role)
+
+    def validate_role(self, role: str) -> None:
+        """validate user role, raise exception if doesn't suits to the schema"""
+        if role not in list(PROFILE_TYPE_SHORT_MAP.values()):
+            raise profile_errors.InvalidProfileRole()
 
     def validate_team(self) -> None:
         """validate team id"""
         if team_id := self.initial_data.get("team_object_id"):
             if not clubs_service.team_exist(team_id):
-                raise TeamDoesNotExist()
+                raise clubs_errors.TeamDoesNotExist
 
     def validate_club(self) -> None:
         """validate club id"""
         if club_id := self.initial_data.get("club_object_id"):
             if not clubs_service.team_exist(club_id):
-                raise ClubDoesNotExist()
+                raise clubs_errors.ClubDoesNotExist
 
     def validate_team_history(self) -> None:
         """validate team history id"""
         if team_history_id := self.initial_data.get("club_object_id"):
             if not clubs_service.team_exist(team_history_id):
-                raise TeamHistoryDoesNotExist()
-
-    def get_role(self) -> str:
-        """get and pop role from data"""
-        try:
-            role: str = self.initial_data.pop("role")
-        except KeyError:
-            raise InvalidUserRole()
-
-        self.validate_role(role)
-        return role
-
-    def validate_role(self, role) -> None:
-        """validate user role, raise exception if doesn't suits to the schema"""
-        if role not in list(PROFILE_TYPE_SHORT_MAP.values()):
-            raise InvalidUserRole()
+                raise clubs_errors.TeamHistoryDoesNotExist
 
     def validate_data(self) -> None:
         """validate ids of team, club and team history"""
@@ -122,35 +115,80 @@ class ProfileSerializer(serializers.Serializer):
         self.validate_club()
         self.validate_team_history()
 
-    def validate_user_has_no_profile(
-        self,
-    ) -> None:
-        """Check if user has profile, if so - raise exception"""
-        if users_service.user_has_profile(self.user_obj, self.model):
-            raise UserAlreadyHasProfile()
-
-    def refresh_instance(self) -> None:
-        """Refresh profile instance before serialize"""
-        self.instance: PROFILE_TYPE = self.model.objects.get(user=self.user_obj)
-
-    def save(self) -> None:
-        """This serializer should not be able to save anything"""
-        raise NotImplementedError()
+    def initial_validation(self, data: QueryDict):
+        """Validate serializer input (data **kw)"""
+        for field in self.required_fields:
+            if not data or field not in data.keys():
+                raise profile_errors.IncompleteRequestData(self.required_fields)
+        return data.dict()
 
 
 class CreateProfileSerializer(ProfileSerializer):
+    user_id = serializers.IntegerField()
+    role = serializers.CharField()
+    serialize_fields = ["user_id", "uuid"]
+    required_fields = ["user_id", "role"]
+
+    def __init__(self, *args, **kwargs) -> None:
+        kwargs["data"] = self.initial_validation(kwargs.get("data"))
+        super().__init__(*args, **kwargs)
+
+    def get_role(self) -> str:
+        """get and pop role from data"""
+        try:
+            role: str = self.initial_data.get("role")
+        except KeyError:
+            raise profile_errors.InvalidProfileRole
+
+        self.validate_role(role)
+        return role
+
+    def validate_user(self):
+        """Validate user_is was given and user exist"""
+        user_id: int = self.initial_data.get("user_id")
+        user_obj: User = users_service.get_user(user_id)
+
+        if not user_id or not user_obj:
+            raise profile_errors.InvalidUser
+
+        if users_service.user_has_profile(user_obj, self.model):
+            raise profile_errors.UserAlreadyHasProfile
+
+    def validate_data(self) -> None:
+        """Validate data"""
+        super().validate_data()
+        self.validate_user()
+
     def save(self) -> None:
         """create profile and set role for given user, need to validate data first"""
-        self.validate_user_has_no_profile()
         self.validate_data()
-        profiles_service.create_profile_with_initial_data(self.model, self.initial_data)
-        self.refresh_instance()
+        self.initial_data.pop("role")
+        self.instance = self.model.objects.create(**self.initial_data)
 
-    @property
-    def data(self) -> dict:
-        """
-        return serialized object, just user_id and role
-        {user_id: .., role: ..}
-        """
-        fields = ["user_id"]
-        return self.to_representation(fields)
+
+class UpdateProfileSerializer(ProfileSerializer):
+    uuid = serializers.UUIDField()
+    required_fields = ["uuid"]
+
+    def __init__(self, *args, **kwargs) -> None:
+        data = self.initial_validation(kwargs.get("data"))
+        uuid = data.get("uuid", "")
+
+        if not profiles_service.is_valid_uuid(uuid):
+            raise profile_errors.InvalidUUID
+
+        kwargs["instance"]: PROFILE_TYPE = profiles_service.get_profile_by_uuid(uuid)
+        super().__init__(*args, **kwargs)
+
+    def update_fields(self) -> None:
+        """Update fields given in payload"""
+        for attr, value in self.initial_data.items():
+            setattr(self.instance, attr, value) if hasattr(
+                self.instance, attr
+            ) else None
+
+    def save(self) -> None:
+        """If data is valid, update fields and save profile instance"""
+        self.validate_data()
+        self.update_fields()
+        self.instance.save()

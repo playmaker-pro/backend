@@ -1,16 +1,37 @@
 import collections
-
+import json
+import typing
 import django.db.utils
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django.utils.html import format_html
-
+from backend.settings.environment import Environment
 from clubs.models import Season
 
 
+def translate_league_name(code, name):
+    return settings.LEAGUES_CODES_MAP.get(code, name)
+
+
+def load_json(path: str, catch_exception: bool = True) -> typing.Union[dict, Exception]:
+    """
+    Read json file with given abspath and return as dictionary.
+    catch_exception=True will return exception if any appear,
+    otherwise exception will be raised
+    """
+    try:
+        with open(path, "r") as file:
+            return json.loads(file.read())
+    except Exception as e:
+        if catch_exception:
+            return e
+        else:
+            raise e
+
+
 def is_allowed_interact_with_s38():
-    return settings.CONFIGURATION == "production" and not settings.DEBUG
+    return settings.CONFIGURATION is Environment.PRODUCTION and not settings.DEBUG
 
 
 def get_current_season():
