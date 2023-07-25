@@ -18,6 +18,7 @@ class UserFactory(CustomObjectFactory):
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
     password = make_password("test")
+    state = User.STATE_ACCOUNT_VERIFIED
 
     @classmethod
     def create_admin_user(
@@ -35,9 +36,8 @@ class UserFactory(CustomObjectFactory):
     @factory.django.mute_signals(signals.post_save)
     def create(cls, *args, **kwargs) -> User:
         """Override create() method to hash user password"""
+        kwargs["password"] = make_password(kwargs.get("password", "test"))
         instance: User = super().create(*args, **kwargs)
-        instance.set_password(kwargs.get("password", "test"))
-        instance.save()
         return instance
 
     @classmethod

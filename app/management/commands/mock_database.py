@@ -7,6 +7,8 @@ from django.conf import settings
 from django.db import connection
 from app import errors
 from backend.settings.environment import Environment
+from home.models import HomePage
+from wagtail.core.models import Site, Page
 
 NAME_TO_FACTORY_MAPPER = {
     "User": factories.UserFactory,
@@ -48,6 +50,7 @@ class Command(BaseCommand):
         """initialize validation and vivos"""
         self.init_validation()
         self.set_voivodeships()
+        self.create_system_user()
 
     def handle(self, *args, **options) -> None:
         """
@@ -57,6 +60,8 @@ class Command(BaseCommand):
         to forbid use in production. Voivodeships are initialized for mocks.
         Script creates superuser for easy management.
         """
+        self.set_wagtail_ui(options.get("port"))
+
         if options.get("file"):
             data: dict = self.read_json() or {}
             return self.mock_from_json(data)
@@ -128,6 +133,24 @@ class Command(BaseCommand):
         parser.add_argument(
             "-count", action="store", default=4, help="How many objects per model?"
         )
+        parser.add_argument("-port", action="store", default=80, help="Host port")
+
+    def set_wagtail_ui(self, port: int) -> None:
+        """Create wagtail UI"""
+        Page.objects.filter(path="00010001").delete()
+        page = HomePage.objects.create(
+            title="PlayMaker.pro",
+            depth=2,
+            path="00010001",
+            slug="pm",
+        )
+        Site.objects.create(
+            hostname="PlayMaker.pro", port=port, root_page=page, is_default_site=True
+        )
+
+    def create_system_user(self) -> None:
+        """Create user with system mail"""
+        factories.UserFactory.create(email=settings.SYSTEM_USER_EMAIL)
 
     def create_batch(
         self,
