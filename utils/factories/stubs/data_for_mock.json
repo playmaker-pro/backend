@@ -1,12 +1,13 @@
 {
   "User": [
     {
-      "first_name": "admin",
-      "last_name": "admin",
+      "first_name": "Imie",
+      "last_name": "Nazwisko",
       "password": "admin",
       "is_staff": true,
       "is_superuser": true,
-      "email": "admin@playmaker.pro"
+      "email": "admin@playmaker.pro",
+      "declared_role": "G"
     }
   ],
   "PlayerProfile": [
@@ -14,7 +15,8 @@
       "user": {
         "first_name": "Jan",
         "last_name": "Nowak",
-        "email": "jannowak@playmaker.pro"
+        "email": "jannowak@playmaker.pro",
+        "declared_role": "P"
       },
       "team_history_object": {
         "team": {
@@ -37,7 +39,8 @@
       "user": {
         "first_name": "Marcin",
         "last_name": "Kowalski",
-        "email": "marcinkowalski@playmaker.pro"
+        "email": "marcinkowalski@playmaker.pro",
+        "declared_role": "P"
       },
       "team_history_object": {
         "team": {
@@ -62,7 +65,8 @@
       "user": {
         "first_name": "Kamil",
         "last_name": "Ślimak",
-        "email": "kamilslimak@playmaker.pro"
+        "email": "kamilslimak@playmaker.pro",
+        "declared_role": "T"
       },
       "team_history_object": {
         "team": {
@@ -88,6 +92,11 @@
         "first_name": "Jan",
         "last_name": "Naj",
         "email": "jannaj@playmaker.pro"
+      }
+    },
+    {
+      "user": {
+        "email": "admin@playmaker.pro"
       }
     }
   ],
