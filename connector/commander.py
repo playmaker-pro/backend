@@ -28,11 +28,6 @@ class Manager:
 
         self.run_action(fix_new_structure, *args, **kwargs)
 
-    def anonymise_sensitive_data(self, *args, **kwargs):
-        from .scripts import anonymise_sensitive_data
-
-        self.run_action(anonymise_sensitive_data, *args, **kwargs)
-
     def compose_urls(self, *args, **kwargs):
         from .scripts import compose_urls
 
