@@ -2,25 +2,39 @@ import logging
 import traceback
 from typing import List, Optional, Sequence
 
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.core.exceptions import ImproperlyConfigured
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from api.swagger_schemas import GOOGLE_AUTH_SWAGGER_SCHEMA
+from api.swagger_schemas import (
+    USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA,
+    USER_FEATURE_SETS_SWAGGER_SCHEMA,
+    USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA,
+    USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA,
+    USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA,
+    GOOGLE_AUTH_SWAGGER_SCHEMA
+)
 from api.views import EndpointView
 from features.models import Feature, FeatureElement
 from users import serializers
-from users.errors import (ApplicationError, FeatureElementsNotFoundException,
-                          FeatureSetsNotFoundException,
-                          NoUserCredentialFetchedException)
-from users.managers import GoogleManager
+from users.errors import (
+    ApplicationError,
+    FeatureElementsNotFoundException,
+    FeatureSetsNotFoundException,
+    NoUserCredentialFetchedException
+)
 from users.models import User
-# Jednak zdaje sobie sprawe ze nie uniknimy sytuacji "if" pod jednm API jak się da to robmy w miare czysto.
+from users.managers import GoogleManager
 from users.serializers import (FeatureElementSerializer, FeaturesSerializer,
                                UserRegisterSerializer)
 from users.services import UserService
+# Jednak zdaje sobie sprawe ze nie uniknimy sytuacji "if" pod jednm API jak się da to robmy w miare czysto.
+
 
 # Definicja enpointów nie musi być skoncentrowana tylko i wyłącznie w jedenj klasie.
 # jesli poniższe metody będą super-cieńkie (logika będzie poza tymi views)
@@ -41,10 +55,14 @@ class UsersAPI(EndpointView):
     allowed_methods = ("list", "post", "put", "update")
 
     @staticmethod
+    @swagger_auto_schema(**USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA)
     def register(request) -> Response:
         """
-        Validate given data and send them to service for register user.
-        Returns serialized User data.
+        post:
+        User register endpoint
+
+        Validate given data and register user if everything is ok.
+        Returns serialized User data or validation errors.
         """
 
         user_data: UserRegisterSerializer = UserRegisterSerializer(data=request.data)
@@ -87,8 +105,14 @@ class UsersAPI(EndpointView):
         ...
 
     @staticmethod
+    @swagger_auto_schema(**USER_FEATURE_SETS_SWAGGER_SCHEMA)
     def feature_sets(request) -> Response:
-        """Return all user feature sets."""
+        """
+        get:
+        User feature sets endpoint
+
+        Returns all user feature sets.
+        """
         data: List[Feature] = user_service.get_user_features(request.user)
         if not data:
             raise FeatureSetsNotFoundException()
@@ -96,8 +120,14 @@ class UsersAPI(EndpointView):
         return Response(serializer.data)
 
     @staticmethod
+    @swagger_auto_schema(**USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA)
     def feature_elements(request) -> Response:
-        """Return all user feature elements."""
+        """
+        get:
+        User feature elements endpoint
+
+        Returns all user feature elements.
+        """
         data: List[FeatureElement] = user_service.get_user_feature_elements(
             request.user
         )
@@ -105,6 +135,32 @@ class UsersAPI(EndpointView):
             raise FeatureElementsNotFoundException()
         serializer = FeatureElementSerializer(instance=data, many=True)
         return Response(serializer.data)
+
+    class LoginView(TokenObtainPairView):
+        """
+        post:
+        User login endpoint
+
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+        """
+
+        @swagger_auto_schema(**USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA)
+        def post(self, request, *args, **kwargs):
+            return super().post(request, *args, **kwargs)
+
+    class RefreshTokenCustom(TokenRefreshView):
+        """
+        post:
+        Refresh user token endpoint
+
+        Returns an access and refresh JWT pair using an existing refresh token.
+        Returns status codes 401 and 400 if the refresh token is expired or invalid, respectively.
+        """
+
+        @swagger_auto_schema(**USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA)
+        def post(self, request, *args, **kwargs):
+            return super().post(request, *args, **kwargs)
 
     @staticmethod
     @swagger_auto_schema(**GOOGLE_AUTH_SWAGGER_SCHEMA)

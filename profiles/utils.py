@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 
 import profiles
 from profiles import models
+from typing import Optional
 
 # from stats import adapters DEPRECATED: PM-1015
 
@@ -482,3 +483,18 @@ def get_metrics_update_date(metrics: "models.PlayerMetrics") -> str:
         else:
             # If the metrics were not updated after the threshold date, return an older date
             return datetime.date(2022, 8, 1).strftime("%d-%m-%Y")
+
+
+def calculate_age(birth_date: Optional[datetime.date]) -> Optional[int]:
+    """
+    Calculate the age based on the given birth date.
+    """
+    if birth_date:
+        now = timezone.now()
+        return (
+            now.year
+            - birth_date.year
+            - ((now.month, now.day) < (birth_date.month, birth_date.day))
+        )
+    else:
+        return None
