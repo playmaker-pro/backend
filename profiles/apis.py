@@ -43,14 +43,13 @@ class ProfileAPI(EndpointView):
 
 
 class PlayerPositionAPI(EndpointView):
-    authentication_classes = []
-    permission_classes = []
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def list_positions(self, request: Request) -> Response:
-        positions = PlayerPosition.objects.all().order_by('id')
+        positions = PlayerPosition.objects.all().order_by("id")
         positions_list = [
-            {'position_id': position.id,
-             'position_name': position.name}
+            {"position_id": position.id, "position_name": position.name}
             for position in positions
         ]
         return Response(positions_list, status=status.HTTP_200_OK)

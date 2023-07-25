@@ -118,12 +118,3 @@ class PositionFactory(factory.django.DjangoModelFactory):
         model = models.PlayerPosition
 
     name = factory.Iterator(["Napastnik", "Skrzydłowy", "Obrońca prawy", "Bramkarz"])
-
-
-class PlayerProfilePositionFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.PlayerProfilePosition
-
-    player_profile = factory.SubFactory(PlayerProfileFactory)
-    player_position = factory.SubFactory(PositionFactory)
-    is_main = factory.Faker('boolean')

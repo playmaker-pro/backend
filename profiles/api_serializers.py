@@ -10,7 +10,6 @@ from .models import PROFILE_TYPE, PlayerProfilePosition, PlayerProfile, PlayerPo
 from roles.definitions import PROFILE_TYPE_SHORT_MAP
 from users.services import UserService
 from django.http import QueryDict
-from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
@@ -33,18 +32,15 @@ SERIALIZED_VALUE_TYPES = typing.Union[tuple(TYPE_TO_SERIALIZER_MAPPING.keys())]
 
 
 class PlayerProfilePositionSerializer(serializers.ModelSerializer):
-    position_name = serializers.CharField(source='player_position.name', read_only=True)
+    position_name = serializers.CharField(source="player_position.name", read_only=True)
 
     class Meta:
         model = PlayerProfilePosition
-        fields = ['player_position', 'position_name', 'is_main']
+        fields = ["player_position", "position_name", "is_main"]
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        return {
-            'player_position': ret['player_position'],
-            'is_main': ret['is_main']
-        }
+        return {"player_position": ret["player_position"], "is_main": ret["is_main"]}
 
 
 class ProfileSerializer(serializers.Serializer):
@@ -80,7 +76,7 @@ class ProfileSerializer(serializers.Serializer):
         ret["role"] = self.profile_role
         # Only serialize player_positions if the profile is a PlayerProfile
         if player_positions := self.get_player_positions():
-            ret['player_positions'] = player_positions
+            ret["player_positions"] = player_positions
         return ret
 
     def get_serializer_field(
@@ -145,7 +141,10 @@ class ProfileSerializer(serializers.Serializer):
         for field in self.required_fields:
             if not data or field not in data.keys():
                 raise profile_errors.IncompleteRequestData(self.required_fields)
-        return data.dict()
+        if isinstance(data, QueryDict):
+            return data.dict()  # convert QueryDict to standard Python dict
+        else:
+            return data  # just return the data as-is if it's a standard Python dict
 
 
 class CreateProfileSerializer(ProfileSerializer):
@@ -183,8 +182,11 @@ class CreateProfileSerializer(ProfileSerializer):
         """Handles the creation of player positions."""
         positions_service = PlayerPositionService()
         for position_data in positions_data:
-            positions_service.create_position(self.instance, position_data["player_position"],
-                                              position_data["is_main"])
+            positions_service.create_position(
+                self.instance,
+                position_data["player_position"],
+                position_data["is_main"],
+            )
 
     def validate_data(self) -> None:
         """Validate data"""

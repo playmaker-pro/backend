@@ -1955,10 +1955,14 @@ class PlayerProfilePosition(models.Model):
         # To allow updating an existing position's is_main attribute,
         # we need to check whether the is_main value has changed.
         if self.is_main and non_main_positions.count() >= 3:
-            raise ValidationError("A player can have a maximum of two non-main positions.")
+            raise ValidationError(
+                "A player can have a maximum of two non-main positions."
+            )
 
         if not self.is_main and non_main_positions.count() >= 2:
-            raise ValidationError("A player can have a maximum of two non-main positions.")
+            raise ValidationError(
+                "A player can have a maximum of two non-main positions."
+            )
 
     def save(self, *args, **kwargs):
         self.clean()

@@ -1,13 +1,16 @@
 import logging
-from typing import Optional, Type, Union, List
+from typing import Optional, Type, Union, List, Dict, Any
 import uuid
 from django.contrib.auth import get_user_model
 from clubs.models import Club as CClub
 from clubs.models import Team as CTeam
 from . import models
 from clubs import models as clubs_models
-from .errors import ProfileDoesNotExist, AlternatePositionValidationError, MainPositionValidationError
-from .models import PlayerProfilePosition
+from .errors import (
+    ProfileDoesNotExist,
+    AlternatePositionValidationError,
+    MainPositionValidationError,
+)
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -313,12 +316,30 @@ class ProfileService:
         return str(uuid_obj) == value
 
 
-# profiles/services.py
-
 class PlayerPositionService:
-    def update_positions(self, profile, positions_data):
+    def update_positions(
+        self, profile: models.PlayerProfile, positions_data: List[Dict[str, Any]]
+    ) -> None:
+        """
+        Updates the player positions associated with the given profile.
+
+        This method takes a player profile and a list of positions data. It separates
+        the positions into main and non-main positions, counts the number of main and
+        non-main positions in the provided data, and raises an error if there are more
+        than one main or two non-main positions.
+
+        It then iterates over the new positions data. If a main position is new or has
+        changed, it is created or updated accordingly. Non-main positions are also created
+        or updated, but no more than two are allowed.
+
+        If any positions from the original set are not in the new positions data, they
+        are deleted.
+        """
         # Get the existing positions
-        current_positions = {position.player_position_id: position for position in profile.player_positions.all()}
+        current_positions = {
+            position.player_position_id: position
+            for position in profile.player_positions.all()
+        }
 
         # Separate main and non-main positions
         main_position = None
@@ -335,7 +356,9 @@ class PlayerPositionService:
 
         # Count the main and non-main positions in positions_data
         main_positions_count = len([data for data in positions_data if data["is_main"]])
-        non_main_positions_count = len([data for data in positions_data if not data["is_main"]])
+        non_main_positions_count = len(
+            [data for data in positions_data if not data["is_main"]]
+        )
 
         # Raise an error if there's more than one main position
         if main_positions_count > 1:
@@ -353,34 +376,47 @@ class PlayerPositionService:
             # Handle main position
             if is_main:
                 if main_position is None:  # If no main position exists, create it
-                    PlayerProfilePosition.objects.create(player_profile=profile, player_position_id=player_position_id,
-                                                         is_main=True)
-                elif main_position.player_position_id != player_position_id:  # If main position has changed, update it
+                    models.PlayerProfilePosition.objects.create(
+                        player_profile=profile,
+                        player_position_id=player_position_id,
+                        is_main=True,
+                    )
+                elif (
+                    main_position.player_position_id != player_position_id
+                ):  # If main position has changed, update it
                     main_position.player_position_id = player_position_id
                     main_position.save()
 
             # Handle non-main positions
             else:
-                if non_main_positions_created_or_updated < non_main_positions_to_update:  # If we can still update existing non-main positions, do so
-                    non_main_positions[non_main_positions_created_or_updated].player_position_id = player_position_id
+                if (
+                    non_main_positions_created_or_updated < non_main_positions_to_update
+                ):  # If we can still update existing non-main positions, do so
+                    non_main_positions[
+                        non_main_positions_created_or_updated
+                    ].player_position_id = player_position_id
                     non_main_positions[non_main_positions_created_or_updated].save()
                     non_main_positions_created_or_updated += 1
-                elif non_main_positions_created_or_updated < 2:  # If we can still create new non-main positions, do so
-                    PlayerProfilePosition.objects.create(player_profile=profile, player_position_id=player_position_id,
-                                                         is_main=False)
+                elif (
+                    non_main_positions_created_or_updated < 2
+                ):  # If we can still create new non-main positions, do so
+                    models.PlayerProfilePosition.objects.create(
+                        player_profile=profile,
+                        player_position_id=player_position_id,
+                        is_main=False,
+                    )
                     non_main_positions_created_or_updated += 1
                 else:  # If we already have two non-main positions, raise an error
                     raise AlternatePositionValidationError
 
         # Delete unused positions
-        self.delete_unused_positions(profile, positions_data)
+        self.delete_removed_positions(profile, positions_data)
 
-    def create_position(self, profile, player_position_id, is_main):
+    def create_position(
+        self, profile: models.PlayerProfile, player_position_id: int, is_main: bool
+    ) -> None:
         """
         Create a new player position for the given profile.
-        :param profile: The profile instance to create the position for.
-        :param player_position_id: The ID of the player position to create.
-        :param is_main: Boolean indicating if this is the main position for the player.
         """
         if is_main:
             main_positions = profile.player_positions.filter(is_main=True)
@@ -392,18 +428,23 @@ class PlayerPositionService:
                 raise AlternatePositionValidationError
 
         position_data = {"player_position_id": player_position_id, "is_main": is_main}
-        PlayerProfilePosition.objects.create(player_profile=profile, **position_data)
+        models.PlayerProfilePosition.objects.create(
+            player_profile=profile, **position_data
+        )
 
-    def delete_unused_positions(self, profile, positions):
+    def delete_removed_positions(
+        self, profile: models.PlayerProfile, positions: List[Dict[str, Any]]
+    ) -> None:
         """
         Delete any player positions that were not included in the API data.
-        :param profile: The profile instance to delete unused positions from.
-        :param positions: List of dictionaries containing position data from the API.
-                          Example format: [{"player_position": 1, "is_main": True}, ...]
         """
         existing_positions = profile.player_positions.all()
-        existing_position_ids = set(pos.player_position_id for pos in existing_positions)
-        updated_position_ids = set(pos_data["player_position"] for pos_data in positions)
+        existing_position_ids = set(
+            pos.player_position_id for pos in existing_positions
+        )
+        updated_position_ids = set(
+            pos_data["player_position"] for pos_data in positions
+        )
 
         positions_to_delete = existing_position_ids - updated_position_ids
 
