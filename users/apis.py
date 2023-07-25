@@ -2,8 +2,6 @@ import logging
 import traceback
 from typing import List, Optional, Sequence
 
-from drf_yasg.utils import swagger_auto_schema
-from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.core.exceptions import ImproperlyConfigured
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -17,7 +15,7 @@ from api.swagger_schemas import (
     USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA,
     USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA,
     USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA,
-    GOOGLE_AUTH_SWAGGER_SCHEMA
+    GOOGLE_AUTH_SWAGGER_SCHEMA,
 )
 from api.views import EndpointView
 from features.models import Feature, FeatureElement
@@ -26,14 +24,16 @@ from users.errors import (
     ApplicationError,
     FeatureElementsNotFoundException,
     FeatureSetsNotFoundException,
-    NoUserCredentialFetchedException
+    NoUserCredentialFetchedException,
 )
 from users.models import User
 from users.managers import GoogleManager
-from users.serializers import (FeatureElementSerializer, FeaturesSerializer,
-                               UserRegisterSerializer)
+from users.serializers import (
+    FeatureElementSerializer,
+    FeaturesSerializer,
+    UserRegisterSerializer,
+)
 from users.services import UserService
-# Jednak zdaje sobie sprawe ze nie uniknimy sytuacji "if" pod jednm API jak się da to robmy w miare czysto.
 
 
 # Definicja enpointów nie musi być skoncentrowana tylko i wyłącznie w jedenj klasie.
@@ -43,6 +43,7 @@ from users.services import UserService
 # unikniemy wówczas if... if... i zaszytej logiki
 # row-column-permission w samym widoku. Wiadomo jakieś powtorzenia w kodzie są ale przez to że
 # logika jest super-thin to nam nie szkodzi.
+# Jednak zdaje sobie sprawe ze nie uniknimy sytuacji "if" pod jednm API jak się da to robmy w miare czysto.
 
 
 user_service: UserService = UserService()
@@ -136,32 +137,6 @@ class UsersAPI(EndpointView):
         serializer = FeatureElementSerializer(instance=data, many=True)
         return Response(serializer.data)
 
-    class LoginView(TokenObtainPairView):
-        """
-        post:
-        User login endpoint
-
-        Takes a set of user credentials and returns an access and refresh JSON web
-        token pair to prove the authentication of those credentials.
-        """
-
-        @swagger_auto_schema(**USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA)
-        def post(self, request, *args, **kwargs):
-            return super().post(request, *args, **kwargs)
-
-    class RefreshTokenCustom(TokenRefreshView):
-        """
-        post:
-        Refresh user token endpoint
-
-        Returns an access and refresh JWT pair using an existing refresh token.
-        Returns status codes 401 and 400 if the refresh token is expired or invalid, respectively.
-        """
-
-        @swagger_auto_schema(**USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA)
-        def post(self, request, *args, **kwargs):
-            return super().post(request, *args, **kwargs)
-
     @staticmethod
     @swagger_auto_schema(**GOOGLE_AUTH_SWAGGER_SCHEMA)
     def google_auth(request):
@@ -211,3 +186,31 @@ class UsersAPI(EndpointView):
         }
 
         return Response(response, status=status.HTTP_200_OK)
+
+
+class LoginView(TokenObtainPairView):
+    """
+    post:
+    User login endpoint
+
+    Takes a set of user credentials and returns an access and refresh JSON web
+    token pair to prove the authentication of those credentials.
+    """
+
+    @swagger_auto_schema(**USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA)
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+
+class RefreshTokenCustom(TokenRefreshView):
+    """
+    post:
+    Refresh user token endpoint
+
+    Returns an access and refresh JWT pair using an existing refresh token.
+    Returns status codes 401 and 400 if the refresh token is expired or invalid, respectively.
+    """
+
+    @swagger_auto_schema(**USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA)
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)

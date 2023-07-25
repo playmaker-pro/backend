@@ -12,6 +12,7 @@ class UserRegisterResponseSerializer(serializers.ModelSerializer):
     Serializer for user registration response.
     We want to exclude a password field from the swagger response.
     """
+
     class Meta:
         model = User
         fields = ["id", "email", "first_name", "last_name", "username"]
@@ -48,7 +49,10 @@ USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA = dict(
                         description="Refresh Token",
                     ),
                 },
-                example={"access": "some_super_secret_jwt_token", "refresh": "refresh_token"},
+                example={
+                    "access": "some_super_secret_jwt_token",
+                    "refresh": "refresh_token",
+                },
             ),
         ),
         status.HTTP_400_BAD_REQUEST: openapi.Response(
@@ -61,7 +65,9 @@ USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA = dict(
                         description="Detailed error message",
                     ),
                 },
-                example={"detail": "No active account found with the given credentials"},
+                example={
+                    "detail": "No active account found with the given credentials"
+                },
             ),
         ),
         status.HTTP_404_NOT_FOUND: openapi.Response(
@@ -106,8 +112,7 @@ USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA = dict(
     ),
     responses={
         status.HTTP_200_OK: openapi.Response(
-            "User registered successfully.",
-            UserRegisterResponseSerializer()
+            "User registered successfully.", UserRegisterResponseSerializer()
         ),
         status.HTTP_400_BAD_REQUEST: openapi.Response(
             description="Bad request. Data sent in request is invalid.",
@@ -135,7 +140,8 @@ USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA = dict(
                     "email": ["This field is required."],
                     "first_name": ["This field is required."],
                     "last_name": ["This field is required."],
-                    "password": ["This field is required."]},
+                    "password": ["This field is required."],
+                },
             ),
         ),
     },
@@ -145,7 +151,8 @@ USER_FEATURE_SETS_SWAGGER_SCHEMA = dict(
     name="get",
     responses={
         status.HTTP_200_OK: openapi.Response(
-            "User feature sets returned successfully.", FeaturesSerializer(),
+            "User feature sets returned successfully.",
+            FeaturesSerializer(),
         ),
         status.HTTP_404_NOT_FOUND: openapi.Response(
             "Feature sets for user not found",
@@ -161,17 +168,21 @@ USER_FEATURE_SETS_SWAGGER_SCHEMA = dict(
                         description="Feature sets for user not found",
                     ),
                 },
-                example={"success": "false", "detail": "Feature sets for user not found"},
+                example={
+                    "success": "false",
+                    "detail": "Feature sets for user not found",
+                },
             ),
-        )
-    }
+        ),
+    },
 )
 
 USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA = dict(
     name="get",
     responses={
         status.HTTP_200_OK: openapi.Response(
-            "User feature sets returned successfully.", FeatureElementSerializer(),
+            "User feature sets returned successfully.",
+            FeatureElementSerializer(),
         ),
         status.HTTP_404_NOT_FOUND: openapi.Response(
             "Feature elements for user not found",
@@ -187,10 +198,13 @@ USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA = dict(
                         description="Feature elements for user not found",
                     ),
                 },
-                example={"success": "false", "detail": "Feature elements for user not found"},
+                example={
+                    "success": "false",
+                    "detail": "Feature elements for user not found",
+                },
             ),
-        )
-    }
+        ),
+    },
 )
 
 USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA = dict(
@@ -220,7 +234,10 @@ USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA = dict(
                         description="Refresh Token",
                     ),
                 },
-                example={"access": "some_super_secret_jwt_token", "refresh": "refresh_token"},
+                example={
+                    "access": "some_super_secret_jwt_token",
+                    "refresh": "refresh_token",
+                },
             ),
         ),
         status.HTTP_400_BAD_REQUEST: openapi.Response(
@@ -314,4 +331,3 @@ GOOGLE_AUTH_SWAGGER_SCHEMA = dict(
         ),
     },
 )
-
