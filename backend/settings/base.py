@@ -1,9 +1,11 @@
 import os
 from datetime import timedelta
-from .environment import Environment
+
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
+
+from .environment import Environment
 
 # This loads additional settings for our environemnt
 CONFIGURATION = (

@@ -14,7 +14,8 @@ from django.utils.translation import ugettext_lazy as _
 from pydantic import ValidationError
 from requests import Response
 
-from users.entities import SocialAppPydantic, UserGoogleDetailPydantic, GoogleSdkLoginCredentials
+from users.entities import (GoogleSdkLoginCredentials, SocialAppPydantic,
+                            UserGoogleDetailPydantic)
 
 logger = logging.getLogger("django")
 
@@ -142,7 +143,9 @@ class GoogleManager:
             raise ValueError(f"{error}. Reason: {error_description}")
 
         try:
-            details: UserGoogleDetailPydantic = UserGoogleDetailPydantic(**response.json())
+            details: UserGoogleDetailPydantic = UserGoogleDetailPydantic(
+                **response.json()
+            )
             return details
         except ValidationError as e:
             logger.critical(str(traceback.format_exc()) + f"\n{e}")

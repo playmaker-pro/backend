@@ -97,7 +97,9 @@ class TestUserService(TestCase):
             "given_name": "first_name",
             "family_name": "last_name",
         }
-        user: User = self.user_service.register_from_google(UserGoogleDetailPydantic(**data))
+        user: User = self.user_service.register_from_google(
+            UserGoogleDetailPydantic(**data)
+        )
 
         assert isinstance(user, User)
         assert user.email == data["email"]
@@ -112,7 +114,9 @@ class TestUserService(TestCase):
             "given_name": 2,
             "family_name": 3,
         }
-        user: User = self.user_service.register_from_google(UserGoogleDetailPydantic(**data))
+        user: User = self.user_service.register_from_google(
+            UserGoogleDetailPydantic(**data)
+        )
 
         assert not isinstance(user, User)
         assert user is None
@@ -124,7 +128,9 @@ class TestUserService(TestCase):
             "given_name": 2,
             "family_name": 3,
         }
-        user: User = self.user_service.register_from_google(UserGoogleDetailPydantic(**data))
+        user: User = self.user_service.register_from_google(
+            UserGoogleDetailPydantic(**data)
+        )
 
         assert not isinstance(user, User)
         assert user is None
@@ -142,12 +148,11 @@ class TestUserService(TestCase):
             "sub": "123",
             "email": TEST_EMAIL,
             "given_name": "first_name",
-            "family_name": "last_name"
+            "family_name": "last_name",
         }
 
         account, created = self.user_service.create_social_account(
-            user,
-            UserGoogleDetailPydantic(**data)
+            user, UserGoogleDetailPydantic(**data)
         )
 
         assert isinstance(account, SocialAccount)
@@ -177,7 +182,7 @@ class TestUserService(TestCase):
             "sub": "123",
             "email": TEST_EMAIL,
             "given_name": "first_name",
-            "family_name": "last_name"
+            "family_name": "last_name",
         }
 
         account, created = self.user_service.create_social_account(

@@ -7,8 +7,12 @@ from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
 
 from users.entities import UserGoogleDetailPydantic
-from users.managers import (GoogleManager, GoogleSdkLoginCredentials,
-                            SocialAppManager, SocialAppPydantic)
+from users.managers import (
+    GoogleManager,
+    GoogleSdkLoginCredentials,
+    SocialAppManager,
+    SocialAppPydantic
+)
 from utils.test.test_utils import ExternalCallsGuardMixin, MockedResponse
 
 User = get_user_model()
@@ -78,7 +82,9 @@ class TestGoogleManager(TestCase, ExternalCallsGuardMixin):
 
     def test_get_social_app_called_once(self) -> None:
         """Test if get_social_app method is called once"""
-        with patch.object(SocialAppManager, "get_social_app", return_value=None) as mock_method:
+        with patch.object(
+            SocialAppManager, "get_social_app", return_value=None
+        ) as mock_method:
             try:
                 GoogleManager()
             except ImproperlyConfigured:
@@ -90,7 +96,7 @@ class TestGoogleManager(TestCase, ExternalCallsGuardMixin):
         """Test if get_user_info method raises ValueError"""
         response_mock: MockedResponse = MockedResponse.create(
             status_code=404,
-            json_data={"error": "error", "error_description": "error_description"}
+            json_data={"error": "error", "error_description": "error_description"},
         )
         self.patch_social_app_method(
             SocialAppPydantic(client_id="client_id", client_secret="client_secret")
@@ -102,7 +108,12 @@ class TestGoogleManager(TestCase, ExternalCallsGuardMixin):
     @override_settings(GOOGLE_OAUTH2_PROJECT_ID="project_id")
     def test_get_user_info_ok(self) -> None:
         """Test if get_user_info method returns valid data"""
-        response_data = {"sub": "True", "given_name": "True", "family_name": "True", "email": "True"}
+        response_data = {
+            "sub": "True",
+            "given_name": "True",
+            "family_name": "True",
+            "email": "True",
+        }
         self.patch_social_app_method(
             SocialAppPydantic(client_id="client_id", client_secret="client_secret")
         )
@@ -113,7 +124,9 @@ class TestGoogleManager(TestCase, ExternalCallsGuardMixin):
             ),
         ).start()
 
-        response: UserGoogleDetailPydantic = GoogleManager().get_user_info(access_token="access_token")
+        response: UserGoogleDetailPydantic = GoogleManager().get_user_info(
+            access_token="access_token"
+        )
 
         assert isinstance(response, UserGoogleDetailPydantic)
         assert list(response_data.keys())[0] in response.dict()
@@ -121,7 +134,9 @@ class TestGoogleManager(TestCase, ExternalCallsGuardMixin):
     @override_settings(GOOGLE_OAUTH2_PROJECT_ID="project_id")
     def test_google_response_invalid(self) -> None:
         """Test if google_response method raises ValueError when fetched data is invalid"""
-        response_data = {"sub": "True",}
+        response_data = {
+            "sub": "True",
+        }
         self.patch_social_app_method(
             SocialAppPydantic(client_id="client_id", client_secret="client_secret")
         )

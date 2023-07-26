@@ -7,35 +7,26 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import (TokenObtainPairView,
+                                            TokenRefreshView)
 
-from api.swagger_schemas import (
-    USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA,
-    USER_FEATURE_SETS_SWAGGER_SCHEMA,
-    USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA,
-    USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA,
-    USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA,
-    GOOGLE_AUTH_SWAGGER_SCHEMA,
-)
+from api.swagger_schemas import (GOOGLE_AUTH_SWAGGER_SCHEMA,
+                                 USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA,
+                                 USER_FEATURE_SETS_SWAGGER_SCHEMA,
+                                 USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA,
+                                 USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA,
+                                 USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA)
 from api.views import EndpointView
 from features.models import Feature, FeatureElement
 from users import serializers
-from users.errors import (
-    ApplicationError,
-    FeatureElementsNotFoundException,
-    FeatureSetsNotFoundException,
-    NoUserCredentialFetchedException,
-    NoGoogleTokenSent,
-)
-from users.models import User
+from users.errors import (ApplicationError, FeatureElementsNotFoundException,
+                          FeatureSetsNotFoundException, NoGoogleTokenSent,
+                          NoUserCredentialFetchedException)
 from users.managers import GoogleManager, UserGoogleDetailPydantic
-from users.serializers import (
-    FeatureElementSerializer,
-    FeaturesSerializer,
-    UserRegisterSerializer,
-)
+from users.models import User
+from users.serializers import (FeatureElementSerializer, FeaturesSerializer,
+                               UserRegisterSerializer)
 from users.services import UserService
-
 
 # Definicja enpointów nie musi być skoncentrowana tylko i wyłącznie w jedenj klasie.
 # jesli poniższe metody będą super-cieńkie (logika będzie poza tymi views)

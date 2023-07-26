@@ -371,7 +371,7 @@ class GoogleAuthTestEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         get_user_info_patcher = patch.object(
             GoogleManager,
             "get_user_info",
-            return_value=UserGoogleDetailPydantic(**user_info_mock)
+            return_value=UserGoogleDetailPydantic(**user_info_mock),
         )
         social_account = SocialAccount.objects.filter(user__email=user_email)
 
@@ -447,7 +447,7 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         get_user_info_patcher = patch.object(
             GoogleManager,
             "get_user_info",
-            return_value=UserGoogleDetailPydantic(**self.user_info_mock)
+            return_value=UserGoogleDetailPydantic(**self.user_info_mock),
         )
         google_credentials_patcher = patch.object(
             GoogleManager,

@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
 from drf_yasg import openapi
-from rest_framework import status, serializers
+from rest_framework import serializers, status
 
-from users.serializers import FeaturesSerializer, FeatureElementSerializer
+from users.serializers import FeatureElementSerializer, FeaturesSerializer
 
 User = get_user_model()
 

@@ -1,21 +1,18 @@
 from contextlib import contextmanager
 from socket import socket
+from typing import Optional
 
 from django.conf import settings
+from django.db.models import signals
 from django.test import TestCase
 from django.test.client import Client
+from django.urls import reverse
 from django.utils import timezone
-from django.db.models import signals
 from factory.django import mute_signals
 
 from clubs.models import Season
 from users.models import User
-
 from utils import testutils as utils
-
-from typing import Optional
-from django.urls import reverse
-
 from utils.factories.user_factories import UserFactory
 
 utils.silence_explamation_mark()
@@ -172,7 +169,7 @@ class ExternalCallsGuardMixin:
 
     @staticmethod
     def guard(*args, **kwargs):
-        raise SocketAccessError('Attempted to access network')
+        raise SocketAccessError("Attempted to access network")
 
 
 class MockedResponse:
@@ -192,6 +189,5 @@ class MockedResponse:
     @staticmethod
     def create(**kwargs):
         return MockedResponse(
-            status_code=kwargs.get("status_code"),
-            json_data=kwargs.get("json_data")
+            status_code=kwargs.get("status_code"), json_data=kwargs.get("json_data")
         )
