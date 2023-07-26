@@ -72,10 +72,10 @@ class Command(BaseCommand):
         self.set_objects_count(options.get("count"))
         self.create_admin_user()
         (options.get("users") or mock_all) and self.mock_users()
-        (options.get("profiles") or mock_all) and self.mock_profiles()
         (options.get("leagues") or mock_all) and self.mock_leagues(history=False)
         (options.get("teams") or mock_all) and self.mock_clubs_and_teams(history=False)
         (options.get("histories") or mock_all) and self.mock_historical()
+        (options.get("profiles") or mock_all) and self.mock_profiles()
 
     def init_validation(self) -> None:
         """Initialize validator and create vivos"""
@@ -167,23 +167,23 @@ class Command(BaseCommand):
 
     def mock_player_profiles(self) -> None:
         """Create player profiles with users"""
-        self.create_batch(factories.PlayerProfileFactory)
+        self.create_batch(factories.PlayerProfileFactory, user__declared_role="P")
 
     def mock_coach_profiles(self) -> None:
         """Create coach profiles with users"""
-        self.create_batch(factories.CoachProfileFactory)
+        self.create_batch(factories.CoachProfileFactory, user__declared_role="T")
 
     def mock_club_profiles(self) -> None:
         """Create club profiles with users"""
-        self.create_batch(factories.ClubProfileFactory)
+        self.create_batch(factories.ClubProfileFactory, user__declared_role="C")
 
     def mock_scout_profiles(self) -> None:
         """Create scout profiles with users"""
-        self.create_batch(factories.ScoutProfileFactory)
+        self.create_batch(factories.ScoutProfileFactory, user__declared_role="S")
 
     def mock_guest_profiles(self) -> None:
         """Create guest profiles with users"""
-        self.create_batch(factories.GuestProfileFactory)
+        self.create_batch(factories.GuestProfileFactory, user__declared_role="G")
 
     def mock_seasons(self) -> None:
         """Create seasons"""

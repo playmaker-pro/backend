@@ -24,7 +24,7 @@ class UserFactory(CustomObjectFactory):
     def create_admin_user(
         cls, email: str = "admin@playmaker.pro", password: str = "admin", **kwargs
     ):
-        cls.create(
+        super().create(
             email=email,
             is_superuser=True,
             is_staff=True,

@@ -13,10 +13,10 @@ class ClubFactory(CustomObjectFactory):
 
     name = factory.Iterator(CLUB_NAMES)
     voivodeship_obj = factory.LazyAttribute(lambda _: utils.get_random_voivo())
-    club_phone = utils.get_random_phone_number()
+    club_phone = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
     club_email = CLUB_MAIL
-    stadion_address = utils.get_random_address()
-    practice_stadion_address = utils.get_random_address()
+    stadion_address = factory.LazyAttribute(lambda _: utils.get_random_address())
+    practice_stadion_address = factory.LazyAttribute(lambda _: utils.get_random_address())
     manager = UserFactory.random_object()
 
     @factory.post_generation
@@ -54,17 +54,17 @@ class TeamFactory(CustomObjectFactory):
         django_get_or_create = ("name",)
 
     name = factory.Iterator(TEAM_NAMES)
-    club = ClubFactory.get_random_or_create_subfactory()
+    club = factory.SubFactory(ClubFactory)
     manager = UserFactory.random_object()
-    game_bonus = utils.get_random_bool()
-    gloves_shoes_refunds = utils.get_random_bool()
-    scolarships = utils.get_random_bool()
-    traning_gear = utils.get_random_bool()
-    regular_gear = utils.get_random_bool()
-    secondary_trainer = utils.get_random_bool()
-    fizo = utils.get_random_bool()
-    diet_suplements = utils.get_random_bool()
-    travel_refunds = utils.get_random_bool()
+    game_bonus = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    gloves_shoes_refunds = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    scolarships = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    traning_gear = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    regular_gear = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    secondary_trainer = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    fizo = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    diet_suplements = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    travel_refunds = factory.LazyAttribute(lambda _: utils.get_random_bool())
     seniority = factory.SubFactory(SeniorityFactory)
     gender = factory.SubFactory(GenderFactory)
 

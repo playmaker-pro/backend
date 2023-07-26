@@ -1,10 +1,6 @@
 import factory
 from django.contrib.auth import get_user_model
-from .clubs_factories import (
-    TeamHistoryFactory,
-    ClubFactory,
-    UserFactory,
-)
+from .clubs_factories import TeamHistoryFactory, ClubFactory, UserFactory, TeamFactory
 from .base import CustomObjectFactory
 from profiles import models
 from utils.factories.mapper_factories import MapperFactory
@@ -35,9 +31,9 @@ class ProfileVisitHistoryFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.ProfileVisitHistory
 
-    counter = utils.get_random_int(0, 1000)
-    counter_coach = utils.get_random_int(0, 100)
-    counter_scout = utils.get_random_int(0, 100)
+    counter = factory.LazyAttribute(lambda _: utils.get_random_int(0, 1000))
+    counter_coach = factory.LazyAttribute(lambda _: utils.get_random_int(0, 100))
+    counter_scout = factory.LazyAttribute(lambda _: utils.get_random_int(0, 100))
 
 
 class PlayerProfileFactory(ProfileFactory):
@@ -45,16 +41,25 @@ class PlayerProfileFactory(ProfileFactory):
         model = models.PlayerProfile
 
     mapper = factory.SubFactory(MapperFactory)
-    team_history_object = TeamHistoryFactory.random_object()
+    team_history_object = TeamHistoryFactory.get_random_or_create_subfactory()
+    team_object = TeamFactory.get_random_or_create_subfactory()
     height = factory.LazyAttribute(lambda _: utils.get_random_int(150, 200))
     weight = factory.LazyAttribute(lambda _: utils.get_random_int(60, 100))
     birth_date = factory.LazyAttribute(
         lambda _: utils.get_random_date(start_date="-50y", end_date="-15y")
     )
-    prefered_leg = random.choice(models.PlayerProfile.LEG_CHOICES)[0]
-    transfer_status = random.choice(models.PlayerProfile.TRANSFER_STATUS_CHOICES)[0]
-    card = random.choice(models.PlayerProfile.CARD_CHOICES)[0]
-    soccer_goal = random.choice(models.PlayerProfile.GOAL_CHOICES)[0]
+    prefered_leg = factory.LazyAttribute(
+        lambda _: random.choice(models.PlayerProfile.LEG_CHOICES)[0]
+    )
+    transfer_status = factory.LazyAttribute(
+        lambda _: random.choice(models.PlayerProfile.TRANSFER_STATUS_CHOICES)[0]
+    )
+    card = factory.LazyAttribute(
+        lambda _: random.choice(models.PlayerProfile.CARD_CHOICES)[0]
+    )
+    soccer_goal = factory.LazyAttribute(
+        lambda _: random.choice(models.PlayerProfile.GOAL_CHOICES)[0]
+    )
     about = factory.Faker("paragraph", nb_sentences=3)
     phone = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
     agent_phone = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
@@ -71,16 +76,28 @@ class PlayerProfileFactory(ProfileFactory):
         """Overwrite fields with subfactories"""
         cls.team_history_object = factory.SubFactory(TeamHistoryFactory)
 
+    @factory.post_generation
+    def set_team(self, *args, **kwargs) -> None:
+        if self.team_history_object:
+            self.team_object = self.team_history_object.team
+
 
 class CoachProfileFactory(ProfileFactory):
     class Meta:
         model = models.CoachProfile
 
     mapper = factory.SubFactory(MapperFactory)
-    licence = random.choice(models.CoachProfile.LICENCE_CHOICES)[0]
-    club_role = random.choice(models.CoachProfile.CLUB_ROLE)[0]
-    team_history_object = TeamHistoryFactory.random_object()
-    soccer_goal = random.choice(models.CoachProfile.GOAL_CHOICES)[0]
+    licence = factory.LazyAttribute(
+        lambda _: random.choice(models.CoachProfile.LICENCE_CHOICES)[0]
+    )
+    club_role = factory.LazyAttribute(
+        lambda _: random.choice(models.CoachProfile.CLUB_ROLE)[0]
+    )
+    team_history_object = TeamHistoryFactory.get_random_or_create_subfactory()
+    team_object = TeamFactory.get_random_or_create_subfactory()
+    soccer_goal = factory.LazyAttribute(
+        lambda _: random.choice(models.CoachProfile.GOAL_CHOICES)[0]
+    )
     phone = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
     voivodeship_obj = factory.LazyAttribute(lambda _: utils.get_random_voivo())
     address = factory.LazyAttribute(lambda _: utils.get_random_address())
@@ -90,21 +107,30 @@ class CoachProfileFactory(ProfileFactory):
         """Overwrite fields with subfactories"""
         cls.team_history_object = factory.SubFactory(TeamHistoryFactory)
 
+    @factory.post_generation
+    def set_team(self, *args, **kwargs) -> None:
+        if self.team_history_object:
+            self.team_object = self.team_history_object.team
+
 
 class ClubProfileFactory(ProfileFactory):
     class Meta:
         model = models.ClubProfile
 
     phone = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
-    club_object = ClubFactory.random_object()
-    club_role = random.choice(models.ClubProfile.CLUB_ROLE)[0]
+    club_object = factory.LazyAttribute(lambda _: ClubFactory.random_object())
+    club_role = factory.LazyAttribute(
+        lambda _: random.choice(models.ClubProfile.CLUB_ROLE)[0]
+    )
 
 
 class ScoutProfileFactory(ProfileFactory):
     class Meta:
         model = models.ScoutProfile
 
-    soccer_goal = random.choice(models.ScoutProfile.GOAL_CHOICES)[0]
+    soccer_goal = factory.LazyAttribute(
+        lambda _: random.choice(models.ScoutProfile.GOAL_CHOICES)[0]
+    )
     practice_distance = factory.LazyAttribute(lambda _: utils.get_random_int(30, 100))
     address = factory.LazyAttribute(lambda _: utils.get_random_address())
 

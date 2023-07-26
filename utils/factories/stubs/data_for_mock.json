@@ -18,6 +18,12 @@
         "email": "jannowak@playmaker.pro",
         "declared_role": "P"
       },
+      "team_object": {
+          "name": "Team 1",
+          "club": {
+            "name": "Club 1"
+          }
+      },
       "team_history_object": {
         "team": {
           "name": "Team 1",
@@ -42,6 +48,12 @@
         "email": "marcinkowalski@playmaker.pro",
         "declared_role": "P"
       },
+      "team_object": {
+          "name": "Team 2",
+          "club": {
+            "name": "Club 2"
+          }
+        },
       "team_history_object": {
         "team": {
           "name": "Team 2",
@@ -68,6 +80,12 @@
         "email": "kamilslimak@playmaker.pro",
         "declared_role": "T"
       },
+      "team_object": {
+          "name": "Team 1",
+          "club": {
+            "name": "Club 1"
+          }
+        },
       "team_history_object": {
         "team": {
           "name": "Team 1",
