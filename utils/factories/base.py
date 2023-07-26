@@ -59,7 +59,7 @@ class CustomObjectFactory(factory.django.DjangoModelFactory):
         random_object: Model = cls.random_object(**kwargs)
         return (
             random_object or factory.SubFactory(cls, **kwargs)
-            if env() is Environment.TEST
+            if env() is not Environment.TEST
             else None
         )
 

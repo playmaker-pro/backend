@@ -41,14 +41,18 @@ class CountriesView(EndpointView):
         """
         Return list of countries and mark prior among them
         [{"country": "Polska", "priority": True}, {"country": "Angola", "priority": False}, ...]
-        It is possible to select language of countries on output by param, Polish by default
+        It is possible to select language of countries on output by param (e.g. ?language=en), Polish by default
         All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
         """
         language = request.GET.get("language", "pl")  # default language (pl -> Polish)
         translation.activate(language)
         countries_list = [
-            {"country": country_name, "priority": self.is_prior_country(country_core)}
-            for country_core, country_name in countries
+            {
+                "country": country_name,
+                "code": country_code,
+                "priority": self.is_prior_country(country_code),
+            }
+            for country_code, country_name in countries
         ]
         return Response(countries_list, status=status.HTTP_200_OK)
 
