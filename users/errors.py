@@ -59,3 +59,10 @@ class ApplicationError(CoreAPIException):
 
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "Failed to obtain tokens from Google."
+
+
+class NoGoogleTokenSent(CoreAPIException):
+    """No Google token sent. Token is required to authenticate user."""
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Invalid request. No Google token sent."

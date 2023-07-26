@@ -25,9 +25,10 @@ from users.errors import (
     FeatureElementsNotFoundException,
     FeatureSetsNotFoundException,
     NoUserCredentialFetchedException,
+    NoGoogleTokenSent,
 )
 from users.models import User
-from users.managers import GoogleManager
+from users.managers import GoogleManager, UserGoogleDetailPydantic
 from users.serializers import (
     FeatureElementSerializer,
     FeaturesSerializer,
@@ -149,21 +150,24 @@ class UsersAPI(EndpointView):
         As a response returns user access and refresh tokens.
         """
         request_data: dict = request.data
+
+        if not request_data.get("token_id"):
+            raise NoGoogleTokenSent()
+
         try:
             google_manager: GoogleManager = GoogleManager()
-            user_info = google_manager.get_user_info(
+            user_info: UserGoogleDetailPydantic = google_manager.get_user_info(
                 access_token=request_data.get("token_id")
             )
-        except ValueError:
-            msg = "Failed to obtain user info from Google."
-            logger.error(str(traceback.format_exc()) + f"\n{msg}")
-            raise ApplicationError(details=msg)
+        except ValueError as e:
+            logger.error(str(traceback.format_exc()) + f"\n{str(e)}")
+            raise ApplicationError(details=str(e))
         except ImproperlyConfigured:
             msg = "Failed to obtain Google credentials."
             logger.error(str(traceback.format_exc()) + f"\n{msg}")
             raise ApplicationError(details=msg)
 
-        user_email: str = user_info.get("email")
+        user_email: str = user_info.email
         user: Optional[User] = user_service.filter(email=user_email)
 
         redirect_path: str = "landing page"

@@ -3,7 +3,7 @@ import traceback
 from dataclasses import dataclass
 from datetime import datetime as dt
 from datetime import timedelta
-from typing import Any, Dict, Optional
+from typing import Optional
 
 import requests
 from allauth.socialaccount.models import SocialApp
@@ -11,15 +11,12 @@ from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 from django.utils.translation import ugettext_lazy as _
-from pydantic import BaseModel
+from pydantic import ValidationError
 from requests import Response
 
+from users.entities import SocialAppPydantic, UserGoogleDetailPydantic, GoogleSdkLoginCredentials
+
 logger = logging.getLogger("django")
-
-
-class SocialAppPydantic(BaseModel):
-    client_id: Optional[str]
-    client_secret: Optional[str]
 
 
 class SocialAppManager:
@@ -74,13 +71,6 @@ class CustomUserManager(BaseUserManager):
         return self.filter(declared_role="P")
 
 
-@dataclass
-class GoogleSdkLoginCredentials:
-    client_id: str
-    client_secret: str
-    project_id: str
-
-
 class GoogleManager:
     """Google manager for Google OAuth2 SDK."""
 
@@ -127,13 +117,33 @@ class GoogleManager:
 
         return credentials
 
-    def get_user_info(self, access_token: str) -> Dict[str, Any]:
-        """Returns user info from Google."""
+    def get_user_info(self, access_token: str) -> UserGoogleDetailPydantic:
+        """
+        Returns user info from Google as UserGoogleDetailPydantic instance.
+        Example response from google:
+        {
+        "sub": "123456789012345678901" (string),
+        "name": "Test User" (string),
+        "given_name": "Test" (string),
+        "family_name": "User" (string),
+        "picture": "example_url" (string),
+        "email": user_email (string),
+        "email_verified": True (bool),
+        "locale": "pl" (string),
+        }
+        """
         response: Response = requests.get(
             self.GOOGLE_USER_INFO_URL, params={"access_token": access_token}
         )
 
         if not response.ok:
-            raise ValueError("Failed to obtain user info from Google.")
+            error: str = response.json().get("error")
+            error_description: str = response.json().get("error_description")
+            raise ValueError(f"{error}. Reason: {error_description}")
 
-        return response.json()
+        try:
+            details: UserGoogleDetailPydantic = UserGoogleDetailPydantic(**response.json())
+            return details
+        except ValidationError as e:
+            logger.critical(str(traceback.format_exc()) + f"\n{e}")
+            raise ValueError(e)

@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 
 from features.models import AccessPermission, Feature, FeatureElement
 from roles.definitions import PLAYER_SHORT
+from users.entities import UserGoogleDetailPydantic
 from users.services import UserService
 from utils.factories.feature_sets_factories import (AccessPermissionFactory,
                                                     FeatureFactory)
@@ -96,20 +97,11 @@ class TestUserService(TestCase):
             "given_name": "first_name",
             "family_name": "last_name",
         }
-        user: User = self.user_service.register_from_google(data)
+        user: User = self.user_service.register_from_google(UserGoogleDetailPydantic(**data))
 
         assert isinstance(user, User)
         assert user.email == data["email"]
         assert user.first_name == data["given_name"]
-
-    @mute_post_save_signal()
-    def test_register_from_google_no_data(self) -> None:
-        """Test if register_from_google method returns None if no data passed"""
-        data: dict = {}
-        user: User = self.user_service.register_from_google(data)
-
-        assert not isinstance(user, User)
-        assert user is None
 
     def test_register_from_google_not_valid_data(self) -> None:
         """
@@ -120,7 +112,7 @@ class TestUserService(TestCase):
             "given_name": 2,
             "family_name": 3,
         }
-        user: User = self.user_service.register_from_google(data)
+        user: User = self.user_service.register_from_google(UserGoogleDetailPydantic(**data))
 
         assert not isinstance(user, User)
         assert user is None
@@ -132,7 +124,7 @@ class TestUserService(TestCase):
             "given_name": 2,
             "family_name": 3,
         }
-        user: User = self.user_service.register_from_google(data)
+        user: User = self.user_service.register_from_google(UserGoogleDetailPydantic(**data))
 
         assert not isinstance(user, User)
         assert user is None
@@ -146,7 +138,17 @@ class TestUserService(TestCase):
         account: Optional[SocialAccount]
         created: bool
 
-        account, created = self.user_service.create_social_account(user, {"sub": "123"})
+        data = {
+            "sub": "123",
+            "email": TEST_EMAIL,
+            "given_name": "first_name",
+            "family_name": "last_name"
+        }
+
+        account, created = self.user_service.create_social_account(
+            user,
+            UserGoogleDetailPydantic(**data)
+        )
 
         assert isinstance(account, SocialAccount)
         assert created
@@ -171,7 +173,16 @@ class TestUserService(TestCase):
         social_acc: SocialAccount = SocialAccountFactory.create(user=user)
         account: Optional[SocialAccount]
         created: bool
-        account, created = self.user_service.create_social_account(user, {"sub": "123"})
+        data = {
+            "sub": "123",
+            "email": TEST_EMAIL,
+            "given_name": "first_name",
+            "family_name": "last_name"
+        }
+
+        account, created = self.user_service.create_social_account(
+            user, UserGoogleDetailPydantic(**data)
+        )
 
         assert social_acc == account
         assert not created

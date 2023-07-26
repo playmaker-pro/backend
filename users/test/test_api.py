@@ -11,6 +11,7 @@ from rest_framework.test import APIClient, APITestCase
 
 from api.schemas import RegisterSchema
 from features.models import Feature
+from users.entities import UserGoogleDetailPydantic
 from users.managers import GoogleManager, GoogleSdkLoginCredentials
 from users.models import User
 from users.services import UserService
@@ -368,7 +369,9 @@ class GoogleAuthTestEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             return_value=google_auth_credentials_mock,
         )
         get_user_info_patcher = patch.object(
-            GoogleManager, "get_user_info", return_value=user_info_mock
+            GoogleManager,
+            "get_user_info",
+            return_value=UserGoogleDetailPydantic(**user_info_mock)
         )
         social_account = SocialAccount.objects.filter(user__email=user_email)
 
@@ -396,6 +399,11 @@ class GoogleAuthTestEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             assert user.email == user_email
 
             assert social_account.exists()
+
+    def test_no_token_sent(self) -> None:
+        """Test if response is 400 when no token is sent"""
+        res: Response = self.client.post(self.url, data={})
+        assert res.status_code == 400
 
 
 @pytest.mark.django_db
@@ -437,7 +445,9 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             project_id="project_id",
         )
         get_user_info_patcher = patch.object(
-            GoogleManager, "get_user_info", return_value=self.user_info_mock
+            GoogleManager,
+            "get_user_info",
+            return_value=UserGoogleDetailPydantic(**self.user_info_mock)
         )
         google_credentials_patcher = patch.object(
             GoogleManager,
@@ -480,7 +490,6 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
                 self.url, data=self.unregistered_user_data
             )
             assert res.status_code == 400
-            assert res.json().get("detail") == "Failed to obtain user info from Google."
 
     def test_response_ok_register_page(self) -> None:
         """

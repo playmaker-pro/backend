@@ -9,6 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from api.schemas import RegisterSchema
 from features.models import AccessPermission, Feature, FeatureElement
 from profiles.models import PROFILE_TYPE
+from users.entities import UserGoogleDetailPydantic
 
 User = get_user_model()
 
@@ -116,17 +117,14 @@ class UserService:
         ]
 
     @staticmethod
-    def register_from_google(data: dict) -> Optional[User]:
+    def register_from_google(data: UserGoogleDetailPydantic) -> Optional[User]:
         """Save User instance with given data taken from Google."""
-
-        if not data or not isinstance(data.get("email"), str):
-            return None
 
         password: str = User.objects.make_random_password()
         user: User = User(
-            email=data.get("email"),
-            first_name=data.get("given_name"),
-            last_name=data.get("family_name"),
+            email=data.email,
+            first_name=data.given_name,
+            last_name=data.family_name,
         )
         try:
             validate_email(user.email)
@@ -139,9 +137,12 @@ class UserService:
 
     @staticmethod
     def create_social_account(
-        user: User, data: dict
+        user: User, data: UserGoogleDetailPydantic
     ) -> Tuple[Optional[SocialAccount], Optional[bool]]:
         """Check if user has social account, if not create one."""
+
+        if not isinstance(data, UserGoogleDetailPydantic):
+            return None, None
 
         result: SocialAccount = SocialAccount.objects.filter(user=user).first()
         response: SocialAccount = result
@@ -152,7 +153,7 @@ class UserService:
                 return None, None
 
             response = SocialAccount.objects.create(
-                user=user, provider="google", uid=data.get("sub"), extra_data=data
+                user=user, provider="google", uid=data.sub, extra_data=data.dict()
             )
             created = True
         else:
