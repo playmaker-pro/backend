@@ -11,6 +11,8 @@ from pm_core.services.models import (
     PlayerScoreSchema,
     PlayerSeasonScoreSchema,
     PlayerSeasonScoreListSchema,
+    PlayerSeasonStatsListSchema,
+    PlayerSeasonStatsSchema,
 )
 
 from adapters.exceptions import DataShortageLogger, WrongDataFormatException

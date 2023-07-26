@@ -9,7 +9,9 @@ from pm_core.services.models import (
     GameSchema,
     GamesSchema,
     PlayerBaseSchema,
+    PlayerScoreSchema,
     PlayerSeasonStatsListSchema,
+    PlayerSeasonScoreListSchema,
     TeamSchema,
 )
 from pm_core.services.models.consts import DEFAULT_LEAGUE_EXCLUDE, ExcludedLeague
