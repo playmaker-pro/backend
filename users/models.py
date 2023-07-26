@@ -11,6 +11,7 @@ from notifications.mail import (
 )
 from roles import definitions
 from users.managers import CustomUserManager
+from pydantic import typing
 
 
 class UserRoleMixin:
@@ -236,6 +237,14 @@ class User(AbstractUser, UserRoleMixin):
         """set role and save, role need to be validated!"""
         self.declared_role = role
         self.save()
+
+    @property
+    def pm_score(self) -> typing.Optional[int]:
+        """Get PlayMaker Score of given user (players only)"""
+        try:
+            return self.playerprofile.playermetrics.pm_score or None
+        except models.ObjectDoesNotExist:
+            return None
 
     finish_account_initial_setup = (
         models.BooleanField(  # @todo - remove this, it is deprecated.

@@ -564,8 +564,12 @@ class League(models.Model):
         if self.parent and self.id == self.parent.id:
             raise ValidationError({"parent": ["You cant have yourself as a parent!"]})
 
+    @property
+    def full_name(self):
+        return self.get_upper_parent_names()
+
     def __str__(self):
-        return f"{self.get_upper_parent_names()}"
+        return self.full_name
 
     class Meta:
         unique_together = ("name", "country", "parent")

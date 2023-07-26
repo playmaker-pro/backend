@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "landingpage",
     "voivodeships",
     "mapper",
+    "premium",
     "resources",
     # "data",  # external repo DEPRECATED: PM-1015
     # "stats",  # external repo DEPRECATED: PM-1015
