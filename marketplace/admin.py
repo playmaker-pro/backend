@@ -7,7 +7,8 @@ from . import models
 
 @admin.register(models.PlayerForClubAnnouncement)
 class PlayerForClubAnnouncementAdmin(admin.ModelAdmin):
-    search_fields = ("user__email",)
+    search_fields = ("user__email", "league__full_name", "target_league__full_name")
+    autocomplete_fields = ["creator", "league", "target_league"]
 
 
 @admin.register(models.ClubForPlayerAnnouncement)

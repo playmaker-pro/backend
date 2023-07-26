@@ -139,7 +139,10 @@ class SectionGroupingAdmin(admin.ModelAdmin):
 
 @admin.register(models.League)
 class LeagueAdmin(admin.ModelAdmin):
-    search_fields: Sequence[str] = ("name", "slug")
+    search_fields: Sequence[str] = (
+        "name",
+        "slug",
+    )
     readonly_fields: Sequence[str] = ("slug", "search_tokens", "virtual", "is_parent")
     actions = [resave]
     list_display = (
@@ -175,6 +178,7 @@ class LeagueAdmin(admin.ModelAdmin):
         "seniority",
         CountryListFilter,
     )
+    autocomplete_fields = ["parent", "highest_parent"]
 
     def get_slicer(self, obj):
         return f"{obj.get_upper_parent_names()}"

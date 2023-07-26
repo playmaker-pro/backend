@@ -1,0 +1,20 @@
+
+<div class="dropdown">
+    <button class="btn-request" type="button" id="filterDropdown" data-toggle="dropdown"
+        aria-haspopup="true" aria-expanded="false">
+        Playmaker Score
+    </button>
+    <div class="dropdown-menu p-4" aria-labelledby="filterDropdown">
+        <form class="">
+            <p>Wybierz przedział Score</p>
+            <div class="form-group mb-4">
+                <input type="text" class="form-control" placeholder="Od" name="from">
+            </div>
+            <div class="form-group mb-4">
+                <input type="text" class="form-control" placeholder="Do" name="to">
+            </div>
+            <button type="button" class="btn-request col" onclick="window.location.href='{% url 'premium:main_page' %}'">Zastosuj</button>
+        </form>
+    </div>
+</div>
+

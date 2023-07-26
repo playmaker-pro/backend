@@ -4,6 +4,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
+from pydantic import typing
 
 from notifications.mail import (
     mail_user_waiting_for_verification,
@@ -236,6 +237,14 @@ class User(AbstractUser, UserRoleMixin):
         """set role and save, role need to be validated!"""
         self.declared_role = role
         self.save()
+
+    @property
+    def pm_score(self) -> typing.Optional[int]:
+        """Get PlayMaker Score of given user (players only)"""
+        try:
+            return self.playerprofile.playermetrics.pm_score or None
+        except models.ObjectDoesNotExist:
+            return None
 
     finish_account_initial_setup = (
         models.BooleanField(  # @todo - remove this, it is deprecated.

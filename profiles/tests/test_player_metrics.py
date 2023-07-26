@@ -1,4 +1,9 @@
 from unittest import TestCase
+
+from pm_core.services.stubs.player_stub import PlayerApiServiceStub
+from utils.factories.profiles_factories import PlayerMetricsFactory
+from utils.factories.clubs_factories import SeasonFactory
+from adapters.tests.utils import dummy_player
 import pytest
 from pm_core.services.stubs.player_stub import PlayerApiServiceStub
 from adapters.tests.utils import dummy_player
@@ -36,3 +41,27 @@ class PlayerMetricsTest(TestCase):
         assert isinstance(self.metrics.games_summary, list)
         assert self.metrics.games_summary is not None
         assert self.metrics.games_summary_updated
+
+    def test_score(self) -> None:
+        """test if scoring is saved correctly"""
+        self.player.refresh_scoring(PlayerApiServiceStub)
+
+        assert isinstance(self.metrics.pm_score, int)
+        assert self.metrics.pm_score
+        assert self.metrics.pm_score_updated
+
+        assert isinstance(self.metrics.season_score, dict)
+        assert self.metrics.season_score is not None
+        assert self.metrics.season_score_updated
+
+    def test_update_pm_score_only(self) -> None:
+        """Test update PlayMaker Score only"""
+        assert self.metrics.pm_score is None
+        self.metrics.get_and_update_pm_score(PlayerApiServiceStub)
+        assert self.metrics.pm_score
+
+    def test_update_season_score_only(self) -> None:
+        """Test update Season Score only"""
+        assert self.metrics.season_score is None
+        self.metrics.get_and_update_season_score(PlayerApiServiceStub)
+        assert self.metrics.season_score

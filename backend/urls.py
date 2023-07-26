@@ -18,10 +18,18 @@ import landingpage.urls
 import marketplace.urls
 import plays.urls
 import products.urls
+import fqa.urls
+import fantasy.urls
+import landingpage.urls
+import premium.urls
+import allauth.account.urls
+import followers.urls  # @to be removed
 import profiles.urls
 import soccerbase.urls
 from api import urls as api_urls
 from search import views as search_views
+from django.views.generic import TemplateView
+from django.conf import settings
 
 from .api import api_router
 from .settings.auth import isStaffPermission
@@ -86,6 +94,8 @@ urlpatterns = [
     path("resources/", include("resources.urls", namespace="resources")),
     path("select2/", include("django_select2.urls")),
     path("transfer/", include(landingpage.urls, namespace="landingpage")),
+    path("select2/", include("django_select2.urls")),
+    path("premium/", include(premium.urls, namespace="premium")),
     path("", include("allauth.urls")),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 ] + settings.REDIRECTS_LISTS
