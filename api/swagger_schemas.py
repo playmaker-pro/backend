@@ -12,6 +12,7 @@ class UserRegisterResponseSerializer(serializers.ModelSerializer):
     Serializer for user registration response.
     We want to exclude a password field from the swagger response.
     """
+
     class Meta:
         model = User
         fields = ["id", "email", "first_name", "last_name", "username"]
@@ -48,7 +49,10 @@ USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA = dict(
                         description="Refresh Token",
                     ),
                 },
-                example={"access": "some_super_secret_jwt_token", "refresh": "refresh_token"},
+                example={
+                    "access": "some_super_secret_jwt_token",
+                    "refresh": "refresh_token",
+                },
             ),
         ),
         status.HTTP_400_BAD_REQUEST: openapi.Response(
@@ -61,7 +65,9 @@ USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA = dict(
                         description="Detailed error message",
                     ),
                 },
-                example={"detail": "No active account found with the given credentials"},
+                example={
+                    "detail": "No active account found with the given credentials"
+                },
             ),
         ),
         status.HTTP_404_NOT_FOUND: openapi.Response(
@@ -106,8 +112,7 @@ USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA = dict(
     ),
     responses={
         status.HTTP_200_OK: openapi.Response(
-            "User registered successfully.",
-            UserRegisterResponseSerializer()
+            "User registered successfully.", UserRegisterResponseSerializer()
         ),
         status.HTTP_400_BAD_REQUEST: openapi.Response(
             description="Bad request. Data sent in request is invalid.",
@@ -135,7 +140,8 @@ USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA = dict(
                     "email": ["This field is required."],
                     "first_name": ["This field is required."],
                     "last_name": ["This field is required."],
-                    "password": ["This field is required."]},
+                    "password": ["This field is required."],
+                },
             ),
         ),
     },
@@ -145,7 +151,8 @@ USER_FEATURE_SETS_SWAGGER_SCHEMA = dict(
     name="get",
     responses={
         status.HTTP_200_OK: openapi.Response(
-            "User feature sets returned successfully.", FeaturesSerializer(),
+            "User feature sets returned successfully.",
+            FeaturesSerializer(),
         ),
         status.HTTP_404_NOT_FOUND: openapi.Response(
             "Feature sets for user not found",
@@ -161,17 +168,21 @@ USER_FEATURE_SETS_SWAGGER_SCHEMA = dict(
                         description="Feature sets for user not found",
                     ),
                 },
-                example={"success": "false", "detail": "Feature sets for user not found"},
+                example={
+                    "success": "false",
+                    "detail": "Feature sets for user not found",
+                },
             ),
-        )
-    }
+        ),
+    },
 )
 
 USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA = dict(
     name="get",
     responses={
         status.HTTP_200_OK: openapi.Response(
-            "User feature sets returned successfully.", FeatureElementSerializer(),
+            "User feature sets returned successfully.",
+            FeatureElementSerializer(),
         ),
         status.HTTP_404_NOT_FOUND: openapi.Response(
             "Feature elements for user not found",
@@ -187,10 +198,13 @@ USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA = dict(
                         description="Feature elements for user not found",
                     ),
                 },
-                example={"success": "false", "detail": "Feature elements for user not found"},
+                example={
+                    "success": "false",
+                    "detail": "Feature elements for user not found",
+                },
             ),
-        )
-    }
+        ),
+    },
 )
 
 USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA = dict(
@@ -220,7 +234,10 @@ USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA = dict(
                         description="Refresh Token",
                     ),
                 },
-                example={"access": "some_super_secret_jwt_token", "refresh": "refresh_token"},
+                example={
+                    "access": "some_super_secret_jwt_token",
+                    "refresh": "refresh_token",
+                },
             ),
         ),
         status.HTTP_400_BAD_REQUEST: openapi.Response(
@@ -247,6 +264,88 @@ USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA = dict(
                     ),
                 },
                 example={"detail": "Bad request"},
+            ),
+        ),
+    },
+)
+
+CITIES_VIEW_SWAGGER_SCHEMA = dict(
+    name="get",
+    operation_id="list_cities",
+    operation_summary="Cities endpoint",
+    manual_parameters=[
+        openapi.Parameter(
+            "city",
+            openapi.IN_QUERY,
+            description="City or voivodeship name to filter",
+            type=openapi.TYPE_STRING,
+        ),
+    ],
+    responses={
+        status.HTTP_200_OK: openapi.Response(
+            "List of [city, voivodeship] pairs returned successfully. For example: "
+            '["Aleksandrów Łódzki", "Łódzkie"].',
+            schema=openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(type=openapi.TYPE_STRING),
+                ),
+            ),
+        ),
+    },
+)
+
+PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA = dict(
+    name="get",
+    operation_id="list_preference_choices",
+    operation_summary="User preferences endpoint",
+    manual_parameters=[],
+    responses={
+        status.HTTP_200_OK: openapi.Response(
+            "Preferences choices returned successfully.",
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "gender": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                "value": openapi.Schema(type=openapi.TYPE_STRING),
+                                "label": openapi.Schema(type=openapi.TYPE_STRING),
+                            },
+                        ),
+                    ),
+                    "player_preferred_leg": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                "value": openapi.Schema(type=openapi.TYPE_INTEGER),
+                                "label": openapi.Schema(type=openapi.TYPE_STRING),
+                            },
+                        ),
+                    ),
+                },
+            ),
+        ),
+    },
+)
+
+ROLES_API_SWAGGER_SCHEMA = dict(
+    name="get",
+    operation_id="list",
+    operation_summary="Roles endpoint",
+    responses={
+        status.HTTP_200_OK: openapi.Response(
+            "Available roles returned successfully.",
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                additionalProperties=openapi.Schema(type=openapi.TYPE_STRING),
+                example={
+                    "P": "Piłkarz",
+                },
             ),
         ),
     },
