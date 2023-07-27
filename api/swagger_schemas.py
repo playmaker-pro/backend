@@ -331,3 +331,85 @@ GOOGLE_AUTH_SWAGGER_SCHEMA = dict(
         ),
     },
 )
+
+CITIES_VIEW_SWAGGER_SCHEMA = dict(
+    name="get",
+    operation_id="list_cities",
+    operation_summary="Cities endpoint",
+    manual_parameters=[
+        openapi.Parameter(
+            "city",
+            openapi.IN_QUERY,
+            description="City or voivodeship name to filter",
+            type=openapi.TYPE_STRING,
+        ),
+    ],
+    responses={
+        status.HTTP_200_OK: openapi.Response(
+            "List of [city, voivodeship] pairs returned successfully. For example: "
+            '["Aleksandrów Łódzki", "Łódzkie"].',
+            schema=openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(type=openapi.TYPE_STRING),
+                ),
+            ),
+        ),
+    },
+)
+
+PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA = dict(
+    name="get",
+    operation_id="list_preference_choices",
+    operation_summary="User preferences endpoint",
+    manual_parameters=[],
+    responses={
+        status.HTTP_200_OK: openapi.Response(
+            "Preferences choices returned successfully.",
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "gender": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                "value": openapi.Schema(type=openapi.TYPE_STRING),
+                                "label": openapi.Schema(type=openapi.TYPE_STRING),
+                            },
+                        ),
+                    ),
+                    "player_preferred_leg": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                "value": openapi.Schema(type=openapi.TYPE_INTEGER),
+                                "label": openapi.Schema(type=openapi.TYPE_STRING),
+                            },
+                        ),
+                    ),
+                },
+            ),
+        ),
+    },
+)
+
+ROLES_API_SWAGGER_SCHEMA = dict(
+    name="get",
+    operation_id="list",
+    operation_summary="Roles endpoint",
+    responses={
+        status.HTTP_200_OK: openapi.Response(
+            "Available roles returned successfully.",
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                additionalProperties=openapi.Schema(type=openapi.TYPE_STRING),
+                example={
+                    "P": "Piłkarz",
+                },
+            ),
+        ),
+    },
+)

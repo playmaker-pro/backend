@@ -1,27 +1,27 @@
 from unidecode import unidecode
 
 VOIVODESHIP_MAPPING = {
-        "Silesia": "Śląskie",
-        "Mazovia": "Mazowieckie",
-        "Lesser Poland": "Małopolskie",
-        "Podlasie": "Podlaskie",
-        "Warmia-Masuria": "Warmińsko-mazurskie",
-        "Lower Silesia": "Dolnośląskie",
-        "Łódź Voivodeship": "Łódzkie",
-        "Lubusz": "Lubuskie",
-        "Opole Voivodeship": "Opolskie",
-        "Pomerania": "Pomorskie",
-        "Greater Poland": "Wielkopolskie",
-        "West Pomerania": "Zachodniopomorskie",
-        "Lublin": "Lubelskie",
-        "Świętokrzyskie": "Świętokrzyskie",
-        "Subcarpathia": "Podkarpackie",
-        "Kujawsko-Pomorskie": "Kujawsko-Pomorskie"
-    }
+    "Silesia": "Śląskie",
+    "Mazovia": "Mazowieckie",
+    "Lesser Poland": "Małopolskie",
+    "Podlasie": "Podlaskie",
+    "Warmia-Masuria": "Warmińsko-mazurskie",
+    "Lower Silesia": "Dolnośląskie",
+    "Łódź Voivodeship": "Łódzkie",
+    "Lubusz": "Lubuskie",
+    "Opole Voivodeship": "Opolskie",
+    "Pomerania": "Pomorskie",
+    "Greater Poland": "Wielkopolskie",
+    "West Pomerania": "Zachodniopomorskie",
+    "Lublin": "Lubelskie",
+    "Świętokrzyskie": "Świętokrzyskie",
+    "Subcarpathia": "Podkarpackie",
+    "Kujawsko-Pomorskie": "Kujawsko-Pomorskie",
+}
 
 CUSTOM_CITY_MAPPING = {
-        "Warsaw": "Warszawa",
-    }
+    "Warsaw": "Warszawa",
+}
 
 
 def match_voivodeship(search_query: str) -> list:
