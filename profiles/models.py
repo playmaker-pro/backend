@@ -30,7 +30,7 @@ from voivodeships.models import Voivodeships
 
 from .errors import VerificationCompletionFieldsWrongSetup
 from .mixins import TeamObjectsDisplayMixin
-from .utils import make_choices, supress_exception, unique_slugify
+from .utils import make_choices, supress_exception, unique_slugify, calculate_age
 
 User = get_user_model()
 
@@ -622,16 +622,8 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         return None
 
     @property
-    def age(self):  # todo przeniesc to do uzywania z profile.utils.
-        if self.birth_date:
-            now = timezone.now()
-            return (
-                now.year
-                - self.birth_date.year
-                - ((now.month, now.day) < (self.birth_date.month, self.birth_date.day))
-            )
-        else:
-            return None
+    def age(self) -> typing.Optional[int]:
+        return calculate_age(self.user.userpreferences.birth_date)
 
     @property
     def has_videos(self):
@@ -706,6 +698,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
     )
 
+    # DEPRECATED: Migrated to UserPreferences PM20-148
     birth_date = models.DateField(_("Data urodzenia"), blank=True, null=True)
     height = models.PositiveIntegerField(
         _("Wzrost"),
@@ -1461,6 +1454,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         blank=True,
     )
+    # DEPRECATED: Migrated to UserPreferences PM20-148
     birth_date = models.DateField(_("Data urodzenia"), blank=True, null=True)
     soccer_goal = models.IntegerField(
         _("Piłkarski cel"), choices=make_choices(GOAL_CHOICES), null=True, blank=True
@@ -1629,16 +1623,8 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         return False
 
     @property
-    def age(self):  # todo przeniesc to do uzywania z profile.utils.
-        if self.birth_date:
-            now = timezone.now()
-            return (
-                now.year
-                - self.birth_date.year
-                - ((now.month, now.day) < (self.birth_date.month, self.birth_date.day))
-            )
-        else:
-            return None
+    def age(self) -> typing.Optional[int]:
+        return calculate_age(self.user.userpreferences.birth_date)
 
     class Meta:
         verbose_name = "Coach Profile"

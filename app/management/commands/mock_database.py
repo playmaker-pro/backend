@@ -7,6 +7,8 @@ from django.conf import settings
 from django.db import connection
 from app import errors
 from backend.settings.environment import Environment
+from home.models import HomePage
+from wagtail.core.models import Site, Page
 
 NAME_TO_FACTORY_MAPPER = {
     "User": factories.UserFactory,
@@ -48,6 +50,7 @@ class Command(BaseCommand):
         """initialize validation and vivos"""
         self.init_validation()
         self.set_voivodeships()
+        self.create_system_user()
 
     def handle(self, *args, **options) -> None:
         """
@@ -57,6 +60,8 @@ class Command(BaseCommand):
         to forbid use in production. Voivodeships are initialized for mocks.
         Script creates superuser for easy management.
         """
+        self.set_wagtail_ui(options.get("port"))
+
         if options.get("file"):
             data: dict = self.read_json() or {}
             return self.mock_from_json(data)
@@ -67,10 +72,10 @@ class Command(BaseCommand):
         self.set_objects_count(options.get("count"))
         self.create_admin_user()
         (options.get("users") or mock_all) and self.mock_users()
-        (options.get("profiles") or mock_all) and self.mock_profiles()
         (options.get("leagues") or mock_all) and self.mock_leagues(history=False)
         (options.get("teams") or mock_all) and self.mock_clubs_and_teams(history=False)
         (options.get("histories") or mock_all) and self.mock_historical()
+        (options.get("profiles") or mock_all) and self.mock_profiles()
 
     def init_validation(self) -> None:
         """Initialize validator and create vivos"""
@@ -128,6 +133,24 @@ class Command(BaseCommand):
         parser.add_argument(
             "-count", action="store", default=4, help="How many objects per model?"
         )
+        parser.add_argument("-port", action="store", default=80, help="Host port")
+
+    def set_wagtail_ui(self, port: int) -> None:
+        """Create wagtail UI"""
+        Page.objects.filter(path="00010001").delete()
+        page = HomePage.objects.create(
+            title="PlayMaker.pro",
+            depth=2,
+            path="00010001",
+            slug="pm",
+        )
+        Site.objects.create(
+            hostname="PlayMaker.pro", port=port, root_page=page, is_default_site=True
+        )
+
+    def create_system_user(self) -> None:
+        """Create user with system mail"""
+        factories.UserFactory.create(email=settings.SYSTEM_USER_EMAIL)
 
     def create_batch(
         self,
@@ -144,23 +167,23 @@ class Command(BaseCommand):
 
     def mock_player_profiles(self) -> None:
         """Create player profiles with users"""
-        self.create_batch(factories.PlayerProfileFactory)
+        self.create_batch(factories.PlayerProfileFactory, user__declared_role="P")
 
     def mock_coach_profiles(self) -> None:
         """Create coach profiles with users"""
-        self.create_batch(factories.CoachProfileFactory)
+        self.create_batch(factories.CoachProfileFactory, user__declared_role="T")
 
     def mock_club_profiles(self) -> None:
         """Create club profiles with users"""
-        self.create_batch(factories.ClubProfileFactory)
+        self.create_batch(factories.ClubProfileFactory, user__declared_role="C")
 
     def mock_scout_profiles(self) -> None:
         """Create scout profiles with users"""
-        self.create_batch(factories.ScoutProfileFactory)
+        self.create_batch(factories.ScoutProfileFactory, user__declared_role="S")
 
     def mock_guest_profiles(self) -> None:
         """Create guest profiles with users"""
-        self.create_batch(factories.GuestProfileFactory)
+        self.create_batch(factories.GuestProfileFactory, user__declared_role="G")
 
     def mock_seasons(self) -> None:
         """Create seasons"""

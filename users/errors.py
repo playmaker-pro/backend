@@ -27,4 +27,4 @@ class FeatureSetsNotFoundException(CoreAPIException):
 
 class FeatureElementsNotFoundException(CoreAPIException):
     status_code = status.HTTP_404_NOT_FOUND
-    default_detail = "Feature sets for user not found"
+    default_detail = "Feature elements for user not found"

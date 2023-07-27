@@ -10,6 +10,11 @@ from cities_light.models import City
 from app.utils import cities
 from users.models import UserPreferences
 from profiles.models import PlayerProfile
+from drf_yasg.utils import swagger_auto_schema
+from api.swagger_schemas import (
+    CITIES_VIEW_SWAGGER_SCHEMA,
+    PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA,
+)
 
 
 class EndpointView(viewsets.GenericViewSet):
@@ -41,14 +46,18 @@ class CountriesView(EndpointView):
         """
         Return list of countries and mark prior among them
         [{"country": "Polska", "priority": True}, {"country": "Angola", "priority": False}, ...]
-        It is possible to select language of countries on output by param, Polish by default
+        It is possible to select language of countries on output by param (e.g. ?language=en), Polish by default
         All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
         """
         language = request.GET.get("language", "pl")  # default language (pl -> Polish)
         translation.activate(language)
         countries_list = [
-            {"country": country_name, "priority": self.is_prior_country(country_core)}
-            for country_core, country_name in countries
+            {
+                "country": country_name,
+                "code": country_code,
+                "priority": self.is_prior_country(country_code),
+            }
+            for country_code, country_name in countries
         ]
         return Response(countries_list, status=status.HTTP_200_OK)
 
@@ -59,9 +68,13 @@ class CitiesView(EndpointView):
     authentication_classes = []
     permission_classes = []
 
+    @swagger_auto_schema(**CITIES_VIEW_SWAGGER_SCHEMA)
     def list_cities(self, request: Request) -> Response:
         """
         Return a list of cities with mapped voivodeships based on the query parameter.
+        Each item in the response array is a pair of strings:
+        [city name, voivodeship name].
+        For example: ["Aleksandrów Łódzki", "Łódzkie"].
         """
         # Get the value of the "city" query parameter
         city_query = request.GET.get("city", "")
@@ -104,6 +117,7 @@ class PreferenceChoicesView(EndpointView):
     authentication_classes = []
     permission_classes = []
 
+    @swagger_auto_schema(**PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA)
     def list_preference_choices(self, request: Request) -> Response:
         """
         Retrieve the choices for gender and preferred leg fields and return as a response

@@ -4,6 +4,7 @@ from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path
 from django.views.generic import TemplateView
 from drf_yasg import openapi
+from drf_yasg.generators import OpenAPISchemaGenerator
 from drf_yasg.views import get_schema_view
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.core import urls as wagtail_urls
@@ -36,20 +37,32 @@ swagger_urls = [
 ]
 
 
+class CustomSchemaGenerator(OpenAPISchemaGenerator):
+    def get_schema(self, request=None, public=True):
+        """
+        Return a custom `Schema` instance.
+        We want to change the "swagger" field to "openapi" for our Frontend.
+        """
+        schema = super().get_schema(request, public)
+        schema.pop("swagger")
+        schema["openapi"] = "3.0.0"
+
+        return schema
+
+
 schema_view = get_schema_view(
     openapi.Info(
         title="Webapp API",
         default_version="v2",
         description="Webapp api description",
         terms_of_service="https://www.google.com/policies/terms/",
-        contact=openapi.Contact(email="contact@snippets.local"),
+        contact=openapi.Contact(email="biuro.playmaker.pro@gmail.com"),
         license=openapi.License(name="BSD License"),
     ),
     public=True,
     patterns=swagger_urls,
-    authentication_classes=[
-        isStaffPermission,
-    ],
+    authentication_classes=(isStaffPermission,),
+    generator_class=CustomSchemaGenerator,
 )
 
 
@@ -107,6 +120,13 @@ if settings.DEBUG:
         path("__debug__/", include(debug_toolbar.urls)),
     ] + urlpatterns
 
+    urlpatterns += [
+        path(
+            "api/v3/swagger.yaml",
+            schema_view.without_ui(cache_timeout=0),
+            name="schema-swagger-yaml",
+        ),
+    ]
 
 urlpatterns = urlpatterns + [
     # For anything not caught by a more specific rule above, hand over to

@@ -6,3 +6,6 @@ class Environment(enum.Enum):
     STAGING: str = "staging"
     DEV: str = "dev"
     TEST: str = "test"
+
+    def __str__(self):
+        return self.value

@@ -1,8 +1,17 @@
 from typing import Sequence, List
 
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from api.swagger_schemas import (
+    USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA,
+    USER_FEATURE_SETS_SWAGGER_SCHEMA,
+    USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA,
+    USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA,
+    USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA
+)
 from api.views import EndpointView
 from features.models import FeatureElement, Feature
 from users import serializers
@@ -34,10 +43,14 @@ class UsersAPI(EndpointView):
     allowed_methods = ("list", "post", "put", "update")
 
     @staticmethod
+    @swagger_auto_schema(**USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA)
     def register(request) -> Response:
         """
-        Validate given data and send them to service for register user.
-        Returns serialized User data.
+        post:
+        User register endpoint
+
+        Validate given data and register user if everything is ok.
+        Returns serialized User data or validation errors.
         """
 
         user_data: UserRegisterSerializer = UserRegisterSerializer(data=request.data)
@@ -80,8 +93,14 @@ class UsersAPI(EndpointView):
         ...
 
     @staticmethod
+    @swagger_auto_schema(**USER_FEATURE_SETS_SWAGGER_SCHEMA)
     def feature_sets(request) -> Response:
-        """Return all user feature sets."""
+        """
+        get:
+        User feature sets endpoint
+
+        Returns all user feature sets.
+        """
         data: List[Feature] = user_service.get_user_features(request.user)
         if not data:
             raise FeatureSetsNotFoundException()
@@ -89,8 +108,14 @@ class UsersAPI(EndpointView):
         return Response(serializer.data)
 
     @staticmethod
+    @swagger_auto_schema(**USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA)
     def feature_elements(request) -> Response:
-        """Return all user feature elements."""
+        """
+        get:
+        User feature elements endpoint
+
+        Returns all user feature elements.
+        """
         data: List[FeatureElement] = user_service.get_user_feature_elements(
             request.user
         )
@@ -98,3 +123,31 @@ class UsersAPI(EndpointView):
             raise FeatureElementsNotFoundException()
         serializer = FeatureElementSerializer(instance=data, many=True)
         return Response(serializer.data)
+
+
+class LoginView(TokenObtainPairView):
+    """
+    post:
+    User login endpoint
+
+    Takes a set of user credentials and returns an access and refresh JSON web
+    token pair to prove the authentication of those credentials.
+    """
+
+    @swagger_auto_schema(**USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA)
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+
+class RefreshTokenCustom(TokenRefreshView):
+    """
+    post:
+    Refresh user token endpoint
+
+    Returns an access and refresh JWT pair using an existing refresh token.
+    Returns status codes 401 and 400 if the refresh token is expired or invalid, respectively.
+    """
+
+    @swagger_auto_schema(**USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA)
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)

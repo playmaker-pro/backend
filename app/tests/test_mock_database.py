@@ -8,6 +8,7 @@ from typing import List
 from utils.testutils import RunWithDifferentEnvironment
 from backend.settings.environment import Environment
 from app.management.commands.mock_database import Command as Mocker
+from django.conf import settings
 
 User = get_user_model()
 
@@ -29,7 +30,9 @@ class TestMockDatabaseCommand(TestCase):
     @property
     def users(self) -> List[User]:
         """Get all common users"""
-        return User.objects.filter(is_superuser=False)
+        return User.objects.filter(is_superuser=False).exclude(
+            email=settings.SYSTEM_USER_EMAIL
+        )
 
     @property
     def seasons(self) -> List[clubs_models.Season]:
