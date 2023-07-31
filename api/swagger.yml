@@ -1,0 +1,663 @@
+openapi: 3.0.3
+info:
+  title: 'Webapp swagger - OpenAPI 3.0'
+  description: "This is a Webapp swagger"
+  version: 0.0.1 (v3)
+
+servers:
+  - url: https://staging.playmakerpro.usermd.net/api/v3/
+
+paths:
+  /cities/:
+    get:
+      operationId: cities_retrieve
+      description: |-
+        Return a list of cities with mapped voivodeships based on the query parameter.
+        Each item in the response array is a pair of strings:
+        [city name, voivodeship name].
+        For example: ["Aleksandrów Łódzki", "Łódzkie"].
+      summary: List cities endpoint
+      parameters:
+      - in: query
+        name: city
+        schema:
+          type: string
+        description: City or voivodeship name to filter
+      tags:
+      - cities
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of [city, voivodeship] pairs returned successfully.
+                  For example: ["Aleksandrów Łódzki", "Łódzkie"].'
+                items:
+                  type: object
+                  properties:
+                    city:
+                      type: string
+                    voivodeship:
+                      type: string
+          description: ''
+  /clubs/club-teams/search/:
+    get:
+      operationId: clubs_club_teams_search_retrieve
+      tags:
+      - clubs
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /clubs/clubs/search/:
+    get:
+      operationId: clubs_clubs_search_retrieve
+      tags:
+      - clubs
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /clubs/team-histories/search/:
+    get:
+      operationId: clubs_team_histories_search_retrieve
+      tags:
+      - clubs
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /clubs/teams/search/:
+    get:
+      operationId: clubs_teams_search_retrieve
+      tags:
+      - clubs
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /countries/:
+    get:
+      operationId: countries_retrieve
+      description: |-
+        Return list of countries and mark prior among them
+        [{"country": "Polska", "priority": True}, {"country": "Angola", "priority": False}, ...]
+        It is possible to select language of countries on output by param (e.g. ?language=en), Polish by default
+        All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+      tags:
+      - countries
+      responses:
+        '200':
+          description: No response body
+  /preference-choices/:
+    get:
+      operationId: preference_choices_retrieve
+      description: Retrieve the choices for gender and preferred leg fields and return
+        as a response
+      summary: User preferences endpoint
+      tags:
+      - preference-choices
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Preferences choices returned successfully.
+                type: object
+                properties:
+                  gender:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                        label:
+                          type: string
+                  player_preferred_leg:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        value:
+                          type: integer
+                        label:
+                          type: string
+          description: ''
+  /profiles/:
+    post:
+      operationId: profiles_create
+      description: Create initial profile for user
+      tags:
+      - profiles
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: profiles_partial_update
+      description: Base class for building views
+      tags:
+      - profiles
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /profiles/{profile_uuid}/:
+    get:
+      operationId: profiles_retrieve
+      description: Base class for building views
+      parameters:
+      - in: path
+        name: profile_uuid
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - profiles
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /profiles/playerupdate/:
+    post:
+      operationId: profiles_playerupdate_create
+      tags:
+      - profiles
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /roles/get-roles/:
+    get:
+      operationId: roles_get_roles_list
+      description: Return a dictionary of available roles.
+      summary: Roles endpoint
+      tags:
+      - roles
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  description: Available roles returned successfully.
+                  type: object
+                  properties:
+                    shortcut:
+                      type: string
+                    full_name:
+                      type: string
+                  example:
+                    P: Piłkarz
+          description: ''
+  /users/feature-elements/:
+    get:
+      operationId: users_feature_elements_retrieve
+      description: Returns all user feature elements.
+      summary: User feature elements.
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeatureElement'
+          description: Returns user feature elements. Returns empty list if user has
+            no feature sets.
+  /users/feature-sets/:
+    get:
+      operationId: users_feature_sets_retrieve
+      description: Returns all user feature sets.
+      summary: User feature sets.
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Features'
+          description: Returns user feature sets. Returns empty list if user has no
+            feature sets.
+  /users/google-oauth2/:
+    post:
+      operationId: users_google_oauth2_create
+      description: |-
+        Authenticate user with Google by token_id and return his data.
+        If user exists in our database, then login him, otherwise register.
+        As a response returns user access and refresh tokens.
+      summary: Google auth endpoint
+      tags:
+      - users
+      requestBody:
+        content:
+          schema:
+            schema:
+              type: object
+              properties:
+                token_id:
+                  type: string
+                  description: Token id from Google.
+              required:
+              - token_id
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: User logged in successfully - tokens returned.
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Is request successful
+                  redirect:
+                    type: string
+                    description: 'The page where user should be redirected. Landing
+                      page after login, or register page if user is new.Choices: ''landing
+                      page'', ''register'''
+                  refresh_token:
+                    type: string
+                    description: JWT refresh token.
+                  access_token:
+                    type: string
+                    description: JWT access token.
+                example:
+                  success: true
+                  redirect: landing page
+                  access: some_super_secret_jwt_token
+                  refresh: refresh_token
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Bad request
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Detailed error message
+                example:
+                  detail: No user credential fetched from Google. Please try again.
+          description: ''
+  /users/login/:
+    post:
+      operationId: users_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      summary: User login endpoint
+      tags:
+      - users
+      requestBody:
+        content:
+          schema:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: User email
+                password:
+                  type: string
+                  description: User super secret password.
+              required:
+              - email
+              - password
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access:
+                    type: string
+                    description: Access Token
+                  refresh:
+                    type: string
+                    description: Refresh Token
+                example:
+                  access: some_super_secret_jwt_token
+                  refresh: refresh_token
+                description: User logged in successfully - tokens returned.
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Detailed error message
+                example:
+                  detail: No active account found with the given credentials
+                description: Bad request
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Detailed error message
+                example:
+                  detail: Bad request
+                description: User not found with given credentials
+          description: ''
+  /users/logout/:
+    post:
+      operationId: users_logout_create
+      description: |-
+        Takes a token and blacklists it. Must be used with the
+        `rest_framework_simplejwt.token_blacklist` app installed.
+      summary: User logout endpoint
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenBlacklist'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenBlacklist'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenBlacklist'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenBlacklist'
+          description: ''
+  /users/refresh-token/:
+    post:
+      operationId: users_refresh_token_create
+      description: |-
+        Returns an access and refresh JWT pair using an existing refresh token.
+        Returns status codes 401 and 400 if the refresh token is expired or invalid, respectively.
+      summary: Refresh user token endpoint
+      tags:
+      - users
+      requestBody:
+        content:
+          schema:
+            schema:
+              type: object
+              properties:
+                refresh:
+                  type: string
+                  description: User refresh token
+              required:
+              - refresh
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: New token obtained successfully.
+                type: object
+                properties:
+                  access:
+                    type: string
+                    description: Access Token
+                  refresh:
+                    type: string
+                    description: Refresh Token
+                example:
+                  access: some_super_secret_jwt_token
+                  refresh: refresh_token
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Bad request
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Detailed error message
+                example:
+                  detail: Refresh token is expired or invalid, respectively
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized request
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Detailed error message
+                example:
+                  detail: Bad request
+          description: ''
+  /users/register/:
+    post:
+      operationId: users_register_create
+      description: |-
+        Validate given data and register user if everything is ok.
+        Returns serialized User data or validation errors.
+      summary: User registration endpoint
+      tags:
+      - users
+      requestBody:
+        content:
+          schema:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: User email
+                password:
+                  type: string
+                  description: User super secret password.
+                first_name:
+                  type: string
+                  description: User first name.
+                last_name:
+                  type: string
+                  description: User last name.
+              required:
+              - email
+              - password
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegisterResponse'
+              examples:
+                Example1:
+                  value:
+                    id: 1
+                    email: example_email@playmaker.com
+                    first_name: first_name
+                    last_name: last_name
+                    username: username
+                  summary: example1
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    description: Detailed error message
+                  password:
+                    type: string
+                    description: Detailed error message
+                example:
+                  email: Detailed error message
+                  password: Detailed error message
+                description: Bad request. Data sent in request is invalid.
+          description: ''
+components:
+  schemas:
+    AccessEnum:
+      enum:
+      - none
+      - all
+      - club
+      - own
+      type: string
+      description: |-
+        * `none` - none
+        * `all` - all
+        * `club` - club
+        * `own` - own
+    AccessPermission:
+      type: object
+      description: Serializer for access permission.
+      properties:
+        role:
+          type: string
+          readOnly: true
+        access:
+          allOf:
+          - $ref: '#/components/schemas/AccessEnum'
+          description: |-
+            Access permission name.
+
+            * `none` - none
+            * `all` - all
+            * `club` - club
+            * `own` - own
+      required:
+      - role
+    FeatureElement:
+      type: object
+      description: Serializer for feature element.
+      properties:
+        name:
+          type: string
+          description: Feature element name
+          maxLength: 255
+        permissions:
+          type: object
+          additionalProperties: {}
+          description: JSON representation of roles permissions.
+        access_permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessPermission'
+      required:
+      - access_permissions
+      - name
+    Features:
+      type: object
+      description: Serializer for features.
+      properties:
+        name:
+          type: string
+          description: Feature name.
+          maxLength: 255
+        keyname:
+          type: string
+          description: Feature keyname.
+          maxLength: 255
+        elements:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureElement'
+        enabled:
+          type: boolean
+          description: Flag that says if feature is enabled.
+      required:
+      - elements
+      - keyname
+      - name
+    TokenBlacklist:
+      type: object
+      properties:
+        refresh:
+          type: string
+      required:
+      - refresh
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+      required:
+      - id
+      - username
+    UserRegisterResponse:
+      type: object
+      description: Serializer for user registration response.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          title: Adres email
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+      required:
+      - email
+      - id
+      - username
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -117,7 +117,8 @@ INSTALLED_APPS = [
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
     "allauth.socialaccount.providers.facebook",
-    "drf_yasg",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
     "cities_light",
     "features",
     "django_extensions",
@@ -567,6 +568,15 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "SWAGGER_UI_DIST": "SIDECAR",  # shorthand to use the sidecar instead
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "REDOC_DIST": "SIDECAR",
+    "SCHEMA_PATH_PREFIX": r"/api/v[0-9]",
+    # 'SERVE_AUTHENTICATION': ['rest_framework.authentication.BasicAuthentication',],
 }
 
 
