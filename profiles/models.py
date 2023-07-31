@@ -1478,7 +1478,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         choices=COACH_ROLE_CHOICES,
         blank=True,
         null=True,
-        help_text=(_("This field represents the role of the coach."),),
+        help_text=_("This field represents the role of the coach."),
     )
     formation = models.CharField(
         _("Formacja"),

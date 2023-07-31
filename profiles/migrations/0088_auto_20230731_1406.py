@@ -4,20 +4,52 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('profiles', '0087_coachlicence_licencetype'),
+        ("profiles", "0087_coachlicence_licencetype"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='coachprofile',
-            name='coach_role',
-            field=models.CharField(blank=True, choices=[('IC', 'Pierwszy trener'), ('IIC', 'Drugi trener'), ('GKC', 'Trener bramkarzy'), ('FIC', 'Trener motoryki'), ('MEC', 'Trener mentalny'), ('ANC', 'Analityk'), ('OTC', 'Inne')], help_text=('This field represents the role of the coach.',), max_length=3, null=True, verbose_name='Rola trenera'),
+            model_name="coachprofile",
+            name="coach_role",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("IC", "Pierwszy trener"),
+                    ("IIC", "Drugi trener"),
+                    ("GKC", "Trener bramkarzy"),
+                    ("FIC", "Trener motoryki"),
+                    ("MEC", "Trener mentalny"),
+                    ("ANC", "Analityk"),
+                    ("OTC", "Inne"),
+                ],
+                help_text="This field represents the role of the coach.",
+                max_length=3,
+                null=True,
+                verbose_name="Rola trenera",
+            ),
         ),
         migrations.AddField(
-            model_name='coachprofile',
-            name='formation',
-            field=models.CharField(blank=True, choices=[('5-3-2', '5-3-2'), ('5-4-1', '5-4-1'), ('4-4-2', '4-4-2'), ('4-5-1', '4-5-1'), ('4-3-3', '4-3-3'), ('4-2-3-1', '4-2-3-1'), ('4-1-4-1', '4-1-4-1'), ('4-3-2-1', '4-3-2-1'), ('3-5-2', '3-5-2'), ('3-4-3', '3-4-3')], help_text='This field represents the preferred formation of the coach.', max_length=7, null=True, verbose_name='Formacja'),
+            model_name="coachprofile",
+            name="formation",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("5-3-2", "5-3-2"),
+                    ("5-4-1", "5-4-1"),
+                    ("4-4-2", "4-4-2"),
+                    ("4-5-1", "4-5-1"),
+                    ("4-3-3", "4-3-3"),
+                    ("4-2-3-1", "4-2-3-1"),
+                    ("4-1-4-1", "4-1-4-1"),
+                    ("4-3-2-1", "4-3-2-1"),
+                    ("3-5-2", "3-5-2"),
+                    ("3-4-3", "3-4-3"),
+                ],
+                help_text="This field represents the preferred formation of the coach.",
+                max_length=7,
+                null=True,
+                verbose_name="Formacja",
+            ),
         ),
     ]
