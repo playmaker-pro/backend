@@ -43,3 +43,9 @@ class ClubSelect2Serializer(serializers.HyperlinkedModelSerializer):
             "id",
             "text",
         ]
+
+
+class TeamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = "__all__"

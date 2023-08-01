@@ -4,12 +4,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from clubs.models import Club, Team, TeamHistory
-
-from .serizalizer import (
-    ClubSelect2Serializer,
-    TeamHistorySelect2Serializer,
-    TeamSelect2Serializer,
-)
+from clubs import errors, services
+from . import serizalizer
 
 User = get_user_model()
 
@@ -17,7 +13,7 @@ User = get_user_model()
 class TeamViewSet(viewsets.ModelViewSet):
     permission_classes = []
     queryset = Team.objects.all().order_by("name")
-    serializer_class = TeamSelect2Serializer
+    serializer_class = serizalizer.TeamSelect2Serializer
 
     def get_queryset(self):
         q_name = self.request.query_params.get("q")
@@ -37,7 +33,7 @@ class TeamSearchApi(APIView):
         if q_name:
             teams = teams.filter(name__icontains=q_name)
 
-        serializer = TeamSelect2Serializer(
+        serializer = serizalizer.TeamSelect2Serializer(
             teams, many=True, context={"request": request}
         )
 
@@ -59,7 +55,7 @@ class TeamHistorySearchApi(APIView):
             teams = teams.filter(team__name__icontains=q_name)
         if q_season:
             teams = teams.filter(league_history__season__name=q_season)
-        serializer = TeamHistorySelect2Serializer(
+        serializer = serizalizer.TeamHistorySelect2Serializer(
             teams[:20], many=True, context={"request": request}
         )
 
@@ -87,7 +83,7 @@ class ClubSearchApi(APIView):
         if q_name:
             queryset = queryset.filter(name__icontains=q_name)
 
-        serializer = ClubSelect2Serializer(
+        serializer = serizalizer.ClubSelect2Serializer(
             queryset[:10], many=True, context={"request": request}
         )
 
@@ -95,6 +91,20 @@ class ClubSearchApi(APIView):
 
 
 class ClubTeamsSearchApi(APIView):
+    permission_classes = []
+    club_service = services.ClubService()
+
     def get(self, request) -> Response:
-        # TODO(bartnyk): create logic for getting teams of given club
-        return Response({}, status=status.HTTP_200_OK)
+        """
+        Get list of teams assigned to given club
+        takes ?club_id as param
+        """
+        club_id: int = request.query_params.get("club_id")
+
+        if not (club_obj := self.club_service.club_exist(club_id)):
+            raise errors.ClubDoesNotExist
+
+        qs = Team.objects.filter(club=club_obj)
+        serializer = serizalizer.TeamSerializer(qs, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
