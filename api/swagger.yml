@@ -44,56 +44,162 @@ paths:
   /clubs/club-teams/search/:
     get:
       operationId: clubs_club_teams_search_retrieve
+      description: Return list of teams assigned for given club.
+      summary: Club teams list endpoint
+      parameters:
+        - in: query
+          name: club_id
+          schema:
+            type: integer
+          description: Club id
       tags:
-      - clubs
+      - club-teams-search
       security:
       - jwtAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of teams for given club'
+                items:
+                  type: object
+                  description: 'Team object'
+              example: [{'id': 1, name: 'team1', ...}, {'id': 2, name: 'team2', ...}]
+          description: 'List of teams for given club'
+        '404':
+          description: 'Given club does not exist'
+        '401':
+          description: 'Unauthorized'
   /clubs/clubs/search/:
     get:
       operationId: clubs_clubs_search_retrieve
+      description: 'Get list of clubs, top 10 ordered by name'
+      summary: Clubs list endpoint
       tags:
       - clubs
+      parameters:
+        - in: query
+          name: season
+          schema:
+            type: string
+          description: 'Season name'
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: 'Club name query, LIKE'
       security:
       - jwtAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of top 10 Clubs based on params, order by name'
+                items:
+                  type: object
+                  description: 'Club name with id'
+                example: [{'id': 1, 'text': 'club 1'}, {'id': 2, 'text': 'club 2'}]
+          description: 'List of clubs, name with ID'
   /clubs/team-histories/search/:
     get:
       operationId: clubs_team_histories_search_retrieve
+      description: 'List of team histories'
+      summary: Team Histories list endpoint
       tags:
-      - clubs
+      - team-histories
       security:
       - jwtAuth: []
+      parameters:
+        - in: query
+          name: season
+          schema:
+            type: string
+          description: 'Season name'
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: 'Team name query, LIKE'
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of top 20 Team histories based on params, order by name'
+                items:
+                  type: object
+                  description: 'Team History name with id'
+                example: [ { 'id': 1, 'text': 'team 1' }, { 'id': 2, 'text': 'team 2' } ]
+          description: 'List of team histories, name with ID'
   /clubs/teams/search/:
     get:
       operationId: clubs_teams_search_retrieve
+      description: 'List of Teams'
+      summary: Teams list endpoint
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: 'Team name query, LIKE'
       tags:
-      - clubs
+      - teams
       security:
       - jwtAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of Teams based on q param, order by name'
+                items:
+                  type: object
+                  description: 'Team name with id'
+                example: [ { 'id': 1, 'text': 'team 1' }, { 'id': 2, 'text': 'team 2' } ]
+          description: 'List of teams, name with ID'
   /countries/:
     get:
       operationId: countries_retrieve
-      description: |-
+      description: '
         Return list of countries and mark prior among them
         [{"country": "Polska", "priority": True}, {"country": "Angola", "priority": False}, ...]
         It is possible to select language of countries on output by param (e.g. ?language=en), Polish by default
-        All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+        All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes'
+      summary: 'List countries'
+      parameters:
+        - in: query
+          name: language
+          schema:
+            type: string
+          required: false
+
+          description: 'Like: pl, en, de. Described here:
+          https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes'
       tags:
       - countries
       responses:
         '200':
-          description: No response body
+          description: 'List of countries'
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of countries with prior and code'
+                items:
+                  type: object
+                  properties:
+                    country:
+                      type: string
+                    code:
+                      type: string
+                    priority:
+                      type: boolean
   /preference-choices/:
     get:
       operationId: preference_choices_retrieve
@@ -133,27 +239,311 @@ paths:
     post:
       operationId: profiles_create
       description: Create initial profile for user
+      summary: Create profile
+      requestBody:
+        description: "user_id and role required, rest of fields based on profile type, fields listed below"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                user_id:
+                  type: integer
+              required:
+                - role
+                - user_id
+              description: 'It is possible to pass other,
+              related with given profile fields to be initialized with new created profile'
       tags:
       - profiles
       security:
       - jwtAuth: []
       responses:
-        '200':
-          description: No response body
+        '201':
+          description: "Profile created successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                    description: User id
+                  role:
+                    type: string
+                    description: Profile role
+                  uuid:
+                    type: string
+                    description: Profile uuid
+        '400':
+          description: 'Invalid role'
+        '404':
+          description: 'User does not exist'
+        '401':
+          description: 'Unauthorized'
     patch:
       operationId: profiles_partial_update
-      description: Base class for building views
+      description: Update profile with given uuid
+      summary: Update profile
       tags:
       - profiles
+      requestBody:
+        description: "uuid required, rest of fields based on profile type, fields listed below"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                uuid:
+                  type: string
+              required:
+                - uuid
+              description: 'With uuid may comes other values related with given profile role'
+              example: {'uuid': "f709376c-f2ca-465c-b598-107e8456b6fa", 'team_object_id': 2, 'bio':"My new bio", 'height': 180, 'weight': 73}
       security:
       - jwtAuth: []
       responses:
         '200':
-          description: No response body
+          description: 'Profile updated successfully'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: "Serialized profile based on profile type"
+                properties:
+                  user_id:
+                    type: integer
+                    description: '*'
+                  verification_id:
+                    type: integer
+                    description: '*'
+                  history_id:
+                    type: integer
+                    description: '*'
+                  data_mapper_id:
+                    type: integer
+                    description: '*'
+                  slug:
+                    type: string
+                    description: '*'
+                  bio:
+                    type: string
+                    description: '*'
+                  event_log:
+                    type: string
+                    description: '*'
+                  step:
+                    type: integer
+                    description: '*'
+                  uuid:
+                    type: string
+                    description: '*'
+                  meta:
+                    type: string
+                    description: Player
+                  meta_updated:
+                    type: boolean
+                    description: Player
+                  team_club_league_voivodeship_ver:
+                    type: string
+                    description: Player,Coach,Club
+                  team_object_id:
+                    type: integer
+                    description: Player,Coach
+                  team_history_object_id:
+                    type: integer
+                    description: Player,Coach
+                  team_object_alt_id:
+                    type: integer
+                    description: Player
+                  club:
+                    type: string
+                    description: Player
+                  team:
+                    type: string
+                    description: Player
+                  league:
+                    type: string
+                    description: Player
+                  birth_date:
+                    type: string
+                    description: Player
+                  height:
+                    type: integer
+                    description: Player
+                  weight:
+                    type: integer
+                    description: Player
+                  position_raw:
+                    type: string
+                    description: Player
+                  position_raw_alt:
+                    type: string
+                    description: Player
+                  position_fantasy:
+                    type: string
+                    description: Player
+                  formation:
+                    type: string
+                    description: Player
+                  formation_alt:
+                    type: string
+                    description: Player
+                  prefered_leg:
+                    type: integer
+                    description: Player
+                  transfer_status:
+                    type: integer
+                    description: Player
+                  card:
+                    type: integer
+                    description: Player
+                  soccer_goal:
+                    type: integer
+                    description: Player,Coach,Scout
+                  phone:
+                    type: string
+                    description: Player,Coach,Club,Guest
+                  facebook_url:
+                    type: string
+                    description: Player,Coach,Scout,Guest
+                  mapper_id:
+                    type: integer
+                    description: Player,Coach
+                  external_links_id:
+                    type: integer
+                    description: Player,Coach,Scout,Guest
+                  laczynaspilka_url:
+                    type: string
+                    description: Player
+                  min90_url:
+                    type: string
+                    description: Player
+                  transfermarket_url:
+                    type: string
+                    description: Player
+                  voivodeship:
+                    type: string
+                    description: Player
+                  voivodeship_obj_id:
+                    type: integer
+                    description: Player,Coach,Scout
+                  voivodeship_raw:
+                    type: string
+                    description: Player
+                  address_id:
+                    type: integer
+                    description: Player,Coach,Scout,Club,Guest
+                  practice_distance:
+                    type: integer
+                    description: Player,Coach,Scout,Guest
+                  about:
+                    type: string
+                    description: Player,Coach
+                  training_ready:
+                    type: string
+                    description: Player
+                  country:
+                    type: string
+                    description: Player,Coach,Scout
+                  agent_status:
+                    type: string
+                    description: Player
+                  agent_name:
+                    type: string
+                    description: Player
+                  agent_phone:
+                    type: string
+                    description: Player
+                  agent_foreign:
+                    type: string
+                    description: Player
+                  licence:
+                    type: integer
+                    description: Coach
+                  club_role:
+                    type: integer
+                    description: Coach,Club
+                  data:
+                    type: string
+                    description: Coach
+                  club_object_id:
+                    type: integer
+                    description: Club
+                  club_raw:
+                    type: string
+                    description: Scout
+                  league_raw:
+                    type: string
+                    description: Scout
+                example: {
+                  "verification_id": 1,
+                  "user_id": 13,
+                  "history_id": 1,
+                  "data_mapper_id": null,
+                  "slug": "player-nichole-turner",
+                  "bio": "National win court commercial building recently. Trouble story cut whether memory amount role.",
+                  "event_log": null,
+                  "step": null,
+                  "uuid": "05103268-abb8-4928-bac2-68bf0d82e63a",
+                  "meta": null,
+                  "meta_updated": null,
+                  "team_club_league_voivodeship_ver": null,
+                  "team_object_id": 1,
+                  "team_history_object_id": 3,
+                  "team_object_alt_id": null,
+                  "club": null,
+                  "team": null,
+                  "league": null,
+                  "birth_date": "1981-06-25",
+                  "height": 175,
+                  "weight": 99,
+                  "position_raw": null,
+                  "position_raw_alt": null,
+                  "position_fantasy": null,
+                  "formation": null,
+                  "formation_alt": null,
+                  "prefered_leg": 1,
+                  "transfer_status": 2,
+                  "card": 2,
+                  "soccer_goal": 2,
+                  "phone": "216-111-805",
+                  "facebook_url": null,
+                  "mapper_id": 47,
+                  "external_links_id": 27,
+                  "laczynaspilka_url": null,
+                  "min90_url": null,
+                  "transfermarket_url": null,
+                  "voivodeship": null,
+                  "voivodeship_obj_id": 9,
+                  "voivodeship_raw": null,
+                  "address_id": 11,
+                  "practice_distance": 68,
+                  "about": "Develop rich record likely. Usually happen computer build beat know song.",
+                  "training_ready": null,
+                  "country": "PL",
+                  "agent_status": null,
+                  "agent_name": null,
+                  "agent_phone": "237-753-122",
+                  "agent_foreign": null,
+                  "updated": false,
+                  "role": "P"
+              }
+        '400':
+          description: 'Invalid uuid'
+        '404':
+          description: 'Profile with given uuid does not exist'
+        '401':
+          description: 'Unauthorized'
   /profiles/{profile_uuid}/:
     get:
       operationId: profiles_retrieve
-      description: Base class for building views
+      description: "Get profile with uuid"
+      summary: "Get profile"
       parameters:
       - in: path
         name: profile_uuid
@@ -168,10 +558,235 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          description: 'Profile obtain successfully'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: "Serialized profile based on profile type"
+                properties:
+                  user_id:
+                    type: integer
+                    description: '*'
+                  verification_id:
+                    type: integer
+                    description: '*'
+                  history_id:
+                    type: integer
+                    description: '*'
+                  data_mapper_id:
+                    type: integer
+                    description: '*'
+                  slug:
+                    type: string
+                    description: '*'
+                  bio:
+                    type: string
+                    description: '*'
+                  event_log:
+                    type: string
+                    description: '*'
+                  step:
+                    type: integer
+                    description: '*'
+                  uuid:
+                    type: string
+                    description: '*'
+                  meta:
+                    type: string
+                    description: Player
+                  meta_updated:
+                    type: boolean
+                    description: Player
+                  team_club_league_voivodeship_ver:
+                    type: string
+                    description: Player,Coach,Club
+                  team_object_id:
+                    type: integer
+                    description: Player,Coach
+                  team_history_object_id:
+                    type: integer
+                    description: Player,Coach
+                  team_object_alt_id:
+                    type: integer
+                    description: Player
+                  club:
+                    type: string
+                    description: Player
+                  team:
+                    type: string
+                    description: Player
+                  league:
+                    type: string
+                    description: Player
+                  birth_date:
+                    type: string
+                    description: Player
+                  height:
+                    type: integer
+                    description: Player
+                  weight:
+                    type: integer
+                    description: Player
+                  position_raw:
+                    type: string
+                    description: Player
+                  position_raw_alt:
+                    type: string
+                    description: Player
+                  position_fantasy:
+                    type: string
+                    description: Player
+                  formation:
+                    type: string
+                    description: Player
+                  formation_alt:
+                    type: string
+                    description: Player
+                  prefered_leg:
+                    type: integer
+                    description: Player
+                  transfer_status:
+                    type: integer
+                    description: Player
+                  card:
+                    type: integer
+                    description: Player
+                  soccer_goal:
+                    type: integer
+                    description: Player,Coach,Scout
+                  phone:
+                    type: string
+                    description: Player,Coach,Club,Guest
+                  facebook_url:
+                    type: string
+                    description: Player,Coach,Scout,Guest
+                  mapper_id:
+                    type: integer
+                    description: Player,Coach
+                  external_links_id:
+                    type: integer
+                    description: Player,Coach,Scout,Guest
+                  laczynaspilka_url:
+                    type: string
+                    description: Player
+                  min90_url:
+                    type: string
+                    description: Player
+                  transfermarket_url:
+                    type: string
+                    description: Player
+                  voivodeship:
+                    type: string
+                    description: Player
+                  voivodeship_obj_id:
+                    type: integer
+                    description: Player,Coach,Scout
+                  voivodeship_raw:
+                    type: string
+                    description: Player
+                  address_id:
+                    type: integer
+                    description: Player,Coach,Scout,Club,Guest
+                  practice_distance:
+                    type: integer
+                    description: Player,Coach,Scout,Guest
+                  about:
+                    type: string
+                    description: Player,Coach
+                  training_ready:
+                    type: string
+                    description: Player
+                  country:
+                    type: string
+                    description: Player,Coach,Scout
+                  agent_status:
+                    type: string
+                    description: Player
+                  agent_name:
+                    type: string
+                    description: Player
+                  agent_phone:
+                    type: string
+                    description: Player
+                  agent_foreign:
+                    type: string
+                    description: Player
+                  licence:
+                    type: integer
+                    description: Coach
+                  club_role:
+                    type: integer
+                    description: Coach,Club
+                  data:
+                    type: string
+                    description: Coach
+                  club_object_id:
+                    type: integer
+                    description: Club
+                  club_raw:
+                    type: string
+                    description: Scout
+                  league_raw:
+                    type: string
+                    description: Scout
+                example: {
+                  "verification_id": 1,
+                  "user_id": 13,
+                  "history_id": 1,
+                  "data_mapper_id": null,
+                  "slug": "player-nichole-turner",
+                  "bio": "National win court commercial building recently. Trouble story cut whether memory amount role.",
+                  "event_log": null,
+                  "step": null,
+                  "uuid": "05103268-abb8-4928-bac2-68bf0d82e63a",
+                  "meta": null,
+                  "meta_updated": null,
+                  "team_club_league_voivodeship_ver": null,
+                  "team_object_id": 1,
+                  "team_history_object_id": 3,
+                  "team_object_alt_id": null,
+                  "club": null,
+                  "team": null,
+                  "league": null,
+                  "birth_date": "1981-06-25",
+                  "height": 175,
+                  "weight": 99,
+                  "position_raw": null,
+                  "position_raw_alt": null,
+                  "position_fantasy": null,
+                  "formation": null,
+                  "formation_alt": null,
+                  "prefered_leg": 1,
+                  "transfer_status": 2,
+                  "card": 2,
+                  "soccer_goal": 2,
+                  "phone": "216-111-805",
+                  "facebook_url": null,
+                  "mapper_id": 47,
+                  "external_links_id": 27,
+                  "laczynaspilka_url": null,
+                  "min90_url": null,
+                  "transfermarket_url": null,
+                  "voivodeship": null,
+                  "voivodeship_obj_id": 9,
+                  "voivodeship_raw": null,
+                  "address_id": 11,
+                  "practice_distance": 68,
+                  "about": "Develop rich record likely. Usually happen computer build beat know song.",
+                  "training_ready": null,
+                  "country": "PL",
+                  "agent_status": null,
+                  "agent_name": null,
+                  "agent_phone": "237-753-122",
+                  "agent_foreign": null,
+                  "updated": false,
+                  "role": "P"
+                }
   /profiles/playerupdate/:
     post:
       operationId: profiles_playerupdate_create
+      summary: DEPRECATED
       tags:
       - profiles
       security:
