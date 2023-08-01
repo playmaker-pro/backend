@@ -15,6 +15,8 @@ from api.swagger_schemas import (
     CITIES_VIEW_SWAGGER_SCHEMA,
     PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA,
 )
+from django.conf.global_settings import LANGUAGES
+from utils import translate_to
 
 
 class EndpointView(viewsets.GenericViewSet):
@@ -24,7 +26,7 @@ class EndpointView(viewsets.GenericViewSet):
         ...
 
 
-class CountriesView(EndpointView):
+class LocaleDataView(EndpointView):
     """View for listing countries"""
 
     authentication_classes = []
@@ -60,13 +62,6 @@ class CountriesView(EndpointView):
             for country_code, country_name in countries
         ]
         return Response(countries_list, status=status.HTTP_200_OK)
-
-
-class CitiesView(EndpointView):
-    """View for listing cities"""
-
-    authentication_classes = []
-    permission_classes = []
 
     @swagger_auto_schema(**CITIES_VIEW_SWAGGER_SCHEMA)
     def list_cities(self, request: Request) -> Response:
@@ -109,6 +104,30 @@ class CitiesView(EndpointView):
         ]
 
         return Response(cities_list, status=status.HTTP_200_OK)
+
+    def list_languages(self, request: Request) -> Response:
+        """
+        Return list of languages.
+        View takes one optional param: ?language=<lang_code> (Default: pl - polish)
+        All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+
+        {
+            language - name of language translated in langauge described by param
+            language_locale - name of language translated as native locale language
+            code - language code
+        }
+        """
+        language = request.GET.get("language", "pl")  # default language (pl -> Polish)
+        countries_list = [
+            {
+                "language": translate_to(language, language_name),
+                "language_locale": translate_to(language_code, language_name),
+                "code": language_code,
+            }
+            for language_code, language_name in LANGUAGES
+        ]
+
+        return Response(countries_list, status=status.HTTP_200_OK)
 
 
 class PreferenceChoicesView(EndpointView):
