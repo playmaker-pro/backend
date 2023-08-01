@@ -51,11 +51,23 @@ class TestCreateProfileAPI(APITestCase):
     @parameterized.expand(
         [
             [{"user_id": 0, "role": "P"}],
-            [{"id_user": 1, "role": "S"}],
-            [{"user": 1, "role": "S"}],
+            [{"user_id": 100000, "role": "P"}],
         ]
     )
     def test_incorrect_user(self, payload: dict) -> None:
+        """test HTTP_400 if request has wrong defined user_id"""
+        response = request.post(reverse(url_create_or_update), payload)
+
+        assert response.status_code == 404
+
+    @parameterized.expand(
+        [
+            [{"id_user": 1, "role": "S"}],
+            [{"role": "S"}],
+            [{"user": 1, "role": "S"}],
+        ]
+    )
+    def test_user_not_defined(self, payload: dict) -> None:
         """test HTTP_400 if request has wrong defined user_id"""
         response = request.post(reverse(url_create_or_update), payload)
 
