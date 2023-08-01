@@ -6,7 +6,8 @@ from clubs import errors as clubs_errors
 from clubs.services import ClubService
 from profiles import errors as profile_errors
 from profiles.services import ProfileService
-from .models import PROFILE_TYPE
+from . import models
+from . import serializers as profiles_serializers
 from roles.definitions import PROFILE_TYPE_SHORT_MAP
 from users.services import UserService
 from django.http import QueryDict
@@ -35,14 +36,22 @@ class ProfileSerializer(serializers.Serializer):
     serialize_fields = []  # if empty -> serialize all fields
     required_fields = []  # fields required as 'data'
 
+    # serializers related to profiles
+    player_positions = profiles_serializers.PlayerProfilePositionSerializer(
+        many=True, read_only=True
+    )
+    player_video = profiles_serializers.PlayerVideoSerializer(many=True, read_only=True)
+    playermetrics = profiles_serializers.PlayerMetricsSerializer(read_only=True)
+    licences = profiles_serializers.CoachLicenceSerializer(many=True, read_only=True)
+
     def __init__(
         self,
         *args,
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
-        self.profile_role: str = self.get_role()
-        self.model: PROFILE_TYPE = self.define_model()
+        self.profile_role: str = kwargs.get("role") or self.get_role()
+        self.model: models.PROFILE_TYPE = self.define_model()
 
     @property
     def data(self) -> dict:
@@ -51,7 +60,8 @@ class ProfileSerializer(serializers.Serializer):
 
     def to_representation(self, *args, **kwargs) -> dict:
         """serialize each attr of given model into json"""
-        ret = {}
+        ret = super().to_representation(self.instance) or {}
+
         fields: list[str] = self.serialize_fields or self.instance.__dict__
         for field_name in fields:
             if field_name.startswith("_") or field_name == "_state":
@@ -82,7 +92,7 @@ class ProfileSerializer(serializers.Serializer):
             f"{self.__class__.__name__} should not be able to save anything!"
         )
 
-    def define_model(self) -> PROFILE_TYPE:
+    def define_model(self) -> models.PROFILE_TYPE:
         """Define profile model based on role shortcut"""
         return profiles_service.get_model_by_role(self.profile_role)
 
@@ -124,8 +134,8 @@ class ProfileSerializer(serializers.Serializer):
 
 
 class CreateProfileSerializer(ProfileSerializer):
-    user_id = serializers.IntegerField()
-    role = serializers.CharField()
+    user_id = serializers.IntegerField(read_only=True)
+    role = serializers.CharField(read_only=True)
     serialize_fields = ["user_id", "uuid"]
     required_fields = ["user_id", "role"]
 
@@ -177,7 +187,9 @@ class UpdateProfileSerializer(ProfileSerializer):
         if not profiles_service.is_valid_uuid(uuid):
             raise profile_errors.InvalidUUID
 
-        kwargs["instance"]: PROFILE_TYPE = profiles_service.get_profile_by_uuid(uuid)
+        kwargs["instance"]: models.PROFILE_TYPE = profiles_service.get_profile_by_uuid(
+            uuid
+        )
         super().__init__(*args, **kwargs)
 
     def update_fields(self) -> None:
