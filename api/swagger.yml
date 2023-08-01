@@ -279,7 +279,7 @@ paths:
                     type: string
                     description: Profile uuid
         '400':
-          description: 'Invalid role'
+          description: 'Invalid role or user_id not defined'
         '404':
           description: 'User does not exist'
         '401':
