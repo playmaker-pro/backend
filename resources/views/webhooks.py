@@ -5,7 +5,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 
-class WebhookPlayer(APIView):
+class WebhookPlayer(
+    APIView
+):  # TODO(bartnyk): prolly whole app can be removed, unused resource
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):

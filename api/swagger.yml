@@ -783,17 +783,6 @@ paths:
                   "updated": false,
                   "role": "P"
                 }
-  /profiles/playerupdate/:
-    post:
-      operationId: profiles_playerupdate_create
-      summary: DEPRECATED
-      tags:
-      - profiles
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
   /roles/get-roles/:
     get:
       operationId: roles_get_roles_list
