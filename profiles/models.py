@@ -1645,6 +1645,47 @@ class ManagerProfile(BaseProfile):
     external_links = models.OneToOneField(
         ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
     )
+    agency_phone = models.CharField(
+        _("Agency Phone"),
+        max_length=15,
+        blank=True,
+        null=True,
+        help_text=_("Contact phone number for the managing agency."),
+    )
+    agency_email = models.EmailField(
+        _("Agency Email"),
+        blank=True,
+        null=True,
+        help_text=_("Contact email address for the managing agency."),
+    )
+    agency_transfermarkt_url = models.URLField(
+        _("Agency Transfermarkt URL"),
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text=_("URL of the managing agency's profile on Transfermarkt."),
+    )
+    agency_website_url = models.URLField(
+        _("Agency Website URL"),
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text=_("URL of the managing agency's official website."),
+    )
+    agency_instagram_url = models.URLField(
+        _("Agency Instagram URL"),
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text=_("URL of the managing agency's Instagram profile."),
+    )
+    agency_twitter_url = models.URLField(
+        _("Agency Twitter URL"),
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text=_("URL of the managing agency's Twitter profile."),
+    )
 
     def create_external_links_obj(self):
         self.external_links = ExternalLinks.objects.create()
