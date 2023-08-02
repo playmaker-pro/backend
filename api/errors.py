@@ -49,6 +49,11 @@ class CoreAPIException(APIException):
         return json.dumps(self._prepare_content())
 
 
+class InvalidLanguagesListInput(Exception):
+    def __str__(self) -> str:
+        return "Expected list of tuples, like: [('pl', 'Polish'), ('en', 'English')]"
+
+
 def custom_exception_handler(exc, context) -> exception_handler:
     """
     Log DRF errors to the console.

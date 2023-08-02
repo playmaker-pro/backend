@@ -16,7 +16,7 @@ from api.swagger_schemas import (
     PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA,
 )
 from django.conf.global_settings import LANGUAGES
-from utils import translate_to
+from . import serializers
 
 
 class EndpointView(viewsets.GenericViewSet):
@@ -48,10 +48,10 @@ class LocaleDataView(EndpointView):
         """
         Return list of countries and mark prior among them
         [{"country": "Polska", "priority": True}, {"country": "Angola", "priority": False}, ...]
-        It is possible to select language of countries on output by param (e.g. ?language=en), Polish by default
+        Select language of countries on output by param (e.g. ?language=en, Default: pl - polish).
         All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
         """
-        language = request.GET.get("language", "pl")  # default language (pl -> Polish)
+        language = request.GET.get("language", "pl")
         translation.activate(language)
         countries_list = [
             {
@@ -117,17 +117,12 @@ class LocaleDataView(EndpointView):
             code - language code
         }
         """
-        language = request.GET.get("language", "pl")  # default language (pl -> Polish)
-        countries_list = [
-            {
-                "language": translate_to(language, language_name),
-                "language_locale": translate_to(language_code, language_name),
-                "code": language_code,
-            }
-            for language_code, language_name in LANGUAGES
-        ]
-
-        return Response(countries_list, status=status.HTTP_200_OK)
+        language = request.GET.get("language", "pl")
+        serializer = serializers.LanguageSerializer(
+            data=LANGUAGES, many=True, context={"language": language}
+        )
+        serializer.is_valid()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class PreferenceChoicesView(EndpointView):
