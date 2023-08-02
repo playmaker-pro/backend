@@ -11,15 +11,21 @@ from rest_framework.test import APIClient, APITestCase
 
 from api.schemas import RegisterSchema
 from features.models import Feature
-from users.entities import UserGoogleDetailPydantic
-from users.managers import GoogleManager, GoogleSdkLoginCredentials
+from users.managers import GoogleManager
 from users.models import User
 from users.services import UserService
-from utils.factories.feature_sets_factories import (FeatureElementFactory,
-                                                    FeatureFactory)
+from users.schemas import UserGoogleDetailPydantic, GoogleSdkLoginCredentials
+from utils.factories.feature_sets_factories import (
+    FeatureElementFactory,
+    FeatureFactory
+)
 from utils.factories.user_factories import UserFactory
-from utils.test.test_utils import (TEST_EMAIL, MethodsNotAllowedTestsMixin,
-                                   UserManager, mute_post_save_signal)
+from utils.test.test_utils import (
+    TEST_EMAIL,
+    MethodsNotAllowedTestsMixin,
+    UserManager,
+    mute_post_save_signal
+)
 
 
 @pytest.mark.django_db

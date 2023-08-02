@@ -8,13 +8,15 @@ from django.contrib.auth import get_user_model
 
 from features.models import AccessPermission, Feature, FeatureElement
 from roles.definitions import PLAYER_SHORT
-from users.entities import UserGoogleDetailPydantic
+from users.schemas import UserGoogleDetailPydantic
 from users.services import UserService
-from utils.factories.feature_sets_factories import (AccessPermissionFactory,
-                                                    FeatureFactory)
+from utils.factories.feature_sets_factories import (
+    AccessPermissionFactory,
+    FeatureFactory,
+)
 from utils.factories.social_factories import SocialAccountFactory
 from utils.factories.user_factories import UserFactory
-from utils.test.test_utils import TEST_EMAIL, mute_post_save_signal
+from utils.test.test_utils import TEST_EMAIL
 
 User = get_user_model()
 

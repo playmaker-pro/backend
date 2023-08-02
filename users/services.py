@@ -9,7 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from api.schemas import RegisterSchema
 from features.models import AccessPermission, Feature, FeatureElement
 from profiles.models import PROFILE_TYPE
-from users.entities import UserGoogleDetailPydantic
+from users.schemas import UserGoogleDetailPydantic
 
 User = get_user_model()
 

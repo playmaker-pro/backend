@@ -14,8 +14,11 @@ from django.utils.translation import ugettext_lazy as _
 from pydantic import ValidationError
 from requests import Response
 
-from users.entities import (GoogleSdkLoginCredentials, SocialAppPydantic,
-                            UserGoogleDetailPydantic)
+from users.schemas import (
+    GoogleSdkLoginCredentials,
+    SocialAppPydantic,
+    UserGoogleDetailPydantic,
+)
 
 logger = logging.getLogger("django")
 

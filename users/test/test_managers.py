@@ -6,12 +6,14 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
 
-from users.entities import UserGoogleDetailPydantic
+from users.schemas import (
+    UserGoogleDetailPydantic,
+    GoogleSdkLoginCredentials,
+    SocialAppPydantic
+)
 from users.managers import (
     GoogleManager,
-    GoogleSdkLoginCredentials,
     SocialAppManager,
-    SocialAppPydantic
 )
 from utils.test.test_utils import ExternalCallsGuardMixin, MockedResponse
 
