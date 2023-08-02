@@ -28,7 +28,7 @@ from users.errors import (
     NoUserCredentialFetchedException,
 )
 from users.managers import GoogleManager
-from users.schemas import UserGoogleDetailPydantic
+from users.schemas import UserGoogleDetailPydantic, RedirectAfterGoogleLogin
 from users.models import User
 from users.serializers import (
     FeatureElementSerializer,
@@ -151,7 +151,8 @@ class UsersAPI(EndpointView):
         """
         request_data: dict = request.data
 
-        if not request_data.get("token_id"):
+        token_id: str = request_data.get("token_id")
+        if not token_id:
             raise NoGoogleTokenSent()
 
         try:
@@ -170,10 +171,10 @@ class UsersAPI(EndpointView):
         user_email: str = user_info.email
         user: Optional[User] = user_service.filter(email=user_email)
 
-        redirect_path: str = "landing page"
+        redirect_path: str = RedirectAfterGoogleLogin.LANDING_PAGE  # type: ignore
 
         if not user:
-            redirect_path = "register"
+            redirect_path = RedirectAfterGoogleLogin.REGISTER_PAGE  # type: ignore
             user: User = user_service.register_from_google(user_info)
 
             if not user:
