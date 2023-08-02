@@ -1,5 +1,6 @@
-from typing import Optional
+import typing
 from . import models
+from django.db.models import F
 
 
 class SeasonService:
@@ -16,7 +17,7 @@ class AdapterBase:
 class TeamAdapter(AdapterBase):
     def match_name_or_mapping_with_code(
         self, name: str, code: str
-    ) -> Optional[models.Team]:
+    ) -> typing.Optional[models.Team]:
         try:
             return models.Team.objects.get(name__iexact=name, league__code=str(code))
         except models.Team.DoesNotExist:
@@ -30,23 +31,29 @@ class TeamAdapter(AdapterBase):
 
 
 class ClubService:
-    def team_exist(self, team_id: str) -> Optional[models.Team]:
+    def team_exist(self, team_id: str) -> typing.Optional[models.Team]:
         """Return Team with given id if exists, None otherwise"""
         try:
             return models.Team.objects.get(id=team_id)
         except models.Team.DoesNotExist:
             return
 
-    def club_exist(self, club_id: str) -> Optional[models.Club]:
+    def club_exist(self, club_id: str) -> typing.Optional[models.Club]:
         """Return Club with given id if exists, None otherwise"""
         try:
             return models.Club.objects.get(id=club_id)
         except models.Club.DoesNotExist:
             return
 
-    def team_history_exist(self, th_id: str) -> Optional[models.TeamHistory]:
+    def team_history_exist(self, th_id: str) -> typing.Optional[models.TeamHistory]:
         """Return TeamHistory with given id if exists, None otherwise"""
         try:
             return models.TeamHistory.objects.get(id=th_id)
         except models.TeamHistory.DoesNotExist:
             return
+
+
+class LeagueService:
+    def get_highest_parents(self) -> typing.List[models.League]:
+        """Get all highest parents"""
+        return models.League.objects.filter(highest_parent=F("id"))
