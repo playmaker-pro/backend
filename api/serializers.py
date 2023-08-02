@@ -1,7 +1,10 @@
 from rest_framework import serializers
+from .services import LocaleDataService
 from utils import translate_to
 import typing
 from django.utils import translation
+
+locale_service = LocaleDataService()
 
 
 class LanguageListSerializer(serializers.ListSerializer):
@@ -19,6 +22,7 @@ class LanguageListSerializer(serializers.ListSerializer):
         }
         """
         language: str = self.context.get("language", "pl")
+        locale_service.validate_language(language)
         return [
             {
                 "language": translate_to(language, language_name).capitalize(),
@@ -43,19 +47,6 @@ class LanguageSerializer(serializers.Serializer):
 
 
 class CountriesListSerializer(serializers.ListSerializer):
-    prior_countries = [
-        "PL",
-        "UA",
-        "SK",
-        "CZ",
-        "BY",
-        "LT",
-    ]  # Polska, Ukraina, Słowacja, Czechy, Białoruś, Litwa
-
-    def is_prior_country(self, country_code: str) -> bool:
-        """Check if given country is priority"""
-        return country_code in self.prior_countries
-
     def to_internal_value(self, data: list) -> typing.List[dict]:
         """
         Return list of countries and mark prior among them
@@ -64,12 +55,13 @@ class CountriesListSerializer(serializers.ListSerializer):
         All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
         """
         language: str = self.context.get("language", "pl")
+        locale_service.validate_language(language)
         translation.activate(language)
         return [
             {
                 "country": country_name,
                 "code": country_code,
-                "priority": self.is_prior_country(country_code),
+                "priority": locale_service.is_prior_country(country_code),
             }
             for country_code, country_name in data
         ]

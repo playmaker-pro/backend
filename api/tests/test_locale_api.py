@@ -23,7 +23,24 @@ class TestLocaleDataView(APITestCase):
             assert len(response.data) == 1
 
     def test_list_languages(self):
+        """test list languages"""
         response = self.client.get(reverse("api:languages_list"))
 
         assert response.status_code == 200
         assert response.data
+
+    def test_list_languages_incorrect_language_param(self):
+        """test list languages with incorrect language param"""
+        response = self.client.get(
+            reverse("api:languages_list"), {"language": "foobar"}
+        )
+
+        assert response.status_code == 400
+
+    def test_list_countries_incorrect_language_param(self):
+        """test list countries with incorrect language param"""
+        response = self.client.get(
+            reverse("api:countries_list"), {"language": "foobar"}
+        )
+
+        assert response.status_code == 400
