@@ -16,7 +16,9 @@ class ClubFactory(CustomObjectFactory):
     club_phone = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
     club_email = CLUB_MAIL
     stadion_address = factory.LazyAttribute(lambda _: utils.get_random_address())
-    practice_stadion_address = factory.LazyAttribute(lambda _: utils.get_random_address())
+    practice_stadion_address = factory.LazyAttribute(
+        lambda _: utils.get_random_address()
+    )
     manager = UserFactory.random_object()
 
     @factory.post_generation
@@ -91,6 +93,14 @@ class LeagueFactory(CustomObjectFactory):
     name = factory.Iterator(LEAGUE_NAMES)
     seniority = factory.SubFactory(SeniorityFactory)
     gender = factory.SubFactory(GenderFactory)
+
+    @classmethod
+    def create_league_as_highest_parent(cls) -> clubs_models.League:
+        """Create League with highest_parent as self"""
+        league = cls.create()
+        league.highest_parent = league
+        league.save()
+        return league
 
 
 class LeagueHistoryFactory(CustomObjectFactory):
