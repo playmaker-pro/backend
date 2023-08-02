@@ -34,4 +34,9 @@ urlpatterns = [
         apis.UsersAPI.as_view({"get": "feature_elements"}),
         name="feature-elements",
     ),
+    path(
+        "google-oauth2/",
+        apis.UsersAPI.as_view({"post": "google_auth"}),
+        name="google-oauth2",
+    ),
 ]

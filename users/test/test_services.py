@@ -1,18 +1,22 @@
-from typing import Set, List
+from typing import List, Optional, Set
 from unittest import TestCase
 from unittest.mock import patch
 
 import pytest
+from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth import get_user_model
 
 from features.models import AccessPermission, Feature, FeatureElement
 from roles.definitions import PLAYER_SHORT
+from users.schemas import UserGoogleDetailPydantic
 from users.services import UserService
 from utils.factories.feature_sets_factories import (
     AccessPermissionFactory,
     FeatureFactory,
 )
+from utils.factories.social_factories import SocialAccountFactory
 from utils.factories.user_factories import UserFactory
+from utils.test.test_utils import TEST_EMAIL
 
 User = get_user_model()
 
@@ -87,3 +91,105 @@ class TestUserService(TestCase):
         assert isinstance(res, list)
         assert isinstance(res[0], FeatureElement)
         assert res[0].pk == obj.elements.first().pk
+
+    def test_register_from_google(self) -> None:
+        """Test if register_from_google method returns correct data"""
+        data: dict = {
+            "email": TEST_EMAIL,
+            "given_name": "first_name",
+            "family_name": "last_name",
+        }
+        user: User = self.user_service.register_from_google(
+            UserGoogleDetailPydantic(**data)
+        )
+
+        assert isinstance(user, User)
+        assert user.email == data["email"]
+        assert user.first_name == data["given_name"]
+
+    def test_register_from_google_not_valid_data(self) -> None:
+        """
+        Test if register_from_google method returns None if not valid data passed
+        """
+        data: dict = {
+            "email": 1,
+            "given_name": 2,
+            "family_name": 3,
+        }
+        user: User = self.user_service.register_from_google(
+            UserGoogleDetailPydantic(**data)
+        )
+
+        assert not isinstance(user, User)
+        assert user is None
+
+    def test_register_from_google_not_valid_email(self) -> None:
+        """Test if register_from_google method returns None if not valid email passed"""
+        data: dict = {
+            "email": "email",
+            "given_name": 2,
+            "family_name": 3,
+        }
+        user: User = self.user_service.register_from_google(
+            UserGoogleDetailPydantic(**data)
+        )
+
+        assert not isinstance(user, User)
+        assert user is None
+
+    def test_create_social_account_created(self) -> None:
+        """
+        Test if social account is created correctly.
+        User doesn't have any social accounts, so we should create new one.
+        """
+        user: User = UserFactory.create()
+        account: Optional[SocialAccount]
+        created: bool
+
+        data = {
+            "sub": "123",
+            "email": TEST_EMAIL,
+            "given_name": "first_name",
+            "family_name": "last_name",
+        }
+
+        account, created = self.user_service.create_social_account(
+            user, UserGoogleDetailPydantic(**data)
+        )
+
+        assert isinstance(account, SocialAccount)
+        assert created
+
+    def test_create_social_account_no_data(self) -> None:
+        """Test if create_social_account method returns None if no data passed"""
+        user: User = UserFactory.create()
+        account: Optional[SocialAccount]
+        created: bool
+
+        account, created = self.user_service.create_social_account(user, {})
+
+        assert not account
+        assert not created
+
+    def test_create_social_account_exists(self) -> None:
+        """
+        Test if create_social_account method returns existing instance
+        if account already exists
+        """
+        user: User = UserFactory.create()
+        social_acc: SocialAccount = SocialAccountFactory.create(user=user)
+        account: Optional[SocialAccount]
+        created: bool
+        data = {
+            "sub": "123",
+            "email": TEST_EMAIL,
+            "given_name": "first_name",
+            "family_name": "last_name",
+        }
+
+        account, created = self.user_service.create_social_account(
+            user, UserGoogleDetailPydantic(**data)
+        )
+
+        assert social_acc == account
+        assert not created

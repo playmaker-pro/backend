@@ -1,22 +1,41 @@
-from typing import Sequence, List
+import logging
+import traceback
+from typing import List, Optional, Sequence
 
+from django.core.exceptions import ImproperlyConfigured
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import status
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from api.swagger_schemas import (
-    USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA,
-    USER_FEATURE_SETS_SWAGGER_SCHEMA,
+    GOOGLE_AUTH_SWAGGER_SCHEMA,
     USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA,
+    USER_FEATURE_SETS_SWAGGER_SCHEMA,
+    USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA,
     USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA,
-    USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA
+    USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA,
 )
 from api.views import EndpointView
-from features.models import FeatureElement, Feature
+from features.models import Feature, FeatureElement
 from users import serializers
-from users.errors import FeatureSetsNotFoundException, FeatureElementsNotFoundException
+from users.errors import (
+    ApplicationError,
+    FeatureElementsNotFoundException,
+    FeatureSetsNotFoundException,
+    NoGoogleTokenSent,
+    NoUserCredentialFetchedException,
+)
+from users.managers import GoogleManager
+from users.schemas import UserGoogleDetailPydantic, RedirectAfterGoogleLogin
 from users.models import User
+from users.serializers import (
+    FeatureElementSerializer,
+    FeaturesSerializer,
+    UserRegisterSerializer,
+)
+from users.services import UserService
 
 # Definicja enpointów nie musi być skoncentrowana tylko i wyłącznie w jedenj klasie.
 # jesli poniższe metody będą super-cieńkie (logika będzie poza tymi views)
@@ -25,16 +44,11 @@ from users.models import User
 # unikniemy wówczas if... if... i zaszytej logiki
 # row-column-permission w samym widoku. Wiadomo jakieś powtorzenia w kodzie są ale przez to że
 # logika jest super-thin to nam nie szkodzi.
-
 # Jednak zdaje sobie sprawe ze nie uniknimy sytuacji "if" pod jednm API jak się da to robmy w miare czysto.
-from users.serializers import (
-    UserRegisterSerializer,
-    FeaturesSerializer,
-    FeatureElementSerializer,
-)
-from users.services import UserService
+
 
 user_service: UserService = UserService()
+logger = logging.getLogger("django")
 
 
 class UsersAPI(EndpointView):
@@ -67,7 +81,7 @@ class UsersAPI(EndpointView):
         Note: You can't use 'self.action' here because it's not set
         when calling not accepted method.
         """
-        if "register" in self.request.path:
+        if "register" in self.request.path or "google-oauth2" in self.request.path:
             retrieve_permission_list = [AllowAny]
             return [permission() for permission in retrieve_permission_list]
         else:
@@ -123,6 +137,60 @@ class UsersAPI(EndpointView):
             raise FeatureElementsNotFoundException()
         serializer = FeatureElementSerializer(instance=data, many=True)
         return Response(serializer.data)
+
+    @staticmethod
+    @swagger_auto_schema(**GOOGLE_AUTH_SWAGGER_SCHEMA)
+    def google_auth(request):
+        """
+        post:
+        Authenticates user with Google and gets his detailed information.
+
+        Method authenticate user with Google by token_id and returns his data.
+        If user exists in our database, then login him, otherwise register.
+        As a response returns user access and refresh tokens.
+        """
+        request_data: dict = request.data
+
+        token_id: str = request_data.get("token_id")
+        if not token_id:
+            raise NoGoogleTokenSent()
+
+        try:
+            google_manager: GoogleManager = GoogleManager()
+            user_info: UserGoogleDetailPydantic = google_manager.get_user_info(
+                access_token=request_data.get("token_id")
+            )
+        except ValueError as e:
+            logger.error(str(traceback.format_exc()) + f"\n{str(e)}")
+            raise ApplicationError(details=str(e))
+        except ImproperlyConfigured:
+            msg = "Failed to obtain Google credentials."
+            logger.error(str(traceback.format_exc()) + f"\n{msg}")
+            raise ApplicationError(details=msg)
+
+        user_email: str = user_info.email
+        user: Optional[User] = user_service.filter(email=user_email)
+
+        redirect_path: str = RedirectAfterGoogleLogin.LANDING_PAGE  # type: ignore
+
+        if not user:
+            redirect_path = RedirectAfterGoogleLogin.REGISTER_PAGE  # type: ignore
+            user: User = user_service.register_from_google(user_info)
+
+            if not user:
+                raise NoUserCredentialFetchedException()
+
+        instance, _ = user_service.create_social_account(user=user, data=user_info)
+        if not instance:
+            raise NoUserCredentialFetchedException()
+
+        response = {
+            "success": True,
+            "redirect": redirect_path,
+            **user_service.create_tokens(user),
+        }
+
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class LoginView(TokenObtainPairView):

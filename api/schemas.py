@@ -1,10 +1,12 @@
 from dataclasses import dataclass, fields
-from typing import Set, Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 
 @dataclass
 class RegisterSchema:
     """Schema represents data which have to be used by register endpoint"""
+
+    # TODO has to be changed to Pydantic Model with email field validation.
 
     email: str
     first_name: str
