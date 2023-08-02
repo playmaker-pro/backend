@@ -171,10 +171,10 @@ class UsersAPI(EndpointView):
         user_email: str = user_info.email
         user: Optional[User] = user_service.filter(email=user_email)
 
-        redirect_path: str = RedirectAfterGoogleLogin.LANDING_PAGE  # type: ignore
+        redirect_path: str = RedirectAfterGoogleLogin.LANDING_PAGE.value
 
         if not user:
-            redirect_path = RedirectAfterGoogleLogin.REGISTER_PAGE  # type: ignore
+            redirect_path = RedirectAfterGoogleLogin.REGISTER.value
             user: User = user_service.register_from_google(user_info)
 
             if not user:

@@ -25,13 +25,10 @@ class GoogleSdkLoginCredentials(BaseModel):
     project_id: str
 
 
-class RedirectAfterGoogleLogin(Enum):
+class RedirectAfterGoogleLogin(str, Enum):
     """
     Enum represents place, where user should be redirected
     after login with Google.
     """
-    REGISTER = "register page"
+    REGISTER = "register"
     LANDING_PAGE = "landing page"
-
-    def __str__(self):
-        return self.value
