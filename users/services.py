@@ -1,9 +1,15 @@
-from typing import Optional, List, Set
-from django.contrib.auth import get_user_model
+from typing import Dict, List, Optional, Set, Tuple
 
-from features.models import AccessPermission, FeatureElement, Feature
-from profiles.models import PROFILE_TYPE
+from allauth.socialaccount.models import SocialAccount
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.validators import validate_email
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from api.schemas import RegisterSchema
+from features.models import AccessPermission, Feature, FeatureElement
+from profiles.models import PROFILE_TYPE
+from users.schemas import UserGoogleDetailPydantic
 
 User = get_user_model()
 
@@ -17,6 +23,23 @@ class UserService:
             return User.objects.get(id=user_id)
         except User.DoesNotExist:
             return
+
+    @staticmethod
+    def filter(**kwargs) -> Optional[User]:
+        try:
+            user = User.objects.get(**kwargs)
+            return user
+        except ObjectDoesNotExist:
+            return None
+
+    @staticmethod
+    def create_tokens(user: User) -> Dict[str, str]:
+        """Create tokens for given user"""
+        tokens: RefreshToken = RefreshToken.for_user(user)
+        return {
+            "refresh_token": str(tokens),
+            "access_token": str(tokens.access_token),
+        }
 
     def set_role(self, user: User, role: str) -> None:
         """Set role to user"""
@@ -92,3 +115,48 @@ class UserService:
                 access_permissions__in=access_permissions_ids
             )
         ]
+
+    @staticmethod
+    def register_from_google(data: UserGoogleDetailPydantic) -> Optional[User]:
+        """Save User instance with given data taken from Google."""
+
+        password: str = User.objects.make_random_password()
+        user: User = User(
+            email=data.email,
+            first_name=data.given_name,
+            last_name=data.family_name,
+        )
+        try:
+            validate_email(user.email)
+        except ValidationError:
+            return None
+
+        user.set_password(password)
+        user.save()
+        return user
+
+    @staticmethod
+    def create_social_account(
+        user: User, data: UserGoogleDetailPydantic
+    ) -> Tuple[Optional[SocialAccount], Optional[bool]]:
+        """Check if user has social account, if not create one."""
+
+        if not isinstance(data, UserGoogleDetailPydantic):
+            return None, None
+
+        result: SocialAccount = SocialAccount.objects.filter(user=user).first()
+        response: SocialAccount = result
+        created: bool
+
+        if not result:
+            if not data:
+                return None, None
+
+            response = SocialAccount.objects.create(
+                user=user, provider="google", uid=data.sub, extra_data=data.dict()
+            )
+            created = True
+        else:
+            created = False
+
+        return response, created

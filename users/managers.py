@@ -1,8 +1,39 @@
+import logging
+import traceback
+from dataclasses import dataclass
 from datetime import datetime as dt
 from datetime import timedelta
+from typing import Optional
 
+import requests
+from allauth.socialaccount.models import SocialApp
+from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
+from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 from django.utils.translation import ugettext_lazy as _
+from pydantic import ValidationError
+from requests import Response
+
+from users.schemas import (
+    GoogleSdkLoginCredentials,
+    SocialAppPydantic,
+    UserGoogleDetailPydantic,
+)
+
+logger = logging.getLogger("django")
+
+
+class SocialAppManager:
+    @staticmethod
+    def get_social_app(provider: str) -> Optional[SocialAppPydantic]:
+        """Get social app by provider. Returns custom pydantic object."""
+        try:
+            instance: SocialApp = SocialApp.objects.get(provider=provider)
+            return SocialAppPydantic(
+                client_id=instance.client_id, client_secret=instance.secret
+            )
+        except ObjectDoesNotExist:
+            return None
 
 
 class CustomUserManager(BaseUserManager):
@@ -42,3 +73,83 @@ class CustomUserManager(BaseUserManager):
 
     def players(self):
         return self.filter(declared_role="P")
+
+
+class GoogleManager:
+    """Google manager for Google OAuth2 SDK."""
+
+    GOOGLE_USER_INFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
+
+    def __init__(self):
+        self._credentials = self.google_sdk_login_get_credentials()
+
+    @staticmethod
+    def google_sdk_login_get_credentials() -> GoogleSdkLoginCredentials:
+        """Get Google credentials from DB and settings."""
+        # TODO not used right now. Have to be removed in future.
+        google: Optional[SocialAppPydantic] = SocialAppManager.get_social_app(
+            provider="google"
+        )
+
+        if not google:
+            msg = "Google provider is missing in DB."
+            logger.critical(msg)
+            raise ImproperlyConfigured(msg)
+
+        client_id: str = google.client_id
+        client_secret: str = google.client_secret
+        project_id: str = settings.GOOGLE_OAUTH2_PROJECT_ID
+
+        if not client_id:
+            msg = "Google oauth2 client id missing in DB."
+            logger.critical(str(traceback.format_exc()) + f"\n{msg}")
+            raise ImproperlyConfigured(msg)
+
+        if not client_secret:
+            msg = "Google oauth2 client secret key missing in DB."
+            logger.critical(str(traceback.format_exc()) + f"\n{msg}")
+            raise ImproperlyConfigured(msg)
+
+        if not project_id:
+            msg = "Google oauth2 project id missing in settings."
+            logger.critical(str(traceback.format_exc()) + f"\n{msg}")
+            raise ImproperlyConfigured(msg)
+
+        credentials = GoogleSdkLoginCredentials(
+            client_id=client_id, client_secret=client_secret, project_id=project_id
+        )
+
+        return credentials
+
+    def get_user_info(self, access_token: str) -> UserGoogleDetailPydantic:
+        """
+        Returns user info from Google as UserGoogleDetailPydantic instance.
+        Example response from google:
+        {
+        "sub": "123456789012345678901" (string),
+        "name": "Test User" (string),
+        "given_name": "Test" (string),
+        "family_name": "User" (string),
+        "picture": "example_url" (string),
+        "email": user_email (string),
+        "email_verified": True (bool),
+        "locale": "pl" (string),
+        }
+        """
+        response: Response = requests.get(
+            self.GOOGLE_USER_INFO_URL, params={"access_token": access_token}
+        )
+
+        if not response.ok:
+            error: str = response.json().get("error")
+            error_description: str = response.json().get("error_description")
+            raise ValueError(f"{error}. Reason: {error_description}")
+
+        try:
+            details: UserGoogleDetailPydantic = UserGoogleDetailPydantic(
+                **response.json()
+            )
+            return details
+        except ValidationError as e:
+            logger.critical(str(traceback.format_exc()) + f"\n{e}")
+            raise ValueError(e)

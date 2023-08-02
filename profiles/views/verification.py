@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 
-from clubs.api.serizalizer import ClubSelect2Serializer, TeamHistorySelect2Serializer
+from clubs.api.serializers import ClubSelect2Serializer, TeamHistorySelect2Serializer
 from clubs.models import Season
 from profiles import forms
 from utils import get_current_season

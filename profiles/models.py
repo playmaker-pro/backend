@@ -1366,6 +1366,29 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
     )
 
+    COACH_ROLE_CHOICES = (
+        ("IC", "Pierwszy trener"),
+        ("IIC", "Drugi trener"),
+        ("GKC", "Trener bramkarzy"),
+        ("FIC", "Trener motoryki"),
+        ("MEC", "Trener mentalny"),
+        ("ANC", "Analityk"),
+        ("OTC", "Inne"),
+    )
+
+    FORMATION_CHOICES = (
+        ("5-3-2", "5-3-2"),
+        ("5-4-1", "5-4-1"),
+        ("4-4-2", "4-4-2"),
+        ("4-5-1", "4-5-1"),
+        ("4-3-3", "4-3-3"),
+        ("4-2-3-1", "4-2-3-1"),
+        ("4-1-4-1", "4-1-4-1"),
+        ("4-3-2-1", "4-3-2-1"),
+        ("3-5-2", "3-5-2"),
+        ("3-4-3", "3-4-3"),
+    )
+
     team_club_league_voivodeship_ver = models.CharField(
         _("Województwo"),
         max_length=355,
@@ -1447,6 +1470,23 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         blank=True,
         help_text="Defines if admin approved change",
+    )
+
+    coach_role = models.CharField(
+        _("Rola trenera"),
+        max_length=3,
+        choices=COACH_ROLE_CHOICES,
+        blank=True,
+        null=True,
+        help_text=_("This field represents the role of the coach."),
+    )
+    formation = models.CharField(
+        _("Formacja"),
+        max_length=7,
+        choices=FORMATION_CHOICES,
+        blank=True,
+        null=True,
+        help_text=_("This field represents the preferred formation of the coach."),
     )
 
     data = models.JSONField(null=True, blank=True)
@@ -1604,6 +1644,47 @@ class ManagerProfile(BaseProfile):
     facebook_url = models.URLField(_("Facebook"), max_length=500, blank=True, null=True)
     external_links = models.OneToOneField(
         ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    agency_phone = models.CharField(
+        _("Agency Phone"),
+        max_length=15,
+        blank=True,
+        null=True,
+        help_text=_("Contact phone number for the managing agency."),
+    )
+    agency_email = models.EmailField(
+        _("Agency Email"),
+        blank=True,
+        null=True,
+        help_text=_("Contact email address for the managing agency."),
+    )
+    agency_transfermarkt_url = models.URLField(
+        _("Agency Transfermarkt URL"),
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text=_("URL of the managing agency's profile on Transfermarkt."),
+    )
+    agency_website_url = models.URLField(
+        _("Agency Website URL"),
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text=_("URL of the managing agency's official website."),
+    )
+    agency_instagram_url = models.URLField(
+        _("Agency Instagram URL"),
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text=_("URL of the managing agency's Instagram profile."),
+    )
+    agency_twitter_url = models.URLField(
+        _("Agency Twitter URL"),
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text=_("URL of the managing agency's Twitter profile."),
     )
 
     def create_external_links_obj(self):

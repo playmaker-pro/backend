@@ -19,4 +19,9 @@ urlpatterns = [
         views.ClubTeamsSearchApi.as_view(),
         name="club_teams_search",
     ),
+    path(
+        "leagues/highest-parents/",
+        views.LeagueAPI.as_view({"get": "get_highest_parents"}),
+        name="highest_parent_leagues",
+    ),
 ]
