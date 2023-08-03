@@ -1356,14 +1356,17 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         (11, "W trakcie kursu"),
     )
 
-    DATA_KEYS = ("metrics",)
-
-    # Deprecated PM20-79
-    licence = models.IntegerField(
-        _("Licencja"),
-        choices=LICENCE_CHOICES,
-        blank=True,
-        null=True,
+    FORMATION_CHOICES = (
+        ("5-3-2", "5-3-2"),
+        ("5-4-1", "5-4-1"),
+        ("4-4-2", "4-4-2"),
+        ("4-5-1", "4-5-1"),
+        ("4-3-3", "4-3-3"),
+        ("4-2-3-1", "4-2-3-1"),
+        ("4-1-4-1", "4-1-4-1"),
+        ("4-3-2-1", "4-3-2-1"),
+        ("3-5-2", "3-5-2"),
+        ("3-4-3", "3-4-3"),
     )
 
     COACH_ROLE_CHOICES = (
@@ -1376,17 +1379,14 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         ("OTC", "Inne"),
     )
 
-    FORMATION_CHOICES = (
-        ("5-3-2", "5-3-2"),
-        ("5-4-1", "5-4-1"),
-        ("4-4-2", "4-4-2"),
-        ("4-5-1", "4-5-1"),
-        ("4-3-3", "4-3-3"),
-        ("4-2-3-1", "4-2-3-1"),
-        ("4-1-4-1", "4-1-4-1"),
-        ("4-3-2-1", "4-3-2-1"),
-        ("3-5-2", "3-5-2"),
-        ("3-4-3", "3-4-3"),
+    DATA_KEYS = ("metrics",)
+
+    # Deprecated PM20-79
+    licence = models.IntegerField(
+        _("Licencja"),
+        choices=LICENCE_CHOICES,
+        blank=True,
+        null=True,
     )
 
     team_club_league_voivodeship_ver = models.CharField(

@@ -251,8 +251,8 @@ GOOGLE_AUTH_SWAGGER_SCHEMA = dict(
                 "redirect": {
                     "type": "string",
                     "description": "The page where user should be redirected. "
-                                   "Landing page after login, or register page if user is new."
-                                   "Choices: 'landing page', 'register'",
+                    "Landing page after login, or register page if user is new."
+                    "Choices: 'landing page', 'register'",
                 },
                 "refresh_token": {
                     "type": "string",
@@ -282,7 +282,7 @@ GOOGLE_AUTH_SWAGGER_SCHEMA = dict(
             "example": {
                 "detail": "No user credential fetched from Google. Please try again."
             },
-        }
+        },
     },
 )
 
@@ -298,17 +298,17 @@ CITIES_VIEW_SWAGGER_SCHEMA = dict(
     responses={
         status.HTTP_200_OK: {
             "type": "array",
-            "description": 'List of [city, voivodeship] pairs returned successfully. For example: '
-                           '["Aleksandrów Łódzki", "Łódzkie"].',
+            "description": "List of [city, voivodeship] pairs returned successfully. For example: "
+            '["Aleksandrów Łódzki", "Łódzkie"].',
             "items": {
                 "type": "object",
                 "properties": {
                     "city": {"type": "string"},
                     "voivodeship": {"type": "string"},
-                }
-            }
+                },
+            },
         },
-    }
+    },
 )
 
 PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA = dict(
@@ -325,9 +325,9 @@ PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA = dict(
                         "properties": {
                             "value": {"type": "string"},
                             "label": {"type": "string"},
-                            },
                         },
                     },
+                },
                 "player_preferred_leg": {
                     "type": "array",
                     "items": {
@@ -337,7 +337,7 @@ PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA = dict(
                             "label": {"type": "string"},
                         },
                     },
-                }
+                },
             },
         },
     },
@@ -354,10 +354,26 @@ ROLES_API_SWAGGER_SCHEMA = dict(
                 "shortcut": {"type": "string"},
                 "full_name": {"type": "string"},
             },
-            "example":{
-                    "P": "Piłkarz",
+            "example": {
+                "P": "Piłkarz",
             },
         },
     },
 )
 
+FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA = dict(
+    summary="Formations endpoint",
+    description="Returns a dictionary where each key-value pair is a formation's unique string representation "
+    "(like '4-4-2' or '4-3-3') mapped to its corresponding label.",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Formation choices returned successfully.",
+            "type": "object",
+            "properties": {
+                "shortcut": {"type": "string"},
+                "full_name": {"type": "string"},
+            },
+            "example": {"4-4-2": "4-4-2", "4-3-3": "4-3-3"},
+        },
+    },
+)

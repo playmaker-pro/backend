@@ -1,4 +1,5 @@
 import uuid
+from drf_spectacular.utils import extend_schema
 from api.views import EndpointView
 from profiles.api_serializers import (
     CreateProfileSerializer,
@@ -6,11 +7,13 @@ from profiles.api_serializers import (
     ProfileSerializer,
     UpdateProfileSerializer,
 )
+from profiles.models import CoachProfile
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from api.swagger_schemas import FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA
 
 
 class ProfileAPI(EndpointView):
@@ -39,3 +42,23 @@ class ProfileAPI(EndpointView):
             serializer.save()
 
         return Response(serializer.data)
+
+
+class FormationChoicesView(EndpointView):
+    """
+    Endpoint for listing formation choices.
+
+    This endpoint returns a dictionary where each key-value pair is a formation's unique string representation
+    (like "4-4-2" or "4-3-3") mapped to its corresponding label.
+    For example, it may return a response like {"4-4-2": "4-4-2", "4-3-3": "4-3-3"}.
+    """
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    @extend_schema(**FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA)
+    def list_formations(self, request: Request) -> Response:
+        """
+        Returns a list of formation choices.
+        """
+        return Response(dict(CoachProfile.FORMATION_CHOICES), status=status.HTTP_200_OK)
