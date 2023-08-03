@@ -2,6 +2,8 @@ import logging
 import traceback
 from typing import List, Optional, Sequence
 
+from drf_spectacular.utils import extend_schema
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.core.exceptions import ImproperlyConfigured
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -57,12 +59,9 @@ class UsersAPI(EndpointView):
     allowed_methods = ("list", "post", "put", "update")
 
     @staticmethod
-    @swagger_auto_schema(**USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA)
+    @extend_schema(**USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA)
     def register(request) -> Response:
         """
-        post:
-        User register endpoint
-
         Validate given data and register user if everything is ok.
         Returns serialized User data or validation errors.
         """
@@ -107,14 +106,9 @@ class UsersAPI(EndpointView):
         ...
 
     @staticmethod
-    @swagger_auto_schema(**USER_FEATURE_SETS_SWAGGER_SCHEMA)
+    @extend_schema(**USER_FEATURE_SETS_SWAGGER_SCHEMA)
     def feature_sets(request) -> Response:
-        """
-        get:
-        User feature sets endpoint
-
-        Returns all user feature sets.
-        """
+        """Returns all user feature sets."""
         data: List[Feature] = user_service.get_user_features(request.user)
         if not data:
             raise FeatureSetsNotFoundException()
@@ -122,14 +116,9 @@ class UsersAPI(EndpointView):
         return Response(serializer.data)
 
     @staticmethod
-    @swagger_auto_schema(**USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA)
+    @extend_schema(**USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA)
     def feature_elements(request) -> Response:
-        """
-        get:
-        User feature elements endpoint
-
-        Returns all user feature elements.
-        """
+        """Returns all user feature elements."""
         data: List[FeatureElement] = user_service.get_user_feature_elements(
             request.user
         )
@@ -139,7 +128,7 @@ class UsersAPI(EndpointView):
         return Response(serializer.data)
 
     @staticmethod
-    @swagger_auto_schema(**GOOGLE_AUTH_SWAGGER_SCHEMA)
+    @extend_schema(**GOOGLE_AUTH_SWAGGER_SCHEMA)
     def google_auth(request):
         """
         post:
@@ -195,27 +184,21 @@ class UsersAPI(EndpointView):
 
 class LoginView(TokenObtainPairView):
     """
-    post:
-    User login endpoint
-
     Takes a set of user credentials and returns an access and refresh JSON web
     token pair to prove the authentication of those credentials.
     """
 
-    @swagger_auto_schema(**USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA)
+    @extend_schema(**USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA)
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
 
 class RefreshTokenCustom(TokenRefreshView):
     """
-    post:
-    Refresh user token endpoint
-
     Returns an access and refresh JWT pair using an existing refresh token.
     Returns status codes 401 and 400 if the refresh token is expired or invalid, respectively.
     """
 
-    @swagger_auto_schema(**USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA)
+    @extend_schema(**USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA)
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)

@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
 from django_countries import countries
 from rest_framework.response import Response
@@ -9,7 +10,6 @@ from cities_light.models import City
 from app.utils import cities
 from users.models import UserPreferences
 from profiles.models import PlayerProfile
-from drf_yasg.utils import swagger_auto_schema
 from api.swagger_schemas import (
     CITIES_VIEW_SWAGGER_SCHEMA,
     PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA,
@@ -45,7 +45,7 @@ class LocaleDataView(EndpointView):
         serializer.is_valid()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(**CITIES_VIEW_SWAGGER_SCHEMA)
+    @extend_schema(**CITIES_VIEW_SWAGGER_SCHEMA)
     def list_cities(self, request: Request) -> Response:
         """
         Return a list of cities with mapped voivodeships based on the query parameter.
@@ -113,7 +113,7 @@ class PreferenceChoicesView(EndpointView):
     authentication_classes = []
     permission_classes = []
 
-    @swagger_auto_schema(**PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA)
+    @extend_schema(**PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA)
     def list_preference_choices(self, request: Request) -> Response:
         """
         Retrieve the choices for gender and preferred leg fields and return as a response

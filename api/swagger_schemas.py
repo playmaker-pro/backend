@@ -1,4 +1,6 @@
 from django.contrib.auth import get_user_model
+
+from drf_spectacular.utils import OpenApiExample, OpenApiResponse, OpenApiParameter
 from drf_yasg import openapi
 from rest_framework import serializers, status
 
@@ -8,6 +10,14 @@ User = get_user_model()
 
 
 class UserRegisterResponseSerializer(serializers.ModelSerializer):
+    """Serializer for user registration response."""
+
+    class Meta:
+        model = User
+        fields = ["id", "email", "first_name", "last_name", "username"]
+
+
+class UserLoginResponseSerializer(serializers.ModelSerializer):
     """
     Serializer for user registration response.
     We want to exclude a password field from the swagger response.
@@ -15,401 +25,339 @@ class UserRegisterResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "first_name", "last_name", "username"]
+        fields = ["email", "password"]
 
 
 USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA = dict(
-    name="post",
-    request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            "email": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="User email",
-            ),
-            "password": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="User super secret password.",
-            ),
-        },
-        required=["email", "password"],
-    ),
+    summary="User login endpoint",
+    request={
+        "schema": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "description": "User email",
+                },
+                "password": {
+                    "type": "string",
+                    "description": "User super secret password.",
+                },
+            },
+            "required": ["email", "password"],
+        }
+    },
     responses={
-        status.HTTP_200_OK: openapi.Response(
-            description="User logged in successfully - tokens returned.",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "access": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Access Token",
-                    ),
-                    "refresh": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Refresh Token",
-                    ),
+        status.HTTP_200_OK: {
+            "type": "object",
+            "properties": {
+                "access": {
+                    "type": "string",
+                    "description": "Access Token",
                 },
-                example={
-                    "access": "some_super_secret_jwt_token",
-                    "refresh": "refresh_token",
+                "refresh": {
+                    "type": "string",
+                    "description": "Refresh Token",
                 },
-            ),
-        ),
-        status.HTTP_400_BAD_REQUEST: openapi.Response(
-            description="Bad request",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "detail": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Detailed error message",
-                    ),
+            },
+            "example": {
+                "access": "some_super_secret_jwt_token",
+                "refresh": "refresh_token",
+            },
+            "description": "User logged in successfully - tokens returned.",
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "type": "string",
+                    "description": "Detailed error message",
                 },
-                example={
-                    "detail": "No active account found with the given credentials"
+            },
+            "example": {"detail": "No active account found with the given credentials"},
+            "description": "Bad request",
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "type": "string",
+                    "description": "Detailed error message",
                 },
-            ),
-        ),
-        status.HTTP_404_NOT_FOUND: openapi.Response(
-            description="User not found with given credentials",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "detail": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Detailed error message",
-                    ),
-                },
-                example={"detail": "Bad request"},
-            ),
-        ),
+            },
+            "example": {"detail": "Bad request"},
+            "description": "User not found with given credentials",
+        },
     },
 )
 
 USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA = dict(
-    name="post",
-    request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            "email": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="User email",
-            ),
-            "password": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="User super secret password.",
-            ),
-            "first_name": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="User first name.",
-            ),
-            "last_name": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="User last name.",
-            ),
-        },
-        required=["email", "password", "first_name", "last_name"],
-    ),
+    summary="User registration endpoint",
+    request={
+        "schema": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "description": "User email",
+                },
+                "password": {
+                    "type": "string",
+                    "description": "User super secret password.",
+                },
+                "first_name": {"type": "string", "description": "User first name."},
+                "last_name": {"type": "string", "description": "User last name."},
+            },
+            "required": ["email", "password"],
+        }
+    },
     responses={
-        status.HTTP_200_OK: openapi.Response(
-            "User registered successfully.", UserRegisterResponseSerializer()
+        status.HTTP_200_OK: OpenApiResponse(
+            response=UserRegisterResponseSerializer,
+            examples=[
+                OpenApiExample(
+                    "example1",
+                    value={
+                        "id": 1,
+                        "email": "example_email@playmaker.com",
+                        "first_name": "first_name",
+                        "last_name": "last_name",
+                        "username": "username",
+                    },
+                ),
+            ],
         ),
-        status.HTTP_400_BAD_REQUEST: openapi.Response(
-            description="Bad request. Data sent in request is invalid.",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "email": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Detailed error message",
-                    ),
-                    "first_name": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Detailed error message",
-                    ),
-                    "last_name": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Detailed error message",
-                    ),
-                    "password": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Detailed error message",
-                    ),
+        status.HTTP_400_BAD_REQUEST: {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "description": "Detailed error message",
                 },
-                example={
-                    "email": ["This field is required."],
-                    "first_name": ["This field is required."],
-                    "last_name": ["This field is required."],
-                    "password": ["This field is required."],
+                "password": {
+                    "type": "string",
+                    "description": "Detailed error message",
                 },
-            ),
-        ),
+            },
+            "example": {
+                "email": "Detailed error message",
+                "password": "Detailed error message",
+            },
+            "description": "Bad request. Data sent in request is invalid.",
+        },
     },
 )
 
 USER_FEATURE_SETS_SWAGGER_SCHEMA = dict(
-    name="get",
+    summary="User feature sets.",
     responses={
-        status.HTTP_200_OK: openapi.Response(
-            "User feature sets returned successfully.",
-            FeaturesSerializer(),
-        ),
-        status.HTTP_404_NOT_FOUND: openapi.Response(
-            "Feature sets for user not found",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "success": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Is response successful or not?",
-                    ),
-                    "detail": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Feature sets for user not found",
-                    ),
-                },
-                example={
-                    "success": "false",
-                    "detail": "Feature sets for user not found",
-                },
-            ),
+        status.HTTP_200_OK: OpenApiResponse(
+            response=FeaturesSerializer,
+            description="Returns user feature sets. Returns empty list if user has no feature sets.",
         ),
     },
 )
 
 USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA = dict(
-    name="get",
+    summary="User feature elements.",
     responses={
-        status.HTTP_200_OK: openapi.Response(
-            "User feature sets returned successfully.",
-            FeatureElementSerializer(),
-        ),
-        status.HTTP_404_NOT_FOUND: openapi.Response(
-            "Feature elements for user not found",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "success": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Is response successful or not?",
-                    ),
-                    "detail": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Feature elements for user not found",
-                    ),
-                },
-                example={
-                    "success": "false",
-                    "detail": "Feature elements for user not found",
-                },
-            ),
+        status.HTTP_200_OK: OpenApiResponse(
+            description="Returns user feature elements. Returns empty list if user has no feature sets.",
+            response=FeatureElementSerializer,
         ),
     },
 )
 
 USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA = dict(
-    name="post",
-    request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            "refresh": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="User refresh token",
-            ),
-        },
-        required=["refresh"],
-    ),
+    summary="Refresh user token endpoint",
+    request={
+        "schema": {
+            "type": "object",
+            "properties": {
+                "refresh": {
+                    "type": "string",
+                    "description": "User refresh token",
+                },
+            },
+            "required": ["refresh"],
+        }
+    },
     responses={
-        status.HTTP_200_OK: openapi.Response(
-            description="New token obtained successfully.",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "access": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Access Token",
-                    ),
-                    "refresh": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Refresh Token",
-                    ),
+        status.HTTP_200_OK: {
+            "description": "New token obtained successfully.",
+            "type": "object",
+            "properties": {
+                "access": {
+                    "type": "string",
+                    "description": "Access Token",
                 },
-                example={
-                    "access": "some_super_secret_jwt_token",
-                    "refresh": "refresh_token",
+                "refresh": {
+                    "type": "string",
+                    "description": "Refresh Token",
                 },
-            ),
-        ),
-        status.HTTP_400_BAD_REQUEST: openapi.Response(
-            description="Bad request",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "detail": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Detailed error message",
-                    ),
+            },
+            "example": {
+                "access": "some_super_secret_jwt_token",
+                "refresh": "refresh_token",
+            },
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Bad request",
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "type": "string",
+                    "description": "Detailed error message",
                 },
-                example={"detail": "Refresh token is expired or invalid, respectively"},
-            ),
-        ),
-        status.HTTP_401_UNAUTHORIZED: openapi.Response(
-            description="Unauthorized request",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "detail": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Detailed error message",
-                    ),
+            },
+            "example": {"detail": "Refresh token is expired or invalid, respectively"},
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized request",
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "type": "string",
+                    "description": "Detailed error message",
                 },
-                example={"detail": "Bad request"},
-            ),
-        ),
+            },
+            "example": {"detail": "Bad request"},
+        },
     },
 )
 
 GOOGLE_AUTH_SWAGGER_SCHEMA = dict(
-    name="post",
-    request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            "token_id": openapi.Schema(
-                type=openapi.TYPE_STRING,
-                description="Token id from Google.",
-            ),
+    summary="Google auth endpoint",
+    request={
+        "schema": {
+            "type": "object",
+            "properties": {
+                "token_id": {
+                    "type": "string",
+                    "description": "Token id from Google.",
+                }
+            },
+            "required": ["token_id"],
         },
-        required=["token_id"],
-    ),
+    },
     responses={
-        status.HTTP_200_OK: openapi.Response(
-            description="User logged in successfully - tokens returned.",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "success": openapi.Schema(
-                        type=openapi.TYPE_BOOLEAN,
-                        description="Is request successful",
-                    ),
-                    "redirect": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="The page where user should be redirected. "
-                        "Landing page after login, or register page if user is new."
-                        "Choices: 'landing page', 'register'",
-                    ),
-                    "refresh_token": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="JWT refresh token.",
-                    ),
-                    "access_token": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="JWT access token.",
-                    ),
+        status.HTTP_200_OK: {
+            "description": "User logged in successfully - tokens returned.",
+            "type": "object",
+            "properties": {
+                "success": {
+                    "type": "boolean",
+                    "description": "Is request successful",
                 },
-                example={
-                    "success": True,
-                    "redirect": "landing page",
-                    "access": "some_super_secret_jwt_token",
-                    "refresh": "refresh_token",
+                "redirect": {
+                    "type": "string",
+                    "description": "The page where user should be redirected. "
+                                   "Landing page after login, or register page if user is new."
+                                   "Choices: 'landing page', 'register'",
                 },
-            ),
-        ),
-        status.HTTP_400_BAD_REQUEST: openapi.Response(
-            description="Bad request",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "detail": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="Detailed error message",
-                    ),
+                "refresh_token": {
+                    "type": "string",
+                    "description": "JWT refresh token.",
                 },
-                example={
-                    "detail": "No user credential fetched from Google. Please try again."
+                "access_token": {
+                    "type": "string",
+                    "description": "JWT access token.",
                 },
-            ),
-        ),
+            },
+            "example": {
+                "success": True,
+                "redirect": "landing page",
+                "access": "some_super_secret_jwt_token",
+                "refresh": "refresh_token",
+            },
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Bad request",
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "type": "string",
+                    "description": "Detailed error message",
+                },
+            },
+            "example": {
+                "detail": "No user credential fetched from Google. Please try again."
+            },
+        }
     },
 )
 
 CITIES_VIEW_SWAGGER_SCHEMA = dict(
-    name="get",
-    operation_id="list_cities",
-    operation_summary="Cities endpoint",
-    manual_parameters=[
-        openapi.Parameter(
-            "city",
-            openapi.IN_QUERY,
+    summary="List cities endpoint",
+    parameters=[
+        OpenApiParameter(
+            name="city",
+            location="query",
             description="City or voivodeship name to filter",
-            type=openapi.TYPE_STRING,
-        ),
+        )
     ],
     responses={
-        status.HTTP_200_OK: openapi.Response(
-            "List of [city, voivodeship] pairs returned successfully. For example: "
-            '["Aleksandrów Łódzki", "Łódzkie"].',
-            schema=openapi.Schema(
-                type=openapi.TYPE_ARRAY,
-                items=openapi.Schema(
-                    type=openapi.TYPE_ARRAY,
-                    items=openapi.Schema(type=openapi.TYPE_STRING),
-                ),
-            ),
-        ),
-    },
+        status.HTTP_200_OK: {
+            "type": "array",
+            "description": 'List of [city, voivodeship] pairs returned successfully. For example: '
+                           '["Aleksandrów Łódzki", "Łódzkie"].',
+            "items": {
+                "type": "object",
+                "properties": {
+                    "city": {"type": "string"},
+                    "voivodeship": {"type": "string"},
+                }
+            }
+        },
+    }
 )
 
 PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA = dict(
-    name="get",
-    operation_id="list_preference_choices",
-    operation_summary="User preferences endpoint",
-    manual_parameters=[],
+    summary="User preferences endpoint",
     responses={
-        status.HTTP_200_OK: openapi.Response(
-            "Preferences choices returned successfully.",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "gender": openapi.Schema(
-                        type=openapi.TYPE_ARRAY,
-                        items=openapi.Schema(
-                            type=openapi.TYPE_OBJECT,
-                            properties={
-                                "value": openapi.Schema(type=openapi.TYPE_STRING),
-                                "label": openapi.Schema(type=openapi.TYPE_STRING),
+        status.HTTP_200_OK: {
+            "description": "Preferences choices returned successfully.",
+            "type": "object",
+            "properties": {
+                "gender": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "value": {"type": "string"},
+                            "label": {"type": "string"},
                             },
-                        ),
-                    ),
-                    "player_preferred_leg": openapi.Schema(
-                        type=openapi.TYPE_ARRAY,
-                        items=openapi.Schema(
-                            type=openapi.TYPE_OBJECT,
-                            properties={
-                                "value": openapi.Schema(type=openapi.TYPE_INTEGER),
-                                "label": openapi.Schema(type=openapi.TYPE_STRING),
-                            },
-                        ),
-                    ),
-                },
-            ),
-        ),
+                        },
+                    },
+                "player_preferred_leg": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "value": {"type": "integer"},
+                            "label": {"type": "string"},
+                        },
+                    },
+                }
+            },
+        },
     },
 )
 
+
 ROLES_API_SWAGGER_SCHEMA = dict(
-    name="get",
-    operation_id="list",
-    operation_summary="Roles endpoint",
+    summary="Roles endpoint",
     responses={
-        status.HTTP_200_OK: openapi.Response(
-            "Available roles returned successfully.",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                additionalProperties=openapi.Schema(type=openapi.TYPE_STRING),
-                example={
+        status.HTTP_200_OK: {
+            "description": "Available roles returned successfully.",
+            "type": "object",
+            "properties": {
+                "shortcut": {"type": "string"},
+                "full_name": {"type": "string"},
+            },
+            "example":{
                     "P": "Piłkarz",
-                },
-            ),
-        ),
+            },
+        },
     },
 )
+
