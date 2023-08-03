@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from backend.settings.environment import Environment
 from clubs.models import Season
+from django.utils import translation
 
 
 def translate_league_name(code, name):
@@ -174,3 +175,12 @@ def update_dict_depth(d, u):
         else:
             d[k] = v
     return d
+
+
+def translate_to(langauge_code: str, text_input: str) -> str:
+    """
+    Select language by passing language_code and text to translate
+    All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+    """
+    translation.activate(langauge_code)
+    return translation.gettext(text_input)

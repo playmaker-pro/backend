@@ -1,7 +1,7 @@
 import json
 import traceback
 from typing import Dict, Union, Optional
-
+from rest_framework import status
 from rest_framework.exceptions import APIException
 from rest_framework.views import exception_handler
 
@@ -47,6 +47,16 @@ class CoreAPIException(APIException):
     def __str__(self) -> str:
         """Prepare string representation of the exception."""
         return json.dumps(self._prepare_content())
+
+
+class InvalidLanguageCode(CoreAPIException):
+    """Exception if request received unknown language code to translate with"""
+
+    status_code = status.HTTP_400_BAD_REQUEST
+
+    def __init__(self, get: str, available: list, *args, **kwargs) -> None:
+        kwargs["details"] = f"Unknown language code: '{get}'. Choices: {available}"
+        super().__init__(*args, **kwargs)
 
 
 def custom_exception_handler(exc, context) -> exception_handler:

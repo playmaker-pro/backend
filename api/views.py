@@ -3,7 +3,6 @@ from django_countries import countries
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.request import Request
-from django.utils import translation
 from django.db.models import Q
 from unidecode import unidecode
 from cities_light.models import City
@@ -15,6 +14,8 @@ from api.swagger_schemas import (
     CITIES_VIEW_SWAGGER_SCHEMA,
     PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA,
 )
+from django.conf.global_settings import LANGUAGES
+from . import serializers
 
 
 class EndpointView(viewsets.GenericViewSet):
@@ -24,49 +25,25 @@ class EndpointView(viewsets.GenericViewSet):
         ...
 
 
-class CountriesView(EndpointView):
-    """View for listing countries"""
+class LocaleDataView(EndpointView):
+    """Viewset for listing locale data"""
 
     authentication_classes = []
     permission_classes = []
-    prior_countries = [
-        "PL",
-        "UA",
-        "SK",
-        "CZ",
-        "BY",
-        "LT",
-    ]  # Polska, Ukraina, Słowacja, Czechy, Białoruś, Litwa
-
-    def is_prior_country(self, country_code: str) -> bool:
-        """Check if given country is priority"""
-        return country_code in self.prior_countries
 
     def list_countries(self, request: Request) -> Response:
         """
         Return list of countries and mark prior among them
         [{"country": "Polska", "priority": True}, {"country": "Angola", "priority": False}, ...]
-        It is possible to select language of countries on output by param (e.g. ?language=en), Polish by default
+        Select language of countries on output by param (e.g. ?language=en, Default: pl - polish).
         All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
         """
-        language = request.GET.get("language", "pl")  # default language (pl -> Polish)
-        translation.activate(language)
-        countries_list = [
-            {
-                "country": country_name,
-                "code": country_code,
-                "priority": self.is_prior_country(country_code),
-            }
-            for country_code, country_name in countries
-        ]
-        return Response(countries_list, status=status.HTTP_200_OK)
-
-
-class CitiesView(EndpointView):
-    """View for listing cities"""
-
-    authentication_classes = []
-    permission_classes = []
+        language = request.GET.get("language", "pl")
+        serializer = serializers.CountrySerializer(
+            data=countries, many=True, context={"language": language}
+        )
+        serializer.is_valid()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(**CITIES_VIEW_SWAGGER_SCHEMA)
     def list_cities(self, request: Request) -> Response:
@@ -109,6 +86,25 @@ class CitiesView(EndpointView):
         ]
 
         return Response(cities_list, status=status.HTTP_200_OK)
+
+    def list_languages(self, request: Request) -> Response:
+        """
+        Return list of languages.
+        View takes one optional param: ?language=<lang_code> (Default: pl - polish)
+        All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+
+        {
+            language - name of language translated in langauge described by param
+            language_locale - name of language translated as native locale language
+            code - language code
+        }
+        """
+        language = request.GET.get("language", "pl")
+        serializer = serializers.LanguageSerializer(
+            data=LANGUAGES, many=True, context={"language": language}
+        )
+        serializer.is_valid()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class PreferenceChoicesView(EndpointView):
