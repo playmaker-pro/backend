@@ -41,6 +41,41 @@ paths:
                     voivodeship:
                       type: string
           description: ''
+  /languages/:
+    get:
+      operationId: languages_retrieve
+      description: '
+        Return list of languages.
+        It is possible to select language on output by param (e.g. ?language=en), Polish by default
+        All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes'
+      summary: 'List languages'
+      parameters:
+        - in: query
+          name: language
+          schema:
+            type: string
+          required: false
+          description: 'Like: pl, en, de. Described here:
+            https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes'
+      tags:
+        - languages
+      responses:
+        '200':
+          description: 'List of languages'
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of languages, with code and locale translation'
+                items:
+                  type: object
+                  properties:
+                    language:
+                      type: string
+                    code:
+                      type: string
+                    language_locale:
+                      type: string
   /clubs/club-teams/search/:
     get:
       operationId: clubs_club_teams_search_retrieve
@@ -70,6 +105,63 @@ paths:
           description: 'List of teams for given club'
         '404':
           description: 'Given club does not exist'
+        '401':
+          description: 'Unauthorized'
+  /clubs/leagues/highest-parents/:
+    get:
+      operationId: clubs_leagues_highest_parents
+      description: Return list of highest parent leagues
+      summary: List of highest parent leagues
+      tags:
+      - highest-parent-leagues
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of highest parent leagues'
+                items:
+                  type: object
+                  description: 'League object'
+              example: [{
+        "id": 1031,
+        "data_seasons": [
+            {
+                "id": 2,
+                "name": "2021/2022",
+                "is_current": false,
+                "is_in_verify_form": true
+            }
+        ],
+        "name": "Ekstraklasa",
+        "virtual": false,
+        "visible": true,
+        "order": 1,
+        "city_name": null,
+        "code": "1",
+        "country": "PL",
+        "rw": false,
+        "slug": "ekstraklasa",
+        "isparent": false,
+        "zpn": null,
+        "zpn_mapped": null,
+        "index": null,
+        "search_tokens": "Ekstraklasa",
+        "scrapper_autocreated": false,
+        "picture": null,
+        "section": 1,
+        "group": null,
+        "region": null,
+        "parent": null,
+        "highest_parent": 1031,
+        "gender": 1,
+        "seniority": 1,
+        "name_junior": null
+    },...]
+          description: 'List of highest parent leagues'
         '401':
           description: 'Unauthorized'
   /clubs/clubs/search/:
