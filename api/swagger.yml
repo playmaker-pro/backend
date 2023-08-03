@@ -179,6 +179,31 @@ paths:
       responses:
         '200':
           description: No response body
+  /profiles/formations/:
+    get:
+      operationId: formation_choices_retrieve
+      description: |
+        Returns a dictionary where each key-value pair
+        is a formation's unique string representation (like "4-4-2" or "4-3-3") mapped to its corresponding label. 
+        For example, it may return a response like {"4-4-2": "4-4-2", "4-3-3": "4-3-3"}.
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                description: 'Dictionary of formations returned successfully.
+                  For example: {"4-4-2": "4-4-2", "4-3-3": "4-3-3"}.'
+                additionalProperties:
+                  type: string
+                example:
+                  "4-4-2": "4-4-2"
+                  "4-3-3": "4-3-3"
+          description: ''
   /roles/get-roles/:
     get:
       operationId: roles_get_roles_list
