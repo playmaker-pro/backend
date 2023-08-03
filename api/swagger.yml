@@ -891,8 +891,8 @@ paths:
       operationId: formation_choices_retrieve
       description: |
         Returns a dictionary where each key-value pair
-        is a formation's unique string representation (like "4-4-2" or "4-3-3") mapped to its corresponding label. 
-        For example, it may return a response like {"4-4-2": "4-4-2", "4-3-3": "4-3-3"}.
+        is a formation's unique string representation (like "4-4-2" or "4-3-3") mapped to its corresponding label.
+      summary: Formations endpoint
       tags:
         - profiles
       security:
@@ -910,7 +910,31 @@ paths:
                 example:
                   "4-4-2": "4-4-2"
                   "4-3-3": "4-3-3"
-          description: ''
+          description: Returns available formations
+  /profiles/coach-roles/:
+    get:
+      operationId: coach_roles_choices_retrieve
+      description: Returns available coach roles choices.
+      summary: Coach roles endpoint
+      tags:
+        - coach-role-choices
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Coach roles choices returned successfully.
+                type: object
+                properties:
+                  shortcut:
+                    type: string
+                  full_name:
+                    type: string
+                example:
+                  IC: Pierwszy trener
+          description: Returns available coach roles choices.
   /roles/get-roles/:
     get:
       operationId: roles_get_roles_list
@@ -1393,3 +1417,4 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+

@@ -1,6 +1,10 @@
 import uuid
 from drf_spectacular.utils import extend_schema
 from api.views import EndpointView
+from api.swagger_schemas import (
+    COACH_ROLES_API_SWAGGER_SCHEMA,
+    FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA,
+)
 from profiles.api_serializers import (
     CreateProfileSerializer,
     profiles_service,
@@ -13,7 +17,6 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from api.swagger_schemas import FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA
 
 
 class ProfileAPI(EndpointView):
@@ -62,3 +65,23 @@ class FormationChoicesView(EndpointView):
         Returns a list of formation choices.
         """
         return Response(dict(CoachProfile.FORMATION_CHOICES), status=status.HTTP_200_OK)
+
+
+class CoachRolesChoicesView(EndpointView):
+    """
+    View for listing coach role choices.
+    The response is a dictionary where each item is a key-value pair:
+    [role code, role name]. For example: {"IC": "Pierwszy trener", "IIC": "Drugi trener", ...}.
+    """
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    @extend_schema(**COACH_ROLES_API_SWAGGER_SCHEMA)
+    def list_coach_roles(self, request: Request) -> Response:
+        """
+        Return a list of coach roles choices.
+        """
+        return Response(
+            dict(CoachProfile.COACH_ROLE_CHOICES), status=status.HTTP_200_OK
+        )

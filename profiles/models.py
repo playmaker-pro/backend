@@ -1471,6 +1471,14 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         help_text="Defines if admin approved change",
     )
+    coach_role = models.CharField(
+        _("Rola trenera"),
+        max_length=3,
+        choices=COACH_ROLE_CHOICES,
+        blank=True,
+        null=True,
+        help_text=_("This field represents the role of the coach."),
+    )
 
     coach_role = models.CharField(
         _("Rola trenera"),
