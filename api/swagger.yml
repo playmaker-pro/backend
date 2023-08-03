@@ -6,6 +6,7 @@ info:
 
 servers:
   - url: https://staging.playmakerpro.usermd.net/api/v3/
+  - url: http://localhost:8001/api/v3/
 
 paths:
   /cities/:
@@ -976,7 +977,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FeatureElement'
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeatureElement'
           description: Returns user feature elements. Returns empty list if user has
             no feature sets.
   /users/feature-sets/:
@@ -993,7 +996,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Features'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Features'
           description: Returns user feature sets. Returns empty list if user has no
             feature sets.
   /users/google-oauth2/:
@@ -1008,7 +1013,7 @@ paths:
       - users
       requestBody:
         content:
-          schema:
+          application/json:
             schema:
               type: object
               properties:
@@ -1072,7 +1077,7 @@ paths:
       - users
       requestBody:
         content:
-          schema:
+          application/json:
             schema:
               type: object
               properties:
@@ -1168,7 +1173,7 @@ paths:
       - users
       requestBody:
         content:
-          schema:
+          application/json:
             schema:
               type: object
               properties:
@@ -1232,7 +1237,7 @@ paths:
       - users
       requestBody:
         content:
-          schema:
+          application/json:
             schema:
               type: object
               properties:
@@ -1417,4 +1422,3 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-

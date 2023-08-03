@@ -24,8 +24,6 @@ from features.models import Feature, FeatureElement
 from users import serializers
 from users.errors import (
     ApplicationError,
-    FeatureElementsNotFoundException,
-    FeatureSetsNotFoundException,
     NoGoogleTokenSent,
     NoUserCredentialFetchedException,
 )
@@ -110,9 +108,9 @@ class UsersAPI(EndpointView):
     def feature_sets(request) -> Response:
         """Returns all user feature sets."""
         data: List[Feature] = user_service.get_user_features(request.user)
-        if not data:
-            raise FeatureSetsNotFoundException()
         serializer = FeaturesSerializer(instance=data, many=True)
+        if not data:
+            return Response(status=status.HTTP_204_NO_CONTENT, data=serializer.data)
         return Response(serializer.data)
 
     @staticmethod
@@ -122,9 +120,9 @@ class UsersAPI(EndpointView):
         data: List[FeatureElement] = user_service.get_user_feature_elements(
             request.user
         )
-        if not data:
-            raise FeatureElementsNotFoundException()
         serializer = FeatureElementSerializer(instance=data, many=True)
+        if not data:
+            return Response(status=status.HTTP_204_NO_CONTENT, data=serializer.data)
         return Response(serializer.data)
 
     @staticmethod
