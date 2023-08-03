@@ -1,10 +1,15 @@
 from os import link
 
 from django.contrib import admin
+from django.db.models import Field
+from django.http import HttpRequest
+from django.forms.models import ModelChoiceField
 
 from app.utils.admin import json_filed_data_prettified
 from profiles import models
+from clubs.models import League
 from utils import linkify
+
 
 from .filters import (
     HasClubObjectFilter,
@@ -335,3 +340,18 @@ class PlayerProfilePositionAdmin(admin.ModelAdmin):
 @admin.register(models.Language)
 class LanguageAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(models.RefereeLevel)
+class RefereeLevelAdmin(admin.ModelAdmin):
+    readonly_fields = ("level_name",)
+
+    def formfield_for_foreignkey(
+        self, db_field: Field, request: HttpRequest, **kwargs
+    ) -> ModelChoiceField:
+        """
+        Override the formfield for the 'level' foreign key to only include league highest parent.
+        """
+        if db_field.name == "level":
+            kwargs["queryset"] = League.objects.filter(parent=None)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)

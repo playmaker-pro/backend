@@ -18,6 +18,7 @@ from adapters.player_adapter import PlayerGamesAdapter, PlayerSeasonStatsAdapter
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_player_external_links
 from mapper.models import Mapper
+from clubs.models import League
 import uuid
 
 # from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
@@ -1480,14 +1481,6 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         help_text=_("This field represents the role of the coach."),
     )
 
-    coach_role = models.CharField(
-        _("Rola trenera"),
-        max_length=3,
-        choices=COACH_ROLE_CHOICES,
-        blank=True,
-        null=True,
-        help_text=_("This field represents the role of the coach."),
-    )
     formation = models.CharField(
         _("Formacja"),
         max_length=7,
@@ -1818,6 +1811,35 @@ class ScoutProfile(BaseProfile):
     class Meta:
         verbose_name = "Scout Profile"
         verbose_name_plural = "Scouts Profiles"
+
+
+class RefereeLevel(models.Model):
+    REFEREE_ROLE_CHOICES = (
+        ("Referee", "Sędzia główny"),
+        ("Assistant Referee", "Asystent"),
+    )
+
+    level = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+        help_text="The league in which the referee has officiated.",
+    )
+    role = models.CharField(
+        _("Role"),
+        max_length=17,
+        choices=REFEREE_ROLE_CHOICES,
+        help_text="The role this referee plays (Referee or Assistant Referee).",
+    )
+
+    @property
+    def level_name(self):
+        """
+        Returns the name of the league in which the referee has officiated.
+        """
+        return self.level.name
+
+    def __str__(self):
+        return f"{self.level_name} - {self.role}"
 
 
 class OtherProfile(BaseProfile):
