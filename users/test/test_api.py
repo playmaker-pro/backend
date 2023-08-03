@@ -277,7 +277,8 @@ class TestUserFeatureSetsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
     def test_no_feature_sets_found(self):
         """Test if response is 404 when no feature sets are found"""
         res: Response = self.client.get(self.url, **self.headers)
-        assert res.status_code == 404
+        assert res.status_code == 204
+        assert res.data == []
 
 
 @pytest.mark.django_db
