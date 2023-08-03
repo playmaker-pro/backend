@@ -363,8 +363,6 @@ ROLES_API_SWAGGER_SCHEMA = dict(
 
 FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA = dict(
     summary="Formations endpoint",
-    description="Returns a dictionary where each key-value pair is a formation's unique string representation "
-    "(like '4-4-2' or '4-3-3') mapped to its corresponding label.",
     responses={
         status.HTTP_200_OK: {
             "description": "Formation choices returned successfully.",
@@ -374,6 +372,24 @@ FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA = dict(
                 "full_name": {"type": "string"},
             },
             "example": {"4-4-2": "4-4-2", "4-3-3": "4-3-3"},
+        },
+    },
+)
+
+COACH_ROLES_API_SWAGGER_SCHEMA = dict(
+    summary="Coach roles endpoint",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Coach role choices returned successfully.",
+            "type": "object",
+            "properties": {
+                "shortcut": {"type": "string"},
+                "full_name": {"type": "string"},
+            },
+            "example": {
+                "IC": "Pierwszy trener",
+                "IIC": "Drugi trener",
+            },
         },
     },
 )

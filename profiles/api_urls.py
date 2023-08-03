@@ -1,6 +1,8 @@
 from django.urls import path
 from rest_framework import routers
-from .apis import ProfileAPI, FormationChoicesView
+
+from .apis import ProfileAPI, FormationChoicesView, CoachRolesChoicesView
+
 from resources.views import WebhookPlayer
 
 router = routers.SimpleRouter(trailing_slash=False)
@@ -22,5 +24,10 @@ urlpatterns = [
         r"formations/",
         FormationChoicesView.as_view({"get": "list_formations"}),
         name="formations_list",
+    ),
+    path(
+        r"coach-roles/",
+        CoachRolesChoicesView.as_view({"get": "list_coach_roles"}),
+        name="coach_roles_list",
     ),
 ]
