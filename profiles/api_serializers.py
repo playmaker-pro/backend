@@ -120,7 +120,7 @@ class ProfileSerializer(serializers.Serializer):
         for field in self.required_fields:
             if not data or field not in data.keys():
                 raise profile_errors.IncompleteRequestData(self.required_fields)
-        return data.dict()
+        return data.dict() if isinstance(data, QueryDict) else data
 
 
 class CreateProfileSerializer(ProfileSerializer):
