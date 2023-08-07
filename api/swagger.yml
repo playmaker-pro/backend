@@ -12,11 +12,10 @@ paths:
   /cities/:
     get:
       operationId: cities_retrieve
-      description: |-
-        Return a list of cities with mapped voivodeships based on the query parameter.
-        Each item in the response array is a pair of strings:
-        [city name, voivodeship name].
-        For example: ["Aleksandrów Łódzki", "Łódzkie"].
+      description: 'Return a list of cities with mapped voivodeships
+        and its priority based on the query parameter.
+        Response is an array of dictionaries:
+        [{id: 1, name: Warszawa, voivodeship: Mazowieckie, priority: True}, ...]'
       summary: List cities endpoint
       parameters:
       - in: query
@@ -32,15 +31,19 @@ paths:
             application/json:
               schema:
                 type: array
-                description: 'List of [city, voivodeship] pairs returned successfully.
-                  For example: ["Aleksandrów Łódzki", "Łódzkie"].'
+                description: 'List of {id, name, voivodeship, priority} pairs returned successfully.
+                  [{id: 1, name: Warszawa, voivodeship: Mazowieckie, priority: True}, ...]'
                 items:
                   type: object
                   properties:
+                    id:
+                      type: integer
                     city:
                       type: string
                     voivodeship:
                       type: string
+                    priority:
+                      type: boolean
           description: ''
   /languages/:
     get:
@@ -77,6 +80,8 @@ paths:
                       type: string
                     language_locale:
                       type: string
+                    priority:
+                      type: boolean
   /clubs/club-teams/search/:
     get:
       operationId: clubs_club_teams_search_retrieve
@@ -283,7 +288,7 @@ paths:
             application/json:
               schema:
                 type: array
-                description: 'List of countries with prior and code'
+                description: 'List of countries with code, priority and dial code'
                 items:
                   type: object
                   properties:
@@ -293,6 +298,8 @@ paths:
                       type: string
                     priority:
                       type: boolean
+                    dial_code:
+                      type: string
   /preference-choices/:
     get:
       operationId: preference_choices_retrieve
