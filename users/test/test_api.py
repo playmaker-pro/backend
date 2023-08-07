@@ -15,16 +15,13 @@ from users.managers import GoogleManager
 from users.models import User
 from users.services import UserService
 from users.schemas import UserGoogleDetailPydantic, GoogleSdkLoginCredentials
-from utils.factories.feature_sets_factories import (
-    FeatureElementFactory,
-    FeatureFactory
-)
+from utils.factories.feature_sets_factories import FeatureElementFactory, FeatureFactory
 from utils.factories.user_factories import UserFactory
 from utils.test.test_utils import (
     TEST_EMAIL,
     MethodsNotAllowedTestsMixin,
     UserManager,
-    mute_post_save_signal
+    mute_post_save_signal,
 )
 
 
@@ -275,7 +272,7 @@ class TestUserFeatureSetsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         assert res.json() == expected_response
 
     def test_no_feature_sets_found(self):
-        """Test if response is 404 when no feature sets are found"""
+        """Test if response is 204 when no feature sets are found"""
         res: Response = self.client.get(self.url, **self.headers)
         assert res.status_code == 204
         assert res.data == []
@@ -320,7 +317,7 @@ class TestUserFeatureElementsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
     def test_no_feature_elements_found(self):
         """Test if response is 404 when no feature elements are found"""
         res: Response = self.client.get(self.url, **self.headers)
-        assert res.status_code == 404
+        assert res.status_code == 204
 
 
 @pytest.mark.django_db
@@ -513,7 +510,9 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             UserService, "create_social_account", return_value=(True, True)
         ).start()
 
-        with get_user_info_patcher, google_credentials_patcher, register_from_google_patcher:
+        with (
+            get_user_info_patcher
+        ), google_credentials_patcher, register_from_google_patcher:
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
@@ -537,7 +536,9 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             UserService, "create_social_account", return_value=(True, True)
         ).start()
 
-        with get_user_info_patcher, google_credentials_patcher, register_from_google_patcher:
+        with (
+            get_user_info_patcher
+        ), google_credentials_patcher, register_from_google_patcher:
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
@@ -557,7 +558,9 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         patch.object(
             UserService, "create_social_account", return_value=(False, True)
         ).start()
-        with get_user_info_patcher, google_credentials_patcher, register_from_google_patcher:
+        with (
+            get_user_info_patcher
+        ), google_credentials_patcher, register_from_google_patcher:
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )

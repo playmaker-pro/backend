@@ -1,5 +1,6 @@
 from django.conf.global_settings import LANGUAGES
 from . import errors
+from .consts import *
 
 
 class LocaleDataService:
@@ -10,6 +11,21 @@ class LocaleDataService:
         Polska, Ukraina, Słowacja, Czechy, Białoruś, Litwa
         """
         return ["PL", "UA", "SK", "CZ", "BY", "LT"]
+
+    @property
+    def prior_languages(self) -> list:
+        """
+        Get list of prior languages
+        [Polish, German, Ukrainian, English]
+        """
+        return ["pl", "de", "uk", "en"]
+
+    @property
+    def prior_cities(self) -> list:
+        """
+        Get list of prior cities
+        """
+        return ["Wrocław", "Warszawa", "Kraków", "Łódź", "Poznań"]
 
     @property
     def available_languages(self) -> list:
@@ -25,3 +41,15 @@ class LocaleDataService:
     def is_prior_country(self, country_code: str) -> bool:
         """Check if given country is priority"""
         return country_code in self.prior_countries
+
+    def is_prior_city(self, city_name: str) -> bool:
+        """Check if given city is priority"""
+        return city_name in self.prior_cities
+
+    def is_prior_language(self, language_code: str) -> bool:
+        """Check if language is priority"""
+        return language_code in self.prior_languages
+
+    def get_dial_code(self, country_code: str) -> str:
+        """Get country dial code with country code"""
+        return COUNTRY_CODE_WITH_DIAL_CODE.get(country_code)
