@@ -113,6 +113,50 @@ paths:
           description: 'Given club does not exist'
         '401':
           description: 'Unauthorized'
+  /clubs/seasons/:
+    get:
+      operationId: season_retrieve
+      description: 'Retrieves a list of seasons. The endpoint primarily returns seasons marked 
+                    with the attribute `is_in_verify_form` set to True. Additionally, users can filter the results by specifying 
+                    a specific season using the season query parameter. The season parameter can accept 
+                    both full season formats (e.g., "2020/2021") and single-year formats (e.g., "2020")'
+      summary: Seasons list endpoint
+      tags:
+        - clubs
+      parameters:
+        - in: query
+          name: season
+          schema:
+            type: string
+          description: 'Season name'
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of seasons'
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: 'Unique identifier for the season'
+                    name:
+                      type: string
+                      description: 'Name of the season'
+                    is_current:
+                      type: boolean
+                      description: 'Indicates if the season is the current one'
+                    is_in_verify_form:
+                      type: boolean
+                      description: 'Indicates if the season is in verify form'
+                  description: 'Season detail'
+                example: [ {"id": 2, "name": "2021/2022", "is_current": false, "is_in_verify_form": true} ]
+          description: 'List of seasons with id, name, is_current and is_in_verify_form'
+
   /clubs/leagues/highest-parents/:
     get:
       operationId: clubs_leagues_highest_parents
@@ -1499,3 +1543,4 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
