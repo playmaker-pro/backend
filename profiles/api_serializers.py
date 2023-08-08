@@ -267,3 +267,9 @@ class PlayerPositionSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PlayerPosition
         fields = ["id", "name"]
+
+
+class LicenceTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.LicenceType
+        fields = "__all__"
