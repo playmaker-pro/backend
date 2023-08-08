@@ -1,9 +1,8 @@
 from django.urls import path
 from rest_framework import routers
-
 from . import apis as views
 
-from resources.views import WebhookPlayer
+# from resources.views import WebhookPlayer
 
 router = routers.SimpleRouter(trailing_slash=False)
 router.register("", views.ProfileAPI, basename="profiles")
@@ -19,7 +18,7 @@ urlpatterns = [
         views.ProfileAPI.as_view({"get": "get_profile_by_uuid"}),
         name="get_profile",
     ),
-    path(r"playerupdate/", WebhookPlayer.as_view(), name="player_webhook"),
+    # path(r"playerupdate/", WebhookPlayer.as_view(), name="player_webhook"), DEPRECATED: PM20-245
     path(
         r"formations/",
         views.FormationChoicesView.as_view({"get": "list_formations"}),

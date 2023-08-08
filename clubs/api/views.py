@@ -7,7 +7,7 @@ from rest_framework.request import Request
 from api.views import EndpointView
 from clubs.models import Club, Team, TeamHistory
 from . import serializers
-from clubs import services
+from clubs import services, errors
 
 User = get_user_model()
 
@@ -93,9 +93,23 @@ class ClubSearchApi(APIView):
 
 
 class ClubTeamsSearchApi(APIView):
+    permission_classes = []
+    club_service = services.ClubService()
+
     def get(self, request) -> Response:
-        # TODO(bartnyk): create logic for getting teams of given club
-        return Response({}, status=status.HTTP_200_OK)
+        """
+        Get list of teams assigned to given club
+        takes ?club_id as param
+        """
+        club_id: int = request.query_params.get("club_id")
+
+        if not (club_obj := self.club_service.club_exist(club_id)):
+            raise errors.ClubDoesNotExist
+
+        qs = Team.objects.filter(club=club_obj)
+        serializer = serializers.TeamSerializer(qs, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class LeagueAPI(EndpointView):
