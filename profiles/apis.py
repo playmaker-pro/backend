@@ -63,7 +63,9 @@ class FormationChoicesView(EndpointView):
         """
         Returns a list of formation choices.
         """
-        return Response(dict(CoachProfile.FORMATION_CHOICES), status=status.HTTP_200_OK)
+        return Response(
+            dict(models.CoachProfile.FORMATION_CHOICES), status=status.HTTP_200_OK
+        )
 
 
 class ProfileEnumsAPI(EndpointView):
@@ -123,6 +125,6 @@ class PlayerPositionAPI(EndpointView):
         """
         Retrieve all player positions ordered by ID.
         """
-        positions = PlayerPosition.objects.all().order_by("id")
+        positions = models.PlayerPosition.objects.all().order_by("id")
         serializer = api_serializers.PlayerPositionSerializer(positions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
