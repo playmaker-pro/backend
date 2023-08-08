@@ -25,6 +25,16 @@ urlpatterns = [
         name="formations_list",
     ),
     path(
+        r"club-roles/",
+        views.ProfileEnumsAPI.as_view({"get": "get_club_roles"}),
+        name="club_roles",
+    ),
+    path(
+        r"referee-roles/",
+        views.ProfileEnumsAPI.as_view({"get": "get_referee_roles"}),
+        name="referee_roles",
+    ),
+    path(
         r"coach-roles/",
         views.CoachRolesChoicesView.as_view({"get": "list_coach_roles"}),
         name="coach_roles_list",

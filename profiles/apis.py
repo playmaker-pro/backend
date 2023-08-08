@@ -1,23 +1,19 @@
 import uuid
 from drf_spectacular.utils import extend_schema
 from api.views import EndpointView
-from api.swagger_schemas import (
-    COACH_ROLES_API_SWAGGER_SCHEMA,
-    FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA,
-)
-from profiles.api_serializers import (
-    CreateProfileSerializer,
-    profiles_service,
-    ProfileSerializer,
-    UpdateProfileSerializer,
-    PlayerPositionSerializer,
-)
-from profiles.models import CoachProfile, PlayerPosition
+from profiles import api_serializers, models
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from .services import ProfileService
+from api.swagger_schemas import (
+    FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA,
+    COACH_ROLES_API_SWAGGER_SCHEMA,
+)
+
+profile_service = ProfileService()
 
 
 class ProfileAPI(EndpointView):
@@ -27,7 +23,7 @@ class ProfileAPI(EndpointView):
 
     def create_profile(self, request: Request) -> Response:
         """Create initial profile for user"""
-        serializer = CreateProfileSerializer(data=request.data)
+        serializer = api_serializers.CreateProfileSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -36,12 +32,14 @@ class ProfileAPI(EndpointView):
     def get_profile_by_uuid(
         self, request: Request, profile_uuid: uuid.UUID
     ) -> Response:
-        profile_object = profiles_service.get_profile_by_uuid(profile_uuid)
-        serializer: ProfileSerializer = ProfileSerializer(profile_object)
+        profile_object = profile_service.get_profile_by_uuid(profile_uuid)
+        serializer: api_serializers.ProfileSerializer = (
+            api_serializers.ProfileSerializer(profile_object)
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update_profile(self, request: Request) -> Response:
-        serializer = UpdateProfileSerializer(data=request.data)
+        serializer = api_serializers.UpdateProfileSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
 
@@ -68,6 +66,28 @@ class FormationChoicesView(EndpointView):
         return Response(dict(CoachProfile.FORMATION_CHOICES), status=status.HTTP_200_OK)
 
 
+class ProfileEnumsAPI(EndpointView):
+    def get_club_roles(self, request: Request) -> Response:
+        """
+        Get ClubProfile roles and return response with format:
+        [{id: 1, name: Trener}, ...]
+        """
+        roles = profile_service.get_club_roles()
+        serializer = api_serializers.ProfileEnumChoicesSerializer(data=roles, many=True)
+        serializer.is_valid()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_referee_roles(self, request: Request) -> Response:
+        """
+        Get RefereeLevel roles and return response with format:
+        [{id: id_name, name: role_name}, ...]
+        """
+        roles = profile_service.get_referee_roles()
+        serializer = api_serializers.ProfileEnumChoicesSerializer(data=roles, many=True)
+        serializer.is_valid()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class CoachRolesChoicesView(EndpointView):
     """
     View for listing coach role choices.
@@ -84,7 +104,7 @@ class CoachRolesChoicesView(EndpointView):
         Return a list of coach roles choices.
         """
         return Response(
-            dict(CoachProfile.COACH_ROLE_CHOICES), status=status.HTTP_200_OK
+            dict(models.CoachProfile.COACH_ROLE_CHOICES), status=status.HTTP_200_OK
         )
 
 
@@ -104,5 +124,5 @@ class PlayerPositionAPI(EndpointView):
         Retrieve all player positions ordered by ID.
         """
         positions = PlayerPosition.objects.all().order_by("id")
-        serializer = PlayerPositionSerializer(positions, many=True)
+        serializer = api_serializers.PlayerPositionSerializer(positions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

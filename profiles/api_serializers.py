@@ -6,7 +6,7 @@ from clubs import errors as clubs_errors
 from clubs.services import ClubService
 from profiles import errors as profile_errors
 from profiles.services import ProfileService, PlayerProfilePositionService
-from .models import PROFILE_TYPE, PlayerProfilePosition, PlayerProfile, PlayerPosition
+from . import models
 from roles.definitions import PROFILE_TYPE_SHORT_MAP
 from users.services import UserService
 from pydantic import parse_obj_as
@@ -43,7 +43,7 @@ class ProfileSerializer(serializers.Serializer):
     ) -> None:
         super().__init__(*args, **kwargs)
         self.profile_role: str = self.get_role()
-        self.model: PROFILE_TYPE = self.define_model()
+        self.model: models.PROFILE_TYPE = self.define_model()
 
     @property
     def data(self) -> dict:
@@ -55,7 +55,6 @@ class ProfileSerializer(serializers.Serializer):
         ret = {}
         fields: list[str] = self.serialize_fields or self.instance.__dict__
         for field_name in fields:
-            # Skipping private fields as they should not be included in the serialization.
             if field_name.startswith("_"):
                 continue
 
@@ -69,7 +68,7 @@ class ProfileSerializer(serializers.Serializer):
         #  https://gitlab.com/playmaker1/webapp/-/commit/6fa060ad101198064425d71f1d11aa3d3a892678.
 
         # Only serialize player_positions if the profile is a PlayerProfile
-        if isinstance(self.instance, PlayerProfile):
+        if isinstance(self.instance, models.PlayerProfile):
             ret["player_positions"] = PlayerProfilePositionSerializer(
                 self.instance.player_positions.order_by("-is_main"), many=True
             ).data
@@ -93,7 +92,7 @@ class ProfileSerializer(serializers.Serializer):
             f"{self.__class__.__name__} should not be able to save anything!"
         )
 
-    def define_model(self) -> PROFILE_TYPE:
+    def define_model(self) -> models.PROFILE_TYPE:
         """Define profile model based on role shortcut"""
         return profiles_service.get_model_by_role(self.profile_role)
 
@@ -184,7 +183,7 @@ class CreateProfileSerializer(ProfileSerializer):
         positions_data = self.initial_data.pop("player_positions", None)
         self.instance = self.model.objects.create(**self.initial_data)
 
-        if positions_data and isinstance(self.instance, PlayerProfile):
+        if positions_data and isinstance(self.instance, models.PlayerProfile):
             self.handle_positions(positions_data)
 
 
@@ -199,7 +198,9 @@ class UpdateProfileSerializer(ProfileSerializer):
         if not profiles_service.is_valid_uuid(uuid):
             raise profile_errors.InvalidUUID
 
-        kwargs["instance"]: PROFILE_TYPE = profiles_service.get_profile_by_uuid(uuid)
+        kwargs["instance"]: models.PROFILE_TYPE = profiles_service.get_profile_by_uuid(
+            uuid
+        )
         super().__init__(*args, **kwargs)
 
     def update_fields(self) -> None:
@@ -220,6 +221,23 @@ class UpdateProfileSerializer(ProfileSerializer):
         self.instance.save()
 
 
+class ProfileEnumListSerializer(serializers.ListSerializer):
+    """List serializer for ClubProfile roles"""
+
+    def to_internal_value(self, data: typing.List[tuple]) -> typing.List[dict]:
+        return [{"id": value[0], "name": value[1]} for value in data]
+
+
+class ProfileEnumChoicesSerializer(serializers.Serializer):
+    """Serializer for ClubProfile roles"""
+
+    id = serializers.CharField()
+    name = serializers.CharField(read_only=True)
+
+    class Meta:
+        list_serializer_class = ProfileEnumListSerializer
+
+
 class PlayerProfilePositionSerializer(serializers.ModelSerializer):
     """
     Serializer for the player's profile position, including the name of the position
@@ -229,7 +247,7 @@ class PlayerProfilePositionSerializer(serializers.ModelSerializer):
     position_name = serializers.CharField(source="player_position.name", read_only=True)
 
     class Meta:
-        model = PlayerProfilePosition
+        model = models.PlayerProfilePosition
         fields = ["player_position", "position_name", "is_main"]
 
     def to_representation(self, instance) -> typing.Dict[str, typing.Any]:
@@ -247,5 +265,5 @@ class PlayerPositionSerializer(serializers.ModelSerializer):
     """
 
     class Meta:
-        model = PlayerPosition
+        model = models.PlayerPosition
         fields = ["id", "name"]
