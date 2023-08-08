@@ -48,10 +48,10 @@ class LocaleDataView(EndpointView):
     @extend_schema(**CITIES_VIEW_SWAGGER_SCHEMA)
     def list_cities(self, request: Request) -> Response:
         """
-        Return a list of cities with mapped voivodeships based on the query parameter.
-        Each item in the response array is a pair of strings:
-        [city name, voivodeship name].
-        For example: ["Aleksandrów Łódzki", "Łódzkie"].
+        Return a list of cities with mapped voivodeships
+        and its priority based on the query parameter.
+        Response is an array of dictionaries:
+        [{id: 1, name: Warszawa, voivodeship: Mazowieckie, priority: True}, ...]
         """
         # Get the value of the "city" query parameter
         city_query = request.GET.get("city", "")
@@ -74,18 +74,8 @@ class LocaleDataView(EndpointView):
             | Q(region__name__in=matched_voivodeships)
         )
 
-        # Iterate over the results and create a list of city-voivodeship pairs
-        cities_list = [
-            [
-                # Get the mapped city name from the CUSTOM_CITY_MAPPING if available, otherwise use the original city name
-                cities.CUSTOM_CITY_MAPPING.get(city.name, city.name),
-                # Map the voivodeship name to its corresponding Polish name for display
-                cities.VOIVODESHIP_MAPPING.get(city.region.name, city.region.name),
-            ]
-            for city in filtered_cities
-        ]
-
-        return Response(cities_list, status=status.HTTP_200_OK)
+        serializer = serializers.CitySerializer(filtered_cities, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def list_languages(self, request: Request) -> Response:
         """

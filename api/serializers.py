@@ -3,6 +3,8 @@ from .services import LocaleDataService
 from utils import translate_to
 import typing
 from django.utils import translation
+from cities_light.models import City
+from app.utils import cities
 
 locale_service = LocaleDataService()
 
@@ -41,9 +43,14 @@ class LanguageSerializer(serializers.Serializer):
     code = (
         serializers.CharField()
     )  # we assume that UserPreferences will save language by code
+    priority = serializers.SerializerMethodField()
 
     class Meta:
         list_serializer_class = LanguageListSerializer
+
+    def get_priority(self, obj) -> bool:
+        """Define language priority"""
+        return locale_service.is_prior_language(obj["code"])
 
 
 class CountriesListSerializer(serializers.ListSerializer):
@@ -61,7 +68,6 @@ class CountriesListSerializer(serializers.ListSerializer):
             {
                 "country": country_name,
                 "code": country_code,
-                "priority": locale_service.is_prior_country(country_code),
             }
             for country_code, country_name in data
         ]
@@ -72,7 +78,40 @@ class CountrySerializer(serializers.Serializer):
     code = (
         serializers.CharField()
     )  # we assume that UserPreferences will save country by code
-    priority = serializers.BooleanField(read_only=True)
+    priority = serializers.SerializerMethodField()
+    dial_code = serializers.SerializerMethodField()
 
     class Meta:
         list_serializer_class = CountriesListSerializer
+
+    def get_priority(self, obj: dict) -> bool:
+        """Define country priority"""
+        return locale_service.is_prior_country(obj["code"])
+
+    def get_dial_code(self, obj: dict) -> str:
+        """Define country dial code"""
+        return locale_service.get_dial_code(obj["code"])
+
+
+class CitySerializer(serializers.ModelSerializer):
+    voivodeship = serializers.SerializerMethodField()
+    priority = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = City
+        fields = ("id", "name", "voivodeship", "priority")
+
+    def get_voivodeship(self, obj: City) -> str:
+        """Transform voivodeship name"""
+        region = obj.region.name
+        return cities.VOIVODESHIP_MAPPING.get(region, region)
+
+    def get_name(self, obj: City) -> str:
+        """Transform city name"""
+        return cities.CUSTOM_CITY_MAPPING.get(obj.name, obj.name)
+
+    def get_priority(self, obj: City) -> bool:
+        """define city priority"""
+        city_name = cities.CUSTOM_CITY_MAPPING.get(obj.name, obj.name)
+        return locale_service.is_prior_city(city_name)

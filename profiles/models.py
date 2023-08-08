@@ -5,7 +5,7 @@ from datetime import datetime
 from address.models import AddressField
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -18,6 +18,7 @@ from adapters.player_adapter import PlayerGamesAdapter, PlayerSeasonStatsAdapter
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_player_external_links
 from mapper.models import Mapper
+from clubs.models import League
 import uuid
 
 # from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
@@ -1471,7 +1472,6 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         help_text="Defines if admin approved change",
     )
-
     coach_role = models.CharField(
         _("Rola trenera"),
         max_length=3,
@@ -1480,6 +1480,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         help_text=_("This field represents the role of the coach."),
     )
+
     formation = models.CharField(
         _("Formacja"),
         max_length=7,
@@ -1812,6 +1813,35 @@ class ScoutProfile(BaseProfile):
         verbose_name_plural = "Scouts Profiles"
 
 
+class RefereeLevel(models.Model):
+    REFEREE_ROLE_CHOICES = (
+        ("Referee", "Sędzia główny"),
+        ("Assistant Referee", "Asystent"),
+    )
+
+    level = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+        help_text="The league in which the referee has officiated.",
+    )
+    role = models.CharField(
+        _("Role"),
+        max_length=17,
+        choices=REFEREE_ROLE_CHOICES,
+        help_text="The role this referee plays (Referee or Assistant Referee).",
+    )
+
+    @property
+    def level_name(self):
+        """
+        Returns the name of the league in which the referee has officiated.
+        """
+        return self.level.name
+
+    def __str__(self):
+        return f"{self.level_name} - {self.role}"
+
+
 class OtherProfile(BaseProfile):
     PROFILE_TYPE = definitions.PROFILE_TYPE_OTHER
     AUTO_VERIFY = True
@@ -1925,7 +1955,9 @@ class PlayerVideo(models.Model):
 class PlayerProfilePosition(models.Model):
     player_position = models.ForeignKey(PlayerPosition, on_delete=models.CASCADE)
     player_profile = models.ForeignKey(
-        PlayerProfile, on_delete=models.CASCADE, related_name="player_positions"
+        PlayerProfile,
+        on_delete=models.CASCADE,
+        related_name="player_positions",
     )
     is_main = models.BooleanField(
         default=False,
@@ -1939,6 +1971,39 @@ class PlayerProfilePosition(models.Model):
         verbose_name = "Player Profile Position"
         verbose_name_plural = "Player Profile Positions"
         unique_together = ("player_position", "player_profile")
+
+    def clean(self):
+        """
+        Validate the object before saving.
+
+        This method is called before a `PlayerProfilePosition` object is saved. It ensures that the following
+        constraints are met:
+        - A player can have only one main position. (This is checked if the position is marked as main.)
+        - A player can have a maximum of two non-main positions.
+        """
+        # Call the parent class's clean method to ensure any inherited validation is performed
+        super().clean()
+        if self.is_main:
+            main_positions = self.player_profile.player_positions.filter(is_main=True)
+            if self.pk:
+                main_positions = main_positions.exclude(pk=self.pk)
+
+            if main_positions.exists():
+                raise ValidationError("A player can have only one main position.")
+
+        non_main_positions = self.player_profile.player_positions.filter(is_main=False)
+        if self.pk:
+            non_main_positions = non_main_positions.exclude(pk=self.pk)
+
+        if not self.is_main and non_main_positions.count() >= 2:
+            raise ValidationError(
+                "A player can have a maximum of two non-main positions."
+            )
+
+
+def save(self, *args, **kwargs):
+    self.clean()
+    super().save(*args, **kwargs)
 
 
 class Language(models.Model):

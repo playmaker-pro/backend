@@ -24,4 +24,14 @@ urlpatterns = [
         views.FormationChoicesView.as_view({"get": "list_formations"}),
         name="formations_list",
     ),
+    path(
+        r"coach-roles/",
+        views.CoachRolesChoicesView.as_view({"get": "list_coach_roles"}),
+        name="coach_roles_list",
+    ),
+    path(
+        r"player-positions/",
+        views.PlayerPositionAPI.as_view({"get": "list_positions"}),
+        name="positions_list",
+    ),
 ]

@@ -6,16 +6,16 @@ info:
 
 servers:
   - url: https://staging.playmakerpro.usermd.net/api/v3/
+  - url: http://localhost:8001/api/v3/
 
 paths:
   /cities/:
     get:
       operationId: cities_retrieve
-      description: |-
-        Return a list of cities with mapped voivodeships based on the query parameter.
-        Each item in the response array is a pair of strings:
-        [city name, voivodeship name].
-        For example: ["Aleksandrów Łódzki", "Łódzkie"].
+      description: 'Return a list of cities with mapped voivodeships
+        and its priority based on the query parameter.
+        Response is an array of dictionaries:
+        [{id: 1, name: Warszawa, voivodeship: Mazowieckie, priority: True}, ...]'
       summary: List cities endpoint
       parameters:
       - in: query
@@ -31,15 +31,19 @@ paths:
             application/json:
               schema:
                 type: array
-                description: 'List of [city, voivodeship] pairs returned successfully.
-                  For example: ["Aleksandrów Łódzki", "Łódzkie"].'
+                description: 'List of {id, name, voivodeship, priority} pairs returned successfully.
+                  [{id: 1, name: Warszawa, voivodeship: Mazowieckie, priority: True}, ...]'
                 items:
                   type: object
                   properties:
+                    id:
+                      type: integer
                     city:
                       type: string
                     voivodeship:
                       type: string
+                    priority:
+                      type: boolean
           description: ''
   /languages/:
     get:
@@ -76,6 +80,8 @@ paths:
                       type: string
                     language_locale:
                       type: string
+                    priority:
+                      type: boolean
   /clubs/club-teams/search/:
     get:
       operationId: clubs_club_teams_search_retrieve
@@ -282,7 +288,7 @@ paths:
             application/json:
               schema:
                 type: array
-                description: 'List of countries with prior and code'
+                description: 'List of countries with code, priority and dial code'
                 items:
                   type: object
                   properties:
@@ -292,6 +298,8 @@ paths:
                       type: string
                     priority:
                       type: boolean
+                    dial_code:
+                      type: string
   /preference-choices/:
     get:
       operationId: preference_choices_retrieve
@@ -875,13 +883,40 @@ paths:
                   "updated": false,
                   "role": "P"
                 }
+  /profiles/player-positions/:
+    get:
+      operationId: player_positions_retrieve
+      description: Returns player positions.
+      summary: Player positions endpoint
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  description: Player positions returned successfully.
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                  example:
+                    id: 1
+                    name: Napastnik
+          description: Returns player positions.
   /profiles/formations/:
     get:
       operationId: formation_choices_retrieve
       description: |
         Returns a dictionary where each key-value pair
-        is a formation's unique string representation (like "4-4-2" or "4-3-3") mapped to its corresponding label. 
-        For example, it may return a response like {"4-4-2": "4-4-2", "4-3-3": "4-3-3"}.
+        is a formation's unique string representation (like "4-4-2" or "4-3-3") mapped to its corresponding label.
+      summary: Formations endpoint
       tags:
         - profiles
       security:
@@ -899,7 +934,31 @@ paths:
                 example:
                   "4-4-2": "4-4-2"
                   "4-3-3": "4-3-3"
-          description: ''
+          description: Returns available formations
+  /profiles/coach-roles/:
+    get:
+      operationId: coach_roles_choices_retrieve
+      description: Returns available coach roles choices.
+      summary: Coach roles endpoint
+      tags:
+        - coach-role-choices
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Coach roles choices returned successfully.
+                type: object
+                properties:
+                  shortcut:
+                    type: string
+                  full_name:
+                    type: string
+                example:
+                  IC: Pierwszy trener
+          description: Returns available coach roles choices.
   /roles/get-roles/:
     get:
       operationId: roles_get_roles_list
@@ -941,7 +1000,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FeatureElement'
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeatureElement'
           description: Returns user feature elements. Returns empty list if user has
             no feature sets.
   /users/feature-sets/:
@@ -958,7 +1019,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Features'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Features'
           description: Returns user feature sets. Returns empty list if user has no
             feature sets.
   /users/google-oauth2/:
@@ -973,7 +1036,7 @@ paths:
       - users
       requestBody:
         content:
-          schema:
+          application/json:
             schema:
               type: object
               properties:
@@ -1037,7 +1100,7 @@ paths:
       - users
       requestBody:
         content:
-          schema:
+          application/json:
             schema:
               type: object
               properties:
@@ -1133,7 +1196,7 @@ paths:
       - users
       requestBody:
         content:
-          schema:
+          application/json:
             schema:
               type: object
               properties:
@@ -1197,7 +1260,7 @@ paths:
       - users
       requestBody:
         content:
-          schema:
+          application/json:
             schema:
               type: object
               properties:
@@ -1252,6 +1315,60 @@ paths:
                   password: Detailed error message
                 description: Bad request. Data sent in request is invalid.
           description: ''
+  /users/email-verification/:
+    post:
+      operationId: users_email_verification
+      description: |-
+        Validate given email if it is already in use.
+      summary: Email verification endpoint
+      tags:
+        - users
+      requestBody:
+        content:
+          schema:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: User email
+              required:
+                - email
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Request was successful.
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Is request successful?
+                  email_available:
+                    type: string
+                    description: Is email available?
+                example:
+                  success: true
+                  email_available: true
+          description: 'Returns a boolean value indicating whether the email is available.'
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Is request successful?
+                  detail:
+                    type: string
+                    description: Detailed error message
+                example:
+                  success: False
+                  detail: "['Please provide valid e-mail address.']"
+                description: Bad request. Data sent in request is invalid.
+          description: 'Returns: a email_available value indicating whether the email address is valid/ not available and a detailed error message if it is not.'
 components:
   schemas:
     AccessEnum:

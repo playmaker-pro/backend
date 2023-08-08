@@ -6,6 +6,9 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.core.exceptions import ImproperlyConfigured
 from drf_yasg.utils import swagger_auto_schema
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -24,10 +27,11 @@ from features.models import Feature, FeatureElement
 from users import serializers
 from users.errors import (
     ApplicationError,
-    FeatureElementsNotFoundException,
-    FeatureSetsNotFoundException,
     NoGoogleTokenSent,
     NoUserCredentialFetchedException,
+    EmailNotValid,
+    UserAlreadyExists,
+    EmailNotAvailable,
 )
 from users.managers import GoogleManager
 from users.schemas import UserGoogleDetailPydantic, RedirectAfterGoogleLogin
@@ -80,7 +84,11 @@ class UsersAPI(EndpointView):
         Note: You can't use 'self.action' here because it's not set
         when calling not accepted method.
         """
-        if "register" in self.request.path or "google-oauth2" in self.request.path:
+        if (
+            "register" in self.request.path
+            or "google-oauth2" in self.request.path
+            or "email-verification" in self.request.path
+        ):
             retrieve_permission_list = [AllowAny]
             return [permission() for permission in retrieve_permission_list]
         else:
@@ -110,9 +118,9 @@ class UsersAPI(EndpointView):
     def feature_sets(request) -> Response:
         """Returns all user feature sets."""
         data: List[Feature] = user_service.get_user_features(request.user)
-        if not data:
-            raise FeatureSetsNotFoundException()
         serializer = FeaturesSerializer(instance=data, many=True)
+        if not data:
+            return Response(status=status.HTTP_204_NO_CONTENT, data=serializer.data)
         return Response(serializer.data)
 
     @staticmethod
@@ -122,9 +130,9 @@ class UsersAPI(EndpointView):
         data: List[FeatureElement] = user_service.get_user_feature_elements(
             request.user
         )
-        if not data:
-            raise FeatureElementsNotFoundException()
         serializer = FeatureElementSerializer(instance=data, many=True)
+        if not data:
+            return Response(status=status.HTTP_204_NO_CONTENT, data=serializer.data)
         return Response(serializer.data)
 
     @staticmethod
@@ -180,6 +188,22 @@ class UsersAPI(EndpointView):
         }
 
         return Response(response, status=status.HTTP_200_OK)
+
+    @staticmethod
+    def verify_email(request) -> Response:
+        """verify email address, if is already in use"""
+        try:
+            validate_email(request.data.get("email"))
+        except ValidationError as e:
+            raise EmailNotValid(details=e)
+
+        response: bool = user_service.email_available(request.data.get("email"))
+        if not response:
+            raise EmailNotAvailable()
+
+        return Response(
+            {"success": True, "email_available": response}, status=status.HTTP_200_OK
+        )
 
 
 class LoginView(TokenObtainPairView):

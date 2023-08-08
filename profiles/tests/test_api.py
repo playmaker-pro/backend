@@ -5,6 +5,7 @@ from parameterized import parameterized
 from profiles.tests import utils
 from utils.factories.clubs_factories import TeamFactory, ClubFactory, TeamHistoryFactory
 from utils.factories.user_factories import UserFactory
+from utils.factories.profiles_factories import PositionFactory
 from utils.factories.api_request_factory import RequestFactory, MethodsSet
 from profiles.apis import ProfileAPI
 from utils import testutils
@@ -27,6 +28,8 @@ class TestCreateProfileAPI(APITestCase):
         testutils.create_system_user()
         UserFactory.create_batch_force_order(5)
         ClubFactory(id=1)
+        PositionFactory(id=1)
+        PositionFactory(id=2)
         TeamHistoryFactory(team=TeamFactory(name="Drużyna FC II", id=1), id=1)
 
     def test_get_profile_valid_without_authentication(self) -> None:
@@ -96,6 +99,10 @@ class TestCreateProfileAPI(APITestCase):
                     "weight": 75,
                     "practice_distance": 20,
                     "prefered_leg": 1,
+                    "player_positions": [
+                        {"player_position": 1, "is_main": True},
+                        {"player_position": 2, "is_main": False},
+                    ],
                 },
             ],
             [
@@ -139,7 +146,7 @@ class TestCreateProfileAPI(APITestCase):
         profile = profile_type.objects.get(user=user)
 
         for attr, val in payload.items():
-            if attr != "role":
+            if attr != "role" and attr != "player_positions":
                 assert getattr(profile, attr) == val
 
     @parameterized.expand([[{"user_id": 1, "role": "P"}]])
@@ -178,6 +185,10 @@ class TestCreateProfileAPI(APITestCase):
                     "weight": 75,
                     "practice_distance": 20,
                     "prefered_leg": 1,
+                    "player_positions": [
+                        {"player_position": 1, "is_main": True},
+                        {"player_position": 2, "is_main": False},
+                    ],
                 },
             ],
             [
@@ -236,7 +247,14 @@ class TestCreateProfileAPI(APITestCase):
 
         assert response.status_code == 200
         for attr, val in payload.items():
-            assert getattr(profile, attr) == val
+            if attr != "role" and attr != "player_positions":
+                assert getattr(profile, attr) == val
+
+        if "player_positions" in payload:
+            for pos in payload["player_positions"]:
+                assert profile.player_positions.filter(
+                    player_position_id=pos["player_position"]
+                ).exists()
 
     def test_patch_fake_uuid(self) -> None:
         """patch request with fake uuid shouldn't pass"""
@@ -291,3 +309,56 @@ class TestCreateProfileAPI(APITestCase):
         response = request.patch(reverse(url_create_or_update), {})
 
         assert response.status_code == 400
+
+    def test_update_positions(self) -> None:
+        """Test updating player positions"""
+        # Create an initial profile
+        initial_payload = {
+            "user_id": 1,
+            "role": "P",
+            "height": 180,
+            "weight": 75,
+            "practice_distance": 20,
+            "prefered_leg": 1,
+            "player_positions": [
+                {"player_position": 1, "is_main": True},
+                {"player_position": 2, "is_main": False},
+            ],
+        }
+        response = request.post(reverse(url_create_or_update), initial_payload)
+        assert response.status_code == 201
+        profile_uuid = response.data["uuid"]
+
+        # Update profile with multiple main positions
+        updated_payload = {
+            "uuid": profile_uuid,
+            "player_positions": [
+                {"player_position": 1, "is_main": True},
+                {"player_position": 2, "is_main": True},
+            ],
+        }
+        response = request.patch(reverse(url_create_or_update), updated_payload)
+
+        # Expected to fail due to multiple main positions
+        assert response.status_code == 400
+        assert "detail" in response.data
+        assert response.data["detail"] == "A player can have only one main position."
+        # Update profile with more than two non-main positions
+        updated_payload = {
+            "uuid": profile_uuid,
+            "player_positions": [
+                {"player_position": 1, "is_main": True},
+                {"player_position": 2, "is_main": False},
+                {"player_position": 3, "is_main": False},
+                {"player_position": 4, "is_main": False},
+            ],
+        }
+        response = request.patch(reverse(url_create_or_update), updated_payload)
+
+        # Expected to fail due to more than two non-main positions
+        assert response.status_code == 400
+        assert "detail" in response.data
+        assert (
+            response.data["detail"]
+            == "A player can have a maximum of two alternate positions."
+        )
