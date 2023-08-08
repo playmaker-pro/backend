@@ -10,8 +10,9 @@ from profiles.api_serializers import (
     profiles_service,
     ProfileSerializer,
     UpdateProfileSerializer,
+    PlayerPositionSerializer,
 )
-from profiles.models import CoachProfile
+from profiles.models import CoachProfile, PlayerPosition
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.request import Request
@@ -85,3 +86,23 @@ class CoachRolesChoicesView(EndpointView):
         return Response(
             dict(CoachProfile.COACH_ROLE_CHOICES), status=status.HTTP_200_OK
         )
+
+
+class PlayerPositionAPI(EndpointView):
+    """
+    API endpoint for retrieving player positions.
+
+    This class provides methods for retrieving all player positions, ordered by ID.
+    It requires JWT authentication and allows read-only access for unauthenticated users.
+    """
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def list_positions(self, request: Request) -> Response:
+        """
+        Retrieve all player positions ordered by ID.
+        """
+        positions = PlayerPosition.objects.all().order_by("id")
+        serializer = PlayerPositionSerializer(positions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

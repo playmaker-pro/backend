@@ -5,7 +5,7 @@ from datetime import datetime
 from address.models import AddressField
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -1955,7 +1955,9 @@ class PlayerVideo(models.Model):
 class PlayerProfilePosition(models.Model):
     player_position = models.ForeignKey(PlayerPosition, on_delete=models.CASCADE)
     player_profile = models.ForeignKey(
-        PlayerProfile, on_delete=models.CASCADE, related_name="player_positions"
+        PlayerProfile,
+        on_delete=models.CASCADE,
+        related_name="player_positions",
     )
     is_main = models.BooleanField(
         default=False,
@@ -1969,6 +1971,39 @@ class PlayerProfilePosition(models.Model):
         verbose_name = "Player Profile Position"
         verbose_name_plural = "Player Profile Positions"
         unique_together = ("player_position", "player_profile")
+
+    def clean(self):
+        """
+        Validate the object before saving.
+
+        This method is called before a `PlayerProfilePosition` object is saved. It ensures that the following
+        constraints are met:
+        - A player can have only one main position. (This is checked if the position is marked as main.)
+        - A player can have a maximum of two non-main positions.
+        """
+        # Call the parent class's clean method to ensure any inherited validation is performed
+        super().clean()
+        if self.is_main:
+            main_positions = self.player_profile.player_positions.filter(is_main=True)
+            if self.pk:
+                main_positions = main_positions.exclude(pk=self.pk)
+
+            if main_positions.exists():
+                raise ValidationError("A player can have only one main position.")
+
+        non_main_positions = self.player_profile.player_positions.filter(is_main=False)
+        if self.pk:
+            non_main_positions = non_main_positions.exclude(pk=self.pk)
+
+        if not self.is_main and non_main_positions.count() >= 2:
+            raise ValidationError(
+                "A player can have a maximum of two non-main positions."
+            )
+
+
+def save(self, *args, **kwargs):
+    self.clean()
+    super().save(*args, **kwargs)
 
 
 class Language(models.Model):

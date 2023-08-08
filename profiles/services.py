@@ -1,15 +1,29 @@
 import logging
-from typing import Optional, Type, Union
+from typing import Optional, Type, Union, List, Dict, Any
 import uuid
 from django.contrib.auth import get_user_model
 from clubs.models import Club as CClub
 from clubs.models import Team as CTeam
 from . import models
 from clubs import models as clubs_models
-from .errors import ProfileDoesNotExist
+from .errors import (
+    ProfileDoesNotExist,
+    TooManyAlternatePositionsError,
+    MultipleMainPositionError,
+)
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
+
+
+class PositionData(BaseModel):
+    """
+    Represents the data structure for a player's position.
+    """
+
+    player_position: int
+    is_main: bool
 
 
 class ProfileVerificationService:
@@ -310,3 +324,111 @@ class ProfileService:
         except ValueError:
             return False
         return str(uuid_obj) == value
+
+
+class PlayerProfilePositionService:
+    def validate_positions(self, positions_data: List[PositionData]) -> None:
+        """
+        Validates the given positions data.
+
+        raises MultipleMainPositionError: If more than one main position is found.
+        raises TooManyAlternatePositionsError: If more than two non-main positions are found.
+        """
+        main_positions_count = len([data for data in positions_data if data.is_main])
+        non_main_positions_count = len(
+            [data for data in positions_data if not data.is_main]
+        )
+
+        if main_positions_count > 1:
+            raise MultipleMainPositionError
+
+        if non_main_positions_count > 2:
+            raise TooManyAlternatePositionsError
+
+    def manage_positions(
+        self, profile: models.PlayerProfile, positions_data: List[PositionData]
+    ) -> None:
+        """
+        Updates the player positions associated with the given profile.
+
+        This method takes a player profile and a list of positions data. It separates
+        the positions into main and non-main positions, counts the number of main and
+        non-main positions in the provided data, and raises an error if there are more
+        than one main or two non-main positions.
+
+        It then iterates over the new positions data. If a main position is new or has
+        changed, it is created or updated accordingly. Non-main positions are also created
+        or updated, but no more than two are allowed.
+
+        If any positions from the original set are not in the new positions data, they
+        are deleted.
+        """
+        # Validate that the provided positions data meets the necessary criteria.
+        self.validate_positions(positions_data)
+
+        # Get the current positions associated with the profile, indexed by their player_position_id.
+        current_positions = {
+            position.player_position_id: position
+            for position in profile.player_positions.all()
+        }
+
+        # Initialize lists to hold positions that need to be created and updated.
+        positions_to_create = []
+        positions_to_update = []
+        # Initialize a set to hold the IDs of positions that should be retained (i.e., not deleted).
+        position_ids_to_keep = set()
+
+        # Iterate over new positions
+        for position_data in positions_data:
+            player_position_id = position_data.player_position
+            is_main = position_data.is_main
+
+            # Handle main position
+            if is_main:
+                if player_position_id not in current_positions:
+                    # If no main position exists, prepare to create it
+                    positions_to_create.append(
+                        models.PlayerProfilePosition(
+                            player_profile=profile,
+                            player_position_id=player_position_id,
+                            is_main=True,
+                        )
+                    )
+                elif current_positions[player_position_id].is_main != is_main:
+                    # If main position has changed, prepare to update it
+                    positions_to_update.append(
+                        (current_positions[player_position_id], is_main)
+                    )
+
+            # Handle non-main positions
+            else:
+                if player_position_id not in current_positions:
+                    # If no such non-main position exists, prepare to create it
+                    positions_to_create.append(
+                        models.PlayerProfilePosition(
+                            player_profile=profile,
+                            player_position_id=player_position_id,
+                            is_main=False,
+                        )
+                    )
+                elif current_positions[player_position_id].is_main != is_main:
+                    # If non-main position has changed, prepare to update it
+                    positions_to_update.append(
+                        (current_positions[player_position_id], is_main)
+                    )
+
+            position_ids_to_keep.add(player_position_id)
+
+        # Delete positions not in positions_data
+        positions_to_delete = set(current_positions.keys()) - position_ids_to_keep
+        for position_id in positions_to_delete:
+            current_positions[position_id].delete()
+
+        # Update positions
+        for position, is_main in positions_to_update:
+            position.is_main = is_main
+            position.save()
+
+        # Create positions
+        for position in positions_to_create:
+            position.save()

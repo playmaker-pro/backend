@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Type
+from typing import Type, Any, Union
 from rest_framework.response import Response
 from rest_framework.test import force_authenticate, APIRequestFactory
 from django.http import QueryDict
@@ -8,6 +8,8 @@ from urllib.request import Request
 from api.views import EndpointView
 from utils import testutils
 from typing import Optional
+import json
+import uuid
 
 
 @dataclasses.dataclass
@@ -21,6 +23,28 @@ class MethodsSet:
     def __getattribute__(self, name) -> dict:
         """Overwrite attributes to create .as_view() friendly input"""
         return {name.lower(): super().__getattribute__(name)}
+
+
+class UUIDEncoder(json.JSONEncoder):
+    """
+    A JSONEncoder subclass that knows how to serialize uuid.UUID objects.
+
+    This is useful when code works with JSON and UUIDs, since the default
+    JSONEncoder doesn't know how to serialize UUIDs. Instead of returning the
+    UUID object, we return its string representation.
+    """
+
+    def default(self, obj: Any) -> Union[str, Any]:
+        """
+        Overwrite the default method from JSONEncoder.
+
+        If the obj is an instance of uuid.UUID, we return its string representation.
+        Otherwise, we call the parent method.
+        """
+        if isinstance(obj, uuid.UUID):
+            # if the obj is uuid, we simply return the value of uuid
+            return str(obj)
+        return json.JSONEncoder.default(self, obj)
 
 
 class RequestFactory(APIRequestFactory):
@@ -78,12 +102,15 @@ class RequestFactory(APIRequestFactory):
         path: str,
         body: dict = None,
         force_authentication: bool = True,
+        content_type="application/json",
         *args,
         **kwargs,
     ) -> Response:
         """Make post request, return response"""
-        payload: QueryDict = self.parse_payload(body)
-        request: Request = super().post(path, payload)
+        request: Request = super().post(
+            path, UUIDEncoder().encode(body), content_type=content_type
+        )
+
         return self.response(
             self.methods.POST, request, force_authentication, *args, **kwargs
         )
@@ -93,12 +120,15 @@ class RequestFactory(APIRequestFactory):
         path: str,
         body: dict = None,
         force_authentication: bool = True,
+        content_type="application/json",
         *args,
         **kwargs,
     ) -> Response:
         """Make patch request, return response"""
-        payload: QueryDict = self.parse_payload(body)
-        request: Request = super().patch(path, payload)
+        request: Request = super().patch(
+            path, UUIDEncoder().encode(body), content_type=content_type
+        )
+
         return self.response(
             self.methods.PATCH, request, force_authentication, *args, **kwargs
         )
