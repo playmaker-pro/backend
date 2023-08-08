@@ -1005,7 +1005,7 @@ paths:
           description: Returns available coach roles choices.
   /roles/get-roles/:
     get:
-      operationId: roles_get_roles_list
+      operationId: roles_get_roles
       description: Return a dictionary of available roles.
       summary: Roles endpoint
       tags:
@@ -1018,18 +1018,16 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  description: Available roles returned successfully.
-                  type: object
-                  properties:
-                    shortcut:
-                      type: string
-                    full_name:
-                      type: string
-                  example:
-                    P: Piłkarz
-          description: ''
+                description: Available roles returned successfully.
+                type: object
+                properties:
+                  shortcut:
+                    type: string
+                  full_name:
+                    type: string
+                example:
+                  P: Piłkarz
+          description: Returns available roles choices.
   /users/feature-elements/:
     get:
       operationId: users_feature_elements_retrieve

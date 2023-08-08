@@ -45,7 +45,6 @@ class LocaleDataView(EndpointView):
         serializer.is_valid()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @extend_schema(**CITIES_VIEW_SWAGGER_SCHEMA)
     def list_cities(self, request: Request) -> Response:
         """
         Return a list of cities with mapped voivodeships
