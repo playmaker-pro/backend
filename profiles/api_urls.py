@@ -44,4 +44,9 @@ urlpatterns = [
         views.PlayerPositionAPI.as_view({"get": "list_positions"}),
         name="positions_list",
     ),
+    path(
+        r"coach-licences/",
+        views.CoachLicencesChoicesView.as_view({"get": "list_coach_licences"}),
+        name="coach_licences_list",
+    ),
 ]

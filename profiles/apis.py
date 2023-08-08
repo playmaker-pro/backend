@@ -128,3 +128,21 @@ class PlayerPositionAPI(EndpointView):
         positions = models.PlayerPosition.objects.all().order_by("id")
         serializer = api_serializers.PlayerPositionSerializer(positions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CoachLicencesChoicesView(EndpointView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    """
+    View for listing coach licence choices.
+    The response is a list of dictionaries each containing licence ID and licence name.
+    For example: [{"id": 1, "name": "UEFA PRO"}, {"id": 2, "name": "UEFA A"}, ...].
+    """
+
+    def list_coach_licences(self, request: Request) -> Response:
+        """
+        Return a list of coach licences choices.
+        """
+        licences = models.LicenceType.objects.all()
+        serializer = api_serializers.LicenceTypeSerializer(licences, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
