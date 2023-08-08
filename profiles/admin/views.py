@@ -1,23 +1,12 @@
-from os import link
-
 from django.contrib import admin
 from django.db.models import Field
 from django.http import HttpRequest
 from django.forms.models import ModelChoiceField
-
 from app.utils.admin import json_filed_data_prettified
 from profiles import models
 from clubs.models import League
 from utils import linkify
-
-
-from .filters import (
-    HasClubObjectFilter,
-    HasDataMapperIdFilter,
-    HasTeamObjectFilter,
-    HasTextInputFilter,
-    OnlyLastVerificationFilter,
-)
+from . import filters
 
 
 @admin.register(models.ProfileVisitHistory)
@@ -191,13 +180,13 @@ class ProfileVerificationStatusAdmin(admin.ModelAdmin):
     list_filter = (
         "owner__declared_role",
         "status",
-        OnlyLastVerificationFilter,
-        HasDataMapperIdFilter,
-        HasTextInputFilter,
+        filters.OnlyLastVerificationFilter,
+        filters.HasDataMapperIdFilter,
+        filters.HasTextInputFilter,
         ("has_team", admin.BooleanFieldListFilter),
         ("team_not_found", admin.BooleanFieldListFilter),
-        HasTeamObjectFilter,
-        HasClubObjectFilter,
+        filters.HasTeamObjectFilter,
+        filters.HasClubObjectFilter,
     )
     actions = [update_with_profile_data]
 

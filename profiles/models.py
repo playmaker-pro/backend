@@ -5,7 +5,7 @@ from datetime import datetime
 from address.models import AddressField
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.validators import MaxValueValidator, MinValueValidator, ValidationError
+from django.core import validators
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -24,10 +24,9 @@ import uuid
 # from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
 from roles import definitions
 from voivodeships.models import Voivodeships
-
 from .errors import VerificationCompletionFieldsWrongSetup
 from .mixins import TeamObjectsDisplayMixin
-from .utils import make_choices, supress_exception, unique_slugify, calculate_age
+from . import utils as profile_utils
 
 User = get_user_model()
 
@@ -362,7 +361,7 @@ class BaseProfile(models.Model, EventLogMixin):
             self.user.first_name,
             self.user.last_name,
         )
-        unique_slugify(self, slug_str)
+        profile_utils.unique_slugify(self, slug_str)
 
         ver_old, object_exists = self._get_verification_object_verification_fields(
             obj=obj_before_save
@@ -620,7 +619,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     @property
     def age(self) -> typing.Optional[int]:
-        return calculate_age(self.user.userpreferences.birth_date)
+        return profile_utils.calculate_age(self.user.userpreferences.birth_date)
 
     @property
     def has_videos(self):
@@ -702,25 +701,31 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         help_text=_("Wysokość (cm) [130-210cm]"),
         blank=True,
         null=True,
-        validators=[MinValueValidator(130), MaxValueValidator(210)],
+        validators=[
+            validators.MinValueValidator(130),
+            validators.MaxValueValidator(210),
+        ],
     )
     weight = models.PositiveIntegerField(
         _("Waga"),
         help_text=_("Waga(kg) [40-140kg]"),
         blank=True,
         null=True,
-        validators=[MinValueValidator(40), MaxValueValidator(140)],
+        validators=[
+            validators.MinValueValidator(40),
+            validators.MaxValueValidator(140),
+        ],
     )
     position_raw = models.IntegerField(
         _("Pozycja"),
         db_index=True,
-        choices=make_choices(POSITION_CHOICES),
+        choices=profile_utils.make_choices(POSITION_CHOICES),
         blank=True,
         null=True,
     )
     position_raw_alt = models.IntegerField(
         _("Pozycja alternatywna"),
-        choices=make_choices(POSITION_CHOICES),
+        choices=profile_utils.make_choices(POSITION_CHOICES),
         blank=True,
         null=True,
     )
@@ -729,32 +734,41 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
     formation = models.CharField(
         _("Formacja"),
-        choices=make_choices(FORMATION_CHOICES),
+        choices=profile_utils.make_choices(FORMATION_CHOICES),
         max_length=15,
         null=True,
         blank=True,
     )
     formation_alt = models.CharField(
         _("Alternatywna formacja"),
-        choices=make_choices(FORMATION_CHOICES),
+        choices=profile_utils.make_choices(FORMATION_CHOICES),
         max_length=15,
         null=True,
         blank=True,
     )
     prefered_leg = models.IntegerField(
-        _("Noga"), choices=make_choices(LEG_CHOICES), null=True, blank=True
+        _("Noga"),
+        choices=profile_utils.make_choices(LEG_CHOICES),
+        null=True,
+        blank=True,
     )
     transfer_status = models.IntegerField(
         _("Status transferowy"),
-        choices=make_choices(TRANSFER_STATUS_CHOICES),
+        choices=profile_utils.make_choices(TRANSFER_STATUS_CHOICES),
         null=True,
         blank=True,
     )
     card = models.IntegerField(
-        _("Karta na ręku"), choices=make_choices(CARD_CHOICES), null=True, blank=True
+        _("Karta na ręku"),
+        choices=profile_utils.make_choices(CARD_CHOICES),
+        null=True,
+        blank=True,
     )
     soccer_goal = models.IntegerField(
-        _("Piłkarski cel"), choices=make_choices(GOAL_CHOICES), null=True, blank=True
+        _("Piłkarski cel"),
+        choices=profile_utils.make_choices(GOAL_CHOICES),
+        null=True,
+        blank=True,
     )
     phone = models.CharField(_("Telefon"), max_length=15, blank=True, null=True)
     facebook_url = models.URLField(_("Facebook"), max_length=500, blank=True, null=True)
@@ -808,12 +822,15 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True,
         help_text=_("Maksymalna odległośc na trening"),
-        validators=[MinValueValidator(10), MaxValueValidator(500)],
+        validators=[
+            validators.MinValueValidator(10),
+            validators.MaxValueValidator(500),
+        ],
     )
     about = models.TextField(_("O sobie"), null=True, blank=True)
     training_ready = models.IntegerField(
         _("Gotowość do treningu"),
-        choices=make_choices(TRAINING_READY_CHOCIES),
+        choices=profile_utils.make_choices(TRAINING_READY_CHOCIES),
         null=True,
         blank=True,
     )
@@ -825,7 +842,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     )
     agent_status = models.IntegerField(
         _("Czy posiadasz agenta"),
-        choices=make_choices(AGENT_STATUS_CHOICES),
+        choices=profile_utils.make_choices(AGENT_STATUS_CHOICES),
         blank=True,
         null=True,
     )
@@ -1253,12 +1270,12 @@ class ClubProfile(BaseProfile):
             return self.club_object
 
     @property
-    @supress_exception
+    @profile_utils.supress_exception
     def display_club(self):
         return self.club_object.display_club
 
     @property
-    @supress_exception
+    @profile_utils.supress_exception
     def display_voivodeship(self):
         return self.club_object.display_voivodeship
 
@@ -1415,7 +1432,10 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     # DEPRECATED: Migrated to UserPreferences PM20-148
     birth_date = models.DateField(_("Data urodzenia"), blank=True, null=True)
     soccer_goal = models.IntegerField(
-        _("Piłkarski cel"), choices=make_choices(GOAL_CHOICES), null=True, blank=True
+        _("Piłkarski cel"),
+        choices=profile_utils.make_choices(GOAL_CHOICES),
+        null=True,
+        blank=True,
     )
     phone = models.CharField(_("Telefon"), max_length=15, blank=True, null=True)
     facebook_url = models.URLField(_("Facebook"), max_length=500, blank=True, null=True)
@@ -1438,7 +1458,10 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True,
         help_text=_("Maksymalna odległośc na trening"),
-        validators=[MinValueValidator(10), MaxValueValidator(500)],
+        validators=[
+            validators.MinValueValidator(10),
+            validators.MaxValueValidator(500),
+        ],
     )
 
     about = models.TextField(_("O sobie"), null=True, blank=True)
@@ -1599,7 +1622,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     @property
     def age(self) -> typing.Optional[int]:
-        return calculate_age(self.user.userpreferences.birth_date)
+        return profile_utils.calculate_age(self.user.userpreferences.birth_date)
 
     class Meta:
         verbose_name = "Coach Profile"
@@ -1737,7 +1760,7 @@ class ScoutProfile(BaseProfile):
 
     soccer_goal = models.IntegerField(
         _("Piłkarski cel"),
-        choices=make_choices(GOAL_CHOICES),
+        choices=profile_utils.make_choices(GOAL_CHOICES),
         # max_length=60,
         null=True,
         blank=True,
@@ -1762,7 +1785,10 @@ class ScoutProfile(BaseProfile):
         blank=True,
         null=True,
         help_text=_("Maksymalna odległośc na trening"),
-        validators=[MinValueValidator(10), MaxValueValidator(500)],
+        validators=[
+            validators.MinValueValidator(10),
+            validators.MaxValueValidator(500),
+        ],
     )
 
     club_raw = models.CharField(
@@ -1989,14 +2015,16 @@ class PlayerProfilePosition(models.Model):
                 main_positions = main_positions.exclude(pk=self.pk)
 
             if main_positions.exists():
-                raise ValidationError("A player can have only one main position.")
+                raise validators.ValidationError(
+                    "A player can have only one main position."
+                )
 
         non_main_positions = self.player_profile.player_positions.filter(is_main=False)
         if self.pk:
             non_main_positions = non_main_positions.exclude(pk=self.pk)
 
         if not self.is_main and non_main_positions.count() >= 2:
-            raise ValidationError(
+            raise validators.ValidationError(
                 "A player can have a maximum of two non-main positions."
             )
 

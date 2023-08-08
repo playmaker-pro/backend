@@ -1,16 +1,11 @@
 import logging
-from typing import Optional, Type, Union, List, Dict, Any
+import typing
 import uuid
 from django.contrib.auth import get_user_model
 from clubs.models import Club as CClub
 from clubs.models import Team as CTeam
-from . import models
+from . import models, errors
 from clubs import models as clubs_models
-from .errors import (
-    ProfileDoesNotExist,
-    TooManyAlternatePositionsError,
-    MultipleMainPositionError,
-)
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -53,10 +48,10 @@ class ProfileVerificationService:
     ) -> models.ProfileVerificationStatus:
         """using dict-like data we can create new verification object"""
         logger.debug("New verification recieved for %s", self.user)
-        team: Optional[clubs_models.Team] = None
-        team_history: Optional[clubs_models.TeamHistory] = None
-        club: Optional[clubs_models.Club] = None
-        text: Optional[str] = None
+        team: typing.Optional[clubs_models.Team] = None
+        team_history: typing.Optional[clubs_models.TeamHistory] = None
+        club: typing.Optional[clubs_models.Club] = None
+        text: typing.Optional[str] = None
 
         if team_club_league_voivodeship_ver := data.get(
             "team_club_league_voivodeship_ver"
@@ -298,12 +293,12 @@ class ProfileService:
         """Get and return type of profile based on role (i.e.: 'S', 'P', 'C')"""
         return models.PROFILE_MODEL_MAP[role]
 
-    def get_role_by_model(self, model: Type[models.PROFILE_TYPE]) -> str:
+    def get_role_by_model(self, model: typing.Type[models.PROFILE_TYPE]) -> str:
         """Get and return role shortcut based on profile type"""
         return models.REVERSED_MODEL_MAP[model]
 
     def get_profile_by_uuid(
-        self, profile_uuid: Union[uuid.UUID, str]
+        self, profile_uuid: typing.Union[uuid.UUID, str]
     ) -> models.PROFILE_TYPE:
         """
         Get profile object using uuid
@@ -316,7 +311,7 @@ class ProfileService:
                 return profile_type.objects.get(uuid=profile_uuid)
             except profile_type.DoesNotExist:
                 continue
-        raise ProfileDoesNotExist
+        raise errors.ProfileDoesNotExist
 
     def is_valid_uuid(self, value: str) -> bool:
         try:
@@ -325,9 +320,17 @@ class ProfileService:
             return False
         return str(uuid_obj) == value
 
+    def get_club_roles(self) -> tuple:
+        """Get list of club roles from ClubProfile"""
+        return models.ClubProfile.CLUB_ROLE
+
+    def get_referee_roles(self) -> tuple:
+        """Get list of referee roles from RefereeProfile"""
+        return models.RefereeLevel.REFEREE_ROLE_CHOICES
+
 
 class PlayerProfilePositionService:
-    def validate_positions(self, positions_data: List[PositionData]) -> None:
+    def validate_positions(self, positions_data: typing.List[PositionData]) -> None:
         """
         Validates the given positions data.
 
@@ -340,13 +343,13 @@ class PlayerProfilePositionService:
         )
 
         if main_positions_count > 1:
-            raise MultipleMainPositionError
+            raise errors.MultipleMainPositionError
 
         if non_main_positions_count > 2:
-            raise TooManyAlternatePositionsError
+            raise errors.TooManyAlternatePositionsError
 
     def manage_positions(
-        self, profile: models.PlayerProfile, positions_data: List[PositionData]
+        self, profile: models.PlayerProfile, positions_data: typing.List[PositionData]
     ) -> None:
         """
         Updates the player positions associated with the given profile.
