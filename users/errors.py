@@ -56,3 +56,13 @@ class NoGoogleTokenSent(CoreAPIException):
 
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "Invalid request. No Google token sent."
+
+
+class EmailNotValid(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Email is not valid"
+
+
+class EmailNotAvailable(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Email is not available"

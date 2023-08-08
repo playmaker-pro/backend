@@ -193,3 +193,16 @@ class TestUserService(TestCase):
 
         assert social_acc == account
         assert not created
+
+    def test_email_available_method_with_false_response(self):
+        """Test if email_available method returns False"""
+        email: str = "some_email_address"
+        res: bool = self.user_service.email_available(email)
+        assert res is True
+
+    def test_email_available_method_with_true_response(self):
+        """Test if email_available method returns True"""
+        email: str = "some_email_address"
+        UserFactory.create(email=email)
+        res: bool = self.user_service.email_available(email)
+        assert res is False

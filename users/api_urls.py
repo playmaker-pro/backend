@@ -12,11 +12,6 @@ router.register("", apis.UsersAPI, basename="users")
 
 
 urlpatterns = [
-    path(
-        r"hello/",
-        apis.UsersAPI.as_view({"get": "list"}),
-        name="admin-view",
-    ),
     path("register/", apis.UsersAPI.as_view({"post": "register"}), name="api-register"),
     path("login/", LoginView.as_view(), name="api-login"),
     # Logout is basically a blacklist of the token, because JWT is stateless.
@@ -38,5 +33,10 @@ urlpatterns = [
         "google-oauth2/",
         apis.UsersAPI.as_view({"post": "google_auth"}),
         name="google-oauth2",
+    ),
+    path(
+        "email-verification/",
+        apis.UsersAPI.as_view({"post": "verify_email"}),
+        name="email-verification",
     ),
 ]

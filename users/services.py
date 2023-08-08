@@ -160,3 +160,8 @@ class UserService:
             created = False
 
         return response, created
+
+    @staticmethod
+    def email_available(email: str) -> bool:
+        """Verify if email is available for register"""
+        return not User.objects.filter(email=email).exists()
