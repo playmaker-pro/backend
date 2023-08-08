@@ -894,6 +894,33 @@ paths:
       responses:
         '200':
           description: No response body
+  /profiles/player-positions/:
+    get:
+      operationId: player_positions_retrieve
+      description: Returns player positions.
+      summary: Player positions endpoint
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  description: Player positions returned successfully.
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                  example:
+                    id: 1
+                    name: Napastnik
+          description: Returns player positions.
   /profiles/formations/:
     get:
       operationId: formation_choices_retrieve

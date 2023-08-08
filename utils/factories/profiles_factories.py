@@ -138,3 +138,10 @@ class ScoutProfileFactory(ProfileFactory):
 class GuestProfileFactory(ProfileFactory):
     class Meta:
         model = models.GuestProfile
+
+
+class PositionFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.PlayerPosition
+
+    name = factory.Iterator(["Napastnik", "Skrzydłowy", "Obrońca prawy", "Bramkarz"])
