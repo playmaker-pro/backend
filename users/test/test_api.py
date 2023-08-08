@@ -568,3 +568,46 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
 
             msg = "No user data fetched from Google or data is not valid. Please try again."
             assert res.json().get("detail") == msg
+
+
+@pytest.mark.django_db
+class TestEmailAvailabilityEndpoint(TestCase, MethodsNotAllowedTestsMixin):
+    NOT_ALLOWED_METHODS = ["get", "put", "patch", "delete"]
+
+    def setUp(self) -> None:
+        """Setup method for UserFeatureElementsEndpoint tests"""
+        self.client: APIClient = APIClient()
+        self.url: str = reverse("api:users:email-verification")
+        self.test_email = "some_email@playmaker.com"
+
+    def test_if_email_has_valid_format(self) -> None:
+        """Test if email has valid format"""
+        data = {"email": "test_email"}
+        res: Response = self.client.post(self.url, data=data)
+
+        assert res.status_code == 400
+        assert "success" in res.json()
+        assert "detail" in res.json()
+
+    def test_email_is_available(self):
+        """Test if email is available"""
+        data = {"email": "test@email.com"}
+        res: Response = self.client.post(self.url, data=data)
+
+        assert res.status_code == 200
+        assert "success" in res.json()
+        assert "email_available" in res.json()
+        assert res.json()["email_available"] is True
+        assert res.json()["success"] is True
+
+    def test_email_is_not_available(self):
+        """Test if email is not available"""
+        UserFactory.create(email=self.test_email)
+        data = {"email": self.test_email}
+        res: Response = self.client.post(self.url, data=data)
+
+        assert res.status_code == 400
+        assert "success" in (data := res.json())
+        assert data["success"] == "False"
+        assert "email_available" not in data
+        assert "detail" in data
