@@ -24,4 +24,8 @@ urlpatterns = [
         views.LeagueAPI.as_view({"get": "get_highest_parents"}),
         name="highest_parent_leagues",
     ),
+    # TODO: Move this to a separate 'seasons' app. Ticket: PM20-328
+    path(
+        "seasons/", views.SeasonAPI.as_view({"get": "list_seasons"}), name="season-list"
+    ),
 ]

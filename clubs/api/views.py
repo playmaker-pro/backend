@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.request import Request
 from api.views import EndpointView
-from clubs.models import Club, Team, TeamHistory
+from clubs.models import Club, Team, TeamHistory, Season
 from . import serializers
 from clubs import services, errors
 
@@ -119,4 +119,50 @@ class LeagueAPI(EndpointView):
         """Get list of leagues (highest parents only)"""
         qs = self.service.get_highest_parents()
         serializer = serializers.LeagueSerializer(qs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class SeasonAPI(EndpointView):
+    """
+    View for listing seasons and filtering them by name.
+
+    Only seasons where `is_in_verify_form` is True are included in the results.
+
+    This view supports additional filtering by providing a 'season' query parameter.
+    If the 'season' parameter is provided, the view will return only seasons whose name includes the specified season string.
+    Seasons are returned in descending order by their name.
+
+    Example usage: /seasons/?season=2021
+    """
+
+    permission_classes = []
+    service = services.SeasonService()
+
+    def list_seasons(self, request: Request) -> Response:
+        """
+        Returns a list of seasons where `is_in_verify_form` is True,
+        or a filtered list of such seasons if the 'season' query parameter is provided.
+
+        The seasons are ordered by 'name' in descending order (newest to oldest).
+        """
+        season = request.GET.get("season", None)
+
+        if season and not self.service.validate_season(season):
+            raise errors.InvalidSeasonFormatException()
+
+        # Query only seasons where is_in_verify_form is True
+        seasons = Season.objects.filter(is_in_verify_form=True)
+
+        # If season query parameter is provided, filter the seasons by name
+        if season:
+            seasons = seasons.filter(name__icontains=season)
+
+        # Check if the query returned any results
+        if not seasons.exists():
+            raise errors.SeasonDoesNotExist()
+
+        # Order by 'name' in descending order to return the seasons from newest to oldest
+        seasons = seasons.order_by("-name")
+
+        serializer = serializers.SeasonSerializer(seasons, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
