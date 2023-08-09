@@ -87,16 +87,17 @@ if settings.DEBUG:
     ] + urlpatterns
 
 
-if Environment.PRODUCTION != settings.CONFIGURATION:
-    # Swagger urls:
-    urlpatterns += [
-        path(
-            "api/v3/swagger.yaml/",
-            MySchemaView.as_view(api_version="v3"),
-            name="schema",
-        ),
-        path("api/v3/swagger/", SpectacularSwaggerView.as_view(), name="swagger-ui"),
-    ]
+# TODO Deprecated due to: https://playmakerpro.atlassian.net/wiki/spaces/~206375100/pages/107773953/Swagger
+# if Environment.PRODUCTION != settings.CONFIGURATION:
+#     # Swagger urls:
+#     urlpatterns += [
+#         path(
+#             "api/v3/swagger.yaml/",
+#             MySchemaView.as_view(api_version="v3"),
+#             name="schema",
+#         ),
+#         path("api/v3/swagger/", SpectacularSwaggerView.as_view(), name="swagger-ui"),
+#     ]
 
 
 urlpatterns = urlpatterns + [
