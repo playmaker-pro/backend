@@ -393,3 +393,20 @@ COACH_ROLES_API_SWAGGER_SCHEMA = dict(
         },
     },
 )
+
+
+PLAYER_POSITION_API_SWAGGER_SCHEMA = dict(
+    summary="Player positions endpoint",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Player positions returned successfully.",
+            "type": "object",
+            "properties": {
+                "id": {"type": "integer"},
+                "name": {"type": "string"},
+                "shortcut": {"type": "string"},
+            },
+            "example": {"id": 1, "name": "Napastnik", "shortcut": "F"},
+        },
+    },
+)
