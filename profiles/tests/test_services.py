@@ -56,8 +56,6 @@ class PlayerPositionServiceTest(TestCase):
             email="username", declared_role=definitions.PLAYER_SHORT
         )
         self.profile = self.user.profile
-        PositionFactory(id=1)
-        PositionFactory(id=2)
         self.position_service = PlayerProfilePositionService()
         self.positions_data = [
             PositionData(player_position=1, is_main=True),

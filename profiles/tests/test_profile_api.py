@@ -10,6 +10,7 @@ from utils.factories.api_request_factory import RequestFactory, MethodsSet
 from profiles.apis import ProfileAPI
 from utils import testutils
 from profiles.models import PlayerProfile
+from clubs.models import Club
 
 url_create_or_update: str = "api:profiles:create_or_update_profile"
 url_get: str = "api:profiles:get_profile"
@@ -27,10 +28,9 @@ class TestCreateProfileAPI(APITestCase):
         """set up object factories"""
         testutils.create_system_user()
         UserFactory.create_batch_force_order(5)
-        ClubFactory(id=1)
-        PositionFactory(id=1)
-        PositionFactory(id=2)
-        TeamHistoryFactory(team=TeamFactory(name="Drużyna FC II", id=1), id=1)
+        TeamHistoryFactory(
+            team=TeamFactory(name="Drużyna FC II", id=1, club=ClubFactory(id=1)), id=1
+        )
 
     def test_get_profile_valid_without_authentication(self) -> None:
         """correct get request with valid uuid, no need to authenticate"""
@@ -137,7 +137,6 @@ class TestCreateProfileAPI(APITestCase):
     def test_successfully_create_profile_for_new_user(self, payload: dict) -> None:
         """Test creating profiles with correctly passed payload"""
         response = request.post(reverse(url_create_or_update), payload)
-
         assert response.status_code == 201
         assert response.data["user_id"] and response.data["role"]
 

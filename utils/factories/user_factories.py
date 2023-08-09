@@ -43,4 +43,5 @@ class UserFactory(CustomObjectFactory):
     @classmethod
     def create_batch_force_order(cls, _count: int):
         for i in range(_count):
-            cls.create(id=i + 1)
+            if not User.objects.filter(id=i + 1).exists():
+                cls.create(id=i + 1)
