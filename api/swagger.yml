@@ -930,7 +930,9 @@ paths:
   /profiles/player-positions/:
     get:
       operationId: player_positions_retrieve
-      description: Returns player positions.
+      description: |
+        Retrieves all available player positions, ordered by ID. 
+        Each player position is represented by its unique ID, a name, and a corresponding shortcut.
       summary: Player positions endpoint
       tags:
         - profiles
@@ -948,12 +950,15 @@ paths:
                   properties:
                     id:
                       type: integer
+                      description: 'Unique identifier for the player position.'
                     name:
                       type: string
-                  example:
-                    id: 1
-                    name: Napastnik
-          description: Returns player positions.
+                      description: 'Full name of the player position.'
+                    shortcut:
+                      type: string
+                      description: 'Shortcut representing the player position.'
+                  example: {id: 1, name: "Napastnik", shortcut: "F"}
+          description: Returns player positions, including names and shortcuts
   /profiles/formations/:
     get:
       operationId: formation_choices_retrieve

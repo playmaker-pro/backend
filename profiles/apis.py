@@ -97,9 +97,6 @@ class CoachRolesChoicesView(EndpointView):
     [role code, role name]. For example: {"IC": "Pierwszy trener", "IIC": "Drugi trener", ...}.
     """
 
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
     @extend_schema(**COACH_ROLES_API_SWAGGER_SCHEMA)
     def list_coach_roles(self, request: Request) -> Response:
         """
@@ -117,9 +114,6 @@ class PlayerPositionAPI(EndpointView):
     This class provides methods for retrieving all player positions, ordered by ID.
     It requires JWT authentication and allows read-only access for unauthenticated users.
     """
-
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def list_positions(self, request: Request) -> Response:
         """

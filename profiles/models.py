@@ -480,9 +480,10 @@ class TrainerContact(models.Model):
 class PlayerPosition(models.Model):
     name = models.CharField(max_length=255)
     score_position = models.CharField(max_length=255, blank=True, null=True)
+    shortcut = models.CharField(max_length=4, null=True)
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.name} - {self.shortcut}"
 
 
 class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
