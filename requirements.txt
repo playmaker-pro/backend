@@ -29,5 +29,7 @@ django-select2==7.10.0
 drf_yasg
 pydantic==1.10.2
 django-cities-light
+drf_spectacular
+drf_spectacular_sidecar
 --extra-index-url http://jacekplaymaker.usermd.net:56258/simple/ --trusted-host jacekplaymaker.usermd.net
 stream-framework
