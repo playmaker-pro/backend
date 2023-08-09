@@ -9,7 +9,6 @@ from profiles.errors import (
     TooManyAlternatePositionsError,
 )
 from profiles.services import PlayerProfilePositionService, PositionData
-from utils.factories import PositionFactory
 
 
 utils.silence_explamation_mark()

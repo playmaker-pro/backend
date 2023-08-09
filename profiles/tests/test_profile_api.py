@@ -5,12 +5,10 @@ from parameterized import parameterized
 from profiles.tests import utils
 from utils.factories.clubs_factories import TeamFactory, ClubFactory, TeamHistoryFactory
 from utils.factories.user_factories import UserFactory
-from utils.factories.profiles_factories import PositionFactory
 from utils.factories.api_request_factory import RequestFactory, MethodsSet
 from profiles.apis import ProfileAPI
 from utils import testutils
 from profiles.models import PlayerProfile
-from clubs.models import Club
 
 url_create_or_update: str = "api:profiles:create_or_update_profile"
 url_get: str = "api:profiles:get_profile"
