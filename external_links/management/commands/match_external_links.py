@@ -3,8 +3,14 @@ from typing import Any, Dict
 from django.core.management.base import BaseCommand
 
 from clubs.models import Club, LeagueHistory, Team
-from external_links.utils import create_or_update_player_external_links
-from profiles.models import CoachProfile, ManagerProfile, PlayerProfile, ScoutProfile
+from external_links.utils import create_or_update_profile_external_links
+from profiles.models import (
+    CoachProfile,
+    ManagerProfile,
+    PlayerProfile,
+    ScoutProfile,
+    RefereeProfile,
+)
 
 
 class Command(BaseCommand):
@@ -31,7 +37,16 @@ class Command(BaseCommand):
         """
 
         profile_type = options.get("profile_type", "").lower()
-        valid_types = ["player", "coach", "scout", "manager", "club", "team", "league"]
+        valid_types = [
+            "player",
+            "coach",
+            "scout",
+            "manager",
+            "referee",
+            "club",
+            "team",
+            "league",
+        ]
 
         if profile_type not in valid_types:
             self.stdout.write(self.style.ERROR(f"Invalid profile type: {profile_type}"))
@@ -42,6 +57,7 @@ class Command(BaseCommand):
             "coach": CoachProfile,
             "scout": ScoutProfile,
             "manager": ManagerProfile,
+            "referee": RefereeProfile,
             "club": Club,
             "team": Team,
             "league": LeagueHistory,
@@ -51,7 +67,7 @@ class Command(BaseCommand):
         profiles = model.objects.all()
 
         for profile in profiles:
-            create_or_update_player_external_links(profile)
+            create_or_update_profile_external_links(profile)
 
         self.stdout.write(
             self.style.SUCCESS(

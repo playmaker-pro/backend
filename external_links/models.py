@@ -19,6 +19,7 @@ class ExternalLinksEntity(models.Model):
         ("coach", "coach profile"),
         ("scout", "scout profile"),
         ("manager", "manager profile"),
+        ("referee", "referee profile"),
         ("club", "club"),
         ("team", "team"),
         ("league", "league history highest parent"),

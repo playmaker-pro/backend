@@ -344,3 +344,9 @@ class RefereeLevelAdmin(admin.ModelAdmin):
         if db_field.name == "level":
             kwargs["queryset"] = League.objects.filter(parent=None)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+@admin.register(models.RefereeProfile)
+class RefereeProfileAdmin(ProfileAdminBase):
+    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (linkify("external_links"),)
+    readonly_fields = ("external_links",)

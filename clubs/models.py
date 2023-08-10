@@ -10,7 +10,6 @@ from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 
 from external_links.models import ExternalLinks
-from external_links.utils import create_or_update_player_external_links
 from mapper.models import Mapper
 from profiles.utils import conver_vivo_for_api, supress_exception, unique_slugify
 from voivodeships.models import Voivodeships
