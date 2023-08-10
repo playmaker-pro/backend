@@ -16,7 +16,7 @@ from adapters import strategy
 from adapters.base_adapter import API_METHOD, ScrapperAPI
 from adapters.player_adapter import PlayerGamesAdapter, PlayerSeasonStatsAdapter
 from external_links.models import ExternalLinks
-from external_links.utils import create_or_update_player_external_links
+from external_links.utils import create_or_update_profile_external_links
 from mapper.models import Mapper
 from clubs.models import League
 import uuid
@@ -991,7 +991,10 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def create_mapper_obj(self):
         self.mapper = Mapper.objects.create()
 
-    def create_external_links_obj(self):
+    def create_external_links_obj(self) -> None:
+        """
+        Create a new ExternalLinks object and associate it with this PlayerProfile instance.
+        """
         self.external_links = ExternalLinks.objects.create()
 
     def save(self, *args, **kwargs):
@@ -1597,7 +1600,10 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     def create_mapper_obj(self):
         self.mapper = Mapper.objects.create()
 
-    def create_external_links_obj(self):
+    def create_external_links_obj(self) -> None:
+        """
+        Create a new ExternalLinks object and associate it with this CoachProfile instance.
+        """
         self.external_links = ExternalLinks.objects.create()
 
     def save(self, *args, **kwargs):
@@ -1606,7 +1612,9 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         if not self.external_links:
             self.create_external_links_obj()
         super().save(*args, **kwargs)
-        create_or_update_player_external_links(self)
+        # Update or create external links associated with the coach.
+        # This ensures that the coach's external links are always up-to-date.
+        create_or_update_profile_external_links(self)
 
     def display_licence(self) -> typing.Optional[str]:
         """
@@ -1713,13 +1721,18 @@ class ManagerProfile(BaseProfile):
     )
 
     def create_external_links_obj(self):
+        """
+        Create a new ExternalLinks object and associate it with this ManagerProfile instance.
+        """
         self.external_links = ExternalLinks.objects.create()
 
     def save(self, *args, **kwargs):
         if not self.external_links:
             self.create_external_links_obj()
         super().save(*args, **kwargs)
-        create_or_update_player_external_links(self)
+        # Update or create external links associated with the manager.
+        # This ensures that the manager's external links are always up-to-date.
+        create_or_update_profile_external_links(self)
 
     class Meta:
         verbose_name = "Manager Profile"
@@ -1826,18 +1839,55 @@ class ScoutProfile(BaseProfile):
         null=True,
     )  # TODO:(l.remkowicz): followup needed to see if that can be safely removed from database scheme follow-up: PM-365
 
-    def create_external_links_obj(self):
+    def create_external_links_obj(self) -> None:
+        """
+        Create a new ExternalLinks object and associate it with this ScoutProfile instance.
+        """
         self.external_links = ExternalLinks.objects.create()
 
     def save(self, *args, **kwargs):
         if not self.external_links:
             self.create_external_links_obj()
         super().save(*args, **kwargs)
-        create_or_update_player_external_links(self)
+        # Update or create external links associated with the scout.
+        # This ensures that the scout's external links are always up-to-date.
+        create_or_update_profile_external_links(self)
 
     class Meta:
         verbose_name = "Scout Profile"
         verbose_name_plural = "Scouts Profiles"
+
+
+class RefereeProfile(BaseProfile):
+    PROFILE_TYPE = definitions.PROFILE_TYPE_REFEREE
+    AUTO_VERIFY = True
+    external_links = models.OneToOneField(
+        ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
+    )
+
+    class Meta:
+        verbose_name = "Referee Profile"
+        verbose_name_plural = "Referee Profiles"
+
+    def create_external_links_obj(self) -> None:
+        """
+        Create a new ExternalLinks object and associate it with this RefereeProfile instance.
+        """
+        self.external_links = ExternalLinks.objects.create()
+
+    def save(self, *args, **kwargs):
+        """
+        Overrides the save method for the RefereeProfile.
+
+        Ensures that an ExternalLinks object is created for the profile if it doesn't exist.
+        Also, it updates or creates necessary external links related to the referee.
+        """
+        if not self.external_links:
+            self.create_external_links_obj()
+        super().save(*args, **kwargs)
+        # Update or create external links associated with the referee.
+        # This ensures that the referee's external links are always up-to-date.
+        create_or_update_profile_external_links(self)
 
 
 class RefereeLevel(models.Model):
@@ -1855,8 +1905,19 @@ class RefereeLevel(models.Model):
         _("Role"),
         max_length=17,
         choices=REFEREE_ROLE_CHOICES,
-        help_text="The role this referee plays (Referee or Assistant Referee).",
+        help_text="The role referee plays on this level (Referee or Assistant Referee).",
     )
+    referee_profile = models.ForeignKey(
+        RefereeProfile,
+        null=True,
+        on_delete=models.CASCADE,
+        help_text="The referee profile that this particular level and role combination is associated with.",
+    )
+
+    class Meta:
+        verbose_name = "Referee Level"
+        verbose_name_plural = "Referee Levels"
+        unique_together = ("level", "role", "referee_profile")
 
     @property
     def level_name(self):
@@ -2057,6 +2118,7 @@ PROFILE_MODELS = (
     ManagerProfile,
     ParentProfile,
     ScoutProfile,
+    RefereeProfile,
 )
 PROFILE_TYPE = typing.Union[PROFILE_MODELS]
 
@@ -2068,6 +2130,7 @@ PROFILE_MODEL_MAP = {
     definitions.MANAGER_SHORT: ManagerProfile,
     definitions.PARENT_SHORT: ParentProfile,
     definitions.GUEST_SHORT: GuestProfile,
+    definitions.REFEREE_SHORT: RefereeProfile,
 }
 
 REVERSED_MODEL_MAP = {

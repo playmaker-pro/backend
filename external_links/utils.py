@@ -22,13 +22,14 @@ EXT_LINK_MODEL = Union[
     "CoachProfile",
     "ScoutProfile",
     "ManagerProfile",
+    "RefereeProfile",
     "Club",
     "Team",
     "LeagueHistory",
 ]
 
 
-def create_or_update_player_external_links(obj: EXT_LINK_MODEL) -> None:
+def create_or_update_profile_external_links(obj: EXT_LINK_MODEL) -> None:
     """
     Update or create ExternalLinks instances for a given profile object, which can be any of the following types:
     'PlayerProfile', 'CoachProfile', 'ScoutProfile', 'ManagerProfile', 'Club', 'Team', or 'League'. The function
