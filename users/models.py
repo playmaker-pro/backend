@@ -4,6 +4,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
+from django.utils import timezone
 
 from notifications.mail import (
     mail_user_waiting_for_verification,
@@ -280,6 +281,9 @@ class User(AbstractUser, UserRoleMixin):
         blank=True,
         help_text="Users declaration in which role he has. It is main paramter.",
     )
+    last_activity = models.DateTimeField(
+        _("Last Activity"), default=None, null=True, blank=True
+    )
 
     # verification = models.OneToOneField(
     #     "VerificationStatus",
@@ -312,6 +316,16 @@ class User(AbstractUser, UserRoleMixin):
         # if state_before != self.STATE_ACCOUNT_VERIFIED and state_after == self.STATE_ACCOUNT_VERIFIED:
         #     pass
         # verification_notification(self)
+
+    def new_user_activity(self):
+        """
+        Update the user's last activity timestamp.
+
+        This method sets the user's `last_activity` attribute to the current time and
+        then saves the change to the database.
+        """
+        self.last_activity = timezone.now()
+        self.save(update_fields=["last_activity"])
 
     class Meta:
         verbose_name = "User"

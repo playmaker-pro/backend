@@ -63,6 +63,12 @@ class ProfileSerializer(serializers.Serializer):
             ret[field_name] = serializer_field.to_representation(field_value)
 
         ret["role"] = self.profile_role
+        last_activity = getattr(self.instance.user, "last_activity", None)
+        last_activity_serialized = serializers.DateTimeField().to_representation(
+            last_activity
+        )
+
+        ret["last_activity"] = last_activity_serialized if last_activity else None
 
         # TODO: new serializers for profiles-related models
         #  https://gitlab.com/playmaker1/webapp/-/commit/6fa060ad101198064425d71f1d11aa3d3a892678.

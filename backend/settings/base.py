@@ -154,6 +154,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+    "middleware.user_activity_middleware.UserActivityMiddleware",
 ]
 
 ROOT_URLCONF = "backend.urls"
