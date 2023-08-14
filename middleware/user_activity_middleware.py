@@ -1,3 +1,6 @@
+import logging
+
+
 class UserActivityMiddleware:
     """
     Middleware to track the activity of authenticated users.
@@ -19,5 +22,9 @@ class UserActivityMiddleware:
         response = self.get_response(request)
         # check if user is authenticated and update activity
         if request.user.is_authenticated:
-            request.user.new_user_activity()
+            try:
+                request.user.new_user_activity()
+            except Exception as e:
+                # Log the error
+                logging.error(f"Error updating user activity: {e}")
         return response
