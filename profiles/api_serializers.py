@@ -63,6 +63,8 @@ class ProfileSerializer(serializers.Serializer):
             ret[field_name] = serializer_field.to_representation(field_value)
 
         ret["role"] = self.profile_role
+
+        # TODO: Moving the 'last_activity' serialization to the 'UserDataSerializer' Reference: MR #[PM20-231]
         last_activity = getattr(self.instance.user, "last_activity", None)
         last_activity_serialized = serializers.DateTimeField().to_representation(
             last_activity

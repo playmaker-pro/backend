@@ -1,7 +1,8 @@
+from django.http import HttpRequest
 from django.test import TestCase, RequestFactory
 from .user_activity_middleware import UserActivityMiddleware
 from users.models import User
-from unittest.mock import patch
+from unittest.mock import patch, Mock, PropertyMock
 from datetime import datetime
 from typing import Optional, Dict, Any
 
@@ -75,3 +76,37 @@ class UserActivityMiddlewareTest(TestCase):
             request.user = self.user
             # Should not raise any exception
             self.middleware(request)
+
+
+class LoggerTest(TestCase):
+    """
+    Test for ensuring the correct behavior of logging in the UserActivityMiddleware.
+    """
+
+    @patch.object(
+        HttpRequest,
+        "user",
+        create=True,
+        new_callable=PropertyMock,
+        return_value=Mock(
+            is_authenticated=True,
+            new_user_activity=Mock(side_effect=Exception("Some error")),
+        ),
+    )
+    @patch("webapp.middleware.user_activity_middleware.logger")
+    def test_logger_error_called(self, mock_logger, mock_user):
+        """
+        Tests that an error is correctly logged when there's an exception while
+        updating the user's activity.
+        """
+        # Setup conditions
+        request = HttpRequest()
+        middleware = UserActivityMiddleware(lambda req: None)
+
+        # Call the middleware, which should trigger the logger
+        middleware(request)
+
+        # Check the logger call
+        mock_logger.error.assert_called_once_with(
+            "Error updating user activity: Some error"
+        )

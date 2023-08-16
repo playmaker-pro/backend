@@ -1,5 +1,7 @@
 import logging
 
+logger = logging.getLogger("user_activity")
+
 
 class UserActivityMiddleware:
     """
@@ -26,5 +28,5 @@ class UserActivityMiddleware:
                 request.user.new_user_activity()
             except Exception as e:
                 # Log the error
-                logging.error(f"Error updating user activity: {e}")
+                logger.error(f"Error updating user activity: {e}")
         return response

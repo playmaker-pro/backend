@@ -514,6 +514,12 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "class": "logging.StreamHandler",
                 "formatter": "simple",
             },
+            "user_activity_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "user_activity.log"),
+                "formatter": "verbose",
+            },
         },
         "loggers": {
             "profiles": {
@@ -535,6 +541,10 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
             },
             "route_updater": {
                 "handlers": ["console", "route_updater"],
+                "level": "DEBUG",
+            },
+            "user_activity": {
+                "handlers": ["console", "user_activity_file"],
                 "level": "DEBUG",
             },
         },
