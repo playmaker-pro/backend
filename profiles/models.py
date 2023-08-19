@@ -2090,10 +2090,9 @@ class PlayerProfilePosition(models.Model):
                 "A player can have a maximum of two non-main positions."
             )
 
-
-def save(self, *args, **kwargs):
-    self.clean()
-    super().save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
 
 class Language(models.Model):
