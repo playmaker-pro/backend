@@ -6,7 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.validators import validate_email
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from api.schemas import RegisterSchema
+from users.schemas import RegisterSchema
 from features.models import AccessPermission, Feature, FeatureElement
 from profiles.models import PROFILE_TYPE
 from users.schemas import UserGoogleDetailPydantic
@@ -57,7 +57,7 @@ class UserService:
         """Save User instance with given data."""
 
         user_schema: RegisterSchema = RegisterSchema(**data)
-        user: User = User(**user_schema.user_creation_data())
+        user: User = User(**user_schema.dict())
 
         user.declared_role = None
         user.state = User.STATE_NEW

@@ -9,7 +9,7 @@ from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
-from api.schemas import RegisterSchema
+from users.schemas import RegisterSchema
 from features.models import Feature
 from users.managers import GoogleManager
 from users.models import User
@@ -128,7 +128,10 @@ class TestAuth(APITestCase):
 
 
 @pytest.mark.django_db
-class TestUserCreationEndpoint(TestCase):
+class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
+
+    NOT_ALLOWED_METHODS = ["get", "put", "patch", "delete"]
+
     def setUp(self) -> None:
         self.client: APIClient = APIClient()
         self.url: str = reverse("api:users:api-register")
@@ -139,30 +142,7 @@ class TestUserCreationEndpoint(TestCase):
             "email": TEST_EMAIL,
         }
 
-    def test_method_get_not_allowed(self) -> None:
-        """Test if GET method is not allowed"""
-
-        res: Response = self.client.get(self.url)
-        assert res.status_code == 405
-
-    def test_method_put_not_allowed(self) -> None:
-        """Test if PUT method is not allowed"""
-
-        res: Response = self.client.put(self.url)
-        assert res.status_code == 405
-
-    def test_method_patch_not_allowed(self) -> None:
-        """Test if PATCH method is not allowed"""
-
-        res: Response = self.client.patch(self.url)
-        assert res.status_code == 405
-
-    def test_method_delete_not_allowed(self) -> None:
-        """Test if DELETE method is not allowed"""
-
-        res: Response = self.client.delete(self.url)
-        assert res.status_code == 405
-
+    @mute_post_save_signal()
     def test_register_endpoint_response_ok(self) -> None:
         """Test register endpoint. Response OK"""
 
@@ -177,21 +157,56 @@ class TestUserCreationEndpoint(TestCase):
         assert res.data["id"]
         assert res.data["username"] == self.data.get("email")
 
-    def test_register_endpoint_invalid_mail(self) -> None:
-        """Test register endpoint with invalid email field"""
+    def test_register_endpoint_no_password_sent(self) -> None:
+        """Test register endpoint with no password field"""
 
-        self.data["email"] = "test_email"
+        self.data.pop("password")
         res: Response = self.client.post(
             self.url,
             data=self.data,
         )
 
         assert res.status_code == 400
-        data: dict = res.json()  # type: ignore
+        assert isinstance(res.data, dict)
+        assert res.data["detail"]
+        assert isinstance(res.data["fields"], dict)
+        assert "password" in res.data["fields"]
 
-        assert data.get("success") == "False"
-        assert data.get("fields") == "email"
+    def test_register_endpoint_no_email(self) -> None:
+        """Test register endpoint with no email field"""
 
+        self.data.pop("email")
+        res: Response = self.client.post(
+            self.url,
+            data=self.data,
+        )
+
+        assert res.status_code == 400
+        assert isinstance(res.data, dict)
+        assert res.data["detail"]
+        assert isinstance(res.data["fields"], dict)
+        assert "email" in res.data["fields"]
+
+    def test_register_endpoint_invalid_mail(self) -> None:
+        """Test register endpoint with invalid email field"""
+
+        invalid_names = ["test_email", "test_email@", "test_email@test", "test_email@test."]
+
+        for email in invalid_names:
+            self.data["email"] = email
+            res: Response = self.client.post(
+                self.url,
+                data=self.data,
+            )
+
+            assert res.status_code == 400
+            data: dict = res.json()  # type: ignore
+
+            assert data.get("success") == "False"
+            assert isinstance(data.get("fields"), dict)
+            assert "email" in data.get("fields")
+
+    @mute_post_save_signal()
     def test_password_not_returned(self) -> None:
         """Test if password field is not returned"""
 
@@ -202,7 +217,7 @@ class TestUserCreationEndpoint(TestCase):
 
         assert "password" not in res.data
 
-    def test_doubled_user(self) -> None:
+    def test_user_already_exists(self) -> None:
         """Test if user can register account for the second time using the same email"""
 
         self.client.post(self.url, data=self.data)
@@ -215,17 +230,71 @@ class TestUserCreationEndpoint(TestCase):
 
         assert res.status_code == 400
         assert data.get("success") == "False"
-        assert data.get("fields") == "email"
+        assert isinstance(data.get("fields"), dict)
+        assert "email" in data.get("fields")
 
     def test_response_data(self) -> None:
         """Test if response data contains all required fields from RegisterSchema"""
 
         user_schema: RegisterSchema = RegisterSchema(**self.data)  # type: ignore
-        fields: Set[str] = user_schema.values_fields()
+        fields: dict = user_schema.dict(exclude={"password"})
         res: Response = self.client.post(self.url, data=self.data)
 
         for field in fields:
             assert field in res.data
+
+    def test_user_creation_without_first_name(self):
+        """Test if user can be created without first_name"""
+        self.data.pop("first_name")
+
+        res: Response = self.client.post(self.url, data=self.data)
+
+        assert res.status_code == 200
+        assert isinstance(res.data, dict)
+        assert res.data["email"] == self.data.get("email")
+        assert res.data["id"]
+        assert res.data["username"] == self.data.get("email")
+        assert not res.data["first_name"]
+
+    def test_user_creation_without_last_name(self):
+        """Test if user can be created without last_name"""
+        self.data.pop("last_name")
+
+        res: Response = self.client.post(self.url, data=self.data)
+
+        assert res.status_code == 200
+        assert isinstance(res.data, dict)
+        assert res.data["email"] == self.data.get("email")
+        assert res.data["id"]
+        assert res.data["username"] == self.data.get("email")
+        assert not res.data["last_name"]
+
+    def test_user_creation_without_last_name_and_first_name(self):
+        """Test if user can be created without last_name and first_name"""
+        self.data.pop("last_name")
+        self.data.pop("first_name")
+
+        res: Response = self.client.post(self.url, data=self.data)
+
+        assert res.status_code == 200
+        assert isinstance(res.data, dict)
+        assert res.data["email"] == self.data.get("email")
+        assert res.data["id"]
+        assert res.data["username"] == self.data.get("email")
+        assert not res.data["last_name"]
+        assert not res.data["first_name"]
+
+    def test_user_creation_password_too_short(self):
+        """Test if user can be created with too short password"""
+        self.data["password"] = "123"
+
+        res: Response = self.client.post(self.url, data=self.data)
+
+        assert res.status_code == 400
+        assert isinstance(res.data, dict)
+        assert res.data["detail"]
+        assert isinstance(res.data["fields"], dict)
+        assert "password" in res.data["fields"]
 
 
 @pytest.mark.django_db

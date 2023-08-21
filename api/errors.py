@@ -1,21 +1,20 @@
 import json
 import traceback
-from typing import Dict, Union, Optional
+from typing import Dict, Union, Optional, List
 from rest_framework import status
 from rest_framework.exceptions import APIException
 from rest_framework.views import exception_handler
 
 
 class CoreAPIException(APIException):
-    fields: Optional[str] = None
+    fields: Union[List[str], dict] = None
     pointer = None
     detail = ""
     default_detail = ""
+    field: str = None
 
     def __init__(self, details=None, pointer=None):
         super(APIException, self).__init__()
-        print(" ------ ")
-        print(self.pointer, self.default_detail, self.status_code, self.fields)
         self.pointer = pointer
         if not details:
             self.detail = self.default_detail
@@ -36,8 +35,8 @@ class CoreAPIException(APIException):
         if self.fields is not None:
             data["fields"] = self.fields
 
-        # if self.messages is not None:
-        #     data['messages'] = self.messages
+        if self.field is not None:
+            data["field"] = self.field
 
         if self.pointer is not None:
             data["pointer"] = self.pointer

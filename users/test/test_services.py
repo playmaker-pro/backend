@@ -40,6 +40,47 @@ class TestUserService(TestCase):
         assert user.email == data["email"]
         assert user.first_name == data["first_name"]
 
+    def test_user_creation_with_no_lastname(self) -> None:
+        """Test if user is created correctly using register method"""
+        data: dict = {
+            "email": "test_email@test.com",
+            "password": "super secret password",
+            "first_name": "first_name",
+        }
+        user: User = self.user_service.register(data)
+
+        assert isinstance(user, User)
+        assert user.email == data["email"]
+        assert user.first_name == data["first_name"]
+        assert not user.last_name
+
+    def test_user_creation_with_no_firstname(self) -> None:
+        """Test if user is created correctly using register method"""
+        data: dict = {
+            "email": "test_email@test.com",
+            "password": "super secret password",
+            "last_name": "last_name",
+        }
+        user: User = self.user_service.register(data)
+
+        assert isinstance(user, User)
+        assert user.email == data["email"]
+        assert user.last_name == data["last_name"]
+        assert not user.first_name
+
+    def test_user_creation_without_firstname_and_lastname(self) -> None:
+        """Test if user is created correctly using register method"""
+        data: dict = {
+            "email": "test_email@test.com",
+            "password": "super secret password",
+        }
+        user: User = self.user_service.register(data)
+
+        assert isinstance(user, User)
+        assert user.email == data["email"]
+        assert not user.last_name
+        assert not user.first_name
+
     def test_access_permission_filtered_by_user_role_method(self):
         """
         Test if access_permission_filtered_by_user_role method

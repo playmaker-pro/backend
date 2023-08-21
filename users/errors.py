@@ -8,18 +8,6 @@ class AccessForbiddenException(CoreAPIException):
     default_detail = "You don't have permission to perform this operation"
 
 
-class UserAlreadyExists(CoreAPIException):
-    status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = "User already exists in database with that email address"
-    fields = "email"
-
-
-class InvalidEmailException(CoreAPIException):
-    status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = "Invalid email address"
-    fields = "email"
-
-
 class NoUserCredentialFetchedException(CoreAPIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = (
@@ -66,3 +54,12 @@ class EmailNotValid(CoreAPIException):
 class EmailNotAvailable(CoreAPIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "Email is not available"
+
+
+class UserRegisterException(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Something wen wrong. Check fields list for more details."
+
+    def __init__(self, fields: dict):
+        self.fields = fields
+        super().__init__(details=self.default_detail)
