@@ -99,6 +99,11 @@ class User(AbstractUser, UserRoleMixin):
 
     state = FSMField(default=STATE_NEW, choices=STATES)
 
+    first_name = models.CharField(
+        _("first name"), max_length=150, blank=True, null=True
+    )
+    last_name = models.CharField(_("last name"), max_length=150, blank=True, null=True)
+
     @transition(
         field=state,
         source=[

@@ -1564,16 +1564,31 @@ paths:
               schema:
                 type: object
                 properties:
-                  email:
+                  success:
+                    type: string
+                    description: is request success?
+                  detail:
                     type: string
                     description: Detailed error message
-                  password:
-                    type: string
-                    description: Detailed error message
+                  fields:
+                    type: object
+                    description: Fields caused an error
+                    properties:
+                      field_name:
+                        type: array
+                        description: List of detailed dexceptions
+                        items:
+                          type: string
+                          description: 'Detailed error message'
                 example:
-                  email: Detailed error message
-                  password: Detailed error message
+                  success: "False"
+                  detail: "Detailed error message"
+                  fields: {"email": ["this field is required"], "password": ["This field cannot be empty"]}
                 description: Bad request. Data sent in request is invalid.
+                required:
+                 - success
+                 - detail
+                 - fields
           description: ''
   /users/email-verification/:
     post:
@@ -1754,6 +1769,8 @@ components:
       - email
       - id
       - username
+      - last_name
+      - first_name
   securitySchemes:
     jwtAuth:
       type: http

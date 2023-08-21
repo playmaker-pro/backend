@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from features.models import Feature, FeatureElement, AccessPermission
+from users.errors import UserRegisterException
 from users.utils.api_utils import validate_serialized_email
 
 User = get_user_model()
@@ -22,10 +23,18 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "id": {"read_only": True, "required": False},
             "username": {"read_only": True, "required": False},
-            "first_name": {"required": True},
-            "last_name": {"required": True},
+            "first_name": {"required": False},
+            "last_name": {"required": False},
             "email": {"required": True},
         }
+
+    @staticmethod
+    def validate_password(value):
+        if len(value) < 8:
+            raise UserRegisterException(
+                fields={"password": "Password must be at least 8 characters long."}
+            )
+        return value
 
     def to_internal_value(self, data):
         """Override to_internal_value method to handle custom exceptions."""
@@ -34,7 +43,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             validated_data = super().to_internal_value(data)
         except serializers.ValidationError as e:
             validate_serialized_email(e)
-
         return validated_data
 
 

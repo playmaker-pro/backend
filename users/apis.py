@@ -3,12 +3,9 @@ import traceback
 from typing import List, Optional, Sequence
 
 from drf_spectacular.utils import extend_schema
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.core.exceptions import ImproperlyConfigured
-from drf_yasg.utils import swagger_auto_schema
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -30,7 +27,6 @@ from users.errors import (
     NoGoogleTokenSent,
     NoUserCredentialFetchedException,
     EmailNotValid,
-    UserAlreadyExists,
     EmailNotAvailable,
 )
 from users.managers import GoogleManager
@@ -70,7 +66,8 @@ class UsersAPI(EndpointView):
         Returns serialized User data or validation errors.
         """
 
-        user_data: UserRegisterSerializer = UserRegisterSerializer(data=request.data)
+        data: dict = request.data
+        user_data: UserRegisterSerializer = UserRegisterSerializer(data=data)
         user_data.is_valid(raise_exception=True)
         user: User = user_service.register(user_data.data)
         serialized_data: dict = UserRegisterSerializer(instance=user).data
