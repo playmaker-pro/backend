@@ -229,6 +229,7 @@ class UserAdminPanel(UserAdmin):
         "get_mapper",
         "get_team_object",
         "get_team_club_league_voivodeship_ver",
+        "last_activity",
     )
     list_filter = ("state", "declared_role", HasDataMapperIdFilter)
     search_fields = ("username", "first_name", "last_name", "declared_role")
@@ -288,11 +289,7 @@ class UserAdminPanel(UserAdmin):
 
 @admin.register(models.UserPreferences)
 class UserPreferencesAdminPanel(admin.ModelAdmin):
-    list_display = (
-        "user",
-        "localization",
-        "display_languages"
-    )
+    list_display = ("user", "localization", "display_languages")
     search_fields = ("user__last_name",)
 
     def display_languages(self, obj):
