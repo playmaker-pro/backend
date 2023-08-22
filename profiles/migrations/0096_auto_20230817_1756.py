@@ -34,9 +34,10 @@ def delete_profiles_positions_with_obsolete_position(apps, schema_editor) -> Non
     PlayerPosition = apps.get_model("profiles", "PlayerPosition")
     PlayerProfilePosition = apps.get_model("profiles", "PlayerProfilePosition")
 
-    pos_dowolna = PlayerPosition.objects.get(name="Dowolna")
+    pos_dowolna = PlayerPosition.objects.filter(name="Dowolna")
 
-    PlayerProfilePosition.objects.filter(player_position=pos_dowolna).delete()
+    if pos_dowolna:
+        PlayerProfilePosition.objects.filter(player_position=pos_dowolna).delete()
 
 
 def delete_unnecessary_positions(apps, schema_editor) -> None:
