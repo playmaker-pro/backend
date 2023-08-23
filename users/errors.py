@@ -8,6 +8,18 @@ class AccessForbiddenException(CoreAPIException):
     default_detail = "You don't have permission to perform this operation"
 
 
+class UserAlreadyExists(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "User already exists in database with that email address"
+    fields = "email"
+
+
+class InvalidEmailException(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Invalid email address"
+    fields = "email"
+
+
 class NoUserCredentialFetchedException(CoreAPIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = (
@@ -39,11 +51,11 @@ class ApplicationError(CoreAPIException):
     default_detail = "Failed to obtain tokens from Google."
 
 
-class NoGoogleTokenSent(CoreAPIException):
-    """No Google token sent. Token is required to authenticate user."""
+class NoSocialTokenSent(CoreAPIException):
+    """No Social token sent. Token is required to authenticate user."""
 
     status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = "Invalid request. No Google token sent."
+    default_detail = "Invalid request. No Social token sent."
 
 
 class EmailNotValid(CoreAPIException):
@@ -58,8 +70,16 @@ class EmailNotAvailable(CoreAPIException):
 
 class UserRegisterException(CoreAPIException):
     status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = "Something wen wrong. Check fields list for more details."
+    default_detail = "Something went wrong. Check fields list for more details."
 
     def __init__(self, fields: dict):
         self.fields = fields
         super().__init__(details=self.default_detail)
+
+
+class UserEmailNotValidException(Exception):
+    ...
+
+
+class SocialAccountInstanceNotCreatedException(Exception):
+    ...

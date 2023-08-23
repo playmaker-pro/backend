@@ -177,7 +177,8 @@ class ExternalCallsGuardMixin:
 
 
 class MockedResponse:
-    def __init__(self, json_data, status_code):
+    def __init__(self, json_data, status_code, force_error=False):
+        self.force_error = force_error
         self.json_data = json_data
         self.status_code = status_code or 200
 
@@ -187,6 +188,8 @@ class MockedResponse:
     @property
     def ok(self):
         if self.status_code is None:
+            return False
+        if self.force_error:
             return False
         return self.status_code < 400
 

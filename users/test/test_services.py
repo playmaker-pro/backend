@@ -140,7 +140,7 @@ class TestUserService(TestCase):
             "given_name": "first_name",
             "family_name": "last_name",
         }
-        user: User = self.user_service.register_from_google(
+        user: User = self.user_service.register_from_social(
             UserGoogleDetailPydantic(**data)
         )
 
@@ -157,7 +157,7 @@ class TestUserService(TestCase):
             "given_name": 2,
             "family_name": 3,
         }
-        user: User = self.user_service.register_from_google(
+        user: User = self.user_service.register_from_social(
             UserGoogleDetailPydantic(**data)
         )
 
@@ -171,7 +171,7 @@ class TestUserService(TestCase):
             "given_name": 2,
             "family_name": 3,
         }
-        user: User = self.user_service.register_from_google(
+        user: User = self.user_service.register_from_social(
             UserGoogleDetailPydantic(**data)
         )
 
@@ -184,6 +184,7 @@ class TestUserService(TestCase):
         User doesn't have any social accounts, so we should create new one.
         """
         user: User = UserFactory.create()
+        provider: str = "google"
         account: Optional[SocialAccount]
         created: bool
 
@@ -195,7 +196,7 @@ class TestUserService(TestCase):
         }
 
         account, created = self.user_service.create_social_account(
-            user, UserGoogleDetailPydantic(**data)
+            user, UserGoogleDetailPydantic(**data), provider
         )
 
         assert isinstance(account, SocialAccount)
@@ -204,10 +205,11 @@ class TestUserService(TestCase):
     def test_create_social_account_no_data(self) -> None:
         """Test if create_social_account method returns None if no data passed"""
         user: User = UserFactory.create()
+        provider: str = "google"
         account: Optional[SocialAccount]
         created: bool
 
-        account, created = self.user_service.create_social_account(user, {})
+        account, created = self.user_service.create_social_account(user, {}, provider)  # type: ignore
 
         assert not account
         assert not created
@@ -218,6 +220,7 @@ class TestUserService(TestCase):
         if account already exists
         """
         user: User = UserFactory.create()
+        provider: str = "google"
         social_acc: SocialAccount = SocialAccountFactory.create(user=user)
         account: Optional[SocialAccount]
         created: bool
@@ -229,7 +232,7 @@ class TestUserService(TestCase):
         }
 
         account, created = self.user_service.create_social_account(
-            user, UserGoogleDetailPydantic(**data)
+            user, UserGoogleDetailPydantic(**data), provider
         )
 
         assert social_acc == account

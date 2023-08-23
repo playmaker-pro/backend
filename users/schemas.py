@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SocialAppPydantic(BaseModel):
@@ -15,6 +15,15 @@ class UserGoogleDetailPydantic(BaseModel):
     """User details from Google. Data needed for registration."""
 
     sub: Optional[str]
+    given_name: str
+    family_name: str
+    email: str
+
+
+class UserFacebookDetailPydantic(BaseModel):
+    """User details from Facebook. Data needed for registration."""
+
+    sub: str = Field(..., alias="id")
     given_name: str
     family_name: str
     email: str

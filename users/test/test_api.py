@@ -4,14 +4,20 @@ from unittest.mock import patch
 
 import pytest
 from allauth.socialaccount.models import SocialAccount
-from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
 from users.schemas import RegisterSchema
+from users.apis import UsersAPI
+from users.errors import (
+    ApplicationError,
+    UserEmailNotValidException,
+    SocialAccountInstanceNotCreatedException
+)
+from users.schemas import UserFacebookDetailPydantic
 from features.models import Feature
-from users.managers import GoogleManager
+from users.managers import GoogleManager, FacebookManager
 from users.models import User
 from users.services import UserService
 from users.schemas import UserGoogleDetailPydantic, GoogleSdkLoginCredentials
@@ -129,7 +135,6 @@ class TestAuth(APITestCase):
 
 @pytest.mark.django_db
 class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
-
     NOT_ALLOWED_METHODS = ["get", "put", "patch", "delete"]
 
     def setUp(self) -> None:
@@ -528,41 +533,14 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             return_value=google_auth_credentials_mock,
         )
         register_from_google_patcher = patch.object(
-            UserService, "register_from_google", return_value=UserFactory.create()
+            UserService, "register_from_social", return_value=UserFactory.create()
         )
 
         return (
-            google_credentials_patcher,
             get_user_info_patcher,
+            google_credentials_patcher,
             register_from_google_patcher,
         )
-
-    def test_google_manager_improperly_configured_exception(self) -> None:
-        """Test if response is 400 when ImproperlyConfigured exception is raised"""
-        google_credentials_patcher = patch.object(
-            GoogleManager,
-            "google_sdk_login_get_credentials",
-            side_effect=ImproperlyConfigured(),
-        )
-
-        with google_credentials_patcher:
-            res: Response = self.client.post(  # type: ignore
-                self.url, data=self.unregistered_user_data
-            )
-            assert res.status_code == 400
-            assert res.json().get("detail") == "Failed to obtain Google credentials."
-
-    def test_google_manager_value_exception(self) -> None:
-        """Test if response is 400 when ValueError exception is raised"""
-        google_credentials_patcher = patch.object(
-            GoogleManager, "google_sdk_login_get_credentials", side_effect=ValueError()
-        )
-
-        with google_credentials_patcher:
-            res: Response = self.client.post(  # type: ignore
-                self.url, data=self.unregistered_user_data
-            )
-            assert res.status_code == 400
 
     def test_response_ok_register_page(self) -> None:
         """
@@ -579,9 +557,7 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             UserService, "create_social_account", return_value=(True, True)
         ).start()
 
-        with (
-            get_user_info_patcher
-        ), google_credentials_patcher, register_from_google_patcher:
+        with get_user_info_patcher, google_credentials_patcher, register_from_google_patcher:
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
@@ -605,9 +581,7 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             UserService, "create_social_account", return_value=(True, True)
         ).start()
 
-        with (
-            get_user_info_patcher
-        ), google_credentials_patcher, register_from_google_patcher:
+        with get_user_info_patcher, google_credentials_patcher, register_from_google_patcher:
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
@@ -627,9 +601,7 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         patch.object(
             UserService, "create_social_account", return_value=(False, True)
         ).start()
-        with (
-            get_user_info_patcher
-        ), google_credentials_patcher, register_from_google_patcher:
+        with get_user_info_patcher, google_credentials_patcher, register_from_google_patcher:
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
@@ -648,6 +620,10 @@ class TestEmailAvailabilityEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         self.client: APIClient = APIClient()
         self.url: str = reverse("api:users:email-verification")
         self.test_email = "some_email@playmaker.com"
+
+    def tearDown(self) -> None:
+        """Stop all patches."""
+        patch.stopall()
 
     def test_if_email_has_valid_format(self) -> None:
         """Test if email has valid format"""
@@ -680,3 +656,108 @@ class TestEmailAvailabilityEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         assert data["success"] == "False"
         assert "email_available" not in data
         assert "detail" in data
+
+
+class TestFacebookAuthEndpoint(TestCase, MethodsNotAllowedTestsMixin):
+    NOT_ALLOWED_METHODS = ["get", "put", "patch", "delete"]
+
+    def setUp(self) -> None:
+        self.url = reverse("api:users:facebook-auth")
+        self.client: APIClient = APIClient()
+
+    def tearDown(self) -> None:
+        """Stop all patches."""
+        patch.stopall()
+
+    def test_facebook_auth_raises_error(self):
+        response: Response = self.client.post(self.url)
+        assert response.status_code == 400
+        assert "No Social token sent." in response.json()["detail"]
+
+    def test_facebook_auth_response_ok(self):
+        response_dict = {
+            "success": True,
+            "redirect": "landing_page",
+            "refresh_token": "some_token",
+            "access_token": "some_access_token",
+        }
+
+        patch("users.apis.UsersAPI._social_media_auth", return_value=response_dict).start()
+        response: Response = self.client.post(self.url, data={"token_id": "test"})
+
+        assert response.status_code == 200
+        assert "success" in response.json()
+        assert response.json()["success"] is True
+        assert "redirect" in response.json()
+        assert response.json()["redirect"] == response_dict["redirect"]
+
+
+@pytest.mark.django_db
+class TestSocialMediaAuthMethod(TestCase):
+
+    def tearDown(self) -> None:
+        """Stop all patches."""
+        patch.stopall()
+
+    def test__social_media_auth_raises_error(self):
+        get_user_info_patcher = patch.object(
+            FacebookManager, "get_user_info", side_effect=ValueError()
+        )
+
+        with get_user_info_patcher, pytest.raises(ApplicationError):
+            UsersAPI._social_media_auth(FacebookManager(token_id="token_id"), "test")
+
+    def test__social_media_auth_ok(self):
+        data_patcher = {
+            "id": "123456789012345678901",
+            "given_name": "Test",
+            "family_name": "Test",
+            "email": TEST_EMAIL,
+        }
+        patch(
+            "users.managers.FacebookManager.get_user_info",
+            return_value=UserFacebookDetailPydantic(**data_patcher)
+        ).start()
+        patch("users.services.UserService.create_social_account", return_value=(True, True)).start()
+
+        res: dict = UsersAPI._social_media_auth(FacebookManager(token_id="token_id"), "test")
+
+        assert User.objects.filter(email=data_patcher["email"]).exists()
+        assert isinstance(res, dict)
+        assert "success" in res
+        assert res["redirect"] == "register"
+        assert "access_token" in res
+
+    def test__social_media_auth_mail_not_valid(self):
+        """Test method _social_media_auth when email is not valid"""
+        data_patcher = {
+            "id": "123456789012345678901",
+            "given_name": "Test",
+            "family_name": "Test",
+            "email": "TEST_EMAIL",
+        }
+        patch(
+            "users.managers.FacebookManager.get_user_info",
+            return_value=UserFacebookDetailPydantic(**data_patcher)
+        ).start()
+        patch("users.services.UserService.create_social_account", return_value=(True, True)).start()
+
+        with pytest.raises(UserEmailNotValidException):
+            UsersAPI._social_media_auth(FacebookManager(token_id="token_id"), "test")
+
+    def test__social_media_auth_no_social_acc_created(self):
+        """Test method _social_media_auth when no social account is created"""
+        data_patcher = {
+            "id": "123456789012345678901",
+            "given_name": "Test",
+            "family_name": "Test",
+            "email": TEST_EMAIL,
+        }
+        patch(
+            "users.managers.FacebookManager.get_user_info",
+            return_value=UserFacebookDetailPydantic(**data_patcher)
+        ).start()
+        patch("users.services.UserService.create_social_account", return_value=(False, True)).start()
+
+        with pytest.raises(SocialAccountInstanceNotCreatedException):
+            UsersAPI._social_media_auth(FacebookManager(token_id="token_id"), "test")
