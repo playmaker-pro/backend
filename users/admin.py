@@ -1,24 +1,14 @@
-from django import forms
 from django.contrib import admin
 from django.contrib.admin import ChoicesFieldListFilter, SimpleListFilter
 from django.contrib.auth.admin import UserAdmin  # as BaseUserAdmin
-from django.db.models import (
-    BooleanField,
-    Case,
-    F,
-    ForeignKey,
-    IntegerField,
-    Q,
-    Value,
-    When,
-)
+from django.db.models import Case, F, Q, When
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
-from profiles.models import CoachProfile
 from utils import linkify
 
 from . import models
+from .forms import UserPreferencesForm
 
 
 def verify_one(modeladmin, request, queryset):
@@ -185,7 +175,17 @@ class HasDataMapperIdFilter(SimpleListFilter):
 class UserAdminPanel(UserAdmin):
     fieldsets = (
         (None, {"fields": ("password",)}),  # 'username',
-        (_("Personal info"), {"fields": ("first_name", "last_name", "email")}),
+        (
+            _("Personal info"),
+            {
+                "fields": (
+                    "first_name",
+                    "last_name",
+                    "email",
+                    "userpreferences",
+                )
+            },
+        ),
         (
             _("Piłkarskie fakty"),
             {"fields": ("declared_role", "state", "picture", "declared_club")},
@@ -209,7 +209,12 @@ class UserAdminPanel(UserAdmin):
             None,
             {
                 "classes": ("wide",),
-                "fields": ("username", "password1", "password2"),
+                "fields": (
+                    "username",
+                    "password1",
+                    "password2",
+                    "userpreferences",
+                ),
             },
         ),
     )
@@ -233,7 +238,7 @@ class UserAdminPanel(UserAdmin):
     )
     list_filter = ("state", "declared_role", HasDataMapperIdFilter)
     search_fields = ("username", "first_name", "last_name", "declared_role")
-
+    readonly_fields = ("userpreferences",)
     actions = [verify_one]
 
     def get_team_object(self, obj):
@@ -289,8 +294,9 @@ class UserAdminPanel(UserAdmin):
 
 @admin.register(models.UserPreferences)
 class UserPreferencesAdminPanel(admin.ModelAdmin):
-    list_display = ("user", "localization", "display_languages")
+    list_display = ("user", "localization", "display_languages", "citizenship")
     search_fields = ("user__last_name",)
+    form = UserPreferencesForm
 
     def display_languages(self, obj):
         return ", ".join([str(language) for language in obj.spoken_languages.all()])

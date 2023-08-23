@@ -9,21 +9,7 @@ from app import errors
 from backend.settings.environment import Environment
 from home.models import HomePage
 from wagtail.core.models import Site, Page
-
-NAME_TO_FACTORY_MAPPER = {
-    "User": factories.UserFactory,
-    "PlayerProfile": factories.PlayerProfileFactory,
-    "CoachProfile": factories.CoachProfileFactory,
-    "ClubProfile": factories.ClubProfileFactory,
-    "ScoutProfile": factories.ScoutProfileFactory,
-    "GuestProfile": factories.GuestProfileFactory,
-    "Club": factories.ClubFactory,
-    "Team": factories.TeamFactory,
-    "League": factories.LeagueFactory,
-    "Season": factories.SeasonFactory,
-    "TeamHistory": factories.TeamHistoryFactory,
-    "LeagueHistory": factories.LeagueHistoryFactory,
-}
+from utils.factories import NAME_TO_FACTORY_MAPPER
 
 
 class Command(BaseCommand):

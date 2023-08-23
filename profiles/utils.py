@@ -5,19 +5,19 @@ import re
 from urllib.parse import parse_qs, urlparse
 
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-import profiles
-from profiles import models
-from typing import Optional
-
-# from stats import adapters DEPRECATED: PM-1015
-
 # from . import models
 # from profiles import forms  # todo teog importu tu nie moze być bo sie robi rekurencja
 from users.models import User
+
+from . import models
+
+# from stats import adapters DEPRECATED: PM-1015
+
 
 logger = logging.getLogger(__name__)
 
@@ -425,18 +425,16 @@ def match_player_videos(csv_file: str) -> None:
             title - the title of the video,
             description - the description of the video.
     """
-    player_profiles = profiles.models.PlayerProfile.objects.all()
+    player_profiles = models.PlayerProfile.objects.all()
     df = pd.read_csv(csv_file)
 
     for index, row in df.iterrows():
         player_profile = player_profiles.get(user=row["player"])
 
-        vids = profiles.models.PlayerVideo.objects.filter(
-            player=player_profile, url=row["url"]
-        )
+        vids = models.PlayerVideo.objects.filter(player=player_profile, url=row["url"])
 
         if not vids:
-            profiles.models.PlayerVideo.objects.create(
+            models.PlayerVideo.objects.create(
                 player=player_profile,
                 url=row["url"],
                 title=row["title"] if not pd.isna(row["title"]) else "",
@@ -485,16 +483,8 @@ def get_metrics_update_date(metrics: "models.PlayerMetrics") -> str:
             return datetime.date(2022, 8, 1).strftime("%d-%m-%Y")
 
 
-def calculate_age(birth_date: Optional[datetime.date]) -> Optional[int]:
-    """
-    Calculate the age based on the given birth date.
-    """
-    if birth_date:
-        now = timezone.now()
-        return (
-            now.year
-            - birth_date.year
-            - ((now.month, now.day) < (birth_date.month, birth_date.day))
-        )
-    else:
-        return None
+def get_past_date(days: int = 0, months: int = 0, years: int = 0) -> datetime.datetime:
+    """Get past date based on days/months/years from current date"""
+    return datetime.datetime.now() - relativedelta(
+        days=days, months=months, years=years
+    )

@@ -1,5 +1,8 @@
-from api.errors import CoreAPIException
+import typing
+
 from rest_framework import status
+
+from api.errors import CoreAPIException
 
 
 class VerificationCompletionFieldsWrongSetup(Exception):
@@ -39,7 +42,7 @@ class InvalidUUID(CoreAPIException):
 
 
 class IncompleteRequestData(CoreAPIException):
-    def __init__(self, required_fields: list):
+    def __init__(self, required_fields: typing.Iterable):
         self.default_detail = (
             f"Incomplete request's body, required fields: {', '.join(required_fields)}"
         )

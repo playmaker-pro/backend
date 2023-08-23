@@ -5,6 +5,7 @@ from django.db.models import Model
 from django.conf import settings
 from pydantic import typing
 from backend.settings.environment import Environment
+from django.db.utils import ProgrammingError
 
 logger: logging.Logger = logging.getLogger("mocker")
 fake: Faker = Faker()
@@ -49,7 +50,10 @@ class CustomObjectFactory(factory.django.DjangoModelFactory):
     def random_object(cls, **kwargs) -> Model:
         """get random object from factory's model, unuseable on tests"""
         if env() is not Environment.TEST:
-            return cls._meta.model.objects.filter(**kwargs).order_by("?").first()
+            try:
+                return cls._meta.model.objects.filter(**kwargs).order_by("?").first()
+            except ProgrammingError:
+                pass
 
     @classmethod
     def get_random_or_create_subfactory(

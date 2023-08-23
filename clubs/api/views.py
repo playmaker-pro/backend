@@ -1,20 +1,23 @@
 from django.contrib.auth import get_user_model
-from rest_framework import viewsets
+from django.db.models import QuerySet
+from rest_framework import status, viewsets
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
-from rest_framework.request import Request
+
+from api import errors as base_errors
 from api.views import EndpointView
-from clubs.models import Club, Team, TeamHistory, Season
+from clubs import errors, models, services
+
 from . import serializers
-from clubs import services, errors
 
 User = get_user_model()
 
 
 class TeamViewSet(viewsets.ModelViewSet):
     permission_classes = []
-    queryset = Team.objects.all().order_by("name")
+    queryset = models.Team.objects.all().order_by("name")
     serializer_class = serializers.TeamSelect2Serializer
 
     def get_queryset(self):
@@ -29,7 +32,7 @@ class TeamSearchApi(APIView):
 
     # @method_decorator(cache_page(60*60*2))
     def get(self, request):
-        teams = Team.objects.all().order_by("name")
+        teams = models.Team.objects.all().order_by("name")
 
         q_name = request.query_params.get("q")
         if q_name:
@@ -47,7 +50,7 @@ class TeamHistorySearchApi(APIView):
 
     def get(self, request):
         teams = (
-            TeamHistory.objects.select_related("team", "league_history__season")
+            models.TeamHistory.objects.select_related("team", "league_history__season")
             .all()
             .order_by("team__name")
         )
@@ -72,14 +75,14 @@ class ClubSearchApi(APIView):
         q_season = request.query_params.get("season")
         if q_season:
             queryset = (
-                Club.objects.filter(
+                models.Club.objects.filter(
                     teams__historical__league_history__season__name__in=[q_season]
                 )
                 .distinct()
                 .order_by("name")
             )
         else:
-            queryset = Club.objects.all()
+            queryset = models.Club.objects.all()
 
         q_name = request.query_params.get("q")
         if q_name:
@@ -102,11 +105,13 @@ class ClubTeamsSearchApi(APIView):
         takes ?club_id as param
         """
         club_id: int = request.query_params.get("club_id")
+        if not club_id:
+            raise base_errors.ParamsRequired(["club_id"])
 
         if not (club_obj := self.club_service.club_exist(club_id)):
             raise errors.ClubDoesNotExist
 
-        qs = Team.objects.filter(club=club_obj)
+        qs = models.Team.objects.filter(club=club_obj)
         serializer = serializers.TeamSerializer(qs, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -114,11 +119,33 @@ class ClubTeamsSearchApi(APIView):
 
 class LeagueAPI(EndpointView):
     service = services.LeagueService()
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self, highest_only: bool = False) -> QuerySet:
+        """Get Leagues queryset"""
+        if highest_only:
+            qs = self.service.get_highest_parents()
+        else:
+            qs = self.service.get_leagues()
+
+        return self.filter_queryset(qs)
+
+    def filter_queryset(self, queryset: QuerySet) -> QuerySet:
+        """Filter queryset by query_params"""
+        if gender := self.request.query_params.get("gender"):
+            try:
+                self.service.validate_gender(gender)
+            except ValueError:
+                raise errors.InvalidGender
+
+            queryset = self.service.filter_gender(queryset, gender)
+
+        return queryset
 
     def get_highest_parents(self, request: Request) -> Response:
         """Get list of leagues (highest parents only)"""
-        qs = self.service.get_highest_parents()
-        serializer = serializers.LeagueSerializer(qs, many=True)
+        qs = self.get_queryset(highest_only=True)
+        serializer = serializers.LeagueBaseDataSerializer(qs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -151,7 +178,7 @@ class SeasonAPI(EndpointView):
             raise errors.InvalidSeasonFormatException()
 
         # Query only seasons where is_in_verify_form is True
-        seasons = Season.objects.filter(is_in_verify_form=True)
+        seasons = models.Season.objects.filter(is_in_verify_form=True)
 
         # If season query parameter is provided, filter the seasons by name
         if season:

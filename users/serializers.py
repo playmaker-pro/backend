@@ -3,9 +3,15 @@ from typing import Optional
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from api.serializers import CitySerializer, CountrySerializer
+from features.models import AccessPermission, Feature, FeatureElement
+from profiles import serializers as profile_serializers
+from profiles.serializers import ProfileEnumChoicesSerializer
 from features.models import Feature, FeatureElement, AccessPermission
 from users.errors import UserRegisterException
 from users.utils.api_utils import validate_serialized_email
+
+from .models import UserPreferences
 
 User = get_user_model()
 
@@ -14,6 +20,35 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "username"]
+
+
+class UserPreferencesSerializer(serializers.ModelSerializer):
+    age = serializers.IntegerField(read_only=True)
+    localization = CitySerializer()
+    spoken_languages = profile_serializers.LanguageSerializer(many=True)
+    citizenship = CountrySerializer(many=True)
+    gender = ProfileEnumChoicesSerializer(model=UserPreferences)
+
+    class Meta:
+        model = UserPreferences
+        fields = "__all__"
+
+
+class UserDataSerializer(serializers.ModelSerializer):
+    """User serializer with basic user information"""
+
+    userpreferences = UserPreferencesSerializer()
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "last_login",
+            "last_activity",
+            "userpreferences",
+        ]
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -43,6 +78,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             validated_data = super().to_internal_value(data)
         except serializers.ValidationError as e:
             validate_serialized_email(e)
+
         return validated_data
 
 

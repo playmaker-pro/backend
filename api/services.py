@@ -1,9 +1,23 @@
+from functools import cached_property
+
 from django.conf.global_settings import LANGUAGES
+from django_countries.data import COUNTRIES
+
 from . import errors
 from .consts import *
 
 
 class LocaleDataService:
+    @cached_property
+    def country_codes(self) -> list:
+        """Return and cache country codes"""
+        return list(COUNTRIES.keys())
+
+    @cached_property
+    def mapped_languages(self) -> dict:
+        """Get language dictionary {lang_code: en_lang_name}"""
+        return dict(LANGUAGES)
+
     @property
     def prior_countries(self) -> list:
         """
@@ -27,17 +41,6 @@ class LocaleDataService:
         """
         return ["Wrocław", "Warszawa", "Kraków", "Łódź", "Poznań"]
 
-    @property
-    def available_languages(self) -> list:
-        """Get all available language codes"""
-        return [language[0] for language in LANGUAGES]
-
-    def validate_language(self, language_code: str) -> None:
-        """Validate language_code used for translations"""
-        available_languages: list = self.available_languages
-        if language_code not in available_languages:
-            raise errors.InvalidLanguageCode(language_code, available_languages)
-
     def is_prior_country(self, country_code: str) -> bool:
         """Check if given country is priority"""
         return country_code in self.prior_countries
@@ -53,3 +56,29 @@ class LocaleDataService:
     def get_dial_code(self, country_code: str) -> str:
         """Get country dial code with country code"""
         return COUNTRY_CODE_WITH_DIAL_CODE.get(country_code)
+
+    def validate_country_code(self, code: str) -> str:
+        """Validate country code. Raise exception if given code is invalid, return code otherwise"""
+        code = code.upper()
+        if code not in self.country_codes:
+            raise ValueError(
+                f"Invalid country code: '{code}'. Choices: {self.country_codes}."
+            )
+        return code
+
+    def validate_language_code(self, code: str) -> str:
+        """Validate language code. Raise exception if given code is invalid, return code otherwise"""
+        code = code.lower()
+        language_codes: list = list(self.mapped_languages.keys())
+        if code not in language_codes:
+            raise ValueError(
+                f"Invalid language code: '{code}', choices: {language_codes}"
+            )
+        return code
+
+    def get_english_language_name_by_code(self, code: str) -> str:
+        """
+        Get english language name by language code.
+        English name is needed in order to translate name to any other language.
+        """
+        return self.mapped_languages.get(code)

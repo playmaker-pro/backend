@@ -10,8 +10,14 @@ router.register("", views.ProfileAPI, basename="profiles")
 urlpatterns = [
     path(
         r"",
-        views.ProfileAPI.as_view({"post": "create_profile", "patch": "update_profile"}),
-        name="create_or_update_profile",
+        views.ProfileAPI.as_view(
+            {
+                "post": "create_profile",
+                "patch": "update_profile",
+                "get": "get_bulk_profiles",
+            }
+        ),
+        name="get_create_or_update_profile",
     ),
     path(
         r"<uuid:profile_uuid>/",
@@ -48,5 +54,10 @@ urlpatterns = [
         r"coach-licences/",
         views.CoachLicencesChoicesView.as_view({"get": "list_coach_licences"}),
         name="coach_licences_list",
+    ),
+    path(
+        r"players-age-range/",
+        views.ProfileEnumsAPI.as_view({"get": "get_player_age_range"}),
+        name="players_age_range",
     ),
 ]
