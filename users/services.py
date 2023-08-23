@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth import get_user_model
@@ -7,6 +7,7 @@ from django.core.validators import validate_email
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.schemas import RegisterSchema
+from users.schemas import UserFacebookDetailPydantic
 from features.models import AccessPermission, Feature, FeatureElement
 from profiles.models import PROFILE_TYPE
 from users.schemas import UserGoogleDetailPydantic
@@ -117,7 +118,7 @@ class UserService:
         ]
 
     @staticmethod
-    def register_from_google(data: UserGoogleDetailPydantic) -> Optional[User]:
+    def register_from_social(data: UserGoogleDetailPydantic) -> Optional[User]:
         """Save User instance with given data taken from Google."""
 
         password: str = User.objects.make_random_password()
@@ -137,11 +138,16 @@ class UserService:
 
     @staticmethod
     def create_social_account(
-        user: User, data: UserGoogleDetailPydantic
+        user: User,
+        data: Union[UserGoogleDetailPydantic, UserFacebookDetailPydantic],
+        provider: str,
     ) -> Tuple[Optional[SocialAccount], Optional[bool]]:
         """Check if user has social account, if not create one."""
 
-        if not isinstance(data, UserGoogleDetailPydantic):
+        if not (
+            isinstance(data, UserGoogleDetailPydantic)
+            or isinstance(data, UserFacebookDetailPydantic)
+        ):
             return None, None
 
         result: SocialAccount = SocialAccount.objects.filter(user=user).first()
@@ -153,7 +159,7 @@ class UserService:
                 return None, None
 
             response = SocialAccount.objects.create(
-                user=user, provider="google", uid=data.sub, extra_data=data.dict()
+                user=user, provider=provider, uid=data.sub, extra_data=data.dict()
             )
             created = True
         else:

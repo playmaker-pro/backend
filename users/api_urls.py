@@ -35,6 +35,11 @@ urlpatterns = [
         name="google-oauth2",
     ),
     path(
+        "facebook-oauth2/",
+        apis.UsersAPI.as_view({"post": "facebook_auth"}),
+        name="facebook-auth",
+    ),
+    path(
         "email-verification/",
         apis.UsersAPI.as_view({"post": "verify_email"}),
         name="email-verification",

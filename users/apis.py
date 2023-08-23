@@ -1,6 +1,6 @@
 import logging
 import traceback
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Union
 
 from drf_spectacular.utils import extend_schema
 from django.core.exceptions import ImproperlyConfigured
@@ -12,7 +12,6 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from api.swagger_schemas import (
-    GOOGLE_AUTH_SWAGGER_SCHEMA,
     USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA,
     USER_FEATURE_SETS_SWAGGER_SCHEMA,
     USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA,
@@ -24,13 +23,19 @@ from features.models import Feature, FeatureElement
 from users import serializers
 from users.errors import (
     ApplicationError,
-    NoGoogleTokenSent,
+    NoSocialTokenSent,
     NoUserCredentialFetchedException,
     EmailNotValid,
     EmailNotAvailable,
+    UserEmailNotValidException,
+    SocialAccountInstanceNotCreatedException,
 )
-from users.managers import GoogleManager
-from users.schemas import UserGoogleDetailPydantic, RedirectAfterGoogleLogin
+from users.managers import GoogleManager, FacebookManager
+from users.schemas import (
+    UserGoogleDetailPydantic,
+    RedirectAfterGoogleLogin,
+    UserFacebookDetailPydantic,
+)
 from users.models import User
 from users.serializers import (
     FeatureElementSerializer,
@@ -66,8 +71,7 @@ class UsersAPI(EndpointView):
         Returns serialized User data or validation errors.
         """
 
-        data: dict = request.data
-        user_data: UserRegisterSerializer = UserRegisterSerializer(data=data)
+        user_data: UserRegisterSerializer = UserRegisterSerializer(data=request.data)
         user_data.is_valid(raise_exception=True)
         user: User = user_service.register(user_data.data)
         serialized_data: dict = UserRegisterSerializer(instance=user).data
@@ -85,6 +89,7 @@ class UsersAPI(EndpointView):
             "register" in self.request.path
             or "google-oauth2" in self.request.path
             or "email-verification" in self.request.path
+            or "facebook-oauth2" in self.request.path
         ):
             retrieve_permission_list = [AllowAny]
             return [permission() for permission in retrieve_permission_list]
@@ -133,8 +138,69 @@ class UsersAPI(EndpointView):
         return Response(serializer.data)
 
     @staticmethod
-    @extend_schema(**GOOGLE_AUTH_SWAGGER_SCHEMA)
-    def google_auth(request):
+    def _social_media_auth(
+        manager: Union[GoogleManager, FacebookManager], provider: str
+    ) -> dict:
+        """
+        Authenticate a user via social media and perform necessary actions based on the user's status.
+
+        This static method is responsible for authenticating a user through a specified social media provider,
+        such as Google or Facebook, using the provided manager. Depending on the user's status and information,
+        it performs actions like retrieving user details, registering new users, and creating associated social
+        media accounts. The method returns a response dictionary indicating the success of the authentication
+        process and additional information.
+
+        Args:
+            manager (Union[GoogleManager, FacebookManager]): An instance of the social media manager responsible
+                for handling authentication and user information retrieval.
+            provider (str): The name of the social media provider (e.g., "Google" or "Facebook").
+
+        Returns:
+            dict: A dictionary containing the result of the authentication process and relevant information.
+                  The dictionary includes the following keys:
+                  - "success": A boolean indicating whether the authentication was successful.
+                  - "redirect": A string representing the path to redirect the user after authentication.
+                  - Other key-value pairs related to user tokens and authentication status.
+
+        Raises:
+            ApplicationError: If an application-level error occurs during the authentication process.
+            UserEmailNotValidException: If the user's email is not valid.
+            SocialAccountInstanceNotCreatedException: If the creation of the associated social account fails.
+
+        """
+        try:
+            user_info: Union[UserGoogleDetailPydantic, UserFacebookDetailPydantic]
+            user_info = manager.get_user_info()
+        except ValueError as e:
+            logger.error(str(traceback.format_exc()) + f"\n{str(e)}")
+            raise ApplicationError(details=str(e))
+
+        user_email: str = user_info.email
+        user: Optional[User] = user_service.filter(email=user_email)
+
+        redirect_path: str = RedirectAfterGoogleLogin.LANDING_PAGE.value
+
+        if not user:
+            redirect_path = RedirectAfterGoogleLogin.REGISTER.value
+            user: User = user_service.register_from_social(user_info)
+
+            if not user:
+                raise UserEmailNotValidException()
+
+        instance, _ = user_service.create_social_account(
+            user=user, data=user_info, provider=provider
+        )
+        if not instance:
+            raise SocialAccountInstanceNotCreatedException()
+
+        response = {
+            "success": True,
+            "redirect": redirect_path,
+            **user_service.create_tokens(user),
+        }
+        return response
+
+    def google_auth(self, request):
         """
         post:
         Authenticates user with Google and gets his detailed information.
@@ -147,44 +213,34 @@ class UsersAPI(EndpointView):
 
         token_id: str = request_data.get("token_id")
         if not token_id:
-            raise NoGoogleTokenSent()
+            raise NoSocialTokenSent()
+        google_manager: GoogleManager = GoogleManager(token_id)
 
         try:
-            google_manager: GoogleManager = GoogleManager()
-            user_info: UserGoogleDetailPydantic = google_manager.get_user_info(
-                access_token=request_data.get("token_id")
+            response = self._social_media_auth(google_manager, "Google")
+        except UserEmailNotValidException:
+            raise NoUserCredentialFetchedException(details="User email not valid")
+        except SocialAccountInstanceNotCreatedException:
+            raise NoUserCredentialFetchedException(
+                details="No user data fetched from Google or data is not valid. Please try again."
             )
-        except ValueError as e:
-            logger.error(str(traceback.format_exc()) + f"\n{str(e)}")
-            raise ApplicationError(details=str(e))
-        except ImproperlyConfigured:
-            msg = "Failed to obtain Google credentials."
-            logger.error(str(traceback.format_exc()) + f"\n{msg}")
-            raise ApplicationError(details=msg)
-
-        user_email: str = user_info.email
-        user: Optional[User] = user_service.filter(email=user_email)
-
-        redirect_path: str = RedirectAfterGoogleLogin.LANDING_PAGE.value
-
-        if not user:
-            redirect_path = RedirectAfterGoogleLogin.REGISTER.value
-            user: User = user_service.register_from_google(user_info)
-
-            if not user:
-                raise NoUserCredentialFetchedException()
-
-        instance, _ = user_service.create_social_account(user=user, data=user_info)
-        if not instance:
-            raise NoUserCredentialFetchedException()
-
-        response = {
-            "success": True,
-            "redirect": redirect_path,
-            **user_service.create_tokens(user),
-        }
 
         return Response(response, status=status.HTTP_200_OK)
+
+    def facebook_auth(self, request):
+        token_id = request.data.get("token_id")
+        if not token_id:
+            raise NoSocialTokenSent()
+        facebook_manager: FacebookManager = FacebookManager(token_id)
+
+        try:
+            response = self._social_media_auth(facebook_manager, "Facebook")
+        except UserEmailNotValidException:
+            raise NoUserCredentialFetchedException(details="User email not valid")
+        except SocialAccountInstanceNotCreatedException:
+            raise NoUserCredentialFetchedException(details="User instance not created")
+
+        return Response(response)
 
     @staticmethod
     def verify_email(request) -> Response:

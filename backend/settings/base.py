@@ -713,7 +713,7 @@ SIMPLE_JWT = {
 }
 
 GOOGLE_OAUTH2_PROJECT_ID = "playmaker-pro"
-
+FACEBOOK_GRAPH_API_VERSION = "v17.0"
 
 try:
     from .local import *

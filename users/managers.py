@@ -1,9 +1,8 @@
 import logging
 import traceback
-from dataclasses import dataclass
 from datetime import datetime as dt
 from datetime import timedelta
-from typing import Optional
+from typing import Optional, Union
 
 import requests
 from allauth.socialaccount.models import SocialApp
@@ -18,6 +17,7 @@ from users.schemas import (
     GoogleSdkLoginCredentials,
     SocialAppPydantic,
     UserGoogleDetailPydantic,
+    UserFacebookDetailPydantic,
 )
 
 logger = logging.getLogger("django")
@@ -75,13 +75,62 @@ class CustomUserManager(BaseUserManager):
         return self.filter(declared_role="P")
 
 
-class GoogleManager:
-    """Google manager for Google OAuth2 SDK."""
+class SocialAuthMixin:
+    """
+    Provides a mixin for requesting user data from a social authentication provider.
 
-    GOOGLE_USER_INFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
+    This mixin encapsulates the functionality of sending a request to a social authentication
+    provider's API to obtain user information. It handles the process of accessing user data
+    using an authentication token.
+    """
 
-    def __init__(self):
-        self._credentials = self.google_sdk_login_get_credentials()
+    URL: str = ""
+    token_id: str = ""
+    USER_DATA_SCOPE: str = ""
+
+    def request_user_data(self) -> dict:
+        """Returns user info from social auth provider. Raises ValueError if response is not ok."""
+
+        user_data_params = {
+            "access_token": self.token_id,
+        }
+
+        if self.USER_DATA_SCOPE:
+            user_data_params["fields"] = self.USER_DATA_SCOPE
+
+        response: Response = requests.get(self.URL, params=user_data_params)
+
+        if not response.ok:
+
+            error: Union[str, dict] = response.json().get("error")
+            error_description: str = response.json().get("error_description")
+            raise ValueError(
+                f"{error if error_description else 'Error'}. "
+                f"Reason: {error_description if error_description else error.get('message')}"
+            )
+
+        return response.json()
+
+
+class GoogleManager(SocialAuthMixin):
+    """
+    GoogleManager class provides an interface for managing Google OAuth2 interactions using the Google OAuth2 SDK.
+
+    This class encapsulates functionality related to user authentication and retrieval of user information
+    from Google services. It serves as an abstraction layer for handling OAuth2 token management and user data.
+
+    Attributes:
+        URL (str): The URL for accessing user information via the OAuth2 protocol.
+
+    Args:
+        token_id (str): A unique identifier associated with the user's authentication token.
+
+    """
+
+    URL = "https://www.googleapis.com/oauth2/v3/userinfo"
+
+    def __init__(self, token_id: str):
+        self.token_id = token_id
 
     @staticmethod
     def google_sdk_login_get_credentials() -> GoogleSdkLoginCredentials:
@@ -121,10 +170,10 @@ class GoogleManager:
 
         return credentials
 
-    def get_user_info(self, access_token: str) -> UserGoogleDetailPydantic:
+    def get_user_info(self) -> UserGoogleDetailPydantic:
         """
         Returns user info from Google as UserGoogleDetailPydantic instance.
-        Example response from google:
+        Example response from Google:
         {
         "sub": "123456789012345678901" (string),
         "name": "Test User" (string),
@@ -136,20 +185,52 @@ class GoogleManager:
         "locale": "pl" (string),
         }
         """
-        response: Response = requests.get(
-            self.GOOGLE_USER_INFO_URL, params={"access_token": access_token}
-        )
+        data: dict = self.request_user_data()
+        try:
+            return UserGoogleDetailPydantic(**data)
+        except ValidationError as e:
+            logger.error(str(traceback.format_exc()) + f"\n{e}")
+            raise ValueError(e)
 
-        if not response.ok:
-            error: str = response.json().get("error")
-            error_description: str = response.json().get("error_description")
-            raise ValueError(f"{error}. Reason: {error_description}")
+
+class FacebookManager(SocialAuthMixin):
+    """
+    Manages interactions with the Facebook Graph API for user authentication and data retrieval.
+
+    This class acts as an interface to the Facebook Graph API, handling user authentication and
+    obtaining user information from Facebook services. It encapsulates the process of accessing
+    user data using the specified token.
+
+    Attributes:
+        URL (str): The URL for accessing the Facebook Graph API.
+        USER_DATA_SCOPE (str): The scope of user data to be retrieved.
+
+    Args:
+        token_id (str): Unique identifier associated with the user's authentication token.
+    """
+
+    def __init__(self, token_id: str):
+        self.token_id = token_id
+
+    URL = f"https://graph.facebook.com/{settings.FACEBOOK_GRAPH_API_VERSION}/me"
+    USER_DATA_SCOPE: str = "id,name,email"
+
+    def get_user_info(self) -> UserFacebookDetailPydantic:
+        """Get user info from Facebook as UserFacebookDetailPydantic instance.
+        Example response from facebook:
+        {
+        "id": "123456789012345678901" (string),
+        "name": "Test User" (string),
+        "email": user_email (string),
+        }
+        """
+        data: dict = self.request_user_data()
+
+        data["given_name"] = data.get("name", "").split(" ")[0]
+        data["family_name"] = data.get("name", "").split(" ")[-1]
 
         try:
-            details: UserGoogleDetailPydantic = UserGoogleDetailPydantic(
-                **response.json()
-            )
-            return details
+            return UserFacebookDetailPydantic(**data)
         except ValidationError as e:
-            logger.critical(str(traceback.format_exc()) + f"\n{e}")
+            logger.error(str(traceback.format_exc()) + f"\n{e}")
             raise ValueError(e)
