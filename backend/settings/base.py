@@ -582,6 +582,7 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_PAGINATION_CLASS": "api.pagination.PagePagination",
 }
 
 SPECTACULAR_SETTINGS = {

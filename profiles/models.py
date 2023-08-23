@@ -18,7 +18,6 @@ from adapters.player_adapter import PlayerGamesAdapter, PlayerSeasonStatsAdapter
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_profile_external_links
 from mapper.models import Mapper
-from clubs.models import League
 import uuid
 
 # from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
@@ -26,7 +25,7 @@ from roles import definitions
 from voivodeships.models import Voivodeships
 from .errors import VerificationCompletionFieldsWrongSetup
 from .mixins import TeamObjectsDisplayMixin
-from . import utils as profile_utils
+from .mixins import utils as profile_utils
 
 User = get_user_model()
 
@@ -38,6 +37,21 @@ GLOBAL_TRAINING_READY_CHOCIES = (
     (1, "1-2 treningi"),
     (2, "3-4 treningi"),
     (3, "5-6 treningi"),
+)
+
+FORMATION_CHOICES = (
+    ("5-3-2", "5-3-2"),
+    ("5-4-1", "5-4-1"),
+    ("4-4-2", "4-4-2"),
+    ("4-5-1", "4-5-1"),
+    ("4-3-3", "4-3-3"),
+    ("4-2-3-1", "4-2-3-1"),
+    ("4-1-4-1", "4-1-4-1"),
+    ("4-3-2-1", "4-3-2-1"),
+    ("3-5-2", "3-5-2"),
+    ("3-4-3", "3-4-3"),
+    ("4-3-1-2", "4-3-1-2"),
+    ("4-4-1-1", "4-4-1-1"),
 )
 
 
@@ -579,19 +593,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         (3, "Nie mam karty na ręku"),
     )
 
-    FORMATION_CHOICES = (
-        ("5-3-2", "5-3-2"),
-        ("5-4-1", "5-4-1"),
-        ("4-4-2", "4-4-2"),
-        ("4-5-1", "4-5-1"),
-        ("4-3-3", "4-3-3"),
-        ("4-2-3-1", "4-2-3-1"),
-        ("4-1-4-1", "4-1-4-1"),
-        ("4-3-2-1", "4-3-2-1"),
-        ("3-5-2", "3-5-2"),
-        ("3-4-3", "3-4-3"),
-    )
-
     GOAL_CHOICES = (
         (1, "Poziom profesjonalny"),
         (2, "Poziom półprofesjonalny"),
@@ -620,7 +621,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     @property
     def age(self) -> typing.Optional[int]:
-        return profile_utils.calculate_age(self.user.userpreferences.birth_date)
+        return self.user.userpreferences.age
 
     @property
     def has_videos(self):
@@ -1378,19 +1379,6 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         (11, "W trakcie kursu"),
     )
 
-    FORMATION_CHOICES = (
-        ("5-3-2", "5-3-2"),
-        ("5-4-1", "5-4-1"),
-        ("4-4-2", "4-4-2"),
-        ("4-5-1", "4-5-1"),
-        ("4-3-3", "4-3-3"),
-        ("4-2-3-1", "4-2-3-1"),
-        ("4-1-4-1", "4-1-4-1"),
-        ("4-3-2-1", "4-3-2-1"),
-        ("3-5-2", "3-5-2"),
-        ("3-4-3", "3-4-3"),
-    )
-
     COACH_ROLE_CHOICES = (
         ("IC", "Pierwszy trener"),
         ("IIC", "Drugi trener"),
@@ -1631,7 +1619,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     @property
     def age(self) -> typing.Optional[int]:
-        return profile_utils.calculate_age(self.user.userpreferences.birth_date)
+        return self.user.userpreferences.age
 
     class Meta:
         verbose_name = "Coach Profile"
@@ -1897,11 +1885,11 @@ class RefereeLevel(models.Model):
     )
 
     level = models.ForeignKey(
-        League,
+        "clubs.League",
         on_delete=models.CASCADE,
         help_text="The league in which the referee has officiated.",
     )
-    role = models.CharField(
+    referee_role = models.CharField(
         _("Role"),
         max_length=17,
         choices=REFEREE_ROLE_CHOICES,
@@ -1917,7 +1905,7 @@ class RefereeLevel(models.Model):
     class Meta:
         verbose_name = "Referee Level"
         verbose_name_plural = "Referee Levels"
-        unique_together = ("level", "role", "referee_profile")
+        unique_together = ("level", "referee_role", "referee_profile")
 
     @property
     def level_name(self):

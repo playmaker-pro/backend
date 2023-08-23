@@ -1,31 +1,38 @@
-from rest_framework.test import APITestCase
-from clubs.api.views import LeagueAPI
-from utils import factories
 from django.urls import reverse
-from utils.testutils import create_system_user
+from parameterized import parameterized
+from rest_framework.test import APIClient, APITestCase
 
-methods = factories.MethodsSet(GET="get_highest_parents")
-request = factories.RequestFactory(LeagueAPI, methods)
+from utils import factories
+from utils.test.test_utils import UserManager
 
 
-class TestLeagueAPI(APITestCase):
+class TestListLeagueHighestParentAPI(APITestCase):
     def setUp(self) -> None:
-        create_system_user()
+        self.client = APIClient()
+        user_manager = UserManager(self.client)
+        self.user = user_manager.create_superuser()
+        self.headers: dict = user_manager.get_headers()
+        factories.GenderFactory.create_batch(2)
+        factories.LeagueFactory.create_league_as_highest_parent()
+        self.url = reverse("api:clubs:highest_parent_leagues")
 
     def test_get_highest_parents_authenticated(self) -> None:
         """Test GET the highest parent leagues with valid authentication"""
-        viewset: str = "api:clubs:highest_parent_leagues"
-        factories.LeagueFactory.create_league_as_highest_parent()
+        response = self.client.get(self.url, **self.headers)
 
-        response = request.get(reverse(viewset))
         assert response.status_code == 200
         assert isinstance(response.data, list) and len(response.data) == 1
 
-    def test_get_highest_parents_not_authenticated(self) -> None:
-        """Test GET the highest parent leagues without authentication"""
-        viewset: str = "api:clubs:highest_parent_leagues"
+    @parameterized.expand([({"gender": "M"},), ({"gender": "F"},)])
+    def test_get_highest_valid_param(self, query) -> None:
+        """Test GET the highest parent leagues with valid param"""
+        response = self.client.get(self.url, query, **self.headers)
 
-        factories.LeagueFactory.create_league_as_highest_parent()
+        assert response.status_code == 200
 
-        response = request.get(reverse(viewset), force_authentication=False)
-        assert response.status_code == 401
+    @parameterized.expand([({"gender": "Male"},), ({"gender": "kobiety"},)])
+    def test_get_highest_invalid_param(self, query) -> None:
+        """Test fail GET the highest parent leagues with invalid param"""
+        response = self.client.get(self.url, query, **self.headers)
+
+        assert response.status_code == 400

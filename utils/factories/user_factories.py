@@ -1,10 +1,19 @@
 import factory
 from django.contrib.auth import get_user_model
-from django.db.models import signals
-from .base import CustomObjectFactory
 from django.contrib.auth.hashers import make_password
+from django.db.models import signals
+
+from users.models import UserPreferences
+
+from .base import CustomObjectFactory
 
 User = get_user_model()
+
+
+class UserPreferencesFactory(CustomObjectFactory):
+    class Meta:
+        model = UserPreferences
+        django_get_or_create = ("user",)
 
 
 @factory.django.mute_signals(signals.post_save)

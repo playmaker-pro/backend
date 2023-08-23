@@ -1,17 +1,18 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
+from django_countries import countries
 from django_fsm import FSMField, transition
 from django.utils import timezone
 
-from notifications.mail import (
-    mail_user_waiting_for_verification,
-    verification_notification,
-)
+from notifications.mail import (mail_user_waiting_for_verification,
+                                verification_notification)
 from roles import definitions
 from users.managers import CustomUserManager
+from utils import calculate_age
 
 
 class UserRoleMixin:
@@ -338,6 +339,8 @@ class User(AbstractUser, UserRoleMixin):
 
 
 class UserPreferences(models.Model):
+    COUNTRIES = countries
+
     GENDER_CHOICES = (
         ("M", _("Mężczyzna")),
         ("K", _("Kobieta")),
@@ -351,8 +354,8 @@ class UserPreferences(models.Model):
         null=True,
         help_text="User's localization (city and voivodeship)",
     )
-    citizenship = models.CharField(
-        max_length=50,
+    citizenship = ArrayField(
+        models.CharField(max_length=100, choices=COUNTRIES),
         blank=True,
         null=True,
         help_text="User's citizenship (country of citizenship)",
@@ -373,6 +376,10 @@ class UserPreferences(models.Model):
     birth_date = models.DateField(
         _("Data urodzenia"), blank=True, null=True, help_text="User's date of birth"
     )
+
+    @property
+    def age(self):
+        return calculate_age(self.birth_date)
 
     class Meta:
         verbose_name = "User Preference"

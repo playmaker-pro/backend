@@ -1,15 +1,24 @@
 import logging
 import typing
 import uuid
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
+from django.db import models as m
+from django.db.models import functions as f
+from pydantic import BaseModel
+
+from api.services import LocaleDataService
+from clubs import models as clubs_models
 from clubs.models import Club as CClub
 from clubs.models import Team as CTeam
-from . import models, errors
-from clubs import models as clubs_models
-from pydantic import BaseModel
+from utils import get_current_season
+
+from . import errors, models, utils
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
+locale_service = LocaleDataService()
 
 
 class PositionData(BaseModel):
@@ -291,7 +300,10 @@ class ProfileService:
 
     def get_model_by_role(self, role: str) -> models.PROFILE_TYPE:
         """Get and return type of profile based on role (i.e.: 'S', 'P', 'C')"""
-        return models.PROFILE_MODEL_MAP[role]
+        try:
+            return models.PROFILE_MODEL_MAP[role]
+        except KeyError:
+            raise ValueError("Invalid role shortcut.")
 
     def get_role_by_model(self, model: typing.Type[models.PROFILE_TYPE]) -> str:
         """Get and return role shortcut based on profile type"""
@@ -327,6 +339,105 @@ class ProfileService:
     def get_referee_roles(self) -> tuple:
         """Get list of referee roles from RefereeProfile"""
         return models.RefereeLevel.REFEREE_ROLE_CHOICES
+
+    def filter_youth_players(self, queryset: m.QuerySet) -> m.QuerySet:
+        """Filter profiles queryset to get profiles of youth users (under 21 yo)"""
+        max_youth_birth_date = utils.get_past_date(years=21)
+        return queryset.filter(
+            user__userpreferences__birth_date__gte=max_youth_birth_date
+        )
+
+    def filter_min_age(self, queryset: m.QuerySet, age: int) -> m.QuerySet:
+        """Filter profile queryset with minimum user age"""
+        min_birth_date = utils.get_past_date(years=age)
+        return queryset.filter(user__userpreferences__birth_date__lte=min_birth_date)
+
+    def filter_max_age(self, queryset: m.QuerySet, age: int) -> m.QuerySet:
+        """Filter profile queryset with maximum user age"""
+        max_birth_date = utils.get_past_date(years=age + 1)
+        return queryset.filter(user__userpreferences__birth_date__gte=max_birth_date)
+
+    def filter_player_position(
+        self, queryset: m.QuerySet, positions: list
+    ) -> m.QuerySet:
+        """Filter profile queryset with maximum user age"""
+        return (
+            queryset.filter(player_positions__player_position__shortcut__in=positions)
+            .annotate(
+                is_main_for_positions=m.Case(
+                    m.When(
+                        player_positions__player_position__shortcut__in=positions,
+                        then=m.F("player_positions__is_main"),
+                    ),
+                    default=m.F("player_positions__is_main"),
+                    output_field=m.BooleanField(),
+                )
+            )
+            .order_by("-is_main_for_positions", "?")
+        )
+
+    def filter_player_league(
+        self, queryset: m.QuerySet, league_ids: list
+    ) -> m.QuerySet:
+        """Filter player's queryset with list of highest_parent league_id's using current season name"""
+        current_season = get_current_season()
+        return queryset.filter(
+            team_object__historical__league_history__season__name=current_season,
+            team_object__historical__league_history__league__highest_parent__in=league_ids,
+        )
+
+    def filter_localization(
+        self, queryset: m.QuerySet, latitude: float, longitude: float, radius: int
+    ) -> m.QuerySet:
+        """
+        Filter queryset with objects within radius based on
+        longitude, latitude and radius (radius distance from target).
+        Function uses Haversine formula (distance between two points on a sphere)
+        """
+        earth_radius = 6371
+        latitude = Decimal(latitude)
+        longitude = Decimal(longitude)
+
+        return queryset.annotate(
+            distance=earth_radius
+            * f.ACos(
+                f.Cos(f.Radians(latitude))
+                * f.Cos(f.Radians("user__userpreferences__localization__latitude"))
+                * f.Cos(
+                    f.Radians("user__userpreferences__localization__longitude")
+                    - f.Radians(longitude)
+                )
+                + f.Sin(f.Radians(latitude))
+                * f.Sin(f.Radians("user__userpreferences__localization__latitude"))
+            )
+        ).filter(distance__lt=radius)
+
+    def filter_country(self, queryset: m.QuerySet, country: list) -> m.QuerySet:
+        """Validate each country code, then return queryset filtered by given countries"""
+        return queryset.filter(
+            user__userpreferences__citizenship__overlap=[
+                locale_service.validate_country_code(code) for code in country
+            ]
+        )
+
+    def filter_language(self, queryset: m.QuerySet, language: list) -> m.QuerySet:
+        """Validate each language code, then return queryset filtered by given spoken languages"""
+        return queryset.filter(
+            user__userpreferences__spoken_languages__code__in=[
+                locale_service.validate_language_code(code) for code in language
+            ]
+        )
+
+    def get_players_on_age_range(
+        self, min_age: int = 14, max_age: int = 44
+    ) -> m.QuerySet:
+        """Get queryset of players with age between given args"""
+        player_max_age = utils.get_past_date(years=max_age)
+        player_min_age = utils.get_past_date(years=min_age)
+        return models.PlayerProfile.objects.filter(
+            user__userpreferences__birth_date__lte=player_min_age,
+            user__userpreferences__birth_date__gte=player_max_age,
+        )
 
 
 class PlayerProfilePositionService:

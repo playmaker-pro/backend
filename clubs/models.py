@@ -584,6 +584,9 @@ class Seniority(models.Model):
 
 
 class Gender(models.Model):
+    MALE = "M"
+    FEMALE = "F"
+
     name = models.CharField(max_length=355, unique=True)
 
     @property
@@ -592,6 +595,16 @@ class Gender(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+
+    @classmethod
+    def get_male_object(cls) -> "Gender":
+        """Get Gender male object"""
+        return cls.objects.get(name__istartswith="m")
+
+    @classmethod
+    def get_female_object(cls) -> "Gender":
+        """Get Gender female object"""
+        return cls.objects.get(name__istartswith="k")
 
 
 class Team(models.Model, MappingMixin):
@@ -743,7 +756,7 @@ class Team(models.Model, MappingMixin):
             "-league_history__season__name"
         )
         if sorted_team_histories:
-            return sorted_team_histories[0]
+            return sorted_team_histories.first()
 
     @property
     @supress_exception

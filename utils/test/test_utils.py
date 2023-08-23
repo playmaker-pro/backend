@@ -9,6 +9,7 @@ from django.test.client import Client
 from django.urls import reverse
 from django.utils import timezone
 from factory.django import mute_signals
+from rest_framework.response import Response
 
 from clubs.models import Season
 from users.models import User
@@ -97,6 +98,9 @@ class UserManager:
         }
 
         return headers
+
+    def login(self, user: User):
+        self.client.login(username=user.username, password=user.password)
 
 
 class MethodsNotAllowedTestsMixin:

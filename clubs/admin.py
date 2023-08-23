@@ -141,6 +141,7 @@ class SectionGroupingAdmin(admin.ModelAdmin):
 class LeagueAdmin(admin.ModelAdmin):
     search_fields: Sequence[str] = ("name", "slug")
     readonly_fields: Sequence[str] = ("slug", "search_tokens", "virtual", "is_parent")
+    autocomplete_fields = ["parent", "highest_parent"]
     actions = [resave]
     list_display = (
         "get_slicer",

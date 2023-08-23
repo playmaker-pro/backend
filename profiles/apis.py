@@ -1,25 +1,31 @@
 import uuid
+
+from django.db.models import QuerySet
 from drf_spectacular.utils import extend_schema
-from api.views import EndpointView
-from profiles import api_serializers, models
-from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.request import Request
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from .services import ProfileService
+from rest_framework.request import Request
+from rest_framework.response import Response
+
 from api.swagger_schemas import (
-    FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA,
     COACH_ROLES_API_SWAGGER_SCHEMA,
+    FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA,
 )
+from api.views import EndpointView
 
-profile_service = ProfileService()
+from . import api_serializers, filters, models, serializers, services
+
+profile_service = services.ProfileService()
 
 
-class ProfileAPI(EndpointView):
-    authentication_classes = [JWTAuthentication]
+class ProfileAPI(filters.ProfileListAPIFilter, EndpointView):
     permission_classes = [IsAuthenticatedOrReadOnly]
     allowed_methods = ["post", "patch", "get"]
+
+    def get_paginated_queryset(self) -> QuerySet:
+        """Paginate queryset to optimize serialization"""
+        qs: QuerySet = self.get_queryset()
+        return self.paginate_queryset(qs)
 
     def create_profile(self, request: Request) -> Response:
         """Create initial profile for user"""
@@ -45,6 +51,15 @@ class ProfileAPI(EndpointView):
 
         return Response(serializer.data)
 
+    def get_bulk_profiles(self, request: Request) -> Response:
+        """
+        Get list of profile for role delivered as param
+        (?role={P, C, S, G, ...})
+        """
+        qs: QuerySet = self.get_paginated_queryset()
+        serializer = api_serializers.ProfileSerializer(qs, many=True)
+        return self.get_paginated_response(serializer.data)
+
 
 class FormationChoicesView(EndpointView):
     """
@@ -55,7 +70,6 @@ class FormationChoicesView(EndpointView):
     For example, it may return a response like {"4-4-2": "4-4-2", "4-3-3": "4-3-3"}.
     """
 
-    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     @extend_schema(**FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA)
@@ -63,20 +77,21 @@ class FormationChoicesView(EndpointView):
         """
         Returns a list of formation choices.
         """
-        return Response(
-            dict(models.CoachProfile.FORMATION_CHOICES), status=status.HTTP_200_OK
-        )
+        return Response(dict(models.FORMATION_CHOICES), status=status.HTTP_200_OK)
 
 
 class ProfileEnumsAPI(EndpointView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
     def get_club_roles(self, request: Request) -> Response:
         """
         Get ClubProfile roles and return response with format:
         [{id: 1, name: Trener}, ...]
         """
-        roles = profile_service.get_club_roles()
-        serializer = api_serializers.ProfileEnumChoicesSerializer(data=roles, many=True)
-        serializer.is_valid()
+        roles = (
+            serializers.ChoicesTuple(*obj) for obj in profile_service.get_club_roles()
+        )
+        serializer = serializers.ProfileEnumChoicesSerializer(roles, many=True)  # type: ignore
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def get_referee_roles(self, request: Request) -> Response:
@@ -84,9 +99,17 @@ class ProfileEnumsAPI(EndpointView):
         Get RefereeLevel roles and return response with format:
         [{id: id_name, name: role_name}, ...]
         """
-        roles = profile_service.get_referee_roles()
-        serializer = api_serializers.ProfileEnumChoicesSerializer(data=roles, many=True)
-        serializer.is_valid()
+        roles = (
+            serializers.ChoicesTuple(*obj)
+            for obj in profile_service.get_referee_roles()
+        )
+        serializer = serializers.ProfileEnumChoicesSerializer(roles, many=True)  # type: ignore
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_player_age_range(self, request: Request) -> Response:
+        """get players count group by age"""
+        qs: QuerySet = profile_service.get_players_on_age_range()
+        serializer = serializers.PlayersGroupByAgeSerializer(qs)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -96,6 +119,8 @@ class CoachRolesChoicesView(EndpointView):
     The response is a dictionary where each item is a key-value pair:
     [role code, role name]. For example: {"IC": "Pierwszy trener", "IIC": "Drugi trener", ...}.
     """
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     @extend_schema(**COACH_ROLES_API_SWAGGER_SCHEMA)
     def list_coach_roles(self, request: Request) -> Response:
@@ -115,17 +140,18 @@ class PlayerPositionAPI(EndpointView):
     It requires JWT authentication and allows read-only access for unauthenticated users.
     """
 
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
     def list_positions(self, request: Request) -> Response:
         """
         Retrieve all player positions ordered by ID.
         """
         positions = models.PlayerPosition.objects.all().order_by("id")
-        serializer = api_serializers.PlayerPositionSerializer(positions, many=True)
+        serializer = serializers.PlayerPositionSerializer(positions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CoachLicencesChoicesView(EndpointView):
-    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticatedOrReadOnly]
     """
     View for listing coach licence choices.
@@ -138,5 +164,5 @@ class CoachLicencesChoicesView(EndpointView):
         Return a list of coach licences choices.
         """
         licences = models.LicenceType.objects.all()
-        serializer = api_serializers.LicenceTypeSerializer(licences, many=True)
+        serializer = serializers.LicenceTypeSerializer(licences, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

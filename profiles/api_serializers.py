@@ -1,20 +1,30 @@
 import typing
 from datetime import date, datetime
-from rest_framework import serializers
+
 from django.contrib.auth import get_user_model
-from clubs import errors as clubs_errors
-from clubs.services import ClubService
-from profiles import errors as profile_errors
-from profiles.services import ProfileService, PlayerProfilePositionService
-from . import models
-from roles.definitions import PROFILE_TYPE_SHORT_MAP
-from users.services import UserService
+from django.db.models import QuerySet
+from django.http import QueryDict
 from pydantic import parse_obj_as
-from profiles.services import PositionData
+from rest_framework import serializers
+
+from clubs import errors as clubs_errors
+from clubs.api import serializers as club_serializers
+from clubs.services import ClubService
+from external_links.serializers import ExternalLinksSerializer
+from profiles import errors as profile_errors
+from profiles import services
+from roles.definitions import PROFILE_TYPE_SHORT_MAP
+from users.serializers import UserDataSerializer
+from users.services import UserService
+from utils.factories import utils
+from voivodeships.serializers import VoivodeshipSerializer
+
+from . import models
+from . import serializers as profile_serializers
 
 User = get_user_model()
 
-profiles_service: ProfileService = ProfileService()
+profiles_service: services.ProfileService = services.ProfileService()
 clubs_service: ClubService = ClubService()
 users_service: UserService = UserService()
 
@@ -32,9 +42,68 @@ TYPE_TO_SERIALIZER_MAPPING = {
 SERIALIZED_VALUE_TYPES = typing.Union[tuple(TYPE_TO_SERIALIZER_MAPPING.keys())]
 
 
+class ProfileListSerializer(serializers.ListSerializer):
+    exclude_fields = ("playermetrics", "player_video", "meta", "history")
+
+    def to_representation(self, data: list) -> list:
+        """Override method to exclude fields from data"""
+        return self.exclude_fields_from_response(super().to_representation(data))
+
+    def exclude_fields_from_response(self, data: list) -> list:
+        """Iterate through list objects and remove elements described in self.exclude_fields"""
+        for obj in data:
+            for key in self.exclude_fields:
+                if key in obj.keys():
+                    obj.pop(key, None)
+        return data
+
+
 class ProfileSerializer(serializers.Serializer):
-    serialize_fields = []  # if empty -> serialize all fields
-    required_fields = []  # fields required as 'data'
+    class Meta:
+        list_serializer_class = ProfileListSerializer
+
+    serialize_fields = ()  # if empty -> serialize all fields
+    exclude_fields = (
+        "event_log",
+        "verification_id",
+        "data_mapper_id",
+    )  # exclude fields from response
+    required_fields = ()  # fields required as 'data'
+
+    # sub-serializers
+    user = UserDataSerializer(read_only=False, required=False)
+    team_object = club_serializers.TeamSerializer(required=False)
+    team_history_object = club_serializers.TeamHistorySerializer(required=False)
+    voivodeship_obj = VoivodeshipSerializer(required=False)
+    history = profile_serializers.ProfileVisitHistorySerializer(required=False)
+    external_links = ExternalLinksSerializer(required=False)
+
+    # fields related with profile (FK to profile)
+    player_positions = profile_serializers.PlayerProfilePositionSerializer(
+        many=True, required=False
+    )
+    player_video = profile_serializers.PlayerVideoSerializer(many=True, required=False)
+    playermetrics = profile_serializers.PlayerMetricsSerializer(required=False)
+    licences = profile_serializers.CoachLicenceSerializer(many=True, required=False)
+
+    enums = [
+        "transfer_status",
+        "soccer_goal",
+        "formation",
+        "formation_alt",
+        "prefered_leg",
+        "card",
+        "training_ready",
+        "agent_status",
+        "club_role",
+        "coach_role",
+        "referee_role",
+        "licence",
+    ]
+
+    # meta fields
+    player_stats = serializers.SerializerMethodField(read_only=True)
+    role = serializers.SerializerMethodField()
 
     def __init__(
         self,
@@ -42,44 +111,47 @@ class ProfileSerializer(serializers.Serializer):
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
-        self.profile_role: str = self.get_role()
-        self.model: models.PROFILE_TYPE = self.define_model()
+        if self.instance:
+            self.model: models.PROFILE_TYPE = (
+                type(self.instance[0])
+                if isinstance(self.instance, (QuerySet, list))
+                else type(self.instance)
+            )
 
     @property
     def data(self) -> dict:
         """return whole serialized object"""
         return self.to_representation()
 
-    def to_representation(self, *args, **kwargs) -> dict:
+    def to_representation(
+        self, obj: models.PROFILE_TYPE = None, *args, **kwargs
+    ) -> dict:
         """serialize each attr of given model into json"""
-        ret = {}
-        fields: list[str] = self.serialize_fields or self.instance.__dict__
+        obj = obj or self.instance
+        ret = super().to_representation(obj)
+        fields: list[str] = self.serialize_fields or obj.__dict__.keys()
+
         for field_name in fields:
             if field_name.startswith("_"):
                 continue
 
-            field_value = getattr(self.instance, field_name)
-            serializer_field: serializers.Field = self.get_serializer_field(field_value)
+            field_value = getattr(obj, field_name)
+
+            if field_name in self.enums:
+                serializer_field = profile_serializers.ProfileEnumChoicesSerializer(
+                    required=False,
+                    model=self.model,
+                    source=field_name,
+                )
+            else:
+                serializer_field: serializers.Field = self.get_serializer_field(
+                    field_value
+                )
             ret[field_name] = serializer_field.to_representation(field_value)
 
-        ret["role"] = self.profile_role
+            if not isinstance(obj, models.PlayerProfile):
+                ret.pop("player_stats", None)
 
-        # TODO: Moving the 'last_activity' serialization to the 'UserDataSerializer' Reference: MR #[PM20-231]
-        last_activity = getattr(self.instance.user, "last_activity", None)
-        last_activity_serialized = serializers.DateTimeField().to_representation(
-            last_activity
-        )
-
-        ret["last_activity"] = last_activity_serialized if last_activity else None
-
-        # TODO: new serializers for profiles-related models
-        #  https://gitlab.com/playmaker1/webapp/-/commit/6fa060ad101198064425d71f1d11aa3d3a892678.
-
-        # Only serialize player_positions if the profile is a PlayerProfile
-        if isinstance(self.instance, models.PlayerProfile):
-            ret["player_positions"] = PlayerProfilePositionSerializer(
-                self.instance.player_positions.order_by("-is_main"), many=True
-            ).data
         return ret
 
     def get_serializer_field(
@@ -90,9 +162,11 @@ class ProfileSerializer(serializers.Serializer):
             type(field_value), serializers.CharField()
         )
 
-    def get_role(self) -> str:
-        """get and pop role from data"""
-        return profiles_service.get_role_by_model(type(self.instance))
+    def get_role(self, obj: typing.Union[QuerySet, models.PROFILE_TYPE]) -> str:
+        """get role by model"""
+        if isinstance(obj, QuerySet):
+            obj = obj.first()
+        return profiles_service.get_role_by_model(type(obj))
 
     def save(self) -> None:
         """This serializer should not be able to save anything"""
@@ -100,14 +174,10 @@ class ProfileSerializer(serializers.Serializer):
             f"{self.__class__.__name__} should not be able to save anything!"
         )
 
-    def define_model(self) -> models.PROFILE_TYPE:
-        """Define profile model based on role shortcut"""
-        return profiles_service.get_model_by_role(self.profile_role)
-
     def validate_role(self, role: str) -> None:
         """validate user role, raise exception if doesn't suits to the schema"""
         if role not in list(PROFILE_TYPE_SHORT_MAP.values()):
-            raise profile_errors.InvalidProfileRole()
+            raise profile_errors.InvalidProfileRole
 
     def validate_team(self) -> None:
         """validate team id"""
@@ -138,28 +208,36 @@ class ProfileSerializer(serializers.Serializer):
         for field in self.required_fields:
             if not data or field not in data.keys():
                 raise profile_errors.IncompleteRequestData(self.required_fields)
-            return data
+        return data.dict() if isinstance(data, QueryDict) else data
+
+    def get_player_stats(self, obj: models.PROFILE_TYPE) -> dict:
+        """
+        Get player summary stats on players catalog
+        Solution is temporarily mocked, full logic will be delivered soon
+        """
+        if isinstance(obj, models.PlayerProfile):
+            ...  # TODO(bartnyk): create logic for stats based on metrics, preferably in ProfileService
+
+            return {
+                "last_goals_count": utils.get_random_int(0, 8),
+                "matches": utils.get_random_int(5, 500),
+                "avg_minutes": utils.get_random_int(0, 90),
+            }  # temp mocked
 
 
 class CreateProfileSerializer(ProfileSerializer):
     user_id = serializers.IntegerField()
-    role = serializers.CharField()
-    serialize_fields = ["user_id", "uuid"]
+    uuid = serializers.CharField(read_only=True)
+    serialize_fields = ["user_id", "uuid", "role"]
     required_fields = ["user_id", "role"]
 
     def __init__(self, *args, **kwargs) -> None:
         kwargs["data"] = self.initial_validation(kwargs.get("data"))
         super().__init__(*args, **kwargs)
 
-    def get_role(self) -> str:
-        """get and pop role from data"""
-        try:
-            role: str = self.initial_data.get("role")
-        except KeyError:
-            raise profile_errors.InvalidProfileRole
-
-        self.validate_role(role)
-        return role
+    def to_representation(self, *args, **kwargs) -> dict:
+        ret = super(ProfileSerializer, self).to_representation(self.instance)
+        return {key: ret[key] for key in self.serialize_fields}
 
     def validate_user(self):
         """Validate user_is was given and user exist"""
@@ -174,9 +252,11 @@ class CreateProfileSerializer(ProfileSerializer):
 
     def handle_positions(self, positions_data: list) -> None:
         """Handles the creation of player positions."""
-        positions_service = PlayerProfilePositionService()
+        positions_service = services.PlayerProfilePositionService()
         # Parse the value as a list of PositionData objects
-        positions_data = parse_obj_as(typing.List[PositionData], positions_data)
+        positions_data = parse_obj_as(
+            typing.List[services.PositionData], positions_data
+        )
         positions_service.manage_positions(self.instance, positions_data)
 
     def validate_data(self) -> None:
@@ -186,8 +266,14 @@ class CreateProfileSerializer(ProfileSerializer):
 
     def save(self) -> None:
         """create profile and set role for given user, need to validate data first"""
+        try:
+            self.model = profiles_service.get_model_by_role(
+                self.initial_data.pop("role")
+            )
+        except ValueError:
+            raise profile_errors.InvalidProfileRole
+
         self.validate_data()
-        self.initial_data.pop("role")
         positions_data = self.initial_data.pop("player_positions", None)
         self.instance = self.model.objects.create(**self.initial_data)
 
@@ -215,9 +301,9 @@ class UpdateProfileSerializer(ProfileSerializer):
         """Update fields given in payload"""
         for attr, value in self.initial_data.items():
             if attr == "player_positions":
-                player_position_service = PlayerProfilePositionService()
+                player_position_service = services.PlayerProfilePositionService()
                 # Parse the value as a list of PositionData objects
-                positions_data = parse_obj_as(typing.List[PositionData], value)
+                positions_data = parse_obj_as(typing.List[services.PositionData], value)
                 player_position_service.manage_positions(self.instance, positions_data)
             elif hasattr(self.instance, attr):
                 setattr(self.instance, attr, value)
@@ -227,57 +313,3 @@ class UpdateProfileSerializer(ProfileSerializer):
         self.validate_data()
         self.update_fields()
         self.instance.save()
-
-
-class ProfileEnumListSerializer(serializers.ListSerializer):
-    """List serializer for ClubProfile roles"""
-
-    def to_internal_value(self, data: typing.List[tuple]) -> typing.List[dict]:
-        return [{"id": value[0], "name": value[1]} for value in data]
-
-
-class ProfileEnumChoicesSerializer(serializers.Serializer):
-    """Serializer for ClubProfile roles"""
-
-    id = serializers.CharField()
-    name = serializers.CharField(read_only=True)
-
-    class Meta:
-        list_serializer_class = ProfileEnumListSerializer
-
-
-class PlayerProfilePositionSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the player's profile position, including the name of the position
-    and whether it is the main position.
-    """
-
-    position_name = serializers.CharField(source="player_position.name", read_only=True)
-
-    class Meta:
-        model = models.PlayerProfilePosition
-        fields = ["player_position", "position_name", "is_main"]
-
-    def to_representation(self, instance) -> typing.Dict[str, typing.Any]:
-        """
-        Converts the instance into a dictionary format.
-        """
-        ret = super().to_representation(instance)
-
-        return {"player_position": ret["player_position"], "is_main": ret["is_main"]}
-
-
-class PlayerPositionSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the player's position, including the ID and name of the position.
-    """
-
-    class Meta:
-        model = models.PlayerPosition
-        fields = ["id", "name", "shortcut"]
-
-
-class LicenceTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.LicenceType
-        fields = "__all__"

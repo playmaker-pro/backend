@@ -1,25 +1,28 @@
-from drf_spectacular.utils import extend_schema
-from rest_framework import viewsets
-from django_countries import countries
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.request import Request
-from django.db.models import Q
-from unidecode import unidecode
 from cities_light.models import City
+from django.db.models import Q
+from django_countries import countries
+from drf_spectacular.utils import extend_schema
+from rest_framework import serializers, status, viewsets
+from rest_framework.request import Request
+from rest_framework.response import Response
+from unidecode import unidecode
+
+from api.swagger_schemas import (CITIES_VIEW_SWAGGER_SCHEMA,
+                                 PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA)
 from app.utils import cities
+from profiles.models import Language, PlayerProfile
+from profiles.serializers import LanguageSerializer
 from users.models import UserPreferences
-from profiles.models import PlayerProfile
-from api.swagger_schemas import (
-    CITIES_VIEW_SWAGGER_SCHEMA,
-    PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA,
-)
-from django.conf.global_settings import LANGUAGES
-from . import serializers
+
+from . import errors
+from . import serializers as api_serializers
+from .pagination import PagePagination
 
 
 class EndpointView(viewsets.GenericViewSet):
     """Base class for building views"""
+
+    pagination_class = PagePagination
 
     def get_queryset(self):
         ...
@@ -39,9 +42,14 @@ class LocaleDataView(EndpointView):
         All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
         """
         language = request.GET.get("language", "pl")
-        serializer = serializers.CountrySerializer(
-            data=countries, many=True, context={"language": language}
-        )
+
+        try:
+            serializer = api_serializers.CountrySerializer(
+                data=countries, many=True, context={"language": language}
+            )
+        except serializers.ValidationError as e:
+            raise errors.InvalidLanguageCode(e.detail)
+
         serializer.is_valid()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -73,7 +81,7 @@ class LocaleDataView(EndpointView):
             | Q(region__name__in=matched_voivodeships)
         )
 
-        serializer = serializers.CitySerializer(filtered_cities, many=True)
+        serializer = api_serializers.CitySerializer(filtered_cities, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def list_languages(self, request: Request) -> Response:
@@ -89,10 +97,8 @@ class LocaleDataView(EndpointView):
         }
         """
         language = request.GET.get("language", "pl")
-        serializer = serializers.LanguageSerializer(
-            data=LANGUAGES, many=True, context={"language": language}
-        )
-        serializer.is_valid()
+        qs = Language.objects.all()
+        serializer = LanguageSerializer(qs, many=True, context={"language": language})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

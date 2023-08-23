@@ -1,7 +1,9 @@
-import typing
-from . import models
 import datetime
-from django.db.models import F
+import typing
+
+from django.db.models import F, QuerySet
+
+from . import models
 
 
 class SeasonService:
@@ -73,21 +75,21 @@ class TeamAdapter(AdapterBase):
 
 
 class ClubService:
-    def team_exist(self, team_id: str) -> typing.Optional[models.Team]:
+    def team_exist(self, team_id: int) -> typing.Optional[models.Team]:
         """Return Team with given id if exists, None otherwise"""
         try:
             return models.Team.objects.get(id=team_id)
         except models.Team.DoesNotExist:
             return
 
-    def club_exist(self, club_id: str) -> typing.Optional[models.Club]:
+    def club_exist(self, club_id: int) -> typing.Optional[models.Club]:
         """Return Club with given id if exists, None otherwise"""
         try:
             return models.Club.objects.get(id=club_id)
         except models.Club.DoesNotExist:
             return
 
-    def team_history_exist(self, th_id: str) -> typing.Optional[models.TeamHistory]:
+    def team_history_exist(self, th_id: int) -> typing.Optional[models.TeamHistory]:
         """Return TeamHistory with given id if exists, None otherwise"""
         try:
             return models.TeamHistory.objects.get(id=th_id)
@@ -96,6 +98,33 @@ class ClubService:
 
 
 class LeagueService:
-    def get_highest_parents(self) -> typing.List[models.League]:
+    def get_highest_parents(self) -> QuerySet:
         """Get all highest parents"""
         return models.League.objects.filter(highest_parent=F("id"))
+
+    def get_leagues(self) -> QuerySet:
+        """Get all leagues"""
+        return models.League.objects.all()
+
+    def filter_male(self, queryset: QuerySet) -> QuerySet:
+        """Filter queryset by male gender"""
+        gender = models.Gender.get_male_object()
+        return queryset.filter(gender=gender)
+
+    def filter_female(self, queryset: QuerySet) -> QuerySet:
+        """Filter queryset by female gender"""
+        gender = models.Gender.get_female_object()
+        return queryset.filter(gender=gender)
+
+    def filter_gender(self, queryset: QuerySet, gender: str) -> QuerySet:
+        """Filter queryset by gender: {F, M}"""
+        if gender.upper() == models.Gender.MALE:
+            return self.filter_male(queryset)
+        elif gender.upper() == models.Gender.FEMALE:
+            return self.filter_female(queryset)
+        else:
+            return queryset
+
+    def validate_gender(self, gender: str) -> None:
+        if gender and gender.upper() not in ["M", "F"]:
+            raise ValueError

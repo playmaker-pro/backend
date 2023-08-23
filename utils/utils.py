@@ -1,14 +1,16 @@
 import collections
 import json
 import typing
+from datetime import datetime
+
 import django.db.utils
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
+from django.utils import timezone, translation
 from django.utils.html import format_html
+
 from backend.settings.environment import Environment
-from clubs.models import Season
-from django.utils import translation
 
 
 def translate_league_name(code, name):
@@ -39,6 +41,8 @@ def get_current_season():
     """
     Return current season based on season stored in database
     """
+    from clubs.models import Season  # avoid circular import
+
     if not settings.SCRAPPER:
         return "2021/2022"
     try:
@@ -184,3 +188,18 @@ def translate_to(langauge_code: str, text_input: str) -> str:
     """
     translation.activate(langauge_code)
     return translation.gettext(text_input)
+
+
+def calculate_age(birth_date: typing.Optional[datetime.date]) -> typing.Optional[int]:
+    """
+    Calculate the age based on the given birth date.
+    """
+    if birth_date:
+        now = timezone.now()
+        return (
+            now.year
+            - birth_date.year
+            - ((now.month, now.day) < (birth_date.month, birth_date.day))
+        )
+    else:
+        return None

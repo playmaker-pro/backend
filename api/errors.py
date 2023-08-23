@@ -1,6 +1,6 @@
 import json
 import traceback
-from typing import Dict, Union, Optional, List
+from typing import Dict, Union, List
 from rest_framework import status
 from rest_framework.exceptions import APIException
 from rest_framework.views import exception_handler
@@ -53,8 +53,24 @@ class InvalidLanguageCode(CoreAPIException):
 
     status_code = status.HTTP_400_BAD_REQUEST
 
-    def __init__(self, get: str, available: list, *args, **kwargs) -> None:
-        kwargs["details"] = f"Unknown language code: '{get}'. Choices: {available}"
+
+class InvalidAPIRequestParam(CoreAPIException):
+    """Exception if request received invalid param"""
+
+    status_code = status.HTTP_400_BAD_REQUEST
+
+
+class InvalidCountryCode(CoreAPIException):
+    """Exception if request received invalid country code"""
+
+    status_code = status.HTTP_400_BAD_REQUEST
+
+
+class ParamsRequired(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+
+    def __init__(self, params_required: list, *args, **kwargs) -> None:
+        kwargs["details"] = f"Params required: {', '.join(params_required)}"
         super().__init__(*args, **kwargs)
 
 
