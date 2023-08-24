@@ -1,5 +1,6 @@
 import typing
 from datetime import date, datetime
+from functools import cached_property
 
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
@@ -43,7 +44,16 @@ SERIALIZED_VALUE_TYPES = typing.Union[tuple(TYPE_TO_SERIALIZER_MAPPING.keys())]
 
 
 class ProfileListSerializer(serializers.ListSerializer):
-    exclude_fields = ("playermetrics", "player_video", "meta", "history")
+    exclude_fields: tuple = (
+        "playermetrics",
+        "player_video",
+        "meta",
+        "history",
+    )
+
+    @cached_property
+    def to_exclude(self) -> set:
+        return set(self.exclude_fields + self.child.exclude_fields)
 
     def to_representation(self, data: list) -> list:
         """Override method to exclude fields from data"""
@@ -52,7 +62,7 @@ class ProfileListSerializer(serializers.ListSerializer):
     def exclude_fields_from_response(self, data: list) -> list:
         """Iterate through list objects and remove elements described in self.exclude_fields"""
         for obj in data:
-            for key in self.exclude_fields:
+            for key in self.to_exclude:
                 if key in obj.keys():
                     obj.pop(key, None)
         return data
@@ -63,10 +73,11 @@ class ProfileSerializer(serializers.Serializer):
         list_serializer_class = ProfileListSerializer
 
     serialize_fields = ()  # if empty -> serialize all fields
-    exclude_fields = (
+    exclude_fields: tuple = (
         "event_log",
         "verification_id",
         "data_mapper_id",
+        "team_club_league_voivodeship_ver",
     )  # exclude fields from response
     required_fields = ()  # fields required as 'data'
 
@@ -137,7 +148,7 @@ class ProfileSerializer(serializers.Serializer):
 
             field_value = getattr(obj, field_name)
 
-            if field_name in self.enums:
+            if field_name in self.enums and field_value:
                 serializer_field = profile_serializers.ProfileEnumChoicesSerializer(
                     required=False,
                     model=self.model,
