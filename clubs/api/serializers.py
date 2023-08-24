@@ -76,6 +76,7 @@ class LeagueSerializer(serializers.ModelSerializer):
     data_seasons = SeasonSerializer(many=True, required=False)
     gender = GenderSerializer(required=False)
     seniority = SenioritySerializer(required=False)
+    name = serializers.CharField(source="get_upper_parent_names", read_only=True)
 
     class Meta:
         model = models.League
@@ -92,10 +93,7 @@ class LeagueBaseDataSerializer(LeagueSerializer):
 
 class LeagueHistorySerializer(serializers.ModelSerializer):
     season = SeasonSerializer(required=False)
-    league = LeagueSerializer(
-        required=False
-    )  # TODO(bartnyk): Await for https://gitlab.com/playmaker1/webapp/-/merge_requests/362
-    # then change to LeagueBaseDataSerializer
+    league = LeagueBaseDataSerializer(required=False)
 
     class Meta:
         model = models.LeagueHistory
@@ -136,7 +134,7 @@ class TeamSerializer(serializers.ModelSerializer):
     def get_current_team_league_history(self, obj: models.Team) -> dict:
         """Get current, serialized league history of team"""
         if latest_th := obj.get_latest_team_history():
-            return LeagueHistorySerializer(latest_th).data
+            return LeagueHistorySerializer(latest_th.league_history).data
 
 
 class TeamHistorySerializer(serializers.ModelSerializer):
