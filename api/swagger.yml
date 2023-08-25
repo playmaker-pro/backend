@@ -483,13 +483,13 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                uuid:
-                  type: string
-              required:
-                - uuid
-              description: 'With uuid may comes other values related with given profile role'
+              oneOf:
+                - $ref: '#/components/schemas/PlayerProfile'
+                - $ref: '#/components/schemas/CoachProfile'
+                - $ref: '#/components/schemas/ClubProfile'
+                - $ref: '#/components/schemas/ScoutProfile'
+                - $ref: '#/components/schemas/GuestProfile'
+              description: 'REQUIRE JUST UUID + fields to update'
               example: {'uuid': "f709376c-f2ca-465c-b598-107e8456b6fa", 'team_object_id': 2, 'bio':"My new bio", 'height': 180, 'weight': 73}
       security:
       - jwtAuth: []
@@ -499,7 +499,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Profile'
+                oneOf:
+                  - $ref: '#/components/schemas/PlayerProfile'
+                  - $ref: '#/components/schemas/CoachProfile'
+                  - $ref: '#/components/schemas/ClubProfile'
+                  - $ref: '#/components/schemas/ScoutProfile'
+                  - $ref: '#/components/schemas/GuestProfile'
         '400':
           description: 'Invalid uuid'
         '404':
@@ -516,7 +521,7 @@ paths:
           schema:
             type: string
           required: true
-          description: 'Profile role {P, C, T, G, S, ...}'
+          description: 'Profile role shortcut {P, C, T, G, S, ...}'
         - in: query
           name: page
           schema:
@@ -600,7 +605,12 @@ paths:
                   results:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Profile'
+                      oneOf:
+                        - $ref: '#/components/schemas/PlayerProfile'
+                        - $ref: '#/components/schemas/CoachProfile'
+                        - $ref: '#/components/schemas/ClubProfile'
+                        - $ref: '#/components/schemas/ScoutProfile'
+                        - $ref: '#/components/schemas/GuestProfile'
                 required: ["count", "results"]
   /profiles/{profile_uuid}/:
     get:
@@ -625,7 +635,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Profile'
+                oneOf:
+                  - $ref: '#/components/schemas/PlayerProfile'
+                  - $ref: '#/components/schemas/CoachProfile'
+                  - $ref: '#/components/schemas/ClubProfile'
+                  - $ref: '#/components/schemas/ScoutProfile'
+                  - $ref: '#/components/schemas/GuestProfile'
   /profiles/player-positions/:
     get:
       operationId: player_positions_retrieve
@@ -1766,46 +1781,16 @@ components:
           type: string
       required:
         - id
-    Profile:
+    BaseProfile:
       type: object
       properties:
         user:
           $ref: '#/components/schemas/UserData'
-        team_object:
-          $ref: '#/components/schemas/Team'
-        team_history_object:
-          $ref: '#/components/schemas/TeamHistory'
-        voivodeship_obj:
-          $ref: '#/components/schemas/Voivodeship'
-        history:
-          $ref: '#/components/schemas/ProfileVisitHistory'
-        external_links:
-          type: array
-          items:
-            $ref: '#/components/schemas/ExternalLink'
-        player_positions:
-          $ref: '#/components/schemas/PlayerPositions'
-        player_video:
-          type: array
-          items:
-            $ref: '#/components/schemas/PlayerVideo'
-        player_metrics:
-          $ref: '#/components/schemas/PlayerMetrics'
-        player_stats:
-          type: object
-          properties:
-            last_goals_count:
-              type: integer
-            matches:
-              type: integer
-            avg_minutes:
-              type: integer
-        user_id:
-          type: integer
-          description: '*'
         history_id:
           type: integer
           description: '*'
+        history:
+          $ref: '#/components/schemas/ProfileVisitHistory'
         slug:
           type: string
           description: '*'
@@ -1815,1224 +1800,582 @@ components:
         step:
           type: integer
           description: '*'
+        user_id:
+          type: integer
+          description: '*'
         uuid:
           type: string
           description: '*'
-        meta:
+        role:
           type: string
-          description: Player
-        meta_updated:
-          type: boolean
-          description: Player
-        team_club_league_voivodeship_ver:
-          type: string
-          description: Player,Coach,Club
-        team_object_id:
+        veryfication_id:
           type: integer
-          description: Player,Coach
-        team_history_object_id:
-          type: integer
-          description: Player,Coach
-        team_object_alt_id:
-          type: integer
-          description: Player
-        club:
-          type: string
-          description: Player
-        team:
-          type: string
-          description: Player
-        league:
-          type: string
-          description: Player
-        birth_date:
-          type: string
-          description: Player
-        height:
-          type: integer
-          description: Player
-        weight:
-          type: integer
-          description: Player
-        position_raw:
-          type: string
-          description: Player
-        position_raw_alt:
-          type: string
-          description: Player
-        position_fantasy:
-          type: string
-          description: Player
-        formation:
-          $ref: '#/components/schemas/ProfileEnumChoices'
-        formation_alt:
-          $ref: '#/components/schemas/ProfileEnumChoices'
-        prefered_leg:
-          $ref: '#/components/schemas/ProfileEnumChoices'
-        transfer_status:
-          $ref: '#/components/schemas/ProfileEnumChoices'
-        card:
-          $ref: '#/components/schemas/ProfileEnumChoices'
-        soccer_goal:
-          $ref: '#/components/schemas/ProfileEnumChoices'
-        phone:
-          type: string
-          description: Player,Coach,Club,Guest
-        facebook_url:
-          type: string
-          description: Player,Coach,Scout,Guest
-        mapper_id:
-          type: integer
-          description: Player,Coach
-        external_links_id:
-          type: integer
-          description: Player,Coach,Scout,Guest
-        laczynaspilka_url:
-          type: string
-          description: Player
-        min90_url:
-          type: string
-          description: Player
-        transfermarket_url:
-          type: string
-          description: Player
-        voivodeship:
-          type: string
-          description: Player
-        voivodeship_obj_id:
-          type: integer
-          description: Player,Coach,Scout
-        voivodeship_raw:
-          type: string
-          description: Player
-        address_id:
-          type: integer
-          description: Player,Coach,Scout,Club,Guest
-        practice_distance:
-          type: integer
-          description: Player,Coach,Scout,Guest
-        about:
-          type: string
-          description: Player,Coach
-        training_ready:
-          $ref: '#/components/schemas/ProfileEnumChoices'
-        country:
-          type: string
-          description: Player,Coach,Scout
-        agent_status:
-          $ref: '#/components/schemas/ProfileEnumChoices'
-        agent_name:
-          type: string
-          description: Player
-        agent_phone:
-          type: string
-          description: Player
-        agent_foreign:
-          type: string
-          description: Player
-        licence:
-          $ref: '#/components/schemas/ProfileEnumChoices'
-        club_role:
-          $ref: '#/components/schemas/ProfileEnumChoices'
-        coach_role:
-          $ref: '#/components/schemas/ProfileEnumChoices'
-        referee_role:
-          $ref: '#/components/schemas/ProfileEnumChoices'
-        data:
-          type: string
-          description: Coach
-        club_object_id:
-          type: integer
-          description: Club
-        club_raw:
-          type: string
-          description: Scout
-        league_raw:
-          type: string
-          description: Scout
+        event_log:
+          type: array
       required:
         - uuid
         - user_id
         - user
         - slug
         - step
-        - mapper_id
-        - history_id
-        - history
-      example:
-        - {
-          "user": {
-            "id": 6482,
-            "first_name": "Dominik",
-            "last_name": "Brzozowski",
-            "last_login": "2022-07-15T14:01:21.130595+02:00",
-            "userpreferences": {
-              "id": 4212,
-              "age": 22,
-              "localization": null,
-              "spoken_languages": [ ],
-              "citizenship": null,
-              "gender": null,
-              "birth_date": "2001-07-21",
-              "user": 6482
-            }
-          },
-          "team_object": {
-            "id": 50,
-            "club": {
-              "id": 100,
-              "voivodeship_obj": {
-                "id": 12,
-                "name": "Śląskie",
-                "code": 18
-              },
-              "manager": {
-                "id": 2078,
-                "first_name": "Tomasz",
-                "last_name": "Stefankiewicz",
-                "last_login": "2023-06-06T08:41:13.066923+02:00",
-                "userpreferences": null
-              },
-              "editors": [
-                {
-                  "id": 7148,
-                  "first_name": "Mateusz",
-                  "last_name": "Skutnik",
-                  "last_login": "2023-06-27T09:07:51.846542+02:00",
-                  "userpreferences": null
-                }
-              ],
-              "stadion_address": "Kolejowa 2 A, 41-902 Bytom",
-              "practice_stadion_address": null,
-              "mapping": ",,bytomski sport polonia bytom sp. z o.o.,,polonia bytom,,bs polonia bytom sp z o.o.,,bytomski sport polonia bytom sp. z o.o.,,",
-              "picture": "/media/club_pics/%25Y-%25m-%25d/Polonia-Bytom01.png",
-              "slug": "klub-polonia-bytom",
-              "name": "Polonia Bytom",
-              "voivodeship_raw": null,
-              "country": "PL",
-              "club_phone": null,
-              "club_email": null,
-              "mapper": 64423,
-              "external_links": null,
-              "voivodeship": 4
-            },
-            "gender": {
-              "id": 1,
-              "name": "mężczyźni"
-            },
-            "seniority": {
-              "id": 1,
-              "name": "seniorzy",
-              "is_senior": true
-            },
-            "junior_group": null,
-            "manager": null,
-            "league": {
-              "id": 1063,
-              "data_seasons": [
-                {
-                  "id": 3,
-                  "name": "2022/2023",
-                  "is_current": true,
-                  "is_in_verify_form": true
-                },
-                {
-                  "id": 1,
-                  "name": "2020/2021",
-                  "is_current": false,
-                  "is_in_verify_form": true
-                },
-                {
-                  "id": 2,
-                  "name": "2021/2022",
-                  "is_current": false,
-                  "is_in_verify_form": true
-                }
-              ],
-              "gender": {
-                "id": 1,
-                "name": "mężczyźni"
-              },
-              "seniority": {
-                "id": 1,
-                "name": "seniorzy",
-                "is_senior": true
-              },
-              "name": "Grupa 3",
-              "virtual": false,
-              "visible": true,
-              "order": 6,
-              "city_name": null,
-              "code": "4",
-              "country": "PL",
-              "rw": false,
-              "slug": "3-liga-grupa-3",
-              "isparent": false,
-              "zpn": null,
-              "zpn_mapped": null,
-              "index": null,
-              "search_tokens": "Grupa 3 Grupa 3",
-              "picture": null,
-              "section": 1,
-              "group": 3,
-              "region": null,
-              "parent": 1034,
-              "highest_parent": 1034,
-              "name_junior": null
-            },
-            "mapping": ",,polonia bytom,,bs polonia bytom sp z o.o.,,bytomski sport polonia bytom sp. z o.o.,,",
-            "visible": true,
-            "autocreated": false,
-            "slug": "team-polonia-bytom-polonia-bytom",
-            "scrapper_autocreated": false,
-            "name": "Polonia Bytom",
-            "travel_refunds": false,
-            "game_bonus": false,
-            "scolarships": false,
-            "gloves_shoes_refunds": false,
-            "traning_gear": false,
-            "regular_gear": false,
-            "secondary_trainer": false,
-            "fizo": false,
-            "diet_suplements": false,
-            "mapper": null,
-            "external_links": null,
-            "editors": [
-              2078
-            ]
-          },
-          "team_history_object": {
-            "id": 2,
-            "team": {
-              "id": 1681,
-              "club": {
-                "id": 8215,
-                "voivodeship_obj": {
-                  "id": 16,
-                  "name": "Zachodniopomorskie",
-                  "code": 9
-                },
-                "manager": {
-                  "id": 3283,
-                  "first_name": "Tomasz",
-                  "last_name": "Bakalarek",
-                  "last_login": "2021-09-28T21:28:16.232582+02:00",
-                  "userpreferences": {
-                    "id": 1967,
-                    "age": 41,
+        - role
+    PlayerProfile:
+      allOf:
+        - $ref: '#/components/schemas/BaseProfile'
+        - type: object
+          properties:
+            team_object:
+              $ref: '#/components/schemas/Team'
+            team_history_object:
+              $ref: '#/components/schemas/TeamHistory'
+            voivodeship_obj:
+              $ref: '#/components/schemas/Voivodeship'
+            external_links:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExternalLink'
+            player_positions:
+              $ref: '#/components/schemas/PlayerPositions'
+            player_video:
+              type: array
+              items:
+                $ref: '#/components/schemas/PlayerVideo'
+            player_metrics:
+              $ref: '#/components/schemas/PlayerMetrics'
+            player_stats:
+              type: object
+              properties:
+                last_goals_count:
+                  type: integer
+                matches:
+                  type: integer
+                avg_minutes:
+                  type: integer
+            meta:
+              type: string
+              description: Player
+            meta_updated:
+              type: boolean
+              description: Player
+            team_club_league_voivodeship_ver:
+              type: string
+              description: Player,Coach,Club
+            team_object_id:
+              type: integer
+              description: Player,Coach
+            team_history_object_id:
+              type: integer
+              description: Player,Coach
+            team_object_alt_id:
+              type: integer
+              description: Player
+            club:
+              type: string
+              description: Player
+            team:
+              type: string
+              description: Player
+            league:
+              type: string
+              description: Player
+            birth_date:
+              type: string
+              description: Player
+            height:
+              type: integer
+              description: Player
+            weight:
+              type: integer
+              description: Player
+            position_raw:
+              type: string
+              description: Player
+            position_raw_alt:
+              type: string
+              description: Player
+            position_fantasy:
+              type: string
+              description: Player
+            formation:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            formation_alt:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            prefered_leg:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            transfer_status:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            card:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            soccer_goal:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            phone:
+              type: string
+              description: Player,Coach,Club,Guest
+            facebook_url:
+              type: string
+              description: Player,Coach,Scout,Guest
+            mapper_id:
+              type: integer
+              description: Player,Coach
+            external_links_id:
+              type: integer
+              description: Player,Coach,Scout,Guest
+            laczynaspilka_url:
+              type: string
+              description: Player
+            min90_url:
+              type: string
+              description: Player
+            transfermarket_url:
+              type: string
+              description: Player
+            voivodeship:
+              type: string
+              description: Player
+            voivodeship_obj_id:
+              type: integer
+              description: Player,Coach,Scout
+            voivodeship_raw:
+              type: string
+              description: Player
+            address_id:
+              type: integer
+              description: Player,Coach,Scout,Club,Guest
+            practice_distance:
+              type: integer
+              description: Player,Coach,Scout,Guest
+            about:
+              type: string
+              description: Player,Coach
+            training_ready:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            country:
+              type: string
+              description: Player,Coach,Scout
+            agent_status:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            agent_name:
+              type: string
+              description: Player
+            agent_phone:
+              type: string
+              description: Player
+            agent_foreign:
+              type: string
+              description: Player
+            updated:
+              type: boolean
+          example: {
+            "user": {
+                "id": 8248,
+                "first_name": "Arek",
+                "last_name": "Goclon",
+                "last_login": "2023-03-31T12:55:00.240615+02:00",
+                "last_activity": null,
+                "userpreferences": {
+                    "id": 5504,
+                    "age": null,
                     "localization": null,
-                    "spoken_languages": [ ],
+                    "spoken_languages": [],
                     "citizenship": null,
                     "gender": null,
-                    "birth_date": "1982-06-04",
-                    "user": 3283
-                  }
-                },
-                "editors": [
-                  {
-                    "id": 3283,
-                    "first_name": "Tomasz",
-                    "last_name": "Bakalarek",
-                    "last_login": "2021-09-28T21:28:16.232582+02:00",
-                    "userpreferences": {
-                      "id": 1967,
-                      "age": 41,
-                      "localization": null,
-                      "spoken_languages": [ ],
-                      "citizenship": null,
-                      "gender": null,
-                      "birth_date": "1982-06-04",
-                      "user": 3283
-                    }
-                  }
-                ],
-                "stadion_address": "ppor. Edmunda Łopuskiego 38, 78-100 Kołobrzeg",
-                "practice_stadion_address": null,
-                "mapping": "AP KOTWICA KOŁOBRZEG",
-                "picture": null,
-                "slug": "klub-ap-kotwica-koobrzeg",
-                "name": "AP Kotwica Kołobrzeg",
-                "voivodeship_raw": null,
-                "country": "PL",
-                "club_phone": null,
-                "club_email": null,
-                "mapper": 35728,
-                "external_links": null,
-                "voivodeship": 16
-              },
-              "gender": {
-                "id": 1,
-                "name": "mężczyźni"
-              },
-              "seniority": {
-                "id": 1,
-                "name": "seniorzy",
-                "is_senior": true
-              },
-              "junior_group": null,
-              "manager": {
-                "id": 4912,
-                "first_name": "Dominik",
-                "last_name": "Mikołajczak",
-                "last_login": "2021-12-13T21:47:29.037982+01:00",
-                "userpreferences": {
-                  "id": 3085,
-                  "age": 41,
-                  "localization": null,
-                  "spoken_languages": [ ],
-                  "citizenship": null,
-                  "gender": null,
-                  "birth_date": "1982-01-14",
-                  "user": 4912
+                    "birth_date": null,
+                    "user": 8248
                 }
-              },
-              "league": {
-                "id": 1062,
-                "data_seasons": [
-                  {
-                    "id": 3,
-                    "name": "2022/2023",
-                    "is_current": true,
-                    "is_in_verify_form": true
-                  },
-                  {
-                    "id": 1,
-                    "name": "2020/2021",
-                    "is_current": false,
-                    "is_in_verify_form": true
-                  },
-                  {
-                    "id": 2,
-                    "name": "2021/2022",
-                    "is_current": false,
-                    "is_in_verify_form": true
-                  }
-                ],
-                "gender": {
-                  "id": 1,
-                  "name": "mężczyźni"
-                },
-                "seniority": {
-                  "id": 1,
-                  "name": "seniorzy",
-                  "is_senior": true
-                },
-                "name": "Grupa 2",
-                "virtual": false,
-                "visible": true,
-                "order": 5,
-                "city_name": null,
-                "code": "4",
-                "country": "PL",
-                "rw": false,
-                "slug": "3-liga-grupa-2",
-                "isparent": true,
-                "zpn": null,
-                "zpn_mapped": null,
-                "index": null,
-                "search_tokens": "Grupa 2",
-                "picture": null,
-                "section": 1,
-                "group": null,
-                "region": null,
-                "parent": 1034,
-                "highest_parent": 1034,
-                "name_junior": null
-              },
-              "mapping": ",,kotwica kołobrzeg,,KOTWICA KOŁOBRZEG",
-              "visible": true,
-              "autocreated": false,
-              "slug": "team-kotwica-koobrzeg-ap-kotwica-koobrzeg",
-              "scrapper_autocreated": false,
-              "name": "Kotwica Kołobrzeg",
-              "travel_refunds": false,
-              "game_bonus": false,
-              "scolarships": false,
-              "gloves_shoes_refunds": false,
-              "traning_gear": false,
-              "regular_gear": false,
-              "secondary_trainer": false,
-              "fizo": false,
-              "diet_suplements": false,
-              "mapper": 7,
-              "external_links": null,
-              "editors": [ ]
             },
-            "league_history": {
-              "id": 3246,
-              "season": {
-                "id": 2,
-                "name": "2021/2022",
-                "is_current": false,
-                "is_in_verify_form": true
-              },
-              "league": {
-                "id": 1062,
-                "data_seasons": [
-                  {
-                    "id": 3,
-                    "name": "2022/2023",
-                    "is_current": true,
-                    "is_in_verify_form": true
-                  },
-                  {
-                    "id": 1,
-                    "name": "2020/2021",
-                    "is_current": false,
-                    "is_in_verify_form": true
-                  },
-                  {
-                    "id": 2,
-                    "name": "2021/2022",
-                    "is_current": false,
-                    "is_in_verify_form": true
-                  }
-                ],
-                "gender": {
-                  "id": 1,
-                  "name": "mężczyźni"
-                },
-                "seniority": {
-                  "id": 1,
-                  "name": "seniorzy",
-                  "is_senior": true
-                },
-                "name": "Grupa 2",
-                "virtual": false,
-                "visible": true,
-                "order": 5,
-                "city_name": null,
-                "code": "4",
-                "country": "PL",
-                "rw": false,
-                "slug": "3-liga-grupa-2",
-                "isparent": true,
-                "zpn": null,
-                "zpn_mapped": null,
-                "index": null,
-                "search_tokens": "Grupa 2",
-                "picture": null,
-                "section": 1,
-                "group": null,
-                "region": null,
-                "parent": 1034,
-                "highest_parent": 1034,
-                "name_junior": null
-              },
-              "index": null,
-              "visible": true,
-              "is_table_data": false,
-              "is_matches_data": false,
-              "data": {
-                "matches": { },
-                "summary": {
-                  "next_games": { },
-                  "today_games": { },
-                  "current_games": { }
-                },
-                "playmakers": {
-                  "coaches": [
-                    {
-                      "url": "/users/coach-dominik-mikoajczak/",
-                      "name": "Dominik Mikołajczak",
-                      "team": "Kotwica Kołobrzeg",
-                      "image": "/media/profile_pics/%25Y-%25m-%25d/mikolajczak-300x244.png.25x25_q85_crop.png",
-                      "league": "Grupa 2"
-                    }
-                  ],
-                  "players": [ ]
-                },
-                "matches_played": { }
-              },
-              "data_updated": "2023-01-22T17:33:15.648727+01:00",
-              "league_name_raw": "Trzecia liga \"grupa 2\"",
-              "mapper": 1193,
-              "external_links": null
+            "team_object": null,
+            "team_history_object": null,
+            "voivodeship_obj": null,
+            "history": {
+                "id": 9859,
+                "counter": 0,
+                "counter_coach": 0,
+                "counter_scout": 0
             },
-            "team_name_raw": "KOTWICA KOŁOBRZEG",
-            "visible": false,
-            "data": null,
-            "mapper": 4809
-          },
-          "voivodeship_obj": {
-            "id": 5,
-            "name": "Łódzkie",
-            "code": 15
-          },
-          "history": {
-            "id": 7636,
-            "counter": 18,
-            "counter_coach": 0,
-            "counter_scout": 0
-          },
-          "external_links": {
-            "links": [ ]
-          },
-          "player_positions": [
-            {
-              "player_position": {
-                "id": 9,
-                "name": "Bramkarz"
-              },
-              "is_main": true
-            }
-          ],
-          "player_video": [ ],
-          "playermetrics": {
-            "id": 4081,
-            "created_at": "2022-01-19T18:41:21.740258+01:00",
-            "updated_at": null,
-            "games_summary": null,
-            "games_summary_updated": null,
-            "games": null,
-            "games_updated": null,
-            "fantasy_summary": null,
-            "fantasy_summary_updated": null,
-            "fantasy": null,
-            "fantasy_updated": null,
-            "season_summary": null,
-            "season_summary_updated": null,
-            "season": null,
-            "season_updated": null,
-            "player": 6482
-          },
-          "player_stats": {
-            "last_goals_count": 6,
-            "matches": 109,
-            "avg_minutes": 39
-          },
-          "role": "P",
-          "user_id": 6482,
-          "history_id": 7636,
-          "slug": "player-dominik-brzozowski",
-          "bio": null,
-          "step": null,
-          "uuid": "3335e697-9135-49bc-bf40-c19e810c6a0b",
-          "meta": null,
-          "meta_updated": null,
-          "team_club_league_voivodeship_ver": null,
-          "team_object_id": 50,
-          "team_history_object_id": 2,
-          "team_object_alt_id": 18142,
-          "club": null,
-          "team": null,
-          "league": null,
-          "birth_date": "2001-07-21",
-          "height": null,
-          "weight": null,
-          "position_raw": 1,
-          "position_raw_alt": null,
-          "position_fantasy": "bramkarz",
-          "formation": {
-            "id": "4-5-1",
-            "name": "4-5-1"
-          },
-          "formation_alt": {
-            "id": "4-5-1",
-            "name": "4-5-1"
-          },
-          "prefered_leg": {
-            "id": 2,
-            "name": "Prawa"
-          },
-          "transfer_status": {
-            "id": 2,
-            "name": "Rozważę wszelkie oferty"
-          },
-          "card": {
-            "id": 1,
-            "name": "Mam kartę na ręku"
-          },
-          "soccer_goal": {
-            "id": 1,
-            "name": "Poziom profesjonalny"
-          },
-          "phone": null,
-          "facebook_url": null,
-          "mapper_id": 71089,
-          "external_links_id": 556,
-          "laczynaspilka_url": null,
-          "min90_url": null,
-          "transfermarket_url": null,
-          "voivodeship": null,
-          "voivodeship_obj_id": 5,
-          "voivodeship_raw": null,
-          "address_id": null,
-          "practice_distance": null,
-          "about": "",
-          "training_ready": {
-            "id": 2,
-            "name": "3-4 treningi"
-          },
-          "country": "PL",
-          "agent_status": {
-            "id": 1,
-            "name": "Mam agenta"
-          },
-          "agent_name": null,
-          "agent_phone": null,
-          "agent_foreign": true,
-          "updated": false
-        }
-        - {
-        "user": {
-          "id": 4889,
-          "first_name": "Arkadiusz",
-          "last_name": "Szczerbowski",
-          "last_login": "2021-07-26T10:49:44.542559+02:00",
-          "userpreferences": {
-            "id": 2457,
-            "age": 26,
-            "localization": null,
-            "spoken_languages": [ ],
-            "citizenship": null,
-            "gender": null,
-            "birth_date": "1996-11-25",
-            "user": 4889
-          }
-        },
-        "team_object": {
-          "id": 1755,
-          "club": {
-            "id": 1328,
-            "voivodeship_obj": {
-              "id": 10,
-              "name": "Podlaskie",
-              "code": 11
-            },
-            "manager": {
-              "id": 4889,
-              "first_name": "Arkadiusz",
-              "last_name": "Szczerbowski",
-              "last_login": "2021-07-26T10:49:44.542559+02:00",
-              "userpreferences": {
-                "id": 2457,
-                "age": 26,
-                "localization": null,
-                "spoken_languages": [ ],
-                "citizenship": null,
-                "gender": null,
-                "birth_date": "1996-11-25",
-                "user": 4889
-              }
-            },
-            "editors": [ ],
-            "stadion_address": null,
-            "practice_stadion_address": null,
-            "mapping": ",,wigry suwałki s.a.,,wigry ii suwałki s.a.,,wigry suwałki s.a.,,",
-            "picture": "/media/club_pics/%25Y-%25m-%25d/pobrane_2.png",
-            "slug": "klub-wigry-suwaki",
-            "name": "Wigry Suwałki",
-            "voivodeship_raw": null,
-            "country": "PL",
-            "club_phone": null,
-            "club_email": null,
-            "mapper": 64949,
             "external_links": null,
-            "voivodeship": 7
-          },
-          "gender": {
-            "id": 1,
-            "name": "mężczyźni"
-          },
-          "seniority": {
-            "id": 1,
-            "name": "seniorzy",
-            "is_senior": true
-          },
-          "junior_group": null,
-          "manager": {
-            "id": 4889,
-            "first_name": "Arkadiusz",
-            "last_name": "Szczerbowski",
-            "last_login": "2021-07-26T10:49:44.542559+02:00",
-            "userpreferences": {
-              "id": 2457,
-              "age": 26,
-              "localization": null,
-              "spoken_languages": [ ],
-              "citizenship": null,
-              "gender": null,
-              "birth_date": "1996-11-25",
-              "user": 4889
-            }
-          },
-          "league": {
-            "id": 1033,
-            "data_seasons": [
-              {
-                "id": 3,
-                "name": "2022/2023",
-                "is_current": true,
-                "is_in_verify_form": true
-              },
-              {
-                "id": 1,
-                "name": "2020/2021",
-                "is_current": false,
-                "is_in_verify_form": true
-              },
-              {
-                "id": 2,
-                "name": "2021/2022",
-                "is_current": false,
-                "is_in_verify_form": true
-              }
-            ],
-            "gender": {
-              "id": 1,
-              "name": "mężczyźni"
+            "player_positions": [],
+            "player_video": [],
+            "playermetrics": {
+                "id": 8871,
+                "created_at": "2023-03-31T12:55:12.989811+02:00",
+                "updated_at": null,
+                "games_summary": null,
+                "games_summary_updated": null,
+                "games": null,
+                "games_updated": null,
+                "fantasy_summary": null,
+                "fantasy_summary_updated": null,
+                "fantasy": null,
+                "fantasy_updated": null,
+                "season_summary": null,
+                "season_summary_updated": null,
+                "season": null,
+                "season_updated": null,
+                "player": 8248
             },
-            "seniority": {
-              "id": 1,
-              "name": "seniorzy",
-              "is_senior": true
+            "player_stats": {
+                "last_goals_count": 1,
+                "matches": 69,
+                "avg_minutes": 52
             },
-            "name": "2 liga",
-            "virtual": false,
-            "visible": true,
-            "order": 3,
-            "city_name": null,
-            "code": "3",
+            "role": "P",
+            "verification_id": 14173,
+            "user_id": 8248,
+            "history_id": 9859,
+            "data_mapper_id": null,
+            "slug": "player-arek-goclon",
+            "bio": null,
+            "event_log": null,
+            "step": null,
+            "uuid": "4a144e1b-0254-4991-a534-a3b45bb41636",
+            "meta": null,
+            "meta_updated": null,
+            "team_club_league_voivodeship_ver": null,
+            "team_object_id": null,
+            "team_history_object_id": null,
+            "team_object_alt_id": null,
+            "club": null,
+            "team": null,
+            "league": null,
+            "birth_date": null,
+            "height": null,
+            "weight": null,
+            "position_raw": null,
+            "position_raw_alt": null,
+            "position_fantasy": null,
+            "formation": null,
+            "formation_alt": null,
+            "prefered_leg": null,
+            "transfer_status": null,
+            "card": null,
+            "soccer_goal": null,
+            "phone": null,
+            "facebook_url": null,
+            "mapper_id": 72331,
+            "external_links_id": null,
+            "laczynaspilka_url": null,
+            "min90_url": null,
+            "transfermarket_url": null,
+            "voivodeship": null,
+            "voivodeship_obj_id": null,
+            "voivodeship_raw": null,
+            "address_id": null,
+            "practice_distance": null,
+            "about": null,
+            "training_ready": null,
             "country": "PL",
-            "rw": false,
-            "slug": "2-liga",
-            "isparent": false,
-            "zpn": null,
-            "zpn_mapped": null,
-            "index": null,
-            "search_tokens": "2 liga",
-            "picture": null,
-            "section": 1,
-            "group": null,
-            "region": null,
-            "parent": null,
-            "highest_parent": 1033,
-            "name_junior": null
-          },
-          "mapping": ",,wigry suwałki s.a.,,WIGRY SUWAŁKI S.A.",
-          "visible": true,
-          "autocreated": false,
-          "slug": "team-wigry-suwaki-wigry-suwaki",
-          "scrapper_autocreated": false,
-          "name": "Wigry Suwałki",
-          "travel_refunds": false,
-          "game_bonus": false,
-          "scolarships": false,
-          "gloves_shoes_refunds": false,
-          "traning_gear": false,
-          "regular_gear": false,
-          "secondary_trainer": false,
-          "fizo": false,
-          "diet_suplements": false,
-          "mapper": 11424,
-          "external_links": null,
-          "editors": [ ]
-        },
-        "team_history_object": null,
-        "voivodeship_obj": null,
-        "history": {
-          "id": 5575,
-          "counter": 253,
-          "counter_coach": 166,
-          "counter_scout": 0
-        },
-        "external_links": {
-          "links": [ ]
-        },
-        "licences": [
-          {
-            "id": 39,
-            "licence": {
-              "id": 11,
-              "name": "W trakcie kursu"
-            },
-            "expiry_date": null,
-            "coach_profile": 4889
+            "agent_status": null,
+            "agent_name": null,
+            "agent_phone": null,
+            "agent_foreign": null,
+            "updated": false
           }
-        ],
-        "role": "T",
-        "user_id": 4889,
-        "history_id": 5575,
-        "slug": "coach-arkadiusz-szczerbowski",
-        "bio": null,
-        "step": null,
-        "uuid": "fe34e2f6-3548-47a5-8d54-5c3273014b50",
-        "licence": {
-          "id": 11,
-          "name": "W trakcie kursu"
-        },
-        "team_club_league_voivodeship_ver": "Wigry Suwałki",
-        "team_object_id": 1755,
-        "team_history_object_id": null,
-        "birth_date": "1996-11-25",
-        "soccer_goal": {
-          "id": 1,
-          "name": "Profesjonalna kariera"
-        },
-        "phone": "690619298",
-        "facebook_url": null,
-        "mapper_id": 72643,
-        "external_links_id": 624,
-        "country": "PL",
-        "practice_distance": null,
-        "about": "",
-        "address_id": null,
-        "voivodeship": null,
-        "voivodeship_obj_id": null,
-        "club_role": {
-          "id": 1,
-          "name": "Trener"
-        },
-        "coach_role": null,
-        "formation": null,
-        "data": {
-          "2021/2022": {
-            "games": [
-              {
-                "date": "2022-06-01",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "W",
-                  "type": "won"
-                },
-                "date_year": "2022",
-                "date_short": "06/01",
-                "host_score": 5,
-                "guest_score": 2,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "WIGRY II SUWAŁKI S.A.",
-                "guest_team_name": "Dąb Dąbrowa Białostocka"
-              },
-              {
-                "date": "2022-05-08",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "P",
-                  "type": "lost"
-                },
-                "date_year": "2022",
-                "date_short": "05/08",
-                "host_score": 0,
-                "guest_score": 1,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "WIGRY II SUWAŁKI S.A.",
-                "guest_team_name": "Orlęta Czyżew"
-              },
-              {
-                "date": "2022-04-30",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "R",
-                  "type": "draw"
-                },
-                "date_year": "2022",
-                "date_short": "04/30",
-                "host_score": 0,
-                "guest_score": 0,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "Puszcza Hajnówka",
-                "guest_team_name": "WIGRY II SUWAŁKI S.A."
-              },
-              {
-                "date": "2022-04-15",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "W",
-                  "type": "won"
-                },
-                "date_year": "2022",
-                "date_short": "04/15",
-                "host_score": 1,
-                "guest_score": 2,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "Pomorzanka Sejny",
-                "guest_team_name": "WIGRY II SUWAŁKI S.A."
-              },
-              {
-                "date": "2022-04-13",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "W",
-                  "type": "won"
-                },
-                "date_year": "2022",
-                "date_short": "04/13",
-                "host_score": 4,
-                "guest_score": 0,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "WIGRY II SUWAŁKI S.A.",
-                "guest_team_name": "Rudnia Zabłudów"
-              },
-              {
-                "date": "2022-03-27",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "W",
-                  "type": "won"
-                },
-                "date_year": "2022",
-                "date_short": "03/27",
-                "host_score": 4,
-                "guest_score": 0,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "WIGRY II SUWAŁKI S.A.",
-                "guest_team_name": "KS Piast Białystok"
-              },
-              {
-                "date": "2022-03-19",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "P",
-                  "type": "lost"
-                },
-                "date_year": "2022",
-                "date_short": "03/19",
-                "host_score": 4,
-                "guest_score": 2,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "KS Śniadowo",
-                "guest_team_name": "WIGRY II SUWAŁKI S.A."
-              },
-              {
-                "date": "2021-11-21",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "W",
-                  "type": "won"
-                },
-                "date_year": "2021",
-                "date_short": "11/21",
-                "host_score": 2,
-                "guest_score": 1,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "WIGRY II SUWAŁKI S.A.",
-                "guest_team_name": "GKS GRÓDEK"
-              },
-              {
-                "date": "2021-11-14",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "W",
-                  "type": "won"
-                },
-                "date_year": "2021",
-                "date_short": "11/14",
-                "host_score": 2,
-                "guest_score": 4,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "GKS Stawiski",
-                "guest_team_name": "WIGRY II SUWAŁKI S.A."
-              },
-              {
-                "date": "2021-11-06",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "W",
-                  "type": "won"
-                },
-                "date_year": "2021",
-                "date_short": "11/06",
-                "host_score": 4,
-                "guest_score": 0,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "WIGRY II SUWAŁKI S.A.",
-                "guest_team_name": "MKS POGOŃ ŁAPY"
-              },
-              {
-                "date": "2021-10-27",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "W",
-                  "type": "won"
-                },
-                "date_year": "2021",
-                "date_short": "10/27",
-                "host_score": 0,
-                "guest_score": 2,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "MKS Mielnik",
-                "guest_team_name": "WIGRY II SUWAŁKI S.A."
-              },
-              {
-                "date": "2021-10-24",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "W",
-                  "type": "won"
-                },
-                "date_year": "2021",
-                "date_short": "10/24",
-                "host_score": 9,
-                "guest_score": 0,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "WIGRY II SUWAŁKI S.A.",
-                "guest_team_name": "PASJA KLEOSIN"
-              },
-              {
-                "date": "2021-10-10",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "R",
-                  "type": "draw"
-                },
-                "date_year": "2021",
-                "date_short": "10/10",
-                "host_score": 1,
-                "guest_score": 1,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "Orlęta Czyżew",
-                "guest_team_name": "WIGRY II SUWAŁKI S.A."
-              },
-              {
-                "date": "2021-10-03",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "P",
-                  "type": "lost"
-                },
-                "date_year": "2021",
-                "date_short": "10/03",
-                "host_score": 0,
-                "guest_score": 3,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "WIGRY II SUWAŁKI S.A.",
-                "guest_team_name": "Puszcza Hajnówka"
-              },
-              {
-                "date": "2021-09-24",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "P",
-                  "type": "lost"
-                },
-                "date_year": "2021",
-                "date_short": "09/24",
-                "host_score": 2,
-                "guest_score": 1,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "Sparta Augustów",
-                "guest_team_name": "WIGRY II SUWAŁKI S.A."
-              },
-              {
-                "date": "2021-09-19",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "W",
-                  "type": "won"
-                },
-                "date_year": "2021",
-                "date_short": "09/19",
-                "host_score": 1,
-                "guest_score": 0,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "WIGRY II SUWAŁKI S.A.",
-                "guest_team_name": "Pomorzanka Sejny"
-              },
-              {
-                "date": "2021-09-05",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "W",
-                  "type": "won"
-                },
-                "date_year": "2021",
-                "date_short": "09/05",
-                "host_score": 1,
-                "guest_score": 0,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "WIGRY II SUWAŁKI S.A.",
-                "guest_team_name": "SOKÓŁ 1946 SOKÓŁKA"
-              },
-              {
-                "date": "2021-08-28",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "W",
-                  "type": "won"
-                },
-                "date_year": "2021",
-                "date_short": "08/28",
-                "host_score": 0,
-                "guest_score": 3,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "KS Piast Białystok",
-                "guest_team_name": "WIGRY II SUWAŁKI S.A."
-              },
-              {
-                "date": "2021-08-14",
-                "team": "WIGRY II SUWAŁKI S.A.",
-                "result": {
-                  "name": "W",
-                  "type": "won"
-                },
-                "date_year": "2021",
-                "date_short": "08/14",
-                "host_score": 2,
-                "guest_score": 4,
-                "league_name": "Klasa okręgowa",
-                "host_team_name": "Rudnia Zabłudów",
-                "guest_team_name": "WIGRY II SUWAŁKI S.A."
-              }
-            ],
-            "carrier": {
-              "teams": {
-                "WIGRY II SUWAŁKI S.A.": {
-                  "wons": 13,
-                  "draws": 2,
-                  "loses": 4,
-                  "points": 41,
-                  "avg_points": 2.2,
-                  "gain_goals": 49,
-                  "lost_goals": 19,
-                  "games_played": 19,
-                  "avg_goals_gain": 2.6,
-                  "avg_goals_losts": 1.0,
-                  "position_in_table": 0
+    CoachProfile:
+      allOf:
+        - $ref: '#/components/schemas/BaseProfile'
+        - type: object
+          properties:
+            team_object:
+              $ref: '#/components/schemas/Team'
+            team_history_object:
+              $ref: '#/components/schemas/TeamHistory'
+            voivodeship_obj:
+              $ref: '#/components/schemas/Voivodeship'
+            external_links:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExternalLink'
+            licences:
+              type: array
+              items:
+                $ref: '#/components/schemas/CoachLicence'
+            licence:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            team_object_id:
+              type: integer
+              description: Player,Coach
+            team_history_object_id:
+              type: integer
+              description: Player,Coach
+            team_club_league_voivodeship_ver:
+              type: string
+            birth_date:
+              type: string
+              description: Player
+            soccer_goal:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            phone:
+              type: string
+              description: Player,Coach,Club,Guest
+            facebook_url:
+              type: string
+              description: Player,Coach,Scout,Guest
+            mapper_id:
+              type: integer
+              description: Player,Coach
+            external_links_id:
+              type: integer
+              description: Player,Coach,Scout,Guest
+            country:
+              type: string
+              description: Player,Coach,Scout
+            practice_distance:
+              type: integer
+              description: Player,Coach,Scout,Guest
+            about:
+              type: string
+              description: Player,Coach
+            address_id:
+              type: integer
+              description: Player,Coach,Scout,Club,Guest
+            voivodeship:
+              type: string
+              description: Player
+            voivodeship_obj_id:
+              type: integer
+              description: Player,Coach,Scout
+            club_role:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            formation:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            coach_role:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            data:
+              type: string
+              description: Coach
+          example: {
+            "user": {
+                "id": 7404,
+                "first_name": "MiZ",
+                "last_name": "SHOTY",
+                "last_login": "2022-07-06T12:32:55.341179+02:00",
+                "last_activity": null,
+                "userpreferences": {
+                    "id": 2289,
+                    "age": null,
+                    "localization": null,
+                    "spoken_languages": [],
+                    "citizenship": null,
+                    "gender": null,
+                    "birth_date": null,
+                    "user": 7404
                 }
-              },
-              "total": {
-                "wons": 13,
-                "draws": 2,
-                "loses": 4,
-                "points": 41,
-                "avg_points": 2.2,
-                "gain_goals": 49,
-                "lost_goals": 19,
-                "games_played": 19,
-                "wons_percent": 68.42105263157895,
-                "draws_percent": 10.526315789473685,
-                "loses_percent": 21.05263157894737,
-                "avg_goals_gain": 2.6,
-                "avg_goals_losts": 1.0,
-                "position_in_table": 0
-              }
-            }
-          },
-          "2022/2023": {
-            "games": [ ],
-            "carrier": {
-              "teams": { },
-              "total": {
-                "wons": 0,
-                "draws": 0,
-                "loses": 0,
-                "points": 0,
-                "avg_points": 0,
-                "gain_goals": 0,
-                "lost_goals": 0,
-                "games_played": 0,
-                "wons_percent": 0,
-                "draws_percent": 0,
-                "loses_percent": 0,
-                "avg_goals_gain": 0,
-                "avg_goals_losts": 0,
-                "position_in_table": 0
-              }
-            }
+            },
+            "team_object": null,
+            "team_history_object": null,
+            "voivodeship_obj": null,
+            "history": {
+                "id": 8819,
+                "counter": 0,
+                "counter_coach": 0,
+                "counter_scout": 0
+            },
+            "external_links": null,
+            "licences": [],
+            "role": "T",
+            "verification_id": 6941,
+            "user_id": 7404,
+            "history_id": 8819,
+            "data_mapper_id": null,
+            "slug": "coach-miz-shoty",
+            "bio": null,
+            "event_log": null,
+            "step": null,
+            "uuid": "22de5851-3246-4c56-aefa-c18c660570d2",
+            "licence": null,
+            "team_club_league_voivodeship_ver": null,
+            "team_object_id": null,
+            "team_history_object_id": null,
+            "birth_date": null,
+            "soccer_goal": null,
+            "phone": null,
+            "facebook_url": null,
+            "mapper_id": null,
+            "external_links_id": null,
+            "country": "PL",
+            "practice_distance": null,
+            "about": null,
+            "address_id": null,
+            "voivodeship": null,
+            "voivodeship_obj_id": null,
+            "club_role": {
+                "id": 1,
+                "name": "Trener"
+            },
+            "coach_role": null,
+            "formation": null,
+            "data": null
           }
-        }
-      }
+    ScoutProfile:
+      allOf:
+        - $ref: '#/components/schemas/BaseProfile'
+        - type: object
+          properties:
+            voivodeship_obj:
+              $ref: '#/components/schemas/Voivodeship'
+            soccer_goal:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            country:
+              type: string
+              description: Player,Coach,Scout
+            facebook_url:
+              type: string
+              description: Player,Coach,Scout,Guest
+            address_id:
+              type: integer
+              description: Player,Coach,Scout,Club,Guest
+            practice_distance:
+              type: integer
+              description: Player,Coach,Scout,Guest
+            club_raw:
+              type: string
+            league_raw:
+              type: string
+            voivodeship_obj_id:
+              type: integer
+              description: Player,Coach,Scout
+            voivodeship_raw:
+              type: string
+          example: {
+            "user": {
+                "id": 2185,
+                "first_name": "Adam",
+                "last_name": "Zawadzki",
+                "last_login": "2023-07-05T17:32:21.688835+02:00",
+                "last_activity": null,
+                "userpreferences": {
+                    "id": 1090,
+                    "age": null,
+                    "localization": null,
+                    "spoken_languages": [],
+                    "citizenship": null,
+                    "gender": null,
+                    "birth_date": null,
+                    "user": 2185
+                }
+            },
+            "voivodeship_obj": null,
+            "history": {
+                "id": 2186,
+                "counter": 0,
+                "counter_coach": 0,
+                "counter_scout": 0
+            },
+            "external_links": null,
+            "role": "S",
+            "verification_id": null,
+            "user_id": 2185,
+            "history_id": 2186,
+            "data_mapper_id": null,
+            "slug": "scout-adam-zawadzki",
+            "bio": null,
+            "event_log": null,
+            "step": null,
+            "uuid": "ff553599-a32b-4bc7-84c0-98c3c9075882",
+            "soccer_goal": {
+                "id": 1,
+                "name": "Profesjonalna kariera"
+            },
+            "country": "PL",
+            "facebook_url": null,
+            "address_id": 6,
+            "external_links_id": null,
+            "practice_distance": null,
+            "club_raw": null,
+            "league_raw": null,
+            "voivodeship_obj_id": null,
+            "voivodeship_raw": "Śląskie"
+          }
+    ClubProfile:
+      allOf:
+        - $ref: '#/components/schemas/BaseProfile'
+        - type: object
+          properties:
+            club_object_id:
+              type: integer
+            phone:
+              type: string
+              description: Player,Coach,Club,Guest
+            team_club_league_voivodeship_ver:
+              type: string
+              description: Player,Coach,Club
+            club_role:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+          example: {
+            "user": {
+                "id": 7300,
+                "first_name": "B",
+                "last_name": "Kobi",
+                "last_login": "2022-06-24T12:12:25.348516+02:00",
+                "last_activity": null,
+                "userpreferences": null
+            },
+            "history": {
+                "id": 8676,
+                "counter": 0,
+                "counter_coach": 0,
+                "counter_scout": 0
+            },
+            "club_object": null,
+            "role": "C",
+            "verification_id": 6552,
+            "user_id": 7300,
+            "history_id": 8676,
+            "data_mapper_id": null,
+            "slug": "club-b-kobi",
+            "bio": null,
+            "event_log": null,
+            "step": null,
+            "uuid": "03bde658-f6af-41a5-b617-a6cd647ce168",
+            "club_object_id": null,
+            "phone": null,
+            "team_club_league_voivodeship_ver": null,
+            "club_role": null
+          }
+    GuestProfile:
+      allOf:
+        - $ref: '#/components/schemas/BaseProfile'
+        - type: object
+          properties:
+            facebook_url:
+              type: string
+              description: Player,Coach,Scout,Guest
+          example: {
+            "user": {
+                "id": 1,
+                "first_name": "",
+                "last_name": "",
+                "last_login": "2023-07-03T20:09:48.118282+02:00",
+                "last_activity": null,
+                "userpreferences": {
+                    "id": 5091,
+                    "age": null,
+                    "localization": null,
+                    "spoken_languages": [],
+                    "citizenship": null,
+                    "gender": null,
+                    "birth_date": null,
+                    "user": 1
+                }
+            },
+            "history": {
+                "id": 1,
+                "counter": 0,
+                "counter_coach": 0,
+                "counter_scout": 0
+            },
+            "role": "G",
+            "verification_id": null,
+            "user_id": 1,
+            "history_id": 1,
+            "data_mapper_id": null,
+            "slug": "guest",
+            "bio": null,
+            "event_log": null,
+            "step": null,
+            "uuid": "104ac6d7-6bf7-490e-abac-9b4c8d42ac49",
+            "facebook_url": null
+          }
     Country:
       type: object
       properties:
@@ -3131,6 +2474,22 @@ components:
       required:
         - id
         - name
+    CoachLicence:
+      type: object
+      properties:
+        id:
+          type: integer
+        licence:
+          $ref: '#/components/schemas/ProfileEnumChoices'
+        expiry_date:
+          type: string
+        coach_profile:
+          type: integer
+          description: "Coach ID"
+      required:
+        - id
+        - coach_profile
+        - licence
   securitySchemes:
     jwtAuth:
       type: http

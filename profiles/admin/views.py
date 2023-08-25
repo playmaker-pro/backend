@@ -9,6 +9,13 @@ from utils import linkify
 from . import filters
 
 
+class CoachLicenceInline(
+    admin.TabularInline
+):  # Use TabularInline or StackedInline based on your preference
+    model = models.CoachLicence
+    extra = 1  # Number of empty forms to display for adding new instances
+
+
 @admin.register(models.ProfileVisitHistory)
 class ProfileVisitHistoryAdmin(admin.ModelAdmin):
     pass
@@ -38,12 +45,7 @@ class PositionAdmin(admin.ModelAdmin):
 
 
 DEFAULT_PROFILE_SEARCHABLES = ("user__email", "user__first_name", "user__last_name")
-DEFAULT_PROFILE_DISPLAY_FIELDS = (
-    "pk",
-    linkify("user"),
-    "slug",
-    "active",
-)
+DEFAULT_PROFILE_DISPLAY_FIELDS = ("pk", linkify("user"), "slug", "active", "uuid")
 
 
 class ProfileAdminBase(admin.ModelAdmin):
@@ -275,6 +277,7 @@ class CoachProfileAdmin(ProfileAdminBase):
         linkify("external_links"),
     )
     autocomplete_fields = ("team_object", "team_history_object", "team_history_object")
+    inlines = [CoachLicenceInline]
 
     def get_mapper(self, obj):
         if hasattr(obj, "mapper"):
