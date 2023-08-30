@@ -389,7 +389,7 @@ class TestUserFeatureElementsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         assert res.json() == expected_response
 
     def test_no_feature_elements_found(self):
-        """Test if response is 404 when no feature elements are found"""
+        """Test if response is 204 when no feature elements are found"""
         res: Response = self.client.get(self.url, **self.headers)
         assert res.status_code == 204
 
@@ -425,6 +425,8 @@ class GoogleAuthTestEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             "redirect": "register",
             "access_token": "test_access_token",
             "refresh_token": "test_refresh_token",
+            "first_name": "Test",
+            "last_name": "User",
         }
         user_info_mock = {
             "sub": "106746665020843434121824568902",
@@ -469,6 +471,11 @@ class GoogleAuthTestEndpoint(TestCase, MethodsNotAllowedTestsMixin):
 
             assert data.get("redirect") == expected_res.get("redirect")
             assert data.get("success") == expected_res.get("success")
+            assert data.get("access_token") is not None
+            assert data.get("refresh_token") is not None
+            assert data.get("first_name") == expected_res.get("first_name")
+            assert data.get("last_name") == expected_res.get("last_name")
+            assert len(data) == len(expected_res)
 
             user_qry = User.objects.filter(email=user_email)
 
@@ -507,6 +514,18 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             "email_verified": True,
             "locale": "pl",
         }
+        self.expected_res = {
+            "success": True,
+            "redirect": "register",
+            "access_token": "test_access_token",
+            "refresh_token": "test_refresh_token",
+            "first_name": "Test",
+            "last_name": "User",
+        }
+        self.user_patcher = UserFactory.create(
+            first_name=self.user_info_mock["given_name"],
+            last_name=self.user_info_mock["family_name"],
+        )
 
     def tearDown(self):
         patch.stopall()
@@ -533,7 +552,7 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             return_value=google_auth_credentials_mock,
         )
         register_from_google_patcher = patch.object(
-            UserService, "register_from_social", return_value=UserFactory.create()
+            UserService, "register_from_social", return_value=self.user_patcher
         )
 
         return (
@@ -562,8 +581,18 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
                 self.url, data=self.unregistered_user_data
             )
             assert res.status_code == 200
+
+            for element in self.expected_res.keys():
+                assert element in res.json()
+
+            assert len(res.json()) == len(self.expected_res)
+
             assert res.json().get("redirect") == "register"
             assert res.json().get("success") is True
+            assert res.json().get("access_token") is not None
+            assert res.json().get("refresh_token") is not None
+            assert res.json().get("first_name") == self.user_patcher.first_name
+            assert res.json().get("last_name") == self.user_patcher.last_name
 
     def test_response_ok_landing_page(self) -> None:
         """
@@ -571,7 +600,7 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         User exists in db, so the response should include a landing page value
         """
 
-        UserFactory.create(email=self.user_info_mock.get("email"))
+        user: User = UserFactory.create(email=self.user_info_mock.get("email"))
         (
             get_user_info_patcher,
             google_credentials_patcher,
@@ -585,9 +614,14 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
+
             assert res.status_code == 200
             assert res.json().get("redirect") == "landing page"
             assert res.json().get("success") is True
+            assert res.json().get("access_token") is not None
+            assert res.json().get("refresh_token") is not None
+            assert res.json().get("first_name") == user.first_name
+            assert res.json().get("last_name") == user.last_name
 
     def test_response_no_user_credentials_exception(self) -> None:
         """Test if response is 400 when no data is fetched from Google"""

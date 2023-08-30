@@ -197,6 +197,8 @@ class UsersAPI(EndpointView):
             "success": True,
             "redirect": redirect_path,
             **user_service.create_tokens(user),
+            "first_name": user.first_name,
+            "last_name": user.last_name,
         }
         return response
 
