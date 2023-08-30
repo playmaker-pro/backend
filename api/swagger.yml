@@ -7,7 +7,10 @@ info:
 servers:
   - url: https://staging.playmakerpro.usermd.net/api/v3/
   - url: http://dev.jacekplaymaker.usermd.net/api/v3/
-  - url: http://localhost:8001/api/v3/
+  - url: http://localhost:{port}/api/v3/
+    variables:
+      port:
+        default: '8000'
 
 paths:
   /cities/:
@@ -773,18 +776,29 @@ paths:
                 example:
                   [
                     {
-                      "id": "5",
-                      "name": "Trener"
-                    },
-                    {
                       "id": "1",
                       "name": "Prezes"
                     },
                     {
                       "id": "2",
-                      "name": "Kierownik"
+                      "name": "Dyrektor sportowy"
                     },
-                    ...
+                    {
+                      "id": "3",
+                      "name": "Członek zarządu"
+                    },
+                    {
+                      "id": "4",
+                      "name": "Dyrektor skautingu"
+                    },
+                    {
+                      "id": "5",
+                      "name": "Kierownik drużyny"
+                    },
+                    {
+                      "id": "6",
+                      "name": "Inne"
+                    },
                   ]
           description: Returns available referee roles choices.
   /profiles/players-age-range/:
@@ -911,7 +925,7 @@ paths:
         As a response returns user access and refresh tokens.
       summary: Google auth endpoint
       tags:
-      - users
+      - social oauth
       requestBody:
         content:
           application/json:
@@ -923,9 +937,6 @@ paths:
                   description: Token id from Google.
               required:
               - token_id
-      security:
-      - jwtAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -948,11 +959,19 @@ paths:
                   access_token:
                     type: string
                     description: JWT access token.
+                  first_name:
+                    type: string
+                    description: User firstname.
+                  last_name:
+                    type: string
+                    description: User lastname.
                 example:
                   success: true
                   redirect: landing page
                   access: some_super_secret_jwt_token
                   refresh: refresh_token
+                  first_name: firstname
+                  last_name: lastname
           description: ''
         '400':
           content:
@@ -966,6 +985,77 @@ paths:
                     description: Detailed error message
                 example:
                   detail: No user credential fetched from Google. Please try again.
+          description: ''
+
+  /users/facebook-oauth2/:
+    post:
+      operationId: users_facebook_oauth2_create
+      description: |-
+        Authenticate user with Facebook by token_id and return his data.
+        If user exists in our database, then login him, otherwise register.
+        As a response returns user access and refresh tokens.
+      summary: Facebook auth endpoint
+      tags:
+      - social oauth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token_id:
+                  type: string
+                  description: Token id from Facebook.
+              required:
+              - token_id
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: User logged in successfully - tokens returned.
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Is request successful
+                  redirect:
+                    type: string
+                    description: 'The page where user should be redirected. Landing
+                      page after login, or register page if user is new.Choices: ''landing
+                      page'', ''register'''
+                  refresh_token:
+                    type: string
+                    description: JWT refresh token.
+                  access_token:
+                    type: string
+                    description: JWT access token.
+                  first_name:
+                    type: string
+                    description: User firstname.
+                  last_name:
+                    type: string
+                    description: User lastname.
+                example:
+                  success: true
+                  redirect: landing page
+                  access: some_super_secret_jwt_token
+                  refresh: refresh_token
+                  first_name: firstname
+                  last_name: lastname
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Bad request
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Detailed error message
+                example:
+                  detail: No user credential fetched from Facebook. Please try again.
           description: ''
   /users/login/:
     post:
@@ -1044,6 +1134,8 @@ paths:
       summary: User logout endpoint
       tags:
       - users
+      security:
+        - jwtAuth: []
       requestBody:
         content:
           application/json:
@@ -1072,6 +1164,8 @@ paths:
       summary: Refresh user token endpoint
       tags:
       - users
+      security:
+        - jwtAuth: []
       requestBody:
         content:
           application/json:
@@ -1157,9 +1251,6 @@ paths:
               required:
               - email
               - password
-      security:
-      - jwtAuth: []
-      - {}
       responses:
         '200':
           content:
