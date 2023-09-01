@@ -1326,11 +1326,25 @@ class ClubProfile(BaseProfile):
 
 class LicenceType(models.Model):
     name = models.CharField(
-        _("Licencja"), max_length=17, unique=True, help_text=_("Type of the licence")
+        _("Licencja"), max_length=25, unique=True, help_text=_("Type of the licence")
+    )
+    key = models.CharField(
+        _("Key"),
+        max_length=10,
+        null=True,
+        help_text=_("Key of the licence"),
+    )
+    order = models.PositiveIntegerField(
+        unique=True,
+        null=False,
+        help_text=_("Order in which the licence will be listed."),
     )
 
     def __str__(self):
         return f"{self.name}"
+
+    class Meta:
+        ordering = ["order"]
 
 
 class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):

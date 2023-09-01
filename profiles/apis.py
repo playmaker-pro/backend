@@ -1,6 +1,6 @@
 import uuid
 
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Case, When, Value, BooleanField
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -156,7 +156,7 @@ class CoachLicencesChoicesView(EndpointView):
     """
     View for listing coach licence choices.
     The response is a list of dictionaries each containing licence ID and licence name.
-    For example: [{"id": 1, "name": "UEFA PRO"}, {"id": 2, "name": "UEFA A"}, ...].
+    For example: [{"id": 1, "name": "UEFA PRO", "key": "PRO"}, {"id": 2, "name": "UEFA A", "key":"A"}, ...].
     """
 
     def list_coach_licences(self, request: Request) -> Response:

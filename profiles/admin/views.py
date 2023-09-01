@@ -353,3 +353,8 @@ class RefereeLevelAdmin(admin.ModelAdmin):
 class RefereeProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (linkify("external_links"),)
     readonly_fields = ("external_links",)
+
+
+@admin.register(models.LicenceType)
+class LicenceTypeAdmin(ProfileAdminBase):
+    pass
