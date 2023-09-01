@@ -27,6 +27,11 @@ class SeasonDoesNotExist(CoreAPIException):
     default_detail = "Given season does not exist"
 
 
+class SeasonParameterMissing(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "The 'season' parameter is required."
+
+
 class InvalidGender(CoreAPIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "Invalid Gender, choices: {M, F}"

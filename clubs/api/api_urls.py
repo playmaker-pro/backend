@@ -20,6 +20,11 @@ urlpatterns = [
         name="club_teams_search",
     ),
     path(
+        "club-teams/",
+        views.ClubTeamsAPI.as_view({"get": "get_club_teams"}),
+        name="club_teams",
+    ),
+    path(
         "leagues/highest-parents/",
         views.LeagueAPI.as_view({"get": "get_highest_parents"}),
         name="highest_parent_leagues",

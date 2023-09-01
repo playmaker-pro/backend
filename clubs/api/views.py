@@ -9,8 +9,7 @@ from rest_framework.views import APIView
 from api import errors as base_errors
 from api.views import EndpointView
 from clubs import errors, models, services
-
-from . import serializers
+from clubs.api import api_filters, serializers
 
 User = get_user_model()
 
@@ -115,6 +114,31 @@ class ClubTeamsSearchApi(APIView):
         serializer = serializers.TeamSerializer(qs, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ClubTeamsAPI(EndpointView):
+    permission_classes = []
+    club_service = services.ClubTeamService()
+
+    def get_club_teams(self, request: Request) -> Response:
+        """Retrieve filtered clubs and serialize them."""
+        filters = request.query_params.dict()
+        season: str = filters.get("season")
+        gender: str = filters.get("gender")
+
+        if not season:
+            raise errors.SeasonParameterMissing
+        try:
+            self.club_service.validate_gender(gender)
+        except (ValueError, AttributeError):
+            raise errors.InvalidGender
+
+        club_filter = api_filters.ClubFilter(filters)
+        clubs = club_filter.qs
+        serializer = serializers.ClubTeamSerializer(
+            clubs, many=True, context={"gender": gender, "season": season}
+        )
+        return Response({"clubs": serializer.data}, status=status.HTTP_200_OK)
 
 
 class LeagueAPI(EndpointView):

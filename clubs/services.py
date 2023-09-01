@@ -4,6 +4,7 @@ import typing
 from django.db.models import F, QuerySet
 
 from . import models
+from clubs.api.api_filters import ClubFilter
 
 
 class SeasonService:
@@ -126,5 +127,25 @@ class LeagueService:
             return queryset
 
     def validate_gender(self, gender: str) -> None:
+        if gender and gender.upper() not in ["M", "F"]:
+            raise ValueError
+
+
+class ClubTeamService:
+    def get_clubs(self, filters: typing.Optional[typing.Dict] = None) -> QuerySet:
+        """
+        Return all clubs filtered by the provided filters.
+        """
+        queryset: QuerySet = models.Club.objects.all().order_by("name")
+        if filters:
+            filter = ClubFilter(filters, queryset=queryset)
+            return filter.qs
+        return queryset
+
+    @staticmethod
+    def validate_gender(gender: str) -> None:
+        """
+        Validate the gender.
+        """
         if gender and gender.upper() not in ["M", "F"]:
             raise ValueError

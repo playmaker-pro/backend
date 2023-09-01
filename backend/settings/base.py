@@ -124,6 +124,7 @@ INSTALLED_APPS = [
     "cities_light",
     "features",
     "django_extensions",
+    "django_filters",
 ]
 
 SWAGGER_SETTINGS = {
