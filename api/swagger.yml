@@ -841,7 +841,7 @@ paths:
             application/json:
               schema:
                 type: array
-                description: 'List of licences, with id and name'
+                description: 'List of licences, with id, name and key'
                 items:
                   type: object
                   properties:
@@ -849,9 +849,12 @@ paths:
                       type: integer
                     name:
                       type: string
+                    key:
+                      type: string
                   example:
                     id: 1
                     name: UEFA PRO
+                    key: PRO
           description: Returns coach licences choices.
   /roles/get-roles/:
     get:

@@ -49,7 +49,7 @@ class PlayerMetricsSerializer(serializers.ModelSerializer):
 class LicenceTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.LicenceType
-        fields = "__all__"
+        fields = ["id", "name", "key"]
 
 
 class CoachLicenceSerializer(serializers.ModelSerializer):
