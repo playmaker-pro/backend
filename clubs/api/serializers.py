@@ -1,9 +1,12 @@
+import typing
+
 from rest_framework import serializers
 
 from clubs import models
 from external_links.serializers import ExternalLinksSerializer
 from users.serializers import UserDataSerializer
 from voivodeships.serializers import VoivodeshipSerializer
+from django.db.models.query import QuerySet
 
 
 class TeamSelect2Serializer(serializers.HyperlinkedModelSerializer):
@@ -135,6 +138,76 @@ class TeamSerializer(serializers.ModelSerializer):
         """Get current, serialized league history of team"""
         if latest_th := obj.get_latest_team_history():
             return LeagueHistorySerializer(latest_th.league_history).data
+
+
+class CustomTeamSerializer(serializers.ModelSerializer):
+    """
+    Custom Serializer for the Team model.
+
+    This serializer extends the default TeamSerializer to include information about a team's historical leagues.
+    While the main TeamSerializer provides standard information about a team, there are cases where more
+    contextual information regarding a team's history in various leagues is required.
+    Specifically, this serializer is useful when needing to show which highest parent league a team was part
+    of during a specific season.
+
+    Note:
+    The 'historical_league_names' field requires the 'season' to be provided in the context when serializing.
+    If no season is provided, it defaults to fetching the highest parent league from the first historical entry.
+    """
+
+    historical_league_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.Team
+        fields = ["id", "name", "gender", "historical_league_name"]
+
+    def get_historical_league_name(self, obj: models.Team) -> typing.Optional[str]:
+        """
+        Retrieve the historical league data based on the season context.
+        If no season is provided in the context, fetches the first historical entry for the team.
+        """
+        season = self.context.get("season")
+        if season:
+            historical_entry: typing.Optional[
+                models.TeamHistory
+            ] = obj.historical.filter(league_history__season__name=season).first()
+        else:
+            historical_entry = obj.historical.first()
+
+        return (
+            historical_entry.league_history.league.get_highest_parent().name
+            if historical_entry
+            else None
+        )
+
+
+class ClubTeamSerializer(serializers.ModelSerializer):
+    club_teams = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.Club
+        fields = ("id", "name", "club_teams")
+
+    def get_club_teams(
+        self, obj: models.Club
+    ) -> typing.List[typing.Dict[str, typing.Any]]:
+        """
+        Fetch team data for a club based on the gender and season context.
+        """
+        season = self.context.get("season")
+        gender = self.context.get("gender")
+
+        # Filter teams by gender
+        teams: QuerySet[models.Team] = obj.teams.all()
+        if gender:
+            if gender.upper() == models.Gender.MALE:
+                teams = teams.filter(gender=models.Gender.get_male_object())
+            elif gender.upper() == models.Gender.FEMALE:
+                teams = teams.filter(gender=models.Gender.get_female_object())
+
+        return CustomTeamSerializer(
+            teams, many=True, context={"gender": gender, "season": season}
+        ).data
 
 
 class TeamHistorySerializer(serializers.ModelSerializer):

@@ -144,6 +144,51 @@ paths:
           description: 'Given club does not exist'
         '401':
           description: 'Unauthorized'
+  /clubs/club-teams/:
+    get:
+      operationId: clubs_teams_retrieve
+      description: Return list of teams assigned to clubs
+      summary: Club teams list endpoint
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: Club name
+        - in: query
+          name: season
+          schema:
+            type: string
+          description: Season name
+          required: true
+        - in: query
+          name: gender
+          schema:
+            type: string
+            example: "M/F"
+          description: "Define gender: M - male, F - female. No param - get all"
+      tags:
+        - clubs
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: 'List of teams for given club'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimpleClub'
+              example:
+                clubs:
+                  - id: 974
+                    name: "38 Podlesianka Katowice"
+                    club_teams:
+                      - id: 19801
+                        name: "Lgks Podlesianka Katowice"
+                        gender: 1
+                        historical_league_name: "Trampkarz C2"
   /clubs/seasons/:
     get:
       operationId: season_retrieve
@@ -254,7 +299,7 @@ paths:
             type: string
           description: 'Season name'
         - in: query
-          name: q
+          name: name
           schema:
             type: string
           description: 'Club name query, LIKE'
@@ -1694,6 +1739,30 @@ components:
       required:
         - id
         - name
+    SimpleTeam:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        gender:
+          type: integer
+          description: 1 for male, 2 for female.
+        historical_leagues:
+          type: string
+          nullable: true
+    SimpleClub:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimpleTeam'
     Season:
       type: object
       properties:
@@ -2589,3 +2658,4 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+

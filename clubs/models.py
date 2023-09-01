@@ -923,6 +923,21 @@ class TeamHistory(models.Model):
     team = models.ForeignKey(
         "Team", on_delete=models.CASCADE, related_name="historical"
     )
+    season = models.ForeignKey(
+        "Season",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="The season associated with this team history entry.",
+    )
+    coach = models.ForeignKey(
+        "profiles.CoachProfile",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="coached_team_histories",
+        help_text="The coach who led the team during this season.",
+    )
 
     data_mapper_id = models.PositiveIntegerField(
         help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
@@ -971,3 +986,18 @@ class JuniorAgeGroup(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class TeamManagers(models.Model):
+    team = models.ForeignKey(
+        Team,
+        on_delete=models.CASCADE,
+        related_name="managers",
+        help_text="Reference to the team with which this manager is associated. A team can have multiple managers.",
+    )
+    manager = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="manager_teams",
+        help_text="Reference to the user profile managing the team",
+    )

@@ -322,3 +322,8 @@ class ClubAdmin(admin.ModelAdmin):
 @admin.register(models.JuniorAgeGroup)
 class JuniorAgeGroupAdmin(admin.ModelAdmin):
     ...
+
+
+@admin.register(models.TeamManagers)
+class TeamManagersAdmin(admin.ModelAdmin):
+    ...
