@@ -1,5 +1,6 @@
 import logging
 import typing
+from django.contrib.contenttypes.fields import GenericRelation
 from collections import Counter
 from datetime import datetime
 from address.models import AddressField
@@ -210,6 +211,8 @@ class BaseProfile(models.Model, EventLogMixin):
     event_log = models.JSONField(null=True, blank=True)
     step = models.IntegerField(default=None, null=True, blank=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
+
+    labels = GenericRelation("labels.Label")
 
     def get_absolute_url(self):
         return self.get_permalink()

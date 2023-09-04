@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     "profiles",
     "transfers",
     "contact",
-    "followers",
+    # Deprecation(rkesik): since we are working on a new FE
+    # "followers",
     "inquiries",
     "clubs",
     "external_links",
@@ -66,7 +67,7 @@ INSTALLED_APPS = [
     "landingpage",
     "voivodeships",
     "mapper",
-    "resources",
+    "labels",
     # "data",  # external repo DEPRECATED: PM-1015
     # "stats",  # external repo DEPRECATED: PM-1015
     "django_countries",

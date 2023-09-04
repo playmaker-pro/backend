@@ -11,7 +11,9 @@ from wagtail.documents import urls as wagtaildocs_urls
 import app.urls
 import clubs.urls
 import fantasy.urls
-import followers.urls  # @to be removed
+
+# Deprecation(rkesik): since we are working on new FE
+# import followers.urls  # @to be removed
 import fqa.urls
 import landingpage.urls
 import marketplace.urls
@@ -58,13 +60,13 @@ urlpatterns = [
     path("products/", include(products.urls), name="products"),
     path("fantasy/", include(fantasy.urls), name="fantasy"),
     path("najczesciej-zadawane-pytania/", include(fqa.urls), name="faqs"),
-    path("feeds/", include(followers.urls), name="feeds"),
+    # Deprecation(rkesik): since we are working on a new FE
+    # path("feeds/", include(followers.urls), name="feeds"),
     path("policy/", TemplateView.as_view(template_name="subpgaes/policy.html")),
     path("terms/", TemplateView.as_view(template_name="subpgaes/terms.html")),
     path("blog/", include("blog.urls", namespace="blog")),
     path("api/v2/", api_router.urls),
     path("api/v3/", include(api_urls, namespace="api")),
-    path("resources/", include("resources.urls", namespace="resources")),
     path("select2/", include("django_select2.urls")),
     path("transfer/", include(landingpage.urls, namespace="landingpage")),
     path("", include("allauth.urls")),

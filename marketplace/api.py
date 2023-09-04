@@ -1,11 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
-from clubs.models import Team
-from followers.models import Follow, FollowTeam
-from inquiries.models import InquiryRequest
 
 # from marketplace.models import Announcement  # TODO: sprawdzic o co tu chodzi i podac prawdziwa klase!
 from marketplace.models import (

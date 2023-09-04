@@ -24,6 +24,11 @@ urlpatterns = [
         views.ProfileAPI.as_view({"get": "get_profile_by_uuid"}),
         name="get_profile",
     ),
+    path(
+        r"<uuid:profile_uuid>/labels",
+        views.ProfileAPI.as_view({"get": "get_profile_labels"}),
+        name="get_profile_labels",
+    ),
     # path(r"playerupdate/", WebhookPlayer.as_view(), name="player_webhook"), DEPRECATED: PM20-245
     path(
         r"formations/",

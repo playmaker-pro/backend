@@ -1,6 +1,6 @@
 import uuid
 
-from django.db.models import QuerySet, Case, When, Value, BooleanField
+from django.db.models import QuerySet
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -59,6 +59,17 @@ class ProfileAPI(filters.ProfileListAPIFilter, EndpointView):
         qs: QuerySet = self.get_paginated_queryset()
         serializer = api_serializers.ProfileSerializer(qs, many=True)
         return self.get_paginated_response(serializer.data)
+
+    def get_profile_labels(self, request: Request, profile_uuid: uuid.UUID) -> Response:
+        profile_object = profile_service.get_profile_by_uuid(profile_uuid)
+        season_name = request.GET.get("season_name")
+        query = {}
+        if season_name:
+            query = {"season_name": season_name}
+        serializer = api_serializers.ProfileLabelsSerializer(
+            profile_object.labels.filter(**query), many=True
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class FormationChoicesView(EndpointView):

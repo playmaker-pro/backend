@@ -13,8 +13,9 @@ urlpatterns = [
     path("me/query/", api.inquiry, name="inquiry_me"),
     path("me/query/see/", api.inquiry_seen, name="inquiry_see"),
     path("me/query/update/", api.inquiry_update, name="inquiry_update"),
-    path("me/observe/", api.observe, name="observe_me"),
-    path("me/observe/team/", api.observe_team, name="observe_team"),
+    # Deprecation(rkesik): since we are working on a new FE
+    #    path("me/observe/", api.observe, name="observe_me"),
+    #     path("me/observe/team/", api.observe_team, name="observe_team"),
     path(
         "me/verification/",
         views.AccountVerification.as_view(),
@@ -70,7 +71,8 @@ urlpatterns = [
     path(
         "stats/matches/<slug:slug>/", views.ProfileGames.as_view(), name="stats_games"
     ),
-    path("my/observers/", views.MyObservers.as_view(), name="my_observers"),
+    # Deprecation(rkesik): since we are working on a new FE
+    #     path("my/observers/", views.MyObservers.as_view(), name="my_observers"),
     path("my/requests/", views.MyRequests.as_view(), name="my_requests"),
     path("me/changerole/", views.RequestRoleChange.as_view(), name="rolechange_self"),
     path("<slug:slug>/", views.ShowProfile.as_view(), name="show"),

@@ -4,7 +4,9 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext_lazy as _
 
 from clubs.models import Team
-from followers.models import Follow, FollowTeam
+
+# Deprecation(rkesik): since we are working on a new FE
+# from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 
 from .model_utils import (
@@ -119,26 +121,27 @@ def inquiry(request):
         return JsonResponse(response_data)
 
 
-@login_required
-def observe_team(request):
-    response_data = {}
-    message = {"body": ""}
+# Deprecated(rkeisk): since we are workign on a new FE
+# @login_required
+# def observe_team(request):
+#     response_data = {}
+#     message = {"body": ""}
 
-    if request.POST.get("action") == "post":
-        slug = request.POST.get("slug")
-        if slug:
-            team = get_object_or_404(Team, slug=slug)
-        f, created = FollowTeam.objects.get_or_create(user=request.user, target=team)
-        if (
-            not created
-        ):  # simple scenario - if pair user-slug is the same delete following.
-            message_body = f"przestałeś obserwować drużynę"
-            f.delete()
-        else:
-            message_body = f"obserwujesz drużynę"
-        message["body"] = message_body
-        response_data["message"] = message
-        return JsonResponse(response_data)
+#     if request.POST.get("action") == "post":
+#         slug = request.POST.get("slug")
+#         if slug:
+#             team = get_object_or_404(Team, slug=slug)
+#         f, created = FollowTeam.objects.get_or_create(user=request.user, target=team)
+#         if (
+#             not created
+#         ):  # simple scenario - if pair user-slug is the same delete following.
+#             message_body = f"przestałeś obserwować drużynę"
+#             f.delete()
+#         else:
+#             message_body = f"obserwujesz drużynę"
+#         message["body"] = message_body
+#         response_data["message"] = message
+#         return JsonResponse(response_data)
 
 
 @login_required

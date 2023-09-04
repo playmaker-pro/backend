@@ -324,3 +324,9 @@ class UpdateProfileSerializer(ProfileSerializer):
         self.validate_data()
         self.update_fields()
         self.instance.save()
+
+
+class ProfileLabelsSerializer(serializers.Serializer):
+    label_name = serializers.CharField(max_length=25)
+    label_description = serializers.CharField(max_length=200)
+    season_name = serializers.CharField(max_length=9)
