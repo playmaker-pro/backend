@@ -29,7 +29,9 @@ class ProfileAPI(filters.ProfileListAPIFilter, EndpointView):
 
     def create_profile(self, request: Request) -> Response:
         """Create initial profile for user"""
-        serializer = api_serializers.CreateProfileSerializer(data=request.data)
+        serializer = api_serializers.CreateProfileSerializer(
+            data=request.data, context={"requestor": request.user}
+        )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -45,7 +47,9 @@ class ProfileAPI(filters.ProfileListAPIFilter, EndpointView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update_profile(self, request: Request) -> Response:
-        serializer = api_serializers.UpdateProfileSerializer(data=request.data)
+        serializer = api_serializers.UpdateProfileSerializer(
+            data=request.data, context={"requestor": request.user}
+        )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
 

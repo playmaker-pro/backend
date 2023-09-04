@@ -8,6 +8,7 @@ from django.http import QueryDict
 from pydantic import parse_obj_as
 from rest_framework import serializers
 
+from api.errors import NotOwnerOfAnObject
 from clubs import errors as clubs_errors
 from clubs.api import serializers as club_serializers
 from clubs.services import ClubService
@@ -97,7 +98,7 @@ class ProfileSerializer(serializers.Serializer):
     playermetrics = profile_serializers.PlayerMetricsSerializer(required=False)
     licences = profile_serializers.CoachLicenceSerializer(many=True, required=False)
 
-    enums = [
+    enums = (
         "transfer_status",
         "soccer_goal",
         "formation",
@@ -110,7 +111,7 @@ class ProfileSerializer(serializers.Serializer):
         "coach_role",
         "referee_role",
         "licence",
-    ]
+    )
 
     # meta fields
     player_stats = serializers.SerializerMethodField(read_only=True)
@@ -239,12 +240,26 @@ class ProfileSerializer(serializers.Serializer):
 class CreateProfileSerializer(ProfileSerializer):
     user_id = serializers.IntegerField()
     uuid = serializers.CharField(read_only=True)
-    serialize_fields = ["user_id", "uuid", "role"]
-    required_fields = ["user_id", "role"]
+    serialize_fields = (
+        "user_id",
+        "uuid",
+        "role",
+    )
+    required_fields = ("role",)
 
     def __init__(self, *args, **kwargs) -> None:
         kwargs["data"] = self.initial_validation(kwargs.get("data"))
         super().__init__(*args, **kwargs)
+
+    def to_internal_value(self, data: dict) -> dict:
+        """Get user directly from request auth (requestor)"""
+        if user := self.context.get("requestor"):
+            data["user_id"] = user.pk
+            return super().to_internal_value(data)
+        else:
+            raise serializers.ValidationError(
+                {"error": "Unable to define owner of a request."}
+            )
 
     def to_representation(self, *args, **kwargs) -> dict:
         ret = super(ProfileSerializer, self).to_representation(self.instance)
@@ -252,11 +267,7 @@ class CreateProfileSerializer(ProfileSerializer):
 
     def validate_user(self):
         """Validate user_is was given and user exist"""
-        user_id: int = self.initial_data.get("user_id")
-        user_obj: User = users_service.get_user(user_id)
-
-        if not user_id or not user_obj:
-            raise profile_errors.InvalidUser
+        user_obj: User = self.context.get("requestor")
 
         if users_service.user_has_profile(user_obj, self.model):
             raise profile_errors.UserAlreadyHasProfile
@@ -294,7 +305,7 @@ class CreateProfileSerializer(ProfileSerializer):
 
 class UpdateProfileSerializer(ProfileSerializer):
     uuid = serializers.UUIDField()
-    required_fields = ["uuid"]
+    required_fields = ("uuid",)
 
     def __init__(self, *args, **kwargs) -> None:
         data = self.initial_validation(kwargs.get("data"))
@@ -318,6 +329,11 @@ class UpdateProfileSerializer(ProfileSerializer):
                 player_position_service.manage_positions(self.instance, positions_data)
             elif hasattr(self.instance, attr):
                 setattr(self.instance, attr, value)
+
+    def validate_owner(self) -> None:
+        """Validate if requestor is owner of a profile"""
+        if self.instance.user != self.context.get("requestor"):
+            raise NotOwnerOfAnObject
 
     def save(self) -> None:
         """If data is valid, update fields and save profile instance"""

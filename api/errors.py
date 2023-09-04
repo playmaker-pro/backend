@@ -74,6 +74,11 @@ class ParamsRequired(CoreAPIException):
         super().__init__(*args, **kwargs)
 
 
+class NotOwnerOfAnObject(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "You are not allowed to modify this object."
+
+
 def custom_exception_handler(exc, context) -> exception_handler:
     """
     Log DRF errors to the console.

@@ -427,7 +427,7 @@ paths:
       description: Create initial profile for user
       summary: Create profile
       requestBody:
-        description: "user_id and role required, rest of fields based on profile type, fields listed below"
+        description: "role shortcut {P, C, S...} required, rest of fields based on profile type, fields listed below"
         required: true
         content:
           application/json:
@@ -436,11 +436,8 @@ paths:
               properties:
                 role:
                   type: string
-                user_id:
-                  type: integer
               required:
                 - role
-                - user_id
               description: 'It is possible to pass other,
               related with given profile fields to be initialized with new created profile'
       tags:
@@ -469,7 +466,7 @@ paths:
                   - role
                   - uuid
         '400':
-          description: 'Invalid role or user_id not defined'
+          description: 'Invalid role'
         '404':
           description: 'User does not exist'
         '401':
