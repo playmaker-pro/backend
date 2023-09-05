@@ -4,14 +4,12 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from api.serializers import CitySerializer, CountrySerializer
-from features.models import AccessPermission, Feature, FeatureElement
 from profiles import serializers as profile_serializers
 from profiles.serializers import ProfileEnumChoicesSerializer
 from features.models import Feature, FeatureElement, AccessPermission
 from users.errors import UserRegisterException
-from users.utils.api_utils import validate_serialized_email
-
-from .models import UserPreferences
+from users.models import UserPreferences
+from users.utils.api_utils import modify2custom_exception
 
 User = get_user_model()
 
@@ -77,7 +75,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         try:
             validated_data = super().to_internal_value(data)
         except serializers.ValidationError as e:
-            validate_serialized_email(e)
+            modify2custom_exception(e)
 
         return validated_data
 

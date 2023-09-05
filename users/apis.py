@@ -2,41 +2,40 @@ import logging
 import traceback
 from typing import List, Optional, Sequence, Union
 
-from drf_spectacular.utils import extend_schema
-from django.core.exceptions import ImproperlyConfigured
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from api.custom_throttling import EmailCheckerThrottle
 from api.swagger_schemas import (
     USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA,
     USER_FEATURE_SETS_SWAGGER_SCHEMA,
     USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA,
     USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA,
-    USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA,
 )
 from api.views import EndpointView
 from features.models import Feature, FeatureElement
 from users import serializers
 from users.errors import (
     ApplicationError,
+    EmailNotAvailable,
+    EmailNotValid,
     NoSocialTokenSent,
     NoUserCredentialFetchedException,
-    EmailNotValid,
-    EmailNotAvailable,
-    UserEmailNotValidException,
     SocialAccountInstanceNotCreatedException,
+    UserEmailNotValidException,
 )
-from users.managers import GoogleManager, FacebookManager
+from users.managers import FacebookManager, GoogleManager
+from users.models import User
 from users.schemas import (
-    UserGoogleDetailPydantic,
     RedirectAfterGoogleLogin,
     UserFacebookDetailPydantic,
+    UserGoogleDetailPydantic,
 )
-from users.models import User
 from users.serializers import (
     FeatureElementSerializer,
     FeaturesSerializer,
@@ -47,24 +46,22 @@ from users.services import UserService
 # Definicja enpointów nie musi być skoncentrowana tylko i wyłącznie w jedenj klasie.
 # jesli poniższe metody będą super-cieńkie (logika będzie poza tymi views)
 # to wówczas można już na tym poziomie rozdzielić:
-#   AdminUsersAPI  i UsersAPI jeśli byśmy np. chceli podzielic sobie API na to co widzi admin a to co zwykly user
+#   AdminUsersAPI  i UsersAPI jeśli byśmy np. chceli podzielic sobie API na to co widzi admin a to co zwykly user  # noqa
 # unikniemy wówczas if... if... i zaszytej logiki
-# row-column-permission w samym widoku. Wiadomo jakieś powtorzenia w kodzie są ale przez to że
+# row-column-permission w samym widoku. Wiadomo jakieś powtorzenia w kodzie są ale przez to że  # noqa
 # logika jest super-thin to nam nie szkodzi.
-# Jednak zdaje sobie sprawe ze nie uniknimy sytuacji "if" pod jednm API jak się da to robmy w miare czysto.
+# Jednak zdaje sobie sprawe ze nie uniknimy sytuacji "if" pod jednm API jak się da to robmy w miare czysto.  # noqa
 
 
 user_service: UserService = UserService()
 logger = logging.getLogger("django")
 
 
-class UsersAPI(EndpointView):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = serializers.UserSerializer
-    allowed_methods = ("list", "post", "put", "update")
+class UserRegisterEndpointView(EndpointView):
+    permission_classes = [AllowAny]
+    throttle_classes = [EmailCheckerThrottle]
 
     @staticmethod
-    @extend_schema(**USER_REGISTER_ENDPOINT_SWAGGER_SCHEMA)
     def register(request) -> Response:
         """
         Validate given data and register user if everything is ok.
@@ -79,6 +76,12 @@ class UsersAPI(EndpointView):
 
         return Response(serialized_data)
 
+
+class UsersAPI(EndpointView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.UserSerializer
+    allowed_methods = ("list", "post", "put", "update")
+
     def get_permissions(self) -> Sequence:
         """
         Exclude register endpoint from permission_classes.
@@ -86,9 +89,7 @@ class UsersAPI(EndpointView):
         when calling not accepted method.
         """
         if (
-            "register" in self.request.path
-            or "google-oauth2" in self.request.path
-            or "email-verification" in self.request.path
+            "google-oauth2" in self.request.path
             or "facebook-oauth2" in self.request.path
         ):
             retrieve_permission_list = [AllowAny]
@@ -167,7 +168,7 @@ class UsersAPI(EndpointView):
             UserEmailNotValidException: If the user's email is not valid.
             SocialAccountInstanceNotCreatedException: If the creation of the associated social account fails.
 
-        """
+        """  # noqa: E501
         try:
             user_info: Union[UserGoogleDetailPydantic, UserFacebookDetailPydantic]
             user_info = manager.get_user_info()
@@ -224,7 +225,7 @@ class UsersAPI(EndpointView):
             raise NoUserCredentialFetchedException(details="User email not valid")
         except SocialAccountInstanceNotCreatedException:
             raise NoUserCredentialFetchedException(
-                details="No user data fetched from Google or data is not valid. Please try again."
+                details="No user data fetched from Google or data is not valid. Please try again."  # noqa
             )
 
         return Response(response, status=status.HTTP_200_OK)
@@ -244,22 +245,6 @@ class UsersAPI(EndpointView):
 
         return Response(response)
 
-    @staticmethod
-    def verify_email(request) -> Response:
-        """verify email address, if is already in use"""
-        try:
-            validate_email(request.data.get("email"))
-        except ValidationError as e:
-            raise EmailNotValid(details=e)
-
-        response: bool = user_service.email_available(request.data.get("email"))
-        if not response:
-            raise EmailNotAvailable()
-
-        return Response(
-            {"success": True, "email_available": response}, status=status.HTTP_200_OK
-        )
-
 
 class LoginView(TokenObtainPairView):
     """
@@ -276,8 +261,34 @@ class RefreshTokenCustom(TokenRefreshView):
     """
     Returns an access and refresh JWT pair using an existing refresh token.
     Returns status codes 401 and 400 if the refresh token is expired or invalid, respectively.
-    """
+    """  # noqa: E501
 
     @extend_schema(**USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA)
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
+
+
+class EmailAvailability(EndpointView):
+    """
+    Checks if the email is available for registration.
+    """
+
+    permission_classes = [AllowAny]
+    throttle_classes = [EmailCheckerThrottle]
+
+    @staticmethod
+    def verify_email(request) -> Response:
+        """verify email address, if is already in use"""
+        email: str = request.data.get("email")
+        try:
+            validate_email(email)
+        except ValidationError as e:
+            raise EmailNotValid(details=e)
+
+        response: bool = user_service.email_available(email)
+        if not response:
+            raise EmailNotAvailable()
+
+        return Response(
+            {"success": True, "email_available": response}, status=status.HTTP_200_OK
+        )
