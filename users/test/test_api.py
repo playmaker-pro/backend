@@ -1,26 +1,31 @@
-from typing import Dict, Set, Tuple
+from typing import Dict, Tuple
 from unittest import TestCase
 from unittest.mock import patch
 
 import pytest
 from allauth.socialaccount.models import SocialAccount
+from django.conf import settings
+from django.core.cache import cache
 from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
-from users.schemas import RegisterSchema
+from features.models import Feature
 from users.apis import UsersAPI
 from users.errors import (
     ApplicationError,
+    SocialAccountInstanceNotCreatedException,
     UserEmailNotValidException,
-    SocialAccountInstanceNotCreatedException
 )
-from users.schemas import UserFacebookDetailPydantic
-from features.models import Feature
-from users.managers import GoogleManager, FacebookManager
+from users.managers import FacebookManager, GoogleManager
 from users.models import User
+from users.schemas import (
+    GoogleSdkLoginCredentials,
+    RegisterSchema,
+    UserFacebookDetailPydantic,
+    UserGoogleDetailPydantic,
+)
 from users.services import UserService
-from users.schemas import UserGoogleDetailPydantic, GoogleSdkLoginCredentials
 from utils.factories.feature_sets_factories import FeatureElementFactory, FeatureFactory
 from utils.factories.user_factories import UserFactory
 from utils.test.test_utils import (
@@ -147,6 +152,33 @@ class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             "email": TEST_EMAIL,
         }
 
+    def tearDown(self) -> None:
+        """Stop all patches and clear throttle cache"""
+        patch.stopall()
+        cache.clear()
+
+    @pytest.mark.usefixtures("disable_email_check_throttle_for_test")
+    def test_request_methods_not_allowed(self) -> None:
+        """Disable throttle for test_request_methods_not_allowed tests"""
+        super().test_request_methods_not_allowed()
+
+    def test_throttle(self) -> None:
+        """Check if throttle works properly"""
+
+        for _ in range(settings.THROTTLE_EMAIL_CHECK_LIMITATION):
+            res: Response = self.client.post(
+                self.url,
+                data=self.data,
+            )
+
+            assert res.status_code != 429
+
+        res: Response = self.client.post(
+            self.url,
+            data=self.data,
+        )
+        assert res.status_code == 429
+
     @mute_post_save_signal()
     def test_register_endpoint_response_ok(self) -> None:
         """Test register endpoint. Response OK"""
@@ -195,7 +227,12 @@ class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
     def test_register_endpoint_invalid_mail(self) -> None:
         """Test register endpoint with invalid email field"""
 
-        invalid_names = ["test_email", "test_email@", "test_email@test", "test_email@test."]
+        invalid_names = [
+            "test_email",
+            "test_email@",
+            "test_email@test",
+            "test_email@test.",
+        ]
 
         for email in invalid_names:
             self.data["email"] = email
@@ -480,7 +517,7 @@ class GoogleAuthTestEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             user_qry = User.objects.filter(email=user_email)
 
             assert user_qry.exists()
-            assert isinstance(user := user_qry.first(), User)
+            assert isinstance(user := user_qry.first(), User)  # noqa: E999
             assert user.email == user_email
 
             assert social_account.exists()
@@ -653,12 +690,30 @@ class TestEmailAvailabilityEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         """Setup method for UserFeatureElementsEndpoint tests"""
         self.client: APIClient = APIClient()
         self.url: str = reverse("api:users:email-verification")
-        self.test_email = "some_email@playmaker.com"
+        self.test_email = TEST_EMAIL
 
     def tearDown(self) -> None:
-        """Stop all patches."""
+        """Stop all patches and clear throttle cache"""
         patch.stopall()
+        cache.clear()
 
+    @pytest.mark.usefixtures("disable_email_check_throttle_for_test")
+    def test_request_methods_not_allowed(self) -> None:
+        """Disable throttle for test_request_methods_not_allowed tests"""
+        super().test_request_methods_not_allowed()
+
+    def test_throttle(self) -> None:
+        """Check if throttle works properly"""
+
+        for _ in range(settings.THROTTLE_EMAIL_CHECK_LIMITATION):
+            res: Response = self.client.post(self.url, data={"email": self.test_email})
+            assert res.status_code == 200
+            assert res.json()["success"] is True
+
+        res: Response = self.client.post(self.url, data={"email": self.test_email})
+        assert res.status_code == 429
+
+    @pytest.mark.usefixtures("disable_email_check_throttle_for_test")
     def test_if_email_has_valid_format(self) -> None:
         """Test if email has valid format"""
         data = {"email": "test_email"}
@@ -668,6 +723,7 @@ class TestEmailAvailabilityEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         assert "success" in res.json()
         assert "detail" in res.json()
 
+    @pytest.mark.usefixtures("disable_email_check_throttle_for_test")
     def test_email_is_available(self):
         """Test if email is available"""
         data = {"email": "test@email.com"}
@@ -679,6 +735,7 @@ class TestEmailAvailabilityEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         assert res.json()["email_available"] is True
         assert res.json()["success"] is True
 
+    @pytest.mark.usefixtures("disable_email_check_throttle_for_test")
     def test_email_is_not_available(self):
         """Test if email is not available"""
         UserFactory.create(email=self.test_email)
@@ -716,7 +773,9 @@ class TestFacebookAuthEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             "access_token": "some_access_token",
         }
 
-        patch("users.apis.UsersAPI._social_media_auth", return_value=response_dict).start()
+        patch(
+            "users.apis.UsersAPI._social_media_auth", return_value=response_dict
+        ).start()
         response: Response = self.client.post(self.url, data={"token_id": "test"})
 
         assert response.status_code == 200
@@ -728,7 +787,6 @@ class TestFacebookAuthEndpoint(TestCase, MethodsNotAllowedTestsMixin):
 
 @pytest.mark.django_db
 class TestSocialMediaAuthMethod(TestCase):
-
     def tearDown(self) -> None:
         """Stop all patches."""
         patch.stopall()
@@ -750,11 +808,16 @@ class TestSocialMediaAuthMethod(TestCase):
         }
         patch(
             "users.managers.FacebookManager.get_user_info",
-            return_value=UserFacebookDetailPydantic(**data_patcher)
+            return_value=UserFacebookDetailPydantic(**data_patcher),
         ).start()
-        patch("users.services.UserService.create_social_account", return_value=(True, True)).start()
+        patch(
+            "users.services.UserService.create_social_account",
+            return_value=(True, True),
+        ).start()
 
-        res: dict = UsersAPI._social_media_auth(FacebookManager(token_id="token_id"), "test")
+        res: dict = UsersAPI._social_media_auth(
+            FacebookManager(token_id="token_id"), "test"
+        )
 
         assert User.objects.filter(email=data_patcher["email"]).exists()
         assert isinstance(res, dict)
@@ -772,9 +835,12 @@ class TestSocialMediaAuthMethod(TestCase):
         }
         patch(
             "users.managers.FacebookManager.get_user_info",
-            return_value=UserFacebookDetailPydantic(**data_patcher)
+            return_value=UserFacebookDetailPydantic(**data_patcher),
         ).start()
-        patch("users.services.UserService.create_social_account", return_value=(True, True)).start()
+        patch(
+            "users.services.UserService.create_social_account",
+            return_value=(True, True),
+        ).start()
 
         with pytest.raises(UserEmailNotValidException):
             UsersAPI._social_media_auth(FacebookManager(token_id="token_id"), "test")
@@ -789,9 +855,12 @@ class TestSocialMediaAuthMethod(TestCase):
         }
         patch(
             "users.managers.FacebookManager.get_user_info",
-            return_value=UserFacebookDetailPydantic(**data_patcher)
+            return_value=UserFacebookDetailPydantic(**data_patcher),
         ).start()
-        patch("users.services.UserService.create_social_account", return_value=(False, True)).start()
+        patch(
+            "users.services.UserService.create_social_account",
+            return_value=(False, True),
+        ).start()
 
         with pytest.raises(SocialAccountInstanceNotCreatedException):
             UsersAPI._social_media_auth(FacebookManager(token_id="token_id"), "test")

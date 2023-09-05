@@ -12,7 +12,11 @@ router.register("", apis.UsersAPI, basename="users")
 
 
 urlpatterns = [
-    path("register/", apis.UsersAPI.as_view({"post": "register"}), name="api-register"),
+    path(
+        "register/",
+        apis.UserRegisterEndpointView.as_view({"post": "register"}),
+        name="api-register",
+    ),
     path("login/", LoginView.as_view(), name="api-login"),
     # Logout is basically a blacklist of the token, because JWT is stateless.
     # Token will expire after given (in settings) time.
@@ -41,7 +45,7 @@ urlpatterns = [
     ),
     path(
         "email-verification/",
-        apis.UsersAPI.as_view({"post": "verify_email"}),
+        apis.EmailAvailability.as_view({"post": "verify_email"}),
         name="email-verification",
     ),
 ]
