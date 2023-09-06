@@ -22,6 +22,7 @@ from adapters.player_adapter import (PlayerGamesAdapter,
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_profile_external_links
 from mapper.models import Mapper
+
 # from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
 from roles import definitions
 from voivodeships.models import Voivodeships

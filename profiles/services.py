@@ -439,6 +439,14 @@ class ProfileService:
             user__userpreferences__birth_date__gte=player_max_age,
         )
 
+    def get_user_profiles(self, user: User) -> typing.List[models.PROFILE_TYPE]:
+        """Find all profiles for given user"""
+        profiles: list = []
+        for profile_type in models.PROFILE_MODELS:
+            if profile := profile_type.objects.filter(user=user).first():
+                profiles.append(profile)
+        return profiles
+
 
 class PlayerProfilePositionService:
     def validate_positions(self, positions_data: typing.List[PositionData]) -> None:

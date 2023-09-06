@@ -1,4 +1,7 @@
 import uuid
+
+from django.contrib.auth.models import AnonymousUser
+from django.db.models import QuerySet
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -64,6 +67,18 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         qs: QuerySet = self.get_paginated_queryset()
         serializer = ProfileSerializer(qs, many=True)
         return self.get_paginated_response(serializer.data)
+
+    def get_owned_profiles(self, request: Request) -> Response:
+        """
+        Get list of profiles owned by the current user
+        [{uuid, role}, ...]
+        """
+        if isinstance(request.user, AnonymousUser):
+            raise exceptions.NotAuthenticated
+
+        profiles = profile_service.get_user_profiles(request.user)
+        serializer = api_serializers.BaseProfileDataSerializer(profiles, many=True)
+        return Response(serializer.data)
 
 
 class FormationChoicesView(EndpointView):
