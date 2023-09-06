@@ -109,6 +109,7 @@ class ClubSerializer(serializers.ModelSerializer):
     editors = UserDataSerializer(many=True, required=False)
     stadion_address = serializers.CharField(required=False)
     practice_stadion_address = serializers.CharField(required=False)
+    picture_url = serializers.CharField()
 
     class Meta:
         model = models.Club
