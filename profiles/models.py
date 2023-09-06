@@ -1,7 +1,9 @@
 import logging
 import typing
+import uuid
 from collections import Counter
 from datetime import datetime
+
 from address.models import AddressField
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -11,18 +13,19 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
+
 import utils as utilites
 from adapters import strategy
 from adapters.base_adapter import API_METHOD, ScrapperAPI
-from adapters.player_adapter import PlayerGamesAdapter, PlayerSeasonStatsAdapter
+from adapters.player_adapter import (PlayerGamesAdapter,
+                                     PlayerSeasonStatsAdapter)
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_profile_external_links
 from mapper.models import Mapper
-import uuid
-
 # from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
 from roles import definitions
 from voivodeships.models import Voivodeships
+
 from .errors import VerificationCompletionFieldsWrongSetup
 from .mixins import TeamObjectsDisplayMixin
 from .mixins import utils as profile_utils
@@ -1574,7 +1577,8 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         Za wygrany mecz 3 pkt, za remis 1 pkt, za porażkę 0 pkt.
 
         """
-        from metrics.coach import CoachCarrierAdapterPercentage, CoachGamesAdapter
+        from metrics.coach import (CoachCarrierAdapterPercentage,
+                                   CoachGamesAdapter)
 
         if not self.has_data_id:
             return
@@ -2038,6 +2042,8 @@ class ProfileVerificationStatus(models.Model):
 
 
 class PlayerVideo(models.Model):
+    LABELS = ((1, "Skrót meczu"), (2, "Cały mecz"), (3, "Bramka"))
+
     player = models.ForeignKey(
         PlayerProfile, on_delete=models.CASCADE, related_name="player_video"
     )
@@ -2046,10 +2052,25 @@ class PlayerVideo(models.Model):
     )
     title = models.CharField(_("Tytuł nagrania"), max_length=235, blank=True, null=True)
     description = models.TextField(_("Opis"), null=True, blank=True)
+    label = models.IntegerField(choices=LABELS, null=True, blank=True)
 
     class Meta:
         verbose_name = "Player Video"
         verbose_name_plural = "Player Videos"
+
+    @property
+    def get_youtube_thumbnail_url(self) -> typing.Union[str, None]:
+        """Crop YouTube video id from url, then return thumbnail url"""
+        from urllib.parse import parse_qsl, urlparse
+
+        thumbnail_url: str = "https://i.ytimg.com/vi/{}/hqdefault.jpg"
+        url = str(self.url)
+        parser = urlparse(url)
+
+        if parser.netloc.endswith("youtu.be") or parser.netloc.endswith("youtube.com"):
+            query_params = dict(parse_qsl(parser.query))
+            if video_id := query_params.get("v", parser.path.split("/")[-1]):
+                return thumbnail_url.format(video_id)
 
 
 class PlayerProfilePosition(models.Model):

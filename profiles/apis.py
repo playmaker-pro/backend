@@ -1,8 +1,6 @@
 import uuid
-
-from django.db.models import QuerySet, Case, When, Value, BooleanField
 from drf_spectacular.utils import extend_schema
-from rest_framework import status
+from rest_framework import exceptions, status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -12,13 +10,16 @@ from api.swagger_schemas import (
     FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA,
 )
 from api.views import EndpointView
+from profiles.api_serializers import *
+from profiles.filters import ProfileListAPIFilter
+from profiles.services import PlayerVideoService, ProfileService
 
-from . import api_serializers, filters, models, serializers, services
+from . import errors, models, serializers
 
-profile_service = services.ProfileService()
+profile_service = ProfileService()
 
 
-class ProfileAPI(filters.ProfileListAPIFilter, EndpointView):
+class ProfileAPI(ProfileListAPIFilter, EndpointView):
     permission_classes = [IsAuthenticatedOrReadOnly]
     allowed_methods = ["post", "patch", "get"]
 
@@ -29,7 +30,7 @@ class ProfileAPI(filters.ProfileListAPIFilter, EndpointView):
 
     def create_profile(self, request: Request) -> Response:
         """Create initial profile for user"""
-        serializer = api_serializers.CreateProfileSerializer(
+        serializer = CreateProfileSerializer(
             data=request.data, context={"requestor": request.user}
         )
         if serializer.is_valid(raise_exception=True):
@@ -41,13 +42,13 @@ class ProfileAPI(filters.ProfileListAPIFilter, EndpointView):
         self, request: Request, profile_uuid: uuid.UUID
     ) -> Response:
         profile_object = profile_service.get_profile_by_uuid(profile_uuid)
-        serializer: api_serializers.ProfileSerializer = (
-            api_serializers.ProfileSerializer(profile_object)
+        serializer: ProfileSerializer = ProfileSerializer(
+            profile_object, context={"requestor": request.user}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update_profile(self, request: Request) -> Response:
-        serializer = api_serializers.UpdateProfileSerializer(
+        serializer = UpdateProfileSerializer(
             data=request.data, context={"requestor": request.user}
         )
         if serializer.is_valid(raise_exception=True):
@@ -61,7 +62,7 @@ class ProfileAPI(filters.ProfileListAPIFilter, EndpointView):
         (?role={P, C, S, G, ...})
         """
         qs: QuerySet = self.get_paginated_queryset()
-        serializer = api_serializers.ProfileSerializer(qs, many=True)
+        serializer = ProfileSerializer(qs, many=True)
         return self.get_paginated_response(serializer.data)
 
 
@@ -170,3 +171,73 @@ class CoachLicencesChoicesView(EndpointView):
         licences = models.LicenceType.objects.all()
         serializer = serializers.LicenceTypeSerializer(licences, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class PlayerVideoAPI(EndpointView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_labels(self, request: Request) -> Response:
+        """List all player video labels"""
+        labels = (
+            serializers.ChoicesTuple(*obj)
+            for obj in PlayerVideoService.get_player_video_labels()
+        )
+        serializer = serializers.ProfileEnumChoicesSerializer(labels, many=True)  # type: ignore
+        return Response(serializer.data)
+
+    def create_player_video(self, request: Request) -> Response:
+        """View for creating new player videos"""
+        serializer = serializers.PlayerVideoSerializer(
+            data=request.data, context={"requestor": request.user}
+        )
+
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(serializer.profile, status=status.HTTP_201_CREATED)
+
+    def delete_player_video(
+        self, request: Request, video_id: typing.Optional[int] = None
+    ) -> Response:
+        """View for deleting player videos"""
+        if not video_id:
+            raise exceptions.ValidationError({"error": "Missing video_id."})
+
+        try:
+            obj = PlayerVideoService.get_video_by_id(video_id)
+        except models.PlayerVideo.DoesNotExist:
+            raise exceptions.NotFound(
+                f"PlayerVideo with ID: {video_id} does not exist."
+            )
+
+        serializer = serializers.PlayerVideoSerializer(
+            obj, context={"requestor": request.user}
+        )
+        serializer.delete()
+
+        return Response(serializer.profile, status=status.HTTP_200_OK)
+
+    def update_player_video(self, request: Request) -> Response:
+        """View for updating existing player video"""
+        if video_id := request.data.get("id"):
+            try:
+                obj = PlayerVideoService.get_video_by_id(video_id)
+            except models.PlayerVideo.DoesNotExist:
+                raise exceptions.NotFound(
+                    f"PlayerVideo with ID: {video_id} does not exist."
+                )
+
+            serializer: serializers.PlayerVideoSerializer = (
+                serializers.PlayerVideoSerializer(
+                    obj, data=request.data, context={"requestor": request.user}
+                )
+            )
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                return Response(serializer.profile, status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            raise errors.IncompleteRequestBody(("id",))

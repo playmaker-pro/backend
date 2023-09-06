@@ -216,11 +216,11 @@ class ProfileSerializer(serializers.Serializer):
         self.validate_club()
         self.validate_team_history()
 
-    def initial_validation(self, data: typing.Dict):
+    def initial_validation(self, data: typing.Dict) -> dict:
         """Validate serializer input (data **kw)"""
         for field in self.required_fields:
             if not data or field not in data.keys():
-                raise profile_errors.IncompleteRequestData(self.required_fields)
+                raise profile_errors.IncompleteRequestBody(self.required_fields)
         return data.dict() if isinstance(data, QueryDict) else data
 
     def get_player_stats(self, obj: models.PROFILE_TYPE) -> dict:

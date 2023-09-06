@@ -41,7 +41,7 @@ class InvalidUUID(CoreAPIException):
     default_detail = "Given UUID is invalid."
 
 
-class IncompleteRequestData(CoreAPIException):
+class IncompleteRequestBody(CoreAPIException):
     def __init__(self, required_fields: typing.Iterable):
         self.default_detail = (
             f"Incomplete request's body, required fields: {', '.join(required_fields)}"
