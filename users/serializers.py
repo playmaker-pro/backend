@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Dict, Optional
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
@@ -138,3 +138,51 @@ class FeaturesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Feature
         fields = ("name", "keyname", "elements", "enabled")
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+    def to_internal_value(self, data):
+        """Override to_internal_value method to handle custom exceptions."""
+        validated_data: Optional[dict] = None
+        try:
+            validated_data = super().to_internal_value(data)
+        except serializers.ValidationError as e:
+            modify2custom_exception(e)  # Use the function to raise the custom exception
+        return validated_data
+
+
+class CreateNewPasswordSerializer(serializers.Serializer):
+    new_password = serializers.CharField(required=True)
+    confirm_new_password = serializers.CharField(required=True, write_only=True)
+
+    def validate(self, data: Dict[str, str]) -> Dict[str, str]:
+        """
+        Check that the new_password and confirm_new_password fields match.
+        """
+        if data["new_password"] != data["confirm_new_password"]:
+            raise UserRegisterException(
+                fields={"non_field_errors": "Passwords must match"}
+            )
+        return data
+
+    def validate_new_password(self, password: str) -> str:
+        """
+        Validates the new password based on pre-defined criteria.
+        """
+        if len(password) < 8:
+            raise UserRegisterException(
+                fields={"password": "Password must be at least 8 characters long."}
+            )
+        return password
+
+    def to_internal_value(self, data):
+        """Override to_internal_value method to handle custom exceptions."""
+        validated_data: Optional[dict] = None
+        try:
+            validated_data = super().to_internal_value(data)
+        except serializers.ValidationError as e:
+            modify2custom_exception(e)
+
+        return validated_data

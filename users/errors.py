@@ -83,3 +83,18 @@ class UserEmailNotValidException(Exception):
 
 class SocialAccountInstanceNotCreatedException(Exception):
     ...
+
+
+class InvalidTokenException(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Invalid token"
+
+
+class TokenProcessingError(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Something went wrong"
+
+
+class EmailValidationException(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Something went wrong. Check fields list for more details."

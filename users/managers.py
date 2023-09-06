@@ -2,22 +2,29 @@ import logging
 import traceback
 from datetime import datetime as dt
 from datetime import timedelta
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 
 import requests
 from allauth.socialaccount.models import SocialApp
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.encoding import DjangoUnicodeDecodeError, force_bytes, force_text
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.translation import ugettext_lazy as _
 from pydantic import ValidationError
 from requests import Response
+from rest_framework import status
 
 from users.schemas import (
     GoogleSdkLoginCredentials,
     SocialAppPydantic,
-    UserGoogleDetailPydantic,
     UserFacebookDetailPydantic,
+    UserGoogleDetailPydantic,
 )
 
 logger = logging.getLogger("django")
@@ -82,14 +89,14 @@ class SocialAuthMixin:
     This mixin encapsulates the functionality of sending a request to a social authentication
     provider's API to obtain user information. It handles the process of accessing user data
     using an authentication token.
-    """
+    """  # noqa: E501
 
     URL: str = ""
     token_id: str = ""
     USER_DATA_SCOPE: str = ""
 
     def request_user_data(self) -> dict:
-        """Returns user info from social auth provider. Raises ValueError if response is not ok."""
+        """Returns user info from social auth provider. Raises ValueError if response is not ok."""  # noqa: E501
 
         user_data_params = {
             "access_token": self.token_id,
@@ -101,7 +108,6 @@ class SocialAuthMixin:
         response: Response = requests.get(self.URL, params=user_data_params)
 
         if not response.ok:
-
             error: Union[str, dict] = response.json().get("error")
             error_description: str = response.json().get("error_description")
             raise ValueError(
@@ -125,7 +131,7 @@ class GoogleManager(SocialAuthMixin):
     Args:
         token_id (str): A unique identifier associated with the user's authentication token.
 
-    """
+    """  # noqa: E501
 
     URL = "https://www.googleapis.com/oauth2/v3/userinfo"
 
@@ -207,7 +213,7 @@ class FacebookManager(SocialAuthMixin):
 
     Args:
         token_id (str): Unique identifier associated with the user's authentication token.
-    """
+    """  # noqa: E501
 
     def __init__(self, token_id: str):
         self.token_id = token_id
@@ -234,3 +240,67 @@ class FacebookManager(SocialAuthMixin):
         except ValidationError as e:
             logger.error(str(traceback.format_exc()) + f"\n{e}")
             raise ValueError(e)
+
+
+class UserTokenManager:
+    """
+    Utility class to manage user tokens for password reset.
+    """
+
+    success_message = "Password reset successful."
+    error_message = "Something went wrong. Please try again later."
+
+    @staticmethod
+    def create_url(user: "User", endpoint_name: str) -> str:
+        """
+        Generates a URL containing a token for the given user.
+
+        Returns a complete URL containing the token for the user.
+        """
+        uidb: str = urlsafe_base64_encode(force_bytes(user.id))
+        token: str = default_token_generator.make_token(user)
+        # Use reverse to get the URL pattern by name
+        path = reverse(endpoint_name, args=[uidb, token])
+
+        # Get base URL from settings or provide a default
+        base_url = settings.BASE_URL or settings.LOCALHOST_URL
+
+        return f"{base_url}{path}"
+
+    @staticmethod
+    def check_user_token(**kwargs) -> Tuple:
+        """
+        Verifies the validity of a token for a user based on a given uidb64.
+
+        Returns tuple containing a dictionary message (success/error), an HTTP status code,
+        and the associated user (or None if not found or in case of an error).
+        """  # noqa: E501
+
+        uidb64 = kwargs.get("user", None)
+        token = kwargs.get("token", None)
+
+        try:
+            user_id = force_text(urlsafe_base64_decode(uidb64))
+            # Ensure that the decoded user_id only contains digit characters for safety.
+            # This guards against any anomalies in the uidb64 encoding/decoding process.
+            if not user_id.isdigit():
+                raise ValueError("UID contains non-digit characters.")
+        except (DjangoUnicodeDecodeError, ValueError):
+            logger.error("Error decoding uidb64 token: %s", uidb64, exc_info=True)
+            raise ValueError("Error processing the token")
+
+        try:
+            user = get_user_model().objects.get(pk=user_id)
+        except ObjectDoesNotExist:
+            logger.error("User not found for decoded uid: %s", user_id, exc_info=True)
+            raise ValueError("Error processing the token")
+
+        if not default_token_generator.check_token(user, token):
+            raise ValueError("Invalid token")
+
+        user.last_login = timezone.now()
+        return (
+            {"success": "True", "detail": UserTokenManager.success_message},
+            status.HTTP_200_OK,
+            user,
+        )

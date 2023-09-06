@@ -1,6 +1,6 @@
 import logging
 import traceback
-from typing import List, Optional, Sequence, Union
+import typing
 
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -8,6 +8,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.request import Request
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from api.custom_throttling import EmailCheckerThrottle
@@ -27,9 +28,11 @@ from users.errors import (
     NoSocialTokenSent,
     NoUserCredentialFetchedException,
     SocialAccountInstanceNotCreatedException,
+    InvalidTokenException,
+    TokenProcessingError,
     UserEmailNotValidException,
 )
-from users.managers import FacebookManager, GoogleManager
+from users.managers import FacebookManager, GoogleManager, UserTokenManager
 from users.models import User
 from users.schemas import (
     RedirectAfterGoogleLogin,
@@ -41,7 +44,8 @@ from users.serializers import (
     FeaturesSerializer,
     UserRegisterSerializer,
 )
-from users.services import UserService
+from users.services import UserService, PasswordResetService
+
 
 # Definicja enpointów nie musi być skoncentrowana tylko i wyłącznie w jedenj klasie.
 # jesli poniższe metody będą super-cieńkie (logika będzie poza tymi views)
@@ -54,6 +58,7 @@ from users.services import UserService
 
 
 user_service: UserService = UserService()
+password_reset_service: PasswordResetService = PasswordResetService()
 logger = logging.getLogger("django")
 
 
@@ -82,7 +87,7 @@ class UsersAPI(EndpointView):
     serializer_class = serializers.UserSerializer
     allowed_methods = ("list", "post", "put", "update")
 
-    def get_permissions(self) -> Sequence:
+    def get_permissions(self) -> typing.Sequence:
         """
         Exclude register endpoint from permission_classes.
         Note: You can't use 'self.action' here because it's not set
@@ -120,7 +125,7 @@ class UsersAPI(EndpointView):
     @extend_schema(**USER_FEATURE_SETS_SWAGGER_SCHEMA)
     def feature_sets(request) -> Response:
         """Returns all user feature sets."""
-        data: List[Feature] = user_service.get_user_features(request.user)
+        data: typing.List[Feature] = user_service.get_user_features(request.user)
         serializer = FeaturesSerializer(instance=data, many=True)
         if not data:
             return Response(status=status.HTTP_204_NO_CONTENT, data=serializer.data)
@@ -130,7 +135,7 @@ class UsersAPI(EndpointView):
     @extend_schema(**USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA)
     def feature_elements(request) -> Response:
         """Returns all user feature elements."""
-        data: List[FeatureElement] = user_service.get_user_feature_elements(
+        data: typing.List[FeatureElement] = user_service.get_user_feature_elements(
             request.user
         )
         serializer = FeatureElementSerializer(instance=data, many=True)
@@ -140,7 +145,7 @@ class UsersAPI(EndpointView):
 
     @staticmethod
     def _social_media_auth(
-        manager: Union[GoogleManager, FacebookManager], provider: str
+        manager: typing.Union[GoogleManager, FacebookManager], provider: str
     ) -> dict:
         """
         Authenticate a user via social media and perform necessary actions based on the user's status.
@@ -170,14 +175,16 @@ class UsersAPI(EndpointView):
 
         """  # noqa: E501
         try:
-            user_info: Union[UserGoogleDetailPydantic, UserFacebookDetailPydantic]
+            user_info: typing.Union[
+                UserGoogleDetailPydantic, UserFacebookDetailPydantic
+            ]
             user_info = manager.get_user_info()
         except ValueError as e:
             logger.error(str(traceback.format_exc()) + f"\n{str(e)}")
             raise ApplicationError(details=str(e))
 
         user_email: str = user_info.email
-        user: Optional[User] = user_service.filter(email=user_email)
+        user: typing.Optional[User] = user_service.filter(email=user_email)
 
         redirect_path: str = RedirectAfterGoogleLogin.LANDING_PAGE.value
 
@@ -291,4 +298,66 @@ class EmailAvailability(EndpointView):
 
         return Response(
             {"success": True, "email_available": response}, status=status.HTTP_200_OK
+        )
+
+
+class PasswordManagementAPIView(EndpointView):
+    serializer_class = serializers.CreateNewPasswordSerializer
+    permission_classes = (AllowAny,)
+
+    def reset_password(self, request: Request) -> Response:
+        """
+        Handle the POST request to initiate the password reset process.
+        """
+        serializer = serializers.ResetPasswordSerializer(data=request.data)
+        serializer.is_valid(
+            raise_exception=True
+        )  # This will now handle email validation and raise custom exceptions
+        email = serializer.validated_data.get("email")
+        user = password_reset_service.get_user_by_email(email)
+
+        if user:
+            reset_url = UserTokenManager.create_url(
+                user, "api:users:api-password-reset-confirm"
+            )
+            password_reset_service.send_reset_email(user, reset_url)
+
+        return Response(
+            {
+                "detail": "If an account with the provided email exists, you'll receive further instructions."
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def create_new_password(
+        self, request: Request, uidb64: str, token: str
+    ) -> Response:
+        """
+        Process the request to reset a user's password using a token.
+        """
+        # Use the serializer for validation.
+        serializer = serializers.CreateNewPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            success_message, status_code, user = UserTokenManager.check_user_token(
+                user=uidb64, token=token
+            )
+
+            if status_code != status.HTTP_200_OK:
+                return Response(success_message, status=status.HTTP_400_BAD_REQUEST)
+
+            password_reset_service.reset_user_password(
+                user, serializer.validated_data["new_password"]
+            )
+
+        except ValueError as e:
+            if str(e) == "Invalid token":
+                raise InvalidTokenException()
+            else:
+                raise TokenProcessingError()
+
+        return Response(
+            {"success": True, "detail": "Password reset successful"},
+            status=status.HTTP_200_OK,
         )
