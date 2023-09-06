@@ -156,3 +156,9 @@ class PlayersGroupByAgeSerializer(serializers.Serializer):
         raise errors.SerializerError(
             f"{self.__class__.__name__} should not be able to save anything!"
         )
+
+
+class VerificationStageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.VerificationStage
+        exclude = ("id",)

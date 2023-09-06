@@ -358,3 +358,8 @@ class RefereeProfileAdmin(ProfileAdminBase):
 @admin.register(models.LicenceType)
 class LicenceTypeAdmin(ProfileAdminBase):
     pass
+
+
+@admin.register(models.VerificationStage)
+class VerificationStageAdmin(admin.ModelAdmin):
+    ...

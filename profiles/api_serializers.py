@@ -89,6 +89,7 @@ class ProfileSerializer(serializers.Serializer):
     voivodeship_obj = VoivodeshipSerializer(required=False)
     history = profile_serializers.ProfileVisitHistorySerializer(required=False)
     external_links = ExternalLinksSerializer(required=False)
+    verification_stage = profile_serializers.VerificationStageSerializer(required=False)
 
     # fields related with profile (FK to profile)
     player_positions = profile_serializers.PlayerProfilePositionSerializer(
