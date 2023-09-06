@@ -8,7 +8,6 @@ from django.http import QueryDict
 from pydantic import parse_obj_as
 from rest_framework import serializers
 
-from api.errors import NotOwnerOfAnObject
 from clubs import errors as clubs_errors
 from clubs.api import serializers as club_serializers
 from clubs.services import ClubService
@@ -333,7 +332,7 @@ class UpdateProfileSerializer(ProfileSerializer):
             if self.user.is_valid(raise_exception=True):
                 self.user.save()
 
-        if history_data := self.initial_data.pop("history", None):
+        if history_data := self.initial_data.pop("history", None):  # noqa: E999
             self.history = profile_serializers.ProfileVisitHistorySerializer(
                 instance=self.instance.history, data=history_data, partial=True
             )

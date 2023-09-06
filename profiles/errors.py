@@ -1,6 +1,8 @@
 import typing
 
-from api.errors import *
+from rest_framework import status
+
+from api.errors import CoreAPIException
 
 
 class VerificationCompletionFieldsWrongSetup(Exception):

@@ -1,15 +1,15 @@
 import uuid
 
-from django.core.exceptions import ValidationError
-from django.db.models import ObjectDoesNotExist, QuerySet
 from django.contrib.auth.models import AnonymousUser
-from django.db.models import QuerySet
+from django.core.exceptions import ValidationError
+from django.db.models import ObjectDoesNotExist
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from api.errors import NotOwnerOfAnObject
 from api.swagger_schemas import (
     COACH_ROLES_API_SWAGGER_SCHEMA,
     FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA,
@@ -19,7 +19,7 @@ from profiles.api_serializers import *
 from profiles.filters import ProfileListAPIFilter
 from profiles.services import PlayerVideoService, ProfileService
 
-from . import api_serializers, errors, filters, models, serializers, services
+from . import api_serializers, errors, models, serializers
 
 profile_service = ProfileService()
 
@@ -62,7 +62,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         try:
             profile_uuid: str = request.data.pop("uuid")
         except KeyError:
-            raise errors.IncompleteRequestData(("uuid",))
+            raise errors.IncompleteRequestBody(("uuid",))
 
         try:
             profile = profile_service.get_profile_by_uuid(profile_uuid)
@@ -72,7 +72,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
             raise errors.InvalidUUID
 
         if profile.user != request.user:
-            raise errors.NotOwnerOfAnObject
+            raise NotOwnerOfAnObject
 
         serializer = api_serializers.UpdateProfileSerializer(
             instance=profile, data=request.data, context={"requestor": request.user}
