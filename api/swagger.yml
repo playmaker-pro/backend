@@ -791,6 +791,35 @@ paths:
                         - $ref: '#/components/schemas/ScoutProfile'
                         - $ref: '#/components/schemas/GuestProfile'
                 required: ["count", "results"]
+  /profiles/owned/:
+    'get':
+      operationId: owned_profile_list
+      description: "List of profiles owned by user"
+      summary: "List of profiles owned by user"
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+        - { }
+      responses:
+        '200':
+          description: 'List of profiles owned by user'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    uuid:
+                      type: string
+                    role:
+                      type: string
+                  required:
+                    - uuid
+                    - role
+        '401':
+          description: "Unauthorized"
   /profiles/{profile_uuid}/:
     get:
       operationId: profiles_retrieve_by_uuid

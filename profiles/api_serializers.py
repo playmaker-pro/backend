@@ -341,3 +341,12 @@ class UpdateProfileSerializer(ProfileSerializer):
         self.validate_data()
         self.update_fields()
         self.instance.save()
+
+
+class BaseProfileDataSerializer(ProfileSerializer):
+    def to_representation(
+        self, obj: typing.Optional[models.PROFILE_TYPE] = None, *args, **kwargs
+    ) -> dict:
+        """Override custom to_representation to return just uuid + role"""
+        obj = obj or self.instance
+        return {"uuid": obj.uuid, "role": profiles_service.get_role_by_model(type(obj))}
