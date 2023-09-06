@@ -1,5 +1,4 @@
-from cities_light.models import City
-from django.db.models import Q
+from django.db.models import QuerySet
 from django_countries import countries
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status, viewsets
@@ -7,8 +6,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from unidecode import unidecode
 
-from api.swagger_schemas import (CITIES_VIEW_SWAGGER_SCHEMA,
-                                 PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA)
+from api.swagger_schemas import PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA
 from app.utils import cities
 from profiles.models import Language, PlayerProfile
 from profiles.serializers import LanguageSerializer
@@ -17,6 +15,9 @@ from users.models import UserPreferences
 from . import errors
 from . import serializers as api_serializers
 from .pagination import PagePagination
+from .services import LocaleDataService
+
+locale_service: LocaleDataService = LocaleDataService()
 
 
 class EndpointView(viewsets.GenericViewSet):
@@ -24,8 +25,13 @@ class EndpointView(viewsets.GenericViewSet):
 
     pagination_class = PagePagination
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet:
         ...
+
+    def get_paginated_queryset(self, qs: QuerySet = None) -> QuerySet:
+        """Paginate queryset to optimize serialization"""
+        qs: QuerySet = qs or self.get_queryset()
+        return self.paginate_queryset(qs)
 
 
 class LocaleDataView(EndpointView):
@@ -76,13 +82,17 @@ class LocaleDataView(EndpointView):
         mapped_city_query = cities.handle_custom_city_mapping(decoded_city_query)
 
         # Filter cities based on the decoded query (matching city names) or matched voivodeships
-        filtered_cities = City.objects.filter(
-            Q(name_ascii__icontains=mapped_city_query)
-            | Q(region__name__in=matched_voivodeships)
-        )
+        # If request has no param, return just prior countries
+        if not city_query:
+            cities_qs: QuerySet = locale_service.get_prior_cities_queryset()
+        else:
+            cities_qs: QuerySet = locale_service.get_cities_queryset_by_query_param(
+                city_like=mapped_city_query, voivo_like=matched_voivodeships
+            )
 
-        serializer = api_serializers.CitySerializer(filtered_cities, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        cities_qs: QuerySet = self.get_paginated_queryset(cities_qs)
+        serializer = api_serializers.CitySerializer(cities_qs, many=True)
+        return self.get_paginated_response(serializer.data)
 
     def list_languages(self, request: Request) -> Response:
         """

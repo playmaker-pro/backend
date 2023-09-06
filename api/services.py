@@ -1,9 +1,10 @@
 from functools import cached_property
 
+from cities_light.models import City
 from django.conf.global_settings import LANGUAGES
+from django.db.models import Q, QuerySet
 from django_countries.data import COUNTRIES
 
-from . import errors
 from .consts import *
 
 
@@ -39,7 +40,7 @@ class LocaleDataService:
         """
         Get list of prior cities
         """
-        return ["Wrocław", "Warszawa", "Kraków", "Łódź", "Poznań"]
+        return ["Wrocław", "Warszawa", "Kraków", "Łódź", "Poznań", "Warsaw"]
 
     def is_prior_country(self, country_code: str) -> bool:
         """Check if given country is priority"""
@@ -82,3 +83,15 @@ class LocaleDataService:
         English name is needed in order to translate name to any other language.
         """
         return self.mapped_languages.get(code)
+
+    def get_prior_cities_queryset(self) -> QuerySet:
+        """Get City queryset of prior Cities"""
+        return City.objects.filter(name__in=self.prior_cities)
+
+    def get_cities_queryset_by_query_param(
+        self, city_like: str, voivo_like: list
+    ) -> QuerySet:
+        """Get City queryset filtered by params"""
+        return City.objects.filter(
+            Q(name_ascii__icontains=city_like) | Q(region__name__in=voivo_like)
+        )

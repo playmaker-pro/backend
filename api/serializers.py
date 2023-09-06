@@ -64,7 +64,14 @@ class CitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = City
-        fields = ("id", "name", "voivodeship", "priority")
+        fields = (
+            "id",
+            "name",
+            "voivodeship",
+            "priority",
+            "latitude",
+            "longitude",
+        )
 
     def get_voivodeship(self, obj: City) -> str:
         """Transform voivodeship name"""
