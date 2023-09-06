@@ -203,3 +203,9 @@ def calculate_age(birth_date: typing.Optional[datetime.date]) -> typing.Optional
         )
     else:
         return None
+
+
+def remove_polish_chars(filename: str) -> str:
+    """Unify Polish chars to default"""
+    trans_map: dict = str.maketrans("ŻŹĆŃĄŚŁĘÓżźćńąśłęó", "ZZCNASLEOzzcnasleo")
+    return filename.translate(trans_map)

@@ -1,3 +1,4 @@
+import datetime
 from functools import cached_property, lru_cache
 from typing import List, Union
 
@@ -12,6 +13,7 @@ from django_countries.fields import CountryField
 from external_links.models import ExternalLinks
 from mapper.models import Mapper
 from profiles.utils import conver_vivo_for_api, supress_exception, unique_slugify
+from utils import remove_polish_chars
 from voivodeships.models import Voivodeships
 
 from .managers import LeagueManager
@@ -72,20 +74,6 @@ class Voivodeship(models.Model):
 
     def __str__(self):
         return f"{self.name}"
-
-
-def remove_polish_chars(filename):
-    return (
-        filename.replace("ł", "l")
-        .replace("ą", "a")
-        .replace("ó", "o")
-        .replace("ż", "z")
-        .replace("ź", "z")
-        .replace("ń", "n")
-        .replace("ę", "e")
-        .replace("ś", "s")
-        .replace("ć", "c")
-    )
 
 
 class MappingMixin:
@@ -167,9 +155,10 @@ class Club(models.Model, MappingMixin):
     def display_voivodeship(self):
         return conver_vivo_for_api(self.voivodeship_obj.name)
 
-    def get_file_path(instance, filename):
-        """Replcae server language code mapping"""
-        return f"club_pics/%Y-%m-%d/{remove_polish_chars(filename)}"
+    def get_file_path(self, *args, **kwargs) -> str:
+        """define club picture image path, remove Polish chars"""
+        curr_date: str = str(datetime.datetime.now().date())
+        return f"club_pics/{curr_date}/{remove_polish_chars(str(self.name))}"
 
     picture = models.ImageField(
         _("Herb klubu"), upload_to=get_file_path, null=True, blank=True
