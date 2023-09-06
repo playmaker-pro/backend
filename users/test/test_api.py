@@ -5,6 +5,8 @@ from unittest.mock import patch
 import pytest
 from allauth.socialaccount.models import SocialAccount
 from django.conf import settings
+from django.contrib.auth import authenticate
+from django.core import mail
 from django.core.cache import cache
 from django.urls import reverse
 from rest_framework.response import Response
@@ -26,6 +28,7 @@ from users.schemas import (
     UserGoogleDetailPydantic,
 )
 from users.services import UserService
+from users.utils.test_utils import extract_uidb64_and_token_from_email
 from utils.factories.feature_sets_factories import FeatureElementFactory, FeatureFactory
 from utils.factories.user_factories import UserFactory
 from utils.test.test_utils import (
@@ -613,7 +616,9 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             UserService, "create_social_account", return_value=(True, True)
         ).start()
 
-        with get_user_info_patcher, google_credentials_patcher, register_from_google_patcher:
+        with (
+            get_user_info_patcher
+        ), google_credentials_patcher, register_from_google_patcher:
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
@@ -647,7 +652,9 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             UserService, "create_social_account", return_value=(True, True)
         ).start()
 
-        with get_user_info_patcher, google_credentials_patcher, register_from_google_patcher:
+        with (
+            get_user_info_patcher
+        ), google_credentials_patcher, register_from_google_patcher:
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
@@ -672,13 +679,15 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         patch.object(
             UserService, "create_social_account", return_value=(False, True)
         ).start()
-        with get_user_info_patcher, google_credentials_patcher, register_from_google_patcher:
+        with (
+            get_user_info_patcher
+        ), google_credentials_patcher, register_from_google_patcher:
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
             assert res.status_code == 400
 
-            msg = "No user data fetched from Google or data is not valid. Please try again."
+            msg = "No user data fetched from Google or data is not valid. Please try again."  # noqa: E501
             assert res.json().get("detail") == msg
 
 
@@ -864,3 +873,142 @@ class TestSocialMediaAuthMethod(TestCase):
 
         with pytest.raises(SocialAccountInstanceNotCreatedException):
             UsersAPI._social_media_auth(FacebookManager(token_id="token_id"), "test")
+
+
+@pytest.mark.django_db
+class TestPasswordResetEndpoint(TestCase, MethodsNotAllowedTestsMixin):
+    NOT_ALLOWED_METHODS = ["get", "put", "patch", "delete"]
+
+    def setUp(self) -> None:
+        self.client: APIClient = APIClient()
+        self.url: str = reverse("api:users:api-password-reset")
+        self.user_data: Dict[str, str] = {
+            "password": "old_secret_password",
+            "first_name": "first_name",
+            "last_name": "last_name",
+            "email": TEST_EMAIL,
+        }
+        self.user = UserFactory.create(**self.user_data)
+
+    def test_password_reset_request(self) -> None:
+        """Test if reset request returns 200 for valid email."""
+        res: Response = self.client.post(
+            self.url, data={"email": self.user_data["email"]}
+        )
+        assert res.status_code == 200
+
+    def test_password_reset_for_non_existent_email(self) -> None:
+        """Test if reset request returns a specific status (e.g., 200) for non-existent email."""  # noqa: E501
+        res: Response = self.client.post(
+            self.url, data={"email": "non_existent@test.com"}
+        )
+        assert res.status_code == 200
+
+    def test_reset_email_content(self) -> None:
+        """Test if the reset email contains the correct content and link."""
+        self.client.post(self.url, data={"email": self.user_data["email"]})
+
+        assert len(mail.outbox) == 1
+        email = mail.outbox[0]
+
+        assert email.subject == "Password reset"
+        assert email.to == [self.user_data["email"]]
+        assert "Witaj na platformie PlayMaker.pro" in email.body
+
+
+@pytest.mark.django_db
+class TestPasswordChangeEndpoint(TestCase, MethodsNotAllowedTestsMixin):
+    NOT_ALLOWED_METHODS = ["get", "put", "patch", "delete"]
+
+    def setUp(self) -> None:
+        self.client: APIClient = APIClient()
+        self.user_data: Dict[str, str] = {
+            "password": "old_secret_password",
+            "first_name": "first_name",
+            "last_name": "last_name",
+            "email": TEST_EMAIL,
+        }
+        self.user = UserFactory.create(**self.user_data)
+
+        # The URL for the password reset confirmation with dummy args
+        # Used for MethodsNotAllowedTestsMixin
+        self.url = reverse(
+            "api:users:api-password-reset-confirm", args=["dummy_uidb64", "dummy_token"]
+        )
+
+        # The URL for initiating the password reset process
+        self.initiate_reset_url = reverse("api:users:api-password-reset")
+
+    def test_password_change_with_valid_token(self) -> None:
+        """Test if the user can reset their password with a valid token."""
+
+        # Request a password reset
+        self.client.post(
+            self.initiate_reset_url, data={"email": self.user_data["email"]}
+        )
+        email = mail.outbox[0]
+        uidb64, token = extract_uidb64_and_token_from_email(email.body)
+
+        # Use these values to reverse the change password URL
+        change_password_url = reverse(
+            "api:users:api-password-reset-confirm", args=[uidb64, token]
+        )
+
+        # Perform the password change request using the valid token.
+        new_password = "newSecurePassword123!"
+        response = self.client.post(
+            change_password_url,
+            data={"new_password": new_password, "confirm_new_password": new_password},
+        )
+
+        # Assert that the password was changed successfully.
+        assert response.status_code == 200
+
+        user = User.objects.get(email=self.user_data["email"])
+        assert user.check_password(new_password) is True
+
+    def test_password_change_with_invalid_token(self) -> None:
+        """Test if the user cannot reset their password with an invalid token."""
+
+        # Make a reset password request. This will generate a valid token.
+        self.client.post(
+            self.initiate_reset_url, data={"email": self.user_data["email"]}
+        )
+        email_content = mail.outbox[0].body
+
+        # Extract the real uidb64 and token for the user.
+        uidb64, valid_token = extract_uidb64_and_token_from_email(email_content)
+
+        # Intentionally modify the token to make it invalid.
+        invalid_token = "invalid-token"
+        assert (
+            invalid_token != valid_token
+        )  # Just to make sure we aren't coincidentally using a valid token.
+
+        # Construct the password reset confirm URL with the invalid token.
+        change_password_url_with_invalid_token = reverse(
+            "api:users:api-password-reset-confirm", args=[uidb64, invalid_token]
+        )
+
+        # Try to reset the password with the invalid token.
+        response = self.client.post(
+            change_password_url_with_invalid_token,
+            data={
+                "password": self.user_data["password"],
+                "new_password": "newpassword1234",
+                "confirm_new_password": "newpassword1234",
+            },
+        )
+
+        # Check that the response indicates a failure
+        assert response.status_code == 400
+        user = authenticate(
+            email=self.user_data["email"], password=self.user_data["password"]
+        )
+        assert (
+            user is not None
+        )  # The authentication should succeed with the old password.
+        user = authenticate(username=self.user_data["email"], password="newpassword123")
+        assert (
+            user is None
+        )  # The authentication should fail since the password was not changed.

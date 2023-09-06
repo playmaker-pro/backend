@@ -48,4 +48,14 @@ urlpatterns = [
         apis.EmailAvailability.as_view({"post": "verify_email"}),
         name="email-verification",
     ),
+    path(
+        "password/reset/",
+        apis.PasswordManagementAPIView.as_view({"post": "reset_password"}),
+        name="api-password-reset",
+    ),
+    path(
+        "password/reset/new-password/<uidb64>/<token>/",
+        apis.PasswordManagementAPIView.as_view({"post": "create_new_password"}),
+        name="api-password-reset-confirm",
+    ),
 ]

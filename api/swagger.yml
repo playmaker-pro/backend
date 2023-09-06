@@ -1582,6 +1582,156 @@ paths:
                   detail: "['Please provide valid e-mail address.']"
                 description: Bad request. Data sent in request is invalid.
           description: 'Returns: a email_available value indicating whether the email address is valid/ not available and a detailed error message if it is not.'
+  /users/password/reset/:
+    post:
+      operationId: users_password_reset
+      description: Initiates the password reset process by sending an email with a link to reset the password.
+      summary: Initiate Password Reset
+      tags:
+        - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: User's registered email address.
+              required:
+                - email
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Message indicating email sent.
+                example:
+                  detail: If an account with the provided email exists, you'll receive further instructions.
+          description: ''
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: Indicates the success or failure of the request.
+                    example: "False"
+                  detail:
+                    type: string
+                    description: General detail about the error.
+                    example: "Something went wrong. Check fields list for more details."
+                  fields:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: string
+                    description: Detailed field-specific error messages.
+                example:
+                  success: "False"
+                  detail: "Something went wrong. Check fields list for more details."
+                  fields:
+                    email: [ "Enter a valid email address." ]
+
+  /users/password/reset/new-password/{uidb64}/{token}/:
+    post:
+      operationId: users_password_reset_confirm
+      description: |-
+        Completes the password reset process using the provided token from the reset email.
+      summary: Confirm Password Reset
+      tags:
+        - users
+      parameters:
+        - name: uidb64
+          in: path
+          description: Encoded user ID.
+          required: true
+          schema:
+            type: string
+        - name: token
+          in: path
+          description: Token for password reset.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                new_password:
+                  type: string
+                  description: User's new password.
+                confirm_new_password:
+                  type: string
+                  description: Confirm the new password.
+              required:
+                - new_password
+                - confirm_new_password
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Message indicating password reset successful.
+                example:
+                  detail: Password reset successful.
+          description: ''
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: Indicates the success or failure of the request.
+                    example: "False"
+                  detail:
+                    type: string
+                    description: General detail about the error.
+                    example: "Something went wrong. Check fields list for more details."
+                  fields:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: string
+                    description: Detailed field-specific error messages. This field may not always be present.
+                example:
+                  success: "False"
+                  detail: "Something went wrong. Check fields list for more details."
+                  fields:
+                    password: [ "Password must be at least 8 characters long." ]
+              examples:
+                invalidPassword:
+                  value:
+                    success: "False"
+                    detail: "Something went wrong. Check fields list for more details."
+                    fields:
+                      password: [ "Password must be at least 8 characters long." ]
+                generalError:
+                  value:
+                    success: "False"
+                    detail: "Something went wrong"
+                invalidToken:
+                  value:
+                    success: "False"
+                    detail: "Invalid token"
 components:
   schemas:
     AccessEnum:

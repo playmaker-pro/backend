@@ -3,19 +3,25 @@ from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
+from utils.factories.user_factories import UserFactory
 
-from users.schemas import (
-    UserGoogleDetailPydantic,
-    SocialAppPydantic,
-    UserFacebookDetailPydantic,
-)
+
 from users.managers import (
+    FacebookManager,
     GoogleManager,
     SocialAppManager,
     SocialAuthMixin,
-    FacebookManager,
+    UserTokenManager,
+)
+from users.schemas import (
+    SocialAppPydantic,
+    UserFacebookDetailPydantic,
+    UserGoogleDetailPydantic,
 )
 from utils.test.test_utils import ExternalCallsGuardMixin, MockedResponse
 
@@ -38,13 +44,19 @@ class TestGoogleManager(TestCase, ExternalCallsGuardMixin):
     def test_google_sdk_login_get_credentials_method_no_social_app_instance(
         self,
     ) -> None:
-        """Test if google_sdk_login_get_credentials method raises exception when credentials not found"""
+        """
+        Test if google_sdk_login_get_credentials method raises
+        exception when credentials not found
+        """
         with pytest.raises(ImproperlyConfigured) as e:
             GoogleManager.google_sdk_login_get_credentials()
         assert str(e.value) == "Google provider is missing in DB."
 
     def test_google_sdk_login_get_credentials_method_no_client_id(self) -> None:
-        """Test if google_sdk_login_get_credentials method raises exception when client_id is None"""
+        """
+        Test if google_sdk_login_get_credentials method raises exception
+        when client_id is None
+        """
         self.patch_social_app_method(
             SocialAppPydantic(client_id=None, client_secret="secret")
         )
@@ -53,7 +65,10 @@ class TestGoogleManager(TestCase, ExternalCallsGuardMixin):
         assert str(e.value) == "Google oauth2 client id missing in DB."
 
     def test_google_sdk_login_get_credentials_method_no_client_secret(self) -> None:
-        """Test if google_sdk_login_get_credentials method raises exception when client_secret is None"""
+        """
+        Test if google_sdk_login_get_credentials method raises exception
+        when client_secret is None
+        """
         self.patch_social_app_method(
             SocialAppPydantic(client_id="client+id", client_secret=None)
         )
@@ -63,7 +78,10 @@ class TestGoogleManager(TestCase, ExternalCallsGuardMixin):
 
     @override_settings(GOOGLE_OAUTH2_PROJECT_ID=None)
     def test_google_sdk_login_get_credentials_method_no_project_id(self) -> None:
-        """Test if google_sdk_login_get_credentials method raises exception when project_id is None"""
+        """
+        Test if google_sdk_login_get_credentials method raises exception
+        when project_id is None
+        """
         self.patch_social_app_method(
             SocialAppPydantic(client_id="client_id", client_secret="client_secret")
         )
@@ -124,7 +142,10 @@ class TestGoogleManager(TestCase, ExternalCallsGuardMixin):
 
     @override_settings(GOOGLE_OAUTH2_PROJECT_ID="project_id")
     def test_google_response_invalid(self) -> None:
-        """Test if google_response method raises ValueError when fetched data is invalid"""
+        """
+        Test if google_response method raises ValueError when
+        fetched data is invalid
+        """
         response_data = {
             "sub": "True",
         }
@@ -201,7 +222,9 @@ class TestSocialAuthMixin(TestCase, ExternalCallsGuardMixin):
         assert response_data["error_description"] in str(err.value)
 
     def test_request_user_data_method_no_description_in_error(self):
-        """Test if request_user_data method raises ValueError and return error_description"""
+        """
+        Test if request_user_data method raises ValueError and return error_description
+        """
         response_data = {
             "error": {"message": "error"},
         }
@@ -232,9 +255,11 @@ class TestFacebookManager(TestCase, ExternalCallsGuardMixin):
         }
         mock.patch(
             "users.managers.SocialAuthMixin.request_user_data",
-            return_value=response_data
+            return_value=response_data,
         ).start()
-        response: UserFacebookDetailPydantic = self.mocked_facebook_manager.get_user_info()
+        response: UserFacebookDetailPydantic = (
+            self.mocked_facebook_manager.get_user_info()
+        )
 
         assert isinstance(response, UserFacebookDetailPydantic)
         assert response_data["id"] == response.sub
@@ -247,7 +272,7 @@ class TestFacebookManager(TestCase, ExternalCallsGuardMixin):
         }
         mock.patch(
             "users.managers.SocialAuthMixin.request_user_data",
-            return_value=response_data
+            return_value=response_data,
         ).start()
 
         with pytest.raises(ValueError):
@@ -262,12 +287,63 @@ class TestFacebookManager(TestCase, ExternalCallsGuardMixin):
         }
         mock.patch(
             "users.managers.SocialAuthMixin.request_user_data",
-            return_value=response_data
+            return_value=response_data,
         ).start()
-        response: UserFacebookDetailPydantic = self.mocked_facebook_manager.get_user_info()
+        response: UserFacebookDetailPydantic = (
+            self.mocked_facebook_manager.get_user_info()
+        )
 
         assert isinstance(response, UserFacebookDetailPydantic)
         assert response_data["id"] == response.sub
         assert response_data["name"] == response.given_name
         assert response_data["name"] == response.family_name
         assert response_data["email"] == response.email
+
+
+class UserTokenManagerTest(TestCase):
+    def setUp(self):
+        """Initialize test data."""
+        self.user = UserFactory.create(
+            email="test@example.com", password="testpassword123"
+        )
+        self.endpoint_name = "api:users:api-password-reset-confirm"
+
+    def test_create_url(self):
+        """
+        Ensure that the create_url function constructs a URL correctly based
+        on the DEBUG setting. It should contain the user's ID and the provided endpoint.
+        """
+        # Construct the URL using the method under test
+        url = UserTokenManager.create_url(self.user, self.endpoint_name)
+
+        # Some basic assertions to check if the URL contains necessary components
+        uidb = urlsafe_base64_encode(force_bytes(self.user.id))
+        assert uidb in url
+
+    def test_check_user_token(self):
+        """
+        Test the check_user_token function.
+        Ensure it validates a user's token correctly
+        and responds with the right status and messages.
+        """
+        uidb = urlsafe_base64_encode(force_bytes(self.user.id))
+        token = default_token_generator.make_token(self.user)
+
+        # Validate using a correct token
+        try:
+            message, status_code, user = UserTokenManager.check_user_token(
+                user=uidb, token=token
+            )
+            assert status_code == 200
+            assert message == {
+                "success": "True",
+                "detail": UserTokenManager.success_message,
+            }
+            assert user == self.user
+        except ValueError as e:
+            pytest.fail(f"Unexpected ValueError: {e}")
+
+        # Validate using an incorrect token
+        with pytest.raises(ValueError) as e_info:
+            UserTokenManager.check_user_token(user=uidb, token="invalid_token")
+        assert str(e_info.value) == "Invalid token"
