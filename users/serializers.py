@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from api.serializers import CitySerializer, CountrySerializer
+from features.models import AccessPermission, Feature, FeatureElement
 from profiles import serializers as profile_serializers
 from profiles.serializers import ProfileEnumChoicesSerializer
 from users.errors import UserRegisterException
@@ -34,7 +35,9 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
         }
 
     def update(self, instance, validated_data):
-        if spoken_languages := validated_data.pop("spoken_languages", None):
+        if spoken_languages := validated_data.pop(
+            "spoken_languages", None
+        ):  # noqa: 599
             instance.spoken_languages.set(spoken_languages)
 
         instance.save()
@@ -68,7 +71,7 @@ class UserDataSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data) -> User:
         """Override method to achieve nested update"""
-        if userpreferences_data := validated_data.pop("userpreferences"):
+        if userpreferences_data := validated_data.pop("userpreferences"):  # noqa: 599
             userpreferences_data["user"] = instance.pk
             userpreferences_serializer = UserPreferencesSerializer(
                 instance.userpreferences, data=userpreferences_data, partial=True
