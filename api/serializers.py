@@ -79,3 +79,9 @@ class CitySerializer(serializers.ModelSerializer):
         """define city priority"""
         city_name = cities.CUSTOM_CITY_MAPPING.get(obj.name, obj.name)
         return locale_service.is_prior_city(city_name)
+
+    def to_internal_value(self, data: dict) -> typing.Union[City, dict]:
+        """Override method to retrieve object by id"""
+        if isinstance(data, int):
+            return City.objects.get(id=data)
+        return data

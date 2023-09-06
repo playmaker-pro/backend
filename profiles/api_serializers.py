@@ -83,20 +83,23 @@ class ProfileSerializer(serializers.Serializer):
     required_fields = ()  # fields required as 'data'
 
     # sub-serializers
-    user = UserDataSerializer(read_only=False, required=False)
-    team_object = club_serializers.TeamSerializer(required=False)
-    team_history_object = club_serializers.TeamHistorySerializer(required=False)
-    voivodeship_obj = VoivodeshipSerializer(required=False)
-    history = profile_serializers.ProfileVisitHistorySerializer(required=False)
+    user = UserDataSerializer(required=False, partial=True)
+    team_object = club_serializers.TeamSerializer(read_only=True)
+    team_history_object = club_serializers.TeamHistorySerializer(read_only=True)
+    voivodeship_obj = VoivodeshipSerializer(read_only=True)
+    history = profile_serializers.ProfileVisitHistorySerializer(
+        required=False, partial=True
+    )
     external_links = ExternalLinksSerializer(required=False)
+    address = serializers.CharField(required=False)
     verification_stage = profile_serializers.VerificationStageSerializer(required=False)
 
     # fields related with profile (FK to profile)
     player_positions = profile_serializers.PlayerProfilePositionSerializer(
         many=True, required=False
     )
-    player_video = profile_serializers.PlayerVideoSerializer(many=True, required=False)
-    playermetrics = profile_serializers.PlayerMetricsSerializer(required=False)
+    player_video = profile_serializers.PlayerVideoSerializer(many=True, read_only=True)
+    playermetrics = profile_serializers.PlayerMetricsSerializer(read_only=True)
     licences = profile_serializers.CoachLicenceSerializer(many=True, required=False)
 
     enums = (
@@ -305,24 +308,42 @@ class CreateProfileSerializer(ProfileSerializer):
 
 
 class UpdateProfileSerializer(ProfileSerializer):
-    uuid = serializers.UUIDField()
-    required_fields = ("uuid",)
-
     def __init__(self, *args, **kwargs) -> None:
-        data = self.initial_validation(kwargs.get("data"))
-        uuid = data.get("uuid", "")
-
-        if not profiles_service.is_valid_uuid(uuid):
-            raise profile_errors.InvalidUUID
-
-        kwargs["instance"]: models.PROFILE_TYPE = profiles_service.get_profile_by_uuid(
-            uuid
-        )
         super().__init__(*args, **kwargs)
+        self.user = self.instance.user
+
+    read_only_fields = (
+        "user_id",
+        "history_id",
+        "mapper_id",
+        "verification_id",
+        "data_mapper_id",
+        "external_links_id",
+        "address_id",
+    )  # read-only fields, should not be able to update
 
     def update_fields(self) -> None:
         """Update fields given in payload"""
+        if user_data := self.initial_data.pop("user", None):
+            self.user = UserDataSerializer(
+                instance=self.instance.user,
+                data=user_data,
+                partial=True,
+            )
+            if self.user.is_valid(raise_exception=True):
+                self.user.save()
+
+        if history_data := self.initial_data.pop("history", None):
+            self.history = profile_serializers.ProfileVisitHistorySerializer(
+                instance=self.instance.history, data=history_data, partial=True
+            )
+            if self.history.is_valid(raise_exception=True):
+                self.history.save()
+
         for attr, value in self.initial_data.items():
+            if attr in self.read_only_fields:
+                continue
+
             if attr == "player_positions":
                 player_position_service = services.PlayerProfilePositionService()
                 # Parse the value as a list of PositionData objects
@@ -330,11 +351,6 @@ class UpdateProfileSerializer(ProfileSerializer):
                 player_position_service.manage_positions(self.instance, positions_data)
             elif hasattr(self.instance, attr):
                 setattr(self.instance, attr, value)
-
-    def validate_owner(self) -> None:
-        """Validate if requestor is owner of a profile"""
-        if self.instance.user != self.context.get("requestor"):
-            raise NotOwnerOfAnObject
 
     def save(self) -> None:
         """If data is valid, update fields and save profile instance"""

@@ -163,6 +163,12 @@ class LanguageSerializer(serializers.ModelSerializer):
         model = models.Language
         fields = "__all__"
 
+    def to_internal_value(self, data: dict) -> typing.Union[models.Language, dict]:
+        """Override object to get language either by code and id"""
+        if isinstance(data, str):
+            return models.Language.objects.filter(code=data).first()
+        return data
+
     def define_priority(self, obj: models.Language) -> bool:
         """Define language priority"""
         return locale_service.is_prior_language(obj.code)
