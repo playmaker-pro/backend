@@ -5,8 +5,8 @@ info:
   version: 0.0.1 (v3)
 
 servers:
-  - url: https://staging.playmakerpro.usermd.net/api/v3/
-  - url: http://dev.jacekplaymaker.usermd.net/api/v3/
+  - url: https://staging.jacekplaymaker.usermd.net/api/v3/
+  - url: https://dev.jacekplaymaker.usermd.net/api/v3/
   - url: http://localhost:{port}/api/v3/
     variables:
       port:
@@ -595,13 +595,13 @@ paths:
         - in: query
           name: position
           schema:
-            type: string
+            type: array
           description: "Player positions shortcut (default sort by is_main), 
             multiple choices possible like: ?position=CAM&position=ST"
         - in: query
           name: league
           schema:
-            type: integer
+            type: array
           description: "Player league, 
             multiple choices possible like: ?league=123&league=321"
         - in: query
@@ -622,7 +622,7 @@ paths:
         - in: query
           name: country
           schema:
-            type: string
+            type: array
           description: "Country, like: ?country=PL&country=UA"
       tags:
         - profiles
