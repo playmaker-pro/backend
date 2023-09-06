@@ -18,6 +18,11 @@ class PlayerPositionFactory(CustomObjectFactory):
         model = models.PlayerPosition
 
 
+class PlayerVideoFactory(CustomObjectFactory):
+    class Meta:
+        model = models.PlayerVideo
+
+
 class PlayerProfilePositionFactory(CustomObjectFactory):
     class Meta:
         model = models.PlayerProfilePosition
@@ -32,6 +37,11 @@ class ProfileFactory(CustomObjectFactory):
 
     class Meta:
         abstract = True
+
+    @classmethod
+    def create(cls, **kwargs) -> models.PROFILE_TYPE:
+        """Override just for typing purposes"""
+        return super().create(**kwargs)
 
 
 class PlayerMetricsFactory(factory.django.DjangoModelFactory):

@@ -333,11 +333,11 @@ class ProfileService:
         return str(uuid_obj) == value
 
     def get_club_roles(self) -> tuple:
-        """Get list of club roles from ClubProfile"""
+        """Get club roles from ClubProfile"""
         return models.ClubProfile.CLUB_ROLE
 
     def get_referee_roles(self) -> tuple:
-        """Get list of referee roles from RefereeProfile"""
+        """Get referee roles from RefereeProfile"""
         return models.RefereeLevel.REFEREE_ROLE_CHOICES
 
     def filter_youth_players(self, queryset: m.QuerySet) -> m.QuerySet:
@@ -546,3 +546,15 @@ class PlayerProfilePositionService:
         # Create positions
         for position in positions_to_create:
             position.save()
+
+
+class PlayerVideoService:
+    @staticmethod
+    def get_player_video_labels() -> tuple:
+        """Get player video labels"""
+        return models.PlayerVideo.LABELS
+
+    @staticmethod
+    def get_video_by_id(_id: int) -> models.PlayerVideo:
+        """Get PlayerVideo object by id"""
+        return models.PlayerVideo.objects.get(id=_id)  # type: ignore
