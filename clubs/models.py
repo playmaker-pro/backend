@@ -1,4 +1,5 @@
 import datetime
+from urllib.parse import urljoin
 from functools import cached_property, lru_cache
 from typing import List, Union
 
@@ -149,6 +150,12 @@ class Club(models.Model, MappingMixin):
     @supress_exception
     def display_club(self):
         return self.name
+
+    @property
+    def picture_url(self) -> str:
+        """Generate club picture url"""
+        if self.picture:
+            return urljoin(settings.BASE_URL, self.picture.url)
 
     @property
     @supress_exception
