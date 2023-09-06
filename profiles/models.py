@@ -208,7 +208,9 @@ class BaseProfile(models.Model, EventLogMixin):
         _("Krótki opis o sobie"), max_length=455, blank=True, null=True
     )
     event_log = models.JSONField(null=True, blank=True)
-    step = models.IntegerField(default=None, null=True, blank=True)
+    verification_stage = models.OneToOneField(
+        "VerificationStage", on_delete=models.SET_NULL, null=True, blank=True
+    )
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
 
     def get_absolute_url(self):
@@ -355,6 +357,13 @@ class BaseProfile(models.Model, EventLogMixin):
         if self.history is None:
             self.history = ProfileVisitHistory.objects.create()
 
+    def ensure_verification_stage_exist(self, commit: bool = True) -> None:
+        """Create VerificationStage for profile if it doesn't exist"""
+        if not self.verification_stage:
+            self.verification_stage = VerificationStage.objects.create()
+            if commit:
+                self.save()
+
     def save(self, *args, **kwargs):
         # silent_param = kwargs.get('silent', False)
         # if silent_param is not None:
@@ -362,6 +371,7 @@ class BaseProfile(models.Model, EventLogMixin):
         # if self.event_log is None:
         #     self.make_default_event_log()
 
+        self.ensure_verification_stage_exist(commit=False)
         self._save_make_profile_history()
         try:
             obj_before_save = obj = (
@@ -2110,8 +2120,16 @@ class Language(models.Model):
         ordering = ["priority", "name"]
 
 
+class VerificationStage(models.Model):
+    step = models.IntegerField(default=0)
+    date_updated = models.DateTimeField(auto_now_add=True)
+    done = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"current step: {self.step} | updated: {self.date_updated} | is done?: {self.done}"
+
+
 PROFILE_MODELS = (
-    BaseProfile,
     PlayerProfile,
     CoachProfile,
     ClubProfile,

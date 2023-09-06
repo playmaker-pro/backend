@@ -1963,9 +1963,8 @@ components:
         bio:
           type: string
           description: '*'
-        step:
-          type: integer
-          description: '*'
+        verification_stage:
+          $ref: '#/components/schemas/VerificationStage'
         user_id:
           type: integer
           description: '*'
@@ -2658,6 +2657,15 @@ components:
         - id
         - coach_profile
         - licence
+    VerificationStage:
+      type: object
+      properties:
+        step:
+          type: integer
+        date_updated:
+          type: string
+        done:
+          type: boolean
   securitySchemes:
     jwtAuth:
       type: http
