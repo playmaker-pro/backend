@@ -2,6 +2,7 @@ from django.urls import reverse
 from parameterized import parameterized
 from rest_framework.test import APIClient, APITestCase
 
+from clubs.models import League
 from utils import factories
 from utils.test.test_utils import UserManager
 
@@ -19,7 +20,6 @@ class TestListLeagueHighestParentAPI(APITestCase):
     def test_get_highest_parents_authenticated(self) -> None:
         """Test GET the highest parent leagues with valid authentication"""
         response = self.client.get(self.url, **self.headers)
-
         assert response.status_code == 200
         assert isinstance(response.data, list) and len(response.data) == 1
 
@@ -36,3 +36,16 @@ class TestListLeagueHighestParentAPI(APITestCase):
         response = self.client.get(self.url, query, **self.headers)
 
         assert response.status_code == 400
+
+    def test_test_get_highest_not_visible(self) -> None:
+        """
+        Test GET the highest parent leagues
+        where object is not visible (visible=False)
+        """
+        league: League = factories.LeagueFactory.create_league_as_highest_parent(
+            visible=False
+        )
+        response = self.client.get(self.url, **self.headers)
+        assert response.status_code == 200
+        assert isinstance(response.data, list) and len(response.data) == 1
+        assert response.data[0]["name"] != league.name

@@ -33,7 +33,7 @@ class Season(models.Model):
         (wyznaczamy go za pomocą:
             jeśli miesiąc daty systemowej jest >= 7 to pokaż sezon (aktualny rok/ aktualny rok + 1).
             Jeśli < 7 th (aktualny rok - 1 / aktualny rok)
-        """
+        """  # noqa:  E501
         season_middle = settings.SEASON_DEFINITION.get("middle", 7)
         if date is None:
             date = timezone.now()
@@ -174,7 +174,7 @@ class Club(models.Model, MappingMixin):
     data_mapper_id = models.PositiveIntegerField(
         null=True,
         blank=True,
-        help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+        help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",  # noqa: E501
     )
 
     scrapper_autocreated = models.BooleanField(
@@ -193,7 +193,7 @@ class Club(models.Model, MappingMixin):
         max_length=255,
         blank=True,
         null=True,
-    )  # TODO:(l.remkowicz): followup needed to see if that can be safely removed from database scheme follow-up: PM-365
+    )  # TODO:(l.remkowicz): followup needed to see if that can be safely removed from database scheme follow-up: PM-365  # noqa: E501
 
     country = CountryField(
         _("Kraj"),
@@ -354,15 +354,24 @@ class League(models.Model):
     name = models.CharField(max_length=355, help_text="eg. Ekstraklasa")
     virtual = models.BooleanField(default=False)
     visible = models.BooleanField(
-        default=False, help_text="Determine if that league will be visible"
+        default=False, help_text="Determine if that league will be visible in queries"
     )
 
     data_seasons = models.ManyToManyField("Season", blank=True)
 
     section = models.ForeignKey(
-        "SectionGrouping", on_delete=models.SET_NULL, null=True, blank=True
+        "SectionGrouping",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Section grouping -- Deprecated, will be removed in future",
     )
-    order = models.IntegerField(default=0)
+    order = models.IntegerField(
+        default=0,
+        null=True,
+        blank=True,
+        help_text="League ordering -- Deprecated, will be removed or again used in future",  # noqa: E501
+    )
 
     group = models.ForeignKey(
         "LeagueGroup", on_delete=models.SET_NULL, null=True, blank=True
@@ -372,7 +381,13 @@ class League(models.Model):
     )
     city_name = models.CharField(max_length=255, null=True, default=None, blank=True)
 
-    code = models.CharField(_("league_code"), null=True, blank=True, max_length=5)
+    code = models.CharField(
+        _("league_code"),
+        null=True,
+        blank=True,
+        max_length=5,
+        help_text="League code -- Deprecated, will be removed in future",
+    )
     parent = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,
@@ -415,7 +430,10 @@ class League(models.Model):
     scrapper_autocreated = models.BooleanField(default=False)
 
     def has_season_data(self, season_name: str) -> bool:
-        """Just a helper function to know if historical object has data for given season"""
+        """
+        Just a helper function to know
+        if historical object has data for given season
+        """
         if self.historical.filter(season__name=season_name).count() == 0:
             return False
         return True
@@ -622,7 +640,7 @@ class Team(models.Model, MappingMixin):
     mapping = models.TextField(
         null=True,
         blank=True,
-        help_text='!Always keep double commna at the end of each name!!!. Mapping names comma separated. eg "name X,,name Xi,,"',
+        help_text='!Always keep double commna at the end of each name!!!. Mapping names comma separated. eg "name X,,name Xi,,"',  # noqa: E501
     )
     visible = models.BooleanField(default=True, help_text="Visible on database")
     autocreated = models.BooleanField(default=False, help_text="Autocreated from s38")
@@ -670,7 +688,7 @@ class Team(models.Model, MappingMixin):
     data_mapper_id = models.PositiveIntegerField(
         null=True,
         blank=True,
-        help_text="ID of object placed in data_ database. It should always reflect scheme which represents.",
+        help_text="ID of object placed in data_ database. It should always reflect scheme which represents.",  # noqa: E501
     )
 
     scrapper_autocreated = models.BooleanField(
@@ -936,7 +954,7 @@ class TeamHistory(models.Model):
     )
 
     data_mapper_id = models.PositiveIntegerField(
-        help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+        help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",  # noqa: E501
         blank=True,
         null=True,
     )
