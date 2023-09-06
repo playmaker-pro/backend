@@ -261,6 +261,11 @@ CITIES_LIGHT_TRANSLATION_LANGUAGES = ["pl"]
 # This setting specifies the countries to include when importing city data.
 CITIES_LIGHT_INCLUDE_COUNTRIES = ["PL"]
 
+CITIES_LIGHT_CITY_SOURCES = [
+    "http://download.geonames.org/export/dump/cities15000.zip",  # all cities with a population > 15000
+    "http://download.geonames.org/export/dump/cities5000.zip",  # all cities with a population > 5000
+    "http://download.geonames.org/export/dump/cities1000.zip",  # all cities with a population > 1000
+]  # more here: https://download.geonames.org/export/dump/readme.txt
 
 TIME_ZONE = "Europe/Warsaw"
 

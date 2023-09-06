@@ -16,10 +16,15 @@ paths:
   /cities/:
     get:
       operationId: cities_retrieve
-      description: 'Return a list of cities with mapped voivodeships
-        and its priority based on the query parameter.
-        Response is an array of dictionaries:
-        [{id: 1, name: Warszawa, voivodeship: Mazowieckie, priority: True}, ...]'
+      description: 'Return a paginated object with list of cities, mapped voivodeships
+       and its priority based on the query parameter. 
+       If query param is not present, response will be limited to prior cities.
+        Response is an paginated object:
+        [{
+          "count": 2057,
+          "next": "http://127.0.0.1:8899/api/v3/cities/?city=S&page=2",
+          "previous": null,
+          "results": [{id: 1, name: Warszawa, voivodeship: Mazowieckie, priority: True}, ...]}}'
       summary: List cities endpoint
       parameters:
       - in: query
@@ -27,6 +32,16 @@ paths:
         schema:
           type: string
         description: City or voivodeship name to filter
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: "Page number"
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: "Count of objects by page"
       tags:
       - locale
       responses:
@@ -34,31 +49,38 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                description: 'List of {id, name, voivodeship, priority} pairs returned successfully.
-                  [{id: 1, name: Warszawa, voivodeship: Mazowieckie, priority: True}, ...]'
-                items:
-                  $ref: '#/components/schemas/City'
+                allOf:
+                  - $ref: '#/components/schemas/Paginator'
+                  - properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/City'
+                description: 'Paginated city results, like:.
+                  {
+                    "count": 2057,
+                    "next": "http://127.0.0.1:8899/api/v3/cities/?city=S&page=2",
+                    "previous": null,
+                    "results": [{id: 1, name: Warszawa, voivodeship: Mazowieckie, priority: True}, ...]
+                  }}'
                 example:
-                  [{
-                    "id": 145,
-                    "name": "Wałbrzych",
-                    "voivodeship": "Dolnośląskie",
-                    "priority": false
-                  },
                   {
-                      "id": 144,
-                      "name": "Wałcz",
-                      "voivodeship": "Zachodniopomorskie",
-                      "priority": false
-                  },
-                  {
-                      "id": 14,
-                      "name": "Warszawa",
-                      "voivodeship": "Mazowieckie",
-                      "priority": true
-                  }, ...
-                  ]
+                    "count": 2057,
+                    "next": "http://127.0.0.1:8899/api/v3/cities/?city=S&page=2",
+                    "previous": null,
+                    "results": [
+                      {
+                        "id": 1597,
+                        "name": "Abramów",
+                        "voivodeship": "Lubelskie",
+                        "priority": false
+                      },
+                      {
+                        "id": 1596,
+                        "name": "Adamów",
+                        "voivodeship": "Lubelskie",
+                        "priority": false
+                      },...]}
           description: ''
   /languages/:
     get:
@@ -770,7 +792,6 @@ paths:
             application/json:
               schema:
                 type: object
-                description: "Paginated list profile based on profile type"
                 properties:
                   count:
                     type: integer
@@ -790,7 +811,7 @@ paths:
                         - $ref: '#/components/schemas/ClubProfile'
                         - $ref: '#/components/schemas/ScoutProfile'
                         - $ref: '#/components/schemas/GuestProfile'
-                required: ["count", "results"]
+                description: "Paginated list profile based on profile type"
   /profiles/owned/:
     'get':
       operationId: owned_profile_list
@@ -2817,6 +2838,20 @@ components:
         - id
         - coach_profile
         - licence
+    Paginator:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+        previous:
+          type: string
+        results:
+          type: array
+          items:
+            description: "Paginated result"
+      required: ["count"]
     VerificationStage:
       type: object
       properties:

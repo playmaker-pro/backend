@@ -3,6 +3,7 @@ import uuid
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist
+from django.db.models import QuerySet
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -27,11 +28,6 @@ profile_service = ProfileService()
 class ProfileAPI(ProfileListAPIFilter, EndpointView):
     permission_classes = [IsAuthenticatedOrReadOnly]
     allowed_methods = ["post", "patch", "get"]
-
-    def get_paginated_queryset(self) -> QuerySet:
-        """Paginate queryset to optimize serialization"""
-        qs: QuerySet = self.get_queryset()
-        return self.paginate_queryset(qs)
 
     def create_profile(self, request: Request) -> Response:
         """Create initial profile for user"""
