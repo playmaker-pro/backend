@@ -596,12 +596,16 @@ paths:
           name: position
           schema:
             type: array
+            items:
+              type: string
           description: "Player positions shortcut (default sort by is_main), 
             multiple choices possible like: ?position=CAM&position=ST"
         - in: query
           name: league
           schema:
             type: array
+            items:
+              type: string
           description: "Player league, 
             multiple choices possible like: ?league=123&league=321"
         - in: query
@@ -623,6 +627,8 @@ paths:
           name: country
           schema:
             type: array
+            items:
+              type: string
           description: "Country, like: ?country=PL&country=UA"
       tags:
         - profiles
@@ -1972,6 +1978,8 @@ components:
           type: integer
         event_log:
           type: array
+          items:
+            type: object
       required:
         - uuid
         - user_id
