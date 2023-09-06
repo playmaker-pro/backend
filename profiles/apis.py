@@ -1,5 +1,7 @@
 import uuid
 
+from django.core.exceptions import ValidationError
+from django.db.models import ObjectDoesNotExist, QuerySet
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import QuerySet
 from drf_spectacular.utils import extend_schema
@@ -17,7 +19,7 @@ from profiles.api_serializers import *
 from profiles.filters import ProfileListAPIFilter
 from profiles.services import PlayerVideoService, ProfileService
 
-from . import errors, models, serializers
+from . import api_serializers, errors, filters, models, serializers, services
 
 profile_service = ProfileService()
 
@@ -44,15 +46,36 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
     def get_profile_by_uuid(
         self, request: Request, profile_uuid: uuid.UUID
     ) -> Response:
-        profile_object = profile_service.get_profile_by_uuid(profile_uuid)
-        serializer: ProfileSerializer = ProfileSerializer(
-            profile_object, context={"requestor": request.user}
+        """GET single profile by uuid"""
+        try:
+            profile_object = profile_service.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist:
+            raise errors.ProfileDoesNotExist
+
+        serializer: api_serializers.ProfileSerializer = (
+            api_serializers.ProfileSerializer(profile_object)
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update_profile(self, request: Request) -> Response:
-        serializer = UpdateProfileSerializer(
-            data=request.data, context={"requestor": request.user}
+        """PATCH request for profile (require UUID in body)"""
+        try:
+            profile_uuid: str = request.data.pop("uuid")
+        except KeyError:
+            raise errors.IncompleteRequestData(("uuid",))
+
+        try:
+            profile = profile_service.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist:
+            raise errors.ProfileDoesNotExist
+        except ValidationError:
+            raise errors.InvalidUUID
+
+        if profile.user != request.user:
+            raise errors.NotOwnerOfAnObject
+
+        serializer = api_serializers.UpdateProfileSerializer(
+            instance=profile, data=request.data, context={"requestor": request.user}
         )
         if serializer.is_valid(raise_exception=True):
             serializer.save()

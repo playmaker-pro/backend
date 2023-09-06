@@ -2189,10 +2189,10 @@ components:
               description: Player,Coach,Club
             team_object_id:
               type: integer
-              description: Player,Coach
+              description: "Used to change object in PATCH request, just pass id"
             team_history_object_id:
               type: integer
-              description: Player,Coach
+              description: "Used to change object in PATCH request, just pass id"
             team_object_alt_id:
               type: integer
               description: Player
@@ -2261,7 +2261,7 @@ components:
               description: Player
             voivodeship_obj_id:
               type: integer
-              description: Player,Coach,Scout
+              description: "Used to change object in PATCH request, just pass id"
             voivodeship_raw:
               type: string
               description: Player
@@ -2420,10 +2420,10 @@ components:
               $ref: '#/components/schemas/ProfileEnumChoices'
             team_object_id:
               type: integer
-              description: Player,Coach
+              description: "Used to change object in PATCH request, just pass id"
             team_history_object_id:
               type: integer
-              description: Player,Coach
+              description: "Used to change object in PATCH request, just pass id"
             team_club_league_voivodeship_ver:
               type: string
             birth_date:

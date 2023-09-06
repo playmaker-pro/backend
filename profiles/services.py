@@ -323,7 +323,8 @@ class ProfileService:
                 return profile_type.objects.get(uuid=profile_uuid)
             except profile_type.DoesNotExist:
                 continue
-        raise errors.ProfileDoesNotExist
+        else:
+            raise m.ObjectDoesNotExist
 
     def is_valid_uuid(self, value: str) -> bool:
         try:

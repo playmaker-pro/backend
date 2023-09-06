@@ -6,7 +6,6 @@ from rest_framework import serializers
 from api.serializers import CitySerializer, CountrySerializer
 from profiles import serializers as profile_serializers
 from profiles.serializers import ProfileEnumChoicesSerializer
-from features.models import Feature, FeatureElement, AccessPermission
 from users.errors import UserRegisterException
 from users.models import UserPreferences
 from users.utils.api_utils import modify2custom_exception
@@ -22,20 +21,33 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserPreferencesSerializer(serializers.ModelSerializer):
     age = serializers.IntegerField(read_only=True)
-    localization = CitySerializer()
-    spoken_languages = profile_serializers.LanguageSerializer(many=True)
-    citizenship = CountrySerializer(many=True)
-    gender = ProfileEnumChoicesSerializer(model=UserPreferences)
+    localization = CitySerializer(required=False)
+    spoken_languages = profile_serializers.LanguageSerializer(many=True, required=False)
+    citizenship = CountrySerializer(many=True, required=False)
+    gender = ProfileEnumChoicesSerializer(model=UserPreferences, required=False)
 
     class Meta:
         model = UserPreferences
         fields = "__all__"
+        extra_kwargs = {
+            "user": {"read_only": True},
+        }
+
+    def update(self, instance, validated_data):
+        if spoken_languages := validated_data.pop("spoken_languages", None):
+            instance.spoken_languages.set(spoken_languages)
+
+        instance.save()
+        return super().update(instance, validated_data)
 
 
 class UserDataSerializer(serializers.ModelSerializer):
     """User serializer with basic user information"""
 
-    userpreferences = UserPreferencesSerializer()
+    userpreferences = UserPreferencesSerializer(required=False, partial=True)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     class Meta:
         model = User
@@ -47,6 +59,23 @@ class UserDataSerializer(serializers.ModelSerializer):
             "last_activity",
             "userpreferences",
         ]
+        depth = 1
+        extra_kwargs = {
+            "last_activity": {"read_only": True},
+            "last_login": {"read_only": True},
+            "id": {"read_only": True},
+        }
+
+    def update(self, instance, validated_data) -> User:
+        """Override method to achieve nested update"""
+        if userpreferences_data := validated_data.pop("userpreferences"):
+            userpreferences_data["user"] = instance.pk
+            userpreferences_serializer = UserPreferencesSerializer(
+                instance.userpreferences, data=userpreferences_data, partial=True
+            )
+            if userpreferences_serializer.is_valid(raise_exception=True):
+                userpreferences_serializer.save()
+        return super().update(instance, validated_data)
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
