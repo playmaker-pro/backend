@@ -1,8 +1,9 @@
+import typing
 import uuid
 
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
-from django.db.models import ObjectDoesNotExist
+from django.db.models import ObjectDoesNotExist, QuerySet
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, status
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
@@ -15,8 +16,7 @@ from api.swagger_schemas import (
     FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA,
 )
 from api.views import EndpointView
-from profiles import api_serializers, errors, serializers
-from profiles.api_serializers import *
+from profiles import api_serializers, errors, models, serializers
 from profiles.filters import ProfileListAPIFilter
 from profiles.services import PlayerVideoService, ProfileService
 
@@ -29,7 +29,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
 
     def create_profile(self, request: Request) -> Response:
         """Create initial profile for user"""
-        serializer = CreateProfileSerializer(
+        serializer = api_serializers.CreateProfileSerializer(
             data=request.data, context={"requestor": request.user}
         )
         if serializer.is_valid(raise_exception=True):
@@ -82,7 +82,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         (?role={P, C, S, G, ...})
         """
         qs: QuerySet = self.get_paginated_queryset()
-        serializer = ProfileSerializer(qs, many=True)
+        serializer = api_serializers.ProfileSerializer(qs, many=True)
         return self.get_paginated_response(serializer.data)
 
     def get_profile_labels(self, request: Request, profile_uuid: uuid.UUID) -> Response:
