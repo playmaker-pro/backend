@@ -93,7 +93,7 @@ def custom_exception_handler(exc, context) -> exception_handler:
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     'EXCEPTION_HANDLER': "path_to_the_module.custom_exception_handler"
     }
-    """
+    """  # noqa: E501
 
     response = exception_handler(exc, context)
     traceback.print_exc()

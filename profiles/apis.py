@@ -3,10 +3,9 @@ import uuid
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist
-from django.db.models import QuerySet
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, status
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -16,11 +15,10 @@ from api.swagger_schemas import (
     FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA,
 )
 from api.views import EndpointView
+from profiles import api_serializers, errors, serializers
 from profiles.api_serializers import *
 from profiles.filters import ProfileListAPIFilter
 from profiles.services import PlayerVideoService, ProfileService
-
-from . import api_serializers, errors, models, serializers
 
 profile_service = ProfileService()
 
@@ -107,7 +105,7 @@ class FormationChoicesView(EndpointView):
     This endpoint returns a dictionary where each key-value pair is a formation's unique string representation
     (like "4-4-2" or "4-3-3") mapped to its corresponding label.
     For example, it may return a response like {"4-4-2": "4-4-2", "4-3-3": "4-3-3"}.
-    """
+    """  # noqa: E501
 
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -120,18 +118,16 @@ class FormationChoicesView(EndpointView):
 
 
 class ProfileEnumsAPI(EndpointView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [AllowAny]
+    http_method_names = ("get",)
 
     def get_club_roles(self, request: Request) -> Response:
         """
         Get ClubProfile roles and return response with format:
-        [{id: 1, name: Trener}, ...]
+        ["Prezes", "Dyrektor sportowy",...]
         """
-        roles = (
-            serializers.ChoicesTuple(*obj) for obj in profile_service.get_club_roles()
-        )
-        serializer = serializers.ProfileEnumChoicesSerializer(roles, many=True)  # type: ignore
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        roles = dict(profile_service.get_club_roles())
+        return Response(list(roles.values()), status=status.HTTP_200_OK)
 
     def get_referee_roles(self, request: Request) -> Response:
         """
@@ -142,7 +138,9 @@ class ProfileEnumsAPI(EndpointView):
             serializers.ChoicesTuple(*obj)
             for obj in profile_service.get_referee_roles()
         )
-        serializer = serializers.ProfileEnumChoicesSerializer(roles, many=True)  # type: ignore
+        serializer = serializers.ProfileEnumChoicesSerializer(  # type: ignore
+            roles, many=True
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def get_player_age_range(self, request: Request) -> Response:
@@ -157,7 +155,7 @@ class CoachRolesChoicesView(EndpointView):
     View for listing coach role choices.
     The response is a dictionary where each item is a key-value pair:
     [role code, role name]. For example: {"IC": "Pierwszy trener", "IIC": "Drugi trener", ...}.
-    """
+    """  # noqa: E501
 
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -177,7 +175,7 @@ class PlayerPositionAPI(EndpointView):
 
     This class provides methods for retrieving all player positions, ordered by ID.
     It requires JWT authentication and allows read-only access for unauthenticated users.
-    """
+    """  # noqa: E501
 
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -196,7 +194,7 @@ class CoachLicencesChoicesView(EndpointView):
     View for listing coach licence choices.
     The response is a list of dictionaries each containing licence ID and licence name.
     For example: [{"id": 1, "name": "UEFA PRO", "key": "PRO"}, {"id": 2, "name": "UEFA A", "key":"A"}, ...].
-    """
+    """  # noqa: E501
 
     def list_coach_licences(self, request: Request) -> Response:
         """
@@ -255,7 +253,7 @@ class PlayerVideoAPI(EndpointView):
 
     def update_player_video(self, request: Request) -> Response:
         """View for updating existing player video"""
-        if video_id := request.data.get("id"):
+        if video_id := request.data.get("id"):  # noqa: E999
             try:
                 obj = PlayerVideoService.get_video_by_id(video_id)
             except models.PlayerVideo.DoesNotExist:

@@ -1,12 +1,12 @@
 import typing
 
+from django.db.models.query import QuerySet
 from rest_framework import serializers
 
 from clubs import models
 from external_links.serializers import ExternalLinksSerializer
 from users.serializers import UserDataSerializer
 from voivodeships.serializers import VoivodeshipSerializer
-from django.db.models.query import QuerySet
 
 
 class TeamSelect2Serializer(serializers.HyperlinkedModelSerializer):
@@ -137,7 +137,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
     def get_current_team_league_history(self, obj: models.Team) -> dict:
         """Get current, serialized league history of team"""
-        if latest_th := obj.get_latest_team_history():
+        if latest_th := obj.get_latest_team_history():  # noqa: E999
             return LeagueHistorySerializer(latest_th.league_history).data
 
 

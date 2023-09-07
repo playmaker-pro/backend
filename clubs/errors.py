@@ -1,5 +1,6 @@
-from api.errors import CoreAPIException
 from rest_framework import status
+
+from api.errors import CoreAPIException
 
 
 class TeamDoesNotExist(CoreAPIException):
