@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
+from django.contrib.contenttypes.fields import GenericRelation
 
 from external_links.models import ExternalLinks
 from mapper.models import Mapper
@@ -219,6 +220,8 @@ class Club(models.Model, MappingMixin):
         blank=True,
         null=True,
     )
+
+    labels = GenericRelation("labels.Label")
 
     def get_permalink(self):
         return reverse("clubs:show_club", kwargs={"slug": self.slug})
@@ -676,9 +679,6 @@ class Team(models.Model, MappingMixin):
 
     slug = models.CharField(max_length=255, blank=True, editable=False)
 
-    def get_file_path(instance, filename):
-        return f"team_pics/%Y-%m-%d/{remove_polish_chars(filename)}"
-
     club = models.ForeignKey(
         Club,
         related_name="teams",
@@ -699,6 +699,11 @@ class Team(models.Model, MappingMixin):
     junior_group = models.ForeignKey(
         "JuniorAgeGroup", null=True, blank=True, on_delete=models.SET_NULL
     )
+
+    labels = GenericRelation("labels.Label")
+
+    def get_file_path(instance, filename):
+        return f"team_pics/%Y-%m-%d/{remove_polish_chars(filename)}"
 
     @property
     def should_be_visible(self):

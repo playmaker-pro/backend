@@ -1,10 +1,10 @@
-from django.db import models
-from wagtail.core.models import Page
+# from django.db import models
+# from wagtail.core.models import Page
 
 
-class HomePage(Page):
-    template = "home/home.html"
-    max_count = 1
+# class HomePage(Page):
+#     template = "home/home.html"
+#     max_count = 1
 
-    class Meta:
-        verbose_name = "PlayMaker Main Page"
+#     class Meta:
+#         verbose_name = "PlayMaker Main Page"

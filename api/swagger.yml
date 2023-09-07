@@ -17,7 +17,7 @@ paths:
     get:
       operationId: cities_retrieve
       description: 'Return a paginated object with list of cities, mapped voivodeships
-       and its priority based on the query parameter. 
+       and its priority based on the query parameter.
        If query param is not present, response will be limited to prior cities.
         Response is an paginated object:
         [{
@@ -214,9 +214,9 @@ paths:
   /clubs/seasons/:
     get:
       operationId: season_retrieve
-      description: 'Retrieves a list of seasons. The endpoint primarily returns seasons marked 
-                    with the attribute `is_in_verify_form` set to True. Additionally, users can filter the results by specifying 
-                    a specific season using the season query parameter. The season parameter can accept 
+      description: 'Retrieves a list of seasons. The endpoint primarily returns seasons marked
+                    with the attribute `is_in_verify_form` set to True. Additionally, users can filter the results by specifying
+                    a specific season using the season query parameter. The season parameter can accept
                     both full season formats (e.g., "2020/2021") and single-year formats (e.g., "2020")'
       summary: Seasons list endpoint
       tags:
@@ -398,6 +398,60 @@ paths:
                   description: 'Team name with id'
                 example: [ { 'id': 1, 'text': 'team 1' }, { 'id': 2, 'text': 'team 2' } ]
           description: 'List of teams, name with ID'
+
+  /clubs/teams/{team_id}:
+    get:
+      operationId: GetTeam
+      description: 'Get team'
+      summary: Get team object
+      parameters:
+        - in: path
+          name: team_id
+          schema:
+            type: string
+            format: int
+          required: true
+      tags:
+      - clubs
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: 'List of teams, name with ID'
+  /clubs/teams/{team_id}/labels:
+    get:
+      operationId: GetTeamLabels
+      description: 'Get team labes'
+      summary: Get team labes
+      parameters:
+        - in: path
+          name: team_id
+          schema:
+            type: string
+            format: int
+          required: true
+        - in: query
+          name: season_name
+          schema:
+            type: string
+      tags:
+      - clubs
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Label'
+          description: 'List of teams, name with ID'
+
   /countries/:
     get:
       operationId: countries_retrieve
@@ -584,6 +638,7 @@ paths:
           description: "User is not an owner of given PlayerVideo"
         '404':
           description: "PlayerVideo with given ID not found"
+
   /player-video/labels/:
     get:
       operationId: player_video_labels
@@ -748,7 +803,7 @@ paths:
             type: array
             items:
               type: string
-          description: "Player positions shortcut (default sort by is_main), 
+          description: "Player positions shortcut (default sort by is_main),
             multiple choices possible like: ?position=CAM&position=ST"
         - in: query
           name: league
@@ -756,7 +811,7 @@ paths:
             type: array
             items:
               type: string
-          description: "Player league, 
+          description: "Player league,
             multiple choices possible like: ?league=123&league=321"
         - in: query
           name: latitude
@@ -870,11 +925,43 @@ paths:
                   - $ref: '#/components/schemas/ClubProfile'
                   - $ref: '#/components/schemas/ScoutProfile'
                   - $ref: '#/components/schemas/GuestProfile'
+
+  /profiles/{profile_uuid}/labels:
+    get:
+      operationId: profiles_retrieve_labels
+      description: "Get labels for a gived profile"
+      summary: "Get profile labels"
+      parameters:
+      - in: path
+        name: profile_uuid
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: season_name
+        schema:
+          type: string
+      tags:
+      - profiles
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: 'Labels sucesfully retrived'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Label'
+
   /profiles/player-positions/:
     get:
       operationId: player_positions_retrieve
       description: |
-        Retrieves all available player positions, ordered by ID. 
+        Retrieves all available player positions, ordered by ID.
         Each player position is represented by its unique ID, a name, and a corresponding shortcut.
       summary: Player positions endpoint
       tags:
@@ -2993,9 +3080,19 @@ components:
           type: string
         done:
           type: boolean
+    Label:
+      type: object
+      properties:
+        label_name:
+          type: string
+        label_description:
+          type: string
+        season_name:
+          type: string
+        icon:
+          type: string
   securitySchemes:
     jwtAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-

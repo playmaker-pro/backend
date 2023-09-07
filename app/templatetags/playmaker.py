@@ -21,7 +21,9 @@ from django.utils.translation import (
 )
 
 from clubs.models import Club, League, Team
-from followers.models import Follow, FollowTeam
+
+# Deprecated(rkesik): since we are working on a new FE
+# from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from profiles.utils import extract_video_id
 from voivodeships.services import VoivodeshipService
@@ -389,7 +391,8 @@ def is_team_observed(user, target):
     if not user.is_authenticated:
         return False
     try:
-        FollowTeam.objects.get(user=user, target=target)
+        # Deprecated(rkesik): Since we are working on custom FE
+        # FollowTeam.objects.get(user=user, target=target)
         return True
     except FollowTeam.DoesNotExist:
         return False

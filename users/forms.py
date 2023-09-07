@@ -1,15 +1,22 @@
 from allauth.account.adapter import get_adapter
 from allauth.account.forms import SignupForm
-from allauth.account.utils import (filter_users_by_email, get_user_model,
-                                   perform_login, setup_user_email,
-                                   sync_user_email_addresses,
-                                   url_str_to_user_pk, user_email,
-                                   user_pk_to_url_str, user_username)
+from allauth.account.utils import (
+    filter_users_by_email,
+    get_user_model,
+    perform_login,
+    setup_user_email,
+    sync_user_email_addresses,
+    url_str_to_user_pk,
+    user_email,
+    user_pk_to_url_str,
+    user_username,
+)
 from django import forms
 from django.conf import settings
 from django.forms import TypedMultipleChoiceField
 from django.utils.translation import gettext_lazy as _
-from wagtail.users.forms import UserCreationForm, UserEditForm
+
+# from wagtail.users.forms import UserCreationForm, UserEditForm
 
 from .models import User, UserPreferences
 
@@ -67,18 +74,18 @@ class CustomSignupForm(SignupForm):
 
 
 # wagtail custom user
-class CustomUserEditForm(UserEditForm):
-    declared_role = forms.ChoiceField(
-        required=True, label=_("Declared Role"), choices=User.ROLE_CHOICES
-    )
-    # status = forms.ModelChoiceField(queryset=MembershipStatus.objects, required=True, label=_("Status"))
+# class CustomUserEditForm(UserEditForm):
+#     declared_role = forms.ChoiceField(
+#         required=True, label=_("Declared Role"), choices=User.ROLE_CHOICES
+#     )
+#     # status = forms.ModelChoiceField(queryset=MembershipStatus.objects, required=True, label=_("Status"))
 
 
-class CustomUserCreationForm(UserCreationForm):
-    declared_role = forms.ChoiceField(
-        required=True, label=_("Declared Role"), choices=User.ROLE_CHOICES
-    )
-    # status = forms.ModelChoiceField(queryset=MembershipStatus.objects, required=True, label=_("Status"))
+# class CustomUserCreationForm(UserCreationForm):
+#     declared_role = forms.ChoiceField(
+#         required=True, label=_("Declared Role"), choices=User.ROLE_CHOICES
+#     )
+#     # status = forms.ModelChoiceField(queryset=MembershipStatus.objects, required=True, label=_("Status"))
 
 
 class UserPreferencesForm(forms.ModelForm):

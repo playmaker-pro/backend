@@ -357,6 +357,13 @@ class UpdateProfileSerializer(ProfileSerializer):
         self.instance.save()
 
 
+class ProfileLabelsSerializer(serializers.Serializer):
+    label_name = serializers.CharField(max_length=25)
+    label_description = serializers.CharField(max_length=200)
+    season_name = serializers.CharField(max_length=9)
+    icon = serializers.CharField(max_length=200)
+
+
 class BaseProfileDataSerializer(ProfileSerializer):
     def to_representation(
         self, obj: typing.Optional[models.PROFILE_TYPE] = None, *args, **kwargs
