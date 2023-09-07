@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
+from django.contrib.contenttypes.fields import GenericRelation
 
 import utils as utilites
 from adapters import strategy
@@ -214,6 +215,8 @@ class BaseProfile(models.Model, EventLogMixin):
         "VerificationStage", on_delete=models.SET_NULL, null=True, blank=True
     )
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
+
+    labels = GenericRelation("labels.Label")
 
     def get_absolute_url(self):
         return self.get_permalink()
@@ -2085,7 +2088,9 @@ class PlayerVideo(models.Model):
 
         if parser.netloc.endswith("youtu.be") or parser.netloc.endswith("youtube.com"):
             query_params = dict(parse_qsl(parser.query))
-            if video_id := query_params.get("v", parser.path.split("/")[-1]):  # noqa: E999
+            if video_id := query_params.get(
+                "v", parser.path.split("/")[-1]
+            ):  # noqa: E999
                 return thumbnail_url.format(video_id)
 
 

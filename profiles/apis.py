@@ -85,6 +85,17 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         serializer = ProfileSerializer(qs, many=True)
         return self.get_paginated_response(serializer.data)
 
+    def get_profile_labels(self, request: Request, profile_uuid: uuid.UUID) -> Response:
+        profile_object = profile_service.get_profile_by_uuid(profile_uuid)
+        season_name = request.GET.get("season_name")
+        query = {}
+        if season_name:
+            query = {"season_name": season_name}
+        serializer = api_serializers.ProfileLabelsSerializer(
+            profile_object.labels.filter(**query), many=True
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def get_owned_profiles(self, request: Request) -> Response:
         """
         Get list of profiles owned by the current user

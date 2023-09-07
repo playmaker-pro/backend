@@ -1,5 +1,5 @@
 
-# Project bootstrap PlayMaker
+# Project bootstrap PlayMaker WebApp
 
 Backend side for PlayMaker project.
 
@@ -11,13 +11,13 @@ Backend side for PlayMaker project.
 # Installation
 
 To set up a development environment quickly you need to have following prerequisits:
-> Python 3.8  
+> Python 3.8
 
-> PostgreSQL (latest)  
+> PostgreSQL (latest)
 
 ## Steps:
 
-  
+
 1. Create and activate virtualenv for `python 3.8.x` ([see more](https://docs.python.org/3.8/library/venv.html))
 
 2. Create workspace directories
@@ -37,12 +37,12 @@ To set up a development environment quickly you need to have following prerequis
     git clone https://gitlab.com/playmaker1/packages/pm-core
     ````
 
-5. Install all dependencies:  
+5. Install all dependencies:
     **Please follow order of installation!**
-    > Note that use_2to3 not working with newest setuptools, so before installing dependencies, you have to install lower version 
+    > Note that use_2to3 not working with newest setuptools, so before installing dependencies, you have to install lower version
     ```
     cd webapp
-    (vn) pip install "setuptools<58.0" 
+    (vn) pip install "setuptools<58.0"
     (vn) pip install -r requirements.txt
     (vn) pip install celery==3.1.26.post2
     (vn) pip install -r requirement_dev.txt
@@ -51,7 +51,7 @@ To set up a development environment quickly you need to have following prerequis
     Then we need to add custom version of a streamer library. (please note that this is a directory to which we cloned repository from 4.)
     ```
     cd ..
-    cd package/pm-stream-framework 
+    cd package/pm-stream-framework
     (vn) pip install -e .
     cd ../pm-core
     (vn) pip install -e .
@@ -62,7 +62,7 @@ To set up a development environment quickly you need to have following prerequis
 
     Now you can verify if everything is fine you should see:
     ```
-    python manage.py check 
+    python manage.py check
 
     :: loading dev configuration
     SEO data loaded from seo.yaml
@@ -102,10 +102,10 @@ To set up a development environment quickly you need to have following prerequis
     ```
     python manage.py runserver
     ```
-10. Go to http://localhost:8000/admin/  (wagtail admin)  
-    Login into a Admin user (see step no 8)  
-    Create new page as Main PlaymakerPage  
-    Create servce with port :8000 and attach main page to that service. 
+10. Go to http://localhost:8000/admin/  (wagtail admin)
+    Login into a Admin user (see step no 8)
+    Create new page as Main PlaymakerPage
+    Create servce with port :8000 and attach main page to that service.
 
 11. To have database synced with production or staging, you have to fill DB with voivodeships.
     ```
@@ -114,23 +114,23 @@ To set up a development environment quickly you need to have following prerequis
 
 # Development
 
-Install dev requirements:  
+Install dev requirements:
 ```bash
-pip install requirements_dev.txt  
-```  
-  
-Working with black formating:  
+pip install requirements_dev.txt
+```
+
+Working with black formating:
 
 ```bash
 invoke black
 ```
 
-Invoke tests:  
+Invoke tests:
 
 ```bash
-pytest . 
+pytest .
 ```
-or 
+or
 ```bash
 invoke tests
 ```

@@ -8,20 +8,18 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.paginator import Paginator
 from django.http import JsonResponse
-from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
 
-from followers.models import Follow, FollowTeam
+# Deprecated(rkesik): since we are working on a new FE
+# from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from profiles import forms, models
 from profiles.model_utils import (
     get_profile_form_model,
-    get_profile_model,
     get_profile_model_from_slug,
 )
 from profiles.utils import get_metrics_update_date
@@ -42,91 +40,92 @@ def redirect_to_profile_with_full_name(request):
     return redirect("profiles:show", slug=request.user.profile.slug)
 
 
-class MyObservers(
-    generic.TemplateView,
-    LoginRequiredMixin,
-    mixins.PaginateMixin,
-    mixins.ViewModalLoadingMixin,
-):
-    template_name = "profiles/observers.html"
-    http_method_names = ["get"]
+#  Deprecated(rkesik): since we are working on a new FE
+# class MyObservers(
+#     generic.TemplateView,
+#     LoginRequiredMixin,
+#     mixins.PaginateMixin,
+#     mixins.ViewModalLoadingMixin,
+# ):
+#     template_name = "profiles/observers.html"
+#     http_method_names = ["get"]
 
-    def get(self, request, *args, **kwargs):
-        user = request.user
-        tabs = []
+#     def get(self, request, *args, **kwargs):
+#         user = request.user
+#         tabs = []
 
-        qs_players_ids = list(
-            Follow.objects.filter(
-                user=user, target__declared_role=definitions.PLAYER_SHORT
-            ).values_list("target__id", flat=True)
-        )
-        qs_players = User.objects.filter(id__in=qs_players_ids)
+#         qs_players_ids = list(
+#             Follow.objects.filter(
+#                 user=user, target__declared_role=definitions.PLAYER_SHORT
+#             ).values_list("target__id", flat=True)
+#         )
+#         qs_players = User.objects.filter(id__in=qs_players_ids)
 
-        qs_teams_ids = FollowTeam.objects.filter(user=user).values_list(
-            "target__id", flat=True
-        )
-        qs_teams = Team.objects.filter(id__in=qs_teams_ids)
-        qs_coaches_ids = list(
-            Follow.objects.filter(
-                user=user, target__declared_role=definitions.COACH_SHORT
-            ).values_list("target__id", flat=True)
-        )
-        qs_coaches = User.objects.filter(id__in=qs_coaches_ids)
+#         qs_teams_ids = FollowTeam.objects.filter(user=user).values_list(
+#             "target__id", flat=True
+#         )
+#         qs_teams = Team.objects.filter(id__in=qs_teams_ids)
+#         qs_coaches_ids = list(
+#             Follow.objects.filter(
+#                 user=user, target__declared_role=definitions.COACH_SHORT
+#             ).values_list("target__id", flat=True)
+#         )
+#         qs_coaches = User.objects.filter(id__in=qs_coaches_ids)
 
-        tabs.append(
-            {
-                "name": "players",
-                "title": "Obserwowani pilkarze",
-                "objects": qs_players,
-                "empty": {
-                    "text_body": "",
-                    "text_header": "Jeszcze nie obserwujesz żadnego piłkarza",
-                },
-                "badge": {
-                    "class": "badge-info",
-                    "number": qs_players.count(),
-                },
-                "actions": True,
-            }
-        )
+#         tabs.append(
+#             {
+#                 "name": "players",
+#                 "title": "Obserwowani pilkarze",
+#                 "objects": qs_players,
+#                 "empty": {
+#                     "text_body": "",
+#                     "text_header": "Jeszcze nie obserwujesz żadnego piłkarza",
+#                 },
+#                 "badge": {
+#                     "class": "badge-info",
+#                     "number": qs_players.count(),
+#                 },
+#                 "actions": True,
+#             }
+#         )
 
-        tabs.append(
-            {
-                "name": "coaches",
-                "title": "Obserwowani trenerzy",
-                "objects": qs_coaches,
-                "empty": {
-                    "text_body": "",
-                    "text_header": "Jeszcze nie obserwujesz żadnego trenera",
-                },
-                "badge": {
-                    "class": "badge-info",
-                    "number": qs_coaches.count(),
-                },
-                "actions": True,
-            }
-        )
+# tabs.append(
+#     {
+#         "name": "coaches",
+#         "title": "Obserwowani trenerzy",
+#         "objects": qs_coaches,
+#         "empty": {
+#             "text_body": "",
+#             "text_header": "Jeszcze nie obserwujesz żadnego trenera",
+#         },
+#         "badge": {
+#             "class": "badge-info",
+#             "number": qs_coaches.count(),
+#         },
+#         "actions": True,
+#     }
+# )
 
-        tabs.append(
-            {
-                "name": "teams",
-                "title": "Obserwowane kluby",
-                "objects": qs_teams,
-                "empty": {
-                    "text_body": "",
-                    "text_header": "Jeszcze nie obserwujesz żadnego klubu",
-                },
-                "badge": {
-                    "class": "badge-info",
-                    "number": qs_teams.count(),
-                },
-                "actions": True,
-            }
-        )
-        kwargs["page_title"] = "Obserwowani"
-        kwargs["tabs"] = tabs
-        kwargs["modals"] = self.modal_activity(user, verification_auto=False)
-        return super().get(request, *args, **kwargs)
+# tabs.append(
+#     {
+#         "name": "teams",
+#         "title": "Obserwowane kluby",
+#         "objects": qs_teams,
+#         "empty": {
+#             "text_body": "",
+#             "text_header": "Jeszcze nie obserwujesz żadnego klubu",
+#         },
+#         "badge": {
+#             "class": "badge-info",
+#             "number": qs_teams.count(),
+#         },
+#         "actions": True,
+#     }
+# )
+# kwargs["page_title"] = "Obserwowani"
+# kwargs["tabs"] = tabs
+# kwargs["modals"] = self.modal_activity(user, verification_auto=False)
+# return super().get(request, *args, **kwargs)
 
 
 class TabStructure:

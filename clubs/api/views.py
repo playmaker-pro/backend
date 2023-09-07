@@ -219,3 +219,36 @@ class SeasonAPI(EndpointView):
 
         serializer = serializers.SeasonSerializer(seasons, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class TeamsAPI(EndpointView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    allowed_methods = ["post", "patch", "get"]
+
+    def get_team(self, request: Request, team_id: int) -> Response:
+        # TODO(rkesik) we might turn that into a TeamService but since there is no addtional logic
+        # we can keep it as that.
+        try:
+            team = models.Team.objects.get(id=team_id)
+        except Team.Follow.DoesNotExist:
+            raise base_errors.ObjectDoesNotExist(details="team does not exists")
+
+        serializer = serializers.TeamSerializer(team)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_team_labels(self, request: Request, team_id: int) -> Response:
+        # TODO(rkesik) we might turn that into a TeamService but since there is no addtional logic
+        # we can keep it as that.
+        try:
+            team = models.Team.objects.get(id=team_id)
+        except Team.Follow.DoesNotExist:
+            raise base_errors.ObjectDoesNotExist(details="team does not exists")
+
+        season_name = request.GET.get("season_name")
+        query = {}
+        if season_name:
+            query = {"season_name": season_name}
+        serializer = serializers.TeamLabelsSerializer(
+            team.labels.filter(**query), many=True
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -218,3 +218,10 @@ class TeamHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.TeamHistory
         exclude = ("data_mapper_id", "autocreated")
+
+
+class TeamLabelsSerializer(serializers.Serializer):
+    label_name = serializers.CharField(max_length=25)
+    label_description = serializers.CharField(max_length=200)
+    season_name = serializers.CharField(max_length=9)
+    icon = serializers.CharField(max_length=200)
