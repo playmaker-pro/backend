@@ -1,5 +1,6 @@
-from django_filters import rest_framework as filters
 from django.db.models import QuerySet
+from django_filters import rest_framework as filters
+
 from clubs import models
 
 

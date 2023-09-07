@@ -95,7 +95,7 @@ class PlayerVideoSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data: dict) -> dict:
         """Override method to define profile based on requestor (user who sent a request)"""
-        if user := self.context.get("requestor"):
+        if user := self.context.get("requestor"):  # noqa: E999
             try:
                 profile = user.playerprofile
             except user._meta.model.playerprofile.RelatedObjectDoesNotExist:
@@ -149,6 +149,40 @@ class ProfileVisitHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ProfileVisitHistory
         fields = "__all__"
+
+
+class ProfileEnumChoicesSerializer(serializers.CharField, serializers.Serializer):
+    """Serializer for Profile Enums"""
+
+    def __init__(
+        self,
+        model: typing.Type[models.models.Model] = None,
+        choices=None,
+        *args,
+        **kwargs,
+    ):
+        self.model: typing.Type[models.models.Model] = model
+        super().__init__(*args, **kwargs)
+
+    def parse_dict(
+        self, data: (typing.Union[int, str], typing.Union[int, str])
+    ) -> dict:
+        """Create dictionary from tuple choices"""
+        return dict(data)
+
+    def to_representation(self, obj: typing.Union[ChoicesTuple, str]) -> dict:
+        """Parse output"""
+        if not obj:
+            return {}
+        if not isinstance(obj, ChoicesTuple):
+            return self.parse(obj)
+        return {"id": obj.id, "name": obj.name}
+
+    def parse(self, _id: typing.Union[str, int]) -> dict:
+        """Get choices by model field and parse output"""
+        choices = getattr(self.model, self.source).__dict__["field"].choices
+        value = self.parse_dict(choices)[_id]
+        return self.to_representation(ChoicesTuple(_id, value))
 
 
 class LanguageSerializer(serializers.ModelSerializer):

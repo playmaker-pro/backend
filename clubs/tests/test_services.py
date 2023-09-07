@@ -1,11 +1,7 @@
-from rest_framework.test import APIClient, APITestCase
+from rest_framework.test import APITestCase
+
 from clubs.services import ClubTeamService
-
-
-from utils.factories import (
-    GenderFactory,
-    TeamFactory,
-)
+from utils.factories import GenderFactory, TeamFactory
 
 
 class TestClubTeamService(APITestCase):
@@ -15,8 +11,8 @@ class TestClubTeamService(APITestCase):
         """
         male_gender = GenderFactory(name="M")
         female_gender = GenderFactory(name="F")
-        team_male = TeamFactory(gender=male_gender)
-        team_female = TeamFactory(gender=female_gender)
+        TeamFactory(gender=male_gender)
+        TeamFactory(gender=female_gender)
 
     def test_get_clubs(self) -> None:
         """

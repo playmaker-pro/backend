@@ -17,19 +17,17 @@ from django_countries.fields import CountryField
 import utils as utilites
 from adapters import strategy
 from adapters.base_adapter import API_METHOD, ScrapperAPI
-from adapters.player_adapter import (PlayerGamesAdapter,
-                                     PlayerSeasonStatsAdapter)
+from adapters.player_adapter import PlayerGamesAdapter, PlayerSeasonStatsAdapter
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_profile_external_links
 from mapper.models import Mapper
+from profiles.errors import VerificationCompletionFieldsWrongSetup
+from profiles.mixins import TeamObjectsDisplayMixin
+from profiles.mixins import utils as profile_utils
 
 # from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
 from roles import definitions
 from voivodeships.models import Voivodeships
-
-from .errors import VerificationCompletionFieldsWrongSetup
-from .mixins import TeamObjectsDisplayMixin
-from .mixins import utils as profile_utils
 
 User = get_user_model()
 
@@ -181,13 +179,13 @@ class BaseProfile(models.Model, EventLogMixin):
     """Base profile model to held most common profile elements"""
 
     PROFILE_TYPE = None
-    AUTO_VERIFY = False  # flag to perform auto verification of User based on profile. If true - User.state will be switched to Verified
+    AUTO_VERIFY = False  # flag to perform auto verification of User based on profile. If true - User.state will be switched to Verified  # noqa: E501
     VERIFICATION_FIELDS = (
         []
-    )  # this is definition of profile fields which will be threaded as must-have params.
+    )  # this is definition of profile fields which will be threaded as must-have params.  # noqa: E501
     COMPLETE_FIELDS = (
         []
-    )  # this is definition of profile fields which will be threaded as mandatory for full profile.
+    )  # this is definition of profile fields which will be threaded as mandatory for full profile.  # noqa: E501
     OPTIONAL_FIELDS = (
         []
     )  # this is definition of profile fields which will be threaded optional
@@ -205,7 +203,7 @@ class BaseProfile(models.Model, EventLogMixin):
     data_mapper_id = models.PositiveIntegerField(
         null=True,
         blank=True,
-        help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+        help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",  # noqa: E501
     )
     slug = models.CharField(max_length=255, blank=True, editable=False)
     bio = models.CharField(
@@ -420,20 +418,27 @@ class BaseProfile(models.Model, EventLogMixin):
         # rkesik: due to new registration flow that is not needed.
         # Cases when one of verification fields is None
         # if self._is_verification_fields_filled():
-        #     if not self.user.is_waiting_for_verification and not self.user.is_verified:
-        #         reason_text = 'Parametry weryfikacyjne są uzupełnione, a użytkownik nie miał wcześniej statusu "zwerfikowany" ani że "czeka na weryfikacje"'
-        #         reason = f'[verification-params-ready]: \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS})  \n Old:{ver_old} -> New:{ver_new} \n'
+        #     if not self.user.is_waiting_for_verification and not self.user.is_verified:  # noqa: E501
+        #         reason_text = 'Parametry weryfikacyjne są uzupełnione,
+        #         a użytkownik nie miał wcześniej statusu "zwerfikowany"
+        #         ani że "czeka na weryfikacje"'
+        #         reason = f'[verification-params-ready]: \n {reason_text} \n\n
+        #         params:{self.VERIFICATION_FIELDS})
+        #         \n Old:{ver_old} -> New:{ver_new} \n'
         #         self.user.waiting_for_verification(extra={'reason': reason})
         #         self.user.save()
         #     else:
-        #         if self._verification_fileds_has_changed_and_was_filled(ver_old, ver_new):
-        #             reason_text = 'Parametry weryfikacyjne zostały zmienione i są wszyskie pola uzupełnione.'
-        #             reason = f'[verification-params-changed] \n {reason_text} \n\n params:{self.VERIFICATION_FIELDS}) \n Old:{ver_old} -> New:{ver_new} \n'
+        #         if self._verification_fileds_has_changed_and_was_filled(ver_old, ver_new):  # noqa: E501
+        #             reason_text = 'Parametry weryfikacyjne zostały zmienione
+        #             i są wszyskie pola uzupełnione.'
+        #             reason = f'[verification-params-changed] \n {reason_text}
+        #             \n\n params:{self.VERIFICATION_FIELDS})
+        #             \n Old:{ver_old} -> New:{ver_new} \n'
         #             self.user.unverify(extra={'reason': reason})
         #             self.user.save()
         # else:
         #     if not self.user.is_missing_verification_data:
-        #         self.user.missing_verification_data()  # -> change state to missing ver data
+        #         self.user.missing_verification_data()  # -> change state to missing ver data  # noqa: E501
         #         self.user.save()
 
     # rkesik: due to new registration flow that is not needed.
@@ -795,7 +800,8 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     external_links = models.OneToOneField(
         ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
     )
-    # laczynaspilka_url, min90_url, transfermarket_url data will be migrated into PlayerMapper and then those fields will be deleted
+    # laczynaspilka_url, min90_url, transfermarket_url data will be migrated
+    # into PlayerMapper and then those fields will be deleted
     laczynaspilka_url = models.URLField(_("LNP"), max_length=500, blank=True, null=True)
     min90_url = models.URLField(
         _("90min portal"), max_length=500, blank=True, null=True
@@ -821,7 +827,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         on_delete=models.SET_NULL,
     )
     voivodeship_raw = models.CharField(
-        # TODO:(l.remkowicz):followup needed to see if that can be safely removed from database scheme follow-up: PM-365
+        # TODO:(l.remkowicz):followup needed to check if that can be safely removed from database scheme follow-up: PM-365  # noqa: E501
         _("Wojewódźtwo (raw)"),
         help_text=_("Wojewódźtwo w którym grasz. Nie uzywane pole"),
         max_length=68,
@@ -832,7 +838,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     address = AddressField(
         help_text=_("Miasto z którego dojeżdżam na trening"), blank=True, null=True
     )
-    # address = models.CharField(max_length=100, help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)
+    # address = models.CharField(max_length=100, help_text=_('Miasto z którego dojeżdżam na trening'), blank=True, null=True)  # noqa: E501
     practice_distance = models.PositiveIntegerField(
         _("Odległość na trening"),
         blank=True,
@@ -891,7 +897,10 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def calculate_fantasy_object(self, *args, **kwargs):
         season = utilites.get_current_season()
         if not self.has_meta_entry_for(season):
-            msg = f'Cannot calculate fantasy data object do not have "meta" or "meta" data do not have data for season={season}'
+            msg = (
+                f'Cannot calculate fantasy data object do not have "meta" '
+                f'or "meta" data do not have data for season={season}'
+            )
             self.add_event_log_message(msg)
             return
 
@@ -915,7 +924,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     #         if adpt.has_player:
     #             self.league = adpt.get_current_league()
     #             self.voivodeship = adpt.get_current_voivodeship()
-    #             # self.club = adpt.get_current_club()  # not yet implemented. Maybe after 1.12
+    #             # self.club = adpt.get_current_club()  # not yet implemented. Maybe after 1.12  # noqa: E501
     #             self.team = adpt.get_current_team()
 
     # DEPRECATED: PM-1015
@@ -1008,7 +1017,8 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     def create_external_links_obj(self) -> None:
         """
-        Create a new ExternalLinks object and associate it with this PlayerProfile instance.
+        Create a new ExternalLinks object
+        and associate it with this PlayerProfile instance.
         """
         self.external_links = ExternalLinks.objects.create()
 
@@ -1016,7 +1026,11 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         """'Nie jest wyświetlana na profilu.
         Pole wykorzystywane wyłącznie do gry Fantasy.
         Użytkownik nie ingeruje w nie, bo ustawiony jest trigger przy wyborze pozycji z A18.
-        Bramkarz' -> 'bramkarz'; 'Obrońca%' ->  'obronca';  '%pomocnik' -> pomocnik; 'Skrzydłowy' -> 'pomocnik'; 'Napastnik' -> 'napastnik'
+        'Bramkarz' -> 'bramkarz';
+        'Obrońca%' ->  'obronca';
+        '%pomocnik' -> pomocnik;
+        'Skrzydłowy' -> 'pomocnik';
+        'Napastnik' -> 'napastnik'
 
            POSITION_CHOICES = [
         (1, 'Bramkarz'),
@@ -1029,7 +1043,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         (8, 'Skrzydłowy'),
         (9, 'Napastnik'),
         ]
-        """
+        """  # noqa: E501
         if self.position_raw is not None:
             self.position_fantasy = self.FANTASY_MAPPING.get(self.position_raw, None)
 
@@ -1043,8 +1057,15 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         # Each time actions
         # if self.attached:
         #     old = self.playermetrics.how_old_days
-        #     # logger.error(f'xxxxx {any([old(season=True) >= 1, old(fantasy=True) >= 1, old(games=True) >= 1])} {old(season=True) >= 1} {old(fantasy=True) >= 1} {old(games=True) >= 1}')
-        #     if any([old(season=True) >= 1, old(fantasy=True) >= 1, old(games=True) >= 1]):
+        #     # logger.error(
+        #     f'xxxxx {any([old(season=True) >= 1,
+        #     old(fantasy=True) >= 1,
+        #     old(games=True) >= 1])}
+        #     {old(season=True) >= 1}
+        #     {old(fantasy=True) >= 1}
+        #     {old(games=True) >= 1}'
+        #     )
+        #     if any([old(season=True) >= 1, old(fantasy=True) >= 1, old(games=True) >= 1]):  # noqa: E501
         #         logger.debug(f'Stats old enough {self}')
         #         self.playermetrics.refresh_metrics()  # download: metrics data
 
@@ -1065,7 +1086,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         #             ).mapper_id
         #         )
         #     )  # commonly use adpt
-        #     if utilites.is_allowed_interact_with_s38():  # are we on PROD and not Debug
+        #     if utilites.is_allowed_interact_with_s38():  # are we on PROD and not Debug  # noqa: E501
         #         self.update_data_player_object(adpt)  # send data to s38
         #         self.trigger_refresh_data_player_stats(adpt)  # send trigger to s38
         #     self.calculate_data_from_data_models(
@@ -1263,21 +1284,7 @@ class PlayerMetrics(models.Model):
 class ClubProfile(BaseProfile):
     PROFILE_TYPE = definitions.PROFILE_TYPE_CLUB
 
-    CLUB_ROLE = (
-        (5, "Trener"),
-        (1, "Prezes"),
-        (2, "Kierownik"),
-        (3, "Członek zarządu"),
-        (4, "Sztab szkoleniowy"),
-        (6, "V-ce prezes"),
-        (7, "II trener"),
-        (8, "Dyrektor sportowy"),
-        (9, "Analityk"),
-        (10, "Dyrektor skautingu"),
-        (11, "Skaut"),
-        (12, "Trener bramkarzy"),
-        (13, "Koordynator"),
-    )
+    CLUB_ROLE = definitions.CLUB_ROLES
 
     VERIFICATION_FIELDS = [
         # 'team_club_league_voivodeship_ver',
@@ -1326,11 +1333,11 @@ class ClubProfile(BaseProfile):
         blank=True,
         null=True,
     )
-    club_role = models.IntegerField(
-        choices=CLUB_ROLE,
+    club_role = models.CharField(
+        max_length=128,
         null=True,
         blank=True,
-        help_text="Defines if admin approved change",
+        help_text=_("Defines if admin approved change"),
     )
 
     class Meta:
@@ -1577,9 +1584,8 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
 
         Za wygrany mecz 3 pkt, za remis 1 pkt, za porażkę 0 pkt.
 
-        """
-        from metrics.coach import (CoachCarrierAdapterPercentage,
-                                   CoachGamesAdapter)
+        """  # noqa: E501
+        from metrics.coach import CoachCarrierAdapterPercentage, CoachGamesAdapter
 
         if not self.has_data_id:
             return
@@ -1606,7 +1612,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
             )
             self.data[season_name][self.DATA_KET_CARRIER] = season_stats
 
-        for _ in range(seasons_behind):
+        for _ in range(seasons_behind):  # noqa: F402
             print(f"Calculating data for {self} for season {season_name}")
             _calculate(season_name)
             season_name = utilites.calculate_prev_season(season_name)
@@ -1620,7 +1626,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     def create_external_links_obj(self) -> None:
         """
         Create a new ExternalLinks object and associate it with this CoachProfile instance.
-        """
+        """  # noqa: E501
         self.external_links = ExternalLinks.objects.create()
 
     def save(self, *args, **kwargs):
@@ -1636,7 +1642,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     def display_licence(self) -> typing.Optional[str]:
         """
         Returns a string representation of the licences associated with the coach profile.
-        """
+        """  # noqa: E501
         licences = self.licences.values_list("licence__name", flat=True)
         return ", ".join(licences) if licences else None
 
@@ -1740,7 +1746,7 @@ class ManagerProfile(BaseProfile):
     def create_external_links_obj(self):
         """
         Create a new ExternalLinks object and associate it with this ManagerProfile instance.
-        """
+        """  # noqa: E501
         self.external_links = ExternalLinks.objects.create()
 
     def save(self, *args, **kwargs):
@@ -1854,12 +1860,12 @@ class ScoutProfile(BaseProfile):
         max_length=68,
         blank=True,
         null=True,
-    )  # TODO:(l.remkowicz): followup needed to see if that can be safely removed from database scheme follow-up: PM-365
+    )  # TODO:(l.remkowicz): followup needed to see if that can be safely removed from database scheme follow-up: PM-365  # noqa: E501
 
     def create_external_links_obj(self) -> None:
         """
         Create a new ExternalLinks object and associate it with this ScoutProfile instance.
-        """
+        """  # noqa: E501
         self.external_links = ExternalLinks.objects.create()
 
     def save(self, *args, **kwargs):
@@ -1889,7 +1895,7 @@ class RefereeProfile(BaseProfile):
     def create_external_links_obj(self) -> None:
         """
         Create a new ExternalLinks object and associate it with this RefereeProfile instance.
-        """
+        """  # noqa: E501
         self.external_links = ExternalLinks.objects.create()
 
     def save(self, *args, **kwargs):
@@ -1898,7 +1904,7 @@ class RefereeProfile(BaseProfile):
 
         Ensures that an ExternalLinks object is created for the profile if it doesn't exist.
         Also, it updates or creates necessary external links related to the referee.
-        """
+        """  # noqa: E501
         if not self.external_links:
             self.create_external_links_obj()
         super().save(*args, **kwargs)
@@ -1922,13 +1928,13 @@ class RefereeLevel(models.Model):
         _("Role"),
         max_length=17,
         choices=REFEREE_ROLE_CHOICES,
-        help_text="The role referee plays on this level (Referee or Assistant Referee).",
+        help_text="The role referee plays on this level (Referee or Assistant Referee).",  # noqa: E501
     )
     referee_profile = models.ForeignKey(
         RefereeProfile,
         null=True,
         on_delete=models.CASCADE,
-        help_text="The referee profile that this particular level and role combination is associated with.",
+        help_text="The referee profile that this particular level and role combination is associated with.",  # noqa: E501
     )
 
     class Meta:
@@ -2007,7 +2013,16 @@ class ProfileVerificationStatus(models.Model):
     # objects = managers.VerificationObjectManager()
 
     # @classmethod
-    # def create(cls, owner: User = owner, text: str = text, previous=previous, set_by: User = set_by, status: str = status, has_team: bool = has_team, team_not_found: bool = team_not_found, club = None, team = None,
+    # def create(
+    # cls,
+    # owner: User = owner,
+    # text: str = text,
+    # previous=previous,
+    # set_by: User = set_by,
+    # status: str = status,
+    # has_team: bool = has_team,
+    # team_not_found: bool = team_not_found,
+    # club = None, team = None,
     # ):
     #     return cls.objects.create(
     #         owner=owner,
@@ -2070,7 +2085,7 @@ class PlayerVideo(models.Model):
 
         if parser.netloc.endswith("youtu.be") or parser.netloc.endswith("youtube.com"):
             query_params = dict(parse_qsl(parser.query))
-            if video_id := query_params.get("v", parser.path.split("/")[-1]):
+            if video_id := query_params.get("v", parser.path.split("/")[-1]):  # noqa: E999
                 return thumbnail_url.format(video_id)
 
 
@@ -2102,8 +2117,9 @@ class PlayerProfilePosition(models.Model):
         constraints are met:
         - A player can have only one main position. (This is checked if the position is marked as main.)
         - A player can have a maximum of two non-main positions.
-        """
-        # Call the parent class's clean method to ensure any inherited validation is performed
+        """  # noqa: E501
+        # Call the parent class's clean method
+        # to ensure any inherited validation is performed
         super().clean()
         if self.is_main:
             main_positions = self.player_profile.player_positions.filter(is_main=True)

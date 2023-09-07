@@ -110,7 +110,6 @@ class ProfileSerializer(serializers.Serializer):
         "card",
         "training_ready",
         "agent_status",
-        "club_role",
         "coach_role",
         "referee_role",
         "licence",
@@ -196,7 +195,7 @@ class ProfileSerializer(serializers.Serializer):
 
     def validate_team(self) -> None:
         """validate team id"""
-        if team_id := self.initial_data.get("team_object_id"):
+        if team_id := self.initial_data.get("team_object_id"):  # noqa: E999
             if not clubs_service.team_exist(team_id):
                 raise clubs_errors.TeamDoesNotExist
 

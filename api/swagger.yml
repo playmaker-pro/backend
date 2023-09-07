@@ -998,35 +998,17 @@ paths:
                 description: Club roles choices returned successfully.
                 type: array
                 items:
-                  $ref: '#/components/schemas/ProfileEnumChoices'
+                  type: string
                 example:
                   [
-                    {
-                      "id": "1",
-                      "name": "Prezes"
-                    },
-                    {
-                      "id": "2",
-                      "name": "Dyrektor sportowy"
-                    },
-                    {
-                      "id": "3",
-                      "name": "Członek zarządu"
-                    },
-                    {
-                      "id": "4",
-                      "name": "Dyrektor skautingu"
-                    },
-                    {
-                      "id": "5",
-                      "name": "Kierownik drużyny"
-                    },
-                    {
-                      "id": "6",
-                      "name": "Inne"
-                    },
+                    "Prezes",
+                    "Dyrektor sportowy",
+                    "Członek zarządu",
+                    "Dyrektor skautingu",
+                    "Kierownik drużyny",
+                    "Inne"
                   ]
-          description: Returns available referee roles choices.
+          description: Returns examples club roles.
   /profiles/players-age-range/:
     get:
       operationId: players_age_range

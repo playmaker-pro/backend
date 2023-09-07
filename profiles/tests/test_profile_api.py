@@ -1,12 +1,14 @@
 import json
 import uuid
 
+import pytest
 from django.urls import reverse
 from parameterized import parameterized
 from rest_framework.test import APIClient, APITestCase
 
 from profiles.services import ProfileService
 from profiles.tests import utils
+from roles.definitions import CLUB_ROLE_TEAM_LEADER
 from utils import factories
 from utils.test.test_utils import UserManager
 
@@ -29,7 +31,7 @@ class TestGetProfileAPI(APITestCase):
 
     def test_get_profile_valid_without_authentication(self) -> None:
         """correct get request with valid uuid, no need to authenticate"""
-        profile_uuid = factories.PlayerProfileFactory.create(user_id=1).uuid  # type: ignore
+        profile_uuid = factories.PlayerProfileFactory.create(user_id=1).uuid
         response = self.client.get(
             reverse(self.url, kwargs={"profile_uuid": profile_uuid}), **self.headers
         )
@@ -99,7 +101,7 @@ class TestCreateUpdateProfileAPI(APITestCase):
                 {
                     "role": "C",
                     "club_object_id": 1,
-                    "club_role": 5,
+                    "club_role": CLUB_ROLE_TEAM_LEADER,
                     "phone": "111222333",
                 }
             ],
@@ -123,13 +125,16 @@ class TestCreateUpdateProfileAPI(APITestCase):
 
     @parameterized.expand([[{"user_id": 1, "role": "P"}]])
     def test_create_same_profile_type_twice_for_same_user(self, payload: dict) -> None:
-        """Test HTTP_400 in attempt to create profile for user that has already a profile"""
+        """
+        Test HTTP_400 in attempt to create profile
+        for user that has already a profile
+        """
         self.client.post(self.url, json.dumps(payload), **self.headers)
         response = self.client.post(self.url, json.dumps(payload), **self.headers)
 
         assert response.status_code == 400
 
-    # @parameterized.expand( # TODO(bartnyk) NOT READY, USER CAN HAVE JUST ONE PROFILE YET
+    # @parameterized.expand( # TODO(bartnyk) NOT READY, USER CAN HAVE JUST ONE PROFILE YET   # noqa: E501
     #     [
     #         [{"user_id": 1, "role": "P"}],
     #         [{"user_id": 1, "role": "S"}],
@@ -137,8 +142,13 @@ class TestCreateUpdateProfileAPI(APITestCase):
     #     ]
     # )
     # def test_create_multiple_profile_types_for_same_user(self, payload: dict) -> None:
-    #     """Test HTTP_400 in attempt to create profile for user that has already a profile"""
-    #     response = ProfileAPI.as_view({"post": "create_profile"})(get_request(payload))
+    #     """
+    #     Test HTTP_400 in attempt to create profile
+    #     for user that has already a profile
+    #     """
+    #     response = ProfileAPI.as_view(
+    #     {"post": "create_profile"})(get_request(payload)
+    #     )
     #
     #     user = get_user(payload["user_id"])
     #     profile = get_profile_by_role(payload["role"])
@@ -183,7 +193,7 @@ class TestCreateUpdateProfileAPI(APITestCase):
                 },
                 {
                     "club_object_id": 1,
-                    "club_role": 5,
+                    "club_role": "Kierownik",
                     "phone": "111222333",
                 },
             ],

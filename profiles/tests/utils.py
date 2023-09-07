@@ -1,5 +1,6 @@
-from profiles import models
 from django.contrib.auth import get_user_model
+
+from profiles import models
 from profiles.services import ProfileService
 
 User = get_user_model()

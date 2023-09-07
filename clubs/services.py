@@ -3,8 +3,9 @@ import typing
 
 from django.db.models import F, QuerySet
 
-from . import models
 from clubs.api.api_filters import ClubFilter
+
+from . import models
 
 
 class SeasonService:
@@ -24,13 +25,16 @@ class SeasonService:
         if len(parts) == 1:
             return True
 
-        # Validate that start year is not greater than the current year (if fully specified)
+        # Validate that start year is not greater
+        # than the current year (if fully specified)
         if len(parts[0]) == 4:
             start_year = int(parts[0])
             if start_year > datetime.date.today().year:
                 return False
 
-        # If end year is fully specified, check that it's exactly one year greater than start year (if both fully specified)
+        # If end year is fully specified,
+        # check that it's exactly one year greater
+        # than start year (if both fully specified)
         if len(parts[1]) == 4 and parts[1].isdigit() and len(parts[0]) == 4:
             start_year = int(parts[0])
             end_year = int(parts[1])

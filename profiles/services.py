@@ -13,9 +13,9 @@ from api.services import LocaleDataService
 from clubs import models as clubs_models
 from clubs.models import Club as CClub
 from clubs.models import Team as CTeam
+from profiles import errors, models, utils
+from roles.definitions import CLUB_ROLES
 from utils import get_current_season
-
-from . import errors, models, utils
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -63,7 +63,7 @@ class ProfileVerificationService:
         club: typing.Optional[clubs_models.Club] = None
         text: typing.Optional[str] = None
 
-        if team_club_league_voivodeship_ver := data.get(
+        if team_club_league_voivodeship_ver := data.get(  # noqa: E999
             "team_club_league_voivodeship_ver"
         ):
             text = team_club_league_voivodeship_ver
@@ -335,8 +335,8 @@ class ProfileService:
         return str(uuid_obj) == value
 
     def get_club_roles(self) -> tuple:
-        """Get club roles from ClubProfile"""
-        return models.ClubProfile.CLUB_ROLE
+        """Get list of club roles from ClubProfile"""
+        return CLUB_ROLES
 
     def get_referee_roles(self) -> tuple:
         """Get referee roles from RefereeProfile"""

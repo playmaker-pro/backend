@@ -1,9 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from parameterized import parameterized
-from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
-from clubs.services import ClubTeamService
-import pytest
+from rest_framework.test import APIClient, APITestCase
 
 from utils.factories import (
     ClubFactory,
@@ -13,7 +12,6 @@ from utils.factories import (
     consts,
 )
 from utils.test.test_utils import UserManager
-from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
