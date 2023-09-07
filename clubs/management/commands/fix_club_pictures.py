@@ -7,7 +7,7 @@ from django.db.models import Q
 from clubs.models import Club
 
 char_file_pattern_mapper = str.maketrans(
-    "ŁŚŻ", "***"
+    "ŁŚŻ£¦¯", "******"
 )  # add other chars mapping if occurs again
 
 
@@ -30,9 +30,10 @@ class Command(BaseCommand):
         ):
             if club.picture and club.picture.name:
                 pattern = club.picture.path.translate(char_file_pattern_mapper)
+                pattern = pattern.replace(pattern.split("/")[-2], "**")
 
                 try:
-                    filepath = glob.glob(pattern)[0]
+                    filepath = glob.glob(pattern, recursive=True)[0]
                 except IndexError:
                     print("Błąd ", club.picture.name, pattern)
                     continue
@@ -41,4 +42,4 @@ class Command(BaseCommand):
 
                 with open(filepath, "rb") as image:
                     club.picture.save(name=filename, content=image)
-                    print(f"Updated: {filepath} -> {club.picture.path}")
+                    print("Updated")
