@@ -8,7 +8,8 @@ from django.db import connection
 from app import errors
 from backend.settings.environment import Environment
 from home.models import HomePage
-from wagtail.core.models import Site, Page
+
+# from wagtail.core.models import Site, Page  @wag
 from utils.factories import NAME_TO_FACTORY_MAPPER
 
 

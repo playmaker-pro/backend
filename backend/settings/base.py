@@ -45,12 +45,12 @@ MANAGERS = [
 
 INSTALLED_APPS = [
     "users",
-    "home",
-    "search",
-    "news",
+    # "home",
+    # "search",
+    # "news",
     "profiles",
     "transfers",
-    "contact",
+    # "contact",
     # Deprecation(rkesik): since we are working on a new FE
     # "followers",
     "inquiries",
@@ -75,28 +75,28 @@ INSTALLED_APPS = [
     "easy_thumbnails",
     "djcelery",
     "django_user_agents",
-    "wagtail.contrib.forms",
-    "wagtail.contrib.modeladmin",
-    "wagtail.contrib.redirects",
-    "wagtail.embeds",
-    "wagtail.sites",
-    "wagtail.users",
-    "wagtail.snippets",
-    "wagtail.documents",
-    "wagtail.images",
-    "wagtail.search",
-    "wagtail.admin",
-    "wagtail.core",
-    "wagtail.contrib.routable_page",
-    "wagtail.api.v2",
-    "wagtailmetadata",
+    # "wagtail.contrib.forms",
+    # "wagtail.contrib.modeladmin",
+    # "wagtail.contrib.redirects",
+    # "wagtail.embeds",
+    # "wagtail.sites",
+    # "wagtail.users",
+    # "wagtail.snippets",
+    # "wagtail.documents",
+    # "wagtail.images",
+    # "wagtail.search",
+    # "wagtail.admin",
+    # "wagtail.core",
+    # "wagtail.contrib.routable_page",
+    # "wagtail.api.v2",
+    # "wagtailmetadata",
     # 'comments_wagtail_xtd',
     # 'django_comments',
     "modelcluster",
     "taggit",
-    "blog",
-    "flex",
-    "streams",
+    # "blog",
+    # "flex",
+    # "streams",
     "django_fsm",
     "phonenumber_field",
     "address",
@@ -155,7 +155,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+    # "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     "middleware.user_activity_middleware.UserActivityMiddleware",
 ]
 
@@ -669,12 +669,6 @@ try:
     from backend.settings._local import *
 except Exception as e:
     print(f"No local settings. {e}")
-
-
-try:
-    from backend.settings.data_settings import *
-except Exception as e:
-    print(f"No backend.settings.data_settings file. {e}")
 
 
 if FORCED_SEASON_NAME is not None:

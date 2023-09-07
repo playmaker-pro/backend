@@ -74,6 +74,11 @@ class ParamsRequired(CoreAPIException):
         super().__init__(*args, **kwargs)
 
 
+class ObjectDoesNotExist(CoreAPIException):
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = "Given object does not exists."
+
+
 def custom_exception_handler(exc, context) -> exception_handler:
     """
     Log DRF errors to the console.

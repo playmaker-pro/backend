@@ -7,6 +7,7 @@ class Label(models.Model):
     label_name = models.CharField(max_length=25)
     label_description = models.TextField(null=True, blank=True)
     season_name = models.CharField(max_length=9)
+    icon = models.CharField(max_length=200)
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
