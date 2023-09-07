@@ -1,7 +1,7 @@
 import datetime
-from urllib.parse import urljoin
 from functools import cached_property, lru_cache
 from typing import List, Union
+from urllib.parse import urljoin
 
 from address.models import AddressField
 from django.conf import settings
@@ -162,10 +162,11 @@ class Club(models.Model, MappingMixin):
     def display_voivodeship(self):
         return conver_vivo_for_api(self.voivodeship_obj.name)
 
-    def get_file_path(self, *args, **kwargs) -> str:
+    def get_file_path(self, filename) -> str:
         """define club picture image path, remove Polish chars"""
         curr_date: str = str(datetime.datetime.now().date())
-        return f"club_pics/{curr_date}/{remove_polish_chars(str(self.name))}"
+        format: str = filename.split(".")[-1]
+        return f"club_pics/{curr_date}/{remove_polish_chars(str(self.name))}.{format}"
 
     picture = models.ImageField(
         _("Herb klubu"), upload_to=get_file_path, null=True, blank=True
