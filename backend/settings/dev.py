@@ -61,3 +61,5 @@ try:
     print("::> Loading custom local settings (local.py)")
 except ImportError as e:
     print(f"[error] Cannot load local settings. Reason={e}")
+
+MEDIA_ROOT = os.path.join(BASE_DIR, "public", "media")

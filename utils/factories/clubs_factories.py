@@ -1,9 +1,11 @@
 import factory
+
 from clubs import models as clubs_models
+
 from . import utils
-from .user_factories import UserFactory
 from .base import CustomObjectFactory
 from .consts import *
+from .user_factories import UserFactory
 
 
 class ClubFactory(CustomObjectFactory):
@@ -93,11 +95,12 @@ class LeagueFactory(CustomObjectFactory):
     name = factory.Iterator(LEAGUE_NAMES)
     seniority = factory.SubFactory(SeniorityFactory)
     gender = factory.SubFactory(GenderFactory)
+    visible = True
 
     @classmethod
-    def create_league_as_highest_parent(cls) -> clubs_models.League:
+    def create_league_as_highest_parent(cls, **kwargs) -> clubs_models.League:
         """Create League with highest_parent as self"""
-        league = cls.create()
+        league = cls.create(**kwargs)
         league.highest_parent = league
         league.save()
         return league

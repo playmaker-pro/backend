@@ -225,7 +225,7 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",  # noqa
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
@@ -262,6 +262,11 @@ CITIES_LIGHT_TRANSLATION_LANGUAGES = ["pl"]
 # This setting specifies the countries to include when importing city data.
 CITIES_LIGHT_INCLUDE_COUNTRIES = ["PL"]
 
+CITIES_LIGHT_CITY_SOURCES = [
+    "http://download.geonames.org/export/dump/cities15000.zip",  # all cities with a population > 15000
+    "http://download.geonames.org/export/dump/cities5000.zip",  # all cities with a population > 5000
+    "http://download.geonames.org/export/dump/cities1000.zip",  # all cities with a population > 1000
+]  # more here: https://download.geonames.org/export/dump/readme.txt
 
 TIME_ZONE = "Europe/Warsaw"
 
@@ -287,7 +292,7 @@ STATICFILES_DIRS = [
 
 # ManifestStaticFilesStorage is recommended in production, to prevent outdated
 # Javascript / CSS assets being served from cache (e.g. after a Wagtail upgrade).
-# See https://docs.djangoproject.com/en/3.1/ref/contrib/staticfiles/#manifeststaticfilesstorage
+# See https://docs.djangoproject.com/en/3.1/ref/contrib/staticfiles/#manifeststaticfilesstorage  # noqa
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
@@ -327,9 +332,6 @@ THUMBNAIL_ALIASES = {
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 CRISPY_FAIL_SILENTLY = False
 
-# For Bootstrap 4, change error alert to 'danger'
-MESSAGE_TAGS = {messages.ERROR: "danger"}
-
 CUSTOM_URL_ENDPOINTS = {"limits": "limit"}
 # Announcement app
 ANNOUNCEMENT_DEFAULT_PLANS = [
@@ -338,9 +340,9 @@ ANNOUNCEMENT_DEFAULT_PLANS = [
         "limit": 1,
         "days": 14,
         "name": "Podstawowe",
-        "description": "Możesz dodać jedno 14-dniowe ogłoszenie w ramach jednego półrocza. "
+        "description": "Możesz dodać jedno 14-dniowe ogłoszenie w ramach jednego półrocza. "  # noqa
         "Po zakupie konta premium będziesz mógł podpiąć 3 ogłoszenia na stałe."
-        "Pozwoli to na prowadzenie naboru np. dla seniorów, drugiej drużyny oraz grup młodzieżowych.",
+        "Pozwoli to na prowadzenie naboru np. dla seniorów, drugiej drużyny oraz grup młodzieżowych.",  # noqa
     },
     {
         "default": False,
@@ -348,7 +350,7 @@ ANNOUNCEMENT_DEFAULT_PLANS = [
         "days": 365,
         "name": "Premium",
         "description": "Możesz dodać trzy ogłoszenie w ramach jednego półrocza. "
-        "Możesz jednocześnie prowadzić nabór np. dla seniorów, drugiej drużyny oraz grup młodzieżowych.",
+        "Możesz jednocześnie prowadzić nabór np. dla seniorów, drugiej drużyny oraz grup młodzieżowych.",  # noqa
     },
 ]
 
@@ -457,8 +459,8 @@ ACCOUNT_FORMS = {"signup": "users.forms.CustomSignupForm"}
 BLOG_PAGINATION_PER_PAGE = 4
 
 
-import logging.config
-from os.path import join
+import logging.config  # noqa
+from os.path import join  # noqa
 
 LOGGING_ROOTDIR = "_logs"
 
@@ -469,7 +471,7 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
         "disable_existing_loggers": False,
         "formatters": {
             "verbose": {
-                "format": "[%(asctime)s] %(levelname)s [%(pathname)s:%(lineno)s] %(message)s",
+                "format": "[%(asctime)s] %(levelname)s [%(pathname)s:%(lineno)s] %(message)s",  # noqa
                 "datefmt": "%d/%b/%Y %H:%M:%S",
             },
             "simple": {"format": "%(levelname)s %(message)s"},
@@ -554,7 +556,7 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
 
 
 # Reset logging
-# (see http://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/)
+# (see http://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/)  # noqa
 LOGGING_CONFIG = None
 LOGGING = get_logging_structure()
 logging.config.dictConfig(LOGGING)
@@ -564,7 +566,7 @@ logger = logging.getLogger(f"project.{__name__}")
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
 CELERY_ALWAYS_EAGER = True
 CELERY_TASK_SERIALIZER = "pickle"
-import djcelery
+import djcelery  # noqa
 
 djcelery.setup_loader()
 # Redis & stream activity
@@ -603,8 +605,8 @@ JQUERY_URL = False
 
 COUNTRIES_FIRST = ["PL", "GER", "CZ", "UA", "GB"]
 
-from django.urls import include, path
-from django.views.generic import RedirectView
+from django.urls import path  # noqa
+from django.views.generic import RedirectView  # noqa
 
 # urlpatterns = patterns('',
 #     url(r'^some-page/$', RedirectView.as_view(url='/')),
@@ -666,7 +668,7 @@ SCRAPPER = True
 # Loading of locally stored settings.
 
 try:
-    from backend.settings._local import *
+    from backend.settings._local import *  # noqa
 except Exception as e:
     print(f"No local settings. {e}")
 
@@ -701,8 +703,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 VERIFICATION_FORM = {"DEFAULT_SEASON_NAME": "2021/2022"}
 
 
-# Setup token and refresh token lifetime. Refresh token is used to get new token,
-# if auth token is expired. If refresh token is expired, user need to send login/ request again.
+# Setup token and refresh token lifetime.
+# Refresh token is used to get new token, if auth token is expired.
+# If refresh token is expired, user need to send login/ request again.
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=2),
@@ -711,8 +714,10 @@ SIMPLE_JWT = {
 GOOGLE_OAUTH2_PROJECT_ID = "playmaker-pro"
 FACEBOOK_GRAPH_API_VERSION = "v17.0"
 
+THROTTLE_EMAIL_CHECK_LIMITATION = 5
+
 try:
-    from .local import *
+    from .local import *  # noqa
 
     print("::> Loading custom local settings (local.py)")
 except ImportError as e:

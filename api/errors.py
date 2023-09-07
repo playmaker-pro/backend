@@ -1,6 +1,7 @@
 import json
 import traceback
-from typing import Dict, Union, List
+from typing import Dict, List, Union
+
 from rest_framework import status
 from rest_framework.exceptions import APIException
 from rest_framework.views import exception_handler
@@ -79,6 +80,11 @@ class ObjectDoesNotExist(CoreAPIException):
     default_detail = "Given object does not exists."
 
 
+class NotOwnerOfAnObject(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "You are not allowed to modify this object."
+
+
 def custom_exception_handler(exc, context) -> exception_handler:
     """
     Log DRF errors to the console.
@@ -92,7 +98,7 @@ def custom_exception_handler(exc, context) -> exception_handler:
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     'EXCEPTION_HANDLER': "path_to_the_module.custom_exception_handler"
     }
-    """
+    """  # noqa: E501
 
     response = exception_handler(exc, context)
     traceback.print_exc()

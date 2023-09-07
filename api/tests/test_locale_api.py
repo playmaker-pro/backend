@@ -16,7 +16,7 @@ class TestLocaleCitiesView(APITestCase):
             response = self.client.get(self.url, {"city": city.name})
 
             assert response.status_code == 200
-            assert len(response.data) == 1
+            assert len(response.data["results"]) == 1
 
 
 class TestLocaleLanguagesView(APITestCase):

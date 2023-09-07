@@ -1,26 +1,34 @@
-from typing import Dict, Set, Tuple
+from typing import Dict, Tuple
 from unittest import TestCase
 from unittest.mock import patch
 
 import pytest
 from allauth.socialaccount.models import SocialAccount
+from django.conf import settings
+from django.contrib.auth import authenticate
+from django.core import mail
+from django.core.cache import cache
 from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
-from users.schemas import RegisterSchema
+from features.models import Feature
 from users.apis import UsersAPI
 from users.errors import (
     ApplicationError,
+    SocialAccountInstanceNotCreatedException,
     UserEmailNotValidException,
-    SocialAccountInstanceNotCreatedException
 )
-from users.schemas import UserFacebookDetailPydantic
-from features.models import Feature
-from users.managers import GoogleManager, FacebookManager
+from users.managers import FacebookManager, GoogleManager
 from users.models import User
+from users.schemas import (
+    GoogleSdkLoginCredentials,
+    RegisterSchema,
+    UserFacebookDetailPydantic,
+    UserGoogleDetailPydantic,
+)
 from users.services import UserService
-from users.schemas import UserGoogleDetailPydantic, GoogleSdkLoginCredentials
+from users.utils.test_utils import extract_uidb64_and_token_from_email
 from utils.factories.feature_sets_factories import FeatureElementFactory, FeatureFactory
 from utils.factories.user_factories import UserFactory
 from utils.test.test_utils import (
@@ -147,6 +155,33 @@ class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             "email": TEST_EMAIL,
         }
 
+    def tearDown(self) -> None:
+        """Stop all patches and clear throttle cache"""
+        patch.stopall()
+        cache.clear()
+
+    @pytest.mark.usefixtures("disable_email_check_throttle_for_test")
+    def test_request_methods_not_allowed(self) -> None:
+        """Disable throttle for test_request_methods_not_allowed tests"""
+        super().test_request_methods_not_allowed()
+
+    def test_throttle(self) -> None:
+        """Check if throttle works properly"""
+
+        for _ in range(settings.THROTTLE_EMAIL_CHECK_LIMITATION):
+            res: Response = self.client.post(
+                self.url,
+                data=self.data,
+            )
+
+            assert res.status_code != 429
+
+        res: Response = self.client.post(
+            self.url,
+            data=self.data,
+        )
+        assert res.status_code == 429
+
     @mute_post_save_signal()
     def test_register_endpoint_response_ok(self) -> None:
         """Test register endpoint. Response OK"""
@@ -195,7 +230,12 @@ class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
     def test_register_endpoint_invalid_mail(self) -> None:
         """Test register endpoint with invalid email field"""
 
-        invalid_names = ["test_email", "test_email@", "test_email@test", "test_email@test."]
+        invalid_names = [
+            "test_email",
+            "test_email@",
+            "test_email@test",
+            "test_email@test.",
+        ]
 
         for email in invalid_names:
             self.data["email"] = email
@@ -480,7 +520,7 @@ class GoogleAuthTestEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             user_qry = User.objects.filter(email=user_email)
 
             assert user_qry.exists()
-            assert isinstance(user := user_qry.first(), User)
+            assert isinstance(user := user_qry.first(), User)  # noqa: E999
             assert user.email == user_email
 
             assert social_account.exists()
@@ -576,7 +616,9 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             UserService, "create_social_account", return_value=(True, True)
         ).start()
 
-        with get_user_info_patcher, google_credentials_patcher, register_from_google_patcher:
+        with (
+            get_user_info_patcher
+        ), google_credentials_patcher, register_from_google_patcher:
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
@@ -610,7 +652,9 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             UserService, "create_social_account", return_value=(True, True)
         ).start()
 
-        with get_user_info_patcher, google_credentials_patcher, register_from_google_patcher:
+        with (
+            get_user_info_patcher
+        ), google_credentials_patcher, register_from_google_patcher:
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
@@ -635,13 +679,15 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         patch.object(
             UserService, "create_social_account", return_value=(False, True)
         ).start()
-        with get_user_info_patcher, google_credentials_patcher, register_from_google_patcher:
+        with (
+            get_user_info_patcher
+        ), google_credentials_patcher, register_from_google_patcher:
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
             assert res.status_code == 400
 
-            msg = "No user data fetched from Google or data is not valid. Please try again."
+            msg = "No user data fetched from Google or data is not valid. Please try again."  # noqa: E501
             assert res.json().get("detail") == msg
 
 
@@ -653,12 +699,30 @@ class TestEmailAvailabilityEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         """Setup method for UserFeatureElementsEndpoint tests"""
         self.client: APIClient = APIClient()
         self.url: str = reverse("api:users:email-verification")
-        self.test_email = "some_email@playmaker.com"
+        self.test_email = TEST_EMAIL
 
     def tearDown(self) -> None:
-        """Stop all patches."""
+        """Stop all patches and clear throttle cache"""
         patch.stopall()
+        cache.clear()
 
+    @pytest.mark.usefixtures("disable_email_check_throttle_for_test")
+    def test_request_methods_not_allowed(self) -> None:
+        """Disable throttle for test_request_methods_not_allowed tests"""
+        super().test_request_methods_not_allowed()
+
+    def test_throttle(self) -> None:
+        """Check if throttle works properly"""
+
+        for _ in range(settings.THROTTLE_EMAIL_CHECK_LIMITATION):
+            res: Response = self.client.post(self.url, data={"email": self.test_email})
+            assert res.status_code == 200
+            assert res.json()["success"] is True
+
+        res: Response = self.client.post(self.url, data={"email": self.test_email})
+        assert res.status_code == 429
+
+    @pytest.mark.usefixtures("disable_email_check_throttle_for_test")
     def test_if_email_has_valid_format(self) -> None:
         """Test if email has valid format"""
         data = {"email": "test_email"}
@@ -668,6 +732,7 @@ class TestEmailAvailabilityEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         assert "success" in res.json()
         assert "detail" in res.json()
 
+    @pytest.mark.usefixtures("disable_email_check_throttle_for_test")
     def test_email_is_available(self):
         """Test if email is available"""
         data = {"email": "test@email.com"}
@@ -679,6 +744,7 @@ class TestEmailAvailabilityEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         assert res.json()["email_available"] is True
         assert res.json()["success"] is True
 
+    @pytest.mark.usefixtures("disable_email_check_throttle_for_test")
     def test_email_is_not_available(self):
         """Test if email is not available"""
         UserFactory.create(email=self.test_email)
@@ -716,7 +782,9 @@ class TestFacebookAuthEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             "access_token": "some_access_token",
         }
 
-        patch("users.apis.UsersAPI._social_media_auth", return_value=response_dict).start()
+        patch(
+            "users.apis.UsersAPI._social_media_auth", return_value=response_dict
+        ).start()
         response: Response = self.client.post(self.url, data={"token_id": "test"})
 
         assert response.status_code == 200
@@ -728,7 +796,6 @@ class TestFacebookAuthEndpoint(TestCase, MethodsNotAllowedTestsMixin):
 
 @pytest.mark.django_db
 class TestSocialMediaAuthMethod(TestCase):
-
     def tearDown(self) -> None:
         """Stop all patches."""
         patch.stopall()
@@ -750,11 +817,16 @@ class TestSocialMediaAuthMethod(TestCase):
         }
         patch(
             "users.managers.FacebookManager.get_user_info",
-            return_value=UserFacebookDetailPydantic(**data_patcher)
+            return_value=UserFacebookDetailPydantic(**data_patcher),
         ).start()
-        patch("users.services.UserService.create_social_account", return_value=(True, True)).start()
+        patch(
+            "users.services.UserService.create_social_account",
+            return_value=(True, True),
+        ).start()
 
-        res: dict = UsersAPI._social_media_auth(FacebookManager(token_id="token_id"), "test")
+        res: dict = UsersAPI._social_media_auth(
+            FacebookManager(token_id="token_id"), "test"
+        )
 
         assert User.objects.filter(email=data_patcher["email"]).exists()
         assert isinstance(res, dict)
@@ -772,9 +844,12 @@ class TestSocialMediaAuthMethod(TestCase):
         }
         patch(
             "users.managers.FacebookManager.get_user_info",
-            return_value=UserFacebookDetailPydantic(**data_patcher)
+            return_value=UserFacebookDetailPydantic(**data_patcher),
         ).start()
-        patch("users.services.UserService.create_social_account", return_value=(True, True)).start()
+        patch(
+            "users.services.UserService.create_social_account",
+            return_value=(True, True),
+        ).start()
 
         with pytest.raises(UserEmailNotValidException):
             UsersAPI._social_media_auth(FacebookManager(token_id="token_id"), "test")
@@ -789,9 +864,151 @@ class TestSocialMediaAuthMethod(TestCase):
         }
         patch(
             "users.managers.FacebookManager.get_user_info",
-            return_value=UserFacebookDetailPydantic(**data_patcher)
+            return_value=UserFacebookDetailPydantic(**data_patcher),
         ).start()
-        patch("users.services.UserService.create_social_account", return_value=(False, True)).start()
+        patch(
+            "users.services.UserService.create_social_account",
+            return_value=(False, True),
+        ).start()
 
         with pytest.raises(SocialAccountInstanceNotCreatedException):
             UsersAPI._social_media_auth(FacebookManager(token_id="token_id"), "test")
+
+
+@pytest.mark.django_db
+class TestPasswordResetEndpoint(TestCase, MethodsNotAllowedTestsMixin):
+    NOT_ALLOWED_METHODS = ["get", "put", "patch", "delete"]
+
+    def setUp(self) -> None:
+        self.client: APIClient = APIClient()
+        self.url: str = reverse("api:users:api-password-reset")
+        self.user_data: Dict[str, str] = {
+            "password": "old_secret_password",
+            "first_name": "first_name",
+            "last_name": "last_name",
+            "email": TEST_EMAIL,
+        }
+        self.user = UserFactory.create(**self.user_data)
+
+    def test_password_reset_request(self) -> None:
+        """Test if reset request returns 200 for valid email."""
+        res: Response = self.client.post(
+            self.url, data={"email": self.user_data["email"]}
+        )
+        assert res.status_code == 200
+
+    def test_password_reset_for_non_existent_email(self) -> None:
+        """Test if reset request returns a specific status (e.g., 200) for non-existent email."""  # noqa: E501
+        res: Response = self.client.post(
+            self.url, data={"email": "non_existent@test.com"}
+        )
+        assert res.status_code == 200
+
+    def test_reset_email_content(self) -> None:
+        """Test if the reset email contains the correct content and link."""
+        self.client.post(self.url, data={"email": self.user_data["email"]})
+
+        assert len(mail.outbox) == 1
+        email = mail.outbox[0]
+
+        assert email.subject == "Password reset"
+        assert email.to == [self.user_data["email"]]
+        assert "Witaj na platformie PlayMaker.pro" in email.body
+
+
+@pytest.mark.django_db
+class TestPasswordChangeEndpoint(TestCase, MethodsNotAllowedTestsMixin):
+    NOT_ALLOWED_METHODS = ["get", "put", "patch", "delete"]
+
+    def setUp(self) -> None:
+        self.client: APIClient = APIClient()
+        self.user_data: Dict[str, str] = {
+            "password": "old_secret_password",
+            "first_name": "first_name",
+            "last_name": "last_name",
+            "email": TEST_EMAIL,
+        }
+        self.user = UserFactory.create(**self.user_data)
+
+        # The URL for the password reset confirmation with dummy args
+        # Used for MethodsNotAllowedTestsMixin
+        self.url = reverse(
+            "api:users:api-password-reset-confirm", args=["dummy_uidb64", "dummy_token"]
+        )
+
+        # The URL for initiating the password reset process
+        self.initiate_reset_url = reverse("api:users:api-password-reset")
+
+    def test_password_change_with_valid_token(self) -> None:
+        """Test if the user can reset their password with a valid token."""
+
+        # Request a password reset
+        self.client.post(
+            self.initiate_reset_url, data={"email": self.user_data["email"]}
+        )
+        email = mail.outbox[0]
+        uidb64, token = extract_uidb64_and_token_from_email(email.body)
+
+        # Use these values to reverse the change password URL
+        change_password_url = reverse(
+            "api:users:api-password-reset-confirm", args=[uidb64, token]
+        )
+
+        # Perform the password change request using the valid token.
+        new_password = "newSecurePassword123!"
+        response = self.client.post(
+            change_password_url,
+            data={"new_password": new_password, "confirm_new_password": new_password},
+        )
+
+        # Assert that the password was changed successfully.
+        assert response.status_code == 200
+
+        user = User.objects.get(email=self.user_data["email"])
+        assert user.check_password(new_password) is True
+
+    def test_password_change_with_invalid_token(self) -> None:
+        """Test if the user cannot reset their password with an invalid token."""
+
+        # Make a reset password request. This will generate a valid token.
+        self.client.post(
+            self.initiate_reset_url, data={"email": self.user_data["email"]}
+        )
+        email_content = mail.outbox[0].body
+
+        # Extract the real uidb64 and token for the user.
+        uidb64, valid_token = extract_uidb64_and_token_from_email(email_content)
+
+        # Intentionally modify the token to make it invalid.
+        invalid_token = "invalid-token"
+        assert (
+            invalid_token != valid_token
+        )  # Just to make sure we aren't coincidentally using a valid token.
+
+        # Construct the password reset confirm URL with the invalid token.
+        change_password_url_with_invalid_token = reverse(
+            "api:users:api-password-reset-confirm", args=[uidb64, invalid_token]
+        )
+
+        # Try to reset the password with the invalid token.
+        response = self.client.post(
+            change_password_url_with_invalid_token,
+            data={
+                "password": self.user_data["password"],
+                "new_password": "newpassword1234",
+                "confirm_new_password": "newpassword1234",
+            },
+        )
+
+        # Check that the response indicates a failure
+        assert response.status_code == 400
+        user = authenticate(
+            email=self.user_data["email"], password=self.user_data["password"]
+        )
+        assert (
+            user is not None
+        )  # The authentication should succeed with the old password.
+        user = authenticate(username=self.user_data["email"], password="newpassword123")
+        assert (
+            user is None
+        )  # The authentication should fail since the password was not changed.

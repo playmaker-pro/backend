@@ -3,13 +3,15 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_countries import countries
 from django_fsm import FSMField, transition
-from django.utils import timezone
 
-from notifications.mail import (mail_user_waiting_for_verification,
-                                verification_notification)
+from notifications.mail import (
+    mail_user_waiting_for_verification,
+    verification_notification,
+)
 from roles import definitions
 from users.managers import CustomUserManager
 from utils import calculate_age

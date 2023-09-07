@@ -8,7 +8,7 @@ profile = "black"
 DJANGO_SETTINGS_MODULE = "backend.settings.test"
 addopts = "-p no:warnings"
 # -- recommended but optional:
-python_files = "tests.py test_*.py *_tests.py"
+python_files = "tests/* test/*"
 norecursedirs = "__IGNORE/*"
 
 [tool.black]

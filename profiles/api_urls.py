@@ -1,5 +1,6 @@
 from django.urls import path
 from rest_framework import routers
+
 from . import apis as views
 
 # from resources.views import WebhookPlayer
@@ -18,6 +19,15 @@ urlpatterns = [
             }
         ),
         name="get_create_or_update_profile",
+    ),
+    path(
+        r"owned/",
+        views.ProfileAPI.as_view(
+            {
+                "get": "get_owned_profiles",
+            }
+        ),
+        name="get_owned_profiles",
     ),
     path(
         r"<uuid:profile_uuid>/",
@@ -64,5 +74,30 @@ urlpatterns = [
         r"players-age-range/",
         views.ProfileEnumsAPI.as_view({"get": "get_player_age_range"}),
         name="players_age_range",
+    ),
+    path(
+        r"player-video/labels/",
+        views.PlayerVideoAPI.as_view({"get": "get_labels"}),
+        name="player_video_labels",
+    ),
+    path(
+        r"player-video/",
+        views.PlayerVideoAPI.as_view(
+            {
+                "post": "create_player_video",
+                "delete": "delete_player_video",
+                "patch": "update_player_video",
+            }
+        ),
+        name="modify_player_video",
+    ),
+    path(
+        r"player-video/<int:video_id>",
+        views.PlayerVideoAPI.as_view(
+            {
+                "delete": "delete_player_video",
+            }
+        ),
+        name="delete_player_video",
     ),
 ]

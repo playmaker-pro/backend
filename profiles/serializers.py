@@ -5,6 +5,7 @@ from django.db.models import Count
 from django.db.models.functions import ExtractYear
 from rest_framework import serializers
 
+from api.errors import NotOwnerOfAnObject
 from api.serializers import locale_service
 from utils import translate_to
 
@@ -14,6 +15,41 @@ from . import errors, models
 class ChoicesTuple(typing.NamedTuple):
     id: typing.Union[str, int]
     name: str
+
+
+class ProfileEnumChoicesSerializer(serializers.CharField, serializers.Serializer):
+    """Serializer for Profile Enums"""
+
+    def __init__(self, model: typing.Type[models.models.Model] = None, *args, **kwargs):
+        self.model: typing.Type[models.models.Model] = model
+        super().__init__(*args, **kwargs)
+
+    def parse_dict(
+        self, data: (typing.Union[int, str], typing.Union[int, str])
+    ) -> dict:
+        """Create dictionary from tuple choices"""
+        return {str(val[0]): val[1] for val in data}
+
+    def to_representation(self, obj: typing.Union[ChoicesTuple, str]) -> dict:
+        """Parse output"""
+        if not obj:
+            return {}
+        if not isinstance(obj, ChoicesTuple):
+            return self.parse(obj)
+        return {"id": obj.id, "name": obj.name}
+
+    def parse(self, _id) -> dict:
+        """Get choices by model field and parse output"""
+        _id = str(_id)
+        choices = self.parse_dict(
+            getattr(self.model, self.source).__dict__["field"].choices
+        )
+
+        if _id not in choices.keys():
+            raise serializers.ValidationError(f"Invalid value: {_id}")
+
+        value = choices[_id]
+        return self.to_representation(ChoicesTuple(_id, value))
 
 
 class PlayerPositionSerializer(serializers.ModelSerializer):
@@ -35,9 +71,58 @@ class PlayerProfilePositionSerializer(serializers.ModelSerializer):
 
 
 class PlayerVideoSerializer(serializers.ModelSerializer):
+    thumbnail = serializers.CharField(
+        source="get_youtube_thumbnail_url", read_only=True
+    )
+    label = ProfileEnumChoicesSerializer(model=models.PlayerVideo, required=False)
+
     class Meta:
         model = models.PlayerVideo
         fields = "__all__"
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Override init to set url as not required if there is defined instance (UPDATE METHOD)"""
+        super().__init__(*args, **kwargs)
+        self._profile = None
+        if self.instance is not None:
+            self.fields["url"].required = False
+
+    def validate_player(self, profile: models.PlayerProfile) -> models.PlayerProfile:
+        """Validate that requestor (User, his PlayerProfile) is owner of the Video"""
+        if profile.user != self.context.get("requestor"):
+            raise NotOwnerOfAnObject
+        return profile
+
+    def to_internal_value(self, data: dict) -> dict:
+        """Override method to define profile based on requestor (user who sent a request)"""
+        if user := self.context.get("requestor"):  # noqa: E999
+            try:
+                profile = user.playerprofile
+            except user._meta.model.playerprofile.RelatedObjectDoesNotExist:
+                raise serializers.ValidationError(
+                    {"error": "You do not have a player profile."}
+                )
+
+            data["player"] = self._profile = profile
+
+            return super().to_internal_value(data)
+        else:
+            raise serializers.ValidationError(
+                {"error": "Unable to define owner of a request."}
+            )
+
+    @property
+    def profile(self) -> dict:
+        """Serialize whole profile of a video owner"""
+        from .api_serializers import ProfileSerializer  # avoid circular
+
+        return ProfileSerializer(self._profile).data
+
+    def delete(self) -> None:
+        """Method do perform DELETE action on PlayerVideo object, validation included"""
+        self.validate_player(self.instance.player)
+        self._profile = self.instance.player
+        self.instance.delete()
 
 
 class PlayerMetricsSerializer(serializers.ModelSerializer):
@@ -69,7 +154,13 @@ class ProfileVisitHistorySerializer(serializers.ModelSerializer):
 class ProfileEnumChoicesSerializer(serializers.CharField, serializers.Serializer):
     """Serializer for Profile Enums"""
 
-    def __init__(self, model: typing.Type[models.models.Model] = None, *args, **kwargs):
+    def __init__(
+        self,
+        model: typing.Type[models.models.Model] = None,
+        choices=None,
+        *args,
+        **kwargs,
+    ):
         self.model: typing.Type[models.models.Model] = model
         super().__init__(*args, **kwargs)
 
@@ -105,6 +196,12 @@ class LanguageSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Language
         fields = "__all__"
+
+    def to_internal_value(self, data: dict) -> typing.Union[models.Language, dict]:
+        """Override object to get language either by code and id"""
+        if isinstance(data, str):
+            return models.Language.objects.filter(code=data).first()
+        return data
 
     def define_priority(self, obj: models.Language) -> bool:
         """Define language priority"""
@@ -156,3 +253,9 @@ class PlayersGroupByAgeSerializer(serializers.Serializer):
         raise errors.SerializerError(
             f"{self.__class__.__name__} should not be able to save anything!"
         )
+
+
+class VerificationStageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.VerificationStage
+        exclude = ("id",)

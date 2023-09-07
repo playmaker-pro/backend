@@ -4,17 +4,18 @@ import uuid
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.db import models as m
-from django.db.models import functions as f
+from django.db import models as django_base_models
+from django.db.models import ObjectDoesNotExist
+from django.db.models import functions as django_base_functions
 from pydantic import BaseModel
 
 from api.services import LocaleDataService
 from clubs import models as clubs_models
 from clubs.models import Club as CClub
 from clubs.models import Team as CTeam
+from profiles import errors, models, utils
+from roles.definitions import CLUB_ROLES
 from utils import get_current_season
-
-from . import errors, models, utils
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -31,7 +32,7 @@ class PositionData(BaseModel):
 
 
 class ProfileVerificationService:
-    """Profile verification service which can mange verification process for user's profile"""
+    """Profile verification service which can manage verification process for user's profile"""
 
     def __init__(self, profile: models.BaseProfile) -> None:
         self.profile: models.BaseProfile = profile
@@ -62,7 +63,7 @@ class ProfileVerificationService:
         club: typing.Optional[clubs_models.Club] = None
         text: typing.Optional[str] = None
 
-        if team_club_league_voivodeship_ver := data.get(
+        if team_club_league_voivodeship_ver := data.get(  # noqa: E999
             "team_club_league_voivodeship_ver"
         ):
             text = team_club_league_voivodeship_ver
@@ -323,7 +324,8 @@ class ProfileService:
                 return profile_type.objects.get(uuid=profile_uuid)
             except profile_type.DoesNotExist:
                 continue
-        raise errors.ProfileDoesNotExist
+        else:
+            raise ObjectDoesNotExist
 
     def is_valid_uuid(self, value: str) -> bool:
         try:
@@ -334,51 +336,57 @@ class ProfileService:
 
     def get_club_roles(self) -> tuple:
         """Get list of club roles from ClubProfile"""
-        return models.ClubProfile.CLUB_ROLE
+        return CLUB_ROLES
 
     def get_referee_roles(self) -> tuple:
-        """Get list of referee roles from RefereeProfile"""
+        """Get referee roles from RefereeProfile"""
         return models.RefereeLevel.REFEREE_ROLE_CHOICES
 
-    def filter_youth_players(self, queryset: m.QuerySet) -> m.QuerySet:
+    def filter_youth_players(
+        self, queryset: django_base_models.QuerySet
+    ) -> django_base_models.QuerySet:
         """Filter profiles queryset to get profiles of youth users (under 21 yo)"""
         max_youth_birth_date = utils.get_past_date(years=21)
         return queryset.filter(
             user__userpreferences__birth_date__gte=max_youth_birth_date
         )
 
-    def filter_min_age(self, queryset: m.QuerySet, age: int) -> m.QuerySet:
+    def filter_min_age(
+        self, queryset: django_base_models.QuerySet, age: int
+    ) -> django_base_models.QuerySet:
         """Filter profile queryset with minimum user age"""
         min_birth_date = utils.get_past_date(years=age)
         return queryset.filter(user__userpreferences__birth_date__lte=min_birth_date)
 
-    def filter_max_age(self, queryset: m.QuerySet, age: int) -> m.QuerySet:
+    def filter_max_age(
+        self, queryset: django_base_models.QuerySet, age: int
+    ) -> django_base_models.QuerySet:
         """Filter profile queryset with maximum user age"""
         max_birth_date = utils.get_past_date(years=age + 1)
         return queryset.filter(user__userpreferences__birth_date__gte=max_birth_date)
 
     def filter_player_position(
-        self, queryset: m.QuerySet, positions: list
-    ) -> m.QuerySet:
+        self, queryset: django_base_models.QuerySet, positions: list
+    ) -> django_base_models.QuerySet:
         """Filter profile queryset with maximum user age"""
         return (
             queryset.filter(player_positions__player_position__shortcut__in=positions)
             .annotate(
-                is_main_for_positions=m.Case(
-                    m.When(
+                is_main_for_positions=django_base_models.Case(
+                    django_base_models.When(
                         player_positions__player_position__shortcut__in=positions,
-                        then=m.F("player_positions__is_main"),
+                        then=django_base_models.F("player_positions__is_main"),
                     ),
-                    default=m.F("player_positions__is_main"),
-                    output_field=m.BooleanField(),
+                    default=django_base_models.F("player_positions__is_main"),
+                    output_field=django_base_models.BooleanField(),
                 )
             )
             .order_by("-is_main_for_positions", "?")
         )
 
     def filter_player_league(
-        self, queryset: m.QuerySet, league_ids: list
-    ) -> m.QuerySet:
+        self, queryset: django_base_models.QuerySet, league_ids: list
+    ) -> django_base_models.QuerySet:
         """Filter player's queryset with list of highest_parent league_id's using current season name"""
         current_season = get_current_season()
         return queryset.filter(
@@ -387,8 +395,12 @@ class ProfileService:
         )
 
     def filter_localization(
-        self, queryset: m.QuerySet, latitude: float, longitude: float, radius: int
-    ) -> m.QuerySet:
+        self,
+        queryset: django_base_models.QuerySet,
+        latitude: float,
+        longitude: float,
+        radius: int,
+    ) -> django_base_models.QuerySet:
         """
         Filter queryset with objects within radius based on
         longitude, latitude and radius (radius distance from target).
@@ -400,19 +412,31 @@ class ProfileService:
 
         return queryset.annotate(
             distance=earth_radius
-            * f.ACos(
-                f.Cos(f.Radians(latitude))
-                * f.Cos(f.Radians("user__userpreferences__localization__latitude"))
-                * f.Cos(
-                    f.Radians("user__userpreferences__localization__longitude")
-                    - f.Radians(longitude)
+            * django_base_functions.ACos(
+                django_base_functions.Cos(django_base_functions.Radians(latitude))
+                * django_base_functions.Cos(
+                    django_base_functions.Radians(
+                        "user__userpreferences__localization__latitude"
+                    )
                 )
-                + f.Sin(f.Radians(latitude))
-                * f.Sin(f.Radians("user__userpreferences__localization__latitude"))
+                * django_base_functions.Cos(
+                    django_base_functions.Radians(
+                        "user__userpreferences__localization__longitude"
+                    )
+                    - django_base_functions.Radians(longitude)
+                )
+                + django_base_functions.Sin(django_base_functions.Radians(latitude))
+                * django_base_functions.Sin(
+                    django_base_functions.Radians(
+                        "user__userpreferences__localization__latitude"
+                    )
+                )
             )
         ).filter(distance__lt=radius)
 
-    def filter_country(self, queryset: m.QuerySet, country: list) -> m.QuerySet:
+    def filter_country(
+        self, queryset: django_base_models.QuerySet, country: list
+    ) -> django_base_models.QuerySet:
         """Validate each country code, then return queryset filtered by given countries"""
         return queryset.filter(
             user__userpreferences__citizenship__overlap=[
@@ -420,7 +444,9 @@ class ProfileService:
             ]
         )
 
-    def filter_language(self, queryset: m.QuerySet, language: list) -> m.QuerySet:
+    def filter_language(
+        self, queryset: django_base_models.QuerySet, language: list
+    ) -> django_base_models.QuerySet:
         """Validate each language code, then return queryset filtered by given spoken languages"""
         return queryset.filter(
             user__userpreferences__spoken_languages__code__in=[
@@ -430,7 +456,7 @@ class ProfileService:
 
     def get_players_on_age_range(
         self, min_age: int = 14, max_age: int = 44
-    ) -> m.QuerySet:
+    ) -> django_base_models.QuerySet:
         """Get queryset of players with age between given args"""
         player_max_age = utils.get_past_date(years=max_age)
         player_min_age = utils.get_past_date(years=min_age)
@@ -438,6 +464,14 @@ class ProfileService:
             user__userpreferences__birth_date__lte=player_min_age,
             user__userpreferences__birth_date__gte=player_max_age,
         )
+
+    def get_user_profiles(self, user: User) -> typing.List[models.PROFILE_TYPE]:
+        """Find all profiles for given user"""
+        profiles: list = []
+        for profile_type in models.PROFILE_MODELS:
+            if profile := profile_type.objects.filter(user=user).first():
+                profiles.append(profile)
+        return profiles
 
 
 class PlayerProfilePositionService:
@@ -470,7 +504,7 @@ class PlayerProfilePositionService:
         non-main positions in the provided data, and raises an error if there are more
         than one main or two non-main positions.
 
-        It then iterates over the new positions data. If a main position is new or has
+        It then iterates over the new positions' data. If a main position is new or has
         changed, it is created or updated accordingly. Non-main positions are also created
         or updated, but no more than two are allowed.
 
@@ -546,3 +580,15 @@ class PlayerProfilePositionService:
         # Create positions
         for position in positions_to_create:
             position.save()
+
+
+class PlayerVideoService:
+    @staticmethod
+    def get_player_video_labels() -> tuple:
+        """Get player video labels"""
+        return models.PlayerVideo.LABELS
+
+    @staticmethod
+    def get_video_by_id(_id: int) -> models.PlayerVideo:
+        """Get PlayerVideo object by id"""
+        return models.PlayerVideo.objects.get(id=_id)  # type: ignore

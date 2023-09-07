@@ -143,13 +143,13 @@ class LeagueAdmin(admin.ModelAdmin):
     readonly_fields: Sequence[str] = ("slug", "search_tokens", "virtual", "is_parent")
     autocomplete_fields = ["parent", "highest_parent"]
     actions = [resave]
+    exclude = ["code", "order", "section"]
     list_display = (
         "get_slicer",
-        "section",
+        "seniority",
         "name",
         "get_data_seasons",
         "virtual",
-        "order",
         "visible",
         "isparent",
         "is_parent",
@@ -158,11 +158,9 @@ class LeagueAdmin(admin.ModelAdmin):
         "country",
         "parent",
         "childs_no",
-        "seniority",
         "gender",
         "index",
         "group",
-        "code",
         "slug",
         "search_tokens",
         linkify("highest_parent"),
@@ -271,8 +269,9 @@ class TeamAdmin(admin.ModelAdmin):
 
     def current_league(self, obj=None):
         """
-        Returns the current league highest parent of a given team. If the team has no team history related
-        to a current season, returns league from latest team history.
+        Returns the current league highest parent of a given team.
+        If the team has no team history related to a current season,
+        returns league from latest team history.
         """
         current_league = "-"
         if obj:

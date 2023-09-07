@@ -83,7 +83,7 @@ class UserManager:
     @property
     def get_access_token(self) -> str:
         """Get the authentication access token for the created superuser."""
-        res: Response = self.client.post(
+        res: Response = self.client.post(  # noqa
             self.login_url, {"email": self.email, "password": self.password}
         )
         return res.data.get("access")

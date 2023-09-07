@@ -107,7 +107,7 @@ class ClubTeamsSearchApi(APIView):
         if not club_id:
             raise base_errors.ParamsRequired(["club_id"])
 
-        if not (club_obj := self.club_service.club_exist(club_id)):
+        if not (club_obj := self.club_service.club_exist(club_id)):  # noqa:  E999
             raise errors.ClubDoesNotExist
 
         qs = models.Team.objects.filter(club=club_obj)
@@ -145,30 +145,32 @@ class LeagueAPI(EndpointView):
     service = services.LeagueService()
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def get_queryset(self, highest_only: bool = False) -> QuerySet:
+    def get_queryset(self, highest_only: bool = False, **kwargs) -> QuerySet:
         """Get Leagues queryset"""
         if highest_only:
             qs = self.service.get_highest_parents()
         else:
             qs = self.service.get_leagues()
 
-        return self.filter_queryset(qs)
+        return self.filter_queryset(qs, **kwargs)
 
-    def filter_queryset(self, queryset: QuerySet) -> QuerySet:
-        """Filter queryset by query_params"""
-        if gender := self.request.query_params.get("gender"):
-            try:
-                self.service.validate_gender(gender)
-            except ValueError:
-                raise errors.InvalidGender
-
+    def filter_queryset(self, queryset: QuerySet, **kwargs) -> QuerySet:
+        """Filter queryset by gender and visible flag"""
+        if gender := kwargs.get("gender"):
             queryset = self.service.filter_gender(queryset, gender)
 
-        return queryset
+        return queryset.filter(visible=True)
 
     def get_highest_parents(self, request: Request) -> Response:
         """Get list of leagues (highest parents only)"""
-        qs = self.get_queryset(highest_only=True)
+
+        gender: str = request.query_params.get("gender")
+        try:
+            self.service.validate_gender(gender)
+        except ValueError:
+            raise errors.InvalidGender
+
+        qs = self.get_queryset(highest_only=True, gender=gender)
         serializer = serializers.LeagueBaseDataSerializer(qs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

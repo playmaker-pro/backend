@@ -1,12 +1,14 @@
 import json
 import uuid
 
+import pytest
 from django.urls import reverse
 from parameterized import parameterized
 from rest_framework.test import APIClient, APITestCase
 
 from profiles.services import ProfileService
 from profiles.tests import utils
+from roles.definitions import CLUB_ROLE_TEAM_LEADER
 from utils import factories
 from utils.test.test_utils import UserManager
 
@@ -47,10 +49,9 @@ class TestGetProfileAPI(APITestCase):
 class TestCreateUpdateProfileAPI(APITestCase):
     def setUp(self) -> None:
         self.client: APIClient = APIClient()
-        self.user = UserManager(self.client)
-        self.user_obj = self.user.create_superuser()
-        self.headers = self.user.get_headers()
-        factories.UserFactory.create_batch_force_order(5)
+        self.manager = UserManager(self.client)
+        self.user_obj = self.manager.create_superuser()
+        self.headers = self.manager.get_headers()
         factories.ClubFactory(id=1)
         factories.TeamHistoryFactory(
             team=factories.TeamFactory(name="Drużyna FC II", id=1), id=1
@@ -59,21 +60,9 @@ class TestCreateUpdateProfileAPI(APITestCase):
 
     @parameterized.expand(
         [
-            [{"id_user": 1, "role": "S"}],
-            [{"user": 1, "role": "S"}],
-        ]
-    )
-    def test_post_incorrect_user(self, payload: dict) -> None:
-        """test HTTP_400 if request has wrong defined user_id"""
-        response = self.client.post(self.url, json.dumps(payload), **self.headers)
-
-        assert response.status_code == 400
-
-    @parameterized.expand(
-        [
-            [{"user_id": 1, "role": "Piłkarz"}],
-            [{"user_id": 1, "role": "s"}],
-            [{"user_id": 1, "r0l3": "P"}],
+            [{"role": "Piłkarz"}],
+            [{"role": "s"}],
+            [{"r0l3": "P"}],
         ]
     )
     def test_post_incorrect_role(self, payload: dict) -> None:
@@ -86,7 +75,6 @@ class TestCreateUpdateProfileAPI(APITestCase):
         [
             [
                 {
-                    "user_id": 1,
                     "role": "P",
                     "height": 180,
                     "weight": 75,
@@ -96,7 +84,6 @@ class TestCreateUpdateProfileAPI(APITestCase):
             ],
             [
                 {
-                    "user_id": 2,
                     "role": "P",
                     "team_object_id": 1,
                     "team_history_object_id": 1,
@@ -104,7 +91,6 @@ class TestCreateUpdateProfileAPI(APITestCase):
             ],
             [
                 {
-                    "user_id": 3,
                     "role": "T",
                     "licence": 1,
                     "team_object_id": 1,
@@ -113,27 +99,25 @@ class TestCreateUpdateProfileAPI(APITestCase):
             ],
             [
                 {
-                    "user_id": 4,
                     "role": "C",
                     "club_object_id": 1,
-                    "club_role": 5,
+                    "club_role": CLUB_ROLE_TEAM_LEADER,
                     "phone": "111222333",
                 }
             ],
-            [{"user_id": 5, "role": "S", "soccer_goal": 2, "bio": "jakiesbio"}],
+            [{"role": "S", "soccer_goal": 2, "bio": "jakiesbio"}],
         ]
     )
     def test_successfully_create_profile_for_new_user(self, payload: dict) -> None:
         """Test creating profiles with correctly passed payload"""
-        self.user.login(self.user_obj)
+        self.manager.login(self.user_obj)
         response = self.client.post(self.url, json.dumps(payload), **self.headers)
 
         assert response.status_code == 201
         assert response.data["user_id"] and response.data["role"]
 
-        user = utils.get_user(payload["user_id"])
         profile_type = utils.get_profile_by_role(payload["role"])
-        profile = profile_type.objects.get(user=user)
+        profile = profile_type.objects.get(user=self.user_obj)
 
         for attr, val in payload.items():
             if attr != "role":
@@ -141,13 +125,16 @@ class TestCreateUpdateProfileAPI(APITestCase):
 
     @parameterized.expand([[{"user_id": 1, "role": "P"}]])
     def test_create_same_profile_type_twice_for_same_user(self, payload: dict) -> None:
-        """Test HTTP_400 in attempt to create profile for user that has already a profile"""
+        """
+        Test HTTP_400 in attempt to create profile
+        for user that has already a profile
+        """
         self.client.post(self.url, json.dumps(payload), **self.headers)
         response = self.client.post(self.url, json.dumps(payload), **self.headers)
 
         assert response.status_code == 400
 
-    # @parameterized.expand( # TODO(bartnyk) NOT READY, USER CAN HAVE JUST ONE PROFILE YET
+    # @parameterized.expand( # TODO(bartnyk) NOT READY, USER CAN HAVE JUST ONE PROFILE YET   # noqa: E501
     #     [
     #         [{"user_id": 1, "role": "P"}],
     #         [{"user_id": 1, "role": "S"}],
@@ -155,8 +142,13 @@ class TestCreateUpdateProfileAPI(APITestCase):
     #     ]
     # )
     # def test_create_multiple_profile_types_for_same_user(self, payload: dict) -> None:
-    #     """Test HTTP_400 in attempt to create profile for user that has already a profile"""
-    #     response = ProfileAPI.as_view({"post": "create_profile"})(get_request(payload))
+    #     """
+    #     Test HTTP_400 in attempt to create profile
+    #     for user that has already a profile
+    #     """
+    #     response = ProfileAPI.as_view(
+    #     {"post": "create_profile"})(get_request(payload)
+    #     )
     #
     #     user = get_user(payload["user_id"])
     #     profile = get_profile_by_role(payload["role"])
@@ -167,7 +159,6 @@ class TestCreateUpdateProfileAPI(APITestCase):
         [
             [
                 {
-                    "user_id": 1,
                     "role": "P",
                 },
                 {
@@ -179,7 +170,6 @@ class TestCreateUpdateProfileAPI(APITestCase):
             ],
             [
                 {
-                    "user_id": 2,
                     "role": "P",
                 },
                 {
@@ -189,7 +179,6 @@ class TestCreateUpdateProfileAPI(APITestCase):
             ],
             [
                 {
-                    "user_id": 3,
                     "role": "T",
                 },
                 {
@@ -200,18 +189,16 @@ class TestCreateUpdateProfileAPI(APITestCase):
             ],
             [
                 {
-                    "user_id": 4,
                     "role": "C",
                 },
                 {
                     "club_object_id": 1,
-                    "club_role": 5,
+                    "club_role": "Kierownik",
                     "phone": "111222333",
                 },
             ],
             [
                 {
-                    "user_id": 5,
                     "role": "S",
                 },
                 {
@@ -225,7 +212,7 @@ class TestCreateUpdateProfileAPI(APITestCase):
         self, init_profile: dict, payload: dict
     ) -> None:
         """Test creating profiles with correctly passed payload"""
-        profile = utils.create_empty_profile(init_profile)
+        profile = utils.create_empty_profile(**init_profile, user_id=self.user_obj.pk)
         profile_uuid = profile.uuid
         payload["uuid"] = str(profile_uuid)
         response = self.client.patch(self.url, json.dumps(payload), **self.headers)
@@ -240,7 +227,7 @@ class TestCreateUpdateProfileAPI(APITestCase):
     def test_patch_fake_uuid(self) -> None:
         """patch request with fake uuid shouldn't pass"""
         fake_uuid = uuid.uuid4()
-        self.user.login(self.user_obj)
+        self.manager.login(self.user_obj)
         response = self.client.patch(
             self.url, json.dumps({"uuid": str(fake_uuid)}), **self.headers
         )
@@ -268,8 +255,8 @@ class TestCreateUpdateProfileAPI(APITestCase):
     def test_patch_need_authentication(self) -> None:
         """patch request should require authentication"""
         profile = utils.create_empty_profile(
-            {
-                "user_id": 1,
+            **{
+                "user_id": self.user_obj.pk,
                 "role": "S",
             }
         )
@@ -291,5 +278,19 @@ class TestCreateUpdateProfileAPI(APITestCase):
     def test_patch_request_need_body(self) -> None:
         """patch require request's body, fail if empty"""
         response = self.client.patch(self.url, {}, **self.headers)
+
+        assert response.status_code == 400
+
+    def test_patch_user_is_not_an_owner_of_profile(self) -> None:
+        """request should return 400 if requestor is not an owner of updated profile"""
+        dummy_user = factories.UserFactory.create()
+        profile = utils.create_empty_profile(
+            **{
+                "user_id": dummy_user.pk,
+                "role": "P",
+            }
+        )
+        profile_uuid = str(profile.uuid)
+        response = self.client.patch(self.url, {"uuid": profile_uuid}, **self.headers)
 
         assert response.status_code == 400

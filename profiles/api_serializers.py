@@ -82,22 +82,26 @@ class ProfileSerializer(serializers.Serializer):
     required_fields = ()  # fields required as 'data'
 
     # sub-serializers
-    user = UserDataSerializer(read_only=False, required=False)
-    team_object = club_serializers.TeamSerializer(required=False)
-    team_history_object = club_serializers.TeamHistorySerializer(required=False)
-    voivodeship_obj = VoivodeshipSerializer(required=False)
-    history = profile_serializers.ProfileVisitHistorySerializer(required=False)
+    user = UserDataSerializer(required=False, partial=True)
+    team_object = club_serializers.TeamSerializer(read_only=True)
+    team_history_object = club_serializers.TeamHistorySerializer(read_only=True)
+    voivodeship_obj = VoivodeshipSerializer(read_only=True)
+    history = profile_serializers.ProfileVisitHistorySerializer(
+        required=False, partial=True
+    )
     external_links = ExternalLinksSerializer(required=False)
+    address = serializers.CharField(required=False)
+    verification_stage = profile_serializers.VerificationStageSerializer(required=False)
 
     # fields related with profile (FK to profile)
     player_positions = profile_serializers.PlayerProfilePositionSerializer(
         many=True, required=False
     )
-    player_video = profile_serializers.PlayerVideoSerializer(many=True, required=False)
-    playermetrics = profile_serializers.PlayerMetricsSerializer(required=False)
+    player_video = profile_serializers.PlayerVideoSerializer(many=True, read_only=True)
+    playermetrics = profile_serializers.PlayerMetricsSerializer(read_only=True)
     licences = profile_serializers.CoachLicenceSerializer(many=True, required=False)
 
-    enums = [
+    enums = (
         "transfer_status",
         "soccer_goal",
         "formation",
@@ -106,11 +110,10 @@ class ProfileSerializer(serializers.Serializer):
         "card",
         "training_ready",
         "agent_status",
-        "club_role",
         "coach_role",
         "referee_role",
         "licence",
-    ]
+    )
 
     # meta fields
     player_stats = serializers.SerializerMethodField(read_only=True)
@@ -192,7 +195,7 @@ class ProfileSerializer(serializers.Serializer):
 
     def validate_team(self) -> None:
         """validate team id"""
-        if team_id := self.initial_data.get("team_object_id"):
+        if team_id := self.initial_data.get("team_object_id"):  # noqa: E999
             if not clubs_service.team_exist(team_id):
                 raise clubs_errors.TeamDoesNotExist
 
@@ -214,11 +217,11 @@ class ProfileSerializer(serializers.Serializer):
         self.validate_club()
         self.validate_team_history()
 
-    def initial_validation(self, data: typing.Dict):
+    def initial_validation(self, data: typing.Dict) -> dict:
         """Validate serializer input (data **kw)"""
         for field in self.required_fields:
             if not data or field not in data.keys():
-                raise profile_errors.IncompleteRequestData(self.required_fields)
+                raise profile_errors.IncompleteRequestBody(self.required_fields)
         return data.dict() if isinstance(data, QueryDict) else data
 
     def get_player_stats(self, obj: models.PROFILE_TYPE) -> dict:
@@ -239,12 +242,26 @@ class ProfileSerializer(serializers.Serializer):
 class CreateProfileSerializer(ProfileSerializer):
     user_id = serializers.IntegerField()
     uuid = serializers.CharField(read_only=True)
-    serialize_fields = ["user_id", "uuid", "role"]
-    required_fields = ["user_id", "role"]
+    serialize_fields = (
+        "user_id",
+        "uuid",
+        "role",
+    )
+    required_fields = ("role",)
 
     def __init__(self, *args, **kwargs) -> None:
         kwargs["data"] = self.initial_validation(kwargs.get("data"))
         super().__init__(*args, **kwargs)
+
+    def to_internal_value(self, data: dict) -> dict:
+        """Get user directly from request auth (requestor)"""
+        if user := self.context.get("requestor"):
+            data["user_id"] = user.pk
+            return super().to_internal_value(data)
+        else:
+            raise serializers.ValidationError(
+                {"error": "Unable to define owner of a request."}
+            )
 
     def to_representation(self, *args, **kwargs) -> dict:
         ret = super(ProfileSerializer, self).to_representation(self.instance)
@@ -252,11 +269,7 @@ class CreateProfileSerializer(ProfileSerializer):
 
     def validate_user(self):
         """Validate user_is was given and user exist"""
-        user_id: int = self.initial_data.get("user_id")
-        user_obj: User = users_service.get_user(user_id)
-
-        if not user_id or not user_obj:
-            raise profile_errors.InvalidUser
+        user_obj: User = self.context.get("requestor")
 
         if users_service.user_has_profile(user_obj, self.model):
             raise profile_errors.UserAlreadyHasProfile
@@ -293,24 +306,42 @@ class CreateProfileSerializer(ProfileSerializer):
 
 
 class UpdateProfileSerializer(ProfileSerializer):
-    uuid = serializers.UUIDField()
-    required_fields = ["uuid"]
-
     def __init__(self, *args, **kwargs) -> None:
-        data = self.initial_validation(kwargs.get("data"))
-        uuid = data.get("uuid", "")
-
-        if not profiles_service.is_valid_uuid(uuid):
-            raise profile_errors.InvalidUUID
-
-        kwargs["instance"]: models.PROFILE_TYPE = profiles_service.get_profile_by_uuid(
-            uuid
-        )
         super().__init__(*args, **kwargs)
+        self.user = self.instance.user
+
+    read_only_fields = (
+        "user_id",
+        "history_id",
+        "mapper_id",
+        "verification_id",
+        "data_mapper_id",
+        "external_links_id",
+        "address_id",
+    )  # read-only fields, should not be able to update
 
     def update_fields(self) -> None:
         """Update fields given in payload"""
+        if user_data := self.initial_data.pop("user", None):
+            self.user = UserDataSerializer(
+                instance=self.instance.user,
+                data=user_data,
+                partial=True,
+            )
+            if self.user.is_valid(raise_exception=True):
+                self.user.save()
+
+        if history_data := self.initial_data.pop("history", None):  # noqa: E999
+            self.history = profile_serializers.ProfileVisitHistorySerializer(
+                instance=self.instance.history, data=history_data, partial=True
+            )
+            if self.history.is_valid(raise_exception=True):
+                self.history.save()
+
         for attr, value in self.initial_data.items():
+            if attr in self.read_only_fields:
+                continue
+
             if attr == "player_positions":
                 player_position_service = services.PlayerProfilePositionService()
                 # Parse the value as a list of PositionData objects
@@ -331,3 +362,12 @@ class ProfileLabelsSerializer(serializers.Serializer):
     label_description = serializers.CharField(max_length=200)
     season_name = serializers.CharField(max_length=9)
     icon = serializers.CharField(max_length=200)
+
+
+class BaseProfileDataSerializer(ProfileSerializer):
+    def to_representation(
+        self, obj: typing.Optional[models.PROFILE_TYPE] = None, *args, **kwargs
+    ) -> dict:
+        """Override custom to_representation to return just uuid + role"""
+        obj = obj or self.instance
+        return {"uuid": obj.uuid, "role": profiles_service.get_role_by_model(type(obj))}

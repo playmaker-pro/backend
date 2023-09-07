@@ -25,6 +25,11 @@ urlpatterns = [
         name="club_teams",
     ),
     path(
+        "teams/<int:team_id>",
+        views.TeamsAPI.as_view({"get": "get_team"}),
+        name="get_team",
+    ),
+    path(
         "teams/<int:team_id>/labels",
         views.TeamsAPI.as_view({"get": "get_team_labels"}),
         name="get_team_labels",

@@ -1,16 +1,22 @@
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 from allauth.socialaccount.models import SocialAccount
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.mail import send_mail
 from django.core.validators import validate_email
+from django.template import loader
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from users.schemas import RegisterSchema
-from users.schemas import UserFacebookDetailPydantic
 from features.models import AccessPermission, Feature, FeatureElement
 from profiles.models import PROFILE_TYPE
-from users.schemas import UserGoogleDetailPydantic
+from users.managers import UserTokenManager
+from users.schemas import (
+    RegisterSchema,
+    UserFacebookDetailPydantic,
+    UserGoogleDetailPydantic,
+)
 
 User = get_user_model()
 
@@ -171,3 +177,50 @@ class UserService:
     def email_available(email: str) -> bool:
         """Verify if email is available for register"""
         return not User.objects.filter(email=email).exists()
+
+
+class PasswordResetService:
+    PASSWORD_RESET_EMAIL_TXT_TEMPLATE = "account/email/password_reset_key_message.txt"
+
+    @staticmethod
+    def get_user_by_email(email: str) -> Optional[User]:
+        """
+        Retrieve a User object based on the provided email.
+        """
+        try:
+            return User.objects.get(email=email)
+        except User.DoesNotExist:
+            return None
+
+    @staticmethod
+    def send_reset_email(user: User, reset_url: str) -> None:
+        """
+        Send a password reset email to the user.
+        """
+        text_content = loader.render_to_string(
+            PasswordResetService.PASSWORD_RESET_EMAIL_TXT_TEMPLATE,
+            {"user": user, "password_reset_url": reset_url},
+        )
+
+        send_mail(
+            "Password reset",
+            text_content,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+        )
+
+    def get_user_from_token(self, uidb64: str, token: str) -> Optional[User]:
+        """
+        Retrieve the user associated with a given token and encoded user ID.
+        """
+        _, _, user = UserTokenManager.check_user_token(user=uidb64, token=token)
+        return user
+
+    @staticmethod
+    def reset_user_password(user: User, new_password: str) -> None:
+        """
+        Set a new password for a given user and save it.
+        """
+        if user is not None:
+            user.set_password(new_password)
+            user.save()

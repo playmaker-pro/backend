@@ -7,7 +7,8 @@ from django.conf import settings
 from django.db import connection
 from app import errors
 from backend.settings.environment import Environment
-from home.models import HomePage
+
+# from home.models import HomePage @wag
 
 # from wagtail.core.models import Site, Page  @wag
 from utils.factories import NAME_TO_FACTORY_MAPPER
@@ -124,16 +125,17 @@ class Command(BaseCommand):
 
     def set_wagtail_ui(self, port: int) -> None:
         """Create wagtail UI"""
-        Page.objects.filter(path="00010001").delete()
-        page = HomePage.objects.create(
-            title="PlayMaker.pro",
-            depth=2,
-            path="00010001",
-            slug="pm",
-        )
-        Site.objects.create(
-            hostname="PlayMaker.pro", port=port, root_page=page, is_default_site=True
-        )
+        # @wag
+        # Page.objects.filter(path="00010001").delete()
+        # page = HomePage.objects.create(
+        #     title="PlayMaker.pro",
+        #     depth=2,
+        #     path="00010001",
+        #     slug="pm",
+        # )
+        # Site.objects.create(
+        #     hostname="PlayMaker.pro", port=port, root_page=page, is_default_site=True
+        # )
 
     def create_system_user(self) -> None:
         """Create user with system mail"""
