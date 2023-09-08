@@ -1,3 +1,4 @@
+from os import link
 from django.contrib import admin
 from django.db.models import Field
 from django.http import HttpRequest
@@ -7,6 +8,14 @@ from profiles import models
 from clubs.models import League
 from utils import linkify
 from . import filters
+from .filters import (
+    HasClubObjectFilter,
+    HasDataMapperIdFilter,
+    HasTeamObjectFilter,
+    HasTextInputFilter,
+    OnlyLastVerificationFilter,
+)
+from .actions import *
 
 
 class CoachLicenceInline(
@@ -37,6 +46,7 @@ class PlayerMetricsAdmin(admin.ModelAdmin):
         "player__user__first_name",
         "player__user__last_name",
     ]
+    autocomplete_fields = ("player",)
 
 
 @admin.register(models.PlayerPosition)
@@ -97,69 +107,6 @@ class ClubProfileAdmin(ProfileAdminBase):
     )
     search_fields = DEFAULT_PROFILE_SEARCHABLES + ("club_object__name",)
     autocomplete_fields = ("club_object",)
-
-
-def trigger_refresh_data_player_stats(modeladmin, request, queryset):
-    for pp in queryset:
-        pp.trigger_refresh_data_player_stats()  # save comes inside
-
-
-trigger_refresh_data_player_stats.short_description = (
-    "1. Refresh metric data_player on -->  s38"
-)
-
-
-def calculate_metrics(modeladmin, request, queryset):
-    for pp in queryset:
-        pp.playermetrics.refresh_metrics()  # save comes inside
-
-
-calculate_metrics.short_description = "2. Calculate Playermeteics <-- s38"
-
-
-def calculate_fantasy(modeladmin, request, queryset):
-    for pp in queryset:
-        pp.calculate_fantasy_object()  # save comes inside
-
-
-calculate_fantasy.short_description = "Calculate fantasy"
-
-
-def fetch_data_player_meta(modeladmin, request, queryset):
-    for pp in queryset:
-        pp.fetch_data_player_meta()  # save comes inside
-
-
-fetch_data_player_meta.short_description = "3. update meta  <--- s38"
-
-
-def set_team_object_based_on_meta(modeladmin, request, queryset):
-    for pp in queryset:
-        pp.set_team_object_based_on_meta()  # save comes inside
-
-
-set_team_object_based_on_meta.short_description = "4. set team_object based on .meta"
-
-
-def refresh(modeladmin, request, queryset):
-    for pp in queryset:
-        pp.trigger_refresh_data_player_stats()  # save not relevant
-        pp.fetch_data_player_meta(save=False)  # save comes inside
-        pp.set_team_object_based_on_meta()  # saving
-        pp.playermetrics.refresh_metrics()  # save not relevant
-
-
-refresh.short_description = "0. Refresh( 1, 2,3,4 )"
-
-
-def update_with_profile_data(modeladmin, request, queryset):
-    for ver in queryset:
-        ver.update_with_profile_data(requestor=request.user)
-
-
-update_with_profile_data.short_description = (
-    "Updated selected verification object with Profles data"
-)
 
 
 @admin.register(models.ProfileVerificationStatus)
@@ -256,6 +203,9 @@ class PlayerProfileAdmin(ProfileAdminBase):
     )
 
     actions = [
+        update_pm_score,
+        update_season_score,
+        update_scoring,
         refresh,
         calculate_metrics,
         trigger_refresh_data_player_stats,

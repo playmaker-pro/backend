@@ -1,0 +1,105 @@
+{% load static %}
+<div class="row gx-5 mt-3">
+    <div class="col-lg-6 mb-5 mb-lg-0">
+        <div class="story-card card">
+            <div class="d-flex">
+                <div class="col-lg-6 story-box" style="background: #B0B4B8;">
+                    {% include "premium/icons/player_icon.html" with width=50 height=50 %}
+                    <p style="margin-top:-25px">Piłkarz</p>
+                </div>
+                <div class="arrow">
+                    <h1>
+                        {% include "premium/icons/right_arrow.html" with width=60 height=60 %}
+                    </h1>
+                </div>
+                <div class="col-lg-6 story-box" style="background: var(--primary__color);">
+                    {% include "premium/icons/club_icon.html" with width=50 height=50 %}
+                    <p style="margin-top:-25px">Klub</p>
+                </div>
+            </div>
+            <div class="story-body">
+                <p>
+                    Patryk, młody zawodnik klasy okręgowej spod Tarnowskich Gór, który właśnie zaczyna studia we Wrocławiu,
+                    chce sprawdzić się w 4 lidze w okolicach swojego nowego miejsca zamieszkania.
+                </p>
+                <p>
+                    Zakłada więc profil na PlayMaker.pro i korzysta z opcji premium score, aby zaoszczędzić swój czas oraz zwiększyć szanse na udany transfer.
+                    W bazie klubów szuka drużyny do testów piłkarskich według filtrów: województwo: dolnośląskie, poziom: 4 liga.
+                    Głównym kryterium jest odległość, więc sprawdza, gdzie będzie miał najbliżej.
+                </p>
+                <p>
+                    Sokół Marcinkowice idealnie wpisuje się w jego oczekiwana.
+                </p>
+
+                <p>
+                    Wysyła zapytanie o testy! Aby otworzyć więcej możliwości, Patryk dodaje także ogłoszenie na marketplace.
+                    W opisie przedstawia swoją aktualną sytuację.
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="story-card card">
+            <div class="story-header d-flex">
+                <div class="col-6 story-box" style="background: var(--primary__color);">
+                    {% include "premium/icons/club_icon.html" with width=50 height=50 %}
+                    <p style="margin-top:-25px">Klub</p>
+                </div>
+                <div class="arrow">
+                    <h1>
+                        {% include "premium/icons/right_arrow.html" with width=60 height=60 %}
+                    </h1>
+                </div>
+                <div class="col-6 story-box" style="background: #B0B4B8;">
+                    {% include "premium/icons/player_icon.html" with width=50 height=50 %}
+                    <p style="margin-top:-25px">Piłkarz</p>
+                </div>
+            </div>
+            <div class="story-body">
+                <p>
+                    Sokół Marcinkowice szuka wzmocnień na nowy sezon. Klub jest gotowy dać szansę zawodnikom z Wrocławia i okolic nawet z dwóch,
+                    niżej notowanych szczebli rozgrywkowych od 4 ligi, a więc klasy okręgowej oraz A klasy.
+                </p>
+                <p>
+                    Jako klub premium na platformie PlayMaker.pro, może skorzystać z 3 opcji:
+                </p>
+                <ul>
+                    <li>filtrować bazę ogłoszeń wg playmakerscore,</li>
+                    <li>odpowiadać na ogłoszenie zawodników, porównujac ich potencjału playmakerscore do przedziałów score w ligach,</li>
+                    <li>otrzymać listę rekomendacji (top10) na okienko transferowe wg score.</li>
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .story-card {
+        height: 100%;
+
+    }
+
+    .arrow {
+        margin: auto -30px;
+        z-index: 100;
+        font-weight: bold;
+        color: white;
+    }
+
+    .story-body {
+        padding: 30px;
+        text-align: justify;
+        text-justify: inter-word;
+    }
+
+    .story-box {
+        height: 100px;
+        display: grid;
+        place-items: center;
+    }
+
+</style>

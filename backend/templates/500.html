@@ -1,3 +1,7 @@
+{% extends 'base.html' %}
+{% load playmaker %}
+{% load static %}
+{% logger500 request.get_full_path %}
 
 {% block content %}
     <section>

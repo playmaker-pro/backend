@@ -8,6 +8,9 @@ from pm_core.services.models import (
     EventSchema,
     GameSchema,
     GamesSchema,
+    PlayerScoreSchema,
+    PlayerSeasonScoreSchema,
+    PlayerSeasonScoreListSchema,
     PlayerSeasonStatsListSchema,
     PlayerSeasonStatsSchema,
 )
@@ -231,3 +234,77 @@ class StatsSerializer(BasePlayerSerializer):
                 }
 
         return prepared_stats
+
+
+class ScoreSerializer(BasePlayerSerializer):
+    def __init__(
+        self, pm_score: PlayerScoreSchema, season_score: PlayerSeasonScoreListSchema
+    ) -> None:
+        """
+        pm_score - PlayMaker Score
+        season_score - Season Score
+        """
+        if pm_score and not isinstance(pm_score, PlayerScoreSchema):
+            raise WrongDataFormatException(self, PlayerScoreSchema, type(pm_score))
+        if season_score and not isinstance(season_score, PlayerSeasonScoreListSchema):
+            raise WrongDataFormatException(
+                self, PlayerSeasonScoreListSchema, type(season_score)
+            )
+
+        self.pm_score = pm_score
+        self.season_score = season_score
+
+    @property
+    def data(self) -> typing.Dict:
+        """get serialized data"""
+        return self.parse_data()
+
+    def parse_data(self) -> typing.Dict:
+        """
+        Data parser to return serialized, prepared data
+        {
+            "player_id": ...,
+            "pm_score": ...,
+            "season_score": {
+                "2022/2023": 60,
+                "2021/2022": 65 ,
+                ...
+            }
+        }
+        """
+        return {
+            "player_id": self.player_id,
+            "pm_score": self.player_score,
+            "season_score": self.player_season_score,
+        }
+
+    @property
+    def player_score(self) -> int:
+        """return PlayMaker Score"""
+        return round(self.pm_score.value * 100) if self.pm_score else None
+
+    @property
+    def player_season_score(self) -> typing.Dict:
+        """return all collected season scores"""
+        return (
+            {
+                season_score.season_name: round(season_score.value * 100)
+                for season_score in self.season_score
+            }
+            if self.season_score
+            else {}
+        )
+
+    @property
+    def player_id(self) -> typing.Optional[str]:
+        """return player_id from adapter's data"""
+        try:
+            return (
+                self.pm_score.player_id
+                if self.pm_score
+                else self.season_score[0].player_id
+                if self.season_score
+                else None
+            )
+        except IndexError:
+            return None

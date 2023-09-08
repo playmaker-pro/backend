@@ -68,6 +68,8 @@ INSTALLED_APPS = [
     "voivodeships",
     "mapper",
     "labels",
+    "premium",
+    # "resources",
     # "data",  # external repo DEPRECATED: PM-1015
     # "stats",  # external repo DEPRECATED: PM-1015
     "django_countries",
