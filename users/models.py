@@ -1,8 +1,11 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+from django_countries import countries
 from django_fsm import FSMField, transition
 from pydantic import typing
 
@@ -12,6 +15,7 @@ from notifications.mail import (
 )
 from roles import definitions
 from users.managers import CustomUserManager
+from utils import calculate_age
 
 
 class UserRoleMixin:
@@ -98,6 +102,11 @@ class User(AbstractUser, UserRoleMixin):
     # Verfied means - user is who he declar
 
     state = FSMField(default=STATE_NEW, choices=STATES)
+
+    first_name = models.CharField(
+        _("first name"), max_length=150, blank=True, null=True
+    )
+    last_name = models.CharField(_("last name"), max_length=150, blank=True, null=True)
 
     @transition(
         field=state,
@@ -289,6 +298,9 @@ class User(AbstractUser, UserRoleMixin):
         blank=True,
         help_text="Users declaration in which role he has. It is main paramter.",
     )
+    last_activity = models.DateTimeField(
+        _("Last Activity"), default=None, null=True, blank=True
+    )
 
     # verification = models.OneToOneField(
     #     "VerificationStatus",
@@ -322,12 +334,24 @@ class User(AbstractUser, UserRoleMixin):
         #     pass
         # verification_notification(self)
 
+    def new_user_activity(self):
+        """
+        Update the user's last activity timestamp.
+
+        This method sets the user's `last_activity` attribute to the current time and
+        then saves the change to the database.
+        """
+        self.last_activity = timezone.now()
+        self.save(update_fields=["last_activity"])
+
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
 
 
 class UserPreferences(models.Model):
+    COUNTRIES = countries
+
     GENDER_CHOICES = (
         ("M", _("Mężczyzna")),
         ("K", _("Kobieta")),
@@ -341,8 +365,8 @@ class UserPreferences(models.Model):
         null=True,
         help_text="User's localization (city and voivodeship)",
     )
-    citizenship = models.CharField(
-        max_length=50,
+    citizenship = ArrayField(
+        models.CharField(max_length=100, choices=COUNTRIES),
         blank=True,
         null=True,
         help_text="User's citizenship (country of citizenship)",
@@ -363,6 +387,10 @@ class UserPreferences(models.Model):
     birth_date = models.DateField(
         _("Data urodzenia"), blank=True, null=True, help_text="User's date of birth"
     )
+
+    @property
+    def age(self):
+        return calculate_age(self.birth_date)
 
     class Meta:
         verbose_name = "User Preference"

@@ -1,9 +1,22 @@
-from typing import Optional, List, Set
-from django.contrib.auth import get_user_model
+from typing import Dict, List, Optional, Set, Tuple, Union
 
-from features.models import AccessPermission, FeatureElement, Feature
+from allauth.socialaccount.models import SocialAccount
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.mail import send_mail
+from django.core.validators import validate_email
+from django.template import loader
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from features.models import AccessPermission, Feature, FeatureElement
 from profiles.models import PROFILE_TYPE
-from api.schemas import RegisterSchema
+from users.managers import UserTokenManager
+from users.schemas import (
+    RegisterSchema,
+    UserFacebookDetailPydantic,
+    UserGoogleDetailPydantic,
+)
 
 User = get_user_model()
 
@@ -17,6 +30,23 @@ class UserService:
             return User.objects.get(id=user_id)
         except User.DoesNotExist:
             return
+
+    @staticmethod
+    def filter(**kwargs) -> Optional[User]:
+        try:
+            user = User.objects.get(**kwargs)
+            return user
+        except ObjectDoesNotExist:
+            return None
+
+    @staticmethod
+    def create_tokens(user: User) -> Dict[str, str]:
+        """Create tokens for given user"""
+        tokens: RefreshToken = RefreshToken.for_user(user)
+        return {
+            "refresh_token": str(tokens),
+            "access_token": str(tokens.access_token),
+        }
 
     def set_role(self, user: User, role: str) -> None:
         """Set role to user"""
@@ -34,7 +64,7 @@ class UserService:
         """Save User instance with given data."""
 
         user_schema: RegisterSchema = RegisterSchema(**data)
-        user: User = User(**user_schema.user_creation_data())
+        user: User = User(**user_schema.dict())
 
         user.declared_role = None
         user.state = User.STATE_NEW
@@ -92,3 +122,105 @@ class UserService:
                 access_permissions__in=access_permissions_ids
             )
         ]
+
+    @staticmethod
+    def register_from_social(data: UserGoogleDetailPydantic) -> Optional[User]:
+        """Save User instance with given data taken from Google."""
+
+        password: str = User.objects.make_random_password()
+        user: User = User(
+            email=data.email,
+            first_name=data.given_name,
+            last_name=data.family_name,
+        )
+        try:
+            validate_email(user.email)
+        except ValidationError:
+            return None
+
+        user.set_password(password)
+        user.save()
+        return user
+
+    @staticmethod
+    def create_social_account(
+        user: User,
+        data: Union[UserGoogleDetailPydantic, UserFacebookDetailPydantic],
+        provider: str,
+    ) -> Tuple[Optional[SocialAccount], Optional[bool]]:
+        """Check if user has social account, if not create one."""
+
+        if not (
+            isinstance(data, UserGoogleDetailPydantic)
+            or isinstance(data, UserFacebookDetailPydantic)
+        ):
+            return None, None
+
+        result: SocialAccount = SocialAccount.objects.filter(user=user).first()
+        response: SocialAccount = result
+        created: bool
+
+        if not result:
+            if not data:
+                return None, None
+
+            response = SocialAccount.objects.create(
+                user=user, provider=provider, uid=data.sub, extra_data=data.dict()
+            )
+            created = True
+        else:
+            created = False
+
+        return response, created
+
+    @staticmethod
+    def email_available(email: str) -> bool:
+        """Verify if email is available for register"""
+        return not User.objects.filter(email=email).exists()
+
+
+class PasswordResetService:
+    PASSWORD_RESET_EMAIL_TXT_TEMPLATE = "account/email/password_reset_key_message.txt"
+
+    @staticmethod
+    def get_user_by_email(email: str) -> Optional[User]:
+        """
+        Retrieve a User object based on the provided email.
+        """
+        try:
+            return User.objects.get(email=email)
+        except User.DoesNotExist:
+            return None
+
+    @staticmethod
+    def send_reset_email(user: User, reset_url: str) -> None:
+        """
+        Send a password reset email to the user.
+        """
+        text_content = loader.render_to_string(
+            PasswordResetService.PASSWORD_RESET_EMAIL_TXT_TEMPLATE,
+            {"user": user, "password_reset_url": reset_url},
+        )
+
+        send_mail(
+            "Password reset",
+            text_content,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+        )
+
+    def get_user_from_token(self, uidb64: str, token: str) -> Optional[User]:
+        """
+        Retrieve the user associated with a given token and encoded user ID.
+        """
+        _, _, user = UserTokenManager.check_user_token(user=uidb64, token=token)
+        return user
+
+    @staticmethod
+    def reset_user_password(user: User, new_password: str) -> None:
+        """
+        Set a new password for a given user and save it.
+        """
+        if user is not None:
+            user.set_password(new_password)
+            user.save()

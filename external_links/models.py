@@ -19,6 +19,7 @@ class ExternalLinksEntity(models.Model):
         ("coach", "coach profile"),
         ("scout", "scout profile"),
         ("manager", "manager profile"),
+        ("referee", "referee profile"),
         ("club", "club"),
         ("team", "team"),
         ("league", "league history highest parent"),
@@ -35,7 +36,11 @@ class ExternalLinksEntity(models.Model):
     )
 
     target = models.ForeignKey(
-        ExternalLinks, on_delete=models.SET_NULL, null=True, blank=True
+        ExternalLinks,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="links",
     )
     source = models.ForeignKey(
         LinkSource, on_delete=models.SET_NULL, null=True, blank=True

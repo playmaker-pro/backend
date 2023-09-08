@@ -13,10 +13,12 @@ from allauth.account.utils import (
 )
 from django import forms
 from django.conf import settings
+from django.forms import TypedMultipleChoiceField
 from django.utils.translation import gettext_lazy as _
-from wagtail.users.forms import UserCreationForm, UserEditForm
 
-from .models import User
+# from wagtail.users.forms import UserCreationForm, UserEditForm
+
+from .models import User, UserPreferences
 
 
 # allauth custom forms
@@ -72,15 +74,23 @@ class CustomSignupForm(SignupForm):
 
 
 # wagtail custom user
-class CustomUserEditForm(UserEditForm):
-    declared_role = forms.ChoiceField(
-        required=True, label=_("Declared Role"), choices=User.ROLE_CHOICES
-    )
-    # status = forms.ModelChoiceField(queryset=MembershipStatus.objects, required=True, label=_("Status"))
+# class CustomUserEditForm(UserEditForm):
+#     declared_role = forms.ChoiceField(
+#         required=True, label=_("Declared Role"), choices=User.ROLE_CHOICES
+#     )
+#     # status = forms.ModelChoiceField(queryset=MembershipStatus.objects, required=True, label=_("Status"))
 
 
-class CustomUserCreationForm(UserCreationForm):
-    declared_role = forms.ChoiceField(
-        required=True, label=_("Declared Role"), choices=User.ROLE_CHOICES
-    )
-    # status = forms.ModelChoiceField(queryset=MembershipStatus.objects, required=True, label=_("Status"))
+# class CustomUserCreationForm(UserCreationForm):
+#     declared_role = forms.ChoiceField(
+#         required=True, label=_("Declared Role"), choices=User.ROLE_CHOICES
+#     )
+#     # status = forms.ModelChoiceField(queryset=MembershipStatus.objects, required=True, label=_("Status"))
+
+
+class UserPreferencesForm(forms.ModelForm):
+    citizenship = TypedMultipleChoiceField(choices=UserPreferences.COUNTRIES)
+
+    class Meta:
+        model = UserPreferences
+        fields = "__all__"

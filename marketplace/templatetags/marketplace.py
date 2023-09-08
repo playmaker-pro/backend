@@ -19,7 +19,9 @@ from django.utils.translation import (
 )
 
 from clubs.models import Club, League, Team
-from followers.models import Follow, FollowTeam
+
+# Deprecation(rkesik): since we are working on a new FE
+# from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from profiles.utils import extract_video_id
 

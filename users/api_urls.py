@@ -13,11 +13,10 @@ router.register("", apis.UsersAPI, basename="users")
 
 urlpatterns = [
     path(
-        r"hello/",
-        apis.UsersAPI.as_view({"get": "list"}),
-        name="admin-view",
+        "register/",
+        apis.UserRegisterEndpointView.as_view({"post": "register"}),
+        name="api-register",
     ),
-    path("register/", apis.UsersAPI.as_view({"post": "register"}), name="api-register"),
     path("login/", LoginView.as_view(), name="api-login"),
     # Logout is basically a blacklist of the token, because JWT is stateless.
     # Token will expire after given (in settings) time.
@@ -33,5 +32,30 @@ urlpatterns = [
         "feature-elements/",
         apis.UsersAPI.as_view({"get": "feature_elements"}),
         name="feature-elements",
+    ),
+    path(
+        "google-oauth2/",
+        apis.UsersAPI.as_view({"post": "google_auth"}),
+        name="google-oauth2",
+    ),
+    path(
+        "facebook-oauth2/",
+        apis.UsersAPI.as_view({"post": "facebook_auth"}),
+        name="facebook-auth",
+    ),
+    path(
+        "email-verification/",
+        apis.EmailAvailability.as_view({"post": "verify_email"}),
+        name="email-verification",
+    ),
+    path(
+        "password/reset/",
+        apis.PasswordManagementAPIView.as_view({"post": "reset_password"}),
+        name="api-password-reset",
+    ),
+    path(
+        "password/reset/new-password/<uidb64>/<token>/",
+        apis.PasswordManagementAPIView.as_view({"post": "create_new_password"}),
+        name="api-password-reset-confirm",
     ),
 ]

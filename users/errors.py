@@ -20,11 +20,81 @@ class InvalidEmailException(CoreAPIException):
     fields = "email"
 
 
-class FeatureSetsNotFoundException(CoreAPIException):
-    status_code = status.HTTP_404_NOT_FOUND
-    default_detail = "Feature sets for user not found"
+class NoUserCredentialFetchedException(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = (
+        "No user data fetched from Google or data is not valid. " "Please try again."
+    )
 
 
-class FeatureElementsNotFoundException(CoreAPIException):
-    status_code = status.HTTP_404_NOT_FOUND
-    default_detail = "Feature elements for user not found"
+class GoogleInvalidGrantError(CoreAPIException):
+    """
+    Invalid grant error from Google.
+    This can happen if the user try access to log in via Google, but params in url are wrong (out-dated).
+    """
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = (
+        "The provided authorization grant (e.g., authorization code, resource owner credentials) "
+        "or refresh token is invalid, expired, revoked, does not match the redirection "
+        "URI used in the authorization request, or was issued to another client"
+    )
+
+
+class ApplicationError(CoreAPIException):
+    """
+    Application error.
+    This can happen if the user try access to log in via Google, but api didn't return requested data
+    """
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Failed to obtain tokens from Google."
+
+
+class NoSocialTokenSent(CoreAPIException):
+    """No Social token sent. Token is required to authenticate user."""
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Invalid request. No Social token sent."
+
+
+class EmailNotValid(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Email is not valid"
+
+
+class EmailNotAvailable(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Email is not available"
+
+
+class UserRegisterException(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Something went wrong. Check fields list for more details."
+
+    def __init__(self, fields: dict):
+        self.fields = fields
+        super().__init__(details=self.default_detail)
+
+
+class UserEmailNotValidException(Exception):
+    ...
+
+
+class SocialAccountInstanceNotCreatedException(Exception):
+    ...
+
+
+class InvalidTokenException(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Invalid token"
+
+
+class TokenProcessingError(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Something went wrong"
+
+
+class EmailValidationException(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Something went wrong. Check fields list for more details."

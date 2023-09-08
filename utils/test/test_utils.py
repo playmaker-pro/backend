@@ -1,24 +1,24 @@
 from contextlib import contextmanager
+from socket import socket
+from typing import Optional
 
 from django.conf import settings
+from django.db.models import signals
 from django.test import TestCase
 from django.test.client import Client
+from django.urls import reverse
 from django.utils import timezone
-from django.db.models import signals
 from factory.django import mute_signals
-from requests import Response
+from rest_framework.response import Response
 
 from clubs.models import Season
 from users.models import User
-
 from utils import testutils as utils
-
-from typing import Optional
-from django.urls import reverse
-
 from utils.factories.user_factories import UserFactory
 
 utils.silence_explamation_mark()
+
+TEST_EMAIL = "some_email@playmayker.com"
 
 
 class GetCurrentSeasonTest(TestCase):
@@ -83,7 +83,7 @@ class UserManager:
     @property
     def get_access_token(self) -> str:
         """Get the authentication access token for the created superuser."""
-        res: Response = self.client.post(
+        res: Response = self.client.post(  # noqa
             self.login_url, {"email": self.email, "password": self.password}
         )
         return res.data.get("access")
@@ -99,11 +99,15 @@ class UserManager:
 
         return headers
 
+    def login(self, user: User):
+        self.client.login(username=user.username, password=user.password)
+
 
 class MethodsNotAllowedTestsMixin:
     """Test mixin for not allowed methods"""
 
     NOT_ALLOWED_METHODS = []
+    headers = {}
 
     def test_request_methods_not_allowed(self) -> None:
         """Test request methods not allowed"""
@@ -113,7 +117,6 @@ class MethodsNotAllowedTestsMixin:
 
     def get_not_allowed(self) -> None:
         """Test if GET method is not allowed"""
-
         res: Response = self.client.get(self.url, **self.headers)  # noqa
         assert (
             res.status_code == 405
@@ -150,3 +153,48 @@ class MethodsNotAllowedTestsMixin:
         assert (
             res.status_code == 405
         ), f"Actual response status code is: {res.status_code}, method: DELETE"
+
+
+class SocketAccessError(Exception):
+    pass
+
+
+class ExternalCallsGuardMixin:
+    @classmethod
+    def setUpClass(cls):  # noqa
+        cls.socket_original = socket.socket
+        socket.socket = cls.guard
+        return super().setUpClass()  # noqa
+
+    @classmethod
+    def tearDownClass(cls):  # noqa
+        socket.socket = cls.socket_original  # noqa
+        return super().tearDownClass()  # noqa
+
+    @staticmethod
+    def guard(*args, **kwargs):
+        raise SocketAccessError("Attempted to access network")
+
+
+class MockedResponse:
+    def __init__(self, json_data, status_code, force_error=False):
+        self.force_error = force_error
+        self.json_data = json_data
+        self.status_code = status_code or 200
+
+    def json(self):
+        return self.json_data
+
+    @property
+    def ok(self):
+        if self.status_code is None:
+            return False
+        if self.force_error:
+            return False
+        return self.status_code < 400
+
+    @staticmethod
+    def create(**kwargs):
+        return MockedResponse(
+            status_code=kwargs.get("status_code"), json_data=kwargs.get("json_data")
+        )

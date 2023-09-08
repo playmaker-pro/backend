@@ -1,10 +1,13 @@
 from os import link
 from django.contrib import admin
-
+from django.db.models import Field
+from django.http import HttpRequest
+from django.forms.models import ModelChoiceField
 from app.utils.admin import json_filed_data_prettified
 from profiles import models
+from clubs.models import League
 from utils import linkify
-
+from . import filters
 from .filters import (
     HasClubObjectFilter,
     HasDataMapperIdFilter,
@@ -13,6 +16,13 @@ from .filters import (
     OnlyLastVerificationFilter,
 )
 from .actions import *
+
+
+class CoachLicenceInline(
+    admin.TabularInline
+):  # Use TabularInline or StackedInline based on your preference
+    model = models.CoachLicence
+    extra = 1  # Number of empty forms to display for adding new instances
 
 
 @admin.register(models.ProfileVisitHistory)
@@ -45,12 +55,7 @@ class PositionAdmin(admin.ModelAdmin):
 
 
 DEFAULT_PROFILE_SEARCHABLES = ("user__email", "user__first_name", "user__last_name")
-DEFAULT_PROFILE_DISPLAY_FIELDS = (
-    "pk",
-    linkify("user"),
-    "slug",
-    "active",
-)
+DEFAULT_PROFILE_DISPLAY_FIELDS = ("pk", linkify("user"), "slug", "active", "uuid")
 
 
 class ProfileAdminBase(admin.ModelAdmin):
@@ -124,13 +129,13 @@ class ProfileVerificationStatusAdmin(admin.ModelAdmin):
     list_filter = (
         "owner__declared_role",
         "status",
-        OnlyLastVerificationFilter,
-        HasDataMapperIdFilter,
-        HasTextInputFilter,
+        filters.OnlyLastVerificationFilter,
+        filters.HasDataMapperIdFilter,
+        filters.HasTextInputFilter,
         ("has_team", admin.BooleanFieldListFilter),
         ("team_not_found", admin.BooleanFieldListFilter),
-        HasTeamObjectFilter,
-        HasClubObjectFilter,
+        filters.HasTeamObjectFilter,
+        filters.HasClubObjectFilter,
     )
     actions = [update_with_profile_data]
 
@@ -222,6 +227,7 @@ class CoachProfileAdmin(ProfileAdminBase):
         linkify("external_links"),
     )
     autocomplete_fields = ("team_object", "team_history_object", "team_history_object")
+    inlines = [CoachLicenceInline]
 
     def get_mapper(self, obj):
         if hasattr(obj, "mapper"):
@@ -276,3 +282,34 @@ class PlayerProfilePositionAdmin(admin.ModelAdmin):
 @admin.register(models.Language)
 class LanguageAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(models.RefereeLevel)
+class RefereeLevelAdmin(admin.ModelAdmin):
+    readonly_fields = ("level_name",)
+
+    def formfield_for_foreignkey(
+        self, db_field: Field, request: HttpRequest, **kwargs
+    ) -> ModelChoiceField:
+        """
+        Override the formfield for the 'level' foreign key to only include league highest parent.
+        """
+        if db_field.name == "level":
+            kwargs["queryset"] = League.objects.filter(parent=None)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+@admin.register(models.RefereeProfile)
+class RefereeProfileAdmin(ProfileAdminBase):
+    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (linkify("external_links"),)
+    readonly_fields = ("external_links",)
+
+
+@admin.register(models.LicenceType)
+class LicenceTypeAdmin(ProfileAdminBase):
+    pass
+
+
+@admin.register(models.VerificationStage)
+class VerificationStageAdmin(admin.ModelAdmin):
+    ...

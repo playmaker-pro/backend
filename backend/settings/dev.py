@@ -41,13 +41,6 @@ CACHES = {
 SELECT2_CACHE_BACKEND = "default"
 
 
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ],
-    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-}
-
 LOGGING["handlers"]["mocker"] = {
     "level": "DEBUG",
     "class": "logging.FileHandler",
@@ -68,3 +61,5 @@ try:
     print("::> Loading custom local settings (local.py)")
 except ImportError as e:
     print(f"[error] Cannot load local settings. Reason={e}")
+
+MEDIA_ROOT = os.path.join(BASE_DIR, "public", "media")

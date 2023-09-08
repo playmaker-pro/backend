@@ -1,5 +1,5 @@
 from django.conf.urls import include, url
-from api.views import CountriesView, CitiesView, PreferenceChoicesView
+from api import views
 from users.api_urls import urlpatterns as users_urls
 from clubs.api.api_urls import urlpatterns as clubs_urls
 from roles.api_urls import urlpatterns as roles_urls
@@ -14,17 +14,22 @@ urlpatterns = [
     url(r"^roles/", include((roles_urls, "roles"))),
     url(
         r"^countries/",
-        CountriesView.as_view({"get": "list_countries"}),
+        views.LocaleDataView.as_view({"get": "list_countries"}),
         name="countries_list",
     ),
     url(
         r"^cities/",
-        CitiesView.as_view({"get": "list_cities"}),
+        views.LocaleDataView.as_view({"get": "list_cities"}),
         name="cities_list",
     ),
     url(
         r"^preference-choices/",
-        PreferenceChoicesView.as_view({"get": "list_preference_choices"}),
+        views.PreferenceChoicesView.as_view({"get": "list_preference_choices"}),
         name="preference_choices_list",
+    ),
+    url(
+        r"^languages/",
+        views.LocaleDataView.as_view({"get": "list_languages"}),
+        name="languages_list",
     ),
 ]

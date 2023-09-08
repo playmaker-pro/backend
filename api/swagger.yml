@@ -1,0 +1,3098 @@
+openapi: 3.0.3
+info:
+  title: 'Webapp swagger - OpenAPI 3.0'
+  description: "This is a Webapp swagger"
+  version: 0.0.1 (v3)
+
+servers:
+  - url: https://staging.jacekplaymaker.usermd.net/api/v3/
+  - url: https://dev.jacekplaymaker.usermd.net/api/v3/
+  - url: http://localhost:{port}/api/v3/
+    variables:
+      port:
+        default: '8000'
+
+paths:
+  /cities/:
+    get:
+      operationId: cities_retrieve
+      description: 'Return a paginated object with list of cities, mapped voivodeships
+       and its priority based on the query parameter.
+       If query param is not present, response will be limited to prior cities.
+        Response is an paginated object:
+        [{
+          "count": 2057,
+          "next": "http://127.0.0.1:8899/api/v3/cities/?city=S&page=2",
+          "previous": null,
+          "results": [{id: 1, name: Warszawa, voivodeship: Mazowieckie, priority: True}, ...]}}'
+      summary: List cities endpoint
+      parameters:
+      - in: query
+        name: city
+        schema:
+          type: string
+        description: City or voivodeship name to filter
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: "Page number"
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: "Count of objects by page"
+      tags:
+      - locale
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Paginator'
+                  - properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/City'
+                description: 'Paginated city results, like:.
+                  {
+                    "count": 2057,
+                    "next": "http://127.0.0.1:8899/api/v3/cities/?city=S&page=2",
+                    "previous": null,
+                    "results": [{id: 1, name: Warszawa, voivodeship: Mazowieckie, priority: True}, ...]
+                  }}'
+                example:
+                  {
+                    "count": 2057,
+                    "next": "http://127.0.0.1:8899/api/v3/cities/?city=S&page=2",
+                    "previous": null,
+                    "results": [
+                      {
+                        "id": 1597,
+                        "name": "Abramów",
+                        "voivodeship": "Lubelskie",
+                        "priority": false
+                      },
+                      {
+                        "id": 1596,
+                        "name": "Adamów",
+                        "voivodeship": "Lubelskie",
+                        "priority": false
+                      },...]}
+          description: ''
+  /languages/:
+    get:
+      operationId: languages_retrieve
+      description: '
+        Return list of languages.
+        It is possible to select language on output by param (e.g. ?language=en), Polish by default
+        All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes'
+      summary: 'List languages'
+      parameters:
+        - in: query
+          name: language
+          schema:
+            type: string
+          required: false
+          description: 'Like: pl, en, de. Described here:
+            https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes'
+      tags:
+        - locale
+      responses:
+        '200':
+          description: 'List of languages'
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of languages, with code and locale translation'
+                items:
+                  $ref: '#/components/schemas/Language'
+                example:
+                  [
+                    {
+                      "id": 19,
+                      "priority": true,
+                      "name": "Angielski",
+                      "native_name": "English",
+                      "code": "en"
+                    },
+                    {
+                      "id": 23,
+                      "priority": false,
+                      "name": "Français",
+                      "native_name": "Français",
+                      "code": "fr"
+                    },
+                    {
+                      "id": 80,
+                      "priority": false,
+                      "name": "Español",
+                      "native_name": "Español",
+                      "code": "es"
+                    }, ...
+                  ]
+  /clubs/club-teams/search/:
+    get:
+      operationId: clubs_club_teams_search_retrieve
+      description: Return list of teams assigned for given club.
+      summary: Club teams list endpoint
+      parameters:
+        - in: query
+          name: club_id
+          schema:
+            type: integer
+          description: Club id
+          required: true
+      tags:
+      - clubs
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of teams for given club'
+                items:
+                  type: object
+                  description: 'Team object'
+              example: [{'id': 1, text: 'team1', ...}, {'id': 2, text: 'team2', ...}]
+          description: 'List of teams for given club'
+        '404':
+          description: 'Given club does not exist'
+        '401':
+          description: 'Unauthorized'
+  /clubs/club-teams/:
+    get:
+      operationId: clubs_teams_retrieve
+      description: Return list of teams assigned to clubs
+      summary: Club teams list endpoint
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: Club name
+        - in: query
+          name: season
+          schema:
+            type: string
+          description: Season name
+          required: true
+        - in: query
+          name: gender
+          schema:
+            type: string
+            example: "M/F"
+          description: "Define gender: M - male, F - female. No param - get all"
+      tags:
+        - clubs
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: 'List of teams for given club'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimpleClub'
+              example:
+                clubs:
+                  - id: 974
+                    name: "38 Podlesianka Katowice"
+                    club_teams:
+                      - id: 19801
+                        name: "Lgks Podlesianka Katowice"
+                        gender: 1
+                        historical_league_name: "Trampkarz C2"
+  /clubs/seasons/:
+    get:
+      operationId: season_retrieve
+      description: 'Retrieves a list of seasons. The endpoint primarily returns seasons marked
+                    with the attribute `is_in_verify_form` set to True. Additionally, users can filter the results by specifying
+                    a specific season using the season query parameter. The season parameter can accept
+                    both full season formats (e.g., "2020/2021") and single-year formats (e.g., "2020")'
+      summary: Seasons list endpoint
+      tags:
+        - clubs
+      parameters:
+        - in: query
+          name: season
+          schema:
+            type: string
+          description: 'Season name'
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of seasons'
+                items:
+                  $ref: '#/components/schemas/Season'
+                example: [ {"id": 2, "name": "2021/2022", "is_current": false, "is_in_verify_form": true} ]
+          description: 'List of seasons with id, name, is_current and is_in_verify_form'
+  /clubs/leagues/highest-parents/:
+    get:
+      operationId: clubs_leagues_highest_parents
+      description: Return list of highest parent leagues
+      summary: List of highest parent leagues
+      tags:
+      - clubs
+      security:
+      - jwtAuth: []
+      parameters:
+        - in: query
+          name: gender
+          schema:
+            type: string
+            example: "M/F"
+          description: "Define gender: M - male, F - female. No param - get all"
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of highest parent leagues'
+                items:
+                  $ref: '#/components/schemas/LeagueBase'
+              example: [
+                {
+                  "id": 4423,
+                  "name": "Liga Makroregionalna U-19",
+                  "gender": {
+                    "id": 1,
+                    "name": "mężczyźni"
+                  },
+                  "seniority": {
+                    "id": 3,
+                    "name": "CLJ",
+                    "is_senior": false
+                  }
+                },
+                {
+                  "id": 2977,
+                  "name": "Ekstraliga PLF K",
+                  "gender": {
+                    "id": 2,
+                    "name": "kobiety"
+                  },
+                  "seniority": {
+                    "id": 1,
+                    "name": "seniorzy",
+                    "is_senior": true
+                  }
+                },{
+                "id": 1031,
+                "name": "Ekstraklasa",
+                "gender": {
+                    "id": 1,
+                    "name": "mężczyźni"
+                },
+                "seniority": {
+                    "id": 1,
+                    "name": "seniorzy",
+                    "is_senior": true
+                }
+               },...]
+          description: 'List of highest parent leagues'
+        '400':
+          description: 'Invalid param'
+  /clubs/clubs/search/:
+    get:
+      operationId: clubs_clubs_search_retrieve
+      description: 'Get list of clubs, top 10 ordered by name'
+      summary: Clubs list endpoint
+      tags:
+      - clubs
+      parameters:
+        - in: query
+          name: season
+          schema:
+            type: string
+          description: 'Season name'
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: 'Club name query, LIKE'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of top 10 Clubs based on params, order by name'
+                items:
+                  type: object
+                  description: 'Club name with id'
+                example: [{'id': 1, 'text': 'club 1'}, {'id': 2, 'text': 'club 2'}]
+          description: 'List of clubs, name with ID'
+  /clubs/team-histories/search/:
+    get:
+      operationId: clubs_team_histories_search_retrieve
+      description: 'List of team histories'
+      summary: Team Histories list endpoint
+      tags:
+      - clubs
+      security:
+      - jwtAuth: []
+      parameters:
+        - in: query
+          name: season
+          schema:
+            type: string
+          description: 'Season name'
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: 'Team name query, LIKE'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of top 20 Team histories based on params, order by name'
+                items:
+                  type: object
+                  description: 'Team History name with id'
+                example: [ { 'id': 1, 'text': 'team 1' }, { 'id': 2, 'text': 'team 2' } ]
+          description: 'List of team histories, name with ID'
+  /clubs/teams/search/:
+    get:
+      operationId: clubs_teams_search_retrieve
+      description: 'List of Teams'
+      summary: Teams list endpoint
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: 'Team name query, LIKE'
+      tags:
+      - clubs
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of Teams based on q param, order by name'
+                items:
+                  type: object
+                  description: 'Team name with id'
+                example: [ { 'id': 1, 'text': 'team 1' }, { 'id': 2, 'text': 'team 2' } ]
+          description: 'List of teams, name with ID'
+
+  /clubs/teams/{team_id}:
+    get:
+      operationId: GetTeam
+      description: 'Get team'
+      summary: Get team object
+      parameters:
+        - in: path
+          name: team_id
+          schema:
+            type: string
+            format: int
+          required: true
+      tags:
+      - clubs
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: 'List of teams, name with ID'
+  /clubs/teams/{team_id}/labels:
+    get:
+      operationId: GetTeamLabels
+      description: 'Get team labes'
+      summary: Get team labes
+      parameters:
+        - in: path
+          name: team_id
+          schema:
+            type: string
+            format: int
+          required: true
+        - in: query
+          name: season_name
+          schema:
+            type: string
+      tags:
+      - clubs
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Label'
+          description: 'List of teams, name with ID'
+
+  /countries/:
+    get:
+      operationId: countries_retrieve
+      description: '
+        Return list of countries and mark prior among them
+        [{"country": "Polska", "priority": True}, {"country": "Angola", "priority": False}, ...]
+        It is possible to select language of countries on output by param (e.g. ?language=en), Polish by default
+        All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes'
+      summary: 'List countries'
+      parameters:
+        - in: query
+          name: language
+          schema:
+            type: string
+          required: false
+
+          description: 'Like: pl, en, de. Described here:
+          https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes'
+      tags:
+      - locale
+      responses:
+        '200':
+          description: 'List of countries'
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of countries with code, priority and dial code'
+                items:
+                  $ref: '#/components/schemas/Country'
+                example:
+                  - {
+                    "country": "Polska",
+                    "code": "PL",
+                    "priority": true,
+                    "dial_code": "+48"
+                  }
+                  - {
+                    "country": "Czechy",
+                    "code": "CZ",
+                    "priority": true,
+                    "dial_code": "+420"
+                  }
+                  - {
+                    "country": "Ukraina",
+                    "code": "UA",
+                    "priority": true,
+                    "dial_code": "+380"
+                  }
+                  - {
+                    "country": "Wielka Brytania",
+                    "code": "GB",
+                    "priority": false,
+                    "dial_code": "+44"
+                  }
+  /preference-choices/:
+    get:
+      operationId: preference_choices_retrieve
+      description: Retrieve the choices for gender and preferred leg fields and return
+        as a response
+      summary: User preferences endpoint
+      tags:
+      - preference-choices
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Preferences choices returned successfully.
+                type: object
+                properties:
+                  gender:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                        label:
+                          type: string
+                  player_preferred_leg:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        value:
+                          type: integer
+                        label:
+                          type: string
+          description: ''
+  /player-video/:
+    post:
+      operationId: player_video_create
+      description: Create PlayerVideo for PlayerProfile
+      summary: Create PlayerVideo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/PlayerVideo'
+                - type: object
+                  required:
+                    - url
+            example: {
+               "url": "https://www.youtube.com/watch?v=some_yt_id",
+               "label": 1
+            }
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '201':
+          description: "PlayerVideo created successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerProfile'
+        '401':
+          description: "Unauthorized"
+        '400':
+          description: "User has no PlayerProfile"
+    patch:
+      operationId: player_video_update
+      description: Update PlayerVideo for PlayerProfile
+      summary: Update PlayerVideo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/PlayerVideo'
+                - type: object
+                  required:
+                    - id
+            example: {
+              "id": 123,
+              "url": "https://www.youtube.com/watch?v=some_other_yt_id",
+              "label": 3
+            }
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: "PlayerVideo updated successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerProfile'
+        '401':
+          description: "Unauthorized"
+        '400':
+          description: "User is not an owner of given PlayerVideo"
+        '404':
+          description: "PlayerVideo with given ID not found"
+  /player-video/{video_id}/:
+    delete:
+      operationId: player_video_delete
+      description: Delete PlayerVideo
+      summary: Delete PlayerVideo
+      parameters:
+        - in: path
+          name: video_id
+          schema:
+            type: integer
+          required: true
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: "PlayerVideo deleted successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerProfile'
+        '401':
+          description: "Unauthorized"
+        '400':
+          description: "User is not an owner of given PlayerVideo"
+        '404':
+          description: "PlayerVideo with given ID not found"
+
+  /player-video/labels/:
+    get:
+      operationId: player_video_labels
+      description: List of PlayerVideo labels
+      summary: List PlayerVideo labels
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: "List of PlayerVideo label objects"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProfileEnumChoices'
+                example: [
+                  {
+                      "id": 1,
+                      "name": "Skrót meczu"
+                  },
+                  {
+                      "id": 2,
+                      "name": "Cały mecz"
+                  },
+                  {
+                      "id": 3,
+                      "name": "Bramka"
+                  }
+                ]
+  /profiles/:
+    post:
+      operationId: profiles_create
+      description: Create initial profile for user
+      summary: Create profile
+      requestBody:
+        description: "role shortcut {P, C, S...} required, rest of fields based on profile type, fields listed below"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+              required:
+                - role
+              description: 'It is possible to pass other,
+              related with given profile fields to be initialized with new created profile'
+      tags:
+      - profiles
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          description: "Profile created successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                    description: User id
+                  role:
+                    type: string
+                    description: Profile role
+                  uuid:
+                    type: string
+                    description: Profile uuid
+                required:
+                  - user_id
+                  - role
+                  - uuid
+        '400':
+          description: 'Invalid role'
+        '404':
+          description: 'User does not exist'
+        '401':
+          description: 'Unauthorized'
+    patch:
+      operationId: profiles_partial_update
+      description: Update profile with given uuid
+      summary: Update profile
+      tags:
+      - profiles
+      requestBody:
+        description: "uuid required, rest of fields based on profile type, fields listed below"
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/PlayerProfile'
+                - $ref: '#/components/schemas/CoachProfile'
+                - $ref: '#/components/schemas/ClubProfile'
+                - $ref: '#/components/schemas/ScoutProfile'
+                - $ref: '#/components/schemas/GuestProfile'
+              description: 'REQUIRE JUST UUID + fields to update'
+              example: {'uuid': "f709376c-f2ca-465c-b598-107e8456b6fa", 'team_object_id': 2, 'bio':"My new bio", 'height': 180, 'weight': 73}
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: 'Profile updated successfully'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlayerProfile'
+                  - $ref: '#/components/schemas/CoachProfile'
+                  - $ref: '#/components/schemas/ClubProfile'
+                  - $ref: '#/components/schemas/ScoutProfile'
+                  - $ref: '#/components/schemas/GuestProfile'
+        '400':
+          description: 'Invalid uuid'
+        '404':
+          description: 'Profile with given uuid does not exist'
+        '401':
+          description: 'Unauthorized'
+    'get':
+      operationId: profiles_retrieve
+      description: "Paginated list profiles for given role"
+      summary: "Get list of profiles by role"
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+          required: true
+          description: 'Profile role shortcut {P, C, T, G, S, ...}'
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: "Page number"
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+          description: "Count of objects by page"
+        - in: query
+          name: youth
+          schema:
+            type: boolean
+          description: "Is youth?"
+        - in: query
+          name: min_age
+          schema:
+            type: integer
+          description: "Age minimum"
+        - in: query
+          name: max_age
+          schema:
+            type: integer
+          description: "Age maximum"
+        - in: query
+          name: position
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Player positions shortcut (default sort by is_main),
+            multiple choices possible like: ?position=CAM&position=ST"
+        - in: query
+          name: league
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Player league,
+            multiple choices possible like: ?league=123&league=321"
+        - in: query
+          name: latitude
+          schema:
+            type: number
+          description: "Profile localization latitude"
+        - in: query
+          name: longitude
+          schema:
+            type: number
+          description: "Profile localization longitude"
+        - in: query
+          name: radius
+          schema:
+            type: integer
+          description: "Profile localization radius range"
+        - in: query
+          name: country
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Country, like: ?country=PL&country=UA"
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+        - { }
+      responses:
+        '200':
+          description: 'Profile list obtain successfully'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: 'Total count of profiles for given role'
+                  next:
+                    type: string
+                    description: "Next paginated request url"
+                  previous:
+                    type: string
+                    description: "Previous paginated request url"
+                  results:
+                    type: array
+                    items:
+                      oneOf:
+                        - $ref: '#/components/schemas/PlayerProfile'
+                        - $ref: '#/components/schemas/CoachProfile'
+                        - $ref: '#/components/schemas/ClubProfile'
+                        - $ref: '#/components/schemas/ScoutProfile'
+                        - $ref: '#/components/schemas/GuestProfile'
+                description: "Paginated list profile based on profile type"
+  /profiles/owned/:
+    'get':
+      operationId: owned_profile_list
+      description: "List of profiles owned by user"
+      summary: "List of profiles owned by user"
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+        - { }
+      responses:
+        '200':
+          description: 'List of profiles owned by user'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    uuid:
+                      type: string
+                    role:
+                      type: string
+                  required:
+                    - uuid
+                    - role
+        '401':
+          description: "Unauthorized"
+  /profiles/{profile_uuid}/:
+    get:
+      operationId: profiles_retrieve_by_uuid
+      description: "Get profile with uuid"
+      summary: "Get profile"
+      parameters:
+      - in: path
+        name: profile_uuid
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - profiles
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: 'Profile obtain successfully'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlayerProfile'
+                  - $ref: '#/components/schemas/CoachProfile'
+                  - $ref: '#/components/schemas/ClubProfile'
+                  - $ref: '#/components/schemas/ScoutProfile'
+                  - $ref: '#/components/schemas/GuestProfile'
+
+  /profiles/{profile_uuid}/labels:
+    get:
+      operationId: profiles_retrieve_labels
+      description: "Get labels for a gived profile"
+      summary: "Get profile labels"
+      parameters:
+      - in: path
+        name: profile_uuid
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: season_name
+        schema:
+          type: string
+      tags:
+      - profiles
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: 'Labels sucesfully retrived'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Label'
+
+  /profiles/player-positions/:
+    get:
+      operationId: player_positions_retrieve
+      description: |
+        Retrieves all available player positions, ordered by ID.
+        Each player position is represented by its unique ID, a name, and a corresponding shortcut.
+      summary: Player positions endpoint
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  description: Player positions returned successfully.
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: 'Unique identifier for the player position.'
+                    name:
+                      type: string
+                      description: 'Full name of the player position.'
+                    shortcut:
+                      type: string
+                      description: 'Shortcut representing the player position.'
+                  example: {id: 1, name: "Napastnik", shortcut: "F"}
+          description: Returns player positions, including names and shortcuts
+  /profiles/formations/:
+    get:
+      operationId: formation_choices_retrieve
+      description: |
+        Returns a dictionary where each key-value pair
+        is a formation's unique string representation (like "4-4-2" or "4-3-3") mapped to its corresponding label.
+      summary: Formations endpoint
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                description: 'Dictionary of formations returned successfully.
+                  For example: {"4-4-2": "4-4-2", "4-3-3": "4-3-3"}.'
+                additionalProperties:
+                  type: string
+                example:
+                  "4-4-2": "4-4-2"
+                  "4-3-3": "4-3-3"
+          description: Returns available formations
+  /profiles/coach-roles/:
+    get:
+      operationId: coach_roles_choices_retrieve
+      description: Returns available coach roles choices.
+      summary: Coach roles endpoint
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Coach roles choices returned successfully.
+                type: object
+                properties:
+                  shortcut:
+                    type: string
+                  full_name:
+                    type: string
+                example:
+                  IC: Pierwszy trener
+          description: Returns available coach roles choices.
+  /profiles/referee-roles/:
+    get:
+      operationId: referee_roles_choices_retrieve
+      description: Returns available referee roles choices.
+      summary: Referee roles list endpoint
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Referee roles choices returned successfully.
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProfileEnumChoices'
+                example:
+                  [
+                    {
+                      "id": "Referee",
+                      "name": "Sędzia główny"
+                    },
+                    {
+                      "id": "Assistant Referee",
+                      "name": "Asystent"
+                    }
+                  ]
+          description: Returns available referee roles choices.
+  /profiles/club-roles/:
+    get:
+      operationId: club_roles_choices_retrieve
+      description: Returns available club roles choices.
+      summary: Club roles list endpoint
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Club roles choices returned successfully.
+                type: array
+                items:
+                  type: string
+                example:
+                  [
+                    "Prezes",
+                    "Dyrektor sportowy",
+                    "Członek zarządu",
+                    "Dyrektor skautingu",
+                    "Kierownik drużyny",
+                    "Inne"
+                  ]
+          description: Returns examples club roles.
+  /profiles/players-age-range/:
+    get:
+      operationId: players_age_range
+      description: Returns players count group by age
+      summary: Players count group by age
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Count of players group by age returned successfully.
+                type: object
+                example:
+                  {
+                    "14": 29,
+                    "15": 77,
+                    "16": 130,
+                    "17": 242,
+                    "18": 358,
+                  }
+          description: Returns count of players group by age.
+  /profiles/coach-licences/:
+    get:
+      operationId: coach_licences_choices_retrieve
+      description: Returns coach licences choices.
+      summary: Coach licences endpoint
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                description: 'List of licences, with id, name and key'
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    key:
+                      type: string
+                  example:
+                    id: 1
+                    name: UEFA PRO
+                    key: PRO
+          description: Returns coach licences choices.
+  /roles/get-roles/:
+    get:
+      operationId: roles_get_roles
+      description: Return a dictionary of available roles.
+      summary: Roles endpoint
+      tags:
+      - roles
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Available roles returned successfully.
+                type: object
+                properties:
+                  shortcut:
+                    type: string
+                  full_name:
+                    type: string
+                example:
+                  P: Piłkarz
+          description: Returns available roles choices.
+  /users/feature-elements/:
+    get:
+      operationId: users_feature_elements_retrieve
+      description: Returns all user feature elements.
+      summary: User feature elements.
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeatureElement'
+          description: Returns user feature elements. Returns empty list if user has
+            no feature sets.
+  /users/feature-sets/:
+    get:
+      operationId: users_feature_sets_retrieve
+      description: Returns all user feature sets.
+      summary: User feature sets.
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Features'
+          description: Returns user feature sets. Returns empty list if user has no
+            feature sets.
+  /users/google-oauth2/:
+    post:
+      operationId: users_google_oauth2_create
+      description: |-
+        Authenticate user with Google by token_id and return his data.
+        If user exists in our database, then login him, otherwise register.
+        As a response returns user access and refresh tokens.
+      summary: Google auth endpoint
+      tags:
+      - social oauth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token_id:
+                  type: string
+                  description: Token id from Google.
+              required:
+              - token_id
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: User logged in successfully - tokens returned.
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Is request successful
+                  redirect:
+                    type: string
+                    description: 'The page where user should be redirected. Landing
+                      page after login, or register page if user is new.Choices: ''landing
+                      page'', ''register'''
+                  refresh_token:
+                    type: string
+                    description: JWT refresh token.
+                  access_token:
+                    type: string
+                    description: JWT access token.
+                  first_name:
+                    type: string
+                    description: User firstname.
+                  last_name:
+                    type: string
+                    description: User lastname.
+                example:
+                  success: true
+                  redirect: landing page
+                  access: some_super_secret_jwt_token
+                  refresh: refresh_token
+                  first_name: firstname
+                  last_name: lastname
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Bad request
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Detailed error message
+                example:
+                  detail: No user credential fetched from Google. Please try again.
+          description: ''
+
+  /users/facebook-oauth2/:
+    post:
+      operationId: users_facebook_oauth2_create
+      description: |-
+        Authenticate user with Facebook by token_id and return his data.
+        If user exists in our database, then login him, otherwise register.
+        As a response returns user access and refresh tokens.
+      summary: Facebook auth endpoint
+      tags:
+      - social oauth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token_id:
+                  type: string
+                  description: Token id from Facebook.
+              required:
+              - token_id
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: User logged in successfully - tokens returned.
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Is request successful
+                  redirect:
+                    type: string
+                    description: 'The page where user should be redirected. Landing
+                      page after login, or register page if user is new.Choices: ''landing
+                      page'', ''register'''
+                  refresh_token:
+                    type: string
+                    description: JWT refresh token.
+                  access_token:
+                    type: string
+                    description: JWT access token.
+                  first_name:
+                    type: string
+                    description: User firstname.
+                  last_name:
+                    type: string
+                    description: User lastname.
+                example:
+                  success: true
+                  redirect: landing page
+                  access: some_super_secret_jwt_token
+                  refresh: refresh_token
+                  first_name: firstname
+                  last_name: lastname
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Bad request
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Detailed error message
+                example:
+                  detail: No user credential fetched from Facebook. Please try again.
+          description: ''
+  /users/login/:
+    post:
+      operationId: users_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      summary: User login endpoint
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: User email
+                password:
+                  type: string
+                  description: User super secret password.
+              required:
+              - email
+              - password
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access:
+                    type: string
+                    description: Access Token
+                  refresh:
+                    type: string
+                    description: Refresh Token
+                example:
+                  access: some_super_secret_jwt_token
+                  refresh: refresh_token
+                description: User logged in successfully - tokens returned.
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Detailed error message
+                example:
+                  detail: No active account found with the given credentials
+                description: Bad request
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Detailed error message
+                example:
+                  detail: Bad request
+                description: User not found with given credentials
+          description: ''
+  /users/logout/:
+    post:
+      operationId: users_logout_create
+      description: |-
+        Takes a token and blacklists it. Must be used with the
+        `rest_framework_simplejwt.token_blacklist` app installed.
+      summary: User logout endpoint
+      tags:
+      - users
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenBlacklist'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenBlacklist'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenBlacklist'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenBlacklist'
+          description: ''
+  /users/refresh-token/:
+    post:
+      operationId: users_refresh_token_create
+      description: |-
+        Returns an access and refresh JWT pair using an existing refresh token.
+        Returns status codes 401 and 400 if the refresh token is expired or invalid, respectively.
+      summary: Refresh user token endpoint
+      tags:
+      - users
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh:
+                  type: string
+                  description: User refresh token
+              required:
+              - refresh
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: New token obtained successfully.
+                type: object
+                properties:
+                  access:
+                    type: string
+                    description: Access Token
+                  refresh:
+                    type: string
+                    description: Refresh Token
+                example:
+                  access: some_super_secret_jwt_token
+                  refresh: refresh_token
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Bad request
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Detailed error message
+                example:
+                  detail: Refresh token is expired or invalid, respectively
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized request
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Detailed error message
+                example:
+                  detail: Bad request
+          description: ''
+  /users/register/:
+    post:
+      operationId: users_register_create
+      description: |-
+        Validate given data and register user if everything is ok.
+        Returns serialized User data or validation errors.
+      summary: User registration endpoint
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: User email
+                password:
+                  type: string
+                  description: User super secret password.
+                first_name:
+                  type: string
+                  description: User first name.
+                last_name:
+                  type: string
+                  description: User last name.
+              required:
+              - email
+              - password
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegisterResponse'
+              examples:
+                Example1:
+                  value:
+                    id: 1
+                    email: example_email@playmaker.com
+                    first_name: first_name
+                    last_name: last_name
+                    username: username
+                  summary: example1
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: is request success?
+                  detail:
+                    type: string
+                    description: Detailed error message
+                  fields:
+                    type: object
+                    description: Fields caused an error
+                    properties:
+                      field_name:
+                        type: array
+                        description: List of detailed dexceptions
+                        items:
+                          type: string
+                          description: 'Detailed error message'
+                example:
+                  success: "False"
+                  detail: "Detailed error message"
+                  fields: {"email": ["this field is required"], "password": ["This field cannot be empty"]}
+                description: Bad request. Data sent in request is invalid.
+                required:
+                 - success
+                 - detail
+                 - fields
+          description: ''
+  /users/email-verification/:
+    post:
+      operationId: users_email_verification
+      description: |-
+        Validate given email if it is already in use.
+      summary: Email verification endpoint
+      tags:
+        - users
+      requestBody:
+        content:
+          schema:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: User email
+              required:
+                - email
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Request was successful.
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Is request successful?
+                  email_available:
+                    type: string
+                    description: Is email available?
+                example:
+                  success: true
+                  email_available: true
+          description: 'Returns a boolean value indicating whether the email is available.'
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Is request successful?
+                  detail:
+                    type: string
+                    description: Detailed error message
+                example:
+                  success: False
+                  detail: "['Please provide valid e-mail address.']"
+                description: Bad request. Data sent in request is invalid.
+          description: 'Returns: a email_available value indicating whether the email address is valid/ not available and a detailed error message if it is not.'
+  /users/password/reset/:
+    post:
+      operationId: users_password_reset
+      description: Initiates the password reset process by sending an email with a link to reset the password.
+      summary: Initiate Password Reset
+      tags:
+        - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: User's registered email address.
+              required:
+                - email
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Message indicating email sent.
+                example:
+                  detail: If an account with the provided email exists, you'll receive further instructions.
+          description: ''
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: Indicates the success or failure of the request.
+                    example: "False"
+                  detail:
+                    type: string
+                    description: General detail about the error.
+                    example: "Something went wrong. Check fields list for more details."
+                  fields:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: string
+                    description: Detailed field-specific error messages.
+                example:
+                  success: "False"
+                  detail: "Something went wrong. Check fields list for more details."
+                  fields:
+                    email: [ "Enter a valid email address." ]
+
+  /users/password/reset/new-password/{uidb64}/{token}/:
+    post:
+      operationId: users_password_reset_confirm
+      description: |-
+        Completes the password reset process using the provided token from the reset email.
+      summary: Confirm Password Reset
+      tags:
+        - users
+      parameters:
+        - name: uidb64
+          in: path
+          description: Encoded user ID.
+          required: true
+          schema:
+            type: string
+        - name: token
+          in: path
+          description: Token for password reset.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                new_password:
+                  type: string
+                  description: User's new password.
+                confirm_new_password:
+                  type: string
+                  description: Confirm the new password.
+              required:
+                - new_password
+                - confirm_new_password
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Message indicating password reset successful.
+                example:
+                  detail: Password reset successful.
+          description: ''
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: Indicates the success or failure of the request.
+                    example: "False"
+                  detail:
+                    type: string
+                    description: General detail about the error.
+                    example: "Something went wrong. Check fields list for more details."
+                  fields:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: string
+                    description: Detailed field-specific error messages. This field may not always be present.
+                example:
+                  success: "False"
+                  detail: "Something went wrong. Check fields list for more details."
+                  fields:
+                    password: [ "Password must be at least 8 characters long." ]
+              examples:
+                invalidPassword:
+                  value:
+                    success: "False"
+                    detail: "Something went wrong. Check fields list for more details."
+                    fields:
+                      password: [ "Password must be at least 8 characters long." ]
+                generalError:
+                  value:
+                    success: "False"
+                    detail: "Something went wrong"
+                invalidToken:
+                  value:
+                    success: "False"
+                    detail: "Invalid token"
+components:
+  schemas:
+    AccessEnum:
+      enum:
+      - none
+      - all
+      - club
+      - own
+      type: string
+      description: |-
+        * `none` - none
+        * `all` - all
+        * `club` - club
+        * `own` - own
+    AccessPermission:
+      type: object
+      description: Serializer for access permission.
+      properties:
+        role:
+          type: string
+          readOnly: true
+        access:
+          allOf:
+          - $ref: '#/components/schemas/AccessEnum'
+          description: |-
+            Access permission name.
+
+            * `none` - none
+            * `all` - all
+            * `club` - club
+            * `own` - own
+      required:
+      - role
+    FeatureElement:
+      type: object
+      description: Serializer for feature element.
+      properties:
+        name:
+          type: string
+          description: Feature element name
+          maxLength: 255
+        permissions:
+          type: object
+          additionalProperties: {}
+          description: JSON representation of roles permissions.
+        access_permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessPermission'
+      required:
+      - access_permissions
+      - name
+    Features:
+      type: object
+      description: Serializer for features.
+      properties:
+        name:
+          type: string
+          description: Feature name.
+          maxLength: 255
+        keyname:
+          type: string
+          description: Feature keyname.
+          maxLength: 255
+        elements:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureElement'
+        enabled:
+          type: boolean
+          description: Flag that says if feature is enabled.
+      required:
+      - elements
+      - keyname
+      - name
+    TokenBlacklist:
+      type: object
+      properties:
+        refresh:
+          type: string
+      required:
+      - refresh
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+      required:
+      - id
+      - username
+    UserRegisterResponse:
+      type: object
+      description: Serializer for user registration response.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          title: Adres email
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+      required:
+      - email
+      - id
+      - username
+      - last_name
+      - first_name
+    UserData:
+      type: object
+      properties:
+        id:
+          type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
+        last_login:
+          type: string
+        userpreferences:
+          $ref: '#/components/schemas/UserPreferences'
+      required:
+        - id
+        - first_name
+        - last_name
+    Gender:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+        - id
+        - name
+    Seniority:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        is_senior:
+          type: boolean
+      required:
+        - id
+        - name
+        - is_senior
+    League:
+      type: object
+      properties:
+        id:
+          type: integer
+        data_seasons:
+          type: array
+          items:
+            $ref: '#/components/schemas/Season'
+        gender:
+          $ref: '#/components/schemas/Gender'
+        seniority:
+          $ref: '#/components/schemas/Seniority'
+        name:
+          type: string
+        virtual:
+          type: boolean
+        visible:
+          type: boolean
+        order:
+          type: integer
+        city_name:
+          type: string
+        code:
+          type: string
+        country:
+          type: string
+        rw:
+          type: boolean
+        slug:
+          type: string
+        isparent:
+          type: boolean
+        zpn:
+          type: string
+        zpn_mapped:
+          type: string
+        index:
+          type: string
+        search_tokens:
+          type: string
+        picture:
+          type: string
+        section:
+          type: integer
+        group:
+          type: integer
+        region:
+          type: object
+        parent:
+          type: integer
+          description: "parent league id"
+        highest_parent:
+          type: integer
+          description: "highest parent league id"
+        name_junior:
+          type: string
+      required:
+        - id
+        - name
+        - isparent
+        - country
+    ExternalLink:
+      type: object
+      properties:
+        id:
+          type: integer
+        source:
+          type: integer
+        url:
+          type: string
+        name:
+          type: string
+    Club:
+      type: object
+      properties:
+        id:
+          type: integer
+        voivodeship_obj:
+          $ref: '#/components/schemas/Voivodeship'
+        manager:
+          $ref: '#/components/schemas/UserData'
+        autocreated:
+          type: boolean
+        mapping:
+          type: string
+        picture:
+          type: string
+        slug:
+          type: string
+        name:
+          type: string
+        voivodeship_raw:
+          type: string
+        country:
+          type: string
+        club_phone:
+          type: string
+        club_email:
+          type: string
+        mapper:
+          type: integer
+        external_links:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExternalLink'
+        stadion_address:
+          type: string
+        practice_stadion_address:
+          type: string
+      required:
+        - id
+        - name
+    Team:
+      type: object
+      properties:
+        id:
+          type: integer
+        club:
+          $ref: '#/components/schemas/Club'
+        gender:
+          $ref: '#/components/schemas/Gender'
+        seniority:
+          $ref: '#/components/schemas/Seniority'
+        junior_group:
+          type: object
+        manager:
+          $ref: '#/components/schemas/FeatureElement'
+        league:
+          $ref: '#/components/schemas/League'
+        mapping:
+          type: string
+        visible:
+          type: boolean
+        slug:
+          type: string
+        name:
+          type: string
+        travel_refunds:
+          type: boolean
+        game_bonus:
+          type: boolean
+        scolarships:
+          type: boolean
+        gloves_shoes_refunds:
+          type: boolean
+        traning_gear:
+          type: boolean
+        regular_gear:
+          type: boolean
+        secondary_trainer:
+          type: boolean
+        fizo:
+          type: boolean
+        diet_suplements:
+          type: boolean
+        mapper:
+          type: integer
+        external_links:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExternalLink'
+        editors:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserData'
+        current_team_league_history:
+          $ref: '#/components/schemas/LeagueHistory'
+      required:
+        - id
+        - name
+    SimpleTeam:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        gender:
+          type: integer
+          description: 1 for male, 2 for female.
+        historical_leagues:
+          type: string
+          nullable: true
+    SimpleClub:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimpleTeam'
+    Season:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        is_current:
+          type: boolean
+        is_in_verify_form:
+          type: boolean
+      required:
+        - id
+        - name
+        - is_current
+        - is_in_verify_form
+    LeagueHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+        season:
+          $ref: '#/components/schemas/Season'
+        league:
+          $ref: '#/components/schemas/League'
+        index:
+          type: string
+        visible:
+          type: boolean
+        is_table_data:
+          type: boolean
+        is_matches_data:
+          type: boolean
+        data:
+          type: object
+        data_updated:
+          type: string
+        league_name_raw:
+          type: string
+        mapper:
+          type: integer
+        external_links:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExternalLink'
+      required:
+        - id
+        - season
+        - league
+    TeamHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+        team:
+          $ref: '#/components/schemas/Team'
+        league_history:
+          $ref: '#/components/schemas/LeagueHistory'
+        team_name_raw:
+          type: string
+        visible:
+          type: boolean
+        data:
+          type: object
+        mapper:
+          type: integer
+      required:
+        - id
+        - league_history
+        - team
+    Voivodeship:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: integer
+      required:
+        - id
+        - name
+    ProfileVisitHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+        counter:
+          type: integer
+          description: "Count of account visitation"
+        counter_coach:
+          type: integer
+          description: "Count of account visitation by coaches"
+        counter_scout:
+          type: integer
+          description: "Count of account visitation by scouts"
+      required:
+        - id
+        - counter
+        - counter_coach
+        - counter_scout
+    Position:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+        - id
+        - name
+    PlayerPosition:
+      type: object
+      properties:
+        player_position:
+          $ref: '#/components/schemas/Position'
+        is_main:
+          type: boolean
+      required:
+        - player_position
+        - is_main
+    PlayerPositions:
+      type: array
+      items:
+        $ref: '#/components/schemas/Position'
+    PlayerVideo:
+      type: object
+      properties:
+        id:
+          type: integer
+        url:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        player:
+          type: integer
+          description: "player_id (owner)"
+          readOnly: true
+        label:
+          type: string
+        thumbnail:
+          type: string
+          readOnly: true
+    PlayerMetrics:
+      type: object
+      properties:
+        id:
+          type: integer
+        created_at:
+          type: string
+        updated_at:
+          type: string
+        games_summary:
+          type: array
+          items:
+            type: object
+        games_summary_updated:
+          type: string
+        games:
+          type: array
+          items:
+            type: object
+        games_updated:
+          type: string
+        fantasy_summary:
+          type: object
+        fantasy_summary_updated:
+          type: string
+        fantasy:
+          type: object
+        fantasy_updated:
+          type: string
+        season_summary:
+          type: object
+        season_summary_updated:
+          type: string
+        season:
+          type: object
+        season_updated:
+          type: string
+      required:
+        - id
+    BaseProfile:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserData'
+        history_id:
+          type: integer
+          description: '*'
+        history:
+          $ref: '#/components/schemas/ProfileVisitHistory'
+        slug:
+          type: string
+          description: '*'
+        bio:
+          type: string
+          description: '*'
+        verification_stage:
+          $ref: '#/components/schemas/VerificationStage'
+        user_id:
+          type: integer
+          description: '*'
+        uuid:
+          type: string
+          description: '*'
+        role:
+          type: string
+        veryfication_id:
+          type: integer
+        event_log:
+          type: array
+          items:
+            type: object
+      required:
+        - uuid
+        - user_id
+        - user
+        - slug
+        - step
+        - role
+    PlayerProfile:
+      allOf:
+        - $ref: '#/components/schemas/BaseProfile'
+        - type: object
+          properties:
+            team_object:
+              $ref: '#/components/schemas/Team'
+            team_history_object:
+              $ref: '#/components/schemas/TeamHistory'
+            voivodeship_obj:
+              $ref: '#/components/schemas/Voivodeship'
+            external_links:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExternalLink'
+            player_positions:
+              $ref: '#/components/schemas/PlayerPositions'
+            player_video:
+              type: array
+              items:
+                $ref: '#/components/schemas/PlayerVideo'
+            player_metrics:
+              $ref: '#/components/schemas/PlayerMetrics'
+            player_stats:
+              type: object
+              properties:
+                last_goals_count:
+                  type: integer
+                matches:
+                  type: integer
+                avg_minutes:
+                  type: integer
+            meta:
+              type: string
+              description: Player
+            meta_updated:
+              type: boolean
+              description: Player
+            team_club_league_voivodeship_ver:
+              type: string
+              description: Player,Coach,Club
+            team_object_id:
+              type: integer
+              description: "Used to change object in PATCH request, just pass id"
+            team_history_object_id:
+              type: integer
+              description: "Used to change object in PATCH request, just pass id"
+            team_object_alt_id:
+              type: integer
+              description: Player
+            club:
+              type: string
+              description: Player
+            team:
+              type: string
+              description: Player
+            league:
+              type: string
+              description: Player
+            birth_date:
+              type: string
+              description: Player
+            height:
+              type: integer
+              description: Player
+            weight:
+              type: integer
+              description: Player
+            position_raw:
+              type: string
+              description: Player
+            position_raw_alt:
+              type: string
+              description: Player
+            position_fantasy:
+              type: string
+              description: Player
+            formation:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            formation_alt:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            prefered_leg:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            transfer_status:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            card:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            soccer_goal:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            phone:
+              type: string
+              description: Player,Coach,Club,Guest
+            facebook_url:
+              type: string
+              description: Player,Coach,Scout,Guest
+            mapper_id:
+              type: integer
+              description: Player,Coach
+            external_links_id:
+              type: integer
+              description: Player,Coach,Scout,Guest
+            laczynaspilka_url:
+              type: string
+              description: Player
+            min90_url:
+              type: string
+              description: Player
+            transfermarket_url:
+              type: string
+              description: Player
+            voivodeship:
+              type: string
+              description: Player
+            voivodeship_obj_id:
+              type: integer
+              description: "Used to change object in PATCH request, just pass id"
+            voivodeship_raw:
+              type: string
+              description: Player
+            address_id:
+              type: integer
+              description: Player,Coach,Scout,Club,Guest
+            practice_distance:
+              type: integer
+              description: Player,Coach,Scout,Guest
+            about:
+              type: string
+              description: Player,Coach
+            training_ready:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            country:
+              type: string
+              description: Player,Coach,Scout
+            agent_status:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            agent_name:
+              type: string
+              description: Player
+            agent_phone:
+              type: string
+              description: Player
+            agent_foreign:
+              type: string
+              description: Player
+            updated:
+              type: boolean
+          example: {
+            "user": {
+                "id": 8248,
+                "first_name": "Arek",
+                "last_name": "Goclon",
+                "last_login": "2023-03-31T12:55:00.240615+02:00",
+                "last_activity": null,
+                "userpreferences": {
+                    "id": 5504,
+                    "age": null,
+                    "localization": null,
+                    "spoken_languages": [],
+                    "citizenship": null,
+                    "gender": null,
+                    "birth_date": null,
+                    "user": 8248
+                }
+            },
+            "team_object": null,
+            "team_history_object": null,
+            "voivodeship_obj": null,
+            "history": {
+                "id": 9859,
+                "counter": 0,
+                "counter_coach": 0,
+                "counter_scout": 0
+            },
+            "external_links": null,
+            "player_positions": [],
+            "player_video": [],
+            "playermetrics": {
+                "id": 8871,
+                "created_at": "2023-03-31T12:55:12.989811+02:00",
+                "updated_at": null,
+                "games_summary": null,
+                "games_summary_updated": null,
+                "games": null,
+                "games_updated": null,
+                "fantasy_summary": null,
+                "fantasy_summary_updated": null,
+                "fantasy": null,
+                "fantasy_updated": null,
+                "season_summary": null,
+                "season_summary_updated": null,
+                "season": null,
+                "season_updated": null,
+                "player": 8248
+            },
+            "player_stats": {
+                "last_goals_count": 1,
+                "matches": 69,
+                "avg_minutes": 52
+            },
+            "role": "P",
+            "verification_id": 14173,
+            "user_id": 8248,
+            "history_id": 9859,
+            "data_mapper_id": null,
+            "slug": "player-arek-goclon",
+            "bio": null,
+            "event_log": null,
+            "step": null,
+            "uuid": "4a144e1b-0254-4991-a534-a3b45bb41636",
+            "meta": null,
+            "meta_updated": null,
+            "team_club_league_voivodeship_ver": null,
+            "team_object_id": null,
+            "team_history_object_id": null,
+            "team_object_alt_id": null,
+            "club": null,
+            "team": null,
+            "league": null,
+            "birth_date": null,
+            "height": null,
+            "weight": null,
+            "position_raw": null,
+            "position_raw_alt": null,
+            "position_fantasy": null,
+            "formation": null,
+            "formation_alt": null,
+            "prefered_leg": null,
+            "transfer_status": null,
+            "card": null,
+            "soccer_goal": null,
+            "phone": null,
+            "facebook_url": null,
+            "mapper_id": 72331,
+            "external_links_id": null,
+            "laczynaspilka_url": null,
+            "min90_url": null,
+            "transfermarket_url": null,
+            "voivodeship": null,
+            "voivodeship_obj_id": null,
+            "voivodeship_raw": null,
+            "address_id": null,
+            "practice_distance": null,
+            "about": null,
+            "training_ready": null,
+            "country": "PL",
+            "agent_status": null,
+            "agent_name": null,
+            "agent_phone": null,
+            "agent_foreign": null,
+            "updated": false
+          }
+    CoachProfile:
+      allOf:
+        - $ref: '#/components/schemas/BaseProfile'
+        - type: object
+          properties:
+            team_object:
+              $ref: '#/components/schemas/Team'
+            team_history_object:
+              $ref: '#/components/schemas/TeamHistory'
+            voivodeship_obj:
+              $ref: '#/components/schemas/Voivodeship'
+            external_links:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExternalLink'
+            licences:
+              type: array
+              items:
+                $ref: '#/components/schemas/CoachLicence'
+            licence:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            team_object_id:
+              type: integer
+              description: "Used to change object in PATCH request, just pass id"
+            team_history_object_id:
+              type: integer
+              description: "Used to change object in PATCH request, just pass id"
+            team_club_league_voivodeship_ver:
+              type: string
+            birth_date:
+              type: string
+              description: Player
+            soccer_goal:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            phone:
+              type: string
+              description: Player,Coach,Club,Guest
+            facebook_url:
+              type: string
+              description: Player,Coach,Scout,Guest
+            mapper_id:
+              type: integer
+              description: Player,Coach
+            external_links_id:
+              type: integer
+              description: Player,Coach,Scout,Guest
+            country:
+              type: string
+              description: Player,Coach,Scout
+            practice_distance:
+              type: integer
+              description: Player,Coach,Scout,Guest
+            about:
+              type: string
+              description: Player,Coach
+            address_id:
+              type: integer
+              description: Player,Coach,Scout,Club,Guest
+            voivodeship:
+              type: string
+              description: Player
+            voivodeship_obj_id:
+              type: integer
+              description: Player,Coach,Scout
+            club_role:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            formation:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            coach_role:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            data:
+              type: string
+              description: Coach
+          example: {
+            "user": {
+                "id": 7404,
+                "first_name": "MiZ",
+                "last_name": "SHOTY",
+                "last_login": "2022-07-06T12:32:55.341179+02:00",
+                "last_activity": null,
+                "userpreferences": {
+                    "id": 2289,
+                    "age": null,
+                    "localization": null,
+                    "spoken_languages": [],
+                    "citizenship": null,
+                    "gender": null,
+                    "birth_date": null,
+                    "user": 7404
+                }
+            },
+            "team_object": null,
+            "team_history_object": null,
+            "voivodeship_obj": null,
+            "history": {
+                "id": 8819,
+                "counter": 0,
+                "counter_coach": 0,
+                "counter_scout": 0
+            },
+            "external_links": null,
+            "licences": [],
+            "role": "T",
+            "verification_id": 6941,
+            "user_id": 7404,
+            "history_id": 8819,
+            "data_mapper_id": null,
+            "slug": "coach-miz-shoty",
+            "bio": null,
+            "event_log": null,
+            "step": null,
+            "uuid": "22de5851-3246-4c56-aefa-c18c660570d2",
+            "licence": null,
+            "team_club_league_voivodeship_ver": null,
+            "team_object_id": null,
+            "team_history_object_id": null,
+            "birth_date": null,
+            "soccer_goal": null,
+            "phone": null,
+            "facebook_url": null,
+            "mapper_id": null,
+            "external_links_id": null,
+            "country": "PL",
+            "practice_distance": null,
+            "about": null,
+            "address_id": null,
+            "voivodeship": null,
+            "voivodeship_obj_id": null,
+            "club_role": {
+                "id": 1,
+                "name": "Trener"
+            },
+            "coach_role": null,
+            "formation": null,
+            "data": null
+          }
+    ScoutProfile:
+      allOf:
+        - $ref: '#/components/schemas/BaseProfile'
+        - type: object
+          properties:
+            voivodeship_obj:
+              $ref: '#/components/schemas/Voivodeship'
+            soccer_goal:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            country:
+              type: string
+              description: Player,Coach,Scout
+            facebook_url:
+              type: string
+              description: Player,Coach,Scout,Guest
+            address_id:
+              type: integer
+              description: Player,Coach,Scout,Club,Guest
+            practice_distance:
+              type: integer
+              description: Player,Coach,Scout,Guest
+            club_raw:
+              type: string
+            league_raw:
+              type: string
+            voivodeship_obj_id:
+              type: integer
+              description: Player,Coach,Scout
+            voivodeship_raw:
+              type: string
+          example: {
+            "user": {
+                "id": 2185,
+                "first_name": "Adam",
+                "last_name": "Zawadzki",
+                "last_login": "2023-07-05T17:32:21.688835+02:00",
+                "last_activity": null,
+                "userpreferences": {
+                    "id": 1090,
+                    "age": null,
+                    "localization": null,
+                    "spoken_languages": [],
+                    "citizenship": null,
+                    "gender": null,
+                    "birth_date": null,
+                    "user": 2185
+                }
+            },
+            "voivodeship_obj": null,
+            "history": {
+                "id": 2186,
+                "counter": 0,
+                "counter_coach": 0,
+                "counter_scout": 0
+            },
+            "external_links": null,
+            "role": "S",
+            "verification_id": null,
+            "user_id": 2185,
+            "history_id": 2186,
+            "data_mapper_id": null,
+            "slug": "scout-adam-zawadzki",
+            "bio": null,
+            "event_log": null,
+            "step": null,
+            "uuid": "ff553599-a32b-4bc7-84c0-98c3c9075882",
+            "soccer_goal": {
+                "id": 1,
+                "name": "Profesjonalna kariera"
+            },
+            "country": "PL",
+            "facebook_url": null,
+            "address_id": 6,
+            "external_links_id": null,
+            "practice_distance": null,
+            "club_raw": null,
+            "league_raw": null,
+            "voivodeship_obj_id": null,
+            "voivodeship_raw": "Śląskie"
+          }
+    ClubProfile:
+      allOf:
+        - $ref: '#/components/schemas/BaseProfile'
+        - type: object
+          properties:
+            club_object_id:
+              type: integer
+            phone:
+              type: string
+              description: Player,Coach,Club,Guest
+            team_club_league_voivodeship_ver:
+              type: string
+              description: Player,Coach,Club
+            club_role:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+          example: {
+            "user": {
+                "id": 7300,
+                "first_name": "B",
+                "last_name": "Kobi",
+                "last_login": "2022-06-24T12:12:25.348516+02:00",
+                "last_activity": null,
+                "userpreferences": null
+            },
+            "history": {
+                "id": 8676,
+                "counter": 0,
+                "counter_coach": 0,
+                "counter_scout": 0
+            },
+            "club_object": null,
+            "role": "C",
+            "verification_id": 6552,
+            "user_id": 7300,
+            "history_id": 8676,
+            "data_mapper_id": null,
+            "slug": "club-b-kobi",
+            "bio": null,
+            "event_log": null,
+            "step": null,
+            "uuid": "03bde658-f6af-41a5-b617-a6cd647ce168",
+            "club_object_id": null,
+            "phone": null,
+            "team_club_league_voivodeship_ver": null,
+            "club_role": null
+          }
+    GuestProfile:
+      allOf:
+        - $ref: '#/components/schemas/BaseProfile'
+        - type: object
+          properties:
+            facebook_url:
+              type: string
+              description: Player,Coach,Scout,Guest
+          example: {
+            "user": {
+                "id": 1,
+                "first_name": "",
+                "last_name": "",
+                "last_login": "2023-07-03T20:09:48.118282+02:00",
+                "last_activity": null,
+                "userpreferences": {
+                    "id": 5091,
+                    "age": null,
+                    "localization": null,
+                    "spoken_languages": [],
+                    "citizenship": null,
+                    "gender": null,
+                    "birth_date": null,
+                    "user": 1
+                }
+            },
+            "history": {
+                "id": 1,
+                "counter": 0,
+                "counter_coach": 0,
+                "counter_scout": 0
+            },
+            "role": "G",
+            "verification_id": null,
+            "user_id": 1,
+            "history_id": 1,
+            "data_mapper_id": null,
+            "slug": "guest",
+            "bio": null,
+            "event_log": null,
+            "step": null,
+            "uuid": "104ac6d7-6bf7-490e-abac-9b4c8d42ac49",
+            "facebook_url": null
+          }
+    Country:
+      type: object
+      properties:
+        country:
+          type: string
+        code:
+          type: string
+        priority:
+          type: boolean
+        dial_code:
+          type: string
+      required:
+        - country
+        - code
+        - priority
+        - dial_code
+    Language:
+      type: object
+      properties:
+        id:
+          type: integer
+        priority:
+          type: boolean
+        name:
+          type: string
+        native_name:
+          type: string
+        code:
+          type: string
+      required:
+        - id
+        - priority
+        - name
+        - native_name
+        - code
+    City:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        voivodeship:
+          type: string
+        priority:
+          type: boolean
+      required:
+        - id
+        - name
+        - voivodeship
+        - priority
+    UserPreferences:
+      type: object
+      properties:
+        localization:
+          $ref: '#/components/schemas/City'
+        spoken_languages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Language'
+        citizenship:
+          type: array
+          items:
+            $ref: '#/components/schemas/Country'
+        gender:
+          $ref: '#/components/schemas/Gender'
+        birth_date:
+          type: string
+        user:
+          type: integer
+          description: "user_id"
+      required:
+        - user
+    ProfileEnumChoices:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      description: 'Object represents enums, common for all models'
+      required:
+        - id
+        - name
+    LeagueBase:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        gender:
+          $ref: '#/components/schemas/Gender'
+        seniority:
+          $ref: '#/components/schemas/Seniority'
+      required:
+        - id
+        - name
+    CoachLicence:
+      type: object
+      properties:
+        id:
+          type: integer
+        licence:
+          $ref: '#/components/schemas/ProfileEnumChoices'
+        expiry_date:
+          type: string
+        coach_profile:
+          type: integer
+          description: "Coach ID"
+      required:
+        - id
+        - coach_profile
+        - licence
+    Paginator:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+        previous:
+          type: string
+        results:
+          type: array
+          items:
+            description: "Paginated result"
+      required: ["count"]
+    VerificationStage:
+      type: object
+      properties:
+        step:
+          type: integer
+        date_updated:
+          type: string
+        done:
+          type: boolean
+    Label:
+      type: object
+      properties:
+        label_name:
+          type: string
+        label_description:
+          type: string
+        season_name:
+          type: string
+        icon:
+          type: string
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

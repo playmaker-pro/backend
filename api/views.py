@@ -1,80 +1,70 @@
-from rest_framework import viewsets
+from django.db.models import QuerySet
 from django_countries import countries
-from rest_framework.response import Response
-from rest_framework import status
+from drf_spectacular.utils import extend_schema
+from rest_framework import serializers, status, viewsets
 from rest_framework.request import Request
-from django.utils import translation
-from django.db.models import Q
+from rest_framework.response import Response
 from unidecode import unidecode
-from cities_light.models import City
+
+from api.swagger_schemas import PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA
 from app.utils import cities
+from profiles.models import Language, PlayerProfile
+from profiles.serializers import LanguageSerializer
 from users.models import UserPreferences
-from profiles.models import PlayerProfile
-from drf_yasg.utils import swagger_auto_schema
-from api.swagger_schemas import (
-    CITIES_VIEW_SWAGGER_SCHEMA,
-    PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA,
-)
+
+from . import errors
+from . import serializers as api_serializers
+from .pagination import PagePagination
+from .services import LocaleDataService
+
+locale_service: LocaleDataService = LocaleDataService()
 
 
 class EndpointView(viewsets.GenericViewSet):
     """Base class for building views"""
 
-    def get_queryset(self):
+    pagination_class = PagePagination
+
+    def get_queryset(self) -> QuerySet:
         ...
 
+    def get_paginated_queryset(self, qs: QuerySet = None) -> QuerySet:
+        """Paginate queryset to optimize serialization"""
+        qs: QuerySet = qs or self.get_queryset()
+        return self.paginate_queryset(qs)
 
-class CountriesView(EndpointView):
-    """View for listing countries"""
+
+class LocaleDataView(EndpointView):
+    """Viewset for listing locale data"""
 
     authentication_classes = []
     permission_classes = []
-    prior_countries = [
-        "PL",
-        "UA",
-        "SK",
-        "CZ",
-        "BY",
-        "LT",
-    ]  # Polska, Ukraina, Słowacja, Czechy, Białoruś, Litwa
-
-    def is_prior_country(self, country_code: str) -> bool:
-        """Check if given country is priority"""
-        return country_code in self.prior_countries
 
     def list_countries(self, request: Request) -> Response:
         """
         Return list of countries and mark prior among them
         [{"country": "Polska", "priority": True}, {"country": "Angola", "priority": False}, ...]
-        It is possible to select language of countries on output by param (e.g. ?language=en), Polish by default
+        Select language of countries on output by param (e.g. ?language=en, Default: pl - polish).
         All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
         """
-        language = request.GET.get("language", "pl")  # default language (pl -> Polish)
-        translation.activate(language)
-        countries_list = [
-            {
-                "country": country_name,
-                "code": country_code,
-                "priority": self.is_prior_country(country_code),
-            }
-            for country_code, country_name in countries
-        ]
-        return Response(countries_list, status=status.HTTP_200_OK)
+        language = request.GET.get("language", "pl")
 
+        try:
+            serializer = api_serializers.CountrySerializer(
+                data=countries, many=True, context={"language": language}
+            )
+        except serializers.ValidationError as e:
+            raise errors.InvalidLanguageCode(e.detail)
 
-class CitiesView(EndpointView):
-    """View for listing cities"""
+        serializer.is_valid()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-    authentication_classes = []
-    permission_classes = []
-
-    @swagger_auto_schema(**CITIES_VIEW_SWAGGER_SCHEMA)
     def list_cities(self, request: Request) -> Response:
         """
-        Return a list of cities with mapped voivodeships based on the query parameter.
-        Each item in the response array is a pair of strings:
-        [city name, voivodeship name].
-        For example: ["Aleksandrów Łódzki", "Łódzkie"].
+        Return a list of cities with mapped voivodeships
+        and its priority based on the query parameter.
+        Response is an array of dictionaries:
+        [{id: 1, name: Warszawa, voivodeship: Mazowieckie, priority: True}, ...]
         """
         # Get the value of the "city" query parameter
         city_query = request.GET.get("city", "")
@@ -92,23 +82,34 @@ class CitiesView(EndpointView):
         mapped_city_query = cities.handle_custom_city_mapping(decoded_city_query)
 
         # Filter cities based on the decoded query (matching city names) or matched voivodeships
-        filtered_cities = City.objects.filter(
-            Q(name_ascii__icontains=mapped_city_query)
-            | Q(region__name__in=matched_voivodeships)
-        )
+        # If request has no param, return just prior countries
+        if not city_query:
+            cities_qs: QuerySet = locale_service.get_prior_cities_queryset()
+        else:
+            cities_qs: QuerySet = locale_service.get_cities_queryset_by_query_param(
+                city_like=mapped_city_query, voivo_like=matched_voivodeships
+            )
 
-        # Iterate over the results and create a list of city-voivodeship pairs
-        cities_list = [
-            [
-                # Get the mapped city name from the CUSTOM_CITY_MAPPING if available, otherwise use the original city name
-                cities.CUSTOM_CITY_MAPPING.get(city.name, city.name),
-                # Map the voivodeship name to its corresponding Polish name for display
-                cities.VOIVODESHIP_MAPPING.get(city.region.name, city.region.name),
-            ]
-            for city in filtered_cities
-        ]
+        cities_qs: QuerySet = self.get_paginated_queryset(cities_qs)
+        serializer = api_serializers.CitySerializer(cities_qs, many=True)
+        return self.get_paginated_response(serializer.data)
 
-        return Response(cities_list, status=status.HTTP_200_OK)
+    def list_languages(self, request: Request) -> Response:
+        """
+        Return list of languages.
+        View takes one optional param: ?language=<lang_code> (Default: pl - polish)
+        All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+
+        {
+            language - name of language translated in langauge described by param
+            language_locale - name of language translated as native locale language
+            code - language code
+        }
+        """
+        language = request.GET.get("language", "pl")
+        qs = Language.objects.all()
+        serializer = LanguageSerializer(qs, many=True, context={"language": language})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class PreferenceChoicesView(EndpointView):
@@ -117,7 +118,7 @@ class PreferenceChoicesView(EndpointView):
     authentication_classes = []
     permission_classes = []
 
-    @swagger_auto_schema(**PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA)
+    @extend_schema(**PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA)
     def list_preference_choices(self, request: Request) -> Response:
         """
         Retrieve the choices for gender and preferred leg fields and return as a response
