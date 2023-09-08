@@ -136,6 +136,8 @@ class Club(models.Model, MappingMixin):
         on_delete=models.SET_NULL,
     )
 
+    labels = GenericRelation("labels.Label")
+
     def is_editor(self, user):
         if user == self.manager or user in self.editors.all():
             return True

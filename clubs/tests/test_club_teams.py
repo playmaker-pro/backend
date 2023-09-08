@@ -16,13 +16,13 @@ from utils.test.test_utils import UserManager
 User = get_user_model()
 
 
-class TestClubTeamsAPI(APITestCase):
+class TestClubAPI(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         user_manager = UserManager(self.client)
         self.user: User = user_manager.create_superuser()
         self.headers: dict = user_manager.get_headers()
-        self.club_teams_endpoint = reverse("api:clubs:club_teams")
+        self.club_teams_endpoint = reverse("api:clubs:get_all_clubs_teams")
         self.club = ClubFactory.create()
         self.team = TeamFactory(club=self.club)
         self.season = SeasonFactory()
@@ -68,3 +68,6 @@ class TestClubTeamsAPI(APITestCase):
             self.club_teams_endpoint, query_params, **self.headers
         )
         assert response.status_code == expected_status
+
+    def test_get_club_labels(self):
+        pass

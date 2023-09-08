@@ -1,7 +1,7 @@
 from django.urls import reverse
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
-
+import uuid
 from utils import factories
 from utils.test.test_utils import UserManager
 
@@ -19,6 +19,13 @@ class TestGetProfileLabelsAPI(APITestCase):
         profile.labels.create(label_name="label2", season_name="2019/2020")
         self.url = "api:profiles:get_profile_labels"
         self.profile_uuid = profile.uuid
+
+    def test_get_profile_labels_and_profile_does_not_exists(self) -> None:
+        response = self.client.get(
+            reverse(self.url, kwargs={"profile_uuid": uuid.uuid4()}),
+            **self.headers,
+        )
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_get_profile_labels_all(self) -> None:
         response = self.client.get(

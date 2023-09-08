@@ -86,7 +86,11 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         return self.get_paginated_response(serializer.data)
 
     def get_profile_labels(self, request: Request, profile_uuid: uuid.UUID) -> Response:
-        profile_object = profile_service.get_profile_by_uuid(profile_uuid)
+        try:
+            profile_object = profile_service.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist:
+            raise errors.ProfileDoesNotExist
+
         season_name = request.GET.get("season_name")
         query = {}
         if season_name:

@@ -116,11 +116,11 @@ class ClubTeamsSearchApi(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ClubTeamsAPI(EndpointView):
+class ClubsAPI(EndpointView):
     permission_classes = []
     club_service = services.ClubTeamService()
 
-    def get_club_teams(self, request: Request) -> Response:
+    def get_all(self, request: Request) -> Response:
         """Retrieve filtered clubs and serialize them."""
         filters = request.query_params.dict()
         season: str = filters.get("season")
@@ -139,6 +139,22 @@ class ClubTeamsAPI(EndpointView):
             clubs, many=True, context={"gender": gender, "season": season}
         )
         return Response({"clubs": serializer.data}, status=status.HTTP_200_OK)
+
+    def get_labels(self, request: Request, club_id: int) -> Response:
+        try:
+            club = models.Club.objects.get(id=club_id)
+        except models.Club.Follow.DoesNotExist:
+            raise base_errors.ObjectDoesNotExist(details="Given club does not exists")
+
+        season_name = request.GET.get("season_name")
+        query = {}
+        if season_name:
+            query = {"season_name": season_name}
+
+        serializer = serializers.ClubLabelsSerializer(
+            club.labels.filter(**query), many=True
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class LeagueAPI(EndpointView):
@@ -230,7 +246,7 @@ class TeamsAPI(EndpointView):
         # we can keep it as that.
         try:
             team = models.Team.objects.get(id=team_id)
-        except Team.Follow.DoesNotExist:
+        except models.Team.DoesNotExist:
             raise base_errors.ObjectDoesNotExist(details="team does not exists")
 
         serializer = serializers.TeamSerializer(team)
@@ -241,7 +257,7 @@ class TeamsAPI(EndpointView):
         # we can keep it as that.
         try:
             team = models.Team.objects.get(id=team_id)
-        except Team.Follow.DoesNotExist:
+        except models.Team.DoesNotExist:
             raise base_errors.ObjectDoesNotExist(details="team does not exists")
 
         season_name = request.GET.get("season_name")
