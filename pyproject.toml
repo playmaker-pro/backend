@@ -47,6 +47,7 @@ pygments = "^2.1"
 django-crispy-forms = "^1.9"
 drf-yasg = "^1.21.7"
 django-select2 = "^7.10"
+python-dateutil = "^2.8.2"
 
 [tool.poetry.group.dev.dependencies]
 django-debug-toolbar = "2.2"
