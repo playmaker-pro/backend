@@ -109,6 +109,10 @@ Run all tests:
 poetry run pytest .
 ```
 
+Export poetry to requiremnets:
+```bash
+poetry export -f requirements.txt --output requirements.txt --without-hashes
+```
 
 #### Extra scripts:
 
