@@ -24,7 +24,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-Django = "3.2"
+Django = "^3.2"
 django-fsm = "2.7.1"
 django-countries = "7.1"
 django-cities-light = "3.9.2"
@@ -48,6 +48,7 @@ django-crispy-forms = "^1.9"
 drf-yasg = "^1.21.7"
 django-select2 = "^7.10"
 python-dateutil = "^2.8.2"
+pymemcache = "^4.0.0"
 
 [tool.poetry.group.dev.dependencies]
 django-debug-toolbar = "2.2"
