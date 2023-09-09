@@ -1,7 +1,5 @@
 from django.contrib.auth import get_user_model
-
-from drf_spectacular.utils import OpenApiExample, OpenApiResponse, OpenApiParameter
-from drf_yasg import openapi
+from drf_spectacular.utils import OpenApiExample, OpenApiParameter, OpenApiResponse
 from rest_framework import serializers, status
 
 from users.serializers import FeatureElementSerializer, FeaturesSerializer
@@ -152,7 +150,7 @@ USER_FEATURE_SETS_SWAGGER_SCHEMA = dict(
     responses={
         status.HTTP_200_OK: OpenApiResponse(
             response=FeaturesSerializer,
-            description="Returns user feature sets. Returns empty list if user has no feature sets.",
+            description="Returns user feature sets. Returns empty list if user has no feature sets.",  # noqa: E501
         ),
     },
 )
@@ -161,7 +159,7 @@ USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA = dict(
     summary="User feature elements.",
     responses={
         status.HTTP_200_OK: OpenApiResponse(
-            description="Returns user feature elements. Returns empty list if user has no feature sets.",
+            description="Returns user feature elements. Returns empty list if user has no feature sets.",  # noqa: E501
             response=FeatureElementSerializer,
         ),
     },
@@ -298,7 +296,7 @@ CITIES_VIEW_SWAGGER_SCHEMA = dict(
     responses={
         status.HTTP_200_OK: {
             "type": "array",
-            "description": "List of [city, voivodeship] pairs returned successfully. For example: "
+            "description": "List of [city, voivodeship] pairs returned successfully. For example: "  # noqa: E501
             '["Aleksandrów Łódzki", "Łódzkie"].',
             "items": {
                 "type": "object",

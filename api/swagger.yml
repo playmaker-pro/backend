@@ -1020,7 +1020,7 @@ paths:
       description: Returns available coach roles choices.
       summary: Coach roles endpoint
       tags:
-        - profiles
+        - roles
       security:
         - jwtAuth: [ ]
       responses:
@@ -1044,7 +1044,7 @@ paths:
       description: Returns available referee roles choices.
       summary: Referee roles list endpoint
       tags:
-        - profiles
+        - roles
       security:
         - jwtAuth: [ ]
       responses:
@@ -1074,7 +1074,7 @@ paths:
       description: Returns available club roles choices.
       summary: Club roles list endpoint
       tags:
-        - profiles
+        - roles
       security:
         - jwtAuth: [ ]
       responses:
@@ -1083,19 +1083,22 @@ paths:
             application/json:
               schema:
                 description: Club roles choices returned successfully.
-                type: array
-                items:
-                  type: string
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
                 example:
-                  [
-                    "Prezes",
-                    "Dyrektor sportowy",
-                    "Członek zarządu",
-                    "Dyrektor skautingu",
-                    "Kierownik drużyny",
-                    "Inne"
-                  ]
-          description: Returns examples club roles.
+                  {
+                    "1": "Prezes",
+                    "2": "Dyrektor sportowy",
+                    "3": "Członek zarządu",
+                    "4": "Dyrektor skautingu",
+                    "5": "Kierownik drużyny",
+                    "6": "Inne"
+                  }
+          description: Returns club roles.
   /profiles/players-age-range/:
     get:
       operationId: players_age_range
