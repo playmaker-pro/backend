@@ -5,19 +5,44 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('clubs', '0083_auto_20230318_0028'),
-        ('profiles', '0089_auto_20230802_2328'),
+        ("clubs", "0083_auto_20230318_0028"),
+        ("profiles", "0089_auto_20230802_2328"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='RefereeLevel',
+            name="RefereeLevel",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('role', models.CharField(choices=[('Referee', 'Sędzia główny'), ('Assistant Referee', 'Asystent')], help_text='The role this referee plays (Referee or Assistant Referee).', max_length=17, verbose_name='Role')),
-                ('level', models.ForeignKey(help_text='The league in which the referee has officiated.', on_delete=django.db.models.deletion.CASCADE, to='clubs.league')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "role",
+                    models.CharField(
+                        choices=[
+                            ("Referee", "Sędzia główny"),
+                            ("Assistant Referee", "Asystent"),
+                        ],
+                        help_text="The role this referee plays (Referee or Assistant Referee).",
+                        max_length=17,
+                        verbose_name="Role",
+                    ),
+                ),
+                (
+                    "level",
+                    models.ForeignKey(
+                        help_text="The league in which the referee has officiated.",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="clubs.league",
+                    ),
+                ),
             ],
         ),
     ]

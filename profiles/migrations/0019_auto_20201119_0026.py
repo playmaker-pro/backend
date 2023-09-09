@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("profiles", "0018_playerprofile_team_club_league_voivodeship_ver"),
     ]

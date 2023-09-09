@@ -3,16 +3,11 @@
 
 Backend side for PlayMaker project.
 
-#### Applications and their roles
-1. Features
-    * Application for managing user features permissions. Core job is to provide a way to manage user permissions for features.
-    * Basically application says, what role can access what feature. For example, we can define there limitations for viewing specific views
-
 # Installation
 
 To set up a development environment quickly you need to have following prerequisits:
 > Python 3.8
-
+> poetry in version `1.6.1`
 > PostgreSQL (latest)
 
 ## Steps:
@@ -31,13 +26,7 @@ To set up a development environment quickly you need to have following prerequis
     git clone https://gitlab.com/playmaker1/webapp --recurse-submodules
     ```
 
-4. Clone additional packages and install as a in-develop packages
-    ````
-    git clone https://gitlab.com/playmaker1/packages/pm-stream-framework
-    git clone https://gitlab.com/playmaker1/packages/pm-core
-    ````
-
-5. Install all dependencies:
+4. Install all dependencies:
     **Please follow order of installation!**
     > Note that use_2to3 not working with newest setuptools, so before installing dependencies, you have to install lower version
     ```
@@ -48,14 +37,6 @@ To set up a development environment quickly you need to have following prerequis
     (vn) pip install -r requirement_dev.txt
     ```
 
-    Then we need to add custom version of a streamer library. (please note that this is a directory to which we cloned repository from 4.)
-    ```
-    cd ..
-    cd package/pm-stream-framework
-    (vn) pip install -e .
-    cd ../pm-core
-    (vn) pip install -e .
-    ```
     > **pm-core package installation in this case is a temporary solution until proper pypi server will be setup<br><br>**
     Note: ignore error about django-celery incompatibility. <br>
     Note: If you are Windows user, you have to install additional library: (vn)  pip install windows-curses
@@ -121,19 +102,13 @@ pip install requirements_dev.txt
 
 Working with black formating:
 
-```bash
-invoke black
-```
 
-Invoke tests:
+Run all tests:
 
 ```bash
-pytest .
+poetry run pytest .
 ```
-or
-```bash
-invoke tests
-```
+
 
 #### Extra scripts:
 

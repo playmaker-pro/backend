@@ -4,15 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('profiles', '0098_auto_20230829_1735'),
+        ("profiles", "0098_auto_20230829_1735"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='licencetype',
-            name='order',
-            field=models.PositiveIntegerField(help_text='Order in which the licence will be listed.', unique=True),
+            model_name="licencetype",
+            name="order",
+            field=models.PositiveIntegerField(
+                help_text="Order in which the licence will be listed.", unique=True
+            ),
         ),
     ]

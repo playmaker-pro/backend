@@ -4,50 +4,49 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('profiles', '0084_auto_20230511_1939'),
+        ("profiles", "0084_auto_20230511_1939"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='clubprofile',
-            name='step',
+            model_name="clubprofile",
+            name="step",
             field=models.IntegerField(blank=True, default=None, null=True),
         ),
         migrations.AddField(
-            model_name='coachprofile',
-            name='step',
+            model_name="coachprofile",
+            name="step",
             field=models.IntegerField(blank=True, default=None, null=True),
         ),
         migrations.AddField(
-            model_name='guestprofile',
-            name='step',
+            model_name="guestprofile",
+            name="step",
             field=models.IntegerField(blank=True, default=None, null=True),
         ),
         migrations.AddField(
-            model_name='managerprofile',
-            name='step',
+            model_name="managerprofile",
+            name="step",
             field=models.IntegerField(blank=True, default=None, null=True),
         ),
         migrations.AddField(
-            model_name='otherprofile',
-            name='step',
+            model_name="otherprofile",
+            name="step",
             field=models.IntegerField(blank=True, default=None, null=True),
         ),
         migrations.AddField(
-            model_name='parentprofile',
-            name='step',
+            model_name="parentprofile",
+            name="step",
             field=models.IntegerField(blank=True, default=None, null=True),
         ),
         migrations.AddField(
-            model_name='playerprofile',
-            name='step',
+            model_name="playerprofile",
+            name="step",
             field=models.IntegerField(blank=True, default=None, null=True),
         ),
         migrations.AddField(
-            model_name='scoutprofile',
-            name='step',
+            model_name="scoutprofile",
+            name="step",
             field=models.IntegerField(blank=True, default=None, null=True),
         ),
     ]

@@ -21,7 +21,6 @@ def migrate_club_roles(apps, schema_editor) -> None:  # noqa
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("profiles", "0101_alter_clubprofile_club_role"),
     ]

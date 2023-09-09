@@ -5,15 +5,20 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('external_links', '0003_alter_externallinksentity_related_type'),
+        ("external_links", "0003_alter_externallinksentity_related_type"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='externallinksentity',
-            name='target',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='links', to='external_links.externallinks'),
+            model_name="externallinksentity",
+            name="target",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="links",
+                to="external_links.externallinks",
+            ),
         ),
     ]

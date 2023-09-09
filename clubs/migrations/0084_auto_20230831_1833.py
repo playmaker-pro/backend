@@ -5,30 +5,49 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('clubs', '0083_auto_20230318_0028'),
+        ("clubs", "0083_auto_20230318_0028"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='league',
-            name='code',
-            field=models.CharField(blank=True, help_text='League code -- Deprecated, will be removed in future', max_length=5, null=True, verbose_name='league_code'),
+            model_name="league",
+            name="code",
+            field=models.CharField(
+                blank=True,
+                help_text="League code -- Deprecated, will be removed in future",
+                max_length=5,
+                null=True,
+                verbose_name="league_code",
+            ),
         ),
         migrations.AlterField(
-            model_name='league',
-            name='order',
-            field=models.IntegerField(blank=True, default=0, help_text='League ordering -- Deprecated, will be removed or again used in future', null=True),
+            model_name="league",
+            name="order",
+            field=models.IntegerField(
+                blank=True,
+                default=0,
+                help_text="League ordering -- Deprecated, will be removed or again used in future",
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='league',
-            name='section',
-            field=models.ForeignKey(blank=True, help_text='Section grouping -- Deprecated, will be removed in future', null=True, on_delete=django.db.models.deletion.SET_NULL, to='clubs.sectiongrouping'),
+            model_name="league",
+            name="section",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="Section grouping -- Deprecated, will be removed in future",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="clubs.sectiongrouping",
+            ),
         ),
         migrations.AlterField(
-            model_name='league',
-            name='visible',
-            field=models.BooleanField(default=False, help_text='Determine if that league will be visible in queries'),
+            model_name="league",
+            name="visible",
+            field=models.BooleanField(
+                default=False,
+                help_text="Determine if that league will be visible in queries",
+            ),
         ),
     ]

@@ -5,9 +5,9 @@ import django.db.models.deletion
 
 
 def populate_coach_licence(apps, schema_editor):
-    Licence = apps.get_model('profiles', 'LicenceType')
-    CoachProfile = apps.get_model('profiles', 'CoachProfile')
-    CoachLicence = apps.get_model('profiles', 'CoachLicence')
+    Licence = apps.get_model("profiles", "LicenceType")
+    CoachProfile = apps.get_model("profiles", "CoachProfile")
+    CoachLicence = apps.get_model("profiles", "CoachLicence")
 
     LICENCE_CHOICES = [
         (1, "UEFA PRO"),
@@ -41,30 +41,75 @@ def populate_coach_licence(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('profiles', '0086_auto_20230627_1402'),
+        ("profiles", "0086_auto_20230627_1402"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='LicenceType',
+            name="LicenceType",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Type of the licence', max_length=17, unique=True, verbose_name='Licencja')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Type of the licence",
+                        max_length=17,
+                        unique=True,
+                        verbose_name="Licencja",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='CoachLicence',
+            name="CoachLicence",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('expiry_date', models.DateField(blank=True, help_text='The expiry date of the licence (optional)', null=True)),
-                ('coach_profile', models.ForeignKey(help_text='Coach profile holding this license', on_delete=django.db.models.deletion.CASCADE, related_name='licences', to='profiles.coachprofile')),
-                ('licence', models.ForeignKey(help_text='The type of licence held by the coach', on_delete=django.db.models.deletion.CASCADE, to='profiles.licencetype')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "expiry_date",
+                    models.DateField(
+                        blank=True,
+                        help_text="The expiry date of the licence (optional)",
+                        null=True,
+                    ),
+                ),
+                (
+                    "coach_profile",
+                    models.ForeignKey(
+                        help_text="Coach profile holding this license",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="licences",
+                        to="profiles.coachprofile",
+                    ),
+                ),
+                (
+                    "licence",
+                    models.ForeignKey(
+                        help_text="The type of licence held by the coach",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="profiles.licencetype",
+                    ),
+                ),
             ],
             options={
-                'unique_together': {('licence', 'coach_profile')},
+                "unique_together": {("licence", "coach_profile")},
             },
         ),
-        migrations.RunPython(populate_coach_licence)
+        migrations.RunPython(populate_coach_licence),
     ]

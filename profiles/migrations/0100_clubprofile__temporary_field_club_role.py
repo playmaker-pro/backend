@@ -57,7 +57,6 @@ def migrate_club_roles(apps, schema_editor) -> None:  # noqa
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("profiles", "0099_alter_licencetype_order"),
     ]

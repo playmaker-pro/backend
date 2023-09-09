@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('profiles', '0085_auto_20230530_1532'),
-        ('profiles', '0087_coachlicence_licencetype'),
+        ("profiles", "0085_auto_20230530_1532"),
+        ("profiles", "0087_coachlicence_licencetype"),
     ]
 
-    operations = [
-    ]
+    operations = []

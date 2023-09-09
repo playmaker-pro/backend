@@ -6,32 +6,82 @@ import profiles.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0002_alter_user_declared_role'),
-        ('profiles', '0083_language'),
+        ("users", "0002_alter_user_declared_role"),
+        ("profiles", "0083_language"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='rolechangerequest',
-            name='new',
-            field=models.CharField(choices=[('P', 'Piłkarz'), ('T', 'Trener'), ('C', 'Działacz klubu'), ('M', 'Menadżer'), ('S', 'Skaut'), ('R', 'Rodzic małego piłkarza'), ('G', 'Kibic'), ('O', 'Inne')], max_length=100),
+            model_name="rolechangerequest",
+            name="new",
+            field=models.CharField(
+                choices=[
+                    ("P", "Piłkarz"),
+                    ("T", "Trener"),
+                    ("C", "Działacz klubu"),
+                    ("M", "Menadżer"),
+                    ("S", "Skaut"),
+                    ("R", "Rodzic małego piłkarza"),
+                    ("G", "Kibic"),
+                    ("O", "Inne"),
+                ],
+                max_length=100,
+            ),
         ),
         migrations.CreateModel(
-            name='OtherProfile',
+            name="OtherProfile",
             fields=[
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='users.user')),
-                ('data_mapper_id', models.PositiveIntegerField(blank=True, help_text='ID of object placed in data_ database. It should alwayes reflect scheme which represents.', null=True)),
-                ('slug', models.CharField(blank=True, editable=False, max_length=255)),
-                ('bio', models.CharField(blank=True, max_length=455, null=True, verbose_name='Krótki opis o sobie')),
-                ('event_log', models.JSONField(blank=True, null=True)),
-                ('history', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='profiles.profilevisithistory')),
-                ('verification', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='profiles.profileverificationstatus')),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to="users.user",
+                    ),
+                ),
+                (
+                    "data_mapper_id",
+                    models.PositiveIntegerField(
+                        blank=True,
+                        help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",
+                        null=True,
+                    ),
+                ),
+                ("slug", models.CharField(blank=True, editable=False, max_length=255)),
+                (
+                    "bio",
+                    models.CharField(
+                        blank=True,
+                        max_length=455,
+                        null=True,
+                        verbose_name="Krótki opis o sobie",
+                    ),
+                ),
+                ("event_log", models.JSONField(blank=True, null=True)),
+                (
+                    "history",
+                    models.OneToOneField(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="profiles.profilevisithistory",
+                    ),
+                ),
+                (
+                    "verification",
+                    models.OneToOneField(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="profiles.profileverificationstatus",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Other Profile',
-                'verbose_name_plural': 'Other Profiles',
+                "verbose_name": "Other Profile",
+                "verbose_name_plural": "Other Profiles",
             },
             bases=(models.Model, profiles.models.EventLogMixin),
         ),

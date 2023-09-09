@@ -4,15 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0006_alter_user_declared_role'),
+        ("users", "0006_alter_user_declared_role"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='last_activity',
-            field=models.DateTimeField(blank=True, default=None, null=True, verbose_name='Last Activity'),
+            model_name="user",
+            name="last_activity",
+            field=models.DateTimeField(
+                blank=True, default=None, null=True, verbose_name="Last Activity"
+            ),
         ),
     ]

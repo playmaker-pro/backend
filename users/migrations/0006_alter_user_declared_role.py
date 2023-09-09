@@ -4,15 +4,31 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0005_userpreferences_birth_date'),
+        ("users", "0005_userpreferences_birth_date"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='declared_role',
-            field=models.CharField(blank=True, choices=[('P', 'Piłkarz'), ('T', 'Trener'), ('C', 'Działacz klubu'), ('M', 'Menadżer'), ('S', 'Skaut'), ('R', 'Rodzic małego piłkarza'), ('G', 'Kibic'), ('O', 'Inne'), ('A', 'Sędzia')], help_text='Users declaration in which role he has. It is main paramter.', max_length=355, null=True, verbose_name='Deklaracja roli'),
+            model_name="user",
+            name="declared_role",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("P", "Piłkarz"),
+                    ("T", "Trener"),
+                    ("C", "Działacz klubu"),
+                    ("M", "Menadżer"),
+                    ("S", "Skaut"),
+                    ("R", "Rodzic małego piłkarza"),
+                    ("G", "Kibic"),
+                    ("O", "Inne"),
+                    ("A", "Sędzia"),
+                ],
+                help_text="Users declaration in which role he has. It is main paramter.",
+                max_length=355,
+                null=True,
+                verbose_name="Deklaracja roli",
+            ),
         ),
     ]

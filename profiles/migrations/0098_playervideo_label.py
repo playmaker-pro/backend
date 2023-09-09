@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('profiles', '0097_auto_20230823_2100'),
+        ("profiles", "0097_auto_20230823_2100"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='playervideo',
-            name='label',
-            field=models.IntegerField(blank=True, choices=[(1, 'Skrót meczu'), (2, 'Cały mecz'), (3, 'Bramka')], null=True),
+            model_name="playervideo",
+            name="label",
+            field=models.IntegerField(
+                blank=True,
+                choices=[(1, "Skrót meczu"), (2, "Cały mecz"), (3, "Bramka")],
+                null=True,
+            ),
         ),
     ]

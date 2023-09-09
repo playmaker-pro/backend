@@ -15,7 +15,7 @@ def get_address_from_profile(profile: Optional[models.Model]) -> Optional[str]:
     """
     Get the address from a profile object.
     """
-    address = getattr(profile, 'address', None)
+    address = getattr(profile, "address", None)
     return address.formatted if address else None
 
 
@@ -33,9 +33,9 @@ def get_localization_from_address(address: Optional[str]) -> Optional[int]:
 
 
 def update_user_preferences_from_profile(
-        profile: Union[PlayerProfile, ScoutProfile, CoachProfile],
-        user_preferences_model: UserPreferences,
-        user: User
+    profile: Union[PlayerProfile, ScoutProfile, CoachProfile],
+    user_preferences_model: UserPreferences,
+    user: User,
 ) -> None:
     """
     Update the localization field in the User Preferences model based on the address field of the provided profile.
@@ -51,11 +51,11 @@ def populate_localization(apps: Any, schema_editor: Any) -> None:
     """
     Populate the localization field of user objects based on profile addresses.
     """
-    User = apps.get_model('users', 'User')
-    PlayerProfile = apps.get_model('profiles', 'PlayerProfile')
-    CoachProfile = apps.get_model('profiles', 'CoachProfile')
-    ScoutProfile = apps.get_model('profiles', 'ScoutProfile')
-    UserPreferences = apps.get_model('users', 'UserPreferences')
+    User = apps.get_model("users", "User")
+    PlayerProfile = apps.get_model("profiles", "PlayerProfile")
+    CoachProfile = apps.get_model("profiles", "CoachProfile")
+    ScoutProfile = apps.get_model("profiles", "ScoutProfile")
+    UserPreferences = apps.get_model("users", "UserPreferences")
 
     users = User.objects.all()
 
@@ -75,27 +75,65 @@ def populate_localization(apps: Any, schema_editor: Any) -> None:
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('cities_light', '0011_alter_city_country_alter_city_region_and_more'),
-        ('profiles', '0087_coachlicence_licencetype'),
-        ('users', '0002_alter_user_declared_role'),
+        ("cities_light", "0011_alter_city_country_alter_city_region_and_more"),
+        ("profiles", "0087_coachlicence_licencetype"),
+        ("users", "0002_alter_user_declared_role"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='UserPreferences',
+            name="UserPreferences",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('citizenship', models.CharField(blank=True, help_text="User's citizenship (country of citizenship)", max_length=50, null=True)),
-                ('spoken_languages', models.ManyToManyField(blank=True, help_text="User's known languages (languages spoken by the user)", to='profiles.Language')),
-                ('localization', models.ForeignKey(blank=True, help_text="User's localization (city and voivodeship)", null=True, on_delete=django.db.models.deletion.SET_NULL, to='cities_light.city', verbose_name='Localization')),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "citizenship",
+                    models.CharField(
+                        blank=True,
+                        help_text="User's citizenship (country of citizenship)",
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "spoken_languages",
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text="User's known languages (languages spoken by the user)",
+                        to="profiles.Language",
+                    ),
+                ),
+                (
+                    "localization",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="User's localization (city and voivodeship)",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="cities_light.city",
+                        verbose_name="Localization",
+                    ),
+                ),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'User Preference',
-                'verbose_name_plural': 'User Preferences',
+                "verbose_name": "User Preference",
+                "verbose_name_plural": "User Preferences",
             },
         ),
-        migrations.RunPython(populate_localization)
+        migrations.RunPython(populate_localization),
     ]

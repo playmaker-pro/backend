@@ -53,11 +53,6 @@ class ModelMethodsRequest(TestCase):
         )
         self.request = InquiryRequest(sender=self.coach, recipient=self.player)
 
-    # DEPRECATED: PM-1015
-    # @patch("stats.adapters.player.PlayerAdapter.__init__", "")
-    # def test__status_display(self):
-    #     assert self.request.status == InquiryRequest.STATUS_NEW
-
     def test__send_status_differs_from_role(self):
         self.request.send()
         self.request.save()

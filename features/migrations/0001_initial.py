@@ -4,37 +4,108 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='AccessPermission',
+            name="AccessPermission",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('access', models.CharField(choices=[('none', 'none'), ('all', 'all'), ('club', 'club'), ('own', 'own')], default='none', help_text='Access permission name.', max_length=15)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "access",
+                    models.CharField(
+                        choices=[
+                            ("none", "none"),
+                            ("all", "all"),
+                            ("club", "club"),
+                            ("own", "own"),
+                        ],
+                        default="none",
+                        help_text="Access permission name.",
+                        max_length=15,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='FeatureElement',
+            name="FeatureElement",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Feature element name', max_length=255, unique=True)),
-                ('permissions', models.JSONField(blank=True, help_text='JSON representation of roles permissions.')),
-                ('access_permissions', models.ManyToManyField(blank=True, help_text='Access permissions list.', to='features.AccessPermission')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Feature element name", max_length=255, unique=True
+                    ),
+                ),
+                (
+                    "permissions",
+                    models.JSONField(
+                        blank=True,
+                        help_text="JSON representation of roles permissions.",
+                    ),
+                ),
+                (
+                    "access_permissions",
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text="Access permissions list.",
+                        to="features.AccessPermission",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Feature',
+            name="Feature",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Feature name.', max_length=255, unique=True)),
-                ('enabled', models.BooleanField(default=True, help_text='Flag that says if feature is enabled.')),
-                ('keyname', models.CharField(help_text='Feature keyname.', max_length=255)),
-                ('elements', models.ManyToManyField(help_text='Feature elements.', to='features.FeatureElement')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Feature name.", max_length=255, unique=True
+                    ),
+                ),
+                (
+                    "enabled",
+                    models.BooleanField(
+                        default=True, help_text="Flag that says if feature is enabled."
+                    ),
+                ),
+                (
+                    "keyname",
+                    models.CharField(help_text="Feature keyname.", max_length=255),
+                ),
+                (
+                    "elements",
+                    models.ManyToManyField(
+                        help_text="Feature elements.", to="features.FeatureElement"
+                    ),
+                ),
             ],
         ),
     ]

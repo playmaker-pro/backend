@@ -14,7 +14,6 @@ from utils.factories import LeagueFactory, SeniorityFactory
 
 @pytest.mark.django_db
 class TestChangeLeagueSeniority(TestCase):
-
     command_name = "change_league_seniorty"
     CENTRAL_JUNIOR_LEAGUE_NAME = "Centralna Liga Juniorow"
 
@@ -109,7 +108,6 @@ class TestChangeLeagueSeniority(TestCase):
 
 @pytest.mark.django_db
 class TestHidePredefinedLeagues(TestCase):
-
     command_name = "hide_predefined_leagues"
     LEAGUES_TO_HIDE = [
         "II Liga PLF K",

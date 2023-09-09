@@ -7,6 +7,5 @@ class Command(BaseCommand):
     help = "Create voivodeships"
 
     def handle(self, *args, **options):
-
         manager = VoivodeshipService()
         manager.map_old_field_to_new()

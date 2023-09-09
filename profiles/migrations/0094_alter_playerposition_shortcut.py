@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('profiles', '0093_playerposition_shortcut'),
+        ("profiles", "0093_playerposition_shortcut"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='playerposition',
-            name='shortcut',
+            model_name="playerposition",
+            name="shortcut",
             field=models.CharField(blank=True, max_length=4, null=True),
         ),
     ]

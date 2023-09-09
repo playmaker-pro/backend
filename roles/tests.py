@@ -11,7 +11,6 @@ from utils.test.test_utils import UserManager
 @pytest.mark.django_db
 class RolesAPITest(TestCase):
     def setUp(self) -> None:
-
         self.client: Client = Client()
         self.user = UserManager(self.client)
         self.user_obj = self.user.create_superuser()
@@ -43,9 +42,7 @@ class RolesAPITest(TestCase):
 
     def test_get_roles_endpoint(self) -> None:
         """Test get-roles endpoint"""
-        res: Response = self.client.get(
-            self.url, **self.headers
-        )
+        res: Response = self.client.get(self.url, **self.headers)
 
         assert res.status_code == 200
         expected_roles = {

@@ -73,9 +73,9 @@ INSTALLED_APPS = [
     # "data",  # external repo DEPRECATED: PM-1015
     # "stats",  # external repo DEPRECATED: PM-1015
     "django_countries",
-    "crispy_forms",
+    # "crispy_forms",
     "easy_thumbnails",
-    "djcelery",
+    # "djcelery",
     "django_user_agents",
     # "wagtail.contrib.forms",
     # "wagtail.contrib.modeladmin",
@@ -94,15 +94,15 @@ INSTALLED_APPS = [
     # "wagtailmetadata",
     # 'comments_wagtail_xtd',
     # 'django_comments',
-    "modelcluster",
-    "taggit",
+    # "modelcluster",  @wag
+    # "taggit",
     # "blog",
     # "flex",
     # "streams",
     "django_fsm",
     "phonenumber_field",
     "address",
-    "compressor",
+    # "compressor",  # @dep - 2
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -285,7 +285,7 @@ COMPRESS_ENABLED = False
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-    "compressor.finders.CompressorFinder",
+    # "compressor.finders.CompressorFinder",  ## @dep - 2
 ]
 
 STATICFILES_DIRS = [
@@ -568,9 +568,8 @@ logger = logging.getLogger(f"project.{__name__}")
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
 CELERY_ALWAYS_EAGER = True
 CELERY_TASK_SERIALIZER = "pickle"
-import djcelery  # noqa
 
-djcelery.setup_loader()
+
 # Redis & stream activity
 STREAM_REDIS_CONFIG = {
     "default": {"host": "127.0.0.1", "port": 6379, "db": 0, "password": None},

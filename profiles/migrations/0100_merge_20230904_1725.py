@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('profiles', '0098_playervideo_label'),
-        ('profiles', '0099_alter_licencetype_order'),
+        ("profiles", "0098_playervideo_label"),
+        ("profiles", "0099_alter_licencetype_order"),
     ]
 
-    operations = [
-    ]
+    operations = []

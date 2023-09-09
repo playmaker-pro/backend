@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0006_auto_20230808_2159'),
-        ('users', '0007_user_last_activity'),
+        ("users", "0006_auto_20230808_2159"),
+        ("users", "0007_user_last_activity"),
     ]
 
-    operations = [
-    ]
+    operations = []
