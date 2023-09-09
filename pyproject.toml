@@ -43,7 +43,6 @@ drf-spectacular-sidecar = "^2023.9.1"
 pm-core = {version = "^1.0.0", source = "pm"}
 django-filter = "^23.2"
 psycopg2 = "^2.9.7"
-pandas = "^1.5.2"
 pygments = "^2.1"
 django-crispy-forms = "^1.9"
 drf-yasg = "^1.21.7"

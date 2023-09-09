@@ -4,7 +4,8 @@ import logging
 import re
 from urllib.parse import parse_qs, urlparse
 
-import pandas as pd
+# Deprecated @dep-2 - due to pandas
+# import pandas as pd
 from dateutil.relativedelta import relativedelta
 from django.template.defaultfilters import slugify
 from django.utils import timezone
@@ -415,36 +416,36 @@ def make_jj_manago():
 #
 #     print(ids)
 
+# Deprecated @dep-2 - due to pandas
+# def match_player_videos(csv_file: str) -> None:
+#     """
+#     Matches player videos with data from csv_file.
+#     Expects the csv_file to have the following columns:
+#             player - the user id,
+#             url - the URL of the video,
+#             title - the title of the video,
+#             description - the description of the video.
+#     """
+#     player_profiles = models.PlayerProfile.objects.all()
+#     df = pd.read_csv(csv_file)
 
-def match_player_videos(csv_file: str) -> None:
-    """
-    Matches player videos with data from csv_file.
-    Expects the csv_file to have the following columns:
-            player - the user id,
-            url - the URL of the video,
-            title - the title of the video,
-            description - the description of the video.
-    """
-    player_profiles = models.PlayerProfile.objects.all()
-    df = pd.read_csv(csv_file)
+#     for index, row in df.iterrows():
+#         player_profile = player_profiles.get(user=row["player"])
 
-    for index, row in df.iterrows():
-        player_profile = player_profiles.get(user=row["player"])
+#         vids = models.PlayerVideo.objects.filter(player=player_profile, url=row["url"])
 
-        vids = models.PlayerVideo.objects.filter(player=player_profile, url=row["url"])
-
-        if not vids:
-            models.PlayerVideo.objects.create(
-                player=player_profile,
-                url=row["url"],
-                title=row["title"] if not pd.isna(row["title"]) else "",
-                description=row["description"]
-                if not pd.isna(row["description"])
-                else "",
-            )
-            print(f"{player_profile.user} video with url {row['url']} created")
-        else:
-            print(f"{player_profile.user} video with url {row['url']} already exists")
+#         if not vids:
+#             models.PlayerVideo.objects.create(
+#                 player=player_profile,
+#                 url=row["url"],
+#                 title=row["title"] if not pd.isna(row["title"]) else "",
+#                 description=row["description"]
+#                 if not pd.isna(row["description"])
+#                 else "",
+#             )
+#             print(f"{player_profile.user} video with url {row['url']} created")
+#         else:
+#             print(f"{player_profile.user} video with url {row['url']} already exists")
 
 
 def get_metrics_update_date(metrics: "models.PlayerMetrics") -> str:
