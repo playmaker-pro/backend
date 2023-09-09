@@ -338,6 +338,11 @@ class ProfileService:
         """Get list of club roles from ClubProfile"""
         return CLUB_ROLES
 
+    @staticmethod
+    def get_club_roles_as_dict() -> dict:
+        """Get list of club roles from ClubProfile as a dict"""
+        return dict(CLUB_ROLES)
+
     def get_referee_roles(self) -> tuple:
         """Get referee roles from RefereeProfile"""
         return models.RefereeLevel.REFEREE_ROLE_CHOICES

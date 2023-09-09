@@ -141,8 +141,8 @@ class ProfileEnumsAPI(EndpointView):
         Get ClubProfile roles and return response with format:
         ["Prezes", "Dyrektor sportowy",...]
         """
-        roles = dict(profile_service.get_club_roles())
-        return Response(list(roles.values()), status=status.HTTP_200_OK)
+        roles = profile_service.get_club_roles_as_dict()
+        return Response(roles, status=status.HTTP_200_OK)
 
     def get_referee_roles(self, request: Request) -> Response:
         """

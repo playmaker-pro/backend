@@ -1,6 +1,7 @@
 from django.urls import reverse
 from rest_framework.test import APIClient, APITestCase
 
+from profiles.services import ProfileService
 from profiles.utils import get_past_date
 from roles.definitions import CLUB_ROLES
 from utils import factories
@@ -25,9 +26,14 @@ class TestProfileEnumChoicesAPI(APITestCase):
     def test_get_club_roles_valid_response_schema(self):
         """Valid response schema of club roles endpoint"""
         response = self.client.get(self.club_roles_url)
+        profile_service = ProfileService()
 
-        assert isinstance(response.data, list)
+        assert isinstance(response.data, type(profile_service.get_club_roles_as_dict()))
         assert len(response.data) == len(CLUB_ROLES)
+
+        for key, value in response.json().items():
+            assert isinstance(key, str)
+            assert isinstance(value, str)
 
     def test_get_referee_roles(self):
         """get referee roles"""
