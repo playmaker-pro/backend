@@ -9,20 +9,20 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 # from wagtail.core import urls as wagtail_urls   #wag
 # from wagtail.documents import urls as wagtaildocs_urls  #wag
 
-import app.urls
-import clubs.urls
-import fantasy.urls
+# import app.urls
+# import clubs.urls
+# import fantasy.urls
 
 # Deprecation(rkesik): since we are working on new FE
 # import followers.urls  # @to be removed
-import fqa.urls
-import landingpage.urls
-import marketplace.urls
-import plays.urls
-import premium.urls
-import products.urls
-import profiles.urls
-import soccerbase.urls
+# import fqa.urls
+# import landingpage.urls
+# import marketplace.urls
+# import plays.urls
+# import premium.urls
+# import products.urls
+# import profiles.urls
+# import soccerbase.urls
 from api import urls as api_urls
 
 # from search import views as search_views   #wag
