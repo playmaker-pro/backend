@@ -10,50 +10,49 @@ from . import models
 
 class SeasonService:
     @staticmethod
-    def validate_season(season: str) -> bool:
-        parts = season.split("/")
+    def is_valid(season: str) -> bool:
+        """Check if given season is valid. Season must be in format: YYYY/YYYY"""
 
-        # Validate that there are at most two parts
-        if len(parts) not in (1, 2):
+        if "/" not in season:
             return False
 
-        # Validate start year (1 to 4 digits)
-        if not (1 <= len(parts[0]) <= 4 and parts[0].isdigit()):
+        if len(season.split("/")) != 2:
             return False
 
-        # Single year without trailing slash (1 to 4 digits)
-        if len(parts) == 1:
-            return True
+        first_year, second_year = season.split("/")
+
+        if (
+            len(first_year) != 4
+            or len(second_year) != 4
+            or not first_year.isdigit()
+            or not second_year.isdigit()
+        ):
+            return False
+
+        if int(first_year) == int(second_year):
+            return False
 
         # Validate that start year is not greater
-        # than the current year (if fully specified)
-        if len(parts[0]) == 4:
-            start_year = int(parts[0])
-            if start_year > datetime.date.today().year:
-                return False
+        # than the current year
+        if int(first_year) > datetime.date.today().year:
+            return False
 
-        # If end year is fully specified,
-        # check that it's exactly one year greater
-        # than start year (if both fully specified)
-        if len(parts[1]) == 4 and parts[1].isdigit() and len(parts[0]) == 4:
-            start_year = int(parts[0])
-            end_year = int(parts[1])
-            if end_year - start_year != 1:
-                return False
-            return True  # Valid case for fully specified start and end year
+        # Validate end year is not greater
+        # than the current year + 1
+        if int(second_year) > datetime.date.today().year + 1:
+            return False
 
-        # If end year is partially specified, check that it's 1 or 3 digits
-        elif 0 <= len(parts[1]) <= 3 and parts[1].isdigit():
-            return True  # Valid case for partially specified end year
+        return True
 
-        # If end year is an empty string, it's also valid
-        elif parts[1] == "":
-            return True  # Valid case for single year with trailing slash
+    @staticmethod
+    def is_current_season_parameter_valid(current_season: str) -> bool:
+        """Check if given current_season parameter is valid"""
+        if current_season not in ["true"]:
+            return False
+        return True
 
-        # All other cases are invalid
-        return False
-
-    def get(self, name):
+    @staticmethod
+    def get(name) -> models.Season:
         season, _ = models.Season.objects.get_or_create(name=name)
         return season
 

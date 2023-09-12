@@ -256,6 +256,18 @@ paths:
             type: string
             example: "M/F"
           description: "Define gender: M - male, F - female. No param - get all"
+        - in: query
+          name: season
+          schema:
+            type: string
+            example: "2022/2023"
+          description: "Set season to search for. No param - get all"
+        - in: query
+          name: current_season
+          schema:
+            type: string
+            example: "true"
+          description: "Set to true to get only current season. No param - get all"
       responses:
         '200':
           content:

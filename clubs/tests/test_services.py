@@ -1,6 +1,8 @@
+from unittest import TestCase
+
 from rest_framework.test import APITestCase
 
-from clubs.services import ClubTeamService
+from clubs.services import ClubTeamService, SeasonService
 from utils.factories import GenderFactory, TeamFactory
 
 
@@ -48,3 +50,25 @@ class TestClubTeamService(APITestCase):
             assert False, "Expected ValueError but none was raised"
         except ValueError:
             pass
+
+
+class TestSeasonService(TestCase):
+    def test_validate_season_valid(self) -> None:
+        """if given season is valid."""
+        valid_season = "2020/2021"
+        assert SeasonService.is_valid(valid_season)
+
+    def test_validate_season_invalid(self) -> None:
+        """if given season is invalid."""
+
+        invalid_season_names = [
+            "2020/202",
+            "2020/2020",
+            "2020/2020/2020",
+            "1/1",
+            "aa/bb",
+            "aaaa/bbbb",
+        ]
+
+        for invalid_season_name in invalid_season_names:
+            assert not SeasonService.is_valid(invalid_season_name)
