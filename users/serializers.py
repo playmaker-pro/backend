@@ -2,6 +2,7 @@ from typing import Dict, Optional
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from api.serializers import CitySerializer, CountrySerializer
 from features.models import AccessPermission, Feature, FeatureElement
@@ -9,6 +10,7 @@ from profiles import serializers as profile_serializers
 from profiles.serializers import ProfileEnumChoicesSerializer
 from users.errors import UserRegisterException
 from users.models import UserPreferences
+from users.schemas import LoginSchemaOut
 from users.utils.api_utils import modify2custom_exception
 
 User = get_user_model()
@@ -35,7 +37,7 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
         }
 
     def update(self, instance, validated_data):
-        if spoken_languages := validated_data.pop(
+        if spoken_languages := validated_data.pop(  # noqa: 599
             "spoken_languages", None
         ):  # noqa: 599
             instance.spoken_languages.set(spoken_languages)
@@ -186,3 +188,14 @@ class CreateNewPasswordSerializer(serializers.Serializer):
             modify2custom_exception(e)
 
         return validated_data
+
+
+class CustomTokenObtainSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        user: User = self.user
+        return LoginSchemaOut(
+            first_name=user.first_name,
+            last_name=user.last_name,
+            **attrs,
+        ).dict()
