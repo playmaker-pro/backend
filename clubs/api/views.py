@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 from rest_framework import status, viewsets
@@ -10,6 +12,7 @@ from api import errors as base_errors
 from api.views import EndpointView
 from clubs import errors, models, services
 from clubs.api import api_filters, serializers
+from clubs.services import SeasonService
 
 User = get_user_model()
 
@@ -158,22 +161,27 @@ class ClubsAPI(EndpointView):
 
 
 class LeagueAPI(EndpointView):
-    service = services.LeagueService()
+    league_service = services.LeagueService()
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self, highest_only: bool = False, **kwargs) -> QuerySet:
         """Get Leagues queryset"""
         if highest_only:
-            qs = self.service.get_highest_parents()
+            qs = self.league_service.get_highest_parents()
         else:
-            qs = self.service.get_leagues()
+            qs = self.league_service.get_leagues()
 
         return self.filter_queryset(qs, **kwargs)
 
     def filter_queryset(self, queryset: QuerySet, **kwargs) -> QuerySet:
         """Filter queryset by gender and visible flag"""
+
         if gender := kwargs.get("gender"):
-            queryset = self.service.filter_gender(queryset, gender)
+            queryset = self.league_service.filter_gender(queryset, gender)
+        if season := kwargs.get("season"):
+            queryset = queryset.filter(data_seasons__name=season)
+        elif current_season := kwargs.get("current_season"):
+            queryset = queryset.filter(data_seasons__is_current=current_season)
 
         return queryset.filter(visible=True)
 
@@ -181,12 +189,31 @@ class LeagueAPI(EndpointView):
         """Get list of leagues (highest parents only)"""
 
         gender: str = request.query_params.get("gender")
+        season: str = request.query_params.get("season")
+        current_season: str = request.query_params.get("current_season")
+
         try:
-            self.service.validate_gender(gender)
+            self.league_service.validate_gender(gender)
         except ValueError:
             raise errors.InvalidGender
 
-        qs = self.get_queryset(highest_only=True, gender=gender)
+        if season and current_season:
+            raise errors.BothSeasonsGivenException()
+
+        search_params = dict(gender=gender)
+
+        if season:
+            if not SeasonService.is_valid(season):
+                raise errors.InvalidSeasonFormatException()
+            search_params["season"] = season
+
+        if current_season:
+            if not SeasonService.is_current_season_parameter_valid(current_season):
+                raise errors.InvalidCurrentSeasonFormatException()
+
+            search_params["current_season"] = json.loads(current_season.lower())
+
+        qs = self.get_queryset(highest_only=True, **search_params)
         serializer = serializers.LeagueBaseDataSerializer(qs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -216,7 +243,7 @@ class SeasonAPI(EndpointView):
         """
         season = request.GET.get("season", None)
 
-        if season and not self.service.validate_season(season):
+        if season and not self.service.is_valid(season):
             raise errors.InvalidSeasonFormatException()
 
         # Query only seasons where is_in_verify_form is True

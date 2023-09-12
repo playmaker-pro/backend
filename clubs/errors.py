@@ -23,6 +23,11 @@ class InvalidSeasonFormatException(CoreAPIException):
     default_detail = "Invalid season format"
 
 
+class InvalidCurrentSeasonFormatException(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Invalid current_season format. Should be 'true' or 'false'."
+
+
 class SeasonDoesNotExist(CoreAPIException):
     status_code = status.HTTP_404_NOT_FOUND
     default_detail = "Given season does not exist"
@@ -31,6 +36,11 @@ class SeasonDoesNotExist(CoreAPIException):
 class SeasonParameterMissing(CoreAPIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "The 'season' parameter is required."
+
+
+class BothSeasonsGivenException(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "You can only set current_season or specific season, not both."
 
 
 class InvalidGender(CoreAPIException):
