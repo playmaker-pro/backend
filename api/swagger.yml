@@ -1387,18 +1387,12 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  access:
-                    type: string
-                    description: Access Token
-                  refresh:
-                    type: string
-                    description: Refresh Token
-                example:
-                  access: some_super_secret_jwt_token
-                  refresh: refresh_token
-                description: User logged in successfully - tokens returned.
+                $ref: '#/components/schemas/TokenObtainSerializer'
+              example:
+                access: some_super_secret_jwt_token
+                refresh: refresh_token
+                last_name: lastname
+                first_name: firstname
           description: ''
         '400':
           content:
@@ -1886,6 +1880,24 @@ components:
           type: string
       required:
       - refresh
+    TokenObtainSerializer:
+      type: object
+      properties:
+        refresh:
+          type: string
+        access:
+          type: string
+        last_name:
+          type: string
+        first_name:
+          type: string
+      required:
+        - refresh
+        - access
+        - last_name
+        - first_name
+      description: User logged in successfully - tokens returned.
+
     User:
       type: object
       properties:

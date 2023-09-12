@@ -54,3 +54,12 @@ class RegisterSchema(BaseModel):
     first_name: Optional[str]
     last_name: Optional[str]
     password: str
+
+
+class LoginSchemaOut(BaseModel):
+    """Schema represents data which have to be returned by login endpoint"""
+
+    refresh: str
+    access: str
+    last_name: Optional[str]
+    first_name: Optional[str]

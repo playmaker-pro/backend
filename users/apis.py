@@ -7,8 +7,8 @@ from django.core.validators import validate_email
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
 from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from api.custom_throttling import EmailCheckerThrottle
@@ -25,10 +25,10 @@ from users.errors import (
     ApplicationError,
     EmailNotAvailable,
     EmailNotValid,
+    InvalidTokenException,
     NoSocialTokenSent,
     NoUserCredentialFetchedException,
     SocialAccountInstanceNotCreatedException,
-    InvalidTokenException,
     TokenProcessingError,
     UserEmailNotValidException,
 )
@@ -40,12 +40,12 @@ from users.schemas import (
     UserGoogleDetailPydantic,
 )
 from users.serializers import (
+    CustomTokenObtainSerializer,
     FeatureElementSerializer,
     FeaturesSerializer,
     UserRegisterSerializer,
 )
-from users.services import UserService, PasswordResetService
-
+from users.services import PasswordResetService, UserService
 
 # Definicja enpointów nie musi być skoncentrowana tylko i wyłącznie w jedenj klasie.
 # jesli poniższe metody będą super-cieńkie (logika będzie poza tymi views)
@@ -259,6 +259,8 @@ class LoginView(TokenObtainPairView):
     token pair to prove the authentication of those credentials.
     """
 
+    serializer_class = CustomTokenObtainSerializer
+
     @extend_schema(**USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA)
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
@@ -324,7 +326,8 @@ class PasswordManagementAPIView(EndpointView):
 
         return Response(
             {
-                "detail": "If an account with the provided email exists, you'll receive further instructions."
+                "detail": "If an account with the provided email exists, "
+                          "you'll receive further instructions."
             },
             status=status.HTTP_200_OK,
         )

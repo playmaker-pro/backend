@@ -23,6 +23,7 @@ from users.managers import FacebookManager, GoogleManager
 from users.models import User
 from users.schemas import (
     GoogleSdkLoginCredentials,
+    LoginSchemaOut,
     RegisterSchema,
     UserFacebookDetailPydantic,
     UserGoogleDetailPydantic,
@@ -139,6 +140,12 @@ class TestAuth(APITestCase):
             data={"refresh": refresh_token},
         )
         assert refresh_res.status_code == 200
+
+    def test_login_response_schema(self):
+        """Test if login response schema is correct"""
+        res: Response = self.login()
+        for element in LoginSchemaOut.__fields__.keys():
+            assert element in res.data
 
 
 @pytest.mark.django_db
