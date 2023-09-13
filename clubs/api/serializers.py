@@ -184,10 +184,11 @@ class CustomTeamSerializer(serializers.ModelSerializer):
 
 class ClubTeamSerializer(serializers.ModelSerializer):
     club_teams = serializers.SerializerMethodField()
+    picture_url = serializers.CharField()
 
     class Meta:
         model = models.Club
-        fields = ("id", "name", "club_teams")
+        fields = ("id", "name", "picture_url", "country", "club_teams")
 
     def get_club_teams(
         self, obj: models.Club

@@ -199,18 +199,24 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SimpleClub'
+                type: object
+                properties:
+                  clubs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SimpleClub'
               example:
                 clubs:
                   - id: 974
                     name: "38 Podlesianka Katowice"
+                    picture_url: "https://example.com/path/to/logo.png"
+                    country: "PL"
                     club_teams:
                       - id: 19801
                         name: "Lgks Podlesianka Katowice"
                         gender: 1
                         historical_league_name: "Trampkarz C2"
+
   /clubs/seasons/:
     get:
       operationId: season_retrieve
@@ -2176,7 +2182,7 @@ components:
         gender:
           type: integer
           description: 1 for male, 2 for female.
-        historical_leagues:
+        historical_league_name:
           type: string
           nullable: true
     SimpleClub:
@@ -2186,7 +2192,13 @@ components:
           type: integer
         name:
           type: string
-        teams:
+        picture_url:
+          type: string
+          description: "URL pointing to the club's logo"
+          format: uri
+        country:
+          type: string
+        club_teams:
           type: array
           items:
             $ref: '#/components/schemas/SimpleTeam'
