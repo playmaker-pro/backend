@@ -7,8 +7,7 @@ from api import utils as api_utils
 from api.errors import InvalidAPIRequestParam
 from api.filters import APIFilter
 from profiles import errors as profile_errors
-
-from . import models, services
+from profiles import models, services
 
 
 class ProfileListAPIFilter(APIFilter):
@@ -25,6 +24,7 @@ class ProfileListAPIFilter(APIFilter):
         "radius": api_utils.convert_int,
         "country": api_utils.convert_str_list,
         "language": api_utils.convert_str_list,
+        "gender": api_utils.convert_str_list,
         # define other filter params requiring validation here
     }
 
@@ -61,6 +61,7 @@ class ProfileListAPIFilter(APIFilter):
         self.filter_youth()
         self.filter_position()
         self.filter_league()
+        self.filter_gender()
 
     def coach_filters(self) -> QuerySet:
         """Filters related with GuestProfile"""
@@ -87,7 +88,7 @@ class ProfileListAPIFilter(APIFilter):
                 if parser in api_utils.LIST_PARSERS
                 else self.request.query_params.get(key)
             )
-            if key_in_params := value:
+            if key_in_params := value:  # noqa: E999
                 try:
                     params[key] = parser(key, key_in_params)
                 except ValueError as e:
@@ -131,6 +132,13 @@ class ProfileListAPIFilter(APIFilter):
         if league := self.query_params.get("league"):
             self.queryset = self.profile_service.filter_player_league(
                 self.queryset, league
+            )
+
+    def filter_gender(self) -> None:
+        """Filter queryset by player gender"""
+        if gender := self.query_params.get("gender"):
+            self.queryset = self.profile_service.filter_player_gender(
+                self.queryset, gender
             )
 
     def filter_position(self) -> None:

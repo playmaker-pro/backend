@@ -2,18 +2,13 @@ import factory
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.db.models import signals
+from factory import fuzzy
 
 from users.models import UserPreferences
 
 from .base import CustomObjectFactory
 
 User = get_user_model()
-
-
-class UserPreferencesFactory(CustomObjectFactory):
-    class Meta:
-        model = UserPreferences
-        django_get_or_create = ("user",)
 
 
 @factory.django.mute_signals(signals.post_save)
@@ -53,3 +48,12 @@ class UserFactory(CustomObjectFactory):
     def create_batch_force_order(cls, _count: int):
         for i in range(_count):
             cls.create(id=i + 1)
+
+
+class UserPreferencesFactory(CustomObjectFactory):
+    user = factory.SubFactory(UserFactory)
+    gender = fuzzy.FuzzyChoice(["M", "K"])
+
+    class Meta:
+        model = UserPreferences
+        django_get_or_create = ("user",)

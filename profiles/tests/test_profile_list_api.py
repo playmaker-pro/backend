@@ -1,10 +1,17 @@
+from typing import List
+
+import factory
 from django.urls import reverse
 from parameterized import parameterized
+from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
+from profiles.models import PlayerProfile
 from profiles.services import ProfileService
 from profiles.utils import get_past_date
+from users.models import UserPreferences
 from utils import factories, get_current_season
+from utils.factories import PlayerProfileFactory, UserPreferencesFactory
 from utils.test.test_utils import UserManager
 
 profile_service = ProfileService()
@@ -261,3 +268,46 @@ class TestProfileListAPI(APITestCase):
             },
         )
         assert response.status_code == 400
+
+
+class TestPlayerProfileListByGenderAPI(APITestCase):
+    def setUp(self) -> None:
+        self.client: APIClient = APIClient()
+        self.url = reverse(url_get_create_or_update)
+
+    @parameterized.expand(
+        [
+            [{"role": "P", "gender": "K"}],
+            [{"role": "P", "gender": "M"}],
+            [{"role": "P", "gender": "Male"}],
+        ]
+    )
+    def test_get_bulk_profiles_by_gender(self, param) -> None:
+        """get profiles by gender"""
+        profiles: List[PlayerProfile] = PlayerProfileFactory.create_batch(10)
+        UserPreferencesFactory.create_batch(
+            10, user=factory.Sequence(lambda n: profiles[n % 10].user)
+        )
+
+        response: Response = self.client.get(self.url, param)
+        expected_count: int = UserPreferences.objects.filter(
+            gender=param["gender"]
+        ).count()
+
+        assert len(response.data["results"]) == expected_count
+        assert response.status_code == 200
+
+    @parameterized.expand(
+        [[{"role": "P", "gender": "K"}], [{"role": "P", "gender": "M"}]]
+    )
+    def test_get_bulk_profiles_by_gender_res_0(self, param) -> None:
+        """get profiles by gender. Result should be 0"""
+        profiles: List[PlayerProfile] = PlayerProfileFactory.create_batch(10)
+        UserPreferencesFactory.create_batch(
+            10, user=factory.Sequence(lambda n: profiles[n % 10].user), gender=None
+        )
+
+        response = self.client.get(self.url, param)
+
+        assert len(response.data["results"]) == 0
+        assert response.status_code == 200
