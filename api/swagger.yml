@@ -81,6 +81,7 @@ paths:
                         "voivodeship": "Lubelskie",
                         "priority": false
                       },...]}
+                required: ["count", "next", "previous", "results"]
           description: ''
   /languages/:
     get:
@@ -791,6 +792,13 @@ paths:
           required: true
           description: 'Profile role shortcut {P, C, T, G, S, ...}'
         - in: query
+          name: gender
+          schema:
+            type: string
+            enum: ['M', 'K']
+          required: false
+          description: 'Player gender.'
+        - in: query
           name: page
           schema:
             type: integer
@@ -855,9 +863,6 @@ paths:
           description: "Country, like: ?country=PL&country=UA"
       tags:
         - profiles
-      security:
-        - jwtAuth: [ ]
-        - { }
       responses:
         '200':
           description: 'Profile list obtain successfully'
@@ -2310,9 +2315,12 @@ components:
           type: integer
         name:
           type: string
+        shortcut:
+          type: string
       required:
         - id
         - name
+        - shortcut
     PlayerPosition:
       type: object
       properties:
@@ -2326,7 +2334,7 @@ components:
     PlayerPositions:
       type: array
       items:
-        $ref: '#/components/schemas/Position'
+        $ref: '#/components/schemas/PlayerPosition'
     PlayerVideo:
       type: object
       properties:

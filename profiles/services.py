@@ -399,6 +399,13 @@ class ProfileService:
             team_object__historical__league_history__league__highest_parent__in=league_ids,
         )
 
+    @staticmethod
+    def filter_player_gender(
+        queryset: django_base_models.QuerySet, gender: str
+    ) -> django_base_models.QuerySet:
+        """Filter player's queryset by gender"""
+        return queryset.filter(user__userpreferences__gender__in=gender)
+
     def filter_localization(
         self,
         queryset: django_base_models.QuerySet,

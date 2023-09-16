@@ -7,12 +7,6 @@ from utils.factories import ClubProfileFactory, UserFactory
 
 
 @pytest.mark.django_db()
-@pytest.mark.slow(
-    reason="No way of currently testing this without error: "
-    "ProgrammingError: relation 'wagtailsearch_editorspick' already exists "
-    "Run it as a stand alone test. Please, have in mind, that you can't use "
-    "pytest --reuse-db flag for this test"
-)
 def test_profile_custom_migrations(migrator) -> None:
     """
     Test if migration scripts works correctly:
