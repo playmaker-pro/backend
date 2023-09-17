@@ -136,12 +136,15 @@ class ClubsAPI(EndpointView):
         except (ValueError, AttributeError):
             raise errors.InvalidGender
 
-        club_filter = api_filters.ClubFilter(filters)
-        clubs = club_filter.qs
+        clubs = self.club_service.get_clubs(filters=filters)
+        paginated_clubs = self.paginate_queryset(clubs)
+
         serializer = serializers.ClubTeamSerializer(
-            clubs, many=True, context={"gender": gender, "season": season}
+            paginated_clubs,
+            many=True,
+            context={"gender": gender, "season": season, "request": request},
         )
-        return Response({"clubs": serializer.data}, status=status.HTTP_200_OK)
+        return self.get_paginated_response(serializer.data)
 
     def get_labels(self, request: Request, club_id: int) -> Response:
         try:
