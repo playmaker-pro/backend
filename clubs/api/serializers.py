@@ -109,7 +109,7 @@ class ClubSerializer(serializers.ModelSerializer):
     editors = UserDataSerializer(many=True, required=False)
     stadion_address = serializers.CharField(required=False)
     practice_stadion_address = serializers.CharField(required=False)
-    picture_url = serializers.CharField()
+    picture_url = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Club
@@ -118,6 +118,17 @@ class ClubSerializer(serializers.ModelSerializer):
             "data_mapper_id",
             "autocreated",
         )
+
+    def get_picture_url(self, obj: models.Club) -> typing.Optional[str]:
+        """
+        Retrieve the absolute url of the club logo.
+        """
+        request = self.context.get("request")
+        try:
+            url = request.build_absolute_uri(obj.picture.url)
+        except (ValueError, AttributeError):
+            return None
+        return url
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -184,11 +195,23 @@ class CustomTeamSerializer(serializers.ModelSerializer):
 
 class ClubTeamSerializer(serializers.ModelSerializer):
     club_teams = serializers.SerializerMethodField()
-    picture_url = serializers.CharField()
+    picture_url = serializers.SerializerMethodField()
+    country_name = serializers.CharField(source="country.name", required=False)
 
     class Meta:
         model = models.Club
-        fields = ("id", "name", "picture_url", "country", "club_teams")
+        fields = ("id", "name", "picture_url", "country_name", "club_teams")
+
+    def get_picture_url(self, obj: models.Club) -> typing.Optional[str]:
+        """
+        Retrieve the absolute url of the club logo.
+        """
+        request = self.context.get("request")
+        try:
+            url = request.build_absolute_uri(obj.picture.url)
+        except (ValueError, AttributeError):
+            return None
+        return url
 
     def get_club_teams(
         self, obj: models.Club

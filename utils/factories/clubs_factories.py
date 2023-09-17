@@ -122,3 +122,36 @@ class TeamHistoryFactory(CustomObjectFactory):
 
     team = factory.SubFactory(TeamFactory)
     league_history = factory.SubFactory(LeagueHistoryFactory)
+
+
+class ClubWithHistoryFactory(CustomObjectFactory):
+    class Meta:
+        model = clubs_models.Club
+        django_get_or_create = ("name",)
+
+    name = factory.Iterator(CLUB_NAMES)
+    voivodeship_obj = factory.LazyAttribute(lambda _: utils.get_random_voivo())
+    club_phone = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
+    club_email = CLUB_MAIL
+    stadion_address = factory.LazyAttribute(lambda _: utils.get_random_address())
+    practice_stadion_address = factory.LazyAttribute(
+        lambda _: utils.get_random_address()
+    )
+    manager = UserFactory.random_object()
+    picture = factory.django.ImageField()
+
+    @factory.post_generation
+    def add_history(self, create: bool, extracted, **kwargs) -> None:
+        """
+        Post-generation method to create a historical record for a club.
+
+        When a club is created using the factory, this method will automatically create
+        a corresponding team for the club, a league history, and then associate both
+        through a TeamHistory record.
+        """
+        if not create:
+            return
+
+        team = TeamFactory(club=self)
+        league_history = LeagueHistoryFactory()
+        TeamHistoryFactory(team=team, league_history=league_history)

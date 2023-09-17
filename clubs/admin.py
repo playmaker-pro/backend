@@ -233,7 +233,7 @@ class TeamHistoryAdmin(admin.ModelAdmin):
     )
 
     def get_season(self, obj):
-        if obj.league_history.season:
+        if obj.league_history and obj.league_history.season:
             return obj.league_history.season
         else:
             return None

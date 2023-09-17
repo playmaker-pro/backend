@@ -732,7 +732,7 @@ class Team(models.Model, MappingMixin):
     @property
     def latest_league_from_lh(self):
         ths = self.get_latest_team_history()
-        if ths:
+        if ths and ths.league_history:
             return ths.league_history.league
 
     @property

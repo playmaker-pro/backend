@@ -22,7 +22,9 @@ class ClubFilter(filters.FilterSet):
         """
         Filters the queryset by the season.
         """
-        return queryset.filter(teams__historical__season__name__in=[value]).distinct()
+        return queryset.filter(
+            teams__historical__league_history__season__name=value
+        ).distinct()
 
     def filter_gender(self, queryset: QuerySet, name: str, value: str) -> QuerySet:
         """

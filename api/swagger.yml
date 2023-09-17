@@ -170,7 +170,7 @@ paths:
   /clubs/club-teams/:
     get:
       operationId: clubs_teams_retrieve
-      description: Return list of teams assigned to clubs
+      description: Return paginated list of teams assigned to clubs.
       summary: Club teams list endpoint
       parameters:
         - in: query
@@ -190,34 +190,63 @@ paths:
             type: string
             example: "M/F"
           description: "Define gender: M - male, F - female. No param - get all"
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: "Page number"
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+          description: "Count of objects by page"
       tags:
         - clubs
       security:
         - jwtAuth: [ ]
       responses:
         '200':
-          description: 'List of teams for given club'
+          description: 'Paginated list of teams for given club'
           content:
             application/json:
               schema:
                 type: object
+                description: Paginated list of teams assigned to clubs
+                required:
+                  - count
+                  - next
+                  - previous
+                  - results
                 properties:
-                  clubs:
+                  count:
+                    type: integer
+                    description: Total count of teams for given filters
+                  next:
+                    type: string
+                    nullable: true
+                    description: Next paginated request url
+                  previous:
+                    type: string
+                    nullable: true
+                    description: Previous paginated request url
+                  results:
                     type: array
                     items:
                       $ref: '#/components/schemas/SimpleClub'
               example:
-                clubs:
+                count: 2000
+                next: "https://api.example.com/clubs/club-teams/?page=2"
+                previous: null
+                results:
                   - id: 974
                     name: "38 Podlesianka Katowice"
                     picture_url: "https://example.com/path/to/logo.png"
-                    country: "PL"
+                    country_name: "Polska"
                     club_teams:
                       - id: 19801
                         name: "Lgks Podlesianka Katowice"
                         gender: 1
                         historical_league_name: "Trampkarz C2"
-
   /clubs/seasons/:
     get:
       operationId: season_retrieve
@@ -2179,6 +2208,11 @@ components:
         - name
     SimpleTeam:
       type: object
+      required:
+        - id
+        - name
+        - gender
+        - historical_league_name
       properties:
         id:
           type: integer
@@ -2192,6 +2226,12 @@ components:
           nullable: true
     SimpleClub:
       type: object
+      required:
+        - id
+        - name
+        - picture_url
+        - country_name
+        - club_teams
       properties:
         id:
           type: integer
@@ -2201,7 +2241,8 @@ components:
           type: string
           description: "URL pointing to the club's logo"
           format: uri
-        country:
+          nullable: true
+        country_name:
           type: string
         club_teams:
           type: array
