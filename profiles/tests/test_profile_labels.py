@@ -43,4 +43,13 @@ class TestGetProfileLabelsAPI(APITestCase):
         assert len(response.data) == 2
         for d in response.data:
             assert d["season_name"] == "2019/2020"
+            assert not d.get("created_at"), "created_at should not be visible"
+            assert not d.get("updated_at"), "updated_at should not be visible"
+            assert not d.get(
+                "visible_on_profile"
+            ), "visible_on_profile should not be visible"
+            assert not d.get("visible_on_base"), "visible_on_base should not be visible"
+            assert not d.get(
+                "visible_on_main_page"
+            ), "visible_on_main_page should not be visible"
         assert response.status_code == status.HTTP_200_OK
