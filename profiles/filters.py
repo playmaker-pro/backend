@@ -25,6 +25,7 @@ class ProfileListAPIFilter(APIFilter):
         "country": api_utils.convert_str_list,
         "language": api_utils.convert_str_list,
         "gender": api_utils.convert_str_list,
+        "shuffle": api_utils.convert_bool
         # define other filter params requiring validation here
     }
 
@@ -41,6 +42,10 @@ class ProfileListAPIFilter(APIFilter):
         """Get queryset based on role"""
         self.queryset: QuerySet = self.model.objects.all().order_by("pk")
         self.filter_queryset(self.queryset)
+
+        if self.query_params.get("shuffle", False):
+            return self.queryset.order_by("?")
+
         return self.queryset
 
     def filter_queryset(self, queryset: QuerySet) -> QuerySet:

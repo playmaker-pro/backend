@@ -27,6 +27,14 @@ class TestProfileListAPI(APITestCase):
         self.headers = self.user.get_headers()
         self.url = reverse(url_get_create_or_update)
 
+    def test_shuffle_list(self) -> None:
+        """Test if results are correctly shuffled"""
+        factories.PlayerProfileFactory.create_batch(10)
+        response1 = self.client.get(self.url, {"role": "P", "shuffle": True})
+        response2 = self.client.get(self.url, {"role": "P", "shuffle": True})
+
+        assert response1.data["results"] != response2.data["results"]
+
     @parameterized.expand([[{"role": "P"}], [{"role": "C"}], [{"role": "T"}]])
     def test_get_bulk_profiles(self, param) -> None:
         """get profiles by role param"""
