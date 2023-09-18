@@ -53,6 +53,12 @@ class TestGetTeamLabelsAPI(APITestCase):
         team.labels.create(label_name="label1", season_name="2018/2019")
         team.labels.create(label_name="label1", season_name="2019/2020")
         team.labels.create(label_name="label2", season_name="2019/2020")
+        team.labels.create(
+            label_name="label-not-visible", season_name="2019/2020", visible=False
+        )
+
+        team2 = factories.TeamFactory(name="Drużyna FC IIIs", id=101)
+        team2.labels.create(label_name="label1", season_name="2018/2019")
 
         self.url = "api:clubs:get_team_labels"
         self.team_id = team.id
@@ -80,9 +86,18 @@ class TestGetTeamLabelsAPI(APITestCase):
         # Then
 
         # we should have 2 objects out of total 3
-        assert len(response.data) == 2
+        assert len(response.data) == 2, response.data
 
         # all labels should have 2019/2020 attribute value as `season_name`
         for d in response.data:
             assert d["season_name"] == "2019/2020"
+            assert not d.get("created_at"), "created_at should not be visible"
+            assert not d.get("updated_at"), "updated_at should not be visible"
+            assert not d.get(
+                "visible_on_profile"
+            ), "visible_on_profile should not be visible"
+            assert not d.get("visible_on_base"), "visible_on_base should not be visible"
+            assert not d.get(
+                "visible_on_main_page"
+            ), "visible_on_main_page should not be visible"
         assert response.status_code == status.HTTP_200_OK

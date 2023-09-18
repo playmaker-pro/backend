@@ -92,9 +92,9 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
             raise errors.ProfileDoesNotExist
 
         season_name = request.GET.get("season_name")
-        query = {}
+        query = {"visible": True}
         if season_name:
-            query = {"season_name": season_name}
+            query["season_name"] = season_name
         serializer = api_serializers.ProfileLabelsSerializer(
             profile_object.labels.filter(**query), many=True
         )
