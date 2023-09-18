@@ -1,8 +1,11 @@
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from features.signals import default_access_role, update_permissions
 from roles.definitions import PROFILE_TYPE_PLAYER
+
+User = get_user_model()
 
 
 class AccessPermission(models.Model):
@@ -22,8 +25,8 @@ class AccessPermission(models.Model):
         CLUB = "club", _("club")
         OWN = "own", _("own")
 
-    # TODO: The 'role' field should be linked to a 'Role' model from the 'Users' domain (currently unavailable).
-    #  role = models.ForeignKey(Role, on_delete=models.CASCADE, help_text=_("Role Foreignkey")
+    # TODO: The 'role' field should be linked to a 'Role' model from the 'Users' domain (currently unavailable).  # noqa: E501
+    #  role = models.ForeignKey(Role, on_delete=models.CASCADE, help_text=_("Role Foreignkey")  # noqa: E501
     role = PROFILE_TYPE_PLAYER
 
     access = models.CharField(
@@ -45,7 +48,7 @@ class FeatureElement(models.Model):
         to a feature element.
     -column access_permissions: Access permissions list. Field stores special information
         about restrictions of access to a feature element.
-    """
+    """  # noqa: E501
 
     name = models.CharField(
         max_length=255, unique=True, help_text=_("Feature element name")
@@ -89,3 +92,14 @@ class Feature(models.Model):
     )
     keyname = models.CharField(max_length=255, help_text=_("Feature keyname."))
     elements = models.ManyToManyField(FeatureElement, help_text=_("Feature elements."))
+
+
+class NewFeatureSubscription(models.Model):
+    """
+    Feature "subscription" entity.
+    Basically it is request from a user, to inform him about new feature implementation.
+    """
+
+    name = models.CharField(max_length=255, help_text=_("Feature name."))
+    category = models.CharField(max_length=255, help_text=_("Feature category."))
+    user = models.ForeignKey(User, on_delete=models.CASCADE)

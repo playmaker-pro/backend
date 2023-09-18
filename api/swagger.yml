@@ -1269,6 +1269,34 @@ paths:
                   $ref: '#/components/schemas/Features'
           description: Returns user feature sets. Returns empty list if user has no
             feature sets.
+
+  /features/:
+    post:
+      operationId: feature_notifications
+      description: Save feature notifications for specific user.
+      summary: User feature notification.
+      tags:
+        - features
+      security:
+        - jwtAuth: []
+      responses:
+        '201':
+          description: "Feature notifications saved successfully."
+        '400':
+          description: "Bad request. Missing required fields."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  field_name:
+                    type: array
+                    items:
+                      type: string
+                      description: "Detailed error message."
+              example:
+                { "name": [ "this field is required" ], "category": [ "This field cannot be empty" ] }
+
   /users/google-oauth2/:
     post:
       operationId: users_google_oauth2_create
