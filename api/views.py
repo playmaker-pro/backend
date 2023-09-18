@@ -30,7 +30,7 @@ class EndpointView(viewsets.GenericViewSet):
 
     def get_paginated_queryset(self, qs: QuerySet = None) -> QuerySet:
         """Paginate queryset to optimize serialization"""
-        qs: QuerySet = qs or self.get_queryset()
+        qs: QuerySet = qs if qs is not None else self.get_queryset()
         return self.paginate_queryset(qs)
 
 
