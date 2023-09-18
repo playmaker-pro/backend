@@ -9,3 +9,7 @@ class EmailCheckerThrottle(UserRateThrottle, AnonRateThrottle):
     """
 
     rate = f"{settings.THROTTLE_EMAIL_CHECK_LIMITATION}/minute"
+
+
+class LimitFeatureNotificationEndpoint(UserRateThrottle):
+    rate = f"2/minute"

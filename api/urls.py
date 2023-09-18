@@ -1,9 +1,11 @@
 from django.conf.urls import include, url
+
 from api import views
-from users.api_urls import urlpatterns as users_urls
 from clubs.api.api_urls import urlpatterns as clubs_urls
-from roles.api_urls import urlpatterns as roles_urls
+from features.api_urls import urlpatterns as features_urls
 from profiles.api_urls import urlpatterns as profiles_urls
+from roles.api_urls import urlpatterns as roles_urls
+from users.api_urls import urlpatterns as users_urls
 
 app_name = "api"
 
@@ -12,6 +14,7 @@ urlpatterns = [
     url(r"^clubs/", include((clubs_urls, "clubs"))),
     url(r"^profiles/", include((profiles_urls, "profiles"))),
     url(r"^roles/", include((roles_urls, "roles"))),
+    url(r"^features/", include((features_urls, "features"))),
     url(
         r"^countries/",
         views.LocaleDataView.as_view({"get": "list_countries"}),

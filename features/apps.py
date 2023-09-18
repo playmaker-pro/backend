@@ -8,6 +8,7 @@ class FeaturesConfig(AppConfig):
     def ready(self) -> None:
         """Load custom signals."""
         from django.db import models
+
         from features.models import FeatureElement
 
         models.signals.pre_save.connect(

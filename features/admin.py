@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from features.models import FeatureElement, AccessPermission, Feature
+from features.models import AccessPermission, Feature, FeatureElement
 
 
 @admin.register(AccessPermission)
