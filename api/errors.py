@@ -1,5 +1,6 @@
 import json
 import traceback
+import typing
 from typing import Dict, List, Union
 
 from rest_framework import status
@@ -70,7 +71,7 @@ class InvalidCountryCode(CoreAPIException):
 class ParamsRequired(CoreAPIException):
     status_code = status.HTTP_400_BAD_REQUEST
 
-    def __init__(self, params_required: list, *args, **kwargs) -> None:
+    def __init__(self, params_required: typing.Iterable, *args, **kwargs) -> None:
         kwargs["details"] = f"Params required: {', '.join(params_required)}"
         super().__init__(*args, **kwargs)
 

@@ -1,7 +1,8 @@
+from cities_light.models import City
 from django.db.models import QuerySet
 from django_countries import countries
 from drf_spectacular.utils import extend_schema
-from rest_framework import serializers, status, viewsets
+from rest_framework import serializers, status, viewsets, exceptions
 from rest_framework.request import Request
 from rest_framework.response import Response
 from unidecode import unidecode
@@ -110,6 +111,25 @@ class LocaleDataView(EndpointView):
         qs = Language.objects.all()
         serializer = LanguageSerializer(qs, many=True, context={"language": language})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_my_city(self, request: Request) -> Response:
+        """Get the closest city based on coordinates supplied in query params"""
+        latitude, longitude = (
+            request.query_params.get("latitude"),
+            request.query_params.get("longitude"),
+        )
+
+        if not latitude or not longitude:
+            raise errors.ParamsRequired(("latitude", "longitude"))
+
+        try:
+            city: City = locale_service.get_closest_city(latitude, longitude)
+        except ValueError as e:
+            raise exceptions.ValidationError(str(e))
+
+        serializer = api_serializers.CitySerializer(city)
+
+        return Response(serializer.data)
 
 
 class PreferenceChoicesView(EndpointView):

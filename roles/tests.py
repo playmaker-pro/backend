@@ -1,11 +1,13 @@
 from unittest import TestCase
+
 import pytest
 from django.test.client import Client
 from django.urls import reverse
 from rest_framework.response import Response
 
-from . import definitions
 from utils.test.test_utils import UserManager
+
+from . import definitions
 
 
 @pytest.mark.django_db

@@ -890,6 +890,11 @@ paths:
             items:
               type: string
           description: "Country, like: ?country=PL&country=UA"
+        - in: query
+          name: shuffle
+          schema:
+            type: bool
+          description: "Shuffle results?"
       tags:
         - profiles
       responses:

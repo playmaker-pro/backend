@@ -1,8 +1,10 @@
+from decimal import Decimal
 from functools import cached_property
 
 from cities_light.models import City
 from django.conf.global_settings import LANGUAGES
 from django.db.models import Q, QuerySet
+from django.db.models import functions as django_base_functions
 from django_countries.data import COUNTRIES
 
 from .consts import *
@@ -95,3 +97,48 @@ class LocaleDataService:
         return City.objects.filter(
             Q(name_ascii__icontains=city_like) | Q(region__name__in=voivo_like)
         )
+
+    def get_closest_city(self, latitude: float, longitude: float) -> City:
+        """
+        Annotate each city by distance to given coordinates
+        then return closest city by distance
+        """
+
+        earth_radius = 6371
+        latitude = Decimal(latitude)
+        longitude = Decimal(longitude)
+        self.validate_latitude_longitude_range(latitude, longitude)
+
+        return (
+            City.objects.all()
+            .annotate(
+                distance=earth_radius
+                * django_base_functions.ACos(
+                    django_base_functions.Cos(django_base_functions.Radians(latitude))
+                    * django_base_functions.Cos(
+                        django_base_functions.Radians("latitude")
+                    )
+                    * django_base_functions.Cos(
+                        django_base_functions.Radians("longitude")
+                        - django_base_functions.Radians(longitude)
+                    )
+                    + django_base_functions.Sin(django_base_functions.Radians(latitude))
+                    * django_base_functions.Sin(
+                        django_base_functions.Radians("latitude")
+                    )
+                )
+            )
+            .order_by("distance")
+            .first()
+        )
+
+    def validate_latitude_longitude_range(
+        self, latitude: Decimal, longitude: Decimal
+    ) -> None:
+        """Validate if latitude and longitude suite to the Polish territory"""
+        min_latitude, max_latitude, min_longitude, max_longitude = (49, 55, 14, 24)
+
+        if not (min_latitude < latitude < max_latitude) or not (
+            min_longitude < longitude < max_longitude
+        ):
+            raise ValueError("Latitude or Longitude out of range.")

@@ -1,8 +1,10 @@
-from cities_light.models import City, Country, Region
 import factory
-from app.utils.cities import VOIVODESHIP_MAPPING
-from . import utils
+from cities_light.models import City, Country, Region
 from faker import Faker
+
+from app.utils.cities import VOIVODESHIP_MAPPING
+
+from . import utils
 
 fake = Faker()
 
@@ -30,3 +32,8 @@ class CityFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = City
+
+    @classmethod
+    def create_with_coordinates(cls, coordinates: tuple, **kwargs) -> City:
+        """Create City with given coordinates"""
+        return cls.create(latitude=coordinates[0], longitude=coordinates[1], **kwargs)

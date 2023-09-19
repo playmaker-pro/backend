@@ -8,8 +8,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
-from utils.factories.user_factories import UserFactory
-
 
 from users.managers import (
     FacebookManager,
@@ -23,6 +21,7 @@ from users.schemas import (
     UserFacebookDetailPydantic,
     UserGoogleDetailPydantic,
 )
+from utils.factories.user_factories import UserFactory
 from utils.test.test_utils import ExternalCallsGuardMixin, MockedResponse
 
 User = get_user_model()
