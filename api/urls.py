@@ -35,4 +35,9 @@ urlpatterns = [
         views.LocaleDataView.as_view({"get": "list_languages"}),
         name="languages_list",
     ),
+    url(
+        r"^my-city/",
+        views.LocaleDataView.as_view({"get": "get_my_city"}),
+        name="get_my_city",
+    ),
 ]
