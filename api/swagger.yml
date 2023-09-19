@@ -1110,20 +1110,12 @@ paths:
             application/json:
               schema:
                 description: Referee roles choices returned successfully.
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProfileEnumChoices'
+                type: object
                 example:
-                  [
-                    {
-                      "id": "Referee",
-                      "name": "Sędzia główny"
-                    },
-                    {
-                      "id": "Assistant Referee",
-                      "name": "Asystent"
-                    }
-                  ]
+                  {
+                    "Referee": "Sędzia główny",
+                    "AssistantReferee": "Asystent"
+                  }
           description: Returns available referee roles choices.
   /profiles/club-roles/:
     get:

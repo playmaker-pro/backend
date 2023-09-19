@@ -1985,7 +1985,7 @@ class RefereeProfile(BaseProfile):
 class RefereeLevel(models.Model):
     REFEREE_ROLE_CHOICES = (
         ("Referee", "Sędzia główny"),
-        ("Assistant Referee", "Asystent"),
+        ("AssistantReferee", "Asystent"),
     )
 
     level = models.ForeignKey(

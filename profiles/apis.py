@@ -153,10 +153,7 @@ class ProfileEnumsAPI(EndpointView):
             serializers.ChoicesTuple(*obj)
             for obj in profile_service.get_referee_roles()
         )
-        serializer = serializers.ProfileEnumChoicesSerializer(  # type: ignore
-            roles, many=True
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(dict(roles), status=status.HTTP_200_OK)
 
     def get_player_age_range(self, request: Request) -> Response:
         """get players count group by age"""
