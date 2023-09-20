@@ -977,11 +977,11 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/PlayerProfile'
-                  - $ref: '#/components/schemas/CoachProfile'
-                  - $ref: '#/components/schemas/ClubProfile'
-                  - $ref: '#/components/schemas/ScoutProfile'
-                  - $ref: '#/components/schemas/GuestProfile'
+                  - $ref: '#/components/schemas/PlayerProfileView'
+#                  - $ref: '#/components/schemas/CoachProfile'
+#                  - $ref: '#/components/schemas/ClubProfile'
+#                  - $ref: '#/components/schemas/ScoutProfile'
+#                  - $ref: '#/components/schemas/GuestProfile'
 
   /profiles/{profile_uuid}/labels:
     get:
@@ -2037,6 +2037,22 @@ components:
         - id
         - first_name
         - last_name
+    PlayerProfileUserData:
+      type: object
+      properties:
+        id:
+          type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
+        userpreferences:
+          $ref: '#/components/schemas/PlayerProfileUserPreferences'
+      required:
+        - id
+        - first_name
+        - last_name
+
     Gender:
       type: object
       properties:
@@ -2060,6 +2076,21 @@ components:
         - id
         - name
         - is_senior
+
+    PlayerProfileLeague:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        isparent:
+          type: boolean
+      required:
+        - id
+        - name
+        - isparent
+
     League:
       type: object
       properties:
@@ -2173,6 +2204,21 @@ components:
       required:
         - id
         - name
+
+    PlayerProfileClub:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        picture:
+          type: string
+          description: "Club logo url"
+      required:
+        - id
+        - name
+
     Team:
       type: object
       properties:
@@ -2231,6 +2277,20 @@ components:
       required:
         - id
         - name
+
+    PlayerProfileTeam:
+      type: object
+      properties:
+        id:
+          type: integer
+        club:
+          $ref: '#/components/schemas/PlayerProfileClub'
+        league:
+          $ref: '#/components/schemas/PlayerProfileLeague'
+      required:
+        - id
+        - name
+
     SimpleTeam:
       type: object
       required:
@@ -2377,8 +2437,6 @@ components:
     Position:
       type: object
       properties:
-        id:
-          type: integer
         name:
           type: string
         shortcut:
@@ -2421,6 +2479,17 @@ components:
         thumbnail:
           type: string
           readOnly: true
+
+    PlayerProfileMetrics:
+      type: object
+      properties:
+        season:
+          type: object
+        pm_score:
+          type: number
+        season_score:
+          type: number
+
     PlayerMetrics:
       type: object
       properties:
@@ -2460,6 +2529,7 @@ components:
           type: string
       required:
         - id
+
     BaseProfile:
       type: object
       properties:
@@ -2499,6 +2569,115 @@ components:
         - slug
         - step
         - role
+
+    PlayerProfileView:
+      allOf:
+        - $ref: '#/components/schemas/PlayerProfileView'
+        - type: object
+          properties:
+            slug:
+              type: string
+            user:
+              $ref: '#/components/schemas/PlayerProfileUserData'
+            team_object:
+              $ref: '#/components/schemas/PlayerProfileTeam'
+            voivodeship_obj:
+              $ref: '#/components/schemas/Voivodeship'
+            external_links:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExternalLink'
+            player_positions:
+              $ref: '#/components/schemas/PlayerPositions'
+            player_video:
+              type: array
+              items:
+                $ref: '#/components/schemas/PlayerVideo'
+            player_metrics:
+              $ref: '#/components/schemas/PlayerProfileMetrics'
+            height:
+              type: integer
+              description: Player
+            weight:
+              type: integer
+              description: Player
+            prefered_leg:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            transfer_status:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+            training_ready:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+          example: {
+            "slug": "player-slug",
+            "user": {
+              "id": 1,
+              "first_name": "Player",
+              "last_name": "Slug",
+              "userpreferences": {
+                "age": 23,
+                "localization": null,
+                "spoken_languages": [ ],
+                "citizenship": null,
+                "gender": null,
+                "birth_date": null,
+              }
+            },
+            "team_object": {
+                "id": 1,
+                "name": "Team name",
+                "club": {
+                   "id": 1,
+                    "name": "Club name",
+                    "logo": "https://example.com/logo.png",
+                },
+                "league": {
+                    "id": 1,
+                    "name": "League name",
+                    "is_parent": true,
+                },
+            },
+            "voivodeship_obj": {
+              "id": 14,
+              "name": "Warmińsko-Mazurskie",
+              "code": 8
+            },
+            "external_links": {
+              "links": []
+            },
+            address: "ELblag",
+            "player_positions":
+              [
+                {
+                  "player_position": {
+                    "name": "Skrzydłowy",
+                    "shortcut": "W"
+                  },
+                  "is_main": false
+                }
+            ],
+            "player_video": [
+              {
+                "id": 1,
+                "thumbnail": null,
+                "label": null,
+                "url": "http://www.yt.com",
+                "title": "Oki",
+                "description": "Doki",
+                "player": 1
+              }
+            ],
+            "transfer": "Szukam klubu",
+            "height": 186,
+            "weight": 101,
+            "prefered_leg": 1,
+            "training_ready": "1-2 treningi",
+            "playermetrics": {
+              "season": {},
+              "pm_score": null,
+              "season_score": null
+            }
+          }
+
     PlayerProfile:
       allOf:
         - $ref: '#/components/schemas/BaseProfile'
@@ -3129,6 +3308,26 @@ components:
           description: "user_id"
       required:
         - user
+    PlayerProfileUserPreferences:
+      type: object
+      properties:
+        age:
+          type: integer
+        localization:
+          $ref: '#/components/schemas/City'
+        spoken_languages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Language'
+        citizenship:
+          type: array
+          items:
+            $ref: '#/components/schemas/Country'
+        gender:
+          $ref: '#/components/schemas/Gender'
+        birth_date:
+          type: string
+
     ProfileEnumChoices:
       type: object
       properties:

@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
+from profiles.serializers_detailed.player_profile_serializers import PlayerProfileViewSerializer
+
 User = get_user_model()
 
 
@@ -12,3 +14,12 @@ class VerificationObjectManager(models.Manager):
             defaults["set_by"] = User.get_system_user()
             defaults["previous"] = None
             return super().create(**defaults)
+
+
+class SerializersManager:
+    SERIALIZER_MAPPING = {
+        "PlayerProfile": PlayerProfileViewSerializer,
+    }
+
+    def get_serializer(self, model_name: str):
+        return self.SERIALIZER_MAPPING.get(model_name)
