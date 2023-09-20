@@ -17,23 +17,23 @@ def test_user_preferences_migration(migrator) -> None:
     """
 
     # Initial state and model creation
-    old_state: ProjectState = migrator.apply_initial_migration(
+    migrator.apply_initial_migration(
         ("users", "0009_alter_userpreferences_citizenship")
     )
 
     # Using factories for data creation before migration
     player = PlayerProfileFactory(country="PL")
-    player_preferences = UserPreferencesFactory(user=player.user)
+    UserPreferencesFactory(user=player.user)
 
     coach = CoachProfileFactory(country="ES")
-    coach_preferences = UserPreferencesFactory(user=coach.user)
+    UserPreferencesFactory(user=coach.user)
 
     scout = ScoutProfileFactory(country="DE")
-    scout_preferences = UserPreferencesFactory(user=scout.user)
+    UserPreferencesFactory(user=scout.user)
     new_state: ProjectState = migrator.apply_tested_migration(
         ("users", "0010_auto_20230918_0219")
     )
-    UserPreferencesNewState: ModelBase = new_state.apps.get_model(
+    UserPreferencesNewState: ModelBase = new_state.apps.get_model(  # noqa
         "users", "UserPreferences"
     )
 
