@@ -32,13 +32,14 @@ class ProfileEnumChoicesSerializer(serializers.CharField, serializers.Serializer
 
     def to_representation(self, obj: typing.Union[ChoicesTuple, str]) -> dict:
         """Parse output"""
+        parsed_obj = obj
         if not obj:
             return {}
         if not isinstance(obj, ChoicesTuple):
-            return self.parse(obj)
-        return {"id": obj.id, "name": obj.name}
+            parsed_obj = self.parse(obj)
+        return {"id": parsed_obj.id, "name": parsed_obj.name}
 
-    def parse(self, _id) -> dict:
+    def parse(self, _id) -> ChoicesTuple:
         """Get choices by model field and parse output"""
         _id = str(_id)
         choices = self.parse_dict(
@@ -49,7 +50,7 @@ class ProfileEnumChoicesSerializer(serializers.CharField, serializers.Serializer
             raise serializers.ValidationError(f"Invalid value: {_id}")
 
         value = choices[_id]
-        return self.to_representation(ChoicesTuple(_id, value))
+        return ChoicesTuple(_id, value)
 
 
 class PlayerPositionSerializer(serializers.ModelSerializer):
@@ -128,7 +129,11 @@ class PlayerVideoSerializer(serializers.ModelSerializer):
 class PlayerMetricsSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PlayerMetrics
-        fields = "__all__"
+        fields = (
+            "season",
+            "pm_score",
+            "season_score"
+        )
 
 
 class LicenceTypeSerializer(serializers.ModelSerializer):
@@ -149,40 +154,6 @@ class ProfileVisitHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ProfileVisitHistory
         fields = "__all__"
-
-
-class ProfileEnumChoicesSerializer(serializers.CharField, serializers.Serializer):
-    """Serializer for Profile Enums"""
-
-    def __init__(
-        self,
-        model: typing.Type[models.models.Model] = None,
-        choices=None,
-        *args,
-        **kwargs,
-    ):
-        self.model: typing.Type[models.models.Model] = model
-        super().__init__(*args, **kwargs)
-
-    def parse_dict(
-        self, data: (typing.Union[int, str], typing.Union[int, str])
-    ) -> dict:
-        """Create dictionary from tuple choices"""
-        return dict(data)
-
-    def to_representation(self, obj: typing.Union[ChoicesTuple, str]) -> dict:
-        """Parse output"""
-        if not obj:
-            return {}
-        if not isinstance(obj, ChoicesTuple):
-            return self.parse(obj)
-        return {"id": obj.id, "name": obj.name}
-
-    def parse(self, _id: typing.Union[str, int]) -> dict:
-        """Get choices by model field and parse output"""
-        choices = getattr(self.model, self.source).__dict__["field"].choices
-        value = self.parse_dict(choices)[_id]
-        return self.to_representation(ChoicesTuple(_id, value))
 
 
 class LanguageSerializer(serializers.ModelSerializer):

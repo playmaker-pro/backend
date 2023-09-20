@@ -533,7 +533,7 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "level": "DEBUG",
             },
             "django": {
-                "handlers": ["django_log_file"],
+                "handlers": ["django_log_file", "console"],
                 "propagate": True,
                 "level": "ERROR",
             },

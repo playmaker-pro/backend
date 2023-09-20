@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
-from profiles.models import PROFILES, BaseProfile
+
+from profiles.models import PROFILE_MODELS, BaseProfile
 
 
 class Command(BaseCommand):
@@ -23,7 +24,7 @@ class Command(BaseCommand):
             print("Aborted")
             return
 
-        for profile_type in PROFILES:
+        for profile_type in PROFILE_MODELS:
             if profile_type is BaseProfile:
                 continue
 

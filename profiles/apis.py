@@ -18,6 +18,8 @@ from api.swagger_schemas import (
 from api.views import EndpointView
 from profiles import api_serializers, errors, models, serializers
 from profiles.filters import ProfileListAPIFilter
+from profiles.managers import SerializersManager
+from profiles.serializers_detailed.player_profile_serializers import PlayerProfileViewSerializer
 from profiles.services import PlayerVideoService, ProfileService
 
 profile_service = ProfileService()
@@ -37,6 +39,9 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def get_serializer_class(self, **kwargs):
+        return SerializersManager().get_serializer(kwargs.get("model_name"))
+
     def get_profile_by_uuid(
         self, request: Request, profile_uuid: uuid.UUID
     ) -> Response:
@@ -46,9 +51,12 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         except ObjectDoesNotExist:
             raise errors.ProfileDoesNotExist
 
-        serializer: api_serializers.ProfileSerializer = (
-            api_serializers.ProfileSerializer(profile_object)
-        )
+        # serializer: api_serializers.ProfileSerializer = (
+        #     api_serializers.ProfileSerializer(profile_object)
+        # )  # TODO: changed to ProfileViewSerializer. Check if it works as expected
+        serializer = self.get_serializer_class(
+            model_name=profile_object.__class__.__name__
+        )(profile_object)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update_profile(self, request: Request) -> Response:
@@ -83,6 +91,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         """
         qs: QuerySet = self.get_paginated_queryset()
         serializer = api_serializers.ProfileSerializer(qs, many=True)
+        # serializer = PlayerProfileViewSerializer(qs, many=True)
         return self.get_paginated_response(serializer.data)
 
     def get_profile_labels(self, request: Request, profile_uuid: uuid.UUID) -> Response:

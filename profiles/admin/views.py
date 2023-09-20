@@ -1,21 +1,25 @@
-from os import link
 from django.contrib import admin
 from django.db.models import Field
-from django.http import HttpRequest
 from django.forms.models import ModelChoiceField
+from django.http import HttpRequest
+
 from app.utils.admin import json_filed_data_prettified
-from profiles import models
 from clubs.models import League
-from utils import linkify
-from . import filters
-from .filters import (
-    HasClubObjectFilter,
-    HasDataMapperIdFilter,
-    HasTeamObjectFilter,
-    HasTextInputFilter,
-    OnlyLastVerificationFilter,
+from profiles import models
+from profiles.admin import filters
+from profiles.admin.actions import (
+    calculate_fantasy,
+    calculate_metrics,
+    fetch_data_player_meta,
+    refresh,
+    set_team_object_based_on_meta,
+    trigger_refresh_data_player_stats,
+    update_pm_score,
+    update_scoring,
+    update_season_score,
+    update_with_profile_data,
 )
-from .actions import *
+from utils import linkify
 
 
 class CoachLicenceInline(
@@ -214,7 +218,7 @@ class PlayerProfileAdmin(ProfileAdminBase):
         calculate_fantasy,
     ]
 
-    readonly_fields = ("data_prettified", "mapper", "external_links")
+    readonly_fields = ("data_prettified", "mapper", "external_links", "uuid")
 
 
 @admin.register(models.CoachProfile)
