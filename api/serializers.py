@@ -16,11 +16,9 @@ locale_service = LocaleDataService()
 
 class CountrySerializer(serializers.Serializer):
     country = serializers.SerializerMethodField(read_only=True)
-    code = (
-        serializers.CharField()
-    )  # we assume that UserPreferences will save country by code
-    priority = serializers.SerializerMethodField()
-    dial_code = serializers.SerializerMethodField()
+    code = serializers.CharField()
+    priority = serializers.SerializerMethodField(read_only=True)
+    dial_code = serializers.SerializerMethodField(read_only=True)
 
     _CHOICES = UserPreferences.COUNTRIES
 
@@ -32,6 +30,10 @@ class CountrySerializer(serializers.Serializer):
         except ValueError as e:
             raise serializers.ValidationError(e)
         translation.activate(language)
+
+    def run_validation(self, *args) -> str:
+        """Override method to retrieve object by id"""
+        return args[0]
 
     @cached_property
     def set_to_dict(self) -> dict:

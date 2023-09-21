@@ -24,10 +24,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserPreferencesSerializer(serializers.ModelSerializer):
     age = serializers.IntegerField(read_only=True)
-    localization = CitySerializer(required=False)
-    spoken_languages = profile_serializers.LanguageSerializer(many=True, required=False)
-    citizenship = CountrySerializer(many=True, required=False)
-    gender = ProfileEnumChoicesSerializer(model=UserPreferences, required=False)
+    localization = CitySerializer(required=False, allow_null=True)
+    spoken_languages = profile_serializers.LanguageSerializer(
+        many=True, required=False, allow_null=True
+    )
+    citizenship = CountrySerializer(many=True, required=False, allow_null=True)
+    gender = ProfileEnumChoicesSerializer(
+        model=UserPreferences, required=False, allow_null=True
+    )
 
     class Meta:
         model = UserPreferences
@@ -37,10 +41,10 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
         }
 
     def update(self, instance, validated_data):
-        if spoken_languages := validated_data.pop(  # noqa: 599
-            "spoken_languages", None
-        ):  # noqa: 599
+        spoken_languages = validated_data.get("spoken_languages", None)
+        if spoken_languages is not None:  # noqa: 599
             instance.spoken_languages.set(spoken_languages)
+            validated_data.pop("spoken_languages")
 
         instance.save()
         return super().update(instance, validated_data)
@@ -72,7 +76,9 @@ class UserDataSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data) -> User:
         """Override method to achieve nested update"""
-        if userpreferences_data := validated_data.pop("userpreferences"):  # noqa: 599
+        if userpreferences_data := validated_data.pop(
+            "userpreferences", None
+        ):  # noqa: 599
             userpreferences_data["user"] = instance.pk
             userpreferences_serializer = UserPreferencesSerializer(
                 instance.userpreferences, data=userpreferences_data, partial=True

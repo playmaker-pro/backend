@@ -228,3 +228,11 @@ class PositionFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ("id",)
 
     name = factory.Iterator(["Napastnik", "Skrzydłowy", "Obrońca prawy", "Bramkarz"])
+
+
+class LanguageFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Language
+        django_get_or_create = ("name",)
+
+    name = factory.Iterator(["Polski", "Angielski", "Niemiecki", "Francuski"])

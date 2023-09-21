@@ -32,14 +32,13 @@ class ProfileEnumChoicesSerializer(serializers.CharField, serializers.Serializer
 
     def to_representation(self, obj: typing.Union[ChoicesTuple, str]) -> dict:
         """Parse output"""
-        parsed_obj = obj
         if not obj:
             return {}
         if not isinstance(obj, ChoicesTuple):
-            parsed_obj = self.parse(obj)
-        return {"id": parsed_obj.id, "name": parsed_obj.name}
+            return self.parse(obj)
+        return {"id": obj.id, "name": obj.name}
 
-    def parse(self, _id) -> ChoicesTuple:
+    def parse(self, _id) -> dict:
         """Get choices by model field and parse output"""
         _id = str(_id)
         choices = self.parse_dict(
@@ -50,7 +49,7 @@ class ProfileEnumChoicesSerializer(serializers.CharField, serializers.Serializer
             raise serializers.ValidationError(f"Invalid value: {_id}")
 
         value = choices[_id]
-        return ChoicesTuple(_id, value)
+        return self.to_representation(ChoicesTuple(_id, value))
 
 
 class PlayerPositionSerializer(serializers.ModelSerializer):
@@ -129,11 +128,7 @@ class PlayerVideoSerializer(serializers.ModelSerializer):
 class PlayerMetricsSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PlayerMetrics
-        fields = (
-            "season",
-            "pm_score",
-            "season_score"
-        )
+        fields = ("season", "pm_score", "season_score")
 
 
 class LicenceTypeSerializer(serializers.ModelSerializer):
@@ -153,7 +148,7 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
 class ProfileVisitHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ProfileVisitHistory
-        fields = "__all__"
+        exclude = ("id",)
 
 
 class LanguageSerializer(serializers.ModelSerializer):
@@ -168,7 +163,7 @@ class LanguageSerializer(serializers.ModelSerializer):
         model = models.Language
         fields = "__all__"
 
-    def to_internal_value(self, data: dict) -> typing.Union[models.Language, dict]:
+    def to_internal_value(self, data: str) -> typing.Union[models.Language, str]:
         """Override object to get language either by code and id"""
         if isinstance(data, str):
             return models.Language.objects.filter(code=data).first()

@@ -769,46 +769,6 @@ paths:
           description: 'User does not exist'
         '401':
           description: 'Unauthorized'
-    patch:
-      operationId: profiles_partial_update
-      description: Update profile with given uuid
-      summary: Update profile
-      tags:
-      - profiles
-      requestBody:
-        description: "uuid required, rest of fields based on profile type, fields listed below"
-        required: true
-        content:
-          application/json:
-            schema:
-              oneOf:
-                - $ref: '#/components/schemas/PlayerProfile'
-                - $ref: '#/components/schemas/CoachProfile'
-                - $ref: '#/components/schemas/ClubProfile'
-                - $ref: '#/components/schemas/ScoutProfile'
-                - $ref: '#/components/schemas/GuestProfile'
-              description: 'REQUIRE JUST UUID + fields to update'
-              example: {'uuid': "f709376c-f2ca-465c-b598-107e8456b6fa", 'team_object_id': 2, 'bio':"My new bio", 'height': 180, 'weight': 73}
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: 'Profile updated successfully'
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlayerProfile'
-                  - $ref: '#/components/schemas/CoachProfile'
-                  - $ref: '#/components/schemas/ClubProfile'
-                  - $ref: '#/components/schemas/ScoutProfile'
-                  - $ref: '#/components/schemas/GuestProfile'
-        '400':
-          description: 'Invalid uuid'
-        '404':
-          description: 'Profile with given uuid does not exist'
-        '401':
-          description: 'Unauthorized'
     'get':
       operationId: profiles_retrieve
       description: "Paginated list profiles for given role"
@@ -982,7 +942,54 @@ paths:
 #                  - $ref: '#/components/schemas/ClubProfile'
 #                  - $ref: '#/components/schemas/ScoutProfile'
 #                  - $ref: '#/components/schemas/GuestProfile'
-
+    patch:
+      operationId: profiles_partial_update
+      description: Update profile with given uuid
+      summary: Update profile
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required:
+            true
+      tags:
+        - profiles
+      requestBody:
+        description: "fields to update, more: https://playmakerpro.atlassian.net/wiki/spaces/~62bcc9f5174792b4ae09c308/pages/133169153/PATCH+profile+docs"
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/PlayerProfile'
+                - $ref: '#/components/schemas/CoachProfile'
+                - $ref: '#/components/schemas/ClubProfile'
+                - $ref: '#/components/schemas/ScoutProfile'
+                - $ref: '#/components/schemas/GuestProfile'
+              description: 'fields to update'
+              example: { 'team_object_id': 2, 'bio': "My new bio", 'height': 180, 'weight': 73 }
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: 'Profile updated successfully'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlayerProfile'
+                  - $ref: '#/components/schemas/CoachProfile'
+                  - $ref: '#/components/schemas/ClubProfile'
+                  - $ref: '#/components/schemas/ScoutProfile'
+                  - $ref: '#/components/schemas/GuestProfile'
+        '400':
+          description: 'Invalid uuid'
+        '404':
+          description: 'Profile with given uuid does not exist'
+        '401':
+          description: 'Unauthorized'
   /profiles/{profile_uuid}/labels:
     get:
       operationId: profiles_retrieve_labels
@@ -2085,7 +2092,6 @@ components:
         - id
         - first_name
         - last_name
-
     Gender:
       type: object
       properties:

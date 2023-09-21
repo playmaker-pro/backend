@@ -59,12 +59,8 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         )(profile_object)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def update_profile(self, request: Request) -> Response:
+    def update_profile(self, request: Request, profile_uuid: uuid.UUID) -> Response:
         """PATCH request for profile (require UUID in body)"""
-        try:
-            profile_uuid: str = request.data.pop("uuid")
-        except KeyError:
-            raise errors.IncompleteRequestBody(("uuid",))
 
         try:
             profile = profile_service.get_profile_by_uuid(profile_uuid)
