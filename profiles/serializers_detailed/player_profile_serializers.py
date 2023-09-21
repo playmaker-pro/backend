@@ -2,16 +2,16 @@ import typing
 
 from rest_framework import serializers
 
-from clubs.models import League, Club, Team
+from clubs.models import Club, League, Team
 from external_links.serializers import ExternalLinksSerializer
 from profiles.models import PlayerPosition, PlayerProfile, PlayerProfilePosition
 from profiles.serializers import (
     ChoicesTuple,
     CoachLicenceSerializer,
+    PlayerMetricsSerializer,
     PlayerProfilePositionSerializer,
     PlayerVideoSerializer,
     ProfileEnumChoicesSerializer,
-    PlayerMetricsSerializer,
 )
 from users.models import User, UserPreferences
 from users.serializers import UserPreferencesSerializer
@@ -20,19 +20,17 @@ from voivodeships.serializers import VoivodeshipSerializer
 
 class PlayerProfileViewLeagueSerializer(serializers.ModelSerializer):
     """Player profile league serializer"""
+
     name = serializers.CharField(source="get_upper_parent_names", read_only=True)
 
     class Meta:
         model = League
-        fields = (
-            "id",
-            "name",
-            "is_parent"
-        )
+        fields = ("id", "name", "is_parent")
 
 
 class PlayerProfileViewClubSerializer(serializers.ModelSerializer):
     """Player profile club serializer"""
+
     picture = serializers.SerializerMethodField()
 
     class Meta:
@@ -71,6 +69,7 @@ class PlayerProfileViewTeamSerializer(serializers.ModelSerializer):
 
 class PlayerProfileViewUserPreferencesSerializer(UserPreferencesSerializer):
     """User preferences serializer for user profile view"""
+
     class Meta:
         model = UserPreferences
         exclude = ("user", "id")
@@ -93,7 +92,9 @@ class ProfileVIewPlayerProfilePositionSerializer(PlayerProfilePositionSerializer
 class PlayerProfileViewUserDataSerializer(serializers.ModelSerializer):
     """User data serializer for player profile view"""
 
-    userpreferences = PlayerProfileViewUserPreferencesSerializer(required=False, partial=True)
+    userpreferences = PlayerProfileViewUserPreferencesSerializer(
+        required=False, partial=True
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -116,8 +117,25 @@ class PlayerProfileViewProfileEnumChoicesSerializer(ProfileEnumChoicesSerializer
     """Profile enum choices serializer for player profile view"""
 
     def to_representation(self, obj: typing.Union[ChoicesTuple, str]) -> dict:
-        result = super().to_representation(obj)
-        return result.pop("name")
+        parsed_obj = obj
+        if not obj:
+            return {}
+        if not isinstance(obj, ChoicesTuple):
+            parsed_obj = self.parse(obj)
+        return {"id": parsed_obj.id}
+
+    def parse(self, _id) -> ChoicesTuple:
+        """Get choices by model field and parse output"""
+        _id = str(_id)
+        choices = self.parse_dict(
+            getattr(self.model, self.source).__dict__["field"].choices
+        )
+
+        if _id not in choices.keys():
+            raise serializers.ValidationError(f"Invalid value: {_id}")
+
+        value = choices[_id]
+        return ChoicesTuple(_id, value)
 
 
 class PlayerProfileViewSerializer(serializers.ModelSerializer):

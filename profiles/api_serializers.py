@@ -95,7 +95,7 @@ class ProfileSerializer(serializers.Serializer):
 
     # fields related with profile (FK to profile)
     player_positions = profile_serializers.PlayerProfilePositionSerializer(
-        many=True, required=False
+        many=True, required=False, read_only=True
     )
     player_video = profile_serializers.PlayerVideoSerializer(many=True, read_only=True)
     playermetrics = profile_serializers.PlayerMetricsSerializer(read_only=True)
@@ -330,6 +330,15 @@ class UpdateProfileSerializer(ProfileSerializer):
             )
             if self.user.is_valid(raise_exception=True):
                 self.user.save()
+
+        if verification := self.initial_data.pop("verification_stage", None):
+            verification_serializer = profile_serializers.VerificationStageSerializer(
+                instance=self.instance.verification_stage,
+                data=verification,
+                partial=True,
+            )
+            if verification_serializer.is_valid(raise_exception=True):
+                verification_serializer.save()
 
         if history_data := self.initial_data.pop("history", None):  # noqa: E999
             self.history = profile_serializers.ProfileVisitHistorySerializer(

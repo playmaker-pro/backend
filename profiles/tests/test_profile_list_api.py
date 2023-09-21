@@ -15,7 +15,7 @@ from utils.factories import PlayerProfileFactory, UserPreferencesFactory
 from utils.test.test_utils import UserManager
 
 profile_service = ProfileService()
-url_get_create_or_update: str = "api:profiles:get_create_or_update_profile"
+url: str = "api:profiles:create_or_list_profiles"
 
 
 class TestProfileListAPI(APITestCase):
@@ -25,7 +25,7 @@ class TestProfileListAPI(APITestCase):
         self.user = UserManager(self.client)
         self.user_obj = self.user.create_superuser()
         self.headers = self.user.get_headers()
-        self.url = reverse(url_get_create_or_update)
+        self.url = reverse(url)
 
     def test_shuffle_list(self) -> None:
         """Test if results are correctly shuffled"""
@@ -281,7 +281,7 @@ class TestProfileListAPI(APITestCase):
 class TestPlayerProfileListByGenderAPI(APITestCase):
     def setUp(self) -> None:
         self.client: APIClient = APIClient()
-        self.url = reverse(url_get_create_or_update)
+        self.url = reverse(url)
 
     @parameterized.expand(
         [

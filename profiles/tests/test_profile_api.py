@@ -1,7 +1,6 @@
 import json
 import uuid
 
-import pytest
 from django.urls import reverse
 from parameterized import parameterized
 from rest_framework.test import APIClient, APITestCase
@@ -22,31 +21,26 @@ class TestGetProfileAPI(APITestCase):
         self.user = UserManager(self.client)
         self.user_obj = self.user.create_superuser()
         self.headers = self.user.get_headers()
-        factories.UserFactory.create_batch_force_order(5)
-        factories.ClubFactory(id=1)
-        factories.TeamHistoryFactory(
-            team=factories.TeamFactory(name="Drużyna FC II", id=1), id=1
+        self.url = lambda profile_uuid: reverse(
+            "api:profiles:get_or_update_profile", kwargs={"profile_uuid": profile_uuid}
         )
-        self.url = "api:profiles:get_profile"
 
     def test_get_profile_valid_without_authentication(self) -> None:
         """correct get request with valid uuid, no need to authenticate"""
-        profile_uuid = factories.PlayerProfileFactory.create(user_id=1).uuid
-        response = self.client.get(
-            reverse(self.url, kwargs={"profile_uuid": profile_uuid}), **self.headers
-        )
+        profile_uuid = factories.PlayerProfileFactory.create(
+            user_id=self.user_obj.pk
+        ).uuid
+        response = self.client.get(self.url(profile_uuid), **self.headers)
         assert response.status_code == 200
 
     def test_get_profile_invalid(self) -> None:
         """get request shouldn't pass with fake uuid"""
         fake_uuid = uuid.uuid4()
-        response = self.client.get(
-            reverse(self.url, kwargs={"profile_uuid": fake_uuid}), **self.headers
-        )
+        response = self.client.get(self.url(fake_uuid), **self.headers)
         assert response.status_code == 404
 
 
-class TestCreateUpdateProfileAPI(APITestCase):
+class TestCreateProfileAPI(APITestCase):
     def setUp(self) -> None:
         self.client: APIClient = APIClient()
         self.manager = UserManager(self.client)
@@ -56,7 +50,7 @@ class TestCreateUpdateProfileAPI(APITestCase):
         factories.TeamHistoryFactory(
             team=factories.TeamFactory(name="Drużyna FC II", id=1), id=1
         )
-        self.url = reverse("api:profiles:get_create_or_update_profile")
+        self.url = reverse("api:profiles:create_or_list_profiles")
 
     @parameterized.expand(
         [
@@ -123,12 +117,13 @@ class TestCreateUpdateProfileAPI(APITestCase):
             if attr != "role":
                 assert getattr(profile, attr) == val
 
-    @parameterized.expand([[{"user_id": 1, "role": "P"}]])
+    @parameterized.expand([[{"role": "P"}]])
     def test_create_same_profile_type_twice_for_same_user(self, payload: dict) -> None:
         """
         Test HTTP_400 in attempt to create profile
         for user that has already a profile
         """
+        payload["user_id"] = self.user_obj.pk
         self.client.post(self.url, json.dumps(payload), **self.headers)
         response = self.client.post(self.url, json.dumps(payload), **self.headers)
 
@@ -154,6 +149,77 @@ class TestCreateUpdateProfileAPI(APITestCase):
     #     profile = get_profile_by_role(payload["role"])
     #     assert profile.objects.get(user=user)
     #     assert response.status_code == 201
+
+    def test_post_need_authentication(self) -> None:
+        """post request should require authentication"""
+        response = self.client.post(
+            self.url,
+            json.dumps({"user_id": 1, "role": "S"}),
+            format="json",
+        )
+
+        assert response.status_code == 401
+
+    def test_post_request_need_body(self) -> None:
+        """post require request's body, fail if empty"""
+        response = self.client.post(self.url, {}, **self.headers)
+
+        assert response.status_code == 400
+
+
+class TestUpdateProfileAPI(APITestCase):
+    def setUp(self) -> None:
+        self.client: APIClient = APIClient()
+        self.manager = UserManager(self.client)
+        self.user_obj = self.manager.create_superuser()
+        self.headers = self.manager.get_headers()
+        factories.TeamHistoryFactory(
+            team=factories.TeamFactory(name="Drużyna FC II", id=1), id=1
+        )
+        self.url = lambda profile_uuid: reverse(
+            "api:profiles:get_or_update_profile", kwargs={"profile_uuid": profile_uuid}
+        )
+        factories.CityFactory(pk=1)
+        factories.ClubFactory(pk=1)
+        factories.LanguageFactory(pk=1)
+
+    def test_patch_user_is_not_an_owner_of_profile(self) -> None:
+        """request should return 400 if requestor is not an owner of updated profile"""
+        dummy_user = factories.UserFactory.create()
+        profile = utils.create_empty_profile(
+            **{
+                "user_id": dummy_user.pk,
+                "role": "P",
+            }
+        )
+        profile_uuid = str(profile.uuid)
+        response = self.client.patch(self.url(profile_uuid), {}, **self.headers)
+
+        assert response.status_code == 400
+
+    def test_patch_need_authentication(self) -> None:
+        """patch request should require authentication"""
+        profile = utils.create_empty_profile(
+            **{
+                "user_id": self.user_obj.pk,
+                "role": "S",
+            }
+        )
+        profile_uuid = str(profile.uuid)
+        response = self.client.patch(
+            self.url(profile_uuid),
+            {},
+        )
+
+        assert response.status_code == 401
+
+    def test_patch_fake_uuid(self) -> None:
+        """patch request with fake uuid shouldn't pass"""
+        fake_uuid = uuid.uuid4()
+        self.manager.login(self.user_obj)
+        response = self.client.patch(self.url(str(fake_uuid)), {}, **self.headers)
+
+        assert response.status_code == 404
 
     @parameterized.expand(
         [
@@ -211,11 +277,12 @@ class TestCreateUpdateProfileAPI(APITestCase):
     def test_successfully_patch_profile_for_new_user(
         self, init_profile: dict, payload: dict
     ) -> None:
-        """Test creating profiles with correctly passed payload"""
+        """Test updating profiles with correctly passed payload"""
         profile = utils.create_empty_profile(**init_profile, user_id=self.user_obj.pk)
         profile_uuid = profile.uuid
-        payload["uuid"] = str(profile_uuid)
-        response = self.client.patch(self.url, json.dumps(payload), **self.headers)
+        response = self.client.patch(
+            self.url(str(profile_uuid)), json.dumps(payload), **self.headers
+        )
         profile = utils.profile_service.get_profile_by_uuid(profile_uuid)
 
         assert response.status_code == 200
@@ -224,73 +291,72 @@ class TestCreateUpdateProfileAPI(APITestCase):
                 val = uuid.UUID(val)
             assert getattr(profile, attr) == val
 
-    def test_patch_fake_uuid(self) -> None:
-        """patch request with fake uuid shouldn't pass"""
-        fake_uuid = uuid.uuid4()
-        self.manager.login(self.user_obj)
+    @parameterized.expand(
+        [
+            ("birth_date", "2001-11-14"),
+            ("localization", 1),
+            ("spoken_languages", [1]),
+            ("citizenship", ["UA"]),
+            ("gender", "M"),
+        ]
+    )
+    def test_patch_user_userpreferences(self, key, val) -> None:
+        """Test updating userpreferences with correctly passed payload"""
+        factories.UserPreferencesFactory.create(user_id=self.user_obj.pk, gender=None)
+        profile = utils.create_empty_profile(role="P", user_id=self.user_obj.pk)
+        profile_uuid = profile.uuid
+        payload = {"user": {"userpreferences": {key: val}}}
+
         response = self.client.patch(
-            self.url, json.dumps({"uuid": str(fake_uuid)}), **self.headers
+            self.url(str(profile_uuid)), json.dumps(payload), **self.headers
         )
 
-        assert response.status_code == 404
+        assert response.status_code == 200
+        assert response.data["user"]["userpreferences"][key]
 
-    def test_patch_invalid_uuid(self) -> None:
-        """patch request with invalid uuid shouldn't pass"""
+    def test_patch_visit_history(self) -> None:
+        """Test updating visit history with correctly passed payload"""
+        profile = utils.create_empty_profile(role="P", user_id=self.user_obj.pk)
+        profile_uuid = profile.uuid
+        payload = {"history": {"counter": 10, "counter_coach": 20, "counter_scout": 30}}
+
         response = self.client.patch(
-            self.url, json.dumps({"uuid": "invalid-uuid-1234"}), **self.headers
+            self.url(str(profile_uuid)), json.dumps(payload), **self.headers
         )
 
-        assert response.status_code == 400
+        assert response.status_code == 200
+        assert response.data["history"] == payload["history"]
 
-    def test_post_need_authentication(self) -> None:
-        """post request should require authentication"""
-        response = self.client.post(
-            self.url,
-            json.dumps({"user_id": 1, "role": "S"}),
-            format="json",
-        )
+    def test_patch_player_positions(self) -> None:
+        """Test updating player positions with correctly passed payload"""
+        profile = utils.create_empty_profile(role="P", user_id=self.user_obj.pk)
+        profile_uuid = profile.uuid
+        payload = {
+            "player_positions": [
+                {"player_position": 8, "is_main": False},
+                {"player_position": 2, "is_main": True},
+            ]
+        }
 
-        assert response.status_code == 401
-
-    def test_patch_need_authentication(self) -> None:
-        """patch request should require authentication"""
-        profile = utils.create_empty_profile(
-            **{
-                "user_id": self.user_obj.pk,
-                "role": "S",
-            }
-        )
-        profile_uuid = str(profile.uuid)
         response = self.client.patch(
-            self.url,
-            json.dumps({"uuid": profile_uuid}),
-            format="json",
+            self.url(str(profile_uuid)), json.dumps(payload), **self.headers
         )
 
-        assert response.status_code == 401
-
-    def test_post_request_need_body(self) -> None:
-        """post require request's body, fail if empty"""
-        response = self.client.post(self.url, {}, **self.headers)
-
-        assert response.status_code == 400
-
-    def test_patch_request_need_body(self) -> None:
-        """patch require request's body, fail if empty"""
-        response = self.client.patch(self.url, {}, **self.headers)
-
-        assert response.status_code == 400
-
-    def test_patch_user_is_not_an_owner_of_profile(self) -> None:
-        """request should return 400 if requestor is not an owner of updated profile"""
-        dummy_user = factories.UserFactory.create()
-        profile = utils.create_empty_profile(
-            **{
-                "user_id": dummy_user.pk,
-                "role": "P",
-            }
+        assert response.status_code == 200
+        assert len(response.data["player_positions"]) == len(
+            payload["player_positions"]
         )
-        profile_uuid = str(profile.uuid)
-        response = self.client.patch(self.url, {"uuid": profile_uuid}, **self.headers)
 
-        assert response.status_code == 400
+    def test_patch_verification_stage(self) -> None:
+        """Test updating verification stage with correctly passed payload"""
+        profile = utils.create_empty_profile(role="P", user_id=self.user_obj.pk)
+        profile_uuid = profile.uuid
+        payload = {"verification_stage": {"step": 5, "done": True}}
+
+        response = self.client.patch(
+            self.url(str(profile_uuid)), json.dumps(payload), **self.headers
+        )
+
+        assert response.status_code == 200
+        assert response.data["verification_stage"]["step"] == 5
+        assert response.data["verification_stage"]["done"] == True

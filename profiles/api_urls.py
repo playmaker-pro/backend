@@ -14,11 +14,10 @@ urlpatterns = [
         views.ProfileAPI.as_view(
             {
                 "post": "create_profile",
-                "patch": "update_profile",
                 "get": "get_bulk_profiles",
             }
         ),
-        name="get_create_or_update_profile",
+        name="create_or_list_profiles",
     ),
     path(
         r"owned/",
@@ -31,8 +30,13 @@ urlpatterns = [
     ),
     path(
         r"<uuid:profile_uuid>/",
-        views.ProfileAPI.as_view({"get": "get_profile_by_uuid"}),
-        name="get_profile",
+        views.ProfileAPI.as_view(
+            {
+                "get": "get_profile_by_uuid",
+                "patch": "update_profile",
+            }
+        ),
+        name="get_or_update_profile",
     ),
     path(
         r"<uuid:profile_uuid>/labels",
