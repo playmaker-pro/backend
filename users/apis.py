@@ -11,7 +11,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from api.custom_throttling import EmailCheckerThrottle
+from api.custom_throttling import DefaultThrottle, EmailCheckerThrottle
 from api.swagger_schemas import (
     USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA,
     USER_FEATURE_SETS_SWAGGER_SCHEMA,
@@ -253,6 +253,22 @@ class UsersAPI(EndpointView):
         return Response(response)
 
 
+class UserManagementAPI(EndpointView):
+    http_method_names = ["post"]
+    throttle_classes = [DefaultThrottle]
+
+    def update_profile_picture(self, request: Request) -> Response:
+        """
+        Update user profile picture.
+        """
+        serializer = serializers.UserProfilePictureSerializer(
+            instance=request.user, data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class LoginView(TokenObtainPairView):
     """
     Takes a set of user credentials and returns an access and refresh JSON web
@@ -327,7 +343,7 @@ class PasswordManagementAPIView(EndpointView):
         return Response(
             {
                 "detail": "If an account with the provided email exists, "
-                          "you'll receive further instructions."
+                "you'll receive further instructions."
             },
             status=status.HTTP_200_OK,
         )

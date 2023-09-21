@@ -128,6 +128,7 @@ INSTALLED_APPS = [
     "features",
     "django_extensions",
     "django_filters",
+    "django_cleanup.apps.CleanupConfig",  # delete old files/images on update
 ]
 
 SWAGGER_SETTINGS = {
@@ -716,6 +717,7 @@ GOOGLE_OAUTH2_PROJECT_ID = "playmaker-pro"
 FACEBOOK_GRAPH_API_VERSION = "v17.0"
 
 THROTTLE_EMAIL_CHECK_LIMITATION = 5
+DEFAULT_THROTTLE = 5
 
 try:
     from .local import *  # noqa

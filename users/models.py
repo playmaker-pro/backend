@@ -1,3 +1,7 @@
+import datetime
+from urllib.parse import urljoin
+
+import uuid
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import ArrayField
@@ -265,18 +269,11 @@ class User(AbstractUser, UserRoleMixin):
 
     email = models.EmailField(_("Adres email"), unique=True)
 
-    def get_file_path(instance, filename):
-        filename = (
-            filename.replace("ł", "l")
-            .replace("ą", "a")
-            .replace("ó", "o")
-            .replace("ż", "z")
-            .replace("ź", "z")
-            .replace("ń", "n")
-            .replace("ę", "e")
-            .replace("ś", "s")
-        )
-        return f"profile_pics/%Y-%m-%d/{filename}"
+    def get_file_path(self, filename) -> str:
+        """define user profile picture image path"""
+        curr_date: str = str(datetime.datetime.now().date())
+        format: str = filename.split(".")[-1]
+        return f"profile_pics/{curr_date}/{str(uuid.uuid4())}.{format}"
 
     picture = models.ImageField(
         _("Zdjęcie"), upload_to=get_file_path, null=True, blank=True
@@ -343,6 +340,12 @@ class User(AbstractUser, UserRoleMixin):
         """
         self.last_activity = timezone.now()
         self.save(update_fields=["last_activity"])
+
+    @property
+    def picture_url(self) -> str:
+        """Generate club picture url"""
+        if self.picture:
+            return urljoin(settings.BASE_URL, self.picture.url)
 
     class Meta:
         verbose_name = "User"

@@ -1019,3 +1019,59 @@ class TestPasswordChangeEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         assert (
             user is None
         )  # The authentication should fail since the password was not changed.
+
+
+class TestUserManagementAPI(APITestCase):
+    def setUp(self) -> None:
+        self.client: APIClient = APIClient()
+        self.manager = UserManager(self.client)
+        self.user_obj = self.manager.create_superuser()
+        # self.headers = self.manager.get_headers()
+        self.image_headers = {
+            "HTTP_AUTHORIZATION": f"Bearer {self.manager.get_access_token}",
+            "Content-type": "image/jpeg",
+        }
+        self.picture_url = reverse("api:users:update_profile_picture")
+
+    def test_valid_picture_update(self) -> None:
+        """Test update image with valid image (<2MB)"""
+        with open("utils/assets/valid_alpaca_image_lt_2MB.jpg", "rb") as image:
+            data = {"picture": image}
+            res: Response = self.client.post(
+                self.picture_url, data=data, **self.image_headers
+            )
+
+            assert res.status_code == 200
+            assert res.data["picture"] is not None
+
+    def test_too_big_picture_update(self) -> None:
+        """Test update image with invalid image (>2MB)"""
+        with open("utils/assets/too_big_alpaca_image_gt_2MB.jpg", "rb") as image:
+            data = {"picture": image}
+            res: Response = self.client.post(
+                self.picture_url, data=data, **self.image_headers
+            )
+
+            assert res.status_code == 400
+
+    def test_not_allowed_formats_update(self) -> None:
+        """Test update image with invalid image (>2MB)"""
+        with open("utils/assets/alpaca_gif_not_allowed.gif", "rb") as image:
+            data = {"picture": image}
+            res: Response = self.client.post(
+                self.picture_url, data=data, **self.image_headers
+            )
+
+            assert res.status_code == 400
+
+    def test_throttle_picture_update(self) -> None:
+        """Test throttling on picture update"""
+        with open("utils/assets/valid_alpaca_image_lt_2MB.jpg", "rb") as image:
+            data = {"picture": image}
+            for _ in range(settings.DEFAULT_THROTTLE):
+                self.client.post(self.picture_url, data=data, **self.image_headers)
+
+            res: Response = self.client.post(
+                self.picture_url, data=data, **self.image_headers
+            )
+            assert res.status_code == 429

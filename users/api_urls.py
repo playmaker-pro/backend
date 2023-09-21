@@ -58,4 +58,9 @@ urlpatterns = [
         apis.PasswordManagementAPIView.as_view({"post": "create_new_password"}),
         name="api-password-reset-confirm",
     ),
+    path(
+        "picture/",
+        apis.UserManagementAPI.as_view({"post": "update_profile_picture"}),
+        name="update_profile_picture",
+    ),
 ]
