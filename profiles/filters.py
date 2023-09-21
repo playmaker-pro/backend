@@ -40,7 +40,7 @@ class ProfileListAPIFilter(APIFilter):
 
     def get_queryset(self) -> QuerySet:
         """Get queryset based on role"""
-        self.queryset: QuerySet = self.model.objects.all().order_by("pk")
+        self.queryset: QuerySet = self.model.objects.all()
         self.filter_queryset(self.queryset)
 
         if self.query_params.get("shuffle", False):
@@ -64,9 +64,13 @@ class ProfileListAPIFilter(APIFilter):
     def player_filters(self) -> None:
         """Filters related with PlayerProfile"""
         self.filter_youth()
-        self.filter_position()
         self.filter_league()
         self.filter_gender()
+
+        self.queryset = self.queryset.order_by("-user__date_joined")
+
+        # position has its own sorting, so it should be the last filter
+        self.filter_position()
 
     def coach_filters(self) -> QuerySet:
         """Filters related with GuestProfile"""
