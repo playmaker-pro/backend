@@ -50,20 +50,19 @@ class UserDataSerializer(serializers.ModelSerializer):
     """User serializer with basic user information"""
 
     userpreferences = UserPreferencesSerializer(required=False, partial=True)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    picture = serializers.CharField(source="picture_url", read_only=True)
 
     class Meta:
         model = User
-        fields = [
+        fields = (
             "id",
             "first_name",
             "last_name",
             "last_login",
             "last_activity",
             "userpreferences",
-        ]
+            "picture",
+        )
         depth = 1
         extra_kwargs = {
             "last_activity": {"read_only": True},
@@ -199,3 +198,33 @@ class CustomTokenObtainSerializer(TokenObtainPairSerializer):
             last_name=user.last_name,
             **attrs,
         ).dict()
+
+
+class UserProfilePictureSerializer(serializers.ModelSerializer):
+    """Serializer for updating User picture"""
+
+    picture = serializers.ImageField(allow_null=True, write_only=True)
+
+    __allowed_extensions = ["jpeg", "jpg", "png"]
+
+    class Meta:
+        model = User
+        fields = ("picture",)
+
+    def validate_picture(self, value):
+        """Validate the picture size, max up to 2MB."""
+        if value:
+            if value.size > 2 * 1024 * 1024:
+                raise serializers.ValidationError("The maximum file size is 2MB.")
+
+            extension = value.name.split(".")[-1].lower()
+            if extension not in self.__allowed_extensions:
+                raise serializers.ValidationError(
+                    f"Allowed formats: {self.__allowed_extensions}"
+                )
+
+        return value
+
+    @property
+    def data(self):
+        return UserDataSerializer(self.instance).data

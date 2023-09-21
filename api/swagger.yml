@@ -893,7 +893,7 @@ paths:
         - in: query
           name: shuffle
           schema:
-            type: bool
+            type: string
           description: "Shuffle results?"
       tags:
         - profiles
@@ -1364,7 +1364,38 @@ paths:
                 example:
                   detail: No user credential fetched from Google. Please try again.
           description: ''
-
+  /users/picture/:
+    post:
+      operationId: update_profile_picture
+      description: Update user profile picture
+      summary: Update user profile picture
+      tags:
+          - users
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          image/jpeg:
+            schema:
+              type: object
+              properties:
+                picture:
+                  type: string
+                  format: binary
+                  description: Profile picture
+      responses:
+        '200':
+          description: "Profile picture updated successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserData'
+        '400':
+          description: "Bad request. Missing required fields. Bad image format [jpg, jpeg, png] or image is too big."
+          content:
+            application/json:
+              schema:
+                type: object
   /users/facebook-oauth2/:
     post:
       operationId: users_facebook_oauth2_create
@@ -2033,6 +2064,8 @@ components:
           type: string
         userpreferences:
           $ref: '#/components/schemas/UserPreferences'
+        picture:
+          type: string
       required:
         - id
         - first_name
