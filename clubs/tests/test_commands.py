@@ -2,13 +2,13 @@ from unittest import TestCase
 
 import factory
 import pytest
-from django.core.management import call_command
+from django.core.management import call_command, CommandError
 from django.db.models import QuerySet
 
 from clubs.management.commands.change_league_seniorty import (
     Command as ChangeLeagueSeniorityCommand,
 )
-from clubs.models import League, Seniority
+from clubs.models import League, Seniority, Season
 from utils.factories import (
     ClubFactory,
     LeagueFactory,
@@ -252,3 +252,54 @@ class TestShortNameCommand(TestCase):
             assert len(team.short_name) <= len(
                 team.club.name
             )  # ensure the team's short name is shorter or equal to its club's name
+
+
+@pytest.mark.django_db
+class AddSeasonsCommandTest(TestCase):
+    command_name = "add_seasons"
+
+    def test_add_seasons_command(self):
+        """
+        Test the functionality of the `add_seasons` management command.
+
+        This test ensures that:
+        - Seasons in the specified range are added to the database.
+        """
+        # Call the management command
+        call_command(self.command_name, 2010, 2013)
+
+        # Assert that the seasons have been added
+        assert Season.objects.filter(name="2010/2011").count() == 1
+        assert Season.objects.filter(name="2011/2012").count() == 1
+        assert Season.objects.filter(name="2012/2013").count() == 1
+        assert Season.objects.filter(name="2013/2014").count() == 1
+
+    def test_add_seasons_command_only_accepts_integers(self):
+        """
+        Test that the command raises an error when provided with non-integer arguments.
+        """
+        with self.assertRaises(CommandError):
+            call_command(self.command_name, "abc", 2023)
+
+        with self.assertRaises(CommandError):
+            call_command(self.command_name, 2020, "def")
+
+        with self.assertRaises(CommandError):
+            call_command(self.command_name, "xyz", "def")
+
+    def test_add_seasons_command_requires_4_digit_years(self):
+        """
+        Test that the command raises an error when provided years are not in the format YYYY.  # noqa: E501
+        """
+        with self.assertRaises(CommandError):
+            call_command(self.command_name, 20, 2023)
+
+        with self.assertRaises(CommandError):
+            call_command(self.command_name, 2020, 200)
+
+    def test_add_seasons_command_start_year_greater_than_end_year(self):
+        """
+        Test that the command raises an error when the provided start_year is greater than end_year.  # noqa: E501
+        """
+        with self.assertRaises(CommandError):
+            call_command(self.command_name, 2025, 2020)
