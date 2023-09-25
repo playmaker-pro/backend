@@ -46,7 +46,7 @@ class Season(models.Model):
         return season
 
     class Meta:
-        ordering = ("-is_current",)
+        ordering = ("-is_current", "-name")
 
     def current_season_update(self, *args, **kwargs):
         current_season = self.define_current_season()
