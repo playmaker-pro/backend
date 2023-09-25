@@ -9,7 +9,14 @@ from clubs.management.commands.change_league_seniorty import (
     Command as ChangeLeagueSeniorityCommand,
 )
 from clubs.models import League, Seniority
-from utils.factories import LeagueFactory, SeniorityFactory
+from utils.factories import (
+    ClubFactory,
+    LeagueFactory,
+    LeagueHistoryFactory,
+    SeniorityFactory,
+    TeamFactory,
+    TeamHistoryFactory,
+)
 
 
 @pytest.mark.django_db
@@ -141,3 +148,107 @@ class TestHidePredefinedLeagues(TestCase):
         League.objects.all().delete()
         call_command(self.command_name)
         assert League.objects.count() == 0
+
+
+@pytest.mark.django_db
+class TestShortNameCommand(TestCase):
+    def setUp(self):
+        """
+        Set up testing environment with various clubs and teams using factories.
+        This setup creates different scenarios of club and team names to validate
+        the functionality of the short name creation logic.
+
+        Specific patterns like years, prefixes, and hyphens are chosen because they
+        are common in club names and have distinct handling rules in the short
+        name logic.
+        """
+        self.league = LeagueFactory.create(
+            name="Futsal"
+        )  # Use "Futsal" as it's a key term that affects short name generation
+        self.league_history = LeagueHistoryFactory.create(league=self.league)
+
+        self.club_with_year = ClubFactory(
+            name="Example Club With Year 1998"
+        )  # Test removal of years in club names
+        self.club_with_prefix_wrong_order = ClubFactory(
+            name="CLUB FC"
+        )  # Test rearranging prefixes
+        self.club_with_hyphen = ClubFactory(
+            name="Example-brand Club"
+        )  # Test handling of hyphens
+        self.club_with_hyphen_in_city_name = ClubFactory(
+            name="Kędzierzyn-Koźle Club"
+        )  # Ensure cities with hyphens are handled correctly
+        self.futsal_club = ClubFactory(
+            name="Example Club"
+        )  # Ensure cities with hyphens are handled correctly
+        self.primary_team = TeamFactory(
+            name="Example Team 1998", club=self.club_with_year
+        )  # Test suffix addition for clubs in the "Futsal" league
+        self.secondary_team = TeamFactory(
+            name="Example Team II", club=self.club_with_year
+        )
+        self.futsal_team = TeamFactory(
+            name="Example Futsal Team",
+            club=self.futsal_club,
+        )
+        self.futsal_team_history_factory = TeamHistoryFactory(
+            team=self.futsal_team, league_history=self.league_history
+        )
+
+    def test_command_output(self):
+        """
+        Test the correctness of the short name generation logic by checking the output
+        of the "create_short_name_for_club_and_team" command. This test focuses
+        on predefined scenarios, ensuring that names with specific patterns are
+        processed as expected.
+        """
+        call_command("create_short_name_for_club_and_team")
+
+        # Refresh the objects from the database
+        self.club_with_year.refresh_from_db()
+        self.club_with_prefix_wrong_order.refresh_from_db()
+        self.club_with_hyphen.refresh_from_db()
+        self.club_with_hyphen_in_city_name.refresh_from_db()
+        self.futsal_club.refresh_from_db()
+        self.primary_team.refresh_from_db()
+        self.secondary_team.refresh_from_db()
+        self.futsal_team.refresh_from_db()
+
+        # Assertions
+        assert self.club_with_year.short_name == "Example Club With Year"
+        assert self.club_with_prefix_wrong_order.short_name == "FC Club"
+        assert self.club_with_hyphen.short_name == "Example Club"
+        assert self.club_with_hyphen_in_city_name.short_name == "Kędzierzyn-Koźle Club"
+        assert self.futsal_club.short_name == "Example Club (Futsal)"
+        assert self.primary_team.short_name == "Example Club With Year"
+        assert self.secondary_team.short_name == "Example Club With Year II"
+        assert self.futsal_team.short_name == "Example Club"
+
+    def test_random_names(self):
+        """
+        Test the robustness of the short name generation logic using randomly generated
+        club and team names.
+        Note: For teams, the short name is based on its associated club's name
+        and not the team's own name.
+        The goal is to ensure that, even with unexpected input, the generated
+        short names adhere to certain standards.
+        """
+        clubs = ClubFactory.create_batch(20)
+        teams = TeamFactory.create_batch(20)
+
+        call_command("create_short_name_for_club_and_team")
+
+        for club in clubs:
+            club.refresh_from_db()
+            assert club.short_name  # ensure it's not an empty string
+            assert len(club.short_name) <= len(
+                club.name
+            )  # ensure it's shorter or equal to the original name
+
+        for team in teams:
+            team.refresh_from_db()
+            assert team.short_name  # ensure it's not an empty string
+            assert len(team.short_name) <= len(
+                team.club.name
+            )  # ensure the team's short name is shorter or equal to its club's name

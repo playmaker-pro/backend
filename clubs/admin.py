@@ -246,6 +246,7 @@ class TeamHistoryAdmin(admin.ModelAdmin):
 class TeamAdmin(admin.ModelAdmin):
     list_display = (
         "name",
+        "short_name",
         "mapping",
         linkify("club"),
         "junior_group",
@@ -298,6 +299,7 @@ class TeamAdmin(admin.ModelAdmin):
 class ClubAdmin(admin.ModelAdmin):
     list_display = (
         "name",
+        "short_name",
         "mapping",
         "autocreated",
         "scrapper_autocreated",
