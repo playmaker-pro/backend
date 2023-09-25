@@ -11,7 +11,7 @@ class ClubFilter(filters.FilterSet):
     """
 
     season = filters.CharFilter(method="filter_by_season")
-    name = filters.CharFilter(lookup_expr="icontains")
+    name = filters.CharFilter(field_name="short_name", lookup_expr="icontains")
     gender = filters.CharFilter(method="filter_gender")
 
     class Meta:

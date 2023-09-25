@@ -38,7 +38,7 @@ class TeamSearchApi(APIView):
 
         q_name = request.query_params.get("q")
         if q_name:
-            teams = teams.filter(name__icontains=q_name)
+            teams = teams.filter(short_name__icontains=q_name)
 
         serializer = serializers.TeamSelect2Serializer(
             teams, many=True, context={"request": request}
@@ -59,7 +59,7 @@ class TeamHistorySearchApi(APIView):
         q_name = request.query_params.get("q")
         q_season = request.query_params.get("season")
         if q_name:
-            teams = teams.filter(team__name__icontains=q_name)
+            teams = teams.filter(team__short_name__icontains=q_name)
         if q_season:
             teams = teams.filter(league_history__season__name=q_season)
         serializer = serializers.TeamHistorySelect2Serializer(

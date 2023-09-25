@@ -41,7 +41,7 @@ class ClubSelect2Serializer(serializers.HyperlinkedModelSerializer):
     text = serializers.SerializerMethodField()
 
     def get_text(self, obj):
-        return obj.name
+        return obj.short_name
 
     class Meta:
         model = models.Club
@@ -114,6 +114,7 @@ class ClubSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Club
         exclude = (
+            "name",
             "scrapper_autocreated",
             "data_mapper_id",
             "autocreated",
@@ -144,7 +145,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Team
-        exclude = ("autocreated", "data_mapper_id", "scrapper_autocreated")
+        exclude = ("name", "autocreated", "data_mapper_id", "scrapper_autocreated")
 
     def get_current_team_league_history(self, obj: models.Team) -> dict:
         """Get current, serialized league history of team"""
@@ -171,7 +172,7 @@ class CustomTeamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Team
-        fields = ["id", "name", "gender", "historical_league_name"]
+        fields = ["id", "short_name", "gender", "historical_league_name"]
 
     def get_historical_league_name(self, obj: models.Team) -> typing.Optional[str]:
         """
@@ -200,7 +201,7 @@ class ClubTeamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Club
-        fields = ("id", "name", "picture_url", "country_name", "club_teams")
+        fields = ("id", "short_name", "picture_url", "country_name", "club_teams")
 
     def get_picture_url(self, obj: models.Club) -> typing.Optional[str]:
         """
@@ -241,7 +242,7 @@ class TeamHistorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.TeamHistory
-        exclude = ("data_mapper_id", "autocreated")
+        exclude = ("name", "data_mapper_id", "autocreated")
 
 
 class LabelSerializer(serializers.Serializer):

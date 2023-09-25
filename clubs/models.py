@@ -152,7 +152,7 @@ class Club(models.Model, MappingMixin):
     @property
     @supress_exception
     def display_club(self):
-        return self.name
+        return self.short_name or self.name
 
     @property
     def picture_url(self) -> str:
@@ -189,6 +189,12 @@ class Club(models.Model, MappingMixin):
 
     name = models.CharField(
         _("Club name"), max_length=255, help_text="Displayed Name of club"
+    )
+    short_name = models.CharField(
+        _("Skrócona nazwa klubu"),
+        max_length=255,
+        null=True,
+        blank=True,
     )
 
     voivodeship_raw = models.CharField(
@@ -755,7 +761,7 @@ class Team(models.Model, MappingMixin):
 
     @property
     def display_team(self):
-        return self.name
+        return self.short_name or self.name
 
     @property
     @supress_exception
@@ -845,6 +851,12 @@ class Team(models.Model, MappingMixin):
     name = models.CharField(
         _("Nazwa drużyny"),
         max_length=255,
+    )
+    short_name = models.CharField(
+        _("Skrócona nazwa drużyny"),
+        max_length=255,
+        null=True,
+        blank=True,
     )
 
     def get_permalink(self):
