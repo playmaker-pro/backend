@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     "mapper",
     "labels",
     "premium",
+    "events",
     # "resources",
     # "data",  # external repo DEPRECATED: PM-1015
     # "stats",  # external repo DEPRECATED: PM-1015

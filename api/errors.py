@@ -81,6 +81,15 @@ class ObjectDoesNotExist(CoreAPIException):
     default_detail = "Given object does not exists."
 
 
+class ForbiddenNotExist(CoreAPIException):
+    status_code = status.HTTP_403_FORBIDDEN
+    default_detail = "Action is forbidden"
+
+
+class HTTPObjectDoesNotExists(ObjectDoesNotExist):
+    pass
+
+
 class NotOwnerOfAnObject(CoreAPIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "You are not allowed to modify this object."

@@ -1913,6 +1913,61 @@ paths:
                   value:
                     success: "False"
                     detail: "Invalid token"
+
+  /events/{event_id}/read:
+    get:
+      operationId: ReadEvent
+      description: 'Reads event - makring it as seeen'
+      summary: Mark event as seen.
+      parameters:
+        - in: path
+          name: event_id
+          schema:
+            type: string
+            format: int
+          required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: 'Sucessfully marked as seeen'
+        '403':
+          description: 'Not possible to edit others events'
+        '404':
+          description: 'Object does not exists'
+
+  /events/users/{user_id}/:
+    get:
+      operationId: GetUsersEvents
+      description: 'Pagginated response with list of unseen user events '
+      summary: Pagginated Response with unssen user events
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: string
+            format: int
+          required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+          description: 'list of events'
+        '404':
+          description: "object does not exists"
+        '403':
+          description: "action is not allwoed."
+
 components:
   schemas:
     AccessEnum:
@@ -3441,6 +3496,13 @@ components:
         season_name:
           type: string
         icon:
+          type: string
+    Event:
+      type: object
+      properties:
+        message:
+          type: string
+        callback:
           type: string
   securitySchemes:
     jwtAuth:
