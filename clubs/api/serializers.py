@@ -168,11 +168,12 @@ class CustomTeamSerializer(serializers.ModelSerializer):
     If no season is provided, it defaults to fetching the highest parent league from the first historical entry.
     """
 
+    division = serializers.SerializerMethodField()
     historical_league_name = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Team
-        fields = ["id", "short_name", "gender", "historical_league_name"]
+        fields = ["id", "name", "gender", "division", "historical_league_name"]
 
     def get_historical_league_name(self, obj: models.Team) -> typing.Optional[str]:
         """
@@ -192,6 +193,19 @@ class CustomTeamSerializer(serializers.ModelSerializer):
             if historical_entry
             else None
         )
+
+    def get_division(self, obj: models.Team) -> typing.Optional[str]:
+        """
+        Retrieve the division of a team based on its junior group or seniority.
+
+        For junior teams, the division will represent the age group (e.g., "U8", "U11", "U14").
+        For senior teams, the division will indicate the seniority level (e.g., "seniorzy").
+        """
+        if obj.junior_group and hasattr(obj.junior_group, "name"):
+            return obj.junior_group.name
+        elif obj.seniority and hasattr(obj.seniority, "name"):
+            return obj.seniority.name
+        return None
 
 
 class ClubTeamSerializer(serializers.ModelSerializer):
