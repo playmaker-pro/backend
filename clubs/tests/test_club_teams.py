@@ -30,7 +30,7 @@ class TestClubAPI(APITestCase):
         self.club_teams_endpoint = reverse("api:clubs:get_all_clubs_teams")
 
         # Select a specific club from the batch for testing.
-        self.club = models.Club.objects.first()
+        self.club = ClubWithHistoryFactory.create()
         self.team = self.club.teams.first()
         self.team_history = self.team.historical.first()
         self.league_history = self.team_history.league_history
@@ -53,12 +53,12 @@ class TestClubAPI(APITestCase):
         """
         response = self.client.get(
             self.club_teams_endpoint,
-            data={"season": self.season.name, "name": self.club.name},
+            data={"season": self.season.name, "name": self.club.short_name},
             **self.headers
         )
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data["results"]) == 1
-        assert response.data["results"][0]["name"] == self.club.name
+        assert response.data["results"][0]["short_name"] == self.club.short_name
 
     def test_pagination(self) -> None:
         """

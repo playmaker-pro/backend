@@ -1,6 +1,7 @@
 import factory
 
 from clubs import models as clubs_models
+from clubs.management.commands.utils import generate_club_or_team_short_name
 
 from . import utils
 from .base import CustomObjectFactory
@@ -14,6 +15,7 @@ class ClubFactory(CustomObjectFactory):
         django_get_or_create = ("name",)
 
     name = factory.Iterator(CLUB_NAMES)
+    short_name = factory.LazyAttribute(lambda o: generate_club_or_team_short_name(o))
     voivodeship_obj = factory.LazyAttribute(lambda _: utils.get_random_voivo())
     club_phone = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
     club_email = CLUB_MAIL
@@ -58,6 +60,7 @@ class TeamFactory(CustomObjectFactory):
         django_get_or_create = ("name",)
 
     name = factory.Iterator(TEAM_NAMES)
+    short_name = factory.LazyAttribute(lambda o: generate_club_or_team_short_name(o))
     club = factory.SubFactory(ClubFactory)
     manager = UserFactory.random_object()
     game_bonus = factory.LazyAttribute(lambda _: utils.get_random_bool())
@@ -130,6 +133,7 @@ class ClubWithHistoryFactory(CustomObjectFactory):
         django_get_or_create = ("name",)
 
     name = factory.Iterator(CLUB_NAMES)
+    short_name = factory.LazyAttribute(lambda o: generate_club_or_team_short_name(o))
     voivodeship_obj = factory.LazyAttribute(lambda _: utils.get_random_voivo())
     club_phone = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
     club_email = CLUB_MAIL
