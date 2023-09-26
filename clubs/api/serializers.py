@@ -256,7 +256,7 @@ class TeamHistorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.TeamHistory
-        exclude = ("name", "data_mapper_id", "autocreated")
+        exclude = ("data_mapper_id", "autocreated")
 
 
 class LabelSerializer(serializers.Serializer):
