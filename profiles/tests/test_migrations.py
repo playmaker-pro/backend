@@ -108,3 +108,51 @@ def test_profile_custom_migrations(migrator) -> None:
     assert second_club.club_role == new_mapping[second_mapped]
     assert third_club.club_role == new_mapping[third_mapped]
     assert fourth_club.club_role is None
+
+
+@pytest.mark.django_db()
+def test_0107_1008(migrator) -> None:
+    """
+    Test migration 0107_auto_20230926_1623,
+    ensure that ownership is moved from CoachProfile to User.
+    """
+    init_state: ProjectState = migrator.apply_initial_migration(
+        ("profiles", "0106_alter_licencetype_key")
+    )
+    User: ModelBase = init_state.apps.get_model("users", "User")
+    CoachProfile: ModelBase = init_state.apps.get_model("profiles", "CoachProfile")
+    CoachLicence: ModelBase = init_state.apps.get_model("profiles", "CoachLicence")
+    LicenceType: ModelBase = init_state.apps.get_model("profiles", "LicenceType")
+
+    user: User = User.objects.create(email="test@test.pl")
+    coach: CoachProfile = CoachProfile.objects.create(user_id=user.pk)
+    licence_type: LicenceType = LicenceType.objects.filter().first()
+
+    assert licence_type
+
+    licence: CoachLicence = CoachLicence.objects.create(
+        coach_profile_id=coach.pk, licence_id=licence_type.pk
+    )
+
+    assert licence.coach_profile == coach
+
+    new_state: ProjectState = migrator.apply_tested_migration(
+        ("profiles", "0107_auto_20230926_2003")
+    )
+    CoachLicence: ModelBase = new_state.apps.get_model("profiles", "CoachLicence")
+    licence = CoachLicence.objects.get(pk=licence.pk)
+
+    assert licence.owner.pk == coach.user.pk
+    assert licence.licence.pk == licence_type.pk
+
+    new_state: ProjectState = migrator.apply_tested_migration(
+        ("profiles", "0108_auto_20230926_2004")
+    )
+    CoachLicence: ModelBase = new_state.apps.get_model("profiles", "CoachLicence")
+    licence = CoachLicence.objects.get(pk=licence.pk)
+
+    assert not hasattr(licence, "coach_profile")
+    assert licence.owner.pk == coach.user.pk
+    assert licence.licence.pk == licence_type.pk
+
+    migrator.reset()

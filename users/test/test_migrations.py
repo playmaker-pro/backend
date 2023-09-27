@@ -1,12 +1,9 @@
+import factory
 import pytest
 from django.db.migrations.state import ProjectState
 from django.db.models.base import ModelBase
-from utils.factories import (
-    PlayerProfileFactory,
-    CoachProfileFactory,
-    ScoutProfileFactory,
-    UserPreferencesFactory,
-)
+
+from utils import factories
 
 
 @pytest.mark.django_db()
@@ -17,19 +14,26 @@ def test_user_preferences_migration(migrator) -> None:
     """
 
     # Initial state and model creation
-    migrator.apply_initial_migration(
+    init_state = migrator.apply_initial_migration(
         ("users", "0009_alter_userpreferences_citizenship")
     )
 
-    # Using factories for data creation before migration
-    player = PlayerProfileFactory(country="PL")
-    UserPreferencesFactory(user=player.user)
+    PlayerProfile = init_state.apps.get_model("profiles", "PlayerProfile")
+    CoachProfile = init_state.apps.get_model("profiles", "CoachProfile")
+    ScoutProfile = init_state.apps.get_model("profiles", "ScoutProfile")
+    User = init_state.apps.get_model("users", "User")
 
-    coach = CoachProfileFactory(country="ES")
-    UserPreferencesFactory(user=coach.user)
+    users = factory.create_batch(User, 3, FACTORY_CLASS=factories.UserFactory)
 
-    scout = ScoutProfileFactory(country="DE")
-    UserPreferencesFactory(user=scout.user)
+    player = PlayerProfile.objects.create(country="PL", user=users[0])
+    factories.UserPreferencesFactory(user_id=player.user.pk)
+
+    coach = CoachProfile.objects.create(country="ES", user=users[1])
+    factories.UserPreferencesFactory(user_id=coach.user.pk)
+
+    scout = ScoutProfile.objects.create(country="DE", user=users[2])
+    factories.UserPreferencesFactory(user_id=scout.user.pk)
+
     new_state: ProjectState = migrator.apply_tested_migration(
         ("users", "0010_auto_20230918_0219")
     )

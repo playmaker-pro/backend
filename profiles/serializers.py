@@ -1,6 +1,7 @@
 import typing
 from datetime import datetime
 
+from django.db import IntegrityError
 from django.db.models import Count
 from django.db.models.functions import ExtractYear
 from rest_framework import serializers
@@ -138,11 +139,98 @@ class LicenceTypeSerializer(serializers.ModelSerializer):
 
 
 class CoachLicenceSerializer(serializers.ModelSerializer):
-    licence = LicenceTypeSerializer()
+    licence = LicenceTypeSerializer(read_only=True)
 
     class Meta:
         model = models.CoachLicence
         fields = "__all__"
+        extra_kwargs = {
+            "licence_id": {"write_only": True},
+            "expiry_date": {"required": False},
+            "release_date": {"required": False},
+            "is_in_progress": {"required": False},
+        }
+
+    def validate(self, attrs: dict) -> dict:
+        """
+        Validate date format,
+        unable to use 'validate_expiry_date' cuz attr isn't required
+        """
+        if expiry_date := attrs.get("expiry_date"):
+            try:
+                datetime.strptime(expiry_date, "%Y-%m-%d")
+            except ValueError:
+                raise serializers.ValidationError(
+                    {"error": "Invalid date format, must be YYYY-MM-DD."}
+                )
+
+        if release_year := attrs.get("release_year"):
+            min_year = 1970
+            max_year = datetime.now().year
+            if min_year > release_year > max_year:
+                raise serializers.ValidationError(
+                    {
+                        "error": f"Invalid date format, must be YYYY between {min_year} and {max_year}."
+                    }
+                )
+
+        return attrs
+
+    def to_internal_value(self, data: dict) -> dict:
+        """
+        Override method to define profile based on requestor
+        (user who sent a request)
+        """
+        try:
+            data["owner"] = self.context["requestor"]
+        except KeyError:
+            raise ValueError("Requestor is not defined.")
+
+        return data
+
+    def update(
+        self, instance: models.CoachLicence, validated_data: dict
+    ) -> models.CoachLicence:
+        """Override method to update CoachLicence object"""
+        if instance.owner != self.context.get("requestor"):
+            raise NotOwnerOfAnObject
+
+        try:
+            return super().update(instance, validated_data)
+        except IntegrityError:
+            raise serializers.ValidationError(
+                {"error": "You already have this licence."}
+            )
+
+    def create(self, validated_data) -> models.CoachLicence:
+        """Override method to create CoachLicence object"""
+        try:
+            licence_id = validated_data.pop("licence_id")
+        except KeyError:
+            raise serializers.ValidationError({"error": "Licence ID is required."})
+
+        try:
+            validated_data["licence"] = models.LicenceType.objects.get(id=licence_id)
+        except models.LicenceType.DoesNotExist:
+            raise serializers.ValidationError(
+                {"error": "Given licence does not exist."}
+            )
+
+        try:
+            return models.CoachLicence.objects.create(**validated_data)
+        except IntegrityError:
+            raise serializers.ValidationError(
+                {"error": "You already have this licence."}
+            )
+
+    def delete(self) -> None:
+        """
+        Method do perform DELETE action on CoachLicence object,
+        owner validation included
+        """
+        if self.instance.owner != self.context.get("requestor"):
+            raise NotOwnerOfAnObject
+        self.instance.delete()
 
 
 class ProfileVisitHistorySerializer(serializers.ModelSerializer):

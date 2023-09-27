@@ -71,8 +71,20 @@ urlpatterns = [
     ),
     path(
         r"coach-licences/",
-        views.CoachLicencesChoicesView.as_view({"get": "list_coach_licences"}),
-        name="coach_licences_list",
+        views.CoachLicencesAPIView.as_view(
+            {
+                "get": "list_coach_licences",
+                "post": "add_licence_for_coach",
+            }
+        ),
+        name="coach_licences",
+    ),
+    path(
+        r"coach-licences/<int:licence_id>/",
+        views.CoachLicencesAPIView.as_view(
+            {"patch": "modify_licence_for_coach", "delete": "delete_licence_for_coach"}
+        ),
+        name="coach_licences_modify",
     ),
     path(
         r"players-age-range/",

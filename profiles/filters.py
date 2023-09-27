@@ -11,7 +11,7 @@ from profiles import models, services
 
 
 class ProfileListAPIFilter(APIFilter):
-    profile_service = services.ProfileService()
+    service = services.ProfileFilterService()
 
     PARAMS_PARSERS = {
         "youth": api_utils.convert_bool,
@@ -34,7 +34,7 @@ class ProfileListAPIFilter(APIFilter):
         """Get Profile class based on role defined within params"""
         role: str = self.request.query_params.get("role")
         try:
-            return self.profile_service.get_model_by_role(role)
+            return self.service.profile_service.get_model_by_role(role)
         except ValueError:
             raise profile_errors.InvalidProfileRole
 
@@ -108,9 +108,7 @@ class ProfileListAPIFilter(APIFilter):
         """Filter queryset by language"""
         if language := self.query_params.get("language"):
             try:
-                self.queryset = self.profile_service.filter_language(
-                    self.queryset, language
-                )
+                self.queryset = self.service.filter_language(self.queryset, language)
             except ValueError as e:
                 raise api_errors.InvalidLanguageCode(e)
 
@@ -118,9 +116,7 @@ class ProfileListAPIFilter(APIFilter):
         """Filter queryset by language"""
         if country := self.query_params.get("country"):
             try:
-                self.queryset = self.profile_service.filter_country(
-                    self.queryset, country
-                )
+                self.queryset = self.service.filter_country(self.queryset, country)
             except ValueError as e:
                 raise api_errors.InvalidCountryCode(e)
 
@@ -132,40 +128,34 @@ class ProfileListAPIFilter(APIFilter):
             self.query_params.get("radius", 1),
         )
         if longitude and latitude:
-            self.queryset = self.profile_service.filter_localization(
+            self.queryset = self.service.filter_localization(
                 self.queryset, latitude, longitude, radius
             )
 
     def filter_league(self) -> None:
         """Filter queryset by player league"""
         if league := self.query_params.get("league"):
-            self.queryset = self.profile_service.filter_player_league(
-                self.queryset, league
-            )
+            self.queryset = self.service.filter_player_league(self.queryset, league)
 
     def filter_gender(self) -> None:
         """Filter queryset by player gender"""
         if gender := self.query_params.get("gender"):
-            self.queryset = self.profile_service.filter_player_gender(
-                self.queryset, gender
-            )
+            self.queryset = self.service.filter_player_gender(self.queryset, gender)
 
     def filter_position(self) -> None:
         """Filter queryset by player position"""
         if position := self.query_params.get("position"):
-            self.queryset = self.profile_service.filter_player_position(
-                self.queryset, position
-            )
+            self.queryset = self.service.filter_player_position(self.queryset, position)
 
     def filter_youth(self) -> None:
         """Filter queryset by youth players"""
         if self.query_params.get("youth"):
-            self.queryset = self.profile_service.filter_youth_players(self.queryset)
+            self.queryset = self.service.filter_youth_players(self.queryset)
 
     def filter_age(self) -> None:
         """Filter queryset by age"""
         if min_age := self.query_params.get("min_age"):
-            self.queryset = self.profile_service.filter_min_age(self.queryset, min_age)
+            self.queryset = self.service.filter_min_age(self.queryset, min_age)
 
         if max_age := self.query_params.get("max_age"):
-            self.queryset = self.profile_service.filter_max_age(self.queryset, max_age)
+            self.queryset = self.service.filter_max_age(self.queryset, max_age)

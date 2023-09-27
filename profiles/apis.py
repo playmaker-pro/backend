@@ -19,8 +19,7 @@ from api.views import EndpointView
 from profiles import api_serializers, errors, models, serializers
 from profiles.filters import ProfileListAPIFilter
 from profiles.managers import SerializersManager
-from profiles.serializers_detailed.player_profile_serializers import PlayerProfileViewSerializer
-from profiles.services import PlayerVideoService, ProfileService
+from profiles.services import PlayerVideoService, ProfileFilterService, ProfileService
 
 profile_service = ProfileService()
 
@@ -162,7 +161,7 @@ class ProfileEnumsAPI(EndpointView):
 
     def get_player_age_range(self, request: Request) -> Response:
         """get players count group by age"""
-        qs: QuerySet = profile_service.get_players_on_age_range()
+        qs: QuerySet = ProfileFilterService.get_players_on_age_range()
         serializer = serializers.PlayersGroupByAgeSerializer(qs)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -205,7 +204,7 @@ class PlayerPositionAPI(EndpointView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CoachLicencesChoicesView(EndpointView):
+class CoachLicencesAPIView(EndpointView):
     permission_classes = [IsAuthenticatedOrReadOnly]
     """
     View for listing coach licence choices.
@@ -220,6 +219,62 @@ class CoachLicencesChoicesView(EndpointView):
         licences = models.LicenceType.objects.all()
         serializer = serializers.LicenceTypeSerializer(licences, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def add_licence_for_coach(self, request: Request) -> Response:
+        """
+        Add licence for coach - POST request
+
+        {
+            "licence_id": 1,
+            "expiry_date": "2025-03-19" (optional)
+        }
+        """
+        serializer = serializers.CoachLicenceSerializer(
+            data=request.data, context={"requestor": request.user}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def modify_licence_for_coach(self, request: Request, licence_id: int) -> Response:
+        """
+        Modify licence for coach - PATCH request
+        {
+            "licence_id": 2,
+            "expiry_date": "2025-11-11"
+        }
+        """
+        try:
+            licence = models.CoachLicence.objects.get(pk=licence_id)
+        except models.CoachLicence.DoesNotExist:
+            raise exceptions.NotFound(
+                f"CoachLicence with licence_id: {licence_id} does not exist."
+            )
+
+        serializer = serializers.CoachLicenceSerializer(
+            licence, data=request.data, context={"requestor": request.user}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete_licence_for_coach(self, request: Request, licence_id: int) -> Response:
+        """Delete licence for coach - DELETE request"""
+        try:
+            licence = models.CoachLicence.objects.get(pk=licence_id)
+        except models.CoachLicence.DoesNotExist:
+            raise exceptions.NotFound(
+                f"CoachLicence with licence_id: {licence_id} does not exist."
+            )
+
+        serializer = serializers.CoachLicenceSerializer(
+            licence, context={"requestor": request.user}
+        )
+        serializer.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PlayerVideoAPI(EndpointView):

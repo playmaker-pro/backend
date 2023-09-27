@@ -7,21 +7,21 @@ from datetime import datetime
 from address.models import AddressField
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core import validators
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
-from django.contrib.contenttypes.fields import GenericRelation
 
 import utils as utilites
 from adapters import strategy
 from adapters.base_adapter import API_METHOD, ScrapperAPI
 from adapters.player_adapter import (
     PlayerGamesAdapter,
-    PlayerSeasonStatsAdapter,
     PlayerScoreAdapter,
+    PlayerSeasonStatsAdapter,
 )
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_profile_external_links
@@ -1321,6 +1321,31 @@ class PlayerMetrics(models.Model):
         diff = now - date
         return diff.days
 
+    def wipe_metrics(self) -> None:
+        """Wipe all metrics data"""
+        self.games_summary = None
+        self.games_summary_updated = None
+        self.games = None
+        self.games_updated = None
+
+        self.fantasy_summary = None
+        self.fantasy_summary_updated = None
+        self.fantasy = None
+        self.fantasy_updated = None
+
+        self.season_summary = None
+        self.season_summary_updated = None
+        self.season = None
+        self.season_updated = None
+
+        self.pm_score = None
+        self.pm_score_updated = None
+
+        self.season_score = None
+        self.season_score_updated = None
+
+        self.save()
+
     def save(self, data_refreshed: bool = None, *args, **kwargs):
         if data_refreshed is not None and data_refreshed is True:
             self.updated_at = timezone.now()
@@ -1422,11 +1447,11 @@ class LicenceType(models.Model):
         _("Key"),
         max_length=10,
         null=True,
+        blank=True,
         help_text=_("Key of the licence"),
     )
     order = models.PositiveIntegerField(
         unique=True,
-        null=False,
         help_text=_("Order in which the licence will be listed."),
     )
 
@@ -1736,18 +1761,20 @@ class CoachLicence(models.Model):
         on_delete=models.CASCADE,
         help_text=_("The type of licence held by the coach"),
     )
-    coach_profile = models.ForeignKey(
-        CoachProfile,
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,  # Each user can have licences
         on_delete=models.CASCADE,
         related_name="licences",
-        help_text=_("Coach profile holding this license"),
+        help_text=_("User holding this license"),
     )
     expiry_date = models.DateField(
         blank=True, null=True, help_text=_("The expiry date of the licence (optional)")
     )
+    release_year = models.IntegerField(blank=True, null=True)
+    is_in_progress = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = ("licence", "coach_profile")
+        unique_together = ("licence", "owner")
 
     def __str__(self):
         return f"{self.licence.name}"
