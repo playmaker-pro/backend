@@ -17,6 +17,8 @@ class PlayerPositionFactory(CustomObjectFactory):
     class Meta:
         model = models.PlayerPosition
 
+    name = factory.Sequence(lambda n: f"position_{n}")
+
 
 class PlayerVideoFactory(CustomObjectFactory):
     class Meta:
@@ -26,9 +28,17 @@ class PlayerVideoFactory(CustomObjectFactory):
 class PlayerProfilePositionFactory(CustomObjectFactory):
     class Meta:
         model = models.PlayerProfilePosition
-        django_get_or_create = ("player_position", "player_profile")
+        django_get_or_create = ("player_profile", "player_position")
 
     player_position = factory.SubFactory(PlayerPositionFactory)
+    player_profile = factory.SubFactory(
+        "utils.factories.profiles.factories.PlayerProfileFactory"
+    )
+
+
+class VerificationStageFactory(CustomObjectFactory):
+    class Meta:
+        model = models.VerificationStage
 
 
 class ProfileFactory(CustomObjectFactory):
@@ -50,7 +60,11 @@ class PlayerMetricsFactory(factory.django.DjangoModelFactory):
 
     games_summary = {"games": "summary"}
     season_summary = {"season": "summary"}
-    ...  # TODO(bartnyk): add scoring after merge to master
+    pm_score = factory.LazyAttribute(lambda _: utils.get_random_int(0, 100))
+    season_score = {
+        "2022/2023": 67,
+        "2023/2024": 45,
+    }
 
 
 class ProfileVisitHistoryFactory(factory.django.DjangoModelFactory):
@@ -158,6 +172,13 @@ class PlayerProfileFactory(ProfileFactory):
         ).spoken_languages.set(languages)
         return obj
 
+    @classmethod
+    def create_with_empty_metrics(self, **kwargs) -> models.PlayerProfile:
+        """Create PlayerProfile with empty metrics"""
+        obj = super().create(**kwargs)
+        obj.playermetrics.wipe_metrics()
+        return obj
+
 
 class CoachProfileFactory(ProfileFactory):
     class Meta:
@@ -228,6 +249,27 @@ class PositionFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ("id",)
 
     name = factory.Iterator(["Napastnik", "Skrzydłowy", "Obrońca prawy", "Bramkarz"])
+
+
+class LicenceTypeFactory(CustomObjectFactory):
+    class Meta:
+        model = models.LicenceType
+
+    name = factory.Sequence(lambda n: f"licence_{n}")
+    order = factory.Sequence(lambda n: 100 + n)
+
+
+class CoachLicenceFactory(CustomObjectFactory):
+    class Meta:
+        model = models.CoachLicence
+
+    licence = factory.SubFactory(LicenceTypeFactory)
+    expiry_date = factory.LazyAttribute(
+        lambda _: utils.get_random_date(start_date="-15y", end_date="today")
+    )
+    owner = factory.SubFactory(user_factories.UserFactory)
+    is_in_progress = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    release_year = factory.LazyAttribute(lambda _: utils.get_random_int(2000, 2021))
 
 
 class LanguageFactory(factory.django.DjangoModelFactory):

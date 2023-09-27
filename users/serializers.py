@@ -32,6 +32,9 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
     gender = ProfileEnumChoicesSerializer(
         model=UserPreferences, required=False, allow_null=True
     )
+    licences = profile_serializers.CoachLicenceSerializer(
+        many=True, read_only=True, source="user.licences"
+    )
 
     class Meta:
         model = UserPreferences

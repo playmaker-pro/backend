@@ -276,7 +276,8 @@ class ProfileVerificationService:
 
 
 class ProfileService:
-    def set_initial_verification(self, profile: models.PROFILE_TYPE) -> None:
+    @staticmethod
+    def set_initial_verification(profile: models.PROFILE_TYPE) -> None:
         """set initial verification status object if not present"""
         if profile.verification is None:
             profile.verification = models.ProfileVerificationStatus.create_initial(
@@ -284,7 +285,8 @@ class ProfileService:
             )
             profile.save()
 
-    def set_and_create_user_profile(self, user: User) -> models.PROFILE_TYPE:
+    @staticmethod
+    def set_and_create_user_profile(user: User) -> models.PROFILE_TYPE:
         """get type of profile and create profile"""
         profile_model = models.PROFILE_MODEL_MAP.get(user.role, models.GuestProfile)
         profile, _ = profile_model.objects.get_or_create(user=user)
@@ -293,25 +295,29 @@ class ProfileService:
 
         return profile
 
+    @staticmethod
     def create_profile_with_initial_data(
-        self, profile_type: models.PROFILE_TYPE, data: dict
+        profile_type: models.PROFILE_TYPE, data: dict
     ) -> models.PROFILE_TYPE:
         """Create profile based on type, save with initial data"""
         return profile_type.objects.create(**data)
 
-    def get_model_by_role(self, role: str) -> models.PROFILE_TYPE:
+    @staticmethod
+    def get_model_by_role(role: str) -> models.PROFILE_TYPE:
         """Get and return type of profile based on role (i.e.: 'S', 'P', 'C')"""
         try:
             return models.PROFILE_MODEL_MAP[role]
         except KeyError:
             raise ValueError("Invalid role shortcut.")
 
-    def get_role_by_model(self, model: typing.Type[models.PROFILE_TYPE]) -> str:
+    @staticmethod
+    def get_role_by_model(model: typing.Type[models.PROFILE_TYPE]) -> str:
         """Get and return role shortcut based on profile type"""
         return models.REVERSED_MODEL_MAP[model]
 
+    @staticmethod
     def get_profile_by_uuid(
-        self, profile_uuid: typing.Union[uuid.UUID, str]
+        profile_uuid: typing.Union[uuid.UUID, str]
     ) -> models.PROFILE_TYPE:
         """
         Get profile object using uuid
@@ -327,14 +333,16 @@ class ProfileService:
         else:
             raise ObjectDoesNotExist
 
-    def is_valid_uuid(self, value: str) -> bool:
+    @staticmethod
+    def is_valid_uuid(value: str) -> bool:
         try:
             uuid_obj = uuid.UUID(value)
         except ValueError:
             return False
         return str(uuid_obj) == value
 
-    def get_club_roles(self) -> tuple:
+    @staticmethod
+    def get_club_roles() -> tuple:
         """Get list of club roles from ClubProfile"""
         return CLUB_ROLES
 
@@ -343,12 +351,27 @@ class ProfileService:
         """Get list of club roles from ClubProfile as a dict"""
         return dict(CLUB_ROLES)
 
-    def get_referee_roles(self) -> tuple:
+    @staticmethod
+    def get_referee_roles() -> tuple:
         """Get referee roles from RefereeProfile"""
         return models.RefereeLevel.REFEREE_ROLE_CHOICES
 
+    @staticmethod
+    def get_user_profiles(user: User) -> typing.List[models.PROFILE_TYPE]:
+        """Find all profiles for given user"""
+        profiles: list = []
+        for profile_type in models.PROFILE_MODELS:
+            if profile := profile_type.objects.filter(user=user).first():
+                profiles.append(profile)
+        return profiles
+
+
+class ProfileFilterService:
+    profile_service = ProfileService
+
+    @staticmethod
     def filter_youth_players(
-        self, queryset: django_base_models.QuerySet
+        queryset: django_base_models.QuerySet,
     ) -> django_base_models.QuerySet:
         """Filter profiles queryset to get profiles of youth users (under 21 yo)"""
         max_youth_birth_date = utils.get_past_date(years=21)
@@ -356,22 +379,25 @@ class ProfileService:
             user__userpreferences__birth_date__gte=max_youth_birth_date
         )
 
+    @staticmethod
     def filter_min_age(
-        self, queryset: django_base_models.QuerySet, age: int
+        queryset: django_base_models.QuerySet, age: int
     ) -> django_base_models.QuerySet:
         """Filter profile queryset with minimum user age"""
         min_birth_date = utils.get_past_date(years=age)
         return queryset.filter(user__userpreferences__birth_date__lte=min_birth_date)
 
+    @staticmethod
     def filter_max_age(
-        self, queryset: django_base_models.QuerySet, age: int
+        queryset: django_base_models.QuerySet, age: int
     ) -> django_base_models.QuerySet:
         """Filter profile queryset with maximum user age"""
         max_birth_date = utils.get_past_date(years=age + 1)
         return queryset.filter(user__userpreferences__birth_date__gte=max_birth_date)
 
+    @staticmethod
     def filter_player_position(
-        self, queryset: django_base_models.QuerySet, positions: list
+        queryset: django_base_models.QuerySet, positions: list
     ) -> django_base_models.QuerySet:
         """Filter profile queryset with maximum user age"""
         return (
@@ -389,8 +415,9 @@ class ProfileService:
             .order_by("-is_main_for_positions", "?")
         )
 
+    @staticmethod
     def filter_player_league(
-        self, queryset: django_base_models.QuerySet, league_ids: list
+        queryset: django_base_models.QuerySet, league_ids: list
     ) -> django_base_models.QuerySet:
         """Filter player's queryset with list of highest_parent league_id's using current season name"""
         current_season = get_current_season()
@@ -406,8 +433,8 @@ class ProfileService:
         """Filter player's queryset by gender"""
         return queryset.filter(user__userpreferences__gender__in=gender)
 
+    @staticmethod
     def filter_localization(
-        self,
         queryset: django_base_models.QuerySet,
         latitude: float,
         longitude: float,
@@ -446,8 +473,9 @@ class ProfileService:
             )
         ).filter(distance__lt=radius)
 
+    @staticmethod
     def filter_country(
-        self, queryset: django_base_models.QuerySet, country: list
+        queryset: django_base_models.QuerySet, country: list
     ) -> django_base_models.QuerySet:
         """Validate each country code, then return queryset filtered by given countries"""
         return queryset.filter(
@@ -456,8 +484,9 @@ class ProfileService:
             ]
         )
 
+    @staticmethod
     def filter_language(
-        self, queryset: django_base_models.QuerySet, language: list
+        queryset: django_base_models.QuerySet, language: list
     ) -> django_base_models.QuerySet:
         """Validate each language code, then return queryset filtered by given spoken languages"""
         return queryset.filter(
@@ -466,8 +495,9 @@ class ProfileService:
             ]
         )
 
+    @staticmethod
     def get_players_on_age_range(
-        self, min_age: int = 14, max_age: int = 44
+        min_age: int = 14, max_age: int = 44
     ) -> django_base_models.QuerySet:
         """Get queryset of players with age between given args"""
         player_max_age = utils.get_past_date(years=max_age)
@@ -476,14 +506,6 @@ class ProfileService:
             user__userpreferences__birth_date__lte=player_min_age,
             user__userpreferences__birth_date__gte=player_max_age,
         )
-
-    def get_user_profiles(self, user: User) -> typing.List[models.PROFILE_TYPE]:
-        """Find all profiles for given user"""
-        profiles: list = []
-        for profile_type in models.PROFILE_MODELS:
-            if profile := profile_type.objects.filter(user=user).first():
-                profiles.append(profile)
-        return profiles
 
 
 class PlayerProfilePositionService:

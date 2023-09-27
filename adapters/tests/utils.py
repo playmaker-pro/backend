@@ -5,20 +5,19 @@ from pm_core.services.stubs.player_stub import PlayerApiServiceStub
 from adapters.player_adapter import (
     PlayerDataAdapter,
     PlayerGamesAdapter,
-    PlayerSeasonStatsAdapter,
     PlayerScoreAdapter,
+    PlayerSeasonStatsAdapter,
 )
 from adapters.strategy import JustGet
-from utils.factories import PlayerProfileFactory, MapperEntityFactory, SeasonFactory
-
+from utils.factories import MapperEntityFactory, PlayerProfileFactory, SeasonFactory
 
 PLAYER_DEFAULT_TYPEHINT = typing.Union[
     PlayerSeasonStatsAdapter, PlayerDataAdapter, PlayerGamesAdapter, PlayerScoreAdapter
 ]
 
 
-def dummy_player():
-    player = PlayerProfileFactory()
+def dummy_player(**kwargs):
+    player = PlayerProfileFactory(**kwargs)
     MapperEntityFactory(target=player.mapper)
     return player
 

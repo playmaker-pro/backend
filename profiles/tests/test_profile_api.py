@@ -11,8 +11,6 @@ from roles.definitions import CLUB_ROLE_TEAM_LEADER
 from utils import factories
 from utils.test.test_utils import UserManager
 
-profile_service = ProfileService()
-
 
 class TestGetProfileAPI(APITestCase):
     def setUp(self) -> None:
@@ -123,7 +121,6 @@ class TestCreateProfileAPI(APITestCase):
         Test HTTP_400 in attempt to create profile
         for user that has already a profile
         """
-        payload["user_id"] = self.user_obj.pk
         self.client.post(self.url, json.dumps(payload), **self.headers)
         response = self.client.post(self.url, json.dumps(payload), **self.headers)
 

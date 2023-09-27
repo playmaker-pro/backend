@@ -231,7 +231,6 @@ class CoachProfileAdmin(ProfileAdminBase):
         linkify("external_links"),
     )
     autocomplete_fields = ("team_object", "team_history_object", "team_history_object")
-    inlines = [CoachLicenceInline]
 
     def get_mapper(self, obj):
         if hasattr(obj, "mapper"):

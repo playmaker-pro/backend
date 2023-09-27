@@ -25,7 +25,6 @@ from . import serializers as profile_serializers
 
 User = get_user_model()
 
-profiles_service: services.ProfileService = services.ProfileService()
 clubs_service: ClubService = ClubService()
 users_service: UserService = UserService()
 
@@ -180,7 +179,7 @@ class ProfileSerializer(serializers.Serializer):
         """get role by model"""
         if isinstance(obj, QuerySet):
             obj = obj.first()
-        return profiles_service.get_role_by_model(type(obj))
+        return services.ProfileService.get_role_by_model(type(obj))
 
     def save(self) -> None:
         """This serializer should not be able to save anything"""
@@ -291,7 +290,7 @@ class CreateProfileSerializer(ProfileSerializer):
     def save(self) -> None:
         """create profile and set role for given user, need to validate data first"""
         try:
-            self.model = profiles_service.get_model_by_role(
+            self.model = services.ProfileService.get_model_by_role(
                 self.initial_data.pop("role")
             )
         except ValueError:
@@ -379,4 +378,7 @@ class BaseProfileDataSerializer(ProfileSerializer):
     ) -> dict:
         """Override custom to_representation to return just uuid + role"""
         obj = obj or self.instance
-        return {"uuid": obj.uuid, "role": profiles_service.get_role_by_model(type(obj))}
+        return {
+            "uuid": obj.uuid,
+            "role": services.ProfileService.get_role_by_model(type(obj)),
+        }
