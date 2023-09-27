@@ -2600,8 +2600,6 @@ components:
     ProfileVisitHistory:
       type: object
       properties:
-        id:
-          type: integer
         counter:
           type: integer
           description: "Count of account visitation"
@@ -3126,10 +3124,6 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ExternalLink'
-            licences:
-              type: array
-              items:
-                $ref: '#/components/schemas/CoachLicence'
             licence:
               $ref: '#/components/schemas/ProfileEnumChoices'
             team_object_id:
@@ -3247,6 +3241,110 @@ components:
             "formation": null,
             "data": null
           }
+    ManagerProfile:
+      allOf:
+        - $ref: '#/components/schemas/BaseProfile'
+        - type: object
+          properties:
+            external_links:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExternalLink'
+            facebook_url:
+              type: string
+            external_links_id:
+              type: integer
+            other_url:
+              type: string
+            agency_phone:
+              type: string
+            agency_email:
+              type: string
+            agency_transfermarkt_url:
+              type: string
+            agency_website_url:
+              type: string
+            agency_instagram_url:
+              type: string
+            agency_twitter_url:
+              type: string
+            agency_facebook_url:
+              type: string
+            agency_other_url:
+              type: string
+          example: {
+            "user": {
+                "id": 7481,
+                "first_name": "Jan",
+                "last_name": "Nowak",
+                "last_login": "2023-07-09T11:37:50.502257+02:00",
+                "last_activity": "2023-09-27T19:20:32.889577+02:00",
+                "userpreferences": {
+                    "id": 5796,
+                    "age": null,
+                    "localization": null,
+                    "spoken_languages": [],
+                    "citizenship": null,
+                    "gender": null,
+                    "licences": [],
+                    "birth_date": null,
+                    "user": 7481
+                },
+                "picture": null
+            },
+            "history": {
+                "counter": 0,
+                "counter_coach": 0,
+                "counter_scout": 0
+            },
+            "external_links": {
+                "links": []
+            },
+            "verification_stage": {
+                "step": 0,
+                "date_updated": "2023-09-27T19:20:32.752574+02:00",
+                "done": false
+            },
+            "role": "M",
+            "verification_id": null,
+            "user_id": 7481,
+            "history_id": 10255,
+            "data_mapper_id": null,
+            "slug": "manager-jakub-bartnik",
+            "bio": null,
+            "event_log": null,
+            "verification_stage_id": 9425,
+            "uuid": "789c8f45-e8d7-4158-b437-bbcbcb3968f1",
+            "facebook_url": null,
+            "other_url": null,
+            "external_links_id": 383,
+            "agency_phone": null,
+            "agency_email": null,
+            "agency_transfermarkt_url": null,
+            "agency_website_url": null,
+            "agency_instagram_url": null,
+            "agency_twitter_url": null,
+            "agency_facebook_url": null,
+            "agency_other_url": null
+        }
+    ParentProfile:
+      allOf:
+        - $ref: '#/components/schemas/BaseProfile'
+        - type: object
+          properties:
+            facebook_url:
+              type: string
+    RefereeProfile:
+      allOf:
+        - $ref: '#/components/schemas/BaseProfile'
+        - type: object
+          properties:
+            facebook_url:
+              type: string
+            external_links:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExternalLink'
     ScoutProfile:
       allOf:
         - $ref: '#/components/schemas/BaseProfile'
@@ -3488,6 +3586,10 @@ components:
         user:
           type: integer
           description: "user_id"
+        licences:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoachLicence'
       required:
         - user
     PlayerProfileUserPreferences:
@@ -3543,6 +3645,10 @@ components:
         licence:
           $ref: '#/components/schemas/CoachLicenceType'
         expiry_date:
+          type: string
+        is_in_progress:
+          type: boolean
+        release_year:
           type: string
       required:
         - id

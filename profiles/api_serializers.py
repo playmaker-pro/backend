@@ -50,10 +50,6 @@ class ProfileListSerializer(serializers.ListSerializer):
         "history",
     )
 
-    @cached_property
-    def to_exclude(self) -> set:
-        return set(self.exclude_fields + self.child.exclude_fields)
-
     def to_representation(self, data: list) -> list:
         """Override method to exclude fields from data"""
         return self.exclude_fields_from_response(super().to_representation(data))
@@ -61,7 +57,7 @@ class ProfileListSerializer(serializers.ListSerializer):
     def exclude_fields_from_response(self, data: list) -> list:
         """Iterate through list objects and remove elements described in self.exclude_fields"""
         for obj in data:
-            for key in self.to_exclude:
+            for key in self.exclude_fields:
                 if key in obj.keys():
                     obj.pop(key, None)
         return data
@@ -77,6 +73,18 @@ class ProfileSerializer(serializers.Serializer):
         "verification_id",
         "data_mapper_id",
         "team_club_league_voivodeship_ver",
+        "external_links_id",
+        "verification_stage_id",
+        "history_id",
+        "meta",
+        "meta_updated",
+        "birth_date",
+        "position_alt",
+        "position_raw_alt",
+        "position_fantasy",
+        "mapper_id",
+        "country",
+        "updated",
     )  # exclude fields from response
     required_fields = ()  # fields required as 'data'
 
@@ -164,6 +172,9 @@ class ProfileSerializer(serializers.Serializer):
 
             if not isinstance(obj, models.PlayerProfile):
                 ret.pop("player_stats", None)
+
+        for field_name in self.exclude_fields:
+            ret.pop(field_name, None)
 
         return ret
 

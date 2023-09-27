@@ -1794,6 +1794,7 @@ class ManagerProfile(BaseProfile):
     PROFILE_TYPE = definitions.PROFILE_TYPE_MANAGER
     AUTO_VERIFY = True
     facebook_url = models.URLField(_("Facebook"), max_length=500, blank=True, null=True)
+    other_url = models.URLField(_("Other"), max_length=500, blank=True, null=True)
     external_links = models.OneToOneField(
         ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
     )
@@ -1837,6 +1838,20 @@ class ManagerProfile(BaseProfile):
         blank=True,
         null=True,
         help_text=_("URL of the managing agency's Twitter profile."),
+    )
+    agency_facebook_url = models.URLField(
+        _("Agency Facebook URL"),
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text=_("URL of the managing agency's Facebook profile."),
+    )
+    agency_other_url = models.URLField(
+        _("Agency Facebook URL"),
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text=_("Other agency URL."),
     )
 
     def create_external_links_obj(self):
