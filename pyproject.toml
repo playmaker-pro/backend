@@ -24,7 +24,7 @@ authors = ["rkesik <rafal.kesik@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.8.10"
 Django = "^3.2"
 django-fsm = "2.7.1"
 django-countries = "7.1"
@@ -43,7 +43,7 @@ drf-spectacular = "^0.26.4"
 drf-spectacular-sidecar = "^2023.9.1"
 pm-core = {version = "^1.0.0", source = "pm"}
 django-filter = "^23.2"
-psycopg2 = "^2.9.7"
+psycopg2-binary = "^2.9.7"
 pygments = "^2.1"
 django-crispy-forms = "^1.9"
 drf-yasg = "^1.21.7"
