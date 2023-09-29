@@ -139,7 +139,12 @@ class ClubTeamService:
         """
         Return all clubs filtered by the provided filters.
         """
-        queryset: QuerySet = models.Club.objects.all().order_by("name")
+        queryset = (
+            models.Club.objects.all()
+            .prefetch_related("teams", "teams__historical")
+            .order_by("name")
+        )
+
         if filters:
             filter = ClubFilter(filters, queryset=queryset)
             return filter.qs
