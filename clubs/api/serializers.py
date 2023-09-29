@@ -1,6 +1,5 @@
 import typing
 
-from django.db.models.query import QuerySet
 from rest_framework import serializers
 
 from clubs import models
@@ -153,58 +152,59 @@ class TeamSerializer(serializers.ModelSerializer):
             return LeagueHistorySerializer(latest_th.league_history).data
 
 
-class CustomTeamSerializer(serializers.ModelSerializer):
+class CustomTeamHistorySerializer(serializers.ModelSerializer):
     """
-    Custom Serializer for the Team model.
+    Serializer for the TeamHistory model providing customized fields.
 
-    This serializer extends the default TeamSerializer to include information about a team's historical leagues.
-    While the main TeamSerializer provides standard information about a team, there are cases where more
-    contextual information regarding a team's history in various leagues is required.
-    Specifically, this serializer is useful when needing to show which highest parent league a team was part
-    of during a specific season.
+    The CustomTeamHistorySerializer is designed to represent the historical data of
+    teams, with details about the highest parent league a team was part of,
+    its division, and some general team information like name and gender.
 
-    Note:
-    The 'historical_league_names' field requires the 'season' to be provided in the context when serializing.
-    If no season is provided, it defaults to fetching the highest parent league from the first historical entry.
+    The division field can represent an age group for junior teams
+    (e.g., "U8", "U11", "U14") or
+    a seniority level for senior teams (e.g., "seniorzy").
     """
 
     division = serializers.SerializerMethodField()
     historical_league_name = serializers.SerializerMethodField()
+    team_name = serializers.CharField(source="team.name")
+    gender = GenderSerializer(source="team.gender")
 
     class Meta:
-        model = models.Team
-        fields = ["id", "name", "gender", "division", "historical_league_name"]
+        model = models.TeamHistory
+        fields = [
+            "id",
+            "team_name",
+            "gender",
+            "division",
+            "historical_league_name",
+        ]
 
-    def get_historical_league_name(self, obj: models.Team) -> typing.Optional[str]:
+    def get_historical_league_name(
+        self, obj: models.TeamHistory
+    ) -> typing.Optional[str]:
         """
-        Retrieve the historical league data based on the season context.
-        If no season is provided in the context, fetches the first historical entry for the team.
+        Retrieve the historical league data.
         """
-        season = self.context.get("season")
-        if season:
-            historical_entry: typing.Optional[
-                models.TeamHistory
-            ] = obj.historical.filter(league_history__season__name=season).first()
-        else:
-            historical_entry = obj.historical.first()
-
         return (
-            historical_entry.league_history.league.get_highest_parent().name
-            if historical_entry
+            obj.league_history.league.get_highest_parent().name
+            if obj.league_history
             else None
         )
 
-    def get_division(self, obj: models.Team) -> typing.Optional[str]:
+    def get_division(self, obj: models.TeamHistory) -> typing.Optional[str]:
         """
         Retrieve the division of a team based on its junior group or seniority.
 
-        For junior teams, the division will represent the age group (e.g., "U8", "U11", "U14").
-        For senior teams, the division will indicate the seniority level (e.g., "seniorzy").
+        For junior teams, the division will represent the age group
+        (e.g., "U8", "U11", "U14").
+        For senior teams, the division will indicate the seniority level
+        (e.g., "seniorzy").
         """
-        if obj.junior_group and hasattr(obj.junior_group, "name"):
-            return obj.junior_group.name
-        elif obj.seniority and hasattr(obj.seniority, "name"):
-            return obj.seniority.name
+        if obj.team.junior_group and hasattr(obj.team.junior_group, "name"):
+            return obj.team.junior_group.name
+        elif obj.team.seniority and hasattr(obj.team.seniority, "name"):
+            return obj.team.seniority.name
         return None
 
 
@@ -215,7 +215,13 @@ class ClubTeamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Club
-        fields = ("id", "short_name", "picture_url", "country_name", "club_teams")
+        fields = (
+            "id",
+            "short_name",
+            "picture_url",
+            "country_name",
+            "club_teams",
+        )
 
     def get_picture_url(self, obj: models.Club) -> typing.Optional[str]:
         """
@@ -232,21 +238,42 @@ class ClubTeamSerializer(serializers.ModelSerializer):
         self, obj: models.Club
     ) -> typing.List[typing.Dict[str, typing.Any]]:
         """
-        Fetch team data for a club based on the gender and season context.
+        Retrieve the list of team histories related to a given club.
+
+        This method fetches all the team history records that are related
+        to the provided club.
+        It can further filter these records based on gender and season context
+        provided during serialization.
         """
         season = self.context.get("season")
         gender = self.context.get("gender")
 
-        # Filter teams by gender
-        teams: QuerySet[models.Team] = obj.teams.all()
+        filters = {"team__club": obj}
+
+        # Filtering by gender
         if gender:
             if gender.upper() == models.Gender.MALE:
-                teams = teams.filter(gender=models.Gender.get_male_object())
+                filters["team__gender"] = models.Gender.MALE
             elif gender.upper() == models.Gender.FEMALE:
-                teams = teams.filter(gender=models.Gender.get_female_object())
+                filters["team__gender"] = models.Gender.FEMALE
 
-        return CustomTeamSerializer(
-            teams, many=True, context={"gender": gender, "season": season}
+        # Filtering by season
+        if season:
+            filters["league_history__season__name"] = season
+
+        # Applying filters
+        team_histories_qs = (
+            models.TeamHistory.objects.select_related(
+                "team", "league_history", "team__gender"
+            )
+            .prefetch_related(
+                "team__junior_group", "team__seniority", "league_history__league"
+            )
+            .filter(**filters)
+        )
+
+        return CustomTeamHistorySerializer(
+            team_histories_qs, many=True, context=self.context
         ).data
 
 

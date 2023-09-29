@@ -245,7 +245,9 @@ paths:
                     club_teams:
                       - id: 19801
                         name: "Lgks Podlesianka Katowice"
-                        gender: 1
+                        gender:
+                          id: 1
+                          name: "mężczyźni"
                         division: "U15"
                         historical_league_name: "Trampkarz C2"
   /clubs/seasons/:
@@ -2473,7 +2475,7 @@ components:
         - id
         - name
 
-    SimpleTeam:
+    SimpleTeamHistory:
       type: object
       required:
         - id
@@ -2487,8 +2489,7 @@ components:
         name:
           type: string
         gender:
-          type: integer
-          description: 1 for male, 2 for female.
+          $ref: '#/components/schemas/Gender'
         division:
           type: string
         historical_league_name:
@@ -2517,7 +2518,7 @@ components:
         club_teams:
           type: array
           items:
-            $ref: '#/components/schemas/SimpleTeam'
+            $ref: '#/components/schemas/SimpleTeamHistory'
     Season:
       type: object
       properties:
