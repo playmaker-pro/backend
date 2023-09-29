@@ -909,9 +909,12 @@ paths:
                       type: string
                     role:
                       type: string
+                    verification_stage:
+                      $ref: '#/components/schemas/VerificationStage'
                   required:
                     - uuid
                     - role
+                    - verification_stage
         '401':
           description: "Unauthorized"
   /profiles/{profile_uuid}/:

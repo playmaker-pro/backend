@@ -25,7 +25,7 @@ profile_service = ProfileService()
 
 
 class ProfileAPI(ProfileListAPIFilter, EndpointView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = []
     allowed_methods = ["post", "patch", "get"]
 
     def create_profile(self, request: Request) -> Response:

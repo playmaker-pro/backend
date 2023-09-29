@@ -389,7 +389,13 @@ class BaseProfileDataSerializer(ProfileSerializer):
     ) -> dict:
         """Override custom to_representation to return just uuid + role"""
         obj = obj or self.instance
+
+        # Use the VerificationStageSerializer to serialize the verification_stage field
+        verification_stage_serializer = profile_serializers.VerificationStageSerializer(
+            instance=obj.verification_stage
+        )
         return {
             "uuid": obj.uuid,
             "role": services.ProfileService.get_role_by_model(type(obj)),
+            "verification_stage": verification_stage_serializer.data,
         }
