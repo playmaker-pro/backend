@@ -272,6 +272,15 @@ class CoachLicenceFactory(CustomObjectFactory):
     release_year = factory.LazyAttribute(lambda _: utils.get_random_int(2000, 2021))
 
 
+class CourseFactory(CustomObjectFactory):
+    class Meta:
+        model = models.Course
+
+    name = factory.Sequence(lambda n: f"course_{n}")
+    release_year = factory.LazyAttribute(lambda _: utils.get_random_int(2000, 2021))
+    owner = factory.SubFactory(user_factories.UserFactory)
+
+
 class LanguageFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Language

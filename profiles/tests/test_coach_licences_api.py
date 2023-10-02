@@ -196,6 +196,18 @@ class TestUpdateDeleteCoachLicenceAPI(APITestCase):
 
         assert response.status_code == 400
 
+    def test_patch_licence_change_owner(self) -> None:
+        """test patch licence change owner"""
+        another_user = factories.UserFactory.create()
+
+        response = self.client.patch(
+            self.url(self.licence.pk),
+            data=json.dumps({"owner_id": another_user.pk}),
+            **self.headers
+        )
+
+        assert response.data["owner"] == self.user_obj.pk
+
     def test_delete_licence_for_user(self) -> None:
         """test delete licence for user"""
         response = self.client.delete(self.url(self.licence.pk), **self.headers)

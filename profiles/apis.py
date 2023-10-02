@@ -345,3 +345,44 @@ class PlayerVideoAPI(EndpointView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             raise errors.IncompleteRequestBody(("id",))
+
+
+class ProfileCoursesAPI(EndpointView):
+    serializer_class = serializers.CourseSerializer
+
+    def create(self, request: Request) -> Response:
+        """Create new course for user"""
+        serializer = self.serializer_class(
+            data=request.data,
+            context={"requestor": request.user},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(owner=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request: Request, course_id: int) -> Response:
+        """Update course for user"""
+
+        try:
+            course = models.Course.objects.get(pk=course_id)
+        except models.Course.DoesNotExist:
+            raise exceptions.NotFound("Course with given ID does not exist.")
+
+        serializer = self.serializer_class(
+            course, data=request.data, context={"requestor": request.user}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request: Request, course_id: int) -> Response:
+        """Update course for user"""
+
+        try:
+            course = models.Course.objects.get(pk=course_id)
+        except models.Course.DoesNotExist:
+            raise exceptions.NotFound("Course with given ID does not exist.")
+
+        serializer = self.serializer_class(course, context={"requestor": request.user})
+        serializer.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

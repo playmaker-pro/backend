@@ -149,6 +149,8 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
             "expiry_date": {"required": False},
             "release_date": {"required": False},
             "is_in_progress": {"required": False},
+            "owner_id": {"read_only": True},
+            "owner": {"read_only": True},
         }
 
     def validate(self, attrs: dict) -> dict:
@@ -156,6 +158,7 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
         Validate date format,
         unable to use 'validate_expiry_date' cuz attr isn't required
         """
+
         if expiry_date := attrs.get("expiry_date"):
             try:
                 datetime.strptime(expiry_date, "%Y-%m-%d")
@@ -167,7 +170,7 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
         if release_year := attrs.get("release_year"):
             min_year = 1970
             max_year = datetime.now().year
-            if min_year > release_year > max_year:
+            if min_year > release_year or release_year > max_year:
                 raise serializers.ValidationError(
                     {
                         "error": f"Invalid date format, must be YYYY between {min_year} and {max_year}."
@@ -313,3 +316,52 @@ class VerificationStageSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.VerificationStage
         exclude = ("id",)
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Course
+        fields = "__all__"
+        extra_kwargs = {
+            "name": {"required": False},
+            "owner_id": {"read_only": True},
+            "owner": {"read_only": True},
+        }
+
+    def validate(self, attrs: dict) -> dict:
+        """Validate data"""
+
+        if self.instance:
+            name = attrs.get("name") or self.instance.name
+            release_year = attrs.get("release_year") or self.instance.release_year
+        else:
+            name = attrs.get("name")
+            release_year = attrs.get("release_year")
+
+        if not name:
+            raise serializers.ValidationError({"error": "Name is required."})
+
+        if release_year and (1970 > release_year or release_year > datetime.now().year):
+            raise serializers.ValidationError(
+                {
+                    "error": f"Invalid date format, must be YYYY between 1970 and {datetime.now().year}."
+                }
+            )
+
+        return attrs
+
+    def delete(self) -> None:
+        """
+        Method do perform DELETE action on Course object,
+        owner validation included
+        """
+        if self.instance.owner != self.context.get("requestor"):
+            raise NotOwnerOfAnObject
+        self.instance.delete()
+
+    def update(self, instance: models.Course, validated_data: dict) -> models.Course:
+        """Override method to update Course object"""
+        if instance.owner != self.context.get("requestor"):
+            raise NotOwnerOfAnObject
+
+        return super().update(instance, validated_data)

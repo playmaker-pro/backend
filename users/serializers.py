@@ -35,6 +35,9 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
     licences = profile_serializers.CoachLicenceSerializer(
         many=True, read_only=True, source="user.licences"
     )
+    courses = profile_serializers.CourseSerializer(
+        many=True, read_only=True, source="user.courses"
+    )
 
     class Meta:
         model = UserPreferences
