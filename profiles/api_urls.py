@@ -70,7 +70,7 @@ urlpatterns = [
         name="positions_list",
     ),
     path(
-        r"coach-licences/",
+        r"coach-licence/",
         views.CoachLicencesAPIView.as_view(
             {
                 "get": "list_coach_licences",
@@ -80,7 +80,7 @@ urlpatterns = [
         name="coach_licences",
     ),
     path(
-        r"coach-licences/<int:licence_id>/",
+        r"coach-licence/<int:licence_id>/",
         views.CoachLicencesAPIView.as_view(
             {"patch": "modify_licence_for_coach", "delete": "delete_licence_for_coach"}
         ),
@@ -108,12 +108,22 @@ urlpatterns = [
         name="modify_player_video",
     ),
     path(
-        r"player-video/<int:video_id>",
+        r"player-video/<int:video_id>/",
         views.PlayerVideoAPI.as_view(
             {
                 "delete": "delete_player_video",
             }
         ),
         name="delete_player_video",
+    ),
+    path(
+        r"course/",
+        views.ProfileCoursesAPI.as_view({"post": "create"}),
+        name="create_course",
+    ),
+    path(
+        r"course/<int:course_id>/",
+        views.ProfileCoursesAPI.as_view({"delete": "delete", "patch": "update"}),
+        name="modify_course",
     ),
 ]

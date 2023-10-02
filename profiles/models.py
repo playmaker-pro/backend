@@ -62,6 +62,17 @@ FORMATION_CHOICES = (
 )
 
 
+class Course(models.Model):
+    name = models.CharField(max_length=100)
+    release_year = models.IntegerField(blank=True, null=True)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="courses"
+    )
+
+    def __str__(self) -> str:
+        return f"{self.owner} - {self.name} ({self.release_year})"
+
+
 class RoleChangeRequest(models.Model):
     """Keeps track on requested changes made by users."""
 
