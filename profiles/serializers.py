@@ -11,6 +11,7 @@ from api.serializers import locale_service
 from utils import translate_to
 
 from . import errors, models
+from clubs.models import TeamHistory
 
 
 class ChoicesTuple(typing.NamedTuple):
@@ -365,3 +366,166 @@ class CourseSerializer(serializers.ModelSerializer):
             raise NotOwnerOfAnObject
 
         return super().update(instance, validated_data)
+
+
+class TeamContributorInputSerializer(serializers.Serializer):
+    team_history = serializers.PrimaryKeyRelatedField(
+        queryset=TeamHistory.objects.all(), required=False, many=True
+    )
+    team_parameter = serializers.CharField(required=True)
+    league_identifier = serializers.CharField(required=True)
+    season = serializers.IntegerField(required=True)
+    round = serializers.ChoiceField(
+        choices=models.TeamContributor.ROUND_CHOICES, required=False
+    )
+    country = serializers.CharField(required=False)
+    gender = serializers.IntegerField(required=False)
+    is_primary = serializers.BooleanField(required=True)
+
+    def __init__(self, *args, **kwargs) -> None:
+        """
+        Initialize the serializer.
+
+        If the initial data contains a 'team_history' key, it marks the 'team_parameter',
+        'league_identifier', and 'season' fields as not required. This caters to the scenario
+        where if a team_history is provided, the other details are derived from it and thus
+        aren't required to be passed in separately.
+        """
+        super().__init__(*args, **kwargs)
+        initial_data = kwargs.get("data")
+
+        if initial_data and initial_data.get("team_history"):
+            self.fields["team_parameter"].required = False
+            self.fields["league_identifier"].required = False
+            self.fields["season"].required = False
+
+    def to_internal_value(self, data):
+        # Check if 'team_history' is an integer
+        if "team_history" in data:
+            if isinstance(data["team_history"], int):
+                data["team_history"] = [data["team_history"]]
+        return super().to_internal_value(data)
+
+    def validate_team_parameter(self, value: str) -> typing.Union[int, str]:
+        """
+        Check if the provided value is numeric and convert it to an integer.
+        """
+        if value.isdigit():
+            return int(value)
+        return value
+
+    def validate_league_identifier(self, value: str) -> typing.Union[int, str]:
+        """
+        Check if the provided league identifier is numeric and convert it to an integer.
+        """
+        if value.isdigit():
+            return int(value)
+        return value
+
+    def validate(
+        self, data: typing.Dict[str, typing.Any]
+    ) -> typing.Dict[str, typing.Any]:
+        """
+        Check specific validation requirements for the provided data.
+        """
+        validation_errors = {}
+
+        # If there's no 'team_history'
+        if not data.get("team_history"):
+            # Check if the league_identifier is an ID or name
+            league_identifier = data.get("league_identifier")
+
+            # If it's a foreign team (determined by league_identifier being a name)
+            if not isinstance(league_identifier, int):
+                # Check if country is provided
+                if not data.get("country"):
+                    validation_errors[
+                        "country"
+                    ] = "This field is required for foreign teams."
+
+                # Check if gender is provided for the foreign team
+                if not data.get("gender"):
+                    if "gender" not in validation_errors:
+                        validation_errors["gender"] = []
+                    validation_errors["gender"].append(
+                        "Gender is required for foreign teams."
+                    )
+
+                    # Check if team_identifier is an ID (which shouldn't be the case for foreign teams)
+                if isinstance(data.get("team_parameter"), int):
+                    validation_errors["team_identifier"] = [
+                        "Foreign teams require a team name, not an ID."
+                    ]
+
+            else:
+                # For non-foreign teams where league_identifier is an ID
+                if data.get("country") and data.get("country") != "PL":
+                    validation_errors["league_identifier"] = (
+                        "Foreign teams require a league name, not an ID.",
+                    )
+
+        # If any errors found, raise them all at once
+        if validation_errors:
+            raise serializers.ValidationError(validation_errors)
+
+        return data
+
+
+class TeamContributorSerializer(serializers.ModelSerializer):
+    team_name = serializers.SerializerMethodField()
+    picture_url = serializers.SerializerMethodField()
+    league_name = serializers.SerializerMethodField()
+    season_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.TeamContributor
+        fields = (
+            "id",
+            "picture_url",
+            "team_name",
+            "league_name",
+            "season_name",
+            "round",
+            "is_primary",
+        )
+
+    def get_picture_url(self, obj):
+        """
+        Retrieve the absolute url of the club logo.
+        """
+        request = self.context.get("request")
+        team_history = obj.team_history.first()
+        try:
+            url = request.build_absolute_uri(team_history.team.club.picture.url)
+        except (ValueError, AttributeError):
+            return None
+        return url
+
+    def get_team_name(self, obj):
+        """
+        Retrieves the name of the team associated with the first team_history instance.
+        """
+        team_history = obj.team_history.first()
+        return team_history.team.name if team_history else None
+
+    def get_league_name(self, obj):
+        """
+        Retrieves the name of the league associated with the first team_history instance.
+        """
+        team_history = obj.team_history.first()
+        if team_history and team_history.league_history:
+            return team_history.league_history.league.display_league_top_parent
+        return None
+
+    def get_season_name(self, obj):
+        """
+        Retrieves the name of the season associated with the first team_history instance.
+        """
+        team_history = obj.team_history.first()
+        if (
+            team_history
+            and team_history.league_history
+            and team_history.league_history.season
+        ):
+            return team_history.league_history.season.name
+        return None

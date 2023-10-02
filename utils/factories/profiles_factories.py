@@ -1,4 +1,5 @@
 import random
+import uuid
 
 import factory
 from cities_light.models import City
@@ -287,3 +288,28 @@ class LanguageFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ("name",)
 
     name = factory.Iterator(["Polski", "Angielski", "Niemiecki", "Francuski"])
+
+
+class TeamContributorFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.TeamContributor
+
+    profile_uuid = factory.LazyAttribute(lambda o: PlayerProfileFactory().uuid)
+    is_primary = False
+
+    @factory.post_generation
+    def team_history(obj, create, extracted, **kwargs):
+        """
+        Post-generation hook to associate TeamHistory objects with the TeamContributor instance.
+
+        If the `extracted` argument is provided, it uses the given TeamHistory instances.
+        Otherwise, it creates and associates a new TeamHistory instance.
+        """
+        if not create:
+            return
+
+        if extracted:
+            for team_hist in extracted:
+                obj.team_history.add(team_hist)
+        else:
+            obj.team_history.add(clubs_factories.TeamHistoryFactory())

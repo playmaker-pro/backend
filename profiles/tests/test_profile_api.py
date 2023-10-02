@@ -7,8 +7,9 @@ from rest_framework.test import APIClient, APITestCase
 
 from profiles.services import ProfileService
 from profiles.tests import utils
-from roles.definitions import CLUB_ROLE_TEAM_LEADER
-from utils import factories
+from roles.definitions import CLUB_ROLE_TEAM_LEADER, PLAYER_SHORT
+from users.models import User
+from utils import factories, testutils
 from utils.test.test_utils import UserManager
 
 
@@ -357,3 +358,106 @@ class TestUpdateProfileAPI(APITestCase):
         assert response.status_code == 200
         assert response.data["verification_stage"]["step"] == 5
         assert response.data["verification_stage"]["done"] == True
+
+
+class ProfileTeamsApiTest(APITestCase):
+    def setUp(self):
+        """Set up test environment."""
+        testutils.create_system_user()
+        self.user = User.objects.create(email="username", declared_role=PLAYER_SHORT)
+        self.service = ProfileService()
+        self.league = factories.LeagueFactory.create()
+        self.team_contributor = factories.TeamContributorFactory.create(
+            profile_uuid=self.user.profile.uuid
+        )
+        self.team_history = factories.TeamHistoryFactory.create()
+        self.season = factories.SeasonFactory.create()
+
+    def test_get_profiles_teams(self):
+        """Test retrieving profile's teams."""
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(
+            reverse(
+                "api:profiles:profiles_teams",
+                kwargs={"profile_uuid": self.user.profile.uuid},
+            )
+        )
+
+        assert response.status_code == 200
+
+    def test_add_team_to_profile(self):
+        """Test adding a team to a profile."""
+        self.client.force_authenticate(user=self.user)
+
+        data = {
+            "league_identifier": self.league.pk,
+            "country": "PL",
+            "season": self.season.pk,
+            "team_parameter": "Test Team",
+        }
+
+        response = self.client.post(
+            reverse(
+                "api:profiles:add_team_to_profile",
+            ),
+            data,
+        )
+
+        assert response.status_code == 201
+
+    def test_patch_team_history(self):
+        """Test updating (patching) a team history."""
+        self.client.force_authenticate(user=self.user)
+
+        data = {
+            "team_history": self.team_history.id,
+        }
+        response = self.client.patch(
+            reverse(
+                "api:profiles:update_team_history",
+                kwargs={"team_contributor_id": self.team_contributor.pk},
+            ),
+            data,
+        )
+
+        assert response.status_code == 200
+        assert response.data["team_name"] == self.team_history.team.name
+        assert (
+            response.data["league_name"] == self.team_history.league_history.league.name
+        )
+
+    def test_delete_team_history(self):
+        """Test deleting a team history."""
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.delete(
+            reverse(
+                "api:profiles:update_team_history",
+                kwargs={"team_contributor_id": self.team_contributor.id},
+            ),
+        )
+
+        assert response.status_code == 204
+
+    def test_get_team_contributor_or_404(self):
+        """
+        Test the endpoint to retrieve team contributor based on profile ID.
+        """
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(
+            reverse(
+                "api:profiles:profiles_teams",
+                kwargs={"profile_uuid": self.user.profile.uuid},
+            )
+        )
+        assert response.status_code == 200
+        assert (
+            response.data[0]["team_name"]
+            == self.team_contributor.team_history.first().team.name
+        )
+        assert (
+            response.data[0]["league_name"]
+            == self.team_contributor.team_history.first().league_history.league.name
+        )

@@ -4,20 +4,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('clubs', '0085_merge_0084_auto_20230818_2033_0084_auto_20230831_1833'),
+        ("clubs", "0085_merge_0084_auto_20230818_2033_0084_auto_20230831_1833"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='club',
-            name='short_name',
-            field=models.CharField(blank=True, max_length=255, null=True, verbose_name='Skrócona nazwa klubu'),
+            model_name="club",
+            name="short_name",
+            field=models.CharField(
+                blank=True,
+                max_length=255,
+                null=True,
+                verbose_name="Skrócona nazwa klubu",
+            ),
         ),
         migrations.AddField(
-            model_name='team',
-            name='short_name',
-            field=models.CharField(blank=True, max_length=255, null=True, verbose_name='Skrócona nazwa drużyny'),
+            model_name="team",
+            name="short_name",
+            field=models.CharField(
+                blank=True,
+                max_length=255,
+                null=True,
+                verbose_name="Skrócona nazwa drużyny",
+            ),
         ),
     ]

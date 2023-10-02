@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('clubs', '0086_auto_20230920_1121'),
+        ("clubs", "0086_auto_20230920_1121"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='season',
-            options={'ordering': ('-is_current', '-name')},
+            name="season",
+            options={"ordering": ("-is_current", "-name")},
         ),
     ]

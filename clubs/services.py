@@ -1,11 +1,12 @@
 import datetime
 import typing
 
-from django.db.models import F, QuerySet
+from django.contrib.auth.models import User
+from django.db import models as django_models
+from django.db.models import F, QuerySet, ObjectDoesNotExist
 
+from clubs import errors, models
 from clubs.api.api_filters import ClubFilter
-
-from . import models
 
 
 class SeasonService:
@@ -157,3 +158,260 @@ class ClubTeamService:
         """
         if gender and gender.upper() not in ["M", "F"]:
             raise ValueError
+
+
+class TeamHistoryCreationService:
+    DEFAULT_COUNTRY_CODE = "PL"
+    DEFAULT_STATUS = "not-ver"
+
+    def initialize_model_instance(
+        self, model_instance: django_models.Model, user: User
+    ) -> None:
+        """
+        Initializes the given model instance with default attributes and saves it to the database.
+
+        """
+        model_instance.status = self.DEFAULT_STATUS
+        model_instance.createdBy = user
+        model_instance.enabled = False
+        model_instance.visible = False
+        model_instance.save()
+
+    def get_or_create(
+        self, validated_data: dict, user, country_code: str
+    ) -> models.Team:
+        """
+        Retrieves an existing team or creates a new one based on the provided data.
+
+        The method uses the 'team_parameter' key from the validated_data. If 'team_parameter' is
+        an integer, it's assumed to be the ID of the team and the team is retrieved by its ID.
+        If it's a string, it's assumed to be the name of the team and the method will either retrieve
+        an existing team with that name or create a new one, depending on whether a match is found.
+        """
+        team_parameter: typing.Union[str, int] = validated_data.get("team_parameter")
+
+        gender: typing.Optional[models.Gender] = self.determine_gender(
+            validated_data, team_parameter, country_code
+        )
+
+        # Set seniority conditionally based on the country code
+        if country_code == self.DEFAULT_COUNTRY_CODE:
+            seniority = self.get_seniority_from_league(
+                validated_data.get("league_identifier")
+            )
+        else:
+            seniority = None
+        if isinstance(team_parameter, int):
+            return self.get_team_by_id(team_parameter)
+        else:
+            return self.get_or_create_team_by_name(
+                team_parameter, gender, seniority, user
+            )
+
+    @staticmethod
+    def get_seniority_from_league(league_id: int) -> str:
+        """
+        Retrieve the seniority of a league based on its ID.
+
+        This method fetches a league by its ID and returns the seniority associated with that league.
+        If the league does not exist, a LeagueDoesNotExist error is raised.
+        """
+        league = models.League.objects.filter(id=league_id).first()
+        if not league:
+            raise errors.LeagueNotFoundServiceException()
+        return league.seniority
+
+    def determine_gender(
+        self,
+        validated_data: dict,
+        team_parameter: typing.Union[str, int],
+        country_code: str,
+    ) -> typing.Optional[models.Gender]:
+        """
+        Determine the gender based on provided data, team parameter, and country code.
+
+        For the default country code (e.g., 'PL'), the gender is determined either:
+        - Directly from the team_parameter if it's an integer.
+        - Or from the league identifier in the validated data.
+
+        For other country codes, the gender is fetched from the validated data.
+        """
+        if country_code != self.DEFAULT_COUNTRY_CODE:
+            return self.get_gender_from_data(validated_data)
+        elif isinstance(team_parameter, int):
+            return None
+        return self.get_gender_from_league(validated_data.get("league_identifier"))
+
+    @staticmethod
+    def get_gender_from_data(validated_data: dict) -> typing.Optional[models.Gender]:
+        """
+        Extract and retrieve the Gender instance from the provided data.
+        """
+        gender_id: int = validated_data.get("gender", None)
+        if not gender_id:
+            return
+        try:
+            return models.Gender.objects.get(id=gender_id)
+        except models.Gender.DoesNotExist:
+            return
+
+    @staticmethod
+    def get_team_by_id(team_id: int) -> typing.Optional[models.Team]:
+        """
+        Retrieve a team based on its ID.
+        """
+        club_service = ClubService()
+        team: typing.Optional[models.Team] = club_service.team_exist(team_id)
+        if not team:
+            raise errors.TeamNotFoundServiceException()
+        return team
+
+    def get_or_create_team_by_name(
+        self, team_name: str, gender: models.Gender, seniority: str, user
+    ) -> models.Team:
+        """
+        Retrieve an existing team by name or create a new one if it doesn't exist.
+
+        This function first tries to get a team by its name and gender. If the team is found
+        and it's marked as visible and enabled, it raises a TeamAlreadyExist error.
+        If the team isn't found, a new team is created with the provided name and gender.
+        The newly created team is then initialized with default values.
+        """
+        team = models.Team.objects.filter(
+            name__iexact=team_name, gender=gender, seniority=seniority
+        ).first()
+
+        if team and team.visible and team.enabled:
+            raise errors.TeamAlreadyExist()
+        if not team:
+            team = models.Team(name=team_name, gender=gender, seniority=seniority)
+            self.initialize_model_instance(team, user)
+        return team
+
+    @staticmethod
+    def get_gender_from_league(league_id: int) -> models.Gender:
+        """
+        Retrieve the gender associated with a league.
+        """
+        league = models.League.objects.filter(id=league_id).first()
+        if not league:
+            raise errors.LeagueNotFoundServiceException()
+        return league.gender
+
+    def create_or_get_team_history(
+        self, team: models.Team, league_history: models.LeagueHistory, user
+    ) -> models.TeamHistory:
+        """
+        Retrieve or create a history record for the given team and league history.
+        """
+        team_history, created = models.TeamHistory.objects.get_or_create(
+            team=team, league_history=league_history
+        )
+        if created:
+            self.initialize_model_instance(team_history, user)
+        return team_history
+
+    def create_or_get_league_history(
+        self, season_id: int, league: models.League, user
+    ) -> models.LeagueHistory:
+        """
+        Retrieve or create a league history record for the given season and league.
+        """
+        try:
+            league_history, created = models.LeagueHistory.objects.get_or_create(
+                season_id=season_id, league=league
+            )
+        except ObjectDoesNotExist:
+            raise errors.SeasonDoesNotExistServiceException()
+        if created:
+            self.initialize_model_instance(league_history, user)
+        return league_history
+
+    def create_or_get_league_by_name(
+        self, league_identifier: str, country_code: str, user, gender: models.Gender
+    ) -> models.League:
+        """
+        Retrieve an existing league by its identifier or create a new one if it doesn't exist.
+
+        This function attempts to get a league using the provided identifier (name).
+        If a league with the given identifier isn't found, a new league is created with the
+        provided identifier, country code, and gender. The newly created league is then
+        initialized with default values.
+        """
+        league, created = models.League.objects.get_or_create(
+            name=league_identifier, defaults={"country": country_code, "gender": gender}
+        )
+        if created:
+            self.initialize_model_instance(league, user)
+        return league
+
+    def get_league_based_on_country(
+        self,
+        league_identifier: typing.Union[str, int],
+        country_code: str,
+        user,
+        gender: models.Gender,
+    ) -> models.League:
+        """
+        Retrieve a league based on its identifier and country.
+        Handles logic to differentiate between local ("PL") and foreign leagues.
+        """
+        if country_code != self.DEFAULT_COUNTRY_CODE:
+            return self.create_or_get_league_by_name(
+                league_identifier, country_code, user, gender
+            )
+
+        league = models.League.objects.filter(id=league_identifier).first()
+        if not league:
+            raise errors.LeagueNotFoundServiceException()
+        return league
+
+    def create_or_get_league_and_history(
+        self,
+        league_identifier: typing.Union[str, int],
+        country_code: str,
+        season: int,
+        user,
+        data,
+    ) -> typing.Tuple[models.League, models.LeagueHistory]:
+        """
+        Retrieve or create a league and its corresponding history record based on provided identifiers.
+
+        This method determines the gender either from provided data (for foreign teams)
+        or from the league (for Polish teams). It then retrieves or creates a league based
+        on the league identifier and country code. Finally, it fetches or creates a
+        league history record for the provided season.
+        """
+        # Determine gender based on country code
+        if country_code != "PL":
+            # For foreign teams, derive the gender from the provided data
+            gender: typing.Optional[models.Gender] = self.get_gender_from_data(data)
+        else:
+            # For Polish teams, fetch gender based on the league
+            gender: models.Gender = self.get_gender_from_league(league_identifier)
+
+        # Retrieve or create the league entity based on identifier, country, and gender
+        league: models.League = self.get_league_based_on_country(
+            league_identifier, country_code, user, gender
+        )
+
+        # Fetch or establish a league history record for the given season and league
+        league_history: models.LeagueHistory = self.create_or_get_league_history(
+            season, league, user
+        )
+        # Ensure the league history is properly retrieved or created
+        if not league_history:
+            raise errors.LeagueHistoryNotFoundServiceException()
+
+        return league, league_history
+
+    @staticmethod
+    def fetch_team_history_and_season(team_history_id: int) -> typing.Tuple:
+        """
+        Fetch the team_history and associated season based on a team_history_id.
+        """
+        team_history: models.TeamHistory = models.TeamHistory.objects.get(
+            id=team_history_id
+        )
+        season: int = team_history.league_history.season.id
+        return team_history, season
