@@ -20,6 +20,11 @@ from voivodeships.models import Voivodeships
 
 from .managers import LeagueManager
 
+STATUS_CHOICES = [
+    ("ver", "Verified"),
+    ("not-ver", "Not Verified"),
+]
+
 
 class Season(models.Model):
     name = models.CharField(max_length=9, unique=True)
@@ -288,6 +293,24 @@ class LeagueHistory(models.Model):
         null=True,
         help_text="League(play) name straight from scrapped object",
     )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        help_text="The user who manually defined this record. This field is populated "
+        "only when a user defines the League by themselves.",
+    )
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default="not-ver",
+        help_text="Verification status of the league history.",
+    )
+    enabled = models.BooleanField(
+        default=True,
+        help_text="Flag indicating whether the league history should be displayed in the API.",
+    )
 
     def __str__(self):
         return f"{self.season} ({self.league}) {self.index or ''}"
@@ -440,6 +463,24 @@ class League(models.Model):
     search_tokens = models.CharField(max_length=255, null=True, blank=True)
 
     scrapper_autocreated = models.BooleanField(default=False)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        help_text="The user who manually defined this record. This field is populated "
+        "only when a user creates or defines the League by themselves.",
+    )
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default="not-ver",
+        help_text="Verification status of the league.",
+    )
+    enabled = models.BooleanField(
+        default=True,
+        help_text="Flag indicating whether the league should be displayed in the API.",
+    )
 
     def has_season_data(self, season_name: str) -> bool:
         """
@@ -713,6 +754,24 @@ class Team(models.Model, MappingMixin):
     )
 
     labels = GenericRelation("labels.Label")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        help_text="The user who manually defined this record. This field is populated "
+        "only when a user creates or defines the Team by themselves.",
+    )
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default="not-ver",
+        help_text="Verification status of the team.",
+    )
+    enabled = models.BooleanField(
+        default=True,
+        help_text="Flag indicating whether the team should be displayed in the API.",
+    )
 
     def get_file_path(instance, filename):
         return f"team_pics/%Y-%m-%d/{remove_polish_chars(filename)}"
@@ -1003,6 +1062,24 @@ class TeamHistory(models.Model):
 
     data = models.JSONField(null=True, blank=True)
     autocreated = models.BooleanField(default=False, help_text="Autocreated")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        help_text="The user who manually defined this record. This field is populated "
+        "only when a user creates or defines the Team by themselves.",
+    )
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default="not-ver",
+        help_text="Verification status of the team history.",
+    )
+    enabled = models.BooleanField(
+        default=True,
+        help_text="Flag indicating whether the team history should be displayed in the API.",
+    )
 
     def __str__(self):
         return self.team.name_with_league_full

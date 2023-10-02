@@ -1416,6 +1416,282 @@ paths:
                 example:
                   P: Piłkarz
           description: Returns available roles choices.
+
+  /profiles/teams/{profile_uuid}/:
+    get:
+      tags:
+        - profiles
+      summary: "Retrieve team contributor's history."
+      description: "Retrieve the profile's TeamContributor history."
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: "Profile uuid to filter team contributor history."
+      responses:
+        200:
+          description: "Successfully retrieved."
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: '#/components/schemas/TeamContributor'
+
+        404:
+          description: "Not found."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "string"
+                    enum: [ "False" ]
+                  detail:
+                    type: "string"
+              example:
+                success: "False"
+                detail: "Profile with given UUID does not exist."
+        500:
+          description: "Internal server error."
+  /profiles/teams/add/:
+    post:
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      summary: "Add a new TeamContributor to the profile's history."
+      description: |
+        Add a new team-history to the contributor's profile history. This endpoint handles multiple scenarios:
+        1. Creating a TeamContributor based on the TeamHistory that already exist.
+        2. Creating a TeamContributor with the Polish Team that does not exist in the database.
+        3. Creating a TeamContributor with the foreign Team that does not exist in the database.
+
+        For specific payload details for each scenario, see the examples below.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/ExistingPolishTeamHistory'
+                - $ref: '#/components/schemas/NewPolishTeamHistory'
+                - $ref: '#/components/schemas/ForeignTeamHistory'
+            examples:
+              existingPolishTeam:
+                summary: Add an existing TeamHistory
+                value:
+                  team_history: 12
+                  is_primary: true
+                  round: "jesienna"
+              newPolishTeam:
+                summary: Add newly created Polish TeamHistory
+                value:
+                  season: 1
+                  team_parameter: "New Polish Team"  # Name of the new Polish team
+                  league_identifier: 1072
+                  is_primary: false
+                  round: "wiosenna"
+              foreignTeam:
+                summary: Add newly created foreign TeamHistory
+                value:
+                  country: "UK"
+                  season: 1
+                  team_parameter: "Foreign Team"
+                  league_identifier: "Premier League"
+                  is_primary: true
+                  round: "wiosenna"
+                  gender: 1
+      responses:
+        201:
+          description: "Successfully added."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamContributor'
+        400:
+          description: "Invalid request."
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - title: "Generic Error Format"
+                    type: "object"
+                    properties:
+                      success:
+                        type: "string"
+                        description: "Indicates the success status. Always 'False' for this structure."
+                        example: "False"
+                      detail:
+                        type: "string"
+                        description: "Detailed error message."
+                        example: "Team contributor instance with provided values already exists."
+                  - title: "Field-Specific Error Format"
+                    type: "object"
+                    description: "Each key in the object corresponds to a field that has an error. The value is an array of error messages for that field."
+                    additionalProperties:
+                      type: "array"
+                      items:
+                        type: "string"
+        404:
+          description: "Not Found."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "string"
+                    description: "Indicates the status of the request."
+                    example: "False"
+                  detail:
+                    type: "string"
+                    description: "Provides a detailed message about the error."
+                    example: "Given season does not exist."
+        500:
+          description: "Internal server error."
+
+
+  /profiles/teams/{team_contributor_id}/:
+    patch:
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      summary: "Update the TeamContributor entry."
+      description: |
+        Update the TeamContributor entry. This endpoint handles multiple scenarios:
+        1. Updating a TeamContributor with the values that already exists in the database.
+        2. Updating a TeamContributor by adding details for a new Polish TeamHistory that does not exist in the database.
+        3. Updating a TeamContributor by adding details for a foreign TeamHistory that does not exist in the database.
+        
+        For specific payload details for each scenario, see the examples below.
+      parameters:
+        - name: "team_contributor_id"
+          in: "path"
+          required: true
+          description: "ID of the team contributor to update."
+          schema:
+            type: "integer"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/ExistingPolishTeamHistory'
+                - $ref: '#/components/schemas/NewPolishTeamHistory'
+                - $ref: '#/components/schemas/ForeignTeamHistory'
+            examples:
+              existingPolishTeam:
+                summary: Update with existing TeamHistory
+                value:
+                  team_history: 4567
+                  season: 1
+                  is_primary: true
+                  round: "jesienna"
+              newPolishTeam:
+                summary: Update with newly created Polish TeamHistory
+                value:
+                  season: 1
+                  team_parameter: "Updated Polish Team Name"
+                  league_identifier: 1072
+                  is_primary: false
+                  round: "wiosenna"
+              foreignTeam:
+                summary: Update with newly created foreign TeamHistory
+                value:
+                  country: "UK"
+                  season: 1
+                  team_parameter: "Updated Foreign Team Name"
+                  league_identifier: "Premier League"
+                  is_primary: true
+                  gender: 1
+                  round: "wiosenna"
+      responses:
+        200:
+          description: "Successfully updated."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamContributor'
+        403:
+          description: "Forbidden."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  detail:
+                    type: "string"
+                    example: "You do not have permission to perform this action."
+        404:
+          description: "Not Found."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "string"
+                    description: "Indicates the status of the request."
+                    example: "False"
+                  detail:
+                    type: "string"
+                    description: "Provides a detailed message about the error."
+                    example: "Team contributor with given id does not exist."
+        500:
+          description: "Internal server error."
+
+    delete:
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      summary: "Delete a TeamContributor."
+      description: "Delete a TeamContributor from the contributor's profile history."
+      parameters:
+        - name: "team_contributor_id"
+          in: "path"
+          required: true
+          description: "ID of the Team Contributor to delete."
+          schema:
+            type: "integer"
+      responses:
+        204:
+          description: "Successfully deleted."
+        403:
+          description: "Forbidden."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  detail:
+                    type: "string"
+                    example: "You do not have permission to perform this action."
+        404:
+          description: "Not Found."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "string"
+                    description: "Indicates the status of the request."
+                    example: "False"
+                  detail:
+                    type: "string"
+                    description: "Provides a detailed message about the error."
+                    example: "Team contributor with given id does not exist."
+        500:
+          description: "Internal server error."
+
   /users/feature-elements/:
     get:
       operationId: users_feature_elements_retrieve
@@ -3832,6 +4108,112 @@ components:
           type: string
         callback:
           type: string
+    ExistingPolishTeamHistory:
+      type: object
+      properties:
+        team_history:
+          type: integer
+          description: "Identifier for the existing Polish TeamHistory."
+        is_primary:
+          type: boolean
+          description: "Flag to set the team-history as primary."
+        round:
+          type: string
+          description: "Season round. jesienna/wiosenna"
+          nullable: true
+      required:
+        - team_history
+        - is_primary
+    NewPolishTeamHistory:
+      type: object
+      properties:
+        season:
+          type: integer
+          description: "Identifier of the season."
+        team_parameter:
+          type: string
+          description: "Name of the new Polish Team."
+        league_identifier:
+          type: integer
+          description: "Identifier of the League."
+        is_primary:
+          type: boolean
+          description: "Flag to set the team-history as primary."
+        round:
+          type: string
+          description: "Season round. jesienna/wiosenna"
+          nullable: true
+      required:
+        - season
+        - team_parameter
+        - league_identifier
+        - is_primary
+    ForeignTeamHistory:
+      type: object
+      properties:
+        country:
+          type: string
+          description: "Country code."
+        season:
+          type: integer
+          description: "Identifier of the season."
+        team_parameter:
+          type: string
+          description: "Name of the new foreign Team."
+        league_identifier:
+          type: string
+          description: "Name of the new foreign League."
+        is_primary:
+          type: boolean
+          description: "Flag to set the team-history as primary."
+        round:
+          type: string
+          description: "Season round. jesienna/wiosenna"
+          nullable: true
+        gender:
+          type: integer
+          description: "Gender identifier. 1 for male, 2 for female"
+      required:
+        - country
+        - season
+        - team_parameter
+        - league_identifier
+        - is_primary
+        - gender
+    TeamContributor:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: "ID of the team contributor."
+        picture_url:
+          type: string
+          description: "URL of the Club picture that TeamContributor's Team belongs to."
+          nullable: true
+        team_name:
+          type: string
+          description: "Name of the Team."
+        league_name:
+          type: string
+          description: "Name of the League the Team belongs to."
+        season_name:
+          type: string
+          description: "Season's name in format 'YYYY/YYYY'."
+        is_primary:
+          type: boolean
+          description: "Indicates if this is the primary Team for this Season."
+        round:
+          type: string
+          description: "Season round name. jesienna/wiosenna"
+          nullable: true
+      required:
+        - id
+        - picture_url
+        - team_name
+        - league_name
+        - season_name
+        - round
+        - is_primary
   securitySchemes:
     jwtAuth:
       type: http

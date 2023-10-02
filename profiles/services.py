@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from api.services import LocaleDataService
 from clubs import models as clubs_models
+from clubs import services as club_services
 from clubs.models import Club as CClub
 from clubs.models import Team as CTeam
 from profiles import errors, models, utils
@@ -20,6 +21,7 @@ from utils import get_current_season
 logger = logging.getLogger(__name__)
 User = get_user_model()
 locale_service = LocaleDataService()
+club_services = club_services.TeamHistoryCreationService()
 
 
 class PositionData(BaseModel):
@@ -365,6 +367,19 @@ class ProfileService:
                 profiles.append(profile)
         return profiles
 
+    @staticmethod
+    def get_user_by_uuid(profile_uuid: uuid.UUID) -> User:
+        """Fetches a profile by its UUID."""
+
+        for model in models.PROFILE_MODELS:
+            try:
+                profile = model.objects.get(uuid=profile_uuid)
+                return profile.user.id
+            except model.DoesNotExist:
+                continue
+        else:
+            raise ObjectDoesNotExist
+
 
 class ProfileFilterService:
     profile_service = ProfileService
@@ -626,3 +641,244 @@ class PlayerVideoService:
     def get_video_by_id(_id: int) -> models.PlayerVideo:
         """Get PlayerVideo object by id"""
         return models.PlayerVideo.objects.get(id=_id)  # type: ignore
+
+
+class TeamContributorService:
+    profile_service = ProfileService()
+
+    @staticmethod
+    def get_team_contributor_or_404(team_contributor_id: int) -> models.TeamContributor:
+        """
+        Retrieves a TeamContributor by its ID or raises a custom exception if not found.
+        """
+        try:
+            return models.TeamContributor.objects.get(pk=team_contributor_id)
+        except models.TeamContributor.DoesNotExist:
+            raise errors.TeamContributorNotFoundServiceException()
+
+    @staticmethod
+    def is_owner_of_team_contributor(
+        profile_uuid: uuid.UUID, team_contributor: models.TeamContributor
+    ) -> bool:
+        """
+        Checks if a profile is the owner of a given TeamContributor.
+        """
+        return team_contributor.profile_uuid == profile_uuid
+
+    @staticmethod
+    def set_as_primary(
+        profile_uuid: uuid.UUID, team_contributor: models.TeamContributor
+    ) -> None:
+        """
+        Sets a given TeamContributor as the primary for a profile.
+        This will unset any existing primary TeamContributor for the profile.
+        """
+        # Unset any existing primary team contributors for the profile
+        models.TeamContributor.objects.filter(
+            profile_uuid=profile_uuid, is_primary=True
+        ).update(is_primary=False)
+
+        # Set the given team_contributor as primary
+        team_contributor.is_primary = True
+        team_contributor.save()
+
+    @staticmethod
+    def get_teams_for_profile(profile_uuid: uuid.UUID) -> django_base_models.QuerySet:
+        """
+        Fetches all the teams associated with a given profile.
+        """
+        return models.TeamContributor.objects.filter(profile_uuid=profile_uuid)
+
+    @staticmethod
+    def create_or_get_team_contributor(
+        profile_uuid: uuid.UUID,
+        team_history: clubs_models.TeamHistory,
+        round_val: typing.Optional[str] = None,
+    ) -> typing.Tuple[models.TeamContributor, bool]:
+        """
+        Create or retrieve a TeamContributor instance for a given profile
+        and team history.
+        """
+        try:
+            team_contributor_instance = models.TeamContributor.objects.get(
+                profile_uuid=profile_uuid, round=round_val, team_history=team_history
+            )
+            created = False
+        except models.TeamContributor.DoesNotExist:
+            team_contributor_instance = models.TeamContributor.objects.create(
+                profile_uuid=profile_uuid, round=round_val
+            )
+            team_contributor_instance.team_history.add(team_history)
+            created = True
+
+        return team_contributor_instance, created
+
+    @staticmethod
+    def handle_primary_contributor(
+        team_contributor: models.TeamContributor,
+        season: str,
+        profile_uuid: uuid.UUID,
+        is_primary: bool,
+        round_val: typing.Optional[str] = None,
+    ) -> None:
+        """
+        Handle setting is_primary attribute and checking for existing primary
+        contributors.
+        """
+
+        if is_primary:
+            # Unset any existing primary contributors with the same profile, season, round
+            models.TeamContributor.objects.filter(
+                profile_uuid=profile_uuid,
+                team_history__league_history__season=season,
+                is_primary=True,
+                round=round_val,
+            ).exclude(id=team_contributor.id).update(is_primary=False)
+
+            # Set the given team_contributor as primary
+            team_contributor.is_primary = True
+        else:
+            team_contributor.is_primary = False
+
+        team_contributor.save()
+
+    def fetch_related_entities(
+        self,
+        data: typing.Dict[str, typing.Union[str, bool, int]],
+        profile_uuid: uuid.UUID,
+    ) -> typing.Tuple:
+        """
+        Fetch team, league, league_history, and team_history.
+        """
+        league_identifier: typing.Union[str, int] = data.get("league_identifier")
+        country_code: str = data.get("country", "PL")
+        season: int = data.get("season")
+        user = self.profile_service.get_user_by_uuid(profile_uuid)
+        team: clubs_models.Team = club_services.get_or_create(data, user, country_code)
+        league, league_history = club_services.create_or_get_league_and_history(
+            league_identifier, country_code, season, user, data
+        )
+
+        team_history: clubs_models.TeamHistory = (
+            club_services.create_or_get_team_history(team, league_history, user)
+        )
+
+        return team, league, league_history, team_history, season
+
+    def ensure_unique_team_contributor_and_related(
+        self,
+        profile_uuid: uuid.UUID,
+        data: typing.Dict[str, typing.Union[str, bool]],
+    ) -> models.TeamContributor:
+        """
+        Creates or gets all related entities for a given profile and provided data.
+        """
+        round_value: str = data.get("round")
+        is_primary: bool = data.get("is_primary")
+
+        if "team_history" in data and data["team_history"]:
+            team_history_instance = (
+                data["team_history"][0]
+                if isinstance(data["team_history"], list)
+                else data["team_history"]
+            )
+            team_history, season = club_services.fetch_team_history_and_season(
+                team_history_instance.id
+            )
+        else:
+            (
+                team,
+                league,
+                league_history,
+                team_history,
+                season,
+            ) = self.fetch_related_entities(data, profile_uuid)
+
+        # Check for existing contributor before making any modifications
+        existing_contributor = models.TeamContributor.objects.filter(
+            profile_uuid=profile_uuid,
+            team_history__in=[team_history],
+            round=data.get("round"),
+        ).first()
+        if existing_contributor:
+            raise errors.TeamContributorAlreadyExistServiceException()
+
+        team_contributor, was_created = self.create_or_get_team_contributor(
+            profile_uuid, team_history, round_value
+        )
+
+        self.handle_primary_contributor(
+            team_contributor,
+            season,
+            profile_uuid,
+            is_primary,
+            round_value,
+        )
+
+        if not was_created:
+            raise errors.TeamContributorAlreadyExistServiceException()
+
+        return team_contributor
+
+    def update_related_entities(
+        self,
+        profile_uuid: uuid.UUID,
+        team_contributor: models.TeamContributor,
+        data: typing.Dict[str, typing.Union[str, bool, int]],
+    ) -> models.TeamContributor:
+        """
+        Update related entities for a given profile, team_contributor,
+        and provided data.
+        """
+        round_value: str = data.get("round")
+        is_primary: bool = data.get("is_primary")
+        if "team_history" in data and data["team_history"]:
+            team_history_instance = (
+                data["team_history"][0]
+                if isinstance(data["team_history"], list)
+                else data["team_history"]
+            )
+            team_history, season = club_services.fetch_team_history_and_season(
+                team_history_instance.id
+            )
+        else:
+            (
+                team,
+                league,
+                league_history,
+                team_history,
+                season,
+            ) = self.fetch_related_entities(data, profile_uuid)
+
+        existing_contributor = (
+            models.TeamContributor.objects.filter(
+                profile_uuid=profile_uuid,
+                team_history__in=[team_history],  # Use __in for M2M lookup
+                round=round_value,
+            )
+            .exclude(id=team_contributor.pk)
+            .first()
+        )
+
+        if existing_contributor:
+            raise errors.TeamContributorAlreadyExistServiceException()
+
+        self.handle_primary_contributor(
+            team_contributor, season, profile_uuid, is_primary, round_value
+        )
+
+        # Clear previous team_histories and set the new one
+        team_contributor.team_history.clear()
+        team_contributor.team_history.add(team_history)
+
+        team_contributor.round = round_value
+        team_contributor.save()
+
+        return team_contributor
+
+    @staticmethod
+    def delete_team_contributor(team_contributor: models.TeamContributor) -> None:
+        """
+        Delete a TeamContributor instance.
+        """
+        team_contributor.delete()

@@ -62,3 +62,8 @@ python manage.py migrate cities_light
 ```bash
 python manage.py cities_light
 ```
+
+- To generate short names for clubs and teams
+```bash
+python manage.py create_short_name_for_club_and_team
+```

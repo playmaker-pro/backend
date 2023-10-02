@@ -126,4 +126,24 @@ urlpatterns = [
         views.ProfileCoursesAPI.as_view({"delete": "delete", "patch": "update"}),
         name="modify_course",
     ),
+    path(
+        r"teams/<uuid:profile_uuid>/",
+        views.ProfileTeamsApi.as_view({"get": "get_profile_team_contributor"}),
+        name="profiles_teams",
+    ),
+    path(
+        r"teams/add/",
+        views.ProfileTeamsApi.as_view({"post": "add_team_contributor_to_profile"}),
+        name="add_team_to_profile",
+    ),
+    path(
+        "teams/<int:team_contributor_id>/",
+        views.ProfileTeamsApi.as_view(
+            {
+                "patch": "update_profile_team_contributor",
+                "delete": "delete_profile_team_contributor",
+            }
+        ),
+        name="update_team_history",
+    ),
 ]

@@ -33,6 +33,8 @@ from profiles.mixins import utils as profile_utils
 # from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
 from roles import definitions
 from voivodeships.models import Voivodeships
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 
 User = get_user_model()
 
@@ -2289,6 +2291,53 @@ class VerificationStage(models.Model):
 
     def __str__(self):
         return f"current step: {self.step} | updated: {self.date_updated} | is done?: {self.done}"
+
+
+class TeamContributor(models.Model):
+    ROUND_CHOICES = [
+        ("wiosenna", "wiosenna"),
+        ("jesienna", "jesienna"),
+    ]
+
+    team_history = models.ManyToManyField("clubs.TeamHistory")
+    profile_uuid = models.UUIDField(
+        db_index=True, help_text="UUID of the related profile."
+    )
+    round = models.CharField(
+        max_length=10,
+        choices=ROUND_CHOICES,
+        default=None,
+        null=True,
+        blank=True,
+        help_text="Seasonal round for the contribution.",
+    )
+    is_primary = models.BooleanField(
+        default=False,
+        help_text="Determines if this is the primary contributor for the season and round.",
+    )
+    start_date = models.DateField(
+        null=True, blank=True, help_text="Start date of the contribution."
+    )
+    end_date = models.DateField(
+        null=True, blank=True, help_text="End date of the contribution."
+    )
+    role = models.CharField(
+        max_length=50,
+        choices=CoachProfile.COACH_ROLE_CHOICES,
+        help_text="Role of the contributor in the team.",
+        null=True,
+        blank=True,
+    )
+    is_actual = models.BooleanField(
+        default=False, help_text="Indicates if this Team is the current one."
+    )
+
+    class Meta:
+        ordering = [
+            "-team_history__league_history__season__name",
+            "-is_primary",
+            "round",
+        ]
 
 
 PROFILE_MODELS = (

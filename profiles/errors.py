@@ -59,3 +59,39 @@ class TooManyAlternatePositionsError(CoreAPIException):
 class MultipleMainPositionError(CoreAPIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "A player can have only one main position."
+
+
+class TeamContributorDoesNotExist(CoreAPIException):
+    """
+    API-specific exception raised when a TeamContributor object is not found.
+    """
+
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = "Team contributor with given id does not exist."
+
+
+class TeamContributorExist(CoreAPIException):
+    """
+    Raised when an API operation attempts to create or add a TeamContributor that already exists.
+    """
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Team contributor instance with provided values already exist"
+
+
+class TeamContributorNotFoundServiceException(Exception):
+    """
+    Raised when a TeamContributor object is not found in service-level functions.
+    This is a generic exception meant to signal the absence of a TeamContributor
+    """
+
+    pass
+
+
+class TeamContributorAlreadyExistServiceException(Exception):
+    """
+    Raised when attempting to create or add a TeamContributor that already
+    exists in service-level functions.
+    """
+
+    pass

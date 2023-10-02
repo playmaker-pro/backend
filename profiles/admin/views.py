@@ -316,3 +316,8 @@ class LicenceTypeAdmin(ProfileAdminBase):
 @admin.register(models.VerificationStage)
 class VerificationStageAdmin(admin.ModelAdmin):
     ...
+
+
+@admin.register(models.TeamContributor)
+class TeamContributorAdmin(admin.ModelAdmin):
+    ...
