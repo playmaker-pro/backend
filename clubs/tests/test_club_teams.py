@@ -6,7 +6,10 @@ from rest_framework import status
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from clubs import api, models
-from utils.factories import ClubWithHistoryFactory
+from utils.factories import (
+    ClubWithHistoryFactory,
+    GenderFactory,
+)
 from utils.test.test_utils import UserManager
 
 User = get_user_model()
@@ -29,8 +32,12 @@ class TestClubAPI(APITestCase):
         self.headers: dict = user_manager.get_headers()
         self.club_teams_endpoint = reverse("api:clubs:get_all_clubs_teams")
 
-        # Select a specific club from the batch for testing.
+        male_gender = GenderFactory(name="mężczyźni")
         self.club = ClubWithHistoryFactory.create()
+
+        # Set gender for all teams of this club
+        self.club.teams.update(gender=male_gender)
+
         self.team = self.club.teams.first()
         self.team_history = self.team.historical.first()
         self.league_history = self.team_history.league_history
@@ -53,12 +60,12 @@ class TestClubAPI(APITestCase):
         """
         response = self.client.get(
             self.club_teams_endpoint,
-            data={"season": self.season.name, "name": self.club.short_name},
+            data={"season": self.season.name, "name": self.club.name},
             **self.headers
         )
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data["results"]) == 1
-        assert response.data["results"][0]["short_name"] == self.club.short_name
+        assert response.data["results"][0]["name"] == self.club.name
 
     def test_pagination(self) -> None:
         """
@@ -144,6 +151,39 @@ class TestClubAPI(APITestCase):
                 serialized_data["picture_url"]
                 == "http://testserver" + self.club.picture.url
             )
+
+    def test_filter_by_male_gender(self) -> None:
+        """
+        Test if club teams can be filtered by MALE gender for a given season.
+        Note: Only MALE teams are created in the setUp method.
+        """
+        response = self.client.get(
+            self.club_teams_endpoint,
+            data={"season": self.season.name, "gender": "M"},
+            **self.headers
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["results"], "No results returned for male teams"
+
+        # If the gender is included in the serialized data
+        for team_data in response.data["results"]:
+            for club_team in team_data["club_teams"]:
+                gender = club_team["gender"]["name"]
+                assert gender == "mężczyźni"
+
+    def test_filter_by_female_gender(self) -> None:
+        """
+        Test if club teams can be filtered by FEMALE gender for a given season.
+        Note: Only MALE teams are created in the setUp method, so no results
+        are expected for FEMALE teams.
+        """
+        response = self.client.get(
+            self.club_teams_endpoint,
+            data={"season": self.season.name, "gender": "F"},
+            **self.headers
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data["results"]) == 0, "Results returned for female teams"
 
     def test_get_club_labels(self):
         pass

@@ -188,8 +188,9 @@ paths:
           name: gender
           schema:
             type: string
-            example: "M/F"
-          description: "Define gender: M - male, F - female. No param - get all"
+            enum: [ 'M', 'F' ]
+          required: false
+          description: 'Define gender: M - male, F - female. No param - get all'
         - in: query
           name: page
           schema:
