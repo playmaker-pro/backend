@@ -167,14 +167,14 @@ class CustomTeamHistorySerializer(serializers.ModelSerializer):
 
     division = serializers.SerializerMethodField()
     historical_league_name = serializers.SerializerMethodField()
-    team_name = serializers.CharField(source="team.name")
+    name = serializers.CharField(source="team.short_name")
     gender = GenderSerializer(source="team.gender")
 
     class Meta:
         model = models.TeamHistory
         fields = [
             "id",
-            "team_name",
+            "name",
             "gender",
             "division",
             "historical_league_name",
@@ -209,6 +209,7 @@ class CustomTeamHistorySerializer(serializers.ModelSerializer):
 
 
 class ClubTeamSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source="short_name")
     club_teams = serializers.SerializerMethodField()
     picture_url = serializers.SerializerMethodField()
     country_name = serializers.CharField(source="country.name", required=False)
@@ -217,7 +218,7 @@ class ClubTeamSerializer(serializers.ModelSerializer):
         model = models.Club
         fields = (
             "id",
-            "short_name",
+            "name",
             "picture_url",
             "country_name",
             "club_teams",
@@ -253,9 +254,9 @@ class ClubTeamSerializer(serializers.ModelSerializer):
         # Filtering by gender
         if gender:
             if gender.upper() == models.Gender.MALE:
-                filters["team__gender"] = models.Gender.MALE
+                filters["team__gender"] = models.Gender.get_male_object().id
             elif gender.upper() == models.Gender.FEMALE:
-                filters["team__gender"] = models.Gender.FEMALE
+                filters["team__gender"] = models.Gender.get_female_object().id
 
         # Filtering by season
         if season:
