@@ -5,6 +5,7 @@ from django.urls import reverse
 from parameterized import parameterized
 from rest_framework.test import APIClient, APITestCase
 
+from profiles.schemas import PlayerProfileGET
 from profiles.services import ProfileService
 from profiles.tests import utils
 from roles.definitions import CLUB_ROLE_TEAM_LEADER, PLAYER_SHORT
@@ -37,6 +38,31 @@ class TestGetProfileAPI(APITestCase):
         fake_uuid = uuid.uuid4()
         response = self.client.get(self.url(fake_uuid), **self.headers)
         assert response.status_code == 404
+
+    def test_get_profile_valid_schema(self) -> None:
+        """get request should return valid schema"""
+        profile_uuid = factories.PlayerProfileFactory.create(
+            user_id=self.user_obj.pk
+        ).uuid
+        fields_schema = list(PlayerProfileGET.__fields__.keys())
+        response = self.client.get(self.url(profile_uuid), **self.headers)
+        assert response.status_code == 200
+        for field in fields_schema:
+            assert field in list(response.data.keys())
+
+    def test_get_profile_valid_schema_not_required_field(self) -> None:
+        """get request should return valid schema for user without required fields"""
+        profile_uuid = factories.PlayerProfileFactory.create(
+            user_id=self.user_obj.pk,
+            playermetrics=None,
+            team_object=None,
+            transfer_status=None,
+        ).uuid
+        fields_schema = list(PlayerProfileGET.__fields__.keys())
+        response = self.client.get(self.url(profile_uuid), **self.headers)
+        assert response.status_code == 200
+        for field in fields_schema:
+            assert field in list(response.data.keys())
 
 
 class TestCreateProfileAPI(APITestCase):
@@ -357,7 +383,7 @@ class TestUpdateProfileAPI(APITestCase):
 
         assert response.status_code == 200
         assert response.data["verification_stage"]["step"] == 5
-        assert response.data["verification_stage"]["done"] == True
+        assert response.data["verification_stage"]["done"] is True
 
 
 class ProfileTeamsApiTest(APITestCase):
