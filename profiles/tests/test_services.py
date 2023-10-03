@@ -43,7 +43,7 @@ class VerificationServiceTest(TestCase):
         self.user.verify(silent=True)
         assert self.user.is_verified is True
 
-    def test__1__changing_role_to_coach_from_player_cause_user_sate_to_missing_verification_data(
+    def test__1__changing_role_to_coach_from_player_cause_user_sate_to_missing_verification_data(  # noqa: 501
         self,
     ):
         assert self.user.is_verified is True

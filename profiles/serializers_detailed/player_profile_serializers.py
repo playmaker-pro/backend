@@ -1,10 +1,11 @@
 import typing
 
+from django.db.models import QuerySet
 from rest_framework import serializers
 
 from clubs.models import Club, League, Team
 from external_links.serializers import ExternalLinksSerializer
-from profiles.models import PlayerPosition, PlayerProfile, PlayerProfilePosition
+from profiles.models import PROFILE_TYPE, PlayerPosition, PlayerProfile
 from profiles.serializers import (
     ChoicesTuple,
     CoachLicenceSerializer,
@@ -13,6 +14,7 @@ from profiles.serializers import (
     PlayerVideoSerializer,
     ProfileEnumChoicesSerializer,
 )
+from profiles.services import ProfileService
 from users.models import User, UserPreferences
 from users.serializers import UserPreferencesSerializer
 from voivodeships.serializers import VoivodeshipSerializer
@@ -157,24 +159,69 @@ class PlayerProfileViewSerializer(serializers.ModelSerializer):
             "prefered_leg",
             "training_ready",
             "playermetrics",
+            "role",
         )
 
-    user = PlayerProfileViewUserDataSerializer(required=False, partial=True)
+    user = PlayerProfileViewUserDataSerializer(partial=True)
     team_object = PlayerProfileViewTeamSerializer(read_only=True)
     voivodeship_obj = VoivodeshipSerializer(read_only=True)
     external_links = ExternalLinksSerializer(required=False)
     address = serializers.CharField(required=False)
-    player_positions = ProfileVIewPlayerProfilePositionSerializer(
-        many=True, required=False
-    )
+    player_positions = serializers.SerializerMethodField()
     player_video = PlayerVideoSerializer(many=True, read_only=True)
-    licences = CoachLicenceSerializer(many=True, required=False)
-    transfer_status = PlayerProfileViewProfileEnumChoicesSerializer(
-        required=False,
-        model=PlayerProfile,
-    )
-    training_ready = PlayerProfileViewProfileEnumChoicesSerializer(
-        required=False,
-        model=PlayerProfile,
-    )
+    licences = serializers.SerializerMethodField()
+    transfer_status = serializers.SerializerMethodField()
+    training_ready = serializers.SerializerMethodField()
     playermetrics = PlayerMetricsSerializer(read_only=True)
+    role = serializers.SerializerMethodField()
+
+    def get_player_positions(self, obj: PlayerProfile) -> typing.Optional[dict]:  # noqa
+        """
+        Get player positions by player profile.
+        If no player positions return None (key still will be presented in response).
+        """
+        player_positions = PlayerProfileViewProfileEnumChoicesSerializer(
+            required=False,
+            model=PlayerProfile,
+        )
+        if not player_positions:
+            return None
+
+    def get_transfer_status(self, obj: PlayerProfile) -> typing.Optional[dict]:  # noqa
+        """
+        Get transfer status by player profile.
+        If no transfer status return None (key still will be presented in response).
+        """
+        transfer_status = PlayerProfileViewProfileEnumChoicesSerializer(
+            required=False,
+            model=PlayerProfile,
+        )
+        if not transfer_status:
+            return None
+
+    def get_training_ready(self, obj: PlayerProfile) -> typing.Optional[dict]:  # noqa
+        """
+        Get trainings by player profile.
+        If no trainings return None (key still will be presented in response).
+        """
+        trainings: dict = PlayerProfileViewProfileEnumChoicesSerializer(
+            required=False,
+            model=PlayerProfile,
+        )
+        if not trainings:
+            return None
+
+    def get_licences(self, obj: PlayerProfile) -> typing.Optional[dict]:  # noqa
+        """
+        Get licences by player profile.
+        If no licences return None (key still will be presented in response).
+        """
+        licenses = CoachLicenceSerializer(many=True, required=False, data=obj)
+        if not licenses:
+            return None
+
+    def get_role(self, obj: typing.Union[QuerySet, PROFILE_TYPE]) -> str:
+        """get role by model"""
+        if isinstance(obj, QuerySet):
+            obj = obj.first()
+        return ProfileService.get_role_by_model(type(obj))

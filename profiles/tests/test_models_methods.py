@@ -23,7 +23,7 @@ class ChangeRoleTests(TestCase):
         assert self.user.is_verified is True
         print(f"----> setUp {self.user.state}")
 
-    def test__1__changing_role_to_coach_from_player_cause_user_sate_to_missing_verification_data(
+    def test__1__changing_role_to_coach_from_player_cause_user_sate_to_missing_verification_data(  # noqa: E501
         self,
     ):
         assert self.user.is_verified is True
@@ -42,7 +42,9 @@ class ChangeRoleTests(TestCase):
         assert self.user.is_verified is False
         assert self.user.is_missing_verification_data is False
 
-    def test_changing_role_to_geust_from_player_cause_user_to_be_still_verified(self):
+    def test_changing_role_to_geust_from_player_cause_user_to_be_still_verified(
+        self,
+    ):  # noqa: E501
         assert self.user.is_verified is True
         change = models.RoleChangeRequest.objects.create(
             user=self.user, new=definitions.GUEST_SHORT
@@ -54,7 +56,7 @@ class ChangeRoleTests(TestCase):
         print(f"---->  {self.user.state}")
         assert self.user.is_verified is True
 
-    def test_changing_role_to_scout_from_unverifed_player_cause_user_to_be_auto_verified(
+    def test_changing_role_to_scout_from_unverifed_player_cause_user_to_be_auto_verified(  # noqa: E501
         self,
     ):
         assert self.user.is_verified is True
@@ -73,7 +75,7 @@ class ChangeRoleTests(TestCase):
         assert self.user.is_verified is True
         assert self.user.is_missing_verification_data is False
 
-    def test_changing_role_to_guest_from_unverifed_player_cause_user_to_be_auto_verified(
+    def test_changing_role_to_guest_from_unverifed_player_cause_user_to_be_auto_verified(  # noqa: E501
         self,
     ):
         assert self.user.is_verified is True
@@ -122,7 +124,7 @@ class TestProfilePercentageTests(TestCase):
         assert self.profile.percentage_left_verified == 0
 
     def test_initialy_only_verification_fields(self):
-        """This scenario cannot occure. Only by overwriting base code of profile model."""
+        """This scenario cannot occure. Only by overwriting base code of profile model."""  # noqa: E501
         self.profile.COMPLETE_FIELDS = []
         assert self.profile.percentage_completion == 0  # here
         # with pytest.raises(models.VerificationCompletionFieldsWrongSetup):
@@ -174,7 +176,7 @@ class InitialBaseProfileCreationTests(TestCase):
 
 
 class InitalPlayerProfileCreationTests(TestCase):
-    """Idea is to create PLAYER profile and check if statuses are corectly behaved"""
+    """Idea is to create PLAYER profile and check if statuses are corectly behaved"""  # noqa: E501
 
     def setUp(self):
         utils.create_system_user()
@@ -197,7 +199,7 @@ class InitalPlayerProfileCreationTests(TestCase):
             assert self.profile.position_fantasy is not None
             assert self.profile.position_fantasy == result
             print(
-                f"position:{self.profile.position_raw} ({number}, {result}) fantasy:{self.profile.position_fantasy}"
+                f"position:{self.profile.position_raw} ({number}, {result}) fantasy:{self.profile.position_fantasy}"  # noqa: E501
             )
 
 

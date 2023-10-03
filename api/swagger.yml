@@ -3148,16 +3148,19 @@ components:
               $ref: '#/components/schemas/PlayerProfileMetrics'
             height:
               type: integer
-              description: Player
+              description: "Player height"
             weight:
               type: integer
-              description: Player
+              description: "Player weight"
             prefered_leg:
               $ref: '#/components/schemas/ProfileEnumChoices'
             transfer_status:
               $ref: '#/components/schemas/ProfileEnumChoices'
             training_ready:
               $ref: '#/components/schemas/ProfileEnumChoices'
+            role:
+              type: string
+              description: "Player role"
           example: {
             "slug": "player-slug",
             "user": {
@@ -3226,8 +3229,25 @@ components:
               "season": {},
               "pm_score": null,
               "season_score": null
-            }
+            },
+            role: "P"
           }
+          required: [
+            slug,
+            user,
+            team_object,
+            voivodeship_obj,
+            external_links,
+            player_positions,
+            player_video,
+            player_metrics,
+            height,
+            weight,
+            prefered_leg,
+            transfer_status,
+            training_ready,
+            role
+          ]
 
     PlayerProfile:
       allOf:

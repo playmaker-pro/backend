@@ -1,7 +1,9 @@
-from django.urls import reverse
-from rest_framework.test import APIClient, APITestCase
-from rest_framework import status
 import uuid
+
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APIClient, APITestCase
+
 from utils import factories
 from utils.test.test_utils import UserManager
 
@@ -37,7 +39,7 @@ class TestGetProfileLabelsAPI(APITestCase):
 
     def test_get_profile_labels_specific_season(self) -> None:
         response = self.client.get(
-            f'{reverse(self.url, kwargs={"profile_uuid": self.profile_uuid})}?season_name=2019/2020',
+            f'{reverse(self.url, kwargs={"profile_uuid": self.profile_uuid})}?season_name=2019/2020',  # noqa: E501
             **self.headers,
         )
         assert len(response.data) == 2

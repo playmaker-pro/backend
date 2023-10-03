@@ -1,12 +1,6 @@
-import logging
-
-import pytest
 from django.test import TestCase
 
-from profiles import models
 from profiles.utils import extract_video_id
-from roles import definitions
-from users.models import User
 from utils import testutils as utils
 
 utils.silence_explamation_mark()
@@ -31,7 +25,7 @@ class ParseVideoUrl(TestCase):
             ("https://youtu.be/44CAh6Eum7w", "44CAh6Eum7w"),
             ("https://m.youtube.com/watch?v=WdnTytj75bc", "WdnTytj75bc"),
             (
-                "https://www.youtube.com/watch?v=zwrtBhYoCL8&feature=youtu.be&ab_channel=qevprodbm",
+                "https://www.youtube.com/watch?v=zwrtBhYoCL8&feature=youtu.be&ab_channel=qevprodbm",  # noqa: E501
                 "zwrtBhYoCL8",
             ),
         ]
