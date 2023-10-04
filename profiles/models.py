@@ -2286,7 +2286,7 @@ class Language(models.Model):
 
 class VerificationStage(models.Model):
     step = models.IntegerField(default=0)
-    date_updated = models.DateTimeField(auto_now_add=True)
+    date_updated = models.DateTimeField(auto_now=True)
     done = models.BooleanField(default=False)
 
     def __str__(self):
