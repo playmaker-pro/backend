@@ -1,4 +1,5 @@
 import factory
+
 from mapper.models import Mapper, MapperEntity, MapperSource
 from utils.factories import CustomObjectFactory
 

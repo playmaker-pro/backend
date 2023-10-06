@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 from allauth.socialaccount.models import SocialAccount
+from cities_light.models import City
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -11,6 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from features.models import AccessPermission, Feature, FeatureElement
 from profiles.models import PROFILE_TYPE
+from users.errors import CityDoesNotExistException
 from users.managers import UserTokenManager
 from users.schemas import (
     RegisterSchema,
@@ -224,3 +226,13 @@ class PasswordResetService:
         if user is not None:
             user.set_password(new_password)
             user.save()
+
+
+class UserPreferencesService:
+    @staticmethod
+    def get_city_by_id(loc_id: int):
+        try:
+            city = City.objects.get(id=loc_id)
+            return city
+        except City.DoesNotExist:
+            raise CityDoesNotExistException

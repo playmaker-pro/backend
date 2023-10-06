@@ -1,7 +1,9 @@
+from datetime import datetime
 from typing import Dict, Optional
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from api.serializers import CitySerializer, CountrySerializer
@@ -55,6 +57,14 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
         instance.save()
         return super().update(instance, validated_data)
 
+    @staticmethod
+    def validate_birth_date(value) -> Optional[datetime]:
+        """Check if birthdate is not in the future"""
+        now = datetime.now().date()
+        if value > now:
+            raise ValidationError(detail="Birth date cannot be in the future")
+        return value
+
 
 class UserDataSerializer(serializers.ModelSerializer):
     """User serializer with basic user information"""
@@ -82,9 +92,9 @@ class UserDataSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data) -> User:
         """Override method to achieve nested update"""
-        if userpreferences_data := validated_data.pop(
+        if userpreferences_data := validated_data.pop(  # noqa: E999
             "userpreferences", None
-        ):  # noqa: 599
+        ):
             userpreferences_data["user"] = instance.pk
             userpreferences_serializer = UserPreferencesSerializer(
                 instance.userpreferences, data=userpreferences_data, partial=True

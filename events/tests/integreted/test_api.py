@@ -1,8 +1,8 @@
+from time import sleep
+
 from django.urls import reverse
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
-import uuid
-from utils import factories
 from utils.test.test_utils import UserManager
 from utils.factories.user_factories import UserFactory
 from events import models as event_models
@@ -105,12 +105,13 @@ class UserEventsAPITests(APITestCase):
 
         self.headers = self.user.get_headers()
         self.url = "api:events:get_user_events"
-
+        sleep(1)
         self.event1 = event_models.NotificationEvent.objects.create(
             user=self.user_obj1,
             message="User 1 event",
             callback="https://google.com",
         )
+        sleep(1)
         self.event2 = event_models.NotificationEvent.objects.create(
             user=self.user_obj1,
             message="User 1 event",

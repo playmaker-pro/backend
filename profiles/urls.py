@@ -36,7 +36,7 @@ urlpatterns = [
     path("player/fantasy/", views.ProfileFantasy.as_view(), name="my_fantasy"),
     path("player/carrier/", views.ProfileCarrier.as_view(), name="my_carrier"),
     path("player/matches/", views.ProfileGames.as_view(), name="my_games"),
-    path("player/videos/", views.PlayerVideosView.as_view(), name="my_videos"),
+    path("player/videos/", views.ProfileVideoView.as_view(), name="my_videos"),
     path(
         "player/fantasy/<slug:slug>/",
         views.ProfileFantasy.as_view(),
@@ -49,7 +49,7 @@ urlpatterns = [
     ),
     path(
         "player/videos/<slug:slug>/",
-        views.PlayerVideosView.as_view(),
+        views.ProfileVideoView.as_view(),
         name="player_videos",
     ),
     path(

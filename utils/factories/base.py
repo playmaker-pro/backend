@@ -1,11 +1,13 @@
-import factory
 import logging
-from faker import Faker
-from django.db.models import Model
+
+import factory
 from django.conf import settings
-from pydantic import typing
-from backend.settings.environment import Environment
+from django.db.models import Model
 from django.db.utils import ProgrammingError
+from faker import Faker
+from pydantic import typing
+
+from backend.settings.environment import Environment
 
 logger: logging.Logger = logging.getLogger("mocker")
 fake: Faker = Faker()

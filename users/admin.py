@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.contrib.admin import ChoicesFieldListFilter, SimpleListFilter
 from django.contrib.auth.admin import UserAdmin  # as BaseUserAdmin
-from django.db.models import Case, F, Q, When
+from django.core.handlers.wsgi import WSGIRequest
+from django.db.models import Case, F, Q, When, QuerySet
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
@@ -295,10 +296,24 @@ class UserAdminPanel(UserAdmin):
 @admin.register(models.UserPreferences)
 class UserPreferencesAdminPanel(admin.ModelAdmin):
     list_display = ("user", "localization", "display_languages", "citizenship")
-    search_fields = ("user__last_name",)
+    search_fields = ("user__last_name", "user__email")
     form = UserPreferencesForm
+    autocomplete_fields = ("user",)
 
     def display_languages(self, obj):
         return ", ".join([str(language) for language in obj.spoken_languages.all()])
 
     display_languages.short_description = "Spoken Languages"
+
+    def get_search_results(
+            self, request: WSGIRequest,
+            queryset: QuerySet[models.UserPreferences],
+            search_term: str
+    ):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+
+        # Custom search logic
+        user_query = Q(user__username__icontains=search_term) | Q(user__email__icontains=search_term)
+        queryset |= self.model.objects.filter(user_query)
+
+        return queryset, use_distinct

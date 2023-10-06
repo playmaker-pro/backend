@@ -1,8 +1,10 @@
-import os
-from voivodeships.models import Voivodeships
-from faker import Faker
 import datetime
+import os
 import random
+
+from faker import Faker
+
+from voivodeships.models import Voivodeships
 
 fake: Faker = Faker()
 

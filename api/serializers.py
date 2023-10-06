@@ -6,10 +6,11 @@ from django.utils import translation
 from django_countries import CountryTuple
 from rest_framework import serializers
 
+from api.services import LocaleDataService
 from app.utils import cities
+from users.errors import CityDoesNotExistException, CityDoesNotExistHTTPException
 from users.models import UserPreferences
-
-from .services import LocaleDataService
+from users.services import UserPreferencesService
 
 locale_service = LocaleDataService()
 
@@ -41,7 +42,7 @@ class CountrySerializer(serializers.Serializer):
         return dict(self._CHOICES)
 
     def to_representation(self, obj: typing.Union[CountryTuple, str]) -> dict:
-        """Create CountryTuple if country is passed as string (e.g. as saved in UserPreferences)"""
+        """Create CountryTuple if country is passed as string (e.g. as saved in UserPreferences)"""  # noqa: 501
         if isinstance(obj, str):
             obj = CountryTuple(obj, self.set_to_dict[obj])
         return super().to_representation(obj)
@@ -92,5 +93,10 @@ class CitySerializer(serializers.ModelSerializer):
     def to_internal_value(self, data: dict) -> typing.Union[City, dict]:
         """Override method to retrieve object by id"""
         if isinstance(data, int):
-            return City.objects.get(id=data)
+            user_preferences_service: UserPreferencesService = UserPreferencesService()
+            try:
+                city: City = user_preferences_service.get_city_by_id(data)
+                return city
+            except CityDoesNotExistException:
+                raise CityDoesNotExistHTTPException
         return data

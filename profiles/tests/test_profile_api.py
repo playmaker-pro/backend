@@ -11,7 +11,9 @@ from profiles.tests import utils
 from roles.definitions import CLUB_ROLE_TEAM_LEADER, PLAYER_SHORT
 from users.models import User
 from utils import factories, testutils
+from utils.factories.voivodeship_factories import VoivodeshipsFactory
 from utils.test.test_utils import UserManager
+from voivodeships.models import Voivodeships
 
 
 class TestGetProfileAPI(APITestCase):
@@ -46,6 +48,7 @@ class TestGetProfileAPI(APITestCase):
         ).uuid
         fields_schema = list(PlayerProfileGET.__fields__.keys())
         response = self.client.get(self.url(profile_uuid), **self.headers)
+
         assert response.status_code == 200
         for field in fields_schema:
             assert field in list(response.data.keys())
@@ -60,6 +63,7 @@ class TestGetProfileAPI(APITestCase):
         ).uuid
         fields_schema = list(PlayerProfileGET.__fields__.keys())
         response = self.client.get(self.url(profile_uuid), **self.headers)
+
         assert response.status_code == 200
         for field in fields_schema:
             assert field in list(response.data.keys())
@@ -203,8 +207,9 @@ class TestUpdateProfileAPI(APITestCase):
         self.url = lambda profile_uuid: reverse(
             "api:profiles:get_or_update_profile", kwargs={"profile_uuid": profile_uuid}
         )
+
         factories.CityFactory(pk=1)
-        factories.ClubFactory(pk=1)
+        factories.ClubFactory(pk=100)
         factories.LanguageFactory(pk=1)
 
     def test_patch_user_is_not_an_owner_of_profile(self) -> None:
@@ -269,20 +274,10 @@ class TestUpdateProfileAPI(APITestCase):
             ],
             [
                 {
-                    "role": "T",
-                },
-                {
-                    "licence": 1,
-                    "team_object_id": 1,
-                    "soccer_goal": 2,
-                },
-            ],
-            [
-                {
                     "role": "C",
                 },
                 {
-                    "club_object_id": 1,
+                    "club_object_id": 100,
                     "club_role": "Kierownik",
                     "phone": "111222333",
                 },
@@ -314,6 +309,39 @@ class TestUpdateProfileAPI(APITestCase):
             if attr == "uuid":
                 val = uuid.UUID(val)
             assert getattr(profile, attr) == val
+
+    def test_coach_profile_patch_method_complex_payload(self) -> None:
+        """Test updating coach profiles with correctly passed payload"""
+        voivo: Voivodeships = VoivodeshipsFactory.create(id=2)
+
+        profile = utils.create_empty_profile(
+            **{
+                "user_id": self.user_obj.pk,
+                "role": "T",
+            }
+        )
+        payload = {
+            "voivodeship_obj": {"id": 2},
+            "coach_role": "IIC",
+        }
+
+        expected_response = {
+            "voivodeship_obj": {"id": voivo.pk, "name": voivo.name, "code": voivo.code},
+            "coach_role": {"id": "IIC", "name": "Drugi trener"},
+        }
+        expected_model_data = {"voivodeship_obj": voivo, "coach_role": "IIC"}
+
+        response = self.client.patch(
+            self.url(str(profile.uuid)), json.dumps(payload), **self.headers
+        )
+        profile = utils.profile_service.get_profile_by_uuid(profile.uuid)
+
+        assert response.status_code == 200
+        for attr, val in expected_model_data.items():
+            assert getattr(profile, attr) == val
+
+        for attr, val in expected_response.items():
+            assert response.data.get(attr) == val
 
     @parameterized.expand(
         [

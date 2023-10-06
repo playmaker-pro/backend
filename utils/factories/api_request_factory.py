@@ -1,15 +1,16 @@
 import dataclasses
-from typing import Type, Any, Union
-from rest_framework.response import Response
-from rest_framework.test import force_authenticate, APIRequestFactory
-from django.http import QueryDict
-from urllib.parse import urlencode
-from urllib.request import Request
-from api.views import EndpointView
-from utils import testutils
-from typing import Optional
 import json
 import uuid
+from typing import Any, Optional, Type, Union
+from urllib.parse import urlencode
+from urllib.request import Request
+
+from django.http import QueryDict
+from rest_framework.response import Response
+from rest_framework.test import APIRequestFactory, force_authenticate
+
+from api.views import EndpointView
+from utils import testutils
 
 
 @dataclasses.dataclass

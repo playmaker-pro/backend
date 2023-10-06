@@ -231,6 +231,7 @@ class CoachProfileAdmin(ProfileAdminBase):
         linkify("external_links"),
     )
     autocomplete_fields = ("team_object", "team_history_object", "team_history_object")
+    exclude = ("voivodeship",)
 
     def get_mapper(self, obj):
         if hasattr(obj, "mapper"):
@@ -272,9 +273,9 @@ class RoleChangeRequestAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-@admin.register(models.PlayerVideo)
-class PlayerVideoAdmin(admin.ModelAdmin):
-    pass
+@admin.register(models.ProfileVideo)
+class ProfileVideoAdmin(admin.ModelAdmin):
+    autocomplete_fields = ("user",)
 
 
 @admin.register(models.PlayerProfilePosition)
@@ -321,3 +322,13 @@ class VerificationStageAdmin(admin.ModelAdmin):
 @admin.register(models.TeamContributor)
 class TeamContributorAdmin(admin.ModelAdmin):
     ...
+
+
+@admin.register(models.CoachLicence)
+class CoachLicenceAdmin(admin.ModelAdmin):
+    autocomplete_fields = ("owner",)
+
+
+@admin.register(models.Course)
+class CourseAdmin(admin.ModelAdmin):
+    autocomplete_fields = ("owner",)

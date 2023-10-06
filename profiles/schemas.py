@@ -16,7 +16,7 @@ class PlayerProfileGET(BaseModel):
     external_links: Optional[dict]
     address: Optional[str]
     player_positions: Optional[dict]
-    player_video: Optional[dict]
+    profile_video: Optional[dict]
     licences: Optional[list]
     transfer_status: Optional[dict]
     height: Optional[str]

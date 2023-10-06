@@ -8,10 +8,9 @@ from rest_framework import serializers
 
 from api.errors import NotOwnerOfAnObject
 from api.serializers import locale_service
-from utils import translate_to
-
-from . import errors, models
 from clubs.models import TeamHistory
+from profiles import errors, models
+from utils import translate_to
 
 
 class ChoicesTuple(typing.NamedTuple):
@@ -34,13 +33,14 @@ class ProfileEnumChoicesSerializer(serializers.CharField, serializers.Serializer
 
     def to_representation(self, obj: typing.Union[ChoicesTuple, str]) -> dict:
         """Parse output"""
+        parsed_obj = obj
         if not obj:
             return {}
         if not isinstance(obj, ChoicesTuple):
-            return self.parse(obj)
-        return {"id": obj.id, "name": obj.name}
+            parsed_obj = self.parse(obj)
+        return {"id": parsed_obj.id, "name": parsed_obj.name}
 
-    def parse(self, _id) -> dict:
+    def parse(self, _id) -> ChoicesTuple:
         """Get choices by model field and parse output"""
         _id = str(_id)
         choices = self.parse_dict(
@@ -51,7 +51,7 @@ class ProfileEnumChoicesSerializer(serializers.CharField, serializers.Serializer
             raise serializers.ValidationError(f"Invalid value: {_id}")
 
         value = choices[_id]
-        return self.to_representation(ChoicesTuple(_id, value))
+        return ChoicesTuple(_id, value)
 
 
 class PlayerPositionSerializer(serializers.ModelSerializer):
@@ -72,59 +72,49 @@ class PlayerProfilePositionSerializer(serializers.ModelSerializer):
         fields = ["player_position", "is_main"]
 
 
-class PlayerVideoSerializer(serializers.ModelSerializer):
+class ProfileVideoSerializer(serializers.ModelSerializer):
     thumbnail = serializers.CharField(
         source="get_youtube_thumbnail_url", read_only=True
     )
-    label = ProfileEnumChoicesSerializer(model=models.PlayerVideo, required=False)
+    label = ProfileEnumChoicesSerializer(model=models.ProfileVideo, required=False)
+
+    @staticmethod
+    def validate_label(value) -> typing.Optional[int]:
+        try:
+            int(value)
+            return value
+        except ValueError:
+            raise serializers.ValidationError(
+                f"Invalid value. Expected number, not a {type(value)}"
+            )
 
     class Meta:
-        model = models.PlayerVideo
+        model = models.ProfileVideo
         fields = "__all__"
 
     def __init__(self, *args, **kwargs) -> None:
         """Override init to set url as not required if there is defined instance (UPDATE METHOD)"""
         super().__init__(*args, **kwargs)
-        self._profile = None
+        self._user = None
         if self.instance is not None:
             self.fields["url"].required = False
 
-    def validate_player(self, profile: models.PlayerProfile) -> models.PlayerProfile:
+    def validate_player(self, user: models.User) -> None:
         """Validate that requestor (User, his PlayerProfile) is owner of the Video"""
-        if profile.user != self.context.get("requestor"):
+        if user != self.context.get("requestor"):
             raise NotOwnerOfAnObject
-        return profile
-
-    def to_internal_value(self, data: dict) -> dict:
-        """Override method to define profile based on requestor (user who sent a request)"""
-        if user := self.context.get("requestor"):  # noqa: E999
-            try:
-                profile = user.playerprofile
-            except user._meta.model.playerprofile.RelatedObjectDoesNotExist:
-                raise serializers.ValidationError(
-                    {"error": "You do not have a player profile."}
-                )
-
-            data["player"] = self._profile = profile
-
-            return super().to_internal_value(data)
-        else:
-            raise serializers.ValidationError(
-                {"error": "Unable to define owner of a request."}
-            )
-
-    @property
-    def profile(self) -> dict:
-        """Serialize whole profile of a video owner"""
-        from .api_serializers import ProfileSerializer  # avoid circular
-
-        return ProfileSerializer(self._profile).data
 
     def delete(self) -> None:
-        """Method do perform DELETE action on PlayerVideo object, validation included"""
-        self.validate_player(self.instance.player)
-        self._profile = self.instance.player
+        """Method do perform DELETE action on ProfileVideo object, validation included"""
+        self.validate_player(self.instance.user)
         self.instance.delete()
+
+    def update(
+        self, instance: models.ProfileVideo, validated_data: dict
+    ) -> models.ProfileVideo:
+        """Method do perform UPDATE action on ProfileVideo object, validation included"""
+        self.validate_player(instance.user)
+        return super().update(instance, validated_data)
 
 
 class PlayerMetricsSerializer(serializers.ModelSerializer):
@@ -168,7 +158,7 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
                     {"error": "Invalid date format, must be YYYY-MM-DD."}
                 )
 
-        if release_year := attrs.get("release_year"):
+        if release_year := attrs.get("release_year"):  # noqa: E999
             min_year = 1970
             max_year = datetime.now().year
             if min_year > release_year or release_year > max_year:

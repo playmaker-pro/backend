@@ -21,9 +21,9 @@ from profiles import api_serializers, errors, models, serializers
 from profiles.filters import ProfileListAPIFilter
 from profiles.managers import SerializersManager
 from profiles.services import (
-    PlayerVideoService,
     ProfileFilterService,
     ProfileService,
+    ProfileVideoService,
     TeamContributorService,
 )
 from profiles.utils import map_service_exception
@@ -61,9 +61,12 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         # serializer: api_serializers.ProfileSerializer = (
         #     api_serializers.ProfileSerializer(profile_object)
         # )  # TODO: changed to ProfileViewSerializer. Check if it works as expected
-        serializer = self.get_serializer_class(
+        serializer_class = self.get_serializer_class(
             model_name=profile_object.__class__.__name__
-        )(profile_object)
+        )
+        if not serializer_class:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        serializer = serializer_class(profile_object)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update_profile(self, request: Request, profile_uuid: uuid.UUID) -> Response:
@@ -79,7 +82,12 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         if profile.user != request.user:
             raise NotOwnerOfAnObject
 
-        serializer = api_serializers.UpdateProfileSerializer(
+        serializer_class = self.get_serializer_class(
+            model_name=f"{profile.__class__.__name__}_update"
+        )
+        if not serializer_class:
+            serializer_class = api_serializers.UpdateProfileSerializer
+        serializer = serializer_class(
             instance=profile, data=request.data, context={"requestor": request.user}
         )
         if serializer.is_valid(raise_exception=True):
@@ -285,70 +293,71 @@ class CoachLicencesAPIView(EndpointView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class PlayerVideoAPI(EndpointView):
+class ProfileVideoAPI(EndpointView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_labels(self, request: Request) -> Response:
         """List all player video labels"""
         labels = (
             serializers.ChoicesTuple(*obj)
-            for obj in PlayerVideoService.get_player_video_labels()
+            for obj in ProfileVideoService.get_player_video_labels()
         )
         serializer = serializers.ProfileEnumChoicesSerializer(labels, many=True)  # type: ignore
         return Response(serializer.data)
 
-    def create_player_video(self, request: Request) -> Response:
-        """View for creating new player videos"""
-        serializer = serializers.PlayerVideoSerializer(
-            data=request.data, context={"requestor": request.user}
-        )
+    def create_profile_video(self, request: Request) -> Response:
+        """View for creating new profile videos"""
+
+        data = {"user": request.user.pk, **request.data}
+        serializer = serializers.ProfileVideoSerializer(data=data)
 
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_201_CREATED)
 
-        return Response(serializer.profile, status=status.HTTP_201_CREATED)
-
-    def delete_player_video(
+    def delete_profile_video(
         self, request: Request, video_id: typing.Optional[int] = None
     ) -> Response:
-        """View for deleting player videos"""
+        """View for deleting profile videos"""
         if not video_id:
             raise exceptions.ValidationError({"error": "Missing video_id."})
 
         try:
-            obj = PlayerVideoService.get_video_by_id(video_id)
-        except models.PlayerVideo.DoesNotExist:
+            obj = ProfileVideoService.get_video_by_id(video_id)
+        except models.ProfileVideo.DoesNotExist:
             raise exceptions.NotFound(
-                f"PlayerVideo with ID: {video_id} does not exist."
+                f"ProfileVideo with ID: {video_id} does not exist."
             )
 
-        serializer = serializers.PlayerVideoSerializer(
+        serializer = serializers.ProfileVideoSerializer(
             obj, context={"requestor": request.user}
         )
         serializer.delete()
 
-        return Response(serializer.profile, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
 
-    def update_player_video(self, request: Request) -> Response:
-        """View for updating existing player video"""
-        if video_id := request.data.get("id"):  # noqa: E999
+    def update_profile_video(self, request: Request) -> Response:
+        """View for updating existing profile video"""
+        data = {"user": request.user.pk, **request.data}
+
+        if video_id := data.get("id"):  # noqa: E999
             try:
-                obj = PlayerVideoService.get_video_by_id(video_id)
-            except models.PlayerVideo.DoesNotExist:
+                obj = ProfileVideoService.get_video_by_id(video_id)
+            except models.ProfileVideo.DoesNotExist:
                 raise exceptions.NotFound(
-                    f"PlayerVideo with ID: {video_id} does not exist."
+                    f"ProfileVideo with ID: {video_id} does not exist."
                 )
 
-            serializer: serializers.PlayerVideoSerializer = (
-                serializers.PlayerVideoSerializer(
-                    obj, data=request.data, context={"requestor": request.user}
+            serializer: serializers.ProfileVideoSerializer = (
+                serializers.ProfileVideoSerializer(
+                    obj, data=data, context={"requestor": request.user}
                 )
             )
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
-                return Response(serializer.profile, status=status.HTTP_200_OK)
+                return Response(status=status.HTTP_200_OK)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:

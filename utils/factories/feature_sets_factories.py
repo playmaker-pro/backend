@@ -3,7 +3,7 @@ from typing import Dict
 import factory
 from django.contrib.auth import get_user_model
 
-from features.models import AccessPermission, FeatureElement, Feature
+from features.models import AccessPermission, Feature, FeatureElement
 from roles.definitions import PROFILE_TYPE_SHORT_MAP
 
 User = get_user_model()

@@ -631,16 +631,16 @@ class PlayerProfilePositionService:
             position.save()
 
 
-class PlayerVideoService:
+class ProfileVideoService:
     @staticmethod
     def get_player_video_labels() -> tuple:
         """Get player video labels"""
-        return models.PlayerVideo.LABELS
+        return models.ProfileVideo.LABELS
 
     @staticmethod
-    def get_video_by_id(_id: int) -> models.PlayerVideo:
-        """Get PlayerVideo object by id"""
-        return models.PlayerVideo.objects.get(id=_id)  # type: ignore
+    def get_video_by_id(_id: int) -> models.ProfileVideo:
+        """Get ProfileVideo object by id"""
+        return models.ProfileVideo.objects.get(id=_id)  # type: ignore
 
 
 class TeamContributorService:
@@ -882,3 +882,15 @@ class TeamContributorService:
         Delete a TeamContributor instance.
         """
         team_contributor.delete()
+
+
+class LanguageService:
+    @staticmethod
+    def get_language_by_id(language_id: int) -> models.Language:
+        """Get a language by id."""
+
+        try:
+            language = models.Language.objects.get(id=language_id)
+            return language
+        except models.Language.DoesNotExist:
+            raise errors.LanguageDoesNotExistException()
