@@ -47,16 +47,6 @@ from users.serializers import (
 )
 from users.services import PasswordResetService, UserService
 
-# Definicja enpointów nie musi być skoncentrowana tylko i wyłącznie w jedenj klasie.
-# jesli poniższe metody będą super-cieńkie (logika będzie poza tymi views)
-# to wówczas można już na tym poziomie rozdzielić:
-#   AdminUsersAPI  i UsersAPI jeśli byśmy np. chceli podzielic sobie API na to co widzi admin a to co zwykly user  # noqa
-# unikniemy wówczas if... if... i zaszytej logiki
-# row-column-permission w samym widoku. Wiadomo jakieś powtorzenia w kodzie są ale przez to że  # noqa
-# logika jest super-thin to nam nie szkodzi.
-# Jednak zdaje sobie sprawe ze nie uniknimy sytuacji "if" pod jednm API jak się da to robmy w miare czysto.  # noqa
-
-
 user_service: UserService = UserService()
 password_reset_service: PasswordResetService = PasswordResetService()
 logger = logging.getLogger("django")
@@ -103,17 +93,6 @@ class UsersAPI(EndpointView):
             return super().get_permissions()
 
     def list(self, request):
-        # if not user_allowed_to_do that _acction(
-
-        # ):
-        #     raise AccessForbiddenException()
-
-        # request_specialty_data = self.specialty_request_usecase.list_network_request(
-        #     company_id, user_id
-        # )
-        # return Response(
-        #     self.serializer_class(request_specialty_data, many=True).data,
-        #     sta
         return Response(
             self.serializer_class(User.objects.all(), many=True).data,
         )

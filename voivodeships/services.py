@@ -1,21 +1,21 @@
 import json
 import logging
-from typing import Tuple, Union
+from typing import Optional, Tuple, Union
 
 from django.apps import apps
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import QuerySet
 
-from clubs.models import Club  # noqa
-from clubs.models import Team  # noqa
-from marketplace.models import CoachForClubAnnouncement  # noqa
+from clubs.models import Club, Team
 from marketplace.models import (
-    ClubForCoachAnnouncement,  # noqa
+    ClubForCoachAnnouncement,
     ClubForPlayerAnnouncement,
+    CoachForClubAnnouncement,
     PlayerForClubAnnouncement,
 )
-from profiles.models import CoachProfile, PlayerProfile, ScoutProfile  # noqa
-from voivodeships.models import Voivodeships  # noqa
+from profiles.models import CoachProfile, PlayerProfile, ScoutProfile
+from voivodeships.exceptions import VoivodeshipDoesNotExist
+from voivodeships.models import Voivodeships
 
 ModelsToMap = Union[
     PlayerProfile,
@@ -50,7 +50,7 @@ class VoivodeshipService:
             return obj.voivodeship_obj
 
     @staticmethod
-    def get_voivodeship(obj) -> Voivodeships:
+    def get_voivodeship(obj) -> Optional[Voivodeships]:
         """Returning Voivodeship object"""
 
         if not obj.voivodeship_obj:
@@ -60,6 +60,15 @@ class VoivodeshipService:
     @property
     def get_voivodeships(self) -> QuerySet:
         return self.voivodeships_model.objects.all()
+
+    def get_voivo_by_id(self, voivo_id: int) -> Optional[Voivodeships]:
+        """Returning Voivodeship object by id. Raise exception if doesn't exist"""
+        try:
+            voivo = self.voivodeships_model.objects.get(id=voivo_id)
+            return voivo
+        except ObjectDoesNotExist:
+            logger.exception(f"Voivo with id {voivo_id} does not exist")
+            raise VoivodeshipDoesNotExist
 
     def get_voivodeship_by_name(self, name) -> QuerySet:
         qry = self.voivodeships_model.objects.filter(name=name)
@@ -195,11 +204,11 @@ class VoivodeshipService:
                         profile.save()
                         logger.info(
                             f"[LOGER VOIVODESHIPS] "
-                            f'Model {name[0]} with id {profile.id if name[1] != "profiles" else profile.user_id} '
+                            f'Model {name[0]} with id {profile.id if name[1] != "profiles" else profile.user_id} '  # noqa: 501
                             f"updated"
                         )
                         print(
-                            f'Model {name[0]} with id {profile.id if name[1] != "profiles" else profile.user_id} '
+                            f'Model {name[0]} with id {profile.id if name[1] != "profiles" else profile.user_id} '  # noqa: 501
                             f"updated"
                         )
                 except (ObjectDoesNotExist, AttributeError):

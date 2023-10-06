@@ -440,10 +440,10 @@ def make_jj_manago():
 #     for index, row in df.iterrows():
 #         player_profile = player_profiles.get(user=row["player"])
 
-#         vids = models.PlayerVideo.objects.filter(player=player_profile, url=row["url"])
+#         vids = models.ProfileVideo.objects.filter(player=player_profile, url=row["url"])
 
 #         if not vids:
-#             models.PlayerVideo.objects.create(
+#             models.ProfileVideo.objects.create(
 #                 player=player_profile,
 #                 url=row["url"],
 #                 title=row["title"] if not pd.isna(row["title"]) else "",

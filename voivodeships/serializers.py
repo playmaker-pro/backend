@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Voivodeships
+
+from voivodeships.models import Voivodeships
 
 
 class VoivodeshipSerializer(serializers.ModelSerializer):

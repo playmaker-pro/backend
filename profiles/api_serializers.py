@@ -1,6 +1,5 @@
 import typing
 from datetime import date, datetime
-from functools import cached_property
 
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
@@ -13,15 +12,14 @@ from clubs.api import serializers as club_serializers
 from clubs.services import ClubService
 from external_links.serializers import ExternalLinksSerializer
 from profiles import errors as profile_errors
+from profiles import models
+from profiles import serializers as profile_serializers
 from profiles import services
 from roles.definitions import PROFILE_TYPE_SHORT_MAP
 from users.serializers import UserDataSerializer
 from users.services import UserService
 from utils.factories import utils
 from voivodeships.serializers import VoivodeshipSerializer
-
-from . import models
-from . import serializers as profile_serializers
 
 User = get_user_model()
 
@@ -104,7 +102,7 @@ class ProfileSerializer(serializers.Serializer):
     player_positions = profile_serializers.PlayerProfilePositionSerializer(
         many=True, required=False, read_only=True
     )
-    player_video = profile_serializers.PlayerVideoSerializer(many=True, read_only=True)
+    player_video = profile_serializers.ProfileVideoSerializer(many=True, read_only=True)
     playermetrics = profile_serializers.PlayerMetricsSerializer(read_only=True)
     licences = profile_serializers.CoachLicenceSerializer(many=True, required=False)
 
@@ -212,13 +210,13 @@ class ProfileSerializer(serializers.Serializer):
     def validate_club(self) -> None:
         """validate club id"""
         if club_id := self.initial_data.get("club_object_id"):
-            if not clubs_service.team_exist(club_id):
+            if not clubs_service.club_exist(club_id):
                 raise clubs_errors.ClubDoesNotExist
 
     def validate_team_history(self) -> None:
         """validate team history id"""
-        if team_history_id := self.initial_data.get("club_object_id"):
-            if not clubs_service.team_exist(team_history_id):
+        if team_history_id := self.initial_data.get("team_history_id"):
+            if not clubs_service.team_history_exist(team_history_id):
                 raise clubs_errors.TeamHistoryDoesNotExist
 
     def validate_data(self) -> None:

@@ -1,5 +1,4 @@
 import random
-import uuid
 
 import factory
 from cities_light.models import City
@@ -21,9 +20,9 @@ class PlayerPositionFactory(CustomObjectFactory):
     name = factory.Sequence(lambda n: f"position_{n}")
 
 
-class PlayerVideoFactory(CustomObjectFactory):
+class ProfileVideoFactory(CustomObjectFactory):
     class Meta:
-        model = models.PlayerVideo
+        model = models.ProfileVideo
 
 
 class PlayerProfilePositionFactory(CustomObjectFactory):

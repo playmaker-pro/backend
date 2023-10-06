@@ -29,12 +29,8 @@ from mapper.models import Mapper
 from profiles.errors import VerificationCompletionFieldsWrongSetup
 from profiles.mixins import TeamObjectsDisplayMixin
 from profiles.mixins import utils as profile_utils
-
-# from phonenumber_field.modelfields import PhoneNumberField  # @remark: phone numbers expired
 from roles import definitions
 from voivodeships.models import Voivodeships
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
-from django.contrib.contenttypes.models import ContentType
 
 User = get_user_model()
 
@@ -664,7 +660,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     @property
     def has_videos(self):
-        return PlayerVideo.objects.filter(player=self).count() > 0
+        return ProfileVideo.objects.filter(player=self).count() > 0
 
     @property
     def attached(self):
@@ -2181,11 +2177,11 @@ class ProfileVerificationStatus(models.Model):
         self.save()
 
 
-class PlayerVideo(models.Model):
+class ProfileVideo(models.Model):
     LABELS = ((1, "Skrót meczu"), (2, "Cały mecz"), (3, "Bramka"))
 
-    player = models.ForeignKey(
-        PlayerProfile, on_delete=models.CASCADE, related_name="player_video"
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="user_video"
     )
     url = models.URLField(
         _("Youtube url"),
@@ -2195,8 +2191,8 @@ class PlayerVideo(models.Model):
     label = models.IntegerField(choices=LABELS, null=True, blank=True)
 
     class Meta:
-        verbose_name = "Player Video"
-        verbose_name_plural = "Player Videos"
+        verbose_name = "Profile Video"
+        verbose_name_plural = "Profile Videos"
 
     @property
     def get_youtube_thumbnail_url(self) -> typing.Union[str, None]:
@@ -2209,9 +2205,9 @@ class PlayerVideo(models.Model):
 
         if parser.netloc.endswith("youtu.be") or parser.netloc.endswith("youtube.com"):
             query_params = dict(parse_qsl(parser.query))
-            if video_id := query_params.get(
+            if video_id := query_params.get(  # noqa: E999
                 "v", parser.path.split("/")[-1]
-            ):  # noqa: E999
+            ):
                 return thumbnail_url.format(video_id)
 
 

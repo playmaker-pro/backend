@@ -594,17 +594,17 @@ paths:
                         label:
                           type: string
           description: ''
-  /player-video/:
+  /profiles/profile-video/:
     post:
-      operationId: player_video_create
-      description: Create PlayerVideo for PlayerProfile
-      summary: Create PlayerVideo
+      operationId: profile_video_create
+      description: Create ProfileVideo for PlayerProfile
+      summary: Create ProfileVideo
       requestBody:
         content:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/PlayerVideo'
+                - $ref: '#/components/schemas/ProfileVideo'
                 - type: object
                   required:
                     - url
@@ -618,7 +618,7 @@ paths:
         - jwtAuth: [ ]
       responses:
         '201':
-          description: "PlayerVideo created successfully"
+          description: "ProfileVideo created successfully"
           content:
             application/json:
               schema:
@@ -628,15 +628,15 @@ paths:
         '400':
           description: "User has no PlayerProfile"
     patch:
-      operationId: player_video_update
-      description: Update PlayerVideo for PlayerProfile
-      summary: Update PlayerVideo
+      operationId: profile_video_update
+      description: Update ProfileVideo for PlayerProfile
+      summary: Update ProfileVideo
       requestBody:
         content:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/PlayerVideo'
+                - $ref: '#/components/schemas/ProfileVideo'
                 - type: object
                   required:
                     - id
@@ -651,7 +651,7 @@ paths:
         - jwtAuth: [ ]
       responses:
         '200':
-          description: "PlayerVideo updated successfully"
+          description: "ProfileVideo updated successfully"
           content:
             application/json:
               schema:
@@ -659,14 +659,14 @@ paths:
         '401':
           description: "Unauthorized"
         '400':
-          description: "User is not an owner of given PlayerVideo"
+          description: "User is not an owner of given ProfileVideo"
         '404':
-          description: "PlayerVideo with given ID not found"
-  /player-video/{video_id}/:
+          description: "ProfileVideo with given ID not found"
+  /profiles/profile-video/{video_id}/:
     delete:
-      operationId: player_video_delete
-      description: Delete PlayerVideo
-      summary: Delete PlayerVideo
+      operationId: profile_video_delete
+      description: Delete ProfileVideo
+      summary: Delete ProfileVideo
       parameters:
         - in: path
           name: video_id
@@ -679,7 +679,7 @@ paths:
         - jwtAuth: [ ]
       responses:
         '200':
-          description: "PlayerVideo deleted successfully"
+          description: "ProfileVideo deleted successfully"
           content:
             application/json:
               schema:
@@ -687,22 +687,22 @@ paths:
         '401':
           description: "Unauthorized"
         '400':
-          description: "User is not an owner of given PlayerVideo"
+          description: "User is not an owner of given ProfileVideo"
         '404':
-          description: "PlayerVideo with given ID not found"
+          description: "ProfileVideo with given ID not found"
 
-  /player-video/labels/:
+  /profiles/profile-video/labels/:
     get:
-      operationId: player_video_labels
-      description: List of PlayerVideo labels
-      summary: List PlayerVideo labels
+      operationId: profile_video_labels
+      description: List of ProfileVideo labels
+      summary: List ProfileVideo labels
       tags:
         - profiles
       security:
         - jwtAuth: [ ]
       responses:
         '200':
-          description: "List of PlayerVideo label objects"
+          description: "List of ProfileVideo label objects"
           content:
             application/json:
               schema:
@@ -945,7 +945,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlayerProfileView'
-#                  - $ref: '#/components/schemas/CoachProfile'
+                  - $ref: '#/components/schemas/CoachProfile'
 #                  - $ref: '#/components/schemas/ClubProfile'
 #                  - $ref: '#/components/schemas/ScoutProfile'
 #                  - $ref: '#/components/schemas/GuestProfile'
@@ -970,13 +970,12 @@ paths:
           application/json:
             schema:
               oneOf:
+                - $ref: '#/components/schemas/CoachProfileUpdate'
                 - $ref: '#/components/schemas/PlayerProfile'
-                - $ref: '#/components/schemas/CoachProfile'
                 - $ref: '#/components/schemas/ClubProfile'
                 - $ref: '#/components/schemas/ScoutProfile'
                 - $ref: '#/components/schemas/GuestProfile'
               description: 'fields to update'
-              example: { 'team_object_id': 2, 'bio': "My new bio", 'height': 180, 'weight': 73 }
       security:
         - jwtAuth: [ ]
       responses:
@@ -2605,6 +2604,33 @@ components:
         - id
         - first_name
         - last_name
+
+    CoachProfileUserData:
+      type: object
+      properties:
+        id:
+          type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
+        userpreferences:
+          $ref: '#/components/schemas/CoachProfileUserPreferences'
+      required:
+        - id
+        - first_name
+        - last_name
+
+    CoachProfileUserDataUpdate:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        userpreferences:
+          $ref: '#/components/schemas/CoachProfileUserPreferencesUpdate'
+
     Gender:
       type: object
       properties:
@@ -2615,6 +2641,16 @@ components:
       required:
         - id
         - name
+
+    GenderUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Choices are: M/K"
+      required:
+       - name
+
     Seniority:
       type: object
       properties:
@@ -2957,6 +2993,7 @@ components:
         - id
         - league_history
         - team
+
     Voivodeship:
       type: object
       properties:
@@ -2969,6 +3006,15 @@ components:
       required:
         - id
         - name
+
+    VoivodeshipUpdate:
+      type: object
+      properties:
+        id:
+          type: integer
+      required:
+        - id
+
     ProfileVisitHistory:
       type: object
       properties:
@@ -3011,7 +3057,8 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/PlayerPosition'
-    PlayerVideo:
+
+    ProfileVideo:
       type: object
       properties:
         id:
@@ -3022,15 +3069,18 @@ components:
           type: string
         description:
           type: string
-        player:
-          type: integer
-          description: "player_id (owner)"
-          readOnly: true
         label:
           type: string
         thumbnail:
           type: string
           readOnly: true
+      required:
+        - id
+        - url
+        - title
+        - description
+        - label
+        - thumbnail
 
     PlayerProfileMetrics:
       type: object
@@ -3141,10 +3191,10 @@ components:
                 $ref: '#/components/schemas/ExternalLink'
             player_positions:
               $ref: '#/components/schemas/PlayerPositions'
-            player_video:
+            profile_video:
               type: array
               items:
-                $ref: '#/components/schemas/PlayerVideo'
+                $ref: '#/components/schemas/ProfileVideo'
             player_metrics:
               $ref: '#/components/schemas/PlayerProfileMetrics'
             height:
@@ -3210,7 +3260,7 @@ components:
                   "is_main": false
                 }
             ],
-            "player_video": [
+            "profile_video": [
               {
                 "id": 1,
                 "thumbnail": null,
@@ -3240,7 +3290,7 @@ components:
             voivodeship_obj,
             external_links,
             player_positions,
-            player_video,
+            profile_video,
             player_metrics,
             height,
             weight,
@@ -3267,10 +3317,10 @@ components:
                 $ref: '#/components/schemas/ExternalLink'
             player_positions:
               $ref: '#/components/schemas/PlayerPositions'
-            player_video:
+            profile_video:
               type: array
               items:
-                $ref: '#/components/schemas/PlayerVideo'
+                $ref: '#/components/schemas/ProfileVideo'
             player_metrics:
               $ref: '#/components/schemas/PlayerMetrics'
             player_stats:
@@ -3425,7 +3475,7 @@ components:
             },
             "external_links": null,
             "player_positions": [],
-            "player_video": [],
+            "profile_video": [],
             "playermetrics": {
                 "id": 8871,
                 "created_at": "2023-03-31T12:55:12.989811+02:00",
@@ -3501,138 +3551,116 @@ components:
             "agent_foreign": null,
             "updated": false
           }
+
     CoachProfile:
       allOf:
-        - $ref: '#/components/schemas/BaseProfile'
         - type: object
           properties:
-            team_object:
-              $ref: '#/components/schemas/Team'
-            team_history_object:
-              $ref: '#/components/schemas/TeamHistory'
+            slug:
+              type: string
+            user:
+              $ref: '#/components/schemas/CoachProfileUserData'
             voivodeship_obj:
               $ref: '#/components/schemas/Voivodeship'
             external_links:
-              type: array
-              items:
-                $ref: '#/components/schemas/ExternalLink'
-            licence:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            team_object_id:
-              type: integer
-              description: "Used to change object in PATCH request, just pass id"
-            team_history_object_id:
-              type: integer
-              description: "Used to change object in PATCH request, just pass id"
-            team_club_league_voivodeship_ver:
-              type: string
-            birth_date:
-              type: string
-              description: Player
-            soccer_goal:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            phone:
-              type: string
-              description: Player,Coach,Club,Guest
-            facebook_url:
-              type: string
-              description: Player,Coach,Scout,Guest
-            mapper_id:
-              type: integer
-              description: Player,Coach
-            external_links_id:
-              type: integer
-              description: Player,Coach,Scout,Guest
-            country:
-              type: string
-              description: Player,Coach,Scout
-            practice_distance:
-              type: integer
-              description: Player,Coach,Scout,Guest
-            about:
-              type: string
-              description: Player,Coach
-            address_id:
-              type: integer
-              description: Player,Coach,Scout,Club,Guest
-            voivodeship:
-              type: string
-              description: Player
-            voivodeship_obj_id:
-              type: integer
-              description: Player,Coach,Scout
-            club_role:
+              type: object
+              properties:
+                links:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ExternalLink'
+            coach_role:
               $ref: '#/components/schemas/ProfileEnumChoices'
             formation:
               $ref: '#/components/schemas/ProfileEnumChoices'
-            coach_role:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            data:
-              type: string
-              description: Coach
+            profile_video:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProfileVideo'
           example: {
+            "slug": "coach-miz-shoty",
             "user": {
                 "id": 7404,
                 "first_name": "MiZ",
                 "last_name": "SHOTY",
-                "last_login": "2022-07-06T12:32:55.341179+02:00",
-                "last_activity": null,
                 "userpreferences": {
-                    "id": 2289,
                     "age": null,
                     "localization": null,
                     "spoken_languages": [],
                     "citizenship": null,
                     "gender": null,
                     "birth_date": null,
-                    "user": 7404
                 }
             },
-            "team_object": null,
-            "team_history_object": null,
-            "voivodeship_obj": null,
-            "history": {
-                "id": 8819,
-                "counter": 0,
-                "counter_coach": 0,
-                "counter_scout": 0
-            },
-            "external_links": null,
-            "licences": [],
-            "role": "T",
-            "verification_id": 6941,
-            "user_id": 7404,
-            "history_id": 8819,
-            "data_mapper_id": null,
-            "slug": "coach-miz-shoty",
-            "bio": null,
-            "event_log": null,
-            "step": null,
-            "uuid": "22de5851-3246-4c56-aefa-c18c660570d2",
-            "licence": null,
-            "team_club_league_voivodeship_ver": null,
-            "team_object_id": null,
-            "team_history_object_id": null,
-            "birth_date": null,
-            "soccer_goal": null,
-            "phone": null,
-            "facebook_url": null,
-            "mapper_id": null,
-            "external_links_id": null,
-            "country": "PL",
-            "practice_distance": null,
-            "about": null,
-            "address_id": null,
-            "voivodeship": null,
-            "voivodeship_obj_id": null,
-            "club_role": {
+            "voivodeship_obj": {
                 "id": 1,
-                "name": "Trener"
+                "name": "Dolnośląskie",
+                "code": 16
             },
-            "coach_role": null,
-            "formation": null,
-            "data": null
+            "external_links": {
+                "links": []
+            },
+            "coach_role": {
+                "id": "IIC",
+                "name": "Drugi trener"
+            },
+            "formation": "4-3-2-1",
+            "profile_video": [
+              {
+                "id": 1,
+                "url": "http://www.google.com",
+                "title": "fwefwqf",
+                "description": "afewsfef",
+                "label": null,
+                "thumbnail": null
+              }
+            ]
           }
+      required:
+        - slug
+        - user
+        - voivodeship_obj
+        - external_links
+        - address
+        - coach_role
+        - formations
+        - profile_video
+
+    CoachProfileUpdate:
+      allOf:
+        - type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/CoachProfileUserDataUpdate'
+            voivodeship_obj:
+              $ref: '#/components/schemas/VoivodeshipUpdate'
+            coach_role:
+              $ref: '#/components/schemas/ProfileEnumChoicesUpdate'
+            formation:
+              $ref: '#/components/schemas/ProfileEnumChoicesUpdate'
+          example: {
+            "user": {
+                "first_name": "MiZ",
+                "last_name": "SHOTY",
+                "userpreferences": {
+                    "localization": null,
+                    "spoken_languages": [],
+                    "citizenship": null,
+                    "gender": null,
+                    "birth_date": null,
+                }
+            },
+            "voivodeship_obj": {
+                "id": 1,
+            },
+            "address": "address",
+            "coach_role": {
+                "id": "IIC",
+            },
+            "formation": "4-3-2-1",
+          }
+
+
     ManagerProfile:
       allOf:
         - $ref: '#/components/schemas/BaseProfile'
@@ -3923,6 +3951,7 @@ components:
         - code
         - priority
         - dial_code
+
     Language:
       type: object
       properties:
@@ -3942,6 +3971,15 @@ components:
         - name
         - native_name
         - code
+
+    LanguageUpdate:
+      type: object
+      properties:
+        id:
+          type: integer
+      required:
+       - id
+
     City:
       type: object
       properties:
@@ -3958,6 +3996,15 @@ components:
         - name
         - voivodeship
         - priority
+
+    CityUpdate:
+      type: object
+      properties:
+        id:
+          type: integer
+      required:
+       - id
+
     UserPreferences:
       type: object
       properties:
@@ -4008,6 +4055,57 @@ components:
         birth_date:
           type: string
 
+    CoachProfileUserPreferences:
+      type: object
+      properties:
+        age:
+          type: integer
+        localization:
+          $ref: '#/components/schemas/City'
+        spoken_languages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Language'
+        citizenship:
+          type: array
+          items:
+            $ref: '#/components/schemas/Country'
+        gender:
+          $ref: '#/components/schemas/Gender'
+        licences:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoachLicenceBody'
+        courses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Course'
+        birth_date:
+          type: string
+      required:
+       - age
+       - localization
+       - spoken_languages
+       - citizenship
+       - gender
+       - licences
+       - courses
+       - birth_date
+
+    CoachProfileUserPreferencesUpdate:
+      type: object
+      properties:
+        localization:
+          $ref: '#/components/schemas/CityUpdate'
+        spoken_languages:
+          type: array
+          items:
+            $ref: '#/components/schemas/LanguageUpdate'
+        gender:
+          $ref: '#/components/schemas/GenderUpdate'
+        birth_date:
+          type: string
+
     ProfileEnumChoices:
       type: object
       properties:
@@ -4019,6 +4117,16 @@ components:
       required:
         - id
         - name
+
+    ProfileEnumChoicesUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+      description: 'Object represents enums, common for all models'
+      required:
+        - id
+
     LeagueBase:
       type: object
       properties:

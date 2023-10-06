@@ -1,7 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
-from profiles.serializers_detailed.player_profile_serializers import PlayerProfileViewSerializer
+from profiles.serializers_detailed.coach_profile_serializers import (
+    CoachProfileUpdateSerializer,
+    CoachProfileViewSerializer,
+)
+from profiles.serializers_detailed.player_profile_serializers import (
+    PlayerProfileViewSerializer,
+)
 
 User = get_user_model()
 
@@ -19,6 +25,8 @@ class VerificationObjectManager(models.Manager):
 class SerializersManager:
     SERIALIZER_MAPPING = {
         "PlayerProfile": PlayerProfileViewSerializer,
+        "CoachProfile": CoachProfileViewSerializer,
+        "CoachProfile_update": CoachProfileUpdateSerializer,
     }
 
     def get_serializer(self, model_name: str):

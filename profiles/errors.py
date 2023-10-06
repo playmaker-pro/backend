@@ -95,3 +95,47 @@ class TeamContributorAlreadyExistServiceException(Exception):
     """
 
     pass
+
+
+class VoivodeshipDoesNotExistHTTPException(CoreAPIException):
+    """
+    API HTTP exception raised when a Voivodeship is not found in DB.
+    """
+
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = "Voivodeship with given id does not exist."
+
+
+class VoivodeshipWrongSchemaHTTPException(CoreAPIException):
+    """
+    API HTTP exception raised when a Voivodeship update schema is invalid.
+    """
+
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = ("Voivodeship object is required. "
+                      "You should provide voivodeship obj as fallows: voivodeship_obj: {id: 1}")
+
+
+class LanguageDoesNotExistException(Exception):
+    """Raises when language does not exist in DB"""
+    ...
+
+
+class InvalidCoachRoleException(CoreAPIException):
+    """
+    API HTTP exception raised when a Coach role is not valid.
+    """
+
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = "Coach role with given id does not exist."
+
+
+class InvalidFormationException(CoreAPIException):
+    """
+    API HTTP exception raised when a given formation is not valid.
+    """
+
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = "Given formation does not exist."
+
+

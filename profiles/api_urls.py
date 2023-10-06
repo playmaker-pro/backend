@@ -43,7 +43,7 @@ urlpatterns = [
         views.ProfileAPI.as_view({"get": "get_profile_labels"}),
         name="get_profile_labels",
     ),
-    # path(r"playerupdate/", WebhookPlayer.as_view(), name="player_webhook"), DEPRECATED: PM20-245
+    # path(r"playerupdate/", WebhookPlayer.as_view(), name="player_webhook"), DEPRECATED: PM20-245  # noqa: 501
     path(
         r"formations/",
         views.FormationChoicesView.as_view({"get": "list_formations"}),
@@ -92,29 +92,29 @@ urlpatterns = [
         name="players_age_range",
     ),
     path(
-        r"player-video/labels/",
-        views.PlayerVideoAPI.as_view({"get": "get_labels"}),
-        name="player_video_labels",
+        r"profile-video/labels/",
+        views.ProfileVideoAPI.as_view({"get": "get_labels"}),
+        name="profile_video_labels",
     ),
     path(
-        r"player-video/",
-        views.PlayerVideoAPI.as_view(
+        r"profile-video/",
+        views.ProfileVideoAPI.as_view(
             {
-                "post": "create_player_video",
-                "delete": "delete_player_video",
-                "patch": "update_player_video",
+                "post": "create_profile_video",
+                "delete": "delete_profile_video",
+                "patch": "update_profile_video",
             }
         ),
-        name="modify_player_video",
+        name="modify_profile_video",
     ),
     path(
-        r"player-video/<int:video_id>/",
-        views.PlayerVideoAPI.as_view(
+        r"profile-video/<int:video_id>/",
+        views.ProfileVideoAPI.as_view(
             {
-                "delete": "delete_player_video",
+                "delete": "delete_profile_video",
             }
         ),
-        name="delete_player_video",
+        name="delete_profile_video",
     ),
     path(
         r"course/",
