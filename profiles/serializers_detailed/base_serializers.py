@@ -9,6 +9,7 @@ from clubs.errors import ClubDoesNotExist, InvalidGender, TeamDoesNotExist
 from clubs.models import Club, League, Team
 from clubs.services import ClubService
 from external_links.serializers import ExternalLinksSerializer
+from profiles.api_serializers import ProfileLabelsSerializer
 from profiles.errors import (
     InvalidProfileRole,
     LanguageDoesNotExistException,
@@ -53,7 +54,9 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
         """Get city data. Return empty dict if city is not set"""
         if not obj.localization:
             return dict()
-        serializer = CitySerializer(instance=obj.localization, required=False, allow_null=True)
+        serializer = CitySerializer(
+            instance=obj.localization, required=False, allow_null=True
+        )
         return serializer.data
 
     @staticmethod
@@ -69,7 +72,6 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
         if spoken_languages := validated_data.pop(  # noqa: 5999
             "spoken_languages", None
         ):
-
             language_service: LanguageService = LanguageService()
             for language_code in spoken_languages:
                 try:
@@ -177,6 +179,16 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     voivodeship_obj = VoivodeshipSerializer(read_only=True)
     external_links = ExternalLinksSerializer(required=False)
     address = serializers.CharField(required=False)
+    labels = serializers.SerializerMethodField()
+
+    def get_labels(self, obj):
+        """Override labels field to return only visible=True labels"""
+        labels = ProfileLabelsSerializer(
+            obj.labels.filter(visible=True),
+            many=True,
+            read_only=True,
+        )
+        return labels.data
 
     @staticmethod
     def validate_role(role: str) -> None:

@@ -75,6 +75,7 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
             "training_ready",
             "playermetrics",
             "role",
+            "labels",
         )
 
     player_positions = ProfileVIewPlayerProfilePositionSerializer(

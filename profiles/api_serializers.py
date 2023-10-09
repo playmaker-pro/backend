@@ -97,6 +97,7 @@ class ProfileSerializer(serializers.Serializer):
     external_links = ExternalLinksSerializer(required=False)
     address = serializers.CharField(required=False)
     verification_stage = profile_serializers.VerificationStageSerializer(required=False)
+    labels = serializers.SerializerMethodField()
 
     # fields related with profile (FK to profile)
     player_positions = profile_serializers.PlayerProfilePositionSerializer(
@@ -123,6 +124,15 @@ class ProfileSerializer(serializers.Serializer):
     # meta fields
     player_stats = serializers.SerializerMethodField(read_only=True)
     role = serializers.SerializerMethodField()
+
+    def get_labels(self, obj):
+        """Override labels field to return only visible=True labels"""
+        labels = ProfileLabelsSerializer(
+            obj.labels.filter(visible=True),
+            many=True,
+            read_only=True,
+        )
+        return labels.data
 
     def __init__(
         self,

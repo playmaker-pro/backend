@@ -41,6 +41,7 @@ class CoachProfileViewSerializer(BaseProfileSerializer):
             "training_ready",
             "formation",
             "profile_video",
+            "labels",
         )
 
     coach_role = ProfileEnumChoicesSerializer(model=CoachProfile, required=False)

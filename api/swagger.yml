@@ -3132,6 +3132,21 @@ components:
       required:
         - id
 
+    ProfileLabel:
+      type: object
+      properties:
+        label_name:
+          type: string
+        label_description:
+          type: string
+        season_name:
+          type: string
+        icon:
+          type: string
+      required:
+        - label_name
+        - season_name
+
     BaseProfile:
       type: object
       properties:
@@ -3164,6 +3179,10 @@ components:
           type: array
           items:
             type: object
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileLabel'
       required:
         - uuid
         - user_id
