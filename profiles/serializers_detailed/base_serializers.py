@@ -1,6 +1,7 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
+from django.db.models import QuerySet
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -16,13 +17,14 @@ from profiles.errors import (
     VoivodeshipDoesNotExistHTTPException,
     VoivodeshipWrongSchemaHTTPException,
 )
+from profiles.models import PROFILE_TYPE
 from profiles.serializers import (
     CoachLicenceSerializer,
     CourseSerializer,
     LanguageSerializer,
     ProfileEnumChoicesSerializer,
 )
-from profiles.services import LanguageService
+from profiles.services import LanguageService, ProfileService
 from roles.definitions import PROFILE_TYPE_SHORT_MAP
 from users.models import User, UserPreferences
 from voivodeships.exceptions import VoivodeshipDoesNotExist
@@ -179,6 +181,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     voivodeship_obj = VoivodeshipSerializer(read_only=True)
     external_links = ExternalLinksSerializer(required=False)
     address = serializers.CharField(required=False)
+    role = serializers.SerializerMethodField()
     labels = serializers.SerializerMethodField()
 
     def get_labels(self, obj):
@@ -189,6 +192,12 @@ class BaseProfileSerializer(serializers.ModelSerializer):
             read_only=True,
         )
         return labels.data
+
+    def get_role(self, obj: Union[QuerySet, PROFILE_TYPE]) -> str:
+        """get role by model"""
+        if isinstance(obj, QuerySet):
+            obj = obj.first()
+        return ProfileService.get_role_by_model(type(obj))
 
     @staticmethod
     def validate_role(role: str) -> None:

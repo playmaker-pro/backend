@@ -1,9 +1,8 @@
 import typing
 
-from django.db.models import QuerySet
 from rest_framework import serializers
 
-from profiles.models import PROFILE_TYPE, PlayerPosition, PlayerProfile
+from profiles.models import PlayerPosition, PlayerProfile
 from profiles.serializers import (
     ChoicesTuple,
     CoachLicenceSerializer,
@@ -13,7 +12,6 @@ from profiles.serializers import (
     ProfileVideoSerializer,
 )
 from profiles.serializers_detailed.base_serializers import BaseProfileSerializer
-from profiles.services import ProfileService
 
 
 class ProfileViePlayerPositionSerializer(serializers.ModelSerializer):
@@ -105,12 +103,6 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
             read_only=True,
         )
         return videos.data
-
-    def get_role(self, obj: typing.Union[QuerySet, PROFILE_TYPE]) -> str:
-        """get role by model"""
-        if isinstance(obj, QuerySet):
-            obj = obj.first()
-        return ProfileService.get_role_by_model(type(obj))
 
     def get_licences(self, obj: PlayerProfile) -> typing.Optional[dict]:  # noqa
         """
