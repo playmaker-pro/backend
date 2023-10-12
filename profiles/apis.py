@@ -27,6 +27,7 @@ from profiles.services import (
     TeamContributorService,
 )
 from profiles.utils import map_service_exception
+from users.serializers import UserMainRoleSerializer
 
 profile_service = ProfileService()
 team_contributor_service = TeamContributorService()
@@ -131,6 +132,15 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         profiles = profile_service.get_user_profiles(request.user)
         serializer = api_serializers.BaseProfileDataSerializer(profiles, many=True)
         return Response(serializer.data)
+
+    def set_main_profile(self, request: Request) -> Response:
+        """
+        Set main profile for user
+        """
+        serializer = UserMainRoleSerializer(request.user, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class FormationChoicesView(EndpointView):

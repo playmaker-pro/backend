@@ -515,3 +515,53 @@ class ProfileTeamsApiTest(APITestCase):
             response.data[0]["league_name"]
             == self.team_contributor.team_history.first().league_history.league.name
         )
+
+
+class TestSetMainProfileAPI(APITestCase):
+    def setUp(self) -> None:
+        self.client: APIClient = APIClient()
+        self.manager = UserManager(self.client)
+        self.user_obj = self.manager.create_superuser()
+        self.headers = self.manager.get_headers()
+        self.url = reverse("api:profiles:set_main_profile")
+
+    @parameterized.expand(["P", "C", "T"])
+    def test_set_main_profile(self, role: str) -> None:
+        """Test setting declared_role on user"""
+        assert self.user_obj.declared_role != role
+        utils.create_empty_profile(
+            **{
+                "user_id": self.user_obj.pk,
+                "role": role,
+            }
+        )
+        response = self.client.post(
+            self.url,
+            json.dumps({"declared_role": role}),
+            **self.headers,
+        )
+
+        assert response.status_code == 204
+        self.user_obj.refresh_from_db()
+        assert self.user_obj.declared_role == role
+
+    def test_user_has_no_given_profile(self) -> None:
+        """Test setting declared_role while user hasn't this type of profile"""
+        assert self.user_obj.declared_role != "P"
+        response = self.client.post(
+            self.url,
+            json.dumps({"declared_role": "P"}),
+            **self.headers,
+        )
+
+        assert response.status_code == 400
+
+    def test_given_role_does_not_exist(self) -> None:
+        """Test setting incorrect declared_role"""
+        response = self.client.post(
+            self.url,
+            json.dumps({"declared_role": "somerandomstring"}),
+            **self.headers,
+        )
+
+        assert response.status_code == 400

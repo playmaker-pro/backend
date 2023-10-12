@@ -10,6 +10,8 @@ from api.serializers import CitySerializer, CountrySerializer
 from features.models import AccessPermission, Feature, FeatureElement
 from profiles import serializers as profile_serializers
 from profiles.serializers import ProfileEnumChoicesSerializer
+from profiles.services import ProfileService
+from roles.definitions import PROFILE_TYPE_SHORT_MAP
 from users.errors import UserRegisterException
 from users.models import UserPreferences
 from users.schemas import LoginSchemaOut
@@ -102,6 +104,29 @@ class UserDataSerializer(serializers.ModelSerializer):
             if userpreferences_serializer.is_valid(raise_exception=True):
                 userpreferences_serializer.save()
         return super().update(instance, validated_data)
+
+
+class UserMainRoleSerializer(serializers.ModelSerializer):
+    """Serializer for user main role"""
+
+    class Meta:
+        model = User
+        fields = ("declared_role",)
+
+    def validate_declared_role(self, value: str) -> str:
+        """Check if declared role is in available roles and user has given profile"""
+        if value not in list(PROFILE_TYPE_SHORT_MAP.values()):
+            raise ValidationError(
+                detail=f"Declared role must be one of {User.ROLE_CHOICES}"
+            )
+
+        model = ProfileService.get_model_by_role(value)
+        try:
+            model.objects.get(user=self.instance)
+        except model.DoesNotExist:
+            raise ValidationError(detail=f"User does not have {model.__name__}!")
+
+        return value
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
