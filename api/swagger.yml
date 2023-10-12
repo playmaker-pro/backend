@@ -1377,9 +1377,8 @@ paths:
             schema:
               allOf:
                 - $ref: '#/components/schemas/CoachLicenceBody'
-                - type: object
-                  required:
-                    - licence_id
+                - required:
+                  - licence_id
       responses:
         '201':
           description: Coach licence created successfully
@@ -3193,7 +3192,6 @@ components:
 
     PlayerProfileView:
       allOf:
-        - $ref: '#/components/schemas/PlayerProfileView'
         - type: object
           properties:
             slug:
