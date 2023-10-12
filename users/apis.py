@@ -181,6 +181,7 @@ class UsersAPI(EndpointView):
             raise SocialAccountInstanceNotCreatedException()
 
         response = {
+            "id": user.pk,
             "success": True,
             "redirect": redirect_path,
             **user_service.create_tokens(user),

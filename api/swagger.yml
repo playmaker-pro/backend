@@ -1813,36 +1813,7 @@ paths:
           content:
             application/json:
               schema:
-                description: User logged in successfully - tokens returned.
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    description: Is request successful
-                  redirect:
-                    type: string
-                    description: 'The page where user should be redirected. Landing
-                      page after login, or register page if user is new.Choices: ''landing
-                      page'', ''register'''
-                  refresh_token:
-                    type: string
-                    description: JWT refresh token.
-                  access_token:
-                    type: string
-                    description: JWT access token.
-                  first_name:
-                    type: string
-                    description: User firstname.
-                  last_name:
-                    type: string
-                    description: User lastname.
-                example:
-                  success: true
-                  redirect: landing page
-                  access: some_super_secret_jwt_token
-                  refresh: refresh_token
-                  first_name: firstname
-                  last_name: lastname
+                $ref: '#/components/schemas/SocialLoginResponse'
           description: ''
         '400':
           content:
@@ -1915,36 +1886,7 @@ paths:
           content:
             application/json:
               schema:
-                description: User logged in successfully - tokens returned.
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    description: Is request successful
-                  redirect:
-                    type: string
-                    description: 'The page where user should be redirected. Landing
-                      page after login, or register page if user is new.Choices: ''landing
-                      page'', ''register'''
-                  refresh_token:
-                    type: string
-                    description: JWT refresh token.
-                  access_token:
-                    type: string
-                    description: JWT access token.
-                  first_name:
-                    type: string
-                    description: User firstname.
-                  last_name:
-                    type: string
-                    description: User lastname.
-                example:
-                  success: true
-                  redirect: landing page
-                  access: some_super_secret_jwt_token
-                  refresh: refresh_token
-                  first_name: firstname
-                  last_name: lastname
+                $ref: '#/components/schemas/SocialLoginResponse'
           description: ''
         '400':
           content:
@@ -4390,6 +4332,46 @@ components:
         - season_name
         - round
         - is_primary
+    SocialLoginResponse:
+      description: User logged in successfully - tokens returned.
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Is request successful
+        redirect:
+          type: string
+          description: 'The page where user should be redirected. Landing
+            page after login, or register page if user is new.Choices: ''landing
+            page'', ''register'''
+        refresh_token:
+          type: string
+          description: JWT refresh token.
+        access_token:
+          type: string
+          description: JWT access token.
+        first_name:
+          type: string
+          description: User firstname.
+        last_name:
+          type: string
+          description: User lastname.
+        id:
+          type: integer
+          description: User id.
+      example:
+        success: true
+        redirect: landing page
+        access: some_super_secret_jwt_token
+        refresh: refresh_token
+        first_name: firstname
+        last_name: lastname
+        id: 42069
+      required:
+        - success
+        - access_token
+        - refresh_token
+        - id
   securitySchemes:
     jwtAuth:
       type: http
