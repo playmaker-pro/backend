@@ -146,4 +146,9 @@ urlpatterns = [
         ),
         name="update_team_history",
     ),
+    path(
+        "set-main/",
+        views.ProfileAPI.as_view({"post": "set_main_profile"}),
+        name="set_main_profile",
+    ),
 ]

@@ -857,7 +857,7 @@ paths:
         - in: query
           name: shuffle
           schema:
-            type: string
+            type: boolean
           description: "Shuffle results?"
       tags:
         - profiles
@@ -914,10 +914,13 @@ paths:
                       type: string
                     verification_stage:
                       $ref: '#/components/schemas/VerificationStage'
+                    is_main:
+                      type: boolean
                   required:
                     - uuid
                     - role
                     - verification_stage
+                    - is_main
         '401':
           description: "Unauthorized"
   /profiles/{profile_uuid}/:
@@ -1275,6 +1278,33 @@ paths:
                 $ref: '#/components/schemas/Course'
         '400':
           description: 'Invalid data'
+        '401':
+          description: 'Unauthorized'
+  /set-main/:
+    'post':
+      operationId: set_main_profile
+      description: Set main user profile
+      summary: Set main user profile
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                declared_role:
+                  type: string
+                  description: "Profile role shortcut {P, C, T, G, S, ...}"
+              required:
+                - declared_role
+      responses:
+        '204':
+          description: Main role assigned successfully
+        '400':
+          description: "Invalid role or user hasn't given profile"
         '401':
           description: 'Unauthorized'
   /profiles/coach-licence/{licence_id}/:

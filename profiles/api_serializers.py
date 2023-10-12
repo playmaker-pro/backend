@@ -391,19 +391,17 @@ class ProfileLabelsSerializer(serializers.Serializer):
     icon = serializers.CharField(max_length=200)
 
 
-class BaseProfileDataSerializer(ProfileSerializer):
-    def to_representation(
-        self, obj: typing.Optional[models.PROFILE_TYPE] = None, *args, **kwargs
-    ) -> dict:
-        """Override custom to_representation to return just uuid + role"""
-        obj = obj or self.instance
+class BaseProfileDataSerializer(serializers.Serializer):
+    uuid = serializers.UUIDField(read_only=True)
+    role = serializers.SerializerMethodField()
+    verification_stage = profile_serializers.VerificationStageSerializer()
+    is_main = serializers.SerializerMethodField(method_name="is_main_profile")
 
-        # Use the VerificationStageSerializer to serialize the verification_stage field
-        verification_stage_serializer = profile_serializers.VerificationStageSerializer(
-            instance=obj.verification_stage
-        )
-        return {
-            "uuid": obj.uuid,
-            "role": services.ProfileService.get_role_by_model(type(obj)),
-            "verification_stage": verification_stage_serializer.data,
-        }
+    def get_role(self, obj: models.PROFILE_TYPE) -> str:
+        """get role by profile model"""
+        return services.ProfileService.get_role_by_model(type(obj))
+
+    def is_main_profile(self, obj: models.PROFILE_TYPE) -> bool:
+        """Check if given profile is main profile for user"""
+        role = self.get_role(obj)
+        return role == obj.user.declared_role
