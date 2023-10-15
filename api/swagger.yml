@@ -1420,6 +1420,90 @@ paths:
           description: 'User has no CoachProfile, already have this licence or invalid data'
         '401':
           description: 'Unauthorized'
+  /profiles/{profile_uuid}/external-links/:
+    get:
+      operationId: get_profile_external_links
+      description: Retrieve external links for a user.
+      summary: Get external links
+      parameters:
+        - name: profile_uuid
+          in: path
+          required: true
+          description: UUID of the user profile
+          schema:
+            type: string
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: "External links fetched successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExternalLinksResponse'
+        '401':
+          description: "Unauthorized"
+        '404':
+          description: "Profile not found"
+    post:
+      operationId: set_or_update_external_links
+      description: Set or update multiple external links from provided data.
+      summary: Set or update external links
+      parameters:
+        - name: profile_uuid
+          in: path
+          required: true
+          description: UUID of the user profile
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                links:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      source:
+                        type: string
+                        description: Name of the link source
+                      url:
+                        type: string
+                        description: URL for the external link
+                    required:
+                      - source
+              example:
+                links:
+                  - source: "min90"
+                    url: "https://90minut.pl/username"
+                  - source: "transfermarket"
+                    url: "https://transfermarkt.com/username"
+        required: true
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: "External links updated successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExternalLinksResponse'
+        '201':
+          description: "External links created successfully"
+        '401':
+          description: "Unauthorized"
+        '400':
+          description: "Invalid data or missing link source"
+        '404':
+          description: "Profile not found"
+
   /roles/get-roles/:
     get:
       operationId: roles_get_roles
@@ -2781,6 +2865,13 @@ components:
           type: string
         name:
           type: string
+    ExternalLinksResponse:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExternalLink'
     Club:
       type: object
       properties:

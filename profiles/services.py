@@ -15,7 +15,8 @@ from clubs import services as club_services
 from clubs.models import Club as CClub
 from clubs.models import Team as CTeam
 from profiles import errors, models, utils
-from roles.definitions import CLUB_ROLES
+from profiles.models import REVERSED_MODEL_MAP
+from roles.definitions import CLUB_ROLES, PROFILE_TYPE_MAP
 from utils import get_current_season
 
 logger = logging.getLogger(__name__)
@@ -379,6 +380,26 @@ class ProfileService:
                 continue
         else:
             raise ObjectDoesNotExist
+
+    @staticmethod
+    def get_related_type_from_profile(profile_instance: models.BaseProfile) -> str:
+        """
+        Get the related type string for a given profile instance.
+
+        The function fetches the model class of the provided profile instance,
+        translates it to a short definition using a predefined mapping, and
+        then translates the short definition to a related type string.
+        """
+        # Get the model class of the profile
+        profile_class = profile_instance.__class__
+
+        # Find the short definition using the REVERSED_MODEL_MAP
+        short_definition = REVERSED_MODEL_MAP.get(profile_class)
+
+        # Translate the short definition to the related type string using PROFILE_TYPE_MAP
+        related_type = PROFILE_TYPE_MAP.get(short_definition)
+
+        return related_type
 
 
 class ProfileFilterService:

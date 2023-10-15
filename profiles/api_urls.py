@@ -151,4 +151,15 @@ urlpatterns = [
         views.ProfileAPI.as_view({"post": "set_main_profile"}),
         name="set_main_profile",
     ),
+    path(
+        r"<uuid:profile_uuid>/external-links/",
+        views.ExternalLinksAPI.as_view(
+            {
+                "get": "get_profile_external_links",
+                "post": "set_or_update_external_links",
+                "patch": "set_or_update_external_links",
+            }
+        ),
+        name="profile_external_links",
+    ),
 ]
