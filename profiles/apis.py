@@ -17,6 +17,12 @@ from api.swagger_schemas import (
     FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA,
 )
 from api.views import EndpointView
+from external_links import serializers as external_links_serializers
+from external_links.errors import (
+    LinkSourceNotFound,
+    LinkSourceNotFoundServiceException,
+)
+from external_links.services import ExternalLinksService
 from profiles import api_serializers, errors, models, serializers
 from profiles.filters import ProfileListAPIFilter
 from profiles.managers import SerializersManager
@@ -31,6 +37,7 @@ from users.serializers import UserMainRoleSerializer
 
 profile_service = ProfileService()
 team_contributor_service = TeamContributorService()
+external_links_services = ExternalLinksService()
 
 
 class ProfileAPI(ProfileListAPIFilter, EndpointView):
@@ -522,3 +529,49 @@ class ProfileTeamsApi(EndpointView):
         team_contributor_service.delete_team_contributor(team_contributor)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ExternalLinksAPI(EndpointView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    serializer_class = external_links_serializers.ExternalLinksSerializer
+
+    def get_profile_external_links(
+        self, request: Request, profile_uuid: uuid.UUID
+    ) -> Response:
+        """Retrieve and display external links for the user."""
+        try:
+            profile = profile_service.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist:
+            raise errors.ProfileDoesNotExist()
+        external_links = profile.external_links
+        serializer = external_links_serializers.ExternalLinksSerializer(external_links)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def set_or_update_external_links(
+        self, request: Request, profile_uuid: uuid.UUID
+    ) -> Response:
+        """Set or update multiple external links from provided data."""
+        links_data = request.data.get("links", [])
+        try:
+            profile = profile_service.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist:
+            raise errors.ProfileDoesNotExist
+        if profile.user != request.user:
+            raise PermissionDenied
+        try:
+            (
+                modified_links,
+                was_any_link_created,
+            ) = external_links_services.upsert_links_for_user(profile, links_data)
+        except LinkSourceNotFoundServiceException as e:
+            raise LinkSourceNotFound(source_name=e.source_name)
+        serializer = external_links_serializers.ExternalLinksEntitySerializer(
+            modified_links, many=True
+        )
+
+        # Determine the status code: if any link was newly created, return 201. Else, return 200. # noqa: E501
+        status_code = (
+            status.HTTP_201_CREATED if was_any_link_created else status.HTTP_200_OK
+        )
+
+        return Response(serializer.data, status=status_code)
