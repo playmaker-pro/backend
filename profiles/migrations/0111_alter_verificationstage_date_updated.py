@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('profiles', '0110_course'),
+        ("profiles", "0110_course"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='verificationstage',
-            name='date_updated',
+            model_name="verificationstage",
+            name="date_updated",
             field=models.DateTimeField(auto_now=True),
         ),
     ]

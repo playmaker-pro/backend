@@ -1,3 +1,5 @@
+import datetime
+
 from django.test import TestCase
 
 from profiles import models
@@ -23,6 +25,7 @@ from utils.factories import (
     TeamContributorFactory,
     TeamHistoryFactory,
     UserFactory,
+    SEASON_NAMES,
 )
 
 team_contributor_service = TeamContributorService()
@@ -154,7 +157,9 @@ class TeamContributorServiceTests(TestCase):
         self.team_contributor = TeamContributorFactory.create(
             profile_uuid=self.user.profile.uuid
         )
-        self.season = SeasonFactory.create()
+        seasons = [SeasonFactory.create() for _ in SEASON_NAMES]
+
+        self.season = seasons[0]
 
     def test_get_team_contributor_or_404_existing_id(self):
         """Test fetching an existing team contributor by its ID."""
@@ -213,12 +218,11 @@ class TeamContributorServiceTests(TestCase):
             "country": "PL",
             "season": self.season.pk,
             "team_parameter": "Test Team",
+            "round": "wiosenna",
         }
 
-        team_contributor = (
-            team_contributor_service.ensure_unique_team_contributor_and_related(
-                self.user.profile.uuid, data
-            )
+        team_contributor = team_contributor_service.create_contributor(
+            self.user.profile.uuid, data, "player"
         )
 
         assert (
@@ -234,16 +238,34 @@ class TeamContributorServiceTests(TestCase):
             "league_identifier": self.league.pk,
             "country": "PL",
             "season": self.season.pk,
-            "team_history": team_history,
+            "team_history": [team_history],
+            "round": "wiosenna",
         }
 
-        team_contributor = (
-            team_contributor_service.ensure_unique_team_contributor_and_related(
-                self.user.profile.uuid, data
-            )
+        team_contributor = team_contributor_service.create_contributor(
+            self.user.profile.uuid, data, "player"
         )
 
         assert team_contributor.pk is not None
+
+    def test_create_non_player_contributor(self):
+        """Test creating a team contributor for non-player profiles."""
+        data = {
+            "league_identifier": self.league.pk,
+            "team_parameter": "Test Team",
+            "start_date": datetime.date(2020, 1, 1),
+            "role": "IC",
+            "end_date": datetime.date(2022, 1, 1),
+        }
+
+        team_contributor = team_contributor_service.create_contributor(
+            self.user.profile.uuid, data, "non-player"
+        )
+
+        assert (
+            team_contributor.pk is not None
+        )  # Ensures the object is saved to the database
+        assert team_contributor.profile_uuid == self.user.profile.uuid
 
     def test_is_owner_of_team_contributor(self):
         """Test if a user is the owner of a specific team contributor."""
@@ -256,11 +278,3 @@ class TeamContributorServiceTests(TestCase):
         assert not self.team_contributor_service.is_owner_of_team_contributor(
             self.user_2.profile.uuid, self.team_contributor
         )
-
-    def test_set_as_primary(self):
-        """Test marking a team contributor as the primary one for a user."""
-        self.team_contributor_service.set_as_primary(
-            self.user.profile.uuid, self.team_contributor
-        )
-        self.team_contributor.refresh_from_db()
-        assert self.team_contributor.is_primary

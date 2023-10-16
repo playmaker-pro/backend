@@ -1,3 +1,4 @@
+import datetime
 import typing
 from unittest import TestCase
 
@@ -6,10 +7,17 @@ from rest_framework.test import APITestCase
 from clubs import errors
 from clubs.models import Gender, League, Team
 from clubs.services import ClubTeamService, SeasonService, TeamHistoryCreationService
-from profiles.serializers import TeamContributorInputSerializer
+from profiles.serializers import PlayerProfileTeamContributorInputSerializer
 from roles import definitions
 from utils import testutils as utils
-from utils.factories import GenderFactory, LeagueFactory, TeamFactory, UserFactory
+from utils.factories import (
+    SEASON_NAMES,
+    GenderFactory,
+    LeagueFactory,
+    SeasonFactory,
+    TeamFactory,
+    UserFactory,
+)
 
 
 class TestClubTeamService(APITestCase):
@@ -87,6 +95,8 @@ class TeamHistoryCreationServicesTest(APITestCase):
         self.user = UserFactory.create(
             email="username", declared_role=definitions.PLAYER_SHORT
         )
+        for season_name in SEASON_NAMES:
+            SeasonFactory.create(name=season_name)
         self.league = LeagueFactory.create()
         self.service = TeamHistoryCreationService()
 
@@ -118,7 +128,7 @@ class TeamHistoryCreationServicesTest(APITestCase):
         fields that are required for the creation or retrieval of a team.
         """
         data = {}
-        serializer = TeamContributorInputSerializer(data=data)
+        serializer = PlayerProfileTeamContributorInputSerializer(data=data)
         assert not serializer.is_valid()
         expected_missing_fields = [
             "team_parameter",
@@ -196,3 +206,45 @@ class TeamHistoryCreationServicesTest(APITestCase):
         )
         assert retrieved_team.name == team_name
         assert Team.objects.filter(name=team_name).count() == 1
+
+    def test_create_or_get_team_history_date_based(self):
+        # Define the date range (from 2020 to 2022, spanning 3 seasons)
+        start_date = datetime.date(2020, 1, 1)
+        end_date = datetime.date(2022, 12, 31)
+        team_parameter = "Test Team Parameter"
+        league_identifier = self.league.pk
+        country_code = "PL"
+
+        # Call the method
+        team_histories = self.service.create_or_get_team_history_date_based(
+            start_date,
+            end_date,
+            team_parameter,
+            league_identifier,
+            country_code,
+            self.user,
+        )
+
+        assert len(team_histories) == 4
+
+        for th in team_histories:
+            assert th.team.name == team_parameter
+            assert th.league_history.league == self.league
+
+    def test_create_or_get_team_history_date_based_invalid_dates(self):
+        start_date = datetime.date(2022, 1, 1)
+        end_date = datetime.date(2020, 12, 31)
+        team_parameter = "Test Team Parameter"
+        league_identifier = "Test League Identifier"
+        country_code = "PL"
+
+        # Assert that an error is raised for invalid date range
+        with self.assertRaises(ValueError):
+            self.service.create_or_get_team_history_date_based(
+                start_date,
+                end_date,
+                team_parameter,
+                league_identifier,
+                country_code,
+                self.user,
+            )

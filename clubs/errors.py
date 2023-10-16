@@ -105,3 +105,32 @@ class SeasonDoesNotExistServiceException(Exception):
     """
 
     pass
+
+
+class TeamHistoryNotFoundServiceException(Exception):
+    """
+    Raised when a TeamHistory object is not found in service-level functions.
+    This is a generic exception meant to signal the absence of a TeamHistory
+    """
+
+    pass
+
+
+class SeasonDateRangeTooWideServiceException(Exception):
+    """
+    Raised when the date range provided in the context of seasons is considered too wide
+    or spans years for which there are no defined seasons in the system.
+    """
+
+    pass
+
+
+class SeasonDateRangeTooWide(CoreAPIException):
+    """
+    API Exception raised when the client provides a date range that's either too wide
+    or includes years without defined seasons. It informs the client of a bad request
+    with a detailed explanation.
+    """
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "The specified date range is too wide or contains years without defined seasons."

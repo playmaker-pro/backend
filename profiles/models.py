@@ -2323,9 +2323,6 @@ class TeamContributor(models.Model):
         null=True,
         blank=True,
     )
-    is_actual = models.BooleanField(
-        default=False, help_text="Indicates if this Team is the current one."
-    )
 
     class Meta:
         ordering = [
@@ -2333,6 +2330,7 @@ class TeamContributor(models.Model):
             "-is_primary",
             "round",
         ]
+        unique_together = ("profile_uuid", "role", "start_date")
 
 
 PROFILE_MODELS = (

@@ -16,15 +16,6 @@ User = get_user_model()
 
 
 class TestClubAPI(APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        """
-        This method sets up data that's shared across all test methods.
-        We're creating a batch of 5 clubs with their histories, which can be
-        used in multiple test scenarios without further database operations.
-        """
-        ClubWithHistoryFactory.create_batch(5)
-
     def setUp(self) -> None:
         self.client = APIClient()
         user_manager = UserManager(self.client)
