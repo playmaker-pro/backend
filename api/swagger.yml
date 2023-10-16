@@ -949,8 +949,8 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlayerProfileView'
                   - $ref: '#/components/schemas/CoachProfile'
+                  - $ref: '#/components/schemas/ScoutProfile'
 #                  - $ref: '#/components/schemas/ClubProfile'
-#                  - $ref: '#/components/schemas/ScoutProfile'
 #                  - $ref: '#/components/schemas/GuestProfile'
     patch:
       operationId: profiles_partial_update
@@ -976,7 +976,7 @@ paths:
                 - $ref: '#/components/schemas/CoachProfileUpdate'
                 - $ref: '#/components/schemas/PlayerProfile'
                 - $ref: '#/components/schemas/ClubProfile'
-                - $ref: '#/components/schemas/ScoutProfile'
+                - $ref: '#/components/schemas/ScoutProfileUpdate'
                 - $ref: '#/components/schemas/GuestProfile'
               description: 'fields to update'
       security:
@@ -2749,6 +2749,30 @@ components:
           type: string
         userpreferences:
           $ref: '#/components/schemas/CoachProfileUserPreferencesUpdate'
+    ScoutProfileUserData:
+      type: object
+      properties:
+        id:
+          type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
+        userpreferences:
+          $ref: '#/components/schemas/ScoutProfileUserPreferences'
+      required:
+        - id
+        - first_name
+        - last_name
+    ScoutProfileUserDataUpdate:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        userpreferences:
+          $ref: '#/components/schemas/ScoutProfileUserPreferencesUpdate'
 
     Gender:
       type: object
@@ -3803,8 +3827,94 @@ components:
             },
             "formation": "4-3-2-1",
           }
+    ScoutProfile:
+      allOf:
+        - type: object
+          properties:
+            slug:
+              type: string
+            user:
+              $ref: '#/components/schemas/ScoutProfileUserData'
+            voivodeship_obj:
+              $ref: '#/components/schemas/Voivodeship'
+            external_links:
+              type: object
+              properties:
+                links:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ExternalLink'
+            profile_video:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProfileVideo'
+          example: {
+            "slug": "scout-kacper-skalski",
+            "user": {
+              "id": 7976,
+              "first_name": "Kacper",
+              "last_name": "Skalski",
+              "userpreferences": {
+                "age": null,
+                "localization": null,
+                "spoken_languages": [ ],
+                "citizenship": null,
+                "gender": null,
+                "birth_date": null,
+              }
+            },
+            "voivodeship_obj": {
+              "id": 1,
+              "name": "Dolnośląskie",
+              "code": 16
+            },
+            "external_links": {
+              "links": [ ]
+            },
+            "profile_video": [
+              {
+                "id": 1,
+                "url": "http://www.google.com",
+                "title": "fwefwqf",
+                "description": "afewsfef",
+                "label": null,
+                "thumbnail": null
+              }
+            ]
+          }
+      required:
+        - slug
+        - user
+        - voivodeship_obj
+        - external_links
+        - address
+        - profile_video
 
-
+    ScoutProfileUpdate:
+      allOf:
+        - type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/ScoutProfileUserDataUpdate'
+            voivodeship_obj:
+              $ref: '#/components/schemas/VoivodeshipUpdate'
+          example: {
+            "user": {
+              "first_name": "Kacper",
+              "last_name": "Skalski",
+              "userpreferences": {
+                "localization": null,
+                "spoken_languages": [ ],
+                "citizenship": null,
+                "gender": null,
+                "birth_date": null,
+              }
+            },
+            "voivodeship_obj": {
+              "id": 1,
+            },
+            "address": "address",
+          }
     ManagerProfile:
       allOf:
         - $ref: '#/components/schemas/BaseProfile'
@@ -3909,86 +4019,6 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ExternalLink'
-    ScoutProfile:
-      allOf:
-        - $ref: '#/components/schemas/BaseProfile'
-        - type: object
-          properties:
-            voivodeship_obj:
-              $ref: '#/components/schemas/Voivodeship'
-            soccer_goal:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            country:
-              type: string
-              description: Player,Coach,Scout
-            facebook_url:
-              type: string
-              description: Player,Coach,Scout,Guest
-            address_id:
-              type: integer
-              description: Player,Coach,Scout,Club,Guest
-            practice_distance:
-              type: integer
-              description: Player,Coach,Scout,Guest
-            club_raw:
-              type: string
-            league_raw:
-              type: string
-            voivodeship_obj_id:
-              type: integer
-              description: Player,Coach,Scout
-            voivodeship_raw:
-              type: string
-          example: {
-            "user": {
-                "id": 2185,
-                "first_name": "Adam",
-                "last_name": "Zawadzki",
-                "last_login": "2023-07-05T17:32:21.688835+02:00",
-                "last_activity": null,
-                "userpreferences": {
-                    "id": 1090,
-                    "age": null,
-                    "localization": null,
-                    "spoken_languages": [],
-                    "citizenship": null,
-                    "gender": null,
-                    "birth_date": null,
-                    "user": 2185
-                }
-            },
-            "voivodeship_obj": null,
-            "history": {
-                "id": 2186,
-                "counter": 0,
-                "counter_coach": 0,
-                "counter_scout": 0
-            },
-            "external_links": null,
-            "role": "S",
-            "verification_id": null,
-            "user_id": 2185,
-            "history_id": 2186,
-            "data_mapper_id": null,
-            "slug": "scout-adam-zawadzki",
-            "bio": null,
-            "event_log": null,
-            "step": null,
-            "uuid": "ff553599-a32b-4bc7-84c0-98c3c9075882",
-            "soccer_goal": {
-                "id": 1,
-                "name": "Profesjonalna kariera"
-            },
-            "country": "PL",
-            "facebook_url": null,
-            "address_id": 6,
-            "external_links_id": null,
-            "practice_distance": null,
-            "club_raw": null,
-            "league_raw": null,
-            "voivodeship_obj_id": null,
-            "voivodeship_raw": "Śląskie"
-          }
     ClubProfile:
       allOf:
         - $ref: '#/components/schemas/BaseProfile'
@@ -4251,7 +4281,56 @@ components:
           $ref: '#/components/schemas/GenderUpdate'
         birth_date:
           type: string
+    ScoutProfileUserPreferences:
+      type: object
+      properties:
+        age:
+          type: integer
+        localization:
+          $ref: '#/components/schemas/City'
+        spoken_languages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Language'
+        citizenship:
+          type: array
+          items:
+            $ref: '#/components/schemas/Country'
+        gender:
+          $ref: '#/components/schemas/Gender'
+        licences:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoachLicenceBody'
+        courses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Course'
+        birth_date:
+          type: string
+      required:
+        - age
+        - localization
+        - spoken_languages
+        - citizenship
+        - gender
+        - licences
+        - courses
+        - birth_date
 
+    ScoutProfileUserPreferencesUpdate:
+      type: object
+      properties:
+        localization:
+          $ref: '#/components/schemas/CityUpdate'
+        spoken_languages:
+          type: array
+          items:
+            $ref: '#/components/schemas/LanguageUpdate'
+        gender:
+          $ref: '#/components/schemas/GenderUpdate'
+        birth_date:
+          type: string
     ProfileEnumChoices:
       type: object
       properties:

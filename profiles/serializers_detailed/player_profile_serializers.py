@@ -65,7 +65,6 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
             "address",
             "player_positions",
             "profile_video",
-            "licences",
             "transfer_status",
             "height",
             "weight",
@@ -79,7 +78,6 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
     player_positions = ProfileVIewPlayerProfilePositionSerializer(
         many=True, required=False
     )
-    licences = serializers.SerializerMethodField()
     transfer_status = ProfileEnumChoicesSerializer(
         required=False,
         model=PlayerProfile,
