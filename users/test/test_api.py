@@ -474,6 +474,7 @@ class GoogleAuthTestEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             "refresh_token": "test_refresh_token",
             "first_name": "Test",
             "last_name": "User",
+            "id": 2137,
         }
         user_info_mock = {
             "sub": "106746665020843434121824568902",
@@ -568,6 +569,7 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             "refresh_token": "test_refresh_token",
             "first_name": "Test",
             "last_name": "User",
+            "id": 321,
         }
         self.user_patcher = UserFactory.create(
             first_name=self.user_info_mock["given_name"],
