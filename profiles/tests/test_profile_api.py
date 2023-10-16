@@ -262,6 +262,7 @@ class TestUpdateProfileAPI(APITestCase):
                     "weight": 75,
                     "practice_distance": 20,
                     "prefered_leg": 1,
+                    "bio": "jakiesbio",
                 },
             ],
             [
@@ -281,15 +282,6 @@ class TestUpdateProfileAPI(APITestCase):
                     "club_object_id": 100,
                     "club_role": "Kierownik",
                     "phone": "111222333",
-                },
-            ],
-            [
-                {
-                    "role": "S",
-                },
-                {
-                    "soccer_goal": 2,
-                    "bio": "jakiesbio",
                 },
             ],
         ]
@@ -344,6 +336,64 @@ class TestUpdateProfileAPI(APITestCase):
         for attr, val in expected_response.items():
             assert response.data.get(attr) == val
 
+    def test_scout_profile_patch_method_complex_payload(self) -> None:
+        """Test updating scout profiles with correctly passed payload"""
+        factories.UserPreferencesFactory.create(user_id=self.user_obj.pk, gender=None)
+        voivo: Voivodeships = VoivodeshipsFactory.create(id=3)
+
+        profile = utils.create_empty_profile(
+            **{
+                "user_id": self.user_obj.pk,
+                "role": "S",
+            }
+        )
+        payload = {
+            "voivodeship_obj": {"id": 3},
+            "user": {
+                "first_name": "NewName",
+                "userpreferences": {
+                    "birth_date": "1999-01-01",
+                    "gender": "M",
+                },
+            },
+        }
+
+        expected_response = {
+            "voivodeship_obj": {"id": voivo.pk, "name": voivo.name, "code": voivo.code},
+            "user": {
+                "first_name": "NewName",
+                "userpreferences": {
+                    "birth_date": "1999-01-01",
+                    "gender": {"id": "M", "name": "Mężczyzna"},
+                },
+            },
+        }
+
+        expected_model_data = {"voivodeship_obj": voivo, "user": self.user_obj}
+
+        response = self.client.patch(
+            self.url(str(profile.uuid)), json.dumps(payload), **self.headers
+        )
+        profile = utils.profile_service.get_profile_by_uuid(profile.uuid)
+
+        assert response.status_code == 200
+        for attr, val in expected_model_data.items():
+            assert getattr(profile, attr) == val
+
+        for attr, val in expected_response.items():
+            if isinstance(val, dict):
+                for key, inner_val in val.items():
+                    if isinstance(inner_val, dict):
+                        for inner_key, deep_inner_val in inner_val.items():
+                            assert (
+                                response.data.get(attr).get(key).get(inner_key)
+                                == deep_inner_val
+                            )
+                    else:
+                        assert response.data.get(attr).get(key) == inner_val
+            else:
+                assert response.data.get(attr) == val
+
     @parameterized.expand(
         [
             ("birth_date", "2001-11-14"),
@@ -363,7 +413,6 @@ class TestUpdateProfileAPI(APITestCase):
         response = self.client.patch(
             self.url(str(profile_uuid)), json.dumps(payload), **self.headers
         )
-
         assert response.status_code == 200
         assert response.data["user"]["userpreferences"][key]
 

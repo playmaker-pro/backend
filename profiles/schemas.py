@@ -17,7 +17,6 @@ class PlayerProfileGET(BaseModel):
     address: Optional[str]
     player_positions: Optional[dict]
     profile_video: Optional[dict]
-    licences: Optional[list]
     transfer_status: Optional[dict]
     height: Optional[str]
     weight: Optional[str]

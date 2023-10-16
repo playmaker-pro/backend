@@ -9,6 +9,10 @@ from profiles import serializers
 from profiles.serializers_detailed.player_profile_serializers import (
     PlayerProfileViewSerializer,
 )
+from profiles.serializers_detailed.scout_profile_serializers import (
+    ScoutProfileViewSerializer,
+    ScoutProfileUpdateSerializer,
+)
 
 User = get_user_model()
 
@@ -16,7 +20,7 @@ User = get_user_model()
 class VerificationObjectManager(models.Manager):
     def create_initial(self, owner: User):
         """Creates initial verifcation object for a profile based on current data."""
-        if owner.is_club or owner.is_player or owner.coach():
+        if owner.is_club or owner.is_player or owner.coach() or owner.scout():
             defaults = owner.profile.get_verification_data_from_profile()
             defaults["set_by"] = User.get_system_user()
             defaults["previous"] = None
@@ -28,6 +32,8 @@ class SerializersManager:
         "PlayerProfile": PlayerProfileViewSerializer,
         "CoachProfile": CoachProfileViewSerializer,
         "CoachProfile_update": CoachProfileUpdateSerializer,
+        "ScoutProfile": ScoutProfileViewSerializer,
+        "ScoutProfile_update": ScoutProfileUpdateSerializer,
     }
     PLAYER_PROFILE_TEAM_CONTRIBUTOR_SERIALIZERS = {
         "input": serializers.PlayerProfileTeamContributorInputSerializer,
