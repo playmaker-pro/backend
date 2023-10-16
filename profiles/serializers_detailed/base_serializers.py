@@ -95,15 +95,17 @@ class UserDataSerializer(serializers.ModelSerializer):
     """User data serializer for player profile view"""
 
     userpreferences = UserPreferencesSerializerDetailed(required=False, partial=True)
+    picture = serializers.CharField(source="picture_url", read_only=True)
 
     class Meta:
         model = User
-        fields = [
+        fields = (
             "id",
             "first_name",
             "last_name",
             "userpreferences",
-        ]
+            "picture",
+        )
         depth = 1
         extra_kwargs = {
             "id": {"read_only": True},

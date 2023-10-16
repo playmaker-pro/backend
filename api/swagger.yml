@@ -2644,6 +2644,7 @@ components:
         - id
         - first_name
         - last_name
+
     PlayerProfileUserData:
       type: object
       properties:
@@ -2655,6 +2656,8 @@ components:
           type: string
         userpreferences:
           $ref: '#/components/schemas/PlayerProfileUserPreferences'
+        picture:
+          type: string
       required:
         - id
         - first_name
@@ -2671,6 +2674,8 @@ components:
           type: string
         userpreferences:
           $ref: '#/components/schemas/CoachProfileUserPreferences'
+        picture:
+          type: string
       required:
         - id
         - first_name
@@ -4088,6 +4093,8 @@ components:
     UserPreferences:
       type: object
       properties:
+        age:
+          type: integer
         localization:
           $ref: '#/components/schemas/City'
         spoken_languages:

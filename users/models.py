@@ -269,7 +269,7 @@ class User(AbstractUser, UserRoleMixin):
 
     email = models.EmailField(_("Adres email"), unique=True)
 
-    def get_file_path(self, filename) -> str:
+    def get_file_path(self, filename: str) -> str:
         """define user profile picture image path"""
         curr_date: str = str(datetime.datetime.now().date())
         format: str = filename.split(".")[-1]
