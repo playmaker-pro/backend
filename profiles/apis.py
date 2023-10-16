@@ -420,6 +420,7 @@ class ProfileCoursesAPI(EndpointView):
 
 class ProfileTeamsApi(EndpointView):
     permission_classes = [IsAuthenticatedOrReadOnly]
+    serializer_manager = SerializersManager()
 
     def get_profile_team_contributor(
         self, request: Request, profile_uuid: uuid.UUID
@@ -430,14 +431,17 @@ class ProfileTeamsApi(EndpointView):
         """
         # Retrieve the profile associated with the given UUID
         try:
-            profile_service.get_profile_by_uuid(profile_uuid)
+            profile = profile_service.get_profile_by_uuid(profile_uuid)
         except ObjectDoesNotExist:
             raise errors.ProfileDoesNotExist()
-        qs: QuerySet = team_contributor_service.get_teams_for_profile(profile_uuid)
-
-        serializer = serializers.TeamContributorSerializer(
-            qs, many=True, context={"request": request}
+        qs: QuerySet = team_contributor_service.get_teams_for_profile(
+            profile_uuid
+        ).prefetch_related("team_history", "team_history__league_history__league")
+        # Using the manager to get the right serializer
+        serializer_class = self.serializer_manager.get_serializer_class(
+            profile, "output"
         )
+        serializer = serializer_class(qs, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def add_team_contributor_to_profile(self, request: Request) -> Response:
@@ -445,15 +449,20 @@ class ProfileTeamsApi(EndpointView):
         Assigns a team with a team history to the user's profile.
         """
         profile_uuid = request.user.profile.uuid
-        serializer_data = serializers.TeamContributorInputSerializer(data=request.data)
+        profile = ProfileService.get_profile_by_uuid(profile_uuid)
+        # Using the manager to get the input serializer
+        input_serializer_class = self.serializer_manager.get_serializer_class(
+            profile, "input"
+        )
+        serializer_data = input_serializer_class(data=request.data)
         serializer_data.is_valid(raise_exception=True)
         validated_data = serializer_data.validated_data
         try:
-            # This service method aggregates all the sub-service methods
-            team_contributor = (
-                team_contributor_service.ensure_unique_team_contributor_and_related(
-                    profile_uuid, validated_data
-                )
+            profile_type = (
+                "player" if profile_service.is_player_profile(profile) else "non-player"
+            )
+            team_contributor = team_contributor_service.create_contributor(
+                profile_uuid, validated_data, profile_type
             )
         except Exception as e:
             mapped_exception = map_service_exception(e)
@@ -461,7 +470,11 @@ class ProfileTeamsApi(EndpointView):
                 raise mapped_exception
             raise
 
-        serializer = serializers.TeamContributorSerializer(team_contributor)
+        # Using the manager to get the output serializer
+        output_serializer_class = self.serializer_manager.get_serializer_class(
+            profile, "output"
+        )
+        serializer = output_serializer_class(team_contributor)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update_profile_team_contributor(
@@ -471,6 +484,15 @@ class ProfileTeamsApi(EndpointView):
         Update a team with a team history in the user's profile.
         """
         profile_uuid = request.user.profile.uuid
+        profile = ProfileService.get_profile_by_uuid(profile_uuid)
+        # Using the manager to get the input serializer
+        input_serializer_class = self.serializer_manager.get_serializer_class(
+            profile, "input"
+        )
+        serializer_data = input_serializer_class(data=request.data)
+        serializer_data.is_valid(raise_exception=True)
+        validated_data = serializer_data.validated_data
+
         try:
             team_contributor: models.TeamContributor = (
                 team_contributor_service.get_team_contributor_or_404(
@@ -479,27 +501,36 @@ class ProfileTeamsApi(EndpointView):
             )
         except errors.TeamContributorNotFoundServiceException:
             raise errors.TeamContributorDoesNotExist()
+
         if not team_contributor_service.is_owner_of_team_contributor(
             profile_uuid, team_contributor
         ):
             raise PermissionDenied()
 
-        serializer_data = serializers.TeamContributorInputSerializer(data=request.data)
-        serializer_data.is_valid(raise_exception=True)
-
-        validated_data = serializer_data.validated_data
-
         try:
-            updated_team_contributor = team_contributor_service.update_related_entities(
-                profile_uuid, team_contributor, validated_data
-            )
+            if profile_service.is_player_profile(profile):
+                updated_team_contributor = (
+                    team_contributor_service.update_player_contributor(
+                        profile_uuid, team_contributor, validated_data
+                    )
+                )
+            else:  # non-player profiles
+                updated_team_contributor = (
+                    team_contributor_service.update_non_player_contributor(
+                        profile_uuid, team_contributor, validated_data
+                    )
+                )
         except Exception as e:
             mapped_exception = map_service_exception(e)
             if mapped_exception:
                 raise mapped_exception
             raise e
 
-        serializer = serializers.TeamContributorSerializer(updated_team_contributor)
+        # Using the manager to get the output serializer
+        output_serializer_class = self.serializer_manager.get_serializer_class(
+            profile, "output"
+        )
+        serializer = output_serializer_class(updated_team_contributor)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 

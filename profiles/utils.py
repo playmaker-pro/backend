@@ -14,7 +14,6 @@ from django.db.models import Model
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from rest_framework.exceptions import NotFound
 
 from clubs import errors as club_errors
 from profiles import errors as profile_errors
@@ -511,9 +510,11 @@ def map_service_exception(exception) -> typing.Optional[typing.Type[Exception]]:
         club_errors.LeagueNotFoundServiceException: club_errors.LeagueDoesNotExist,
         club_errors.LeagueHistoryNotFoundServiceException: club_errors.LeagueHistoryDoesNotExist,
         club_errors.TeamNotFoundServiceException: club_errors.TeamDoesNotExist,
+        club_errors.TeamHistoryNotFoundServiceException: club_errors.TeamHistoryDoesNotExist,
         profile_errors.TeamContributorAlreadyExistServiceException: profile_errors.TeamContributorExist,
         profile_errors.TeamContributorNotFoundServiceException: profile_errors.TeamContributorDoesNotExist,
         club_errors.SeasonDoesNotExistServiceException: club_errors.SeasonDoesNotExist,
+        club_errors.SeasonDateRangeTooWideServiceException: club_errors.SeasonDateRangeTooWide,
     }
 
     return exception_mapping.get(type(exception), None)

@@ -1530,7 +1530,7 @@ paths:
                   P: Piłkarz
           description: Returns available roles choices.
 
-  /profiles/teams/{profile_uuid}/:
+  /profiles/{profile_uuid}/teams/:
     get:
       tags:
         - profiles
@@ -1550,9 +1550,9 @@ paths:
           content:
             application/json:
               schema:
-                type: "array"
-                items:
-                  $ref: '#/components/schemas/TeamContributor'
+                  oneOf:
+                    - $ref: '#/components/schemas/TeamContributor'
+                    - $ref: '#/components/schemas/TeamContributorNonPlayer'
 
         404:
           description: "Not found."
@@ -1594,6 +1594,9 @@ paths:
                 - $ref: '#/components/schemas/ExistingPolishTeamHistory'
                 - $ref: '#/components/schemas/NewPolishTeamHistory'
                 - $ref: '#/components/schemas/ForeignTeamHistory'
+                - $ref: '#/components/schemas/ExistingPolishTeamHistoryDateBased'
+                - $ref: '#/components/schemas/NewPolishTeamHistoryDateBased'
+                - $ref: '#/components/schemas/ForeignTeamHistoryDateBased'
             examples:
               existingPolishTeam:
                 summary: Add an existing TeamHistory
@@ -1601,14 +1604,29 @@ paths:
                   team_history: 12
                   is_primary: true
                   round: "jesienna"
+              existingPolishTeamDate:
+                summary: Add an existing TeamHistory with a date
+                value:
+                  team_history: 12
+                  is_primary: true
+                  start_date: "2020-01-01"
+                  role: "GKC"
               newPolishTeam:
                 summary: Add newly created Polish TeamHistory
                 value:
                   season: 1
-                  team_parameter: "New Polish Team"  # Name of the new Polish team
+                  team_parameter: "New Polish Team"
                   league_identifier: 1072
                   is_primary: false
                   round: "wiosenna"
+              newPolishTeamDate:
+                summary: Add newly created Polish TeamHistory with a date
+                value:
+                  team_parameter: "New Polish Team"
+                  league_identifier: 1072
+                  start_date: "2020-01-01"
+                  end_date: "2023-06-01"
+                  role: "IC"
               foreignTeam:
                 summary: Add newly created foreign TeamHistory
                 value:
@@ -1619,13 +1637,25 @@ paths:
                   is_primary: true
                   round: "wiosenna"
                   gender: 1
+              foreignTeamDate:
+                summary: Add newly created foreign TeamHistory with a date
+                value:
+                  country: "IT"
+                  start_date: "2020-01-01"
+                  is_primary: true
+                  team_parameter: "Foreign Team IT"
+                  league_identifier: "Serie A"
+                  role: "IIC"
+                  gender: 1
       responses:
         201:
           description: "Successfully added."
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TeamContributor'
+                oneOf:
+                 - $ref: '#/components/schemas/TeamContributor'
+                 - $ref: '#/components/schemas/TeamContributorNonPlayer'
         400:
           description: "Invalid request."
           content:
@@ -1697,41 +1727,70 @@ paths:
             schema:
               oneOf:
                 - $ref: '#/components/schemas/ExistingPolishTeamHistory'
+                - $ref: '#/components/schemas/ExistingPolishTeamHistoryDateBased'
                 - $ref: '#/components/schemas/NewPolishTeamHistory'
+                - $ref: '#/components/schemas/NewPolishTeamHistoryDateBased'
+                - $ref: '#/components/schemas/ForeignTeamHistoryDateBased'
                 - $ref: '#/components/schemas/ForeignTeamHistory'
             examples:
               existingPolishTeam:
-                summary: Update with existing TeamHistory
+                summary: Update with an existing TeamHistory
                 value:
-                  team_history: 4567
-                  season: 1
+                  team_history: 12
                   is_primary: true
                   round: "jesienna"
+              existingPolishTeamDate:
+                summary: Update with an existing TeamHistory with a date
+                value:
+                  team_history: 12
+                  is_primary: true
+                  start_date: "2021-01-01"
+                  role: "IIC"
               newPolishTeam:
                 summary: Update with newly created Polish TeamHistory
                 value:
                   season: 1
-                  team_parameter: "Updated Polish Team Name"
+                  team_parameter: "New Polish Team"
                   league_identifier: 1072
                   is_primary: false
                   round: "wiosenna"
+              newPolishTeamDate:
+                summary: Update with newly created Polish TeamHistory with a date
+                value:
+                  team_parameter: "New Polish Team"
+                  league_identifier: 1072
+                  start_date: "2020-01-01"
+                  end_date: "2023-06-01"
+                  role: "IC"
               foreignTeam:
                 summary: Update with newly created foreign TeamHistory
                 value:
                   country: "UK"
                   season: 1
-                  team_parameter: "Updated Foreign Team Name"
+                  team_parameter: "Foreign Team"
                   league_identifier: "Premier League"
                   is_primary: true
-                  gender: 1
                   round: "wiosenna"
+                  gender: 1
+              foreignTeamDate:
+                summary: Update with newly created foreign TeamHistory with a date
+                value:
+                  country: "IT"
+                  start_date: "2020-01-01"
+                  is_primary: true
+                  team_parameter: "Foreign Team IT"
+                  league_identifier: "Serie A"
+                  role: "IIC"
+                  gender: 1
       responses:
         200:
           description: "Successfully updated."
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TeamContributor'
+                oneOf:
+                  - $ref: '#/components/schemas/TeamContributor'
+                  - $ref: '#/components/schemas/TeamContributorNonPlayer'
         403:
           description: "Forbidden."
           content:
@@ -4336,10 +4395,37 @@ components:
         round:
           type: string
           description: "Season round. jesienna/wiosenna"
-          nullable: true
       required:
         - team_history
         - is_primary
+        - round
+    ExistingPolishTeamHistoryDateBased:
+      type: object
+      properties:
+        team_history:
+          type: integer
+          description: "Identifier for the existing Polish TeamHistory."
+        is_primary:
+          type: boolean
+          description: "Flag to set the team-history as actual one."
+        start_date:
+          type: string
+          format: date
+          description: "date when the team-history started YYYY-MM-DD"
+          nullable: false
+        end_date:
+          type: string
+          description: "date when the team-history ended YYYY-MM-DD. If is_primary set to true this field is a null"
+          nullable: true
+        role:
+          type: string
+          description: "role in the team-history ('IC', 'GKC'..)"
+          nullable: false
+      required:
+        - team_history
+        - is_primary
+        - start_date
+        - role
     NewPolishTeamHistory:
       type: object
       properties:
@@ -4358,12 +4444,42 @@ components:
         round:
           type: string
           description: "Season round. jesienna/wiosenna"
-          nullable: true
       required:
         - season
         - team_parameter
         - league_identifier
         - is_primary
+        - round
+    NewPolishTeamHistoryDateBased:
+      type: object
+      properties:
+        start_date:
+          type: string
+          format: date
+          description: "date when the team-history started YYYY-MM-DD"
+        end_date:
+          type: string
+          description: "date when the team-history ended YYYY-MM-DD. If is_primary set to true this field is a null"
+          nullable: true
+        team_parameter:
+          type: string
+          description: "Name of the new Polish Team."
+        league_identifier:
+          type: integer
+          description: "Identifier of the League."
+        is_primary:
+          type: boolean
+          description: "Flag to set the team-history as primary. True set the end date as 'aktualnie'"
+        role:
+          type: string
+          description: "role in the team-history ('IC', 'GKC'..)"
+          nullable: false
+      required:
+        - start_date
+        - team_parameter
+        - league_identifier
+        - is_primary
+        - role
     ForeignTeamHistory:
       type: object
       properties:
@@ -4385,7 +4501,6 @@ components:
         round:
           type: string
           description: "Season round. jesienna/wiosenna"
-          nullable: true
         gender:
           type: integer
           description: "Gender identifier. 1 for male, 2 for female"
@@ -4395,7 +4510,42 @@ components:
         - team_parameter
         - league_identifier
         - is_primary
+        - round
         - gender
+    ForeignTeamHistoryDateBased:
+      type: object
+      properties:
+        country:
+          type: string
+          description: "Country code."
+        team_parameter:
+          type: string
+          description: "Name of the new foreign Team."
+        league_identifier:
+          type: string
+          description: "Name of the new foreign League."
+        start_date:
+          type: string
+          format: date
+          description: "date when the team-history started YYYY-MM-DD"
+        end_date:
+          type: string
+          description: "date when the team-history ended YYYY-MM-DD. If is_primary set to true this field is a null"
+          nullable: true
+        is_primary:
+          type: boolean
+          description: "Flag to set the team-history as primary."
+        gender:
+          type: integer
+          description: "Gender identifier. 1 for male, 2 for female"
+      required:
+        - country
+        - team_parameter
+        - league_identifier
+        - gender
+        - role
+        - start_date
+        - is_primary
     TeamContributor:
       type: object
       properties:
@@ -4421,7 +4571,6 @@ components:
         round:
           type: string
           description: "Season round name. jesienna/wiosenna"
-          nullable: true
       required:
         - id
         - picture_url
@@ -4430,6 +4579,44 @@ components:
         - season_name
         - round
         - is_primary
+    TeamContributorNonPlayer:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: "ID of the team contributor."
+        picture_url:
+          type: string
+          description: "URL of the Club picture that TeamContributor's Team belongs to."
+          nullable: true
+        is_primary:
+          type: boolean
+          description: "Indicates if this is the current Team the coach (or other non-player role) is associated with."
+        team_name:
+          type: string
+          description: "Name of the Team."
+        league_name:
+          type: string
+          description: "Name of the League the Team belongs to."
+        date_from:
+          type: string
+          description: "Season's name in format 'YYYY-MM-DD'."
+        end_date_display:
+          type: string
+          description: "Ending date for the contributor's association with the team in format 'YYYY-MM-DD'. If the contributor is currently associated with the team, this will be set to 'aktualnie'."
+        role:
+          type: string
+          description: "Role in the team (e.g., IC, IIC, GKC, etc.)."
+      required:
+        - id
+        - picture_url
+        - team_name
+        - league_name
+        - round
+        - is_primary
+        - date_from
+        - end_date_display
+        - role
     SocialLoginResponse:
       description: User logged in successfully - tokens returned.
       type: object

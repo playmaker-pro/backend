@@ -112,12 +112,15 @@ class VoivodeshipWrongSchemaHTTPException(CoreAPIException):
     """
 
     status_code = status.HTTP_404_NOT_FOUND
-    default_detail = ("Voivodeship object is required. "
-                      "You should provide voivodeship obj as fallows: voivodeship_obj: {id: 1}")
+    default_detail = (
+        "Voivodeship object is required. "
+        "You should provide voivodeship obj as fallows: voivodeship_obj: {id: 1}"
+    )
 
 
 class LanguageDoesNotExistException(Exception):
     """Raises when language does not exist in DB"""
+
     ...
 
 
@@ -137,5 +140,3 @@ class InvalidFormationException(CoreAPIException):
 
     status_code = status.HTTP_404_NOT_FOUND
     default_detail = "Given formation does not exist."
-
-

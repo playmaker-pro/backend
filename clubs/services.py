@@ -172,7 +172,7 @@ class TeamHistoryCreationService:
 
         """
         model_instance.status = self.DEFAULT_STATUS
-        model_instance.createdBy = user
+        model_instance.created_by = user
         model_instance.enabled = False
         model_instance.visible = False
         model_instance.save()
@@ -305,7 +305,7 @@ class TeamHistoryCreationService:
         Retrieve or create a history record for the given team and league history.
         """
         team_history, created = models.TeamHistory.objects.get_or_create(
-            team=team, league_history=league_history
+            team=team, league_history=league_history, season=league_history.season
         )
         if created:
             self.initialize_model_instance(team_history, user)
@@ -321,6 +321,11 @@ class TeamHistoryCreationService:
             league_history, created = models.LeagueHistory.objects.get_or_create(
                 season_id=season_id, league=league
             )
+        except models.LeagueHistory.MultipleObjectsReturned:
+            # Get the first record as a fallback
+            league_history = models.LeagueHistory.objects.filter().first()
+            created = False
+
         except ObjectDoesNotExist:
             raise errors.SeasonDoesNotExistServiceException()
         if created:
@@ -410,8 +415,74 @@ class TeamHistoryCreationService:
         """
         Fetch the team_history and associated season based on a team_history_id.
         """
-        team_history: models.TeamHistory = models.TeamHistory.objects.get(
-            id=team_history_id
-        )
+        try:
+            team_history: models.TeamHistory = (
+                models.TeamHistory.objects.select_related("league_history").get(
+                    id=team_history_id
+                )
+            )
+
+        except models.TeamHistory.DoesNotExist:
+            raise errors.TeamHistoryNotFoundServiceException()
+
         season: int = team_history.league_history.season.id
         return team_history, season
+
+    def create_or_get_team_history_date_based(
+        self,
+        start_date: datetime.date,
+        end_date: typing.Union[datetime.date, None],
+        team_parameter: typing.Union[str, int],
+        league_identifier: typing.Union[str, int],
+        country_code: str,
+        user: User,
+    ):
+        """
+        Creates or retrieves the TeamHistory instances for a given date range.
+
+        For each date within the range, the method checks if a corresponding TeamHistory exists. If it does,
+        the instance is added to the list of results; otherwise, a new one is created. The method returns
+        all TeamHistory instances corresponding to the date range.
+        """
+        if end_date is None:
+            end_date = datetime.date.today()
+
+        if end_date < start_date:
+            raise ValueError("End date cannot be before start date.")
+
+        cursor_date = start_date
+        team_histories = []
+        while cursor_date <= end_date:
+            # Retrieve Season for the cursor_date
+            current_season_name = models.Season.define_current_season(cursor_date)
+            season_obj = models.Season.objects.filter(name=current_season_name).first()
+            if not season_obj:
+                raise errors.SeasonDateRangeTooWideServiceException()
+
+            league, league_history = self.create_or_get_league_and_history(
+                league_identifier,
+                country_code,
+                season_obj.id,
+                user,
+                {"team_parameter": team_parameter},
+            )
+
+            # Use existing method to get or create TeamHistory
+            team = self.get_or_create(
+                {
+                    "team_parameter": team_parameter,
+                    "league_identifier": league_identifier,
+                },
+                user,
+                country_code,
+            )
+
+            team_history = self.create_or_get_team_history(team, league_history, user)
+
+            team_histories.append(team_history)
+
+            # Move cursor_date to the next season start. E.g., if current season is 2020/2021, move to 01-07-2021
+            next_season_start_year = int(current_season_name.split("/")[1])
+            cursor_date = datetime.date(next_season_start_year, 7, 1)
+
+        return team_histories

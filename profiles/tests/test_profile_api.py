@@ -8,10 +8,11 @@ from rest_framework.test import APIClient, APITestCase
 from profiles.schemas import PlayerProfileGET
 from profiles.services import ProfileService
 from profiles.tests import utils
-from roles.definitions import CLUB_ROLE_TEAM_LEADER, PLAYER_SHORT
+from roles.definitions import CLUB_ROLE_TEAM_LEADER, PLAYER_SHORT, COACH_SHORT
 from users.models import User
 from utils import factories, testutils
 from utils.factories.voivodeship_factories import VoivodeshipsFactory
+from utils.factories import SEASON_NAMES
 from utils.test.test_utils import UserManager
 from voivodeships.models import Voivodeships
 
@@ -419,13 +420,24 @@ class ProfileTeamsApiTest(APITestCase):
         """Set up test environment."""
         testutils.create_system_user()
         self.user = User.objects.create(email="username", declared_role=PLAYER_SHORT)
+        self.non_player_user = User.objects.create(
+            email="nonplayer@example.com", declared_role=COACH_SHORT
+        )
+
         self.service = ProfileService()
         self.league = factories.LeagueFactory.create()
         self.team_contributor = factories.TeamContributorFactory.create(
             profile_uuid=self.user.profile.uuid
         )
+        self.non_player_team_contributor = factories.TeamContributorFactory.create(
+            profile_uuid=self.non_player_user.profile.uuid
+        )
+        all_seasons = [
+            factories.SeasonFactory.create(name=season_name)
+            for season_name in SEASON_NAMES
+        ]
         self.team_history = factories.TeamHistoryFactory.create()
-        self.season = factories.SeasonFactory.create()
+        self.season = all_seasons[0]
 
     def test_get_profiles_teams(self):
         """Test retrieving profile's teams."""
@@ -440,21 +452,52 @@ class ProfileTeamsApiTest(APITestCase):
 
         assert response.status_code == 200
 
+    def test_get_non_player_profiles_teams(self):
+        """Test retrieving non-player profile's teams."""
+        self.client.force_authenticate(user=self.non_player_user)
+
+        response = self.client.get(
+            reverse(
+                "api:profiles:profiles_teams",
+                kwargs={"profile_uuid": self.non_player_user.profile.uuid},
+            )
+        )
+
+        assert response.status_code == 200
+
     def test_add_team_to_profile(self):
         """Test adding a team to a profile."""
         self.client.force_authenticate(user=self.user)
 
         data = {
             "league_identifier": self.league.pk,
-            "country": "PL",
             "season": self.season.pk,
             "team_parameter": "Test Team",
+            "round": "wiosenna",
         }
-
         response = self.client.post(
             reverse(
                 "api:profiles:add_team_to_profile",
             ),
+            data,
+        )
+
+        assert response.status_code == 201
+
+    def test_add_team_to_non_player_profile(self):
+        """Test adding a team to a non-player profile."""
+        self.client.force_authenticate(user=self.non_player_user)
+
+        data = {
+            "league_identifier": self.league.pk,
+            "start_date": "2021-01-01",
+            "is_primary": True,
+            "team_parameter": "Test Team for Non-Player",
+            "role": "IC",
+        }
+
+        response = self.client.post(
+            reverse("api:profiles:add_team_to_profile"),
             data,
         )
 
@@ -466,10 +509,11 @@ class ProfileTeamsApiTest(APITestCase):
 
         data = {
             "team_history": self.team_history.id,
+            "round": "jesienna",
         }
         response = self.client.patch(
             reverse(
-                "api:profiles:update_team_history",
+                "api:profiles:update_or_delete_team_contributor",
                 kwargs={"team_contributor_id": self.team_contributor.pk},
             ),
             data,
@@ -481,13 +525,39 @@ class ProfileTeamsApiTest(APITestCase):
             response.data["league_name"] == self.team_history.league_history.league.name
         )
 
+    def test_patch_team_for_non_player_profile(self):
+        """Test updating (patching) a team for a non-player profile."""
+        self.client.force_authenticate(user=self.non_player_user)
+
+        data = {
+            "team_history": self.team_history.id,
+            "start_date": "2021-02-01",
+            "end_date": "2021-12-31",
+            "role": "IIC",
+        }
+
+        response = self.client.patch(
+            reverse(
+                "api:profiles:update_or_delete_team_contributor",
+                kwargs={"team_contributor_id": self.non_player_team_contributor.pk},
+            ),
+            data,
+        )
+
+        assert response.status_code == 200
+        assert response.data["team_name"] == self.team_history.team.name
+        assert (
+            response.data["league_name"] == self.team_history.league_history.league.name
+        )
+        assert response.data["role"] == data["role"]
+
     def test_delete_team_history(self):
         """Test deleting a team history."""
         self.client.force_authenticate(user=self.user)
 
         response = self.client.delete(
             reverse(
-                "api:profiles:update_team_history",
+                "api:profiles:update_or_delete_team_contributor",
                 kwargs={"team_contributor_id": self.team_contributor.id},
             ),
         )
@@ -514,6 +584,26 @@ class ProfileTeamsApiTest(APITestCase):
         assert (
             response.data[0]["league_name"]
             == self.team_contributor.team_history.first().league_history.league.name
+        )
+
+    def test_get_non_player_team_contributor_or_404(self):
+        """Test retrieving team contributor for non-player based on profile ID."""
+        self.client.force_authenticate(user=self.non_player_user)
+
+        response = self.client.get(
+            reverse(
+                "api:profiles:profiles_teams",
+                kwargs={"profile_uuid": self.non_player_user.profile.uuid},
+            )
+        )
+        assert response.status_code == 200
+        assert (
+            response.data[0]["team_name"]
+            == self.non_player_team_contributor.team_history.first().team.name
+        )
+        assert (
+            response.data[0]["league_name"]
+            == self.non_player_team_contributor.team_history.first().league_history.league.name
         )
 
 
