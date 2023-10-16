@@ -328,11 +328,9 @@ class ProfileVideoAPI(EndpointView):
         data = {"user": request.user.pk, **request.data}
         serializer = serializers.ProfileVideoSerializer(data=data)
 
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_201_CREATED)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete_profile_video(
         self, request: Request, video_id: typing.Optional[int] = None
@@ -372,11 +370,9 @@ class ProfileVideoAPI(EndpointView):
                     obj, data=data, context={"requestor": request.user}
                 )
             )
-            if serializer.is_valid(raise_exception=True):
-                serializer.save()
-                return Response(status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(status=status.HTTP_200_OK)
         else:
             raise errors.IncompleteRequestBody(("id",))
 

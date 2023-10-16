@@ -2180,15 +2180,14 @@ class ProfileVerificationStatus(models.Model):
 class ProfileVideo(models.Model):
     LABELS = ((1, "Skrót meczu"), (2, "Cały mecz"), (3, "Bramka"))
 
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="user_video"
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_video")
     url = models.URLField(
         _("Youtube url"),
     )
     title = models.CharField(_("Tytuł nagrania"), max_length=235, blank=True, null=True)
     description = models.TextField(_("Opis"), null=True, blank=True)
     label = models.IntegerField(choices=LABELS, null=True, blank=True)
+    date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
     class Meta:
         verbose_name = "Profile Video"
