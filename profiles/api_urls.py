@@ -20,6 +20,11 @@ urlpatterns = [
         name="create_or_list_profiles",
     ),
     path(
+        "search/",
+        views.ProfileSearchView.as_view({"get": "search_profiles"}),
+        name="profile_search",
+    ),
+    path(
         r"owned/",
         views.ProfileAPI.as_view(
             {

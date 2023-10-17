@@ -383,6 +383,31 @@ class ProfileService:
             raise ObjectDoesNotExist
 
     @staticmethod
+    def search_profiles_by_name(search_term: str) -> django_base_models.QuerySet:
+        """
+        Search for users whose concatenated first name and last name
+        match the given search term.
+        The search is case-insensitive and space-insensitive
+        """
+        # Validate the search term
+        if not search_term or len(search_term) < 3:
+            raise ValueError("Search term must be at least 3 characters long.")
+        search_term = utils.preprocess_search_term(search_term)
+
+        potential_matches = User.objects.all()
+
+        matching_users = filter(
+            lambda user: search_term
+            in utils.preprocess_search_term(
+                (user.first_name or "") + (user.last_name or "")
+            ),
+            potential_matches,
+        )
+
+        matching_users_ids = [user.id for user in matching_users]
+        return User.objects.filter(id__in=matching_users_ids)
+
+    @staticmethod
     def is_player_profile(profile) -> bool:
         return type(profile).__name__.lower() == "playerprofile"
 

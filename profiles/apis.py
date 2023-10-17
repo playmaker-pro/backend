@@ -1,6 +1,5 @@
 import typing
 import uuid
-
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist, QuerySet
@@ -148,6 +147,41 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ProfileSearchView(EndpointView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    allowed_methods = ["get"]
+
+    def get_paginated_queryset(self, qs: QuerySet = None) -> QuerySet:
+        """Paginate queryset with custom page size"""
+        self.pagination_class.page_size = 5
+        return super().get_paginated_queryset(qs)
+
+    def search_profiles(self, request: Request) -> Response:
+        """
+        Search for user profiles based on a provided search term.
+
+        The search term is extracted from the "name" query parameter.
+        If the term is not provided or is shorter than 3 characters,
+        an InvalidSearchTerm exception is raised.
+        Matching profiles are then retrieved and paginated.
+        """
+        search_term = request.GET.get("name", "").strip()
+
+        try:
+            matching_users_queryset = profile_service.search_profiles_by_name(
+                search_term
+            )
+        except ValueError:
+            raise errors.InvalidSearchTerm()
+
+        paginated_profiles = self.get_paginated_queryset(matching_users_queryset)
+        serializer = api_serializers.ProfileSearchSerializer(
+            paginated_profiles, many=True
+        )
+
+        return self.get_paginated_response(serializer.data)
 
 
 class FormationChoicesView(EndpointView):

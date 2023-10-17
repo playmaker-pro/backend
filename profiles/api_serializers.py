@@ -10,6 +10,7 @@ from rest_framework import serializers
 from clubs import errors as clubs_errors
 from clubs.api import serializers as club_serializers
 from clubs.services import ClubService
+from clubs.models import Season
 from external_links.serializers import ExternalLinksSerializer
 from profiles import errors as profile_errors
 from profiles import models
@@ -405,3 +406,76 @@ class BaseProfileDataSerializer(serializers.Serializer):
         """Check if given profile is main profile for user"""
         role = self.get_role(obj)
         return role == obj.user.declared_role
+
+
+class ProfileSearchSerializer(serializers.ModelSerializer):
+    team = serializers.SerializerMethodField()
+    age = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.User
+        fields = (
+            "role",
+            "first_name",
+            "last_name",
+            "team",
+            "age",
+        )
+
+    def get_age(self, obj: User) -> typing.Union[int, None]:
+        """
+        Retrieve the age for a given user from userpreferences.
+        """
+        return obj.userpreferences.age
+
+    def get_team(self, obj: User) -> str:
+        """
+        Retrieve the team for a given profile.
+
+        For PlayerProfile:
+        - Checks if the player has a primary association with a team for the current season and round.
+        - If such an association exists, it returns the team's display name along with its top parent league.
+
+        For other profiles:
+        - Checks for the primary team association irrespective of season or round.
+        - If an association exists, returns the team's display name along with its top parent league.
+
+        If neither of the above conditions is satisfied:
+        - The function checks if the profile has a directly associated team object and returns its display name.
+
+        If no association is found in any of the above conditions, the function returns "bez klubu"
+        indicating that the profile does not have an associated team.
+        """
+        current_season = Season.define_current_season()
+        current_round = Season.get_current_round()
+
+        team_contrib = models.TeamContributor.objects.filter(
+            profile_uuid=obj.profile.uuid,
+            is_primary=True,
+        ).first()
+
+        if team_contrib:
+            if (
+                obj.role == "P"
+                and team_contrib.round == current_round
+                and team_contrib.team_history.filter(
+                    league_history__season__name=current_season
+                ).exists()
+            ):
+                team_history_instance = team_contrib.team_history.all().first()
+                if team_history_instance:
+                    return (
+                        team_history_instance.team.display_team_with_league_top_parent
+                    )
+
+            else:
+                team_history_instance = team_contrib.team_history.all().first()
+                if team_history_instance:
+                    return (
+                        team_history_instance.team.display_team_with_league_top_parent
+                    )
+
+        if hasattr(obj.profile, "team_object") and obj.profile.team_object:
+            return obj.profile.team_object.display_team_with_league_top_parent
+
+        return "bez klubu"

@@ -64,6 +64,27 @@ class Season(models.Model):
         if not updated:
             self.current_season_update()
 
+    @classmethod
+    def get_current_round(cls, date: datetime.date = None) -> str:
+        """
+        Determine the current round based on the month of the provided date.
+
+        If no date is provided, the current system date is used.
+
+        Jesienna round: Months 8-2 of the next year (August-February)
+        Wiosenna round: Months 3-7 (March-July)
+        """
+        if date is None:
+            date = timezone.now()
+
+        # Jesienna round
+        if 8 <= date.month <= 12 or 1 <= date.month <= 2:
+            return "jesienna"
+
+        # Wiosenna round
+        elif 3 <= date.month <= 7:
+            return "wiosenna"
+
     @property
     def display_season(self):
         return self.name
@@ -906,6 +927,14 @@ class Team(models.Model, MappingMixin):
     @supress_exception
     def display_gender(self):
         return self.gender.display_gender
+
+    @property
+    def display_team_with_league_top_parent(self) -> str:
+        """
+        Returns a formatted string representing the team
+        along with its top parent league.
+        """
+        return f"({self.display_league_top_parent}, {self.display_team})"
 
     name = models.CharField(
         _("Nazwa drużyny"),
