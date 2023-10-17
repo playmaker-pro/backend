@@ -1863,6 +1863,54 @@ paths:
                     example: "Team contributor with given id does not exist."
         500:
           description: "Internal server error."
+  /profiles/search/:
+    'get':
+      operationId: profiles_search
+      description: "Search for user profiles based on a provided search term."
+      summary: "Search user profiles"
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          required: true
+          description: 'Search term used to match user first name or last name.'
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: "Page number"
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+          description: "Count of objects by page"
+      tags:
+        - profiles
+      responses:
+        '200':
+          description: 'Profiles matched by search term obtained successfully'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: 'Total count of matched profiles'
+                  next:
+                    type: string
+                    description: "Next paginated request url"
+                  previous:
+                    type: string
+                    description: "Previous paginated request url"
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProfileSearchResult'
+                description: "List of profiles matched by search term"
+        '400':
+          description: 'Invalid search term provided'
 
   /users/feature-elements/:
     get:
@@ -4109,6 +4157,32 @@ components:
             "uuid": "104ac6d7-6bf7-490e-abac-9b4c8d42ac49",
             "facebook_url": null
           }
+    ProfileSearchResult:
+      type: object
+      properties:
+        role:
+          type: string
+          description: 'Role of the user. e.g., P, C, T, G, S, etc.'
+        first_name:
+          type: string
+          description: 'First name of the user.'
+        last_name:
+          type: string
+          description: 'Last name of the user.'
+        team:
+          type: string
+          description: 'Team of the user with league top parent or "bez klubu" if no team associated.'
+        age:
+          type: integer
+          description: 'Age of the user.'
+          nullable: true
+      required:
+        - role
+        - first_name
+        - last_name
+        - team
+        - age
+
     Country:
       type: object
       properties:

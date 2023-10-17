@@ -4,6 +4,8 @@ import logging
 import re
 import typing
 from urllib.parse import parse_qs, urlparse
+from unidecode import unidecode
+
 
 # Deprecated @dep-2 - due to pandas
 # import pandas as pd
@@ -518,3 +520,17 @@ def map_service_exception(exception) -> typing.Optional[typing.Type[Exception]]:
     }
 
     return exception_mapping.get(type(exception), None)
+
+
+def preprocess_search_term(term: str) -> str:
+    """
+    Preprocess the given search term by converting non-ASCII characters
+    to their closest ASCII equivalents, removing spaces, and converting to lowercase.
+    """
+    # Convert non-ASCII characters to their closest ASCII equivalents
+    term = unidecode(term)
+    # Remove spaces
+    term = term.replace(" ", "")
+    # Convert to lowercase
+    term = term.lower()
+    return term
