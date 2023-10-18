@@ -6,8 +6,8 @@ from api import errors as api_errors
 from api import utils as api_utils
 from api.errors import InvalidAPIRequestParam
 from api.filters import APIFilter
-from profiles import errors as profile_errors
 from profiles import models, services
+from profiles.api_errors import IncorrectProfileRole
 
 
 class ProfileListAPIFilter(APIFilter):
@@ -36,7 +36,7 @@ class ProfileListAPIFilter(APIFilter):
         try:
             return self.service.profile_service.get_model_by_role(role)
         except ValueError:
-            raise profile_errors.InvalidProfileRole
+            raise IncorrectProfileRole
 
     def get_queryset(self) -> QuerySet:
         """Get queryset based on role"""

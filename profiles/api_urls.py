@@ -106,20 +106,19 @@ urlpatterns = [
         views.ProfileVideoAPI.as_view(
             {
                 "post": "create_profile_video",
-                "delete": "delete_profile_video",
-                "patch": "update_profile_video",
             }
         ),
-        name="modify_profile_video",
+        name="create_profile_video",
     ),
     path(
         r"profile-video/<int:video_id>/",
         views.ProfileVideoAPI.as_view(
             {
                 "delete": "delete_profile_video",
+                "patch": "update_profile_video",
             }
         ),
-        name="delete_profile_video",
+        name="modify_profile_video",
     ),
     path(
         r"course/",

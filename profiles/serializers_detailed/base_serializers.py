@@ -10,13 +10,13 @@ from clubs.errors import ClubDoesNotExist, InvalidGender, TeamDoesNotExist
 from clubs.models import Club, League, Team
 from clubs.services import ClubService
 from external_links.serializers import ExternalLinksSerializer
-from profiles.api_serializers import ProfileLabelsSerializer
-from profiles.errors import (
+from profiles.api_errors import (
     InvalidProfileRole,
-    LanguageDoesNotExistException,
     VoivodeshipDoesNotExistHTTPException,
     VoivodeshipWrongSchemaHTTPException,
 )
+from profiles.api_serializers import ProfileLabelsSerializer
+from profiles.errors import LanguageDoesNotExistException
 from profiles.models import PROFILE_TYPE
 from profiles.serializers import (
     CoachLicenceSerializer,
