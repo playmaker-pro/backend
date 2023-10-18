@@ -1,5 +1,5 @@
-import typing
 import uuid
+
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist, QuerySet
@@ -17,12 +17,9 @@ from api.swagger_schemas import (
 )
 from api.views import EndpointView
 from external_links import serializers as external_links_serializers
-from external_links.errors import (
-    LinkSourceNotFound,
-    LinkSourceNotFoundServiceException,
-)
+from external_links.errors import LinkSourceNotFound, LinkSourceNotFoundServiceException
 from external_links.services import ExternalLinksService
-from profiles import api_serializers, errors, models, serializers
+from profiles import api_errors, api_serializers, errors, models, serializers
 from profiles.filters import ProfileListAPIFilter
 from profiles.managers import SerializersManager
 from profiles.services import (
@@ -63,7 +60,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         try:
             profile_object = profile_service.get_profile_by_uuid(profile_uuid)
         except ObjectDoesNotExist:
-            raise errors.ProfileDoesNotExist
+            raise api_errors.ProfileDoesNotExist
 
         # serializer: api_serializers.ProfileSerializer = (
         #     api_serializers.ProfileSerializer(profile_object)
@@ -82,9 +79,9 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         try:
             profile = profile_service.get_profile_by_uuid(profile_uuid)
         except ObjectDoesNotExist:
-            raise errors.ProfileDoesNotExist
+            raise api_errors.ProfileDoesNotExist
         except ValidationError:
-            raise errors.InvalidUUID
+            raise api_errors.InvalidUUID
 
         if profile.user != request.user:
             raise NotOwnerOfAnObject
@@ -116,7 +113,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         try:
             profile_object = profile_service.get_profile_by_uuid(profile_uuid)
         except ObjectDoesNotExist:
-            raise errors.ProfileDoesNotExist
+            raise api_errors.ProfileDoesNotExist
 
         season_name = request.GET.get("season_name")
         query = {"visible": True}
@@ -174,7 +171,7 @@ class ProfileSearchView(EndpointView):
                 search_term
             )
         except ValueError:
-            raise errors.InvalidSearchTerm()
+            raise api_errors.InvalidSearchTerm()
 
         paginated_profiles = self.get_paginated_queryset(matching_users_queryset)
         serializer = api_serializers.ProfileSearchSerializer(
@@ -348,30 +345,29 @@ class ProfileVideoAPI(EndpointView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_labels(self, request: Request) -> Response:
-        """List all player video labels"""
-        labels = (
-            serializers.ChoicesTuple(*obj)
-            for obj in ProfileVideoService.get_player_video_labels()
-        )
-        serializer = serializers.ProfileEnumChoicesSerializer(labels, many=True)  # type: ignore
+        """List profile video labels"""
+        role = request.query_params.get("role")
+        try:
+            labels = ProfileVideoService.get_labels(role)
+        except ValueError:
+            raise api_errors.IncorrectProfileRole
+        labels_choices = (serializers.ChoicesTuple(*label) for label in labels)
+        serializer = serializers.ProfileEnumChoicesSerializer(labels_choices, many=True)  # type: ignore
         return Response(serializer.data)
 
     def create_profile_video(self, request: Request) -> Response:
         """View for creating new profile videos"""
-
-        data = {"user": request.user.pk, **request.data}
-        serializer = serializers.ProfileVideoSerializer(data=data)
+        serializer = serializers.ProfileVideoSerializer(
+            data=request.data,
+            context={"requestor": request.user},
+        )
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def delete_profile_video(
-        self, request: Request, video_id: typing.Optional[int] = None
-    ) -> Response:
+    def delete_profile_video(self, request: Request, video_id: int) -> Response:
         """View for deleting profile videos"""
-        if not video_id:
-            raise exceptions.ValidationError({"error": "Missing video_id."})
 
         try:
             obj = ProfileVideoService.get_video_by_id(video_id)
@@ -385,30 +381,25 @@ class ProfileVideoAPI(EndpointView):
         )
         serializer.delete()
 
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def update_profile_video(self, request: Request) -> Response:
+    def update_profile_video(self, request: Request, video_id: int) -> Response:
         """View for updating existing profile video"""
-        data = {"user": request.user.pk, **request.data}
-
-        if video_id := data.get("id"):  # noqa: E999
-            try:
-                obj = ProfileVideoService.get_video_by_id(video_id)
-            except models.ProfileVideo.DoesNotExist:
-                raise exceptions.NotFound(
-                    f"ProfileVideo with ID: {video_id} does not exist."
-                )
-
-            serializer: serializers.ProfileVideoSerializer = (
-                serializers.ProfileVideoSerializer(
-                    obj, data=data, context={"requestor": request.user}
-                )
+        try:
+            obj = ProfileVideoService.get_video_by_id(video_id)
+        except models.ProfileVideo.DoesNotExist:
+            raise exceptions.NotFound(
+                f"ProfileVideo with ID: {video_id} does not exist."
             )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(status=status.HTTP_200_OK)
-        else:
-            raise errors.IncompleteRequestBody(("id",))
+
+        serializer: serializers.ProfileVideoSerializer = (
+            serializers.ProfileVideoSerializer(
+                obj, data=request.data, context={"requestor": request.user}
+            )
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ProfileCoursesAPI(EndpointView):
@@ -534,8 +525,7 @@ class ProfileTeamsApi(EndpointView):
                 )
             )
         except errors.TeamContributorNotFoundServiceException:
-            raise errors.TeamContributorDoesNotExist()
-
+            raise api_errors.TeamContributorDoesNotExist()
         if not team_contributor_service.is_owner_of_team_contributor(
             profile_uuid, team_contributor
         ):
@@ -580,7 +570,7 @@ class ProfileTeamsApi(EndpointView):
                 team_contributor_id
             )
         except errors.TeamContributorNotFoundServiceException:
-            raise errors.TeamContributorDoesNotExist()
+            raise api_errors.TeamContributorDoesNotExist()
 
         if not team_contributor_service.is_owner_of_team_contributor(
             profile_uuid, team_contributor
@@ -603,7 +593,7 @@ class ExternalLinksAPI(EndpointView):
         try:
             profile = profile_service.get_profile_by_uuid(profile_uuid)
         except ObjectDoesNotExist:
-            raise errors.ProfileDoesNotExist()
+            raise api_errors.ProfileDoesNotExist
         external_links = profile.external_links
         serializer = external_links_serializers.ExternalLinksSerializer(external_links)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -616,7 +606,7 @@ class ExternalLinksAPI(EndpointView):
         try:
             profile = profile_service.get_profile_by_uuid(profile_uuid)
         except ObjectDoesNotExist:
-            raise errors.ProfileDoesNotExist
+            raise api_errors.ProfileDoesNotExist
         if profile.user != request.user:
             raise PermissionDenied
         try:

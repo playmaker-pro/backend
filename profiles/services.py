@@ -15,7 +15,7 @@ from clubs import models as clubs_models
 from clubs import services as club_services
 from clubs.models import Club as CClub
 from clubs.models import Team as CTeam
-from profiles import errors, models, utils
+from profiles import api_errors, errors, models, utils
 from profiles.models import REVERSED_MODEL_MAP
 from roles.definitions import CLUB_ROLES, PROFILE_TYPE_MAP
 from utils import get_current_season
@@ -588,10 +588,10 @@ class PlayerProfilePositionService:
         )
 
         if main_positions_count > 1:
-            raise errors.MultipleMainPositionError
+            raise api_errors.MultipleMainPositionError
 
         if non_main_positions_count > 2:
-            raise errors.TooManyAlternatePositionsError
+            raise api_errors.TooManyAlternatePositionsError
 
     def manage_positions(
         self, profile: models.PlayerProfile, positions_data: typing.List[PositionData]
@@ -684,8 +684,11 @@ class PlayerProfilePositionService:
 
 class ProfileVideoService:
     @staticmethod
-    def get_player_video_labels() -> tuple:
-        """Get player video labels"""
+    def get_labels(role: str = None) -> tuple:
+        """Get video labels based on role if given"""
+        if role:
+            profile = ProfileService.get_model_by_role(role)
+            return profile.get_profile_video_labels()
         return models.ProfileVideo.LABELS
 
     @staticmethod

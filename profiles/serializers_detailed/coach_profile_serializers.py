@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from external_links.serializers import ExternalLinksSerializer
-from profiles.errors import InvalidCoachRoleException, InvalidFormationException
+from profiles.api_errors import InvalidCoachRoleException, InvalidFormationException
 from profiles.models import FORMATION_CHOICES, CoachProfile, ProfileVideo
 from profiles.serializers import ProfileEnumChoicesSerializer
 from profiles.serializers_detailed.base_serializers import (
@@ -14,6 +14,7 @@ class ProfileVideoSerializer(serializers.ModelSerializer):
     thumbnail = serializers.CharField(
         source="get_youtube_thumbnail_url", read_only=True
     )
+    label = ProfileEnumChoicesSerializer(model=ProfileVideo, required=False)
 
     class Meta:
         model = ProfileVideo

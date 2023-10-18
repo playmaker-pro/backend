@@ -1,9 +1,9 @@
 import logging
 import typing
-import uuid
 from collections import Counter
 from datetime import datetime
 
+import uuid
 from address.models import AddressField
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -27,8 +27,7 @@ from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_profile_external_links
 from mapper.models import Mapper
 from profiles.errors import VerificationCompletionFieldsWrongSetup
-from profiles.mixins import TeamObjectsDisplayMixin
-from profiles.mixins import utils as profile_utils
+from profiles.mixins import TeamObjectsDisplayMixin, utils as profile_utils
 from roles import definitions
 from voivodeships.models import Voivodeships
 
@@ -58,6 +57,74 @@ FORMATION_CHOICES = (
     ("4-3-1-2", "4-3-1-2"),
     ("4-4-1-1", "4-4-1-1"),
 )
+
+
+class ProfileVideo(models.Model):
+    """Model to keep track on user videos"""
+
+    class PlayerLabels(models.TextChoices):
+        """Labels specific for PlayerProfile"""
+
+        SHORT = "player_short", "Skrót meczu"
+        FULL = "player_full", "Cały mecz"
+        GOAL = "player_goal", "Bramka"
+
+    class CoachLabels(models.TextChoices):
+        """Labels specific for CoachProfile"""
+
+        SHORT = "coach_short", "Skrót meczu"
+        FULL = "coach_full", "Cały mecz"
+        ANALYSIS = "coach_analysis", "Analiza"
+
+    class ClubLabels(models.TextChoices):
+        """Labels specific for ClubProfile"""
+
+        SHORT = "club_short", "Skrót meczu"
+        FULL = "club_full", "Cały mecz"
+        ANALYSIS = "club_analysis", "Analiza"
+
+    class ScoutLabels(models.TextChoices):
+        """Labels specific for ScoutProfile"""
+
+        PLAYER = "scout_player_analysis", "Piłkarz"
+        TACTICS = "scout_tactics", "Taktyka"
+        FRAGMENT = "scout_fragment", "Stałe fragmenty"
+
+    LABELS = (
+        *PlayerLabels.choices,
+        *CoachLabels.choices,
+        *ScoutLabels.choices,
+        *ClubLabels.choices,
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_video")
+    url = models.URLField(
+        _("Youtube url"),
+    )
+    title = models.CharField(_("Tytuł nagrania"), max_length=235, blank=True, null=True)
+    description = models.TextField(_("Opis"), null=True, blank=True)
+    label = models.CharField(choices=LABELS, null=True, blank=True, max_length=30)
+    date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Profile Video"
+        verbose_name_plural = "Profile Videos"
+
+    @property
+    def get_youtube_thumbnail_url(self) -> typing.Union[str, None]:
+        """Crop YouTube video id from url, then return thumbnail url"""
+        from urllib.parse import parse_qsl, urlparse
+
+        thumbnail_url: str = "https://i.ytimg.com/vi/{}/hqdefault.jpg"
+        url = str(self.url)
+        parser = urlparse(url)
+
+        if parser.netloc.endswith("youtu.be") or parser.netloc.endswith("youtube.com"):
+            query_params = dict(parse_qsl(parser.query))
+            if video_id := query_params.get(  # noqa: E999
+                "v", parser.path.split("/")[-1]
+            ):
+                return thumbnail_url.format(video_id)
 
 
 class Course(models.Model):
@@ -191,6 +258,8 @@ class EventLogMixin:
 
 class BaseProfile(models.Model, EventLogMixin):
     """Base profile model to held most common profile elements"""
+
+    _video_labels = models.TextChoices  # override in subclasses
 
     PROFILE_TYPE = None
     AUTO_VERIFY = False  # flag to perform auto verification of User based on profile. If true - User.state will be switched to Verified  # noqa: E501
@@ -382,6 +451,11 @@ class BaseProfile(models.Model, EventLogMixin):
             if commit:
                 self.save()
 
+    @classmethod
+    def get_profile_video_labels(cls) -> list:
+        """Returns list of video labels for profile"""
+        return cls._video_labels.choices
+
     def save(self, *args, **kwargs):
         # silent_param = kwargs.get('silent', False)
         # if silent_param is not None:
@@ -538,6 +612,7 @@ class PlayerPosition(models.Model):
 class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     """Player specific profile"""
 
+    _video_labels = ProfileVideo.PlayerLabels
     PROFILE_TYPE = definitions.PROFILE_TYPE_PLAYER
     VERIFICATION_FIELDS = [
         "country",
@@ -1385,6 +1460,7 @@ class PlayerMetrics(models.Model):
 
 
 class ClubProfile(BaseProfile):
+    _video_labels = ProfileVideo.ClubLabels
     PROFILE_TYPE = definitions.PROFILE_TYPE_CLUB
 
     CLUB_ROLE = definitions.CLUB_ROLES
@@ -1472,6 +1548,7 @@ class LicenceType(models.Model):
 
 
 class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
+    _video_labels = ProfileVideo.CoachLabels
     PROFILE_TYPE = definitions.PROFILE_TYPE_COACH
     DATA_KEY_GAMES = "games"
     DATA_KET_CARRIER = "carrier"
@@ -1893,6 +1970,7 @@ class ParentProfile(BaseProfile):
 
 
 class ScoutProfile(BaseProfile):
+    _video_labels = ProfileVideo.ScoutLabels
     PROFILE_TYPE = definitions.PROFILE_TYPE_SCOUT
     AUTO_VERIFY = True
     VERIFICATION_FIELDS = []
@@ -2175,39 +2253,6 @@ class ProfileVerificationStatus(models.Model):
         self.team = defaults.get("team")
         self.team_history = defaults.get("team_history")
         self.save()
-
-
-class ProfileVideo(models.Model):
-    LABELS = ((1, "Skrót meczu"), (2, "Cały mecz"), (3, "Bramka"))
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_video")
-    url = models.URLField(
-        _("Youtube url"),
-    )
-    title = models.CharField(_("Tytuł nagrania"), max_length=235, blank=True, null=True)
-    description = models.TextField(_("Opis"), null=True, blank=True)
-    label = models.IntegerField(choices=LABELS, null=True, blank=True)
-    date_created = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-
-    class Meta:
-        verbose_name = "Profile Video"
-        verbose_name_plural = "Profile Videos"
-
-    @property
-    def get_youtube_thumbnail_url(self) -> typing.Union[str, None]:
-        """Crop YouTube video id from url, then return thumbnail url"""
-        from urllib.parse import parse_qsl, urlparse
-
-        thumbnail_url: str = "https://i.ytimg.com/vi/{}/hqdefault.jpg"
-        url = str(self.url)
-        parser = urlparse(url)
-
-        if parser.netloc.endswith("youtu.be") or parser.netloc.endswith("youtube.com"):
-            query_params = dict(parse_qsl(parser.query))
-            if video_id := query_params.get(  # noqa: E999
-                "v", parser.path.split("/")[-1]
-            ):
-                return thumbnail_url.format(video_id)
 
 
 class PlayerProfilePosition(models.Model):

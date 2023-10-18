@@ -78,42 +78,37 @@ class ProfileVideoSerializer(serializers.ModelSerializer):
     )
     label = ProfileEnumChoicesSerializer(model=models.ProfileVideo, required=False)
 
-    @staticmethod
-    def validate_label(value) -> typing.Optional[int]:
-        try:
-            int(value)
-            return value
-        except ValueError:
-            raise serializers.ValidationError(
-                f"Invalid value. Expected number, not a {type(value)}"
-            )
-
     class Meta:
         model = models.ProfileVideo
         fields = "__all__"
+        extra_kwargs = {"user": {"required": False}}
 
     def __init__(self, *args, **kwargs) -> None:
         """Override init to set url as not required if there is defined instance (UPDATE METHOD)"""
         super().__init__(*args, **kwargs)
-        self._user = None
         if self.instance is not None:
             self.fields["url"].required = False
 
-    def validate_player(self, user: models.User) -> None:
+    def create(self, validated_data: dict) -> models.ProfileVideo:
+        """Override create to set user based on requestor"""
+        validated_data["user"] = self.context["requestor"]
+        return super().create(validated_data)
+
+    def validate_user(self, user: models.User) -> None:
         """Validate that requestor (User, his PlayerProfile) is owner of the Video"""
         if user != self.context.get("requestor"):
             raise NotOwnerOfAnObject
 
     def delete(self) -> None:
         """Method do perform DELETE action on ProfileVideo object, validation included"""
-        self.validate_player(self.instance.user)
+        self.validate_user(self.instance.user)
         self.instance.delete()
 
     def update(
         self, instance: models.ProfileVideo, validated_data: dict
     ) -> models.ProfileVideo:
         """Method do perform UPDATE action on ProfileVideo object, validation included"""
-        self.validate_player(instance.user)
+        self.validate_user(instance.user)
         return super().update(instance, validated_data)
 
 

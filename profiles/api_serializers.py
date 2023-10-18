@@ -12,6 +12,7 @@ from clubs.api import serializers as club_serializers
 from clubs.services import ClubService
 from clubs.models import Season
 from external_links.serializers import ExternalLinksSerializer
+from profiles import api_errors as profile_api_errors
 from profiles import errors as profile_errors
 from profiles import models
 from profiles import serializers as profile_serializers
@@ -210,7 +211,7 @@ class ProfileSerializer(serializers.Serializer):
     def validate_role(self, role: str) -> None:
         """validate user role, raise exception if doesn't suits to the schema"""
         if role not in list(PROFILE_TYPE_SHORT_MAP.values()):
-            raise profile_errors.InvalidProfileRole
+            raise profile_api_errors.InvalidProfileRole
 
     def validate_team(self) -> None:
         """validate team id"""
@@ -240,7 +241,7 @@ class ProfileSerializer(serializers.Serializer):
         """Validate serializer input (data **kw)"""
         for field in self.required_fields:
             if not data or field not in data.keys():
-                raise profile_errors.IncompleteRequestBody(self.required_fields)
+                raise profile_api_errors.IncompleteRequestBody(self.required_fields)
         return data.dict() if isinstance(data, QueryDict) else data
 
     def get_player_stats(self, obj: models.PROFILE_TYPE) -> dict:
@@ -291,7 +292,7 @@ class CreateProfileSerializer(ProfileSerializer):
         user_obj: User = self.context.get("requestor")
 
         if users_service.user_has_profile(user_obj, self.model):
-            raise profile_errors.UserAlreadyHasProfile
+            raise profile_api_errors.UserAlreadyHasProfile
 
     def handle_positions(self, positions_data: list) -> None:
         """Handles the creation of player positions."""
@@ -314,7 +315,7 @@ class CreateProfileSerializer(ProfileSerializer):
                 self.initial_data.pop("role")
             )
         except ValueError:
-            raise profile_errors.InvalidProfileRole
+            raise profile_api_errors.InvalidProfileRole
 
         self.validate_data()
         positions_data = self.initial_data.pop("player_positions", None)

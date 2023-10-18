@@ -4,21 +4,14 @@ import logging
 import re
 import typing
 from urllib.parse import parse_qs, urlparse
-from unidecode import unidecode
-
 
 # Deprecated @dep-2 - due to pandas
 # import pandas as pd
 from dateutil.relativedelta import relativedelta
-from django.contrib.contenttypes.models import ContentType
-from django.core.cache import cache
-from django.db.models import Model
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-
-from clubs import errors as club_errors
-from profiles import errors as profile_errors
+from unidecode import unidecode
 
 # from . import models
 # from profiles import forms  # todo teog importu tu nie moze być bo sie robi rekurencja
@@ -508,13 +501,18 @@ def map_service_exception(exception) -> typing.Optional[typing.Type[Exception]]:
     service exception. If a match is found, the API exception is returned,
     otherwise, None is returned.
     """
+    # avoid recursive import
+    from clubs import errors as club_errors
+    from profiles import api_errors as profile_api_errors
+    from profiles import errors as profile_errors
+
     exception_mapping: typing.Dict[typing.Type[Exception], typing.Type[Exception]] = {
         club_errors.LeagueNotFoundServiceException: club_errors.LeagueDoesNotExist,
         club_errors.LeagueHistoryNotFoundServiceException: club_errors.LeagueHistoryDoesNotExist,
         club_errors.TeamNotFoundServiceException: club_errors.TeamDoesNotExist,
+        profile_errors.TeamContributorAlreadyExistServiceException: profile_api_errors.TeamContributorExist,
+        profile_errors.TeamContributorNotFoundServiceException: profile_api_errors.TeamContributorDoesNotExist,
         club_errors.TeamHistoryNotFoundServiceException: club_errors.TeamHistoryDoesNotExist,
-        profile_errors.TeamContributorAlreadyExistServiceException: profile_errors.TeamContributorExist,
-        profile_errors.TeamContributorNotFoundServiceException: profile_errors.TeamContributorDoesNotExist,
         club_errors.SeasonDoesNotExistServiceException: club_errors.SeasonDoesNotExist,
         club_errors.SeasonDateRangeTooWideServiceException: club_errors.SeasonDateRangeTooWide,
     }

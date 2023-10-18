@@ -606,11 +606,14 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/ProfileVideo'
                 - type: object
-                  required:
+                  properties:
+                    label:
+                      type: string
+                - required:
                     - url
             example: {
                "url": "https://www.youtube.com/watch?v=some_yt_id",
-               "label": 1
+               "label": "player_goal"
             }
       tags:
         - profiles
@@ -622,15 +625,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PlayerProfile'
+                $ref: '#/components/schemas/ProfileVideoRequired'
         '401':
           description: "Unauthorized"
-        '400':
-          description: "User has no PlayerProfile"
+
+  /profiles/profile-video/{video_id}/:
     patch:
       operationId: profile_video_update
       description: Update ProfileVideo for PlayerProfile
       summary: Update ProfileVideo
+      parameters:
+        - in: path
+          name: video_id
+          schema:
+            type: integer
+          required: true
       requestBody:
         content:
           application/json:
@@ -639,11 +648,10 @@ paths:
                 - $ref: '#/components/schemas/ProfileVideo'
                 - type: object
                   required:
-                    - id
+                    - url
             example: {
-              "id": 123,
-              "url": "https://www.youtube.com/watch?v=some_other_yt_id",
-              "label": 3
+              "url": "https://www.youtube.com/watch?v=some_yt_id",
+              "label": "player_goal"
             }
       tags:
         - profiles
@@ -655,14 +663,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PlayerProfile'
+                $ref: '#/components/schemas/ProfileVideoRequired'
         '401':
           description: "Unauthorized"
         '400':
           description: "User is not an owner of given ProfileVideo"
         '404':
           description: "ProfileVideo with given ID not found"
-  /profiles/profile-video/{video_id}/:
     delete:
       operationId: profile_video_delete
       description: Delete ProfileVideo
@@ -678,12 +685,8 @@ paths:
       security:
         - jwtAuth: [ ]
       responses:
-        '200':
+        '204':
           description: "ProfileVideo deleted successfully"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlayerProfile'
         '401':
           description: "Unauthorized"
         '400':
@@ -696,6 +699,13 @@ paths:
       operationId: profile_video_labels
       description: List of ProfileVideo labels
       summary: List ProfileVideo labels
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+          required: false
+          description: 'Profile role, like: {P, T, C, S...}. If not provided, all labels will be returned'
       tags:
         - profiles
       security:
@@ -711,16 +721,16 @@ paths:
                   $ref: '#/components/schemas/ProfileEnumChoices'
                 example: [
                   {
-                      "id": 1,
-                      "name": "Skrót meczu"
+                      "id": "scout_player_analysis",
+                      "name": "Piłkarz"
                   },
                   {
-                      "id": 2,
-                      "name": "Cały mecz"
+                      "id": "scout_tactics",
+                      "name": "Taktyka"
                   },
                   {
-                      "id": 3,
-                      "name": "Bramka"
+                      "id": "scout_fragment",
+                      "name": "Stałe fragmenty"
                   }
                 ]
   /profiles/:
@@ -3272,13 +3282,18 @@ components:
         thumbnail:
           type: string
           readOnly: true
-      required:
-        - id
-        - url
-        - title
-        - description
-        - label
-        - thumbnail
+
+    ProfileVideoRequired:
+      allOf:
+        - $ref: '#/components/schemas/ProfileVideo'
+        - type: object
+          properties:
+            label:
+              '$ref': '#/components/schemas/ProfileEnumChoices'
+        - required:
+          - id
+          - url
+          - thumbnail
 
     PlayerProfileMetrics:
       type: object
