@@ -527,6 +527,7 @@ class ProfileTeamsApiTest(APITestCase):
         response = self.client.post(
             reverse(
                 "api:profiles:add_team_to_profile",
+                kwargs={"profile_uuid": self.user.profile.uuid},
             ),
             data,
         )
@@ -546,7 +547,10 @@ class ProfileTeamsApiTest(APITestCase):
         }
 
         response = self.client.post(
-            reverse("api:profiles:add_team_to_profile"),
+            reverse(
+                "api:profiles:add_team_to_profile",
+                kwargs={"profile_uuid": self.non_player_user.profile.uuid},
+            ),
             data,
         )
 
@@ -563,7 +567,10 @@ class ProfileTeamsApiTest(APITestCase):
         response = self.client.patch(
             reverse(
                 "api:profiles:update_or_delete_team_contributor",
-                kwargs={"team_contributor_id": self.team_contributor.pk},
+                kwargs={
+                    "profile_uuid": self.user.profile.uuid,
+                    "team_contributor_id": self.team_contributor.pk,
+                },
             ),
             data,
         )
@@ -588,7 +595,10 @@ class ProfileTeamsApiTest(APITestCase):
         response = self.client.patch(
             reverse(
                 "api:profiles:update_or_delete_team_contributor",
-                kwargs={"team_contributor_id": self.non_player_team_contributor.pk},
+                kwargs={
+                    "profile_uuid": self.non_player_user.profile.uuid,
+                    "team_contributor_id": self.non_player_team_contributor.pk,
+                },
             ),
             data,
         )
@@ -607,7 +617,10 @@ class ProfileTeamsApiTest(APITestCase):
         response = self.client.delete(
             reverse(
                 "api:profiles:update_or_delete_team_contributor",
-                kwargs={"team_contributor_id": self.team_contributor.id},
+                kwargs={
+                    "profile_uuid": self.user.profile.uuid,
+                    "team_contributor_id": self.team_contributor.id,
+                },
             ),
         )
 

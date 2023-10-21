@@ -1290,7 +1290,7 @@ paths:
           description: 'Invalid data'
         '401':
           description: 'Unauthorized'
-  /set-main/:
+  /profiles/set-main/:
     'post':
       operationId: set_main_profile
       description: Set main user profile
@@ -4766,7 +4766,7 @@ components:
         league_name:
           type: string
           description: "Name of the League the Team belongs to."
-        date_from:
+        start_date:
           type: string
           description: "Season's name in format 'YYYY-MM-DD'."
         end_date_display:
@@ -4782,7 +4782,7 @@ components:
         - league_name
         - round
         - is_primary
-        - date_from
+        - start_date
         - end_date_display
         - role
     SocialLoginResponse:
