@@ -1044,7 +1044,6 @@ class TeamContributorService:
         """
         team_history_instance = team_contributor.team_history.first()
 
-        # First, get the current attributes of the team_contributor for a player
         if team_history_instance:
             current_data = {
                 "round": team_contributor.round,
@@ -1053,7 +1052,6 @@ class TeamContributorService:
                 "season": team_history_instance.season,
             }
 
-        # Overwrite the current_data dictionary with the provided data.
         current_data.update(data)
         profile_type = "player"
         team_history, season = self.fetch_related_data(data, profile_uuid, profile_type)
@@ -1096,7 +1094,6 @@ class TeamContributorService:
         """
         team_history_instance = team_contributor.team_history.first()
 
-        # First, get the current attributes of the team_contributor
         if team_history_instance:
             current_data = {
                 "start_date": team_contributor.start_date,
@@ -1107,7 +1104,6 @@ class TeamContributorService:
                 "role": team_contributor.role,
             }
 
-        # Now, overwrite the current_data dictionary with the provided data.
         current_data.update(data)
 
         if "team_history" in current_data and current_data["team_history"]:
