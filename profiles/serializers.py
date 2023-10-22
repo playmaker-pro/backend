@@ -542,7 +542,6 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
     ) -> typing.Dict[str, typing.Any]:
         data = super().validate(data)  # this now returns modified data
         validation_errors = {}
-        profile_short_type = self.context.get("profile_short_type")
 
         start_date = data.get("start_date")
         end_date = data.get("end_date")
@@ -557,9 +556,7 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
                 "end_date"
             ] = "End date should not be provided if is_primary is True."
         elif data.get("is_primary") is False and not end_date:
-            validation_errors[
-                "end_date"
-            ] = "End date is required when is_primary is not set."
+            data["end_date"] = datetime.now().date()
 
         # If any errors found, raise them all at once
 

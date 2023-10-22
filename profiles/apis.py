@@ -548,7 +548,6 @@ class ProfileTeamsApi(EndpointView):
             profile_uuid, team_contributor
         ):
             raise PermissionDenied()
-
         try:
             if profile_service.is_player_profile(profile):
                 updated_team_contributor = (
@@ -583,7 +582,8 @@ class ProfileTeamsApi(EndpointView):
         """
         Delete a team with a team history from the user's profile.
         """
-        if profile_uuid != request.user.profile.uuid:
+        user = profile_service.get_user_by_uuid(profile_uuid)
+        if user != request.user:
             raise PermissionDenied
         try:
             team_contributor = team_contributor_service.get_team_contributor_or_404(

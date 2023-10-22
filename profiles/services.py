@@ -903,7 +903,6 @@ class TeamContributorService:
                     "profile_uuid": profile_uuid,
                     "role": data.get("role"),
                     "start_date": data.get("start_date"),
-                    "end_date": data.get("end_date"),
                 }
             )
         # Check if existing contributor
@@ -1104,6 +1103,8 @@ class TeamContributorService:
                 "end_date": team_contributor.end_date,
                 "team_parameter": team_history_instance.team.id,
                 "league_identifier": team_history_instance.league_history.league.id,
+                "is_primary": team_contributor.is_primary,
+                "role": team_contributor.role,
             }
 
         # Now, overwrite the current_data dictionary with the provided data.
