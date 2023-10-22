@@ -10,6 +10,7 @@ from api.errors import NotOwnerOfAnObject
 from api.serializers import locale_service
 from clubs.models import TeamHistory
 from profiles import errors, models
+from profiles.services import ProfileVideoService
 from utils import translate_to
 
 
@@ -88,6 +89,15 @@ class ProfileVideoSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
         if self.instance is not None:
             self.fields["url"].required = False
+
+    def validate_label(self, label: str) -> None:
+        """Validate label field"""
+        choices = list(dict(ProfileVideoService.get_labels()).keys())
+        if label and label not in choices:
+            raise serializers.ValidationError(
+                f"Invalid value: {label}. Expected one of: {choices}"
+            )
+        return label
 
     def create(self, validated_data: dict) -> models.ProfileVideo:
         """Override create to set user based on requestor"""

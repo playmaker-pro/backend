@@ -1290,7 +1290,7 @@ paths:
           description: 'Invalid data'
         '401':
           description: 'Unauthorized'
-  /set-main/:
+  /profiles/set-main/:
     'post':
       operationId: set_main_profile
       description: Set main user profile
