@@ -70,55 +70,55 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
             raise ValidationError(detail="Birth date cannot be in the future")
         return value
 
-    def validate(self, attrs: dict) -> dict:
-        """Validate user preferences data"""
-        if "spoken_languages" in attrs and attrs["spoken_languages"]:
-            is_valid_list = all([isinstance(x, str) for x in attrs["spoken_languages"]])
-            if not is_valid_list:
-                raise InvalidLanguagesListException(
-                    details=f"Invalid languages list. Expected string values (language codes like: 'pl')"
-                )
-        return attrs
+    def validate_citizenship(self, citizenship: List[str]) -> List[str]:
+        """Validate citizenship field"""
+        if not isinstance(citizenship, list) or not all(
+                [isinstance(el, str) for el in citizenship]
+        ):
+            raise InvalidCitizenshipListException(
+                details="Citizenship must be a list of countries codes"
+            )
+
+        return [code for code in citizenship if code in countries]
+
+    def validate_gender(self, value: str) -> str:
+        """Validate gender field"""
+        if value not in ["M", "K"]:
+            raise InvalidGender
+        return value
+
+    def validate_spoken_languages(self, spoken_languages: List[Union[Language, str]]) -> List[str]:
+        """Validate spoken languages field"""
+        is_list = isinstance(spoken_languages, list)
+
+        if not is_list:
+            raise InvalidLanguagesListException(
+                details=f"Invalid languages list. Expected string values (language codes like: 'pl')"
+            )
+
+        language_service: LanguageService = LanguageService()
+
+        for language_code in spoken_languages:
+            if not isinstance(language_code, Language):
+                try:
+                    language: Language = language_service.get_language_by_code(
+                        language_code.lower()
+                    )
+                    spoken_languages.append(language)
+                except LanguageDoesNotExistException as e:
+                    logger.error(e, exc_info=True)
+                except ExpectedIntException as e:
+                    logger.error(e, exc_info=True)
+                spoken_languages.remove(language_code)
+
+        return spoken_languages
 
     def update(self, instance: UserPreferences, validated_data) -> UserPreferences:
         """Update nested user preferences data"""
         if spoken_languages := validated_data.pop(  # noqa: 5999
             "spoken_languages", None
         ):
-            language_service: LanguageService = LanguageService()
-            languages = []
-            for language_code in spoken_languages:
-                try:
-                    language: Language = language_service.get_language_by_code(
-                        language_code.lower()
-                    )
-                    languages.append(language.pk)
-                except LanguageDoesNotExistException as e:
-                    logger.error(e, exc_info=True)
-                except ExpectedIntException as e:
-                    logger.error(e, exc_info=True)
-            instance.spoken_languages.set(languages)
-
-        if gender := validated_data.pop("gender", None):  # noqa: 5999
-            if gender not in ["M", "K"]:
-                raise InvalidGender
-            instance.gender = gender
-
-        if citizenship := self.initial_data.pop("citizenship", None):  # noqa: 5999
-            if not isinstance(citizenship, list) or not all(
-                [isinstance(el, str) for el in citizenship]
-            ):
-                raise InvalidCitizenshipListException(
-                    details="Citizenship must be a list of countries codes"
-                )
-            country_list = []
-            for element in citizenship:
-                try:
-                    dict(countries)[element]  # noqa
-                    country_list.append(element)
-                except KeyError:
-                    pass
-            instance.citizenship = country_list
+            instance.spoken_languages.set([language.pk for language in spoken_languages])
 
         return super().update(instance, validated_data)
 

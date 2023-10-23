@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from rest_framework import serializers
 
@@ -28,6 +28,7 @@ class ProfileVideoSerializer(serializers.ModelSerializer):
 
 class CoachProfileViewSerializer(BaseProfileSerializer):
     """Serializer for retrieving coach profile data."""
+    formation = serializers.CharField(required=False, allow_null=True)
 
     class Meta:
         model = CoachProfile
@@ -54,15 +55,13 @@ class CoachProfileViewSerializer(BaseProfileSerializer):
 class CoachProfileUpdateSerializer(CoachProfileViewSerializer):
     """Serializer for updating coach profile data."""
 
-    def is_valid(self, raise_exception=False) -> bool:
-        """Override is_valid method to return custom error message for formation field validation"""
-        if "formation" in self.initial_data and self.initial_data["formation"]:
-            expected_values: List[str] = [el[0] for el in FORMATION_CHOICES]
-            if self.initial_data["formation"] not in expected_values:
-                raise InvalidFormationException(
-                    details=f"Given formation is invalid. Expected one of: {expected_values}"
-                )
-        return super().is_valid(raise_exception)
+    def validate_formation(self, formation: Optional[str] = None) -> str:
+        expected_values: List[str] = [el[0] for el in FORMATION_CHOICES]
+        if formation and formation not in expected_values:
+            raise InvalidFormationException(
+                details=f"Given formation is invalid. Expected one of: {expected_values}"
+            )
+        return formation
 
     def update(self, instance: CoachProfile, validated_data: dict) -> CoachProfile:
         """Update coach profile data. Overridden due to nested user data."""

@@ -4507,8 +4507,8 @@ components:
         spoken_languages:
           type: array
           items:
-            type: integer
-            description: "Id of language"
+            type: string
+            description: "List of Language shortcuts like: ['PL', 'EN']/['pl', 'en']"""
         citizenship:
           type: array
           items:
