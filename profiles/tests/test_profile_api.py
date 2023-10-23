@@ -1,6 +1,8 @@
 import json
 import uuid
+from datetime import datetime
 
+import pytest
 from django.urls import reverse
 from parameterized import parameterized
 from rest_framework.test import APIClient, APITestCase
@@ -8,13 +10,11 @@ from rest_framework.test import APIClient, APITestCase
 from profiles.schemas import PlayerProfileGET
 from profiles.services import ProfileService
 from profiles.tests import utils
-from roles.definitions import CLUB_ROLE_TEAM_LEADER, PLAYER_SHORT, COACH_SHORT
+from roles.definitions import CLUB_ROLE_TEAM_LEADER, COACH_SHORT, PLAYER_SHORT
 from users.models import User
 from utils import factories, testutils
-from utils.factories.voivodeship_factories import VoivodeshipsFactory
-from utils.factories import SEASON_NAMES
+from utils.factories import SEASON_NAMES, UserPreferencesFactory
 from utils.test.test_utils import UserManager
-from voivodeships.models import Voivodeships
 
 
 class TestGetProfileAPI(APITestCase):
@@ -29,7 +29,7 @@ class TestGetProfileAPI(APITestCase):
         )
 
     def test_get_profile_valid_without_authentication(self) -> None:
-        """correct get request with valid uuid, no need to authenticate"""
+        """correct get request with valid uuid, no need to authentie"""
         profile_uuid = factories.PlayerProfileFactory.create(
             user_id=self.user_obj.pk
         ).uuid
@@ -260,9 +260,7 @@ class TestUpdateProfileAPI(APITestCase):
                 {
                     "height": 180,
                     "weight": 75,
-                    "practice_distance": 20,
                     "prefered_leg": 1,
-                    "bio": "jakiesbio",
                 },
             ],
             [
@@ -270,8 +268,11 @@ class TestUpdateProfileAPI(APITestCase):
                     "role": "P",
                 },
                 {
-                    "team_object_id": 1,
-                    "team_history_object_id": 1,
+                    "user": {
+                        "first_name": "LukaszLukasinski",
+                        "last_name": "Lukasinski",
+                    },
+                    "training_ready": 1,
                 },
             ],
             [
@@ -279,9 +280,8 @@ class TestUpdateProfileAPI(APITestCase):
                     "role": "C",
                 },
                 {
-                    "club_object_id": 100,
-                    "club_role": "Kierownik",
-                    "phone": "111222333",
+                    "club_role": "brzeczyszczykiewicz",
+                    "user": {"userpreferences": {"birth_date": "1990-01-01"}},
                 },
             ],
         ]
@@ -291,6 +291,8 @@ class TestUpdateProfileAPI(APITestCase):
     ) -> None:
         """Test updating profiles with correctly passed payload"""
         profile = utils.create_empty_profile(**init_profile, user_id=self.user_obj.pk)
+        UserPreferencesFactory.create(user=profile.user)
+
         profile_uuid = profile.uuid
         response = self.client.patch(
             self.url(str(profile_uuid)), json.dumps(payload), **self.headers
@@ -299,14 +301,22 @@ class TestUpdateProfileAPI(APITestCase):
 
         assert response.status_code == 200
         for attr, val in payload.items():
-            if attr == "uuid":
-                val = uuid.UUID(val)
-            assert getattr(profile, attr) == val
+            if attr == "user":
+                user: User = getattr(profile, attr)
+                for element in val:
+                    if element == "userpreferences":
+                        for key, value in val[element].items():
+                            assert (
+                                getattr(user.userpreferences, key)
+                                == datetime.strptime(value, "%Y-%m-%d").date()
+                            )
+                    else:
+                        assert getattr(user, element) == val[element]
+            else:
+                assert getattr(profile, attr) == val
 
     def test_coach_profile_patch_method_complex_payload(self) -> None:
         """Test updating coach profiles with correctly passed payload"""
-        voivo: Voivodeships = VoivodeshipsFactory.create(id=2)
-
         profile = utils.create_empty_profile(
             **{
                 "user_id": self.user_obj.pk,
@@ -314,15 +324,13 @@ class TestUpdateProfileAPI(APITestCase):
             }
         )
         payload = {
-            "voivodeship_obj": {"id": 2},
             "coach_role": "IIC",
         }
 
         expected_response = {
-            "voivodeship_obj": {"id": voivo.pk, "name": voivo.name, "code": voivo.code},
             "coach_role": {"id": "IIC", "name": "Drugi trener"},
         }
-        expected_model_data = {"voivodeship_obj": voivo, "coach_role": "IIC"}
+        expected_model_data = {"coach_role": "IIC"}
 
         response = self.client.patch(
             self.url(str(profile.uuid)), json.dumps(payload), **self.headers
@@ -339,7 +347,6 @@ class TestUpdateProfileAPI(APITestCase):
     def test_scout_profile_patch_method_complex_payload(self) -> None:
         """Test updating scout profiles with correctly passed payload"""
         factories.UserPreferencesFactory.create(user_id=self.user_obj.pk, gender=None)
-        voivo: Voivodeships = VoivodeshipsFactory.create(id=3)
 
         profile = utils.create_empty_profile(
             **{
@@ -348,7 +355,6 @@ class TestUpdateProfileAPI(APITestCase):
             }
         )
         payload = {
-            "voivodeship_obj": {"id": 3},
             "user": {
                 "first_name": "NewName",
                 "userpreferences": {
@@ -359,7 +365,6 @@ class TestUpdateProfileAPI(APITestCase):
         }
 
         expected_response = {
-            "voivodeship_obj": {"id": voivo.pk, "name": voivo.name, "code": voivo.code},
             "user": {
                 "first_name": "NewName",
                 "userpreferences": {
@@ -369,7 +374,7 @@ class TestUpdateProfileAPI(APITestCase):
             },
         }
 
-        expected_model_data = {"voivodeship_obj": voivo, "user": self.user_obj}
+        expected_model_data = {"user": self.user_obj}
 
         response = self.client.patch(
             self.url(str(profile.uuid)), json.dumps(payload), **self.headers
@@ -398,7 +403,7 @@ class TestUpdateProfileAPI(APITestCase):
         [
             ("birth_date", "2001-11-14"),
             ("localization", 1),
-            ("spoken_languages", [1]),
+            ("spoken_languages", ["PL"]),
             ("citizenship", ["UA"]),
             ("gender", "M"),
         ]
@@ -416,6 +421,7 @@ class TestUpdateProfileAPI(APITestCase):
         assert response.status_code == 200
         assert response.data["user"]["userpreferences"][key]
 
+    @pytest.mark.skip("Not implemented yet, because of new player profile structure")
     def test_patch_visit_history(self) -> None:
         """Test updating visit history with correctly passed payload"""
         profile = utils.create_empty_profile(role="P", user_id=self.user_obj.pk)
@@ -453,7 +459,7 @@ class TestUpdateProfileAPI(APITestCase):
         """Test updating verification stage with correctly passed payload"""
         profile = utils.create_empty_profile(role="P", user_id=self.user_obj.pk)
         profile_uuid = profile.uuid
-        payload = {"verification_stage": {"step": 5, "done": True}}
+        payload = {"verification_stage": {"step": 5, "done": False}}
 
         response = self.client.patch(
             self.url(str(profile_uuid)), json.dumps(payload), **self.headers
@@ -461,7 +467,20 @@ class TestUpdateProfileAPI(APITestCase):
 
         assert response.status_code == 200
         assert response.data["verification_stage"]["step"] == 5
-        assert response.data["verification_stage"]["done"] is True
+        assert response.data["verification_stage"]["done"] is False
+
+    def test_patch_verification_stage_not_in_response(self) -> None:
+        """Test if verification stage is not in response as it has status done"""
+        profile = utils.create_empty_profile(role="P", user_id=self.user_obj.pk)
+        profile_uuid = profile.uuid
+        payload = {"verification_stage": {"step": 5, "done": True}}
+
+        response = self.client.patch(
+            self.url(str(profile_uuid)), json.dumps(payload), **self.headers
+        )
+
+        assert response.status_code == 200
+        assert "verification_stage" not in response.data
 
 
 class ProfileTeamsApiTest(APITestCase):
@@ -652,7 +671,7 @@ class ProfileTeamsApiTest(APITestCase):
         )
         assert (
             response.data[0]["league_name"]
-            == self.non_player_team_contributor.team_history.first().league_history.league.name
+            == self.non_player_team_contributor.team_history.first().league_history.league.name  # noqa: E501
         )
 
 

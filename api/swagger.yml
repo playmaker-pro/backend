@@ -960,7 +960,7 @@ paths:
                   - $ref: '#/components/schemas/PlayerProfileView'
                   - $ref: '#/components/schemas/CoachProfile'
                   - $ref: '#/components/schemas/ScoutProfile'
-#                  - $ref: '#/components/schemas/ClubProfile'
+                  - $ref: '#/components/schemas/ClubProfileView'
 #                  - $ref: '#/components/schemas/GuestProfile'
     patch:
       operationId: profiles_partial_update
@@ -982,13 +982,7 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-                - $ref: '#/components/schemas/CoachProfileUpdate'
-                - $ref: '#/components/schemas/PlayerProfile'
-                - $ref: '#/components/schemas/ClubProfile'
-                - $ref: '#/components/schemas/ScoutProfileUpdate'
-                - $ref: '#/components/schemas/GuestProfile'
-              description: 'fields to update'
+              $ref: '#/components/schemas/BaseProfileUpdateFields'
       security:
         - jwtAuth: [ ]
       responses:
@@ -998,11 +992,11 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/PlayerProfile'
+                  - $ref: '#/components/schemas/PlayerProfileView'
                   - $ref: '#/components/schemas/CoachProfile'
-                  - $ref: '#/components/schemas/ClubProfile'
+                  - $ref: '#/components/schemas/ClubProfileView'
                   - $ref: '#/components/schemas/ScoutProfile'
-                  - $ref: '#/components/schemas/GuestProfile'
+                  # - $ref: '#/components/schemas/GuestProfile'
         '400':
           description: 'Invalid uuid'
         '404':
@@ -2762,7 +2756,7 @@ components:
         - first_name
         - last_name
 
-    PlayerProfileUserData:
+    UserProfileBase:
       type: object
       properties:
         id:
@@ -2772,31 +2766,17 @@ components:
         last_name:
           type: string
         userpreferences:
-          $ref: '#/components/schemas/PlayerProfileUserPreferences'
+          $ref: '#/components/schemas/BaseUserProfilePreferences'
         picture:
+          type: string
+        last_login:
           type: string
       required:
         - id
         - first_name
         - last_name
-
-    CoachProfileUserData:
-      type: object
-      properties:
-        id:
-          type: integer
-        first_name:
-          type: string
-        last_name:
-          type: string
-        userpreferences:
-          $ref: '#/components/schemas/CoachProfileUserPreferences'
-        picture:
-          type: string
-      required:
-        - id
-        - first_name
-        - last_name
+        - userpreferences
+        - last_login
 
     CoachProfileUserDataUpdate:
       type: object
@@ -2866,20 +2846,6 @@ components:
         - name
         - is_senior
 
-    PlayerProfileLeague:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        isparent:
-          type: boolean
-      required:
-        - id
-        - name
-        - isparent
-
     League:
       type: object
       properties:
@@ -2947,12 +2913,16 @@ components:
       properties:
         id:
           type: integer
+          readOnly: true
         source:
           type: integer
+          readOnly: true
         url:
           type: string
+          readOnly: true
         name:
           type: string
+          readOnly: true
     ExternalLinksResponse:
       type: object
       properties:
@@ -2997,20 +2967,6 @@ components:
           type: string
         practice_stadion_address:
           type: string
-      required:
-        - id
-        - name
-
-    PlayerProfileClub:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        picture:
-          type: string
-          description: "Club logo url"
       required:
         - id
         - name
@@ -3070,19 +3026,6 @@ components:
             $ref: '#/components/schemas/UserData'
         current_team_league_history:
           $ref: '#/components/schemas/LeagueHistory'
-      required:
-        - id
-        - name
-
-    PlayerProfileTeam:
-      type: object
-      properties:
-        id:
-          type: integer
-        club:
-          $ref: '#/components/schemas/PlayerProfileClub'
-        league:
-          $ref: '#/components/schemas/PlayerProfileLeague'
       required:
         - id
         - name
@@ -3261,27 +3204,57 @@ components:
       required:
         - player_position
         - is_main
+
+    PlayerPositionUpdate:
+      type: object
+      properties:
+        player_position:
+          type: integer
+          description: "Id of position for update"
+        is_main:
+          type: boolean
+      required:
+        - player_position
+        - is_main
+
     PlayerPositions:
       type: array
       items:
         $ref: '#/components/schemas/PlayerPosition'
+
+    PlayerPositionsUpdate:
+      type: array
+      items:
+        $ref: '#/components/schemas/PlayerPositionUpdate'
 
     ProfileVideo:
       type: object
       properties:
         id:
           type: integer
+          readOnly: true
         url:
           type: string
+          readOnly: true
         title:
           type: string
+          readOnly: true
         description:
           type: string
+          readOnly: true
         label:
           type: string
+          readOnly: true
         thumbnail:
           type: string
           readOnly: true
+      required:
+       - id
+       - url
+       - title
+       - dscription
+       - label
+       - thumbnail
 
     ProfileVideoRequired:
       allOf:
@@ -3300,10 +3273,17 @@ components:
       properties:
         season:
           type: object
+          readOnly: true
         pm_score:
           type: number
+          readOnly: true
         season_score:
           type: number
+          readOnly: true
+      required:
+       - season
+       - pm_score
+       - season_score
 
     PlayerMetrics:
       type: object
@@ -3396,6 +3376,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProfileLabel'
+
       required:
         - uuid
         - user_id
@@ -3410,12 +3391,9 @@ components:
           properties:
             slug:
               type: string
+              readOnly: true
             user:
-              $ref: '#/components/schemas/PlayerProfileUserData'
-            team_object:
-              $ref: '#/components/schemas/PlayerProfileTeam'
-            voivodeship_obj:
-              $ref: '#/components/schemas/Voivodeship'
+              $ref: '#/components/schemas/UserProfileBase'
             external_links:
               type: array
               items:
@@ -3435,7 +3413,7 @@ components:
               type: integer
               description: "Player weight"
             prefered_leg:
-              $ref: '#/components/schemas/ProfileEnumChoices'
+              type: integer
             transfer_status:
               $ref: '#/components/schemas/ProfileEnumChoices'
             training_ready:
@@ -3443,6 +3421,9 @@ components:
             role:
               type: string
               description: "Player role"
+              readOnly: true
+            verification_stage:
+              $ref: '#/components/schemas/VerificationStage'
           example: {
             "slug": "player-slug",
             "user": {
@@ -3456,31 +3437,13 @@ components:
                 "citizenship": null,
                 "gender": null,
                 "birth_date": null,
-              }
-            },
-            "team_object": {
-                "id": 1,
-                "name": "Team name",
-                "club": {
-                   "id": 1,
-                    "name": "Club name",
-                    "logo": "https://example.com/logo.png",
-                },
-                "league": {
-                    "id": 1,
-                    "name": "League name",
-                    "is_parent": true,
-                },
-            },
-            "voivodeship_obj": {
-              "id": 14,
-              "name": "Warmińsko-Mazurskie",
-              "code": 8
+              },
+            "picture": null,
+            "last_activity": "2023-10-21T21:54:55.160773+02:00"
             },
             "external_links": {
               "links": []
             },
-            address: "ELblag",
             "player_positions":
               [
                 {
@@ -3512,7 +3475,12 @@ components:
               "pm_score": null,
               "season_score": null
             },
-            role: "P"
+            "role": "P",
+            "verification_stage": {
+              "step": 0,
+              "date_updated": "2023-09-09T10:18:34.070304+02:00",
+              "done": false
+            }
           }
           required: [
             slug,
@@ -3528,7 +3496,8 @@ components:
             prefered_leg,
             transfer_status,
             training_ready,
-            role
+            role,
+            verification_stage
           ]
 
     PlayerProfile:
@@ -3790,9 +3759,7 @@ components:
             slug:
               type: string
             user:
-              $ref: '#/components/schemas/CoachProfileUserData'
-            voivodeship_obj:
-              $ref: '#/components/schemas/Voivodeship'
+              $ref: '#/components/schemas/UserProfileBase'
             external_links:
               type: object
               properties:
@@ -3808,6 +3775,14 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ProfileVideo'
+            labels:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProfileLabel'
+            role:
+              type: string
+            verification_stage:
+              $ref: '#/components/schemas/VerificationStage'
           example: {
             "slug": "coach-miz-shoty",
             "user": {
@@ -3821,12 +3796,9 @@ components:
                     "citizenship": null,
                     "gender": null,
                     "birth_date": null,
-                }
-            },
-            "voivodeship_obj": {
-                "id": 1,
-                "name": "Dolnośląskie",
-                "code": 16
+                },
+            "picture": null,
+            "last_activity": "2023-10-21T21:54:55.160773+02:00"
             },
             "external_links": {
                 "links": []
@@ -3845,7 +3817,14 @@ components:
                 "label": null,
                 "thumbnail": null
               }
-            ]
+            ],
+            "labels": [],
+            "role": "T",
+            "verification_stage": {
+              "step": 0,
+              "date_updated": "2023-09-09T10:18:34.070304+02:00",
+              "done": false
+            }
           }
       required:
         - slug
@@ -3856,6 +3835,9 @@ components:
         - coach_role
         - formations
         - profile_video
+        - labels
+        - role
+        - verification_stage
 
     CoachProfileUpdate:
       allOf:
@@ -3890,6 +3872,69 @@ components:
             },
             "formation": "4-3-2-1",
           }
+
+    BaseProfileUpdateFields:
+      allOf:
+        - type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/BaseUserProfilePreferencesUpdate'
+            player_positions:
+              $ref: '#/components/schemas/PlayerPositionsUpdate'
+            transfer_status:
+              type: integer
+              description: "Field used for player profile update. Choices are: 1 - 'Szukam klubu', 2 - 'Rozważę wszelkie oferty', 3 - 'Nie szukam klubu'"
+            height:
+              type: integer
+              description: "Field used for player profile update"
+            weight:
+              type: integer
+              description: "Field used for player profile update"
+            prefered_leg:
+              type: integer
+              description: "Field used for player profile update. Chices are: 1 or 2"
+            training_ready:
+              type: integer
+              description: "Field used for player profile update. Choices are: 1 - '1-2 treningi', 2 - '3-4 treningi, 3 - '5-6 treningi'"
+            club_role:
+              type: string
+              description: "Field used for club profile update"
+            coach_role:
+              type: string
+              description: "Field used for coach profile. Choices are: 'IC' - 'Pierwszy trener', 'IIC' - 'Drugi trener', GKC' - 'Trener bramkarzy', 'FIC' - 'Trener motoryki', 'MEC' - 'Trener mentalny', 'ANC' - 'Analityk', 'OTC' - 'Inne"
+            formation:
+              type: string
+              description: "Field for player and coach profile. Choices are: '5-3-2', '5-4-1', '4-4-2', '4-5-1', '4-3-3', '4-2-3-1', '4-1-4-1', ''4-3-2-1', '3-5-2', '3-4-3', '4-3-1-2', '4-4-1-1'"
+            verification_stage:
+              $ref: '#/components/schemas/VerificationStageUpdate'
+          example: {
+            "user": {
+                "first_name": "first_name",
+                "last_name": "last_name",
+                "userpreferences": {
+                    "localization": 100,
+                    "spoken_languages": ["PL", "CZ"],
+                    "citizenship": ["PL", "CZ"],
+                    "gender": "M",
+                    "birth_date": "2012-02-14"
+                },
+            },
+            "player_positions": [
+              {
+                  "is_main": true,
+                  "player_position": 12
+              }
+            ],
+            "transfer_status": 3,
+            "height": 130,
+            "weight": 140,
+            "prefered_leg": 1,
+            "training_ready": 1,
+            "club_role": "V-ce prezes",
+            "coach_role": "IC",
+            "formation": "5-3-2",
+        }
+
     ScoutProfile:
       allOf:
         - type: object
@@ -3911,6 +3956,8 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ProfileVideo'
+            verification_stage:
+              $ref: '#/components/schemas/VerificationStage'
           example: {
             "slug": "scout-kacper-skalski",
             "user": {
@@ -3924,7 +3971,9 @@ components:
                 "citizenship": null,
                 "gender": null,
                 "birth_date": null,
-              }
+              },
+            "picture": null,
+            "last_activity": "2023-10-21T21:54:55.160773+02:00"
             },
             "voivodeship_obj": {
               "id": 1,
@@ -3943,7 +3992,12 @@ components:
                 "label": null,
                 "thumbnail": null
               }
-            ]
+            ],
+            "verification_stage": {
+              "step": 0,
+              "date_updated": "2023-09-09T10:18:34.070304+02:00",
+              "done": false
+            }
           }
       required:
         - slug
@@ -3952,6 +4006,7 @@ components:
         - external_links
         - address
         - profile_video
+        - verification_stage
 
     ScoutProfileUpdate:
       allOf:
@@ -4082,6 +4137,7 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ExternalLink'
+
     ClubProfile:
       allOf:
         - $ref: '#/components/schemas/BaseProfile'
@@ -4097,6 +4153,8 @@ components:
               description: Player,Coach,Club
             club_role:
               $ref: '#/components/schemas/ProfileEnumChoices'
+            verification_stage:
+              $ref: '#/components/schemas/VerificationStage'
           example: {
             "user": {
                 "id": 7300,
@@ -4126,8 +4184,118 @@ components:
             "club_object_id": null,
             "phone": null,
             "team_club_league_voivodeship_ver": null,
-            "club_role": null
+            "club_role": null,
+            "verification_stage": {
+              "step": 0,
+              "date_updated": "2023-09-09T10:18:34.070304+02:00",
+              "done": false
+            }
           }
+
+    ClubProfileView:
+      allOf:
+        - type: object
+          properties:
+            slug:
+              type: string
+              description: profile slug
+            user:
+              $ref: '#/components/schemas/UserProfileBase'
+            labels:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProfileLabel'
+            club_role:
+              type: string
+            profile_video:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProfileVideo'
+            external_links:
+              type: object
+              properties:
+                links:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ExternalLink'
+            role:
+              type: string
+              description: "Player role"
+            verification_stage:
+              $ref: '#/components/schemas/VerificationStage'
+          required:
+          - slug
+          - user
+          - labels
+          - club_role
+          - profile_video
+          - external_links
+          - role
+          - verification_stage
+
+          example:
+           {
+            "slug": "club-slug",
+            "user": {
+                "id": 19,
+                "first_name": "first_name",
+                "last_name": "last_name",
+                "userpreferences": {
+                    "age": 11,
+                    "localization": {
+                        "id": 1,
+                        "name": "Żyrardów",
+                        "voivodeship": "Mazowieckie",
+                        "priority": false,
+                        "latitude": "52.04880",
+                        "longitude": "20.44599"
+                    },
+                    "spoken_languages": [
+                        {
+                            "id": 1,
+                            "priority": false,
+                            "name": "Afrykanerski",
+                            "native_name": "afrikaans",
+                            "code": "af"
+                        }
+                    ],
+                    "citizenship": [
+                        {
+                            "country": "Polska",
+                            "code": "PL",
+                            "priority": true,
+                            "dial_code": "+48"
+                        },
+                        {
+                            "country": "Czechy",
+                            "code": "CZ",
+                            "priority": true,
+                            "dial_code": "+420"
+                        }
+                    ],
+                    "gender": {
+                        "id": "K",
+                        "name": "Kobieta"
+                    },
+                    "licences": [],
+                    "courses": [],
+                    "birth_date": "2012-01-01"
+                },
+            "picture": null,
+            "last_activity": "2023-10-21T21:54:55.160773+02:00"
+            },
+            "labels": [],
+            "club_role": "V-ce prezes",
+            "profile_video": [],
+            "external_links": [],
+            "role": "C",
+            "verification_stage": {
+              "step": 0,
+              "date_updated": "2023-09-09T10:18:34.070304+02:00",
+              "done": false
+            }
+          }
+
     GuestProfile:
       allOf:
         - $ref: '#/components/schemas/BaseProfile'
@@ -4236,10 +4404,9 @@ components:
         - code
 
     LanguageUpdate:
-      type: object
-      properties:
-        id:
-          type: integer
+      type: array
+      items:
+        type: integer
       required:
        - id
 
@@ -4259,14 +4426,6 @@ components:
         - name
         - voivodeship
         - priority
-
-    CityUpdate:
-      type: object
-      properties:
-        id:
-          type: integer
-      required:
-       - id
 
     UserPreferences:
       type: object
@@ -4300,7 +4459,8 @@ components:
             $ref: '#/components/schemas/Course'
       required:
         - user
-    PlayerProfileUserPreferences:
+
+    BaseUserProfilePreferences:
       type: object
       properties:
         age:
@@ -4319,57 +4479,48 @@ components:
           $ref: '#/components/schemas/Gender'
         birth_date:
           type: string
-
-    CoachProfileUserPreferences:
-      type: object
-      properties:
-        age:
-          type: integer
-        localization:
-          $ref: '#/components/schemas/City'
-        spoken_languages:
-          type: array
-          items:
-            $ref: '#/components/schemas/Language'
-        citizenship:
-          type: array
-          items:
-            $ref: '#/components/schemas/Country'
-        gender:
-          $ref: '#/components/schemas/Gender'
+          description: "Format: YYYY-MM-DD"
         licences:
           type: array
           items:
-            $ref: '#/components/schemas/CoachLicenceBody'
+            $ref: '#/components/schemas/CoachLicence'
         courses:
           type: array
           items:
             $ref: '#/components/schemas/Course'
-        birth_date:
-          type: string
       required:
        - age
        - localization
        - spoken_languages
        - citizenship
        - gender
+       - birth_date
        - licences
        - courses
-       - birth_date
 
-    CoachProfileUserPreferencesUpdate:
+    BaseUserProfilePreferencesUpdate:
       type: object
       properties:
         localization:
-          $ref: '#/components/schemas/CityUpdate'
+          type: integer
+          description: "id for localization"
         spoken_languages:
           type: array
           items:
-            $ref: '#/components/schemas/LanguageUpdate'
+            type: integer
+            description: "Id of language"
+        citizenship:
+          type: array
+          items:
+            type: string
+            description: "List of COuntry shortcuts like: ['PL', 'CZ']"
         gender:
-          $ref: '#/components/schemas/GenderUpdate'
+          type: string
+          description: "Choices are: M or K"
         birth_date:
           type: string
+          description: "Format: YYYY-MM-DD"
+
     ScoutProfileUserPreferences:
       type: object
       properties:
@@ -4407,11 +4558,24 @@ components:
         - courses
         - birth_date
 
-    ScoutProfileUserPreferencesUpdate:
+    CoachProfileUserPreferencesUpdate:
       type: object
       properties:
         localization:
-          $ref: '#/components/schemas/CityUpdate'
+          type: integer
+          description: "id for localization"
+        spoken_languages:
+          type: array
+          items:
+            $ref: '#/components/schemas/LanguageUpdate'
+        gender:
+          $ref: '#/components/schemas/GenderUpdate'
+        birth_date:
+          type: string
+
+    ScoutProfileUserPreferencesUpdate:
+      type: object
+      properties:
         spoken_languages:
           type: array
           items:
@@ -4524,6 +4688,7 @@ components:
           items:
             description: "Paginated result"
       required: ["count"]
+
     VerificationStage:
       type: object
       properties:
@@ -4533,6 +4698,21 @@ components:
           type: string
         done:
           type: boolean
+      required:
+       - step
+       - date_updated
+       - done
+
+    VerificationStageUpdate:
+      type: object
+      properties:
+        step:
+          type: integer
+        date_updated:
+          type: string
+        done:
+          type: boolean
+
     Label:
       type: object
       properties:

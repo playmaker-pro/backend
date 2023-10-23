@@ -97,3 +97,5 @@ custom_script_*.py
 default.env
 
 /static
+
+*.http

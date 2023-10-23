@@ -1,9 +1,9 @@
 import logging
 import typing
+import uuid
 from collections import Counter
 from datetime import datetime
 
-import uuid
 from address.models import AddressField
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -27,7 +27,8 @@ from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_profile_external_links
 from mapper.models import Mapper
 from profiles.errors import VerificationCompletionFieldsWrongSetup
-from profiles.mixins import TeamObjectsDisplayMixin, utils as profile_utils
+from profiles.mixins import TeamObjectsDisplayMixin
+from profiles.mixins import utils as profile_utils
 from roles import definitions
 from voivodeships.models import Voivodeships
 
@@ -1517,6 +1518,9 @@ class ClubProfile(BaseProfile):
         null=True,
         blank=True,
         help_text=_("Defines if admin approved change"),
+    )
+    external_links = models.OneToOneField(
+        ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
     )
 
     class Meta:

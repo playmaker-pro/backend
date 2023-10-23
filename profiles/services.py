@@ -5,6 +5,7 @@ import uuid
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from django.db import models as django_base_models
 from django.db.models import ObjectDoesNotExist
 from django.db.models import functions as django_base_functions
@@ -679,7 +680,10 @@ class PlayerProfilePositionService:
 
         # Create positions
         for position in positions_to_create:
-            position.save()
+            try:
+                position.save()
+            except IntegrityError:
+                logger.error("Error saving player position", exc_info=True)
 
 
 class ProfileVideoService:
@@ -1110,9 +1114,21 @@ class LanguageService:
     @staticmethod
     def get_language_by_id(language_id: int) -> models.Language:
         """Get a language by id."""
-
         try:
             language = models.Language.objects.get(id=language_id)
             return language
         except models.Language.DoesNotExist:
             raise errors.LanguageDoesNotExistException()
+        except TypeError:
+            raise errors.ExpectedIntException
+
+    @staticmethod
+    def get_language_by_code(code: str) -> models.Language:
+        """Get a Language by code."""
+        try:
+            language = models.Language.objects.get(code=code)
+            return language
+        except models.Language.DoesNotExist:
+            raise errors.LanguageDoesNotExistException()
+        except TypeError:
+            raise errors.ExpectedIntException

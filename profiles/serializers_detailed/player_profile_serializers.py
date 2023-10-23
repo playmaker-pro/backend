@@ -9,9 +9,11 @@ from profiles.serializers import (
     PlayerMetricsSerializer,
     PlayerProfilePositionSerializer,
     ProfileEnumChoicesSerializer,
-    ProfileVideoSerializer,
 )
-from profiles.serializers_detailed.base_serializers import BaseProfileSerializer
+from profiles.serializers_detailed.base_serializers import (
+    BaseProfileSerializer,
+    TeamSerializer,
+)
 
 
 class ProfileViePlayerPositionSerializer(serializers.ModelSerializer):
@@ -59,10 +61,7 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
         fields = (
             "slug",
             "user",
-            "team_object",
-            "voivodeship_obj",
             "external_links",
-            "address",
             "player_positions",
             "profile_video",
             "transfer_status",
@@ -73,6 +72,7 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
             "playermetrics",
             "role",
             "labels",
+            "verification_stage",
         )
 
     player_positions = ProfileVIewPlayerProfilePositionSerializer(
@@ -89,19 +89,6 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
     playermetrics = PlayerMetricsSerializer(read_only=True)
     role = serializers.SerializerMethodField()
 
-    profile_video = serializers.SerializerMethodField()
-
-    def get_profile_video(self, obj):
-        """Override profile video field to return serialized data even if empty."""
-
-        videos = ProfileVideoSerializer(
-            instance=obj.user.user_video.all(),
-            many=True,
-            required=False,
-            read_only=True,
-        )
-        return videos.data
-
     def get_licences(self, obj: PlayerProfile) -> typing.Optional[dict]:  # noqa
         """
         Get licences by player profile.
@@ -109,3 +96,31 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
         """
         licenses = CoachLicenceSerializer(many=True, required=False, data=obj)
         return licenses.data if licenses.is_valid() else None
+
+
+class PlayerProfileUpdateSerializer(PlayerProfileViewSerializer):
+    """Serializer for updating player profile data."""
+
+    class Meta:
+        model = PlayerProfile
+        fields = (
+            "slug",
+            "user",
+            "external_links",
+            "player_positions",
+            "profile_video",
+            "transfer_status",
+            "height",
+            "weight",
+            "prefered_leg",
+            "training_ready",
+            "playermetrics",
+            "role",
+            "labels",
+            "verification_stage",
+        )
+
+    player_positions = PlayerProfilePositionSerializer(
+        many=True, required=False, read_only=True
+    )
+    team_object = TeamSerializer(required=False, allow_null=True)
