@@ -695,7 +695,7 @@ class ProfileTeamsApiTest(APITestCase):
         assert response1.data["is_primary"] is True
         assert response1.data["end_date"] is None
 
-        # Set the second contributor as primary
+        # Unset the primary status for the current team contributor
         data2 = {"is_primary": False}
         response2 = self.client.patch(
             reverse(

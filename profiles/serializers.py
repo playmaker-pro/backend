@@ -507,7 +507,6 @@ class PlayerProfileTeamContributorInputSerializer(BaseTeamContributorInputSerial
             if data.get("team_history", []):
                 if "season" in data:
                     del data["season"]
-                print(f"your data {data}")
             else:
                 # If 'team_history' is not provided, validate 'season'
                 if not data.get("season"):
@@ -626,7 +625,7 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
 
     def get_league_id(self, obj):
         """
-        Retrieves the name of the league associated with the first team_history instance.
+        Retrieves the id of the league associated with the first team_history instance.
         """
         team_history = obj.team_history.first()
         if team_history and team_history.league_history:
