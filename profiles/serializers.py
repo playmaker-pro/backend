@@ -540,7 +540,7 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
         """
         Initialize the serializer.
 
-        If the initial data contains a 'team_history' key, it marks the 'season' field as not required.
+        If the profile is Scout, it marks the role field as a not required.
         """
         super().__init__(*args, **kwargs)
         profile_short_type = self.context.get("profile_short_type")
@@ -667,11 +667,11 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
             "end_date",
         ]
 
-    def get_team_name(self, obj):
+    def get_team_name(self, obj: models.TeamContributor) -> str:
         team_histories = obj.team_history.all()
         return ", ".join(set(th.team.name for th in team_histories))
 
-    def get_picture_url(self, obj):
+    def get_picture_url(self, obj: models.TeamContributor) -> typing.Optional[str]:
         """
         Retrieve the absolute url of the club logo.
         """
@@ -683,14 +683,14 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
             return None
         return url
 
-    def get_league_name(self, obj):
+    def get_league_name(self, obj: models.TeamContributor) -> str:
         if obj.team_history.all().exists():
             return (
                 obj.team_history.last().league_history.league.display_league_top_parent
             )
         return ""
 
-    def get_league_id(self, obj):
+    def get_league_id(self, obj: models.TeamContributor) -> typing.Optional[int]:
         """
         Retrieves the name of the league associated with the first team_history instance.
         """
