@@ -55,10 +55,10 @@ class TestProfileVideoAPI(APITestCase):
         """
         Create and return dummy video of given user (more like for his PlayerProfile).
         If user is None, video will be created for new user - usefull for testing ownership.
-        """
+        """  # noqa: E501
         if not user:
             user: User = factories.UserFactory.create(**kwargs)
-        return factories.ProfileVideoFactory.create(user=user, **default_body)  # type: ignore
+        return factories.ProfileVideoFactory.create(user=user, **default_body)
 
 
 class TestCreateProfileVideoAPI(TestProfileVideoAPI):
@@ -108,7 +108,10 @@ class TestUpdateProfileVideoAPI(TestProfileVideoAPI):
         assert response.status_code == 401
 
     def test_patch_video_user_is_not_an_owner_of_video(self) -> None:
-        """FAIL patch video with valid authentication, but User is not owner of given video"""
+        """
+        FAIL patch video with valid authentication,
+        but User is not owner of given video
+        """
         video: factories.models.ProfileVideo = self.create_dummy_video()
         response = self.client.patch(self.url(video.pk), json.dumps({}), **self.headers)
 
@@ -142,7 +145,10 @@ class TestDeleteProfileVideoAPI(TestProfileVideoAPI):
         assert response.status_code == 401
 
     def test_delete_video_user_is_not_an_owner_of_video(self) -> None:
-        """FAIL delete video with valid authentication, but User is not owner of given video"""
+        """
+        FAIL delete video with valid authentication,
+        but User is not owner of given video
+        """
         video: factories.models.ProfileVideo = self.create_dummy_video()
 
         response = self.client.delete(self.url(video.pk), **self.headers)

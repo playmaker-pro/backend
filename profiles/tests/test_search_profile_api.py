@@ -1,13 +1,14 @@
-from rest_framework.test import APIClient, APITestCase
 from django.urls import reverse
+from rest_framework.test import APIClient, APITestCase
+
+from roles import definitions
 from utils import testutils
 from utils.factories import (
-    UserFactory,
-    PlayerProfileFactory,
     CoachProfileFactory,
+    PlayerProfileFactory,
+    UserFactory,
     UserPreferencesFactory,
 )
-from roles import definitions
 
 
 class TestProfileSearchAPI(APITestCase):

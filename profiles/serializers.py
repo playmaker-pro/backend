@@ -49,7 +49,7 @@ class ProfileEnumChoicesSerializer(serializers.CharField, serializers.Serializer
         )
 
         if _id not in choices.keys():
-            raise serializers.ValidationError(f"Invalid value: {_id}")
+            raise serializers.ValidationError(f"Invalid value: {_id}. Expected: {choices.keys()}")
 
         value = choices[_id]
         return ChoicesTuple(_id, value)
@@ -155,7 +155,7 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
         unable to use 'validate_expiry_date' cuz attr isn't required
         """
 
-        if expiry_date := attrs.get("expiry_date"):
+        if expiry_date := attrs.get("expiry_date"):  # noqa: E999
             try:
                 datetime.strptime(expiry_date, "%Y-%m-%d")
             except ValueError:
@@ -253,7 +253,7 @@ class LanguageSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data: str) -> typing.Union[models.Language, str]:
         """Override object to get language either by code and id"""
         if isinstance(data, str):
-            return models.Language.objects.filter(code=data).first()
+            return models.Language.objects.filter(code=data).first() or data
         return data
 
     def define_priority(self, obj: models.Language) -> bool:

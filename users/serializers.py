@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 from typing import Dict, Optional
 
 from django.contrib.auth import get_user_model
@@ -60,10 +60,10 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
     @staticmethod
-    def validate_birth_date(value) -> Optional[datetime]:
+    def validate_birth_date(value: date) -> date:
         """Check if birthdate is not in the future"""
-        now = datetime.now().date()
-        if value > now:
+        now = date.today()
+        if value and value > now:
             raise ValidationError(detail="Birth date cannot be in the future")
         return value
 
