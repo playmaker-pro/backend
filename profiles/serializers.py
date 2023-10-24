@@ -542,7 +542,7 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
         If the profile is Scout, it marks the role field as a not required.
         """
         super().__init__(*args, **kwargs)
-        profile_short_type = self.context.get("profile_short_type")
+        profile_short_type: str = self.context.get("profile_short_type")
         if profile_short_type == "S" and self.initial_data:
             self.fields["role"].required = False
 
