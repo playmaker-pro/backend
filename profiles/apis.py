@@ -1,5 +1,6 @@
 import uuid
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist, QuerySet
@@ -34,6 +35,7 @@ from users.serializers import UserMainRoleSerializer
 profile_service = ProfileService()
 team_contributor_service = TeamContributorService()
 external_links_services = ExternalLinksService()
+User = get_user_model()
 
 
 class ProfileAPI(ProfileListAPIFilter, EndpointView):
@@ -475,10 +477,12 @@ class ProfileTeamsApi(EndpointView):
         """
         Assigns a team with a team history to the user's profile.
         """
-        user = profile_service.get_user_by_uuid(profile_uuid)
+        user: User = profile_service.get_user_by_uuid(profile_uuid)
         if user != request.user:
             raise PermissionDenied
-        profile = profile_service.get_profile_by_uuid(profile_uuid)
+        profile: models.PROFILE_MODELS = profile_service.get_profile_by_uuid(
+            profile_uuid
+        )
         profile_short_type = next(
             (
                 key
@@ -524,10 +528,12 @@ class ProfileTeamsApi(EndpointView):
         """
         Update a team with a team history in the user's profile.
         """
-        user = profile_service.get_user_by_uuid(profile_uuid)
+        user: User = profile_service.get_user_by_uuid(profile_uuid)
         if user != request.user:
             raise PermissionDenied
-        profile = profile_service.get_profile_by_uuid(profile_uuid)
+        profile: models.PROFILE_MODELS = profile_service.get_profile_by_uuid(
+            profile_uuid
+        )
         # Using the manager to get the input serializer
         input_serializer_class = self.serializer_manager.get_serializer_class(
             profile, "input"
@@ -582,7 +588,7 @@ class ProfileTeamsApi(EndpointView):
         """
         Delete a team with a team history from the user's profile.
         """
-        user = profile_service.get_user_by_uuid(profile_uuid)
+        user: User = profile_service.get_user_by_uuid(profile_uuid)
         if user != request.user:
             raise PermissionDenied
         try:

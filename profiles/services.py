@@ -1106,7 +1106,7 @@ class TeamContributorService:
 
         current_data.update(data)
 
-        if "team_history" in current_data and current_data["team_history"]:
+        if "team_history" in current_data and current_data.get("team_history"):
             team_history_instance, season = self.fetch_related_data(
                 current_data, profile_uuid, None
             )
@@ -1114,10 +1114,10 @@ class TeamContributorService:
         else:
             matched_team_histories = (
                 club_services.create_or_get_team_history_date_based(
-                    current_data["start_date"],
-                    current_data["end_date"],
-                    current_data["team_parameter"],
-                    current_data["league_identifier"],
+                    current_data.get("start_date"),
+                    current_data.get("end_date"),
+                    current_data.get("team_parameter"),
+                    current_data.get("league_identifier"),
                     current_data.get("country", "PL"),
                     self.profile_service.get_user_by_uuid(profile_uuid),
                 )
