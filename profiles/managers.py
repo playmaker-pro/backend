@@ -18,6 +18,10 @@ from profiles.serializers_detailed.scout_profile_serializers import (
     ScoutProfileUpdateSerializer,
     ScoutProfileViewSerializer,
 )
+from profiles.serializers_detailed.manager_profile_serializers import (
+    ManagerProfileUpdateSerializer,
+    ManagerProfileViewSerializer,
+)
 
 User = get_user_model()
 
@@ -42,6 +46,8 @@ class SerializersManager:
         "ScoutProfile_update": ScoutProfileUpdateSerializer,
         "ClubProfile": ClubProfileViewSerializer,
         "ClubProfile_update": ClubProfileUpdateSerializer,
+        "ManagerProfile": ManagerProfileViewSerializer,
+        "ManagerProfile_update": ManagerProfileUpdateSerializer,
     }
     PLAYER_PROFILE_TEAM_CONTRIBUTOR_SERIALIZERS = {
         "input": serializers.PlayerProfileTeamContributorInputSerializer,
