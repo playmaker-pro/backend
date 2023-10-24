@@ -284,6 +284,27 @@ class TestUpdateProfileAPI(APITestCase):
                     "user": {"userpreferences": {"birth_date": "1990-01-01"}},
                 },
             ],
+            [
+                {
+                    "role": "S",
+                },
+                {
+                    "user": {
+                        "first_name": "scout",
+                        "last_name": "test",
+                    },
+                },
+            ],
+            [
+                {
+                    "role": "M",
+                },
+                {
+                    "agency_phone": "+1234567890",
+                    "agency_email": "example@example.com",
+                    "agency_transfermarkt_url": "https://www.transfermarkt.com/example",
+                },
+            ],
         ]
     )
     def test_successfully_patch_profile_for_new_user(
@@ -343,61 +364,6 @@ class TestUpdateProfileAPI(APITestCase):
 
         for attr, val in expected_response.items():
             assert response.data.get(attr) == val
-
-    def test_scout_profile_patch_method_complex_payload(self) -> None:
-        """Test updating scout profiles with correctly passed payload"""
-        factories.UserPreferencesFactory.create(user_id=self.user_obj.pk, gender=None)
-
-        profile = utils.create_empty_profile(
-            **{
-                "user_id": self.user_obj.pk,
-                "role": "S",
-            }
-        )
-        payload = {
-            "user": {
-                "first_name": "NewName",
-                "userpreferences": {
-                    "birth_date": "1999-01-01",
-                    "gender": "M",
-                },
-            },
-        }
-
-        expected_response = {
-            "user": {
-                "first_name": "NewName",
-                "userpreferences": {
-                    "birth_date": "1999-01-01",
-                    "gender": {"id": "M", "name": "Mężczyzna"},
-                },
-            },
-        }
-
-        expected_model_data = {"user": self.user_obj}
-
-        response = self.client.patch(
-            self.url(str(profile.uuid)), json.dumps(payload), **self.headers
-        )
-        profile = utils.profile_service.get_profile_by_uuid(profile.uuid)
-
-        assert response.status_code == 200
-        for attr, val in expected_model_data.items():
-            assert getattr(profile, attr) == val
-
-        for attr, val in expected_response.items():
-            if isinstance(val, dict):
-                for key, inner_val in val.items():
-                    if isinstance(inner_val, dict):
-                        for inner_key, deep_inner_val in inner_val.items():
-                            assert (
-                                response.data.get(attr).get(key).get(inner_key)
-                                == deep_inner_val
-                            )
-                    else:
-                        assert response.data.get(attr).get(key) == inner_val
-            else:
-                assert response.data.get(attr) == val
 
     @parameterized.expand(
         [

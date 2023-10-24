@@ -896,6 +896,7 @@ paths:
                         - $ref: '#/components/schemas/CoachProfile'
                         - $ref: '#/components/schemas/ClubProfile'
                         - $ref: '#/components/schemas/ScoutProfile'
+                        - $ref: '#/components/schemas/ManagerProfile'
                         - $ref: '#/components/schemas/GuestProfile'
                 description: "Paginated list profile based on profile type"
   /profiles/owned/:
@@ -961,6 +962,7 @@ paths:
                   - $ref: '#/components/schemas/CoachProfile'
                   - $ref: '#/components/schemas/ScoutProfile'
                   - $ref: '#/components/schemas/ClubProfileView'
+                  - $ref: '#/components/schemas/ManagerProfile'
 #                  - $ref: '#/components/schemas/GuestProfile'
     patch:
       operationId: profiles_partial_update
@@ -996,6 +998,7 @@ paths:
                   - $ref: '#/components/schemas/CoachProfile'
                   - $ref: '#/components/schemas/ClubProfileView'
                   - $ref: '#/components/schemas/ScoutProfile'
+                  - $ref: '#/components/schemas/ManagerProfile'
                   # - $ref: '#/components/schemas/GuestProfile'
         '400':
           description: 'Invalid uuid'
@@ -1218,6 +1221,7 @@ paths:
                       type: string
                     release_year:
                       type: integer
+                      nullable: true
       responses:
         '200':
           description: Course updated successfully
@@ -3942,9 +3946,7 @@ components:
             slug:
               type: string
             user:
-              $ref: '#/components/schemas/ScoutProfileUserData'
-            voivodeship_obj:
-              $ref: '#/components/schemas/Voivodeship'
+              $ref: '#/components/schemas/UserProfileBase'
             external_links:
               type: object
               properties:
@@ -3956,6 +3958,12 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ProfileVideo'
+            labels:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProfileLabel'
+            role:
+              type: string
             verification_stage:
               $ref: '#/components/schemas/VerificationStage'
           example: {
@@ -3975,11 +3983,6 @@ components:
             "picture": null,
             "last_activity": "2023-10-21T21:54:55.160773+02:00"
             },
-            "voivodeship_obj": {
-              "id": 1,
-              "name": "Dolnośląskie",
-              "code": 16
-            },
             "external_links": {
               "links": [ ]
             },
@@ -3993,6 +3996,8 @@ components:
                 "thumbnail": null
               }
             ],
+            labels: [ ],
+            role: "S",
             "verification_stage": {
               "step": 0,
               "date_updated": "2023-09-09T10:18:34.070304+02:00",
@@ -4002,10 +4007,10 @@ components:
       required:
         - slug
         - user
-        - voivodeship_obj
+        - role
         - external_links
-        - address
         - profile_video
+        - labels
         - verification_stage
 
     ScoutProfileUpdate:
@@ -4035,90 +4040,117 @@ components:
           }
     ManagerProfile:
       allOf:
-        - $ref: '#/components/schemas/BaseProfile'
         - type: object
           properties:
-            external_links:
-              type: array
-              items:
-                $ref: '#/components/schemas/ExternalLink'
-            facebook_url:
+            slug:
               type: string
-            external_links_id:
-              type: integer
-            other_url:
-              type: string
+            user:
+              $ref: '#/components/schemas/UserProfileBase'
             agency_phone:
               type: string
+              nullable: true
             agency_email:
               type: string
+              format: email
+              nullable: true
             agency_transfermarkt_url:
               type: string
+              format: uri
+              nullable: true
             agency_website_url:
               type: string
+              format: uri
+              nullable: true
             agency_instagram_url:
               type: string
+              format: uri
+              nullable: true
             agency_twitter_url:
               type: string
+              format: uri
+              nullable: true
             agency_facebook_url:
               type: string
+              format: uri
+              nullable: true
             agency_other_url:
               type: string
-          example: {
-            "user": {
-                "id": 7481,
-                "first_name": "Jan",
-                "last_name": "Nowak",
-                "last_login": "2023-07-09T11:37:50.502257+02:00",
-                "last_activity": "2023-09-27T19:20:32.889577+02:00",
-                "userpreferences": {
-                    "id": 5796,
-                    "age": null,
-                    "localization": null,
-                    "spoken_languages": [],
-                    "citizenship": null,
-                    "gender": null,
-                    "licences": [],
-                    "birth_date": null,
-                    "user": 7481
-                },
-                "picture": null
-            },
-            "history": {
-                "counter": 0,
-                "counter_coach": 0,
-                "counter_scout": 0
-            },
-            "external_links": {
-                "links": []
-            },
-            "verification_stage": {
-                "step": 0,
-                "date_updated": "2023-09-27T19:20:32.752574+02:00",
-                "done": false
-            },
-            "role": "M",
-            "verification_id": null,
-            "user_id": 7481,
-            "history_id": 10255,
-            "data_mapper_id": null,
-            "slug": "manager-jakub-bartnik",
-            "bio": null,
-            "event_log": null,
-            "verification_stage_id": 9425,
-            "uuid": "789c8f45-e8d7-4158-b437-bbcbcb3968f1",
-            "facebook_url": null,
-            "other_url": null,
-            "external_links_id": 383,
-            "agency_phone": null,
-            "agency_email": null,
-            "agency_transfermarkt_url": null,
-            "agency_website_url": null,
-            "agency_instagram_url": null,
-            "agency_twitter_url": null,
-            "agency_facebook_url": null,
-            "agency_other_url": null
-        }
+              format: uri
+              nullable: true
+            external_links:
+              type: object
+              properties:
+                links:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ExternalLink'
+            profile_video:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProfileVideo'
+            labels:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProfileLabel'
+            role:
+              type: string
+            verification_stage:
+              $ref: '#/components/schemas/VerificationStage'
+          example:
+            slug: "coach-miz-shoty"
+            user:
+              id: 7404
+              first_name: "MiZ"
+              last_name: "SHOTY"
+              userpreferences:
+                age: null
+                localization: null
+                spoken_languages: [ ]
+                citizenship: null
+                gender: null
+                birth_date: null
+              picture: null
+              last_activity: "2023-10-21T21:54:55.160773+02:00"
+            agency_phone: "+1234567890"
+            agency_email: "example@example.com"
+            agency_transfermarkt_url: "https://www.transfermarkt.com/example"
+            agency_website_url: "https://www.example.com"
+            agency_instagram_url: "https://www.instagram.com/example/"
+            agency_twitter_url: "https://twitter.com/example"
+            agency_facebook_url: "https://www.facebook.com/example"
+            agency_other_url: "https://www.other.com/example"
+            external_links:
+              links: [ ]
+            profile_video:
+              - id: 1
+                url: "http://www.google.com"
+                title: "fwefwqf"
+                description: "afewsfef"
+                label: null
+                thumbnail: null
+            labels: [ ]
+            role: "M"
+            verification_stage:
+              step: 0
+              date_updated: "2023-09-09T10:18:34.070304+02:00"
+              done: false
+      required:
+        - slug
+        - user
+        - external_links
+        - profile_video
+        - labels
+        - role
+        - agency_phone
+        - agency_email
+        - agency_transfermarkt_url
+        - agency_website_url
+        - agency_instagram_url
+        - agency_twitter_url
+        - agency_facebook_url
+        - agency_other_url
+        - verification_stage
+
     ParentProfile:
       allOf:
         - $ref: '#/components/schemas/BaseProfile'
@@ -4508,7 +4540,7 @@ components:
           type: array
           items:
             type: string
-            description: "List of Language shortcuts like: ['PL', 'EN']/['pl', 'en']"""
+            description: "List of Language shortcuts like: ['PL', 'EN']/['pl', 'en']"
         citizenship:
           type: array
           items:
@@ -4632,6 +4664,7 @@ components:
           type: boolean
         release_year:
           type: string
+          nullable: true
       required:
         - id
         - licence
@@ -4661,6 +4694,7 @@ components:
           type: boolean
         release_year:
           type: integer
+          nullable: true
     CoachLicenceType:
       type: object
       properties:
