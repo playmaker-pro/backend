@@ -11,10 +11,7 @@ class PlayerProfileGET(BaseModel):
 
     slug: str
     user: dict
-    team_object: Optional[dict]
-    voivodeship_obj: Optional[dict]
     external_links: Optional[dict]
-    address: Optional[str]
     player_positions: Optional[dict]
     profile_video: Optional[dict]
     transfer_status: Optional[dict]
@@ -24,3 +21,4 @@ class PlayerProfileGET(BaseModel):
     training_ready: Optional[dict]
     playermetrics: Optional[dict]
     role: str
+    verification_stage: dict

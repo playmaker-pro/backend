@@ -18,6 +18,7 @@ from roles import definitions
 from users.models import User
 from utils import testutils as utils
 from utils.factories import (
+    SEASON_NAMES,
     LeagueFactory,
     PlayerProfileFactory,
     PositionFactory,
@@ -25,7 +26,6 @@ from utils.factories import (
     TeamContributorFactory,
     TeamHistoryFactory,
     UserFactory,
-    SEASON_NAMES,
 )
 
 team_contributor_service = TeamContributorService()
@@ -212,7 +212,7 @@ class TeamContributorServiceTests(TestCase):
         assert existing_team_contributor == team_contributor
 
     def test_create_or_get_all_related_entities(self):
-        """Test creating or fetching all related entities for a given team contributor."""
+        """Test creating or fetching all related entities for a given team contributor."""  # noqa: E501
         data = {
             "league_identifier": self.league.pk,
             "country": "PL",

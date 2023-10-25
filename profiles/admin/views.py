@@ -90,7 +90,11 @@ class ManagerProfileAdmin(ProfileAdminBase):
 @admin.register(models.ScoutProfile)
 class ScoutProfileAdmin(ProfileAdminBase):
     exclude = ("voivodeship_raw",)
-    readonly_fields = ("external_links",)
+    readonly_fields = ("external_links", "uuid")
+    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
+        "pk",
+        "user",
+    )
 
 
 @admin.register(models.GuestProfile)
@@ -280,7 +284,25 @@ class ProfileVideoAdmin(admin.ModelAdmin):
 
 @admin.register(models.PlayerProfilePosition)
 class PlayerProfilePositionAdmin(admin.ModelAdmin):
-    pass
+    list_display = (
+        "pk",
+        linkify("player_profile"),
+        "player_position",
+        "is_main",
+        "get_email",
+        "get_user_id",
+    )
+
+    def get_user_id(self, obj: models.PlayerProfilePosition) -> int:
+        """Return user id."""
+        return obj.player_profile.user.id
+
+    def get_email(self, obj: models.PlayerProfilePosition) -> str:
+        """Return user email."""
+        return obj.player_profile.user.email
+
+    get_user_id.short_description = "User id"
+    get_email.short_description = "User email"
 
 
 @admin.register(models.Language)
@@ -297,7 +319,7 @@ class RefereeLevelAdmin(admin.ModelAdmin):
     ) -> ModelChoiceField:
         """
         Override the formfield for the 'level' foreign key to only include league highest parent.
-        """
+        """  # noqa: E501
         if db_field.name == "level":
             kwargs["queryset"] = League.objects.filter(parent=None)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)

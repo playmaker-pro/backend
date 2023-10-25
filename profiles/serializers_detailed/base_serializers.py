@@ -1,7 +1,10 @@
-from datetime import datetime
-from typing import Optional, Union
+import logging
+from datetime import date
+from typing import List, Optional, Union
 
 from django.db.models import QuerySet
+from django_countries import countries
+from pydantic import parse_obj_as
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -10,27 +13,34 @@ from clubs.errors import ClubDoesNotExist, InvalidGender, TeamDoesNotExist
 from clubs.models import Club, League, Team
 from clubs.services import ClubService
 from external_links.serializers import ExternalLinksSerializer
-from profiles.api_errors import (
-    InvalidProfileRole,
-    VoivodeshipDoesNotExistHTTPException,
-    VoivodeshipWrongSchemaHTTPException,
-)
+from profiles.api_errors import InvalidProfileRole
 from profiles.api_serializers import ProfileLabelsSerializer
-from profiles.errors import LanguageDoesNotExistException
-from profiles.models import PROFILE_TYPE
+from profiles.errors import (
+    ExpectedIntException,
+    InvalidCitizenshipListException,
+    InvalidLanguagesListException,
+    LanguageDoesNotExistException,
+)
+from profiles.models import PROFILE_TYPE, Language
 from profiles.serializers import (
     CoachLicenceSerializer,
     CourseSerializer,
     LanguageSerializer,
     ProfileEnumChoicesSerializer,
+    ProfileVideoSerializer,
+    VerificationStageSerializer,
 )
-from profiles.services import LanguageService, ProfileService
+from profiles.services import (
+    LanguageService,
+    PlayerProfilePositionService,
+    PositionData,
+    ProfileService,
+)
 from roles.definitions import PROFILE_TYPE_SHORT_MAP
 from users.models import User, UserPreferences
-from voivodeships.exceptions import VoivodeshipDoesNotExist
-from voivodeships.models import Voivodeships
-from voivodeships.serializers import VoivodeshipSerializer
-from voivodeships.services import VoivodeshipService
+
+logger = logging.getLogger(__name__)
+
 
 clubs_service: ClubService = ClubService()
 
@@ -43,7 +53,7 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
         exclude = ("user", "id")
 
     age = serializers.IntegerField(read_only=True)
-    localization = serializers.SerializerMethodField()
+    localization = CitySerializer(required=False, allow_null=True)
     spoken_languages = LanguageSerializer(many=True, required=False, allow_null=True)
     citizenship = CountrySerializer(many=True, required=False, allow_null=True)
     gender = ProfileEnumChoicesSerializer(
@@ -52,43 +62,65 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
     licences = CoachLicenceSerializer(many=True, read_only=True, source="user.licences")
     courses = CourseSerializer(many=True, read_only=True, source="user.courses")
 
-    def get_localization(self, obj: UserPreferences) -> dict:
-        """Get city data. Return empty dict if city is not set"""
-        if not obj.localization:
-            return dict()
-        serializer = CitySerializer(
-            instance=obj.localization, required=False, allow_null=True
-        )
-        return serializer.data
-
     @staticmethod
-    def validate_birth_date(value) -> datetime:
+    def validate_birth_date(value: date) -> date:
         """Check if birthdate is not in the future"""
-        now = datetime.now().date()
-        if value > now:
+        now = date.today()
+        if value and value > now:
             raise ValidationError(detail="Birth date cannot be in the future")
         return value
+
+    def validate_citizenship(self, citizenship: List[str]) -> List[str]:
+        """Validate citizenship field"""
+        if not isinstance(citizenship, list) or not all(
+                [isinstance(el, str) for el in citizenship]
+        ):
+            raise InvalidCitizenshipListException(
+                details="Citizenship must be a list of countries codes"
+            )
+
+        return [code for code in citizenship if code in countries]
+
+    def validate_gender(self, value: str) -> str:
+        """Validate gender field"""
+        if value not in ["M", "K"]:
+            raise InvalidGender
+        return value
+
+    def validate_spoken_languages(self, spoken_languages: List[Union[Language, str]]) -> List[str]:
+        """Validate spoken languages field"""
+        is_list = isinstance(spoken_languages, list)
+
+        if not is_list:
+            raise InvalidLanguagesListException(
+                details=f"Invalid languages list. Expected string values (language codes like: 'pl')"
+            )
+
+        language_service: LanguageService = LanguageService()
+
+        for language_code in spoken_languages:
+            if not isinstance(language_code, Language):
+                try:
+                    language: Language = language_service.get_language_by_code(
+                        language_code.lower()
+                    )
+                    spoken_languages.append(language)
+                except LanguageDoesNotExistException as e:
+                    logger.error(e, exc_info=True)
+                except ExpectedIntException as e:
+                    logger.error(e, exc_info=True)
+                spoken_languages.remove(language_code)
+
+        return spoken_languages
 
     def update(self, instance: UserPreferences, validated_data) -> UserPreferences:
         """Update nested user preferences data"""
         if spoken_languages := validated_data.pop(  # noqa: 5999
             "spoken_languages", None
         ):
-            language_service: LanguageService = LanguageService()
-            for language_code in spoken_languages:
-                try:
-                    language_service.get_language_by_id(language_code)
-                    instance.spoken_languages.set(spoken_languages)
-                except LanguageDoesNotExistException:
-                    pass
+            instance.spoken_languages.set([language.pk for language in spoken_languages])
 
-        if gender := validated_data.pop("gender", None):  # noqa: 5999
-            if gender not in ["M", "K"]:
-                raise InvalidGender
-            instance.gender = gender
-
-        super().update(instance, validated_data)
-        return instance
+        return super().update(instance, validated_data)
 
 
 class UserDataSerializer(serializers.ModelSerializer):
@@ -96,6 +128,7 @@ class UserDataSerializer(serializers.ModelSerializer):
 
     userpreferences = UserPreferencesSerializerDetailed(required=False, partial=True)
     picture = serializers.CharField(source="picture_url", read_only=True)
+    last_activity = serializers.CharField(read_only=True)
 
     class Meta:
         model = User
@@ -105,6 +138,7 @@ class UserDataSerializer(serializers.ModelSerializer):
             "last_name",
             "userpreferences",
             "picture",
+            "last_activity",
         )
         depth = 1
         extra_kwargs = {
@@ -122,8 +156,7 @@ class UserDataSerializer(serializers.ModelSerializer):
             )
             if user_preferences_serializer.is_valid(raise_exception=True):
                 user_preferences_serializer.save()
-        super().update(instance, validated_data)
-        return instance
+        return super().update(instance, validated_data)
 
 
 class ClubSerializer(serializers.ModelSerializer):
@@ -180,11 +213,41 @@ class BaseProfileSerializer(serializers.ModelSerializer):
 
     user = UserDataSerializer(partial=True, required=False)
     team_object = TeamSerializer(read_only=True)
-    voivodeship_obj = VoivodeshipSerializer(read_only=True)
-    external_links = ExternalLinksSerializer(required=False)
+    external_links = ExternalLinksSerializer(read_only=True)
     address = serializers.CharField(required=False)
     role = serializers.SerializerMethodField()
     labels = serializers.SerializerMethodField()
+    verification_stage = VerificationStageSerializer(read_only=True)
+    profile_video = serializers.SerializerMethodField()
+
+    def update(self, instance: PROFILE_TYPE, validated_data: dict):
+        self.validate_data()
+
+        if positions := self.initial_data.pop("player_positions", None):  # noqa: 5999
+            player_position_service = PlayerProfilePositionService()
+            # Parse the value as a list of PositionData objects
+            positions_data = parse_obj_as(List[PositionData], positions)
+            player_position_service.manage_positions(self.instance, positions_data)
+
+        if user_data := validated_data.pop("user", None):  # noqa: 5999
+            self.user = UserDataSerializer(
+                instance=self.instance.user,
+                data=user_data,
+                partial=True,
+            )
+            if self.user.is_valid(raise_exception=True):
+                self.user.save()
+
+        if verification := self.initial_data.pop("verification_stage", None):
+            verification_serializer = VerificationStageSerializer(
+                instance=self.instance.verification_stage,
+                data=verification,
+                partial=True,
+            )
+            if verification_serializer.is_valid(raise_exception=True):
+                verification_serializer.save()
+
+        return super().update(instance, validated_data)
 
     def get_labels(self, obj):
         """Override labels field to return only visible=True labels"""
@@ -219,20 +282,32 @@ class BaseProfileSerializer(serializers.ModelSerializer):
             if not clubs_service.team_exist(club_id):
                 raise ClubDoesNotExist
 
-    def get_voivo(self) -> Optional[Voivodeships]:
-        """Get voivodeship object from request data"""
-        voivodeship_service: VoivodeshipService = VoivodeshipService()
-        try:
-            voivodeship = voivodeship_service.get_voivo_by_id(
-                self.initial_data.get("voivodeship_obj").get("id")
-            )
-            return voivodeship
-        except VoivodeshipDoesNotExist:
-            raise VoivodeshipDoesNotExistHTTPException
-        except AttributeError:
-            raise VoivodeshipWrongSchemaHTTPException
-
     def validate_data(self) -> None:
         """validate ids of team, club and team history"""
         self.validate_team()
         self.validate_club()
+
+    def to_representation(self, instance: PROFILE_TYPE) -> dict:
+        """Hide verification stage from response if it's complete"""
+        repr_dict = super().to_representation(instance)
+        if "verification_stage" in repr_dict:
+            if repr_dict["verification_stage"] and repr_dict["verification_stage"].get(
+                "done"
+            ):
+                del repr_dict["verification_stage"]
+
+        if repr_dict.get("external_links") is None:
+            repr_dict["external_links"] = []
+
+        return repr_dict
+
+    def get_profile_video(self, obj: PROFILE_TYPE) -> dict:
+        """Override profile video field to return serialized data even if empty."""
+
+        videos = ProfileVideoSerializer(
+            instance=obj.user.user_video.all(),
+            many=True,
+            required=False,
+            read_only=True,
+        )
+        return videos.data
