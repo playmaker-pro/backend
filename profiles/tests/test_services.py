@@ -219,6 +219,7 @@ class TeamContributorServiceTests(TestCase):
             "season": self.season.pk,
             "team_parameter": "Test Team",
             "round": "wiosenna",
+            "is_primary": True,
         }
 
         team_contributor = team_contributor_service.create_contributor(
@@ -240,6 +241,7 @@ class TeamContributorServiceTests(TestCase):
             "season": self.season.pk,
             "team_history": [team_history],
             "round": "wiosenna",
+            "is_primary": False,
         }
 
         team_contributor = team_contributor_service.create_contributor(

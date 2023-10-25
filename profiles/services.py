@@ -778,9 +778,8 @@ class TeamContributorService:
         Handle setting is_primary attribute and checking for existing primary
         contributors.
         """
-
         if is_primary:
-            if profile_type == "playerprofile":
+            if profile_type == "player":
                 # Unset any existing primary contributors with the same profile, season, round
                 models.TeamContributor.objects.filter(
                     profile_uuid=profile_uuid,
@@ -883,16 +882,17 @@ class TeamContributorService:
         # Common logic
         criteria = {}
         matched_team_histories = self.get_or_create_team_history(data, profile_uuid)
-
         # Player-specific logic
         if is_player:
             criteria["round"] = data.get("round")
+            criteria["is_primary"] = data.get("is_primary")
             existing_contributor: models.TeamContributor = (
                 self.check_existing_contributor(
                     {
                         "profile_uuid": profile_uuid,
                         "team_history__in": matched_team_histories,
                         "round": data.get("round"),
+                        "is_primary": data.get("is_primary"),
                     }
                 )
             )
@@ -905,6 +905,7 @@ class TeamContributorService:
             existing_contributor = self.check_existing_contributor(
                 {
                     "profile_uuid": profile_uuid,
+                    "team_history__in": matched_team_histories,
                     "role": data.get("role"),
                     "start_date": data.get("start_date"),
                 }
@@ -928,6 +929,7 @@ class TeamContributorService:
             profile_uuid=profile_uuid,
             is_primary=data.get("is_primary", False),
             profile_type="player" if is_player else "non-player",
+            round_val=data.get("round"),
         )
 
         return team_contributor

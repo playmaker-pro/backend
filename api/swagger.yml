@@ -4966,6 +4966,9 @@ components:
         league_name:
           type: string
           description: "Name of the League the Team belongs to."
+        league_id:
+          type: integer
+          description: "Id of the League the Team belongs to"
         season_name:
           type: string
           description: "Season's name in format 'YYYY/YYYY'."
@@ -4980,6 +4983,7 @@ components:
         - picture_url
         - team_name
         - league_name
+        - league_id
         - season_name
         - round
         - is_primary
@@ -5002,20 +5006,26 @@ components:
         league_name:
           type: string
           description: "Name of the League the Team belongs to."
+        league_id:
+          type: integer
+          description: "Id of the League the Team belongs to"
         start_date:
           type: string
           description: "Season's name in format 'YYYY-MM-DD'."
         end_date:
           type: string
           description: "Ending date for the contributor's association with the team in format 'YYYY-MM-DD'."
+          nullable: true
         role:
           type: string
           description: "Role in the team (e.g., IC, IIC, GKC, etc.)."
+          nullable: true
       required:
         - id
         - picture_url
         - team_name
         - league_name
+        - league_id
         - round
         - is_primary
         - start_date
