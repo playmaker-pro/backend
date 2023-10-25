@@ -5,7 +5,7 @@ from unittest import TestCase
 from rest_framework.test import APITestCase
 
 from clubs import errors
-from clubs.models import Gender, League, Team
+from clubs.models import Gender, League, Team, TeamHistory
 from clubs.services import ClubTeamService, SeasonService, TeamHistoryCreationService
 from profiles.serializers import PlayerProfileTeamContributorInputSerializer
 from roles import definitions
@@ -95,8 +95,9 @@ class TeamHistoryCreationServicesTest(APITestCase):
         self.user = UserFactory.create(
             email="username", declared_role=definitions.PLAYER_SHORT
         )
-        for season_name in SEASON_NAMES:
-            SeasonFactory.create(name=season_name)
+        self.seasons = [
+            SeasonFactory.create(name=season_name) for season_name in SEASON_NAMES
+        ]
         self.league = LeagueFactory.create()
         self.service = TeamHistoryCreationService()
 
@@ -206,6 +207,35 @@ class TeamHistoryCreationServicesTest(APITestCase):
         )
         assert retrieved_team.name == team_name
         assert Team.objects.filter(name=team_name).count() == 1
+
+    def test_create_or_get_team_history_for_player(self):
+        """
+        Test the functionality of the `create_or_get_team_history_for_player` method.
+        """
+        season = self.seasons[0]
+        team_parameter = "Test Team Parameter"
+        league_identifier = self.league.pk
+        country_code = "PL"
+
+        assert not TeamHistory.objects.filter(
+            team__name=team_parameter,
+            league_history__league=self.league,
+            season=season,
+        ).exists()
+
+        team_history = self.service.create_or_get_team_history_for_player(
+            season.id, team_parameter, league_identifier, country_code, self.user
+        )
+
+        assert team_history.team.name == team_parameter
+        assert team_history.league_history.league == self.league
+        assert team_history.season == season
+
+        same_team_history = self.service.create_or_get_team_history_for_player(
+            season.id, team_parameter, league_identifier, country_code, self.user
+        )
+
+        assert same_team_history.pk == team_history.pk
 
     def test_create_or_get_team_history_date_based(self):
         # Define the date range (from 2020 to 2022, spanning 3 seasons)
