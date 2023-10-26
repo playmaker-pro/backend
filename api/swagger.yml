@@ -1542,7 +1542,7 @@ paths:
     get:
       tags:
         - profiles
-      summary: "Retrieve team contributor's history."
+      summary: "Retrieve Team Contributor's history for given profile."
       description: "Retrieve the profile's TeamContributor history."
       parameters:
         - in: path
@@ -1579,7 +1579,7 @@ paths:
                 detail: "Profile with given UUID does not exist."
         500:
           description: "Internal server error."
-  /profiles/teams/add/:
+  /profiles/{profile_uuid}/teams/add/:
     post:
       tags:
         - profiles
@@ -1593,6 +1593,14 @@ paths:
         3. Creating a TeamContributor with the foreign Team that does not exist in the database.
 
         For specific payload details for each scenario, see the examples below.
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: "Profile uuid"
       requestBody:
         required: true
         content:
@@ -1707,13 +1715,13 @@ paths:
           description: "Internal server error."
 
 
-  /profiles/teams/{team_contributor_id}/:
+  /profiles/{profile_uuid}/teams/{team_contributor_id}/:
     patch:
       tags:
         - profiles
       security:
         - jwtAuth: [ ]
-      summary: "Update the TeamContributor entry."
+      summary: "Update the TeamContributor."
       description: |
         Update the TeamContributor entry. This endpoint handles multiple scenarios:
         1. Updating a TeamContributor with the values that already exists in the database.
@@ -1722,12 +1730,19 @@ paths:
         
         For specific payload details for each scenario, see the examples below.
       parameters:
-        - name: "team_contributor_id"
-          in: "path"
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: "Profile uuid"
+        - in: path
+          name: team_contributor_id
+          schema:
+            type: integer
           required: true
           description: "ID of the team contributor to update."
-          schema:
-            type: "integer"
       requestBody:
         required: true
         content:
@@ -1835,12 +1850,19 @@ paths:
       summary: "Delete a TeamContributor."
       description: "Delete a TeamContributor from the contributor's profile history."
       parameters:
-        - name: "team_contributor_id"
-          in: "path"
-          required: true
-          description: "ID of the Team Contributor to delete."
+        - in: path
+          name: team_contributor_id
           schema:
-            type: "integer"
+            type: integer
+          required: true
+          description: "ID of the team contributor to update."
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: "Profile uuid"
       responses:
         204:
           description: "Successfully deleted."
@@ -4944,6 +4966,9 @@ components:
         league_name:
           type: string
           description: "Name of the League the Team belongs to."
+        league_id:
+          type: integer
+          description: "Id of the League the Team belongs to"
         season_name:
           type: string
           description: "Season's name in format 'YYYY/YYYY'."
@@ -4958,6 +4983,7 @@ components:
         - picture_url
         - team_name
         - league_name
+        - league_id
         - season_name
         - round
         - is_primary
@@ -4980,24 +5006,30 @@ components:
         league_name:
           type: string
           description: "Name of the League the Team belongs to."
-        date_from:
+        league_id:
+          type: integer
+          description: "Id of the League the Team belongs to"
+        start_date:
           type: string
           description: "Season's name in format 'YYYY-MM-DD'."
-        end_date_display:
+        end_date:
           type: string
-          description: "Ending date for the contributor's association with the team in format 'YYYY-MM-DD'. If the contributor is currently associated with the team, this will be set to 'aktualnie'."
+          description: "Ending date for the contributor's association with the team in format 'YYYY-MM-DD'."
+          nullable: true
         role:
           type: string
           description: "Role in the team (e.g., IC, IIC, GKC, etc.)."
+          nullable: true
       required:
         - id
         - picture_url
         - team_name
         - league_name
+        - league_id
         - round
         - is_primary
-        - date_from
-        - end_date_display
+        - start_date
+        - end_date
         - role
     SocialLoginResponse:
       description: User logged in successfully - tokens returned.

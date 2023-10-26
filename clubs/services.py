@@ -304,11 +304,16 @@ class TeamHistoryCreationService:
         """
         Retrieve or create a history record for the given team and league history.
         """
-        team_history, created = models.TeamHistory.objects.get_or_create(
+        team_history = models.TeamHistory.objects.filter(
             team=team, league_history=league_history, season=league_history.season
-        )
-        if created:
+        ).first()
+
+        if not team_history:
+            team_history = models.TeamHistory.objects.create(
+                team=team, league_history=league_history, season=league_history.season
+            )
             self.initialize_model_instance(team_history, user)
+
         return team_history
 
     def create_or_get_league_history(
@@ -428,6 +433,49 @@ class TeamHistoryCreationService:
         season: int = team_history.league_history.season.id
         return team_history, season
 
+    def create_or_get_team_history_for_player(
+        self,
+        season: int,
+        team_parameter: typing.Union[str, int],
+        league_identifier: typing.Union[str, int],
+        country_code: str,
+        user: User,
+    ) -> models.TeamHistory:
+        """
+        Creates or retrieves the TeamHistory instances for a given season and round.
+
+        The method checks if a corresponding TeamHistory exists for the provided season and round.
+        If it does, the instance is returned; otherwise, a new one is created.
+        """
+
+        # Retrieve or Create the Season based on the provided season parameter
+        season_obj = models.Season.objects.filter(id=season).first()
+        if not season_obj:
+            raise errors.SeasonDoesNotExist()
+
+        # Retrieve or Create the League and its corresponding LeagueHistory
+        league, league_history = self.create_or_get_league_and_history(
+            league_identifier,
+            country_code,
+            season_obj.id,
+            user,
+            {"team_parameter": team_parameter},
+        )
+
+        # Retrieve or Create the Team
+        team = self.get_or_create(
+            {
+                "team_parameter": team_parameter,
+                "league_identifier": league_identifier,
+            },
+            user,
+            country_code,
+        )
+
+        team_history = self.create_or_get_team_history(team, league_history, user)
+
+        return team_history
+
     def create_or_get_team_history_date_based(
         self,
         start_date: datetime.date,
@@ -436,7 +484,7 @@ class TeamHistoryCreationService:
         league_identifier: typing.Union[str, int],
         country_code: str,
         user: User,
-    ):
+    ) -> typing.List[models.TeamHistory]:
         """
         Creates or retrieves the TeamHistory instances for a given date range.
 
@@ -476,7 +524,6 @@ class TeamHistoryCreationService:
                 user,
                 country_code,
             )
-
             team_history = self.create_or_get_team_history(team, league_history, user)
 
             team_histories.append(team_history)

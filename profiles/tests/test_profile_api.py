@@ -512,6 +512,7 @@ class ProfileTeamsApiTest(APITestCase):
         response = self.client.post(
             reverse(
                 "api:profiles:add_team_to_profile",
+                kwargs={"profile_uuid": self.user.profile.uuid},
             ),
             data,
         )
@@ -531,11 +532,15 @@ class ProfileTeamsApiTest(APITestCase):
         }
 
         response = self.client.post(
-            reverse("api:profiles:add_team_to_profile"),
+            reverse(
+                "api:profiles:add_team_to_profile",
+                kwargs={"profile_uuid": self.non_player_user.profile.uuid},
+            ),
             data,
         )
 
         assert response.status_code == 201
+        assert response.data["end_date"] is None
 
     def test_patch_team_history(self):
         """Test updating (patching) a team history."""
@@ -548,7 +553,10 @@ class ProfileTeamsApiTest(APITestCase):
         response = self.client.patch(
             reverse(
                 "api:profiles:update_or_delete_team_contributor",
-                kwargs={"team_contributor_id": self.team_contributor.pk},
+                kwargs={
+                    "profile_uuid": self.user.profile.uuid,
+                    "team_contributor_id": self.team_contributor.pk,
+                },
             ),
             data,
         )
@@ -573,7 +581,10 @@ class ProfileTeamsApiTest(APITestCase):
         response = self.client.patch(
             reverse(
                 "api:profiles:update_or_delete_team_contributor",
-                kwargs={"team_contributor_id": self.non_player_team_contributor.pk},
+                kwargs={
+                    "profile_uuid": self.non_player_user.profile.uuid,
+                    "team_contributor_id": self.non_player_team_contributor.pk,
+                },
             ),
             data,
         )
@@ -592,7 +603,10 @@ class ProfileTeamsApiTest(APITestCase):
         response = self.client.delete(
             reverse(
                 "api:profiles:update_or_delete_team_contributor",
-                kwargs={"team_contributor_id": self.team_contributor.id},
+                kwargs={
+                    "profile_uuid": self.user.profile.uuid,
+                    "team_contributor_id": self.team_contributor.id,
+                },
             ),
         )
 
@@ -639,6 +653,51 @@ class ProfileTeamsApiTest(APITestCase):
             response.data[0]["league_name"]
             == self.non_player_team_contributor.team_history.first().league_history.league.name  # noqa: E501
         )
+
+    def test_unset_previous_primary_for_non_player(self):
+        """Test that setting a new team as primary unsets the previous primary for a non-player profile."""
+        self.client.force_authenticate(user=self.non_player_user)
+
+        # Set the first contributor as primary
+        data1 = {
+            "team_history": self.team_history.id,
+            "start_date": "2021-02-01",
+            "is_primary": True,
+            "role": "IC",
+        }
+        response1 = self.client.patch(
+            reverse(
+                "api:profiles:update_or_delete_team_contributor",
+                kwargs={
+                    "profile_uuid": self.non_player_user.profile.uuid,
+                    "team_contributor_id": self.non_player_team_contributor.pk,
+                },
+            ),
+            data1,
+        )
+        assert response1.status_code == 200
+        assert response1.data["is_primary"] is True
+        assert response1.data["end_date"] is None
+
+        # Unset the primary status for the current team contributor
+        data2 = {"is_primary": False}
+        response2 = self.client.patch(
+            reverse(
+                "api:profiles:update_or_delete_team_contributor",
+                kwargs={
+                    "profile_uuid": self.non_player_user.profile.uuid,
+                    "team_contributor_id": self.non_player_team_contributor.pk,
+                },
+            ),
+            data2,
+        )
+
+        assert response2.status_code == 200
+
+        self.non_player_team_contributor.refresh_from_db()
+
+        assert self.non_player_team_contributor.is_primary is False
+        assert self.non_player_team_contributor.end_date == datetime.today().date()
 
 
 class TestSetMainProfileAPI(APITestCase):
