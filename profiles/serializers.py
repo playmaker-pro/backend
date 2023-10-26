@@ -420,57 +420,59 @@ class BaseTeamContributorInputSerializer(serializers.Serializer):
         Check specific validation requirements for the provided data.
         """
         validation_errors = {}
+        if not self.partial:
+            if data.get("team_history"):
+                if "team_parameter" in data:
+                    del data["team_parameter"]
+                if "league_identifier" in data:
+                    del data["league_identifier"]
+                return data
 
-        if data.get("team_history"):
-            if "team_parameter" in data:
-                del data["team_parameter"]
-            if "league_identifier" in data:
-                del data["league_identifier"]
-            return data
+                # If 'team_history' is not provided, validate other fields
+            if not data.get("team_parameter"):
+                validation_errors["team_parameter"] = [
+                    "This field is required when team_history is not provided."
+                ]
+            if not data.get("league_identifier"):
+                validation_errors["league_identifier"] = [
+                    "This field is required when team_history is not provided."
+                ]
 
-            # If 'team_history' is not provided, validate other fields
-        if not data.get("team_parameter"):
-            validation_errors["team_parameter"] = [
-                "This field is required when team_history is not provided."
-            ]
-        if not data.get("league_identifier"):
-            validation_errors["league_identifier"] = [
-                "This field is required when team_history is not provided."
-            ]
+            # If there's no 'team_history'
+            if not data.get("team_history"):
+                # Check if the league_identifier is an ID or name
+                league_identifier = data.get("league_identifier")
 
-        # If there's no 'team_history'
-        if not data.get("team_history"):
-            # Check if the league_identifier is an ID or name
-            league_identifier = data.get("league_identifier")
+                # If it's a foreign team (determined by league_identifier being a name)
+                if not isinstance(league_identifier, int):
+                    # Check if country is provided
+                    if not data.get("country"):
+                        validation_errors[
+                            "country"
+                        ] = "This field is required for foreign teams."
 
-            # If it's a foreign team (determined by league_identifier being a name)
-            if not isinstance(league_identifier, int):
-                # Check if country is provided
-                if not data.get("country"):
-                    validation_errors[
-                        "country"
-                    ] = "This field is required for foreign teams."
+                    # Check if gender is provided for the foreign team
+                    if not data.get("gender"):
+                        if "gender" not in validation_errors:
+                            validation_errors["gender"] = []
+                        validation_errors["gender"].append(
+                            "Gender is required for foreign teams."
+                        )
 
-                # Check if gender is provided for the foreign team
-                if not data.get("gender"):
-                    if "gender" not in validation_errors:
-                        validation_errors["gender"] = []
-                    validation_errors["gender"].append(
-                        "Gender is required for foreign teams."
-                    )
+                        # Check if team_identifier is an ID (which shouldn't be the case for foreign teams)
+                    if isinstance(data.get("team_parameter"), int):
+                        validation_errors["team_identifier"] = [
+                            "Foreign teams require a team name, not an ID."
+                        ]
 
-                    # Check if team_identifier is an ID (which shouldn't be the case for foreign teams)
-                if isinstance(data.get("team_parameter"), int):
-                    validation_errors["team_identifier"] = [
-                        "Foreign teams require a team name, not an ID."
-                    ]
-
-            else:
-                # For non-foreign teams where league_identifier is an ID
-                if data.get("country") and data.get("country") != "PL":
-                    validation_errors["league_identifier"] = [
-                        "Foreign teams require a league name, not an ID.",
-                    ]
+                else:
+                    # For non-foreign teams where league_identifier is an ID
+                    if data.get("country") and data.get("country") != "PL":
+                        validation_errors["league_identifier"] = [
+                            "Foreign teams require a league name, not an ID.",
+                        ]
+        else:
+            pass
 
         if validation_errors:
             raise serializers.ValidationError(validation_errors)
@@ -501,16 +503,18 @@ class PlayerProfileTeamContributorInputSerializer(BaseTeamContributorInputSerial
         validation_errors = {}
 
         # If 'team_history' is provided, 'season' becomes optional
-        if data.get("team_history", []):
-            if "season" in data:
-                del data["season"]
-            print(f"your data {data}")
+        if not self.partial:
+            if data.get("team_history", []):
+                if "season" in data:
+                    del data["season"]
+            else:
+                # If 'team_history' is not provided, validate 'season'
+                if not data.get("season"):
+                    validation_errors["season"] = [
+                        "This field is required when team_history is not provided."
+                    ]
         else:
-            # If 'team_history' is not provided, validate 'season'
-            if not data.get("season"):
-                validation_errors["season"] = [
-                    "This field is required when team_history is not provided."
-                ]
+            pass
 
         # Raise all accumulated errors
 
@@ -531,6 +535,17 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
         choices=models.CoachProfile.COACH_ROLE_CHOICES, required=True
     )
 
+    def __init__(self, *args, **kwargs) -> None:
+        """
+        Initialize the serializer.
+
+        If the profile is Scout, it marks the role field as a not required.
+        """
+        super().__init__(*args, **kwargs)
+        profile_short_type: typing.Optional[str] = self.context.get("profile_short_type")
+        if profile_short_type == "S" and self.initial_data:
+            self.fields["role"].required = False
+
     def validate(
         self, data: typing.Dict[str, typing.Any]
     ) -> typing.Dict[str, typing.Any]:
@@ -550,9 +565,7 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
                 "end_date"
             ] = "End date should not be provided if is_primary is True."
         elif data.get("is_primary") is False and not end_date:
-            validation_errors[
-                "end_date"
-            ] = "End date is required when is_primary is not set."
+            data["end_date"] = datetime.now().date()
 
         # If any errors found, raise them all at once
 
@@ -566,6 +579,7 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
     team_name = serializers.SerializerMethodField()
     picture_url = serializers.SerializerMethodField()
     league_name = serializers.SerializerMethodField()
+    league_id = serializers.SerializerMethodField()
     season_name = serializers.SerializerMethodField()
 
     class Meta:
@@ -575,6 +589,7 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
             "picture_url",
             "team_name",
             "league_name",
+            "league_id",
             "season_name",
             "round",
             "is_primary",
@@ -608,6 +623,15 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
             return team_history.league_history.league.display_league_top_parent
         return None
 
+    def get_league_id(self, obj):
+        """
+        Retrieves the id of the league associated with the first team_history instance.
+        """
+        team_history = obj.team_history.first()
+        if team_history and team_history.league_history:
+            return team_history.league_history.league.id
+        return None
+
     def get_season_name(self, obj):
         """
         Retrieves the name of the season associated with the first team_history instance.
@@ -626,7 +650,7 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
     team_name = serializers.SerializerMethodField()
     picture_url = serializers.SerializerMethodField()
     league_name = serializers.SerializerMethodField()
-    end_date_display = serializers.SerializerMethodField()
+    league_id = serializers.SerializerMethodField()
 
     class Meta:
         model = models.TeamContributor
@@ -635,17 +659,18 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
             "team_name",
             "picture_url",
             "league_name",
+            "league_id",
             "is_primary",
             "role",
             "start_date",
-            "end_date_display",
+            "end_date",
         ]
 
-    def get_team_name(self, obj):
+    def get_team_name(self, obj: models.TeamContributor) -> str:
         team_histories = obj.team_history.all()
         return ", ".join(set(th.team.name for th in team_histories))
 
-    def get_picture_url(self, obj):
+    def get_picture_url(self, obj: models.TeamContributor) -> typing.Optional[str]:
         """
         Retrieve the absolute url of the club logo.
         """
@@ -657,12 +682,18 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
             return None
         return url
 
-    def get_league_name(self, obj):
+    def get_league_name(self, obj: models.TeamContributor) -> str:
         if obj.team_history.all().exists():
             return (
                 obj.team_history.last().league_history.league.display_league_top_parent
             )
         return ""
 
-    def get_end_date_display(self, obj):
-        return "aktualnie" if obj.is_primary else obj.end_date
+    def get_league_id(self, obj: models.TeamContributor) -> typing.Optional[int]:
+        """
+        Retrieves the name of the league associated with the first team_history instance.
+        """
+        team_history = obj.team_history.first()
+        if team_history and team_history.league_history:
+            return team_history.league_history.league.id
+        return None

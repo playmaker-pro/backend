@@ -1,5 +1,6 @@
 import uuid
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist, QuerySet
@@ -34,6 +35,7 @@ from users.serializers import UserMainRoleSerializer
 profile_service = ProfileService()
 team_contributor_service = TeamContributorService()
 external_links_services = ExternalLinksService()
+User = get_user_model()
 
 
 class ProfileAPI(ProfileListAPIFilter, EndpointView):
@@ -458,7 +460,7 @@ class ProfileTeamsApi(EndpointView):
         try:
             profile = profile_service.get_profile_by_uuid(profile_uuid)
         except ObjectDoesNotExist:
-            raise errors.ProfileDoesNotExist()
+            raise api_errors.ProfileDoesNotExist()
         qs: QuerySet = team_contributor_service.get_teams_for_profile(
             profile_uuid
         ).prefetch_related("team_history", "team_history__league_history__league")
@@ -469,17 +471,33 @@ class ProfileTeamsApi(EndpointView):
         serializer = serializer_class(qs, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def add_team_contributor_to_profile(self, request: Request) -> Response:
+    def add_team_contributor_to_profile(
+        self, request: Request, profile_uuid: uuid.UUID
+    ) -> Response:
         """
         Assigns a team with a team history to the user's profile.
         """
-        profile_uuid = request.user.profile.uuid
-        profile = ProfileService.get_profile_by_uuid(profile_uuid)
+        user: User = profile_service.get_user_by_uuid(profile_uuid)
+        if user != request.user:
+            raise PermissionDenied
+        profile: models.PROFILE_MODELS = profile_service.get_profile_by_uuid(
+            profile_uuid
+        )
+        profile_short_type = next(
+            (
+                key
+                for key, value in models.PROFILE_MODEL_MAP.items()
+                if isinstance(profile, value)
+            ),
+            None,
+        )
         # Using the manager to get the input serializer
         input_serializer_class = self.serializer_manager.get_serializer_class(
             profile, "input"
         )
-        serializer_data = input_serializer_class(data=request.data)
+        serializer_data = input_serializer_class(
+            data=request.data, context={"profile_short_type": profile_short_type}
+        )
         serializer_data.is_valid(raise_exception=True)
         validated_data = serializer_data.validated_data
         try:
@@ -499,22 +517,28 @@ class ProfileTeamsApi(EndpointView):
         output_serializer_class = self.serializer_manager.get_serializer_class(
             profile, "output"
         )
-        serializer = output_serializer_class(team_contributor)
+        serializer = output_serializer_class(
+            team_contributor, context={"request": request}
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update_profile_team_contributor(
-        self, request: Request, team_contributor_id: int
+        self, request: Request, team_contributor_id: int, profile_uuid: uuid.UUID
     ) -> Response:
         """
         Update a team with a team history in the user's profile.
         """
-        profile_uuid = request.user.profile.uuid
-        profile = ProfileService.get_profile_by_uuid(profile_uuid)
+        user: User = profile_service.get_user_by_uuid(profile_uuid)
+        if user != request.user:
+            raise PermissionDenied
+        profile: models.PROFILE_MODELS = profile_service.get_profile_by_uuid(
+            profile_uuid
+        )
         # Using the manager to get the input serializer
         input_serializer_class = self.serializer_manager.get_serializer_class(
             profile, "input"
         )
-        serializer_data = input_serializer_class(data=request.data)
+        serializer_data = input_serializer_class(data=request.data, partial=True)
         serializer_data.is_valid(raise_exception=True)
         validated_data = serializer_data.validated_data
 
@@ -530,7 +554,6 @@ class ProfileTeamsApi(EndpointView):
             profile_uuid, team_contributor
         ):
             raise PermissionDenied()
-
         try:
             if profile_service.is_player_profile(profile):
                 updated_team_contributor = (
@@ -554,17 +577,20 @@ class ProfileTeamsApi(EndpointView):
         output_serializer_class = self.serializer_manager.get_serializer_class(
             profile, "output"
         )
-        serializer = output_serializer_class(updated_team_contributor)
-
+        serializer = output_serializer_class(
+            updated_team_contributor, context={"request": request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def delete_profile_team_contributor(
-        self, request: Request, team_contributor_id: int
+        self, request: Request, team_contributor_id: int, profile_uuid: uuid.UUID
     ) -> Response:
         """
         Delete a team with a team history from the user's profile.
         """
-        profile_uuid = request.user.profile.uuid
+        user: User = profile_service.get_user_by_uuid(profile_uuid)
+        if user != request.user:
+            raise PermissionDenied
         try:
             team_contributor = team_contributor_service.get_team_contributor_or_404(
                 team_contributor_id

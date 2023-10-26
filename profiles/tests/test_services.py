@@ -190,24 +190,26 @@ class TeamContributorServiceTests(TestCase):
             team_contributor,
             was_created,
         ) = team_contributor_service.create_or_get_team_contributor(
-            self.user.profile.uuid, team_history
+            self.user.profile.uuid, team_history, role="IIC"
         )
 
         assert team_contributor.pk is not None
         assert was_created
         assert team_contributor.profile_uuid == self.user.profile.uuid
+        assert team_contributor.role == "IIC"
+        assert team_contributor.team_history.filter(id=team_history.id).exists()
 
     def test_create_or_get_team_contributor_get(self):
         """Test fetching an existing team contributor instead of creating a new one."""
         team_history = TeamHistoryFactory.create()
         existing_team_contributor = TeamContributorFactory.create(
-            profile_uuid=self.user.profile.uuid, team_history=[team_history]
+            profile_uuid=self.user.profile.uuid, team_history=[team_history], role="IC"
         )
         (
             team_contributor,
             was_created,
         ) = team_contributor_service.create_or_get_team_contributor(
-            self.user.profile.uuid, team_history
+            self.user.profile.uuid, team_history, role="IC"
         )
         assert existing_team_contributor == team_contributor
 
@@ -219,6 +221,7 @@ class TeamContributorServiceTests(TestCase):
             "season": self.season.pk,
             "team_parameter": "Test Team",
             "round": "wiosenna",
+            "is_primary": True,
         }
 
         team_contributor = team_contributor_service.create_contributor(
@@ -240,6 +243,7 @@ class TeamContributorServiceTests(TestCase):
             "season": self.season.pk,
             "team_history": [team_history],
             "round": "wiosenna",
+            "is_primary": False,
         }
 
         team_contributor = team_contributor_service.create_contributor(

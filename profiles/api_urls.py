@@ -131,24 +131,24 @@ urlpatterns = [
         name="modify_course",
     ),
     path(
-        r"teams/<uuid:profile_uuid>/",
+        r"<uuid:profile_uuid>/teams/",
         views.ProfileTeamsApi.as_view({"get": "get_profile_team_contributor"}),
         name="profiles_teams",
     ),
     path(
-        r"teams/add/",
+        r"<uuid:profile_uuid>/teams/add/",
         views.ProfileTeamsApi.as_view({"post": "add_team_contributor_to_profile"}),
         name="add_team_to_profile",
     ),
     path(
-        "teams/<int:team_contributor_id>/",
+        r"<uuid:profile_uuid>/teams/<int:team_contributor_id>/",
         views.ProfileTeamsApi.as_view(
             {
                 "patch": "update_profile_team_contributor",
                 "delete": "delete_profile_team_contributor",
             }
         ),
-        name="update_team_history",
+        name="update_or_delete_team_contributor",
     ),
     path(
         "set-main/",
@@ -165,25 +165,5 @@ urlpatterns = [
             }
         ),
         name="profile_external_links",
-    ),
-    path(
-        r"<uuid:profile_uuid>/teams/",
-        views.ProfileTeamsApi.as_view({"get": "get_profile_team_contributor"}),
-        name="profiles_teams",
-    ),
-    path(
-        r"teams/add/",
-        views.ProfileTeamsApi.as_view({"post": "add_team_contributor_to_profile"}),
-        name="add_team_to_profile",
-    ),
-    path(
-        "teams/<int:team_contributor_id>/",
-        views.ProfileTeamsApi.as_view(
-            {
-                "patch": "update_profile_team_contributor",
-                "delete": "delete_profile_team_contributor",
-            }
-        ),
-        name="update_or_delete_team_contributor",
     ),
 ]
