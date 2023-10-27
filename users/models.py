@@ -13,6 +13,7 @@ from django_countries import countries
 from django_fsm import FSMField, transition
 from pydantic import typing
 
+from inquiries.models import InquiryRequest
 from notifications.mail import (
     mail_user_waiting_for_verification,
     verification_notification,
@@ -346,6 +347,11 @@ class User(AbstractUser, UserRoleMixin):
         """Generate club picture url"""
         if self.picture:
             return urljoin(settings.BASE_URL, self.picture.url)
+
+    @property
+    def inquiries_contacts(self) -> models.QuerySet:
+        """Get user contacts - accepted InquiryRequests"""
+        return InquiryRequest.objects.contacts(self)
 
     class Meta:
         verbose_name = "User"

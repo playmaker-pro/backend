@@ -5,7 +5,6 @@ from django.db.models import signals
 from factory import fuzzy
 
 from users.models import UserPreferences
-
 from .base import CustomObjectFactory
 
 User = get_user_model()
@@ -38,11 +37,19 @@ class UserFactory(CustomObjectFactory):
 
     @classmethod
     @factory.django.mute_signals(signals.post_save)
-    def create(cls, *args, **kwargs) -> User:
+    def _silent_create(cls, **kwargs) -> User:
+        """Create user with disabled post_save signals"""
+        return super().create(**kwargs)
+
+    @classmethod
+    def create(cls, mute_signals: bool = False, **kwargs) -> User:
         """Override create() method to hash user password"""
         kwargs["password"] = make_password(kwargs.get("password", "test"))
-        instance: User = super().create(*args, **kwargs)
-        return instance
+
+        if mute_signals:
+            return cls._silent_create(**kwargs)
+
+        return super().create(**kwargs)
 
     @classmethod
     def create_batch_force_order(cls, _count: int):
