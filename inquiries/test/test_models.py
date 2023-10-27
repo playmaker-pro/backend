@@ -1,11 +1,7 @@
-import logging
-from unittest.mock import patch
-
-import pytest
-from django.conf import settings
 from django.test import TestCase
 
-from inquiries.models import InquiryPlan, InquiryRequest, UserInquiry
+from inquiries.models import InquiryPlan, InquiryRequest
+from inquiries.plans import basic_plan, premium_plan
 from roles import definitions
 from users.models import User
 from utils import testutils as utils
@@ -22,8 +18,6 @@ class InitialClassCreationTest(TestCase):
     """
 
     def setUp(self):
-        with pytest.raises(InquiryPlan.DoesNotExist):
-            InquiryPlan.objects.get(default=True)
         utils.create_system_user()
         self.player = User.objects.create(
             email="username-player", declared_role=definitions.PLAYER_SHORT
@@ -33,8 +27,8 @@ class InitialClassCreationTest(TestCase):
         )
 
     def test_basic_plans_from_settings_shoudl_exists(self):
-        for args in settings.INQUIRIES_INITAL_PLANS:
-            InquiryPlan.objects.get(name=args["name"], default=args["default"])
+        for plan in [basic_plan, premium_plan]:
+            InquiryPlan.objects.get(**plan.dict())
 
     def test_player_user_should_have_basic_plan(self):
         assert self.player.userinquiry.plan.default is True
@@ -42,8 +36,6 @@ class InitialClassCreationTest(TestCase):
 
 class ModelMethodsRequest(TestCase):
     def setUp(self):
-        with pytest.raises(InquiryPlan.DoesNotExist):
-            InquiryPlan.objects.get(default=True)
         utils.create_system_user()
         self.player = User.objects.create(
             email="username-player", declared_role=definitions.PLAYER_SHORT

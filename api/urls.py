@@ -1,9 +1,10 @@
 from django.conf.urls import include, url
 
 from api import views
-from events.urls import urlpatterns as events_urls
 from clubs.api.api_urls import urlpatterns as clubs_urls
+from events.urls import urlpatterns as events_urls
 from features.api_urls import urlpatterns as features_urls
+from inquiries.api.urls import urlpatterns as inquiries_urls
 from profiles.api_urls import urlpatterns as profiles_urls
 from roles.api_urls import urlpatterns as roles_urls
 from users.api_urls import urlpatterns as users_urls
@@ -17,6 +18,7 @@ urlpatterns = [
     url(r"^roles/", include((roles_urls, "roles"))),
     url(r"^features/", include((features_urls, "features"))),
     url(r"^events/", include((events_urls, "events"))),
+    url(r"^inquiries/", include((inquiries_urls, "inquiries"))),
     url(
         r"^countries/",
         views.LocaleDataView.as_view({"get": "list_countries"}),

@@ -6,8 +6,6 @@ from django.dispatch import receiver
 
 from inquiries.services import InquireService
 from notifications.mail import mail_admins_about_new_user, mail_role_change_request
-from roles import definitions
-
 from . import models
 from .services import ProfileService
 
@@ -33,8 +31,11 @@ def create_profile_handler(sender, instance, created, **kwargs):
         logger.debug(f"Sending email to admins about new user {instance.username}")
         mail_admins_about_new_user(instance)
         msgprefix = "New"
+
+    # FIXME: here's created GuestProfile for each new user, will be deprecated soon
     profile_service.set_and_create_user_profile(instance)
-    inquire_service.set_user_inquiry_plan(instance)
+
+    inquire_service.create_basic_inquiry_plan(instance)
     logger.info(
         f"{msgprefix} user profile for {instance} created with declared role {instance.declared_role}"
     )

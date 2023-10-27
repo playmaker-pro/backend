@@ -68,10 +68,7 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
         return value
 
 
-class UserDataSerializer(serializers.ModelSerializer):
-    """User serializer with basic user information"""
-
-    userpreferences = UserPreferencesSerializer(required=False, partial=True)
+class BaseUserDataSerializer(serializers.ModelSerializer):
     picture = serializers.CharField(source="picture_url", read_only=True)
 
     class Meta:
@@ -82,15 +79,24 @@ class UserDataSerializer(serializers.ModelSerializer):
             "last_name",
             "last_login",
             "last_activity",
-            "userpreferences",
             "picture",
+            "declared_role",
         )
-        depth = 1
         extra_kwargs = {
             "last_activity": {"read_only": True},
             "last_login": {"read_only": True},
             "id": {"read_only": True},
         }
+
+
+class UserDataSerializer(BaseUserDataSerializer):
+    """User serializer with basic user information"""
+
+    userpreferences = UserPreferencesSerializer(required=False, partial=True)
+
+    class Meta(BaseUserDataSerializer.Meta):
+        fields = BaseUserDataSerializer.Meta.fields + ("userpreferences",)
+        depth = 1
 
     def update(self, instance, validated_data) -> User:
         """Override method to achieve nested update"""

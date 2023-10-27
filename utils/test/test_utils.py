@@ -71,10 +71,16 @@ class UserManager:
 
         self.login_url = reverse("api:users:api-login")
 
-    @mute_post_save_signal()
-    def create_superuser(self) -> User:
+    def create_superuser(self, mute_signals: bool = True, **kwargs) -> User:
         """Create a superuser in the test database."""
-        user = UserFactory.create(email=self.email, password=self.password)
+        if email := kwargs.pop("email", None):
+            self.email = email
+        user = UserFactory.create(
+            mute_signals=mute_signals,
+            email=self.email,
+            password=self.password,
+            **kwargs,
+        )
         user.is_activated = True
         user.save()
 

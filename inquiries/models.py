@@ -5,6 +5,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django_fsm import FSMField, transition
 
+from inquiries.plans import basic_plan, premium_plan
 from notifications.mail import request_accepted, request_declined, request_new
 
 logger = logging.getLogger(__name__)
@@ -50,6 +51,16 @@ class InquiryPlan(models.Model):
     def __str__(self):
         return f"{self.name}({self.limit})"
 
+    @classmethod
+    def basic(cls) -> "InquiryPlan":
+        """Get basic plan"""
+        return cls.objects.get_or_create(**basic_plan.dict())[0]
+
+    @classmethod
+    def premium(cls) -> "InquiryPlan":
+        """Get premium plan"""
+        return cls.objects.get_or_create(**premium_plan.dict())[0]
+
 
 class UserInquiry(models.Model):
     user = models.OneToOneField(
@@ -66,7 +77,7 @@ class UserInquiry(models.Model):
 
     @property
     def can_make_request(self):
-        return self.limit >= self.counter
+        return self.counter < self.limit
 
     @property
     def left(self):
@@ -90,30 +101,18 @@ class UserInquiry(models.Model):
         return f"{self.user}: {self.counter}/{self.plan.limit}"
 
 
-class RequestType(models.Model):
-    name = models.CharField(max_length=240)
-
-
-class InquiryRequestQuerySet(models.QuerySet):
-    def resolved(self):
-        return self.filter(status=self.model.RESOLVED_STATES)
-
-    def active(self):
-        return self.filter(status=self.model.ACTIVE_STATES)
-
-
 class InquiryRequestManager(models.Manager):
-    def get_queryset(self):
-        return InquiryRequestQuerySet(self.model, using=self._db)
-
-    def resolved(self):
-        return self.get_queryset().resolved()
-
-    def active(self):
-        return self.get_queryset().active()
+    def contacts(self, user_instance: settings.AUTH_USER_MODEL) -> models.QuerySet:
+        """Query user contacts (accepted requests)"""
+        return self.filter(
+            models.Q(status=InquiryRequest.STATUS_ACCEPTED)
+            & (models.Q(sender=user_instance) | models.Q(recipient=user_instance))
+        )
 
 
 class InquiryRequest(models.Model):
+    objects = InquiryRequestManager()
+
     STATUS_NEW = "NOWE"
     STATUS_SENT = "WYSŁANO"
     STATUS_RECEIVED = "PRZECZYTANE"
@@ -122,16 +121,6 @@ class InquiryRequest(models.Model):
     UNSEEN_STATES = [STATUS_SENT]
     ACTIVE_STATES = [STATUS_NEW, STATUS_SENT, STATUS_RECEIVED]
     RESOLVED_STATES = [STATUS_ACCEPTED, STATUS_REJECTED]
-
-    CATEGORY_CLUB = "club"
-    CATEGORY_TEAM = "team"
-    CATEGORY_USER = "user"
-
-    CATEGORY_CHOICES = (
-        (CATEGORY_USER, CATEGORY_USER),
-        (CATEGORY_TEAM, CATEGORY_TEAM),
-        (CATEGORY_CLUB, CATEGORY_CLUB),
-    )
 
     STATUS_CHOICES = (
         (STATUS_NEW, STATUS_NEW),
@@ -165,22 +154,6 @@ class InquiryRequest(models.Model):
         on_delete=models.CASCADE,
     )
 
-    category = models.CharField(
-        default=CATEGORY_USER, choices=CATEGORY_CHOICES, max_length=255
-    )
-
-    @property
-    def is_user_type(self):
-        return self.category == self.CATEGORY_USER
-
-    @property
-    def is_club_type(self):
-        return self.category == self.CATEGORY_CLUB
-
-    @property
-    def is_team_type(self):
-        return self.category == self.CATEGORY_TEAM
-
     def is_active(self):
         return self.status in self.ACTIVE_STATES
 
@@ -207,13 +180,12 @@ class InquiryRequest(models.Model):
         source=[STATUS_NEW, STATUS_SENT, STATUS_RECEIVED],
         target=STATUS_ACCEPTED,
     )
-    def accept(self):
+    def accept(self) -> None:
         """Should be appeared when message was accepted by recipient"""
         logger.debug(
             f"#{self.pk} reuqest accepted creating sender and recipient contanct body"
         )
-        self.body = ContactBodySnippet.generate(self.sender)
-        self.body_recipient = ContactBodySnippet.generate(self.recipient)
+        self.set_bodies()
         request_accepted(self)
 
     @transition(
@@ -221,27 +193,65 @@ class InquiryRequest(models.Model):
         source=[STATUS_NEW, STATUS_SENT, STATUS_RECEIVED],
         target=STATUS_REJECTED,
     )
-    def reject(self):
+    def reject(self) -> None:
         """Should be appeared when message was rejected by recipient"""
         request_declined(self)
 
     def save(self, *args, **kwargs):
         if self.status == self.STATUS_NEW:
             self.send()  # @todo due to problem with detecting changes of paramters here is hax to alter status to send, durgin which message is sedn via mail
+        if self._state.adding:
+            self.sender.userinquiry.increment()  # type: ignore
         super().save(*args, **kwargs)
+
+    def set_bodies(self) -> None:
+        """Set contact bodies for inquire request"""
+        self.body = self.sender.inquiry_contact.contact_body  # type: ignore
+        self.body_recipient = self.recipient.inquiry_contact.contact_body  # type: ignore
+        super().save(update_fields=["body", "body_recipient"])
 
     def __str__(self):
         return f"{self.sender} --({self.status})-> {self.recipient}"
 
 
-class ContactBodySnippet:
-    @classmethod
-    def generate(cls, user):
-        body = ""
-        if user.profile.phone:
-            body += f"{user.profile.phone} / \n"
+class InquiryContact(models.Model):
+    phone = models.CharField(_("Numer telefonu"), max_length=15, blank=True, null=True)
+    email = models.EmailField(_("Email"), max_length=100, blank=True, null=True)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name="inquiry_contact",
+    )
 
-        body += f"{user.email}\n"
-        # if user.profile.facebook_url:
-        #     body += f'FB: {user.profile.facebook_url}\n'
-        return body
+    @property
+    def _phone(self) -> str:
+        """Get phone number"""
+        return self.phone  # type: ignore
+
+    @property
+    def _email(self) -> str:
+        """Get email"""
+        return self.email or self.user.email  # type: ignore
+
+    @_email.setter
+    def _email(self, value: str) -> None:
+        """Set email"""
+        self.email = value
+
+    @property
+    def contact_body(self) -> str:
+        """Get text-based contact body"""
+        return (
+            f"{_('Numer telefonu')}: {self._phone or '-'} / "
+            f"{_('Email')}: {self._email}"
+        )
+
+    @classmethod
+    def parse_custom_body(cls, phone: str, email: str) -> str:
+        """Parse custom body"""
+        dummy_contact = cls(phone=phone, email=email)
+        return dummy_contact.contact_body
+
+    def __str__(self) -> str:
+        return f"{self.user} -- {self.contact_body}"

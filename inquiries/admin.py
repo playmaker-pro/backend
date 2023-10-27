@@ -40,7 +40,6 @@ class InquiryRequestAdmin(admin.ModelAdmin):
         "status",
         "recipient",
         "created_at",
-        "category",
         "body",
         "body_recipient",
     )

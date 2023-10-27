@@ -1,0 +1,90 @@
+from django.contrib.auth import get_user_model
+from rest_framework import serializers
+
+from inquiries.models import InquiryContact, InquiryPlan, InquiryRequest, UserInquiry
+from users.serializers import BaseUserDataSerializer
+
+User = get_user_model()
+
+
+class InquiryRequestSerializer(serializers.ModelSerializer):
+    sender_object = BaseUserDataSerializer(read_only=True, source="sender")
+    recipient_object = BaseUserDataSerializer(read_only=True, source="recipient")
+
+    class Meta:
+        model = InquiryRequest
+        fields = "__all__"
+
+    def validate(self, attrs: dict) -> dict:
+        """Validate if user can make request"""
+        if not self.instance:
+            sender: User = attrs.get("sender")
+            recipient: User = attrs.get("recipient")
+            userinquiry: UserInquiry = sender.userinquiry
+
+            if not userinquiry.can_make_request:
+                raise serializers.ValidationError(
+                    f"You have reached your limit of inquiries ({userinquiry.counter}/{userinquiry.limit})."
+                )
+
+            if InquiryRequest.objects.filter(
+                sender=sender, recipient=recipient
+            ).exists():
+                raise serializers.ValidationError(
+                    f"You have already sent inquiry to {recipient}."
+                )
+
+            if cross_request := InquiryRequest.objects.filter(
+                sender=recipient, recipient=sender
+            ).first():
+                self._accept_cross_request(cross_request)
+
+        return attrs
+
+    def _accept_cross_request(
+        self, cross_request: InquiryRequest
+    ) -> "InquiryRequestSerializer":
+        """
+        Cross request is case when user A send request to user B
+        when user B already sent request to user A.
+        We want to auto-accept this kind of request and avoid creating new one.
+        """
+        return InquiryRequestSerializer(cross_request).accept()
+
+    def accept(self) -> "InquiryRequestSerializer":
+        """Accept inquiry request"""
+        self.instance.accept()
+        self.instance.save()
+        return self
+
+    def reject(self) -> "InquiryRequestSerializer":
+        """Reject inquiry request"""
+        self.instance.reject()
+        self.instance.save()
+        return self
+
+
+class InquiryPlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InquiryPlan
+        exclude = ("sort",)
+
+
+class InquiryContactSerializer(serializers.ModelSerializer):
+    email = serializers.CharField(source="_email", allow_null=True)
+
+    class Meta:
+        model = InquiryContact
+        fields = (
+            "phone",
+            "email",
+        )
+
+
+class UserInquirySerializer(serializers.ModelSerializer):
+    plan = InquiryPlanSerializer(read_only=True)
+    contact = InquiryContactSerializer(source="user.inquiry_contact", read_only=True)
+
+    class Meta:
+        model = UserInquiry
+        fields = "__all__"

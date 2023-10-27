@@ -1,6 +1,10 @@
 import logging
-from .models import InquiryRequest, InquiryPlan, UserInquiry
+
 from django.conf import settings
+from django.db.models import QuerySet
+
+from inquiries.plans import basic_plan
+from .models import InquiryContact, InquiryPlan, InquiryRequest, UserInquiry
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -18,16 +22,16 @@ class InquireService:
             plan = InquiryPlan.objects.create(**args)
         return plan
 
-    def set_user_inquiry_plan(self, user):
-        try:
-            UserInquiry.objects.get(user=user)
-        except UserInquiry.DoesNotExist:
-            if user.is_coach or user.is_club:
-                default = self.create_default_basic_plan_for_coach_if_not_present()
-            else:
-                default = self.create_default_basic_plan_if_not_present()
-            UserInquiry.objects.create(plan=default, user=user)
-            logger.info(f"User {user.id} plan created.")
+    def create_inquiry_contact_for_user(self, user) -> None:
+        """Create InquiryContact object for each new user"""
+        InquiryContact.objects.get_or_create(user=user)
+
+    def create_basic_inquiry_plan(self, user) -> None:
+        """Create basic inquiry plan and contact instance for user"""
+        plan = InquiryPlan.basic()
+        UserInquiry.objects.get_or_create(user=user, plan=plan)
+        self.create_inquiry_contact_for_user(user)
+        logger.info(f"Created {basic_plan.description} plan for {user}")
 
     def create_default_basic_plan_if_not_present(self):
         """In case when there is no Default plan we would like to create it at first time"""
@@ -55,3 +59,23 @@ class InquireService:
             if request.recipient == user:
                 request.read()
                 request.save()
+
+    @staticmethod
+    def get_user_sent_inquiries(user) -> QuerySet:
+        """Get all sent inquiries by user"""
+        return user.sender_request_recipient.all().order_by("-created_at")
+
+    @staticmethod
+    def get_user_contacts(user) -> QuerySet:
+        """Get all inquiries contacts by user"""
+        return user.inquiries_contacts.order_by("-updated_at")
+
+    @staticmethod
+    def get_user_received_inquiries(user) -> QuerySet:
+        """Get all received inquiries by user"""
+        return user.inquiry_request_recipient.all().order_by("-created_at")
+
+    @staticmethod
+    def get_user_inquiry_metadata(user) -> UserInquiry:
+        """Get all received inquiries by user"""
+        return user.userinquiry

@@ -1,21 +1,17 @@
 import datetime
 import logging
 import typing
-import uuid
 from decimal import Decimal
 
+import uuid
 from django.contrib.auth import get_user_model
-from django.db import IntegrityError
-from django.db import models as django_base_models
-from django.db.models import ObjectDoesNotExist
-from django.db.models import functions as django_base_functions
+from django.db import IntegrityError, models as django_base_models
+from django.db.models import ObjectDoesNotExist, functions as django_base_functions
 from pydantic import BaseModel
 
 from api.services import LocaleDataService
-from clubs import models as clubs_models
-from clubs import services as club_services
-from clubs.models import Club as CClub
-from clubs.models import Team as CTeam
+from clubs import models as clubs_models, services as club_services
+from clubs.models import Club as CClub, Team as CTeam
 from profiles import api_errors, errors, models, utils
 from profiles.models import REVERSED_MODEL_MAP
 from roles.definitions import CLUB_ROLES, PROFILE_TYPE_MAP
@@ -370,18 +366,10 @@ class ProfileService:
                 profiles.append(profile)
         return profiles
 
-    @staticmethod
-    def get_user_by_uuid(profile_uuid: uuid.UUID) -> User:
+    @classmethod
+    def get_user_by_uuid(cls, profile_uuid: uuid.UUID) -> User:
         """Fetches a profile by its UUID."""
-
-        for model in models.PROFILE_MODELS:
-            try:
-                profile = model.objects.get(uuid=profile_uuid)
-                return profile.user
-            except model.DoesNotExist:
-                continue
-        else:
-            raise ObjectDoesNotExist
+        return cls.get_profile_by_uuid(profile_uuid).user
 
     @staticmethod
     def search_profiles_by_name(search_term: str) -> django_base_models.QuerySet:
