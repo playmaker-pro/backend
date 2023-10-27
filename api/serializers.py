@@ -2,10 +2,12 @@ import typing
 from functools import cached_property
 
 from cities_light.models import City
+from django.db.models import Model
 from django.utils import translation
 from django_countries import CountryTuple
-from rest_framework import serializers
+from rest_framework import serializers as _serializers
 
+from api.consts import ChoicesTuple
 from api.services import LocaleDataService
 from app.utils import cities
 from users.errors import CityDoesNotExistException, CityDoesNotExistHTTPException
@@ -15,11 +17,11 @@ from users.services import UserPreferencesService
 locale_service = LocaleDataService()
 
 
-class CountrySerializer(serializers.Serializer):
-    country = serializers.SerializerMethodField(read_only=True)
-    code = serializers.CharField()
-    priority = serializers.SerializerMethodField(read_only=True)
-    dial_code = serializers.SerializerMethodField(read_only=True)
+class CountrySerializer(_serializers.Serializer):
+    country = _serializers.SerializerMethodField(read_only=True)
+    code = _serializers.CharField()
+    priority = _serializers.SerializerMethodField(read_only=True)
+    dial_code = _serializers.SerializerMethodField(read_only=True)
 
     _CHOICES = UserPreferences.COUNTRIES
 
@@ -29,7 +31,7 @@ class CountrySerializer(serializers.Serializer):
         try:
             locale_service.validate_language_code(language)
         except ValueError as e:
-            raise serializers.ValidationError(e)
+            raise _serializers.ValidationError(e)
         translation.activate(language)
 
     def run_validation(self, *args) -> str:
@@ -60,10 +62,10 @@ class CountrySerializer(serializers.Serializer):
         return locale_service.get_dial_code(obj.code)
 
 
-class CitySerializer(serializers.ModelSerializer):
-    voivodeship = serializers.SerializerMethodField()
-    priority = serializers.SerializerMethodField()
-    name = serializers.SerializerMethodField()
+class CitySerializer(_serializers.ModelSerializer):
+    voivodeship = _serializers.SerializerMethodField()
+    priority = _serializers.SerializerMethodField()
+    name = _serializers.SerializerMethodField()
 
     class Meta:
         model = City
@@ -100,3 +102,41 @@ class CitySerializer(serializers.ModelSerializer):
             except CityDoesNotExistException:
                 raise CityDoesNotExistHTTPException
         return data
+
+
+class ProfileEnumChoicesSerializer(_serializers.CharField, _serializers.Serializer):
+    """Serializer for Profile Enums"""
+
+    def __init__(self, model: typing.Type[Model] = None, *args, **kwargs):
+        self.model: typing.Type[Model] = model
+        super().__init__(*args, **kwargs)
+
+    def parse_dict(
+        self, data: (typing.Union[int, str], typing.Union[int, str])
+    ) -> dict:
+        """Create dictionary from tuple choices"""
+        return {str(val[0]): val[1] for val in data}
+
+    def to_representation(self, obj: typing.Union[ChoicesTuple, str]) -> dict:
+        """Parse output"""
+        parsed_obj = obj
+        if not obj:
+            return {}
+        if not isinstance(obj, ChoicesTuple):
+            parsed_obj = self.parse(obj)
+        return {"id": parsed_obj.id, "name": parsed_obj.name}
+
+    def parse(self, _id) -> ChoicesTuple:
+        """Get choices by model field and parse output"""
+        _id = str(_id)
+        choices = self.parse_dict(
+            getattr(self.model, self.source).__dict__["field"].choices
+        )
+
+        if _id not in choices.keys():
+            raise _serializers.ValidationError(
+                f"Invalid value: {_id}. Expected: {choices.keys()}"
+            )
+
+        value = choices[_id]
+        return ChoicesTuple(_id, value)

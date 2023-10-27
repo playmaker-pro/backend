@@ -1,8 +1,8 @@
 from rest_framework import status
 from rest_framework.response import Response
 
+from api.base_view import EndpointView
 from api.custom_throttling import LimitFeatureNotificationEndpoint
-from api.views import EndpointView
 from features.serializers import FutureFeatureSerializer
 
 

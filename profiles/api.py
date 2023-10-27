@@ -1,19 +1,18 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect
-from django.utils.translation import gettext_lazy as _
-
-from clubs.models import Team
+from django.shortcuts import get_object_or_404
 
 # Deprecation(rkesik): since we are working on a new FE
 # from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 
-from .model_utils import (
-    get_profile_form_model,
-    get_profile_model,
-    get_profile_model_from_slug,
-)
+from .model_utils import get_profile_model_from_slug
+
+#
+#
+#   DEPRECATED since we are working on a new FE
+#
+#
 
 
 def get_modal_action(user):

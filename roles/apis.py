@@ -1,11 +1,11 @@
 from drf_spectacular.utils import extend_schema
-from rest_framework.response import Response
-from rest_framework.request import Request
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from api.views import EndpointView
-from api.swagger_schemas import ROLES_API_SWAGGER_SCHEMA
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from api.base_view import EndpointView
+from api.swagger_schemas import ROLES_API_SWAGGER_SCHEMA
 from . import definitions
 
 

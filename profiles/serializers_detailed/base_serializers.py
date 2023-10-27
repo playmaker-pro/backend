@@ -13,8 +13,16 @@ from clubs.errors import ClubDoesNotExist, InvalidGender, TeamDoesNotExist
 from clubs.models import Club, League, Team
 from clubs.services import ClubService
 from external_links.serializers import ExternalLinksSerializer
-from profiles.api_errors import InvalidProfileRole
-from profiles.api_serializers import ProfileLabelsSerializer
+from profiles.api.errors import InvalidProfileRole
+from profiles.api.serializers import (
+    CoachLicenceSerializer,
+    CourseSerializer,
+    LanguageSerializer,
+    ProfileEnumChoicesSerializer,
+    ProfileLabelsSerializer,
+    ProfileVideoSerializer,
+    VerificationStageSerializer,
+)
 from profiles.errors import (
     ExpectedIntException,
     InvalidCitizenshipListException,
@@ -22,14 +30,6 @@ from profiles.errors import (
     LanguageDoesNotExistException,
 )
 from profiles.models import PROFILE_TYPE, Language
-from profiles.serializers import (
-    CoachLicenceSerializer,
-    CourseSerializer,
-    LanguageSerializer,
-    ProfileEnumChoicesSerializer,
-    ProfileVideoSerializer,
-    VerificationStageSerializer,
-)
 from profiles.services import (
     LanguageService,
     PlayerProfilePositionService,
@@ -73,7 +73,7 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
     def validate_citizenship(self, citizenship: List[str]) -> List[str]:
         """Validate citizenship field"""
         if not isinstance(citizenship, list) or not all(
-                [isinstance(el, str) for el in citizenship]
+            [isinstance(el, str) for el in citizenship]
         ):
             raise InvalidCitizenshipListException(
                 details="Citizenship must be a list of countries codes"
@@ -87,7 +87,9 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
             raise InvalidGender
         return value
 
-    def validate_spoken_languages(self, spoken_languages: List[Union[Language, str]]) -> List[str]:
+    def validate_spoken_languages(
+        self, spoken_languages: List[Union[Language, str]]
+    ) -> List[str]:
         """Validate spoken languages field"""
         is_list = isinstance(spoken_languages, list)
 
@@ -118,7 +120,9 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
         if spoken_languages := validated_data.pop(  # noqa: 5999
             "spoken_languages", None
         ):
-            instance.spoken_languages.set([language.pk for language in spoken_languages])
+            instance.spoken_languages.set(
+                [language.pk for language in spoken_languages]
+            )
 
         return super().update(instance, validated_data)
 

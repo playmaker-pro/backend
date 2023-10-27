@@ -2,9 +2,9 @@ from typing import List, Optional
 
 from rest_framework import serializers
 
-from profiles.api_errors import InvalidCoachRoleException, InvalidFormationException
+from profiles.api.errors import InvalidCoachRoleException, InvalidFormationException
+from profiles.api.serializers import ProfileEnumChoicesSerializer
 from profiles.models import FORMATION_CHOICES, CoachProfile, ProfileVideo
-from profiles.serializers import ProfileEnumChoicesSerializer
 from profiles.serializers_detailed.base_serializers import BaseProfileSerializer
 
 
@@ -28,6 +28,7 @@ class ProfileVideoSerializer(serializers.ModelSerializer):
 
 class CoachProfileViewSerializer(BaseProfileSerializer):
     """Serializer for retrieving coach profile data."""
+
     formation = serializers.CharField(required=False, allow_null=True)
 
     class Meta:

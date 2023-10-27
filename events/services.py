@@ -5,7 +5,6 @@ from django.utils import timezone
 
 from events import errors, models
 
-
 logger = logging.getLogger(__name__)
 
 

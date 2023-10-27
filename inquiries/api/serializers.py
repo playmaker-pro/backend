@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from inquiries.models import InquiryContact, InquiryPlan, InquiryRequest, UserInquiry
-from users.serializers import BaseUserDataSerializer
+from users.api.serializers import BaseUserDataSerializer
 
 User = get_user_model()
 

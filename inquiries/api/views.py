@@ -1,4 +1,5 @@
 import uuid
+
 from django.db.models import ObjectDoesNotExist, QuerySet
 from django_fsm import TransitionNotAllowed
 from rest_framework import status
@@ -7,8 +8,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from api.base_view import EndpointView
 from api.errors import NotOwnerOfAnObject
-from api.views import EndpointView
 from inquiries.api.serializers import (
     InquiryContactSerializer,
     InquiryRequestSerializer,

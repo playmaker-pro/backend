@@ -1,13 +1,12 @@
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
+from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework import status
+
 from api import errors as base_errors
-from api.views import EndpointView
-
-from events import services, serializers, errors
-
+from api.base_view import EndpointView
+from events import errors, serializers, services
 
 User = get_user_model()
 

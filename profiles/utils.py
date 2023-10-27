@@ -503,8 +503,8 @@ def map_service_exception(exception) -> typing.Optional[typing.Type[Exception]]:
     """
     # avoid recursive import
     from clubs import errors as club_errors
-    from profiles import api_errors as profile_api_errors
     from profiles import errors as profile_errors
+    from profiles.api import errors as profile_api_errors
 
     exception_mapping: typing.Dict[typing.Type[Exception], typing.Type[Exception]] = {
         club_errors.LeagueNotFoundServiceException: club_errors.LeagueDoesNotExist,

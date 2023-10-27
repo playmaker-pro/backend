@@ -2,37 +2,23 @@ from cities_light.models import City
 from django.db.models import QuerySet
 from django_countries import countries
 from drf_spectacular.utils import extend_schema
-from rest_framework import serializers, status, viewsets, exceptions
+from rest_framework import exceptions, serializers, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from unidecode import unidecode
 
-from api.swagger_schemas import PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA
+from api.base_view import EndpointView
 from app.utils import cities
+from profiles.api.serializers import LanguageSerializer
 from profiles.models import Language, PlayerProfile
-from profiles.serializers import LanguageSerializer
 from users.models import UserPreferences
-
 from . import errors
 from . import serializers as api_serializers
-from .pagination import PagePagination
 from .services import LocaleDataService
 
 locale_service: LocaleDataService = LocaleDataService()
 
 
-class EndpointView(viewsets.GenericViewSet):
-    """Base class for building views"""
-
-    pagination_class = PagePagination
-
-    def get_queryset(self) -> QuerySet:
-        ...
-
-    def get_paginated_queryset(self, qs: QuerySet = None) -> QuerySet:
-        """Paginate queryset to optimize serialization"""
-        qs: QuerySet = qs if qs is not None else self.get_queryset()
-        return self.paginate_queryset(qs)
 
 
 class LocaleDataView(EndpointView):
@@ -134,6 +120,7 @@ class LocaleDataView(EndpointView):
 
 class PreferenceChoicesView(EndpointView):
     """View for listing gender and preferred leg choices"""
+    from api.swagger_schemas import PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA
 
     authentication_classes = []
     permission_classes = []

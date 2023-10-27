@@ -1,8 +1,15 @@
+#
+#
+#  DEPRECATED since we're creating swagger by hand
+#
+#
+
+
 from django.contrib.auth import get_user_model
 from drf_spectacular.utils import OpenApiExample, OpenApiParameter, OpenApiResponse
 from rest_framework import serializers, status
 
-from users.serializers import FeatureElementSerializer, FeaturesSerializer
+from users.api.serializers import FeatureElementSerializer, FeaturesSerializer
 
 User = get_user_model()
 

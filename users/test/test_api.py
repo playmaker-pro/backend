@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
 from features.models import Feature
-from users.apis import UsersAPI
+from users.api.views import UsersAPI
 from users.errors import (
     ApplicationError,
     SocialAccountInstanceNotCreatedException,
@@ -792,7 +792,7 @@ class TestFacebookAuthEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         }
 
         patch(
-            "users.apis.UsersAPI._social_media_auth", return_value=response_dict
+            "users.api.views.UsersAPI._social_media_auth", return_value=response_dict
         ).start()
         response: Response = self.client.post(self.url, data={"token_id": "test"})
 

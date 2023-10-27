@@ -1,5 +1,4 @@
 import uuid
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
@@ -11,7 +10,9 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import PermissionDenied
 
+from api.consts import ChoicesTuple
 from api.errors import NotOwnerOfAnObject
+from api.serializers import ProfileEnumChoicesSerializer
 from api.swagger_schemas import (
     COACH_ROLES_API_SWAGGER_SCHEMA,
     FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA,
@@ -20,7 +21,9 @@ from api.views import EndpointView
 from external_links import serializers as external_links_serializers
 from external_links.errors import LinkSourceNotFound, LinkSourceNotFoundServiceException
 from external_links.services import ExternalLinksService
-from profiles import api_errors, api_serializers, errors, models, serializers
+from profiles import errors, models
+from profiles.api import errors as api_errors
+from profiles.api import serializers
 from profiles.filters import ProfileListAPIFilter
 from profiles.managers import SerializersManager
 from profiles.services import (
@@ -30,7 +33,7 @@ from profiles.services import (
     TeamContributorService,
 )
 from profiles.utils import map_service_exception
-from users.serializers import UserMainRoleSerializer
+from users.api.serializers import UserMainRoleSerializer
 
 profile_service = ProfileService()
 team_contributor_service = TeamContributorService()
@@ -44,7 +47,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
 
     def create_profile(self, request: Request) -> Response:
         """Create initial profile for user"""
-        serializer = api_serializers.CreateProfileSerializer(
+        serializer = serializers.CreateProfileSerializer(
             data=request.data, context={"requestor": request.user}
         )
         if serializer.is_valid(raise_exception=True):
@@ -92,7 +95,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
             model_name=f"{profile.__class__.__name__}_update"
         )
         if not serializer_class:
-            serializer_class = api_serializers.UpdateProfileSerializer
+            serializer_class = serializers.UpdateProfileSerializer
         serializer = serializer_class(
             instance=profile, data=request.data, context={"requestor": request.user}
         )
@@ -107,7 +110,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         (?role={P, C, S, G, ...})
         """
         qs: QuerySet = self.get_paginated_queryset()
-        serializer = api_serializers.ProfileSerializer(qs, many=True)
+        serializer = serializers.ProfileSerializer(qs, many=True)
         # serializer = PlayerProfileViewSerializer(qs, many=True)
         return self.get_paginated_response(serializer.data)
 
@@ -121,7 +124,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         query = {"visible": True}
         if season_name:
             query["season_name"] = season_name
-        serializer = api_serializers.ProfileLabelsSerializer(
+        serializer = serializers.ProfileLabelsSerializer(
             profile_object.labels.filter(**query), many=True
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -135,7 +138,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
             raise exceptions.NotAuthenticated
 
         profiles = profile_service.get_user_profiles(request.user)
-        serializer = api_serializers.BaseProfileDataSerializer(profiles, many=True)
+        serializer = serializers.BaseProfileDataSerializer(profiles, many=True)
         return Response(serializer.data)
 
     def set_main_profile(self, request: Request) -> Response:
@@ -176,7 +179,7 @@ class ProfileSearchView(EndpointView):
             raise api_errors.InvalidSearchTerm()
 
         paginated_profiles = self.get_paginated_queryset(matching_users_queryset)
-        serializer = api_serializers.ProfileSearchSerializer(
+        serializer = serializers.ProfileSearchSerializer(
             paginated_profiles, many=True
         )
 
@@ -220,7 +223,7 @@ class ProfileEnumsAPI(EndpointView):
         [{id: id_name, name: role_name}, ...]
         """
         roles = (
-            serializers.ChoicesTuple(*obj)
+            ChoicesTuple(*obj)
             for obj in profile_service.get_referee_roles()
         )
         return Response(dict(roles), status=status.HTTP_200_OK)
@@ -353,8 +356,8 @@ class ProfileVideoAPI(EndpointView):
             labels = ProfileVideoService.get_labels(role)
         except ValueError:
             raise api_errors.IncorrectProfileRole
-        labels_choices = (serializers.ChoicesTuple(*label) for label in labels)
-        serializer = serializers.ProfileEnumChoicesSerializer(labels_choices, many=True)  # type: ignore
+        labels_choices = (ChoicesTuple(*label) for label in labels)
+        serializer = ProfileEnumChoicesSerializer(labels_choices, many=True)  # type: ignore
         return Response(serializer.data)
 
     def create_profile_video(self, request: Request) -> Response:

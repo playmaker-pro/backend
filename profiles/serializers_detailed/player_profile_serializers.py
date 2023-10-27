@@ -2,14 +2,14 @@ import typing
 
 from rest_framework import serializers
 
-from profiles.models import PlayerPosition, PlayerProfile
-from profiles.serializers import (
-    ChoicesTuple,
+from api.consts import ChoicesTuple
+from profiles.api.serializers import (
     CoachLicenceSerializer,
     PlayerMetricsSerializer,
     PlayerProfilePositionSerializer,
     ProfileEnumChoicesSerializer,
 )
+from profiles.models import PlayerPosition, PlayerProfile
 from profiles.serializers_detailed.base_serializers import (
     BaseProfileSerializer,
     TeamSerializer,

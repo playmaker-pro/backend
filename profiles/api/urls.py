@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework import routers
 
-from . import apis as views
+from profiles.api import views
 
 # from resources.views import WebhookPlayer
 

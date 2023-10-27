@@ -3,7 +3,7 @@ import datetime
 from django.test import TestCase
 
 from profiles import models
-from profiles.api_errors import (
+from profiles.api.errors import (
     MultipleMainPositionError,
     TooManyAlternatePositionsError,
 )

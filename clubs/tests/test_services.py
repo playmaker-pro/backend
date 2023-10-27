@@ -7,7 +7,7 @@ from rest_framework.test import APITestCase
 from clubs import errors
 from clubs.models import Gender, League, Team, TeamHistory
 from clubs.services import ClubTeamService, SeasonService, TeamHistoryCreationService
-from profiles.serializers import PlayerProfileTeamContributorInputSerializer
+from profiles.api.serializers import PlayerProfileTeamContributorInputSerializer
 from roles import definitions
 from utils import testutils as utils
 from utils.factories import (

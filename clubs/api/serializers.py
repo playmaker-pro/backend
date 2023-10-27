@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from clubs import models
 from external_links.serializers import ExternalLinksSerializer
-from users.serializers import UserDataSerializer
+from users.api.serializers import UserDataSerializer
 from voivodeships.serializers import VoivodeshipSerializer
 
 

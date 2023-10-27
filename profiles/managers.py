@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
-from profiles import serializers
+from profiles.api import serializers
 from profiles.serializers_detailed.club_profile_serializers import (
     ClubProfileUpdateSerializer,
     ClubProfileViewSerializer,
@@ -10,6 +10,10 @@ from profiles.serializers_detailed.coach_profile_serializers import (
     CoachProfileUpdateSerializer,
     CoachProfileViewSerializer,
 )
+from profiles.serializers_detailed.manager_profile_serializers import (
+    ManagerProfileUpdateSerializer,
+    ManagerProfileViewSerializer,
+)
 from profiles.serializers_detailed.player_profile_serializers import (
     PlayerProfileUpdateSerializer,
     PlayerProfileViewSerializer,
@@ -17,10 +21,6 @@ from profiles.serializers_detailed.player_profile_serializers import (
 from profiles.serializers_detailed.scout_profile_serializers import (
     ScoutProfileUpdateSerializer,
     ScoutProfileViewSerializer,
-)
-from profiles.serializers_detailed.manager_profile_serializers import (
-    ManagerProfileUpdateSerializer,
-    ManagerProfileViewSerializer,
 )
 
 User = get_user_model()

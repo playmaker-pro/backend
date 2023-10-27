@@ -7,7 +7,7 @@ from api import utils as api_utils
 from api.errors import InvalidAPIRequestParam
 from api.filters import APIFilter
 from profiles import models, services
-from profiles.api_errors import IncorrectProfileRole
+from profiles.api.errors import IncorrectProfileRole
 
 
 class ProfileListAPIFilter(APIFilter):

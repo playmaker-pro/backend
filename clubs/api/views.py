@@ -9,9 +9,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api import errors as base_errors
-from api.views import EndpointView
+from api.base_view import EndpointView
 from clubs import errors, models, services
-from clubs.api import api_filters, serializers
+from clubs.api import serializers
 from clubs.services import SeasonService
 
 User = get_user_model()

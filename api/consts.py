@@ -1,3 +1,5 @@
+import typing
+
 COUNTRY_CODE_WITH_DIAL_CODE = {
     "AD": "+376",
     "AE": "+971",
@@ -249,3 +251,8 @@ COUNTRY_CODE_WITH_DIAL_CODE = {
     "ZM": "+260",
     "ZW": "+263",
 }
+
+
+class ChoicesTuple(typing.NamedTuple):
+    id: typing.Union[str, int]
+    name: str

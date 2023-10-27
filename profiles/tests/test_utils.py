@@ -2,8 +2,8 @@ from django.test import TestCase
 from parameterized import parameterized
 
 from clubs import errors as club_errors
-from profiles import api_errors as profile_api_errors
-from profiles import errors as profile_errors
+from profiles import errors as errors
+from profiles.api import errors as api_errors
 from profiles.utils import map_service_exception
 
 
@@ -20,12 +20,12 @@ class MapServiceExceptionTest(TestCase):
             ),
             (club_errors.TeamNotFoundServiceException(), club_errors.TeamDoesNotExist),
             (
-                profile_errors.TeamContributorAlreadyExistServiceException(),
-                profile_api_errors.TeamContributorExist,
+                errors.TeamContributorAlreadyExistServiceException(),
+                api_errors.TeamContributorExist,
             ),
             (
-                profile_errors.TeamContributorNotFoundServiceException(),
-                profile_api_errors.TeamContributorDoesNotExist,
+                errors.TeamContributorNotFoundServiceException(),
+                api_errors.TeamContributorDoesNotExist,
             ),
             (
                 club_errors.SeasonDoesNotExistServiceException(),

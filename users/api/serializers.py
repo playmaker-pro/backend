@@ -6,10 +6,17 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from api.serializers import CitySerializer, CountrySerializer
+from api.serializers import (
+    CitySerializer,
+    CountrySerializer,
+    ProfileEnumChoicesSerializer,
+)
 from features.models import AccessPermission, Feature, FeatureElement
-from profiles import serializers as profile_serializers
-from profiles.serializers import ProfileEnumChoicesSerializer
+from profiles.api.serializers import (
+    CoachLicenceSerializer,
+    CourseSerializer,
+    LanguageSerializer,
+)
 from profiles.services import ProfileService
 from roles.definitions import PROFILE_TYPE_SHORT_MAP
 from users.errors import UserRegisterException
@@ -26,22 +33,27 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id", "username"]
 
 
+class MainProfileDataSerializer(serializers.Serializer):
+    role = serializers.CharField(read_only=True, source="declared_role")
+    uuid = serializers.SerializerMethodField(read_only=True, source="my_profile_uuid")
+
+    def my_profile_uuid(self, instance: User) -> Optional[str]:
+        """Return uuid of user's profile if user has declared role, otherwise None"""
+        if not instance.declared_role:
+            return None
+        return instance.profile.uuid
+
+
 class UserPreferencesSerializer(serializers.ModelSerializer):
     age = serializers.IntegerField(read_only=True)
     localization = CitySerializer(required=False, allow_null=True)
-    spoken_languages = profile_serializers.LanguageSerializer(
-        many=True, required=False, allow_null=True
-    )
+    spoken_languages = LanguageSerializer(many=True, required=False, allow_null=True)
     citizenship = CountrySerializer(many=True, required=False, allow_null=True)
     gender = ProfileEnumChoicesSerializer(
         model=UserPreferences, required=False, allow_null=True
     )
-    licences = profile_serializers.CoachLicenceSerializer(
-        many=True, read_only=True, source="user.licences"
-    )
-    courses = profile_serializers.CourseSerializer(
-        many=True, read_only=True, source="user.courses"
-    )
+    licences = CoachLicenceSerializer(many=True, read_only=True, source="user.licences")
+    courses = CourseSerializer(many=True, read_only=True, source="user.courses")
 
     class Meta:
         model = UserPreferences

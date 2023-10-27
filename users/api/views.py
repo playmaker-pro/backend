@@ -20,7 +20,17 @@ from api.swagger_schemas import (
 )
 from api.views import EndpointView
 from features.models import Feature, FeatureElement
-from users import serializers
+from users.api.serializers import (
+    CreateNewPasswordSerializer,
+    CustomTokenObtainSerializer,
+    FeatureElementSerializer,
+    FeaturesSerializer,
+    MainProfileDataSerializer,
+    ResetPasswordSerializer,
+    UserProfilePictureSerializer,
+    UserRegisterSerializer,
+    UserSerializer,
+)
 from users.errors import (
     ApplicationError,
     EmailNotAvailable,
@@ -38,12 +48,6 @@ from users.schemas import (
     RedirectAfterGoogleLogin,
     UserFacebookDetailPydantic,
     UserGoogleDetailPydantic,
-)
-from users.serializers import (
-    CustomTokenObtainSerializer,
-    FeatureElementSerializer,
-    FeaturesSerializer,
-    UserRegisterSerializer,
 )
 from users.services import PasswordResetService, UserService
 
@@ -74,7 +78,7 @@ class UserRegisterEndpointView(EndpointView):
 
 class UsersAPI(EndpointView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = serializers.UserSerializer
+    serializer_class = UserSerializer
     allowed_methods = ("list", "post", "put", "update")
 
     def get_permissions(self) -> typing.Sequence:
@@ -300,14 +304,14 @@ class EmailAvailability(EndpointView):
 
 
 class PasswordManagementAPIView(EndpointView):
-    serializer_class = serializers.CreateNewPasswordSerializer
+    serializer_class = CreateNewPasswordSerializer
     permission_classes = (AllowAny,)
 
     def reset_password(self, request: Request) -> Response:
         """
         Handle the POST request to initiate the password reset process.
         """
-        serializer = serializers.ResetPasswordSerializer(data=request.data)
+        serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(
             raise_exception=True
         )  # This will now handle email validation and raise custom exceptions
@@ -335,7 +339,7 @@ class PasswordManagementAPIView(EndpointView):
         Process the request to reset a user's password using a token.
         """
         # Use the serializer for validation.
-        serializer = serializers.CreateNewPasswordSerializer(data=request.data)
+        serializer = CreateNewPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         try:

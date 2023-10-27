@@ -5,9 +5,9 @@ from clubs.api.api_urls import urlpatterns as clubs_urls
 from events.urls import urlpatterns as events_urls
 from features.api_urls import urlpatterns as features_urls
 from inquiries.api.urls import urlpatterns as inquiries_urls
-from profiles.api_urls import urlpatterns as profiles_urls
+from profiles.api.urls import urlpatterns as profiles_urls
 from roles.api_urls import urlpatterns as roles_urls
-from users.api_urls import urlpatterns as users_urls
+from users.api.urls import urlpatterns as users_urls
 
 app_name = "api"
 
