@@ -1870,7 +1870,8 @@ class CoachLicence(models.Model):
         return f"{self.licence.name}"
 
 
-class GuestProfile(BaseProfile):  # @todo to be removed
+class GuestProfile(BaseProfile):
+    """In this model we store data about "fan" (kibic) users."""
     PROFILE_TYPE = definitions.PROFILE_TYPE_GUEST
     AUTO_VERIFY = True
     facebook_url = models.URLField(_("Facebook"), max_length=500, blank=True, null=True)

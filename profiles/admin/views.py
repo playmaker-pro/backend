@@ -99,7 +99,7 @@ class ScoutProfileAdmin(ProfileAdminBase):
 
 @admin.register(models.GuestProfile)
 class GuestProfileAdmin(ProfileAdminBase):
-    pass
+    list_display = DEFAULT_PROFILE_DISPLAY_FIELDS
 
 
 @admin.register(models.OtherProfile)

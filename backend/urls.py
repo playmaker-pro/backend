@@ -16,7 +16,8 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 # Deprecation(rkesik): since we are working on new FE
 # import followers.urls  # @to be removed
 # import fqa.urls
-# import landingpage.urls
+import landingpage.urls
+
 # import marketplace.urls
 # import plays.urls
 # import premium.urls
@@ -71,7 +72,7 @@ urlpatterns = [
     #  path("api/v2/", api_router.urls),  #wag
     path("api/v3/", include(api_urls, namespace="api")),
     path("select2/", include("django_select2.urls")),
-    # path("transfer/", include(landingpage.urls, namespace="landingpage")),
+    path("transfer/", include(landingpage.urls, namespace="landingpage")),
     # path("premium/", include(premium.urls, namespace="premium")),
     # path("", include("allauth.urls")),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),

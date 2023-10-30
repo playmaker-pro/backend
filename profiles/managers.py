@@ -10,6 +10,10 @@ from profiles.serializers_detailed.coach_profile_serializers import (
     CoachProfileUpdateSerializer,
     CoachProfileViewSerializer,
 )
+from profiles.serializers_detailed.guest_profile_serializer import (
+    GuestProfileUpdateSerializer,
+    GuestProfileViewSerializer,
+)
 from profiles.serializers_detailed.manager_profile_serializers import (
     ManagerProfileUpdateSerializer,
     ManagerProfileViewSerializer,
@@ -46,6 +50,8 @@ class SerializersManager:
         "ScoutProfile_update": ScoutProfileUpdateSerializer,
         "ClubProfile": ClubProfileViewSerializer,
         "ClubProfile_update": ClubProfileUpdateSerializer,
+        "GuestProfile": GuestProfileViewSerializer,  # "Fan" profile (kibic)
+        "GuestProfile_update": GuestProfileUpdateSerializer,
         "ManagerProfile": ManagerProfileViewSerializer,
         "ManagerProfile_update": ManagerProfileUpdateSerializer,
     }

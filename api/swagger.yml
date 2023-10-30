@@ -1149,7 +1149,7 @@ paths:
                   - $ref: '#/components/schemas/ScoutProfile'
                   - $ref: '#/components/schemas/ClubProfileView'
                   - $ref: '#/components/schemas/ManagerProfile'
-#                  - $ref: '#/components/schemas/GuestProfile'
+                  - $ref: '#/components/schemas/GuestProfile'
     patch:
       operationId: profiles_partial_update
       description: Update profile with given uuid
@@ -1185,7 +1185,7 @@ paths:
                   - $ref: '#/components/schemas/ClubProfileView'
                   - $ref: '#/components/schemas/ScoutProfile'
                   - $ref: '#/components/schemas/ManagerProfile'
-                  # - $ref: '#/components/schemas/GuestProfile'
+                  - $ref: '#/components/schemas/GuestProfile'
         '400':
           description: 'Invalid uuid'
         '404':
@@ -4091,7 +4091,7 @@ components:
         - type: object
           properties:
             user:
-              $ref: '#/components/schemas/BaseUserProfilePreferencesUpdate'
+              $ref: '#/components/schemas/BaseUserProfileUpdate'
             player_positions:
               $ref: '#/components/schemas/PlayerPositionsUpdate'
             transfer_status:
@@ -4761,6 +4761,12 @@ components:
         birth_date:
           type: string
           description: "Format: YYYY-MM-DD"
+
+    BaseUserProfileUpdate:
+      type: object
+      properties:
+        userpreferences:
+          $ref: '#/components/schemas/BaseUserProfilePreferencesUpdate'
 
     ScoutProfileUserPreferences:
       type: object
