@@ -9,11 +9,13 @@ from pm_core.services.models import (
 
 from adapters.player_adapter import PlayerGamesAdapter
 from adapters.tests.utils import get_adapter
+from utils.testutils import create_system_user
 
 
 @pytest.mark.django_db
 class PlayerGamesAdapterUnitTest(TestCase):
     def setUp(self) -> None:
+        create_system_user()
         self.adapter = get_adapter(PlayerGamesAdapter)
         self.adapter.get_player_games()
         self.games = self.adapter.games

@@ -464,6 +464,12 @@ class BaseProfile(models.Model, EventLogMixin):
         # if self.event_log is None:
         #     self.make_default_event_log()
 
+        if self._state.adding:
+            self.user.declared_role = definitions.PROFILE_TYPE_SHORT_MAP[
+                self.PROFILE_TYPE
+            ]
+            self.user.save(update_fields=["declared_role"])
+
         self.ensure_verification_stage_exist(commit=False)
         self._save_make_profile_history()
         try:
@@ -1964,16 +1970,6 @@ class ManagerProfile(BaseProfile):
         verbose_name_plural = "Managers Profiles"
 
 
-class ParentProfile(BaseProfile):
-    PROFILE_TYPE = definitions.PROFILE_TYPE_PARENT
-    AUTO_VERIFY = True
-    facebook_url = models.URLField(_("Facebook"), max_length=500, blank=True, null=True)
-
-    class Meta:
-        verbose_name = "Parent Profile"
-        verbose_name_plural = "Parents Profiles"
-
-
 class ScoutProfile(BaseProfile):
     _video_labels = ProfileVideo.ScoutLabels
     PROFILE_TYPE = definitions.PROFILE_TYPE_SCOUT
@@ -2389,7 +2385,6 @@ PROFILE_MODELS = (
     ClubProfile,
     GuestProfile,
     ManagerProfile,
-    ParentProfile,
     ScoutProfile,
     RefereeProfile,
 )
@@ -2401,7 +2396,6 @@ PROFILE_MODEL_MAP = {
     definitions.CLUB_SHORT: ClubProfile,
     definitions.SCOUT_SHORT: ScoutProfile,
     definitions.MANAGER_SHORT: ManagerProfile,
-    definitions.PARENT_SHORT: ParentProfile,
     definitions.GUEST_SHORT: GuestProfile,
     definitions.REFEREE_SHORT: RefereeProfile,
 }

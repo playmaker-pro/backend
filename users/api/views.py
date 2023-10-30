@@ -104,6 +104,13 @@ class UsersAPI(EndpointView):
     def get_queryset(self):
         ...
 
+    def my_main_profile(self, request: Request) -> Response:
+        """
+        Returns user's main profile data {role, uuid} based on `declared_role`.
+        """
+        serializer = MainProfileDataSerializer(instance=request.user)
+        return Response(serializer.data)
+
     @staticmethod
     @extend_schema(**USER_FEATURE_SETS_SWAGGER_SCHEMA)
     def feature_sets(request) -> Response:
@@ -245,7 +252,7 @@ class UserManagementAPI(EndpointView):
         """
         Update user profile picture.
         """
-        serializer = serializers.UserProfilePictureSerializer(
+        serializer = UserProfilePictureSerializer(
             instance=request.user, data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)

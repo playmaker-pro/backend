@@ -15,7 +15,6 @@ from profiles.services import (
     TeamContributorService,
 )
 from roles import definitions
-from users.models import User
 from utils import testutils as utils
 from utils.factories import (
     SEASON_NAMES,
@@ -35,9 +34,7 @@ utils.silence_explamation_mark()
 class VerificationServiceTest(TestCase):
     def setUp(self):
         utils.create_system_user()
-        self.user = User.objects.create(
-            email="username", declared_role=definitions.PLAYER_SHORT
-        )
+        self.user = PlayerProfileFactory.create(user__email="username").user
         self.user.profile.VERIFICATION_FIELDS = ["bio"]
         self.user.profile.COMPLETE_FIELDS = ["team"]  # , 'club_raw']
         self.user.profile.bio = "Lubie Herbate"
@@ -69,9 +66,7 @@ class VerificationServiceTest(TestCase):
 class PlayerPositionServiceTest(TestCase):
     def setUp(self):
         utils.create_system_user()
-        self.user = User.objects.create(
-            email="username", declared_role=definitions.PLAYER_SHORT
-        )
+        self.user = PlayerProfileFactory.create(user__email="username").user
         self.profile = self.user.profile
         PositionFactory.create(id=1)
         PositionFactory.create(id=2)

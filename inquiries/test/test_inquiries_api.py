@@ -46,6 +46,7 @@ class TestInquiriesAPI(APITestCase):
         )
         self.sender_headers = self.sender_manager.get_headers()
         self.recipient_headers = self.recipient_manager.get_headers()
+        GuestProfileFactory.create(user=self.recipient_obj)
 
     @property
     def sender_contact_data(self) -> (dict, dict):
@@ -57,7 +58,7 @@ class TestInquiriesAPI(APITestCase):
 
     @property
     def recipient_profile_uuid(self) -> str:
-        return str(self.recipient_obj.guestprofile.uuid)
+        return str(self.recipient_obj.profile.uuid)
 
     def update_contact_data(self, data: dict, headers: dict) -> None:
         response = self.client.post(

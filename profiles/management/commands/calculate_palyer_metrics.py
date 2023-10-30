@@ -2,14 +2,11 @@ import logging
 from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.db import reset_queries
 
 # from data.models import Player    DEPRECATED: PM-1015
 from profiles import models
-from profiles.views import (
-    get_profile_model,
-)  # @todo this shoudl goes to utilities, views and commands are using this utility
 from users.models import definitions
 
 User = get_user_model()
@@ -90,7 +87,7 @@ class Command(BaseCommand):
             reset_queries()
 
     def execute_method(
-        self, profile: models.ParentProfile, method: str, *args, **kwargs
+        self, profile: models.PlayerProfile, method: str, *args, **kwargs
     ):
         start = datetime.now()
         getattr(profile, method)(*args, **kwargs)

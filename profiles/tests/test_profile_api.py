@@ -10,11 +10,12 @@ from rest_framework.test import APIClient, APITestCase
 from profiles.schemas import PlayerProfileGET
 from profiles.services import ProfileService
 from profiles.tests import utils
-from roles.definitions import CLUB_ROLE_TEAM_LEADER, COACH_SHORT, PLAYER_SHORT
+from roles.definitions import CLUB_ROLE_TEAM_LEADER
 from users.models import User
 from utils import factories, testutils
-from utils.factories import SEASON_NAMES, UserPreferencesFactory
+from utils.factories import SEASON_NAMES
 from utils.test.test_utils import UserManager
+from utils.testutils import create_system_user
 
 
 class TestGetProfileAPI(APITestCase):
@@ -198,6 +199,7 @@ class TestCreateProfileAPI(APITestCase):
 
 class TestUpdateProfileAPI(APITestCase):
     def setUp(self) -> None:
+        create_system_user()
         self.client: APIClient = APIClient()
         self.manager = UserManager(self.client)
         self.user_obj = self.manager.create_superuser()
@@ -312,7 +314,7 @@ class TestUpdateProfileAPI(APITestCase):
     ) -> None:
         """Test updating profiles with correctly passed payload"""
         profile = utils.create_empty_profile(**init_profile, user_id=self.user_obj.pk)
-        UserPreferencesFactory.create(user=profile.user)
+        factories.UserPreferencesFactory.create(user=profile.user)
 
         profile_uuid = profile.uuid
         response = self.client.patch(
@@ -453,10 +455,10 @@ class ProfileTeamsApiTest(APITestCase):
     def setUp(self):
         """Set up test environment."""
         testutils.create_system_user()
-        self.user = User.objects.create(email="username", declared_role=PLAYER_SHORT)
-        self.non_player_user = User.objects.create(
-            email="nonplayer@example.com", declared_role=COACH_SHORT
-        )
+        self.user = factories.PlayerProfileFactory.create(user__email="username").user
+        self.non_player_user = factories.CoachProfileFactory.create(
+            user__email="nonplayer@example.com"
+        ).user
 
         self.service = ProfileService()
         self.league = factories.LeagueFactory.create()
@@ -702,6 +704,7 @@ class ProfileTeamsApiTest(APITestCase):
 
 class TestSetMainProfileAPI(APITestCase):
     def setUp(self) -> None:
+        create_system_user()
         self.client: APIClient = APIClient()
         self.manager = UserManager(self.client)
         self.user_obj = self.manager.create_superuser()

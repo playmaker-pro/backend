@@ -24,6 +24,7 @@ from utils import calculate_age
 
 
 class UserRoleMixin:
+
     @property
     def is_player(self):
         return self.role == definitions.PLAYER_SHORT
@@ -45,33 +46,14 @@ class UserRoleMixin:
         return self.role == definitions.SCOUT_SHORT
 
     @property
-    def is_parent(self):
-        return self.role == definitions.PARENT_SHORT
-
-    @property
     def is_guest(self):
         return self.role == definitions.GUEST_SHORT
 
     @property
     def profile(self):
-        if self.is_player:
-            return self.playerprofile
-        elif self.is_coach:  # @todo unified access to this T P... and other types.
-            return self.coachprofile
-        elif self.is_club:
-            return self.clubprofile
-        elif self.is_manager:
-            return self.managerprofile
-        elif self.is_scout:
-            return self.scoutprofile
-        elif self.is_parent:
-            return self.parentprofile
-        elif self.is_guest:
-            return self.guestprofile
-        elif self.role is None:
-            return self.guestprofile
-        else:
-            return None
+        """Get profile based on declared role"""
+        if role_name := definitions.PROFILE_TYPE_MAP.get(self.role, None):
+            return getattr(self, f"{role_name}profile", None)
 
     def get_admin_url(self):
         return reverse(
@@ -319,7 +301,6 @@ class User(AbstractUser, UserRoleMixin):
         if self.role in [
             definitions.GUEST_SHORT,
             definitions.SCOUT_SHORT,
-            definitions.PARENT_SHORT,
             definitions.MANAGER_SHORT,
         ]:
             if self.state != self.STATE_ACCOUNT_VERIFIED:

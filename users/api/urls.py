@@ -64,4 +64,9 @@ urlpatterns = [
         views.UserManagementAPI.as_view({"post": "update_profile_picture"}),
         name="update_profile_picture",
     ),
+    path(
+        "me/",
+        views.UsersAPI.as_view({"get": "my_main_profile"}),
+        name="my_main_profile",
+    ),
 ]

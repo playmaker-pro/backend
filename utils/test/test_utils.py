@@ -15,6 +15,7 @@ from clubs.models import Season
 from users.models import User
 from utils import testutils as utils
 from utils.factories.user_factories import UserFactory
+from utils.testutils import create_system_user
 
 utils.silence_explamation_mark()
 
@@ -63,6 +64,7 @@ class UserManager:
     """
 
     def __init__(self, client: Optional[Client] = None) -> None:
+        create_system_user()
         self.email = "test_email@test.com"
         self.password = "super secret password"
 

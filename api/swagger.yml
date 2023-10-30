@@ -2147,6 +2147,27 @@ paths:
                   $ref: '#/components/schemas/FeatureElement'
           description: Returns user feature elements. Returns empty list if user has
             no feature sets.
+  /users/me/:
+    get:
+      operationId: get_user_main_profile_data
+      description: Get user main profile data
+      summary: Get user main profile data
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  role:
+                    type: object
+                  uuid:
+                    type: string
+          description: Get user main profile uuid with role.
   /users/feature-sets/:
     get:
       operationId: users_feature_sets_retrieve

@@ -1,17 +1,19 @@
+import pytest
 from django.test import TestCase
+
 from adapters.player_adapter import (
     PlayerScoreAdapter,
     PlayerScoreSchema,
     PlayerSeasonScoreListSchema,
 )
-from adapters.tests.utils import get_adapter
-import pytest
-from adapters.tests.utils import create_seasons
+from adapters.tests.utils import create_seasons, get_adapter
+from utils.testutils import create_system_user
 
 
 @pytest.mark.django_db
 class PlayerScoreAdapterUnitTest(TestCase):
     def setUp(self) -> None:
+        create_system_user()
         create_seasons()
         self.adapter = get_adapter(PlayerScoreAdapter)
         self.adapter.get_pm_score()

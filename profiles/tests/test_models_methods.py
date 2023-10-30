@@ -4,6 +4,7 @@ from profiles import models
 from roles import definitions
 from users.models import User
 from utils import testutils as utils
+from utils.factories import CoachProfileFactory, PlayerProfileFactory
 
 utils.silence_explamation_mark()
 
@@ -11,9 +12,7 @@ utils.silence_explamation_mark()
 class ChangeRoleTests(TestCase):
     def setUp(self):
         utils.create_system_user()
-        self.user = User.objects.create(
-            email="username", declared_role=definitions.PLAYER_SHORT
-        )
+        self.user = PlayerProfileFactory.create(user__email="username").user
         self.user.profile.VERIFICATION_FIELDS = ["bio"]
         self.user.profile.COMPLETE_FIELDS = ["team"]  # , 'club_raw']
         self.user.profile.bio = "Lubie Herbate"
@@ -102,7 +101,7 @@ class ChangeRoleTests(TestCase):
 class TestProfilePercentageTests(TestCase):
     def setUp(self):
         utils.create_system_user()
-        user = User.objects.create(email="username", declared_role="P")
+        user = PlayerProfileFactory.create(user__email="username", bio=None).user
         user.profile.VERIFICATION_FIELDS = ["bio"]
         user.profile.COMPLETE_FIELDS = ["team"]  # , 'club_raw']
         self.profile = user.profile
@@ -164,7 +163,7 @@ class InitialBaseProfileCreationTests(TestCase):
 
     def setUp(self):
         utils.create_system_user()
-        user = User.objects.create(email="username", declared_role="T")
+        user = CoachProfileFactory.create(user__email="username").user
         user.profile.VERIFICATION_FIELDS = ["bio"]
         self.profile = user.profile
 
@@ -180,8 +179,7 @@ class InitalPlayerProfileCreationTests(TestCase):
 
     def setUp(self):
         utils.create_system_user()
-        user = User.objects.create(email="username", declared_role="P")
-        self.profile = user.profile
+        self.profile = PlayerProfileFactory.create(user__email="username")
 
     def test_initial_paramters(self):
         assert self.profile.position_fantasy is None
@@ -208,7 +206,7 @@ class ProfileVerificationExistingProfileWithReadyForVerificationTests(TestCase):
 
     def setUp(self):
         utils.create_system_user()
-        self.user = User.objects.create(email="username", declared_role="T")
+        self.user = CoachProfileFactory.create(user__email="username").user
         self.user.profile.VERIFICATION_FIELDS = ["bio"]
         self.user.profile.bio = "bbbb"
         self.user.profile.save()
@@ -249,7 +247,7 @@ class ProfileVerificationExistingProfileWithReadyForVerificationTests(TestCase):
 class ProfileUserIsVerifiedAndModifiesVerificationFields(TestCase):
     def setUp(self):
         utils.create_system_user()
-        self.user = User.objects.create(email="username", declared_role="T")
+        self.user = CoachProfileFactory.create(user__email="username").user
         self.user.profile.VERIFICATION_FIELDS = ["bio"]
         self.user.profile.bio = "bbbb"
         self.user.profile.save()
@@ -274,7 +272,7 @@ class ProfileUserIsVerifiedAndModifiesVerificationFields(TestCase):
 class ProfileCompletnesTests(TestCase):
     def test_profile_is_complete(self):
         utils.create_system_user()
-        user = User.objects.create(email="username", declared_role="T")
+        user = CoachProfileFactory.create(user__email="username", bio=None).user
         user.profile.COMPLETE_FIELDS = ["bio"]
         user.profile.VERIFICATION_FIELDS = []
         assert user.profile.is_complete is False

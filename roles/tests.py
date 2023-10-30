@@ -50,6 +50,5 @@ class RolesAPITest(TestCase):
         expected_roles = {
             role[0]: role[1]
             for role in definitions.ACCOUNT_ROLES
-            if role[0] != definitions.PARENT_SHORT
         }
         assert res.data == expected_roles

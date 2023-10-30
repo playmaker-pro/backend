@@ -13,6 +13,7 @@ from users.models import UserPreferences
 from utils import factories, get_current_season
 from utils.factories import PlayerProfileFactory, UserPreferencesFactory
 from utils.test.test_utils import UserManager
+from utils.testutils import create_system_user
 
 profile_service = ProfileService()
 url: str = "api:profiles:create_or_list_profiles"
@@ -21,6 +22,7 @@ url: str = "api:profiles:create_or_list_profiles"
 class TestProfileListAPI(APITestCase):
     def setUp(self) -> None:
         """set up object factories"""
+        create_system_user()
         self.client: APIClient = APIClient()
         self.user = UserManager(self.client)
         self.user_obj = self.user.create_superuser()
@@ -280,6 +282,7 @@ class TestProfileListAPI(APITestCase):
 
 class TestPlayerProfileListByGenderAPI(APITestCase):
     def setUp(self) -> None:
+        create_system_user()
         self.client: APIClient = APIClient()
         self.url = reverse(url)
 

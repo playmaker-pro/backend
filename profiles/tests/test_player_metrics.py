@@ -4,11 +4,13 @@ import pytest
 from pm_core.services.stubs.player_stub import PlayerApiServiceStub
 
 from utils import factories
+from utils.testutils import create_system_user
 
 
 @pytest.mark.django_db
 class PlayerMetricsTest(TestCase):
     def setUp(self) -> None:
+        create_system_user()
         self.player = factories.PlayerProfileFactory.create_with_empty_metrics()
         factories.SeasonFactory.create_batch(4)
         self.player.refresh_metrics(PlayerApiServiceStub)

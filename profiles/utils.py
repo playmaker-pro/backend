@@ -5,22 +5,15 @@ import re
 import typing
 from urllib.parse import parse_qs, urlparse
 
-# Deprecated @dep-2 - due to pandas
-# import pandas as pd
 from dateutil.relativedelta import relativedelta
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from unidecode import unidecode
 
-# from . import models
-# from profiles import forms  # todo teog importu tu nie moze być bo sie robi rekurencja
-from users.models import User
-
 from . import models
 
 # from stats import adapters DEPRECATED: PM-1015
-
 
 logger = logging.getLogger(__name__)
 
@@ -231,15 +224,15 @@ def item_adapter(item: dict) -> dict:
     return dict((PARAMETERS_MAPPING[key], value) for (key, value) in item.items())
 
 
-def make_jj_manago():
-    from clubs.models import Club
-
-    cs = Club.objects.filter(autocreated=True)
-    sysuser = User.get_system_user()
-    for i in cs:
-        i.manager = sysuser
-        i.save()
-
+# def make_jj_manago():
+#     from clubs.models import Club
+#
+#     cs = Club.objects.filter(autocreated=True)
+#     sysuser = User.get_system_user()
+#     for i in cs:
+#         i.manager = sysuser
+#         i.save()
+#
 
 # DEPRECATED: PM-1015
 # def create_from_data():

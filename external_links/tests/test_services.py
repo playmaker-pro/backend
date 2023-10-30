@@ -1,17 +1,19 @@
 from django.test import TestCase
 
-from external_links.services import ExternalLinksService
 from external_links.errors import LinkSourceNotFoundServiceException
+from external_links.services import ExternalLinksService
 from utils.factories import PlayerProfileFactory, UserFactory
 from utils.factories.external_links_factories import (
     ExternalLinksEntityFactory,
     ExternalLinksFactory,
     LinkSourceFactory,
 )
+from utils.testutils import create_system_user
 
 
 class ExternalLinksServiceTests(TestCase):
     def setUp(self):
+        create_system_user()
         self.user = UserFactory()
         self.profile = PlayerProfileFactory(user=self.user)
         self.link_sources = LinkSourceFactory.create_batch(3)

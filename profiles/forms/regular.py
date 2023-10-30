@@ -1,27 +1,7 @@
 from __future__ import unicode_literals
 
-from curses import wrapper
-
-from crispy_forms.bootstrap import (
-    Alert,
-    AppendedText,
-    FormActions,
-    PrependedText,
-    Tab,
-    TabHolder,
-)
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import (
-    HTML,
-    Button,
-    Div,
-    Field,
-    Fieldset,
-    Layout,
-    MultiField,
-    Row,
-    Submit,
-)
+from crispy_forms.layout import Div, Field, Fieldset, Layout, Submit
 from django import forms
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -486,12 +466,6 @@ class GuestProfileForm(BaseProfileForm):
 
     class Meta:
         model = models.GuestProfile
-        fields = ["facebook_url", "bio"]
-
-
-class ParentProfileForm(GuestProfileForm):
-    class Meta:
-        model = models.ManagerProfile
         fields = ["facebook_url", "bio"]
 
 

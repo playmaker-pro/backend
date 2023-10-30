@@ -6,6 +6,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from api.base_view import EndpointView
 from api.swagger_schemas import ROLES_API_SWAGGER_SCHEMA
+
 from . import definitions
 
 
@@ -22,6 +23,5 @@ class RolesAPI(EndpointView):
         roles = {
             role[0]: role[1]
             for role in definitions.ACCOUNT_ROLES
-            if role[0] != definitions.PARENT_SHORT
         }
         return Response(roles)

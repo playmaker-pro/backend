@@ -6,10 +6,12 @@ from rest_framework.test import APIClient, APITestCase
 
 from utils import factories
 from utils.test.test_utils import UserManager
+from utils.testutils import create_system_user
 
 
 class TestGetProfileLabelsAPI(APITestCase):
     def setUp(self) -> None:
+        create_system_user()
         self.client: APIClient = APIClient()
         self.user = UserManager(self.client)
         self.user_obj = self.user.create_superuser()

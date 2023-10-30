@@ -77,10 +77,6 @@ class ProfileAdminBase(admin.ModelAdmin):
     active.boolean = True
 
 
-@admin.register(models.ParentProfile)
-class ParentProfileAdmin(ProfileAdminBase):
-    pass
-
 
 @admin.register(models.ManagerProfile)
 class ManagerProfileAdmin(ProfileAdminBase):
@@ -100,11 +96,6 @@ class ScoutProfileAdmin(ProfileAdminBase):
 @admin.register(models.GuestProfile)
 class GuestProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS
-
-
-@admin.register(models.OtherProfile)
-class OtherProfileAdmin(ProfileAdminBase):
-    pass
 
 
 @admin.register(models.ClubProfile)
