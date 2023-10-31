@@ -317,22 +317,28 @@ class TeamHistoryCreationService:
         return team_history
 
     def create_or_get_league_history(
-        self, season_id: int, league: models.League, user
+        self, season_id: int, league: models.League, user, year
     ) -> models.LeagueHistory:
         """
         Retrieve or create a league history record for the given season and league.
         """
         try:
-            league_history, created = models.LeagueHistory.objects.get_or_create(
-                season_id=season_id, league=league
+            league_history, created = (
+                models.LeagueHistory.objects.get_or_create(
+                    season_id=season_id, league=league
+                )
+                if season_id
+                else models.LeagueHistory.objects.get_or_create(
+                    league=league, year=year
+                )
             )
         except models.LeagueHistory.MultipleObjectsReturned:
             # Get the first record as a fallback
             league_history = models.LeagueHistory.objects.filter().first()
             created = False
-
         except ObjectDoesNotExist:
             raise errors.SeasonDoesNotExistServiceException()
+
         if created:
             self.initialize_model_instance(league_history, user)
         return league_history
@@ -383,6 +389,7 @@ class TeamHistoryCreationService:
         season: int,
         user,
         data,
+        year: typing.Optional[int] = None,
     ) -> typing.Tuple[models.League, models.LeagueHistory]:
         """
         Retrieve or create a league and its corresponding history record based on provided identifiers.
@@ -407,7 +414,7 @@ class TeamHistoryCreationService:
 
         # Fetch or establish a league history record for the given season and league
         league_history: models.LeagueHistory = self.create_or_get_league_history(
-            season, league, user
+            season, league, user, year
         )
         # Ensure the league history is properly retrieved or created
         if not league_history:
@@ -504,15 +511,16 @@ class TeamHistoryCreationService:
             # Retrieve Season for the cursor_date
             current_season_name = models.Season.define_current_season(cursor_date)
             season_obj = models.Season.objects.filter(name=current_season_name).first()
-            if not season_obj:
-                raise errors.SeasonDateRangeTooWideServiceException()
+
+            year = cursor_date.year if not season_obj else None
 
             league, league_history = self.create_or_get_league_and_history(
                 league_identifier,
                 country_code,
-                season_obj.id,
+                season_obj.id if season_obj else None,
                 user,
                 {"team_parameter": team_parameter},
+                year=year,
             )
 
             # Use existing method to get or create TeamHistory

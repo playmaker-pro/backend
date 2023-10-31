@@ -14,6 +14,7 @@ class ScoutProfileViewSerializer(BaseProfileSerializer):
             "profile_video",
             "verification_stage",
             "role",
+            "team_history_object",
         )
 
 

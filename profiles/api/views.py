@@ -498,6 +498,7 @@ class ProfileTeamsApi(EndpointView):
         input_serializer_class = self.serializer_manager.get_serializer_class(
             profile, "input"
         )
+
         serializer_data = input_serializer_class(
             data=request.data, context={"profile_short_type": profile_short_type}
         )
@@ -505,7 +506,9 @@ class ProfileTeamsApi(EndpointView):
         validated_data = serializer_data.validated_data
         try:
             profile_type = (
-                "player" if profile_service.is_player_profile(profile) else "non-player"
+                "player"
+                if profile_service.is_player_or_guest_profile(profile)
+                else "non-player"
             )
             team_contributor = team_contributor_service.create_contributor(
                 profile_uuid, validated_data, profile_type
@@ -515,7 +518,6 @@ class ProfileTeamsApi(EndpointView):
             if mapped_exception:
                 raise mapped_exception
             raise
-
         # Using the manager to get the output serializer
         output_serializer_class = self.serializer_manager.get_serializer_class(
             profile, "output"
@@ -558,7 +560,7 @@ class ProfileTeamsApi(EndpointView):
         ):
             raise PermissionDenied()
         try:
-            if profile_service.is_player_profile(profile):
+            if profile_service.is_player_or_guest_profile(profile):
                 updated_team_contributor = (
                     team_contributor_service.update_player_contributor(
                         profile_uuid, team_contributor, validated_data

@@ -1805,7 +1805,6 @@ paths:
                 value:
                   team_history: 12
                   is_primary: true
-                  round: "jesienna"
               existingPolishTeamDate:
                 summary: Add an existing TeamHistory with a date
                 value:
@@ -1820,7 +1819,6 @@ paths:
                   team_parameter: "New Polish Team"
                   league_identifier: 1072
                   is_primary: false
-                  round: "wiosenna"
               newPolishTeamDate:
                 summary: Add newly created Polish TeamHistory with a date
                 value:
@@ -1837,7 +1835,6 @@ paths:
                   team_parameter: "Foreign Team"
                   league_identifier: "Premier League"
                   is_primary: true
-                  round: "wiosenna"
                   gender: 1
               foreignTeamDate:
                 summary: Add newly created foreign TeamHistory with a date
@@ -1947,7 +1944,6 @@ paths:
                 value:
                   team_history: 12
                   is_primary: true
-                  round: "jesienna"
               existingPolishTeamDate:
                 summary: Update with an existing TeamHistory with a date
                 value:
@@ -1962,7 +1958,6 @@ paths:
                   team_parameter: "New Polish Team"
                   league_identifier: 1072
                   is_primary: false
-                  round: "wiosenna"
               newPolishTeamDate:
                 summary: Update with newly created Polish TeamHistory with a date
                 value:
@@ -1979,7 +1974,6 @@ paths:
                   team_parameter: "Foreign Team"
                   league_identifier: "Premier League"
                   is_primary: true
-                  round: "wiosenna"
                   gender: 1
               foreignTeamDate:
                 summary: Update with newly created foreign TeamHistory with a date
@@ -3272,7 +3266,19 @@ components:
       required:
         - id
         - name
-
+    TeamHistoryProfileView:
+      type: object
+      required:
+        - team_name
+        - league_highest_parent_name
+        - league_highest_parent_id
+      properties:
+        team_name:
+          type: string
+        league_highest_parent_name:
+          type: string
+        league_highest_parent_id:
+          type: integer
     SimpleTeamHistory:
       type: object
       required:
@@ -3658,6 +3664,8 @@ components:
               readOnly: true
             verification_stage:
               $ref: '#/components/schemas/VerificationStage'
+            team_history_object:
+              $ref: '#/components/schemas/TeamHistoryProfileView'
           example: {
             "slug": "player-slug",
             "user": {
@@ -3714,7 +3722,12 @@ components:
               "step": 0,
               "date_updated": "2023-09-09T10:18:34.070304+02:00",
               "done": false
-            }
+            },
+            "team_history_object": {
+              "team_name": "Team",
+              "league_highest_parent_name": "League",
+              "league_highest_parent_id": 5251
+            },
           }
           required: [
             slug,
@@ -3731,7 +3744,8 @@ components:
             transfer_status,
             training_ready,
             role,
-            verification_stage
+            verification_stage,
+            team_history_object
           ]
 
     PlayerProfile:
@@ -3742,7 +3756,7 @@ components:
             team_object:
               $ref: '#/components/schemas/Team'
             team_history_object:
-              $ref: '#/components/schemas/TeamHistory'
+              $ref: '#/components/schemas/TeamHistoryProfileView'
             voivodeship_obj:
               $ref: '#/components/schemas/Voivodeship'
             external_links:
@@ -3899,7 +3913,11 @@ components:
                 }
             },
             "team_object": null,
-            "team_history_object": null,
+            "team_history_object": {
+              "team_name": "Team",
+              "league_highest_parent_name": "League",
+              "league_highest_parent_id": 5251
+            },
             "voivodeship_obj": null,
             "history": {
                 "id": 9859,
@@ -4017,6 +4035,8 @@ components:
               type: string
             verification_stage:
               $ref: '#/components/schemas/VerificationStage'
+            team_history_object:
+              $ref: '#/components/schemas/TeamHistoryProfileView'
           example: {
             "slug": "coach-miz-shoty",
             "user": {
@@ -4058,7 +4078,12 @@ components:
               "step": 0,
               "date_updated": "2023-09-09T10:18:34.070304+02:00",
               "done": false
-            }
+            },
+            "team_history_object": {
+              "team_name": "Team",
+              "league_highest_parent_name": "League",
+              "league_highest_parent_id": 5251
+            },
           }
       required:
         - slug
@@ -4072,6 +4097,7 @@ components:
         - labels
         - role
         - verification_stage
+        - team_history_object
 
     CoachProfileUpdate:
       allOf:
@@ -4196,6 +4222,8 @@ components:
               type: string
             verification_stage:
               $ref: '#/components/schemas/VerificationStage'
+            team_history_object:
+              $ref: '#/components/schemas/TeamHistoryProfileView'
           example: {
             "slug": "scout-kacper-skalski",
             "user": {
@@ -4232,7 +4260,12 @@ components:
               "step": 0,
               "date_updated": "2023-09-09T10:18:34.070304+02:00",
               "done": false
-            }
+            },
+            "team_history_object": {
+              "team_name": "Team",
+              "league_highest_parent_name": "League",
+              "league_highest_parent_id": 5251
+            },
           }
       required:
         - slug
@@ -4242,6 +4275,7 @@ components:
         - profile_video
         - labels
         - verification_stage
+        - team_history_object
 
     ScoutProfileUpdate:
       allOf:
@@ -4326,6 +4360,8 @@ components:
               type: string
             verification_stage:
               $ref: '#/components/schemas/VerificationStage'
+            team_history_object:
+              $ref: '#/components/schemas/TeamHistoryProfileView'
           example:
             slug: "coach-miz-shoty"
             user:
@@ -4380,6 +4416,7 @@ components:
         - agency_facebook_url
         - agency_other_url
         - verification_stage
+        - team_history_object
 
     ParentProfile:
       allOf:
@@ -4417,6 +4454,8 @@ components:
               $ref: '#/components/schemas/ProfileEnumChoices'
             verification_stage:
               $ref: '#/components/schemas/VerificationStage'
+            team_history_object:
+              $ref: '#/components/schemas/TeamHistoryProfileView'
           example: {
             "user": {
                 "id": 7300,
@@ -4480,6 +4519,8 @@ components:
                   type: array
                   items:
                     $ref: '#/components/schemas/ExternalLink'
+            team_history_object:
+              $ref: '#/components/schemas/TeamHistoryProfileView'
             role:
               type: string
               description: "Player role"
@@ -4494,6 +4535,7 @@ components:
           - external_links
           - role
           - verification_stage
+          - team_history_object
 
           example:
            {
@@ -4566,6 +4608,8 @@ components:
             facebook_url:
               type: string
               description: Player,Coach,Scout,Guest
+            team_history_object:
+              $ref: '#/components/schemas/TeamHistoryProfileView'
           example: {
             "user": {
                 "id": 1,
@@ -5010,13 +5054,9 @@ components:
         is_primary:
           type: boolean
           description: "Flag to set the team-history as primary."
-        round:
-          type: string
-          description: "Season round. jesienna/wiosenna"
       required:
         - team_history
         - is_primary
-        - round
     ExistingPolishTeamHistoryDateBased:
       type: object
       properties:
@@ -5059,15 +5099,11 @@ components:
         is_primary:
           type: boolean
           description: "Flag to set the team-history as primary."
-        round:
-          type: string
-          description: "Season round. jesienna/wiosenna"
       required:
         - season
         - team_parameter
         - league_identifier
         - is_primary
-        - round
     NewPolishTeamHistoryDateBased:
       type: object
       properties:
@@ -5116,9 +5152,6 @@ components:
         is_primary:
           type: boolean
           description: "Flag to set the team-history as primary."
-        round:
-          type: string
-          description: "Season round. jesienna/wiosenna"
         gender:
           type: integer
           description: "Gender identifier. 1 for male, 2 for female"
@@ -5128,7 +5161,6 @@ components:
         - team_parameter
         - league_identifier
         - is_primary
-        - round
         - gender
     ForeignTeamHistoryDateBased:
       type: object
@@ -5188,10 +5220,13 @@ components:
           description: "Season's name in format 'YYYY/YYYY'."
         is_primary:
           type: boolean
-          description: "Indicates if this is the primary Team for this Season."
+          description: "Indicates if this is the current Team the player is associated with."
         round:
           type: string
           description: "Season round name. jesienna/wiosenna"
+        is_primary_for_round:
+          type: boolean
+          description: "Indicates if this is the primary team for this round and season"
       required:
         - id
         - picture_url
@@ -5201,6 +5236,7 @@ components:
         - season_name
         - round
         - is_primary
+        - is_primary_for_round
     TeamContributorNonPlayer:
       type: object
       properties:

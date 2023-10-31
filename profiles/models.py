@@ -1511,6 +1511,20 @@ class ClubProfile(BaseProfile):
         null=True,
         blank=True,
     )
+    team_object = models.ForeignKey(
+        "clubs.Team",
+        on_delete=models.SET_NULL,
+        related_name="club_profiles",
+        null=True,
+        blank=True,
+    )
+    team_history_object = models.ForeignKey(
+        "clubs.TeamHistory",
+        on_delete=models.SET_NULL,
+        related_name="club_profiles_history",
+        null=True,
+        blank=True,
+    )
     phone = models.CharField(_("Telefon"), max_length=15, blank=True, null=True)
     team_club_league_voivodeship_ver = models.CharField(
         _("team_club_league_voivodeship_ver"),
@@ -1878,9 +1892,24 @@ class CoachLicence(models.Model):
 
 class GuestProfile(BaseProfile):
     """In this model we store data about "fan" (kibic) users."""
+
     PROFILE_TYPE = definitions.PROFILE_TYPE_GUEST
     AUTO_VERIFY = True
     facebook_url = models.URLField(_("Facebook"), max_length=500, blank=True, null=True)
+    team_object = models.ForeignKey(
+        "clubs.Team",
+        on_delete=models.SET_NULL,
+        related_name="guest_profiles",
+        null=True,
+        blank=True,
+    )
+    team_history_object = models.ForeignKey(
+        "clubs.TeamHistory",
+        on_delete=models.SET_NULL,
+        related_name="guest_history",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         verbose_name = "Guest Profile"
@@ -1949,6 +1978,20 @@ class ManagerProfile(BaseProfile):
         blank=True,
         null=True,
         help_text=_("Other agency URL."),
+    )
+    team_object = models.ForeignKey(
+        "clubs.Team",
+        on_delete=models.SET_NULL,
+        related_name="manager_profiles",
+        null=True,
+        blank=True,
+    )
+    team_history_object = models.ForeignKey(
+        "clubs.TeamHistory",
+        on_delete=models.SET_NULL,
+        related_name="managers_history",
+        null=True,
+        blank=True,
     )
 
     def create_external_links_obj(self):
@@ -2060,6 +2103,20 @@ class ScoutProfile(BaseProfile):
         blank=True,
         null=True,
     )  # TODO:(l.remkowicz): followup needed to see if that can be safely removed from database scheme follow-up: PM-365  # noqa: E501
+    team_object = models.ForeignKey(
+        "clubs.Team",
+        on_delete=models.SET_NULL,
+        related_name="scouts",
+        null=True,
+        blank=True,
+    )
+    team_history_object = models.ForeignKey(
+        "clubs.TeamHistory",
+        on_delete=models.SET_NULL,
+        related_name="scouts_history",
+        null=True,
+        blank=True,
+    )
 
     def create_external_links_obj(self) -> None:
         """
@@ -2354,7 +2411,7 @@ class TeamContributor(models.Model):
     )
     is_primary = models.BooleanField(
         default=False,
-        help_text="Determines if this is the primary contributor for the season and round.",
+        help_text="Determines if this is the actual contribution.",
     )
     start_date = models.DateField(
         null=True, blank=True, help_text="Start date of the contribution."
@@ -2368,6 +2425,10 @@ class TeamContributor(models.Model):
         help_text="Role of the contributor in the team.",
         null=True,
         blank=True,
+    )
+    is_primary_for_round = models.BooleanField(
+        default=False,
+        help_text="Determines if this is the primary contributor for the season and round.",
     )
 
     class Meta:

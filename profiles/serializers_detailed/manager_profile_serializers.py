@@ -22,6 +22,7 @@ class ManagerProfileViewSerializer(BaseProfileSerializer):
             "agency_twitter_url",
             "agency_facebook_url",
             "agency_other_url",
+            "team_history_object",
         )
 
 
