@@ -23,6 +23,7 @@ from profiles.api.serializers import (
     ProfileVideoSerializer,
     VerificationStageSerializer,
 )
+from clubs.api.serializers import TeamHistoryBaseProfileSerializer
 from profiles.errors import (
     ExpectedIntException,
     InvalidCitizenshipListException,
@@ -216,7 +217,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     """Base profile serializer for all profile types"""
 
     user = UserDataSerializer(partial=True, required=False)
-    team_object = TeamSerializer(read_only=True)
+    team_history_object = TeamHistoryBaseProfileSerializer(read_only=True)
     external_links = ExternalLinksSerializer(read_only=True)
     address = serializers.CharField(required=False)
     role = serializers.SerializerMethodField()

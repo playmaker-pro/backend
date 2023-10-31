@@ -73,6 +73,7 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
             "role",
             "labels",
             "verification_stage",
+            "team_history_object",
         )
 
     player_positions = ProfileVIewPlayerProfilePositionSerializer(
@@ -118,9 +119,9 @@ class PlayerProfileUpdateSerializer(PlayerProfileViewSerializer):
             "role",
             "labels",
             "verification_stage",
+            "team_history_object",
         )
 
     player_positions = PlayerProfilePositionSerializer(
         many=True, required=False, read_only=True
     )
-    team_object = TeamSerializer(required=False, allow_null=True)

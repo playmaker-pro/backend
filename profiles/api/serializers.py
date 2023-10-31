@@ -461,8 +461,9 @@ class BaseTeamContributorInputSerializer(serializers.Serializer):
 class PlayerProfileTeamContributorInputSerializer(BaseTeamContributorInputSerializer):
     season = serializers.IntegerField(required=True)
     round = serializers.ChoiceField(
-        choices=models.TeamContributor.ROUND_CHOICES, required=True
+        choices=models.TeamContributor.ROUND_CHOICES, required=False
     )
+    is_primary_for_round = serializers.BooleanField(required=False)
 
     def __init__(self, *args, **kwargs) -> None:
         """
@@ -544,7 +545,8 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
             validation_errors[
                 "end_date"
             ] = "End date should not be provided if is_primary is True."
-        elif data.get("is_primary") is False and not end_date:
+        # If is_primary is False or not provided and end_date is not provided, set end_date to today
+        if data.get("is_primary") in (False, None) and not end_date:
             data["end_date"] = datetime.now().date()
 
         # If any errors found, raise them all at once
@@ -573,6 +575,7 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
             "season_name",
             "round",
             "is_primary",
+            "is_primary_for_round",
         )
 
     def get_picture_url(self, obj):
@@ -609,7 +612,7 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
         """
         team_history = obj.team_history.first()
         if team_history and team_history.league_history:
-            return team_history.league_history.league.id
+            return team_history.league_history.league.highest_parent.id
         return None
 
     def get_season_name(self, obj):
@@ -702,7 +705,7 @@ class ProfileListSerializer(serializers.ListSerializer):
 
 class ProfileSerializer(serializers.Serializer):
     # recursive imports
-    from clubs.api.serializers import TeamHistorySerializer, TeamSerializer
+    from clubs.api.serializers import TeamHistoryBaseProfileSerializer, TeamSerializer
     from users.api.serializers import UserDataSerializer
 
     class Meta:
@@ -732,7 +735,7 @@ class ProfileSerializer(serializers.Serializer):
     # sub-serializers
     user = UserDataSerializer(required=False, partial=True)
     team_object = TeamSerializer(read_only=True)
-    team_history_object = TeamHistorySerializer(read_only=True)
+    team_history_object = TeamHistoryBaseProfileSerializer(read_only=True)
     voivodeship_obj = VoivodeshipSerializer(read_only=True)
     history = ProfileVisitHistorySerializer(required=False, partial=True)
     external_links = ExternalLinksSerializer(required=False)

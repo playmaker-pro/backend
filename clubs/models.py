@@ -332,6 +332,9 @@ class LeagueHistory(models.Model):
         default=True,
         help_text="Flag indicating whether the league history should be displayed in the API.",
     )
+    year = models.IntegerField(
+        null=True, blank=True, help_text="Year the league history represents."
+    )
 
     def __str__(self):
         return f"{self.season} ({self.league}) {self.index or ''}"
@@ -361,7 +364,8 @@ class LeagueHistory(models.Model):
 
     def save(self, *args, **kwargs):
         # self.check_and_set_if_data_exists()
-        self.league.set_league_season([self.season])
+        if self.season:
+            self.league.set_league_season([self.season])
 
         if not self.mapper:
             self.create_mapper_obj()

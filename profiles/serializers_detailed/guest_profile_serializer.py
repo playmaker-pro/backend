@@ -13,6 +13,7 @@ class GuestProfileViewSerializer(BaseProfileSerializer):
             "labels",
             "verification_stage",
             "role",
+            "team_history_object",
         )
 
 

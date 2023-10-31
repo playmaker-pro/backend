@@ -287,6 +287,34 @@ class TeamHistorySerializer(serializers.ModelSerializer):
         exclude = ("data_mapper_id", "autocreated")
 
 
+class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the TeamHistory model focused on providing base profile information.
+
+    This serializer extracts the essential information about the team and its associated league
+    from the TeamHistory model. It provides the team's name and details about the league's
+    highest parent entity.
+    """
+
+    team_name = serializers.SerializerMethodField()
+    league_highest_parent_name = serializers.CharField(
+        source="league_history.league.get_highest_parent.name"
+    )
+    league_highest_parent_id = serializers.IntegerField(
+        source="league_history.league.get_highest_parent.id"
+    )
+
+    class Meta:
+        model = models.TeamHistory
+        fields = ["team_name", "league_highest_parent_name", "league_highest_parent_id"]
+
+    def get_team_name(self, obj: models.TeamHistory) -> str:
+        """
+        Retrieve the team's short name if available; otherwise, return the team's full name.
+        """
+        return obj.team.short_name or obj.team.name
+
+
 class LabelSerializer(serializers.Serializer):
     label_name = serializers.CharField(max_length=25)
     label_description = serializers.CharField(max_length=200)

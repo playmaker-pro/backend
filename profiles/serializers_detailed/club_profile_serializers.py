@@ -15,6 +15,7 @@ class ClubProfileViewSerializer(BaseProfileSerializer):
             "labels",
             "role",
             "verification_stage",
+            "team_history_object",
         )
 
 

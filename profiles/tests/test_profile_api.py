@@ -701,6 +701,106 @@ class ProfileTeamsApiTest(APITestCase):
         assert self.non_player_team_contributor.is_primary is False
         assert self.non_player_team_contributor.end_date == datetime.today().date()
 
+    def test_is_primary_for_round_behavior(self):
+        """Test the behavior of the is_primary_for_round field."""
+        self.client.force_authenticate(user=self.user)
+
+        # Add team with is_primary_for_round set to True
+        data = {
+            "league_identifier": self.league.pk,
+            "season": self.season.pk,
+            "team_parameter": "Test Team",
+            "round": "wiosenna",
+            "is_primary_for_round": True,
+        }
+        response = self.client.post(
+            reverse(
+                "api:profiles:add_team_to_profile",
+                kwargs={"profile_uuid": self.user.profile.uuid},
+            ),
+            data,
+        )
+
+        assert response.status_code == 201
+        assert response.data["is_primary_for_round"] is True
+
+        # Patching and checking if is_primary_for_round can be updated
+        data_patch = {
+            "is_primary_for_round": False,
+        }
+        response_patch = self.client.patch(
+            reverse(
+                "api:profiles:update_or_delete_team_contributor",
+                kwargs={
+                    "profile_uuid": self.user.profile.uuid,
+                    "team_contributor_id": self.team_contributor.pk,
+                },
+            ),
+            data_patch,
+        )
+
+        assert response_patch.status_code == 200
+        assert response_patch.data["is_primary_for_round"] is False
+
+    def test_prevent_multiple_primary_for_round(self):
+        """Ensure only one team can be primary for a round in a season."""
+        self.client.force_authenticate(user=self.user)
+
+        # Add first team with is_primary_for_round set to True
+        data1 = {
+            "league_identifier": self.league.pk,
+            "season": self.season.pk,
+            "team_parameter": "Test Team A",
+            "round": "wiosenna",
+            "is_primary_for_round": True,
+        }
+        response1 = self.client.post(
+            reverse(
+                "api:profiles:add_team_to_profile",
+                kwargs={"profile_uuid": self.user.profile.uuid},
+            ),
+            data1,
+        )
+        assert response1.status_code == 201
+        assert response1.data["is_primary_for_round"] is True
+
+        # Add second team with is_primary_for_round set to True for the same round and season
+        data2 = {
+            "league_identifier": self.league.pk,
+            "season": self.season.pk,
+            "team_parameter": "Test Team B",
+            "round": "wiosenna",
+            "is_primary_for_round": True,
+        }
+        response2 = self.client.post(
+            reverse(
+                "api:profiles:add_team_to_profile",
+                kwargs={"profile_uuid": self.user.profile.uuid},
+            ),
+            data2,
+        )
+        assert response2.status_code == 201
+        assert response2.data["is_primary_for_round"] is True
+
+        response_check = self.client.get(
+            reverse(
+                "api:profiles:profiles_teams",
+                kwargs={
+                    "profile_uuid": self.user.profile.uuid,
+                },
+            ),
+        )
+        assert response_check.status_code == 200
+        team_contributor_data = next(
+            (
+                team_contributor
+                for team_contributor in response_check.data
+                if team_contributor["id"] == self.team_contributor.pk
+            ),
+            None,
+        )
+        assert team_contributor_data["is_primary_for_round"] is False
+
 
 class TestSetMainProfileAPI(APITestCase):
     def setUp(self) -> None:

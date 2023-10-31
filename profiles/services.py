@@ -7,7 +7,7 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.db import models as django_base_models
-from django.db.models import ObjectDoesNotExist
+from django.db.models import ObjectDoesNotExist, Case, When, Value, IntegerField
 from django.db.models import functions as django_base_functions
 from pydantic import BaseModel
 
@@ -402,8 +402,8 @@ class ProfileService:
         return User.objects.filter(id__in=matching_users_ids)
 
     @staticmethod
-    def is_player_profile(profile) -> bool:
-        return type(profile).__name__.lower() == "playerprofile"
+    def is_player_or_guest_profile(profile) -> bool:
+        return type(profile).__name__.lower() in ["playerprofile", "guestprofile"]
 
     @staticmethod
     def get_related_type_from_profile(profile_instance: models.BaseProfile) -> str:
@@ -479,12 +479,37 @@ class ProfileFilterService:
     def filter_player_league(
         queryset: django_base_models.QuerySet, league_ids: list
     ) -> django_base_models.QuerySet:
-        """Filter player's queryset with list of highest_parent league_id's using current season name"""
+        """
+        Filter a queryset of players based on their association with the specified league IDs.
+
+        The method prioritizes players who are associated with the leagues in the current season.
+        If a player has been associated with one of the given leagues in the current season,
+        they are included in the results. If they haven't been associated in the current season
+        but have been in past seasons, they are also included. However, players with current season
+        associations are prioritized over those with only past associations.
+        """
         current_season = get_current_season()
-        return queryset.filter(
-            team_object__historical__league_history__season__name=current_season,
-            team_object__historical__league_history__league__highest_parent__in=league_ids,
+
+        distinct_user_ids = (
+            queryset.filter(
+                team_object__historical__league_history__league__highest_parent__in=league_ids
+            )
+            .annotate(
+                is_current_season=Case(
+                    When(
+                        team_object__historical__league_history__season__name=current_season,
+                        then=Value(1),
+                    ),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                )
+            )
+            .order_by("user_id", "-is_current_season")
+            .values_list("user_id", flat=True)
+            .distinct()
         )
+
+        return queryset.filter(user_id__in=distinct_user_ids)
 
     @staticmethod
     def filter_player_gender(
@@ -737,6 +762,7 @@ class TeamContributorService:
         """
         criteria = {
             "profile_uuid": profile_uuid,
+            "team_history__in": [team_history],
             **kwargs,
         }
 
@@ -745,7 +771,17 @@ class TeamContributorService:
         if existing_contributor:
             return existing_contributor, False
 
-        team_contributor_instance = models.TeamContributor.objects.create(**criteria)
+        creation_criteria = {
+            "profile_uuid": profile_uuid,
+            **kwargs,
+        }
+        try:
+            team_contributor_instance = models.TeamContributor.objects.create(
+                **creation_criteria
+            )
+        except IntegrityError:
+            raise errors.TeamContributorAlreadyExistServiceException
+
         team_contributor_instance.team_history.add(team_history)
 
         return team_contributor_instance, True
@@ -760,10 +796,11 @@ class TeamContributorService:
     def handle_primary_contributor(
         team_contributor: models.TeamContributor,
         profile_uuid: uuid.UUID,
-        is_primary: bool,
+        is_primary: typing.Optional[bool] = None,
         season: typing.Optional[str] = None,
         round_val: typing.Optional[str] = None,
         profile_type: str = "player",
+        is_primary_for_round: typing.Optional[bool] = False,
     ) -> None:
         """
         Handle setting is_primary attribute and checking for existing primary
@@ -771,30 +808,37 @@ class TeamContributorService:
         """
         if is_primary:
             if profile_type == "player":
-                # Unset any existing primary contributors with the same profile, season, round
+                # Unset any existing primary contributors with the given profile
                 models.TeamContributor.objects.filter(
                     profile_uuid=profile_uuid,
-                    team_history__league_history__season=season,
                     is_primary=True,
-                    round=round_val,
                 ).exclude(id=team_contributor.id).update(is_primary=False)
-
+                team_contributor.is_primary = True
             else:
-                # Unset any existing primary contributors for non-players
                 contributors_to_unset = models.TeamContributor.objects.filter(
                     profile_uuid=profile_uuid, is_primary=True
                 ).exclude(id=team_contributor.id)
-
-                # Set their end date to today
                 contributors_to_unset.update(
                     is_primary=False, end_date=datetime.date.today()
                 )
-
-            # Set the given team_contributor as primary
-            team_contributor.is_primary = True
-            team_contributor.end_date = None
-        else:
+                team_contributor.is_primary = True
+                team_contributor.end_date = None
+        elif is_primary is False:
             team_contributor.is_primary = False
+
+        # If is_primary_for_round is provided and it's True
+        if is_primary_for_round:
+            models.TeamContributor.objects.filter(
+                profile_uuid=profile_uuid,
+                team_history__league_history__season=season,
+                is_primary_for_round=True,
+                round=round_val,
+            ).exclude(id=team_contributor.id).update(is_primary_for_round=False)
+            team_contributor.is_primary_for_round = True
+
+        # If is_primary_for_round is provided and it's False
+        elif is_primary_for_round is False:
+            team_contributor.is_primary_for_round = False
 
         team_contributor.save()
 
@@ -847,6 +891,21 @@ class TeamContributorService:
             season if profile_type == "player" else None,
         )
 
+    def update_profile_team_fields(
+        self, profile_uuid: uuid.UUID, team_history: clubs_models.TeamHistory
+    ) -> None:
+        """
+        Updates the team fields (`team_object` and `team_history_object`) of a profile instance.
+        """
+        profile_instance: models.PROFILE_MODELS = (
+            self.profile_service.get_profile_by_uuid(profile_uuid)
+        )
+
+        profile_instance.team_object = team_history.team
+        profile_instance.team_history_object = team_history
+
+        profile_instance.save()
+
     def create_contributor(
         self,
         profile_uuid: uuid.UUID,
@@ -876,14 +935,14 @@ class TeamContributorService:
         # Player-specific logic
         if is_player:
             criteria["round"] = data.get("round")
-            criteria["is_primary"] = data.get("is_primary")
+            criteria["is_primary_for_round"] = data.get("is_primary_for_round", False)
             existing_contributor: models.TeamContributor = (
                 self.check_existing_contributor(
                     {
                         "profile_uuid": profile_uuid,
                         "team_history__in": matched_team_histories,
                         "round": data.get("round"),
-                        "is_primary": data.get("is_primary"),
+                        "is_primary_for_round": data.get("is_primary_for_round"),
                     }
                 )
             )
@@ -919,9 +978,13 @@ class TeamContributorService:
             team_contributor=team_contributor,
             profile_uuid=profile_uuid,
             is_primary=data.get("is_primary", False),
+            season=team_contributor.team_history.all()[0].league_history.season,
+            is_primary_for_round=data.get("is_primary_for_round"),
             profile_type="player" if is_player else "non-player",
             round_val=data.get("round"),
         )
+        if data.get("is_primary", False):
+            self.update_profile_team_fields(profile_uuid, matched_team_histories[0])
 
         return team_contributor
 
@@ -931,8 +994,9 @@ class TeamContributorService:
         """
         Retrieve or create a team history based on the provided data and profile UUID.
         """
-        is_player = "round" in data  # Using "season" as the distinguishing factor
-
+        is_player = (
+            "start_date" not in data
+        )  # Using "start_date" as the distinguishing factor
         # If a team_history is provided, fetch it
         if "team_history" in data and data["team_history"]:
             team_history_instance, _ = self.fetch_related_data(data, profile_uuid)
@@ -1011,7 +1075,7 @@ class TeamContributorService:
         team_contributor: models.TeamContributor,
         data: dict,
         team_histories: typing.List[clubs_models.TeamHistory],
-    ):
+    ) -> None:
         """
         Update attributes of a TeamContributor instance based on provided data.
 
@@ -1019,9 +1083,13 @@ class TeamContributorService:
         It sets the team history, primary status, round (if applicable), and then saves the changes.
         """
         team_contributor.team_history.set(team_histories)
-        team_contributor.is_primary = data.get("is_primary", False)
-        if "round" in data:
-            team_contributor.round = data.get("round")
+
+        fields_to_update = ["round", "role", "start_date", "end_date"]
+
+        for field in fields_to_update:
+            if field in data:
+                setattr(team_contributor, field, data.get(field))
+
         team_contributor.save()
 
     def update_player_contributor(
@@ -1048,6 +1116,7 @@ class TeamContributorService:
                 "league_identifier": team_history_instance.league_history.league.id,
                 "season": team_history_instance.league_history.season.id,
                 "is_primary": team_contributor.is_primary,
+                "is_primary_for_round": team_contributor.is_primary_for_round,
             }
         current_data.update(data)
         profile_type = "player"
@@ -1057,9 +1126,9 @@ class TeamContributorService:
             )
         else:
             team_history = club_services.create_or_get_team_history_for_player(
-                current_data["season"],
-                current_data["team_parameter"],
-                current_data["league_identifier"],
+                current_data.get("season"),
+                current_data.get("team_parameter"),
+                current_data.get("league_identifier"),
                 current_data.get("country", "PL"),
                 self.profile_service.get_user_by_uuid(profile_uuid),
             )
@@ -1074,16 +1143,19 @@ class TeamContributorService:
 
         if existing_contributor:
             raise errors.TeamContributorAlreadyExistServiceException()
-
         self.handle_primary_contributor(
             team_contributor,
             profile_uuid,
-            current_data.get("is_primary", False),
+            current_data.get("is_primary"),
             current_data.get("season"),
             current_data.get("round"),
             profile_type,
+            current_data.get("is_primary_for_round"),
         )
         self.update_team_contributor(team_contributor, data, [team_history])
+        if current_data.get("is_primary", False):
+            self.update_profile_team_fields(profile_uuid, team_history)
+
         return team_contributor
 
     def update_non_player_contributor(
@@ -1144,10 +1216,6 @@ class TeamContributorService:
         if existing_contributor:
             raise errors.TeamContributorAlreadyExistServiceException()
 
-        team_contributor.role = current_data.get("role")
-        team_contributor.start_date = current_data.get("start_date")
-        team_contributor.end_date = current_data.get("end_date")
-
         self.handle_primary_contributor(
             team_contributor,
             profile_uuid,
@@ -1157,6 +1225,8 @@ class TeamContributorService:
         self.update_team_contributor(
             team_contributor, current_data, matched_team_histories
         )
+        if current_data.get("is_primary", False):
+            self.update_profile_team_fields(profile_uuid, matched_team_histories[0])
 
         return team_contributor
 
