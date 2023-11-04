@@ -240,3 +240,32 @@ class TestInquiriesAPI(APITestCase):
 
         response = create_new_profile_and_send_him_inquiry()
         assert response.status_code == 400
+
+    def test_read_inquire_request(self) -> None:
+        """
+        Test update inquiry request state: sent -> read.
+        Should happened on GET recipient inquiry requests.
+        """
+        send_response = self.client.post(
+            URL_SEND(self.recipient_profile_uuid), **self.sender_headers
+        )
+        assert send_response.status_code == 201
+
+        obj_id = send_response.data["id"]
+        obj = InquiryRequest.objects.get(pk=obj_id)
+
+        assert obj.status == InquiryRequest.STATUS_SENT
+
+        receive_recipment_repsponse = self.client.get(
+            URL_MY_RECEIVED, **self.recipient_headers
+        )
+
+        assert receive_recipment_repsponse.status_code == 200
+        assert (
+            receive_recipment_repsponse.data[0]["status"]
+            == InquiryRequest.STATUS_RECEIVED
+        )
+
+        obj.refresh_from_db()
+
+        assert obj.status == InquiryRequest.STATUS_RECEIVED
