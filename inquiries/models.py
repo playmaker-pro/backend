@@ -177,7 +177,7 @@ class InquiryRequest(models.Model):
 
     @transition(
         field=status,
-        source=[STATUS_NEW, STATUS_SENT, STATUS_RECEIVED],
+        source=ACTIVE_STATES,
         target=STATUS_ACCEPTED,
     )
     def accept(self) -> None:
@@ -190,7 +190,7 @@ class InquiryRequest(models.Model):
 
     @transition(
         field=status,
-        source=[STATUS_NEW, STATUS_SENT, STATUS_RECEIVED],
+        source=ACTIVE_STATES,
         target=STATUS_REJECTED,
     )
     def reject(self) -> None:

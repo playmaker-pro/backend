@@ -1,12 +1,15 @@
 import logging
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 
 from inquiries.plans import basic_plan
+
 from .models import InquiryContact, InquiryPlan, InquiryRequest, UserInquiry
 
 logger: logging.Logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
 class InquireService:
@@ -61,21 +64,26 @@ class InquireService:
                 request.save()
 
     @staticmethod
-    def get_user_sent_inquiries(user) -> QuerySet:
+    def get_user_sent_inquiries(user: User) -> QuerySet:
         """Get all sent inquiries by user"""
         return user.sender_request_recipient.all().order_by("-created_at")
 
     @staticmethod
-    def get_user_contacts(user) -> QuerySet:
+    def get_user_contacts(user: User) -> QuerySet:
         """Get all inquiries contacts by user"""
         return user.inquiries_contacts.order_by("-updated_at")
 
-    @staticmethod
-    def get_user_received_inquiries(user) -> QuerySet:
-        """Get all received inquiries by user"""
-        return user.inquiry_request_recipient.all().order_by("-created_at")
+    @classmethod
+    def get_user_received_inquiries(cls, user: User) -> QuerySet:
+        """
+        Get all received inquiries by user,
+        update queryset objects status as read.
+        """
+        queryset = user.inquiry_request_recipient.all().order_by("-created_at")
+        cls.update_requests_with_read_status(queryset, user)
+        return queryset
 
     @staticmethod
-    def get_user_inquiry_metadata(user) -> UserInquiry:
+    def get_user_inquiry_metadata(user: User) -> UserInquiry:
         """Get all received inquiries by user"""
         return user.userinquiry
