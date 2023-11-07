@@ -20,7 +20,7 @@ from profiles import errors, models, services
 from profiles.api import consts
 from profiles.api import errors as api_errors
 from profiles.services import ProfileVideoService
-from roles.definitions import PROFILE_TYPE_SHORT_MAP
+from roles.definitions import PROFILE_TYPE_SHORT_MAP, CLUB_ROLES
 from users.services import UserService
 from utils import translate_to
 from utils.factories import utils
@@ -437,9 +437,9 @@ class BaseTeamContributorInputSerializer(serializers.Serializer):
                             "Gender is required for foreign teams."
                         )
 
-                        # Check if team_identifier is an ID (which shouldn't be the case for foreign teams)
+                        # Check if team_parameter is an ID (which shouldn't be the case for foreign teams)
                     if isinstance(data.get("team_parameter"), int):
-                        validation_errors["team_identifier"] = [
+                        validation_errors["team_parameter"] = [
                             "Foreign teams require a team name, not an ID."
                         ]
 
@@ -511,8 +511,9 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
         required=False, help_text="End date of the contribution."
     )
     role = serializers.ChoiceField(
-        choices=models.CoachProfile.COACH_ROLE_CHOICES, required=True
+        choices=models.CoachProfile.COACH_ROLE_CHOICES + CLUB_ROLES, required=True
     )
+    custom_role = serializers.CharField(required=False, allow_null=True)
 
     def __init__(self, *args, **kwargs) -> None:
         """
@@ -533,6 +534,9 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
         data = super().validate(data)  # this now returns modified data
         validation_errors = {}
 
+        is_primary = data.get(
+            "is_primary", self.instance.is_primary if self.instance else None
+        )
         start_date = data.get("start_date")
         end_date = data.get("end_date")
 
@@ -545,10 +549,38 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
             validation_errors[
                 "end_date"
             ] = "End date should not be provided if is_primary is True."
-        # If is_primary is False or not provided and end_date is not provided, set end_date to today
-        if data.get("is_primary") in (False, None) and not end_date:
-            data["end_date"] = datetime.now().date()
+        if self.instance:
+            # Case where is_primary changes from True to False, and no end_date is provided
+            if (
+                self.instance.is_primary
+                and is_primary is False
+                and not data.get("end_date")
+            ):
+                data["end_date"] = datetime.now().date()
 
+            # Case where is_primary changes from False to True, clear the end_date
+            if not self.instance.is_primary and is_primary is True:
+                data["end_date"] = None
+
+        role = data.get("role", self.instance.role if self.instance else None)
+        # Validate the 'custom_role' field
+        if (
+            role not in models.TeamContributor.get_other_roles()
+            and data.get("custom_role") is not None
+        ):
+            validation_errors[
+                "custom_role"
+            ] = "Custom role should not be provided unless the role is 'Other'."
+
+        # Specific logic based on the profile type
+        profile_short_type = self.context.get("profile_short_type")
+        if profile_short_type and role:
+            if profile_short_type == "T" and role not in dict(
+                models.CoachProfile.COACH_ROLE_CHOICES
+            ):
+                validation_errors["role"] = "Invalid role for coach profile."
+            elif profile_short_type == "C" and role not in dict(CLUB_ROLES):
+                validation_errors["role"] = "Invalid role for club profile."
         # If any errors found, raise them all at once
 
         if validation_errors:
@@ -645,6 +677,7 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
             "league_id",
             "is_primary",
             "role",
+            "custom_role",
             "start_date",
             "end_date",
         ]

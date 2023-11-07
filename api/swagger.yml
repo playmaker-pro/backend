@@ -4021,6 +4021,9 @@ components:
                     $ref: '#/components/schemas/ExternalLink'
             coach_role:
               $ref: '#/components/schemas/ProfileEnumChoices'
+            custom_coach_role:
+              type: string
+              nullable: true
             formation:
               $ref: '#/components/schemas/ProfileEnumChoices'
             profile_video:
@@ -4092,6 +4095,7 @@ components:
         - external_links
         - address
         - coach_role
+        - custom_coach_role
         - formations
         - profile_video
         - labels
@@ -4452,6 +4456,9 @@ components:
               description: Player,Coach,Club
             club_role:
               $ref: '#/components/schemas/ProfileEnumChoices'
+            custom_club_role:
+              type: string
+              nullable: true
             verification_stage:
               $ref: '#/components/schemas/VerificationStage'
             team_history_object:
@@ -4508,6 +4515,9 @@ components:
                 $ref: '#/components/schemas/ProfileLabel'
             club_role:
               type: string
+            custom_club_role:
+              type: string
+              nullable: true
             profile_video:
               type: array
               items:
@@ -4531,6 +4541,7 @@ components:
           - user
           - labels
           - club_role
+          - custom_club_role
           - profile_video
           - external_links
           - role
@@ -4590,6 +4601,7 @@ components:
             },
             "labels": [],
             "club_role": "V-ce prezes",
+            "custom_club_role": null,
             "profile_video": [],
             "external_links": [],
             "role": "C",
@@ -5079,6 +5091,10 @@ components:
           type: string
           description: "role in the team-history ('IC', 'GKC'..)"
           nullable: false
+        custom_role:
+          type: string
+          nullable: true
+          description: "Custom role for the contributor, can be null if role is not 'Other'."
       required:
         - team_history
         - is_primary
@@ -5128,6 +5144,10 @@ components:
           type: string
           description: "role in the team-history ('IC', 'GKC'..)"
           nullable: false
+        custom_role:
+          type: string
+          nullable: true
+          description: "Custom role for the contributor, can be null if role is not 'Other'."
       required:
         - start_date
         - team_parameter
@@ -5188,6 +5208,14 @@ components:
         gender:
           type: integer
           description: "Gender identifier. 1 for male, 2 for female"
+        role:
+          type: string
+          description: "role in the team-history ('IC', 'GKC'..)"
+          nullable: false
+        custom_role:
+          type: string
+          nullable: true
+          description: "Custom role for the contributor, can be null if role is not 'Other'."
       required:
         - country
         - team_parameter
@@ -5270,6 +5298,10 @@ components:
           type: string
           description: "Role in the team (e.g., IC, IIC, GKC, etc.)."
           nullable: true
+        custom_role:
+          type: string
+          nullable: true
+          description: 'Custom role for the contributor, can be null if role is not "Other".'
       required:
         - id
         - picture_url
@@ -5281,6 +5313,7 @@ components:
         - start_date
         - end_date
         - role
+        - custom_role
     SocialLoginResponse:
       description: User logged in successfully - tokens returned.
       type: object
