@@ -5,14 +5,12 @@ from rest_framework import serializers
 from api.consts import ChoicesTuple
 from profiles.api.serializers import (
     CoachLicenceSerializer,
-    PlayerMetricsSerializer,
     PlayerProfilePositionSerializer,
     ProfileEnumChoicesSerializer,
 )
-from profiles.models import PlayerPosition, PlayerProfile
+from profiles.models import PlayerPosition, PlayerProfile, PlayerMetrics
 from profiles.serializers_detailed.base_serializers import (
     BaseProfileSerializer,
-    TeamSerializer,
 )
 
 
@@ -53,6 +51,12 @@ class PlayerProfileViewProfileEnumChoicesSerializer(ProfileEnumChoicesSerializer
 
         value = choices[_id]
         return ChoicesTuple(_id, value)
+
+
+class PlayerMetricsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlayerMetrics
+        fields = ("pm_score", "season_score")
 
 
 class PlayerProfileViewSerializer(BaseProfileSerializer):

@@ -3511,9 +3511,6 @@ components:
     PlayerProfileMetrics:
       type: object
       properties:
-        season:
-          type: object
-          readOnly: true
         pm_score:
           type: number
           readOnly: true
@@ -3521,7 +3518,6 @@ components:
           type: number
           readOnly: true
       required:
-       - season
        - pm_score
        - season_score
 
@@ -3713,7 +3709,6 @@ components:
             "prefered_leg": 1,
             "training_ready": "1-2 treningi",
             "playermetrics": {
-              "season": {},
               "pm_score": null,
               "season_score": null
             },
