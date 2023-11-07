@@ -42,15 +42,21 @@ class ClubProfileUpdateSerializer(ClubProfileViewSerializer):
                 )
             instance.club_role = club_role
 
-            # Handle custom_club_role
-            if club_role == "O":  # 'O' corresponds to 'Other' or 'Inne'
-                custom_club_role = validated_data.get("custom_club_role")
-                instance.custom_club_role = custom_club_role
-            else:
-                # If club_role is not 'Other' (Inne), then reset custom_club_role to None.
-                instance.custom_club_role = None
-                # If custom_club_role is present in validated_data, raise an error.
-                if validated_data.get("custom_club_role"):
-                    raise InvalidCustomClubRoleException()
+        # Additional logic for handling 'custom_club_role'
+        # If 'club_role' is not provided, use the existing one from the instance
+        club_role = validated_data.get("club_role", instance.club_role)
+
+        # If 'club_role' is "O", check for 'custom_club_role'. If not, ensure 'custom_club_role' is not provided.
+        if club_role == "O":
+            custom_club_role = validated_data.get("custom_club_role", None)
+            instance.custom_club_role = custom_club_role
+        else:
+            if (
+                "custom_club_role" in validated_data
+                and validated_data.get("custom_club_role") is not None
+            ):
+                raise InvalidCustomClubRoleException()
+            # Reset custom_club_role to None if club_role is not "O"
+            instance.custom_club_role = None
 
         return super().update(instance, validated_data)

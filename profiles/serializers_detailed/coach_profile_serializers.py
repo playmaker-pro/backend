@@ -84,16 +84,22 @@ class CoachProfileUpdateSerializer(CoachProfileViewSerializer):
                 )
             instance.coach_role = coach_role
 
-            # Handle custom_coach_role
-            if coach_role == "OTC":
-                custom_coach_role = validated_data.get("custom_coach_role")
-                instance.custom_coach_role = custom_coach_role
-            else:
-                # If coach_role is not 'OTC', then reset custom_coach_role to None.
-                instance.custom_coach_role = None
-                # If custom_coach_role is present in validated_data, raise an error.
-                if validated_data.get("custom_coach_role"):
-                    raise InvalidCustomCoachRoleException()
+        # Additional logic for handling 'custom_coach_role'
+        # If 'coach_role' is not provided, use the existing one from the instance
+        coach_role = validated_data.get("coach_role", instance.coach_role)
+
+        # If 'coach_role' is "OTC", check for 'custom_coach_role'. If not, ensure 'custom_coach_role' is not provided.
+        if coach_role == "OTC":
+            custom_coach_role = validated_data.get("custom_coach_role", None)
+            instance.custom_coach_role = custom_coach_role
+        else:
+            if (
+                "custom_coach_role" in validated_data
+                and validated_data.get("custom_coach_role") is not None
+            ):
+                raise InvalidCustomCoachRoleException()
+            # Reset custom_coach_role to None if coach_role is not "OTC"
+            instance.custom_coach_role = None
 
         if formation := validated_data.get("formation"):
             instance.formation = formation
