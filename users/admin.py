@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.admin import ChoicesFieldListFilter, SimpleListFilter
 from django.contrib.auth.admin import UserAdmin  # as BaseUserAdmin
 from django.core.handlers.wsgi import WSGIRequest
-from django.db.models import Case, F, Q, When, QuerySet
+from django.db.models import Case, F, Q, QuerySet, When
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
@@ -267,20 +267,21 @@ class UserAdminPanel(UserAdmin):
         return None
 
     def get_profile_percentage(self, obj):
-        percentage = obj.profile.percentage_completion
-        return format_html(
-            f"""
-            <progress value="{percentage}" max="100"></progress>
-            <span style="font-weight:bold">{percentage}%</span>
-            """
-        )
+        if obj.profile:
+            percentage = obj.profile.percentage_completion
+            return format_html(
+                f"""
+                <progress value="{percentage}" max="100"></progress>
+                <span style="font-weight:bold">{percentage}%</span>
+                """
+            )
 
     get_profile_percentage.short_description = "Profile %"
 
     def get_profile_permalink(self, obj):
-        url = obj.profile.get_permalink
-        # Unicode hex b6 is the Pilcrow sign
-        return format_html('<a href="{}">{}</a>'.format(url, "\xb6"))
+        if obj.profile:
+            url = obj.profile.get_permalink
+            return format_html('<a href="{}">{}</a>'.format(url, "\xb6"))
 
     get_profile_permalink.short_description = "Profile Link"
 
@@ -306,14 +307,19 @@ class UserPreferencesAdminPanel(admin.ModelAdmin):
     display_languages.short_description = "Spoken Languages"
 
     def get_search_results(
-            self, request: WSGIRequest,
-            queryset: QuerySet[models.UserPreferences],
-            search_term: str
+        self,
+        request: WSGIRequest,
+        queryset: QuerySet[models.UserPreferences],
+        search_term: str,
     ):
-        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        queryset, use_distinct = super().get_search_results(
+            request, queryset, search_term
+        )
 
         # Custom search logic
-        user_query = Q(user__username__icontains=search_term) | Q(user__email__icontains=search_term)
+        user_query = Q(user__username__icontains=search_term) | Q(
+            user__email__icontains=search_term
+        )
         queryset |= self.model.objects.filter(user_query)
 
         return queryset, use_distinct
