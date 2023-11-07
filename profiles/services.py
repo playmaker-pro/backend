@@ -843,6 +843,38 @@ class TeamContributorService:
         team_contributor.save()
 
     @staticmethod
+    def reset_or_update_custom_role(
+        team_contributor: models.TeamContributor, data: typing.Dict[str, typing.Any]
+    ) -> bool:
+        """
+        Resets or updates the custom role of a team contributor based on the provided data.
+
+        If the team contributor's role is changing from 'Other' to a different role,
+        the custom role is reset to None. If the role is changing to 'Other' and a non-None
+        custom role is provided, it updates the custom role.
+        """
+        role_changing_from_other = (
+            team_contributor.role in models.TeamContributor.get_other_roles()
+            and data.get("role") not in models.TeamContributor.get_other_roles()
+        )
+        role_changing_to_other = (
+            data.get("role") in models.TeamContributor.get_other_roles()
+        )
+        custom_role_provided = "custom_role" in data and data["custom_role"] is not None
+        custom_role_updated = False
+
+        if role_changing_from_other:
+            # Reset custom_role to None if changing from 'Other' to a different role
+            team_contributor.custom_role = None
+            custom_role_updated = True
+        elif role_changing_to_other and custom_role_provided:
+            # Update custom_role only if changing to 'Other' and a non-None custom_role is provided
+            team_contributor.custom_role = data["custom_role"]
+            custom_role_updated = True
+
+        return custom_role_updated
+
+    @staticmethod
     def delete_team_contributor(team_contributor: models.TeamContributor) -> None:
         """
         Delete a TeamContributor instance.
@@ -952,6 +984,11 @@ class TeamContributorService:
             criteria["role"] = data.get("role")
             criteria["start_date"] = data["start_date"]
             criteria["end_date"] = data.get("end_date", None)
+            if (
+                "custom_role" in data
+                and data["role"] in models.TeamContributor.get_other_roles()
+            ):
+                criteria["custom_role"] = data["custom_role"]
             existing_contributor = self.check_existing_contributor(
                 {
                     "profile_uuid": profile_uuid,
@@ -1078,19 +1115,24 @@ class TeamContributorService:
     ) -> None:
         """
         Update attributes of a TeamContributor instance based on provided data.
-
-        This function updates various attributes of a given team contributor instance.
-        It sets the team history, primary status, round (if applicable), and then saves the changes.
         """
+        # Set the team history for the contributor
         team_contributor.team_history.set(team_histories)
 
+        # Start with fields that are always updated
         fields_to_update = ["round", "role", "start_date", "end_date"]
 
-        for field in fields_to_update:
-            if field in data:
-                setattr(team_contributor, field, data.get(field))
+        # Update custom role and check if it needs to be saved
+        if self.reset_or_update_custom_role(team_contributor, data):
+            fields_to_update.append("custom_role")
 
-        team_contributor.save()
+        # Update the fields from the data provided.
+        for field in fields_to_update:
+            if field in data and field != "custom_role":
+                setattr(team_contributor, field, data[field])
+
+        # Now save only the fields that were updated.
+        team_contributor.save(update_fields=fields_to_update)
 
     def update_player_contributor(
         self,
@@ -1181,6 +1223,7 @@ class TeamContributorService:
                 "league_identifier": team_history_instance.league_history.league.id,
                 "is_primary": team_contributor.is_primary,
                 "role": team_contributor.role,
+                "custom_role": team_contributor.custom_role,
             }
 
         current_data.update(data)

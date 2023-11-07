@@ -110,6 +110,18 @@ class InvalidCoachRoleException(CoreAPIException):
     default_detail = "Coach role with given id does not exist."
 
 
+class InvalidCustomCoachRoleException(CoreAPIException):
+    """
+    API HTTP exception raised when the custom coach role is set
+    without the coach role being 'Other' (Inne).
+    """
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = (
+        "Custom coach role can only be set when coach role is 'Other' (Inne)."
+    )
+
+
 class InvalidFormationException(CoreAPIException):
     """
     API HTTP exception raised when a given formation is not valid.
@@ -127,3 +139,24 @@ class InvalidSearchTerm(CoreAPIException):
 
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "Please provide a search term with at least 3 letters."
+
+
+class InvalidClubRoleException(CoreAPIException):
+    """
+    API HTTP exception raised when a Club role is not valid.
+    """
+
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = "Club role does not exist."
+
+
+class InvalidCustomClubRoleException(CoreAPIException):
+    """
+    API HTTP exception raised when the custom club role is set
+    without the club role being 'Other' (Inne).
+    """
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = (
+        "Custom club role can only be set when club role is 'Other' (Inne)."
+    )

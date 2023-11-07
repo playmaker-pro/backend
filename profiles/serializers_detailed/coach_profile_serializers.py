@@ -2,7 +2,11 @@ from typing import List, Optional
 
 from rest_framework import serializers
 
-from profiles.api.errors import InvalidCoachRoleException, InvalidFormationException
+from profiles.api.errors import (
+    InvalidCoachRoleException,
+    InvalidFormationException,
+    InvalidCustomCoachRoleException,
+)
 from profiles.api.serializers import ProfileEnumChoicesSerializer
 from profiles.models import FORMATION_CHOICES, CoachProfile, ProfileVideo
 from profiles.serializers_detailed.base_serializers import BaseProfileSerializer
@@ -38,6 +42,7 @@ class CoachProfileViewSerializer(BaseProfileSerializer):
             "user",
             "external_links",
             "coach_role",
+            "custom_coach_role",
             "training_ready",
             "formation",
             "profile_video",
@@ -78,6 +83,17 @@ class CoachProfileUpdateSerializer(CoachProfileViewSerializer):
                     details=f"Coach role is invalid. Expected values: {expected_values}"
                 )
             instance.coach_role = coach_role
+
+            # Handle custom_coach_role
+            if coach_role == "OTC":
+                custom_coach_role = validated_data.get("custom_coach_role")
+                instance.custom_coach_role = custom_coach_role
+            else:
+                # If coach_role is not 'OTC', then reset custom_coach_role to None.
+                instance.custom_coach_role = None
+                # If custom_coach_role is present in validated_data, raise an error.
+                if validated_data.get("custom_coach_role"):
+                    raise InvalidCustomCoachRoleException()
 
         if formation := validated_data.get("formation"):
             instance.formation = formation

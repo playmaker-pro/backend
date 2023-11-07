@@ -282,7 +282,7 @@ class TestUpdateProfileAPI(APITestCase):
                     "role": "C",
                 },
                 {
-                    "club_role": "brzeczyszczykiewicz",
+                    "club_role": "DSp",
                     "user": {"userpreferences": {"birth_date": "1990-01-01"}},
                 },
             ],
@@ -449,6 +449,71 @@ class TestUpdateProfileAPI(APITestCase):
 
         assert response.status_code == 200
         assert "verification_stage" not in response.data
+
+    @parameterized.expand(
+        [
+            # Testing coach roles
+            ("T", "coach_role", "custom_coach_role", "OTC", "Custom Role", "IIC", None),
+            (
+                "T",
+                "coach_role",
+                "custom_coach_role",
+                "IIC",
+                None,
+                "OTC",
+                "Custom Role II",
+            ),
+            # Testing club roles
+            (
+                "C",
+                "club_role",
+                "custom_club_role",
+                "O",
+                "Custom Club Role",
+                "DSp",
+                None,
+            ),
+            (
+                "C",
+                "club_role",
+                "custom_club_role",
+                "DSp",
+                None,
+                "O",
+                "Custom Club Role II",
+            ),
+        ]
+    )
+    def test_role_updates(
+        self,
+        role,
+        role_field,
+        custom_role_field,
+        initial_role,
+        initial_custom_role,
+        updated_role,
+        expected_custom_role,
+    ):
+        """Test updating role and custom role fields."""
+        profile = utils.create_empty_profile(
+            **{
+                "user_id": self.user_obj.pk,
+                "role": role,
+                role_field: initial_role,
+                custom_role_field: initial_custom_role,
+            }
+        )
+        payload = {role_field: updated_role}
+        if updated_role in ["OTC", "O"]:
+            payload[custom_role_field] = expected_custom_role
+
+        response = self.client.patch(
+            self.url(str(profile.uuid)), json.dumps(payload), **self.headers
+        )
+        profile.refresh_from_db()
+        assert response.status_code == 200
+        assert getattr(profile, role_field) == updated_role
+        assert getattr(profile, custom_role_field) == expected_custom_role
 
 
 class ProfileTeamsApiTest(APITestCase):
@@ -800,6 +865,52 @@ class ProfileTeamsApiTest(APITestCase):
             None,
         )
         assert team_contributor_data["is_primary_for_round"] is False
+
+    def test_change_role_to_the_other_with_custom_role(self):
+        """Test that setting a new team as primary unsets the previous primary for a non-player profile."""
+        self.client.force_authenticate(user=self.non_player_user)
+
+        # Set the role as IC
+        data1 = {
+            "team_history": self.team_history.id,
+            "start_date": "2021-02-01",
+            "is_primary": True,
+            "role": "IC",
+        }
+        response1 = self.client.patch(
+            reverse(
+                "api:profiles:update_or_delete_team_contributor",
+                kwargs={
+                    "profile_uuid": self.non_player_user.profile.uuid,
+                    "team_contributor_id": self.non_player_team_contributor.pk,
+                },
+            ),
+            data1,
+        )
+        assert response1.status_code == 200
+        assert response1.data["is_primary"] is True
+        assert response1.data["end_date"] is None
+        assert response1.data["role"] == "IC"
+
+        # Unset the role to the Other and provide the custom_role
+        data2 = {"role": "OTC", "custom_role": "custom role"}
+        response2 = self.client.patch(
+            reverse(
+                "api:profiles:update_or_delete_team_contributor",
+                kwargs={
+                    "profile_uuid": self.non_player_user.profile.uuid,
+                    "team_contributor_id": self.non_player_team_contributor.pk,
+                },
+            ),
+            data2,
+        )
+
+        assert response2.status_code == 200
+
+        self.non_player_team_contributor.refresh_from_db()
+
+        assert self.non_player_team_contributor.role == "OTC"
+        assert self.non_player_team_contributor.custom_role == "custom role"
 
 
 class TestSetMainProfileAPI(APITestCase):
