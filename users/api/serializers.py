@@ -35,9 +35,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 class MainProfileDataSerializer(serializers.Serializer):
     role = serializers.CharField(read_only=True, source="declared_role")
-    uuid = serializers.SerializerMethodField(read_only=True, source="my_profile_uuid")
+    uuid = serializers.SerializerMethodField(read_only=True)
 
-    def my_profile_uuid(self, instance: User) -> Optional[str]:
+    def get_uuid(self, instance: User) -> Optional[str]:
         """Return uuid of user's profile if user has declared role, otherwise None"""
         if not instance.declared_role:
             return None
