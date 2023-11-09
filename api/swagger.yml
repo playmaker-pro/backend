@@ -2158,7 +2158,7 @@ paths:
                 type: object
                 properties:
                   role:
-                    type: object
+                    type: string
                   uuid:
                     type: string
           description: Get user main profile uuid with role.
