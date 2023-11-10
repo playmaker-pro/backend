@@ -335,6 +335,9 @@ class TestUpdateProfileAPI(APITestCase):
                             )
                     else:
                         assert getattr(user, element) == val[element]
+            elif attr == "club_role":
+                club_role_value = getattr(profile, attr)
+                assert club_role_value == val
             else:
                 assert getattr(profile, attr) == val
 
@@ -661,7 +664,7 @@ class ProfileTeamsApiTest(APITestCase):
         assert (
             response.data["league_name"] == self.team_history.league_history.league.name
         )
-        assert response.data["role"] == data["role"]
+        assert response.data["role"]["id"] == data["role"]
 
     def test_delete_team_history(self):
         """Test deleting a team history."""
@@ -890,7 +893,7 @@ class ProfileTeamsApiTest(APITestCase):
         assert response1.status_code == 200
         assert response1.data["is_primary"] is True
         assert response1.data["end_date"] is None
-        assert response1.data["role"] == "IC"
+        assert response1.data["role"]["id"] == "IC"
 
         # Unset the role to the Other and provide the custom_role
         data2 = {"role": "OTC", "custom_role": "custom role"}

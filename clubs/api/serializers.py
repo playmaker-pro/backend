@@ -303,16 +303,62 @@ class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
     league_highest_parent_id = serializers.IntegerField(
         source="league_history.league.get_highest_parent.id"
     )
+    team_contributor_id = serializers.SerializerMethodField()
+    picture_url = serializers.SerializerMethodField()
+    country = serializers.CharField(source="get_country", read_only=True)
+    season = serializers.SerializerMethodField()
 
     class Meta:
         model = models.TeamHistory
-        fields = ["team_name", "league_highest_parent_name", "league_highest_parent_id"]
+        fields = [
+            "team_name",
+            "league_highest_parent_name",
+            "league_highest_parent_id",
+            "team_contributor_id",
+            "picture_url",
+            "country",
+            "season",
+        ]
 
     def get_team_name(self, obj: models.TeamHistory) -> str:
         """
         Retrieve the team's short name if available; otherwise, return the team's full name.
         """
         return obj.team.short_name or obj.team.name
+
+    def get_picture_url(self, obj: models.TeamHistory) -> typing.Optional[str]:
+        """
+        Retrieve the absolute url of the club logo.
+        """
+        request = self.context.get("request")
+        try:
+            url = request.build_absolute_uri(obj.team.club.picture.url)
+        except (ValueError, AttributeError):
+            return None
+        return url
+
+    @staticmethod
+    def get_season(obj: models.TeamHistory) -> typing.Optional[str]:
+        """
+        Retrieve the season name associated with the TeamHistory instance.
+        """
+        team_history_season = getattr(obj, "season", None)
+        if team_history_season:
+            return team_history_season.name
+
+        league_history_season = getattr(obj.league_history, "season", None)
+        if league_history_season:
+            return league_history_season.name
+
+    @staticmethod
+    def get_team_contributor_id(
+        obj: models.TeamHistory,
+    ) -> typing.Optional[int]:
+        """
+        Retrieve the ID of the primary TeamContributor associated with the given TeamHistory object.
+        """
+        primary_contributor = obj.teamcontributor_set.filter(is_primary=True).first()
+        return primary_contributor.id if primary_contributor else None
 
 
 class LabelSerializer(serializers.Serializer):
