@@ -1503,6 +1503,14 @@ class ClubProfile(BaseProfile):
             return True
         return False
 
+    @property
+    def club_role_dict(self) -> typing.Optional[typing.Dict[str, str]]:
+        """Return the club role as a dictionary."""
+        role_dict = dict(self.CLUB_ROLE)
+        club_role_id = self.club_role
+        club_role_name = role_dict.get(club_role_id)
+        return {"id": club_role_id, "name": club_role_name} if club_role_id else None
+
     club_object = models.ForeignKey(
         "clubs.Club",
         on_delete=models.SET_NULL,

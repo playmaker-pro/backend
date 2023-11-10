@@ -1744,10 +1744,11 @@ paths:
           content:
             application/json:
               schema:
+                type: array
+                items:
                   oneOf:
                     - $ref: '#/components/schemas/TeamContributor'
                     - $ref: '#/components/schemas/TeamContributorNonPlayer'
-
         404:
           description: "Not found."
           content:
@@ -3272,6 +3273,10 @@ components:
         - team_name
         - league_highest_parent_name
         - league_highest_parent_id
+        - team_contributor_id
+        - picture_url
+        - season
+        - country
       properties:
         team_name:
           type: string
@@ -3279,6 +3284,16 @@ components:
           type: string
         league_highest_parent_id:
           type: integer
+        team_contributor_id:
+          type: integer
+        picture_url:
+          type: string
+          nullable: true
+          format: uri
+        country:
+          type: string
+        season:
+          type: string
     SimpleTeamHistory:
       type: object
       required:
@@ -3640,6 +3655,10 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ProfileVideo'
+            labels:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProfileLabel'
             player_metrics:
               $ref: '#/components/schemas/PlayerProfileMetrics'
             height:
@@ -3703,6 +3722,7 @@ components:
                 "player": 1
               }
             ],
+            "labels": [],
             "transfer": "Szukam klubu",
             "height": 186,
             "weight": 101,
@@ -3732,6 +3752,7 @@ components:
             external_links,
             player_positions,
             profile_video,
+            labels,
             player_metrics,
             height,
             weight,
@@ -4020,7 +4041,8 @@ components:
               type: string
               nullable: true
             formation:
-              $ref: '#/components/schemas/ProfileEnumChoices'
+              type: string
+              nullable: true
             profile_video:
               type: array
               items:
@@ -4509,7 +4531,10 @@ components:
               items:
                 $ref: '#/components/schemas/ProfileLabel'
             club_role:
-              type: string
+              $ref: '#/components/schemas/ProfileEnumChoices'
+              required:
+                - id
+                - name
             custom_club_role:
               type: string
               nullable: true
@@ -4734,11 +4759,21 @@ components:
           type: string
         priority:
           type: boolean
+        latitude:
+          type: string
+          format: double
+          description: The latitude coordinate of the city.
+        longitude:
+          type: string
+          format: double
+          description: The longitude coordinate of the city.
       required:
         - id
         - name
         - voivodeship
         - priority
+        - latitude
+        - longitude
 
     UserPreferences:
       type: object
@@ -5290,9 +5325,7 @@ components:
           description: "Ending date for the contributor's association with the team in format 'YYYY-MM-DD'."
           nullable: true
         role:
-          type: string
-          description: "Role in the team (e.g., IC, IIC, GKC, etc.)."
-          nullable: true
+          $ref: '#/components/schemas/ProfileEnumChoices'
         custom_role:
           type: string
           nullable: true

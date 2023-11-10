@@ -1,4 +1,5 @@
 from typing import List
+
 from rest_framework import serializers
 
 from profiles.api.errors import InvalidClubRoleException, InvalidCustomClubRoleException
@@ -8,6 +9,8 @@ from roles.definitions import CLUB_ROLES
 
 
 class ClubProfileViewSerializer(BaseProfileSerializer):
+    club_role = serializers.DictField(source="club_role_dict", read_only=True)
+
     class Meta:
         model = ClubProfile
         fields = (
@@ -27,6 +30,8 @@ class ClubProfileViewSerializer(BaseProfileSerializer):
 
 class ClubProfileUpdateSerializer(ClubProfileViewSerializer):
     """Serializer for updating coach profile data."""
+
+    club_role = serializers.ChoiceField(choices=CLUB_ROLES, required=False)
 
     def update(self, instance: ClubProfile, validated_data: dict) -> ClubProfile:
         """Update club profile data. Overridden due to nested user data."""

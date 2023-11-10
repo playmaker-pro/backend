@@ -1,15 +1,17 @@
 import typing
 from datetime import datetime
+from typing import Optional, Dict, Union, Any
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
-from django.db.models import Count, QuerySet
+from django.db.models import Count, QuerySet, CharField
 from django.db.models.functions import ExtractYear
 from django.http import QueryDict
 from pydantic import parse_obj_as
 from rest_framework import serializers
 
 from api.errors import NotOwnerOfAnObject
+from api.consts import ChoicesTuple
 from api.serializers import ProfileEnumChoicesSerializer
 from api.services import LocaleDataService
 from clubs import errors as clubs_errors
@@ -20,7 +22,7 @@ from profiles import errors, models, services
 from profiles.api import consts
 from profiles.api import errors as api_errors
 from profiles.services import ProfileVideoService
-from roles.definitions import PROFILE_TYPE_SHORT_MAP, CLUB_ROLES
+from roles.definitions import CLUB_ROLES, PROFILE_TYPE_SHORT_MAP
 from users.services import UserService
 from utils import translate_to
 from utils.factories import utils
@@ -666,6 +668,7 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
     picture_url = serializers.SerializerMethodField()
     league_name = serializers.SerializerMethodField()
     league_id = serializers.SerializerMethodField()
+    role = serializers.SerializerMethodField()
 
     class Meta:
         model = models.TeamContributor
@@ -712,6 +715,21 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
         team_history = obj.team_history.first()
         if team_history and team_history.league_history:
             return team_history.league_history.league.id
+        return None
+
+    @staticmethod
+    def get_role(
+        obj: models.TeamContributor,
+    ) -> Optional[typing.Dict[str, str]]:
+        """
+        Gets the role of the team contributor as a dictionary with 'id' and 'name' keys.
+        """
+        role_choices = dict(models.CoachProfile.COACH_ROLE_CHOICES + CLUB_ROLES)
+
+        # Check if the role code exists in the role_choices
+        if obj.role in role_choices:
+            # Return the role in the expected format
+            return {"id": obj.role, "name": role_choices[obj.role]}
         return None
 
 
