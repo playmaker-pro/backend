@@ -1,4 +1,4 @@
-from typing import List
+from typing import Optional
 
 from rest_framework import serializers
 
@@ -29,39 +29,45 @@ class ClubProfileViewSerializer(BaseProfileSerializer):
 
 
 class ClubProfileUpdateSerializer(ClubProfileViewSerializer):
-    """Serializer for updating coach profile data."""
+    """Serializer for updating club profile data."""
 
     club_role = serializers.ChoiceField(choices=CLUB_ROLES, required=False)
 
+    def validate_club_role(self, club_role: Optional[str] = None) -> str:
+        """
+        Validates the club_role field to ensure it contains a valid choice.
+        """
+        expected_values = [role[0] for role in CLUB_ROLES]
+        if club_role and club_role not in expected_values:
+            raise InvalidClubRoleException(
+                details=f"Club role is invalid. Expected one of: {expected_values}"
+            )
+        return club_role
+
     def update(self, instance: ClubProfile, validated_data: dict) -> ClubProfile:
         """Update club profile data. Overridden due to nested user data."""
+        # Keep a reference to the old club_role before any update
+        old_club_role = instance.club_role
+
         super().update(instance, validated_data)
 
-        # Handle club_role
-        if club_role := validated_data.get("club_role"):
-            # Ensure club_role is valid
-            if club_role not in [role[0] for role in CLUB_ROLES]:
-                expected_values: List[str] = [el[0] for el in CLUB_ROLES]
-                raise InvalidClubRoleException(
-                    details=f"Club role is invalid. Expected values: {expected_values}"
-                )
-            instance.club_role = club_role
+        # Get the new club_role from validated_data or use the existing one if not provided
+        new_club_role = validated_data.get("club_role", instance.club_role)
+        # Check if custom_club_role is provided when club_role is not 'O'
+        if "custom_club_role" in validated_data and new_club_role != "O":
+            raise InvalidCustomClubRoleException()
 
-        # Additional logic for handling 'custom_club_role'
-        # If 'club_role' is not provided, use the existing one from the instance
-        club_role = validated_data.get("club_role", instance.club_role)
+        # Check if club_role is valid and update it
+        if new_club_role and new_club_role != old_club_role:
+            instance.club_role = new_club_role
 
-        # If 'club_role' is "O", check for 'custom_club_role'. If not, ensure 'custom_club_role' is not provided.
-        if club_role == "O":
-            custom_club_role = validated_data.get("custom_club_role", None)
-            instance.custom_club_role = custom_club_role
-        else:
-            if (
-                "custom_club_role" in validated_data
-                and validated_data.get("custom_club_role") is not None
-            ):
-                raise InvalidCustomClubRoleException()
-            # Reset custom_club_role to None if club_role is not "O"
+        # Reset custom_club_role to None if club_role changes from 'O' to a different value
+        if old_club_role == "O" and new_club_role != "O":
             instance.custom_club_role = None
+
+        # Update custom_club_role if new club_role is 'Other' and custom_club_role is provided
+        elif new_club_role == "O":
+            if "custom_club_role" in validated_data:
+                instance.custom_club_role = validated_data["custom_club_role"]
 
         return super().update(instance, validated_data)
