@@ -760,27 +760,27 @@ class TeamContributorService:
         Create or retrieve a TeamContributor instance for a given profile
         and team history.
         """
-        criteria = {
-            "profile_uuid": profile_uuid,
-            "team_history__in": [team_history],
-            **kwargs,
-        }
-
-        existing_contributor = models.TeamContributor.objects.filter(**criteria).first()
-
-        if existing_contributor:
-            return existing_contributor, False
+        # TODO: kgarczewski: TEMPORARY CHANGE: Reference: PM 20-697[SPIKE]
+        # criteria = {
+        #     "profile_uuid": profile_uuid,
+        #     "team_history__in": [team_history],
+        #     **kwargs,
+        # }
+        #
+        # existing_contributor = models.TeamContributor.objects.filter(**criteria).first()
+        #
+        # if existing_contributor:
+        #     return existing_contributor, False
 
         creation_criteria = {
             "profile_uuid": profile_uuid,
             **kwargs,
         }
-        try:
-            team_contributor_instance = models.TeamContributor.objects.create(
-                **creation_criteria
-            )
-        except IntegrityError:
-            raise errors.TeamContributorAlreadyExistServiceException
+        team_contributor_instance = models.TeamContributor.objects.create(
+            **creation_criteria
+        )
+        # except IntegrityError:
+        #     raise errors.TeamContributorAlreadyExistServiceException
 
         team_contributor_instance.team_history.add(team_history)
 
@@ -874,12 +874,26 @@ class TeamContributorService:
 
         return custom_role_updated
 
-    @staticmethod
-    def delete_team_contributor(team_contributor: models.TeamContributor) -> None:
+    def delete_team_contributor(self, team_contributor: models.TeamContributor) -> None:
         """
-        Delete a TeamContributor instance.
+        Delete a TeamContributor instance and update related profile fields if necessary.
         """
+        # Check if the team contributor is primary
+        is_primary = team_contributor.is_primary
+        profile_uuid = team_contributor.profile_uuid
+
+        # Delete the team contributor
         team_contributor.delete()
+
+        # If the deleted contributor was primary, unset the team fields in the profile
+        if is_primary:
+            profile_instance: models.PROFILE_MODELS = (
+                self.profile_service.get_profile_by_uuid(profile_uuid)
+            )
+            if profile_instance:
+                profile_instance.team_object = None
+                profile_instance.team_history_object = None
+                profile_instance.save()
 
     def unified_fetch_related_entities(
         self, data: dict, profile_uuid: uuid.UUID, profile_type: str
@@ -968,16 +982,17 @@ class TeamContributorService:
         if is_player:
             criteria["round"] = data.get("round")
             criteria["is_primary_for_round"] = data.get("is_primary_for_round", False)
-            existing_contributor: models.TeamContributor = (
-                self.check_existing_contributor(
-                    {
-                        "profile_uuid": profile_uuid,
-                        "team_history__in": matched_team_histories,
-                        "round": data.get("round"),
-                        "is_primary_for_round": data.get("is_primary_for_round"),
-                    }
-                )
-            )
+            # TODO: kgarczewski: TEMPORARY CHANGE: Reference: PM 20-697[SPIKE]
+            # existing_contributor: models.TeamContributor = (
+            #     self.check_existing_contributor(
+            #         {
+            #             "profile_uuid": profile_uuid,
+            #             "team_history__in": matched_team_histories,
+            #             "round": data.get("round"),
+            #             "is_primary_for_round": data.get("is_primary_for_round"),
+            #         }
+            #     )
+            # )
 
         # Non-player specific logic
         else:
@@ -989,25 +1004,25 @@ class TeamContributorService:
                 and data["role"] in models.TeamContributor.get_other_roles()
             ):
                 criteria["custom_role"] = data["custom_role"]
-            existing_contributor = self.check_existing_contributor(
-                {
-                    "profile_uuid": profile_uuid,
-                    "team_history__in": matched_team_histories,
-                    "role": data.get("role"),
-                    "start_date": data.get("start_date"),
-                }
-            )
+            # existing_contributor = self.check_existing_contributor(
+            #     {
+            #         "profile_uuid": profile_uuid,
+            #         "team_history__in": matched_team_histories,
+            #         "role": data.get("role"),
+            #         "start_date": data.get("start_date"),
+            #     }
+            # )
         # Check if existing contributor
-        if existing_contributor:
-            raise errors.TeamContributorAlreadyExistServiceException()
+        # if existing_contributor:
+        #     raise errors.TeamContributorAlreadyExistServiceException()
 
         # Create or get the team contributor
         team_contributor, was_created = self.create_or_get_team_contributor(
             profile_uuid, matched_team_histories[0], **criteria
         )
 
-        if not was_created:
-            raise errors.TeamContributorAlreadyExistServiceException()
+        # if not was_created:
+        #     raise errors.TeamContributorAlreadyExistServiceException()
 
         # Handle primary contributor logic
         team_contributor.team_history.set(matched_team_histories)
@@ -1174,17 +1189,18 @@ class TeamContributorService:
                 current_data.get("country", "PL"),
                 self.profile_service.get_user_by_uuid(profile_uuid),
             )
-        existing_contributor: models.TeamContributor = self.check_existing_contributor(
-            {
-                "profile_uuid": profile_uuid,
-                "team_history__in": [team_history],
-                "round": data.get("round"),
-            },
-            team_contributor.pk,
-        )
+        # TODO: kgarczewski: TEMPORARY CHANGE: Reference: PM 20-697[SPIKE]
+        # existing_contributor: models.TeamContributor = self.check_existing_contributor(
+        #     {
+        #         "profile_uuid": profile_uuid,
+        #         "team_history__in": [team_history],
+        #         "round": data.get("round"),
+        #     },
+        #     team_contributor.pk,
+        # )
 
-        if existing_contributor:
-            raise errors.TeamContributorAlreadyExistServiceException()
+        # if existing_contributor:
+        #     raise errors.TeamContributorAlreadyExistServiceException()
         self.handle_primary_contributor(
             team_contributor,
             profile_uuid,
@@ -1256,8 +1272,8 @@ class TeamContributorService:
             team_contributor.pk,
         )
 
-        if existing_contributor:
-            raise errors.TeamContributorAlreadyExistServiceException()
+        # if existing_contributor:
+        #     raise errors.TeamContributorAlreadyExistServiceException()
 
         self.handle_primary_contributor(
             team_contributor,

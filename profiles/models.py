@@ -2464,7 +2464,8 @@ class TeamContributor(models.Model):
             "-is_primary",
             "round",
         ]
-        unique_together = ("profile_uuid", "role", "start_date")
+        # TODO: kgarczewski: TEMPORARY CHANGE: Reference: PM 20-697[SPIKE]
+        # unique_together = ("profile_uuid", "role", "start_date")
 
     @staticmethod
     def get_other_roles():

@@ -876,6 +876,11 @@ class ProfileSerializer(serializers.Serializer):
             if not isinstance(obj, models.PlayerProfile):
                 ret.pop("player_stats", None)
 
+            # Special handling for club_role in ClubProfile
+            if isinstance(obj, models.ClubProfile) and field_name == "club_role":
+                ret[field_name] = obj.club_role_dict
+                continue
+
         for field_name in self.exclude_fields:
             ret.pop(field_name, None)
 
