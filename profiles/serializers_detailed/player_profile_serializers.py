@@ -19,7 +19,7 @@ class ProfileViePlayerPositionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PlayerPosition
-        fields = ("name", "shortcut")
+        fields = ("id", "name", "shortcut")
 
 
 class ProfileVIewPlayerProfilePositionSerializer(PlayerProfilePositionSerializer):
