@@ -1503,14 +1503,6 @@ class ClubProfile(BaseProfile):
             return True
         return False
 
-    @property
-    def club_role_dict(self) -> typing.Optional[typing.Dict[str, str]]:
-        """Return the club role as a dictionary."""
-        role_dict = dict(self.CLUB_ROLE)
-        club_role_id = self.club_role
-        club_role_name = role_dict.get(club_role_id)
-        return {"id": club_role_id, "name": club_role_name} if club_role_id else None
-
     club_object = models.ForeignKey(
         "clubs.Club",
         on_delete=models.SET_NULL,
@@ -1545,6 +1537,7 @@ class ClubProfile(BaseProfile):
         max_length=128,
         null=True,
         blank=True,
+        choices=CLUB_ROLE,
         help_text=_("Defines if admin approved change"),
     )
     custom_club_role = models.CharField(
