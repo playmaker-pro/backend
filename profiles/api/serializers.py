@@ -812,6 +812,7 @@ class ProfileSerializer(serializers.Serializer):
         "training_ready",
         "agent_status",
         "coach_role",
+        "club_role",
         "referee_role",
         "licence",
     )
