@@ -4,7 +4,12 @@ from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
-from inquiries.models import InquiryContact, InquiryRequest
+from inquiries.models import (
+    InquiryContact,
+    InquiryLogMessage,
+    InquiryRequest,
+    UserInquiryLog,
+)
 from utils.factories import GuestProfileFactory
 from utils.test.test_utils import UserManager
 
@@ -119,6 +124,17 @@ class TestInquiriesAPI(APITestCase):
             "body_recipient"
         ) == InquiryContact.parse_custom_body(*recipient_contact_data.values())
 
+        assert (
+            UserInquiryLog.objects.filter(
+                log_owner=self.sender_obj.userinquiry,
+                message__message_type=InquiryLogMessage.MessageType.ACCEPTED,
+            ).exists()
+            and UserInquiryLog.objects.filter(
+                log_owner=self.recipient_obj.userinquiry,
+                message__message_type=InquiryLogMessage.MessageType.NEW,
+            ).exists()
+        )
+
     def test_valid_reject_request_full_flow(self) -> None:
         """Test should success, full flow of rejecting inquiry request"""
         send_response = self.client.post(
@@ -157,6 +173,17 @@ class TestInquiriesAPI(APITestCase):
         )  # Nothing in contacts due to rejection
         assert contact_response.status_code == 200
         assert len(contact_response.data) == 0
+
+        assert (
+            UserInquiryLog.objects.filter(
+                log_owner=self.sender_obj.userinquiry,
+                message__message_type=InquiryLogMessage.MessageType.REJECTED,
+            ).exists()
+            and UserInquiryLog.objects.filter(
+                log_owner=self.recipient_obj.userinquiry,
+                message__message_type=InquiryLogMessage.MessageType.NEW,
+            ).exists()
+        )
 
     def test_everything_require_authentication(self) -> None:
         """Test should fail, all endpoints require authentication"""
@@ -239,6 +266,7 @@ class TestInquiriesAPI(APITestCase):
             assert response.status_code == 201
 
         response = create_new_profile_and_send_him_inquiry()
+
         assert response.status_code == 400
 
     def test_read_inquire_request(self) -> None:

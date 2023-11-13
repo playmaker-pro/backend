@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from .environment import Environment
 
@@ -528,6 +528,12 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "filename": join(LOGFILE_ROOT, "user_activity.log"),
                 "formatter": "verbose",
             },
+            "inquiries_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "inquiries.log"),
+                "formatter": "verbose",
+            },
         },
         "loggers": {
             "profiles": {
@@ -553,6 +559,10 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
             },
             "user_activity": {
                 "handlers": ["console", "user_activity_file"],
+                "level": "DEBUG",
+            },
+            "inquiries": {
+                "handlers": ["console", "inquiries_file"],
                 "level": "DEBUG",
             },
         },

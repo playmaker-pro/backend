@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from inquiries.models import InquiryContact, InquiryPlan, InquiryRequest, UserInquiry
+from inquiries import models as _models
 from users.api.serializers import BaseUserDataSerializer
 
 User = get_user_model()
@@ -12,7 +12,7 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
     recipient_object = BaseUserDataSerializer(read_only=True, source="recipient")
 
     class Meta:
-        model = InquiryRequest
+        model = _models.InquiryRequest
         fields = "__all__"
 
     def validate(self, attrs: dict) -> dict:
@@ -20,21 +20,21 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         if not self.instance:
             sender: User = attrs.get("sender")
             recipient: User = attrs.get("recipient")
-            userinquiry: UserInquiry = sender.userinquiry
+            userinquiry: _models.UserInquiry = sender.userinquiry
 
             if not userinquiry.can_make_request:
                 raise serializers.ValidationError(
                     f"You have reached your limit of inquiries ({userinquiry.counter}/{userinquiry.limit})."
                 )
 
-            if InquiryRequest.objects.filter(
+            if _models.InquiryRequest.objects.filter(
                 sender=sender, recipient=recipient
             ).exists():
                 raise serializers.ValidationError(
                     f"You have already sent inquiry to {recipient}."
                 )
 
-            if cross_request := InquiryRequest.objects.filter(
+            if cross_request := _models.InquiryRequest.objects.filter(
                 sender=recipient, recipient=sender
             ).first():
                 self._accept_cross_request(cross_request)
@@ -42,7 +42,7 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         return attrs
 
     def _accept_cross_request(
-        self, cross_request: InquiryRequest
+        self, cross_request: _models.InquiryRequest
     ) -> "InquiryRequestSerializer":
         """
         Cross request is case when user A send request to user B
@@ -66,7 +66,7 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
 
 class InquiryPlanSerializer(serializers.ModelSerializer):
     class Meta:
-        model = InquiryPlan
+        model = _models.InquiryPlan
         exclude = ("sort",)
 
 
@@ -74,17 +74,33 @@ class InquiryContactSerializer(serializers.ModelSerializer):
     email = serializers.CharField(source="_email", allow_null=True)
 
     class Meta:
-        model = InquiryContact
+        model = _models.InquiryContact
         fields = (
             "phone",
             "email",
         )
 
 
+class UserInquiryLogSerializer(serializers.ModelSerializer):
+    message_type = serializers.CharField(source="message.message_type", read_only=True)
+    body = serializers.SerializerMethodField(
+        method_name="get_log_message", read_only=True
+    )
+
+    class Meta:
+        model = _models.UserInquiryLog
+        fields = ("created_at", "message_type", "body")
+
+    def get_log_message(self, obj: _models.UserInquiryLog) -> str:
+        """Get message body with user related data"""
+        return obj.message_body
+
+
 class UserInquirySerializer(serializers.ModelSerializer):
     plan = InquiryPlanSerializer(read_only=True)
     contact = InquiryContactSerializer(source="user.inquiry_contact", read_only=True)
+    logs = UserInquiryLogSerializer(many=True, read_only=True)
 
     class Meta:
-        model = UserInquiry
+        model = _models.UserInquiry
         fields = "__all__"

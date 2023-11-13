@@ -36,7 +36,7 @@ class InquireService:
         self.create_inquiry_contact_for_user(user)
         logger.info(f"Created {basic_plan.description} plan for {user}")
 
-    def create_default_basic_plan_if_not_present(self):
+    def create_default_basic_plan_if_not_present(self) -> InquiryPlan:
         """In case when there is no Default plan we would like to create it at first time"""
 
         args = settings.INQUIRIES_INITAL_PLAN
@@ -47,17 +47,17 @@ class InquireService:
         return default
 
     @staticmethod
-    def unseen_requests(queryset, user):
+    def unseen_requests(queryset, user: User) -> QuerySet:
         return queryset.filter(recipient=user, status__in=InquiryRequest.UNSEEN_STATES)
 
     @staticmethod
-    def unseen_user_requests(user):
+    def unseen_user_requests(user: User) -> QuerySet:
         return InquiryRequest.objects.filter(
             recipient=user, status=InquiryRequest.STATUS_SENT
         )
 
     @staticmethod
-    def update_requests_with_read_status(queryset, user):
+    def update_requests_with_read_status(queryset: QuerySet, user: User) -> None:
         for request in queryset.filter(status=InquiryRequest.STATUS_SENT):
             if request.recipient == user:
                 request.read()
@@ -75,10 +75,7 @@ class InquireService:
 
     @classmethod
     def get_user_received_inquiries(cls, user: User) -> QuerySet:
-        """
-        Get all received inquiries by user,
-        update queryset objects status as read.
-        """
+        """Get all received inquiries by user"""
         queryset = user.inquiry_request_recipient.all().order_by("-created_at")
         cls.update_requests_with_read_status(queryset, user)
         return queryset

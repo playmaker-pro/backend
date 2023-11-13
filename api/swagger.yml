@@ -5474,11 +5474,29 @@ components:
           type: integer
           description: "Current sent inquiry request count"
           readOnly: true
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserInquiryLog'
       required:
         - user
         - plan
         - contact
         - counter
+
+    UserInquiryLog:
+      type: object
+      properties:
+        created_at:
+          type: string
+        message_type:
+          type: string
+        body:
+          type: string  
+      required:
+        - created_at
+        - message_type
+        - body
   securitySchemes:
     jwtAuth:
       type: http

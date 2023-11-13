@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.db import models
@@ -8,7 +9,74 @@ from django_fsm import FSMField, transition
 from inquiries.plans import basic_plan, premium_plan
 from notifications.mail import request_accepted, request_declined, request_new
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("inquiries")
+
+
+class InquiryLogMessage(models.Model):
+    class MessageType(models.TextChoices):
+        ACCEPTED = "ACCEPTED_INQUIRY", _("Accepted inquiry")
+        REJECTED = "REJECTED_INQUIRY", _("Rejected inquiry")
+        NEW = "NEW_INQUIRY", _("New inquiry")
+        OUTDATED = "OUTDATED_INQUIRY", _("Outdated inquiry")
+        UNDEFINED = "UNDEFINED_INQUIRY", _("Undefined inquiry")
+
+    body = models.TextField(
+        help_text=_(
+            "Message should include '<>' as placeholder for user related with log."
+        ),
+    )
+
+    message_type = models.CharField(
+        max_length=20,
+        choices=MessageType.choices,
+        default=MessageType.UNDEFINED,
+        unique=True,
+    )
+
+    def __str__(self) -> str:
+        return f"{self.message_type}: {self.body}"
+
+
+class UserInquiryLog(models.Model):
+    """User Inquiry Log"""
+
+    log_owner = models.ForeignKey(
+        "UserInquiry",
+        on_delete=models.CASCADE,
+        related_name="logs",
+    )
+    related_with = models.ForeignKey(
+        "UserInquiry",
+        on_delete=models.CASCADE,
+        related_name="related_logs",
+    )
+    ref = models.ForeignKey(
+        "InquiryRequest", on_delete=models.CASCADE, related_name="logs"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    message = models.ForeignKey(
+        InquiryLogMessage,
+        on_delete=models.PROTECT,
+        related_name="logs",
+    )
+
+    def __str__(self) -> str:
+        return f"{self.log_owner.user} -- {self.created_at_readable} -- {self.message_body}"
+
+    @property
+    def created_at_readable(self) -> str:
+        """Get created_at in readable format."""
+        return self.created_at.strftime("%H:%M, %d.%m.%Y")
+
+    @property
+    def message_body(self) -> str:
+        """Parse message body to include user related with log"""
+        message = _(self.message.body)
+        return message.replace("<>", self.related_with.user.display_full_name)  # type: ignore
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        logger.info(f"New UserInquiryLog (ID: {self.pk}) created: {self}")
 
 
 class InquiryPlan(models.Model):
@@ -97,6 +165,12 @@ class UserInquiry(models.Model):
         self.counter += 1
         self.save()
 
+    def decrement(self):
+        """Decrease by one counter"""
+        if self.counter > 0:
+            self.counter -= 1
+            self.save()
+
     def __str__(self):
         return f"{self.user}: {self.counter}/{self.plan.limit}"
 
@@ -107,6 +181,19 @@ class InquiryRequestManager(models.Manager):
         return self.filter(
             models.Q(status=InquiryRequest.STATUS_ACCEPTED)
             & (models.Q(sender=user_instance) | models.Q(recipient=user_instance))
+        )
+
+    def outdated(self) -> models.QuerySet:
+        """
+        Filter InquiryRequest that are older than week that are not read yet.
+        """
+        week_ago = datetime.now() - timedelta(days=7)
+        return self.filter(status=InquiryRequest.STATUS_SENT, created_at__lte=week_ago)
+
+    def to_notify_about_outdated(self) -> models.QuerySet:
+        """Filter outdated InquiryRequest have not been logged yet."""
+        return self.outdated().exclude(
+            logs__message__message_type=InquiryLogMessage.MessageType.OUTDATED
         )
 
 
@@ -154,6 +241,26 @@ class InquiryRequest(models.Model):
         on_delete=models.CASCADE,
     )
 
+    def create_log_for_sender(self, type: InquiryLogMessage.MessageType) -> None:
+        """Create log for sender"""
+        message = InquiryLogMessage.objects.get(message_type=type)
+        UserInquiryLog.objects.create(
+            log_owner=self.sender.userinquiry,
+            related_with=self.recipient.userinquiry,
+            message=message,
+            ref=self,
+        )
+
+    def create_log_for_recipient(self, type: InquiryLogMessage.MessageType) -> None:
+        """Create log for recipient"""
+        message = InquiryLogMessage.objects.get(message_type=type)
+        UserInquiryLog.objects.create(
+            log_owner=self.recipient.userinquiry,
+            related_with=self.sender.userinquiry,
+            message=message,
+            ref=self,
+        )
+
     def is_active(self):
         return self.status in self.ACTIVE_STATES
 
@@ -174,6 +281,9 @@ class InquiryRequest(models.Model):
     @transition(field=status, source=[STATUS_SENT], target=STATUS_RECEIVED)
     def read(self):
         """Should be appeared when message readed/seen by recipient"""
+        logger.info(
+            f"{self.recipient} read request from {self.sender}. -- InquiryRequestID: {self.pk}"
+        )
 
     @transition(
         field=status,
@@ -185,8 +295,12 @@ class InquiryRequest(models.Model):
         logger.debug(
             f"#{self.pk} reuqest accepted creating sender and recipient contanct body"
         )
+        self.create_log_for_sender(InquiryLogMessage.MessageType.ACCEPTED)
         self.set_bodies()
         request_accepted(self)
+        logger.info(
+            f"{self.recipient} accepted request from {self.sender}. -- InquiryRequestID: {self.pk}"
+        )
 
     @transition(
         field=status,
@@ -195,20 +309,37 @@ class InquiryRequest(models.Model):
     )
     def reject(self) -> None:
         """Should be appeared when message was rejected by recipient"""
+        self.create_log_for_sender(InquiryLogMessage.MessageType.REJECTED)
         request_declined(self)
+        logger.info(
+            f"{self.recipient} rejected request from {self.sender}. -- InquiryRequestID: {self.pk}"
+        )
 
     def save(self, *args, **kwargs):
+        adding = self._state.adding
+
         if self.status == self.STATUS_NEW:
-            self.send()  # @todo due to problem with detecting changes of paramters here is hax to alter status to send, durgin which message is sedn via mail
-        if self._state.adding:
-            self.sender.userinquiry.increment()  # type: ignore
+            self.send()
+
         super().save(*args, **kwargs)
+
+        if adding:
+            self.sender.userinquiry.increment()  # type: ignore
+            self.create_log_for_recipient(InquiryLogMessage.MessageType.NEW)
+            logger.info(
+                f"{self.sender} sent request to {self.recipient}. -- InquiryRequestID: {self.pk}"
+            )
 
     def set_bodies(self) -> None:
         """Set contact bodies for inquire request"""
         self.body = self.sender.inquiry_contact.contact_body  # type: ignore
         self.body_recipient = self.recipient.inquiry_contact.contact_body  # type: ignore
         super().save(update_fields=["body", "body_recipient"])
+
+    def reward_sender(self) -> None:
+        """Reward sender if request is outdated. Create log for sender."""
+        self.sender.userinquiry.decrement()
+        self.create_log_for_sender(InquiryLogMessage.MessageType.OUTDATED)
 
     def __str__(self):
         return f"{self.sender} --({self.status})-> {self.recipient}"
