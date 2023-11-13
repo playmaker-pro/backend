@@ -43,3 +43,26 @@ class InquiryRequestAdmin(admin.ModelAdmin):
         "body",
         "body_recipient",
     )
+
+
+@admin.register(models.InquiryContact)
+class InquiryContactAdmin(admin.ModelAdmin):
+    search_fields = (
+        "user__email",
+        "user__full_name",
+    )
+
+
+@admin.register(models.InquiryLogMessage)
+class InquiryLogMessageAdmin(admin.ModelAdmin):
+    ...
+
+
+@admin.register(models.UserInquiryLog)
+class UserInquiryLogAdmin(admin.ModelAdmin):
+    search_fields = (
+        "log_owner",
+        "related_with",
+        "ref",
+    )
+    autocomplete_fields = ("log_owner", "related_with", "ref")

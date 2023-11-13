@@ -1,6 +1,7 @@
 import logging
 
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_profile_handler(sender, instance, created, **kwargs):
+def user_handler(sender, instance, created, **kwargs):
     """Signal reponsible for creating and attaching proper profile to user during creation process.
 
     Based on declared role append proper role (profile)
@@ -31,10 +32,12 @@ def create_profile_handler(sender, instance, created, **kwargs):
         mail_admins_about_new_user(instance)
         msgprefix = "New"
 
-    inquire_service.create_basic_inquiry_plan(instance)
-    logger.info(
-        f"{msgprefix} user: {instance}."
-    )
+    try:
+        instance.userinquiry
+        instance.inquiry_contact
+    except ObjectDoesNotExist:
+        inquire_service.create_basic_inquiry_plan(instance)
+    logger.info(f"{msgprefix} user: {instance}.")
 
 
 @receiver(post_save, sender=models.RoleChangeRequest)
