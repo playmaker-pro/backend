@@ -145,6 +145,8 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         """
         Set main profile for user
         """
+        if not request.data.get("declared_role"):
+            raise api_errors.IncompleteRequestBody(["declared_role"])
         serializer = UserMainRoleSerializer(request.user, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -179,9 +181,7 @@ class ProfileSearchView(EndpointView):
             raise api_errors.InvalidSearchTerm()
 
         paginated_profiles = self.get_paginated_queryset(matching_users_queryset)
-        serializer = serializers.ProfileSearchSerializer(
-            paginated_profiles, many=True
-        )
+        serializer = serializers.ProfileSearchSerializer(paginated_profiles, many=True)
 
         return self.get_paginated_response(serializer.data)
 
@@ -222,10 +222,7 @@ class ProfileEnumsAPI(EndpointView):
         Get RefereeLevel roles and return response with format:
         [{id: id_name, name: role_name}, ...]
         """
-        roles = (
-            ChoicesTuple(*obj)
-            for obj in profile_service.get_referee_roles()
-        )
+        roles = (ChoicesTuple(*obj) for obj in profile_service.get_referee_roles())
         return Response(dict(roles), status=status.HTTP_200_OK)
 
     def get_player_age_range(self, request: Request) -> Response:
