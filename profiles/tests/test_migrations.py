@@ -156,3 +156,77 @@ def test_0107_1008(migrator) -> None:
     assert licence.licence.pk == licence_type.pk
 
     migrator.reset()
+
+
+@pytest.mark.django_db()
+def test_map_old_roles_to_new(migrator) -> None:
+    """
+    Test the 'map_old_roles_to_new' migration function.
+    """
+    # Applying the initial state migration
+    old_state: ProjectState = migrator.apply_initial_migration(
+        ("profiles", "0124_auto_20231104_2253")
+    )
+    ClubProfile: ModelBase = old_state.apps.get_model("profiles", "ClubProfile")
+    User: ModelBase = old_state.apps.get_model("users", "User")
+
+    # Using factories to create User instances
+    users = [factory.create(User, FACTORY_CLASS=UserFactory) for _ in range(7)]
+
+    club_role_values = [
+        "Prezes",  # Exact case match
+        "Dyrektor sportowy",  # Exact case match
+        "Członek zarządu",  # Exact case match
+        "Dyrektor skautingu",  # Exact case match
+        "kierownik drużyny",  # Case variation
+        "nonexistent role",  # Not in choices, lowercase
+        "Trener",  # Not in choices, original case
+        None,
+    ]
+
+    # Create ClubProfile instances with various 'club_role' values and store pre-migration roles
+    pre_migration_roles = {}
+    for user, role in zip(users, club_role_values):
+        profile = factory.create(
+            ClubProfile, FACTORY_CLASS=ClubProfileFactory, user=user, club_role=role
+        )
+        pre_migration_roles[profile.pk] = role
+
+    # Apply the migration
+    new_state: ProjectState = migrator.apply_tested_migration(
+        ("profiles", "0125_alter_clubprofile_club_role")
+    )
+    ClubProfileNewState: ModelBase = new_state.apps.get_model("profiles", "ClubProfile")
+
+    # Fetch the updated instances and assert the results
+    for profile_id, pre_role in pre_migration_roles.items():
+        updated_profile = ClubProfileNewState.objects.get(pk=profile_id)
+
+        # Expected mapping from the old role to the new role
+        expected_mapping = {
+            "Prezes": "P",  # Exact case match
+            "Dyrektor sportowy": "DSp",  # Exact case match
+            "Członek zarządu": "CZ",  # Exact case match
+            "Dyrektor skautingu": "DSk",  # Exact case match
+            "kierownik drużyny": "KD",  # Lowercase for case-insensitive comparison
+            "nonexistent role": "O",  # Lowercase for case-insensitive comparison
+            "trener": "O",  # Lowercase for case-insensitive comparison
+            None: None,
+        }
+        expected_custom_role_mapping = {
+            "nonexistent role": "nonexistent role",  # Preserving the original case
+            "Trener": "Trener",  # Preserving the original case as in club_role_values
+        }
+
+        # Fetch the updated instances and assert the results
+        for profile_id, pre_role in pre_migration_roles.items():
+            updated_profile = ClubProfileNewState.objects.get(pk=profile_id)
+
+            lower_case_pre_role = pre_role.lower() if pre_role else pre_role
+            expected_role = expected_mapping.get(
+                pre_role, expected_mapping.get(lower_case_pre_role, None)
+            )
+            expected_custom_role = expected_custom_role_mapping.get(pre_role, None)
+
+            assert updated_profile.club_role == expected_role
+            assert updated_profile.custom_club_role == expected_custom_role

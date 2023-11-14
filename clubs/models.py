@@ -1,6 +1,6 @@
 import datetime
 from functools import cached_property, lru_cache
-from typing import List, Union
+from typing import List, Union, Optional
 from urllib.parse import urljoin
 
 from address.models import AddressField
@@ -1124,6 +1124,22 @@ class TeamHistory(models.Model):
         if not self.mapper:
             self.create_mapper_obj()
         super().save()
+
+    @property
+    def get_country(self) -> Optional[str]:
+        """
+        Attempts to retrieve the country name either from the team's club or the league's history.
+        Returns None if neither is available.
+        """
+        club_country = getattr(self.team.club, "country", None)
+        if club_country:
+            return club_country.name
+
+        league_country = getattr(self.league_history.league, "country", None)
+        if league_country:
+            return league_country.name
+
+        return None
 
     class Meta:
         unique_together = ("mapper", "league_history")

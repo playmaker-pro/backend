@@ -1,15 +1,17 @@
 import typing
 from datetime import datetime
+from typing import Optional, Dict, Union, Any
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
-from django.db.models import Count, QuerySet
+from django.db.models import Count, QuerySet, CharField
 from django.db.models.functions import ExtractYear
 from django.http import QueryDict
 from pydantic import parse_obj_as
 from rest_framework import serializers
 
 from api.errors import NotOwnerOfAnObject
+from api.consts import ChoicesTuple
 from api.serializers import ProfileEnumChoicesSerializer
 from api.services import LocaleDataService
 from clubs import errors as clubs_errors
@@ -20,7 +22,7 @@ from profiles import errors, models, services
 from profiles.api import consts
 from profiles.api import errors as api_errors
 from profiles.services import ProfileVideoService
-from roles.definitions import PROFILE_TYPE_SHORT_MAP
+from roles.definitions import CLUB_ROLES, PROFILE_TYPE_SHORT_MAP
 from users.services import UserService
 from utils import translate_to
 from utils.factories import utils
@@ -437,9 +439,9 @@ class BaseTeamContributorInputSerializer(serializers.Serializer):
                             "Gender is required for foreign teams."
                         )
 
-                        # Check if team_identifier is an ID (which shouldn't be the case for foreign teams)
+                        # Check if team_parameter is an ID (which shouldn't be the case for foreign teams)
                     if isinstance(data.get("team_parameter"), int):
-                        validation_errors["team_identifier"] = [
+                        validation_errors["team_parameter"] = [
                             "Foreign teams require a team name, not an ID."
                         ]
 
@@ -511,8 +513,9 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
         required=False, help_text="End date of the contribution."
     )
     role = serializers.ChoiceField(
-        choices=models.CoachProfile.COACH_ROLE_CHOICES, required=True
+        choices=models.CoachProfile.COACH_ROLE_CHOICES + CLUB_ROLES, required=True
     )
+    custom_role = serializers.CharField(required=False, allow_null=True)
 
     def __init__(self, *args, **kwargs) -> None:
         """
@@ -533,6 +536,9 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
         data = super().validate(data)  # this now returns modified data
         validation_errors = {}
 
+        is_primary = data.get(
+            "is_primary", self.instance.is_primary if self.instance else None
+        )
         start_date = data.get("start_date")
         end_date = data.get("end_date")
 
@@ -545,10 +551,38 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
             validation_errors[
                 "end_date"
             ] = "End date should not be provided if is_primary is True."
-        # If is_primary is False or not provided and end_date is not provided, set end_date to today
-        if data.get("is_primary") in (False, None) and not end_date:
-            data["end_date"] = datetime.now().date()
+        if self.instance:
+            # Case where is_primary changes from True to False, and no end_date is provided
+            if (
+                self.instance.is_primary
+                and is_primary is False
+                and not data.get("end_date")
+            ):
+                data["end_date"] = datetime.now().date()
 
+            # Case where is_primary changes from False to True, clear the end_date
+            if not self.instance.is_primary and is_primary is True:
+                data["end_date"] = None
+
+        role = data.get("role", self.instance.role if self.instance else None)
+        # Validate the 'custom_role' field
+        if (
+            role not in models.TeamContributor.get_other_roles()
+            and data.get("custom_role") is not None
+        ):
+            validation_errors[
+                "custom_role"
+            ] = "Custom role should not be provided unless the role is 'Other'."
+
+        # Specific logic based on the profile type
+        profile_short_type = self.context.get("profile_short_type")
+        if profile_short_type and role:
+            if profile_short_type == "T" and role not in dict(
+                models.CoachProfile.COACH_ROLE_CHOICES
+            ):
+                validation_errors["role"] = "Invalid role for coach profile."
+            elif profile_short_type == "C" and role not in dict(CLUB_ROLES):
+                validation_errors["role"] = "Invalid role for club profile."
         # If any errors found, raise them all at once
 
         if validation_errors:
@@ -634,6 +668,7 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
     picture_url = serializers.SerializerMethodField()
     league_name = serializers.SerializerMethodField()
     league_id = serializers.SerializerMethodField()
+    role = serializers.SerializerMethodField()
 
     class Meta:
         model = models.TeamContributor
@@ -645,6 +680,7 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
             "league_id",
             "is_primary",
             "role",
+            "custom_role",
             "start_date",
             "end_date",
         ]
@@ -679,6 +715,21 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
         team_history = obj.team_history.first()
         if team_history and team_history.league_history:
             return team_history.league_history.league.id
+        return None
+
+    @staticmethod
+    def get_role(
+        obj: models.TeamContributor,
+    ) -> Optional[typing.Dict[str, str]]:
+        """
+        Gets the role of the team contributor as a dictionary with 'id' and 'name' keys.
+        """
+        role_choices = dict(models.CoachProfile.COACH_ROLE_CHOICES + CLUB_ROLES)
+
+        # Check if the role code exists in the role_choices
+        if obj.role in role_choices:
+            # Return the role in the expected format
+            return {"id": obj.role, "name": role_choices[obj.role]}
         return None
 
 
@@ -761,6 +812,7 @@ class ProfileSerializer(serializers.Serializer):
         "training_ready",
         "agent_status",
         "coach_role",
+        "club_role",
         "referee_role",
         "licence",
     )

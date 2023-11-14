@@ -1537,7 +1537,14 @@ class ClubProfile(BaseProfile):
         max_length=128,
         null=True,
         blank=True,
+        choices=CLUB_ROLE,
         help_text=_("Defines if admin approved change"),
+    )
+    custom_club_role = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("Custom club role specified by the user."),
     )
     external_links = models.OneToOneField(
         ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
@@ -1733,6 +1740,13 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         blank=True,
         null=True,
         help_text=_("This field represents the role of the coach."),
+    )
+    custom_coach_role = models.CharField(
+        _("Custom Coach Role"),
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("Custom club role specified by the user."),
     )
 
     formation = models.CharField(
@@ -2421,10 +2435,16 @@ class TeamContributor(models.Model):
     )
     role = models.CharField(
         max_length=50,
-        choices=CoachProfile.COACH_ROLE_CHOICES,
+        choices=CoachProfile.COACH_ROLE_CHOICES + definitions.CLUB_ROLES,
         help_text="Role of the contributor in the team.",
         null=True,
         blank=True,
+    )
+    custom_role = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Custom role of the contributor when 'Other' is selected.",
     )
     is_primary_for_round = models.BooleanField(
         default=False,
@@ -2438,6 +2458,13 @@ class TeamContributor(models.Model):
             "round",
         ]
         unique_together = ("profile_uuid", "role", "start_date")
+
+    @staticmethod
+    def get_other_roles():
+        return ["O", "OTC"]
+
+    def is_other_role(self):
+        return self.role in TeamContributor.get_other_roles()
 
 
 PROFILE_MODELS = (

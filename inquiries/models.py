@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.db import models
@@ -11,7 +12,7 @@ from inquiries.plans import basic_plan, premium_plan
 
 # from notifications.mail import request_accepted, request_declined, request_new
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("inquiries")
 
 
 class InquiryLogMessage(models.Model):
@@ -79,7 +80,9 @@ class UserInquiryLog(models.Model):
         on_delete=models.CASCADE,
         related_name="related_logs",
     )
-    ref = models.ForeignKey("InquiryRequest", on_delete=models.CASCADE)
+    ref = models.ForeignKey(
+        "InquiryRequest", on_delete=models.CASCADE, related_name="logs"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     message = models.ForeignKey(
         InquiryLogMessage,
@@ -88,14 +91,12 @@ class UserInquiryLog(models.Model):
     )
 
     def __str__(self) -> str:
-        return f"{self.log_owner.user} ({self.created_at.strftime('%H:%M, %d.%m.%Y')}) -- {self.message.message_type}"
+        return f"{self.log_owner.user} -- {self.created_at_readable} -- {self.log_message_body}"
 
-    def save(self, *args, **kwargs):
-        """Save instance, send email if configured"""
-        if self.message.send_mail and self._state.adding:
-            self.send_email_to_user()
-
-        super().save(*args, **kwargs)
+    @property
+    def created_at_readable(self) -> str:
+        """Get created_at in readable format."""
+        return self.created_at.strftime("%H:%M, %d.%m.%Y")
 
     def send_email_to_user(self) -> None:
         """Send email to user with new inquiry request state"""
@@ -115,6 +116,12 @@ class UserInquiryLog(models.Model):
     def email_body(self) -> str:
         """Parse email body to include user related with log"""
         return _TextParser(self).email_body
+
+    def save(self, *args, **kwargs):
+        if self.message.send_mail and self._state.adding:
+            self.send_email_to_user()
+        super().save(*args, **kwargs)
+        logger.info(f"New UserInquiryLog (ID: {self.pk}) created: {self}")
 
 
 class InquiryPlan(models.Model):
@@ -203,6 +210,12 @@ class UserInquiry(models.Model):
         self.counter += 1
         self.save()
 
+    def decrement(self):
+        """Decrease by one counter"""
+        if self.counter > 0:
+            self.counter -= 1
+            self.save()
+
     def __str__(self):
         return f"{self.user}: {self.counter}/{self.plan.limit}"
 
@@ -213,6 +226,19 @@ class InquiryRequestManager(models.Manager):
         return self.filter(
             models.Q(status=InquiryRequest.STATUS_ACCEPTED)
             & (models.Q(sender=user_instance) | models.Q(recipient=user_instance))
+        )
+
+    def outdated(self) -> models.QuerySet:
+        """
+        Filter InquiryRequest that are older than week that are not read yet.
+        """
+        week_ago = datetime.now() - timedelta(days=7)
+        return self.filter(status=InquiryRequest.STATUS_SENT, created_at__lte=week_ago)
+
+    def to_notify_about_outdated(self) -> models.QuerySet:
+        """Filter outdated InquiryRequest have not been logged yet."""
+        return self.outdated().exclude(
+            logs__message__message_type=InquiryLogMessage.MessageType.OUTDATED
         )
 
 
@@ -300,6 +326,9 @@ class InquiryRequest(models.Model):
     @transition(field=status, source=[STATUS_SENT], target=STATUS_RECEIVED)
     def read(self):
         """Should be appeared when message readed/seen by recipient"""
+        logger.info(
+            f"{self.recipient} read request from {self.sender}. -- InquiryRequestID: {self.pk}"
+        )
 
     @transition(
         field=status,
@@ -314,6 +343,9 @@ class InquiryRequest(models.Model):
         self.create_log_for_sender(InquiryLogMessage.MessageType.ACCEPTED)
         self.set_bodies()
         # request_accepted(self) # deprecated since we're sending emails in different way
+        logger.info(
+            f"{self.recipient} accepted request from {self.sender}. -- InquiryRequestID: {self.pk}"
+        )
 
     @transition(
         field=status,
@@ -324,6 +356,9 @@ class InquiryRequest(models.Model):
         """Should be appeared when message was rejected by recipient"""
         self.create_log_for_sender(InquiryLogMessage.MessageType.REJECTED)
         # request_declined(self) # deprecated since we're sending emails in different way
+        logger.info(
+            f"{self.recipient} rejected request from {self.sender}. -- InquiryRequestID: {self.pk}"
+        )
 
     def save(self, *args, **kwargs):
         adding = self._state.adding
@@ -336,12 +371,20 @@ class InquiryRequest(models.Model):
         if adding:
             self.sender.userinquiry.increment()  # type: ignore
             self.create_log_for_recipient(InquiryLogMessage.MessageType.NEW)
+            logger.info(
+                f"{self.sender} sent request to {self.recipient}. -- InquiryRequestID: {self.pk}"
+            )
 
     def set_bodies(self) -> None:
         """Set contact bodies for inquire request"""
         self.body = self.sender.inquiry_contact.contact_body  # type: ignore
         self.body_recipient = self.recipient.inquiry_contact.contact_body  # type: ignore
         super().save(update_fields=["body", "body_recipient"])
+
+    def reward_sender(self) -> None:
+        """Reward sender if request is outdated. Create log for sender."""
+        self.sender.userinquiry.decrement()
+        self.create_log_for_sender(InquiryLogMessage.MessageType.OUTDATED)
 
     def __str__(self):
         return f"{self.sender} --({self.status})-> {self.recipient}"

@@ -536,14 +536,6 @@ class ProfileTeamsApi(EndpointView):
         profile: models.PROFILE_MODELS = profile_service.get_profile_by_uuid(
             profile_uuid
         )
-        # Using the manager to get the input serializer
-        input_serializer_class = self.serializer_manager.get_serializer_class(
-            profile, "input"
-        )
-        serializer_data = input_serializer_class(data=request.data, partial=True)
-        serializer_data.is_valid(raise_exception=True)
-        validated_data = serializer_data.validated_data
-
         try:
             team_contributor: models.TeamContributor = (
                 team_contributor_service.get_team_contributor_or_404(
@@ -552,6 +544,32 @@ class ProfileTeamsApi(EndpointView):
             )
         except errors.TeamContributorNotFoundServiceException:
             raise api_errors.TeamContributorDoesNotExist()
+
+        profile_short_type = next(
+            (
+                key
+                for key, value in models.PROFILE_MODEL_MAP.items()
+                if isinstance(profile, value)
+            ),
+            None,
+        )
+        serializer_context = {
+            "request": request,
+            "profile_short_type": profile_short_type,
+        }
+        # Using the manager to get the input serializer
+        input_serializer_class = self.serializer_manager.get_serializer_class(
+            profile, "input"
+        )
+        serializer_data = input_serializer_class(
+            instance=team_contributor,
+            data=request.data,
+            partial=True,
+            context=serializer_context,
+        )
+        serializer_data.is_valid(raise_exception=True)
+        validated_data = serializer_data.validated_data
+
         if not team_contributor_service.is_owner_of_team_contributor(
             profile_uuid, team_contributor
         ):

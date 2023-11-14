@@ -1744,10 +1744,11 @@ paths:
           content:
             application/json:
               schema:
+                type: array
+                items:
                   oneOf:
                     - $ref: '#/components/schemas/TeamContributor'
                     - $ref: '#/components/schemas/TeamContributorNonPlayer'
-
         404:
           description: "Not found."
           content:
@@ -2158,7 +2159,7 @@ paths:
                 type: object
                 properties:
                   role:
-                    type: object
+                    type: string
                   uuid:
                     type: string
           description: Get user main profile uuid with role.
@@ -3272,6 +3273,10 @@ components:
         - team_name
         - league_highest_parent_name
         - league_highest_parent_id
+        - team_contributor_id
+        - picture_url
+        - season
+        - country
       properties:
         team_name:
           type: string
@@ -3279,6 +3284,16 @@ components:
           type: string
         league_highest_parent_id:
           type: integer
+        team_contributor_id:
+          type: integer
+        picture_url:
+          type: string
+          nullable: true
+          format: uri
+        country:
+          type: string
+        season:
+          type: string
     SimpleTeamHistory:
       type: object
       required:
@@ -3435,6 +3450,8 @@ components:
     Position:
       type: object
       properties:
+        id:
+          type: integer
         name:
           type: string
         shortcut:
@@ -3511,9 +3528,6 @@ components:
     PlayerProfileMetrics:
       type: object
       properties:
-        season:
-          type: object
-          readOnly: true
         pm_score:
           type: number
           readOnly: true
@@ -3521,7 +3535,6 @@ components:
           type: number
           readOnly: true
       required:
-       - season
        - pm_score
        - season_score
 
@@ -3644,6 +3657,10 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ProfileVideo'
+            labels:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProfileLabel'
             player_metrics:
               $ref: '#/components/schemas/PlayerProfileMetrics'
             height:
@@ -3707,13 +3724,13 @@ components:
                 "player": 1
               }
             ],
+            "labels": [],
             "transfer": "Szukam klubu",
             "height": 186,
             "weight": 101,
             "prefered_leg": 1,
             "training_ready": "1-2 treningi",
             "playermetrics": {
-              "season": {},
               "pm_score": null,
               "season_score": null
             },
@@ -3737,6 +3754,7 @@ components:
             external_links,
             player_positions,
             profile_video,
+            labels,
             player_metrics,
             height,
             weight,
@@ -4021,8 +4039,12 @@ components:
                     $ref: '#/components/schemas/ExternalLink'
             coach_role:
               $ref: '#/components/schemas/ProfileEnumChoices'
+            custom_coach_role:
+              type: string
+              nullable: true
             formation:
-              $ref: '#/components/schemas/ProfileEnumChoices'
+              type: string
+              nullable: true
             profile_video:
               type: array
               items:
@@ -4092,6 +4114,7 @@ components:
         - external_links
         - address
         - coach_role
+        - custom_coach_role
         - formations
         - profile_video
         - labels
@@ -4452,6 +4475,9 @@ components:
               description: Player,Coach,Club
             club_role:
               $ref: '#/components/schemas/ProfileEnumChoices'
+            custom_club_role:
+              type: string
+              nullable: true
             verification_stage:
               $ref: '#/components/schemas/VerificationStage'
             team_history_object:
@@ -4507,7 +4533,13 @@ components:
               items:
                 $ref: '#/components/schemas/ProfileLabel'
             club_role:
+              $ref: '#/components/schemas/ProfileEnumChoices'
+              required:
+                - id
+                - name
+            custom_club_role:
               type: string
+              nullable: true
             profile_video:
               type: array
               items:
@@ -4531,6 +4563,7 @@ components:
           - user
           - labels
           - club_role
+          - custom_club_role
           - profile_video
           - external_links
           - role
@@ -4590,6 +4623,7 @@ components:
             },
             "labels": [],
             "club_role": "V-ce prezes",
+            "custom_club_role": null,
             "profile_video": [],
             "external_links": [],
             "role": "C",
@@ -4727,11 +4761,21 @@ components:
           type: string
         priority:
           type: boolean
+        latitude:
+          type: string
+          format: double
+          description: The latitude coordinate of the city.
+        longitude:
+          type: string
+          format: double
+          description: The longitude coordinate of the city.
       required:
         - id
         - name
         - voivodeship
         - priority
+        - latitude
+        - longitude
 
     UserPreferences:
       type: object
@@ -5079,6 +5123,10 @@ components:
           type: string
           description: "role in the team-history ('IC', 'GKC'..)"
           nullable: false
+        custom_role:
+          type: string
+          nullable: true
+          description: "Custom role for the contributor, can be null if role is not 'Other'."
       required:
         - team_history
         - is_primary
@@ -5128,6 +5176,10 @@ components:
           type: string
           description: "role in the team-history ('IC', 'GKC'..)"
           nullable: false
+        custom_role:
+          type: string
+          nullable: true
+          description: "Custom role for the contributor, can be null if role is not 'Other'."
       required:
         - start_date
         - team_parameter
@@ -5188,6 +5240,14 @@ components:
         gender:
           type: integer
           description: "Gender identifier. 1 for male, 2 for female"
+        role:
+          type: string
+          description: "role in the team-history ('IC', 'GKC'..)"
+          nullable: false
+        custom_role:
+          type: string
+          nullable: true
+          description: "Custom role for the contributor, can be null if role is not 'Other'."
       required:
         - country
         - team_parameter
@@ -5267,9 +5327,11 @@ components:
           description: "Ending date for the contributor's association with the team in format 'YYYY-MM-DD'."
           nullable: true
         role:
+          $ref: '#/components/schemas/ProfileEnumChoices'
+        custom_role:
           type: string
-          description: "Role in the team (e.g., IC, IIC, GKC, etc.)."
           nullable: true
+          description: 'Custom role for the contributor, can be null if role is not "Other".'
       required:
         - id
         - picture_url
@@ -5281,6 +5343,7 @@ components:
         - start_date
         - end_date
         - role
+        - custom_role
     SocialLoginResponse:
       description: User logged in successfully - tokens returned.
       type: object
@@ -5411,11 +5474,29 @@ components:
           type: integer
           description: "Current sent inquiry request count"
           readOnly: true
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserInquiryLog'
       required:
         - user
         - plan
         - contact
         - counter
+
+    UserInquiryLog:
+      type: object
+      properties:
+        created_at:
+          type: string
+        message_type:
+          type: string
+        body:
+          type: string  
+      required:
+        - created_at
+        - message_type
+        - body
   securitySchemes:
     jwtAuth:
       type: http
