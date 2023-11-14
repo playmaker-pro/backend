@@ -70,7 +70,7 @@ Wiadomość została wygenerowana automatycznie. Prosimy na nią nie odpowiadać
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("inquiries", "0005_inquirylogmessage_userinquirylog"),
+        ("inquiries", "0006_alter_userinquirylog_ref"),
     ]
 
     operations = [

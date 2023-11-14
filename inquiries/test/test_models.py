@@ -1,5 +1,6 @@
 import datetime
 
+import pytest
 from django.test import TestCase
 
 from inquiries.models import (
@@ -61,6 +62,7 @@ class ModelMethodsRequest(TestCase):
         assert self.request.status_display_for(self.coach) == "WYSŁANO"
 
 
+@pytest.mark.usefixtures("silence_mails")
 class RewardOutdatedInquiryRequest(TestCase):
     def setUp(self) -> None:
         utils.create_system_user()

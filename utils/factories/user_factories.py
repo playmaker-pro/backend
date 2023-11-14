@@ -5,6 +5,7 @@ from django.db.models import signals
 from factory import fuzzy
 
 from users.models import UserPreferences
+
 from .base import CustomObjectFactory
 
 User = get_user_model()

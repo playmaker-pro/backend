@@ -1,7 +1,7 @@
 import datetime
+import uuid
 from urllib.parse import urljoin
 
-import uuid
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import ArrayField
@@ -24,7 +24,6 @@ from utils import calculate_age
 
 
 class UserRoleMixin:
-
     @property
     def is_player(self):
         return self.role == definitions.PLAYER_SHORT
