@@ -2158,6 +2158,15 @@ paths:
               schema:
                 type: object
                 properties:
+                  picture:
+                    type: string
+                    nullable: true
+                  email:
+                    type: string
+                  first_name:
+                    type: string
+                  last_name:
+                    type: string
                   role:
                     type: string
                   uuid:
