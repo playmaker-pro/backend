@@ -75,7 +75,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         )
         if not serializer_class:
             return Response(status=status.HTTP_204_NO_CONTENT)
-        serializer = serializer_class(profile_object)
+        serializer = serializer_class(profile_object, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update_profile(self, request: Request, profile_uuid: uuid.UUID) -> Response:
@@ -110,7 +110,9 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         (?role={P, C, S, G, ...})
         """
         qs: QuerySet = self.get_paginated_queryset()
-        serializer = serializers.ProfileSerializer(qs, many=True)
+        serializer = serializers.ProfileSerializer(
+            qs, many=True, context={"request": request}
+        )
         # serializer = PlayerProfileViewSerializer(qs, many=True)
         return self.get_paginated_response(serializer.data)
 
@@ -531,6 +533,7 @@ class ProfileTeamsApi(EndpointView):
         user: User = profile_service.get_user_by_uuid(profile_uuid)
         if user != request.user:
             raise PermissionDenied
+
         profile: models.PROFILE_MODELS = profile_service.get_profile_by_uuid(
             profile_uuid
         )
@@ -542,6 +545,11 @@ class ProfileTeamsApi(EndpointView):
             )
         except errors.TeamContributorNotFoundServiceException:
             raise api_errors.TeamContributorDoesNotExist()
+
+        if not team_contributor_service.is_owner_of_team_contributor(
+            profile_uuid, team_contributor
+        ):
+            raise PermissionDenied()
 
         profile_short_type = next(
             (
@@ -567,11 +575,6 @@ class ProfileTeamsApi(EndpointView):
         )
         serializer_data.is_valid(raise_exception=True)
         validated_data = serializer_data.validated_data
-
-        if not team_contributor_service.is_owner_of_team_contributor(
-            profile_uuid, team_contributor
-        ):
-            raise PermissionDenied()
         try:
             if profile_service.is_player_or_guest_profile(profile):
                 updated_team_contributor = (

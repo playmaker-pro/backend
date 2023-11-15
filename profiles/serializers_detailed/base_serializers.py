@@ -304,6 +304,35 @@ class BaseProfileSerializer(serializers.ModelSerializer):
         if repr_dict.get("external_links") is None:
             repr_dict["external_links"] = []
 
+        # Special handling for 'team_history_object'
+        if "team_history_object" in repr_dict and hasattr(instance, "uuid"):
+            team_history_serializer_context = {
+                "request": self.context.get("request"),
+                "profile_uuid": instance.uuid,
+            }
+
+            # Check if there is a primary team contributor for the team history
+            if (
+                hasattr(instance, "team_history_object")
+                and instance.team_history_object
+            ):
+                primary_contributor = (
+                    instance.team_history_object.teamcontributor_set.filter(
+                        is_primary=True, profile_uuid=instance.uuid
+                    ).first()
+                )
+
+                if primary_contributor:
+                    team_history_serializer = TeamHistoryBaseProfileSerializer(
+                        instance.team_history_object,
+                        context=team_history_serializer_context,
+                    )
+                    repr_dict["team_history_object"] = team_history_serializer.data
+                else:
+                    repr_dict["team_history_object"] = None
+        else:
+            repr_dict["team_history_object"] = None
+
         return repr_dict
 
     def get_profile_video(self, obj: PROFILE_TYPE) -> dict:

@@ -714,7 +714,7 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
         """
         team_history = obj.team_history.first()
         if team_history and team_history.league_history:
-            return team_history.league_history.league.id
+            return team_history.league_history.league.highest_parent.id
         return None
 
     @staticmethod
@@ -852,6 +852,7 @@ class ProfileSerializer(serializers.Serializer):
         self, obj: models.PROFILE_TYPE = None, *args, **kwargs
     ) -> dict:
         """serialize each attr of given model into json"""
+
         obj = obj or self.instance
         ret = super().to_representation(obj)
         fields: list[str] = self.serialize_fields or obj.__dict__.keys()
@@ -879,6 +880,33 @@ class ProfileSerializer(serializers.Serializer):
 
         for field_name in self.exclude_fields:
             ret.pop(field_name, None)
+
+        # For the field 'team_history_object', modify its context to include 'profile_uuid'
+        if (
+            "team_history_object" in ret
+            and hasattr(obj, "team_history_object")
+            and obj.team_history_object
+        ):
+            team_history_serializer_context = {
+                "request": self.context.get("request"),
+                "profile_uuid": obj.uuid,
+            }
+
+            # Check if there is a primary team contributor for the team history
+            primary_contributor = obj.team_history_object.teamcontributor_set.filter(
+                is_primary=True, profile_uuid=obj.uuid
+            ).first()
+
+            if primary_contributor:
+                team_history_serializer = self.TeamHistoryBaseProfileSerializer(
+                    obj.team_history_object,
+                    context=team_history_serializer_context,
+                )
+                ret["team_history_object"] = team_history_serializer.data
+            else:
+                ret["team_history_object"] = None
+        else:
+            ret["team_history_object"] = None
 
         return ret
 

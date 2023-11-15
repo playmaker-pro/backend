@@ -1,8 +1,10 @@
 import typing
+import uuid
 
 from rest_framework import serializers
 
 from clubs import models
+from profiles.models import TeamContributor
 from external_links.serializers import ExternalLinksSerializer
 from users.api.serializers import UserDataSerializer
 from voivodeships.serializers import VoivodeshipSerializer
@@ -350,14 +352,20 @@ class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
         if league_history_season:
             return league_history_season.name
 
-    @staticmethod
     def get_team_contributor_id(
+        self,
         obj: models.TeamHistory,
     ) -> typing.Optional[int]:
         """
         Retrieve the ID of the primary TeamContributor associated with the given TeamHistory object.
         """
-        primary_contributor = obj.teamcontributor_set.filter(is_primary=True).first()
+        profile_uuid: typing.Optional[uuid.UUID] = self.context.get("profile_uuid")
+        primary_contributor: typing.Optional[
+            TeamContributor
+        ] = obj.teamcontributor_set.filter(
+            is_primary=True, profile_uuid=profile_uuid
+        ).first()
+
         return primary_contributor.id if primary_contributor else None
 
 
