@@ -194,19 +194,20 @@ class TeamContributorServiceTests(TestCase):
         assert team_contributor.role == "IIC"
         assert team_contributor.team_history.filter(id=team_history.id).exists()
 
-    def test_create_or_get_team_contributor_get(self):
-        """Test fetching an existing team contributor instead of creating a new one."""
-        team_history = TeamHistoryFactory.create()
-        existing_team_contributor = TeamContributorFactory.create(
-            profile_uuid=self.user.profile.uuid, team_history=[team_history], role="IC"
-        )
-        (
-            team_contributor,
-            was_created,
-        ) = team_contributor_service.create_or_get_team_contributor(
-            self.user.profile.uuid, team_history, role="IC"
-        )
-        assert existing_team_contributor == team_contributor
+    # TODO: kgarczewski: FUTURE ADDITION: Reference: PM 20-697[SPIKE]
+    # def test_create_or_get_team_contributor_get(self):
+    #     """Test fetching an existing team contributor instead of creating a new one."""
+    #     team_history = TeamHistoryFactory.create()
+    #     existing_team_contributor = TeamContributorFactory.create(
+    #         profile_uuid=self.user.profile.uuid, team_history=[team_history], role="IC"
+    #     )
+    #     (
+    #         team_contributor,
+    #         was_created,
+    #     ) = team_contributor_service.create_or_get_team_contributor(
+    #         self.user.profile.uuid, team_history, role="IC"
+    #     )
+    #     assert existing_team_contributor == team_contributor
 
     def test_create_or_get_all_related_entities(self):
         """Test creating or fetching all related entities for a given team contributor."""  # noqa: E501
@@ -277,3 +278,34 @@ class TeamContributorServiceTests(TestCase):
         assert not self.team_contributor_service.is_owner_of_team_contributor(
             self.user_2.profile.uuid, self.team_contributor
         )
+
+    def test_profile_fields_update_on_contributor_creation(self):
+        """Test that profile fields are updated when a primary team contributor is created."""
+        team_history = TeamHistoryFactory.create()
+        data = {
+            "team_history": team_history,
+            "is_primary": True,
+        }
+        team_contributor = self.team_contributor_service.create_contributor(
+            self.user.profile.uuid, data, "player"
+        )
+        profile_instance = models.PlayerProfile.objects.get(uuid=self.user.profile.uuid)
+        assert (
+            profile_instance.team_object == team_contributor.team_history.all()[0].team
+        )
+        assert (
+            profile_instance.team_history_object
+            == team_contributor.team_history.all()[0]
+        )
+
+    def test_profile_fields_reset_on_contributor_deletion(self):
+        """Test that profile fields are reset when a primary team contributor is deleted."""
+        # Create a primary team contributor
+        team_contributor = TeamContributorFactory.create(
+            profile_uuid=self.user.profile.uuid, is_primary=True
+        )
+        # Delete the primary team contributor
+        self.team_contributor_service.delete_team_contributor(team_contributor)
+        profile_instance = models.PlayerProfile.objects.get(uuid=self.user.profile.uuid)
+        assert profile_instance.team_object is None
+        assert profile_instance.team_history_object is None

@@ -70,36 +70,43 @@ class CoachProfileUpdateSerializer(CoachProfileViewSerializer):
             )
         return formation
 
+    def validate_coach_role(self, coach_role: Optional[str] = None) -> str:
+        """
+        Validates the coach_role field to ensure it contains a valid choice.
+        """
+        expected_values = [role[0] for role in CoachProfile.COACH_ROLE_CHOICES]
+        if coach_role and coach_role not in expected_values:
+            raise InvalidCoachRoleException(
+                details=f"Coach role is invalid. Expected one of: {expected_values}"
+            )
+        return coach_role
+
     def update(self, instance: CoachProfile, validated_data: dict) -> CoachProfile:
         """Update coach profile data. Overridden due to nested user data."""
+        # Keep a reference to the old coach_role before any update
+        old_coach_role = instance.coach_role
+
         super().update(instance, validated_data)
 
-        if coach_role := validated_data.get("coach_role"):  # noqa: E999
-            if coach_role not in [role[0] for role in CoachProfile.COACH_ROLE_CHOICES]:
-                expected_values: List[str] = [
-                    el[0] for el in CoachProfile.COACH_ROLE_CHOICES
-                ]
-                raise InvalidCoachRoleException(
-                    details=f"Coach role is invalid. Expected values: {expected_values}"
-                )
-            instance.coach_role = coach_role
+        # Retrieve the new coach_role from validated_data, default to existing role if not provided
+        new_coach_role = validated_data.get("coach_role", instance.coach_role)
 
-        # Additional logic for handling 'custom_coach_role'
-        # If 'coach_role' is not provided, use the existing one from the instance
-        coach_role = validated_data.get("coach_role", instance.coach_role)
+        # Raise an exception if custom_coach_role is provided but the new coach_role is not 'Other'
+        if "custom_coach_role" in validated_data and new_coach_role != "OTC":
+            raise InvalidCustomCoachRoleException()
 
-        # If 'coach_role' is "OTC", check for 'custom_coach_role'. If not, ensure 'custom_coach_role' is not provided.
-        if coach_role == "OTC":
-            custom_coach_role = validated_data.get("custom_coach_role", None)
-            instance.custom_coach_role = custom_coach_role
-        else:
-            if (
-                "custom_coach_role" in validated_data
-                and validated_data.get("custom_coach_role") is not None
-            ):
-                raise InvalidCustomCoachRoleException()
-            # Reset custom_coach_role to None if coach_role is not "OTC"
+        # Update the coach_role on the instance if it has changed
+        if new_coach_role and new_coach_role != old_coach_role:
+            instance.coach_role = new_coach_role
+
+        # Reset custom_coach_role to None if coach_role changes from 'Other' to a different role
+        if old_coach_role == "OTC" and new_coach_role != "OTC":
             instance.custom_coach_role = None
+
+        # Update custom_coach_role if new coach_role is 'Other' and custom_coach_role is provided
+        elif new_coach_role == "OTC":
+            if "custom_coach_role" in validated_data:
+                instance.custom_coach_role = validated_data["custom_coach_role"]
 
         if formation := validated_data.get("formation"):
             instance.formation = formation
