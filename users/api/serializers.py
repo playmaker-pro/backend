@@ -33,11 +33,23 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id", "username"]
 
 
-class MainProfileDataSerializer(serializers.Serializer):
+class MainProfileDataSerializer(serializers.ModelSerializer):
     role = serializers.CharField(read_only=True, source="declared_role")
     uuid = serializers.SerializerMethodField(
         read_only=True, method_name="my_profile_uuid"
     )
+    picture = serializers.CharField(source="picture_url", read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            "picture",
+            "email",
+            "first_name",
+            "last_name",
+            "role",
+            "uuid",
+        )
 
     def my_profile_uuid(self, instance: User) -> Optional[str]:
         """Return uuid of user's profile if user has declared role, otherwise None"""
