@@ -852,6 +852,9 @@ class ProfileSerializer(serializers.Serializer):
         self, obj: models.PROFILE_TYPE = None, *args, **kwargs
     ) -> dict:
         """serialize each attr of given model into json"""
+        from profiles.serializers_detailed.manager_profile_serializers import (
+            PhoneNumberField,
+        )
 
         obj = obj or self.instance
         ret = super().to_representation(obj)
@@ -907,6 +910,14 @@ class ProfileSerializer(serializers.Serializer):
                 ret["team_history_object"] = None
         else:
             ret["team_history_object"] = None
+
+        # Dynamically add 'phone_number' field if 'dial_code' and 'agency_phone' are in the response
+        if "dial_code" in ret and "agency_phone" in ret:
+            phone_number_field = PhoneNumberField(source="*")
+            ret["phone_number"] = phone_number_field.to_representation(obj)
+
+            ret.pop("dial_code", None)
+            ret.pop("agency_phone", None)
 
         return ret
 
