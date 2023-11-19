@@ -302,7 +302,7 @@ class TestUpdateProfileAPI(APITestCase):
                     "role": "M",
                 },
                 {
-                    "agency_phone": "+1234567890",
+                    "phone_number": {"dial_code": "+9", "agency_phone": "+333333333"},
                     "agency_email": "example@example.com",
                     "agency_transfermarkt_url": "https://www.transfermarkt.com/example",
                 },
@@ -335,6 +335,9 @@ class TestUpdateProfileAPI(APITestCase):
                             )
                     else:
                         assert getattr(user, element) == val[element]
+            elif attr == "phone_number":
+                assert profile.dial_code == val["dial_code"]
+                assert profile.agency_phone == val["agency_phone"]
             elif attr == "club_role":
                 club_role_value = getattr(profile, attr)
                 assert club_role_value == val

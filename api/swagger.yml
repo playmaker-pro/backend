@@ -4201,9 +4201,8 @@ components:
             formation:
               type: string
               description: "Field for player and coach profile. Choices are: '5-3-2', '5-4-1', '4-4-2', '4-5-1', '4-3-3', '4-2-3-1', '4-1-4-1', ''4-3-2-1', '3-5-2', '3-4-3', '4-3-1-2', '4-4-1-1'"
-            agency_phone:
-              type: string
-              description: "Contact phone number for the managing agency."
+            phone_number:
+               $ref: '#/components/schemas/PhoneNumber'
             agency_email:
               type: string
               format: email
@@ -4378,9 +4377,8 @@ components:
               type: string
             user:
               $ref: '#/components/schemas/UserProfileBase'
-            agency_phone:
-              type: string
-              nullable: true
+            phone_number:
+              $ref: '#/components/schemas/PhoneNumber'
             agency_email:
               type: string
               format: email
@@ -4475,7 +4473,7 @@ components:
         - profile_video
         - labels
         - role
-        - agency_phone
+        - phone_number
         - agency_email
         - agency_transfermarkt_url
         - agency_website_url
@@ -5542,6 +5540,20 @@ components:
         - created_at
         - message_type
         - body
+    PhoneNumber:
+      type: object
+      nullable: true
+      description: "Nested object containing the dial code and phone number for the managing agency."
+      properties:
+        dial_code:
+          type: string
+          description: "Country dial code for the agency phone number."
+          example: "+1"
+        agency_phone:
+          type: string
+          description: "Contact phone number for the managing agency."
+          example: "123456789"
+
   securitySchemes:
     jwtAuth:
       type: http

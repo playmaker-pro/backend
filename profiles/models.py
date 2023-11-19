@@ -1945,6 +1945,13 @@ class ManagerProfile(BaseProfile):
         null=True,
         help_text=_("Contact phone number for the managing agency."),
     )
+    dial_code = models.CharField(
+        _("Dial Code"),
+        max_length=5,
+        blank=True,
+        null=True,
+        help_text=_("Country dial code for the agency phone number."),
+    )
     agency_email = models.EmailField(
         _("Agency Email"),
         blank=True,
