@@ -9,6 +9,10 @@ Main purpose of functions is to skip marked tests when running with specific fla
 """  # noqa: E501
 
 import pytest
+from django.conf import settings
+from rest_framework.test import APIClient
+
+from utils.factories import UserFactory
 
 
 def pytest_addoption(parser):
@@ -20,7 +24,7 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     """Add additional marker to pytest."""
-    config.addinivalue_line("markers", "slow: mark test as slow to run")
+    config.addinivalue_line("markers", "mute: mark test as slow to run")
 
 
 def pytest_collection_modifyitems(config, items):
@@ -29,5 +33,17 @@ def pytest_collection_modifyitems(config, items):
         return
     skip_slow = pytest.mark.skip(reason="need --allow-skipped option to run")
     for item in items:
-        if "slow" in item.keywords:
+        if "mute" in item.keywords:
             item.add_marker(skip_slow)
+
+
+@pytest.fixture(autouse=True)
+def system_user():
+    """Create system user before running tests."""
+    UserFactory.create(email=settings.SYSTEM_USER_EMAIL)
+
+
+@pytest.fixture(autouse=True)
+def api_client():
+    """Create api client before running tests."""
+    return APIClient()

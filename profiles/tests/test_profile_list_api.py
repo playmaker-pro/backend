@@ -1,19 +1,24 @@
+import random
 from typing import List
+from unittest import mock
+from unittest.mock import MagicMock
 
 import factory
+import pytest
+from django.test import override_settings
 from django.urls import reverse
 from parameterized import parameterized
 from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
+from profiles.managers import ProfileManager
 from profiles.models import PlayerProfile
 from profiles.services import ProfileService
 from profiles.utils import get_past_date
 from users.models import UserPreferences
 from utils import factories, get_current_season
-from utils.factories import PlayerProfileFactory, UserPreferencesFactory
+from utils.factories import PlayerProfileFactory, UserFactory, UserPreferencesFactory
 from utils.test.test_utils import UserManager
-from utils.testutils import create_system_user
 
 profile_service = ProfileService()
 url: str = "api:profiles:create_or_list_profiles"
@@ -22,7 +27,6 @@ url: str = "api:profiles:create_or_list_profiles"
 class TestProfileListAPI(APITestCase):
     def setUp(self) -> None:
         """set up object factories"""
-        create_system_user()
         self.client: APIClient = APIClient()
         self.user = UserManager(self.client)
         self.user_obj = self.user.create_superuser()
@@ -30,11 +34,15 @@ class TestProfileListAPI(APITestCase):
         self.url = reverse(url)
 
     def test_shuffle_list(self) -> None:
-        """Test if results are correctly shuffled"""
-        factories.PlayerProfileFactory.create_batch(10)
+        """
+        Test if results are correctly shuffled.
+        We have to test for more than 10 profiles,
+        because at the end of filtering, we are sorting it by data score value.
+        Bigger sample of profiles, bigger change to pass this test.
+        """
+        factories.PlayerProfileFactory.create_batch(30)
         response1 = self.client.get(self.url, {"role": "P", "shuffle": True})
         response2 = self.client.get(self.url, {"role": "P", "shuffle": True})
-
         assert response1.data["results"] != response2.data["results"]
 
     @parameterized.expand([[{"role": "P"}], [{"role": "C"}], [{"role": "T"}]])
@@ -280,9 +288,11 @@ class TestProfileListAPI(APITestCase):
         assert response.status_code == 400
 
 
+@override_settings(SUSPEND_SIGNALS=True)
 class TestPlayerProfileListByGenderAPI(APITestCase):
+    """Test profile/ url with gender parameters."""
+
     def setUp(self) -> None:
-        create_system_user()
         self.client: APIClient = APIClient()
         self.url = reverse(url)
 
@@ -322,3 +332,112 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
 
         assert len(response.data["results"]) == 0
         assert response.status_code == 200
+
+
+@pytest.mark.django_db
+@mock.patch.object(
+    ProfileManager,
+    "get_data_score",
+    side_effect=lambda obj: random.randint(1, 3),
+)
+def test_if_response_is_ordered_by_data_score(
+    data_fulfill_score: MagicMock,  # noqa # pylint: disable=unused-argument
+    api_client: APIClient,
+) -> None:
+    """
+    Test if response is ordered by data_fulfill_score.
+    We are mocking here data_fulfill_score method.
+    Endpoint returns 10 results, so we can guess how response will look like
+    """
+    profiles: List[PlayerProfile] = PlayerProfileFactory.create_batch(5)
+
+    expected_response = [
+        obj.data_fulfill_status
+        for obj in sorted(profiles, key=lambda x: x.data_fulfill_status)
+    ]
+
+    response: Response = api_client.get(reverse(url) + "?role=P")
+    user_ids_response = [obj["user"]["id"] for obj in response.data["results"]]
+
+    profiles_scoring = [
+        var["data_fulfill_status"]
+        for var in list(
+            PlayerProfile.objects.filter(user__in=user_ids_response).values(
+                "data_fulfill_status"
+            )
+        )
+    ]
+    assert expected_response == sorted(map(int, profiles_scoring))
+
+
+@pytest.mark.django_db
+@mock.patch.object(
+    ProfileManager,
+    "get_data_score",
+    side_effect=lambda obj: random.randint(1, 3),
+)
+def test_if_response_is_ordered_by_data_score_with_many_profiles(
+    data_fulfill_score: MagicMock,  # noqa # pylint: disable=unused-argument
+    api_client: APIClient,
+) -> None:
+    """
+    Test if response is ordered by data_fulfill_score.
+    We are mocking here data_fulfill_score method.
+    Endpoint returns 10 items, and we are creating 50 profiles.
+    We can't guess how response would look like.
+    """
+    PlayerProfileFactory.create_batch(50)
+
+    response: Response = api_client.get(reverse(url) + "?role=P")
+    user_ids_response = [obj["user"]["id"] for obj in response.data["results"]]
+
+    # Get profiles data_fulfill_status level
+    profiles_scoring = [
+        var["data_fulfill_status"]
+        for var in list(
+            PlayerProfile.objects.filter(user__in=user_ids_response).values(
+                "data_fulfill_status"
+            )
+        )
+    ]
+
+    expected_response = sorted(profiles_scoring)
+
+    # We have to check if sorted list is equal as the response one
+    assert expected_response == profiles_scoring
+
+
+@pytest.mark.django_db
+def test_profile_listing_not_me_parameter(api_client: APIClient) -> None:
+    """Test if user profile is not returned when not_me parameter is set to true"""
+    user = UserFactory.create(password="test1234")
+    PlayerProfileFactory.create(user=user)
+
+    user_manager = UserManager(api_client)
+    headers = user_manager.custom_user_headers(email=user.email, password="test1234")
+    url_to_hit: str = reverse(url)
+    response_without_my_profile = api_client.get(
+        url_to_hit + "?role=P&not_me=true", **headers
+    )
+    response_with_profile = api_client.get(url_to_hit + "?role=P", **headers)
+
+    assert len(response_without_my_profile.data["results"]) == 0
+    assert len(response_with_profile.data["results"]) == 1
+
+
+@pytest.mark.django_db
+def test_profile_listing_not_me_wrong_parameter(api_client: APIClient) -> None:
+    """Test if user profile is not returned when not_me parameter is set to true"""
+    user = UserFactory.create(password="test1234")
+    PlayerProfileFactory.create(user=user)
+
+    user_manager = UserManager(api_client)
+    headers = user_manager.custom_user_headers(email=user.email, password="test1234")
+    url_to_hit: str = reverse(url)
+    response_wit_not_me_param = api_client.get(
+        url_to_hit + "?role=P&not_me=false", **headers
+    )
+    response_with_profile = api_client.get(url_to_hit + "?role=P", **headers)
+
+    assert len(response_wit_not_me_param.data["results"]) == 1
+    assert len(response_with_profile.data["results"]) == 1

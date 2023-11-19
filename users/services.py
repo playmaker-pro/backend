@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Union
 
 from allauth.socialaccount.models import SocialAccount
 from cities_light.models import City
@@ -11,7 +11,6 @@ from django.template import loader
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from features.models import AccessPermission, Feature, FeatureElement
-from profiles.models import PROFILE_TYPE
 from users.errors import CityDoesNotExistException
 from users.managers import UserTokenManager
 from users.schemas import (
@@ -19,6 +18,9 @@ from users.schemas import (
     UserFacebookDetailPydantic,
     UserGoogleDetailPydantic,
 )
+
+if TYPE_CHECKING:
+    from profiles.models import PROFILE_TYPE
 
 User = get_user_model()
 
@@ -54,7 +56,7 @@ class UserService:
         """Set role to user"""
         user.set_role(role)
 
-    def user_has_profile(self, user: User, profile: PROFILE_TYPE) -> bool:
+    def user_has_profile(self, user: User, profile: "PROFILE_TYPE") -> bool:
         """Check if given user already has profile on given type"""
         try:
             return profile.objects.get(user=user)

@@ -2,6 +2,7 @@ import datetime
 import typing
 from unittest import TestCase
 
+import pytest
 from rest_framework.test import APITestCase
 
 from clubs import errors
@@ -9,7 +10,6 @@ from clubs.models import Gender, League, Team, TeamHistory
 from clubs.services import ClubTeamService, SeasonService, TeamHistoryCreationService
 from profiles.api.serializers import PlayerProfileTeamContributorInputSerializer
 from roles import definitions
-from utils import testutils as utils
 from utils.factories import (
     SEASON_NAMES,
     GenderFactory,
@@ -66,6 +66,7 @@ class TestClubTeamService(APITestCase):
             pass
 
 
+@pytest.mark.django_db
 class TestSeasonService(TestCase):
     def test_validate_season_valid(self) -> None:
         """if given season is valid."""
@@ -91,7 +92,6 @@ class TestSeasonService(TestCase):
 class TeamHistoryCreationServicesTest(APITestCase):
     def setUp(self) -> None:
         """Set up test environment."""
-        utils.create_system_user()
         self.user = UserFactory.create(
             email="username", declared_role=definitions.PLAYER_SHORT
         )

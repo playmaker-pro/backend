@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.db.models import QuerySet
 from rest_framework import viewsets
 
@@ -12,7 +14,7 @@ class EndpointView(viewsets.GenericViewSet):
     def get_queryset(self) -> QuerySet:
         ...
 
-    def get_paginated_queryset(self, qs: QuerySet = None) -> QuerySet:
+    def get_paginated_queryset(self, qs: QuerySet = None) -> Optional[list]:
         """Paginate queryset to optimize serialization"""
         qs: QuerySet = qs if qs is not None else self.get_queryset()
         return self.paginate_queryset(qs)

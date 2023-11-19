@@ -33,7 +33,6 @@ utils.silence_explamation_mark()
 
 class VerificationServiceTest(TestCase):
     def setUp(self):
-        utils.create_system_user()
         self.user = PlayerProfileFactory.create(user__email="username").user
         self.user.profile.VERIFICATION_FIELDS = ["bio"]
         self.user.profile.COMPLETE_FIELDS = ["team"]  # , 'club_raw']
@@ -65,7 +64,6 @@ class VerificationServiceTest(TestCase):
 
 class PlayerPositionServiceTest(TestCase):
     def setUp(self):
-        utils.create_system_user()
         self.user = PlayerProfileFactory.create(user__email="username").user
         self.profile = self.user.profile
         PositionFactory.create(id=1)
@@ -139,7 +137,6 @@ class PlayerPositionServiceTest(TestCase):
 class TeamContributorServiceTests(TestCase):
     def setUp(self):
         """Set up the test environment."""
-        utils.create_system_user()
         PlayerProfileFactory.create_batch(2)
         self.users = UserFactory.create_batch(5, declared_role=definitions.PLAYER_SHORT)
         for user in self.users:

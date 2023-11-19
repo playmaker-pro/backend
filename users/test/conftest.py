@@ -1,7 +1,6 @@
 import pytest
 
 
-
 @pytest.fixture
 def disable_email_check_throttle_for_test():
     """Disable throttling for email check endpoint."""

@@ -2,7 +2,6 @@ from django.urls import reverse
 from rest_framework.test import APIClient, APITestCase
 
 from roles import definitions
-from utils import testutils
 from utils.factories import (
     CoachProfileFactory,
     PlayerProfileFactory,
@@ -13,7 +12,6 @@ from utils.factories import (
 
 class TestProfileSearchAPI(APITestCase):
     def setUp(self):
-        testutils.create_system_user()
         self.client = APIClient()
         self.profile_search_url = reverse("api:profiles:profile_search")
         self.user1 = UserFactory.create(

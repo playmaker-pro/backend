@@ -2,14 +2,13 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from utils import factories, testutils
+from utils import factories
 from utils.factories import external_links_factories as external_links_factories
 
 
 class ExternalLinksApiTest(APITestCase):
     def setUp(self):
         """Set up test environment."""
-        testutils.create_system_user()
 
         # Create a user for create test
         self.user_create = factories.UserFactory(email="username", declared_role="P")

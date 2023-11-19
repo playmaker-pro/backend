@@ -1,3 +1,5 @@
+from enum import Enum
+
 PLAYER_SHORT, PLAYER_FULL = "P", "Piłkarz"
 COACH_SHORT, COACH_FULL = "T", "Trener"
 CLUB_SHORT, CLUB_FULL = "C", "Działacz klubu"
@@ -66,3 +68,25 @@ CLUB_ROLES = (
     ("KD", CLUB_ROLE_TEAM_LEADER),
     ("O", CLUB_ROLE_OTHERS),
 )
+
+
+DATA_FULFILL_STATUS = (
+    (1, "Uzupełnione"),
+    (2, "Częściowo uzupełnione"),
+    (3, "Nie uzupełnione"),
+)
+
+
+class RoleShortcut(str, Enum):
+    PLAYER: str = PLAYER_SHORT
+    COACH: str = COACH_SHORT
+    CLUB: str = CLUB_SHORT
+    MANAGER: str = MANAGER_SHORT
+    SCOUT: str = SCOUT_SHORT
+    FAN: str = GUEST_SHORT
+
+
+class ProfileDataScore(str, Enum):
+    ONE = 1
+    TWO = 2
+    THREE = 3

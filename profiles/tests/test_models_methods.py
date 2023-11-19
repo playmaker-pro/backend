@@ -11,7 +11,6 @@ utils.silence_explamation_mark()
 
 class ChangeRoleTests(TestCase):
     def setUp(self):
-        utils.create_system_user()
         self.user = PlayerProfileFactory.create(user__email="username").user
         self.user.profile.VERIFICATION_FIELDS = ["bio"]
         self.user.profile.COMPLETE_FIELDS = ["team"]  # , 'club_raw']
@@ -100,7 +99,6 @@ class ChangeRoleTests(TestCase):
 
 class TestProfilePercentageTests(TestCase):
     def setUp(self):
-        utils.create_system_user()
         user = PlayerProfileFactory.create(user__email="username", bio=None).user
         user.profile.VERIFICATION_FIELDS = ["bio"]
         user.profile.COMPLETE_FIELDS = ["team"]  # , 'club_raw']
@@ -162,7 +160,6 @@ class InitialBaseProfileCreationTests(TestCase):
     """Idea is to create any profile and check if statuses are corectly behaved"""
 
     def setUp(self):
-        utils.create_system_user()
         user = CoachProfileFactory.create(user__email="username").user
         user.profile.VERIFICATION_FIELDS = ["bio"]
         self.profile = user.profile
@@ -178,7 +175,6 @@ class InitalPlayerProfileCreationTests(TestCase):
     """Idea is to create PLAYER profile and check if statuses are corectly behaved"""  # noqa: E501
 
     def setUp(self):
-        utils.create_system_user()
         self.profile = PlayerProfileFactory.create(user__email="username")
 
     def test_initial_paramters(self):
@@ -205,7 +201,6 @@ class ProfileVerificationExistingProfileWithReadyForVerificationTests(TestCase):
     """Freshly created user is modifing profile fields which are Verification fields."""
 
     def setUp(self):
-        utils.create_system_user()
         self.user = CoachProfileFactory.create(user__email="username").user
         self.user.profile.VERIFICATION_FIELDS = ["bio"]
         self.user.profile.bio = "bbbb"
@@ -246,7 +241,6 @@ class ProfileVerificationExistingProfileWithReadyForVerificationTests(TestCase):
 
 class ProfileUserIsVerifiedAndModifiesVerificationFields(TestCase):
     def setUp(self):
-        utils.create_system_user()
         self.user = CoachProfileFactory.create(user__email="username").user
         self.user.profile.VERIFICATION_FIELDS = ["bio"]
         self.user.profile.bio = "bbbb"
@@ -271,7 +265,6 @@ class ProfileUserIsVerifiedAndModifiesVerificationFields(TestCase):
 
 class ProfileCompletnesTests(TestCase):
     def test_profile_is_complete(self):
-        utils.create_system_user()
         user = CoachProfileFactory.create(user__email="username", bio=None).user
         user.profile.COMPLETE_FIELDS = ["bio"]
         user.profile.VERIFICATION_FIELDS = []

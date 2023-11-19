@@ -1,5 +1,6 @@
-from functools import cached_property, lru_cache
-from . import utils
+from functools import cached_property
+
+from profiles import utils
 
 
 class SoccerDisplayMixin:

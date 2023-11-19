@@ -3,8 +3,6 @@ from rest_framework import routers
 
 from profiles.api import views
 
-# from resources.views import WebhookPlayer
-
 router = routers.SimpleRouter(trailing_slash=False)
 router.register("", views.ProfileAPI, basename="profiles")
 

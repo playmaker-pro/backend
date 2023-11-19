@@ -6,18 +6,16 @@ from rest_framework.test import APIClient, APITestCase
 
 from utils import factories
 from utils.test.test_utils import UserManager
-from utils.testutils import create_system_user
 
 
 class TestGetProfileLabelsAPI(APITestCase):
     def setUp(self) -> None:
-        create_system_user()
         self.client: APIClient = APIClient()
         self.user = UserManager(self.client)
         self.user_obj = self.user.create_superuser()
         self.headers = self.user.get_headers()
-        factories.UserFactory.create_batch_force_order(5)
-        profile = factories.PlayerProfileFactory.create(user_id=1)
+        factories.UserFactory.create_batch(5)
+        profile = factories.PlayerProfileFactory.create(user=self.user_obj)
         profile.labels.create(label_name="label1", season_name="2018/2019")
         profile.labels.create(label_name="label1", season_name="2019/2020")
         profile.labels.create(label_name="label2", season_name="2019/2020")

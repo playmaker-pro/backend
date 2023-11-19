@@ -1,17 +1,16 @@
 import typing
 from datetime import datetime
-from typing import Optional, Dict, Union, Any
+from typing import Optional
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
-from django.db.models import Count, QuerySet, CharField
+from django.db.models import Count, QuerySet
 from django.db.models.functions import ExtractYear
 from django.http import QueryDict
 from pydantic import parse_obj_as
 from rest_framework import serializers
 
 from api.errors import NotOwnerOfAnObject
-from api.consts import ChoicesTuple
 from api.serializers import ProfileEnumChoicesSerializer
 from api.services import LocaleDataService
 from clubs import errors as clubs_errors

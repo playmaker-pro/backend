@@ -15,7 +15,6 @@ from clubs.models import Season
 from users.models import User
 from utils import testutils as utils
 from utils.factories.user_factories import UserFactory
-from utils.testutils import create_system_user
 
 utils.silence_explamation_mark()
 
@@ -64,7 +63,6 @@ class UserManager:
     """
 
     def __init__(self, client: Optional[Client] = None) -> None:
-        create_system_user()
         self.email = "test_email@test.com"
         self.password = "super secret password"
 
@@ -73,12 +71,11 @@ class UserManager:
 
         self.login_url = reverse("api:users:api-login")
 
-    def create_superuser(self, mute_signals: bool = True, **kwargs) -> User:
+    def create_superuser(self, **kwargs) -> User:
         """Create a superuser in the test database."""
-        if email := kwargs.pop("email", None):
+        if email := kwargs.pop("email", None):  # noqa: E999
             self.email = email
         user = UserFactory.create(
-            mute_signals=mute_signals,
             email=self.email,
             password=self.password,
             **kwargs,
@@ -98,17 +95,37 @@ class UserManager:
 
     def get_headers(self) -> dict:
         """Get the headers containing the authentication token for API requests."""
+        headers = self.headers
+        headers["HTTP_AUTHORIZATION"] = f"Bearer {self.get_access_token}"
+        return headers
+
+    @property
+    def headers(self) -> dict:
+        """Get the headers containing the authentication token for API requests."""
         headers = {
             "Content-Type": "application/json",
             "content_type": "application/json",
-            # "Authorization": "Bearer " + self.get_access_token,
-            "HTTP_AUTHORIZATION": f"Bearer {self.get_access_token}",
         }
 
         return headers
 
     def login(self, user: User):
         self.client.login(username=user.username, password=user.password)
+
+    def custom_user_access_token(self, email: str, password: str) -> str:
+        """Get the authentication access token for the created superuser."""
+        res: Response = self.client.post(  # noqa
+            self.login_url, {"email": email, "password": password}
+        )
+        return res.data.get("access")
+
+    def custom_user_headers(self, email: str, password: str) -> dict:
+        """Get the headers containing the authentication token for API requests."""
+        headers = self.headers
+        headers[
+            "HTTP_AUTHORIZATION"
+        ] = f"Bearer {self.custom_user_access_token(email, password)}"
+        return headers
 
 
 class MethodsNotAllowedTestsMixin:

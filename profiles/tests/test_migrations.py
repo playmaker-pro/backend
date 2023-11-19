@@ -7,6 +7,9 @@ from utils.factories import ClubProfileFactory, UserFactory
 
 
 @pytest.mark.django_db()
+@pytest.mark.mute(
+    "This test is slow. Mute it by default. Can be run with --allow-skipped flag."
+)
 def test_profile_custom_migrations(migrator) -> None:
     """
     Test if migration scripts works correctly:
@@ -111,6 +114,9 @@ def test_profile_custom_migrations(migrator) -> None:
 
 
 @pytest.mark.django_db()
+@pytest.mark.mute(
+    "This test is slow. Mute it by default. Can be run with --allow-skipped flag."
+)
 def test_0107_1008(migrator) -> None:
     """
     Test migration 0107_auto_20230926_1623,
@@ -159,6 +165,9 @@ def test_0107_1008(migrator) -> None:
 
 
 @pytest.mark.django_db()
+@pytest.mark.mute(
+    "This test is slow. Mute it by default. Can be run with --allow-skipped flag."
+)
 def test_map_old_roles_to_new(migrator) -> None:
     """
     Test the 'map_old_roles_to_new' migration function.

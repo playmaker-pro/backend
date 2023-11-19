@@ -2,13 +2,13 @@ from unittest import TestCase
 
 import factory
 import pytest
-from django.core.management import call_command, CommandError
+from django.core.management import CommandError, call_command
 from django.db.models import QuerySet
 
 from clubs.management.commands.change_league_seniorty import (
     Command as ChangeLeagueSeniorityCommand,
 )
-from clubs.models import League, Seniority, Season
+from clubs.models import League, Season, Seniority
 from utils.factories import (
     ClubFactory,
     LeagueFactory,

@@ -1,31 +1,22 @@
+from dataclasses import dataclass, field
+from typing import Optional, TYPE_CHECKING, Type, Dict
+
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
-from profiles.api import serializers
-from profiles.serializers_detailed.club_profile_serializers import (
-    ClubProfileUpdateSerializer,
-    ClubProfileViewSerializer,
-)
-from profiles.serializers_detailed.coach_profile_serializers import (
-    CoachProfileUpdateSerializer,
-    CoachProfileViewSerializer,
-)
-from profiles.serializers_detailed.guest_profile_serializer import (
-    GuestProfileUpdateSerializer,
-    GuestProfileViewSerializer,
-)
-from profiles.serializers_detailed.manager_profile_serializers import (
-    ManagerProfileUpdateSerializer,
-    ManagerProfileViewSerializer,
-)
-from profiles.serializers_detailed.player_profile_serializers import (
-    PlayerProfileUpdateSerializer,
-    PlayerProfileViewSerializer,
-)
-from profiles.serializers_detailed.scout_profile_serializers import (
-    ScoutProfileUpdateSerializer,
-    ScoutProfileViewSerializer,
-)
+from profiles.interfaces import FulfillScoreProtocol
+
+from roles.definitions import ProfileDataScore
+
+
+if TYPE_CHECKING:
+    from profiles.models import (
+        BaseProfile,
+        ClubProfile,
+        CoachProfile,
+        PlayerProfile,
+    )
 
 User = get_user_model()
 
@@ -40,53 +31,167 @@ class VerificationObjectManager(models.Manager):
             return super().create(**defaults)
 
 
-class SerializersManager:
-    SERIALIZER_MAPPING = {
-        "PlayerProfile": PlayerProfileViewSerializer,
-        "PlayerProfile_update": PlayerProfileUpdateSerializer,
-        "CoachProfile": CoachProfileViewSerializer,
-        "CoachProfile_update": CoachProfileUpdateSerializer,
-        "ScoutProfile": ScoutProfileViewSerializer,
-        "ScoutProfile_update": ScoutProfileUpdateSerializer,
-        "ClubProfile": ClubProfileViewSerializer,
-        "ClubProfile_update": ClubProfileUpdateSerializer,
-        "GuestProfile": GuestProfileViewSerializer,  # "Fan" profile (kibic)
-        "GuestProfile_update": GuestProfileUpdateSerializer,
-        "ManagerProfile": ManagerProfileViewSerializer,
-        "ManagerProfile_update": ManagerProfileUpdateSerializer,
-    }
-    PLAYER_PROFILE_TEAM_CONTRIBUTOR_SERIALIZERS = {
-        "input": serializers.PlayerProfileTeamContributorInputSerializer,
-        "output": serializers.PlayerTeamContributorSerializer,
-    }
+class PlayerProfileFulFillScore:
+    """Calculate Player profile data scoring."""
 
-    OTHER_PROFILE_TEAM_CONTRIBUTOR_SERIALIZERS = {
-        "input": serializers.OtherProfilesTeamContributorInputSerializer,
-        "output": serializers.AggregatedTeamContributorSerializer,
-    }
-
-    TEAM_CONTRIBUTOR_SERIALIZER_MAPPING = {
-        "PlayerProfile": PLAYER_PROFILE_TEAM_CONTRIBUTOR_SERIALIZERS,
-        "GuestProfile": PLAYER_PROFILE_TEAM_CONTRIBUTOR_SERIALIZERS,
-        "Default": OTHER_PROFILE_TEAM_CONTRIBUTOR_SERIALIZERS,
-    }
-
-    def get_serializer(self, model_name: str):
-        return self.SERIALIZER_MAPPING.get(model_name)
-
-    def get_serializer_class(self, profile, direction: str):
+    @staticmethod
+    def data_fulfill_level(obj: "BaseProfile") -> ProfileDataScore:
         """
-        Get the serializer class based on the type of the provided profile and the direction.
-        """  # noqa: E501
-        return self.get_team_contributor_serializer(type(profile).__name__, direction)
+        Verify if the player profile data is fulfilled.
 
-    def get_team_contributor_serializer(
-        self, profile_type: str, direction: str = "input"
-    ):
+        The first acceptance criterion (level 1) is the verification stage (completed).
+        The second acceptance criterion (level 2) includes fulfilled data in the following fields:
+            - last_name
+            - first_name
+            - birth_date
+            - player_positions
+            - team_history_object
+
+        Returns:
+            ProfileDataScore: The level of profile data fulfillment or None.
+        """  # noqa: 501
+        instance: "PlayerProfile" = obj  # noqa
+
+        if instance.verification_stage and instance.verification_stage.done is True:
+            return ProfileDataScore.ONE.value
+
+        try:
+            instance.user.userpreferences
+        except ObjectDoesNotExist:
+            return ProfileDataScore.THREE.value
+
+        if (
+            instance.user.last_name
+            and instance.user.first_name
+            and instance.user.userpreferences.birth_date
+            and instance.player_positions.exists()
+            and instance.team_history_object
+        ):
+            return ProfileDataScore.TWO.value
+        return ProfileDataScore.THREE.value
+
+
+class CoachProfileFulFillScore:
+    """Calculate Coach profile data scoring."""
+
+    @staticmethod
+    def data_fulfill_level(obj: "BaseProfile") -> ProfileDataScore:
         """
-        Retrieve the TeamContributor serializer based on the profile type and direction.
+        Verify if the coach profile data is fulfilled.
+
+        The first acceptance criterion for the level 1 is the verification stage (completed).
+        The second acceptance criterion (level 2) includes fulfilled data in the following fields:
+            - last_name
+            - first_name
+            - birth_date
+            - licences
+            - team_history_object
+
+        Returns:
+            OProfileDataScore: The level of profile data fulfillment or None.
+        """  # noqa: 501
+        instance: "CoachProfile" = obj  # noqa
+        if instance.verification_stage and instance.verification_stage.done is True:
+            return ProfileDataScore.ONE.value
+
+        try:
+            instance.user.userpreferences
+        except ObjectDoesNotExist:
+            return ProfileDataScore.THREE.value
+
+        if (
+            instance.user.last_name
+            and instance.user.first_name
+            and instance.user.userpreferences.birth_date
+            and instance.user.licences.exists()
+            and instance.team_history_object
+        ):
+            return ProfileDataScore.TWO.value
+        return ProfileDataScore.THREE.value
+
+
+class ClubProfileFulFillScore:
+    """Calculate CLub profile data scoring."""
+
+    @staticmethod
+    def data_fulfill_level(obj: "BaseProfile") -> str:
         """
-        serializers_map = self.TEAM_CONTRIBUTOR_SERIALIZER_MAPPING.get(
-            profile_type, self.TEAM_CONTRIBUTOR_SERIALIZER_MAPPING["Default"]
+        Verify if the club profile data is fulfilled.
+
+        The first acceptance criterion for level 1 is the verification stage.
+        The second acceptance criterion (level 2) includes fulfilled data in the following fields:
+            - last_name
+            - first_name
+            - birth_date
+            - licences
+            - team_history_object
+
+        Returns:
+            ProfileDataScore: The level of profile data fulfillment or None.
+        """  # noqa: 501
+        instance: "ClubProfile" = obj  # noqa
+        if instance.verification_stage and instance.verification_stage.done is True:
+            return ProfileDataScore.ONE.value
+
+        if (
+            instance.user.last_name
+            and instance.user.first_name
+            and instance.club_role
+            and instance.team_history_object
+        ):
+            return ProfileDataScore.TWO.value
+
+        return ProfileDataScore.THREE.value
+
+
+class OtherProfilesFulFillScore:
+    """Calculate data scoring for other profiles."""
+
+    @staticmethod
+    def data_fulfill_level(obj) -> ProfileDataScore:
+        """
+        Verify if other profiles data is fulfilled.
+        Acceptance criteria for level 1 is verification stage.
+        There is no level 2.
+        """
+        if obj.verification_stage and obj.verification_stage.done is True:
+            return ProfileDataScore.ONE.value
+
+        return ProfileDataScore.THREE.value
+
+
+DATA_PROFILE_MAPPING = {
+    "PlayerProfile": PlayerProfileFulFillScore,
+    "CoachProfile": CoachProfileFulFillScore,
+    "ClubProfile": ClubProfileFulFillScore,
+    "ScoutProfile": OtherProfilesFulFillScore,
+    "ManagerProfile": OtherProfilesFulFillScore,
+    "GuestProfile": OtherProfilesFulFillScore,
+}
+
+
+def default_managers_mapping() -> Dict[str, Type[FulfillScoreProtocol]]:
+    """Default mapping callable for managers default_factory in ProfileManager."""
+    return DATA_PROFILE_MAPPING
+
+
+@dataclass
+class ProfileManager:
+    """Base profile manager."""
+
+    data_score_managers: Dict[str, Type[FulfillScoreProtocol]] = field(
+        default_factory=default_managers_mapping
+    )
+
+    def get_data_score(self, obj: "BaseProfile") -> Optional[str]:
+        """
+        Returns level of profile data fulfillment
+        or None if class name doesn't exist in mapper.
+        """
+        manager: Optional[FulfillScoreProtocol] = self.data_score_managers.get(
+            type(obj).__name__
         )
-        return serializers_map.get(direction)
+
+        if manager:
+            return manager.data_fulfill_level(obj)
+        return None

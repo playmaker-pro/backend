@@ -767,6 +767,7 @@ class TestEmailAvailabilityEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         assert "detail" in data
 
 
+@pytest.mark.django_db
 class TestFacebookAuthEndpoint(TestCase, MethodsNotAllowedTestsMixin):
     NOT_ALLOWED_METHODS = ["get", "put", "patch", "delete"]
 

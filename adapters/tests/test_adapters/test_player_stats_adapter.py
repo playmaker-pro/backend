@@ -4,13 +4,11 @@ from pm_core.services.models import PlayerSeasonStatsSchema
 
 from adapters.player_adapter import PlayerSeasonStatsAdapter
 from adapters.tests.utils import get_adapter
-from utils.testutils import create_system_user
 
 
 @pytest.mark.django_db
 class PlayerStatsAdapterUnitTest(TestCase):
     def setUp(self) -> None:
-        create_system_user()
         self.adapter = get_adapter(PlayerSeasonStatsAdapter)
 
     def test_season_stats_structure(self):

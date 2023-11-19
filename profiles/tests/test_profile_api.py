@@ -12,10 +12,9 @@ from profiles.services import ProfileService
 from profiles.tests import utils
 from roles.definitions import CLUB_ROLE_TEAM_LEADER
 from users.models import User
-from utils import factories, testutils
+from utils import factories
 from utils.factories import SEASON_NAMES
 from utils.test.test_utils import UserManager
-from utils.testutils import create_system_user
 
 
 class TestGetProfileAPI(APITestCase):
@@ -199,7 +198,6 @@ class TestCreateProfileAPI(APITestCase):
 
 class TestUpdateProfileAPI(APITestCase):
     def setUp(self) -> None:
-        create_system_user()
         self.client: APIClient = APIClient()
         self.manager = UserManager(self.client)
         self.user_obj = self.manager.create_superuser()
@@ -525,7 +523,6 @@ class TestUpdateProfileAPI(APITestCase):
 class ProfileTeamsApiTest(APITestCase):
     def setUp(self):
         """Set up test environment."""
-        testutils.create_system_user()
         self.user = factories.PlayerProfileFactory.create(user__email="username").user
         self.non_player_user = factories.CoachProfileFactory.create(
             user__email="nonplayer@example.com"
@@ -728,7 +725,10 @@ class ProfileTeamsApiTest(APITestCase):
         )
 
     def test_unset_previous_primary_for_non_player(self):
-        """Test that setting a new team as primary unsets the previous primary for a non-player profile."""
+        """
+        Test that setting a new team as primary unsets the previous primary
+        for a non-player profile.
+        """
         self.client.force_authenticate(user=self.non_player_user)
 
         # Set the first contributor as primary
@@ -835,7 +835,8 @@ class ProfileTeamsApiTest(APITestCase):
         assert response1.status_code == 201
         assert response1.data["is_primary_for_round"] is True
 
-        # Add second team with is_primary_for_round set to True for the same round and season
+        # Add second team with is_primary_for_round
+        # set to True for the same round and season
         data2 = {
             "league_identifier": self.league.pk,
             "season": self.season.pk,
@@ -873,7 +874,10 @@ class ProfileTeamsApiTest(APITestCase):
         assert team_contributor_data["is_primary_for_round"] is False
 
     def test_change_role_to_the_other_with_custom_role(self):
-        """Test that setting a new team as primary unsets the previous primary for a non-player profile."""
+        """
+        Test that setting a new team as primary unsets the
+        previous primary for a non-player profile.
+        """
         self.client.force_authenticate(user=self.non_player_user)
 
         # Set the role as IC
@@ -921,7 +925,6 @@ class ProfileTeamsApiTest(APITestCase):
 
 class TestSetMainProfileAPI(APITestCase):
     def setUp(self) -> None:
-        create_system_user()
         self.client: APIClient = APIClient()
         self.manager = UserManager(self.client)
         self.user_obj = self.manager.create_superuser()

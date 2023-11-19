@@ -10,13 +10,11 @@ from pm_core.services.models.player import PlayerBaseSchema
 from adapters.player_adapter import PlayerDataAdapter
 from adapters.tests.utils import get_adapter
 from utils.factories.mapper_factories import ID
-from utils.testutils import create_system_user
 
 
 @pytest.mark.django_db
 class PlayerDataAdapterUnitTest(TestCase):
     def setUp(self) -> None:
-        create_system_user()
         self.adapter = get_adapter(PlayerDataAdapter)
         self.adapter.get_player_data()
 
