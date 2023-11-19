@@ -1,13 +1,7 @@
+import pytest
 from django.urls import reverse
-from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
-
-from utils import factories
-from utils.test.test_utils import UserManager
-
-from django.urls import reverse
 from rest_framework.test import APIClient, APITestCase
-from rest_framework import status
 
 from utils import factories
 from utils.test.test_utils import UserManager
@@ -19,7 +13,7 @@ class TestGetTeamAPI(APITestCase):
         self.user = UserManager(self.client)
         self.user_obj = self.user.create_superuser()
         self.headers = self.user.get_headers()
-        factories.UserFactory.create_batch_force_order(5)
+        factories.UserFactory.create_batch(5)
         team = factories.TeamFactory(name="Drużyna FC II", id=100)
 
         self.url = "api:clubs:get_team"
@@ -47,7 +41,7 @@ class TestGetTeamLabelsAPI(APITestCase):
         self.user = UserManager(self.client)
         self.user_obj = self.user.create_superuser()
         self.headers = self.user.get_headers()
-        factories.UserFactory.create_batch_force_order(5)
+        factories.UserFactory.create_batch(5)
         team = factories.TeamFactory(name="Drużyna FC II", id=100)
 
         team.labels.create(label_name="label1", season_name="2018/2019")
@@ -79,8 +73,9 @@ class TestGetTeamLabelsAPI(APITestCase):
         assert response.status_code == status.HTTP_200_OK
 
     def test_get_team_labels_specific_season(self) -> None:
+        url: str = reverse(self.url, kwargs={"team_id": self.team_id})
         response = self.client.get(
-            f'{reverse(self.url, kwargs={"team_id": self.team_id })}?season_name=2019/2020',
+            url + "?season_name=2019/2020",
             **self.headers,
         )
         # Then

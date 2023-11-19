@@ -3,13 +3,11 @@ from django.test import TestCase
 
 from adapters.player_adapter import PlayerSeasonStatsAdapter
 from adapters.tests.utils import get_adapter
-from utils.testutils import create_system_user
 
 
 @pytest.mark.django_db
 class StatsSerializerUnitTest(TestCase):
     def setUp(self) -> None:
-        create_system_user()
         self.adapter = get_adapter(PlayerSeasonStatsAdapter)
         self.adapter.get_season_stats()
         self.serializer = self.adapter.serialize()

@@ -6,10 +6,7 @@ from rest_framework import status
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from clubs import api, models
-from utils.factories import (
-    ClubWithHistoryFactory,
-    GenderFactory,
-)
+from utils.factories import ClubWithHistoryFactory, GenderFactory
 from utils.test.test_utils import UserManager
 
 User = get_user_model()

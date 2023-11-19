@@ -5,13 +5,11 @@ from pm_core.services.models import EventSchema
 from adapters.player_adapter import PlayerGamesAdapter
 from adapters.serializers import GameSerializer
 from adapters.tests.utils import get_adapter
-from utils.testutils import create_system_user
 
 
 @pytest.mark.django_db
 class GameSerializerUnitTest(TestCase):
     def setUp(self) -> None:
-        create_system_user()
         self.adapter = get_adapter(PlayerGamesAdapter)
         self.adapter.clean()
         self.adapter.get_player_games()

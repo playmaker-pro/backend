@@ -27,6 +27,7 @@ from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_profile_external_links
 from mapper.models import Mapper
 from profiles.errors import VerificationCompletionFieldsWrongSetup
+from profiles.managers import ProfileManager
 from profiles.mixins import TeamObjectsDisplayMixin
 from profiles.mixins import utils as profile_utils
 from roles import definitions
@@ -278,6 +279,14 @@ class BaseProfile(models.Model, EventLogMixin):
     verification = models.OneToOneField(
         "ProfileVerificationStatus", on_delete=models.SET_NULL, null=True, blank=True
     )
+    data_fulfill_status = models.CharField(
+        choices=definitions.DATA_FULFILL_STATUS,
+        max_length=255,
+        null=True,
+        blank=True,
+        editable=False,
+    )
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True
     )
@@ -471,6 +480,11 @@ class BaseProfile(models.Model, EventLogMixin):
             self.user.save(update_fields=["declared_role"])
 
         self.ensure_verification_stage_exist(commit=False)
+
+        # When profile changes, update data score level
+        profile_manager: ProfileManager = ProfileManager()
+        self.data_fulfill_status: str = profile_manager.get_data_score(self)
+
         self._save_make_profile_history()
         try:
             obj_before_save = obj = (
@@ -813,7 +827,8 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
     )
 
-    # DEPRECATED: Migrated to UserPreferences PM20-148
+    # TODO: kgarczewski: DEPRECATED: Migrated to UserPreferences PM20-148.
+    #  Have to be removed in future
     birth_date = models.DateField(_("Data urodzenia"), blank=True, null=True)
     height = models.PositiveIntegerField(
         _("Wzrost"),
@@ -1637,7 +1652,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     DATA_KEYS = ("metrics",)
 
-    # Deprecated PM20-79
+    # TODO: kgarczewski: Deprecated PM20-79
     licence = models.IntegerField(
         _("Licencja"),
         choices=LICENCE_CHOICES,

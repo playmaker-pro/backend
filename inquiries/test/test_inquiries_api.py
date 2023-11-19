@@ -44,10 +44,10 @@ class TestInquiriesAPI(APITestCase):
         self.sender_manager = UserManager(self.client)
         self.recipient_manager = UserManager(self.client)
         self.sender_obj = self.sender_manager.create_superuser(
-            mute_signals=False, email="sender@sender.com"
+            email="sender@sender.com"
         )
         self.recipient_obj = self.recipient_manager.create_superuser(
-            mute_signals=False, email="recipient@recipient.com"
+            email="recipient@recipient.com"
         )
         self.sender_headers = self.sender_manager.get_headers()
         self.recipient_headers = self.recipient_manager.get_headers()

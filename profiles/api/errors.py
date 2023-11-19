@@ -3,7 +3,7 @@ import typing
 from rest_framework import status
 
 from api.errors import CoreAPIException
-from profiles.models import PROFILE_MODEL_MAP
+from roles.definitions import PROFILE_TYPE_MAP
 
 
 class InvalidUser(CoreAPIException):
@@ -98,7 +98,7 @@ class IncorrectProfileRole(CoreAPIException):
     """
 
     status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = f"Invalid role. Must be one of: {list(PROFILE_MODEL_MAP.keys())}."
+    default_detail = f"Invalid role. Must be one of: {list(PROFILE_TYPE_MAP.keys())}."
 
 
 class InvalidCoachRoleException(CoreAPIException):

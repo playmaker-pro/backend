@@ -1,17 +1,13 @@
-from django.core.management.base import BaseCommand, CommandParser
-from pydantic import typing
-from utils import factories, load_json
-from utils.factories import CustomObjectFactory, clubs_models
-from voivodeships.services import VoivodeshipService
 from django.conf import settings
+from django.core.management.base import BaseCommand, CommandParser
 from django.db import connection
+from pydantic import typing
+
 from app import errors
 from backend.settings.environment import Environment
-
-# from home.models import HomePage @wag
-
-# from wagtail.core.models import Site, Page  @wag
-from utils.factories import NAME_TO_FACTORY_MAPPER
+from utils import factories, load_json
+from utils.factories import NAME_TO_FACTORY_MAPPER, CustomObjectFactory, clubs_models
+from voivodeships.services import VoivodeshipService
 
 
 class Command(BaseCommand):
@@ -38,7 +34,6 @@ class Command(BaseCommand):
         """initialize validation and vivos"""
         self.init_validation()
         self.set_voivodeships()
-        self.create_system_user()
 
     def handle(self, *args, **options) -> None:
         """

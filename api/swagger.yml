@@ -1049,7 +1049,12 @@ paths:
             type: array
             items:
               type: string
-          description: "Country, like: ?country=PL&country=UA"
+            description: "Country, like: ?country=PL&country=UA"
+        - in: query
+          name: not_me
+          schema:
+            type: string
+          description: "Exclude authenticated profile when set to 'true'"
         - in: query
           name: shuffle
           schema:
@@ -1078,6 +1083,7 @@ paths:
                     type: array
                     items:
                       oneOf:
+                        # FIXME: tutaj powinny być profile zwracane w zależności od roli
                         - $ref: '#/components/schemas/PlayerProfile'
                         - $ref: '#/components/schemas/CoachProfile'
                         - $ref: '#/components/schemas/ClubProfile'

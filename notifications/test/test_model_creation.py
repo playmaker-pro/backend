@@ -3,12 +3,10 @@ from django.test import TestCase
 from notifications import models
 from roles import definitions
 from users.models import User
-from utils import testutils as utils
 
 
 class ClubTeamDisplays(TestCase):
     def setUp(self):
-        utils.create_system_user()
         self.user = User.objects.create(
             email="username", declared_role=definitions.PLAYER_SHORT
         )

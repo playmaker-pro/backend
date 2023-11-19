@@ -1,14 +1,16 @@
 import logging
 import typing
-import pytest
+
 from django.conf import settings
-from django.test import TestCase
+from django.contrib.auth import get_user_model
+
 from clubs.models import Club, Gender, League, Seniority, Team
-from profiles import models
 from roles import definitions
-from users.models import User
 from voivodeships.models import Voivodeships
 from backend.settings.environment import Environment
+
+
+User = get_user_model()
 
 
 class RunWithDifferentEnvironment:
@@ -55,10 +57,6 @@ class RunWithDifferentEnvironment:
                 return e
             else:
                 raise e
-
-
-def create_system_user():
-    User.objects.get_or_create(email=settings.SYSTEM_USER_EMAIL)
 
 
 def get_team():

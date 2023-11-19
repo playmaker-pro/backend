@@ -1,3 +1,4 @@
+import random
 from functools import cached_property
 
 from django.db.models import QuerySet
@@ -13,6 +14,8 @@ from profiles.api.errors import IncorrectProfileRole
 class ProfileListAPIFilter(APIFilter):
     service = services.ProfileFilterService()
 
+    # define other filter params requiring validation below.
+    # New values will be added to self.query_params
     PARAMS_PARSERS = {
         "youth": api_utils.convert_bool,
         "min_age": api_utils.convert_int,
@@ -25,8 +28,8 @@ class ProfileListAPIFilter(APIFilter):
         "country": api_utils.convert_str_list,
         "language": api_utils.convert_str_list,
         "gender": api_utils.convert_str_list,
-        "shuffle": api_utils.convert_bool
-        # define other filter params requiring validation here
+        "shuffle": api_utils.convert_bool,
+        "not_me": api_utils.convert_bool,
     }
 
     @cached_property
@@ -44,7 +47,10 @@ class ProfileListAPIFilter(APIFilter):
         self.filter_queryset(self.queryset)
 
         if self.query_params.get("shuffle", False):
-            return self.queryset.order_by("?")
+            # Random shuffle -> get random sample of 10 -> return list of random choices
+            shuffled_queryset = self.queryset.order_by("?")
+            selected_items = random.sample(list(shuffled_queryset), 10)
+            return self.queryset.filter(pk__in=[item.pk for item in selected_items])
 
         return self.queryset
 
@@ -83,6 +89,7 @@ class ProfileListAPIFilter(APIFilter):
         ):
             self.filter_age()
 
+        self.not_me_filter()
         self.filter_localization()
         self.filter_country()
         self.filter_language()
@@ -111,6 +118,14 @@ class ProfileListAPIFilter(APIFilter):
                 self.queryset = self.service.filter_language(self.queryset, language)
             except ValueError as e:
                 raise api_errors.InvalidLanguageCode(e)
+
+    def not_me_filter(self) -> None:
+        """Exclude current user from queryset if not_me param is sent"""
+        if (
+            self.query_params.get("not_me")
+            and self.request.user.is_authenticated
+        ):
+            self.queryset = self.queryset.exclude(user=self.request.user)
 
     def filter_country(self) -> None:
         """Filter queryset by language"""

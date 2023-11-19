@@ -1,4 +1,6 @@
 import uuid
+from typing import Optional
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
@@ -24,8 +26,8 @@ from external_links.services import ExternalLinksService
 from profiles import errors, models
 from profiles.api import errors as api_errors
 from profiles.api import serializers
+from profiles.api.managers import SerializersManager
 from profiles.filters import ProfileListAPIFilter
-from profiles.managers import SerializersManager
 from profiles.services import (
     ProfileFilterService,
     ProfileService,
@@ -104,17 +106,38 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
 
         return Response(serializer.data)
 
+    def get_paginated_queryset(self, qs: QuerySet = None) -> Optional[list]:
+        """Paginate queryset to optimize serialization"""
+        qs: QuerySet = qs or self.get_queryset()
+        return self.paginate_queryset(qs.order_by("data_fulfill_status"))
+
     def get_bulk_profiles(self, request: Request) -> Response:
         """
         Get list of profile for role delivered as param
         (?role={P, C, S, G, ...})
+        Full list of choices can be found in roles/definitions.py
         """
-        qs: QuerySet = self.get_paginated_queryset()
-        serializer = serializers.ProfileSerializer(
-            qs, many=True, context={"request": request}
+        qs: QuerySet = self.get_queryset().order_by("data_fulfill_status")
+        serializer_class = self.get_serializer_class(
+            model_name=request.query_params.get("role")
         )
+        if not serializer_class:
+            serializer_class = serializers.ProfileSerializer
+
+        serializer = serializer_class(
+            qs,
+            context={"requestor": request.user},
+            many=True,
+        )
+        # FIXME: lremkowicz: if response time of above serializer will be acceptable, remove commented block    # noqa: 501
+        # serializer = serializers.ProfileSerializer(data=qs, many=True)
+        # res = serializer.is_valid(raise_exception=True)
+        # if not serializer.is_valid():
+        #     return Response(
+        #         serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        #     )
         # serializer = PlayerProfileViewSerializer(qs, many=True)
-        return self.get_paginated_response(serializer.data)
+        return self.get_paginated_response(self.paginate_queryset(serializer.data))
 
     def get_profile_labels(self, request: Request, profile_uuid: uuid.UUID) -> Response:
         try:
@@ -354,7 +377,9 @@ class ProfileVideoAPI(EndpointView):
         except ValueError:
             raise api_errors.IncorrectProfileRole
         labels_choices = (ChoicesTuple(*label) for label in labels)
-        serializer = ProfileEnumChoicesSerializer(labels_choices, many=True)  # type: ignore
+        serializer = ProfileEnumChoicesSerializer(
+            labels_choices, many=True  # type: ignore
+        )  # noqa: 501
         return Response(serializer.data)
 
     def create_profile_video(self, request: Request) -> Response:

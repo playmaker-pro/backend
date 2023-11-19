@@ -16,7 +16,6 @@ LAST_NAME = "T"
 
 class InitialUserCreationPlayerProfile(TestCase):
     def setUp(self):
-        utils.create_system_user()
         self.user = PlayerProfileFactory.create(
             user__email=TEST_MAIL,
             user__first_name=FIRST_NAME,

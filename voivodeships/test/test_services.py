@@ -3,7 +3,6 @@ import tempfile
 
 from django.test import TestCase
 
-from utils import testutils as utils
 from utils.factories import PlayerProfileFactory
 from voivodeships.models import Voivodeships
 from voivodeships.services import VoivodeshipService
@@ -11,7 +10,6 @@ from voivodeships.services import VoivodeshipService
 
 class TestVoivodeshipService(TestCase):
     def setUp(self) -> None:
-        utils.create_system_user()
         self.voivodeship_data = {"name": "Warmińsko-Mazurskie"}
 
         self.voivodeship, _ = Voivodeships.objects.get_or_create(

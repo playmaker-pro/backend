@@ -26,7 +26,6 @@ class InitialClassCreationTest(TestCase):
     """
 
     def setUp(self):
-        utils.create_system_user()
         self.player = User.objects.create(
             email="username-player", declared_role=definitions.PLAYER_SHORT
         )
@@ -44,7 +43,6 @@ class InitialClassCreationTest(TestCase):
 
 class ModelMethodsRequest(TestCase):
     def setUp(self):
-        utils.create_system_user()
         self.player = User.objects.create(
             email="username-player", declared_role=definitions.PLAYER_SHORT
         )
@@ -63,7 +61,6 @@ class ModelMethodsRequest(TestCase):
 
 class RewardOutdatedInquiryRequest(TestCase):
     def setUp(self) -> None:
-        utils.create_system_user()
         self.inquiry_request = InquiryRequestFactory()
 
         # Resave to bind signals
