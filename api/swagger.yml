@@ -1083,11 +1083,10 @@ paths:
                     type: array
                     items:
                       oneOf:
-                        # FIXME: tutaj powinny być profile zwracane w zależności od roli
-                        - $ref: '#/components/schemas/PlayerProfile'
+                        - $ref: '#/components/schemas/PlayerProfileView'
                         - $ref: '#/components/schemas/CoachProfile'
-                        - $ref: '#/components/schemas/ClubProfile'
                         - $ref: '#/components/schemas/ScoutProfile'
+                        - $ref: '#/components/schemas/ClubProfileView'
                         - $ref: '#/components/schemas/ManagerProfile'
                         - $ref: '#/components/schemas/GuestProfile'
                 description: "Paginated list profile based on profile type"

@@ -51,6 +51,7 @@ class ManagerProfileViewSerializer(BaseProfileSerializer):
         model = ManagerProfile
         fields = (
             "slug",
+            "uuid",
             "user",
             "labels",
             "profile_video",

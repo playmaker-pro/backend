@@ -114,3 +114,20 @@ def custom_exception_handler(exc, context) -> exception_handler:
     traceback.print_exc()
 
     return response
+
+
+class ChoiceFieldValueErrorHTTPException(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+
+    def __init__(
+        self, field: str, choices: List[str], model: str, *args, **kwargs
+    ) -> None:
+        kwargs["details"] = (
+            f"Invalid value for field: {field} in model: {model}. "
+            f"Field must be one of: {', '.join(choices)}"
+        )
+        super().__init__(*args, **kwargs)
+
+
+class ChoiceFieldValueErrorException(Exception):
+    """Exception if request received invalid value for field"""

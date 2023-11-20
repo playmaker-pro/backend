@@ -39,6 +39,7 @@ class CoachProfileViewSerializer(BaseProfileSerializer):
         model = CoachProfile
         fields = (
             "slug",
+            "uuid",
             "user",
             "external_links",
             "coach_role",

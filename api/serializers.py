@@ -8,6 +8,10 @@ from django_countries import CountryTuple
 from rest_framework import serializers as _serializers
 
 from api.consts import ChoicesTuple
+from api.errors import (
+    ChoiceFieldValueErrorHTTPException,
+    ChoiceFieldValueErrorException,
+)
 from api.services import LocaleDataService
 from app.utils import cities
 from users.errors import CityDoesNotExistException, CityDoesNotExistHTTPException
@@ -107,7 +111,14 @@ class CitySerializer(_serializers.ModelSerializer):
 class ProfileEnumChoicesSerializer(_serializers.CharField, _serializers.Serializer):
     """Serializer for Profile Enums"""
 
-    def __init__(self, model: typing.Type[Model] = None, *args, **kwargs):
+    def __init__(
+        self,
+        model: typing.Type[Model] = None,
+        raise_exception: bool = True,
+        *args,
+        **kwargs
+    ):
+        self.raise_exception = raise_exception
         self.model: typing.Type[Model] = model
         super().__init__(*args, **kwargs)
 
@@ -134,8 +145,10 @@ class ProfileEnumChoicesSerializer(_serializers.CharField, _serializers.Serializ
         )
 
         if _id not in choices.keys():
-            raise _serializers.ValidationError(
-                f"Invalid value: {_id}. Expected: {choices.keys()}"
+            if not self.raise_exception:
+                raise ChoiceFieldValueErrorException
+            raise ChoiceFieldValueErrorHTTPException(
+                field=self.source, choices=choices.keys(), model=self.model.__name__
             )
 
         value = choices[_id]

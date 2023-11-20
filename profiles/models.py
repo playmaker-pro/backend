@@ -128,6 +128,10 @@ class ProfileVideo(models.Model):
             ):
                 return thumbnail_url.format(video_id)
 
+    def __str__(self):
+        """Return video title"""
+        return f"{self.user} - {self.title}"
+
 
 class Course(models.Model):
     name = models.CharField(max_length=100)

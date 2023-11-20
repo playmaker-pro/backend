@@ -30,7 +30,7 @@ from profiles.errors import (
     InvalidLanguagesListException,
     LanguageDoesNotExistException,
 )
-from profiles.models import PROFILE_TYPE, Language
+from profiles.models import PROFILE_TYPE, Language, BaseProfile
 from profiles.services import (
     LanguageService,
     PlayerProfilePositionService,
@@ -224,6 +224,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     labels = serializers.SerializerMethodField()
     verification_stage = VerificationStageSerializer(read_only=True)
     profile_video = serializers.SerializerMethodField()
+    uuid = serializers.UUIDField(read_only=True)
 
     def update(self, instance: PROFILE_TYPE, validated_data: dict):
         self.validate_data()
@@ -254,7 +255,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
 
         return super().update(instance, validated_data)
 
-    def get_labels(self, obj):
+    def get_labels(self, obj: BaseProfile):
         """Override labels field to return only visible=True labels"""
         labels = ProfileLabelsSerializer(
             obj.labels.filter(visible=True),

@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist, QuerySet
+from django.db.models.functions import Random
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, status
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
@@ -117,7 +118,9 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         (?role={P, C, S, G, ...})
         Full list of choices can be found in roles/definitions.py
         """
-        qs: QuerySet = self.get_queryset().order_by("data_fulfill_status")
+
+        qs: QuerySet = self.get_queryset().order_by("data_fulfill_status", Random())
+
         serializer_class = self.get_serializer_class(
             model_name=request.query_params.get("role")
         )

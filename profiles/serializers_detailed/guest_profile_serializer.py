@@ -9,6 +9,7 @@ class GuestProfileViewSerializer(BaseProfileSerializer):
         model = GuestProfile
         fields = (
             "slug",
+            "uuid",
             "user",
             "labels",
             "verification_stage",
