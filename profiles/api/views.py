@@ -127,8 +127,9 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         if not serializer_class:
             serializer_class = serializers.ProfileSerializer
 
+        paginated_query = self.paginate_queryset(qs)
         serializer = serializer_class(
-            qs,
+            paginated_query,
             context={"requestor": request.user},
             many=True,
         )
@@ -140,7 +141,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         #         serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         #     )
         # serializer = PlayerProfileViewSerializer(qs, many=True)
-        return self.get_paginated_response(self.paginate_queryset(serializer.data))
+        return self.get_paginated_response(serializer.data)
 
     def get_profile_labels(self, request: Request, profile_uuid: uuid.UUID) -> Response:
         try:
