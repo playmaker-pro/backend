@@ -49,8 +49,14 @@ class ProfileListAPIFilter(APIFilter):
         if self.query_params.get("shuffle", False):
             # Random shuffle -> get random sample of 10 -> return list of random choices
             shuffled_queryset = self.queryset.order_by("?")
-            selected_items = random.sample(list(shuffled_queryset), 10)
-            return self.queryset.filter(pk__in=[item.pk for item in selected_items])
+            queryset_length = shuffled_queryset.count()
+
+            if queryset_length >= 10:
+                selected_items = random.sample(list(shuffled_queryset), 10)
+                return self.queryset.filter(pk__in=[item.pk for item in selected_items])
+            else:
+                # Handle cases where the queryset has fewer than 10 elements
+                return shuffled_queryset
 
         return self.queryset
 

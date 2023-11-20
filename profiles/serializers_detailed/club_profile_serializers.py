@@ -14,6 +14,7 @@ class ClubProfileViewSerializer(BaseProfileSerializer):
         model = ClubProfile
         fields = (
             "slug",
+            "uuid",
             "user",
             "labels",
             "club_role",

@@ -9,6 +9,7 @@ class ScoutProfileViewSerializer(BaseProfileSerializer):
         model = ScoutProfile
         fields = (
             "slug",
+            "uuid",
             "user",
             "external_links",
             "profile_video",

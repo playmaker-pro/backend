@@ -64,6 +64,7 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
         model = PlayerProfile
         fields = (
             "slug",
+            "uuid",
             "user",
             "external_links",
             "player_positions",
