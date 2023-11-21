@@ -2,15 +2,14 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Union
 
 from allauth.socialaccount.models import SocialAccount
 from cities_light.models import City
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.core.mail import send_mail
 from django.core.validators import validate_email
-from django.template import loader
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from features.models import AccessPermission, Feature, FeatureElement
+from mailing.models import EmailTemplate as _EmailTemplate
+from profiles.models import PROFILE_TYPE
 from users.errors import CityDoesNotExistException
 from users.managers import UserTokenManager
 from users.schemas import (
@@ -182,6 +181,14 @@ class UserService:
         """Verify if email is available for register"""
         return not User.objects.filter(email=email).exists()
 
+    @staticmethod
+    def send_email_to_confirm_new_user(user: User) -> None:
+        """Send email to user with"""
+        email_template = _EmailTemplate.objects.new_user_template()
+        # TODO(bartnyk): add url to verify email address
+        schema = email_template.create_email_schema(user=user, url="ADD_URL_HERE")
+        email_template.send_email(schema)
+
 
 class PasswordResetService:
     PASSWORD_RESET_EMAIL_TXT_TEMPLATE = "account/email/password_reset_key_message.txt"
@@ -201,17 +208,9 @@ class PasswordResetService:
         """
         Send a password reset email to the user.
         """
-        text_content = loader.render_to_string(
-            PasswordResetService.PASSWORD_RESET_EMAIL_TXT_TEMPLATE,
-            {"user": user, "password_reset_url": reset_url},
-        )
-
-        send_mail(
-            "Password reset",
-            text_content,
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-        )
+        email_template = _EmailTemplate.objects.password_reset_template()
+        schema = email_template.create_email_schema(user=user, url=reset_url)
+        email_template.send_email(schema)
 
     def get_user_from_token(self, uidb64: str, token: str) -> Optional[User]:
         """

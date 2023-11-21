@@ -3,7 +3,6 @@ from typing import List
 from unittest import mock
 from unittest.mock import MagicMock
 
-import factory
 import pytest
 from django.test import override_settings
 from django.urls import reverse
@@ -15,9 +14,9 @@ from profiles.managers import ProfileManager
 from profiles.models import PlayerProfile
 from profiles.services import ProfileService
 from profiles.utils import get_past_date
-from users.models import UserPreferences
 from utils import factories, get_current_season
-from utils.factories import PlayerProfileFactory, UserFactory, UserPreferencesFactory
+from utils.factories import PlayerProfileFactory
+from utils.factories import UserFactory
 from utils.test.test_utils import UserManager
 
 profile_service = ProfileService()
@@ -43,6 +42,7 @@ class TestProfileListAPI(APITestCase):
         factories.PlayerProfileFactory.create_batch(30)
         response1 = self.client.get(self.url, {"role": "P", "shuffle": True})
         response2 = self.client.get(self.url, {"role": "P", "shuffle": True})
+
         assert response1.data["results"] != response2.data["results"]
 
     @parameterized.expand([[{"role": "P"}], [{"role": "C"}], [{"role": "T"}]])
@@ -66,8 +66,12 @@ class TestProfileListAPI(APITestCase):
     def test_get_bulk_profiles_youth_only(self) -> None:
         """get only youth player profiles"""
         youth_birth_date = get_past_date(years=20)
-        factories.PlayerProfileFactory.create_with_birth_date(youth_birth_date)  # youth
-        factories.PlayerProfileFactory.create_with_birth_date("1995-04-21")  # not youth
+        factories.PlayerProfileFactory.create(
+            user__userpreferences__birth_date=youth_birth_date
+        )  # youth
+        factories.PlayerProfileFactory.create(
+            user__userpreferences__birth_date="1995-04-21"
+        )  # not youth
 
         response = self.client.get(
             self.url, {"role": "P", "youth": "true"}, **self.headers
@@ -81,9 +85,15 @@ class TestProfileListAPI(APITestCase):
         too_young_birth_year = get_past_date(years=20)
         exact_birth_year = get_past_date(years=25)
         too_old_birth_year = get_past_date(years=30)
-        factories.PlayerProfileFactory.create_with_birth_date(too_young_birth_year)
-        factories.PlayerProfileFactory.create_with_birth_date(exact_birth_year)
-        factories.PlayerProfileFactory.create_with_birth_date(too_old_birth_year)
+        factories.PlayerProfileFactory.create(
+            user__userpreferences__birth_date=too_young_birth_year
+        )
+        factories.PlayerProfileFactory.create(
+            user__userpreferences__birth_date=exact_birth_year
+        )
+        factories.PlayerProfileFactory.create(
+            user__userpreferences__birth_date=too_old_birth_year
+        )
 
         response = self.client.get(
             self.url, {"role": "P", "min_age": "22", "max_age": "27"}, **self.headers
@@ -94,8 +104,14 @@ class TestProfileListAPI(APITestCase):
 
     def test_get_bulk_profiles_filter_position(self) -> None:
         """get player profiles filter by position"""
-        factories.PlayerProfileFactory.create_with_position("CAM")
-        factories.PlayerProfileFactory.create_with_position("GK")
+        factories.PlayerProfileFactory.create(
+            player_positions__player_position__shortcut="CAM",
+            player_positions__is_main=True,
+        )
+        factories.PlayerProfileFactory.create(
+            player_positions__player_position__shortcut="GK",
+            player_positions__is_main=True,
+        )
 
         response = self.client.get(
             self.url,
@@ -156,9 +172,15 @@ class TestProfileListAPI(APITestCase):
         city_c = factories.CityFactory.create(
             name="c", latitude=54.13695015319587, longitude=18.458313275377453
         )
-        factories.PlayerProfileFactory.create_with_localization(city_a)
-        factories.PlayerProfileFactory.create_with_localization(city_b)
-        factories.PlayerProfileFactory.create_with_localization(city_c)
+        factories.PlayerProfileFactory.create(
+            user__userpreferences__localization=city_a
+        )
+        factories.PlayerProfileFactory.create(
+            user__userpreferences__localization=city_b
+        )
+        factories.PlayerProfileFactory.create(
+            user__userpreferences__localization=city_c
+        )
 
         response = self.client.get(
             self.url,
@@ -195,9 +217,11 @@ class TestProfileListAPI(APITestCase):
 
     def test_get_bulk_profiles_filter_citizenship(self) -> None:
         """test filter citizenship"""
-        factories.PlayerProfileFactory.create_with_citizenship(["PL"])
-        factories.PlayerProfileFactory.create_with_citizenship(["PL", "UA"])
-        factories.PlayerProfileFactory.create_with_citizenship(["DE"])
+        factories.PlayerProfileFactory.create(user__userpreferences__citizenship=["PL"])
+        factories.PlayerProfileFactory.create(
+            user__userpreferences__citizenship=["PL", "UA"]
+        )
+        factories.PlayerProfileFactory.create(user__userpreferences__citizenship=["DE"])
 
         response = self.client.get(
             self.url,
@@ -306,13 +330,10 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
     def test_get_bulk_profiles_by_gender(self, param) -> None:
         """get profiles by gender"""
         profiles: List[PlayerProfile] = PlayerProfileFactory.create_batch(10)
-        UserPreferencesFactory.create_batch(
-            10, user=factory.Sequence(lambda n: profiles[n % 10].user)
-        )
 
         response: Response = self.client.get(self.url, param)
-        expected_count: int = UserPreferences.objects.filter(
-            gender=param["gender"]
+        expected_count: int = PlayerProfile.objects.filter(
+            user__userpreferences__gender=param["gender"]
         ).count()
 
         assert len(response.data["results"]) == expected_count
@@ -323,11 +344,7 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
     )
     def test_get_bulk_profiles_by_gender_res_0(self, param) -> None:
         """get profiles by gender. Result should be 0"""
-        profiles: List[PlayerProfile] = PlayerProfileFactory.create_batch(10)
-        UserPreferencesFactory.create_batch(
-            10, user=factory.Sequence(lambda n: profiles[n % 10].user), gender=None
-        )
-
+        PlayerProfileFactory.create_batch(10, user__userpreferences__gender=None)
         response = self.client.get(self.url, param)
 
         assert len(response.data["results"]) == 0

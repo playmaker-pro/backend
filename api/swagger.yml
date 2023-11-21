@@ -5537,13 +5537,13 @@ components:
       properties:
         created_at:
           type: string
-        message_type:
+        log_type:
           type: string
         body:
           type: string  
       required:
         - created_at
-        - message_type
+        - log_type
         - body
     PhoneNumber:
       type: object

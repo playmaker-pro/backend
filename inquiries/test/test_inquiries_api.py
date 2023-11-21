@@ -1,5 +1,6 @@
 import json
 
+import pytest
 from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
@@ -38,6 +39,7 @@ URL_MY_DATA = reverse("api:inquiries:my_inquiry_data")
 URL_UPDATE_CONTACT_DATA = reverse("api:inquiries:update_contact_data")
 
 
+@pytest.mark.usefixtures("silence_mails")
 class TestInquiriesAPI(APITestCase):
     def setUp(self):
         self.client: APIClient = APIClient()
@@ -127,11 +129,11 @@ class TestInquiriesAPI(APITestCase):
         assert (
             UserInquiryLog.objects.filter(
                 log_owner=self.sender_obj.userinquiry,
-                message__message_type=InquiryLogMessage.MessageType.ACCEPTED,
+                message__log_type=InquiryLogMessage.MessageType.ACCEPTED,
             ).exists()
             and UserInquiryLog.objects.filter(
                 log_owner=self.recipient_obj.userinquiry,
-                message__message_type=InquiryLogMessage.MessageType.NEW,
+                message__log_type=InquiryLogMessage.MessageType.NEW,
             ).exists()
         )
 
@@ -177,11 +179,11 @@ class TestInquiriesAPI(APITestCase):
         assert (
             UserInquiryLog.objects.filter(
                 log_owner=self.sender_obj.userinquiry,
-                message__message_type=InquiryLogMessage.MessageType.REJECTED,
+                message__log_type=InquiryLogMessage.MessageType.REJECTED,
             ).exists()
             and UserInquiryLog.objects.filter(
                 log_owner=self.recipient_obj.userinquiry,
-                message__message_type=InquiryLogMessage.MessageType.NEW,
+                message__log_type=InquiryLogMessage.MessageType.NEW,
             ).exists()
         )
 

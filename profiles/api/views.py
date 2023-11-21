@@ -174,6 +174,8 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         """
         Set main profile for user
         """
+        if not request.data.get("declared_role"):
+            raise api_errors.IncompleteRequestBody(["declared_role"])
         serializer = UserMainRoleSerializer(request.user, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
