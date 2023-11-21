@@ -7,12 +7,23 @@ from django.utils.translation import gettext_lazy as _
 from django_fsm import FSMField, transition
 
 from inquiries.plans import basic_plan, premium_plan
-from notifications.mail import request_accepted, request_declined, request_new
+from inquiries.utils import InquiryMessageContentParser as _ContentParser
+from mailing.models import EmailTemplate as _EmailTemplate
+from mailing.schemas import EmailSchema as _EmailSchema
+
+# from notifications.mail import request_accepted, request_declined, request_new
 
 logger = logging.getLogger("inquiries")
 
 
 class InquiryLogMessage(models.Model):
+    EMAIL_PATTERN = _(
+        "Type '#male_form|female_form#' - to mark something that should be determined by gender (e.g. #Otrzymałeś|Otrzymałaś#).\n"
+        "<> - to include user related with log.\n"
+        "'#r#' to include user related with log with role.\n"
+        "'#rb#' to include user related with log with role in objective case (biernik).\n"
+    )
+
     class MessageType(models.TextChoices):
         ACCEPTED = "ACCEPTED_INQUIRY", _("Accepted inquiry")
         REJECTED = "REJECTED_INQUIRY", _("Rejected inquiry")
@@ -20,13 +31,30 @@ class InquiryLogMessage(models.Model):
         OUTDATED = "OUTDATED_INQUIRY", _("Outdated inquiry")
         UNDEFINED = "UNDEFINED_INQUIRY", _("Undefined inquiry")
 
-    body = models.TextField(
+    log_body = models.TextField(
         help_text=_(
             "Message should include '<>' as placeholder for user related with log."
         ),
+        blank=True,
+        null=True,
     )
 
-    message_type = models.CharField(
+    email_title = models.TextField(
+        help_text=EMAIL_PATTERN,
+        blank=True,
+        null=True,
+    )
+    email_body = models.TextField(
+        help_text=EMAIL_PATTERN,
+        blank=True,
+        null=True,
+    )
+    send_mail = models.BooleanField(
+        default=False,
+        help_text=_("Should email be sent automatically when log is created?"),
+    )
+
+    log_type = models.CharField(
         max_length=20,
         choices=MessageType.choices,
         default=MessageType.UNDEFINED,
@@ -34,7 +62,7 @@ class InquiryLogMessage(models.Model):
     )
 
     def __str__(self) -> str:
-        return f"{self.message_type}: {self.body}"
+        return f"{self.log_type}: {self.log_body}"
 
 
 class UserInquiryLog(models.Model):
@@ -61,20 +89,44 @@ class UserInquiryLog(models.Model):
     )
 
     def __str__(self) -> str:
-        return f"{self.log_owner.user} -- {self.created_at_readable} -- {self.message_body}"
+        return f"{self.log_owner.user} -- {self.created_at_readable} -- {self.log_message_body}"
 
     @property
     def created_at_readable(self) -> str:
         """Get created_at in readable format."""
         return self.created_at.strftime("%H:%M, %d.%m.%Y")
 
+    def create_email_schema(self) -> _EmailSchema:
+        """Create email schema based on log message and related user."""
+        return _EmailSchema(
+            body=self.email_body,
+            subject=self.email_title,
+            recipients=[self.log_owner.user.email],
+        )
+
+    def send_email_to_user(self) -> None:
+        """Send email to user with new inquiry request state"""
+        schema = self.create_email_schema()
+        _EmailTemplate.send_email(schema)
+
     @property
-    def message_body(self) -> str:
+    def log_message_body(self) -> str:
         """Parse message body to include user related with log"""
-        message = _(self.message.body)
-        return message.replace("<>", self.related_with.user.display_full_name)  # type: ignore
+        return _ContentParser(self).parse_log_body
+
+    @property
+    def email_title(self) -> str:
+        """Parse email title to include user related with log"""
+        return _ContentParser(self).parse_email_title
+
+    @property
+    def email_body(self) -> str:
+        """Parse email body to include user related with log"""
+        return _ContentParser(self).parse_email_body
 
     def save(self, *args, **kwargs):
+        if self.message.send_mail and self._state.adding:
+            self.send_email_to_user()
         super().save(*args, **kwargs)
         logger.info(f"New UserInquiryLog (ID: {self.pk}) created: {self}")
 
@@ -193,7 +245,7 @@ class InquiryRequestManager(models.Manager):
     def to_notify_about_outdated(self) -> models.QuerySet:
         """Filter outdated InquiryRequest have not been logged yet."""
         return self.outdated().exclude(
-            logs__message__message_type=InquiryLogMessage.MessageType.OUTDATED
+            logs__message__log_type=InquiryLogMessage.MessageType.OUTDATED
         )
 
 
@@ -243,7 +295,7 @@ class InquiryRequest(models.Model):
 
     def create_log_for_sender(self, type: InquiryLogMessage.MessageType) -> None:
         """Create log for sender"""
-        message = InquiryLogMessage.objects.get(message_type=type)
+        message = InquiryLogMessage.objects.get(log_type=type)
         UserInquiryLog.objects.create(
             log_owner=self.sender.userinquiry,
             related_with=self.recipient.userinquiry,
@@ -253,7 +305,7 @@ class InquiryRequest(models.Model):
 
     def create_log_for_recipient(self, type: InquiryLogMessage.MessageType) -> None:
         """Create log for recipient"""
-        message = InquiryLogMessage.objects.get(message_type=type)
+        message = InquiryLogMessage.objects.get(log_type=type)
         UserInquiryLog.objects.create(
             log_owner=self.recipient.userinquiry,
             related_with=self.sender.userinquiry,
@@ -276,7 +328,6 @@ class InquiryRequest(models.Model):
     @transition(field=status, source=[STATUS_NEW], target=STATUS_SENT)
     def send(self):
         """Should be appeared when message was distributed to recipient"""
-        request_new(self)
 
     @transition(field=status, source=[STATUS_SENT], target=STATUS_RECEIVED)
     def read(self):
@@ -297,7 +348,6 @@ class InquiryRequest(models.Model):
         )
         self.create_log_for_sender(InquiryLogMessage.MessageType.ACCEPTED)
         self.set_bodies()
-        request_accepted(self)
         logger.info(
             f"{self.recipient} accepted request from {self.sender}. -- InquiryRequestID: {self.pk}"
         )
@@ -310,7 +360,6 @@ class InquiryRequest(models.Model):
     def reject(self) -> None:
         """Should be appeared when message was rejected by recipient"""
         self.create_log_for_sender(InquiryLogMessage.MessageType.REJECTED)
-        request_declined(self)
         logger.info(
             f"{self.recipient} rejected request from {self.sender}. -- InquiryRequestID: {self.pk}"
         )

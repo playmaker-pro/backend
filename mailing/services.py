@@ -1,0 +1,95 @@
+import re as _re
+from typing import List as _List
+
+from django.conf import settings
+from django.core.mail import send_mail
+from django.utils.translation import gettext_lazy as _
+
+from mailing.schemas import EmailSchema as _EmailSchema
+
+
+class MailingService:
+    def __init__(self, schema: _EmailSchema) -> None:
+        self._schema: _EmailSchema = schema
+
+    @property
+    def _subject(self) -> str:
+        """Return email subject."""
+        return self._schema.subject
+
+    @property
+    def _body(self) -> str:
+        """Return email body."""
+        return self._schema.body
+
+    @property
+    def _recipients(self) -> _List:
+        """Return email recipients."""
+        return self._schema.recipients
+
+    @property
+    def _sender(self) -> str:
+        """Return email sender."""
+        return self._schema.sender
+
+    @classmethod
+    def send_mail(cls, schema: _EmailSchema) -> None:
+        """Send email based on schema."""
+        instance = cls(schema)
+        send_mail(
+            subject=instance._subject,
+            message=instance._body,
+            from_email=instance._sender,
+            recipient_list=instance._recipients,
+        )
+
+
+class MessageContentParser:
+    def __init__(self, recipient: settings.AUTH_USER_MODEL, **extra_kwargs) -> None:
+        self._recipient: settings.AUTH_USER_MODEL = recipient
+        self._text: str = ""
+        self._extra_kwargs = extra_kwargs
+
+    @property
+    def text(self) -> str:
+        return str(self._text)
+
+    @text.setter
+    def text(self, value: str) -> None:
+        self._text = _(value)
+
+    @property
+    def _recipient_user_gender_index(self) -> int:
+        """Return 1 if related user is female, 0 otherwise"""
+        return int(self._recipient.userpreferences.gender == "K")
+
+    def _put_correct_form(self) -> None:
+        """Replace '#male_form|female_form#' with correct form of word based on recipient gender."""
+        pattern = r"#(\w+)\|(\w+)#"
+
+        matches = _re.findall(pattern, self.text)
+        _id = self._recipient_user_gender_index
+
+        for match in matches:
+            self._text = self._text.replace(
+                f"#{match[0]}|{match[1]}#", str(_(match[_id]))
+            )
+
+    def _put_url(self) -> None:
+        """Replace '#url#' with url."""
+        url = self._extra_kwargs.get("url", "")
+        self._text = self._text.replace("#url#", url)
+
+    def parse_email_title(self, content: str) -> str:
+        """Transform text and return correct form of email_title."""
+        self.text = content
+
+        return self.text
+
+    def parse_email_body(self, content: str) -> str:
+        """Transform text and return correct form of email_body."""
+        self.text = content
+        self._put_url()
+        self._put_correct_form()
+
+        return self.text

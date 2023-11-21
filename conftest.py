@@ -7,6 +7,7 @@ Functions below are taken from the official documentation.
 
 Main purpose of functions is to skip marked tests when running with specific flag (--runslow).
 """  # noqa: E501
+from unittest.mock import patch
 
 import pytest
 from django.conf import settings
@@ -40,7 +41,8 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture(autouse=True)
 def system_user():
     """Create system user before running tests."""
-    UserFactory.create(email=settings.SYSTEM_USER_EMAIL)
+    with patch("django.db.models.signals.post_save", return_value=None) as mck:
+        UserFactory.create(email=settings.SYSTEM_USER_EMAIL)
 
 
 @pytest.fixture(autouse=True)

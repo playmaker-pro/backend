@@ -5,6 +5,7 @@ from django.db.models import signals
 from factory import fuzzy
 
 from users.models import UserPreferences
+
 from .base import CustomObjectFactory
 
 User = get_user_model()
@@ -22,6 +23,9 @@ class UserFactory(CustomObjectFactory):
     last_name = factory.Faker("last_name")
     password = make_password("test")
     state = User.STATE_ACCOUNT_VERIFIED
+    userpreferences = factory.RelatedFactory(
+        "utils.factories.user_factories.UserPreferencesFactory", "user"
+    )
 
     @classmethod
     def create_admin_user(

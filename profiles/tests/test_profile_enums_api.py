@@ -48,9 +48,15 @@ class TestProfileEnumChoicesAPI(APITestCase):
         birth_date_1 = get_past_date(years=20)
         birth_date_2 = get_past_date(years=25)
         birth_date_3 = get_past_date(years=30)
-        factories.PlayerProfileFactory.create_with_birth_date(birth_date_1)
-        factories.PlayerProfileFactory.create_with_birth_date(birth_date_2)
-        factories.PlayerProfileFactory.create_with_birth_date(birth_date_3)
+        factories.PlayerProfileFactory.create(
+            user__userpreferences__birth_date=birth_date_1
+        )
+        factories.PlayerProfileFactory.create(
+            user__userpreferences__birth_date=birth_date_2
+        )
+        factories.PlayerProfileFactory.create(
+            user__userpreferences__birth_date=birth_date_3
+        )
 
         response = self.client.get(reverse("api:profiles:players_age_range"))
 

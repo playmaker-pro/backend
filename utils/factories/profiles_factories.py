@@ -112,6 +112,9 @@ class PlayerProfileFactory(ProfileFactory):
         PlayerMetricsFactory, factory_related_name="player"
     )
     history = factory.SubFactory(ProfileVisitHistoryFactory)
+    player_positions = factory.RelatedFactory(
+        PlayerProfilePositionFactory, "player_profile"
+    )
 
     @classmethod
     def set_subfactories(cls) -> None:
@@ -125,51 +128,13 @@ class PlayerProfileFactory(ProfileFactory):
             self.team_object = self.team_history_object.team
 
     @classmethod
-    def create_with_birth_date(cls, birth_date, **kwargs) -> models.PlayerProfile:
-        """Create PlayerProfile with predefined birth_date"""
-        obj = super().create(**kwargs)
-        user_factories.UserPreferencesFactory(user=obj.user, birth_date=birth_date)
-        return obj
-
-    @classmethod
-    def create_with_position(
-        cls, position_str: str, is_main: bool = True, **kwargs
-    ) -> models.PlayerProfile:
-        """Create PlayerProfile with predefined position"""
-        obj = super().create(**kwargs)
-        PlayerProfilePositionFactory(
-            player_profile=obj, player_position__shortcut=position_str, is_main=is_main
-        )
-        return obj
-
-    @classmethod
-    def create_with_localization(
-        cls, localization: City, **kwargs
-    ) -> models.PlayerProfile:
-        """Create PlayerProfile with predefined localization"""
-        obj = super().create(**kwargs)
-        user_factories.UserPreferencesFactory(user=obj.user, localization=localization)
-        return obj
-
-    @classmethod
-    def create_with_citizenship(
-        cls, country_codes: list, **kwargs
-    ) -> models.PlayerProfile:
-        """Create PlayerProfile with predefined citizenship"""
-        obj = super().create(**kwargs)
-        user_factories.UserPreferencesFactory(user=obj.user, citizenship=country_codes)
-        return obj
-
-    @classmethod
     def create_with_language(
         cls, language_codes: list, **kwargs
     ) -> models.PlayerProfile:
         """Create PlayerProfile with predefined language"""
         obj = super().create(**kwargs)
         languages = models.Language.objects.filter(code__in=language_codes)
-        user_factories.UserPreferencesFactory.create(
-            user=obj.user
-        ).spoken_languages.set(languages)
+        obj.user.userpreferences.spoken_languages.set(languages)
         return obj
 
     @classmethod

@@ -1,5 +1,6 @@
 import datetime
 
+import pytest
 from django.test import TestCase
 
 from inquiries.models import (
@@ -59,6 +60,7 @@ class ModelMethodsRequest(TestCase):
         assert self.request.status_display_for(self.coach) == "WYSŁANO"
 
 
+@pytest.mark.usefixtures("silence_mails")
 class RewardOutdatedInquiryRequest(TestCase):
     def setUp(self) -> None:
         self.inquiry_request = InquiryRequestFactory()
@@ -92,6 +94,6 @@ class RewardOutdatedInquiryRequest(TestCase):
             UserInquiryLog.objects.get(
                 log_owner=self.inquiry_request.sender.userinquiry,
                 ref=self.inquiry_request,
-            ).message.message_type
+            ).message.log_type
             == InquiryLogMessage.MessageType.OUTDATED
         )

@@ -37,6 +37,10 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
             if cross_request := _models.InquiryRequest.objects.filter(
                 sender=recipient, recipient=sender
             ).first():
+                if cross_request.status in _models.InquiryRequest.RESOLVED_STATES:
+                    raise serializers.ValidationError(
+                        f"This user has already replied to your request (status={cross_request.status})."
+                    )
                 self._accept_cross_request(cross_request)
 
         return attrs
@@ -82,18 +86,18 @@ class InquiryContactSerializer(serializers.ModelSerializer):
 
 
 class UserInquiryLogSerializer(serializers.ModelSerializer):
-    message_type = serializers.CharField(source="message.message_type", read_only=True)
+    message_type = serializers.CharField(source="message.log_type", read_only=True)
     body = serializers.SerializerMethodField(
         method_name="get_log_message", read_only=True
     )
 
     class Meta:
         model = _models.UserInquiryLog
-        fields = ("created_at", "message_type", "body")
+        fields = ("created_at", "log_type", "body")
 
     def get_log_message(self, obj: _models.UserInquiryLog) -> str:
         """Get message body with user related data"""
-        return obj.message_body
+        return obj.log_message_body
 
 
 class UserInquirySerializer(serializers.ModelSerializer):

@@ -7,6 +7,7 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
 from users.models import UserPreferences
+from users.services import UserService
 
 logger = logging.getLogger("project")
 
@@ -33,3 +34,4 @@ def post_create_user(sender, instance, created, **kwargs) -> None:
     """Create UserPreferences object for each new user"""
     if created:
         UserPreferences.objects.get_or_create(user=instance)
+        UserService.send_email_to_confirm_new_user(instance)
