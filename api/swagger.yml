@@ -276,6 +276,33 @@ paths:
                       },...]}
                 required: ["count", "next", "previous", "results"]
           description: ''
+  /my-city/:
+    get:
+      operationId: get_my_city
+      description: 'Get closest city based on longitude and latitude'
+      summary: Get my city
+      parameters:
+      - in: query
+        name: longitude
+        schema:
+          type: string
+          format: double
+        required: true
+      - in: query
+        name: latitude
+        schema:
+          type: string
+          format: double
+        required: true
+      tags:
+      - locale
+      responses:
+        '200':
+          description: "City closest to given longitude and latitude"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/City'
   /languages/:
     get:
       operationId: languages_retrieve
