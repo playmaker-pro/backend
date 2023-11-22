@@ -11,10 +11,9 @@ from django.utils.translation import gettext_lazy as _
 
 # This can be extracted to models.User.
 from django_countries.fields import CountryField
-from django_fsm import FSMField, transition
+from django_fsm import FSMField
 
 from clubs.models import Club, Gender, League, Seniority, Voivodeship
-from notifications.mail import request_accepted, request_declined, request_new
 from profiles.models import PlayerPosition
 from voivodeships.models import Voivodeships
 
@@ -178,9 +177,7 @@ class AnnouncementMeta(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
-    subscribers = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, null=True, blank=True
-    )
+    subscribers = models.ManyToManyField(settings.AUTH_USER_MODEL)
 
     def set_expiration_date(self):
         if self.expire is None:

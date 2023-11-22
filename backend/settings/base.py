@@ -683,8 +683,8 @@ SCRAPPER = True
 
 try:
     from backend.settings._local import *  # noqa
-except Exception as e:
-    print(f"No local settings. {e}")
+except ImportError:
+    pass
 
 
 if FORCED_SEASON_NAME is not None:
@@ -730,10 +730,3 @@ FACEBOOK_GRAPH_API_VERSION = "v17.0"
 
 THROTTLE_EMAIL_CHECK_LIMITATION = 5
 DEFAULT_THROTTLE = 5
-
-try:
-    from .local import *  # noqa
-
-    print("::> Loading custom local settings (local.py)")
-except ImportError as e:
-    print(f"[error] Cannot load local settings. Reason={e}")
