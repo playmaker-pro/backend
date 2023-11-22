@@ -4692,6 +4692,9 @@ components:
               description: Player,Coach,Scout,Guest
             team_history_object:
               $ref: '#/components/schemas/TeamHistoryProfileView'
+            custom_role:
+              type: string
+              description: Custom role description provided by the user
           example: {
             "user": {
                 "id": 1,

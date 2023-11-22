@@ -1,9 +1,6 @@
-import factory
 import pytest
 from django.db.migrations.state import ProjectState
 from django.db.models.base import ModelBase
-
-from utils import factories
 
 
 @pytest.mark.django_db()
@@ -22,18 +19,23 @@ def test_user_preferences_migration(migrator) -> None:
     CoachProfile = init_state.apps.get_model("profiles", "CoachProfile")
     ScoutProfile = init_state.apps.get_model("profiles", "ScoutProfile")
     User = init_state.apps.get_model("users", "User")
+    UserPreferences = init_state.apps.get_model("users", "UserPreferences")
 
-    users = factory.create_batch(User, 3, FACTORY_CLASS=factories.UserFactory)
+    # Create User instances directly
+    user1 = User.objects.create(email="player@example.com", username="playerUser")
+    user2 = User.objects.create(email="coach@example.com", username="coachUser")
+    user3 = User.objects.create(email="scout@example.com", username="scoutUser")
 
-    player = PlayerProfile.objects.create(country="PL", user=users[0])
-    factories.UserPreferencesFactory(user_id=player.user.pk)
+    player = PlayerProfile.objects.create(country="PL", user=user1)
+    UserPreferences.objects.create(user=player.user)
 
-    coach = CoachProfile.objects.create(country="ES", user=users[1])
-    factories.UserPreferencesFactory(user_id=coach.user.pk)
+    coach = CoachProfile.objects.create(country="ES", user=user2)
+    UserPreferences.objects.create(user=coach.user)
 
-    scout = ScoutProfile.objects.create(country="DE", user=users[2])
-    factories.UserPreferencesFactory(user_id=scout.user.pk)
+    scout = ScoutProfile.objects.create(country="DE", user=user3)
+    UserPreferences.objects.create(user=scout.user)
 
+    # Apply the tested migration
     new_state: ProjectState = migrator.apply_tested_migration(
         ("users", "0010_auto_20230918_0219")
     )

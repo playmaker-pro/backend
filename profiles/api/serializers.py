@@ -21,7 +21,7 @@ from profiles import errors, models, services
 from profiles.api import consts
 from profiles.api import errors as api_errors
 from profiles.services import ProfileVideoService
-from roles.definitions import CLUB_ROLES, PROFILE_TYPE_SHORT_MAP
+from roles.definitions import CLUB_ROLES, PROFILE_TYPE_SHORT_MAP, GUEST_SHORT
 from users.services import UserService
 from utils import translate_to
 from utils.factories import utils
@@ -832,11 +832,7 @@ class ProfileSerializer(serializers.Serializer):
         )
         return labels.data
 
-    def __init__(
-        self,
-        *args,
-        **kwargs,
-    ) -> None:
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance:
             self.model: models.PROFILE_TYPE = (
@@ -844,6 +840,8 @@ class ProfileSerializer(serializers.Serializer):
                 if isinstance(self.instance, (QuerySet, list))
                 else type(self.instance)
             )
+            if hasattr(self.model, "custom_role"):
+                self.serialize_fields += ("custom_role",)
 
     @property
     def data(self) -> dict:
@@ -1040,24 +1038,41 @@ class CreateProfileSerializer(ProfileSerializer):
 
     def validate_data(self) -> None:
         """Validate data"""
-        super().validate_data()
-        self.validate_user()
-
-    def save(self) -> None:
-        """create profile and set role for given user, need to validate data first"""
+        role: str = self.initial_data.get("role")
         try:
-            self.model = services.ProfileService.get_model_by_role(
-                self.initial_data.pop("role")
+            self.model: models.PROFILE_TYPE = services.ProfileService.get_model_by_role(
+                role
             )
         except ValueError:
             raise api_errors.InvalidProfileRole
 
+        super().validate_data()
+        self.validate_user()
+
+        if role == GUEST_SHORT:
+            custom_role = self.initial_data.get("custom_role")
+            if not custom_role:
+                raise serializers.ValidationError(
+                    {
+                        "custom_role": f"This field is required when role is {GUEST_SHORT} (GuestProfile)."
+                    }
+                )
+
+    def save(self) -> None:
+        """create profile and set role for given user, need to validate data first"""
         self.validate_data()
+
+        role: str = self.initial_data.pop("role")
         positions_data = self.initial_data.pop("player_positions", None)
+
         self.instance = self.model.objects.create(**self.initial_data)
 
         if positions_data and isinstance(self.instance, models.PlayerProfile):
             self.handle_positions(positions_data)
+
+        if role == GUEST_SHORT and "custom_role" in self.initial_data:
+            self.instance.custom_role = self.initial_data["custom_role"]
+            self.instance.save()
 
 
 class UpdateProfileSerializer(ProfileSerializer):
