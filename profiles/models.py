@@ -1943,6 +1943,9 @@ class GuestProfile(BaseProfile):
         null=True,
         blank=True,
     )
+    custom_role = models.CharField(
+        _("Custom Role"), max_length=255, blank=True, null=True
+    )
 
     class Meta:
         verbose_name = "Guest Profile"

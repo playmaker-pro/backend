@@ -130,6 +130,7 @@ class TestCreateProfileAPI(APITestCase):
                 }
             ],
             [{"role": "S", "soccer_goal": 2, "bio": "jakiesbio"}],
+            [{"role": "G", "custom_role": "fizjoterapeuta"}],
         ]
     )
     def test_successfully_create_profile_for_new_user(self, payload: dict) -> None:
