@@ -276,6 +276,8 @@ paths:
                       },...]}
                 required: ["count", "next", "previous", "results"]
           description: ''
+        '400':
+          description: 'No coords provided or coords are outside of Poland'
   /my-city/:
     get:
       operationId: get_my_city
