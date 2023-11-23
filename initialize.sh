@@ -27,9 +27,6 @@ execute_command ./manage.py change_league_seniorty
 # hide predefined leagues
 execute_command ./manage.py hide_predefined_leagues
 
-# create default leagues
-execute_command ./manage.py create_default_leagues
-
 # add season 2023/2024
 #TODO: This should not be hardcoded here, script should get by default current season from clubs.models.Season.define_current_season()
 execute_command ./manage.py add_seasons 2023 2024
