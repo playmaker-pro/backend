@@ -93,7 +93,7 @@ class UserInquiryLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = _models.UserInquiryLog
-        fields = ("created_at", "log_type", "body")
+        fields = ("created_at", "message_type", "body")
 
     def get_log_message(self, obj: _models.UserInquiryLog) -> str:
         """Get message body with user related data"""
