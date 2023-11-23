@@ -177,7 +177,7 @@ class AnnouncementMeta(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
-    subscribers = models.ManyToManyField(settings.AUTH_USER_MODEL)
+    subscribers = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
 
     def set_expiration_date(self):
         if self.expire is None:

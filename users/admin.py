@@ -247,7 +247,7 @@ class UserAdminPanel(UserAdmin):
             if obj.profile.club_object:
                 return obj.profile.club_object
         elif obj.is_coach or obj.is_player:
-            if obj.profile.team_object:
+            if obj.profile and obj.profile.team_object:
                 return obj.profile.team_object
 
     def get_team_club_league_voivodeship_ver(self, obj):

@@ -21,6 +21,7 @@ class UserInquiryAdmin(admin.ModelAdmin):
     search_fields = ("user__email",)
     list_display = ("user", "plan", "counter")
     actions = [reset_plan]
+    autocomplete_fields = ("user",)
 
 
 @admin.register(models.InquiryRequest)
@@ -60,9 +61,5 @@ class InquiryLogMessageAdmin(admin.ModelAdmin):
 
 @admin.register(models.UserInquiryLog)
 class UserInquiryLogAdmin(admin.ModelAdmin):
-    search_fields = (
-        "log_owner",
-        "related_with",
-        "ref",
-    )
+    search_fields = ("log_owner__user__email",)
     autocomplete_fields = ("log_owner", "related_with", "ref")

@@ -133,14 +133,6 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
             context={"requestor": request.user},
             many=True,
         )
-        # FIXME: lremkowicz: if response time of above serializer will be acceptable, remove commented block    # noqa: 501
-        # serializer = serializers.ProfileSerializer(data=qs, many=True)
-        # res = serializer.is_valid(raise_exception=True)
-        # if not serializer.is_valid():
-        #     return Response(
-        #         serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        #     )
-        # serializer = PlayerProfileViewSerializer(qs, many=True)
         return self.get_paginated_response(serializer.data)
 
     def get_profile_labels(self, request: Request, profile_uuid: uuid.UUID) -> Response:
