@@ -1,17 +1,17 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_fsm import FSMField, transition
 
+from inquiries.errors import ForbiddenLogAction
 from inquiries.plans import basic_plan, premium_plan
 from inquiries.utils import InquiryMessageContentParser as _ContentParser
 from mailing.models import EmailTemplate as _EmailTemplate
 from mailing.schemas import EmailSchema as _EmailSchema
-
-# from notifications.mail import request_accepted, request_declined, request_new
 
 logger = logging.getLogger("inquiries")
 
@@ -22,6 +22,7 @@ class InquiryLogMessage(models.Model):
         "<> - to include user related with log.\n"
         "'#r#' to include user related with log with role.\n"
         "'#rb#' to include user related with log with role in objective case (biernik).\n"
+        "#url# - to include additional url."
     )
 
     class MessageType(models.TextChoices):
@@ -30,6 +31,7 @@ class InquiryLogMessage(models.Model):
         NEW = "NEW_INQUIRY", _("New inquiry")
         OUTDATED = "OUTDATED_INQUIRY", _("Outdated inquiry")
         UNDEFINED = "UNDEFINED_INQUIRY", _("Undefined inquiry")
+        OUTDATED_REMINDER = "OUTDATED_REMINDER", _("Reminder about outdated inquiry")
 
     log_body = models.TextField(
         help_text=_(
@@ -122,7 +124,18 @@ class UserInquiryLog(models.Model):
     @property
     def email_body(self) -> str:
         """Parse email body to include user related with log"""
-        return _ContentParser(self).parse_email_body
+        return _ContentParser(self, url=self.ulr_to_profile).parse_email_body
+
+    @property
+    def ulr_to_profile(self) -> str:
+        """Get url to profile based on log type"""
+        # TODO(bartnyk): We need await for routing from frontend.
+        # Then, based on user declared_role field we can generate url to profile.
+        if self.message.log_type == InquiryLogMessage.MessageType.OUTDATED:
+            return f"URL_FOR_SENDER"
+        elif self.message.log_type == InquiryLogMessage.MessageType.OUTDATED_REMINDER:
+            return f"URL_FOR_RECIPIENT"
+        return ""
 
     def save(self, *args, **kwargs):
         if self.message.send_mail and self._state.adding:
@@ -235,18 +248,56 @@ class InquiryRequestManager(models.Manager):
             & (models.Q(sender=user_instance) | models.Q(recipient=user_instance))
         )
 
-    def outdated(self) -> models.QuerySet:
+    def outdated_for_sender(self) -> models.QuerySet:
         """
-        Filter InquiryRequest that are older than week that are not read yet.
+        Filter unread InquiryRequest that are older than week
         """
-        week_ago = datetime.now() - timedelta(days=7)
+        week_ago = timezone.now() - timedelta(days=7)
         return self.filter(status=InquiryRequest.STATUS_SENT, created_at__lte=week_ago)
 
-    def to_notify_about_outdated(self) -> models.QuerySet:
+    def to_notify_sender_about_outdated(self) -> models.QuerySet:
         """Filter outdated InquiryRequest have not been logged yet."""
-        return self.outdated().exclude(
+        return self.outdated_for_sender().exclude(
             logs__message__log_type=InquiryLogMessage.MessageType.OUTDATED
         )
+
+    def to_remind_recipient_about_outdated(self) -> models.QuerySet:
+        """
+        Filter InquiryRequest in conditions:
+        - older than 3 days and no reminder logs created
+        - older than 6 days and only 1 reminder log created
+
+        Queries are that complicated because we want to ensure that user won't get spam.
+        """
+        curr_date = timezone.now()
+        _3_days = curr_date - timedelta(days=3)
+        _6_days = curr_date - timedelta(days=6)
+
+        # older than 3 days and no reminder logs created
+        _3_days_qs = self.filter(
+            status=InquiryRequest.STATUS_SENT, created_at__lte=_3_days
+        ).exclude(
+            logs__message__log_type=InquiryLogMessage.MessageType.OUTDATED_REMINDER
+        )
+
+        # older than 6 days and only 1 reminder log created
+        _6_days_qs = (
+            self.filter(status=InquiryRequest.STATUS_SENT, created_at__lte=_6_days)
+            .alias(
+                reminder_count=models.Count(
+                    models.Case(
+                        models.When(
+                            logs__message__log_type=InquiryLogMessage.MessageType.OUTDATED_REMINDER,
+                            then=1,
+                        ),
+                        output_field=models.IntegerField(),
+                    )
+                )
+            )
+            .filter(reminder_count=1)
+        )
+
+        return _3_days_qs.union(_6_days_qs)  # concat querysets without duplicates
 
 
 class InquiryRequest(models.Model):
@@ -293,9 +344,9 @@ class InquiryRequest(models.Model):
         on_delete=models.CASCADE,
     )
 
-    def create_log_for_sender(self, type: InquiryLogMessage.MessageType) -> None:
+    def create_log_for_sender(self, log_type: InquiryLogMessage.MessageType) -> None:
         """Create log for sender"""
-        message = InquiryLogMessage.objects.get(log_type=type)
+        message = InquiryLogMessage.objects.get(log_type=log_type)
         UserInquiryLog.objects.create(
             log_owner=self.sender.userinquiry,
             related_with=self.recipient.userinquiry,
@@ -303,9 +354,9 @@ class InquiryRequest(models.Model):
             ref=self,
         )
 
-    def create_log_for_recipient(self, type: InquiryLogMessage.MessageType) -> None:
+    def create_log_for_recipient(self, log_type: InquiryLogMessage.MessageType) -> None:
         """Create log for recipient"""
-        message = InquiryLogMessage.objects.get(log_type=type)
+        message = InquiryLogMessage.objects.get(log_type=log_type)
         UserInquiryLog.objects.create(
             log_owner=self.recipient.userinquiry,
             related_with=self.sender.userinquiry,
@@ -387,8 +438,31 @@ class InquiryRequest(models.Model):
 
     def reward_sender(self) -> None:
         """Reward sender if request is outdated. Create log for sender."""
+        if not self.can_be_rewarded:
+            raise ForbiddenLogAction("Cannot reward sender anymore.")
+
         self.sender.userinquiry.decrement()
         self.create_log_for_sender(InquiryLogMessage.MessageType.OUTDATED)
+
+    def notify_recipient_about_outdated(self) -> None:
+        """
+        Create log for recipient that request require action.
+        Raise ForbiddenLogAction if recipient cannot be reminded anymore.
+        """
+        if not self.can_be_reminded:
+            raise ForbiddenLogAction("Cannot create more than 2 reminders.")
+
+        self.create_log_for_recipient(InquiryLogMessage.MessageType.OUTDATED_REMINDER)
+
+    @property
+    def can_be_reminded(self) -> bool:
+        """Check if request recipient can be reminded"""
+        return self in self.__class__.objects.to_remind_recipient_about_outdated()
+
+    @property
+    def can_be_rewarded(self) -> bool:
+        """Check if request sender can be rewarded"""
+        return self in self.__class__.objects.to_notify_sender_about_outdated()
 
     def __str__(self):
         return f"{self.sender} --({self.status})-> {self.recipient}"
