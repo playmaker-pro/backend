@@ -113,7 +113,7 @@ class ProfileVideoSerializer(serializers.ModelSerializer):
     ) -> models.ProfileVideo:
         """Method do perform UPDATE action on ProfileVideo object, validation included"""
         self.validate_user(instance.user)
-        return super().update(instance, validated_data)
+        return super().update(instance, self.initial_data)
 
 
 class PlayerMetricsSerializer(serializers.ModelSerializer):

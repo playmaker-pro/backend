@@ -45,9 +45,8 @@ def change_profile_approved_handler(sender, instance, created, **kwargs):
     """users.User.declared_role is central point to navigate with role changes.
     admin can alter somees role just changing User.declared_role
     """
-    if (
-        created
-    ):  # we assume that when object is created RoleChangedRequest only admin shold recieve notifiaction.
+    # we assume that when object is created RoleChangedRequest only admin should receive notification.
+    if created:
         mail_role_change_request(instance)
         return
 

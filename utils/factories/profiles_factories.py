@@ -67,15 +67,6 @@ class PlayerMetricsFactory(factory.django.DjangoModelFactory):
     }
 
 
-class ProfileVisitHistoryFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.ProfileVisitHistory
-
-    counter = factory.LazyAttribute(lambda _: utils.get_random_int(0, 1000))
-    counter_coach = factory.LazyAttribute(lambda _: utils.get_random_int(0, 100))
-    counter_scout = factory.LazyAttribute(lambda _: utils.get_random_int(0, 100))
-
-
 class PlayerProfileFactory(ProfileFactory):
     class Meta:
         model = models.PlayerProfile
@@ -111,7 +102,6 @@ class PlayerProfileFactory(ProfileFactory):
     playermetrics = factory.RelatedFactory(
         PlayerMetricsFactory, factory_related_name="player"
     )
-    history = factory.SubFactory(ProfileVisitHistoryFactory)
     player_positions = factory.RelatedFactory(
         PlayerProfilePositionFactory, "player_profile"
     )
