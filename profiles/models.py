@@ -276,9 +276,6 @@ class BaseProfile(models.Model, EventLogMixin):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True
     )
-    history = models.OneToOneField(
-        "ProfileVisitHistory", on_delete=models.CASCADE, null=True, blank=True
-    )
     data_mapper_id = models.PositiveIntegerField(
         null=True,
         blank=True,
@@ -442,10 +439,6 @@ class BaseProfile(models.Model, EventLogMixin):
             fields_values = None
         return fields_values, object_exists
 
-    def _save_make_profile_history(self):
-        if self.history is None:
-            self.history = ProfileVisitHistory.objects.create()
-
     def ensure_verification_stage_exist(self, commit: bool = True) -> None:
         """Create VerificationStage for profile if it doesn't exist"""
         if not self.verification_stage:
@@ -477,7 +470,6 @@ class BaseProfile(models.Model, EventLogMixin):
         profile_manager: ProfileManager = ProfileManager()
         self.data_fulfill_status: str = profile_manager.get_data_score(self)
 
-        self._save_make_profile_history()
         try:
             obj_before_save = obj = (
                 type(self).objects.get(pk=self.pk) if self.pk else None
