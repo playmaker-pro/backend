@@ -8,10 +8,8 @@ from profiles.api.serializers import (
     PlayerProfilePositionSerializer,
     ProfileEnumChoicesSerializer,
 )
-from profiles.models import PlayerPosition, PlayerProfile, PlayerMetrics
-from profiles.serializers_detailed.base_serializers import (
-    BaseProfileSerializer,
-)
+from profiles.models import PlayerMetrics, PlayerPosition, PlayerProfile
+from profiles.serializers_detailed.base_serializers import BaseProfileSerializer
 
 
 class ProfileViePlayerPositionSerializer(serializers.ModelSerializer):
@@ -83,10 +81,6 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
 
     player_positions = ProfileVIewPlayerProfilePositionSerializer(
         many=True, required=False
-    )
-    transfer_status = ProfileEnumChoicesSerializer(
-        required=False,
-        model=PlayerProfile,
     )
     training_ready = ProfileEnumChoicesSerializer(
         required=False,

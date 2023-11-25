@@ -2155,6 +2155,166 @@ paths:
         '400':
           description: 'Invalid search term provided'
 
+  /profiles/list-transfer-status/:
+    get:
+      operationId: transfer_status_listing
+      description: "Returns list of transfer statuses."
+      tags:
+        - profiles
+      security:
+        - {}
+      responses:
+        "200":
+          description: "List of avaiable transfer statuses."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: "Id of transfer status"
+                    name:
+                      type: string
+                example:
+                  [
+                    {
+                        "id": "1",
+                        "name": "Szukam klubu"
+                    },
+                    {
+                        "id": "2",
+                        "name": "Rozważę propozycje"
+                    },
+                    {
+                        "id": "3",
+                        "name": "Nie szukam klubu"
+                    },
+                    {
+                        "id": "4",
+                        "name": "Piłkarska emerytura"
+                    }
+                ]
+
+  /profiles/{profile_uuid}/transfer-status/:
+    get:
+      operationId: profile_transfer_status
+      description: "Returns profile transfer status object"
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+      tags:
+        - profiles
+      security:
+        - {}
+      responses:
+        "200":
+          description: "Get profile transfer status object."
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/TransferStatus'
+    post:
+      operationId: profile_transfer_status_create
+      description: "Crfeate profile transfer status object"
+      security:
+      - jwtAuth: []
+      tags:
+        - profiles
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contact_email:
+                  type: string
+                  description: "Profile contact email address."
+                contact_phone:
+                  type: string
+                  description: "Profile contact phone number."
+                status_id:
+                  type: integer
+                  description: "Transfer status object id."
+      responses:
+        "201":
+          description: "Returns created profile transfer status object."
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/TransferStatus'
+
+
+
+  /profiles/{profile_uuid}/transfer-status/{transfer_id}/:
+    patch:
+      operationId: update_profile_transfer_status
+      description: "Updates profile transfer status"
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+        - in: path
+          name: transfer_id
+          schema:
+            type: string
+            format: integer
+          required: true
+      tags:
+        - profiles
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: "Status 200 when update succeded"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferStatus'
+        "403":
+          description: "User is not allowed to do this action"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: "Represents bool as string"
+                  detail:
+                    type: string
+                    description: "Failure detail message"
+        "404":
+          description: "Transfer status not found"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: "Represents bool as string"
+                  detail:
+                    type: string
+                    description: "Failure detail message"
+
   /users/feature-elements/:
     get:
       operationId: users_feature_elements_retrieve
@@ -3713,7 +3873,7 @@ components:
             prefered_leg:
               type: integer
             transfer_status:
-              $ref: '#/components/schemas/ProfileEnumChoices'
+              $ref: '#/components/schemas/TransferStatus'
             training_ready:
               $ref: '#/components/schemas/ProfileEnumChoices'
             role:
@@ -3766,7 +3926,17 @@ components:
               }
             ],
             "labels": [],
-            "transfer": "Szukam klubu",
+            "transfer_status": {
+                "id": 2,
+                "contact": {
+                    "phone": null,
+                    "email": ""
+                },
+                "status": {
+                    "id": "1",
+                    "name": "Szukam klubu"
+                }
+            },
             "height": 186,
             "weight": 101,
             "prefered_leg": 1,
@@ -4090,6 +4260,8 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ProfileVideo'
+            transfer_status:
+              $ref: '#/components/schemas/TransferStatus'
             labels:
               type: array
               items:
@@ -4136,6 +4308,17 @@ components:
               }
             ],
             "labels": [],
+            "transfer_status": {
+                "id": 2,
+                "contact": {
+                    "phone": null,
+                    "email": ""
+                },
+                "status": {
+                    "id": "1",
+                    "name": "Szukam klubu"
+                }
+            },
             "role": "T",
             "verification_stage": {
               "step": 0,
@@ -5138,6 +5321,31 @@ components:
        - step
        - date_updated
        - done
+
+    TransferStatus:
+      type: object
+      properties:
+        contact:
+          type: object
+          properties:
+            id:
+              type: integer
+              description: "Contact object id."
+            phone:
+              type: string
+              description: "Contact mobile phone number."
+            email:
+              type: string
+              description: "Contact email address."
+        status:
+          type: object
+          properties:
+            id:
+              type: integer
+              description: "Transfer status id."
+            name:
+              type: string
+              description: "Transfer status name"
 
     VerificationStageUpdate:
       type: object

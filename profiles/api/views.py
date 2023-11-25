@@ -27,8 +27,12 @@ from external_links.services import ExternalLinksService
 from profiles import errors, models
 from profiles.api import errors as api_errors
 from profiles.api import serializers
+from profiles.api.errors import PermissionDeniedHTTPException
 from profiles.api.managers import SerializersManager
 from profiles.filters import ProfileListAPIFilter
+from profiles.serializers_detailed.base_serializers import (
+    ProfileTransferStatusSerializer,
+)
 from profiles.services import (
     ProfileFilterService,
     ProfileService,
@@ -36,6 +40,7 @@ from profiles.services import (
     TeamContributorService,
 )
 from profiles.utils import map_service_exception
+from roles.definitions import TRANSFER_STATUS_CHOICES
 from users.api.serializers import UserMainRoleSerializer
 
 profile_service = ProfileService()
@@ -696,3 +701,90 @@ class ExternalLinksAPI(EndpointView):
         )
 
         return Response(serializer.data, status=status_code)
+
+
+class TransferStatusAPIView(EndpointView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def list_transfer_status(self, request: Request) -> Response:  # noqa
+        """Retrieve and display transfer statuses for the user."""
+        transfer_choices = (
+            ChoicesTuple(*transfer) for transfer in TRANSFER_STATUS_CHOICES
+        )
+        serializer = ProfileEnumChoicesSerializer(transfer_choices, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_profile_transfer_status(
+        self, request: Request, profile_uuid: uuid.UUID  # noqa
+    ) -> Response:
+        """Retrieve and display transfer status for the user."""
+        try:
+            profile = profile_service.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist as exc:
+            raise api_errors.ProfileDoesNotExist from exc
+
+        serializer = ProfileTransferStatusSerializer(
+            transfer := profile.transfer_status_related.first()  # noqa: E999
+        )
+        if transfer:
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def update_profile_transfer_status(
+        self, request: Request, profile_uuid: uuid.UUID, transfer_status_id: int
+    ) -> Response:
+        """Update transfer status for the user."""
+
+        try:
+            profile = profile_service.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist as exc:
+            raise api_errors.ProfileDoesNotExist from exc
+
+        if profile.user != request.user:
+            raise PermissionDeniedHTTPException
+
+        # profile_transfer_status = profile.transfer_status_related.first()
+        # if not profile_transfer_status:
+        #     raise api_errors.TransferStatusDoesNotExist
+        #
+        # serializer = ProfileTransferStatusSerializer(
+        #     profile.transfer_status_related.first(),
+        #     data=request.data,
+        #     context={"requestor": request.user},
+        # )
+        # serializer.is_valid(raise_exception=True)
+        # serializer.save()
+        # FIXME: its a mock.
+
+        serializer = ProfileTransferStatusSerializer(
+            transfer := profile.transfer_status_related.first()
+        )
+        if transfer:
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def create_profile_transfer_status(
+        self, request: Request, profile_uuid: uuid.UUID  # noqa
+    ) -> Response:
+        """Create transfer status for the profile."""
+        try:
+            profile = profile_service.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist as exc:
+            raise api_errors.ProfileDoesNotExist from exc
+
+        if profile.user != request.user:
+            raise PermissionDenied
+
+        # serializer = ProfileTransferStatusSerializer(
+        #     data=request.data,
+        #     context={"requestor": request.user},
+        # )
+        # serializer.is_valid(raise_exception=True)
+        # serializer.save()
+
+        serializer = ProfileTransferStatusSerializer(
+            profile.transfer_status_related.first()
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
