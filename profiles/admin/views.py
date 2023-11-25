@@ -1,4 +1,6 @@
+from django import forms
 from django.contrib import admin
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Field
 from django.forms.models import ModelChoiceField
 from django.http import HttpRequest
@@ -19,6 +21,7 @@ from profiles.admin.actions import (
     update_season_score,
     update_with_profile_data,
 )
+from profiles.models import PROFILE_TYPES_AS_STRING
 from utils import linkify
 
 
@@ -75,7 +78,6 @@ class ProfileAdminBase(admin.ModelAdmin):
         return json_filed_data_prettified(instance.event_log)
 
     active.boolean = True
-
 
 
 @admin.register(models.ManagerProfile)
@@ -214,6 +216,7 @@ class PlayerProfileAdmin(ProfileAdminBase):
     ]
 
     readonly_fields = ("data_prettified", "mapper", "external_links", "uuid")
+    search_fields = ("uuid",)
 
 
 @admin.register(models.CoachProfile)
@@ -226,7 +229,7 @@ class CoachProfileAdmin(ProfileAdminBase):
         linkify("external_links"),
     )
     autocomplete_fields = ("team_object", "team_history_object", "team_history_object")
-    exclude = ("voivodeship",)
+    exclude = ("voivodeship", "user__email")
 
     def get_mapper(self, obj):
         if hasattr(obj, "mapper"):
@@ -345,3 +348,29 @@ class CoachLicenceAdmin(admin.ModelAdmin):
 @admin.register(models.Course)
 class CourseAdmin(admin.ModelAdmin):
     autocomplete_fields = ("owner",)
+
+
+class TransferStatusForm(forms.ModelForm):
+    class Meta:
+        model = models.ProfileTransferStatus
+        exclude = []
+
+    def __init__(self, *args, **kwargs):
+        """
+        Override the formfield for the 'content_type'
+        foreign key to only include profiles.
+        """
+        super().__init__(*args, **kwargs)
+        self.fields["content_type"].queryset = ContentType.objects.filter(
+            app_label="profiles",
+            model__in=[
+                obj[0].lower() for obj in PROFILE_TYPES_AS_STRING
+            ],  # Include the model names you want
+        )
+
+
+@admin.register(models.ProfileTransferStatus)
+class ProfileTransferStatusAdmin(admin.ModelAdmin):
+    """Admin for ProfileTransferStatus model."""
+
+    form = TransferStatusForm

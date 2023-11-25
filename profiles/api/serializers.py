@@ -10,7 +10,7 @@ from django.http import QueryDict
 from pydantic import parse_obj_as
 from rest_framework import serializers
 
-from api.errors import NotOwnerOfAnObject
+from api.errors import ChoiceFieldValueErrorException, NotOwnerOfAnObject
 from api.serializers import ProfileEnumChoicesSerializer
 from api.services import LocaleDataService
 from clubs import errors as clubs_errors
@@ -21,7 +21,7 @@ from profiles import errors, models, services
 from profiles.api import consts
 from profiles.api import errors as api_errors
 from profiles.services import ProfileVideoService
-from roles.definitions import CLUB_ROLES, PROFILE_TYPE_SHORT_MAP, GUEST_SHORT
+from roles.definitions import CLUB_ROLES, GUEST_SHORT, PROFILE_TYPE_SHORT_MAP
 from users.services import UserService
 from utils import translate_to
 from utils.factories import utils
@@ -56,15 +56,27 @@ class ProfileVideoSerializer(serializers.ModelSerializer):
     thumbnail = serializers.CharField(
         source="get_youtube_thumbnail_url", read_only=True
     )
-    label = ProfileEnumChoicesSerializer(
-        model=models.ProfileVideo,
-        required=False,
-    )
+    label = serializers.SerializerMethodField()
 
     class Meta:
         model = models.ProfileVideo
         fields = "__all__"
         extra_kwargs = {"user": {"required": False}}
+
+    def get_label(self, obj: models.ProfileVideo) -> Optional[dict]:
+        """Get label name. If label is not defined, return empty dict"""
+        serializer = ProfileEnumChoicesSerializer(
+            model=models.ProfileVideo,
+            required=False,
+            raise_exception=False,
+            source="label",
+            data=obj.label,
+        )
+        try:
+            serializer.is_valid()
+            return serializer.data
+        except ChoiceFieldValueErrorException:
+            return {}
 
     def __init__(self, *args, **kwargs) -> None:
         """Override init to set url as not required if there is defined instance (UPDATE METHOD)"""

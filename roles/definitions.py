@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from enum import Enum
 
 PLAYER_SHORT, PLAYER_FULL = "P", "Piłkarz"
@@ -90,3 +91,19 @@ class ProfileDataScore(str, Enum):
     ONE = 1
     TWO = 2
     THREE = 3
+
+
+@dataclass
+class TransferStatusChoices:
+    LOOKING_FOR_CLUB = "Szukam klubu"
+    CONSIDER_OFFERS = "Rozważę propozycje"
+    NOT_LOOKING_FOR_CLUB = "Nie szukam klubu"
+    FOOTBALL_PENSION = "Piłkarska emerytura"
+
+
+TRANSFER_STATUS_CHOICES = (
+    ("1", TransferStatusChoices.LOOKING_FOR_CLUB),
+    ("2", TransferStatusChoices.CONSIDER_OFFERS),
+    ("3", TransferStatusChoices.NOT_LOOKING_FOR_CLUB),
+    ("4", TransferStatusChoices.FOOTBALL_PENSION),
+)

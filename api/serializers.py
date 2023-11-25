@@ -9,8 +9,8 @@ from rest_framework import serializers as _serializers
 
 from api.consts import ChoicesTuple
 from api.errors import (
-    ChoiceFieldValueErrorHTTPException,
     ChoiceFieldValueErrorException,
+    ChoiceFieldValueErrorHTTPException,
 )
 from api.services import LocaleDataService
 from app.utils import cities
@@ -113,7 +113,7 @@ class ProfileEnumChoicesSerializer(_serializers.CharField, _serializers.Serializ
 
     def __init__(
         self,
-        model: typing.Type[Model] = None,
+        model: typing.Union[typing.Type[Model], typing.Generator] = None,
         raise_exception: bool = True,
         *args,
         **kwargs
@@ -143,7 +143,6 @@ class ProfileEnumChoicesSerializer(_serializers.CharField, _serializers.Serializ
         choices = self.parse_dict(
             getattr(self.model, self.source).__dict__["field"].choices
         )
-
         if _id not in choices.keys():
             if not self.raise_exception:
                 raise ChoiceFieldValueErrorException

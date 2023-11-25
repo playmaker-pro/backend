@@ -4,8 +4,8 @@ from rest_framework import serializers
 
 from profiles.api.errors import (
     InvalidCoachRoleException,
-    InvalidFormationException,
     InvalidCustomCoachRoleException,
+    InvalidFormationException,
 )
 from profiles.api.serializers import ProfileEnumChoicesSerializer
 from profiles.models import FORMATION_CHOICES, CoachProfile, ProfileVideo
@@ -46,6 +46,7 @@ class CoachProfileViewSerializer(BaseProfileSerializer):
             "custom_coach_role",
             "training_ready",
             "formation",
+            "transfer_status",
             "profile_video",
             "labels",
             "role",
@@ -109,7 +110,7 @@ class CoachProfileUpdateSerializer(CoachProfileViewSerializer):
             if "custom_coach_role" in validated_data:
                 instance.custom_coach_role = validated_data["custom_coach_role"]
 
-        if formation := validated_data.get("formation"):
+        if formation := validated_data.get("formation"):  # noqa: E999
             instance.formation = formation
 
         return super().update(instance, validated_data)

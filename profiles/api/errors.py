@@ -64,7 +64,8 @@ class TeamContributorDoesNotExist(CoreAPIException):
 
 class TeamContributorExist(CoreAPIException):
     """
-    Raised when an API operation attempts to create or add a TeamContributor that already exists.
+    Raised when an API operation attempts to create or
+    add a TeamContributor that already exists.
     """
 
     status_code = status.HTTP_400_BAD_REQUEST
@@ -160,3 +161,12 @@ class InvalidCustomClubRoleException(CoreAPIException):
     default_detail = (
         "Custom club role can only be set when club role is 'Other' (Inne)."
     )
+
+
+class PermissionDeniedHTTPException(CoreAPIException):
+    """
+    API HTTP exception raised when a user doesn't have permission to perform an action.
+    """
+
+    status_code = status.HTTP_403_FORBIDDEN
+    default_detail = "You do not have permission to perform this action."

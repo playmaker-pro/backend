@@ -7,7 +7,9 @@ from datetime import datetime
 from address.models import AddressField
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.auth.models import AnonymousUser
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 from django.core import validators
 from django.db import models
 from django.urls import reverse
@@ -25,6 +27,7 @@ from adapters.player_adapter import (
 )
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_profile_external_links
+from inquiries.models import InquiryContact
 from mapper.models import Mapper
 from profiles.errors import VerificationCompletionFieldsWrongSetup
 from profiles.managers import ProfileManager
@@ -207,27 +210,6 @@ class RoleChangeRequest(models.Model):
         )
 
 
-class ProfileVisitHistory(models.Model):
-    counter = models.PositiveIntegerField(default=0)
-    counter_coach = models.PositiveIntegerField(default=0)
-    counter_scout = models.PositiveIntegerField(default=0)
-
-    def increment(self, commit=True):
-        self.counter += 1
-        if commit:
-            self.save()
-
-    def increment_coach(self, commit=True):
-        self.counter_coach += 1
-        if commit:
-            self.save()
-
-    def increment_scout(self, commit=True):
-        self.counter_scout += 1
-        if commit:
-            self.save()
-
-
 class EventLogMixin:
     EVENT_LOG_HISTORY = 35
 
@@ -295,12 +277,15 @@ class BaseProfile(models.Model, EventLogMixin):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True
     )
     history = models.OneToOneField(
-        ProfileVisitHistory, on_delete=models.CASCADE, null=True, blank=True
+        "ProfileVisitHistory", on_delete=models.CASCADE, null=True, blank=True
     )
     data_mapper_id = models.PositiveIntegerField(
         null=True,
         blank=True,
-        help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",  # noqa: E501
+        help_text=(  # noqa: E501
+            "ID of object placed in data_ database. It should alwayes reflect scheme"
+            " which represents."
+        ),
     )
     slug = models.CharField(max_length=255, blank=True, editable=False)
     bio = models.CharField(
@@ -313,6 +298,9 @@ class BaseProfile(models.Model, EventLogMixin):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
 
     labels = GenericRelation("labels.Label")
+    transfer_status_related = GenericRelation(
+        "ProfileTransferStatus", related_query_name="transfer_status_related"
+    )
 
     def get_absolute_url(self):
         return self.get_permalink()
@@ -890,6 +878,8 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         blank=True,
     )
+    # TODO: lremkowicz: deprecated due to https://playmakerpro.atlassian.net/browse/PM20-628
+    #  Transfer status moved to new model and this field have to be removed in future
     transfer_status = models.IntegerField(
         _("Status transferowy"),
         choices=profile_utils.make_choices(TRANSFER_STATUS_CHOICES),
@@ -1015,7 +1005,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         season = utilites.get_current_season()
         if not self.has_meta_entry_for(season):
             msg = (
-                f'Cannot calculate fantasy data object do not have "meta" '
+                'Cannot calculate fantasy data object do not have "meta" '
                 f'or "meta" data do not have data for season={season}'
             )
             self.add_event_log_message(msg)
@@ -2227,13 +2217,18 @@ class RefereeLevel(models.Model):
         _("Role"),
         max_length=17,
         choices=REFEREE_ROLE_CHOICES,
-        help_text="The role referee plays on this level (Referee or Assistant Referee).",  # noqa: E501
+        help_text=(  # noqa: E501
+            "The role referee plays on this level (Referee or Assistant Referee)."
+        ),
     )
     referee_profile = models.ForeignKey(
         RefereeProfile,
         null=True,
         on_delete=models.CASCADE,
-        help_text="The referee profile that this particular level and role combination is associated with.",  # noqa: E501
+        help_text=(  # noqa: E501
+            "The referee profile that this particular level and role combination is"
+            " associated with."
+        ),
     )
 
     class Meta:
@@ -2431,7 +2426,10 @@ class VerificationStage(models.Model):
     done = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"current step: {self.step} | updated: {self.date_updated} | is done?: {self.done}"
+        return (
+            f"current step: {self.step} | updated: {self.date_updated} | is done?:"
+            f" {self.done}"
+        )
 
 
 class TeamContributor(models.Model):
@@ -2477,7 +2475,9 @@ class TeamContributor(models.Model):
     )
     is_primary_for_round = models.BooleanField(
         default=False,
-        help_text="Determines if this is the primary contributor for the season and round.",
+        help_text=(
+            "Determines if this is the primary contributor for the season and round."
+        ),
     )
 
     class Meta:
@@ -2495,6 +2495,114 @@ class TeamContributor(models.Model):
 
     def is_other_role(self):
         return self.role in TeamContributor.get_other_roles()
+
+
+class ProfileVisitHistory(models.Model):
+    """Keeps track on profile visits"""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="profile_visit_history",
+    )
+    counter_playerprofile = models.PositiveIntegerField(default=0)
+    counter_clubprofile = models.PositiveIntegerField(default=0)
+    counter_coachprofile = models.PositiveIntegerField(default=0)
+    counter_scoutprofile = models.PositiveIntegerField(default=0)
+    counter_managerprofile = models.PositiveIntegerField(default=0)
+    counter_guestprofile = models.PositiveIntegerField(default=0)
+    counter_refereeprofile = models.PositiveIntegerField(default=0)
+    counter_anonymoususer = models.PositiveIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def increment(self, requester: typing.Union[BaseProfile, AnonymousUser]):
+        """Increments counter based on requester"""
+
+        setattr(self, f"counter_{requester.__name__}")
+        self.save()
+
+    #     if requester.__name__ == "PlayerProfile":
+    #         self.increment_player()
+    #     elif requester.__name__ == "ClubProfile":
+    #         self.increment_club()
+    #     elif requester.__name__ == "CoachProfile":
+    #         self.increment_coach()
+    #     elif requester.__name__ == "ScoutProfile":
+    #         self.increment_scout()
+    #     elif requester.__name__ == "ManagerProfile":
+    #         self.increment_manager()
+    #     elif requester.__name__ == "GuestProfile":
+    #         self.increment_guest()
+    #     elif requester.__name__ == "RefereeProfile":
+    #         self.increment_referee()
+    #     else:
+    #         self.increment_anonymous()
+    #
+    # def increment_coach(self, commit=True):
+    #     """Increments coach counter"""
+    #     self.counter_coach += 1
+    #     if commit:
+    #         self.save()
+    #
+    # def increment_scout(self, commit=True):
+    #     """Increments scout counter"""
+    #     self.counter_scout += 1
+    #     if commit:
+    #         self.save()
+    #
+    # def increment_player(self, commit=True):
+    #     """Increments player counter"""
+    #     self.counter_player += 1
+    #     if commit:
+    #         self.save()
+    #
+    # def increment_club(self, commit=True):
+    #     """Increments club counter"""
+    #     self.counter_club += 1
+    #     if commit:
+    #         self.save()
+    #
+    # def increment_manager(self, commit=True):
+    #     """Increments manager counter"""
+    #     self.counter_manager += 1
+    #     if commit:
+    #         self.save()
+    #
+    # def increment_guest(self, commit=True):
+    #     """Increments guest counter"""
+    #     self.counter_guest += 1
+    #     if commit:
+    #         self.save()
+    #
+    # def increment_referee(self, commit=True):
+    #     """Increments referee counter"""
+    #     self.counter_referee += 1
+    #     if commit:
+    #         self.save()
+    #
+    # def increment_anonymous(self, commit=True):
+    #     """Increments anonymous counter"""
+    #     self.counter_anonymous += 1
+    #     if commit:
+    #         self.save()
+
+
+class ProfileTransferStatus(models.Model):
+    """Keeps track on profile transfer status"""
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey("content_type", "object_id")
+    contact = models.ForeignKey(InquiryContact, on_delete=models.CASCADE)
+    status = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        choices=definitions.TRANSFER_STATUS_CHOICES,
+        help_text="Defines a status of the transfer for the profile.",
+    )
 
 
 PROFILE_MODELS = (
@@ -2521,3 +2629,9 @@ PROFILE_MODEL_MAP = {
 REVERSED_MODEL_MAP = {
     model: definition for (definition, model) in PROFILE_MODEL_MAP.items()
 }
+
+
+PROFILE_TYPES_AS_STRING = [(obj.__name__, obj.__name__) for obj in PROFILE_MODELS]
+PROFILE_AND_ANONYMOUS_TYPE_CHOICES = tuple(
+    PROFILE_TYPES_AS_STRING + [("AnonymousUser", "AnonymousUser")]
+)

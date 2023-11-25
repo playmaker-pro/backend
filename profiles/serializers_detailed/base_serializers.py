@@ -9,10 +9,12 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from api.serializers import CitySerializer, CountrySerializer
+from clubs.api.serializers import TeamHistoryBaseProfileSerializer
 from clubs.errors import ClubDoesNotExist, InvalidGender, TeamDoesNotExist
 from clubs.models import Club, League, Team
 from clubs.services import ClubService
 from external_links.serializers import ExternalLinksSerializer
+from inquiries.api.serializers import InquiryContactSerializer
 from profiles.api.errors import InvalidProfileRole
 from profiles.api.serializers import (
     CoachLicenceSerializer,
@@ -23,14 +25,13 @@ from profiles.api.serializers import (
     ProfileVideoSerializer,
     VerificationStageSerializer,
 )
-from clubs.api.serializers import TeamHistoryBaseProfileSerializer
 from profiles.errors import (
     ExpectedIntException,
     InvalidCitizenshipListException,
     InvalidLanguagesListException,
     LanguageDoesNotExistException,
 )
-from profiles.models import PROFILE_TYPE, Language, BaseProfile
+from profiles.models import PROFILE_TYPE, BaseProfile, Language, ProfileTransferStatus
 from profiles.services import (
     LanguageService,
     PlayerProfilePositionService,
@@ -213,6 +214,19 @@ class TeamSerializer(serializers.ModelSerializer):
         )
 
 
+class ProfileTransferStatusSerializer(serializers.ModelSerializer):
+    """Transfer status serializer for user profile view"""
+
+    class Meta:
+        model = ProfileTransferStatus
+        fields = ("id", "contact", "status")
+
+    status = ProfileEnumChoicesSerializer(
+        model=ProfileTransferStatus, required=False, allow_null=True
+    )
+    contact = InquiryContactSerializer()
+
+
 class BaseProfileSerializer(serializers.ModelSerializer):
     """Base profile serializer for all profile types"""
 
@@ -225,6 +239,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     verification_stage = VerificationStageSerializer(read_only=True)
     profile_video = serializers.SerializerMethodField()
     uuid = serializers.UUIDField(read_only=True)
+    transfer_status = serializers.SerializerMethodField()
 
     def update(self, instance: PROFILE_TYPE, validated_data: dict):
         self.validate_data()
@@ -254,6 +269,14 @@ class BaseProfileSerializer(serializers.ModelSerializer):
                 verification_serializer.save()
 
         return super().update(instance, validated_data)
+
+    def get_transfer_status(self, obj: BaseProfile) -> Optional[dict]:
+        """Get transfer status by player profile."""
+        result: list = obj.transfer_status_related.first()
+        if result:
+            serializer = ProfileTransferStatusSerializer(result, required=False)
+            return serializer.data
+        return None
 
     def get_labels(self, obj: BaseProfile):
         """Override labels field to return only visible=True labels"""
