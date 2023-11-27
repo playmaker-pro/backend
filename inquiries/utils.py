@@ -28,9 +28,11 @@ OBJECTIVE_GENDER_BASED_ROLES = {
 class InquiryMessageContentParser(_MessageContentParser):
     """Parse text into a list of words."""
 
-    def __init__(self, log_instance: "inquiries.models.UserInquiryLog"):
+    def __init__(
+        self, log_instance: "inquiries.models.UserInquiryLog", **extra_kwargs
+    ) -> None:
         self._log: "inquiries.models.UserInquiryLog" = log_instance
-        super().__init__(recipient=self._recipient_user)
+        super().__init__(recipient=self._recipient_user, **extra_kwargs)
 
     @property
     def parse_log_body(self) -> str:
@@ -54,6 +56,7 @@ class InquiryMessageContentParser(_MessageContentParser):
         self._put_recipient_full_name()
         self._put_related_user_with_role()
         self._put_related_user_with_role_in_objective_case()
+        self._put_url()
 
         return self.text
 
