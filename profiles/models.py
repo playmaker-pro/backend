@@ -2588,7 +2588,19 @@ class ProfileTransferStatus(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
-    contact = models.ForeignKey(InquiryContact, on_delete=models.CASCADE)
+    contact_email = models.EmailField(
+        _("Contact Email"),
+        blank=True,
+        null=True,
+        help_text=_("Contact email address for the transfer."),
+    )
+    contact_phone_number = models.CharField(
+        _("Contact Phone Number"),
+        max_length=15,
+        blank=True,
+        null=True,
+        help_text=_("Contact phone number for the transfer."),
+    )
     status = models.CharField(
         max_length=255,
         null=True,

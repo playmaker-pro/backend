@@ -1,7 +1,12 @@
 import datetime
 
+import factory
+import pytest
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import signals
 from django.test import TestCase
 
+from api.consts import ChoicesTuple
 from profiles import models
 from profiles.api.errors import (
     MultipleMainPositionError,
@@ -13,8 +18,10 @@ from profiles.services import (
     PositionData,
     ProfileService,
     TeamContributorService,
+    TransferStatusService,
 )
 from roles import definitions
+from roles.definitions import TRANSFER_STATUS_CHOICES
 from utils import testutils as utils
 from utils.factories import (
     SEASON_NAMES,
@@ -306,3 +313,49 @@ class TeamContributorServiceTests(TestCase):
         profile_instance = models.PlayerProfile.objects.get(uuid=self.user.profile.uuid)
         assert profile_instance.team_object is None
         assert profile_instance.team_history_object is None
+
+
+@pytest.mark.django_db
+class TestTransferStatusService:
+    """Test transfer status service."""
+
+    @pytest.fixture(autouse=True)
+    def service(self):
+        """Provide TransferStatusService instance."""
+        return TransferStatusService()
+
+    @pytest.fixture(autouse=True)
+    def profile(self):
+        """Provide profile instance."""
+        user = PlayerProfileFactory.create(user__email="username").user
+        return user.profile
+
+    def test_create_prepare_generic_type_content(self, service, profile):
+        """Test prepare generic type content."""
+        data = {"contact_email": "some_email"}
+        data = service.prepare_generic_type_content(content=data, profile=profile)
+        assert data["object_id"] == profile.pk
+        assert isinstance(data["content_type"], ContentType)
+
+    @pytest.mark.parametrize(
+        "transfer_id",
+        [1, 2, 3, 4],
+    )
+    def test_get_transfer_status_by_id(self, transfer_id, service):
+        """Test get transfer status by id."""
+        obj = service.get_transfer_status_by_id(transfer_status_id=transfer_id)
+        expected = [
+            ChoicesTuple(*transfer)._asdict()
+            for transfer in TRANSFER_STATUS_CHOICES
+            if transfer[0] == str(transfer_id)
+        ]
+
+        assert obj == expected[0]
+
+    def test_get_list_transfer_statutes(self, service):
+        """Test get list transfer status."""
+        obj = service.get_list_transfer_statutes()
+        expected = [
+            ChoicesTuple(*transfer)._asdict() for transfer in TRANSFER_STATUS_CHOICES
+        ]
+        assert obj == expected

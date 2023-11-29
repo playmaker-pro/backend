@@ -14,8 +14,10 @@ from clubs.errors import ClubDoesNotExist, InvalidGender, TeamDoesNotExist
 from clubs.models import Club, League, Team
 from clubs.services import ClubService
 from external_links.serializers import ExternalLinksSerializer
-from inquiries.api.serializers import InquiryContactSerializer
-from profiles.api.errors import InvalidProfileRole
+from profiles.api.errors import (
+    InvalidProfileRole,
+    TransferStatusAlreadyExistsHTTPException,
+)
 from profiles.api.serializers import (
     CoachLicenceSerializer,
     CourseSerializer,
@@ -37,6 +39,7 @@ from profiles.services import (
     PlayerProfilePositionService,
     PositionData,
     ProfileService,
+    TransferStatusService,
 )
 from roles.definitions import PROFILE_TYPE_SHORT_MAP
 from users.models import User, UserPreferences
@@ -219,12 +222,24 @@ class ProfileTransferStatusSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProfileTransferStatus
-        fields = ("id", "contact", "status")
+        fields = ("contact_email", "contact_phone_number", "status")
 
     status = ProfileEnumChoicesSerializer(
         model=ProfileTransferStatus, required=False, allow_null=True
     )
-    contact = InquiryContactSerializer()
+
+    def create(self, validated_data):
+        """Create transfer status"""
+
+        profile = self.context.get("profile")
+        transfer_status = ProfileService().get_profile_transfer_status(profile)
+        if transfer_status:
+            raise TransferStatusAlreadyExistsHTTPException
+
+        validated_data: dict = TransferStatusService.prepare_generic_type_content(
+            validated_data, profile
+        )
+        return super().create(validated_data)
 
 
 class BaseProfileSerializer(serializers.ModelSerializer):
