@@ -1,10 +1,10 @@
 import random
 
 import factory
-from cities_light.models import City
 from django.contrib.auth import get_user_model
 
 from profiles import models
+from profiles.services import TransferStatusService
 from utils.factories.mapper_factories import MapperFactory
 
 from . import clubs_factories, user_factories, utils
@@ -267,3 +267,29 @@ class TeamContributorFactory(factory.django.DjangoModelFactory):
                 obj.team_history.add(team_hist)
         else:
             obj.team_history.add(clubs_factories.TeamHistoryFactory())
+
+
+class TransferStatusFactory(factory.django.DjangoModelFactory):
+    """Transfer status factory"""
+
+    class Meta:
+        model = models.ProfileTransferStatus
+
+    contact_email = factory.Faker("email")
+    contact_phone_number = factory.LazyAttribute(
+        lambda _: utils.get_random_phone_number()
+    )
+    status = 1
+
+    class Params:
+        profile = None
+
+    @classmethod
+    def create(cls, **kwargs) -> models.PROFILE_TYPE:
+        """Override just for typing purposes"""
+        if not kwargs.get("profile"):
+            profile = PlayerProfileFactory.create()
+        else:
+            profile = kwargs.pop("profile")
+        kwargs = TransferStatusService.prepare_generic_type_content(kwargs, profile)
+        return super().create(**kwargs)

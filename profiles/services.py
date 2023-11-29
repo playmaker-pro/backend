@@ -5,12 +5,14 @@ import uuid
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
 from django.db import models as django_base_models
-from django.db.models import ObjectDoesNotExist, Case, When, Value, IntegerField
+from django.db.models import Case, IntegerField, ObjectDoesNotExist, Value, When
 from django.db.models import functions as django_base_functions
 from pydantic import BaseModel
 
+from api.consts import ChoicesTuple
 from api.services import LocaleDataService
 from clubs import models as clubs_models
 from clubs import services as club_services
@@ -18,8 +20,8 @@ from clubs.models import Club as CClub
 from clubs.models import Team as CTeam
 from profiles import errors, models, utils
 from profiles.api import errors as api_errors
-from profiles.models import REVERSED_MODEL_MAP
-from roles.definitions import CLUB_ROLES, PROFILE_TYPE_MAP
+from profiles.models import REVERSED_MODEL_MAP, ProfileTransferStatus
+from roles.definitions import CLUB_ROLES, PROFILE_TYPE_MAP, TRANSFER_STATUS_CHOICES
 from utils import get_current_season
 
 logger = logging.getLogger(__name__)
@@ -424,6 +426,14 @@ class ProfileService:
         related_type = PROFILE_TYPE_MAP.get(short_definition)
 
         return related_type
+
+    @staticmethod
+    def get_profile_transfer_status(
+        profile: models.BaseProfile,
+    ) -> typing.Optional[ProfileTransferStatus]:
+        """Get the transfer status of a given profile."""
+        transfer_status: ProfileTransferStatus = profile.transfer_status_related.first()
+        return transfer_status or None
 
 
 class ProfileFilterService:
@@ -1340,3 +1350,37 @@ class LanguageService:
             raise errors.LanguageDoesNotExistException()
         except TypeError:
             raise errors.ExpectedIntException
+
+
+class TransferStatusService:
+    """Service for transfer status operation."""
+
+    @staticmethod
+    def prepare_generic_type_content(
+        content: dict, profile: models.BaseProfile
+    ) -> dict:
+        """Prepare generic type content for transfer status"""
+        content["content_type"] = ContentType.objects.get_for_model(profile)
+        content["object_id"] = profile.pk
+        return content
+
+    def get_transfer_status_by_id(
+        self, transfer_status_id: int
+    ) -> typing.Optional[typing.Dict[str, str]]:
+        """Get a transfer status by id."""
+        result: list = self.get_list_transfer_statutes(id=transfer_status_id)
+        return result[0] if result else None
+
+    @staticmethod
+    def get_list_transfer_statutes(**search_kwargs) -> typing.List[dict]:
+        """Get a list of transfer statuses. If param is provided, filter results."""
+        lambda_function: typing.Callable = lambda transfer: True
+        if transfer_id := search_kwargs.get("id"):
+            lambda_function = lambda transfer: transfer[0] == str(transfer_id)
+
+        result = [
+            ChoicesTuple(*transfer)._asdict()
+            for transfer in TRANSFER_STATUS_CHOICES
+            if lambda_function(transfer)
+        ]
+        return result

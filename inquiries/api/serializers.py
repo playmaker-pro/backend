@@ -94,7 +94,7 @@ class InquiryPlanSerializer(serializers.ModelSerializer):
 
 
 class InquiryContactSerializer(serializers.ModelSerializer):
-    email = serializers.CharField(source="_email", allow_null=True)
+    email = serializers.EmailField(source="_email", allow_null=True)
 
     class Meta:
         model = _models.InquiryContact

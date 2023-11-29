@@ -2309,6 +2309,66 @@ paths:
             application/json:
               schema:
                   $ref: '#/components/schemas/TransferStatus'
+        "404":
+          description: "Transfer status for given profile not found."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: "Represents bool as string"
+                  detail:
+                    type: string
+                    description: "Failure detail message"
+    patch:
+      operationId: update_profile_transfer_status
+      description: "Updates profile transfer status"
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+      tags:
+        - profiles
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: "Status 200 when update succeded"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferStatus'
+        "403":
+          description: "User is not allowed to do this action"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: "Represents bool as string"
+                  detail:
+                    type: string
+                    description: "Failure detail message"
+        "404":
+          description: "Transfer status for given profile not found."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: "Represents bool as string"
+                  detail:
+                    type: string
+                    description: "Failure detail message"
     post:
       operationId: profile_transfer_status_create
       description: "Crfeate profile transfer status object"
@@ -2346,52 +2406,8 @@ paths:
             application/json:
               schema:
                   $ref: '#/components/schemas/TransferStatus'
-
-
-
-  /profiles/{profile_uuid}/transfer-status/{transfer_id}/:
-    patch:
-      operationId: update_profile_transfer_status
-      description: "Updates profile transfer status"
-      parameters:
-        - in: path
-          name: profile_uuid
-          schema:
-            type: string
-            format: uuid
-          required: true
-        - in: path
-          name: transfer_id
-          schema:
-            type: string
-            format: integer
-          required: true
-      tags:
-        - profiles
-      security:
-        - jwtAuth: []
-      responses:
-        "200":
-          description: "Status 200 when update succeded"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TransferStatus'
         "403":
           description: "User is not allowed to do this action"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: string
-                    description: "Represents bool as string"
-                  detail:
-                    type: string
-                    description: "Failure detail message"
-        "404":
-          description: "Transfer status not found"
           content:
             application/json:
               schema:

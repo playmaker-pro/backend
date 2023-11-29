@@ -176,15 +176,6 @@ urlpatterns = [
         name="profile_transfer_status",
     ),
     path(
-        r"<uuid:profile_uuid>/transfer-status/<int:transfer_status_id>/",
-        views.TransferStatusAPIView.as_view(
-            {
-                "patch": "update_profile_transfer_status",
-            }
-        ),
-        name="profile_transfer_status_update",
-    ),
-    path(
         r"list-transfer-status/",
         views.TransferStatusAPIView.as_view(
             {
