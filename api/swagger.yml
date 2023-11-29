@@ -775,6 +775,18 @@ paths:
           name: season_name
           schema:
             type: string
+        - in: query
+          name: start_date
+          description: "Start date for label filtering in YYYY-MM-DD format."
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: end_date
+          description: "End date for label filtering in YYYY-MM-DD format."
+          schema:
+            type: string
+            format: date
       tags:
       - clubs
       security:
@@ -1305,6 +1317,18 @@ paths:
         name: season_name
         schema:
           type: string
+      - in: query
+        name: start_date
+        description: "Start date for label filtering in YYYY-MM-DD format."
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: end_date
+        description: "End date for label filtering in YYYY-MM-DD format."
+        schema:
+          type: string
+          format: date
       tags:
       - profiles
       security:
@@ -5433,6 +5457,15 @@ components:
           type: string
         icon:
           type: string
+        league:
+          type: string
+          nullable: true
+        team:
+          type: string
+          nullable: true
+        round:
+          type: string
+          nullable: true
     Event:
       type: object
       properties:

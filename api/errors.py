@@ -131,3 +131,8 @@ class ChoiceFieldValueErrorHTTPException(CoreAPIException):
 
 class ChoiceFieldValueErrorException(Exception):
     """Exception if request received invalid value for field"""
+
+
+class InvalidDateFormat(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Invalid date format, expected YYYY-MM-DD."
