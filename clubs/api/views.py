@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
@@ -13,6 +14,7 @@ from api.base_view import EndpointView
 from clubs import errors, models, services
 from clubs.api import serializers
 from clubs.services import SeasonService
+from utils.utils import validate_date_format
 
 User = get_user_model()
 
@@ -152,10 +154,33 @@ class ClubsAPI(EndpointView):
         except models.Club.Follow.DoesNotExist:
             raise base_errors.ObjectDoesNotExist(details="Given club does not exists")
 
+        # Validate start and end dates at the beginning
+        start_date_str = request.GET.get("start_date")
+        end_date_str = request.GET.get("end_date")
+        if start_date_str:
+            try:
+                validate_date_format(start_date_str)
+            except ValueError:
+                raise base_errors.InvalidDateFormat
+        if end_date_str:
+            try:
+                validate_date_format(end_date_str)
+            except ValueError:
+                raise base_errors.InvalidDateFormat
+
+        query = {"visible": True}
+        if start_date_str:
+            query["end_date__gte"] = datetime.strptime(
+                start_date_str, "%Y-%m-%d"
+            ).date()
+        if end_date_str:
+            query["start_date__lte"] = datetime.strptime(
+                end_date_str, "%Y-%m-%d"
+            ).date()
+
         season_name = request.GET.get("season_name")
-        query = {}
         if season_name:
-            query = {"season_name": season_name}
+            query["season_name"] = season_name
 
         serializer = serializers.ClubLabelsSerializer(
             club.labels.filter(**query), many=True

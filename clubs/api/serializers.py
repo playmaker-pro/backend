@@ -4,8 +4,8 @@ import uuid
 from rest_framework import serializers
 
 from clubs import models
-from profiles.models import TeamContributor
 from external_links.serializers import ExternalLinksSerializer
+from profiles.models import TeamContributor
 from users.api.serializers import UserDataSerializer
 from voivodeships.serializers import VoivodeshipSerializer
 
@@ -370,10 +370,23 @@ class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
 
 
 class LabelSerializer(serializers.Serializer):
-    label_name = serializers.CharField(max_length=25)
-    label_description = serializers.CharField(max_length=200)
+    label_name = serializers.CharField(
+        source="label_definition.label_name", max_length=25
+    )
+    label_description = serializers.CharField(
+        source="label_definition.label_description", max_length=200
+    )
     season_name = serializers.CharField(max_length=9)
-    icon = serializers.CharField(max_length=200)
+    icon = serializers.CharField(source="label_definition.icon", max_length=200)
+    league = serializers.CharField(
+        max_length=255, required=False
+    )
+    team = serializers.CharField(
+        max_length=255, required=False
+    )
+    season_round = serializers.CharField(
+        max_length=10, required=False
+    )
 
 
 class TeamLabelsSerializer(LabelSerializer):

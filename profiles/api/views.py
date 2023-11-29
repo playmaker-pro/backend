@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import Optional
 
 from django.contrib.auth import get_user_model
@@ -14,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework.views import PermissionDenied
 
 from api.consts import ChoicesTuple
-from api.errors import NotOwnerOfAnObject
+from api.errors import InvalidDateFormat, NotOwnerOfAnObject
 from api.serializers import ProfileEnumChoicesSerializer
 from api.swagger_schemas import (
     COACH_ROLES_API_SWAGGER_SCHEMA,
@@ -42,6 +43,7 @@ from profiles.services import (
 from profiles.utils import map_service_exception
 from roles.definitions import TRANSFER_STATUS_CHOICES
 from users.api.serializers import UserMainRoleSerializer
+from utils.utils import validate_date_format
 
 profile_service = ProfileService()
 team_contributor_service = TeamContributorService()
@@ -146,10 +148,31 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExist
 
-        season_name = request.GET.get("season_name")
+        start_date_str = request.GET.get("start_date")
+        end_date_str = request.GET.get("end_date")
+        if start_date_str:
+            try:
+                validate_date_format(start_date_str)
+            except ValueError:
+                raise InvalidDateFormat
+        if end_date_str:
+            try:
+                validate_date_format(end_date_str)
+            except ValueError:
+                raise InvalidDateFormat
         query = {"visible": True}
+        if start_date_str:
+            query["end_date__gte"] = datetime.strptime(
+                start_date_str, "%Y-%m-%d"
+            ).date()
+        if end_date_str:
+            query["start_date__lte"] = datetime.strptime(
+                end_date_str, "%Y-%m-%d"
+            ).date()
+        season_name = request.GET.get("season_name")
         if season_name:
             query["season_name"] = season_name
+
         serializer = serializers.ProfileLabelsSerializer(
             profile_object.labels.filter(**query), many=True
         )

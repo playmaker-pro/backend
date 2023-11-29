@@ -1,4 +1,3 @@
-import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
@@ -41,21 +40,48 @@ class TestGetTeamLabelsAPI(APITestCase):
         self.user = UserManager(self.client)
         self.user_obj = self.user.create_superuser()
         self.headers = self.user.get_headers()
-        factories.UserFactory.create_batch(5)
-        team = factories.TeamFactory(name="Drużyna FC II", id=100)
 
-        team.labels.create(label_name="label1", season_name="2018/2019")
-        team.labels.create(label_name="label1", season_name="2019/2020")
-        team.labels.create(label_name="label2", season_name="2019/2020")
-        team.labels.create(
-            label_name="label-not-visible", season_name="2019/2020", visible=False
+        self.team = factories.TeamFactory(name="Drużyna FC II", id=100)
+        self.team2 = factories.TeamFactory(name="Drużyna FC IIIs", id=101)
+
+        # Create LabelDefinitions
+        label_def1 = factories.LabelDefinitionFactory(label_name="label1")
+        label_def2 = factories.LabelDefinitionFactory(label_name="label2")
+        label_def_not_visible = factories.LabelDefinitionFactory(
+            label_name="label-not-visible"
         )
 
-        team2 = factories.TeamFactory(name="Drużyna FC IIIs", id=101)
-        team2.labels.create(label_name="label1", season_name="2018/2019")
+        # Create Labels using factories
+        factories.LabelFactory(
+            label_definition=label_def1,
+            season_name="2018/2019",
+            content_object=self.team,
+        )
+        factories.LabelFactory(
+            label_definition=label_def1,
+            season_name="2019/2020",
+            content_object=self.team,
+        )
+        factories.LabelFactory(
+            label_definition=label_def2,
+            season_name="2019/2020",
+            content_object=self.team,
+        )
+        factories.LabelFactory(
+            label_definition=label_def_not_visible,
+            season_name="2019/2020",
+            visible=False,
+            content_object=self.team,
+        )
+
+        factories.LabelFactory(
+            label_definition=label_def1,
+            season_name="2018/2019",
+            content_object=self.team2,
+        )
 
         self.url = "api:clubs:get_team_labels"
-        self.team_id = team.id
+        self.team_id = self.team.id
 
     def test_get_team_labels_and_team_does_not_exists(self) -> None:
         response = self.client.get(

@@ -15,12 +15,27 @@ class TestGetProfileLabelsAPI(APITestCase):
         self.user_obj = self.user.create_superuser()
         self.headers = self.user.get_headers()
         factories.UserFactory.create_batch(5)
-        profile = factories.PlayerProfileFactory.create(user=self.user_obj)
-        profile.labels.create(label_name="label1", season_name="2018/2019")
-        profile.labels.create(label_name="label1", season_name="2019/2020")
-        profile.labels.create(label_name="label2", season_name="2019/2020")
+        self.profile = factories.PlayerProfileFactory.create(user=self.user_obj)
+        self.profile_uuid = self.profile.uuid
+        label_def1 = factories.LabelDefinitionFactory(label_name="label1")
+        label_def2 = factories.LabelDefinitionFactory(label_name="label2")
+        factories.LabelFactory(
+            label_definition=label_def1,
+            season_name="2018/2019",
+            content_object=self.profile,
+        )
+        factories.LabelFactory(
+            label_definition=label_def1,
+            season_name="2019/2020",
+            content_object=self.profile,
+        )
+        factories.LabelFactory(
+            label_definition=label_def2,
+            season_name="2019/2020",
+            content_object=self.profile,
+        )
+
         self.url = "api:profiles:get_profile_labels"
-        self.profile_uuid = profile.uuid
 
     def test_get_profile_labels_and_profile_does_not_exists(self) -> None:
         response = self.client.get(
