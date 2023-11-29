@@ -1,3 +1,5 @@
+import typing
+
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
@@ -10,6 +12,7 @@ User = get_user_model()
 class InquiryRequestSerializer(serializers.ModelSerializer):
     sender_object = BaseUserDataSerializer(read_only=True, source="sender")
     recipient_object = BaseUserDataSerializer(read_only=True, source="recipient")
+    recipient_profile_uuid = serializers.UUIDField(write_only=True)
 
     class Meta:
         model = _models.InquiryRequest
@@ -66,6 +69,22 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         self.instance.reject()
         self.instance.save()
         return self
+
+    def create(
+        self, validated_data: typing.Dict[str, typing.Any]
+    ) -> _models.InquiryRequest:
+        """
+        Overrides the default create method to handle the creation of an InquiryRequest.
+
+        This method extracts the recipient_profile_uuid from the validated data if present,
+        then creates an InquiryRequest instance with the remaining validated data. The
+        recipient_profile_uuid is used to perform additional logic specific to the InquiryRequest
+        during its creation.
+        """
+        recipient_profile_uuid = validated_data.pop("recipient_profile_uuid", None)
+        inquiry_request = _models.InquiryRequest(**validated_data)
+        inquiry_request.save(recipient_profile_uuid=recipient_profile_uuid)
+        return inquiry_request
 
 
 class InquiryPlanSerializer(serializers.ModelSerializer):

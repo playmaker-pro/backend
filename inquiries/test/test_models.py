@@ -14,6 +14,7 @@ from roles import definitions
 from users.models import User
 from utils import testutils as utils
 from utils.factories.inquiry_factories import InquiryRequestFactory
+from utils.factories.user_factories import UserFactory
 
 utils.silence_explamation_mark()
 
@@ -63,10 +64,11 @@ class ModelMethodsRequest(TestCase):
 @pytest.mark.usefixtures("silence_mails")
 class RewardOutdatedInquiryRequest(TestCase):
     def setUp(self) -> None:
-        self.inquiry_request = InquiryRequestFactory()
-
-        # Resave to bind signals
-        sender, recipient = self.inquiry_request.sender, self.inquiry_request.recipient
+        sender = UserFactory(userpreferences__gender="M")
+        recipient = UserFactory(userpreferences__gender="K")
+        self.inquiry_request = InquiryRequestFactory(
+            sender=sender, recipient=recipient
+        )
         sender.save()
         recipient.save()
 

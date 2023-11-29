@@ -52,6 +52,14 @@ class UserFactory(CustomObjectFactory):
 
         return super().create(**kwargs)
 
+    @factory.post_generation
+    def post_create(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        # Create UserPreferences for the user
+        UserPreferencesFactory(user=self)
+
 
 class UserPreferencesFactory(CustomObjectFactory):
     user = factory.SubFactory(UserFactory)

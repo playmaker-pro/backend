@@ -295,6 +295,7 @@ class BaseProfile(models.Model, EventLogMixin):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
 
     labels = GenericRelation("labels.Label")
+    notifications = GenericRelation("notifications.Notification")
     transfer_status_related = GenericRelation(
         "ProfileTransferStatus", related_query_name="transfer_status_related"
     )
