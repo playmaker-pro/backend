@@ -11,6 +11,7 @@ from inquiries.models import (
     InquiryRequest,
     UserInquiryLog,
 )
+from notifications.models import Notification
 from utils.factories import GuestProfileFactory
 from utils.test.test_utils import UserManager
 
@@ -46,10 +47,10 @@ class TestInquiriesAPI(APITestCase):
         self.sender_manager = UserManager(self.client)
         self.recipient_manager = UserManager(self.client)
         self.sender_obj = self.sender_manager.create_superuser(
-            email="sender@sender.com"
+            email="sender@sender.com", userpreferences={'gender': 'M'}
         )
         self.recipient_obj = self.recipient_manager.create_superuser(
-            email="recipient@recipient.com"
+            email="recipient@recipient.com", userpreferences={'gender': 'K'}
         )
         self.sender_headers = self.sender_manager.get_headers()
         self.recipient_headers = self.recipient_manager.get_headers()
@@ -101,7 +102,7 @@ class TestInquiriesAPI(APITestCase):
 
         assert sent_requests_response.status_code == 200
         assert len(sent_requests_response.data) == 1
-
+        notifications_count_before = Notification.objects.count()
         accept_response = self.client.post(
             URL_ACCEPT(obj.pk),
             **self.recipient_headers,
@@ -110,6 +111,11 @@ class TestInquiriesAPI(APITestCase):
         assert accept_response.status_code == 200
         obj.refresh_from_db()
         assert obj.status == InquiryRequest.STATUS_ACCEPTED
+        notifications_count_after = Notification.objects.count()
+        assert notifications_count_after == notifications_count_before + 1
+        new_notification = Notification.objects.latest("id")
+        assert new_notification.user == self.sender_obj
+        assert new_notification.notification_type == "CO"
 
         contacts_response = self.client.get(
             URL_MY_CONTACTS,

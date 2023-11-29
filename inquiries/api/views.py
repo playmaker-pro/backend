@@ -17,7 +17,10 @@ from inquiries.api.serializers import (
 )
 from inquiries.models import InquiryRequest
 from inquiries.services import InquireService
+from notifications.services import NotificationService
 from profiles.services import ProfileService
+
+notification_service = NotificationService()
 
 
 class InquiresAPIView(EndpointView):
@@ -60,10 +63,13 @@ class InquiresAPIView(EndpointView):
             raise NotFound("Recipient does not exist")
         if sender == recipient:
             raise ValidationError("You can't send inquiry to yourself")
-
-        body = {**request.data, "sender": sender.pk, "recipient": recipient.pk}
+        body = {
+            **request.data,
+            "sender": sender.pk,
+            "recipient": recipient.pk,
+            "recipient_profile_uuid": recipient_profile_uuid,
+        }
         serializer = InquiryRequestSerializer(data=body)
-
         serializer.is_valid(raise_exception=True)
         serializer.save()
 

@@ -13,6 +13,71 @@ servers:
         default: '8000'
 
 paths:
+  /notifications/{profile_uuid}:
+    get:
+      operationId: get_notifications
+      description: Get notifications
+      summary: Get all notifications
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+        - in: query
+          name: latest_only
+          schema:
+            type: boolean
+            default: false
+          required: false
+          description: If set to true, only the latest notifications will be returned.
+      tags:
+        - notifications
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: "List of notifications"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+        '401':
+          description: "Unauthorized"
+  /notifications/{profile_uuid}/{notification_id}:
+    patch:
+      operationId: patch_notifications
+      description: Mark notification as read
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+        - in: path
+          name: notification_id
+          schema:
+            type: integer
+          required: true
+      tags:
+        - notifications
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: "Notification read"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '404':
+          description: "Notification not found"
+        '403':
+          description: "You do not have permission to modify this notification"
   /inquiries/{recipient_profile_uuid}/send/:
     post:
       operationId: send_inquiry_request
@@ -5783,6 +5848,37 @@ components:
         - created_at
         - log_type
         - body
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        notification_type:
+          type: string
+        content:
+          type: string
+        is_read:
+          type: boolean
+        created_at:
+          type: string
+        updated_at:
+          type: string
+        object_id:
+          type: string
+        redirect_url:
+          type: string
+          format: uri
+        user:
+          type: integer
+        content_type:
+          type: integer
+        event_type:
+          type: string
+        unread_count:
+          type: integer
+        details:
+          type: object
+          nullable: true
     PhoneNumber:
       type: object
       nullable: true

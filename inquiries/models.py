@@ -13,6 +13,10 @@ from inquiries.utils import InquiryMessageContentParser as _ContentParser
 from mailing.models import EmailTemplate as _EmailTemplate
 from mailing.schemas import EmailSchema as _EmailSchema
 
+from .signals import inquiry_accepted, inquiry_rejected, inquiry_sent
+
+# from notifications.mail import request_accepted, request_declined, request_new
+
 logger = logging.getLogger("inquiries")
 
 
@@ -394,6 +398,7 @@ class InquiryRequest(models.Model):
     )
     def accept(self) -> None:
         """Should be appeared when message was accepted by recipient"""
+
         logger.debug(
             f"#{self.pk} reuqest accepted creating sender and recipient contanct body"
         )
@@ -402,6 +407,7 @@ class InquiryRequest(models.Model):
         logger.info(
             f"{self.recipient} accepted request from {self.sender}. -- InquiryRequestID: {self.pk}"
         )
+        inquiry_accepted.send(sender=self.__class__, inquiry_request=self)
 
     @transition(
         field=status,
@@ -410,22 +416,34 @@ class InquiryRequest(models.Model):
     )
     def reject(self) -> None:
         """Should be appeared when message was rejected by recipient"""
+
         self.create_log_for_sender(InquiryLogMessage.MessageType.REJECTED)
         logger.info(
             f"{self.recipient} rejected request from {self.sender}. -- InquiryRequestID: {self.pk}"
         )
+        inquiry_rejected.send(sender=self.__class__, inquiry_request=self)
 
     def save(self, *args, **kwargs):
+        recipient_profile_uuid = kwargs.pop("recipient_profile_uuid", None)
+        self._recipient_profile_uuid = recipient_profile_uuid
         adding = self._state.adding
 
         if self.status == self.STATUS_NEW:
             self.send()
 
         super().save(*args, **kwargs)
+        if recipient_profile_uuid:
+            inquiry_sent.send(
+                sender=self.__class__,
+                inquiry_request=self,
+                profile_uuid=recipient_profile_uuid,
+            )
 
         if adding:
             self.sender.userinquiry.increment()  # type: ignore
-            self.create_log_for_recipient(InquiryLogMessage.MessageType.NEW)
+            self.create_log_for_recipient(
+                InquiryLogMessage.MessageType.NEW,
+            )
             logger.info(
                 f"{self.sender} sent request to {self.recipient}. -- InquiryRequestID: {self.pk}"
             )
