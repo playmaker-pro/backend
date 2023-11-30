@@ -9,11 +9,17 @@ from django_fsm import FSMField, transition
 
 from inquiries.errors import ForbiddenLogAction
 from inquiries.plans import basic_plan, premium_plan
+from inquiries.signals import (
+    inquiry_accepted,
+    inquiry_pool_exhausted,
+    inquiry_rejected,
+    inquiry_reminder,
+    inquiry_restored,
+    inquiry_sent,
+)
 from inquiries.utils import InquiryMessageContentParser as _ContentParser
 from mailing.models import EmailTemplate as _EmailTemplate
 from mailing.schemas import EmailSchema as _EmailSchema
-
-from .signals import inquiry_accepted, inquiry_rejected, inquiry_sent
 
 # from notifications.mail import request_accepted, request_declined, request_new
 
@@ -233,6 +239,8 @@ class UserInquiry(models.Model):
         """Increase by one counter"""
         self.counter += 1
         self.save()
+        if self.counter >= self.limit:
+            inquiry_pool_exhausted.send(sender=self.__class__, user=self.user)
 
     def decrement(self):
         """Decrease by one counter"""
@@ -460,6 +468,7 @@ class InquiryRequest(models.Model):
             raise ForbiddenLogAction("Cannot reward sender anymore.")
 
         self.sender.userinquiry.decrement()
+        inquiry_restored.send(sender=self.__class__, inquiry_request=self)
         self.create_log_for_sender(InquiryLogMessage.MessageType.OUTDATED)
 
     def notify_recipient_about_outdated(self) -> None:
@@ -469,7 +478,7 @@ class InquiryRequest(models.Model):
         """
         if not self.can_be_reminded:
             raise ForbiddenLogAction("Cannot create more than 2 reminders.")
-
+        inquiry_reminder.send(sender=self.__class__, inquiry_request=self)
         self.create_log_for_recipient(InquiryLogMessage.MessageType.OUTDATED_REMINDER)
 
     @property
