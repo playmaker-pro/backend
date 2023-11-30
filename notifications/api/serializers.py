@@ -1,3 +1,4 @@
+from django.urls import reverse
 from rest_framework import serializers
 
 from notifications.models import Notification
@@ -38,12 +39,21 @@ class NotificationSerializer(serializers.ModelSerializer):
         redirect URL. The base URL is constructed using the request context.
         """
         request = self.context.get("request")
-        base_url = request.build_absolute_uri("/api/v3/")
 
         # Extract details from obj
         details = obj.details or {}
+        # Get the namespaced URL path based on the event type
+        namespaced_url_path = reverse(
+            get_notification_redirect_url(obj.event_type, details)
+        )
 
-        return get_notification_redirect_url(obj.event_type, details, base_url)
+        # Construct the full URL by combining scheme, host, and namespaced URL path
+        if request:
+            scheme = request.scheme
+            host = request.get_host()
+            return f"{scheme}://{host}{namespaced_url_path}"
+
+        return namespaced_url_path
 
     def get_unread_count(self, obj: Notification) -> int:
         """

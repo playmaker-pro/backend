@@ -1,23 +1,25 @@
 import re
 
 
-def get_notification_redirect_url(event_type: str, details: dict, base_url: str) -> str:
+def get_notification_redirect_url(event_type: str, details: dict) -> str:
     """
-    Generates a redirect URL based on the event type and details of the notification.
+    Generates a namespaced URL path based on the event type of the notification.
+
+    This function maps each event type to a specific URL name defined in the Django URL configuration.
+    It is used to provide a relevant redirect path for each type of notification.
     """
-    # Define URL mapping for different event types and roles
     URL_MAPPING = {
-        "accept_inquiry": "inquiries/my/contacts",  # URL for sender when inquiry is accepted
-        "reject_inquiry": "inquiries/my/sent",  # URL for sender when inquiry is rejected
-        "receive_inquiry": "inquiries/my/received",  # URL for recipient when they receive an inquiry
+        "accept_inquiry": "api:inquiries:my_inquiry_contacts",
+        "reject_inquiry": "api:inquiries:my_sent_inquiries",
+        "receive_inquiry": "api:inquiries:my_received_inquiries",
+        "query_pool_exhausted": "api:inquiries:my_sent_inquiries",
+        "pending_inquiry_decision": "api:inquiries:my_received_inquiries",
+        "reward_sender": "api:inquiries:my_sent_inquiries",
+        "inquiry_request_restored": "api:inquiries:my_sent_inquiries",
     }
 
-    # Use the event type to determine the redirect URL
-    if event_type in URL_MAPPING:
-        return f"{base_url}{URL_MAPPING[event_type]}"
+    return URL_MAPPING.get(event_type, "")
 
-    # Fallback to a default URL if specific mapping isn't found
-    return base_url
 
 
 class NotificationContentParser:

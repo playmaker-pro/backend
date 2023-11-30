@@ -67,7 +67,7 @@ class UserNotificationViewTests(APITestCase):
         Test the marking of a notification as read.
         It checks if the notification's 'is_read' field is successfully updated.
         """
-        notification = NotificationFactory(user=self.user)
+        notification = NotificationFactory(user=self.user, event_type="receive_inquiry")
         url = reverse(
             "api:notifications:mark-notification-read",
             kwargs={
