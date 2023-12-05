@@ -21,4 +21,3 @@ class PlayerProfileGET(BaseModel):
     training_ready: Optional[dict]
     playermetrics: Optional[dict]
     role: str
-    verification_stage: dict

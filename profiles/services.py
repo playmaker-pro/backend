@@ -40,7 +40,8 @@ class PositionData(BaseModel):
 
 
 class ProfileVerificationService:
-    """Profile verification service which can manage verification process for user's profile"""
+    """Profile verification service which can manage verification
+    process for user's profile"""
 
     def __init__(self, profile: models.BaseProfile) -> None:
         self.profile: models.BaseProfile = profile
@@ -51,7 +52,8 @@ class ProfileVerificationService:
             self.user.unverify()
             self.user.save()
             logger.info(
-                f"User {self.user} has invalid last_name ={self.user.last_name}. Minimum 2char needed."
+                f"User {self.user} has invalid last_name "
+                f"={self.user.last_name}. Minimum 2char needed."
             )
             return
         if self.user.is_player:
@@ -422,7 +424,8 @@ class ProfileService:
         # Find the short definition using the REVERSED_MODEL_MAP
         short_definition = REVERSED_MODEL_MAP.get(profile_class)
 
-        # Translate the short definition to the related type string using PROFILE_TYPE_MAP
+        # Translate the short definition to the related type string using
+        # PROFILE_TYPE_MAP
         related_type = PROFILE_TYPE_MAP.get(short_definition)
 
         return related_type
@@ -490,24 +493,26 @@ class ProfileFilterService:
         queryset: django_base_models.QuerySet, league_ids: list
     ) -> django_base_models.QuerySet:
         """
-        Filter a queryset of players based on their association with the specified league IDs.
+        Filter a queryset of players based on their association with the specified
+        league IDs.
 
-        The method prioritizes players who are associated with the leagues in the current season.
-        If a player has been associated with one of the given leagues in the current season,
-        they are included in the results. If they haven't been associated in the current season
-        but have been in past seasons, they are also included. However, players with current season
+        The method prioritizes players who are associated with the leagues in the
+        current season. If a player has been associated with one of the given leagues in
+        the current season, they are included in the results.
+        If they haven't been associated in the current season but have been in
+        past seasons, they are also included. However, players with current season
         associations are prioritized over those with only past associations.
         """
         current_season = get_current_season()
 
         distinct_user_ids = (
             queryset.filter(
-                team_object__historical__league_history__league__highest_parent__in=league_ids
+                team_object__historical__league_history__league__highest_parent__in=league_ids  # noqa: E501
             )
             .annotate(
                 is_current_season=Case(
                     When(
-                        team_object__historical__league_history__season__name=current_season,
+                        team_object__historical__league_history__season__name=current_season,  # noqa: E501
                         then=Value(1),
                     ),
                     default=Value(0),
@@ -572,7 +577,9 @@ class ProfileFilterService:
     def filter_country(
         queryset: django_base_models.QuerySet, country: list
     ) -> django_base_models.QuerySet:
-        """Validate each country code, then return queryset filtered by given countries"""
+        """
+        Validate each country code, then return queryset filtered by given countries
+        """
         return queryset.filter(
             user__userpreferences__citizenship__overlap=[
                 locale_service.validate_country_code(code) for code in country
@@ -583,7 +590,8 @@ class ProfileFilterService:
     def filter_language(
         queryset: django_base_models.QuerySet, language: list
     ) -> django_base_models.QuerySet:
-        """Validate each language code, then return queryset filtered by given spoken languages"""
+        """Validate each language code, then return queryset filtered by given
+        spoken languages"""
         return queryset.filter(
             user__userpreferences__spoken_languages__code__in=[
                 locale_service.validate_language_code(code) for code in language
@@ -609,7 +617,8 @@ class PlayerProfilePositionService:
         Validates the given positions data.
 
         raises MultipleMainPositionError: If more than one main position is found.
-        raises TooManyAlternatePositionsError: If more than two non-main positions are found.
+        raises TooManyAlternatePositionsError: If more than two non-main positions
+        are found.
         """
         main_positions_count = len([data for data in positions_data if data.is_main])
         non_main_positions_count = len(
@@ -634,8 +643,8 @@ class PlayerProfilePositionService:
         than one main or two non-main positions.
 
         It then iterates over the new positions' data. If a main position is new or has
-        changed, it is created or updated accordingly. Non-main positions are also created
-        or updated, but no more than two are allowed.
+        changed, it is created or updated accordingly. Non-main positions are also
+        created or updated, but no more than two are allowed.
 
         If any positions from the original set are not in the new positions data, they
         are deleted.
@@ -643,7 +652,8 @@ class PlayerProfilePositionService:
         # Validate that the provided positions data meets the necessary criteria.
         self.validate_positions(positions_data)
 
-        # Get the current positions associated with the profile, indexed by their player_position_id.
+        # Get the current positions associated with the profile, indexed by their
+        # player_position_id.
         current_positions = {
             position.player_position_id: position
             for position in profile.player_positions.all()
@@ -652,7 +662,8 @@ class PlayerProfilePositionService:
         # Initialize lists to hold positions that need to be created and updated.
         positions_to_create = []
         positions_to_update = []
-        # Initialize a set to hold the IDs of positions that should be retained (i.e., not deleted).
+        # Initialize a set to hold the IDs of positions that should be retained
+        # (i.e., not deleted).
         position_ids_to_keep = set()
 
         # Iterate over new positions
@@ -751,15 +762,33 @@ class TeamContributorService:
         """
         return team_contributor.profile_uuid == profile_uuid
 
+    def get_teams_for_profile(
+        self, profile_uuid: uuid.UUID, **kwargs
+    ) -> django_base_models.QuerySet:
+        """
+        Fetches all the teams associated with a given profile, following the model's
+        Meta ordering.
+        """
+        return self.filter_team_contributor(profile_uuid=profile_uuid, **kwargs)
+
     @staticmethod
-    def get_teams_for_profile(profile_uuid: uuid.UUID) -> django_base_models.QuerySet:
-        """
-        Fetches all the teams associated with a given profile, following the model's Meta ordering.
-        """
+    def filter_team_contributor(**kwargs):
+        """Filter team contributor by given kwargs"""
         return (
-            models.TeamContributor.objects.filter(profile_uuid=profile_uuid)
+            models.TeamContributor.objects.filter(**kwargs)
             .distinct("id")
             .order_by("id")
+        )
+
+    def get_profile_actual_teams(
+        self, profile_uuid: uuid.UUID
+    ) -> django_base_models.QuerySet:
+        """
+        Fetches all the teams associated with a given profile, following the model's
+        Meta ordering.
+        """
+        return self.filter_team_contributor(
+            profile_uuid=profile_uuid, end_date__isnull=True
         )
 
     @staticmethod
@@ -777,7 +806,7 @@ class TeamContributorService:
         #     **kwargs,
         # }
         #
-        # existing_contributor = models.TeamContributor.objects.filter(**criteria).first()
+        # existing_contributor = models.TeamContributor.objects.filter(**criteria).first()  # noqa: E501
         #
         # if existing_contributor:
         #     return existing_contributor, False
@@ -857,11 +886,12 @@ class TeamContributorService:
         team_contributor: models.TeamContributor, data: typing.Dict[str, typing.Any]
     ) -> bool:
         """
-        Resets or updates the custom role of a team contributor based on the provided data.
+        Resets or updates the custom role of a team contributor based on the provided
+        data.
 
         If the team contributor's role is changing from 'Other' to a different role,
-        the custom role is reset to None. If the role is changing to 'Other' and a non-None
-        custom role is provided, it updates the custom role.
+        the custom role is reset to None. If the role is changing to 'Other'
+        and a non-None custom role is provided, it updates the custom role.
         """
         role_changing_from_other = (
             team_contributor.role in models.TeamContributor.get_other_roles()
@@ -878,7 +908,8 @@ class TeamContributorService:
             team_contributor.custom_role = None
             custom_role_updated = True
         elif role_changing_to_other and custom_role_provided:
-            # Update custom_role only if changing to 'Other' and a non-None custom_role is provided
+            # Update custom_role only if changing to 'Other' and a non-None custom_role
+            # is provided
             team_contributor.custom_role = data["custom_role"]
             custom_role_updated = True
 
@@ -886,7 +917,8 @@ class TeamContributorService:
 
     def delete_team_contributor(self, team_contributor: models.TeamContributor) -> None:
         """
-        Delete a TeamContributor instance and update related profile fields if necessary.
+        Delete a TeamContributor instance and update related profile fields
+        if necessary.
         """
         # Check if the team contributor is primary
         is_primary: bool = team_contributor.is_primary
@@ -909,7 +941,8 @@ class TeamContributorService:
         self, data: dict, profile_uuid: uuid.UUID, profile_type: str
     ) -> typing.Tuple:
         """
-        Fetch or create team, league, league history, and team history based on the profile type.
+        Fetch or create team, league, league history, and team history based on
+        the profile type.
         """
         league_identifier: typing.Union[str, int] = data.get("league_identifier")
         country_code: str = data.get("country", "PL")
@@ -951,7 +984,8 @@ class TeamContributorService:
         self, profile_uuid: uuid.UUID, team_history: clubs_models.TeamHistory
     ) -> None:
         """
-        Updates the team fields (`team_object` and `team_history_object`) of a profile instance.
+        Updates the team fields (`team_object` and `team_history_object`)
+        of a profile instance.
         """
         profile_instance: models.PROFILE_MODELS = (
             self.profile_service.get_profile_by_uuid(profile_uuid)
@@ -1006,7 +1040,8 @@ class TeamContributorService:
         is_player: bool,
     ) -> models.TeamContributor:
         """
-        Create a contributor, either a player or a non-player, based on the provided data and profile UUID.
+        Create a contributor, either a player or a non-player, based on the
+        provided data and profile UUID.
         """
         # Common logic
         criteria = {}
@@ -1094,7 +1129,8 @@ class TeamContributorService:
                 team_parameter = team_history_instance.team.id
                 league_identifier = team_history_instance.league_history.league.id
 
-                # Use these extracted values to call create_or_get_team_history_date_based
+                # Use these extracted values to call
+                # create_or_get_team_history_date_based
                 return club_services.create_or_get_team_history_date_based(
                     data.get("start_date"),
                     data.get("end_date"),
@@ -1196,9 +1232,10 @@ class TeamContributorService:
 
         This function updates a player contributor by fetching the relevant team history
         based on the input data. It checks for any existing contributor that matches the
-        provided criteria and raises an exception if one exists. If the contributor is marked
-        as primary, the function handles the primary contributor logic. Finally, the function
-        updates the team contributor instance with the new data provided.
+        provided criteria and raises an exception if one exists. If the contributor
+        is marked as primary, the function handles the primary contributor logic.
+        Finally, the function updates the team contributor instance with the
+        new data provided.
         """
         team_history_instance = team_contributor.team_history.first()
 
@@ -1226,7 +1263,7 @@ class TeamContributorService:
                 self.profile_service.get_user_by_uuid(profile_uuid),
             )
         # TODO: kgarczewski: FUTURE ADDITION: Reference: PM 20-697[SPIKE]
-        # existing_contributor: models.TeamContributor = self.check_existing_contributor(
+        # existing_contributor: models.TeamContributor = self.check_existing_contributor(  # noqa: E501
         #     {
         #         "profile_uuid": profile_uuid,
         #         "team_history__in": [team_history],
@@ -1262,8 +1299,8 @@ class TeamContributorService:
         Update non-player contributor data.
 
         This function updates a non-player contributor by fetching or creating the
-        relevant team history based on the input data. It then updates the team contributor
-        instance with the new data provided.
+        relevant team history based on the input data. It then updates the team
+        contributor instance with the new data provided.
         """
         team_history_instance = team_contributor.team_history.first()
 
@@ -1297,7 +1334,7 @@ class TeamContributorService:
                 )
             )
         # TODO: kgarczewski: FUTURE ADDITION: Reference: PM 20-697[SPIKE]
-        # existing_contributor: models.TeamContributor = self.check_existing_contributor(
+        # existing_contributor: models.TeamContributor = self.check_existing_contributor(  # noqa: E501
         #     {
         #         "profile_uuid": profile_uuid,
         #         "role": current_data.get("role"),
@@ -1376,7 +1413,9 @@ class TransferStatusService:
         """Get a list of transfer statuses. If param is provided, filter results."""
         lambda_function: typing.Callable = lambda transfer: True
         if transfer_id := search_kwargs.get("id"):
-            lambda_function = lambda transfer: transfer[0] == str(transfer_id)
+            lambda_function = lambda transfer: transfer[0] == str(  # noqa: E731
+                transfer_id
+            )
 
         result = [
             ChoicesTuple(*transfer)._asdict()

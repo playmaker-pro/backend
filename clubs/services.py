@@ -3,7 +3,7 @@ import typing
 
 from django.contrib.auth.models import User
 from django.db import models as django_models
-from django.db.models import F, QuerySet, ObjectDoesNotExist
+from django.db.models import F, ObjectDoesNotExist, QuerySet
 
 from clubs import errors, models
 from clubs.api.api_filters import ClubFilter
@@ -103,13 +103,15 @@ class ClubService:
 
 
 class LeagueService:
+    model = models.League
+
     def get_highest_parents(self) -> QuerySet:
         """Get all highest parents"""
-        return models.League.objects.filter(highest_parent=F("id"))
+        return self.model.objects.filter(highest_parent=F("id"))
 
     def get_leagues(self) -> QuerySet:
         """Get all leagues"""
-        return models.League.objects.all()
+        return self.model.objects.all()
 
     def filter_male(self, queryset: QuerySet) -> QuerySet:
         """Filter queryset by male gender"""
@@ -133,6 +135,15 @@ class LeagueService:
     def validate_gender(self, gender: str) -> None:
         if gender and gender.upper() not in ["M", "F"]:
             raise ValueError
+
+    def get_league_by_id(self, league_id: int) -> typing.Optional[models.League]:
+        """Get league by id"""
+        result = self.filter(id=league_id).first()
+        return result or None
+
+    def filter(self, **search_params) -> QuerySet:
+        """Filter queryset by given params"""
+        return self.model.objects.filter(**search_params)
 
 
 class ClubTeamService:
@@ -168,7 +179,8 @@ class TeamHistoryCreationService:
         self, model_instance: django_models.Model, user: User
     ) -> None:
         """
-        Initializes the given model instance with default attributes and saves it to the database.
+        Initializes the given model instance with default attributes and saves
+        it to the database.
 
         """
         model_instance.status = self.DEFAULT_STATUS
@@ -183,10 +195,11 @@ class TeamHistoryCreationService:
         """
         Retrieves an existing team or creates a new one based on the provided data.
 
-        The method uses the 'team_parameter' key from the validated_data. If 'team_parameter' is
-        an integer, it's assumed to be the ID of the team and the team is retrieved by its ID.
-        If it's a string, it's assumed to be the name of the team and the method will either retrieve
-        an existing team with that name or create a new one, depending on whether a match is found.
+        The method uses the 'team_parameter' key from the validated_data. If
+        'team_parameter' is an integer, it's assumed to be the ID of the team and the
+        team is retrieved by its ID. If it's a string, it's assumed to be the name of
+        the team and the method will either retrieve an existing team with that name or
+        create a new one, depending on whether a match is found.
         """
         team_parameter: typing.Union[str, int] = validated_data.get("team_parameter")
 
@@ -213,8 +226,9 @@ class TeamHistoryCreationService:
         """
         Retrieve the seniority of a league based on its ID.
 
-        This method fetches a league by its ID and returns the seniority associated with that league.
-        If the league does not exist, a LeagueDoesNotExist error is raised.
+        This method fetches a league by its ID and returns the seniority associated
+        with that league. If the league does not exist, a LeagueDoesNotExist
+        error is raised.
         """
         league = models.League.objects.filter(id=league_id).first()
         if not league:
@@ -272,10 +286,11 @@ class TeamHistoryCreationService:
         """
         Retrieve an existing team by name or create a new one if it doesn't exist.
 
-        This function first tries to get a team by its name and gender. If the team is found
-        and it's marked as visible and enabled, it raises a TeamAlreadyExist error.
-        If the team isn't found, a new team is created with the provided name and gender.
-        The newly created team is then initialized with default values.
+        This function first tries to get a team by its name and gender.
+        If the team is found, and it's marked as visible and enabled, it raises
+        a TeamAlreadyExist error. If the team isn't found, a new team is created
+        with the provided name and gender. The newly created team is then initialized
+        with default values.
         """
         team = models.Team.objects.filter(
             name__iexact=team_name, gender=gender, seniority=seniority
@@ -347,12 +362,13 @@ class TeamHistoryCreationService:
         self, league_identifier: str, country_code: str, user, gender: models.Gender
     ) -> models.League:
         """
-        Retrieve an existing league by its identifier or create a new one if it doesn't exist.
+        Retrieve an existing league by its identifier or create a new one if it doesn't
+        exist.
 
         This function attempts to get a league using the provided identifier (name).
-        If a league with the given identifier isn't found, a new league is created with the
-        provided identifier, country code, and gender. The newly created league is then
-        initialized with default values.
+        If a league with the given identifier isn't found, a new league is created
+        with the provided identifier, country code, and gender.
+        The newly created league is then initialized with default values.
         """
         league, created = models.League.objects.get_or_create(
             name=league_identifier, defaults={"country": country_code, "gender": gender}
@@ -392,12 +408,13 @@ class TeamHistoryCreationService:
         year: typing.Optional[int] = None,
     ) -> typing.Tuple[models.League, models.LeagueHistory]:
         """
-        Retrieve or create a league and its corresponding history record based on provided identifiers.
+        Retrieve or create a league and its corresponding history record based
+        on provided identifiers.
 
         This method determines the gender either from provided data (for foreign teams)
-        or from the league (for Polish teams). It then retrieves or creates a league based
-        on the league identifier and country code. Finally, it fetches or creates a
-        league history record for the provided season.
+        or from the league (for Polish teams). It then retrieves or creates a league
+        based on the league identifier and country code. Finally, it fetches or
+        creates a league history record for the provided season.
         """
         # Determine gender based on country code
         if country_code != "PL":
@@ -451,8 +468,9 @@ class TeamHistoryCreationService:
         """
         Creates or retrieves the TeamHistory instances for a given season and round.
 
-        The method checks if a corresponding TeamHistory exists for the provided season and round.
-        If it does, the instance is returned; otherwise, a new one is created.
+        The method checks if a corresponding TeamHistory exists for the provided
+        season and round. If it does, the instance is returned; otherwise,
+        a new one is created.
         """
 
         # Retrieve or Create the Season based on the provided season parameter
@@ -495,9 +513,10 @@ class TeamHistoryCreationService:
         """
         Creates or retrieves the TeamHistory instances for a given date range.
 
-        For each date within the range, the method checks if a corresponding TeamHistory exists. If it does,
-        the instance is added to the list of results; otherwise, a new one is created. The method returns
-        all TeamHistory instances corresponding to the date range.
+        For each date within the range, the method checks if a corresponding TeamHistory
+        exists. If it does, the instance is added to the list of results; otherwise,
+        a new one is created. The method returns all TeamHistory instances
+        corresponding to the date range.
         """
         if end_date is None:
             end_date = datetime.date.today()
@@ -536,7 +555,8 @@ class TeamHistoryCreationService:
 
             team_histories.append(team_history)
 
-            # Move cursor_date to the next season start. E.g., if current season is 2020/2021, move to 01-07-2021
+            # Move cursor_date to the next season start. E.g., if current season is
+            # 2020/2021, move to 01-07-2021
             next_season_start_year = int(current_season_name.split("/")[1])
             cursor_date = datetime.date(next_season_start_year, 7, 1)
 

@@ -2267,6 +2267,7 @@ paths:
                       description: "Id of transfer status"
                     name:
                       type: string
+                  required: ["id", "name"]
                 example:
                   [
                     {
@@ -2284,6 +2285,58 @@ paths:
                     {
                         "id": "4",
                         "name": "Piłkarska emerytura"
+                    }
+                ]
+
+  /profiles/transfer-status/additional-info/:
+    get:
+      operationId: transfer_status_additional_info_listing
+      description: "Returns list of transfer status additional information."
+      tags:
+        - profiles
+      security:
+        - {}
+      responses:
+        "200":
+          description: "List of avaiable objects."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: "Id of object"
+                    name:
+                      type: string
+                  required: ["id", "name"]
+                example:
+                  [
+                    {
+                        "id": "1",
+                        "name": "Dostępny od zaraz"
+                    },
+                    {
+                        "id": "2",
+                        "name": "Wracam po kontuzji"
+                    },
+                    {
+                        "id": "3",
+                        "name": "Możliwe wypożyczenie"
+                    },
+                    {
+                        "id": "4",
+                        "name": "Po przeprowadzce"
+                    },
+                    {
+                        "id": "5",
+                        "name": "Studiuje zaoczne"
+                    },
+                    {
+                        "id": "6",
+                        "name": "Pracuje w nieregularnym trybie pracy"
                     }
                 ]
 
@@ -2308,7 +2361,7 @@ paths:
           content:
             application/json:
               schema:
-                  $ref: '#/components/schemas/TransferStatus'
+                  $ref: '#/components/schemas/TransferStatusGet'
         "404":
           description: "Transfer status for given profile not found."
           content:
@@ -2336,13 +2389,44 @@ paths:
         - profiles
       security:
         - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contact_email:
+                  type: string
+                  description: "Profile contact email"
+                phone_number:
+                  type: object
+                  properties:
+                    dial_code:
+                      type: string
+                      description: "Represents a phone number dial code"
+                    number:
+                      type: string
+                      description: "Profile phone number"
+                status:
+                  type: integer
+                  description: "Id of transfer status object. Check avaiable objects at /profiles/list-transfer-status/"
+                additional_info:
+                  type: array
+                  items:
+                    type: integer
+                    description: "Id of an object from: /profiles/transfer-status/additional-info/"
+                league:
+                  type: array
+                  items:
+                    type: integer
+                    description: "Id of an highest parent league taken from: /clubs/leagues/highest-parents/"
       responses:
         "200":
           description: "Status 200 when update succeded"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransferStatus'
+                $ref: '#/components/schemas/TransferStatusGet'
         "403":
           description: "User is not allowed to do this action"
           content:
@@ -2371,7 +2455,7 @@ paths:
                     description: "Failure detail message"
     post:
       operationId: profile_transfer_status_create
-      description: "Crfeate profile transfer status object"
+      description: "Create profile transfer status object"
       security:
       - jwtAuth: []
       tags:
@@ -2392,20 +2476,37 @@ paths:
               properties:
                 contact_email:
                   type: string
-                  description: "Profile contact email address."
-                contact_phone:
-                  type: string
-                  description: "Profile contact phone number."
-                status_id:
+                  description: "Profile contact email"
+                phone_number:
+                  type: object
+                  properties:
+                    dial_code:
+                      type: string
+                      description: "Represents a phone number dial code"
+                    number:
+                      type: string
+                      description: "Profile phone number"
+                status:
                   type: integer
-                  description: "Transfer status object id."
+                  description: "Id of transfer status object. Check avaiable objects at /profiles/list-transfer-status/"
+                additional_info:
+                  type: array
+                  items:
+                    type: integer
+                    description: "Id of an object from: /profiles/transfer-status/additional-info/"
+                league:
+                  type: array
+                  items:
+                    type: integer
+                    description: "Id of an highest parent league taken from: /clubs/leagues/highest-parents/"
+              required: ["status", "additional_info", "league"]
       responses:
         "201":
           description: "Returns created profile transfer status object."
           content:
             application/json:
               schema:
-                  $ref: '#/components/schemas/TransferStatus'
+                  $ref: '#/components/schemas/TransferStatusGet'
         "403":
           description: "User is not allowed to do this action"
           content:
@@ -2419,6 +2520,52 @@ paths:
                   detail:
                     type: string
                     description: "Failure detail message"
+
+    delete:
+      operationId: delete_profile_transfer_status
+      description: "Deletes profile transfer status"
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+      tags:
+        - profiles
+      security:
+        - jwtAuth: []
+      responses:
+        "204":
+          description: "Object deleted successful"
+        "403":
+          description: "User is not allowed to do this action"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: "Represents bool as string"
+                  detail:
+                    type: string
+                    description: "Failure detail message"
+        "404":
+          description: "Transfer status for given profile not found."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: "Represents bool as string"
+                  detail:
+                    type: string
+                    description: "Failure detail message"
+
+
 
   /users/feature-elements/:
     get:
@@ -3978,7 +4125,7 @@ components:
             prefered_leg:
               type: integer
             transfer_status:
-              $ref: '#/components/schemas/TransferStatus'
+              $ref: '#/components/schemas/TransferStatusGet'
             training_ready:
               $ref: '#/components/schemas/ProfileEnumChoices'
             role:
@@ -4366,7 +4513,7 @@ components:
               items:
                 $ref: '#/components/schemas/ProfileVideo'
             transfer_status:
-              $ref: '#/components/schemas/TransferStatus'
+              $ref: '#/components/schemas/TransferStatusGet'
             labels:
               type: array
               items:
@@ -5427,21 +5574,22 @@ components:
        - date_updated
        - done
 
-    TransferStatus:
+    TransferStatusGet:
       type: object
       properties:
-        contact:
+        contact_email:
+          type: string
+          description: "Contact email address."
+        phone_number:
           type: object
           properties:
-            id:
+            dial_code:
               type: integer
-              description: "Contact object id."
-            phone:
+              description: "Represents dial code for phone number."
+            number:
               type: string
               description: "Contact mobile phone number."
-            email:
-              type: string
-              description: "Contact email address."
+          required: ["dial_code", "number"]
         status:
           type: object
           properties:
@@ -5451,6 +5599,73 @@ components:
             name:
               type: string
               description: "Transfer status name"
+          required: ["id", "name"]
+        additional_info:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: "Object id."
+              name:
+                type: string
+                description: "Object name"
+            required: ["id", "name"]
+        league:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: "Object id."
+              name:
+                type: string
+                description: "Object name"
+              is_parent:
+                type: boolean
+                description: "Is league parent?"
+            required: ["id", "name", "is_parent"]
+      required: ["contact_email", "phone_number", "status", "additional_info", "league"]
+      example:
+        {
+          "contact_email": "",
+          "phone_number": {
+              "dial_code": "+48",
+              "number": "999999999"
+          },
+          "status": {
+              "id": "1",
+              "name": "Szukam klubu"
+          },
+          "additional_info": [
+              [
+                  {
+                      "id": "3",
+                      "name": "Możliwe wypożyczenie"
+                  }
+              ],
+              [
+                  {
+                      "id": "2",
+                      "name": "Wracam po kontuzji"
+                  }
+              ]
+          ],
+          "league": [
+              {
+                  "id": 14,
+                  "name": "Krosno",
+                  "is_parent": true
+              },
+              {
+                  "id": 5,
+                  "name": "1 liga",
+                  "is_parent": true
+              }
+          ]
+      }
 
     VerificationStageUpdate:
       type: object

@@ -22,6 +22,7 @@ from api.swagger_schemas import (
     FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA,
 )
 from api.views import EndpointView
+from clubs.services import LeagueService
 from external_links import serializers as external_links_serializers
 from external_links.errors import LinkSourceNotFound, LinkSourceNotFoundServiceException
 from external_links.services import ExternalLinksService
@@ -35,6 +36,7 @@ from profiles.api.errors import (
 from profiles.api.managers import SerializersManager
 from profiles.filters import ProfileListAPIFilter
 from profiles.serializers_detailed.base_serializers import (
+    ProfileTransferRequestSerializer,
     ProfileTransferStatusSerializer,
 )
 from profiles.services import (
@@ -44,7 +46,15 @@ from profiles.services import (
     TeamContributorService,
 )
 from profiles.utils import map_service_exception
-from roles.definitions import TRANSFER_STATUS_CHOICES
+from roles.definitions import (
+    TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES,
+    TRANSFER_REQUEST_POSITIONS_CHOICES,
+    TRANSFER_REQUEST_SALARY_CHOICES,
+    TRANSFER_REQUEST_STATUS_CHOICES,
+    TRANSFER_REQUEST_TRAININGS_CHOICES,
+    TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES,
+    TRANSFER_STATUS_CHOICES,
+)
 from users.api.serializers import UserMainRoleSerializer
 from utils.utils import validate_date_format
 
@@ -80,9 +90,6 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExist
 
-        # serializer: api_serializers.ProfileSerializer = (
-        #     api_serializers.ProfileSerializer(profile_object)
-        # )  # TODO: changed to ProfileViewSerializer. Check if it works as expected
         serializer_class = self.get_serializer_class(
             model_name=profile_object.__class__.__name__
         )
@@ -731,6 +738,7 @@ class ExternalLinksAPI(EndpointView):
 
 class TransferStatusAPIView(EndpointView):
     permission_classes = [IsAuthenticatedOrReadOnly]
+    league_service = LeagueService()
 
     def list_transfer_status(self, request: Request) -> Response:  # noqa
         """Retrieve and display transfer statuses for the profiles."""
@@ -755,7 +763,7 @@ class TransferStatusAPIView(EndpointView):
         serializer = ProfileTransferStatusSerializer(transfer_status)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def update_profile_transfer_status(
+    def update_profile_transfer_status(  # noqa
         self, request: Request, profile_uuid: uuid.UUID
     ) -> Response:
         """Update transfer status for the user."""
@@ -774,7 +782,7 @@ class TransferStatusAPIView(EndpointView):
             raise api_errors.TransferStatusDoesNotExistHTTPException
 
         serializer = ProfileTransferStatusSerializer(
-            instance=transfer_status, data=request.data
+            instance=transfer_status, data=request.data, partial=True
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -784,6 +792,7 @@ class TransferStatusAPIView(EndpointView):
     def create_profile_transfer_status(
         self, request: Request, profile_uuid: uuid.UUID  # noqa
     ) -> Response:
+        # views.py
         """Create transfer status for the profile."""
         try:
             profile = profile_service.get_profile_by_uuid(profile_uuid)
@@ -797,6 +806,150 @@ class TransferStatusAPIView(EndpointView):
             data=request.data, context={"profile": profile}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.create(serializer.validated_data)
+        serializer.save()
 
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete_profile_transfer_status(
+        self, request: Request, profile_uuid: uuid.UUID  # noqa
+    ) -> Response:
+        """Delete transfer status for the profile."""
+        try:
+            profile = profile_service.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist as exc:
+            raise api_errors.ProfileDoesNotExist from exc
+
+        if profile.user != request.user:
+            raise PermissionDeniedHTTPException
+
+        transfer_status = profile_service.get_profile_transfer_status(profile)
+
+        if not transfer_status:
+            raise api_errors.TransferStatusDoesNotExistHTTPException
+
+        transfer_status.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def get_transfer_status_additional_info(self, request: Request) -> Response:  # noqa
+        """Retrieve and display transfer statuses for the profiles."""
+        transfer_status_additional_info_choices = (
+            ChoicesTuple(*transfer)
+            for transfer in TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES
+        )
+        serializer = ProfileEnumChoicesSerializer(
+            transfer_status_additional_info_choices, many=True
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class TransferRequestAPIView(EndpointView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    serializer_manager = SerializersManager()
+
+    def list_transfer_request_status(self, request: Request) -> Response:  # noqa
+        """Retrieve and display transfer statuses for the profiles."""
+        transfer_request_status_choices = (
+            ChoicesTuple(*transfer) for transfer in TRANSFER_REQUEST_STATUS_CHOICES
+        )
+        serializer = ProfileEnumChoicesSerializer(
+            transfer_request_status_choices, many=True
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def list_transfer_request_position(self, request: Request) -> Response:  # noqa
+        """Retrieve and display transfer status positions for the profiles."""
+        transfer_request_positions_choices = (
+            ChoicesTuple(*transfer) for transfer in TRANSFER_REQUEST_POSITIONS_CHOICES
+        )
+        serializer = ProfileEnumChoicesSerializer(
+            transfer_request_positions_choices, many=True
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def list_transfer_request_number_of_trainings(
+        self, request: Request  # noqa
+    ) -> Response:
+        """
+        Retrieve and display transfer status number of trainings for the profiles.
+        """
+        transfer_request_number_of_trainings_choices = (
+            ChoicesTuple(*transfer) for transfer in TRANSFER_REQUEST_TRAININGS_CHOICES
+        )
+        serializer = ProfileEnumChoicesSerializer(
+            transfer_request_number_of_trainings_choices, many=True
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def list_transfer_request_additional_info(
+        self, request: Request  # noqa
+    ) -> Response:  # noqa
+        """
+        Retrieve and display transfer status additional information for the profiles.
+        """
+        transfer_request_additional_info_choices = (
+            ChoicesTuple(*transfer)
+            for transfer in TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES
+        )
+        serializer = ProfileEnumChoicesSerializer(
+            transfer_request_additional_info_choices, many=True
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def list_transfer_request_salary(self, request: Request) -> Response:  # noqa
+        """
+        Retrieve and display transfer status request salary for the profiles.
+        """
+        transfer_request_salary_choices = (
+            ChoicesTuple(*transfer) for transfer in TRANSFER_REQUEST_SALARY_CHOICES
+        )
+        serializer = ProfileEnumChoicesSerializer(
+            transfer_request_salary_choices, many=True
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_profile_actual_teams(
+        self, request: Request, profile_uuid: uuid.UUID
+    ) -> Response:
+        """
+        Retrieve a list of team contributors associated
+        with a given user profile and are actual ones. This endpoint is just
+        for transfer request, so should be only visible for specific profile.
+        """
+        try:
+            profile = profile_service.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist as exc:
+            raise api_errors.ProfileDoesNotExist() from exc
+
+        if profile.user != request.user:
+            raise PermissionDeniedHTTPException
+
+        queryset: QuerySet = team_contributor_service.get_profile_actual_teams(
+            profile_uuid
+        ).prefetch_related("team_history", "team_history__league_history__league")
+        # Using the manager to get the right serializer
+        serializer_class = self.serializer_manager.get_serializer_class(
+            profile, "output"
+        )
+        serializer = serializer_class(queryset, many=True, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def create_transfer_request(
+        self, request: Request, profile_uuid: uuid.UUID
+    ) -> Response:
+        """Create transfer request for the profile."""
+
+        try:
+            profile = profile_service.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist as exc:
+            raise api_errors.ProfileDoesNotExist() from exc
+
+        if profile.user != request.user:
+            raise PermissionDeniedHTTPException
+
+        serializer = ProfileTransferRequestSerializer(
+            data=request.data, context={"profile": profile}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.create(serializer.validated_data)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
