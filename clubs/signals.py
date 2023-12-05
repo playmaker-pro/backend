@@ -9,13 +9,16 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=models.League)
-def _post_save_league(sender, instance, created, **kwargs):
-    # Identify and set highest parent
+def _post_save_league(sender, instance, created, **kwargs):  # noqa
+    """
+    Setting up highest parent for league. If not set, check if there is a parent,
+    if not, setting to self (get_highest_parent).
+    """
 
     if hasattr(instance, "_skip_post_save"):
         return
 
-    if highest_parent := instance.get_highest_parent():
+    if highest_parent := instance.get_highest_parent():  # noqa: E999
         instance.highest_parent = highest_parent
     try:
         instance._skip_post_save = True

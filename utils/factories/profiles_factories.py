@@ -2,6 +2,7 @@ import random
 
 import factory
 from django.contrib.auth import get_user_model
+from faker import Faker
 
 from profiles import models
 from profiles.services import TransferStatusService
@@ -39,6 +40,8 @@ class PlayerProfilePositionFactory(CustomObjectFactory):
 class VerificationStageFactory(CustomObjectFactory):
     class Meta:
         model = models.VerificationStage
+
+    done = factory.LazyAttribute(lambda _: Faker().boolean())
 
 
 class ProfileFactory(CustomObjectFactory):
@@ -105,6 +108,7 @@ class PlayerProfileFactory(ProfileFactory):
     player_positions = factory.RelatedFactory(
         PlayerProfilePositionFactory, "player_profile"
     )
+    verification_stage = factory.SubFactory(VerificationStageFactory)
 
     @classmethod
     def set_subfactories(cls) -> None:
@@ -276,10 +280,9 @@ class TransferStatusFactory(factory.django.DjangoModelFactory):
         model = models.ProfileTransferStatus
 
     contact_email = factory.Faker("email")
-    contact_phone_number = factory.LazyAttribute(
-        lambda _: utils.get_random_phone_number()
-    )
+    phone_number = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
     status = 1
+    additional_info = [1, 2]
 
     class Params:
         profile = None

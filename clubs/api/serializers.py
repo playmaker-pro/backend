@@ -293,9 +293,9 @@ class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
     """
     Serializer for the TeamHistory model focused on providing base profile information.
 
-    This serializer extracts the essential information about the team and its associated league
-    from the TeamHistory model. It provides the team's name and details about the league's
-    highest parent entity.
+    This serializer extracts the essential information about the team and its
+    associated league from the TeamHistory model.
+    It provides the team's name and details about the league's highest parent entity.
     """
 
     team_name = serializers.SerializerMethodField()
@@ -313,6 +313,7 @@ class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.TeamHistory
         fields = [
+            "id",
             "team_name",
             "league_highest_parent_name",
             "league_highest_parent_id",
@@ -324,7 +325,8 @@ class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
 
     def get_team_name(self, obj: models.TeamHistory) -> str:
         """
-        Retrieve the team's short name if available; otherwise, return the team's full name.
+        Retrieve the team's short name if available; otherwise, return the
+        team's full name.
         """
         return obj.team.short_name or obj.team.name
 
@@ -357,7 +359,8 @@ class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
         obj: models.TeamHistory,
     ) -> typing.Optional[int]:
         """
-        Retrieve the ID of the primary TeamContributor associated with the given TeamHistory object.
+        Retrieve the ID of the primary TeamContributor associated with the given
+        TeamHistory object.
         """
         profile_uuid: typing.Optional[uuid.UUID] = self.context.get("profile_uuid")
         primary_contributor: typing.Optional[
@@ -378,15 +381,9 @@ class LabelSerializer(serializers.Serializer):
     )
     season_name = serializers.CharField(max_length=9)
     icon = serializers.CharField(source="label_definition.icon", max_length=200)
-    league = serializers.CharField(
-        max_length=255, required=False
-    )
-    team = serializers.CharField(
-        max_length=255, required=False
-    )
-    season_round = serializers.CharField(
-        max_length=10, required=False
-    )
+    league = serializers.CharField(max_length=255, required=False)
+    team = serializers.CharField(max_length=255, required=False)
+    season_round = serializers.CharField(max_length=10, required=False)
 
 
 class TeamLabelsSerializer(LabelSerializer):

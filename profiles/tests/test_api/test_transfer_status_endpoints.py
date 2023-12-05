@@ -9,7 +9,12 @@ from rest_framework.test import APIClient, APITestCase
 from profiles.api.errors import TransferStatusDoesNotExistHTTPException
 from profiles.models import BaseProfile, ProfileTransferStatus
 from profiles.services import TransferStatusService
-from utils.factories import PlayerProfileFactory, TransferStatusFactory, UserFactory
+from utils.factories import (
+    LeagueFactory,
+    PlayerProfileFactory,
+    TransferStatusFactory,
+    UserFactory,
+)
 from utils.test.test_utils import MethodsNotAllowedTestsMixin, UserManager
 
 transfer_service = TransferStatusService()
@@ -18,7 +23,7 @@ transfer_service = TransferStatusService()
 class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
     """Test transfer status API endpoints."""
 
-    NOT_ALLOWED_METHODS = ["put", "delete"]
+    NOT_ALLOWED_METHODS = ["put"]
 
     @factory.django.mute_signals(signals.pre_save, signals.post_save)
     def setUp(self):
@@ -102,19 +107,19 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
     def test_update_profile_transfer_status_phone(self):
         """Test update profile transfer status. Expected status code 200."""
         transfer_status_obj: ProfileTransferStatus = TransferStatusFactory.create(
-            profile=self.profile, contact_phone_number=None
+            profile=self.profile, phone_number=None
         )
         new_contact_phone = "123456789"
         response: Response = self.update_profile(
-            {"contact_phone_number": new_contact_phone}
+            {"phone_number": {"number": new_contact_phone}}
         )
 
         assert response.status_code == 200
         assert isinstance(response.json(), dict)
-        assert response.json().get("contact_phone_number") == new_contact_phone
+        assert response.json().get("phone_number").get("number") == new_contact_phone
 
         transfer_status_obj.refresh_from_db()
-        assert transfer_status_obj.contact_phone_number == new_contact_phone
+        assert transfer_status_obj.phone_number == new_contact_phone
 
     @factory.django.mute_signals(signals.pre_save, signals.post_save)
     def test_update_profile_transfer_status(self):
@@ -160,8 +165,13 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
     @factory.django.mute_signals(signals.pre_save, signals.post_save)
     def test_create_profile_transfer_status(self):
         """Test create profile transfer status. Expected status code 201."""
+        league = LeagueFactory.create_league_as_highest_parent()
+        data = {
+            "status": 2,
+            "league": [league.pk],
+        }
         response: Response = self.client.post(
-            self.url, json.dumps({"status": 2}), **self.headers
+            self.url, json.dumps(data), **self.headers
         )
 
         assert response.status_code == 201
@@ -170,6 +180,25 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
             response.json().get("status")
             == transfer_service.get_list_transfer_statutes(id=2)[0]
         )
+
+    @factory.django.mute_signals(signals.pre_save, signals.post_save)
+    def test_create_profile_transfer_status_phone_num(self):
+        """
+        Test create profile transfer status with phone number.
+        Expected status code 201.
+        """
+        league = LeagueFactory.create_league_as_highest_parent()
+        data = {
+            "status": 2,
+            "league": [league.pk],
+            "phone_number": {"dial_code": "+48", "number": "123456789"},
+        }
+        response: Response = self.client.post(
+            self.url, json.dumps(data), **self.headers
+        )
+
+        assert response.status_code == 201
+        assert response.json().get("phone_number").get("number") == "123456789"
 
     @factory.django.mute_signals(signals.pre_save, signals.post_save)
     def test_create_profile_transfer_status_permission_denied(self):

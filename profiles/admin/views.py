@@ -337,7 +337,11 @@ class VerificationStageAdmin(admin.ModelAdmin):
 
 @admin.register(models.TeamContributor)
 class TeamContributorAdmin(admin.ModelAdmin):
-    ...
+    list_display = ("get_name", "profile_uuid", "is_primary", "start_date", "end_date")
+
+    def get_name(self, obj: models.TeamContributor) -> str:
+        """Return user email."""
+        return str(obj)
 
 
 @admin.register(models.CoachLicence)
@@ -371,6 +375,13 @@ class TransferStatusForm(forms.ModelForm):
 
 @admin.register(models.ProfileTransferStatus)
 class ProfileTransferStatusAdmin(admin.ModelAdmin):
+    """Admin for ProfileTransferStatus model."""
+
+    form = TransferStatusForm
+
+
+@admin.register(models.ProfileTransferRequest)
+class ProfileTransferRequestAdmin(admin.ModelAdmin):
     """Admin for ProfileTransferStatus model."""
 
     form = TransferStatusForm

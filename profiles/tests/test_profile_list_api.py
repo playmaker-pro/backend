@@ -3,9 +3,12 @@ from typing import List
 from unittest import mock
 from unittest.mock import MagicMock
 
+import factory
 import pytest
+from django.db.models import signals
 from django.test import override_settings
 from django.urls import reverse
+from faker import Faker
 from parameterized import parameterized
 from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
@@ -15,8 +18,7 @@ from profiles.models import PlayerProfile
 from profiles.services import ProfileService
 from profiles.utils import get_past_date
 from utils import factories, get_current_season
-from utils.factories import PlayerProfileFactory
-from utils.factories import UserFactory
+from utils.factories import PlayerProfileFactory, UserFactory
 from utils.test.test_utils import UserManager
 
 profile_service = ProfileService()
@@ -329,7 +331,7 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
     )
     def test_get_bulk_profiles_by_gender(self, param) -> None:
         """get profiles by gender"""
-        profiles: List[PlayerProfile] = PlayerProfileFactory.create_batch(10)
+        PlayerProfileFactory.create_batch(10)
 
         response: Response = self.client.get(self.url, param)
         expected_count: int = PlayerProfile.objects.filter(
@@ -387,6 +389,7 @@ def test_if_response_is_ordered_by_data_score(
     assert expected_response == sorted(map(int, profiles_scoring))
 
 
+@factory.django.mute_signals(signals.pre_save, signals.post_save)
 @pytest.mark.django_db
 @mock.patch.object(
     ProfileManager,
@@ -403,20 +406,16 @@ def test_if_response_is_ordered_by_data_score_with_many_profiles(
     Endpoint returns 10 items, and we are creating 50 profiles.
     We can't guess how response would look like.
     """
-    PlayerProfileFactory.create_batch(50)
-
+    PlayerProfileFactory.create_batch(20)
     response: Response = api_client.get(reverse(url) + "?role=P")
     user_ids_response = [obj["user"]["id"] for obj in response.data["results"]]
 
     # Get profiles data_fulfill_status level
-    profiles_scoring = [
-        var["data_fulfill_status"]
-        for var in list(
-            PlayerProfile.objects.filter(user__in=user_ids_response).values(
-                "data_fulfill_status"
-            )
+    profiles_scoring = []
+    for element in user_ids_response:
+        profiles_scoring.append(
+            PlayerProfile.objects.get(pk=element).data_fulfill_status
         )
-    ]
 
     expected_response = sorted(profiles_scoring)
 

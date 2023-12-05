@@ -171,6 +171,7 @@ urlpatterns = [
                 "get": "get_profile_transfer_status",
                 "patch": "update_profile_transfer_status",
                 "post": "create_profile_transfer_status",
+                "delete": "delete_profile_transfer_status",
             }
         ),
         name="profile_transfer_status",
@@ -183,5 +184,87 @@ urlpatterns = [
             }
         ),
         name="list_transfer_status",
+    ),
+    path(
+        r"transfer-status/additional-info/",
+        views.TransferStatusAPIView.as_view(
+            {
+                "get": "get_transfer_status_additional_info",
+            }
+        ),
+        name="list_transfer_status_additional_choices",
+    ),
+    path(
+        r"<uuid:profile_uuid>/transfer-request/",
+        views.TransferStatusAPIView.as_view(
+            {
+                "get": "get_profile_transfer_request",
+                "post": "create_profile_transfer_request",
+            }
+        ),
+        name="profile_transfer_request",
+    ),
+    path(
+        r"<uuid:profile_uuid>/transfer-request/<int:transfer_request_id>/",
+        views.TransferStatusAPIView.as_view(
+            {
+                "patch": "update_profile_transfer_request",
+            }
+        ),
+        name="profile_transfer_request_update",
+    ),
+    path(
+        r"transfer-request/status/",
+        views.TransferRequestAPIView.as_view(
+            {
+                "get": "list_transfer_request_status",
+            }
+        ),
+        name="list_transfer_request_status",
+    ),
+    path(
+        r"transfer-request/position/",
+        views.TransferRequestAPIView.as_view(
+            {
+                "get": "list_transfer_request_position",
+            }
+        ),
+        name="list_transfer_request_position",
+    ),
+    path(
+        r"transfer-request/number_of_trainings/",
+        views.TransferRequestAPIView.as_view(
+            {
+                "get": "list_transfer_request_number_of_trainings",
+            }
+        ),
+        name="list_transfer_request_number_of_trainings",
+    ),
+    path(
+        r"transfer-request/additional-info/",
+        views.TransferRequestAPIView.as_view(
+            {
+                "get": "list_transfer_request_additional_info",
+            }
+        ),
+        name="list_transfer_request_additional_info",
+    ),
+    path(
+        r"transfer-request/salary/",
+        views.TransferRequestAPIView.as_view(
+            {
+                "get": "list_transfer_request_salary",
+            }
+        ),
+        name="list_transfer_request_salary",
+    ),
+    path(
+        r"<uuid:profile_uuid>/transfer-request/teams/",
+        views.TransferRequestAPIView.as_view(
+            {
+                "get": "get_profile_actual_teams",
+            }
+        ),
+        name="list_transfer_request_actual_teams",
     ),
 ]

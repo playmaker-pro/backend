@@ -228,7 +228,7 @@ class LeagueAPI(EndpointView):
         if season and current_season:
             raise errors.BothSeasonsGivenException()
 
-        search_params = dict(gender=gender)
+        search_params = {"gender": gender}
 
         if season:
             if not SeasonService.is_valid(season):
@@ -253,8 +253,9 @@ class SeasonAPI(EndpointView):
     Only seasons where `is_in_verify_form` is True are included in the results.
 
     This view supports additional filtering by providing a 'season' query parameter.
-    If the 'season' parameter is provided, the view will return only seasons whose name includes the specified season string.
-    Seasons are returned in descending order by their name.
+    If the 'season' parameter is provided, the view will return only seasons whose name
+    includes the specified season string. Seasons are returned in descending
+    order by their name.
 
     Example usage: /seasons/?season=2021
     """
@@ -285,7 +286,8 @@ class SeasonAPI(EndpointView):
         if not seasons.exists():
             raise errors.SeasonDoesNotExist()
 
-        # Order by 'name' in descending order to return the seasons from newest to oldest
+        # Order by 'name' in descending order to return the seasons from newest
+        # to oldest
         seasons = seasons.order_by("-name")
 
         serializer = serializers.SeasonSerializer(seasons, many=True)
@@ -297,8 +299,8 @@ class TeamsAPI(EndpointView):
     allowed_methods = ["post", "patch", "get"]
 
     def get_team(self, request: Request, team_id: int) -> Response:
-        # TODO(rkesik) we might turn that into a TeamService but since there is no addtional logic
-        # we can keep it as that.
+        #  TODO(rkesik) we might turn that into a TeamService but since
+        #  there is no addtional logic we can keep it as that.
         try:
             team = models.Team.objects.get(id=team_id)
         except models.Team.DoesNotExist:
@@ -308,8 +310,8 @@ class TeamsAPI(EndpointView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def get_team_labels(self, request: Request, team_id: int) -> Response:
-        # TODO(rkesik) we might turn that into a TeamService but since there is no addtional logic
-        # we can keep it as that.
+        #  TODO(rkesik) we might turn that into a TeamService but since
+        #  there is no addtional logic we can keep it as that.
         try:
             team = models.Team.objects.get(id=team_id)
         except models.Team.DoesNotExist:

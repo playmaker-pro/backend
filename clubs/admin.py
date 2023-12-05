@@ -148,6 +148,7 @@ class LeagueAdmin(admin.ModelAdmin):
     actions = [resave]
     exclude = ["code", "order", "section"]
     list_display = (
+        "pk",
         "get_slicer",
         "seniority",
         "name",
@@ -180,7 +181,7 @@ class LeagueAdmin(admin.ModelAdmin):
     autocomplete_fields = ["parent", "highest_parent"]
 
     def get_slicer(self, obj):
-        return f"{obj.get_upper_parent_names()}"
+        return mark_safe(f'<a href="{obj.pk}">{obj.get_upper_parent_names()}</a>')
 
     def get_data_seasons(self, obj):
         return "\n".join([season.name for season in obj.data_seasons.all()])

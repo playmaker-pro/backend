@@ -68,6 +68,7 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
             "player_positions",
             "profile_video",
             "transfer_status",
+            "transfer_requests",
             "height",
             "weight",
             "prefered_leg",

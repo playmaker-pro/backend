@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.db import models
 from django.urls import reverse
@@ -27,7 +28,6 @@ from adapters.player_adapter import (
 )
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_profile_external_links
-from inquiries.models import InquiryContact
 from mapper.models import Mapper
 from profiles.errors import VerificationCompletionFieldsWrongSetup
 from profiles.managers import ProfileManager
@@ -298,6 +298,9 @@ class BaseProfile(models.Model, EventLogMixin):
     notifications = GenericRelation("notifications.Notification")
     transfer_status_related = GenericRelation(
         "ProfileTransferStatus", related_query_name="transfer_status_related"
+    )
+    transfer_requests = GenericRelation(
+        "ProfileTransferRequest", related_query_name="transfer_requests"
     )
 
     def get_absolute_url(self):
@@ -871,7 +874,7 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         blank=True,
     )
-    # TODO: lremkowicz: deprecated due to https://playmakerpro.atlassian.net/browse/PM20-628
+    # TODO: lremkowicz: deprecated due to https://playmakerpro.atlassian.net/browse/PM20-628  # noqa: E501
     #  Transfer status moved to new model and this field have to be removed in future
     transfer_status = models.IntegerField(
         _("Status transferowy"),
@@ -2594,19 +2597,105 @@ class ProfileTransferStatus(models.Model):
         null=True,
         help_text=_("Contact email address for the transfer."),
     )
-    contact_phone_number = models.CharField(
-        _("Contact Phone Number"),
+    phone_number = models.CharField(
         max_length=15,
+        null=True,
+        blank=True,
+        help_text="Phone number for the transfer status.",
+    )
+    dial_code = models.CharField(
+        _("Dial Code"),
+        max_length=5,
         blank=True,
         null=True,
-        help_text=_("Contact phone number for the transfer."),
+        help_text=_("Country dial code for the phone number."),
     )
+    status = models.CharField(
+        max_length=255,
+        choices=definitions.TRANSFER_STATUS_CHOICES,
+        help_text="Defines a status of the transfer for the profile.",
+    )
+    league = models.ManyToManyField(
+        "clubs.League",
+        related_name="transfer_status",
+    )
+    additional_info = ArrayField(
+        models.CharField(
+            max_length=10,
+            choices=definitions.TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES,
+            help_text="Additional information about the transfer.",
+        ),
+        null=True,
+    )
+
+
+class ProfileTransferRequest(models.Model):
+    """
+    Represents a profile transfer request in the context of profile needs
+    (for example soccer clubs and coaches).
+
+    This model tracks transfer requests initiated by profiles
+    (coaches or club representatives) to request players for team participation.
+    """
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey("content_type", "object_id")
+
+    requesting_team = models.ForeignKey(
+        TeamContributor,
+        on_delete=models.CASCADE,
+        related_name="transfer_requests",
+        help_text="The team that is requesting the transfer.",
+    )
+    gender = models.CharField(
+        max_length=10, choices=(("M", "M"), ("F", "F")), help_text="Define team gender"
+    )
+
     status = models.CharField(
         max_length=255,
         null=True,
         blank=True,
-        choices=definitions.TRANSFER_STATUS_CHOICES,
+        choices=definitions.TRANSFER_REQUEST_STATUS_CHOICES,
         help_text="Defines a status of the transfer for the profile.",
+    )
+    position = models.CharField(
+        max_length=10,
+        choices=definitions.TRANSFER_REQUEST_POSITIONS_CHOICES,
+        help_text="Define team position",
+    )
+    number_of_trainings = models.CharField(
+        max_length=10,
+        choices=definitions.TRANSFER_REQUEST_TRAININGS_CHOICES,
+        help_text="Define number of trainings per week",
+    )
+    additional_info = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        choices=definitions.TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES,
+        help_text="Additional information about the transfer request.",
+    )
+    salary = models.CharField(
+        max_length=10,
+        choices=definitions.TRANSFER_REQUEST_SALARY_CHOICES,
+        help_text="Define salary",
+    )
+    contact_email = models.EmailField(
+        null=True, blank=True, help_text="Email address of the contact person."
+    )
+    phone_number = models.CharField(
+        max_length=15,
+        null=True,
+        blank=True,
+        help_text="Phone number for the transfer request.",
+    )
+    dial_code = models.CharField(
+        _("Dial Code"),
+        max_length=5,
+        blank=True,
+        null=True,
+        help_text=_("Country dial code for the phone number."),
     )
 
 
