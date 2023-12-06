@@ -4,14 +4,36 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from inquiries import models as _models
-from users.api.serializers import BaseUserDataSerializer
+from profiles.api.serializers import (
+    PlayerProfilePositionSerializer as _PlayerProfilePositionSerializer,
+)
+from users.api.serializers import BaseUserDataSerializer as _BaseUserDataSerializer
 
 User = get_user_model()
 
 
+class InquiryUserDataSerializer(_BaseUserDataSerializer):
+    age = serializers.IntegerField(read_only=True, source="userpreferences.age")
+    custom_role = serializers.CharField(
+        source="profile.profile_based_custom_role", read_only=True
+    )
+    uuid = serializers.UUIDField(source="profile.uuid", read_only=True)
+    player_position = _PlayerProfilePositionSerializer(
+        source="profile.get_main_position", read_only=True
+    )
+
+    class Meta(_BaseUserDataSerializer.Meta):
+        fields = _BaseUserDataSerializer.Meta.fields + (
+            "age",
+            "custom_role",
+            "uuid",
+            "player_position",
+        )
+
+
 class InquiryRequestSerializer(serializers.ModelSerializer):
-    sender_object = BaseUserDataSerializer(read_only=True, source="sender")
-    recipient_object = BaseUserDataSerializer(read_only=True, source="recipient")
+    sender_object = InquiryUserDataSerializer(read_only=True, source="sender")
+    recipient_object = InquiryUserDataSerializer(read_only=True, source="recipient")
     recipient_profile_uuid = serializers.UUIDField(write_only=True)
 
     class Meta:
