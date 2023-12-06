@@ -3431,7 +3431,7 @@ components:
           type: string
         picture:
           type: string
-        declared_role:
+        role:
           type: string
       required:
         - id
@@ -6000,6 +6000,20 @@ components:
         - refresh_token
         - id
 
+    InquirySpecifiedUserBaseData:
+      allOf:
+        - $ref: '#/components/schemas/BaseUserData'
+        - type: object
+          properties:
+            uuid:
+              type: string
+              format: uuid
+            custom_role:
+              type: string
+            age:
+              type: integer
+            player_position:
+              $ref: '#/components/schemas/PlayerPosition'
     InquiryRequest:
       type: object
       properties:
@@ -6023,9 +6037,9 @@ components:
           type: string
           readOnly: true
         sender_object:
-          $ref: '#/components/schemas/BaseUserData'
+          $ref: '#/components/schemas/InquirySpecifiedUserBaseData'
         recipient_object:
-          $ref: '#/components/schemas/BaseUserData'
+          $ref: '#/components/schemas/InquirySpecifiedUserBaseData'
         sender:
           type: integer
           description: Sender ID

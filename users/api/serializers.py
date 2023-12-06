@@ -96,6 +96,7 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
 
 class BaseUserDataSerializer(serializers.ModelSerializer):
     picture = serializers.CharField(source="picture_url", read_only=True)
+    role = serializers.CharField(read_only=True, source="declared_role")
 
     class Meta:
         model = User
@@ -106,7 +107,7 @@ class BaseUserDataSerializer(serializers.ModelSerializer):
             "last_login",
             "last_activity",
             "picture",
-            "declared_role",
+            "role",
         )
         extra_kwargs = {
             "last_activity": {"read_only": True},

@@ -591,6 +591,15 @@ class BaseProfile(models.Model, EventLogMixin):
     def _get_verification_field_values(self, obj):
         return [getattr(obj, field) for field in self.VERIFICATION_FIELDS]
 
+    @property
+    def profile_based_custom_role(self) -> typing.Optional[str]:
+        """
+        Get custom profile role based on profile type.
+        For now available for: Coach, Club, Guest
+        Must be implemented in sub-profile classes
+        """
+        return
+
     def __str__(self):
         return f"{self.user}'s {self.PROFILE_TYPE} profile"
 
@@ -750,6 +759,11 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     def attached(self):
         """proxy method to pass if profile has id"""
         return self.has_data_id()
+
+    @property
+    def get_main_position(self) -> "PlayerProfilePosition":
+        """Get main player position"""
+        return self.player_positions.filter(is_main=True).first()
 
     @property
     def get_team_object(self):
@@ -1555,6 +1569,13 @@ class ClubProfile(BaseProfile):
         ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
     )
 
+    @property
+    def profile_based_custom_role(self) -> typing.Optional[str]:
+        """
+        Get custom role of ClubProfile
+        """
+        return self.custom_club_role
+
     class Meta:
         verbose_name = "Club Profile"
         verbose_name_plural = "Club Profiles"
@@ -1765,6 +1786,13 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     data = models.JSONField(null=True, blank=True)
 
+    @property
+    def profile_based_custom_role(self) -> typing.Optional[str]:
+        """
+        Get custom role of CoachProfile
+        """
+        return self.custom_coach_role
+
     def get_season_games_data(self, season: str) -> bool:
         if (
             self.data
@@ -1932,6 +1960,13 @@ class GuestProfile(BaseProfile):
     custom_role = models.CharField(
         _("Custom Role"), max_length=255, blank=True, null=True
     )
+
+    @property
+    def profile_based_custom_role(self) -> typing.Optional[str]:
+        """
+        Get custom role of GuestProfile
+        """
+        return self.custom_role
 
     class Meta:
         verbose_name = "Guest Profile"
