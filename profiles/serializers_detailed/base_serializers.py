@@ -247,6 +247,8 @@ class PhoneNumberField(serializers.Field):
     #  PhoneNumberField from ManagerProfileSerializer.
     """
 
+    dial_code = serializers.IntegerField()
+
     def to_representation(self, obj: ProfileTransferStatus) -> dict:
         """
         Converts the ManagerProfile instance's phone number information into
@@ -314,8 +316,19 @@ class ProfileTransferStatusSerializer(serializers.ModelSerializer):
                 many=True,
             )
             serializer.is_valid()
-            data.append(serializer.data)
+            data.append(serializer.data[0])
         return data
+
+    def validate_phone_number(self, phone_number: dict) -> dict:
+        """Validate phone number field"""
+        if not isinstance(phone_number, dict):
+            raise ValidationError(detail="Phone number must be a dict")
+        if dial_code := phone_number.get("dial_code"):
+            try:
+                int(phone_number.get("dial_code"))
+            except ValueError:
+                raise ValidationError(detail="Dial code must be an integer")
+        return phone_number
 
     def update(self, instance: ProfileTransferStatus, validated_data: dict):
         """

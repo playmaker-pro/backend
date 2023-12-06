@@ -2603,9 +2603,8 @@ class ProfileTransferStatus(models.Model):
         blank=True,
         help_text="Phone number for the transfer status.",
     )
-    dial_code = models.CharField(
+    dial_code = models.IntegerField(
         _("Dial Code"),
-        max_length=5,
         blank=True,
         null=True,
         help_text=_("Country dial code for the phone number."),
