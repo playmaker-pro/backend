@@ -1155,6 +1155,13 @@ paths:
               type: string
             description: "Country, like: ?country=PL&country=UA"
         - in: query
+          name: licence
+          schema:
+            type: array
+            items:
+              type: string
+            description: "Licence, like: ?licence=UEFA+A&licence=UEFA+B"
+        - in: query
           name: not_me
           schema:
             type: string

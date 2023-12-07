@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
 from profiles.managers import ProfileManager
-from profiles.models import PlayerProfile
+from profiles.models import LicenceType, PlayerProfile
 from profiles.services import ProfileService
 from profiles.utils import get_past_date
 from utils import factories, get_current_season
@@ -312,6 +312,42 @@ class TestProfileListAPI(APITestCase):
             },
         )
         assert response.status_code == 400
+
+    def test_get_bulk_profiles_filter_licence(self) -> None:
+        """test filter licence"""
+        player_profile = factories.PlayerProfileFactory.create()
+        licence_type = LicenceType.objects.get(name="UEFA PRO")
+        licence = factories.CoachLicenceFactory(
+            owner=player_profile.user, licence=licence_type
+        )
+
+        response = self.client.get(
+            self.url,
+            {
+                "role": "P",
+                "licence": [licence.licence.name],
+            },
+        )
+        assert len(response.data["results"]) == 1
+
+    def test_get_bulk_profiles_filter_licence_invalid(self) -> None:
+        """
+        Test the filter licence functionality with an invalid licence name to ensure that
+        the validation logic works correctly and the API responds appropriately.
+        """
+        factories.PlayerProfileFactory.create()
+        invalid_licence_name = "INVALID_LICENCE"
+        response = self.client.get(
+            self.url,
+            {
+                "role": "P",
+                "licence": [invalid_licence_name],
+            },
+        )
+
+        assert response.status_code == 400
+        expected_error_msg = "Invalid value for field: licence in model: LicenceType. Field must be one of:"
+        assert expected_error_msg in response.data["detail"]
 
 
 @override_settings(SUSPEND_SIGNALS=True)
