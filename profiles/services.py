@@ -20,7 +20,7 @@ from clubs.models import Club as CClub
 from clubs.models import Team as CTeam
 from profiles import errors, models, utils
 from profiles.api import errors as api_errors
-from profiles.models import REVERSED_MODEL_MAP, ProfileTransferStatus
+from profiles.models import REVERSED_MODEL_MAP, LicenceType, ProfileTransferStatus
 from roles.definitions import CLUB_ROLES, PROFILE_TYPE_MAP, TRANSFER_STATUS_CHOICES
 from utils import get_current_season
 
@@ -609,6 +609,20 @@ class ProfileFilterService:
             user__userpreferences__birth_date__lte=player_min_age,
             user__userpreferences__birth_date__gte=player_max_age,
         )
+
+    @staticmethod
+    def validate_licence_keys(licence_keys: typing.List[str]) -> None:
+        """
+        Validates whether the provided licence names exist in the available licence names.
+
+        This function checks each name in the provided list of licence names against the
+        list of available licence names obtained from the LicenceType model. If any name
+        is not found in the available names, a ValueError is raised.
+        """
+        available_keys = LicenceType.get_available_licence_names()
+        for name in licence_keys:
+            if name not in available_keys:
+                raise ValueError(f"Invalid licence name: {name}")
 
 
 class PlayerProfilePositionService:

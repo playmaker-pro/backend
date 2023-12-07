@@ -1600,6 +1600,16 @@ class LicenceType(models.Model):
     def __str__(self):
         return f"{self.name}"
 
+    @staticmethod
+    def get_available_licence_names() -> typing.List[str]:
+        """
+        Retrieves a list of available licence names from the LicenceType model.
+
+        This method queries the LicenceType model, excluding any entries where
+        the key is null, and returns a list of unique names of the licences.
+        """
+        return list(LicenceType.objects.exclude(key__isnull=True).values_list('name', flat=True))
+
     class Meta:
         ordering = ["order"]
 

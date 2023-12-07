@@ -1,4 +1,5 @@
 import random
+import typing
 from functools import cached_property
 
 from django.db.models import QuerySet
@@ -30,6 +31,7 @@ class ProfileListAPIFilter(APIFilter):
         "gender": api_utils.convert_str_list,
         "shuffle": api_utils.convert_bool,
         "not_me": api_utils.convert_bool,
+        "licence": api_utils.convert_str_list,
     }
 
     @cached_property
@@ -99,6 +101,7 @@ class ProfileListAPIFilter(APIFilter):
         self.filter_localization()
         self.filter_country()
         self.filter_language()
+        self.filter_licence()
 
     def define_query_params(self) -> None:
         """Validate query_params and save as self.query_params"""
@@ -127,10 +130,7 @@ class ProfileListAPIFilter(APIFilter):
 
     def not_me_filter(self) -> None:
         """Exclude current user from queryset if not_me param is sent"""
-        if (
-            self.query_params.get("not_me")
-            and self.request.user.is_authenticated
-        ):
+        if self.query_params.get("not_me") and self.request.user.is_authenticated:
             self.queryset = self.queryset.exclude(user=self.request.user)
 
     def filter_country(self) -> None:
@@ -180,3 +180,18 @@ class ProfileListAPIFilter(APIFilter):
 
         if max_age := self.query_params.get("max_age"):
             self.queryset = self.service.filter_max_age(self.queryset, max_age)
+
+    def filter_licence(self) -> None:
+        """Filter queryset by licence"""
+        licence_names: typing.List[str] = self.query_params.get("licence", [])
+        if licence_names:
+            try:
+                services.ProfileFilterService.validate_licence_keys(licence_names)
+            except ValueError:
+                available_names = models.LicenceType.get_available_licence_names()
+                raise api_errors.ChoiceFieldValueErrorHTTPException(
+                    field="licence", choices=available_names, model="LicenceType"
+                )
+            self.queryset = self.queryset.filter(
+                user__licences__licence__name__in=licence_names
+            ).distinct()
