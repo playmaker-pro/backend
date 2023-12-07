@@ -62,9 +62,9 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
             if cross_request := _models.InquiryRequest.objects.filter(
                 sender=recipient, recipient=sender
             ).first():
-                if cross_request.status in _models.InquiryRequest.RESOLVED_STATES:
+                if cross_request.status == _models.InquiryRequest.STATUS_ACCEPTED:
                     raise serializers.ValidationError(
-                        f"This user has already replied to your request (status={cross_request.status})."
+                        "This user has already accepted your request."
                     )
                 self._accept_cross_request(cross_request)
 
