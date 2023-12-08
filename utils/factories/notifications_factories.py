@@ -11,7 +11,7 @@ class NotificationFactory(factory.django.DjangoModelFactory):
         model = Notification
 
     user = factory.SubFactory(user_factories.UserFactory)
-    notification_type = factory.Iterator(["BI", "CO", "MA", "FO", "SE"])
+    notification_type = factory.Iterator(Notification.NotificationType.values)
     event_type = factory.Faker("word")
     details = factory.Dict({})
     content = factory.Faker("sentence")

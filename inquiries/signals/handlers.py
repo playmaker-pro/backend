@@ -1,6 +1,7 @@
 from datetime import timedelta
 from typing import Any, Optional, Type
 
+from django.conf import settings
 from django.db.models.base import ModelBase
 from django.dispatch import receiver
 from django.utils import timezone
@@ -64,7 +65,9 @@ def handle_inquiry_rejected(sender: Type[ModelBase], **kwargs: Any) -> None:
 
 
 @receiver(inquiry_pool_exhausted)
-def handle_inquiry_pool_exhausted(sender, **kwargs) -> None:
+def handle_inquiry_pool_exhausted(
+    sender, user: settings.AUTH_USER_MODEL, force: bool = False, **kwargs
+) -> None:
     """
     Signal handler for when a user's inquiry pool is exhausted.
 
@@ -72,25 +75,23 @@ def handle_inquiry_pool_exhausted(sender, **kwargs) -> None:
     a notification for exhausting the inquiry pool has already been sent to the user in the last month.
     If not, it sends a new notification to inform the user that their inquiry pool is depleted.
     """
-    user = kwargs.get("user")
-    if user:
-        # Calculate the cutoff date for a month ago
-        one_month_ago = timezone.now() - timedelta(days=30)
+    # Calculate the cutoff date for a month ago
+    one_month_ago = timezone.now() - timedelta(days=30)
 
-        # Check if a 'query_pool_exhausted' notification has been sent in the last month
-        recent_notification_exists = Notification.objects.filter(
+    # Check if a 'query_pool_exhausted' notification has been sent in the last month
+    recent_notification_exists = Notification.objects.filter(
+        user=user,
+        event_type=Notification.EventType.QUERY_POOL_EXHAUSTED,
+        created_at__gte=one_month_ago,
+    ).exists()
+
+    # If no recent notification exists, send a new one
+    if not recent_notification_exists or force:
+        NotificationService.create_user_associated_notification(
             user=user,
-            event_type="query_pool_exhausted",
-            created_at__gte=one_month_ago,
-        ).exists()
-
-        # If no recent notification exists, send a new one
-        if not recent_notification_exists:
-            NotificationService.create_user_associated_notification(
-                user=user,
-                event_type="query_pool_exhausted",
-                notification_type="BI",
-            )
+            event_type=Notification.EventType.QUERY_POOL_EXHAUSTED,
+            notification_type=Notification.NotificationType.BUILT_IN,
+        )
 
 
 @receiver(inquiry_restored)
@@ -106,8 +107,8 @@ def handle_inquiry_restored(sender, **kwargs) -> None:
     if inquiry_request:
         NotificationService.create_user_associated_notification(
             user=inquiry_request.sender,
-            event_type="inquiry_request_restored",
-            notification_type="BI",
+            event_type=Notification.EventType.INQUIRY_REQUEST_RESTORED,
+            notification_type=Notification.NotificationType.BUILT_IN,
         )
 
 
@@ -123,6 +124,6 @@ def handle_inquiry_reminder(sender, **kwargs) -> None:
     if inquiry_request:
         NotificationService.create_user_associated_notification(
             user=inquiry_request.recipient,
-            event_type="pending_inquiry_decision",
-            notification_type="BI",
+            event_type=Notification.EventType.PENDING_INQUIRY_DECISION,
+            notification_type=Notification.NotificationType.BUILT_IN,
         )

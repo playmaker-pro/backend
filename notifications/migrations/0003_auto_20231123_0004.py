@@ -1,28 +1,30 @@
 from django.db import migrations
 
+from notifications.models import Notification as _Notification
+
 
 def add_notification_templates(apps, schema_editor):
     NotificationTemplate = apps.get_model("notifications", "NotificationTemplate")
 
     templates = [
         {
-            "event_type": "query_pool_exhausted",
-            "notification_type": "BI",
+            "event_type": _Notification.EventType.QUERY_POOL_EXHAUSTED,
+            "notification_type": _Notification.NotificationType.BUILT_IN,
             "content_template": "Pula zapytań wyczerpana. Zwiększ limit.",
         },
         {
-            "event_type": "inquiry_request_restored",
-            "notification_type": "BI",
+            "event_type": _Notification.EventType.INQUIRY_REQUEST_RESTORED,
+            "notification_type": _Notification.NotificationType.BUILT_IN,
             "content_template": "Twoja pula zapytań została zwiększona.",
         },
         {
-            "event_type": "pending_inquiry_decision",
-            "notification_type": "BI",
+            "event_type": _Notification.EventType.PENDING_INQUIRY_DECISION,
+            "notification_type": _Notification.NotificationType.BUILT_IN,
             "content_template": "Zapytania oczekują na twoją decyzję.",
         },
         {
-            "event_type": "reward_sender",
-            "notification_type": "BI",
+            "event_type": _Notification.EventType.REWARD_SENDER,
+            "notification_type": _Notification.NotificationType.BUILT_IN,
             "content_template": "Twoja pula zapytań została zwiększona",
         },
     ]
