@@ -1,4 +1,6 @@
+import logging as _logging
 import re as _re
+import traceback as _traceback
 from typing import List as _List
 
 from django.conf import settings
@@ -6,6 +8,8 @@ from django.core.mail import send_mail
 from django.utils.translation import gettext_lazy as _
 
 from mailing.schemas import EmailSchema as _EmailSchema
+
+logger: _logging.Logger = _logging.getLogger("mailing")
 
 
 class MailingService:
@@ -32,16 +36,19 @@ class MailingService:
         """Return email sender."""
         return self._schema.sender
 
-    @classmethod
-    def send_mail(cls, schema: _EmailSchema) -> None:
-        """Send email based on schema."""
-        instance = cls(schema)
-        send_mail(
-            subject=instance._subject,
-            message=instance._body,
-            from_email=instance._sender,
-            recipient_list=instance._recipients,
-        )
+    def send_mail(self) -> None:
+        """Send email based on schema. Log error if sending failed."""
+        try:
+            send_mail(
+                subject=self._subject,
+                message=self._body,
+                from_email=self._sender,
+                recipient_list=self._recipients,
+            )
+        except Exception as e:
+            logger.error(f"[ERROR]\n{self._schema.log}\n{e}\n{_traceback.format_exc()}")
+        else:
+            logger.info(f"[SUCCESS]\n{self._schema.log}")
 
 
 class MessageContentParser:

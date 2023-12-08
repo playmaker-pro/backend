@@ -21,8 +21,6 @@ from inquiries.utils import InquiryMessageContentParser as _ContentParser
 from mailing.models import EmailTemplate as _EmailTemplate
 from mailing.schemas import EmailSchema as _EmailSchema
 
-# from notifications.mail import request_accepted, request_declined, request_new
-
 logger = logging.getLogger("inquiries")
 
 
@@ -101,7 +99,11 @@ class UserInquiryLog(models.Model):
     )
 
     def __str__(self) -> str:
-        return f"{self.log_owner.user} -- {self.created_at_readable} -- {self.log_message_body}"
+        return (
+            f"{self.log_owner.user} -- "
+            f"{self.created_at_readable} -- "
+            f"{self.log_message_body}"
+        )
 
     @property
     def created_at_readable(self) -> str:
@@ -114,6 +116,7 @@ class UserInquiryLog(models.Model):
             body=self.email_body,
             subject=self.email_title,
             recipients=[self.log_owner.user.email],
+            type=self.message.log_type,
         )
 
     def send_email_to_user(self) -> None:
@@ -206,6 +209,13 @@ class InquiryPlan(models.Model):
 
 
 class UserInquiry(models.Model):
+    class UserInquiryManager(models.Manager):
+        def limit_reached(self) -> models.QuerySet:
+            """Get users with limit reached"""
+            return self.filter(counter__gte=models.F("plan__limit"))
+
+    objects = UserInquiryManager()
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True
     )
@@ -237,10 +247,41 @@ class UserInquiry(models.Model):
 
     def increment(self):
         """Increase by one counter"""
-        self.counter += 1
-        self.save()
-        if self.counter >= self.limit:
-            inquiry_pool_exhausted.send(sender=self.__class__, user=self.user)
+        if self.counter < self.plan.limit:
+            self.counter += 1
+            self.save(update_fields=("counter",))
+        self.check_limit_to_notify()
+
+    def check_limit_to_notify(self) -> None:
+        """Decide user should be notified about reaching the limit"""
+        if self.counter == self.plan.limit:
+            self.notify_about_limit(force=True)
+
+    def notify_about_limit(self, force: bool = False) -> None:
+        """Notify user about reaching the limit"""
+        self.mail_about_limit(force_send=force)
+        self.notification_about_limit(force_send=force)
+
+    def mail_about_limit(self, force_send: bool = False) -> None:
+        """Send email notification about reaching the limit"""
+        if (
+            _EmailTemplate.objects.can_sent_inquiry_limit_reached_email(self.user)
+            or force_send
+        ):
+            template = _EmailTemplate.objects.inquiry_limit_reached_template()
+            schema = _EmailSchema(
+                body=template.body,
+                subject=template.subject,
+                recipients=[self.user.email],
+                type=_EmailTemplate.EmailType.INQUIRY_LIMIT,
+            )
+            _EmailTemplate.send_email(schema)
+
+    def notification_about_limit(self, force_send: bool = False) -> None:
+        """Create notification about reaching the limit"""
+        inquiry_pool_exhausted.send(
+            sender=self.__class__, user=self.user, force=force_send
+        )
 
     def decrement(self):
         """Decrease by one counter"""

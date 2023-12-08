@@ -100,7 +100,7 @@ class InquirySignalTests(TestCase):
         # Assert that a notification was created
         notification_exists = Notification.objects.filter(
             user=self.sender,
-            event_type="query_pool_exhausted",
+            event_type=Notification.EventType.QUERY_POOL_EXHAUSTED,
             created_at__gte=timezone.now() - timezone.timedelta(days=30),
         ).exists()
         assert notification_exists
@@ -122,7 +122,7 @@ class InquirySignalTests(TestCase):
         # Assert that a notification was created for the recipient
         notification_exists = Notification.objects.filter(
             user=self.recipient,
-            event_type="pending_inquiry_decision",
+            event_type=Notification.EventType.PENDING_INQUIRY_DECISION,
         ).exists()
         assert notification_exists
 
@@ -146,6 +146,6 @@ class InquirySignalTests(TestCase):
         # Assert that a notification was created for the sender
         notification_exists = Notification.objects.filter(
             user=self.sender,
-            event_type="inquiry_request_restored",
+            event_type=Notification.EventType.INQUIRY_REQUEST_RESTORED,
         ).exists()
         self.assertTrue(notification_exists)

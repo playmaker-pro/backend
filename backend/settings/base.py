@@ -535,6 +535,12 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "filename": join(LOGFILE_ROOT, "inquiries.log"),
                 "formatter": "verbose",
             },
+            "mailing_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "mailing.log"),
+                "formatter": "verbose",
+            },
         },
         "loggers": {
             "profiles": {
@@ -564,6 +570,10 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
             },
             "inquiries": {
                 "handlers": ["console", "inquiries_file"],
+                "level": "DEBUG",
+            },
+            "mailing": {
+                "handlers": ["console", "mailing_file"],
                 "level": "DEBUG",
             },
         },

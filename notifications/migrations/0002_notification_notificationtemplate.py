@@ -4,24 +4,26 @@ import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
 
+from notifications.models import Notification as _Notification
+
 
 def create_notification_templates(apps, schema_editor) -> None:
     NotificationTemplate = apps.get_model("notifications", "NotificationTemplate")
 
     templates = [
         {
-            "event_type": "accept_inquiry",
-            "notification_type": "CO",
+            "event_type": _Notification.EventType.ACCEPT_INQUIRY,
+            "notification_type": _Notification.NotificationType.CONTACTS,
             "content_template": "{recipient_name} #zaakceptował|zaakceptowała# zapytanie o kontakt.",
         },
         {
-            "event_type": "reject_inquiry",
-            "notification_type": "CO",
+            "event_type": _Notification.EventType.REJECT_INQUIRY,
+            "notification_type": _Notification.NotificationType.CONTACTS,
             "content_template": "{recipient_name} #odrzucił|odrzuciła# zapytanie o kontakt.",
         },
         {
-            "event_type": "receive_inquiry",
-            "notification_type": "CO",
+            "event_type": _Notification.EventType.RECEIVE_INQUIRY,
+            "notification_type": _Notification.NotificationType.CONTACTS,
             "content_template": "{sender_name} #wysłał|wysłała# zapytanie o kontakt.",
         },
     ]
@@ -30,38 +32,83 @@ def create_notification_templates(apps, schema_editor) -> None:
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
+        ("contenttypes", "0002_remove_content_type_name"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('notifications', '0001_initial'),
+        ("notifications", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='NotificationTemplate',
+            name="NotificationTemplate",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('event_type', models.CharField(max_length=100, unique=True)),
-                ('notification_type', models.CharField(max_length=50)),
-                ('content_template', models.TextField(help_text='Use placeholders for dynamic content')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("event_type", models.CharField(max_length=100, unique=True)),
+                ("notification_type", models.CharField(max_length=50)),
+                (
+                    "content_template",
+                    models.TextField(help_text="Use placeholders for dynamic content"),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Notification',
+            name="Notification",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('notification_type', models.CharField(choices=[('BI', 'built-in'), ('CO', 'contacts'), ('MA', 'marketing'), ('FO', 'follow'), ('SE', 'seasonal')], max_length=2)),
-                ('event_type', models.CharField(max_length=100)),
-                ('details', models.JSONField(blank=True, null=True)),
-                ('content', models.TextField()),
-                ('is_read', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('object_id', models.PositiveIntegerField()),
-                ('content_type', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='contenttypes.contenttype')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notifications', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "notification_type",
+                    models.CharField(
+                        choices=[
+                            ("BI", "built-in"),
+                            ("CO", "contacts"),
+                            ("MA", "marketing"),
+                            ("FO", "follow"),
+                            ("SE", "seasonal"),
+                        ],
+                        max_length=2,
+                    ),
+                ),
+                ("event_type", models.CharField(max_length=100)),
+                ("details", models.JSONField(blank=True, null=True)),
+                ("content", models.TextField()),
+                ("is_read", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("object_id", models.PositiveIntegerField()),
+                (
+                    "content_type",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="contenttypes.contenttype",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="notifications",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
-        migrations.RunPython(create_notification_templates)
+        migrations.RunPython(create_notification_templates),
     ]

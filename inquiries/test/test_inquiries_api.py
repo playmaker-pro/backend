@@ -47,10 +47,10 @@ class TestInquiriesAPI(APITestCase):
         self.sender_manager = UserManager(self.client)
         self.recipient_manager = UserManager(self.client)
         self.sender_obj = self.sender_manager.create_superuser(
-            email="sender@sender.com", userpreferences={'gender': 'M'}
+            email="sender@sender.com", userpreferences={"gender": "M"}
         )
         self.recipient_obj = self.recipient_manager.create_superuser(
-            email="recipient@recipient.com", userpreferences={'gender': 'K'}
+            email="recipient@recipient.com", userpreferences={"gender": "K"}
         )
         self.sender_headers = self.sender_manager.get_headers()
         self.recipient_headers = self.recipient_manager.get_headers()
@@ -115,7 +115,9 @@ class TestInquiriesAPI(APITestCase):
         assert notifications_count_after == notifications_count_before + 1
         new_notification = Notification.objects.latest("id")
         assert new_notification.user == self.sender_obj
-        assert new_notification.notification_type == "CO"
+        assert (
+            new_notification.notification_type == Notification.NotificationType.CONTACTS
+        )
 
         contacts_response = self.client.get(
             URL_MY_CONTACTS,

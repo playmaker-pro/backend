@@ -1,4 +1,5 @@
 import typing
+from enum import Enum as _Enum
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -19,17 +20,26 @@ class NotificationSetting(models.Model):
 
 
 class Notification(models.Model):
-    NOTIFICATION_TYPES = (
-        ("BI", "built-in"),
-        ("CO", "contacts"),
-        ("MA", "marketing"),
-        ("FO", "follow"),
-        ("SE", "seasonal"),
-    )
+    class NotificationType(models.TextChoices):
+        BUILT_IN = "BI", "built-in"
+        CONTACTS = "CO", "contacts"
+        MARKETING = "MA", "marketing"
+        FOLLOW = "FO", "follow"
+        SEASONAL = "SE", "seasonal"
+
+    class EventType(str, _Enum):
+        ACCEPT_INQUIRY = "accept_inquiry"
+        REJECT_INQUIRY = "reject_inquiry"
+        RECEIVE_INQUIRY = "receive_inquiry"
+        QUERY_POOL_EXHAUSTED = "query_pool_exhausted"
+        INQUIRY_REQUEST_RESTORED = "inquiry_request_restored"
+        PENDING_INQUIRY_DECISION = "pending_inquiry_decision"
+        REWARD_SENDER = "reward_sender"
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications"
     )
-    notification_type = models.CharField(max_length=2, choices=NOTIFICATION_TYPES)
+    notification_type = models.CharField(max_length=2, choices=NotificationType.choices)
     event_type = models.CharField(max_length=100)
     details = JSONField(null=True, blank=True)
     content = models.TextField()

@@ -1,6 +1,7 @@
 from django.urls import reverse
 from rest_framework.test import APIClient, APITestCase
 
+from notifications.models import Notification
 from utils.factories import PlayerProfileFactory
 from utils.factories.notifications_factories import NotificationFactory
 
@@ -34,7 +35,7 @@ class UserNotificationViewTests(APITestCase):
         NotificationFactory(
             user=self.user,
             event_type="sample_event",
-            notification_type="BI",
+            notification_type=Notification.NotificationType.BUILT_IN,
             details={"event_type": "accept_inquiry"},
         )
         url = reverse(
@@ -60,7 +61,10 @@ class UserNotificationViewTests(APITestCase):
             for field in expected_fields:
                 assert field in notification
             assert notification["event_type"] == "sample_event"
-            assert notification["notification_type"] == "BI"
+            assert (
+                notification["notification_type"]
+                == Notification.NotificationType.BUILT_IN
+            )
 
     def test_mark_notification_as_read(self) -> None:
         """

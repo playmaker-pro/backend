@@ -126,7 +126,8 @@ class NotificationService:
 
         # Fetch profile-specific notifications
         profile_notifications_query = Notification.objects.filter(
-            user=user, content_type=ContentType.objects.get_for_model(profile_instance.__class__)
+            user=user,
+            content_type=ContentType.objects.get_for_model(profile_instance.__class__),
         ).order_by("-created_at")
 
         # Combine both user and profile-specific querysets
@@ -154,9 +155,9 @@ class NotificationService:
         # Create notification for the recipient about the new inquiry
         NotificationService.create_profile_associated_notification(
             user=inquiry_request.recipient,
-            event_type="receive_inquiry",
+            event_type=Notification.EventType.RECEIVE_INQUIRY,
             profile_uuid=profile_uuid,
-            notification_type="CO",
+            notification_type=Notification.NotificationType.CONTACTS,
             extra_details={
                 "inquiry_id": inquiry_request.id,
                 "sender_name": inquiry_request.sender.display_full_name,
@@ -171,8 +172,8 @@ class NotificationService:
         # Create notification for the sender about the inquiry acceptance
         NotificationService.create_user_associated_notification(
             user=inquiry_request.sender,
-            event_type="accept_inquiry",
-            notification_type="CO",
+            event_type=Notification.EventType.ACCEPT_INQUIRY,
+            notification_type=Notification.NotificationType.CONTACTS,
             extra_details={
                 "inquiry_id": inquiry_request.id,
                 "recipient_name": inquiry_request.recipient.display_full_name,
@@ -187,8 +188,8 @@ class NotificationService:
         # Create notification for the sender about the inquiry rejection
         NotificationService.create_user_associated_notification(
             user=inquiry_request.sender,
-            event_type="reject_inquiry",
-            notification_type="CO",
+            event_type=Notification.EventType.REJECT_INQUIRY,
+            notification_type=Notification.NotificationType.CONTACTS,
             extra_details={
                 "inquiry_id": inquiry_request.id,
                 "recipient_name": inquiry_request.recipient.display_full_name,
