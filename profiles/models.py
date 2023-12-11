@@ -2479,7 +2479,7 @@ class TeamContributor(models.Model):
         ("jesienna", "jesienna"),
     ]
 
-    team_history = models.ManyToManyField("clubs.TeamHistory")
+    team_history = models.ManyToManyField("clubs.Team", help_text="Teams associated with the contributor.")
     profile_uuid = models.UUIDField(
         db_index=True, help_text="UUID of the related profile."
     )

@@ -1,16 +1,16 @@
 import datetime
 from functools import cached_property, lru_cache
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 from urllib.parse import urljoin
 
 from address.models import AddressField
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
-from django.contrib.contenttypes.fields import GenericRelation
 
 from external_links.models import ExternalLinks
 from mapper.models import Mapper
@@ -255,8 +255,6 @@ class Club(models.Model, MappingMixin):
         null=True,
     )
 
-    labels = GenericRelation("labels.Label")
-
     def get_permalink(self):
         return reverse("clubs:show_club", kwargs={"slug": self.slug})
 
@@ -288,10 +286,15 @@ class Club(models.Model, MappingMixin):
 
 
 class LeagueHistory(models.Model):
+    name = models.CharField(
+        _("Plays name"),
+        max_length=255,
+        help_text="Displayed Name of plays",
+        null=True,
+    )
     season = models.ForeignKey(
         "Season", on_delete=models.SET_NULL, null=True, blank=True
     )
-
     index = models.CharField(max_length=255, null=True, blank=True)
     league = models.ForeignKey(
         "League", on_delete=models.CASCADE, related_name="historical"
@@ -334,6 +337,15 @@ class LeagueHistory(models.Model):
     )
     year = models.IntegerField(
         null=True, blank=True, help_text="Year the league history represents."
+    )
+    voivodeship_obj = models.ForeignKey(
+        Voivodeships,
+        verbose_name=_("Województwo"),
+        help_text="Wybierz województwo.",
+        max_length=20,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     def __str__(self):
@@ -411,6 +423,10 @@ class SectionGrouping(models.Model):
 
 
 class League(models.Model):
+    LEAGUE_TYPES = (
+        ("CUP", "Cup"),
+        ("LEAGUE", "League"),
+    )
     name = models.CharField(max_length=355, help_text="eg. Ekstraklasa")
     virtual = models.BooleanField(default=False)
     visible = models.BooleanField(
@@ -448,16 +464,6 @@ class League(models.Model):
         max_length=5,
         help_text="League code -- Deprecated, will be removed in future",
     )
-    parent = models.ForeignKey(
-        "self",
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name="childs",
-    )
-    highest_parent = models.ForeignKey(
-        "self", on_delete=models.SET_NULL, blank=True, null=True
-    )
     country = CountryField(
         _("Kraj"),
         default="PL",
@@ -478,13 +484,11 @@ class League(models.Model):
     rw = models.BooleanField(default=False, help_text="Spring round (runda wiosenna)")
     # auto calculated fields & flags
     slug = models.CharField(max_length=255, blank=True, editable=False)
-    isparent = models.BooleanField(default=False)
 
     zpn = models.CharField(max_length=255, null=True, blank=True)
     # @todo(rkesik): zpn mapped looks like deprecated. Shall we remove that?
     zpn_mapped = models.CharField(max_length=255, null=True, blank=True)
     index = models.CharField(max_length=255, null=True, blank=True)
-
     search_tokens = models.CharField(max_length=255, null=True, blank=True)
 
     scrapper_autocreated = models.BooleanField(default=False)
@@ -506,6 +510,12 @@ class League(models.Model):
         default=True,
         help_text="Flag indicating whether the league should be displayed in the API.",
     )
+    league_type = models.CharField(
+        max_length=10,
+        choices=LEAGUE_TYPES,
+        default="LEAGUE",
+        help_text="Type of the league (e.g., Cup, League)",
+    )
 
     def has_season_data(self, season_name: str) -> bool:
         """
@@ -524,6 +534,26 @@ class League(models.Model):
     )
 
     objects = LeagueManager()
+
+    isparent = models.BooleanField(
+        default=False,
+        help_text="Deprecated: This field is no longer used due to database schema changes. Refer to PM20-792.",
+    )
+    highest_parent = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        help_text="Deprecated: This field is no longer used due to database schema changes. Refer to PM20-792.",
+    )
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="childs",
+        help_text="Deprecated: This field is no longer used due to database schema changes. Refer to PM20-792.",
+    )
 
     @cached_property
     def get_childs(self):
@@ -566,6 +596,7 @@ class League(models.Model):
         if self.highest_parent:
             return self.highest_parent.display_league
 
+    # DEPRECATED: PM20-792
     @lru_cache
     def get_highest_parent(self):
         """Loops to find last (top) parent in a tree"""
@@ -603,11 +634,16 @@ class League(models.Model):
             else "#"
         )
 
+    # DEPRECATED: PM20-792
     def get_slug_value(self):
         return self.get_upper_parent_names(spliter="--")
 
     def save(self, *args, **kwargs):
-        # is a virtual parent?
+        # [Deprecation Notice]
+        # As of PM20-792, the concept of parent and child leagues has been deprecated.
+        # Now every League instance is considered a top-level entity.
+
+        # Deprecated: Check for virtual parent (historical usage)
         if self.is_parent:
             # isparent flag is due to historical reasons
             self.isparent = True
@@ -615,6 +651,7 @@ class League(models.Model):
             # and do not contains any league data.
             self.virtual = True
 
+        # Deprecated: Update parent league (historical usage)
         # We set a new/modify parent attribute
         # so we need to trigger our parent object
         # to recalclate data and set a proper flag.
@@ -622,11 +659,12 @@ class League(models.Model):
             self.parent.isparent = True
             self.parent.save()
 
-        unique_slugify(self, self.get_slug_value())
+        # unique_slugify(self, self.get_slug_value())
         # make search index
         self.search_tokens = self.build_search_tokens()
         super().save(*args, **kwargs)
 
+    # DEPRECATED: PM20-792
     def get_upper_parent_names(self, spliter=", "):
         name = self.name
         if self.parent:
@@ -655,6 +693,7 @@ class League(models.Model):
         if self.parent and self.id == self.parent.id:
             raise ValidationError({"parent": ["You cant have yourself as a parent!"]})
 
+    # DEPRECATED: PM20-792
     @property
     def full_name(self):
         return self.get_upper_parent_names()
@@ -718,6 +757,21 @@ class Team(models.Model, MappingMixin):
         "fizo",
         "diet_suplements",
     ]
+    AGE_CATEGORIES = (
+        ("U19", "U19"),
+        ("U17", "U17"),
+        ("U16", "U16"),
+        ("U15", "U15"),
+        ("U14", "U14"),
+        ("U13", "U13"),
+        ("U12", "U12"),
+        ("U11", "U11"),
+        ("U10", "U10"),
+        ("U9", "U9"),
+        ("U8", "U8"),
+        ("U7", "U7"),
+        ("U6", "U6"),
+    )
 
     mapping = models.TextField(
         null=True,
@@ -728,9 +782,22 @@ class Team(models.Model, MappingMixin):
     autocreated = models.BooleanField(default=False, help_text="Autocreated from s38")
     gender = models.ForeignKey(Gender, on_delete=models.SET_NULL, null=True, blank=True)
 
-    # That would be deprecated since TeamHistory introduction
     league = models.ForeignKey(League, on_delete=models.SET_NULL, null=True, blank=True)
 
+    league_history = models.ForeignKey(
+        "LeagueHistory",
+        on_delete=models.SET_NULL,
+        related_name="team_league_history",
+        null=True,
+        blank=True,
+    )
+    ageCategory = models.CharField(
+        max_length=3,
+        choices=AGE_CATEGORIES,
+        null=True,
+        blank=True,
+        help_text="Age category of the team.",
+    )
     seniority = models.ForeignKey(
         Seniority, on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -833,15 +900,14 @@ class Team(models.Model, MappingMixin):
             else ""
         )
 
+    # DEPRECATED: PM20-792
     @property
     def league_with_parents(self):
         return self.league.get_upper_parent_names(spliter=", ")
 
     @property
     def name_with_league_full(self):
-        return f"{self.name}" + (
-            f" ({self.league_with_parents})" if self.league else ""
-        )
+        return f"{self.name}" + (f" ({self.league.name})" if self.league else "")
 
     @property
     def display_team(self):
@@ -865,8 +931,10 @@ class Team(models.Model, MappingMixin):
     @property
     @supress_exception
     def display_league(self):
-        return self.league.display_league
+        leagues = self.league.all()
+        return ", ".join([league.display_league for league in leagues])
 
+    # DEPRECATED: PM20-792
     def get_latest_team_history(self) -> List["TeamHistory"]:
         sorted_team_histories = self.historical.all().order_by(
             "-league_history__season__name"
@@ -874,6 +942,7 @@ class Team(models.Model, MappingMixin):
         if sorted_team_histories:
             return sorted_team_histories.first()
 
+    # DEPRECATED: PM20-792
     @property
     @supress_exception
     def display_league_top_parent(self):
@@ -995,7 +1064,7 @@ class Team(models.Model, MappingMixin):
     class Meta:
         verbose_name = _("Team")
         verbose_name_plural = _("Teams")
-        unique_together = ("name", "club", "seniority", "league")
+        unique_together = ("name", "club", "seniority", "league_history")
 
     # common team fileds
     travel_refunds = models.BooleanField(_("Zwrot za dojazdy"), default=False)
@@ -1045,8 +1114,10 @@ class Team(models.Model, MappingMixin):
 
 
 class TeamHistory(models.Model):
-    """Definition of a  team history object
+    """
+    [Deprecated since PM20-792]
 
+    Definition of a  team history object
     Keeps track of a team history in a past
     """
 
