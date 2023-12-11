@@ -79,7 +79,10 @@ class ProfileVideoSerializer(serializers.ModelSerializer):
             return {}
 
     def __init__(self, *args, **kwargs) -> None:
-        """Override init to set url as not required if there is defined instance (UPDATE METHOD)"""
+        """
+        Override init to set url as not required if there is defined instance
+        (UPDATE METHOD)
+        """
         super().__init__(*args, **kwargs)
         if self.instance is not None:
             self.fields["url"].required = False
@@ -104,14 +107,18 @@ class ProfileVideoSerializer(serializers.ModelSerializer):
             raise NotOwnerOfAnObject
 
     def delete(self) -> None:
-        """Method do perform DELETE action on ProfileVideo object, validation included"""
+        """
+        Method do perform DELETE action on ProfileVideo object, validation included
+        """
         self.validate_user(self.instance.user)
         self.instance.delete()
 
     def update(
         self, instance: models.ProfileVideo, validated_data: dict
     ) -> models.ProfileVideo:
-        """Method do perform UPDATE action on ProfileVideo object, validation included"""
+        """
+        Method do perform UPDATE action on ProfileVideo object, validation included
+        """
         self.validate_user(instance.user)
         return super().update(instance, self.initial_data)
 
@@ -163,7 +170,8 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
             if min_year > release_year or release_year > max_year:
                 raise serializers.ValidationError(
                     {
-                        "error": f"Invalid date format, must be YYYY between {min_year} and {max_year}."
+                        "error": f"Invalid date format, must be YYYY between "
+                                 f"{min_year} and {max_year}."
                     }
                 )
 
@@ -334,7 +342,8 @@ class CourseSerializer(serializers.ModelSerializer):
         if release_year and (1970 > release_year or release_year > datetime.now().year):
             raise serializers.ValidationError(
                 {
-                    "error": f"Invalid date format, must be YYYY between 1970 and {datetime.now().year}."
+                    "error": f"Invalid date format, must be YYYY between 1970 "
+                             f"and {datetime.now().year}."
                 }
             )
 
@@ -372,10 +381,11 @@ class BaseTeamContributorInputSerializer(serializers.Serializer):
         """
         Initialize the serializer.
 
-        If the initial data contains a 'team_history' key, it marks the 'team_parameter',
-        'league_identifier', and 'season' fields as not required. This caters to the scenario
-        where if a team_history is provided, the other details are derived from it and thus
-        aren't required to be passed in separately.
+        If the initial data contains a 'team_history' key, it marks the
+        'team_parameter', 'league_identifier', and 'season' fields as not required.
+        This caters to the scenario where if a team_history is provided, the other
+        details are derived from it and thus aren't required
+        to be passed in separately.
         """
         super().__init__(*args, **kwargs)
         initial_data = kwargs.get("data")
@@ -453,7 +463,8 @@ class BaseTeamContributorInputSerializer(serializers.Serializer):
                             "Gender is required for foreign teams."
                         )
 
-                        # Check if team_parameter is an ID (which shouldn't be the case for foreign teams)
+                        # Check if team_parameter is an ID (which shouldn't be the
+                        # case for foreign teams)
                     if isinstance(data.get("team_parameter"), int):
                         validation_errors["team_parameter"] = [
                             "Foreign teams require a team name, not an ID."
@@ -485,7 +496,8 @@ class PlayerProfileTeamContributorInputSerializer(BaseTeamContributorInputSerial
         """
         Initialize the serializer.
 
-        If the initial data contains a 'team_history' key, it marks the 'season' field as not required.
+        If the initial data contains a 'team_history' key, it marks the
+        'season' field as not required.
         """
         super().__init__(*args, **kwargs)
         initial_data = kwargs.get("data")
@@ -566,7 +578,8 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
                 "end_date"
             ] = "End date should not be provided if is_primary is True."
         if self.instance:
-            # Case where is_primary changes from True to False, and no end_date is provided
+            # Case where is_primary changes from True to False,
+            # and no end_date is provided
             if (
                 self.instance.is_primary
                 and is_primary is False
@@ -611,11 +624,13 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
     league_name = serializers.SerializerMethodField()
     league_id = serializers.SerializerMethodField()
     season_name = serializers.SerializerMethodField()
+    team_id = serializers.SerializerMethodField()
 
     class Meta:
         model = models.TeamContributor
         fields = (
             "id",
+            "team_id",
             "picture_url",
             "team_name",
             "league_name",
@@ -638,6 +653,11 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
             return None
         return url
 
+    def get_team_id(self, obj: models.TeamContributor) -> Optional[int]:
+        """Returns team id"""
+        team_history = obj.team_history.first()
+        return team_history.team.pk if team_history else None
+
     def get_team_name(self, obj):
         """
         Retrieves the name of the team associated with the first team_history instance.
@@ -647,7 +667,8 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
 
     def get_league_name(self, obj):
         """
-        Retrieves the name of the league associated with the first team_history instance.
+        Retrieves the name of the league associated with the first
+        team_history instance.
         """
         team_history = obj.team_history.first()
         if team_history and team_history.league_history:
@@ -665,7 +686,8 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
 
     def get_season_name(self, obj):
         """
-        Retrieves the name of the season associated with the first team_history instance.
+        Retrieves the name of the season associated with the
+        first team_history instance.
         """
         team_history = obj.team_history.first()
         if (
@@ -724,7 +746,8 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
 
     def get_league_id(self, obj: models.TeamContributor) -> typing.Optional[int]:
         """
-        Retrieves the name of the league associated with the first team_history instance.
+        Retrieves the name of the league associated with the first
+        team_history instance.
         """
         team_history = obj.team_history.first()
         if team_history and team_history.league_history:
@@ -760,7 +783,10 @@ class ProfileListSerializer(serializers.ListSerializer):
         return self.exclude_fields_from_response(super().to_representation(data))
 
     def exclude_fields_from_response(self, data: list) -> list:
-        """Iterate through list objects and remove elements described in self.exclude_fields"""
+        """
+        Iterate through list objects and remove elements described
+        in self.exclude_fields
+        """
         for obj in data:
             for key in self.exclude_fields:
                 if key in obj.keys():
@@ -896,7 +922,8 @@ class ProfileSerializer(serializers.Serializer):
         for field_name in self.exclude_fields:
             ret.pop(field_name, None)
 
-        # For the field 'team_history_object', modify its context to include 'profile_uuid'
+        # For the field 'team_history_object', modify its context to
+        # include 'profile_uuid'
         if (
             "team_history_object" in ret
             and hasattr(obj, "team_history_object")
@@ -923,7 +950,8 @@ class ProfileSerializer(serializers.Serializer):
         else:
             ret["team_history_object"] = None
 
-        # Dynamically add 'phone_number' field if 'dial_code' and 'agency_phone' are in the response
+        # Dynamically add 'phone_number' field if 'dial_code' and 'agency_phone'
+        # are in the response
         if "dial_code" in ret and "agency_phone" in ret:
             phone_number_field = PhoneNumberField(source="*")
             ret["phone_number"] = phone_number_field.to_representation(obj)
@@ -995,7 +1023,8 @@ class ProfileSerializer(serializers.Serializer):
         Solution is temporarily mocked, full logic will be delivered soon
         """
         if isinstance(obj, models.PlayerProfile):
-            ...  # TODO(bartnyk): create logic for stats based on metrics, preferably in ProfileService
+            ...  # TODO(bartnyk): create logic for stats based on metrics, preferably
+            # in ProfileService
 
             return {
                 "last_goals_count": utils.get_random_int(0, 8),
@@ -1066,7 +1095,8 @@ class CreateProfileSerializer(ProfileSerializer):
             if not custom_role:
                 raise serializers.ValidationError(
                     {
-                        "custom_role": f"This field is required when role is {GUEST_SHORT} (GuestProfile)."
+                        "custom_role": f"This field is required when role is "
+                                       f"{GUEST_SHORT} (GuestProfile)."
                     }
                 )
 
@@ -1203,17 +1233,22 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
         Retrieve the team for a given profile.
 
         For PlayerProfile:
-        - Checks if the player has a primary association with a team for the current season and round.
-        - If such an association exists, it returns the team's display name along with its top parent league.
+        - Checks if the player has a primary association with a team for the current
+        season and round.
+        - If such an association exists, it returns the team's display name along with
+        its top parent league.
 
         For other profiles:
         - Checks for the primary team association irrespective of season or round.
-        - If an association exists, returns the team's display name along with its top parent league.
+        - If an association exists, returns the team's display name along with its top
+         parent league.
 
         If neither of the above conditions is satisfied:
-        - The function checks if the profile has a directly associated team object and returns its display name.
+        - The function checks if the profile has a directly associated team object
+        and returns its display name.
 
-        If no association is found in any of the above conditions, the function returns "bez klubu"
+        If no association is found in any of the above conditions, the function
+        returns "bez klubu"
         indicating that the profile does not have an associated team.
         """
         current_season = Season.define_current_season()

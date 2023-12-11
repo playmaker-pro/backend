@@ -2256,7 +2256,7 @@ paths:
       operationId: transfer_status_listing
       description: "Returns list of transfer statuses."
       tags:
-        - profiles
+        - transfer status
       security:
         - {}
       responses:
@@ -2300,7 +2300,7 @@ paths:
       operationId: transfer_status_additional_info_listing
       description: "Returns list of transfer status additional information."
       tags:
-        - profiles
+        - transfer status
       security:
         - {}
       responses:
@@ -2359,7 +2359,7 @@ paths:
             format: uuid
           required: true
       tags:
-        - profiles
+        - transfer status
       security:
         - {}
       responses:
@@ -2393,7 +2393,7 @@ paths:
             format: uuid
           required: true
       tags:
-        - profiles
+        - transfer status
       security:
         - jwtAuth: []
       requestBody:
@@ -2409,7 +2409,7 @@ paths:
                   type: object
                   properties:
                     dial_code:
-                      type: string
+                      type: integer
                       description: "Represents a phone number dial code"
                     number:
                       type: string
@@ -2466,7 +2466,7 @@ paths:
       security:
       - jwtAuth: []
       tags:
-        - profiles
+        - transfer status
       parameters:
         - in: path
           name: profile_uuid
@@ -2488,7 +2488,7 @@ paths:
                   type: object
                   properties:
                     dial_code:
-                      type: string
+                      type: integer
                       description: "Represents a phone number dial code"
                     number:
                       type: string
@@ -2539,7 +2539,7 @@ paths:
             format: uuid
           required: true
       tags:
-        - profiles
+        - transfer status
       security:
         - jwtAuth: []
       responses:
@@ -2572,7 +2572,485 @@ paths:
                     type: string
                     description: "Failure detail message"
 
+  /profiles/transfer-request/status:
+    get:
+      operationId: profile_transfer_request_status_listing
+      description: "Returns profile transfer request status objects"
+      tags:
+        - transfer requests
+      security:
+        - {}
+      responses:
+        "200":
+          description: "Get profile transfer request status objects."
+          content:
+            application/json:
+              schema:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: "Object id."
+                      name:
+                        type: string
+                        description: "Object name"
+                    required: ["id", "name"]
+              example:
+                [
+                  {
+                      "id": "1",
+                      "name": "Nieznany"
+                  },
+                  {
+                      "id": "2",
+                      "name": "Szukam piłkarzy"
+                  },
+                  {
+                      "id": "3",
+                      "name": "Nie szukam piłkarzy"
+                  }
+              ]
 
+  /profiles/transfer-request/position:
+    get:
+      operationId: profile_transfer_request_position_listing
+      description: "Returns profile transfer request position objects"
+      tags:
+        - transfer requests
+      security:
+        - {}
+      responses:
+        "200":
+          description: "Get profile transfer request position objects."
+          content:
+            application/json:
+              schema:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: "Object id."
+                      name:
+                        type: string
+                        description: "Object name"
+                    required: ["id", "name"]
+              example:
+                [
+                  {
+                      "id": "1",
+                      "name": "Dowolna pozycja"
+                  },
+                  {
+                      "id": "2",
+                      "name": "Bramkarz"
+                  },
+                  {
+                      "id": "3",
+                      "name": "Środkowy obrońca"
+                  },
+                  {
+                      "id": "4",
+                      "name": "Lewy obrońca"
+                  },
+                  {
+                      "id": "5",
+                      "name": "Prawy obrońca"
+                  },
+                  {
+                      "id": "6",
+                      "name": "Defensywny pomocnik"
+                  },
+                  {
+                      "id": "7",
+                      "name": "Środkowy pomocnik"
+                  },
+                  {
+                      "id": "8",
+                      "name": "Ofensywny pomocnik"
+                  },
+                  {
+                      "id": "9",
+                      "name": "Lewy pomocnik"
+                  },
+                  {
+                      "id": "10",
+                      "name": "Prawy pomocnik"
+                  },
+                  {
+                      "id": "11",
+                      "name": "Napastnik"
+                  }
+              ]
+
+  /profiles/transfer-request/number-of-trainings:
+    get:
+      operationId: profile_transfer_request_number-of-trainings_listing
+      description: "Returns profile transfer request number of trainings objects"
+      tags:
+        - transfer requests
+      security:
+        - {}
+      responses:
+        "200":
+          description: "Get profile transfer request number of trainings objects."
+          content:
+            application/json:
+              schema:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: "Object id."
+                      name:
+                        type: string
+                        description: "Object name"
+                    required: ["id", "name"]
+              example:
+                [
+                  {
+                      "id": "1",
+                      "name": "1-2 treningi tygodniowo"
+                  },
+                  {
+                      "id": "2",
+                      "name": "3-4 treningi tygodniowo"
+                  },
+                  {
+                      "id": "3",
+                      "name": "5+ treningów tygodniowo"
+                  }
+              ]
+
+  /profiles/transfer-request/additional-info:
+    get:
+      operationId: profile_transfer_request_additional-info_listing
+      description: "Returns profile transfer request additional info objects"
+      tags:
+        - transfer requests
+      security:
+        - {}
+      responses:
+        "200":
+          description: "Get profile transfer request additional info objects."
+          content:
+            application/json:
+              schema:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: "Object id."
+                      name:
+                        type: string
+                        description: "Object name"
+                    required: ["id", "name"]
+              example:
+                [
+                  {
+                      "id": "1",
+                      "name": "Zwrot lub organizacja transportu"
+                  },
+                  {
+                      "id": "2",
+                      "name": "Zwrot za butóy lub rękawice"
+                  },
+                  {
+                      "id": "3",
+                      "name": "Sprzęt treningowy"
+                  },
+                  {
+                      "id": "4",
+                      "name": "Dobre zaplecze treningowe"
+                  },
+                  {
+                      "id": "5",
+                      "name": "Premie za wygrane"
+                  },
+                  {
+                      "id": "6",
+                      "name": "Fizjoterapeuta w sztabie"
+                  },
+                  {
+                      "id": "7",
+                      "name": "Siłownia do dyspozycji"
+                  },
+                  {
+                      "id": "8",
+                      "name": "Walka o awans"
+                  },
+                  {
+                      "id": "9",
+                      "name": "Doświadczony trener"
+                  }
+              ]
+
+  /profiles/transfer-request/salary:
+    get:
+      operationId: profile_transfer_request_salary_listing
+      description: "Returns profile transfer request salary objects"
+      tags:
+        - transfer requests
+      security:
+        - {}
+      responses:
+        "200":
+          description: "Get profile transfer request salary objects."
+          content:
+            application/json:
+              schema:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: "Object id."
+                      name:
+                        type: string
+                        description: "Object name"
+                    required: ["id", "name"]
+              example:
+                [
+                  {
+                      "id": "1",
+                      "name": "0 - 499 zł"
+                  },
+                  {
+                      "id": "2",
+                      "name": "500 - 999 zł"
+                  },
+                  {
+                      "id": "3",
+                      "name": "1000 - 1999 zł"
+                  },
+                  {
+                      "id": "4",
+                      "name": "2000 - 3999 zł"
+                  },
+                  {
+                      "id": "5",
+                      "name": "4000+ zł"
+                  }
+              ]
+
+  /profiles/{profile_uuid}/transfer-request/teams:
+    get:
+      operationId: profile_actual_teams
+      description: "Returns profile actual teams objects"
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+      tags:
+        - transfer requests
+      security:
+        - {}
+      responses:
+        "200":
+          description: "Get profile actual teams objects."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamContributor'
+              example:
+                [
+                  {
+                      "id": 5,
+                      "team_id": 5,
+                      "picture_url": null,
+                      "team_name": "Sokół Marcinkowice",
+                      "league_name": "1 liga",
+                      "league_id": 5,
+                      "season_name": "2021/2022",
+                      "round": "wiosenna",
+                      "is_primary": false,
+                      "is_primary_for_round": false
+                  }
+              ]
+
+
+  /profiles/{profile_uuid}/transfer-request/:
+    get:
+      operationId: profile_transfer_request
+      description: "Returns profile transfer request object"
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+      tags:
+        - transfer requests
+      security:
+        - {}
+      responses:
+        "200":
+          description: "Get profile transfer request object."
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/TransferRequestGet'
+        "404":
+          description: "Transfer request for given profile not found."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: "Represents bool as string"
+                  detail:
+                    type: string
+                    description: "Failure detail message"
+    patch:
+      operationId: update_profile_transfer_request
+      description: "Updates profile transfer request"
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+      tags:
+        - transfer requests
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransferRequestUpdate"
+      responses:
+        "200":
+          description: "Status 200 when update succeded"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferStatusGet'
+        "403":
+          description: "User is not allowed to do this action"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: "Represents bool as string"
+                  detail:
+                    type: string
+                    description: "Failure detail message"
+        "404":
+          description: "Transfer status for given profile not found."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: "Represents bool as string"
+                  detail:
+                    type: string
+                    description: "Failure detail message"
+    post:
+      operationId: profile_transfer_request_create
+      description: "Create profile transfer request object"
+      security:
+      - jwtAuth: []
+      tags:
+        - transfer requests
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransferRequestCreate"
+      responses:
+        "201":
+          description: "Returns created profile transfer status object."
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/TransferStatusGet'
+        "403":
+          description: "User is not allowed to do this action"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: "Represents bool as string"
+                  detail:
+                    type: string
+                    description: "Failure detail message"
+
+    delete:
+      operationId: delete_profile_transfer_request
+      description: "Deletes profile transfer request"
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+      tags:
+        - transfer requests
+      security:
+        - jwtAuth: []
+      responses:
+        "204":
+          description: "Object deleted successful"
+        "403":
+          description: "User is not allowed to do this action"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: "Represents bool as string"
+                  detail:
+                    type: string
+                    description: "Failure detail message"
+        "404":
+          description: "Transfer request for given profile not found."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: "Represents bool as string"
+                  detail:
+                    type: string
+                    description: "Failure detail message"
 
   /users/feature-elements/:
     get:
@@ -5591,7 +6069,7 @@ components:
           type: object
           properties:
             dial_code:
-              type: integer
+              type: string
               description: "Represents dial code for phone number."
             number:
               type: string
@@ -5601,7 +6079,7 @@ components:
           type: object
           properties:
             id:
-              type: integer
+              type: string
               description: "Transfer status id."
             name:
               type: string
@@ -5613,7 +6091,7 @@ components:
             type: object
             properties:
               id:
-                type: integer
+                type: string
                 description: "Object id."
               name:
                 type: string
@@ -5672,6 +6150,240 @@ components:
                   "is_parent": true
               }
           ]
+      }
+
+    TransferRequestUpdate:
+      type: object
+      properties:
+        requesting_team:
+          type: integer
+          description: "Team contributor id."
+        gender:
+          type: string
+        status:
+          type: integer
+          description: "Status object id."
+        position:
+          type: array
+          items:
+            type: integer
+            description: "Position object id's"
+        additional_info:
+          type: array
+          items:
+            type: integer
+            description: "Additional information object id's"
+        number_of_trainings:
+          type: integer
+          description: "Object id"
+        salary:
+          type: integer
+          description: "Object id"
+        contact_email:
+          type: string
+        phone_number:
+          type: object
+          properties:
+            dial_code:
+              type: integer
+            number:
+              type: string
+
+    TransferRequestCreate:
+      type: object
+      properties:
+        requesting_team:
+          type: integer
+          description: "Team contributor id."
+        gender:
+          type: string
+        status:
+          type: integer
+          description: "Status object id."
+        position:
+          type: array
+          items:
+            type: integer
+            description: "Position object id's"
+        additional_info:
+          type: array
+          items:
+            type: integer
+            description: "Additional information object id's"
+        number_of_trainings:
+          type: integer
+          description: "Object id"
+        salary:
+          type: integer
+          description: "Object id"
+        contact_email:
+          type: string
+        phone_number:
+          type: object
+          properties:
+            dial_code:
+              type: integer
+            number:
+              type: string
+      required: ["requesting_team", "status", "position"]
+
+    TransferRequestGetTeamContributor:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: "Object id"
+        round:
+          type: string
+          description: "Team round type"
+        team:
+          type: object
+          properties:
+            id:
+              type: integer
+              description: "Team object id"
+            team_name:
+              type: string
+            league_highest_parent_name:
+              type: string
+            league_highest_parent_id:
+              type: integer
+            team_contributor_id:
+              type: integer
+            picture_url:
+              type: string
+            country:
+              type: string
+            season:
+              type: string
+          required: ["id", "team_name", "league_highest_parent_name", "league_highest_parent_id", "team_contributor_id", "picture_url", "country", "season"]
+      required: ["id", "round", "team"]
+
+    TransferRequestPositions:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+        required: ["id", "name"]
+
+    TransferRequestGet:
+      type: object
+      properties:
+        requesting_team:
+          $ref: '#/components/schemas/TransferRequestGetTeamContributor'
+        gender:
+          type: string
+          description: "Describes a requested team gender"
+        status:
+          type: object
+          properties:
+            id:
+              type: integer
+              description: "Transfer request id."
+            name:
+              type: string
+              description: "Transfer status name"
+          required: ["id", "name"]
+        position:
+          $ref: '#/components/schemas/TransferRequestPositions'
+        number_of_trainings:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+          required: ["id", "name"]
+        additional_info:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: "Object id."
+              name:
+                type: string
+                description: "Object name"
+            required: ["id", "name"]
+        salary:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+          required: ["id", "name"]
+        contact_email:
+          type: string
+        phone_number:
+          type: object
+          properties:
+            dial_code:
+              type: string
+            number:
+              type: string
+          required: ["dial_code", "number"]
+      required: ["requesting_team", "gender", "status", "position", "number_of_trainings", "additional_info", "salary", "contact_email", "phone_number"]
+
+      example:
+        {
+          "requesting_team": {
+              "id": 5,
+              "round": "wiosenna",
+              "team": {
+                  "id": 1,
+                  "team_name": "Sokół Marcinkowice",
+                  "league_highest_parent_name": "1 liga",
+                  "league_highest_parent_id": 5,
+                  "team_contributor_id": null,
+                  "picture_url": null,
+                  "country": "Polska",
+                  "season": "2021/2022"
+              }
+          },
+          "gender": "M",
+          "status": {
+              "id": "1",
+              "name": "Nieznany"
+          },
+          "position": [
+              {
+                  "id": "3",
+                  "name": "Środkowy obrońca"
+              },
+              {
+                  "id": "4",
+                  "name": "Lewy obrońca"
+              }
+          ],
+          "number_of_trainings": {
+              "id": "1",
+              "name": "1-2 treningi tygodniowo"
+          },
+          "additional_info": [
+              {
+                  "id": "2",
+                  "name": "Zwrot za butóy lub rękawice"
+              },
+              {
+                  "id": "4",
+                  "name": "Dobre zaplecze treningowe"
+              }
+          ],
+          "salary": {
+              "id": "1",
+              "name": "0 - 499 zł"
+          },
+          "contact_email": "dwdw@fefe.com",
+          "phone_number": {
+              "dial_code": "+2",
+              "number": "1234567"
+          }
       }
 
     VerificationStageUpdate:
@@ -5884,6 +6596,9 @@ components:
         id:
           type: integer
           description: "ID of the team contributor."
+        team_id:
+          type: integer
+          description: "Team id"
         picture_url:
           type: string
           description: "URL of the Club picture that TeamContributor's Team belongs to."
@@ -5919,6 +6634,7 @@ components:
         - round
         - is_primary
         - is_primary_for_round
+        - team_id
     TeamContributorNonPlayer:
       type: object
       properties:

@@ -258,9 +258,11 @@ class TeamContributorFactory(factory.django.DjangoModelFactory):
     @factory.post_generation
     def team_history(obj, create, extracted, **kwargs):
         """
-        Post-generation hook to associate TeamHistory objects with the TeamContributor instance.
+        Post-generation hook to associate TeamHistory objects with the TeamContributor
+        instance.
 
-        If the `extracted` argument is provided, it uses the given TeamHistory instances.
+        If the `extracted` argument is provided, it uses the given TeamHistory
+        instances.
         Otherwise, it creates and associates a new TeamHistory instance.
         """
         if not create:
@@ -289,7 +291,38 @@ class TransferStatusFactory(factory.django.DjangoModelFactory):
 
     @classmethod
     def create(cls, **kwargs) -> models.PROFILE_TYPE:
-        """Override just for typing purposes"""
+        """Override for GenericForeignKey purposes."""
+        if not kwargs.get("profile"):
+            profile = PlayerProfileFactory.create()
+        else:
+            profile = kwargs.pop("profile")
+        kwargs = TransferStatusService.prepare_generic_type_content(kwargs, profile)
+        return super().create(**kwargs)
+
+
+class TransferRequestFactory(factory.django.DjangoModelFactory):
+    """Transfer status factory"""
+
+    class Meta:
+        model = models.ProfileTransferRequest
+
+    contact_email = factory.Faker("email")
+    phone_number = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
+    status = "1"
+    additional_info = [1, 2]
+    requesting_team = factory.SubFactory(TeamContributorFactory)
+    gender = "M"
+    position = [1]
+    number_of_trainings = "1"
+    salary = "1"
+    dial_code = factory.Faker("pyint", min_value=0, max_value=1000)
+
+    class Params:
+        profile = None
+
+    @classmethod
+    def create(cls, **kwargs) -> models.PROFILE_TYPE:
+        """Override for GenericForeignKey purposes."""
         if not kwargs.get("profile"):
             profile = PlayerProfileFactory.create()
         else:

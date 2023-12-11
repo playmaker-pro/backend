@@ -8,6 +8,11 @@ from rest_framework.test import APIClient, APITestCase
 
 from profiles.api.errors import TransferStatusDoesNotExistHTTPException
 from profiles.models import BaseProfile, ProfileTransferStatus
+from profiles.schemas import (
+    TransferStatusPhoneNumberSchema,
+    TransferStatusSchema,
+    TransferStatusStatusSchema,
+)
 from profiles.services import TransferStatusService
 from utils.factories import (
     LeagueFactory,
@@ -77,6 +82,21 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
         assert response.json().get(
             "status"
         ) == transfer_service.get_transfer_status_by_id(transfer_status_obj.status)
+
+        data = response.data
+        fields_schema = list(TransferStatusSchema.__fields__.keys())
+
+        assert response.status_code == 200
+        for field in fields_schema:
+            assert field in list(data.keys())
+
+        phone_number_schema = list(TransferStatusPhoneNumberSchema.__fields__.keys())
+        for field in phone_number_schema:
+            assert field in list(data["phone_number"].keys())
+
+        status = list(TransferStatusStatusSchema.__fields__.keys())
+        for field in status:
+            assert field in list(data["status"].keys())
 
     def update_profile(self, new_data: dict) -> Response:
         """Patch request to update profile transfer status."""
@@ -167,7 +187,10 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
         """Test create profile transfer status. Expected status code 201."""
         league = LeagueFactory.create_league_as_highest_parent()
         data = {
-            "status": 2,
+            "contact_email": "contact@email.com",
+            "phone_number": {"dial_code": 48, "number": "+111222333"},
+            "status": 1,
+            "additional_info": [1],
             "league": [league.pk],
         }
         response: Response = self.client.post(
@@ -178,7 +201,28 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
         assert isinstance(response.json(), dict)
         assert (
             response.json().get("status")
-            == transfer_service.get_list_transfer_statutes(id=2)[0]
+            == transfer_service.get_list_transfer_statutes(id=1)[0]
+        )
+
+    @factory.django.mute_signals(signals.pre_save, signals.post_save)
+    def test_create_profile_transfer_status_without_additional_info(self):
+        """Test create profile transfer status. Expected status code 201."""
+        league = LeagueFactory.create_league_as_highest_parent()
+        data = {
+            "contact_email": "contact@email.com",
+            "phone_number": {"dial_code": 48, "number": "+111222333"},
+            "status": 1,
+            "league": [league.pk],
+        }
+        response: Response = self.client.post(
+            self.url, json.dumps(data), **self.headers
+        )
+
+        assert response.status_code == 201
+        assert isinstance(response.json(), dict)
+        assert (
+            response.json().get("status")
+            == transfer_service.get_list_transfer_statutes(id=1)[0]
         )
 
     @factory.django.mute_signals(signals.pre_save, signals.post_save)

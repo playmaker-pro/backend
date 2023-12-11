@@ -7,6 +7,7 @@ from django_countries import countries
 from pydantic import parse_obj_as
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework.fields import empty
 
 from api.consts import ChoicesTuple
 from api.serializers import CitySerializer, CountrySerializer
@@ -17,6 +18,9 @@ from clubs.services import ClubService, LeagueService
 from external_links.serializers import ExternalLinksSerializer
 from profiles.api.errors import (
     InvalidProfileRole,
+    NotAOwnerOfTheTeamContributorHTTPException,
+    PhoneNumberMustBeADictionaryHTTPException,
+    TransferRequestAlreadyExistsHTTPException,
     TransferStatusAlreadyExistsHTTPException,
 )
 from profiles.api.serializers import (
@@ -51,6 +55,8 @@ from profiles.services import (
 )
 from roles.definitions import (
     PROFILE_TYPE_SHORT_MAP,
+    TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES,
+    TRANSFER_REQUEST_POSITIONS_CHOICES,
     TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES,
 )
 from users.models import User, UserPreferences
@@ -59,6 +65,29 @@ logger = logging.getLogger(__name__)
 
 
 clubs_service: ClubService = ClubService()
+
+
+class SharedValidatorsMixin:
+    """Mixing for shared methods."""
+
+    def validate_phone_number(self, phone_number: dict) -> dict:  # noqa
+        """Validate phone number field. Running when creating object."""
+        if not isinstance(phone_number, dict):
+            raise ValidationError(detail="Phone number must be a dict")
+        if dial_code := phone_number.get("dial_code"):  # noqa: 5999
+            try:
+                int(dial_code)
+            except ValueError:
+                raise ValidationError(detail="Dial code must be an integer")
+        return phone_number
+
+    def validate_additional_info(self, additional_info: list) -> list:  # noqa
+        """Validate additional info field"""
+        if not isinstance(additional_info, list) or not all(
+            (isinstance(el, int) for el in additional_info)
+        ):
+            raise ValidationError(detail="Additional info must be a list of integers")
+        return additional_info
 
 
 class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
@@ -234,7 +263,7 @@ class TeamSerializer(serializers.ModelSerializer):
         )
 
 
-class PhoneNumberField(serializers.Field):
+class PhoneNumberField(serializers.Serializer):
     """
     A custom field for handling phone numbers in the ManagerProfile serializer.
 
@@ -248,6 +277,13 @@ class PhoneNumberField(serializers.Field):
     """
 
     dial_code = serializers.IntegerField()
+
+    def run_validation(self, data=...):
+        """Validate phone number field before creating object."""
+
+        if data is not empty and not isinstance(data, dict):
+            raise PhoneNumberMustBeADictionaryHTTPException
+        return super().run_validation(data)
 
     def to_representation(self, obj: ProfileTransferStatus) -> dict:
         """
@@ -275,7 +311,9 @@ class PhoneNumberField(serializers.Field):
         return internal_value
 
 
-class ProfileTransferStatusSerializer(serializers.ModelSerializer):
+class ProfileTransferStatusSerializer(
+    serializers.ModelSerializer, SharedValidatorsMixin
+):
     """Transfer status serializer for user profile view"""
 
     class Meta:
@@ -289,57 +327,11 @@ class ProfileTransferStatusSerializer(serializers.ModelSerializer):
         )
 
     status = ProfileEnumChoicesSerializer(model=ProfileTransferStatus)
-    additional_info = serializers.SerializerMethodField()
+    additional_info = serializers.ListField(required=False, allow_null=True)
     league = serializers.PrimaryKeyRelatedField(
         queryset=LeagueService().get_highest_parents(), many=True
     )
     phone_number = PhoneNumberField(source="*", required=False)
-
-    def get_additional_info(self, obj: ProfileTransferStatus) -> List[dict]:
-        """
-        Get additional info by transfer status. We have to write custom
-        method because we have and ArrayField, which is not serializable by
-        ProfileEnumChoicesSerializer.
-        """
-        data: list = []
-        if obj.additional_info is None:
-            return data
-        for element in obj.additional_info:
-            info = [
-                ChoicesTuple(*transfer)
-                for transfer in TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES
-                if transfer[0] == str(element)
-            ]
-
-            serializer = ProfileEnumChoicesSerializer(
-                data=info,
-                many=True,
-            )
-            serializer.is_valid()
-            data.append(serializer.data[0])
-        return data
-
-    def validate_phone_number(self, phone_number: dict) -> dict:
-        """Validate phone number field"""
-        if not isinstance(phone_number, dict):
-            raise ValidationError(detail="Phone number must be a dict")
-        if dial_code := phone_number.get("dial_code"):
-            try:
-                int(phone_number.get("dial_code"))
-            except ValueError:
-                raise ValidationError(detail="Dial code must be an integer")
-        return phone_number
-
-    def update(self, instance: ProfileTransferStatus, validated_data: dict):
-        """
-        Due to fact that we overriden additional_info field we have to
-        override update method to handle this field properly. When we
-        used a SerializerMethodField, additional_info field is read only == it's not
-        inside a validated_data. We have to pop it from initial_data.
-        """
-        if positions := self.initial_data.pop("additional_info", None):  # noqa: 5999
-            validated_data["additional_info"] = positions
-        return super().update(instance, validated_data)
 
     def create(self, validated_data: dict):
         """Create transfer status"""
@@ -354,10 +346,27 @@ class ProfileTransferStatusSerializer(serializers.ModelSerializer):
         instance = super().create(validated_data)
         return instance
 
-    def to_representation(self, instance: ProfileTransferStatus):
+    def to_representation(self, instance: ProfileTransferStatus) -> dict:
+        """
+        Overrides to_representation method to return additional info
+        as a list of strings.
+        """
         data = super().to_representation(instance)
         data["league"] = LeagueSerializer(instance=instance.league, many=True).data
+        if instance.additional_info:
+            info = [
+                ChoicesTuple(*transfer)
+                for transfer in TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES
+                if transfer[0] in str(instance.additional_info)
+            ]
+            serializer = ProfileEnumChoicesSerializer(info, many=True)
+            data["additional_info"] = serializer.data
         return data
+
+    def to_internal_value(self, data):
+        internal_value = super().to_internal_value(data)
+        internal_value["additional_info"] = data.get("additional_info")
+        return internal_value
 
 
 class TeamContributorSerializer(serializers.ModelSerializer):
@@ -367,7 +376,7 @@ class TeamContributorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TeamContributor
-        fields = ("round", "team")
+        fields = ("id", "round", "team")
 
     def get_team(self, obj: TeamContributor) -> dict:
         """Retrieve the team from the team_history object."""
@@ -376,7 +385,9 @@ class TeamContributorSerializer(serializers.ModelSerializer):
         return data.data
 
 
-class ProfileTransferRequestSerializer(serializers.ModelSerializer):
+class ProfileTransferRequestSerializer(
+    serializers.ModelSerializer, SharedValidatorsMixin
+):
     """Transfer request serializer for user profile view"""
 
     class Meta:
@@ -390,33 +401,83 @@ class ProfileTransferRequestSerializer(serializers.ModelSerializer):
             "additional_info",
             "salary",
             "contact_email",
-            "contact_phone",
+            "phone_number",
         )
 
-    requesting_team = TeamContributorSerializer()
+    requesting_team = serializers.PrimaryKeyRelatedField(
+        queryset=TeamContributor.objects.all()
+    )
     status = ProfileEnumChoicesSerializer(
-        model=ProfileTransferRequest, required=False, allow_null=True
+        model=ProfileTransferRequest,
     )
-    position = ProfileEnumChoicesSerializer(
-        model=ProfileTransferRequest, required=False, allow_null=True
-    )
-    number_of_trainings = ProfileEnumChoicesSerializer(
-        model=ProfileTransferRequest, required=False, allow_null=True
-    )
-    additional_info = ProfileEnumChoicesSerializer(
-        model=ProfileTransferRequest, required=False, allow_null=True
-    )
-    salary = ProfileEnumChoicesSerializer(
-        model=ProfileTransferRequest, required=False, allow_null=True
-    )
+    position = serializers.ListField()
+    number_of_trainings = serializers.IntegerField(required=False, allow_null=True)
+    additional_info = serializers.ListField(required=False, allow_null=True)
+    salary = serializers.IntegerField(required=False, allow_null=True)
+    phone_number = PhoneNumberField(source="*", required=False)
+
+    def to_representation(self, instance: ProfileTransferRequest) -> dict:
+        """
+        Overrides to_representation method to return additional info, position,
+        number of trainings and salary as an objects represents
+        by their names and ids.
+        """
+        serializer = ProfileEnumChoicesSerializer
+        data = super().to_representation(instance)
+        data["requesting_team"] = TeamContributorSerializer(
+            instance=instance.requesting_team, read_only=True
+        ).data
+        if instance.additional_info:
+            info = [
+                ChoicesTuple(*transfer)
+                for transfer in TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES
+                if transfer[0] in str(instance.additional_info)
+            ]
+            info_serialized = serializer(info, many=True)
+            data["additional_info"] = info_serialized.data
+        if instance.position:
+            positions = [
+                ChoicesTuple(*transfer)
+                for transfer in TRANSFER_REQUEST_POSITIONS_CHOICES
+                if transfer[0] in str(instance.position)
+            ]
+            position_serialized = serializer(positions, many=True)
+            data["position"] = position_serialized.data
+        if instance.number_of_trainings:
+            num_of_training_serialized = serializer(
+                instance=instance.number_of_trainings,
+                source="number_of_trainings",
+                model=ProfileTransferRequest,
+            )
+            data["number_of_trainings"] = num_of_training_serialized.data
+        if instance.salary:
+            salary_serialized = serializer(
+                instance=instance.salary,
+                source="salary",
+                model=ProfileTransferRequest,
+            )
+            data["salary"] = salary_serialized.data
+        return data
+
+    def validate_requesting_team(
+        self, requesting_team: TeamContributor
+    ) -> TeamContributor:
+        """Validate requesting team field"""
+        owner = self.context.get("profile")
+        if requesting_team.profile_uuid != owner.uuid:
+            logger.error(
+                f"Requesting team profile_uuid: {requesting_team.profile_uuid} "
+                f"!= owner uuid: {owner.uuid}"
+            )
+            raise NotAOwnerOfTheTeamContributorHTTPException
+        return requesting_team
 
     def create(self, validated_data):
         """Create transfer request"""
-
         profile = self.context.get("profile")
-        transfer_status = ProfileService().get_profile_transfer_status(profile)
-        if transfer_status:
-            raise TransferStatusAlreadyExistsHTTPException
+        transfer_request = ProfileService().get_profile_transfer_request(profile)
+        if transfer_request:
+            raise TransferRequestAlreadyExistsHTTPException
 
         validated_data: dict = TransferStatusService.prepare_generic_type_content(
             validated_data, profile

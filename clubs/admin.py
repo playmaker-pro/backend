@@ -246,7 +246,8 @@ class TeamHistoryAdmin(admin.ModelAdmin):
 @admin.register(models.Team)
 class TeamAdmin(admin.ModelAdmin):
     list_display = (
-        "name",
+        "pk",
+        "get_name",
         "short_name",
         "mapping",
         linkify("club"),
@@ -273,9 +274,15 @@ class TeamAdmin(admin.ModelAdmin):
         "club",
     )
 
+    def get_name(self, obj: models.Team) -> str:
+        """Return Team name as ahref link."""
+        return mark_safe(f'<a href="{obj.pk}">{obj.name}</a>')
+
+    get_name.short_description = "Nazwa Drużyny"
+
     def current_league(self, obj=None):
         """
-        Returns the current league highest parent of a given team.
+        Returns the current league the highest parent of a given team.
         If the team has no team history related to a current season,
         returns league from latest team history.
         """

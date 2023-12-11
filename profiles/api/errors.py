@@ -174,7 +174,7 @@ class PermissionDeniedHTTPException(CoreAPIException):
 
 class TransferStatusDoesNotExistHTTPException(CoreAPIException):
     """
-    API HTTP exception raised when a TransferStatus is not found in DB.
+    API HTTP exception raised when a ProfileTransferStatus is not found in DB.
     """
 
     status_code = status.HTTP_404_NOT_FOUND
@@ -183,8 +183,44 @@ class TransferStatusDoesNotExistHTTPException(CoreAPIException):
 
 class TransferStatusAlreadyExistsHTTPException(CoreAPIException):
     """
-    API HTTP exception raised when a TransferStatus already exists in DB.
+    API HTTP exception raised when a ProfileTransferStatus already exists in DB.
     """
 
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "Transfer status for specified user already exists."
+
+
+class TransferRequestAlreadyExistsHTTPException(CoreAPIException):
+    """
+    API HTTP exception raised when a ProfileTransferRequest already exist in DB.
+    """
+
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = "Transfer request for specified user already exists."
+
+
+class TransferRequestDoesNotExistHTTPException(CoreAPIException):
+    """
+    API HTTP exception raised when a ProfileTransferRequest is not found in DB.
+    """
+
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = "Given player does not have transfer request."
+
+
+class NotAOwnerOfTheTeamContributorHTTPException(CoreAPIException):
+    """
+    API HTTP exception raised when a user is not a owner of the team contributor.
+    """
+
+    status_code = status.HTTP_403_FORBIDDEN
+    default_detail = "You can't request transfer for this team."
+
+
+class PhoneNumberMustBeADictionaryHTTPException(CoreAPIException):
+    """
+    API HTTP exception raised when a phone number is not a dictionary.
+    """
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Phone number must be a dictionary."

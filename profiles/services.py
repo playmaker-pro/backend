@@ -21,7 +21,16 @@ from clubs.models import Team as CTeam
 from profiles import errors, models, utils
 from profiles.api import errors as api_errors
 from profiles.models import REVERSED_MODEL_MAP, LicenceType, ProfileTransferStatus
-from roles.definitions import CLUB_ROLES, PROFILE_TYPE_MAP, TRANSFER_STATUS_CHOICES
+from roles.definitions import (
+    CLUB_ROLES,
+    PROFILE_TYPE_MAP,
+    TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES,
+    TRANSFER_REQUEST_POSITIONS_CHOICES,
+    TRANSFER_REQUEST_SALARY_CHOICES,
+    TRANSFER_REQUEST_STATUS_CHOICES,
+    TRANSFER_REQUEST_TRAININGS_CHOICES,
+    TRANSFER_STATUS_CHOICES,
+)
 from utils import get_current_season
 
 logger = logging.getLogger(__name__)
@@ -438,6 +447,14 @@ class ProfileService:
         transfer_status: ProfileTransferStatus = profile.transfer_status_related.first()
         return transfer_status or None
 
+    @staticmethod
+    def get_profile_transfer_request(
+        profile: models.BaseProfile,
+    ) -> typing.Optional[ProfileTransferStatus]:
+        """Get the transfer status of a given profile."""
+        transfer_request: ProfileTransferStatus = profile.transfer_requests.first()
+        return transfer_request or None
+
 
 class ProfileFilterService:
     profile_service = ProfileService
@@ -613,7 +630,8 @@ class ProfileFilterService:
     @staticmethod
     def validate_licence_keys(licence_keys: typing.List[str]) -> None:
         """
-        Validates whether the provided licence names exist in the available licence names.
+        Validates whether the provided licence names exist in the available licence
+        names.
 
         This function checks each name in the provided list of licence names against the
         list of available licence names obtained from the LicenceType model. If any name
@@ -1434,6 +1452,105 @@ class TransferStatusService:
         result = [
             ChoicesTuple(*transfer)._asdict()
             for transfer in TRANSFER_STATUS_CHOICES
+            if lambda_function(transfer)
+        ]
+        return result
+
+
+class TransferRequestService:
+    """Service for transfer request operation."""
+
+    def get_transfer_request_status_by_id(
+        self, transfer_status_id: int
+    ) -> typing.Optional[typing.Dict[str, str]]:
+        """Get a transfer status by id."""
+        result: list = self.__get_list_transfer_request_choices(
+            id=transfer_status_id, choices_tuple=TRANSFER_REQUEST_STATUS_CHOICES
+        )
+        return result[0] if result else None
+
+    def get_transfer_request_position_by_id(
+        self, position_id: int
+    ) -> typing.Optional[typing.Dict[str, str]]:
+        """Get a transfer status by position id."""
+        result: list = self.__get_list_transfer_request_choices(
+            id=position_id, choices_tuple=TRANSFER_REQUEST_POSITIONS_CHOICES
+        )
+        return result[0] if result else None
+
+    def get_num_of_trainings_by_id(
+        self, trainings_id: int
+    ) -> typing.Optional[typing.Dict[str, str]]:
+        """Get a transfer status by number of trainings id."""
+        result: list = self.__get_list_transfer_request_choices(
+            id=trainings_id, choices_tuple=TRANSFER_REQUEST_TRAININGS_CHOICES
+        )
+        return result[0] if result else None
+
+    def get_additional_info_by_id(
+        self, info_id: int
+    ) -> typing.Optional[typing.Dict[str, str]]:
+        """Get a transfer status by additional information id."""
+        result: list = self.__get_list_transfer_request_choices(
+            id=info_id, choices_tuple=TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES
+        )
+        return result[0] if result else None
+
+    def get_salary_by_id(
+        self, salary_id: int
+    ) -> typing.Optional[typing.Dict[str, str]]:
+        """Get a transfer status by salary id."""
+        result: list = self.__get_list_transfer_request_choices(
+            id=salary_id, choices_tuple=TRANSFER_REQUEST_SALARY_CHOICES
+        )
+        return result[0] if result else None
+
+    def get_list_transfer_statutes(self) -> typing.List[dict]:
+        """Get a list of transfer statuses for specified status choices."""
+        return self.__get_list_transfer_request_choices(
+            choices_tuple=TRANSFER_REQUEST_STATUS_CHOICES
+        )
+
+    def get_list_transfer_positions(self) -> typing.List[dict]:
+        """Get a list of transfer statuses for specified positions choices."""
+        return self.__get_list_transfer_request_choices(
+            choices_tuple=TRANSFER_REQUEST_POSITIONS_CHOICES
+        )
+
+    def get_list_transfer_num_of_trainings(self) -> typing.List[dict]:
+        """Get a list of transfer statuses for specified number of trainings choices."""
+        return self.__get_list_transfer_request_choices(
+            choices_tuple=TRANSFER_REQUEST_TRAININGS_CHOICES
+        )
+
+    def get_list_transfer_additional_info(self) -> typing.List[dict]:
+        """
+        Get a list of transfer statuses for specified additional information choices.
+        """
+        return self.__get_list_transfer_request_choices(
+            choices_tuple=TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES
+        )
+
+    def get_list_transfer_salary(self) -> typing.List[dict]:
+        """Get a list of transfer statuses for specified salary choices."""
+        return self.__get_list_transfer_request_choices(
+            choices_tuple=TRANSFER_REQUEST_SALARY_CHOICES
+        )
+
+    @staticmethod
+    def __get_list_transfer_request_choices(
+        choices_tuple: typing.Tuple, **search_kwargs
+    ) -> typing.List[dict]:
+        """Get a list of transfer statuses. If param is provided, filter results."""
+        lambda_function: typing.Callable = lambda transfer: True
+        if transfer_id := search_kwargs.get("id"):
+            lambda_function = lambda transfer: transfer[0] == str(  # noqa: E731
+                transfer_id
+            )
+
+        result = [
+            ChoicesTuple(*transfer)._asdict()
+            for transfer in choices_tuple
             if lambda_function(transfer)
         ]
         return result
