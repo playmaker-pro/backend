@@ -1,9 +1,14 @@
+from typing import Type
+
 from django import forms
+from django.apps import apps
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Field
 from django.forms.models import ModelChoiceField
 from django.http import HttpRequest
+from django.urls import reverse
+from django.utils.html import format_html
 
 from app.utils.admin import json_filed_data_prettified
 from clubs.models import League
@@ -21,7 +26,7 @@ from profiles.admin.actions import (
     update_season_score,
     update_with_profile_data,
 )
-from profiles.models import PROFILE_TYPES_AS_STRING
+from profiles.models import PROFILE_TYPES_AS_STRING, BaseProfile
 from utils import linkify
 
 
@@ -337,7 +342,26 @@ class VerificationStageAdmin(admin.ModelAdmin):
 
 @admin.register(models.TeamContributor)
 class TeamContributorAdmin(admin.ModelAdmin):
-    list_display = ("get_name", "profile_uuid", "is_primary", "start_date", "end_date")
+    list_display = (
+        "pk",
+        "get_name",
+        "get_team",
+        "get_team_pk",
+        "profile_uuid",
+        "is_primary",
+        "start_date",
+        "end_date",
+    )
+
+    def get_team(self, obj: models.TeamContributor) -> str:
+        """Return user email."""
+        team_history = obj.team_history.first()
+        return team_history.team.name if team_history else None
+
+    def get_team_pk(self, obj: models.TeamContributor) -> str:
+        """Return user email."""
+        team_history = obj.team_history.first()
+        return team_history.team.pk if team_history else None
 
     def get_name(self, obj: models.TeamContributor) -> str:
         """Return user email."""
@@ -373,15 +397,54 @@ class TransferStatusForm(forms.ModelForm):
         )
 
 
+class ContentTypeMixin:
+    def get_content_type(self, obj: models.ProfileTransferStatus) -> str:
+        """
+        Retrieves the content type of the given ProfileTransferStatus object and returns
+        a formatted HTML string.
+
+        This method gets the model associated with the content type of the
+        ProfileTransferStatus object, retrieves the corresponding profile,
+        and generates a URL to the admin page for that profile. It then returns a
+        formatted HTML string that contains a hyperlink to the admin page.
+        """
+
+        Model: Type[BaseProfile] = apps.get_model(  # noqa
+            "profiles", obj.content_type.model
+        )
+        profile = Model.objects.get(pk=obj.object_id)
+        view_name = (
+            f"admin:{profile._meta.app_label}_"  # noqa
+            f"{profile.__class__.__name__.lower()}_change"
+        )
+        link_url = reverse(view_name, args=[profile.pk])
+        return format_html(f'<a href="{link_url}">{profile}</a>')
+
+    get_content_type.short_description = "Profile"
+
+    def profile_type(self, obj: models.ProfileTransferStatus) -> str:
+        """Return user email."""
+
+        Model: Type[BaseProfile] = apps.get_model(  # noqa
+            "profiles", obj.content_type.model
+        )
+        profile = Model.objects.get(pk=obj.object_id)
+        return profile.__class__.__name__
+
+    profile_type.short_description = "Profile type"
+
+
 @admin.register(models.ProfileTransferStatus)
-class ProfileTransferStatusAdmin(admin.ModelAdmin):
+class ProfileTransferStatusAdmin(admin.ModelAdmin, ContentTypeMixin):
     """Admin for ProfileTransferStatus model."""
 
     form = TransferStatusForm
+    list_display = ("pk", "get_content_type", "profile_type")
 
 
 @admin.register(models.ProfileTransferRequest)
-class ProfileTransferRequestAdmin(admin.ModelAdmin):
-    """Admin for ProfileTransferStatus model."""
+class ProfileTransferRequestAdmin(admin.ModelAdmin, ContentTypeMixin):
+    """Admin for ProfileTransferRequest model."""
 
+    list_display = ("pk", "get_content_type", "profile_type")
     form = TransferStatusForm

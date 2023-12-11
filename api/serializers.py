@@ -113,7 +113,9 @@ class ProfileEnumChoicesSerializer(_serializers.CharField, _serializers.Serializ
 
     def __init__(
         self,
-        model: typing.Union[typing.Type[Model], typing.Generator] = None,
+        model: typing.Union[
+            typing.Type[Model], typing.Generator, typing.List[ChoicesTuple]
+        ] = None,
         raise_exception: bool = True,
         *args,
         **kwargs

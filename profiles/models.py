@@ -1608,7 +1608,9 @@ class LicenceType(models.Model):
         This method queries the LicenceType model, excluding any entries where
         the key is null, and returns a list of unique names of the licences.
         """
-        return list(LicenceType.objects.exclude(key__isnull=True).values_list('name', flat=True))
+        return list(
+            LicenceType.objects.exclude(key__isnull=True).values_list("name", flat=True)
+        )
 
     class Meta:
         ordering = ["order"]
@@ -2703,22 +2705,28 @@ class ProfileTransferRequest(models.Model):
         choices=definitions.TRANSFER_REQUEST_STATUS_CHOICES,
         help_text="Defines a status of the transfer for the profile.",
     )
-    position = models.CharField(
-        max_length=10,
-        choices=definitions.TRANSFER_REQUEST_POSITIONS_CHOICES,
-        help_text="Define team position",
+    position = ArrayField(
+        models.CharField(
+            max_length=10,
+            choices=definitions.TRANSFER_REQUEST_POSITIONS_CHOICES,
+            help_text="Define team position",
+        )
     )
     number_of_trainings = models.CharField(
         max_length=10,
         choices=definitions.TRANSFER_REQUEST_TRAININGS_CHOICES,
         help_text="Define number of trainings per week",
     )
-    additional_info = models.CharField(
-        max_length=255,
+    additional_info = ArrayField(
+        models.CharField(
+            max_length=255,
+            null=True,
+            blank=True,
+            choices=definitions.TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES,
+            help_text="Additional information about the transfer request.",
+        ),
         null=True,
         blank=True,
-        choices=definitions.TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES,
-        help_text="Additional information about the transfer request.",
     )
     salary = models.CharField(
         max_length=10,
@@ -2734,7 +2742,7 @@ class ProfileTransferRequest(models.Model):
         blank=True,
         help_text="Phone number for the transfer request.",
     )
-    dial_code = models.CharField(
+    dial_code = models.IntegerField(
         _("Dial Code"),
         max_length=5,
         blank=True,
