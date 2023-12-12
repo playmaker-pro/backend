@@ -8,7 +8,6 @@ import pytest
 from django.db.models import signals
 from django.test import override_settings
 from django.urls import reverse
-from faker import Faker
 from parameterized import parameterized
 from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
@@ -18,7 +17,12 @@ from profiles.models import LicenceType, PlayerProfile
 from profiles.services import ProfileService
 from profiles.utils import get_past_date
 from utils import factories, get_current_season
-from utils.factories import PlayerProfileFactory, UserFactory
+from utils.factories import (
+    LabelDefinitionFactory,
+    LabelFactory,
+    PlayerProfileFactory,
+    UserFactory,
+)
 from utils.test.test_utils import UserManager
 
 profile_service = ProfileService()
@@ -350,6 +354,43 @@ class TestProfileListAPI(APITestCase):
         assert expected_error_msg in response.data["detail"]
 
 
+    def test_get_bulk_profiles_filter_by_labels(self) -> None:
+        """Test profile filtering by labels"""
+        # Create label definitions and labels
+        label_def1 = LabelDefinitionFactory(label_name="Label1")
+        label_def2 = LabelDefinitionFactory(label_name="Label2")
+
+        # Create profiles with labels
+        profile_with_label1 = factories.PlayerProfileFactory()
+        LabelFactory(label_definition=label_def1, content_object=profile_with_label1)
+
+        profile_with_label2 = factories.PlayerProfileFactory()
+        LabelFactory(label_definition=label_def2, content_object=profile_with_label2)
+
+        # Test filtering by Label1
+        response = self.client.get(
+            self.url, {"role": "P", "labels": "Label1"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+        assert response.data["results"][0]["uuid"] == str(profile_with_label1.uuid)
+
+        # Test filtering by Label2
+        response = self.client.get(
+            self.url, {"role": "P", "labels": "Label2"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+        assert response.data["results"][0]["uuid"] == str(profile_with_label2.uuid)
+
+        # Test filtering with a label that no profile has
+        response = self.client.get(
+            self.url, {"role": "P", "labels": "Label3"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 0
+
+
 @override_settings(SUSPEND_SIGNALS=True)
 class TestPlayerProfileListByGenderAPI(APITestCase):
     """Test profile/ url with gender parameters."""
@@ -387,6 +428,7 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
 
         assert len(response.data["results"]) == 0
         assert response.status_code == 200
+
 
 
 @pytest.mark.django_db
