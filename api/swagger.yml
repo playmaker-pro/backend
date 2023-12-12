@@ -2874,22 +2874,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TeamContributor'
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransferRequestGetTeamContributor'
               example:
                 [
                   {
-                      "id": 5,
-                      "team_id": 5,
-                      "picture_url": null,
+                    "id": 5,
+                    "round": "wiosenna",
+                    "team": {
+                      "id": 1,
                       "team_name": "Sokół Marcinkowice",
-                      "league_name": "1 liga",
-                      "league_id": 5,
-                      "season_name": "2021/2022",
-                      "round": "wiosenna",
-                      "is_primary": false,
-                      "is_primary_for_round": false
+                      "league_highest_parent_name": "1 liga",
+                      "league_highest_parent_id": 5,
+                      "team_contributor_id": null,
+                      "picture_url": null,
+                      "country": "Polska",
+                      "season": "2021/2022"
+                    }
                   }
-              ]
+                ]
 
 
   /profiles/{profile_uuid}/transfer-request/:
@@ -6285,9 +6289,9 @@ components:
               type: string
             country:
               type: string
-            season:
+            season_name:
               type: string
-          required: ["id", "team_name", "league_highest_parent_name", "league_highest_parent_id", "team_contributor_id", "picture_url", "country", "season"]
+          required: ["id", "team_name", "league_highest_parent_name", "league_highest_parent_id", "team_contributor_id", "picture_url", "country", "season_name"]
       required: ["id", "round", "team"]
 
     TransferRequestPositions:
