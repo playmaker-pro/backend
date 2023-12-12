@@ -5,10 +5,11 @@ from clubs.api.api_urls import urlpatterns as clubs_urls
 from events.urls import urlpatterns as events_urls
 from features.api_urls import urlpatterns as features_urls
 from inquiries.api.urls import urlpatterns as inquiries_urls
+from labels.api.urls import urlpatterns as labels_urls
+from notifications.api.urls import urlpatterns as notifications_urls
 from profiles.api.urls import urlpatterns as profiles_urls
 from roles.api_urls import urlpatterns as roles_urls
 from users.api.urls import urlpatterns as users_urls
-from notifications.api.urls import urlpatterns as notifications_urls
 
 app_name = "api"
 
@@ -21,6 +22,7 @@ urlpatterns = [
     url(r"^events/", include((events_urls, "events"))),
     url(r"^inquiries/", include((inquiries_urls, "inquiries"))),
     url(r"^notifications/", include((notifications_urls, "notifications"))),
+    url(r"^labels/", include((labels_urls, "labels"))),
     url(
         r"^countries/",
         views.LocaleDataView.as_view({"get": "list_countries"}),

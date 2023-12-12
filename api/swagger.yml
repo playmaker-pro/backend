@@ -13,6 +13,26 @@ servers:
         default: '8000'
 
 paths:
+  /labels:
+    get:
+      operationId: get_labels
+      description: Get labels definition
+      summary: Get all labels definition
+      tags:
+        - labels
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: "List of labels definition"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LabelDefinition'
+        '401':
+          description: "Unauthorized"
   /notifications/{profile_uuid}:
     get:
       operationId: get_notifications
@@ -798,7 +818,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Label'
+                  $ref: '#/components/schemas/ProfileLabel'
           description: 'List of teams, name with ID'
 
   /countries/:
@@ -1155,12 +1175,20 @@ paths:
               type: string
             description: "Country, like: ?country=PL&country=UA"
         - in: query
-          name: licence
+          name: language
           schema:
             type: array
             items:
               type: string
-            description: "Licence, like: ?licence=UEFA+A&licence=UEFA+B"
+          description: "Spoken languages,
+            multiple choices possible like: ?language=pl&league=fr"
+        - in: query
+          name: labels
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Filter profiles by labels, multiple choices possible like: ?labels=label1&labels=label2"
         - in: query
           name: not_me
           schema:
@@ -1311,7 +1339,7 @@ paths:
   /profiles/{profile_uuid}/labels:
     get:
       operationId: profiles_retrieve_labels
-      description: "Get labels for a gived profile"
+      description: "Get labels for a given profile"
       summary: "Get profile labels"
       parameters:
       - in: path
@@ -1320,22 +1348,6 @@ paths:
           type: string
           format: uuid
         required: true
-      - in: query
-        name: season_name
-        schema:
-          type: string
-      - in: query
-        name: start_date
-        description: "Start date for label filtering in YYYY-MM-DD format."
-        schema:
-          type: string
-          format: date
-      - in: query
-        name: end_date
-        description: "End date for label filtering in YYYY-MM-DD format."
-        schema:
-          type: string
-          format: date
       tags:
       - profiles
       security:
@@ -1349,7 +1361,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Label'
+                  $ref: '#/components/schemas/ProfileLabel'
 
   /profiles/player-positions/:
     get:
@@ -4521,15 +4533,34 @@ components:
       properties:
         label_name:
           type: string
+          description: The name of the label
         label_description:
           type: string
+          description: A description of the label
         season_name:
           type: string
+          description: The name of the season associated with the label
+          nullable: true
         icon:
           type: string
+          description: Identifier for the label
+        league:
+          type: string
+          description: The league associated with the label
+          nullable: true
+        team:
+          type: string
+          description: The team associated with the label
+          nullable: true
+        season_round:
+          type: string
+          description: The season round associated with the label
+          nullable: true
       required:
         - label_name
+        - label_description
         - season_name
+        - icon
 
     BaseProfile:
       type: object
@@ -6396,26 +6427,31 @@ components:
         done:
           type: boolean
 
-    Label:
+    LabelDefinition:
       type: object
       properties:
+        id:
+          type: integer
+          readOnly: true
         label_name:
           type: string
         label_description:
           type: string
-        season_name:
+          nullable: true
+        catalog_name:
           type: string
+          nullable: true
         icon:
           type: string
-        league:
+        conditions:
           type: string
-          nullable: true
-        team:
-          type: string
-          nullable: true
-        round:
-          type: string
-          nullable: true
+      required:
+        - id
+        - label_name
+        - label_description
+        - catalog_name
+        - icon
+        - conditions
     Event:
       type: object
       properties:

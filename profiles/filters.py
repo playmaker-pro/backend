@@ -8,6 +8,12 @@ from api import errors as api_errors
 from api import utils as api_utils
 from api.errors import InvalidAPIRequestParam
 from api.filters import APIFilter
+from labels.utils import (
+    apply_label_filters,
+    get_profile_specific_ids,
+    get_user_related_ids,
+    validate_labels,
+)
 from profiles import models, services
 from profiles.api.errors import IncorrectProfileRole
 
@@ -32,6 +38,7 @@ class ProfileListAPIFilter(APIFilter):
         "shuffle": api_utils.convert_bool,
         "not_me": api_utils.convert_bool,
         "licence": api_utils.convert_str_list,
+        "labels": api_utils.convert_str_list,
     }
 
     @cached_property
@@ -102,6 +109,7 @@ class ProfileListAPIFilter(APIFilter):
         self.filter_country()
         self.filter_language()
         self.filter_licence()
+        self.filter_by_labels()
 
     def define_query_params(self) -> None:
         """Validate query_params and save as self.query_params"""
@@ -195,3 +203,22 @@ class ProfileListAPIFilter(APIFilter):
             self.queryset = self.queryset.filter(
                 user__licences__licence__name__in=licence_names
             ).distinct()
+
+
+    def filter_by_labels(self) -> None:
+        """
+        Filters the queryset based on label criteria.
+
+        The method relies on utility functions to validate label names, get specific IDs for profile and
+        user-related labels, and apply these filters to the queryset.
+        """
+        if label_names := self.query_params.get("labels"):
+            valid_label_names = validate_labels(label_names)
+            profile_specific_ids = get_profile_specific_ids(
+                self.model, valid_label_names
+            )
+            user_related_ids = get_user_related_ids(valid_label_names)
+
+            self.queryset = apply_label_filters(
+                self.queryset, profile_specific_ids, user_related_ids, self.model
+            )
