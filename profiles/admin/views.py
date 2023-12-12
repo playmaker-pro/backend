@@ -221,7 +221,7 @@ class PlayerProfileAdmin(ProfileAdminBase):
     ]
 
     readonly_fields = ("data_prettified", "mapper", "external_links", "uuid")
-    search_fields = ("uuid",)
+    search_fields = ("uuid", "user__email", "user__first_name", "user__last_name")
 
 
 @admin.register(models.CoachProfile)

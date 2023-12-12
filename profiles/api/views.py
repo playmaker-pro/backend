@@ -39,6 +39,7 @@ from profiles.filters import ProfileListAPIFilter
 from profiles.serializers_detailed.base_serializers import (
     ProfileTransferRequestSerializer,
     ProfileTransferStatusSerializer,
+    TeamContributorSerializer,
 )
 from profiles.services import (
     ProfileFilterService,
@@ -932,7 +933,7 @@ class TransferRequestAPIView(EndpointView):
         serializer_class = self.serializer_manager.get_serializer_class(
             profile, "output"
         )
-        serializer = serializer_class(queryset, many=True, context={"request": request})
+        serializer = TeamContributorSerializer(queryset, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create_transfer_request(
