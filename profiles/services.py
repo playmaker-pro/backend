@@ -24,12 +24,12 @@ from profiles.models import REVERSED_MODEL_MAP, LicenceType, ProfileTransferStat
 from roles.definitions import (
     CLUB_ROLES,
     PROFILE_TYPE_MAP,
-    TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES,
+    TRANSFER_BENEFITS_CHOICES,
     TRANSFER_REQUEST_POSITIONS_CHOICES,
-    TRANSFER_REQUEST_SALARY_CHOICES,
     TRANSFER_REQUEST_STATUS_CHOICES,
-    TRANSFER_REQUEST_TRAININGS_CHOICES,
+    TRANSFER_SALARY_CHOICES,
     TRANSFER_STATUS_CHOICES,
+    TRANSFER_TRAININGS_CHOICES,
 )
 from utils import get_current_season
 
@@ -1483,7 +1483,7 @@ class TransferRequestService:
     ) -> typing.Optional[typing.Dict[str, str]]:
         """Get a transfer status by number of trainings id."""
         result: list = self.__get_list_transfer_request_choices(
-            id=trainings_id, choices_tuple=TRANSFER_REQUEST_TRAININGS_CHOICES
+            id=trainings_id, choices_tuple=TRANSFER_TRAININGS_CHOICES
         )
         return result[0] if result else None
 
@@ -1492,7 +1492,7 @@ class TransferRequestService:
     ) -> typing.Optional[typing.Dict[str, str]]:
         """Get a transfer status by additional information id."""
         result: list = self.__get_list_transfer_request_choices(
-            id=info_id, choices_tuple=TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES
+            id=info_id, choices_tuple=TRANSFER_BENEFITS_CHOICES
         )
         return result[0] if result else None
 
@@ -1501,7 +1501,7 @@ class TransferRequestService:
     ) -> typing.Optional[typing.Dict[str, str]]:
         """Get a transfer status by salary id."""
         result: list = self.__get_list_transfer_request_choices(
-            id=salary_id, choices_tuple=TRANSFER_REQUEST_SALARY_CHOICES
+            id=salary_id, choices_tuple=TRANSFER_SALARY_CHOICES
         )
         return result[0] if result else None
 
@@ -1520,7 +1520,7 @@ class TransferRequestService:
     def get_list_transfer_num_of_trainings(self) -> typing.List[dict]:
         """Get a list of transfer statuses for specified number of trainings choices."""
         return self.__get_list_transfer_request_choices(
-            choices_tuple=TRANSFER_REQUEST_TRAININGS_CHOICES
+            choices_tuple=TRANSFER_TRAININGS_CHOICES
         )
 
     def get_list_transfer_additional_info(self) -> typing.List[dict]:
@@ -1528,13 +1528,13 @@ class TransferRequestService:
         Get a list of transfer statuses for specified additional information choices.
         """
         return self.__get_list_transfer_request_choices(
-            choices_tuple=TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES
+            choices_tuple=TRANSFER_BENEFITS_CHOICES
         )
 
     def get_list_transfer_salary(self) -> typing.List[dict]:
         """Get a list of transfer statuses for specified salary choices."""
         return self.__get_list_transfer_request_choices(
-            choices_tuple=TRANSFER_REQUEST_SALARY_CHOICES
+            choices_tuple=TRANSFER_SALARY_CHOICES
         )
 
     @staticmethod

@@ -193,7 +193,8 @@ def test_map_old_roles_to_new(migrator) -> None:
         None,
     ]
 
-    # Create ClubProfile instances with various 'club_role' values and store pre-migration roles
+    # Create ClubProfile instances with various 'club_role'
+    # values and store pre-migration roles
     pre_migration_roles = {}
     for user, role in zip(users, club_role_values):
         profile = factory.create(

@@ -1,9 +1,7 @@
 import datetime
 
-import factory
 import pytest
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import signals
 from django.test import TestCase
 
 from api.consts import ChoicesTuple
@@ -200,10 +198,14 @@ class TeamContributorServiceTests(TestCase):
 
     # TODO: kgarczewski: FUTURE ADDITION: Reference: PM 20-697[SPIKE]
     # def test_create_or_get_team_contributor_get(self):
-    #     """Test fetching an existing team contributor instead of creating a new one."""
+    #     """
+    #     Test fetching an existing team contributor instead of creating a new one.
+    #     """
     #     team_history = TeamHistoryFactory.create()
     #     existing_team_contributor = TeamContributorFactory.create(
-    #         profile_uuid=self.user.profile.uuid, team_history=[team_history], role="IC"
+    #         profile_uuid=self.user.profile.uuid,
+    #         team_history=[team_history],
+    #         role="IC"
     #     )
     #     (
     #         team_contributor,
@@ -214,7 +216,9 @@ class TeamContributorServiceTests(TestCase):
     #     assert existing_team_contributor == team_contributor
 
     def test_create_or_get_all_related_entities(self):
-        """Test creating or fetching all related entities for a given team contributor."""  # noqa: E501
+        """
+        Test creating or fetching all related entities for a given team contributor.
+        """
         data = {
             "league_identifier": self.league.pk,
             "country": "PL",
@@ -284,7 +288,9 @@ class TeamContributorServiceTests(TestCase):
         )
 
     def test_profile_fields_update_on_contributor_creation(self):
-        """Test that profile fields are updated when a primary team contributor is created."""
+        """
+        Test that profile fields are updated when a primary team contributor is created.
+        """
         team_history = TeamHistoryFactory.create()
         data = {
             "team_history": team_history,
@@ -303,7 +309,9 @@ class TeamContributorServiceTests(TestCase):
         )
 
     def test_profile_fields_reset_on_contributor_deletion(self):
-        """Test that profile fields are reset when a primary team contributor is deleted."""
+        """
+        Test that profile fields are reset when a primary team contributor is deleted.
+        """
         # Create a primary team contributor
         team_contributor = TeamContributorFactory.create(
             profile_uuid=self.user.profile.uuid, is_primary=True

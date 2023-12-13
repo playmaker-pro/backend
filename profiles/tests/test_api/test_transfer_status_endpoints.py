@@ -205,7 +205,7 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
         )
 
     @factory.django.mute_signals(signals.pre_save, signals.post_save)
-    def test_create_profile_transfer_status_without_additional_info(self):
+    def test_create_profile_transfer_status_without_benefits(self):
         """Test create profile transfer status. Expected status code 201."""
         league = LeagueFactory.create_league_as_highest_parent()
         data = {
@@ -255,3 +255,25 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
             self.url, json.dumps({"status": 2}), **self.headers
         )
         assert response.status_code == 403
+
+    @factory.django.mute_signals(signals.pre_save, signals.post_save)
+    def test_transfer_status_with_extra_fields(self):
+        """
+        Test create profile transfer status with extra fields.
+        Expected status code 201.
+        """
+        league = LeagueFactory.create_league_as_highest_parent()
+        data = {
+            "status": 2,
+            "league": [league.pk],
+            "additional_info": [1],
+            "number_of_trainings": 1,
+            "salary": 1,
+        }
+        response: Response = self.client.post(
+            self.url, json.dumps(data), **self.headers
+        )
+
+        assert response.status_code == 201
+        for element in data.keys():
+            assert element in response.json()

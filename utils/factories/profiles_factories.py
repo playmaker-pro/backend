@@ -309,7 +309,7 @@ class TransferRequestFactory(factory.django.DjangoModelFactory):
     contact_email = factory.Faker("email")
     phone_number = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
     status = "1"
-    additional_info = [1, 2]
+    benefits = [1, 2]
     requesting_team = factory.SubFactory(TeamContributorFactory)
     gender = "M"
     position = [1]

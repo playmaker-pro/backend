@@ -57,7 +57,7 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
             "gender": "M",
             "status": 1,
             "position": [3, 4],
-            "additional_info": [2, 4],
+            "benefits": [2, 4],
             "number_of_trainings": 1,
             "salary": 1,
             "contact_email": "dwdw@fefe.com",
@@ -103,10 +103,10 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
 
         assert response.json() == expected_response
 
-    def test_list_transfer_request_additional_info(self):
+    def test_list_transfer_request_benefits(self):
         """Test list transfer additional information. Expected status code 200."""
         response: Response = self.client.get(
-            reverse("api:profiles:list_transfer_request_additional_info")
+            reverse("api:profiles:list_transfer_request_benefits")
         )
         assert response.status_code == 200
         assert isinstance(response.json(), list)
@@ -175,9 +175,9 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         assert response.json().get("number_of_trainings") == expected_trainings
 
         expected_infos = []
-        for element in transfer_request_obj.additional_info:
+        for element in transfer_request_obj.benefits:
             expected_infos.append(transfer_service.get_additional_info_by_id(element))
-        assert response.json().get("additional_info") == expected_infos
+        assert response.json().get("benefits") == expected_infos
 
         expected_salary = transfer_service.get_salary_by_id(transfer_request_obj.salary)
         assert response.json().get("salary") == expected_salary
@@ -311,7 +311,7 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
     @factory.django.mute_signals(signals.pre_save, signals.post_save)
     def test_create_profile_transfer_request_without_additional_info(self):
         """Test create profile transfer status. Expected status code 201."""
-        self.data.pop("additional_info")
+        self.data.pop("benefits")
         response: Response = self.client.post(
             self.url, json.dumps(self.data), **self.headers
         )
@@ -418,27 +418,31 @@ def test_profile_transfer_request_teams_endpoint(
     expected_response = [
         {
             "id": team_contributor1.pk,
-            "team_id": team1.pk,
-            "picture_url": request.build_absolute_uri(team1.get_club_pic),
-            "team_name": team1.name,
-            "league_name": team_history1.league_history.league.display_league_top_parent,  # noqa: E501
-            "league_id": team_history1.league_history.league.pk,
-            "season_name": team_history1.league_history.season.name,
             "round": team_contributor1.round,
-            "is_primary": team_contributor1.is_primary,
-            "is_primary_for_round": team_contributor1.is_primary_for_round,
+            "team": {
+                "id": team_history1.pk,
+                "team_name": team1.name,
+                "league_highest_parent_name": team_history1.league_history.league.display_league_top_parent,  # noqa: E501
+                "league_highest_parent_id": team_history1.league_history.league.pk,
+                "team_contributor_id": None,
+                "picture_url": request.build_absolute_uri(team1.get_club_pic),
+                "country": team_history1.get_country,
+                "season": team_history1.league_history.season.name,
+            },
         },
         {
             "id": team_contributor2.pk,
-            "team_id": team2.pk,
-            "picture_url": request.build_absolute_uri(team2.get_club_pic),
-            "team_name": team2.name,
-            "league_name": team_history2.league_history.league.display_league_top_parent,  # noqa: E501
-            "league_id": team_history2.league_history.league.pk,
-            "season_name": team_history2.league_history.season.name,
             "round": team_contributor2.round,
-            "is_primary": team_contributor2.is_primary,
-            "is_primary_for_round": team_contributor2.is_primary_for_round,
+            "team": {
+                "id": team_history2.pk,
+                "team_name": team2.name,
+                "league_highest_parent_name": team_history2.league_history.league.display_league_top_parent,  # noqa: E501
+                "league_highest_parent_id": team_history2.league_history.league.pk,
+                "team_contributor_id": None,
+                "picture_url": request.build_absolute_uri(team2.get_club_pic),
+                "country": team_history2.get_country,
+                "season": team_history2.league_history.season.name,
+            },
         },
     ]
 

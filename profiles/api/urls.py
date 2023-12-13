@@ -234,13 +234,13 @@ urlpatterns = [
         name="list_transfer_request_number_of_trainings",
     ),
     path(
-        r"transfer-request/additional-info/",
+        r"transfer-request/benefits/",
         views.TransferRequestAPIView.as_view(
             {
-                "get": "list_transfer_request_additional_info",
+                "get": "list_transfer_request_benefits",
             }
         ),
-        name="list_transfer_request_additional_info",
+        name="list_transfer_request_benefits",
     ),
     path(
         r"transfer-request/salary/",

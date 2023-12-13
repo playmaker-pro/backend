@@ -50,13 +50,13 @@ from profiles.services import (
 )
 from profiles.utils import map_service_exception
 from roles.definitions import (
-    TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES,
+    TRANSFER_BENEFITS_CHOICES,
     TRANSFER_REQUEST_POSITIONS_CHOICES,
-    TRANSFER_REQUEST_SALARY_CHOICES,
     TRANSFER_REQUEST_STATUS_CHOICES,
-    TRANSFER_REQUEST_TRAININGS_CHOICES,
+    TRANSFER_SALARY_CHOICES,
     TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES,
     TRANSFER_STATUS_CHOICES,
+    TRANSFER_TRAININGS_CHOICES,
 )
 from users.api.serializers import UserMainRoleSerializer
 
@@ -855,22 +855,21 @@ class TransferRequestAPIView(EndpointView):
         Retrieve and display transfer status number of trainings for the profiles.
         """
         transfer_request_number_of_trainings_choices = (
-            ChoicesTuple(*transfer) for transfer in TRANSFER_REQUEST_TRAININGS_CHOICES
+            ChoicesTuple(*transfer) for transfer in TRANSFER_TRAININGS_CHOICES
         )
         serializer = ProfileEnumChoicesSerializer(
             transfer_request_number_of_trainings_choices, many=True
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def list_transfer_request_additional_info(
+    def list_transfer_request_benefits(
         self, request: Request  # noqa
     ) -> Response:  # noqa
         """
         Retrieve and display transfer status additional information for the profiles.
         """
         transfer_request_additional_info_choices = (
-            ChoicesTuple(*transfer)
-            for transfer in TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES
+            ChoicesTuple(*transfer) for transfer in TRANSFER_BENEFITS_CHOICES
         )
         serializer = ProfileEnumChoicesSerializer(
             transfer_request_additional_info_choices, many=True
@@ -882,7 +881,7 @@ class TransferRequestAPIView(EndpointView):
         Retrieve and display transfer status request salary for the profiles.
         """
         transfer_request_salary_choices = (
-            ChoicesTuple(*transfer) for transfer in TRANSFER_REQUEST_SALARY_CHOICES
+            ChoicesTuple(*transfer) for transfer in TRANSFER_SALARY_CHOICES
         )
         serializer = ProfileEnumChoicesSerializer(
             transfer_request_salary_choices, many=True
@@ -908,11 +907,9 @@ class TransferRequestAPIView(EndpointView):
         queryset: QuerySet = team_contributor_service.get_profile_actual_teams(
             profile_uuid
         ).prefetch_related("team_history", "team_history__league_history__league")
-        # Using the manager to get the right serializer
-        serializer_class = self.serializer_manager.get_serializer_class(
-            profile, "output"
+        serializer = TeamContributorSerializer(
+            queryset, many=True, context={"request": request}
         )
-        serializer = TeamContributorSerializer(queryset, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create_transfer_request(

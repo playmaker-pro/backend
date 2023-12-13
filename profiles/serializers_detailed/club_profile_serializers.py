@@ -49,7 +49,8 @@ class ClubProfileUpdateSerializer(ClubProfileViewSerializer):
 
         super().update(instance, validated_data)
 
-        # Get the new club_role from validated_data or use the existing one if not provided
+        # Get the new club_role from validated_data or use the
+        # existing one if not provided
         new_club_role = validated_data.get("club_role", instance.club_role)
         # Check if custom_club_role is provided when club_role is not 'O'
         if "custom_club_role" in validated_data and new_club_role != "O":
@@ -59,11 +60,13 @@ class ClubProfileUpdateSerializer(ClubProfileViewSerializer):
         if new_club_role and new_club_role != old_club_role:
             instance.club_role = new_club_role
 
-        # Reset custom_club_role to None if club_role changes from 'O' to a different value
+        # Reset custom_club_role to None if club_role changes from 'O'
+        # to a different value
         if old_club_role == "O" and new_club_role != "O":
             instance.custom_club_role = None
 
-        # Update custom_club_role if new club_role is 'Other' and custom_club_role is provided
+        # Update custom_club_role if new club_role is 'Other' and
+        # custom_club_role is provided
         elif new_club_role == "O":
             if "custom_club_role" in validated_data:
                 instance.custom_club_role = validated_data["custom_club_role"]

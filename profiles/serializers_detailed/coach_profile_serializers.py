@@ -68,7 +68,8 @@ class CoachProfileUpdateSerializer(CoachProfileViewSerializer):
         expected_values: List[str] = [el[0] for el in FORMATION_CHOICES]
         if formation and formation not in expected_values:
             raise InvalidFormationException(
-                details=f"Given formation is invalid. Expected one of: {expected_values}"
+                details=f"Given formation is invalid. "
+                f"Expected one of: {expected_values}"
             )
         return formation
 
@@ -90,10 +91,12 @@ class CoachProfileUpdateSerializer(CoachProfileViewSerializer):
 
         super().update(instance, validated_data)
 
-        # Retrieve the new coach_role from validated_data, default to existing role if not provided
+        # Retrieve the new coach_role from validated_data,
+        # default to existing role if not provided
         new_coach_role = validated_data.get("coach_role", instance.coach_role)
 
-        # Raise an exception if custom_coach_role is provided but the new coach_role is not 'Other'
+        # Raise an exception if custom_coach_role is provided but the
+        # new coach_role is not 'Other'
         if "custom_coach_role" in validated_data and new_coach_role != "OTC":
             raise InvalidCustomCoachRoleException()
 
@@ -101,11 +104,13 @@ class CoachProfileUpdateSerializer(CoachProfileViewSerializer):
         if new_coach_role and new_coach_role != old_coach_role:
             instance.coach_role = new_coach_role
 
-        # Reset custom_coach_role to None if coach_role changes from 'Other' to a different role
+        # Reset custom_coach_role to None if coach_role changes from
+        # 'Other' to a different role
         if old_coach_role == "OTC" and new_coach_role != "OTC":
             instance.custom_coach_role = None
 
-        # Update custom_coach_role if new coach_role is 'Other' and custom_coach_role is provided
+        # Update custom_coach_role if new coach_role is 'Other' and
+        # custom_coach_role is provided
         elif new_coach_role == "OTC":
             if "custom_coach_role" in validated_data:
                 instance.custom_coach_role = validated_data["custom_coach_role"]
