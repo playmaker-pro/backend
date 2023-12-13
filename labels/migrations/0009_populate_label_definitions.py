@@ -55,7 +55,9 @@ def populate_label_definitions(apps, schema_editor) -> None:
     ]
 
     for label in labels:
-        LabelDefinition.objects.create(**label)
+        LabelDefinition.objects.get_or_create(
+            label_name=label["label_name"], defaults=label
+        )
 
 
 class Migration(migrations.Migration):

@@ -64,6 +64,8 @@ class UserFactory(CustomObjectFactory):
 class UserPreferencesFactory(CustomObjectFactory):
     user = factory.SubFactory(UserFactory)
     gender = fuzzy.FuzzyChoice(["M", "K"])
+    birth_date = factory.Faker("date_of_birth")
+    citizenship = factory.List(["PL"])
 
     class Meta:
         model = UserPreferences

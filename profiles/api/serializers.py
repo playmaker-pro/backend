@@ -17,6 +17,7 @@ from clubs import errors as clubs_errors
 from clubs.models import Season, TeamHistory
 from clubs.services import ClubService
 from external_links.serializers import ExternalLinksSerializer
+from labels.services import LabelService
 from profiles import errors, models, services
 from profiles.api import consts
 from profiles.api import errors as api_errors
@@ -32,6 +33,7 @@ User = get_user_model()
 clubs_service: ClubService = ClubService()
 users_service: UserService = UserService()
 locale_service: LocaleDataService = LocaleDataService()
+label_service: LabelService = LabelService()
 
 
 class PlayerPositionSerializer(serializers.ModelSerializer):
@@ -197,16 +199,21 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
             raise NotOwnerOfAnObject
 
         try:
-            return super().update(instance, validated_data)
+            updated_licence = super().update(instance, validated_data)
         except IntegrityError:
             raise serializers.ValidationError(
                 {"error": "You already have this licence."}
             )
+        # Assign labels based on the updated license
+        label_service.assign_licence_labels(updated_licence.owner_id)
+
+        return updated_licence
 
     def create(self, validated_data) -> models.CoachLicence:
         """Override method to create CoachLicence object"""
         try:
             licence_id = validated_data.pop("licence_id")
+            validated_data["licence"] = models.LicenceType.objects.get(id=licence_id)
         except KeyError:
             raise serializers.ValidationError({"error": "Licence ID is required."})
 
@@ -218,11 +225,14 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
             )
 
         try:
-            return models.CoachLicence.objects.create(**validated_data)
+            licence_instance = models.CoachLicence.objects.create(**validated_data)
         except IntegrityError:
             raise serializers.ValidationError(
                 {"error": "You already have this licence."}
             )
+        # Assign labels based on the created license
+        label_service.assign_licence_labels(licence_instance.owner_id)
+        return licence_instance
 
     def delete(self) -> None:
         """
@@ -231,7 +241,12 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
         """
         if self.instance.owner != self.context.get("requestor"):
             raise NotOwnerOfAnObject
+        user_id = (
+            self.instance.owner_id
+        )  # Store the user ID before deleting the licence
         self.instance.delete()
+        # Update labels after deleting the licence
+        label_service.assign_licence_labels(user_id)
 
 
 class ProfileVisitHistorySerializer(serializers.ModelSerializer):

@@ -1,8 +1,13 @@
 import factory
+from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 
 from labels.models import Label, LabelDefinition
 from utils.factories.consts import *
+from utils.factories.user_factories import UserFactory
+
+User = get_user_model()
 
 
 class LabelDefinitionFactory(factory.django.DjangoModelFactory):
@@ -34,3 +39,5 @@ class LabelFactory(factory.django.DjangoModelFactory):
     visible_on_profile = True
     visible_on_base = True
     visible_on_main_page = True
+
+    content_type = factory.LazyFunction(lambda: ContentType.objects.get_for_model(User))

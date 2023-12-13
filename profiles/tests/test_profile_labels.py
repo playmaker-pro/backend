@@ -21,18 +21,17 @@ class TestGetProfileLabelsAPI(APITestCase):
         label_def2 = factories.LabelDefinitionFactory(label_name="label2")
         factories.LabelFactory(
             label_definition=label_def1,
-            season_name="2018/2019",
-            content_object=self.profile,
-        )
-        factories.LabelFactory(
-            label_definition=label_def1,
-            season_name="2019/2020",
-            content_object=self.profile,
+            object_id=self.profile.user.id,
+            visible_on_profile=True,
+            start_date="2021-01-01",
+            season_name=None,
         )
         factories.LabelFactory(
             label_definition=label_def2,
-            season_name="2019/2020",
-            content_object=self.profile,
+            object_id=self.profile.user.id,
+            visible_on_profile=True,
+            start_date="2021-01-01",
+            season_name=None,
         )
 
         self.url = "api:profiles:get_profile_labels"
@@ -49,24 +48,5 @@ class TestGetProfileLabelsAPI(APITestCase):
             reverse(self.url, kwargs={"profile_uuid": self.profile_uuid}),
             **self.headers,
         )
-        assert len(response.data) == 3
-        assert response.status_code == status.HTTP_200_OK
-
-    def test_get_profile_labels_specific_season(self) -> None:
-        response = self.client.get(
-            f'{reverse(self.url, kwargs={"profile_uuid": self.profile_uuid})}?season_name=2019/2020',  # noqa: E501
-            **self.headers,
-        )
         assert len(response.data) == 2
-        for d in response.data:
-            assert d["season_name"] == "2019/2020"
-            assert not d.get("created_at"), "created_at should not be visible"
-            assert not d.get("updated_at"), "updated_at should not be visible"
-            assert not d.get(
-                "visible_on_profile"
-            ), "visible_on_profile should not be visible"
-            assert not d.get("visible_on_base"), "visible_on_base should not be visible"
-            assert not d.get(
-                "visible_on_main_page"
-            ), "visible_on_main_page should not be visible"
         assert response.status_code == status.HTTP_200_OK

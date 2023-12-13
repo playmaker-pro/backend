@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date
 from typing import Optional
 
 from django.contrib.auth import get_user_model
@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework.views import PermissionDenied
 
 from api.consts import ChoicesTuple
-from api.errors import InvalidDateFormat, NotOwnerOfAnObject
+from api.errors import NotOwnerOfAnObject
 from api.serializers import ProfileEnumChoicesSerializer
 from api.swagger_schemas import (
     COACH_ROLES_API_SWAGGER_SCHEMA,
@@ -26,6 +26,7 @@ from clubs.services import LeagueService
 from external_links import serializers as external_links_serializers
 from external_links.errors import LinkSourceNotFound, LinkSourceNotFoundServiceException
 from external_links.services import ExternalLinksService
+from labels.utils import fetch_all_labels
 from profiles import errors, models
 from profiles.api import errors as api_errors
 from profiles.api import serializers
@@ -58,7 +59,6 @@ from roles.definitions import (
     TRANSFER_STATUS_CHOICES,
 )
 from users.api.serializers import UserMainRoleSerializer
-from utils.utils import validate_date_format
 
 profile_service = ProfileService()
 team_contributor_service = TeamContributorService()
@@ -97,7 +97,9 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         )
         if not serializer_class:
             return Response(status=status.HTTP_204_NO_CONTENT)
-        serializer = serializer_class(profile_object, context={"request": request})
+        serializer = serializer_class(
+            profile_object, context={"request": request, "label_context": "profile"}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update_profile(self, request: Request, profile_uuid: uuid.UUID) -> Response:
@@ -119,7 +121,9 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         if not serializer_class:
             serializer_class = serializers.UpdateProfileSerializer
         serializer = serializer_class(
-            instance=profile, data=request.data, context={"requestor": request.user}
+            instance=profile,
+            data=request.data,
+            context={"requestor": request.user, "profile_uuid": profile_uuid},
         )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
@@ -149,7 +153,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         paginated_query = self.paginate_queryset(qs)
         serializer = serializer_class(
             paginated_query,
-            context={"requestor": request.user},
+            context={"requestor": request.user, "label_context": "base"},
             many=True,
         )
         return self.get_paginated_response(serializer.data)
@@ -159,35 +163,10 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
             profile_object = profile_service.get_profile_by_uuid(profile_uuid)
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExist
+        all_labels = fetch_all_labels(profile_object, label_context="profile")
 
-        start_date_str = request.GET.get("start_date")
-        end_date_str = request.GET.get("end_date")
-        if start_date_str:
-            try:
-                validate_date_format(start_date_str)
-            except ValueError:
-                raise InvalidDateFormat
-        if end_date_str:
-            try:
-                validate_date_format(end_date_str)
-            except ValueError:
-                raise InvalidDateFormat
-        query = {"visible": True}
-        if start_date_str:
-            query["end_date__gte"] = datetime.strptime(
-                start_date_str, "%Y-%m-%d"
-            ).date()
-        if end_date_str:
-            query["start_date__lte"] = datetime.strptime(
-                end_date_str, "%Y-%m-%d"
-            ).date()
-        season_name = request.GET.get("season_name")
-        if season_name:
-            query["season_name"] = season_name
+        serializer = serializers.ProfileLabelsSerializer(all_labels, many=True)
 
-        serializer = serializers.ProfileLabelsSerializer(
-            profile_object.labels.filter(**query), many=True
-        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def get_owned_profiles(self, request: Request) -> Response:
