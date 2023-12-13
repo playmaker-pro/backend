@@ -1,6 +1,8 @@
 import factory
+
+from external_links.models import ExternalLinks, ExternalLinksEntity, LinkSource
+
 from .base import CustomObjectFactory
-from external_links.models import LinkSource, ExternalLinks, ExternalLinksEntity
 
 
 class ExternalLinksFactory(factory.django.DjangoModelFactory):

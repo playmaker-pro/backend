@@ -58,9 +58,11 @@ from profiles.services import (
 )
 from roles.definitions import (
     PROFILE_TYPE_SHORT_MAP,
-    TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES,
+    TRANSFER_BENEFITS_CHOICES,
     TRANSFER_REQUEST_POSITIONS_CHOICES,
+    TRANSFER_SALARY_CHOICES,
     TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES,
+    TRANSFER_TRAININGS_CHOICES,
 )
 from users.models import User, UserPreferences
 
@@ -344,6 +346,9 @@ class ProfileTransferStatusSerializer(
             "status",
             "additional_info",
             "league",
+            "benefits",
+            "salary",
+            "number_of_trainings",
         )
 
     status = ProfileEnumChoicesSerializer(model=ProfileTransferStatus)
@@ -352,6 +357,7 @@ class ProfileTransferStatusSerializer(
         queryset=LeagueService().get_highest_parents(), many=True
     )
     phone_number = PhoneNumberField(source="*", required=False)
+    benefits = serializers.ListField(required=False, allow_null=True)
 
     def create(self, validated_data: dict):
         """Create transfer status"""
@@ -381,6 +387,30 @@ class ProfileTransferStatusSerializer(
             ]
             serializer = ProfileEnumChoicesSerializer(info, many=True)
             data["additional_info"] = serializer.data
+        if instance.benefits:
+            benefits = [
+                ChoicesTuple(*transfer)
+                for transfer in TRANSFER_BENEFITS_CHOICES
+                if transfer[0] in str(instance.benefits)
+            ]
+            serializer = ProfileEnumChoicesSerializer(benefits, many=True)
+            data["benefits"] = serializer.data
+        if instance.salary:
+            salary = [
+                ChoicesTuple(*transfer)
+                for transfer in TRANSFER_SALARY_CHOICES
+                if transfer[0] in str(instance.salary)
+            ]
+            serializer = ProfileEnumChoicesSerializer(salary, many=True)
+            data["salary"] = serializer.data
+        if instance.number_of_trainings:
+            number_of_trainings = [
+                ChoicesTuple(*transfer)
+                for transfer in TRANSFER_TRAININGS_CHOICES
+                if transfer[0] in str(instance.number_of_trainings)
+            ]
+            serializer = ProfileEnumChoicesSerializer(number_of_trainings, many=True)
+            data["number_of_trainings"] = serializer.data
         return data
 
     def to_internal_value(self, data):
@@ -401,7 +431,9 @@ class TeamContributorSerializer(serializers.ModelSerializer):
     def get_team(self, obj: TeamContributor) -> dict:
         """Retrieve the team from the team_history object."""
         instance = obj.team_history.first()
-        data = TeamHistoryBaseProfileSerializer(instance=instance, read_only=True)
+        data = TeamHistoryBaseProfileSerializer(
+            instance=instance, read_only=True, context=self.context
+        )
         return data.data
 
 
@@ -418,7 +450,7 @@ class ProfileTransferRequestSerializer(
             "status",
             "position",
             "number_of_trainings",
-            "additional_info",
+            "benefits",
             "salary",
             "contact_email",
             "phone_number",
@@ -432,7 +464,7 @@ class ProfileTransferRequestSerializer(
     )
     position = serializers.ListField()
     number_of_trainings = serializers.IntegerField(required=False, allow_null=True)
-    additional_info = serializers.ListField(required=False, allow_null=True)
+    benefits = serializers.ListField(required=False, allow_null=True)
     salary = serializers.IntegerField(required=False, allow_null=True)
     phone_number = PhoneNumberField(source="*", required=False)
 
@@ -447,14 +479,14 @@ class ProfileTransferRequestSerializer(
         data["requesting_team"] = TeamContributorSerializer(
             instance=instance.requesting_team, read_only=True
         ).data
-        if instance.additional_info:
+        if instance.benefits:
             info = [
                 ChoicesTuple(*transfer)
-                for transfer in TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES
-                if transfer[0] in str(instance.additional_info)
+                for transfer in TRANSFER_BENEFITS_CHOICES
+                if transfer[0] in str(instance.benefits)
             ]
             info_serialized = serializer(info, many=True)
-            data["additional_info"] = info_serialized.data
+            data["benefits"] = info_serialized.data
         if instance.position:
             positions = [
                 ChoicesTuple(*transfer)

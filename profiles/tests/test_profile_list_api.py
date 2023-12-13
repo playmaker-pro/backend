@@ -336,8 +336,9 @@ class TestProfileListAPI(APITestCase):
 
     def test_get_bulk_profiles_filter_licence_invalid(self) -> None:
         """
-        Test the filter licence functionality with an invalid licence name to ensure that
-        the validation logic works correctly and the API responds appropriately.
+        Test the filter licence functionality with an invalid licence name to
+         ensure that the validation logic works correctly and the API
+         responds appropriately.
         """
         factories.PlayerProfileFactory.create()
         invalid_licence_name = "INVALID_LICENCE"
@@ -350,9 +351,11 @@ class TestProfileListAPI(APITestCase):
         )
 
         assert response.status_code == 400
-        expected_error_msg = "Invalid value for field: licence in model: LicenceType. Field must be one of:"
+        expected_error_msg = (
+            "Invalid value for field: licence in model: "
+            "LicenceType. Field must be one of:"
+        )
         assert expected_error_msg in response.data["detail"]
-
 
     def test_get_bulk_profiles_filter_by_labels(self) -> None:
         """Test profile filtering by labels"""
@@ -428,7 +431,6 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
 
         assert len(response.data["results"]) == 0
         assert response.status_code == 200
-
 
 
 @pytest.mark.django_db

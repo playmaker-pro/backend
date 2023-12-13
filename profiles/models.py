@@ -2632,7 +2632,61 @@ class ProfileVisitHistory(models.Model):
     #         self.save()
 
 
-class ProfileTransferStatus(models.Model):
+class TransferBaseModel(models.Model):
+    """Transfer base model."""
+    phone_number = models.CharField(
+        max_length=15,
+        null=True,
+        blank=True,
+        help_text="Phone number for the transfer.",
+    )
+    dial_code = models.IntegerField(
+        _("Dial Code"),
+        blank=True,
+        null=True,
+        help_text=_("Country dial code for the phone number."),
+    )
+    contact_email = models.EmailField(
+        _("Contact Email"),
+        blank=True,
+        null=True,
+        help_text=_("Contact email address for the transfer."),
+    )
+    salary = models.CharField(
+        max_length=10,
+        default=None,
+        null=True,
+        blank=True,
+        choices=definitions.TRANSFER_SALARY_CHOICES,
+        help_text="Define salary",
+    )
+    benefits = ArrayField(
+        models.CharField(
+            max_length=255,
+            null=True,
+            blank=True,
+            choices=definitions.TRANSFER_BENEFITS_CHOICES,
+            help_text="Additional information about the transfer.",
+        ),
+        null=True,
+        blank=True,
+    )
+    number_of_trainings = models.CharField(
+        max_length=10,
+        default=None,
+        null=True,
+        blank=True,
+        choices=definitions.TRANSFER_TRAININGS_CHOICES,
+        help_text="Define number of trainings per week",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class ProfileTransferStatus(TransferBaseModel):
     """Keeps track on profile transfer status"""
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
@@ -2643,18 +2697,6 @@ class ProfileTransferStatus(models.Model):
         blank=True,
         null=True,
         help_text=_("Contact email address for the transfer."),
-    )
-    phone_number = models.CharField(
-        max_length=15,
-        null=True,
-        blank=True,
-        help_text="Phone number for the transfer status.",
-    )
-    dial_code = models.IntegerField(
-        _("Dial Code"),
-        blank=True,
-        null=True,
-        help_text=_("Country dial code for the phone number."),
     )
     status = models.CharField(
         max_length=255,
@@ -2675,7 +2717,7 @@ class ProfileTransferStatus(models.Model):
     )
 
 
-class ProfileTransferRequest(models.Model):
+class ProfileTransferRequest(TransferBaseModel):
     """
     Represents a profile transfer request in the context of profile needs
     (for example soccer clubs and coaches).
@@ -2711,43 +2753,6 @@ class ProfileTransferRequest(models.Model):
             choices=definitions.TRANSFER_REQUEST_POSITIONS_CHOICES,
             help_text="Define team position",
         )
-    )
-    number_of_trainings = models.CharField(
-        max_length=10,
-        choices=definitions.TRANSFER_REQUEST_TRAININGS_CHOICES,
-        help_text="Define number of trainings per week",
-    )
-    additional_info = ArrayField(
-        models.CharField(
-            max_length=255,
-            null=True,
-            blank=True,
-            choices=definitions.TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES,
-            help_text="Additional information about the transfer request.",
-        ),
-        null=True,
-        blank=True,
-    )
-    salary = models.CharField(
-        max_length=10,
-        choices=definitions.TRANSFER_REQUEST_SALARY_CHOICES,
-        help_text="Define salary",
-    )
-    contact_email = models.EmailField(
-        null=True, blank=True, help_text="Email address of the contact person."
-    )
-    phone_number = models.CharField(
-        max_length=15,
-        null=True,
-        blank=True,
-        help_text="Phone number for the transfer request.",
-    )
-    dial_code = models.IntegerField(
-        _("Dial Code"),
-        max_length=5,
-        blank=True,
-        null=True,
-        help_text=_("Country dial code for the phone number."),
     )
 
 

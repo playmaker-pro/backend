@@ -1,6 +1,7 @@
 import typing
 
 from rest_framework import serializers
+
 from profiles.models import ManagerProfile
 from profiles.serializers_detailed.base_serializers import BaseProfileSerializer
 
@@ -12,7 +13,8 @@ class PhoneNumberField(serializers.Field):
     This field is responsible for serializing and deserializing the phone number
     information (which includes 'dial_code' and 'agency_phone'). It handles the logic
     of combining these two separate fields into a single nested object for API
-    representation, and it also processes incoming data for these fields in API requests.
+    representation, and it also processes incoming data for these fields in
+    API requests.
     """
 
     def to_representation(
@@ -34,7 +36,8 @@ class PhoneNumberField(serializers.Field):
 
         This method is responsible for parsing and validating the 'dial_code' and
         'agency_phone' from the incoming nested object. It ensures that partial updates
-        are correctly handled by not overriding existing values with None when not provided.
+        are correctly handled by not overriding existing values with None when
+        not provided.
         """
         internal_value = {}
         if "dial_code" in data:

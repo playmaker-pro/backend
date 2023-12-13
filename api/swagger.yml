@@ -2434,11 +2434,36 @@ paths:
                   items:
                     type: integer
                     description: "Id of an object from: /profiles/transfer-status/additional-info/"
+                benefits:
+                  type: array
+                  items:
+                    type: integer
+                    description: "Id of an object from: /profiles/transfer-request/benefits"
+                salary:
+                    type: integer
+                    description: "Id of an object from: /profiles/transfer-request/salary"
+                number_of_trainings:
+                  type: integer
+                  description: "Id of an object from: /profiles/transfer-request/number-of-trainings/"
                 league:
                   type: array
                   items:
                     type: integer
                     description: "Id of an highest parent league taken from: /clubs/leagues/highest-parents/"
+            example:
+              {
+                "benefits": [1,2],
+                "status": 1,
+                "league": [13],
+                "gender": "M",
+                "requesting_team": 5,
+                "position": [6,7,8],
+                "salary": 1,
+                "contact_email": "email@email.com",
+                "phone_number": {"dial_code": 1, "number": 123},
+                "additional_info": [1, 2],
+                "number_of_trainings": 1
+              }
       responses:
         "200":
           description: "Status 200 when update succeded"
@@ -2513,6 +2538,17 @@ paths:
                   items:
                     type: integer
                     description: "Id of an object from: /profiles/transfer-status/additional-info/"
+                benefits:
+                  type: array
+                  items:
+                    type: integer
+                    description: "Id of an object from: /profiles/transfer-requests/benefits/"
+                salary:
+                  type: integer
+                  description: "Id of transfer status object. Check avaiable objects at /profiles/transfer-request/salary/"
+                number_of_trainings:
+                  type: integer
+                  description: "Id of transfer status object. Check avaiable objects at /profiles/transfer-request/number-of-trainings/"
                 league:
                   type: array
                   items:
@@ -2739,17 +2775,17 @@ paths:
                   }
               ]
 
-  /profiles/transfer-request/additional-info:
+  /profiles/transfer-request/benefits:
     get:
       operationId: profile_transfer_request_additional-info_listing
-      description: "Returns profile transfer request additional info objects"
+      description: "Returns profile transfer request benefit objects"
       tags:
         - transfer requests
       security:
         - {}
       responses:
         "200":
-          description: "Get profile transfer request additional info objects."
+          description: "Get profile transfer request benefit objects."
           content:
             application/json:
               schema:
@@ -6132,6 +6168,34 @@ components:
                 type: string
                 description: "Object name"
             required: ["id", "name"]
+        benefits:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: "Object id."
+              name:
+                type: string
+                description: "Object name"
+            required: ["id", "name"]
+        number_of_trainings:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+          required: ["id", "name"]
+        salary:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+          required: ["id", "name"]
         league:
           type: array
           items:
@@ -6147,42 +6211,55 @@ components:
                 type: boolean
                 description: "Is league parent?"
             required: ["id", "name", "is_parent"]
-      required: ["contact_email", "phone_number", "status", "additional_info", "league"]
+      required: ["contact_email", "phone_number", "status", "additional_info", "league", "benefits", "salary", "number_of_trainings"]
       example:
         {
-          "contact_email": "",
+          "contact_email": "email@email.com",
           "phone_number": {
-              "dial_code": "+48",
-              "number": "999999999"
+              "dial_code": "+1",
+              "number": 123
           },
           "status": {
               "id": "1",
               "name": "Szukam klubu"
           },
           "additional_info": [
-              [
-                  {
-                      "id": "3",
-                      "name": "Możliwe wypożyczenie"
-                  }
-              ],
-              [
-                  {
-                      "id": "2",
-                      "name": "Wracam po kontuzji"
-                  }
-              ]
+              {
+                  "id": "1",
+                  "name": "Dostępny od zaraz"
+              },
+              {
+                  "id": "2",
+                  "name": "Wracam po kontuzji"
+              }
           ],
           "league": [
               {
-                  "id": 14,
-                  "name": "Krosno",
+                  "id": 13,
+                  "name": "B klasa",
                   "is_parent": true
+              }
+          ],
+          "benefits": [
+              {
+                  "id": "1",
+                  "name": "Zwrot lub organizacja transportu"
               },
               {
-                  "id": 5,
-                  "name": "1 liga",
-                  "is_parent": true
+                  "id": "2",
+                  "name": "Zwrot za buty lub rękawice"
+              }
+          ],
+          "salary": [
+              {
+                  "id": "1",
+                  "name": "0 - 499 zł"
+              }
+          ],
+          "number_of_trainings": [
+              {
+                  "id": "1",
+                  "name": "1-2 treningi tygodniowo"
               }
           ]
       }
@@ -6203,14 +6280,14 @@ components:
           items:
             type: integer
             description: "Position object id's"
-        additional_info:
+        number_of_trainings:
+          type: integer
+          description: "Object id"
+        benefits:
           type: array
           items:
             type: integer
             description: "Additional information object id's"
-        number_of_trainings:
-          type: integer
-          description: "Object id"
         salary:
           type: integer
           description: "Object id"
@@ -6240,14 +6317,14 @@ components:
           items:
             type: integer
             description: "Position object id's"
-        additional_info:
+        number_of_trainings:
+          type: integer
+          description: "Object id"
+        benefits:
           type: array
           items:
             type: integer
             description: "Additional information object id's"
-        number_of_trainings:
-          type: integer
-          description: "Object id"
         salary:
           type: integer
           description: "Object id"
@@ -6329,21 +6406,21 @@ components:
           type: object
           properties:
             id:
-              type: string
+              type: integer
+              description: "Transfer request id."
             name:
               type: string
+              description: "Transfer status name"
           required: ["id", "name"]
-        additional_info:
+        benefits:
           type: array
           items:
             type: object
             properties:
               id:
-                type: integer
-                description: "Object id."
+                type: string
               name:
                 type: string
-                description: "Object name"
             required: ["id", "name"]
         salary:
           type: object
@@ -6363,7 +6440,7 @@ components:
             number:
               type: string
           required: ["dial_code", "number"]
-      required: ["requesting_team", "gender", "status", "position", "number_of_trainings", "additional_info", "salary", "contact_email", "phone_number"]
+      required: ["requesting_team", "gender", "status", "position", "number_of_trainings", "salary", "contact_email", "phone_number", "benefits",]
 
       example:
         {
@@ -6388,36 +6465,40 @@ components:
           },
           "position": [
               {
-                  "id": "3",
-                  "name": "Środkowy obrońca"
+                  "id": "6",
+                  "name": "Defensywny pomocnik"
               },
               {
-                  "id": "4",
-                  "name": "Lewy obrońca"
+                  "id": "7",
+                  "name": "Środkowy pomocnik"
+              },
+              {
+                  "id": "8",
+                  "name": "Ofensywny pomocnik"
               }
           ],
           "number_of_trainings": {
               "id": "1",
               "name": "1-2 treningi tygodniowo"
           },
-          "additional_info": [
+          "benefits": [
               {
-                  "id": "2",
-                  "name": "Zwrot za butóy lub rękawice"
+                  "id": "1",
+                  "name": "Zwrot lub organizacja transportu"
               },
               {
-                  "id": "4",
-                  "name": "Dobre zaplecze treningowe"
+                  "id": "2",
+                  "name": "Zwrot za buty lub rękawice"
               }
           ],
           "salary": {
               "id": "1",
               "name": "0 - 499 zł"
           },
-          "contact_email": "dwdw@fefe.com",
+          "contact_email": "email@email.com",
           "phone_number": {
-              "dial_code": "+2",
-              "number": "1234567"
+              "dial_code": "+1",
+              "number": "123"
           }
       }
 

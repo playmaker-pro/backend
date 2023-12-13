@@ -75,6 +75,7 @@ class TransferStatusSchema(BaseModel):
     status: TransferStatusStatusSchema
     additional_info: TransferStatusAdditionalInfoSchema
     league: TransferStatusLeagueSchema
+    benefits: List[dict]
 
 
 class TransferRequestSchema(BaseModel):
@@ -88,7 +89,7 @@ class TransferRequestSchema(BaseModel):
     status: dict
     position: dict
     number_of_trainings: dict
-    additional_info: List[dict]
+    benefits: List[dict]
     salary: dict
     contact_email: str
     phone_number: dict

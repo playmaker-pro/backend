@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Type, Union
 
 from django import forms
 from django.apps import apps
@@ -9,6 +9,7 @@ from django.forms.models import ModelChoiceField
 from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
 from app.utils.admin import json_filed_data_prettified
 from clubs.models import League
@@ -87,7 +88,7 @@ class ProfileAdminBase(admin.ModelAdmin):
 
 @admin.register(models.ManagerProfile)
 class ManagerProfileAdmin(ProfileAdminBase):
-    readonly_fields = ("external_links",)
+    readonly_fields = ("external_links", "uuid")
 
 
 @admin.register(models.ScoutProfile)
@@ -103,6 +104,7 @@ class ScoutProfileAdmin(ProfileAdminBase):
 @admin.register(models.GuestProfile)
 class GuestProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS
+    readonly_fields = ("uuid",)
 
 
 @admin.register(models.ClubProfile)
@@ -113,6 +115,7 @@ class ClubProfileAdmin(ProfileAdminBase):
     )
     search_fields = DEFAULT_PROFILE_SEARCHABLES + ("club_object__name",)
     autocomplete_fields = ("club_object",)
+    readonly_fields = ("uuid",)
 
 
 @admin.register(models.ProfileVerificationStatus)
@@ -147,8 +150,6 @@ class ProfileVerificationStatusAdmin(admin.ModelAdmin):
 
     def get_next(self, obj):
         return obj.next
-
-    #  TODO napisac swoja metode v
 
     def get_owner(self, obj):
         if obj.owner is None:
@@ -246,7 +247,7 @@ class CoachProfileAdmin(ProfileAdminBase):
                     return old_mapper.mapper_id
         return None
 
-    readonly_fields = ("mapper", "external_links")
+    readonly_fields = ("mapper", "external_links", "uuid")
 
 
 @admin.register(models.RoleChangeRequest)
@@ -398,7 +399,9 @@ class TransferStatusForm(forms.ModelForm):
 
 
 class ContentTypeMixin:
-    def get_content_type(self, obj: models.ProfileTransferStatus) -> str:
+    def get_content_type(
+        self, obj: Union[models.ProfileTransferStatus, models.ProfileTransferRequest]
+    ) -> str:
         """
         Retrieves the content type of the given ProfileTransferStatus object and returns
         a formatted HTML string.
@@ -422,8 +425,10 @@ class ContentTypeMixin:
 
     get_content_type.short_description = "Profile"
 
-    def profile_type(self, obj: models.ProfileTransferStatus) -> str:
-        """Return user email."""
+    def profile_type(
+        self, obj: Union[models.ProfileTransferStatus, models.ProfileTransferRequest]
+    ) -> str:
+        """Return profile type."""
 
         Model: Type[BaseProfile] = apps.get_model(  # noqa
             "profiles", obj.content_type.model
@@ -433,18 +438,54 @@ class ContentTypeMixin:
 
     profile_type.short_description = "Profile type"
 
+    def get_user_email(
+        self, obj: Union[models.ProfileTransferStatus, models.ProfileTransferRequest]
+    ) -> str:
+        """Return user email."""
+        return mark_safe(f'<a href="{obj.pk}">{obj}</a>')
+
+    get_user_email.short_description = "Transfer object"
+
+    def get_profile_uuid(
+        self, obj: Union[models.ProfileTransferStatus, models.ProfileTransferRequest]
+    ) -> str:
+        """Return profile uuid."""
+        Model: Type[BaseProfile] = apps.get_model(  # noqa
+            "profiles", obj.content_type.model
+        )
+        profile = Model.objects.get(pk=obj.object_id)
+        return profile.uuid
+
+    get_profile_uuid.short_description = "Profile uuid"
+
 
 @admin.register(models.ProfileTransferStatus)
 class ProfileTransferStatusAdmin(admin.ModelAdmin, ContentTypeMixin):
     """Admin for ProfileTransferStatus model."""
 
     form = TransferStatusForm
-    list_display = ("pk", "get_content_type", "profile_type")
+    list_display = (
+        "pk",
+        "get_user_email",
+        "get_content_type",
+        "get_profile_uuid",
+        "profile_type",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(models.ProfileTransferRequest)
 class ProfileTransferRequestAdmin(admin.ModelAdmin, ContentTypeMixin):
     """Admin for ProfileTransferRequest model."""
 
-    list_display = ("pk", "get_content_type", "profile_type")
+    list_display = (
+        "pk",
+        "get_user_email",
+        "get_content_type",
+        "get_profile_uuid",
+        "profile_type",
+        "created_at",
+        "updated_at",
+    )
     form = TransferStatusForm

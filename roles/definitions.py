@@ -174,7 +174,7 @@ class TransferRequestTrainings:
     FIVE_OR_MORE = "5+ treningów tygodniowo"
 
 
-TRANSFER_REQUEST_TRAININGS_CHOICES = (
+TRANSFER_TRAININGS_CHOICES = (
     ("1", TransferRequestTrainings.ONE_TWO),
     ("2", TransferRequestTrainings.THREE_FOUR),
     ("3", TransferRequestTrainings.FIVE_OR_MORE),
@@ -186,7 +186,7 @@ class TransferRequestAdditionalInfo:
     """Enum for transfer request additional info field."""
 
     TRANSPORT_REFUND = "Zwrot lub organizacja transportu"
-    SHOES_OR_GLOVES_REFUND = "Zwrot za butóy lub rękawice"
+    SHOES_OR_GLOVES_REFUND = "Zwrot za buty lub rękawice"
     TRAINING_EQUIPMENT = "Sprzęt treningowy"
     TRAINING_FACILITIES = "Dobre zaplecze treningowe"
     WINNING_BONUSES = "Premie za wygrane"
@@ -196,7 +196,7 @@ class TransferRequestAdditionalInfo:
     EXPERIENCED_COACH = "Doświadczony trener"
 
 
-TRANSFER_REQUEST_ADDITIONAL_INFO_CHOICES = (
+TRANSFER_BENEFITS_CHOICES = (
     ("1", TransferRequestAdditionalInfo.TRANSPORT_REFUND),
     ("2", TransferRequestAdditionalInfo.SHOES_OR_GLOVES_REFUND),
     ("3", TransferRequestAdditionalInfo.TRAINING_EQUIPMENT),
@@ -220,7 +220,7 @@ class TransferRequestSalary:
     FIVE = "4000+ zł"
 
 
-TRANSFER_REQUEST_SALARY_CHOICES = (
+TRANSFER_SALARY_CHOICES = (
     ("1", TransferRequestSalary.ONE),
     ("2", TransferRequestSalary.TWO),
     ("3", TransferRequestSalary.THREE),

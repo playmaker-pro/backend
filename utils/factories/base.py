@@ -33,7 +33,8 @@ class CustomObjectFactory(factory.django.DjangoModelFactory):
         obj: Model = super()._create(model_class, *args, **kwargs)
         if env() is not Environment.TEST:
             logger.info(
-                f"[Factory: {cls.__name__}, model: {type(obj)}] Object: ID={obj.pk} | {obj}",
+                f"[Factory: {cls.__name__}, model: "
+                f"{type(obj)}] Object: ID={obj.pk} | {obj}",
             )
         return obj
 
@@ -100,5 +101,7 @@ class CustomObjectFactory(factory.django.DjangoModelFactory):
 
     @classmethod
     def set_subfactories(cls) -> None:
-        """Abstract method that should be overwrited when factory needs to add subfactories"""
-        ...
+        """
+        Abstract method that should be overwritten when factory needs
+        to add sub factories
+        """
