@@ -1,10 +1,16 @@
 import json
 
+from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from rest_framework.test import APIClient, APITestCase
 
+from labels.models import Label, LabelDefinition
+from profiles.models import LicenceType
 from utils import factories
 from utils.test.test_utils import UserManager
+
+User = get_user_model()
 
 
 class TestGetCreateCoachLicenceAPI(APITestCase):
@@ -32,10 +38,16 @@ class TestGetCreateCoachLicenceAPI(APITestCase):
                     "expiry_date": "2025-01-01",
                 }
             ),
-            **self.headers
+            **self.headers,
         )
+        # Check if the UEFA PRO label has been assigned
+        licence_label_exists = Label.objects.filter(
+            content_type=ContentType.objects.get_for_model(User),
+            object_id=self.user_obj.id,
+        ).exists()
 
         assert response.status_code == 201
+        assert licence_label_exists, "Licence label not assigned as expected"
 
     def test_create_licence_for_coach_with_invalid_licence_id(self) -> None:
         """test create licence for coach with invalid licence id"""
@@ -45,7 +57,7 @@ class TestGetCreateCoachLicenceAPI(APITestCase):
                 "licence_id": 100,
                 "expiry_date": "2025-01-01",
             },
-            **self.headers
+            **self.headers,
         )
 
         assert response.status_code == 400
@@ -58,7 +70,7 @@ class TestGetCreateCoachLicenceAPI(APITestCase):
                 "licence_id": 2,
                 "expiry_date": "01-01-01",
             },
-            **self.headers
+            **self.headers,
         )
 
         assert response.status_code == 400
@@ -71,7 +83,7 @@ class TestGetCreateCoachLicenceAPI(APITestCase):
                 "licence_id": "",
                 "expiry_date": "2025-01-01",
             },
-            **self.headers
+            **self.headers,
         )
 
         assert response.status_code == 400
@@ -98,7 +110,7 @@ class TestGetCreateCoachLicenceAPI(APITestCase):
                     "expiry_date": "2025-01-01",
                 }
             ),
-            **self.headers
+            **self.headers,
         )
 
         assert response.status_code == 201
@@ -109,7 +121,7 @@ class TestGetCreateCoachLicenceAPI(APITestCase):
                 "licence_id": 1,
                 "expiry_date": "2025-01-01",
             },
-            **self.headers
+            **self.headers,
         )
 
         assert response.status_code == 400
@@ -137,7 +149,7 @@ class TestUpdateDeleteCoachLicenceAPI(APITestCase):
                     "release_year": 2010,
                 }
             ),
-            **self.headers
+            **self.headers,
         )
 
         assert response.status_code == 200
@@ -147,7 +159,7 @@ class TestUpdateDeleteCoachLicenceAPI(APITestCase):
         response = self.client.patch(
             self.url(100),
             data={"expiry_date": "2025-01-01", "release_year": 2010},
-            **self.headers
+            **self.headers,
         )
 
         assert response.status_code == 404
@@ -157,7 +169,7 @@ class TestUpdateDeleteCoachLicenceAPI(APITestCase):
         response = self.client.patch(
             self.url(self.licence.pk),
             data=json.dumps({"expiry_date": "01-01-01", "release_year": 2010}),
-            **self.headers
+            **self.headers,
         )
 
         assert response.status_code == 400
@@ -180,7 +192,7 @@ class TestUpdateDeleteCoachLicenceAPI(APITestCase):
         response = self.client.patch(
             self.url(second_licence.pk),
             data={"licence_id": self.licence.licence.pk},
-            **self.headers
+            **self.headers,
         )
 
         assert response.status_code == 400
@@ -203,7 +215,7 @@ class TestUpdateDeleteCoachLicenceAPI(APITestCase):
         response = self.client.patch(
             self.url(self.licence.pk),
             data=json.dumps({"owner_id": another_user.pk}),
-            **self.headers
+            **self.headers,
         )
 
         assert response.data["owner"] == self.user_obj.pk
@@ -228,3 +240,43 @@ class TestUpdateDeleteCoachLicenceAPI(APITestCase):
         response = self.client.delete(self.url(self.licence.pk))
 
         assert response.status_code == 401
+
+    def test_label_removal_on_licence_deletion(self):
+        """Test label removal when a coach licence is deleted."""
+        # Create UEFA PRO LicenceType using factory
+        uefa_pro_licence, _ = LicenceType.objects.get_or_create(name="UEFA PRO")
+
+        # Create a CoachLicence with the UEFA PRO LicenceType
+        factories.CoachLicenceFactory(owner=self.user_obj, licence=uefa_pro_licence)
+
+        # Create UEFA PRO label using factory
+        label_def, _ = LabelDefinition.objects.get_or_create(label_name="LICENCE_PRO")
+        factories.LabelFactory(
+            content_type=ContentType.objects.get_for_model(User),
+            object_id=self.user_obj.id,
+            label_definition=label_def,
+            visible=True,
+        )
+
+        # Ensure the label exists before deletion
+        licence_label_exists_before = Label.objects.filter(
+            content_type=ContentType.objects.get_for_model(User),
+            object_id=self.user_obj.id,
+            label_definition=label_def,
+        ).exists()
+        assert (
+            licence_label_exists_before
+        ), f"{self.licence} label does not exist before deletion"
+
+        # Delete the licence
+        response = self.client.delete(self.url(self.licence.id), **self.headers)
+        assert response.status_code == 204
+
+        # Check if the label is removed after deletion
+        licence_label_exists_after = Label.objects.filter(
+            content_type=ContentType.objects.get_for_model(User),
+            object_id=self.user_obj.id,
+        ).exists()
+        assert (
+            not licence_label_exists_after
+        ), f"{self.licence} label not removed as expected"

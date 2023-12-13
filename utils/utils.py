@@ -6,6 +6,7 @@ from datetime import datetime
 import django.db.utils
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpRequest
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.html import format_html
@@ -209,15 +210,3 @@ def remove_polish_chars(filename: str) -> str:
     """Unify Polish chars to default"""
     trans_map: dict = str.maketrans("ŻŹĆŃĄŚŁĘÓżźćńąśłęó", "ZZCNASLEOzzcnasleo")
     return filename.translate(trans_map)
-
-
-def validate_date_format(date_str: str, date_format: str = "%Y-%m-%d") -> None:
-    """
-    Validates if the given date string matches the specified format.
-    Raises a ValueError if the format is invalid.
-    """
-    try:
-        datetime.strptime(date_str, date_format)
-    except ValueError:
-        raise ValueError(f"Invalid date format: {date_str} does not match {date_format}")
-

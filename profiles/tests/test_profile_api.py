@@ -7,14 +7,19 @@ from django.urls import reverse
 from parameterized import parameterized
 from rest_framework.test import APIClient, APITestCase
 
+from labels.models import Label
+from labels.services import LabelService
+from profiles.models import PlayerPosition
 from profiles.schemas import PlayerProfileGET
 from profiles.services import ProfileService
 from profiles.tests import utils
 from roles.definitions import CLUB_ROLE_TEAM_LEADER
-from users.models import User
+from users.models import User, UserPreferences
 from utils import factories
 from utils.factories import SEASON_NAMES
 from utils.test.test_utils import UserManager
+
+label_service = LabelService()
 
 
 class TestGetProfileAPI(APITestCase):
@@ -209,6 +214,7 @@ class TestUpdateProfileAPI(APITestCase):
         self.url = lambda profile_uuid: reverse(
             "api:profiles:get_or_update_profile", kwargs={"profile_uuid": profile_uuid}
         )
+        self.goalkeeper_position = factories.PositionFactory(id=9, name="Goalkepper")
 
         factories.CityFactory(pk=1)
         factories.ClubFactory(pk=100)
@@ -519,6 +525,173 @@ class TestUpdateProfileAPI(APITestCase):
         assert response.status_code == 200
         assert getattr(profile, role_field) == updated_role
         assert getattr(profile, custom_role_field) == expected_custom_role
+
+    @parameterized.expand(
+        [
+            # Testing for player profile
+            (
+                "birth_date",
+                "2005-02-14",
+                "citizenship",
+                ["PL"],
+                "P",
+                "YOUTH",
+            ),
+            # Testing for coach profile
+            ("birth_date", "1990-02-14", None, None, "T", "COACH_AGE_40"),
+            ("birth_date", "1995-02-14", None, None, "T", "COACH_AGE_30"),
+        ]
+    )
+    def test_patch_user_userpreferences_and_label_assignment_for_coach_and_player(
+        self, key1, val1, key2, val2, profile_type, expected_label
+    ) -> None:
+        """Test updating userpreferences and label assignment for both coach and player profiles"""
+        profile = utils.create_empty_profile(
+            role=profile_type, user_id=self.user_obj.pk
+        )
+        payload = {"user": {"userpreferences": {key1: val1}}}
+        if key2:
+            payload["user"]["userpreferences"][key2] = val2
+        response = self.client.patch(
+            self.url(str(profile.uuid)), json.dumps(payload), **self.headers
+        )
+        assert response.status_code == 200
+
+        profile.refresh_from_db()
+        # Check if the expected label exists
+        label_exists = Label.objects.filter(
+            object_id=profile.user.id,
+            label_definition__label_name=expected_label,
+        ).exists()
+
+        # Assert label existence
+        assert label_exists, f"{expected_label} label not assigned as expected"
+
+    @parameterized.expand(
+        [
+            # Testing removal of Młodzieżowiec label for player profile
+            (
+                "birth_date",
+                "1991-01-01",
+                "citizenship",
+                ["DE"],
+                "P",
+                "YOUTH",
+                False,
+            ),
+            # Testing removal of Trener przed 30 labels for coach profile
+            ("birth_date", "1980-01-01", None, None, "T", "COACH_AGE_30", False),
+        ]
+    )
+    def test_userpreferences_update_removes_label_if_no_longer_applicable(
+        self, key1, val1, key2, val2, profile_type, label_to_check, expected_existence
+    ):
+        """Test that updating userpreferences removes label if conditions are no longer met"""
+        profile = utils.create_empty_profile(
+            role=profile_type, user_id=self.user_obj.pk
+        )
+        user_preferences = UserPreferences.objects.get(user=profile.user)
+        user_preferences.birth_date = (
+            "2003-01-01" if profile_type == "P" else "1995-01-01"
+        )
+        user_preferences.save()
+
+        label_service.assign_youngster_label(
+            profile.uuid
+        ) if profile_type == "P" else label_service.assign_coach_age_labels(
+            profile.uuid
+        )
+
+        # Update user preferences
+        payload = {"user": {"userpreferences": {key1: val1}}}
+        if key2:
+            payload["user"]["userpreferences"][key2] = val2
+        response = self.client.patch(
+            self.url(str(profile.uuid)), json.dumps(payload), **self.headers
+        )
+        assert response.status_code == 200
+
+        # Refresh profile and check for label existence
+        profile.refresh_from_db()
+        label_exists = Label.objects.filter(
+            object_id=profile.user.id,
+            label_definition__label_name=label_to_check,
+        ).exists()
+
+        # Assert label existence or non-existence based on the test case
+        assert (
+            label_exists == expected_existence
+        ), f"Label '{label_to_check}' existence not as expected"
+
+    def test_goalkeeper_height_label_assignment(self):
+        """
+        Tests the assignment of the 'Bramkarz 185+' label for a player profile.
+        """
+        # Create a player profile
+        profile = utils.create_empty_profile(user_id=self.user_obj.pk, role="P")
+
+        # Assign the goalkeeper position to the player profile
+        factories.PlayerProfilePositionFactory(
+            player_profile=profile, player_position=self.goalkeeper_position, is_main=True
+        )
+
+        # Update the height to a value over 185
+        payload = {"height": 186}
+        response = self.client.patch(
+            self.url(str(profile.uuid)), json.dumps(payload), **self.headers
+        )
+        assert response.status_code == 200
+        # Refresh profile and check for the 'Bramkarz 185+' label
+        profile.refresh_from_db()
+        label_exists = Label.objects.filter(
+            object_id=profile.user.id,
+            label_definition__label_name="HIGH_KEEPER",
+        ).exists()
+
+        # Assert that the label exists
+        assert label_exists, "Bramkarz 185+ label not assigned as expected"
+
+    def test_goalkeeper_height_label_removal(self):
+        """
+        Tests the removal of the 'Bramkarz 185+' label from a player
+        profile when the player is no longer a goalkeeper or their height is below 185 cm.
+        """
+        # Setup: Create a goalkeeper with a height over 185 cm
+        profile = utils.create_empty_profile(user_id=self.user_obj.pk, role="P")
+        profile.height = 186
+        profile.save()
+
+        # Assign the goalkeeper position to the player profile
+        factories.PlayerProfilePositionFactory(
+            player_profile=profile, player_position=self.goalkeeper_position, is_main=True
+        )
+
+        # Assign the 'Bramkarz 185+' label
+        label_service.assign_goalkeeper_height_label(profile.uuid)
+
+        # Check that the label is initially assigned
+        initial_label_exists = Label.objects.filter(
+            object_id=profile.user.id,
+            label_definition__label_name="HIGH_KEEPER",
+        ).exists()
+        assert initial_label_exists, "Initial label assignment failed"
+
+        # Action: Update the profile to no longer meet the label criteria
+        # Example: Changing the height to below 185 cm
+        payload = {"height": 180}
+        response = self.client.patch(
+            self.url(str(profile.uuid)), json.dumps(payload), **self.headers
+        )
+        assert response.status_code == 200
+
+        # Check that the label is removed
+        label_exists_after_update = Label.objects.filter(
+            object_id=profile.user.id,
+            label_definition__label_name="HIGH_KEEPER",
+        ).exists()
+
+        # Assert that the label no longer exists
+        assert not label_exists_after_update, "Label not removed as expected"
 
 
 class ProfileTeamsApiTest(APITestCase):

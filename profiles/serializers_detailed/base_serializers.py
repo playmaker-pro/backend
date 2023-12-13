@@ -16,6 +16,8 @@ from clubs.errors import ClubDoesNotExist, InvalidGender, TeamDoesNotExist
 from clubs.models import Club, League, Team
 from clubs.services import ClubService, LeagueService
 from external_links.serializers import ExternalLinksSerializer
+from labels.services import LabelService
+from labels.utils import fetch_all_labels
 from profiles.api.errors import (
     InvalidProfileRole,
     NotAOwnerOfTheTeamContributorHTTPException,
@@ -42,6 +44,7 @@ from profiles.models import (
     PROFILE_TYPE,
     BaseProfile,
     Language,
+    PlayerProfile,
     ProfileTransferRequest,
     ProfileTransferStatus,
     TeamContributor,
@@ -65,6 +68,7 @@ logger = logging.getLogger(__name__)
 
 
 clubs_service: ClubService = ClubService()
+label_service: LabelService = LabelService()
 
 
 class SharedValidatorsMixin:
@@ -163,14 +167,29 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
 
     def update(self, instance: UserPreferences, validated_data) -> UserPreferences:
         """Update nested user preferences data"""
+        profile_uuid = self.context.get("profile_uuid")
+        profile_type = ProfileService.get_profile_by_uuid(
+            profile_uuid
+        ).__class__.__name__
+        citizenship_updated = (
+            "citizenship" in validated_data
+            and "PL" not in validated_data["citizenship"]
+        )
         if spoken_languages := validated_data.pop(  # noqa: 5999
             "spoken_languages", None
         ):
             instance.spoken_languages.set(
                 [language.pk for language in spoken_languages]
             )
+        instance = super().update(instance, validated_data)
+        if profile_type == "PlayerProfile":
+            if "birth_date" in validated_data or citizenship_updated:
+                label_service.assign_youngster_label(profile_uuid)
+        if profile_type == "CoachProfile":
+            if "birth_date" in validated_data:
+                label_service.assign_coach_age_labels(profile_uuid)
 
-        return super().update(instance, validated_data)
+        return instance
 
 
 class UserDataSerializer(serializers.ModelSerializer):
@@ -203,6 +222,7 @@ class UserDataSerializer(serializers.ModelSerializer):
                 instance=instance.userpreferences,
                 data=user_preferences,
                 partial=True,
+                context=self.context,
             )
             if user_preferences_serializer.is_valid(raise_exception=True):
                 user_preferences_serializer.save()
@@ -514,6 +534,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
                 instance=self.instance.user,
                 data=user_data,
                 partial=True,
+                context=self.context,
             )
             if self.user.is_valid(raise_exception=True):
                 self.user.save()
@@ -526,8 +547,11 @@ class BaseProfileSerializer(serializers.ModelSerializer):
             )
             if verification_serializer.is_valid(raise_exception=True):
                 verification_serializer.save()
+        instance = super().update(instance, validated_data)
+        if isinstance(instance, PlayerProfile) and "height" in validated_data:
+            label_service.assign_goalkeeper_height_label(instance.uuid)
 
-        return super().update(instance, validated_data)
+        return instance
 
     def get_transfer_status(self, obj: BaseProfile) -> Optional[dict]:
         """Get transfer status by player profile."""
@@ -538,9 +562,13 @@ class BaseProfileSerializer(serializers.ModelSerializer):
         return None
 
     def get_labels(self, obj: BaseProfile):
-        """Override labels field to return only visible=True labels"""
+        """Override labels field to return both profile and user related labels"""
+        label_context = self.context.get(
+            "label_context", "profile"
+        )  # Default to "profile"
+
         labels = ProfileLabelsSerializer(
-            obj.labels.filter(visible=True),
+            fetch_all_labels(obj, label_context=label_context),
             many=True,
             read_only=True,
         )
