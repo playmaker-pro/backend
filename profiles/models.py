@@ -359,6 +359,13 @@ class BaseProfile(models.Model, EventLogMixin):
             return None
 
     @property
+    def specific_role_field_name(self) -> str:
+        """
+        Get field_name of profile secondary role (ClubProfile, CoachProfile)
+        """
+        return ""
+
+    @property
     def has_attachemnt(self):
         return False
 
@@ -1576,6 +1583,13 @@ class ClubProfile(BaseProfile):
         """
         return self.custom_club_role
 
+    @property
+    def specific_role_field_name(self) -> str:
+        """
+        Get field_name of specific role of ClubProfile
+        """
+        return "club_role"
+
     class Meta:
         verbose_name = "Club Profile"
         verbose_name_plural = "Club Profiles"
@@ -1804,6 +1818,13 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         Get custom role of CoachProfile
         """
         return self.custom_coach_role
+
+    @property
+    def specific_role_field_name(self) -> str:
+        """
+        Get field_name of specific role of CoachProfile
+        """
+        return "coach_role"
 
     def get_season_games_data(self, season: str) -> bool:
         if (
@@ -2634,6 +2655,7 @@ class ProfileVisitHistory(models.Model):
 
 class TransferBaseModel(models.Model):
     """Transfer base model."""
+
     phone_number = models.CharField(
         max_length=15,
         null=True,

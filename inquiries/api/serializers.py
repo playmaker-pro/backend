@@ -3,6 +3,7 @@ import typing
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from api.serializers import ProfileEnumChoicesSerializer
 from inquiries import models as _models
 from profiles.api.serializers import (
     PlayerProfilePositionSerializer as _PlayerProfilePositionSerializer,
@@ -14,6 +15,7 @@ User = get_user_model()
 
 class InquiryUserDataSerializer(_BaseUserDataSerializer):
     age = serializers.IntegerField(read_only=True, source="userpreferences.age")
+    specific_role = serializers.SerializerMethodField()
     custom_role = serializers.CharField(
         source="profile.profile_based_custom_role", read_only=True
     )
@@ -22,12 +24,24 @@ class InquiryUserDataSerializer(_BaseUserDataSerializer):
         source="profile.get_main_position", read_only=True
     )
 
+    def get_specific_role(self, obj: User) -> dict:
+        """Get specific role for profile (Coach, Club)"""
+        if field_name := obj.profile.specific_role_field_name:
+            val = getattr(obj.profile, field_name, None)
+            serializer = ProfileEnumChoicesSerializer(
+                source=field_name,
+                read_only=True,
+                model=obj.profile.__class__,
+            )
+            return serializer.to_representation(serializer.parse(val))
+
     class Meta(_BaseUserDataSerializer.Meta):
         fields = _BaseUserDataSerializer.Meta.fields + (
             "age",
             "custom_role",
             "uuid",
             "player_position",
+            "specific_role",
         )
 
 
