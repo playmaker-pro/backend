@@ -529,7 +529,7 @@ class TeamHistoryCreationService:
         while cursor_date <= end_date:
             # Retrieve Season for the cursor_date
             current_season_name = models.Season.define_current_season(cursor_date)
-            season_obj = models.Season.objects.filter(name=current_season_name).first()
+            season_obj, created = models.Season.objects.get_or_create(name=current_season_name)
 
             year = cursor_date.year if not season_obj else None
 
