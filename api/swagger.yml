@@ -6366,9 +6366,9 @@ components:
               type: string
             country:
               type: string
-            season_name:
+            season:
               type: string
-          required: ["id", "team_name", "league_highest_parent_name", "league_highest_parent_id", "team_contributor_id", "picture_url", "country", "season_name"]
+          required: ["id", "team_name", "league_highest_parent_name", "league_highest_parent_id", "team_contributor_id", "picture_url", "country", "season"]
       required: ["id", "round", "team"]
 
     TransferRequestPositions:
