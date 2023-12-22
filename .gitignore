@@ -94,7 +94,7 @@ custom_script_*.py
 .idea/
 
 # pm
-default.env
+.env
 
 /static
 
