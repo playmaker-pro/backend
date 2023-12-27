@@ -18,6 +18,15 @@ urlpatterns = [
         name="create_or_list_profiles",
     ),
     path(
+        "count/",
+        views.ProfileAPI.as_view(
+            {
+                "get": "get_filtered_profile_count",
+            }
+        ),
+        name="filtered_profile_count",
+    ),
+    path(
         "search/",
         views.ProfileSearchView.as_view({"get": "search_profiles"}),
         name="profile_search",
