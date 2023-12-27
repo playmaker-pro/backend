@@ -16,6 +16,7 @@ class GuestProfileViewSerializer(BaseProfileSerializer):
             "role",
             "custom_role",
             "team_history_object",
+            "visits",
         )
 
 

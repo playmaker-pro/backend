@@ -13,6 +13,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.db import models
+from django.db.models import QuerySet
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -2577,80 +2578,48 @@ class ProfileVisitHistory(models.Model):
     counter_guestprofile = models.PositiveIntegerField(default=0)
     counter_refereeprofile = models.PositiveIntegerField(default=0)
     counter_anonymoususer = models.PositiveIntegerField(default=0)
+    user_logged_in = models.BooleanField(default=False)
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def increment(self, requester: typing.Union[BaseProfile, AnonymousUser]):
+    def increment(self, requestor: typing.Union[BaseProfile, AnonymousUser]):
         """Increments counter based on requester"""
-
-        setattr(self, f"counter_{requester.__name__}")
+        counter_field = f"counter_{requestor.__class__.__name__.lower()}"
+        try:
+            counter = getattr(self, counter_field)
+        except AttributeError:
+            raise AttributeError(f"Invalid counter field: {counter_field}")
+        setattr(self, counter_field, counter + 1)
         self.save()
 
-    #     if requester.__name__ == "PlayerProfile":
-    #         self.increment_player()
-    #     elif requester.__name__ == "ClubProfile":
-    #         self.increment_club()
-    #     elif requester.__name__ == "CoachProfile":
-    #         self.increment_coach()
-    #     elif requester.__name__ == "ScoutProfile":
-    #         self.increment_scout()
-    #     elif requester.__name__ == "ManagerProfile":
-    #         self.increment_manager()
-    #     elif requester.__name__ == "GuestProfile":
-    #         self.increment_guest()
-    #     elif requester.__name__ == "RefereeProfile":
-    #         self.increment_referee()
-    #     else:
-    #         self.increment_anonymous()
-    #
-    # def increment_coach(self, commit=True):
-    #     """Increments coach counter"""
-    #     self.counter_coach += 1
-    #     if commit:
-    #         self.save()
-    #
-    # def increment_scout(self, commit=True):
-    #     """Increments scout counter"""
-    #     self.counter_scout += 1
-    #     if commit:
-    #         self.save()
-    #
-    # def increment_player(self, commit=True):
-    #     """Increments player counter"""
-    #     self.counter_player += 1
-    #     if commit:
-    #         self.save()
-    #
-    # def increment_club(self, commit=True):
-    #     """Increments club counter"""
-    #     self.counter_club += 1
-    #     if commit:
-    #         self.save()
-    #
-    # def increment_manager(self, commit=True):
-    #     """Increments manager counter"""
-    #     self.counter_manager += 1
-    #     if commit:
-    #         self.save()
-    #
-    # def increment_guest(self, commit=True):
-    #     """Increments guest counter"""
-    #     self.counter_guest += 1
-    #     if commit:
-    #         self.save()
-    #
-    # def increment_referee(self, commit=True):
-    #     """Increments referee counter"""
-    #     self.counter_referee += 1
-    #     if commit:
-    #         self.save()
-    #
-    # def increment_anonymous(self, commit=True):
-    #     """Increments anonymous counter"""
-    #     self.counter_anonymous += 1
-    #     if commit:
-    #         self.save()
+    @property
+    def total_visits(self) -> int:
+        """Returns the total number of visits across all fields"""
+        counter_fields = [
+            field.attname
+            for field in self._meta.fields
+            if field.attname.startswith("counter_")
+        ]
+
+        return sum(getattr(self, field) for field in counter_fields)
+
+    @staticmethod
+    def total_visits_from_range(date: datetime, user: User) -> int:
+        """
+        Returns the total number of visits across all fields from given date
+        for specified user.
+        """
+        qs: QuerySet = ProfileVisitHistory.objects.filter(
+            user=user, created_at__gte=date
+        )
+        return sum(obj.total_visits for obj in qs)
+
+    class Meta:
+        unique_together = ("user", "created_at")
+        indexes = [
+            models.Index(fields=["user",]),
+        ]
 
 
 class TransferBaseModel(models.Model):

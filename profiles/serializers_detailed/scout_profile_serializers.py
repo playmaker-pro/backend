@@ -16,6 +16,7 @@ class ScoutProfileViewSerializer(BaseProfileSerializer):
             "verification_stage",
             "role",
             "team_history_object",
+            "visits",
         )
 
 

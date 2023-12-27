@@ -3439,12 +3439,8 @@ paths:
                   access:
                     type: string
                     description: Access Token
-                  refresh:
-                    type: string
-                    description: Refresh Token
                 example:
                   access: some_super_secret_jwt_token
-                  refresh: refresh_token
           description: ''
         '400':
           content:
@@ -4638,6 +4634,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProfileLabel'
+        visits:
+              type: integer
+              description: "Total profile visits per last 30 days"
 
       required:
         - uuid
@@ -4646,6 +4645,7 @@ components:
         - slug
         - step
         - role
+        - visits
 
     PlayerProfileView:
       allOf:
@@ -4692,6 +4692,9 @@ components:
               $ref: '#/components/schemas/VerificationStage'
             team_history_object:
               $ref: '#/components/schemas/TeamHistoryProfileView'
+            visits:
+              type: integer
+              description: "Total profile visits per last 30 days"
           example: {
             "slug": "player-slug",
             "user": {
@@ -4764,6 +4767,7 @@ components:
               "league_highest_parent_name": "League",
               "league_highest_parent_id": 5251
             },
+            "visits": 10
           }
           required: [
             slug,
@@ -4782,264 +4786,9 @@ components:
             training_ready,
             role,
             verification_stage,
-            team_history_object
+            team_history_object,
+            visits
           ]
-
-    PlayerProfile:
-      allOf:
-        - $ref: '#/components/schemas/BaseProfile'
-        - type: object
-          properties:
-            team_object:
-              $ref: '#/components/schemas/Team'
-            team_history_object:
-              $ref: '#/components/schemas/TeamHistoryProfileView'
-            voivodeship_obj:
-              $ref: '#/components/schemas/Voivodeship'
-            external_links:
-              type: array
-              items:
-                $ref: '#/components/schemas/ExternalLink'
-            player_positions:
-              $ref: '#/components/schemas/PlayerPositions'
-            profile_video:
-              type: array
-              items:
-                $ref: '#/components/schemas/ProfileVideo'
-            player_metrics:
-              $ref: '#/components/schemas/PlayerMetrics'
-            player_stats:
-              type: object
-              properties:
-                last_goals_count:
-                  type: integer
-                matches:
-                  type: integer
-                avg_minutes:
-                  type: integer
-            meta:
-              type: string
-              description: Player
-            meta_updated:
-              type: boolean
-              description: Player
-            team_club_league_voivodeship_ver:
-              type: string
-              description: Player,Coach,Club
-            team_object_id:
-              type: integer
-              description: "Used to change object in PATCH request, just pass id"
-            team_history_object_id:
-              type: integer
-              description: "Used to change object in PATCH request, just pass id"
-            team_object_alt_id:
-              type: integer
-              description: Player
-            club:
-              type: string
-              description: Player
-            team:
-              type: string
-              description: Player
-            league:
-              type: string
-              description: Player
-            birth_date:
-              type: string
-              description: Player
-            height:
-              type: integer
-              description: Player
-            weight:
-              type: integer
-              description: Player
-            position_raw:
-              type: string
-              description: Player
-            position_raw_alt:
-              type: string
-              description: Player
-            position_fantasy:
-              type: string
-              description: Player
-            formation:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            formation_alt:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            prefered_leg:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            transfer_status:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            card:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            soccer_goal:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            phone:
-              type: string
-              description: Player,Coach,Club,Guest
-            facebook_url:
-              type: string
-              description: Player,Coach,Scout,Guest
-            mapper_id:
-              type: integer
-              description: Player,Coach
-            external_links_id:
-              type: integer
-              description: Player,Coach,Scout,Guest
-            laczynaspilka_url:
-              type: string
-              description: Player
-            min90_url:
-              type: string
-              description: Player
-            transfermarket_url:
-              type: string
-              description: Player
-            voivodeship:
-              type: string
-              description: Player
-            voivodeship_obj_id:
-              type: integer
-              description: "Used to change object in PATCH request, just pass id"
-            voivodeship_raw:
-              type: string
-              description: Player
-            address_id:
-              type: integer
-              description: Player,Coach,Scout,Club,Guest
-            practice_distance:
-              type: integer
-              description: Player,Coach,Scout,Guest
-            about:
-              type: string
-              description: Player,Coach
-            training_ready:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            country:
-              type: string
-              description: Player,Coach,Scout
-            agent_status:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            agent_name:
-              type: string
-              description: Player
-            agent_phone:
-              type: string
-              description: Player
-            agent_foreign:
-              type: string
-              description: Player
-            updated:
-              type: boolean
-          example: {
-            "user": {
-                "id": 8248,
-                "first_name": "Arek",
-                "last_name": "Goclon",
-                "last_login": "2023-03-31T12:55:00.240615+02:00",
-                "last_activity": null,
-                "userpreferences": {
-                    "id": 5504,
-                    "age": null,
-                    "localization": null,
-                    "spoken_languages": [],
-                    "citizenship": null,
-                    "gender": null,
-                    "birth_date": null,
-                    "user": 8248
-                }
-            },
-            "team_object": null,
-            "team_history_object": {
-              "team_name": "Team",
-              "league_highest_parent_name": "League",
-              "league_highest_parent_id": 5251
-            },
-            "voivodeship_obj": null,
-            "history": {
-                "id": 9859,
-                "counter": 0,
-                "counter_coach": 0,
-                "counter_scout": 0
-            },
-            "external_links": null,
-            "player_positions": [],
-            "profile_video": [],
-            "playermetrics": {
-                "id": 8871,
-                "created_at": "2023-03-31T12:55:12.989811+02:00",
-                "updated_at": null,
-                "games_summary": null,
-                "games_summary_updated": null,
-                "games": null,
-                "games_updated": null,
-                "fantasy_summary": null,
-                "fantasy_summary_updated": null,
-                "fantasy": null,
-                "fantasy_updated": null,
-                "season_summary": null,
-                "season_summary_updated": null,
-                "season": null,
-                "season_updated": null,
-                "player": 8248
-            },
-            "player_stats": {
-                "last_goals_count": 1,
-                "matches": 69,
-                "avg_minutes": 52
-            },
-            "role": "P",
-            "verification_id": 14173,
-            "user_id": 8248,
-            "history_id": 9859,
-            "data_mapper_id": null,
-            "slug": "player-arek-goclon",
-            "bio": null,
-            "event_log": null,
-            "step": null,
-            "uuid": "4a144e1b-0254-4991-a534-a3b45bb41636",
-            "meta": null,
-            "meta_updated": null,
-            "team_club_league_voivodeship_ver": null,
-            "team_object_id": null,
-            "team_history_object_id": null,
-            "team_object_alt_id": null,
-            "club": null,
-            "team": null,
-            "league": null,
-            "birth_date": null,
-            "height": null,
-            "weight": null,
-            "position_raw": null,
-            "position_raw_alt": null,
-            "position_fantasy": null,
-            "formation": null,
-            "formation_alt": null,
-            "prefered_leg": null,
-            "transfer_status": null,
-            "card": null,
-            "soccer_goal": null,
-            "phone": null,
-            "facebook_url": null,
-            "mapper_id": 72331,
-            "external_links_id": null,
-            "laczynaspilka_url": null,
-            "min90_url": null,
-            "transfermarket_url": null,
-            "voivodeship": null,
-            "voivodeship_obj_id": null,
-            "voivodeship_raw": null,
-            "address_id": null,
-            "practice_distance": null,
-            "about": null,
-            "training_ready": null,
-            "country": "PL",
-            "agent_status": null,
-            "agent_name": null,
-            "agent_phone": null,
-            "agent_foreign": null,
-            "updated": false
-          }
 
     CoachProfile:
       allOf:
@@ -5080,6 +4829,9 @@ components:
               $ref: '#/components/schemas/VerificationStage'
             team_history_object:
               $ref: '#/components/schemas/TeamHistoryProfileView'
+            visits:
+              type: integer
+              description: "Total profile visits per last 30 days"
           example: {
             "slug": "coach-miz-shoty",
             "user": {
@@ -5138,6 +4890,7 @@ components:
               "league_highest_parent_name": "League",
               "league_highest_parent_id": 5251
             },
+            "visits": 10
           }
       required:
         - slug
@@ -5153,40 +4906,7 @@ components:
         - role
         - verification_stage
         - team_history_object
-
-    CoachProfileUpdate:
-      allOf:
-        - type: object
-          properties:
-            user:
-              $ref: '#/components/schemas/CoachProfileUserDataUpdate'
-            voivodeship_obj:
-              $ref: '#/components/schemas/VoivodeshipUpdate'
-            coach_role:
-              $ref: '#/components/schemas/ProfileEnumChoicesUpdate'
-            formation:
-              $ref: '#/components/schemas/ProfileEnumChoicesUpdate'
-          example: {
-            "user": {
-                "first_name": "MiZ",
-                "last_name": "SHOTY",
-                "userpreferences": {
-                    "localization": null,
-                    "spoken_languages": [],
-                    "citizenship": null,
-                    "gender": null,
-                    "birth_date": null,
-                }
-            },
-            "voivodeship_obj": {
-                "id": 1,
-            },
-            "address": "address",
-            "coach_role": {
-                "id": "IIC",
-            },
-            "formation": "4-3-2-1",
-          }
+        - visits
 
     BaseProfileUpdateFields:
       allOf:
@@ -5314,6 +5034,9 @@ components:
               $ref: '#/components/schemas/VerificationStage'
             team_history_object:
               $ref: '#/components/schemas/TeamHistoryProfileView'
+            visits:
+              type: integer
+              description: "Total profile visits per last 30 days"
           example: {
             "slug": "scout-kacper-skalski",
             "user": {
@@ -5356,6 +5079,7 @@ components:
               "league_highest_parent_name": "League",
               "league_highest_parent_id": 5251
             },
+            "visits": 10
           }
       required:
         - slug
@@ -5366,32 +5090,8 @@ components:
         - labels
         - verification_stage
         - team_history_object
+        - visits
 
-    ScoutProfileUpdate:
-      allOf:
-        - type: object
-          properties:
-            user:
-              $ref: '#/components/schemas/ScoutProfileUserDataUpdate'
-            voivodeship_obj:
-              $ref: '#/components/schemas/VoivodeshipUpdate'
-          example: {
-            "user": {
-              "first_name": "Kacper",
-              "last_name": "Skalski",
-              "userpreferences": {
-                "localization": null,
-                "spoken_languages": [ ],
-                "citizenship": null,
-                "gender": null,
-                "birth_date": null,
-              }
-            },
-            "voivodeship_obj": {
-              "id": 1,
-            },
-            "address": "address",
-          }
     ManagerProfile:
       allOf:
         - type: object
@@ -5451,6 +5151,9 @@ components:
               $ref: '#/components/schemas/VerificationStage'
             team_history_object:
               $ref: '#/components/schemas/TeamHistoryProfileView'
+            visits:
+              type: integer
+              description: "Total profile visits per last 30 days"
           example:
             slug: "coach-miz-shoty"
             user:
@@ -5489,6 +5192,7 @@ components:
               step: 0
               date_updated: "2023-09-09T10:18:34.070304+02:00"
               done: false
+            visits: 10
       required:
         - slug
         - user
@@ -5506,84 +5210,7 @@ components:
         - agency_other_url
         - verification_stage
         - team_history_object
-
-    ParentProfile:
-      allOf:
-        - $ref: '#/components/schemas/BaseProfile'
-        - type: object
-          properties:
-            facebook_url:
-              type: string
-    RefereeProfile:
-      allOf:
-        - $ref: '#/components/schemas/BaseProfile'
-        - type: object
-          properties:
-            facebook_url:
-              type: string
-            external_links:
-              type: array
-              items:
-                $ref: '#/components/schemas/ExternalLink'
-
-    ClubProfile:
-      allOf:
-        - $ref: '#/components/schemas/BaseProfile'
-        - type: object
-          properties:
-            club_object_id:
-              type: integer
-            phone:
-              type: string
-              description: Player,Coach,Club,Guest
-            team_club_league_voivodeship_ver:
-              type: string
-              description: Player,Coach,Club
-            club_role:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            custom_club_role:
-              type: string
-              nullable: true
-            verification_stage:
-              $ref: '#/components/schemas/VerificationStage'
-            team_history_object:
-              $ref: '#/components/schemas/TeamHistoryProfileView'
-          example: {
-            "user": {
-                "id": 7300,
-                "first_name": "B",
-                "last_name": "Kobi",
-                "last_login": "2022-06-24T12:12:25.348516+02:00",
-                "last_activity": null,
-                "userpreferences": null
-            },
-            "history": {
-                "id": 8676,
-                "counter": 0,
-                "counter_coach": 0,
-                "counter_scout": 0
-            },
-            "club_object": null,
-            "role": "C",
-            "verification_id": 6552,
-            "user_id": 7300,
-            "history_id": 8676,
-            "data_mapper_id": null,
-            "slug": "club-b-kobi",
-            "bio": null,
-            "event_log": null,
-            "step": null,
-            "uuid": "03bde658-f6af-41a5-b617-a6cd647ce168",
-            "club_object_id": null,
-            "phone": null,
-            "team_club_league_voivodeship_ver": null,
-            "club_role": null,
-            "verification_stage": {
-              "step": 0,
-              "date_updated": "2023-09-09T10:18:34.070304+02:00",
-              "done": false
-            }
-          }
+        - visits
 
     ClubProfileView:
       allOf:
@@ -5600,9 +5227,6 @@ components:
                 $ref: '#/components/schemas/ProfileLabel'
             club_role:
               $ref: '#/components/schemas/ProfileEnumChoices'
-              required:
-                - id
-                - name
             custom_club_role:
               type: string
               nullable: true
@@ -5624,6 +5248,9 @@ components:
               description: "Player role"
             verification_stage:
               $ref: '#/components/schemas/VerificationStage'
+            visits:
+              type: integer
+              description: "Total profile visits per last 30 days"
           required:
           - slug
           - user
@@ -5635,6 +5262,7 @@ components:
           - role
           - verification_stage
           - team_history_object
+          - visits
 
           example:
            {
@@ -5697,7 +5325,8 @@ components:
               "step": 0,
               "date_updated": "2023-09-09T10:18:34.070304+02:00",
               "done": false
-            }
+            },
+            "visits": 10
           }
 
     GuestProfile:
@@ -5747,7 +5376,8 @@ components:
             "event_log": null,
             "step": null,
             "uuid": "104ac6d7-6bf7-490e-abac-9b4c8d42ac49",
-            "facebook_url": null
+            "facebook_url": null,
+            "visits": 10
           }
     ProfileSearchResult:
       type: object
