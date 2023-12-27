@@ -26,14 +26,15 @@ class InquiryUserDataSerializer(_BaseUserDataSerializer):
 
     def get_specific_role(self, obj: User) -> dict:
         """Get specific role for profile (Coach, Club)"""
-        if field_name := obj.profile.specific_role_field_name:
-            val = getattr(obj.profile, field_name, None)
-            serializer = ProfileEnumChoicesSerializer(
-                source=field_name,
-                read_only=True,
-                model=obj.profile.__class__,
-            )
-            return serializer.to_representation(serializer.parse(val))
+        if obj.profile:
+            if field_name := obj.profile.specific_role_field_name:
+                val = getattr(obj.profile, field_name, None)
+                serializer = ProfileEnumChoicesSerializer(
+                    source=field_name,
+                    read_only=True,
+                    model=obj.profile.__class__,
+                )
+                return serializer.to_representation(serializer.parse(val))
 
     class Meta(_BaseUserDataSerializer.Meta):
         fields = _BaseUserDataSerializer.Meta.fields + (
