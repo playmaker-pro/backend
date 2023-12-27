@@ -466,7 +466,45 @@ class GoogleAuthTestEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         so the response should include a register value
         """
         user_email: str = self.unregistered_user_data.get("email")
+        expected_res, user_info_mock = self.expected_res_user_info()
+        get_user_info_patcher, google_credentials_patcher = self.mock_objects(
+            user_info_mock=user_info_mock
+        )
+        expected_res["last_name"] = "User"
+        social_account = SocialAccount.objects.filter(user__email=user_email)
 
+        assert not social_account.exists()
+
+        with get_user_info_patcher, google_credentials_patcher:
+            res: Response = self.client.post(  # type: ignore
+                self.url, data=self.unregistered_user_data
+            )
+
+            data: dict = res.json()  # type: ignore
+            assert res.status_code == 200
+
+            for elements in expected_res.keys():
+                assert elements in data
+
+            assert data.get("redirect") == expected_res.get("redirect")
+            assert data.get("success") == expected_res.get("success")
+            assert data.get("access_token") is not None
+            assert data.get("refresh_token") is not None
+            assert data.get("first_name") == expected_res.get("first_name")
+            assert data.get("last_name") == expected_res.get("last_name")
+            assert len(data) == len(expected_res)
+
+            user_qry = User.objects.filter(email=user_email)
+
+            assert user_qry.exists()
+            assert isinstance(user := user_qry.first(), User)  # noqa: E999
+            assert user.email == user_email
+
+            assert social_account.exists()
+
+    def expected_res_user_info(self) -> Tuple[dict, dict]:
+        """Prepare expected response and user info mock"""
+        user_email: str = self.unregistered_user_data.get("email")
         expected_res = {
             "success": True,
             "redirect": "register",
@@ -486,6 +524,11 @@ class GoogleAuthTestEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             "email_verified": True,
             "locale": "pl",
         }
+
+        return expected_res, user_info_mock
+
+    def mock_objects(self, user_info_mock: dict) -> Tuple[patch, patch]:
+        """Mock objects for tests"""
         google_auth_credentials_mock = GoogleSdkLoginCredentials(
             client_id="client_id",
             client_secret="client_secret",
@@ -501,12 +544,24 @@ class GoogleAuthTestEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             "get_user_info",
             return_value=UserGoogleDetailPydantic(**user_info_mock),
         )
-        social_account = SocialAccount.objects.filter(user__email=user_email)
-
-        assert not social_account.exists()
+        return get_user_info_patcher, google_credentials_patcher
+    @mute_post_save_signal()
+    def test_endpoint_ok_no_last_name(self) -> None:
+        """
+        Test if response is OK. User doesn't exist in db,
+        so the response should include a register value.
+        Google don't return last_name.
+        """
+        user_email: str = self.unregistered_user_data.get("email")
+        expected_res, user_info_mock = self.expected_res_user_info()
+        expected_res["last_name"] = None
+        user_info_mock.pop("family_name")
+        get_user_info_patcher, google_credentials_patcher = self.mock_objects(
+            user_info_mock=user_info_mock
+        )
 
         with get_user_info_patcher, google_credentials_patcher:
-            res: Response = self.client.post(  # type: ignore
+            res: Response = self.client.post(
                 self.url, data=self.unregistered_user_data
             )
 
@@ -530,8 +585,6 @@ class GoogleAuthTestEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             assert user_qry.exists()
             assert isinstance(user := user_qry.first(), User)  # noqa: E999
             assert user.email == user_email
-
-            assert social_account.exists()
 
     def test_no_token_sent(self) -> None:
         """Test if response is 400 when no token is sent"""

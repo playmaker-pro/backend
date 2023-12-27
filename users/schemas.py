@@ -16,7 +16,7 @@ class UserGoogleDetailPydantic(BaseModel):
 
     sub: Optional[str]
     given_name: str
-    family_name: str
+    family_name: Optional[str] = None
     email: str
 
 
