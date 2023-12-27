@@ -173,7 +173,7 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {
                         "error": f"Invalid date format, must be YYYY between "
-                                 f"{min_year} and {max_year}."
+                        f"{min_year} and {max_year}."
                     }
                 )
 
@@ -358,7 +358,7 @@ class CourseSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {
                     "error": f"Invalid date format, must be YYYY between 1970 "
-                             f"and {datetime.now().year}."
+                    f"and {datetime.now().year}."
                 }
             )
 
@@ -1111,7 +1111,7 @@ class CreateProfileSerializer(ProfileSerializer):
                 raise serializers.ValidationError(
                     {
                         "custom_role": f"This field is required when role is "
-                                       f"{GUEST_SHORT} (GuestProfile)."
+                        f"{GUEST_SHORT} (GuestProfile)."
                     }
                 )
 
@@ -1266,6 +1266,11 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
         returns "bez klubu"
         indicating that the profile does not have an associated team.
         """
+
+        # Check if the user has an associated profile
+        if not hasattr(obj, "profile") or not obj.profile:
+            return "bez klubu"
+
         current_season = Season.define_current_season()
         current_round = Season.get_current_round()
 

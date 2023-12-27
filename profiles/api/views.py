@@ -192,6 +192,38 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         serializer.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    def get_filtered_profile_count(self, request: Request) -> Response:
+        """
+        Retrieve the count of profiles matching the specified filter criteria.
+
+        This method processes a GET request containing various filter parameters
+        and returns the count of profiles that match these filters, without
+        actually fetching or returning the profile data. It's useful for getting
+        a quick overview of how many profiles meet certain criteria before
+        fetching the detailed data.
+
+        The method works by extracting query parameters from the request,
+        applying these filters to the queryset using ProfileListAPIFilter, and
+        then counting the number of profiles in the filtered queryset.
+        """
+        # Extract and format query parameters
+        query_params = {
+            key: request.query_params.get(key) for key in request.query_params
+        }
+
+        # Instantiate ProfileListAPIFilter with formatted query parameters
+        filter_service = ProfileListAPIFilter()
+        filter_service.request = request
+        filter_service.query_params = query_params  # Set the formatted query parameters
+
+        # Apply the filters and get the filtered queryset
+        filtered_queryset = filter_service.get_queryset()
+
+        # Get the count of the filtered queryset
+        count = filtered_queryset.count()
+
+        return Response({"count": count})
+
 
 class ProfileSearchView(EndpointView):
     permission_classes = [IsAuthenticatedOrReadOnly]

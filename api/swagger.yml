@@ -1229,6 +1229,112 @@ paths:
                         - $ref: '#/components/schemas/ManagerProfile'
                         - $ref: '#/components/schemas/GuestProfile'
                 description: "Paginated list profile based on profile type"
+  /profiles/count/:
+    'get':
+      operationId: profile_count_retrieve
+      description: "Get count of profiles matching the given filters"
+      summary: "Get count of profiles based on filters"
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+          required: true
+          description: 'Profile role shortcut {P, C, T, G, S, ...}'
+        - in: query
+          name: gender
+          schema:
+            type: string
+            enum: [ 'M', 'K' ]
+          required: false
+          description: 'Player gender.'
+        - in: query
+          name: youth
+          schema:
+            type: boolean
+          description: "Is youth?"
+        - in: query
+          name: min_age
+          schema:
+            type: integer
+          description: "Age minimum"
+        - in: query
+          name: max_age
+          schema:
+            type: integer
+          description: "Age maximum"
+        - in: query
+          name: position
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Player positions shortcut (default sort by is_main),
+            multiple choices possible like: ?position=CAM&position=ST"
+        - in: query
+          name: league
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Player league,
+            multiple choices possible like: ?league=123&league=321"
+        - in: query
+          name: latitude
+          schema:
+            type: number
+          description: "Profile localization latitude"
+        - in: query
+          name: longitude
+          schema:
+            type: number
+          description: "Profile localization longitude"
+        - in: query
+          name: radius
+          schema:
+            type: integer
+          description: "Profile localization radius range"
+        - in: query
+          name: country
+          schema:
+            type: array
+            items:
+              type: string
+            description: "Country, like: ?country=PL&country=UA"
+        - in: query
+          name: language
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Spoken languages,
+            multiple choices possible like: ?language=pl&league=fr"
+        - in: query
+          name: labels
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Filter profiles by labels, multiple choices possible like: ?labels=label1&labels=label2"
+        - in: query
+          name: not_me
+          schema:
+            type: string
+          description: "Exclude authenticated profile when set to 'true'"
+      tags:
+        - profiles
+      responses:
+        '200':
+          description: 'Count of profiles matching filters obtained successfully'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: 'Total count of profiles matching the given filters'
+
   /profiles/owned/:
     'get':
       operationId: owned_profile_list
