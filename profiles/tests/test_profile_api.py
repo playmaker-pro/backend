@@ -1217,7 +1217,7 @@ class TestProfileVisitHistory(APITestCase):
         response = self.client.get(url)
         assert response.status_code == 200
         visit_object.refresh_from_db()
-        assert getattr(visit_object, "counter_anonymoususer") == 1
+        assert visit_object.counter_anonymoususer == 1
 
         response = self.client.get(url, **self.requested_user_headers)
         assert response.status_code == 200
