@@ -7,6 +7,7 @@ from features.api_urls import urlpatterns as features_urls
 from inquiries.api.urls import urlpatterns as inquiries_urls
 from labels.api.urls import urlpatterns as labels_urls
 from notifications.api.urls import urlpatterns as notifications_urls
+from payments.api.urls import urlpatterns as payments_urls
 from profiles.api.urls import urlpatterns as profiles_urls
 from roles.api_urls import urlpatterns as roles_urls
 from users.api.urls import urlpatterns as users_urls
@@ -23,6 +24,7 @@ urlpatterns = [
     url(r"^inquiries/", include((inquiries_urls, "inquiries"))),
     url(r"^notifications/", include((notifications_urls, "notifications"))),
     url(r"^labels/", include((labels_urls, "labels"))),
+    url(r"^payments/", include((payments_urls, "payments"))),
     url(
         r"^countries/",
         views.LocaleDataView.as_view({"get": "list_countries"}),

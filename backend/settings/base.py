@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "premium",
     "events",
     "mailing",
+    "payments",
     # "resources",
     # "data",  # external repo DEPRECATED: PM-1015
     # "stats",  # external repo DEPRECATED: PM-1015
