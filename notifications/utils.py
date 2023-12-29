@@ -1,7 +1,11 @@
 import re
 
+from notifications.models import Notification
 
-def get_notification_redirect_url(event_type: str, details: dict) -> str:
+
+def get_notification_redirect_url(
+    event_type: Notification.EventType, details: dict
+) -> str:
     """
     Generates a namespaced URL path based on the event type of the notification.
 
@@ -9,17 +13,16 @@ def get_notification_redirect_url(event_type: str, details: dict) -> str:
     It is used to provide a relevant redirect path for each type of notification.
     """
     URL_MAPPING = {
-        "accept_inquiry": "api:inquiries:my_inquiry_contacts",
-        "reject_inquiry": "api:inquiries:my_sent_inquiries",
-        "receive_inquiry": "api:inquiries:my_received_inquiries",
-        "query_pool_exhausted": "api:inquiries:my_sent_inquiries",
-        "pending_inquiry_decision": "api:inquiries:my_received_inquiries",
-        "reward_sender": "api:inquiries:my_sent_inquiries",
-        "inquiry_request_restored": "api:inquiries:my_sent_inquiries",
+        Notification.EventType.ACCEPT_INQUIRY: "api:inquiries:my_inquiry_contacts",
+        Notification.EventType.REJECT_INQUIRY: "api:inquiries:my_sent_inquiries",
+        Notification.EventType.RECEIVE_INQUIRY: "api:inquiries:my_received_inquiries",
+        Notification.EventType.QUERY_POOL_EXHAUSTED: "api:inquiries:my_sent_inquiries",
+        Notification.EventType.PENDING_INQUIRY_DECISION: "api:inquiries:my_received_inquiries",
+        Notification.EventType.REWARD_SENDER: "api:inquiries:my_sent_inquiries",
+        Notification.EventType.INQUIRY_REQUEST_RESTORED: "api:inquiries:my_sent_inquiries",
     }
 
     return URL_MAPPING.get(event_type, "")
-
 
 
 class NotificationContentParser:

@@ -35,6 +35,14 @@ class Notification(models.Model):
         INQUIRY_REQUEST_RESTORED = "inquiry_request_restored"
         PENDING_INQUIRY_DECISION = "pending_inquiry_decision"
         REWARD_SENDER = "reward_sender"
+        MISSING_LOCATION = "missing_location"
+        MISSING_ALT_POSITION = "missing_alternative_position"
+        MISSING_FAV_FORMATION = "missing_favorite_formation"
+        INCOMPLETE_AGENCY_DATA = "incomplete_agency_data"
+        MISSING_EXT_LINKS = "missing_external_links"
+        MISSING_VIDEO = "missing_video"
+        MISSING_PHOTO = "missing_photo"
+        MISSING_COURSE = "missing_certificate_course"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications"
