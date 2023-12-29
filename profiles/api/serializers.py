@@ -1225,7 +1225,16 @@ class BaseProfileDataSerializer(serializers.Serializer):
 
 class ProfileSearchSerializer(serializers.ModelSerializer):
     team = serializers.SerializerMethodField()
-    age = serializers.SerializerMethodField()
+    age = serializers.IntegerField(read_only=True, source="userpreferences.age")
+    player_position = PlayerProfilePositionSerializer(
+        source="profile.get_main_position", read_only=True
+    )
+    specific_role = serializers.SerializerMethodField()
+    custom_role = serializers.CharField(
+        source="profile.profile_based_custom_role", read_only=True
+    )
+    picture = serializers.CharField(source="picture_url", read_only=True)
+    uuid = serializers.UUIDField(source="profile.uuid", read_only=True)
 
     class Meta:
         model = models.User
@@ -1235,15 +1244,14 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
             "last_name",
             "team",
             "age",
+            "player_position",
+            "specific_role",
+            "custom_role",
+            "picture",
+            "uuid",
         )
 
-    def get_age(self, obj: User) -> typing.Union[int, None]:
-        """
-        Retrieve the age for a given user from userpreferences.
-        """
-        return obj.userpreferences.age
-
-    def get_team(self, obj: User) -> str:
+    def get_team(self, obj: User) -> Optional[str]:
         """
         Retrieve the team for a given profile.
 
@@ -1269,10 +1277,9 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
 
         # Check if the user has an associated profile
         if not hasattr(obj, "profile") or not obj.profile:
-            return "bez klubu"
+            return None
 
         current_season = Season.define_current_season()
-        current_round = Season.get_current_round()
 
         team_contrib = models.TeamContributor.objects.filter(
             profile_uuid=obj.profile.uuid,
@@ -1282,7 +1289,6 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
         if team_contrib:
             if (
                 obj.role == "P"
-                and team_contrib.round == current_round
                 and team_contrib.team_history.filter(
                     league_history__season__name=current_season
                 ).exists()
@@ -1303,4 +1309,16 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
         if hasattr(obj.profile, "team_object") and obj.profile.team_object:
             return obj.profile.team_object.display_team_with_league_top_parent
 
-        return "bez klubu"
+        return None
+
+    def get_specific_role(self, obj: User) -> dict:
+        """Get specific role for profile (Coach, Club)"""
+        if obj.profile:
+            if field_name := obj.profile.specific_role_field_name:
+                val = getattr(obj.profile, field_name, None)
+                serializer = ProfileEnumChoicesSerializer(
+                    source=field_name,
+                    read_only=True,
+                    model=obj.profile.__class__,
+                )
+                return serializer.to_representation(serializer.parse(val))

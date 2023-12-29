@@ -5867,19 +5867,26 @@ components:
         last_name:
           type: string
           description: 'Last name of the user.'
-        team:
-          type: string
-          description: 'Team of the user with league top parent or "bez klubu" if no team associated.'
         age:
           type: integer
           description: 'Age of the user.'
           nullable: true
-      required:
-        - role
-        - first_name
-        - last_name
-        - team
-        - age
+        team:
+          type: string
+          description: 'Team of the user with league.'
+          nullable: true
+        uuid:
+          type: string
+          format: uuid
+        custom_role:
+          type: string
+          nullable: true
+        specific_role:
+          $ref: '#/components/schemas/ProfileEnumChoices'
+          nullable: true
+        player_position:
+          $ref: '#/components/schemas/PlayerPosition'
+          nullable: true
 
     Country:
       type: object

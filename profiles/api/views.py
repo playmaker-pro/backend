@@ -251,9 +251,8 @@ class ProfileSearchView(EndpointView):
             )
         except ValueError:
             raise api_errors.InvalidSearchTerm()
-
         paginated_profiles = self.get_paginated_queryset(matching_users_queryset)
-        serializer = serializers.ProfileSearchSerializer(paginated_profiles, many=True)
+        serializer = serializers.ProfileSearchSerializer(paginated_profiles, many=True, context={"request": request})
 
         return self.get_paginated_response(serializer.data)
 
