@@ -40,7 +40,20 @@ class CoachLicenceInline(
 
 @admin.register(models.ProfileVisitHistory)
 class ProfileVisitHistoryAdmin(admin.ModelAdmin):
-    pass
+    list_display = (
+        "pk",
+        linkify("user"),
+        "user_logged_in",
+        "counter_playerprofile",
+        "counter_clubprofile",
+        "counter_coachprofile",
+        "counter_scoutprofile",
+        "counter_managerprofile",
+        "counter_guestprofile",
+        "counter_refereeprofile",
+        "counter_anonymoususer",
+        "created_at",
+    )
 
 
 @admin.register(models.PlayerMetrics)

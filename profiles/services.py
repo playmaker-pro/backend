@@ -5,10 +5,18 @@ import uuid
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
 from django.db import models as django_base_models
-from django.db.models import Case, IntegerField, ObjectDoesNotExist, Value, When
+from django.db.models import (
+    Case,
+    IntegerField,
+    ObjectDoesNotExist,
+    QuerySet,
+    Value,
+    When,
+)
 from django.db.models import functions as django_base_functions
 from pydantic import BaseModel
 
@@ -20,7 +28,13 @@ from clubs.models import Club as CClub
 from clubs.models import Team as CTeam
 from profiles import errors, models, utils
 from profiles.api import errors as api_errors
-from profiles.models import REVERSED_MODEL_MAP, LicenceType, ProfileTransferStatus
+from profiles.interfaces import ProfileVisitHistoryProtocol
+from profiles.models import (
+    REVERSED_MODEL_MAP,
+    BaseProfile,
+    LicenceType,
+    ProfileTransferStatus,
+)
 from roles.definitions import (
     CLUB_ROLES,
     PROFILE_TYPE_MAP,
@@ -328,6 +342,16 @@ class ProfileService:
             return models.PROFILE_MODEL_MAP[role]
         except KeyError:
             raise ValueError("Invalid role shortcut.")
+
+    def get_profile_by_role_and_user(
+        self, role: str, user: User
+    ) -> typing.Optional[models.PROFILE_TYPE]:
+        """Get and return profile based on role and user"""
+        profile_type = self.get_model_by_role(role)
+        try:
+            return profile_type.objects.get(user=user)
+        except ObjectDoesNotExist:
+            return None
 
     @staticmethod
     def get_role_by_model(model: typing.Type[models.PROFILE_TYPE]) -> str:
@@ -1555,3 +1579,41 @@ class TransferRequestService:
             if lambda_function(transfer)
         ]
         return result
+
+
+class ProfileVisitHistoryService:
+    model = models.ProfileVisitHistory
+
+    def filter(self, **kwargs) -> QuerySet:
+        """Filter profile visit history based on given parameters."""
+        return self.model.objects.filter(**kwargs)
+
+    def get_user_profile_visit_history(self, **kwargs) -> models.ProfileVisitHistory:
+        """
+        Retrieve a specific profile visit history based on given parameters.
+
+        Raises errors.ProfileVisitHistoryDoesNotExistException if no history is found.
+        """
+
+        try:
+            return self.model.objects.get(**kwargs)
+        except ObjectDoesNotExist:
+            raise errors.ProfileVisitHistoryDoesNotExistException()
+
+    @staticmethod
+    def increment(
+        instance: ProfileVisitHistoryProtocol,
+        requestor: typing.Union[BaseProfile, AnonymousUser],
+    ) -> None:
+        """Increment the profile visit count for a user."""
+        instance.increment(requestor=requestor)
+
+    def create(self, **kwargs) -> models.ProfileVisitHistory:
+        """Create a new profile visit history entry with specified kwargs."""
+        return self.model.objects.create(**kwargs)
+
+    def profile_visit_history_last_month(self, user: User) -> int:
+        """Get the total number of visits for a user in the last 30 days."""
+        return self.model.total_visits_from_range(
+            user=user, date=utils.get_past_date(days=30)
+        )

@@ -1,12 +1,13 @@
+import logging
 import uuid
-from datetime import date
-from typing import Optional
+from typing import Optional, Union
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist, QuerySet
 from django.db.models.functions import Random
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, status
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
@@ -31,12 +32,16 @@ from profiles import errors, models
 from profiles.api import errors as api_errors
 from profiles.api import serializers
 from profiles.api.errors import (
+    InvalidProfileRole,
     PermissionDeniedHTTPException,
+    ProfileDoesNotExist,
     TransferRequestDoesNotExistHTTPException,
     TransferStatusDoesNotExistHTTPException,
 )
 from profiles.api.managers import SerializersManager
+from profiles.errors import ProfileVisitHistoryDoesNotExistException
 from profiles.filters import ProfileListAPIFilter
+from profiles.interfaces import ProfileVisitHistoryProtocol
 from profiles.serializers_detailed.base_serializers import (
     ProfileTransferRequestSerializer,
     ProfileTransferStatusSerializer,
@@ -46,6 +51,7 @@ from profiles.services import (
     ProfileFilterService,
     ProfileService,
     ProfileVideoService,
+    ProfileVisitHistoryService,
     TeamContributorService,
 )
 from profiles.utils import map_service_exception
@@ -64,6 +70,10 @@ profile_service = ProfileService()
 team_contributor_service = TeamContributorService()
 external_links_services = ExternalLinksService()
 User = get_user_model()
+visit_history_service = ProfileVisitHistoryService()
+
+
+logger = logging.getLogger(__name__)
 
 
 class ProfileAPI(ProfileListAPIFilter, EndpointView):
@@ -91,6 +101,35 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
             profile_object = profile_service.get_profile_by_uuid(profile_uuid)
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExist
+
+        # Profile visit counter
+        if profile_object.user != request.user:
+            requestor_profile: Union[models.BaseProfile, AnonymousUser] = request.user
+            if request.user.is_authenticated:
+                try:
+                    requestor_profile = profile_service.get_profile_by_role_and_user(
+                        user=request.user, role=request.user.role
+                    )
+                    if not requestor_profile:
+                        raise ProfileDoesNotExist(details="Requestor has no profile")
+                except ValueError:
+                    raise InvalidProfileRole(details="Requestor has invalid role")
+
+            history: ProfileVisitHistoryProtocol
+            try:
+                history = visit_history_service.get_user_profile_visit_history(
+                    user=profile_object.user, created_at=timezone.now()
+                )
+                visit_history_service.increment(
+                    instance=history, requestor=requestor_profile
+                )
+
+            except ProfileVisitHistoryDoesNotExistException:
+                logger.error("Profile visit history does not exist. Creating one..")
+                history = visit_history_service.create(user=profile_object.user)
+                visit_history_service.increment(
+                    instance=history, requestor=requestor_profile
+                )
 
         serializer_class = self.get_serializer_class(
             model_name=profile_object.__class__.__name__

@@ -2,21 +2,24 @@ import json
 import uuid
 from datetime import datetime
 
+import factory
 import pytest
+from django.db.models import signals
 from django.urls import reverse
 from parameterized import parameterized
 from rest_framework.test import APIClient, APITestCase
 
 from labels.models import Label
 from labels.services import LabelService
-from profiles.models import PlayerPosition
+from profiles.api.errors import ProfileDoesNotExist
+from profiles.models import PlayerPosition, ProfileVisitHistory
 from profiles.schemas import PlayerProfileGET
 from profiles.services import ProfileService
 from profiles.tests import utils
 from roles.definitions import CLUB_ROLE_TEAM_LEADER
 from users.models import User, UserPreferences
 from utils import factories
-from utils.factories import SEASON_NAMES
+from utils.factories import SEASON_NAMES, UserFactory
 from utils.test.test_utils import UserManager
 
 label_service = LabelService()
@@ -1145,3 +1148,83 @@ class TestSetMainProfileAPI(APITestCase):
         )
 
         assert response.status_code == 400
+
+
+class TestProfileVisitHistory(APITestCase):
+
+    @factory.django.mute_signals(signals.pre_save, signals.post_save)
+    def setUp(self) -> None:
+        """set up object factories"""
+        self.client: APIClient = APIClient()
+        self.user_manager = UserManager(self.client)
+        self.non_profile_user = self.user_manager.create_superuser()
+        self.non_profile_user_headers = self.user_manager.get_headers()
+
+        user = UserFactory.create(password="password")
+        self.user_profile = factories.PlayerProfileFactory.create(user=user)
+        self.user_profile_headers = self.user_manager.custom_user_headers(
+            password="password", email=user.email
+        )
+
+        requested_user = UserFactory.create(password="password")
+        self.requested_user_headers = self.user_manager.custom_user_headers(
+            password="password", email=requested_user.email
+        )
+        self.requested_profile = factories.PlayerProfileFactory.create(
+            user=requested_user
+        )
+
+        self.url_reverse = "api:profiles:get_or_update_profile"
+
+    @factory.django.mute_signals(signals.pre_save, signals.post_save)
+    def test_no_profile_exception(self) -> None:
+        """Test that no profile raises exception"""
+        self.non_profile_user.declared_role = "P"
+        self.non_profile_user.save()
+        url = reverse(
+            self.url_reverse, kwargs={
+            "profile_uuid": self.requested_profile.uuid}
+       )
+        response = self.client.get(url, **self.non_profile_user_headers)
+        assert response.status_code == 404
+        assert response.data["detail"] == "Requestor has no profile"
+
+    @factory.django.mute_signals(signals.pre_save, signals.post_save)
+    def test_invalid_role_exception(self) -> None:
+        """Test that invalid role raises exception"""
+        url = reverse(
+            self.url_reverse, kwargs={
+            "profile_uuid": self.requested_profile.uuid}
+       )
+        response = self.client.get(url, **self.non_profile_user_headers)
+        assert response.status_code == 400
+        assert response.data["detail"] == "Requestor has invalid role"
+
+    @factory.django.mute_signals(signals.pre_save, signals.post_save)
+    def test_get_visit_history(self) -> None:
+        """Test that visit history is returned"""
+        url = reverse(
+            self.url_reverse, kwargs={
+            "profile_uuid": self.requested_profile.uuid}
+       )
+        response = self.client.get(url, **self.user_profile_headers)
+        assert response.status_code == 200
+
+        visit_object = ProfileVisitHistory.objects.get(user=self.requested_profile.user)
+        field_name = self.user_profile.__class__.__name__.lower()
+        assert getattr(visit_object, f"counter_{field_name}") == 1
+
+        response = self.client.get(url)
+        assert response.status_code == 200
+        visit_object.refresh_from_db()
+        assert visit_object.counter_anonymoususer == 1
+
+        response = self.client.get(url, **self.requested_user_headers)
+        assert response.status_code == 200
+        visit_object.refresh_from_db()
+        assert visit_object.counter_anonymoususer == 1
+        assert getattr(visit_object, f"counter_{field_name}") == 1
+        assert visit_object.user_logged_in == True
+
+        # Check if counter doesn't count if requestor is the same as requested
+        assert visit_object.total_visits == 2

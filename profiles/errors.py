@@ -101,3 +101,7 @@ class InvalidCitizenshipListException(CoreAPIException):
     """
 
     status_code = status.HTTP_400_BAD_REQUEST
+
+
+class ProfileVisitHistoryDoesNotExistException(Exception):
+    """Raises when profile visit history does not exist in DB"""
