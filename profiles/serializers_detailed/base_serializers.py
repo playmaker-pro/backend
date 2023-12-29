@@ -54,6 +54,7 @@ from profiles.services import (
     PlayerProfilePositionService,
     PositionData,
     ProfileService,
+    ProfileVisitHistoryService,
     TransferStatusService,
 )
 from roles.definitions import (
@@ -551,6 +552,12 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(read_only=True)
     transfer_status = serializers.SerializerMethodField()
     transfer_requests = ProfileTransferRequestSerializer(many=True, read_only=True)
+    visits = serializers.SerializerMethodField()
+
+    def get_visits(self, obj: BaseProfile) -> int:
+        """Get profile visits from last month."""
+        history_service = ProfileVisitHistoryService()
+        return history_service.profile_visit_history_last_month(obj.user)
 
     def update(self, instance: PROFILE_TYPE, validated_data: dict):
         self.validate_data()
