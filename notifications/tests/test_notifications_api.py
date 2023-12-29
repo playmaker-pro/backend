@@ -19,7 +19,7 @@ class UserNotificationViewTests(APITestCase):
         It checks if the response is successful and the notification list is empty.
         """
         url = reverse(
-            "api:notifications:get-user-notifications",
+            "api:notifications:get_user_notifications",
             kwargs={"profile_uuid": self.profile.uuid},
         )
         response = self.client.get(url)
@@ -39,7 +39,7 @@ class UserNotificationViewTests(APITestCase):
             details={"event_type": "accept_inquiry"},
         )
         url = reverse(
-            "api:notifications:get-user-notifications",
+            "api:notifications:get_user_notifications",
             kwargs={"profile_uuid": self.profile.uuid},
         )
         response = self.client.get(url)
@@ -73,7 +73,7 @@ class UserNotificationViewTests(APITestCase):
         """
         notification = NotificationFactory(user=self.user, event_type="receive_inquiry")
         url = reverse(
-            "api:notifications:mark-notification-read",
+            "api:notifications:mark_notification_read",
             kwargs={
                 "profile_uuid": self.profile.uuid,
                 "notification_id": notification.id,

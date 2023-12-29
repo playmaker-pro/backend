@@ -12,6 +12,7 @@ from mailing.models import EmailTemplate as _EmailTemplate
 from profiles.models import PROFILE_TYPE
 from users.errors import CityDoesNotExistException
 from users.managers import UserTokenManager
+from users.models import UserPreferences
 from users.schemas import (
     RegisterSchema,
     UserFacebookDetailPydantic,
@@ -237,3 +238,10 @@ class UserPreferencesService:
             return city
         except City.DoesNotExist:
             raise CityDoesNotExistException
+
+    @staticmethod
+    def get_users_with_missing_location() -> User:
+        user_ids = UserPreferences.objects.filter(
+            localization__isnull=True
+        ).values_list("user_id", flat=True)
+        return User.objects.filter(id__in=user_ids)

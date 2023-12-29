@@ -39,19 +39,20 @@ class NotificationSerializer(serializers.ModelSerializer):
         redirect URL. The base URL is constructed using the request context.
         """
         request = self.context.get("request")
-
-        # Extract details from obj
         details = obj.details or {}
-        # Get the namespaced URL path based on the event type
-        namespaced_url_path = reverse(
-            get_notification_redirect_url(obj.event_type, details)
-        )
 
-        # Construct the full URL by combining scheme, host, and namespaced URL path
+        # Get the namespaced URL path based on the event type
+        namespaced_url_path = get_notification_redirect_url(obj.event_type, details)
+
+        # If the path is empty, return an empty string
+        if not namespaced_url_path:
+            return ""
+
+        # If not empty, construct the full URL
         if request:
             scheme = request.scheme
             host = request.get_host()
-            return f"{scheme}://{host}{namespaced_url_path}"
+            return f"{scheme}://{host}/{namespaced_url_path}"
 
         return namespaced_url_path
 

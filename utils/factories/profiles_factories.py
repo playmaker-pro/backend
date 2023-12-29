@@ -197,6 +197,33 @@ class ScoutProfileFactory(ProfileFactory):
     address = factory.LazyAttribute(lambda _: utils.get_random_address())
 
 
+class ManagerProfileFactory(ProfileFactory):
+    class Meta:
+        model = models.ManagerProfile
+
+    facebook_url = factory.Faker("url")
+    other_url = factory.Faker("url")
+    agency_phone = factory.Sequence(lambda n: f"+4812345{n:04d}")
+    dial_code = factory.Sequence(lambda n: f"+{n%99:02d}")
+    agency_email = factory.Faker("email")
+    agency_transfermarkt_url = factory.Faker("url")
+    agency_website_url = factory.Faker("url")
+    agency_instagram_url = factory.Faker("url")
+    agency_twitter_url = factory.Faker("url")
+    agency_facebook_url = factory.Faker("url")
+    agency_other_url = factory.Faker("url")
+
+    @factory.post_generation
+    def post_create(self, create, extracted, **kwargs):
+        """
+        This method is called after a new instance is created with the factory.
+        It is used to perform additional actions or setup that is not covered by
+        the default factory creation process.
+        """
+        if not create:
+            return
+
+
 class GuestProfileFactory(ProfileFactory):
     class Meta:
         model = models.GuestProfile

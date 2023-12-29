@@ -1,17 +1,31 @@
 import typing
 import uuid
+from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import QuerySet
+from django.db.models import Exists, OuterRef, Q, QuerySet
+from django.utils import timezone
 
+from external_links.models import ExternalLinksEntity, LinkSource
 from inquiries.models import InquiryRequest
 from notifications.models import Notification, NotificationTemplate
+from profiles.models import (
+    PROFILE_MODELS,
+    CoachProfile,
+    GuestProfile,
+    ManagerProfile,
+    PlayerProfile,
+    ProfileVideo,
+)
 from profiles.services import ProfileService
+from users.models import UserPreferences
+from users.services import UserPreferencesService
 
 User = get_user_model()
 profile_service = ProfileService()
+user_references_service = UserPreferencesService()
 
 
 class NotificationService:
@@ -116,7 +130,8 @@ class NotificationService:
         user: User, profile_uuid: uuid.UUID, latest_only: bool = False
     ) -> typing.Tuple[QuerySet, int]:
         """
-        Retrieves a combined list of notifications for a user, both general and profile-specific.
+        Retrieves a combined list of notifications for a user, both general
+        and profile-specific.
         """
         profile_instance = profile_service.get_profile_by_uuid(profile_uuid)
         # Fetch notifications for the given user
@@ -194,4 +209,201 @@ class NotificationService:
                 "inquiry_id": inquiry_request.id,
                 "recipient_name": inquiry_request.recipient.display_full_name,
             },
+        )
+
+
+class ProfileCompletionNotificationService:
+    notification_service = NotificationService()
+
+    @staticmethod
+    def can_send_notification(
+        user: User, event_type: str, profile_instance=None
+    ) -> bool:
+        """
+        Determine if a notification can be sent based on the rules.
+        """
+        now = timezone.now()
+        one_month_ago = now - timedelta(days=30)
+
+        # Determine the content type for the profile instance, if provided
+        content_type = (
+            ContentType.objects.get_for_model(profile_instance.__class__)
+            if profile_instance
+            else None
+        )
+
+        notifications = Notification.objects.filter(
+            user=user,
+            event_type=event_type,
+            content_type=content_type if profile_instance else None,
+        ).order_by("created_at")
+        # Check if there are any notifications
+        if not notifications.exists():
+            return True
+
+        # Check the read status of the latest notification
+        latest_notification = notifications.last()
+        if not latest_notification.is_read:
+            return False
+
+        # Check the time since the first notification
+        first_notification = notifications.first()
+        if first_notification.created_at > one_month_ago:
+            return False
+
+        return True
+
+    def notify_profiles(self, profiles: list, event_type: str) -> None:
+        """
+        Helper method to send notifications to a list of profiles.
+        """
+        for profile in profiles:
+            if self.can_send_notification(profile.user, event_type, profile):
+                self.notification_service.create_profile_associated_notification(
+                    profile.user,
+                    event_type,
+                    profile.uuid,
+                    Notification.NotificationType.BUILT_IN,
+                )
+                print(f"Notification '{event_type}' created for {profile}")
+
+    def notify_users(self, users: list, event_type: str) -> None:
+        """
+        Helper method to send notifications to a list of users.
+        """
+        for user in users:
+            if self.can_send_notification(user, event_type):
+                self.notification_service.create_user_associated_notification(
+                    user, event_type, Notification.NotificationType.BUILT_IN
+                )
+                # Optionally log or print a message about the notification sent
+                print(f"Notification '{event_type}' created for user {user.username}")
+
+    def check_and_notify_for_missing_location(self) -> None:
+        """
+        Check and notify users who have not specified their location in
+        their user preferences.
+        This method iterates over users with missing location data and
+        sends a notification if the conditions defined in can_send_notification
+        are met.
+        """
+        users_to_notify = user_references_service.get_users_with_missing_location()
+        self.notify_users(
+            users=users_to_notify, event_type=Notification.EventType.MISSING_LOCATION
+        )
+
+    def check_and_notify_for_missing_alternative_position(self) -> None:
+        """
+        Check and notify player profiles that have a main position but
+        are missing alternative positions.
+        This method iterates over player profiles and sends a notification for those
+        needing to specify alternative playing positions.
+        """
+        player_profiles_to_notify = PlayerProfile.objects.filter(
+            player_positions__is_main=True
+        ).exclude(player_positions__is_main=False)
+
+        self.notify_profiles(
+            list(player_profiles_to_notify), Notification.EventType.MISSING_ALT_POSITION
+        )
+
+    def check_and_notify_for_missing_favorite_formation(self) -> None:
+        """
+        Check and notify coach profiles that have not specified their
+        favorite formation.
+        This method iterates over coach profiles and sends a notification to those
+        with missing favorite formation information.
+        """
+        coach_profiles_to_notify = CoachProfile.objects.filter(formation__isnull=True)
+
+        self.notify_profiles(
+            list(coach_profiles_to_notify), Notification.EventType.MISSING_FAV_FORMATION
+        )
+
+    def check_and_notify_for_incomplete_agency_data(self) -> None:
+        """
+        Check and notify manager profiles that have incomplete agency data.
+        This method iterates over manager profiles and sends a notification to those
+        with missing agency email or Transfermarkt URL.
+        """
+        manager_profiles_to_notify = ManagerProfile.objects.filter(
+            Q(agency_email__isnull=True) | Q(agency_transfermarkt_url__isnull=True)
+        )
+
+        self.notify_profiles(
+            list(manager_profiles_to_notify),
+            Notification.EventType.INCOMPLETE_AGENCY_DATA,
+        )
+
+    def check_and_notify_for_missing_external_links(self) -> None:
+        """
+        Check and notify profiles missing external links, excluding those
+        with a specific source link.
+        This method iterates over various profile models, excluding GuestProfile,
+        and sends notifications to profiles missing external links and not having a link
+        from the 'laczynaspilka' source.
+        """
+        lnp_source_name = "laczynaspilka"
+        lnp_source = LinkSource.objects.filter(name=lnp_source_name).first()
+
+        profiles_missing_links = [
+            profile
+            for profile_model in PROFILE_MODELS
+            if profile_model is not GuestProfile
+            for profile in profile_model.objects.annotate(
+                has_lnp_link=Exists(
+                    ExternalLinksEntity.objects.filter(
+                        target__id=OuterRef("external_links__id"),
+                        source=lnp_source,
+                    )
+                )
+            ).filter(has_lnp_link=False)
+        ]
+
+        self.notify_profiles(
+            profiles_missing_links, Notification.EventType.MISSING_EXT_LINKS
+        )
+
+    def check_and_notify_for_missing_video(self) -> None:
+        """
+        Check and notify profiles that do not have an associated video.
+        This method iterates over various profile models, excluding GuestProfile,
+        and sends notifications to profiles that are missing videos.
+        """
+        profiles_missing_video = [
+            profile
+            for profile_model in PROFILE_MODELS
+            if profile_model is not GuestProfile
+            for profile in profile_model.objects.annotate(
+                has_video=Exists(ProfileVideo.objects.filter(user=OuterRef("user")))
+            ).filter(has_video=False)
+        ]
+
+        self.notify_profiles(
+            profiles_missing_video, Notification.EventType.MISSING_VIDEO
+        )
+
+    def check_and_notify_for_missing_photo(self) -> None:
+        """
+        Check and notify users who have not uploaded a profile picture.
+        This method iterates over users with missing profile pictures
+        and sends a notification if the conditions defined
+        in can_send_notification are met.
+        """
+        users_to_notify = User.objects.filter(picture="")
+        self.notify_users(
+            users=users_to_notify, event_type=Notification.EventType.MISSING_PHOTO
+        )
+
+    def check_and_notify_for_missing_certificate_course(self) -> None:
+        """
+        Check and notify users who have not provided information about
+        their courses or certificates.
+        This method iterates over users with missing course or certificate
+        information and sends a notification if the conditions defined
+        in can_send_notification are met.
+        """
+        users_to_notify = User.objects.filter(courses__isnull=True)
+        self.notify_users(
+            users=users_to_notify, event_type=Notification.EventType.MISSING_COURSE
         )
