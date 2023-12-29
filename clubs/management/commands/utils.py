@@ -39,11 +39,7 @@ def get_club_without_img(clubs: Club, herbs: bool = False) -> Union[list, dict]:
 
     for club in clubs:
         for team in club.teams.all():
-            if (
-                team.league
-                and team.league.highest_parent
-                and team.league.highest_parent.name in LEAGUES
-            ):
+            if team.league and team.league and team.league.name in LEAGUES:
                 if herbs:
                     herbs_list.append(
                         {
@@ -54,8 +50,7 @@ def get_club_without_img(clubs: Club, herbs: bool = False) -> Union[list, dict]:
                             if club.voivodeship
                             else None,
                             "team_name": [
-                                (team, team.league.highest_parent.name)
-                                for team in club.teams.all()
+                                (team, team.league.name) for team in club.teams.all()
                             ],
                         }
                     )
@@ -65,7 +60,7 @@ def get_club_without_img(clubs: Club, herbs: bool = False) -> Union[list, dict]:
                     "name": club.name,
                     "picture": club.picture.url if club.picture else None,
                     "team_name": team.name,
-                    "team_league": team.league.highest_parent.name,
+                    "team_league": team.league.name,
                 }
                 break
 

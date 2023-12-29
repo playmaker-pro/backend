@@ -4,12 +4,7 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 
 from app.utils.admin import json_filed_data_prettified
-from clubs.filters import (
-    CountryListFilter,
-    HasManagerFilter,
-    IsParentFilter,
-    ZpnListFilter,
-)
+from clubs.filters import CountryListFilter, HasManagerFilter, ZpnListFilter
 from users.queries import get_users_manger_roles
 from utils import linkify
 
@@ -57,6 +52,10 @@ resave.short_description = "Save objects again."
 class LeagueHistoryAdmin(admin.ModelAdmin):
     list_display = (
         "id",
+        "name",
+        "visible",
+        "created_by",
+        "voivodeship_obj",
         "season",
         "league",
         "get_league_slug",
@@ -69,7 +68,6 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
     )
     list_filter = (
         ZpnListFilter,
-        ("league__highest_parent", admin.RelatedOnlyFieldListFilter),
         "season",
         "league__gender",
         "league__seniority",
@@ -143,45 +141,30 @@ class LeagueAdmin(admin.ModelAdmin):
         "name",
         "slug",
     )
-    readonly_fields: Sequence[str] = ("slug", "search_tokens", "virtual", "is_parent")
-    autocomplete_fields = ["parent", "highest_parent"]
+    readonly_fields: Sequence[str] = ("slug", "search_tokens", "virtual")
     actions = [resave]
     exclude = ["code", "order", "section"]
     list_display = (
         "pk",
-        "get_slicer",
         "seniority",
         "name",
         "get_data_seasons",
         "virtual",
         "visible",
-        "isparent",
-        "is_parent",
-        "standalone",
+        "created_by",
         "league_history",
         "country",
-        "parent",
-        "childs_no",
         "gender",
         "index",
-        "group",
         "slug",
         "search_tokens",
-        linkify("highest_parent"),
     )
     list_filter = (
-        "zpn",
-        ("highest_parent", admin.RelatedOnlyFieldListFilter),
-        IsParentFilter,
         "visible",
         "gender",
         "seniority",
         CountryListFilter,
     )
-    autocomplete_fields = ["parent", "highest_parent"]
-
-    def get_slicer(self, obj):
-        return mark_safe(f'<a href="{obj.pk}">{obj.get_upper_parent_names()}</a>')
 
     def get_data_seasons(self, obj):
         return "\n".join([season.name for season in obj.data_seasons.all()])
@@ -195,19 +178,6 @@ class LeagueAdmin(admin.ModelAdmin):
                 ]
             )
         )
-
-    def childs_no(self, obj):
-        return obj.get_childs.count()
-
-    def standalone(self, obj):
-        return obj.standalone
-
-    def is_parent(self, obj):
-        return obj.is_parent
-
-    is_parent.short_description = "is_parent()"
-    standalone.boolean = True
-    is_parent.boolean = True
 
 
 @admin.register(models.Voivodeship)
@@ -252,7 +222,8 @@ class TeamAdmin(admin.ModelAdmin):
         "mapping",
         linkify("club"),
         "junior_group",
-        "current_league",
+        "league",
+        "league_history",
         linkify("gender"),
         linkify("seniority"),
         linkify("manager"),
@@ -279,19 +250,6 @@ class TeamAdmin(admin.ModelAdmin):
         return mark_safe(f'<a href="{obj.pk}">{obj.name}</a>')
 
     get_name.short_description = "Nazwa Drużyny"
-
-    def current_league(self, obj=None):
-        """
-        Returns the current league the highest parent of a given team.
-        If the team has no team history related to a current season,
-        returns league from latest team history.
-        """
-        current_league = "-"
-        if obj:
-            latest_league = obj.latest_league_from_lh
-            if latest_league:
-                current_league = f"{latest_league.get_highest_parent()}"
-        return current_league
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)

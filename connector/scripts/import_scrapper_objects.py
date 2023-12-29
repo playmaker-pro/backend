@@ -135,11 +135,11 @@ class Command(BaseCommand):
         """
         Assign RW/RJ league
         """
-        parent_league = current_league_obj.parent
+        parent_league = current_league_obj
         lost_league, _ = League.objects.get_or_create(
             name=target,
             parent=parent_league,
-            highest_parent=parent_league.highest_parent,
+            highest_parent=parent_league,
         )
         try:
             lh_to_change = LeagueHistory.objects.get(

@@ -9,8 +9,8 @@ from pm_core.services.models import (
     GameSchema,
     GamesSchema,
     PlayerScoreSchema,
-    PlayerSeasonScoreSchema,
     PlayerSeasonScoreListSchema,
+    PlayerSeasonScoreSchema,
     PlayerSeasonStatsListSchema,
     PlayerSeasonStatsSchema,
 )
@@ -40,7 +40,7 @@ class BasePlayerSerializer:
         """get league name from s51 (scrapper has different league names)"""
         entity = MapperEntity.objects.filter(mapper_id=_id).first()
         if entity:
-            return entity.target.leaguehistory.league.highest_parent.name
+            return entity.target.leaguehistory.league.name
 
 
 class GameSerializer(BasePlayerSerializer):

@@ -299,7 +299,7 @@ class TeamContributorFactory(factory.django.DjangoModelFactory):
             for team_hist in extracted:
                 obj.team_history.add(team_hist)
         else:
-            obj.team_history.add(clubs_factories.TeamHistoryFactory())
+            obj.team_history.add(clubs_factories.TeamFactory())
 
 
 class TransferStatusFactory(factory.django.DjangoModelFactory):

@@ -20,6 +20,7 @@ class TestClubAPI(APITestCase):
         self.headers: dict = user_manager.get_headers()
         self.club_teams_endpoint = reverse("api:clubs:get_all_clubs_teams")
 
+        GenderFactory(name="kobiety")
         male_gender = GenderFactory(name="mężczyźni")
         self.club = ClubWithHistoryFactory.create()
 
@@ -27,8 +28,7 @@ class TestClubAPI(APITestCase):
         self.club.teams.update(gender=male_gender)
 
         self.team = self.club.teams.first()
-        self.team_history = self.team.historical.first()
-        self.league_history = self.team_history.league_history
+        self.league_history = self.team.league_history
         self.season = self.league_history.season
         self.league = self.league_history.league
 
@@ -48,7 +48,7 @@ class TestClubAPI(APITestCase):
         """
         response = self.client.get(
             self.club_teams_endpoint,
-            data={"season": self.season.name, "name": self.club.name},
+            data={"season": self.league_history.season.name, "name": self.club.name},
             **self.headers
         )
         assert response.status_code == status.HTTP_200_OK
@@ -65,7 +65,7 @@ class TestClubAPI(APITestCase):
         # This count helps us determine the expected number of results
         # when paginating through the API endpoint
         num_clubs = models.Club.objects.filter(
-            teams__historical__league_history__season__name=self.season
+            teams__league_history__season__name=self.season
         ).count()
 
         # Request the first page

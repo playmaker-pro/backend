@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     "transfers",
     # "contact",
     # Deprecation(rkesik): since we are working on a new FE
-    # "followers",
+    "followers",
     "inquiries",
     "clubs",
     "external_links",

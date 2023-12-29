@@ -10,7 +10,7 @@ from django.urls import reverse
 from requests import Response
 from rest_framework.test import APIClient, APITestCase
 
-from clubs.models import Team, TeamHistory
+from clubs.models import Team
 from profiles.api.errors import (
     NotAOwnerOfTheTeamContributorHTTPException,
     PhoneNumberMustBeADictionaryHTTPException,
@@ -396,19 +396,14 @@ def test_profile_transfer_request_teams_endpoint(
         profile_uuid=profile.uuid
     )
 
-    team_history1: TeamHistory = team_contributor1.team_history.first()
-    team_history2: TeamHistory = team_contributor2.team_history.first()
+    team1: Team = team_contributor1.team_history.first()
+    team2: Team = team_contributor2.team_history.first()
 
-    league = team_history1.league_history.league
-    league.highest_parent = league
+    league = team1.league_history.league
     league.save()
 
-    league2 = team_history2.league_history.league
-    league2.highest_parent = league2
+    league2 = team2.league_history.league
     league2.save()
-
-    team1: Team = team_history1.team
-    team2: Team = team_history2.team
 
     team1.club.picture.save(uploaded_file.name, uploaded_file, save=True)
     team2.club.picture.save(uploaded_file.name, uploaded_file, save=True)
@@ -419,30 +414,18 @@ def test_profile_transfer_request_teams_endpoint(
         {
             "id": team_contributor1.pk,
             "round": team_contributor1.round,
-            "team": {
-                "id": team_history1.pk,
-                "team_name": team1.name,
-                "league_highest_parent_name": team_history1.league_history.league.display_league_top_parent,  # noqa: E501
-                "league_highest_parent_id": team_history1.league_history.league.pk,
-                "team_contributor_id": None,
-                "picture_url": request.build_absolute_uri(team1.get_club_pic),
-                "country": team_history1.get_country,
-                "season": team_history1.league_history.season.name,
-            },
+            "is_primary": team_contributor1.is_primary,
+            "is_primary_for_round": team_contributor1.is_primary_for_round,
         },
         {
             "id": team_contributor2.pk,
+            "team_id": team2.pk,
+            "picture_url": request.build_absolute_uri(team2.get_club_pic),
+            "team_name": team2.name,
+            "league_name": team2.league_history.league.name,
+            "league_id": team2.league_history.league.pk,
+            "season_name": team2.league_history.season.name,
             "round": team_contributor2.round,
-            "team": {
-                "id": team_history2.pk,
-                "team_name": team2.name,
-                "league_highest_parent_name": team_history2.league_history.league.display_league_top_parent,  # noqa: E501
-                "league_highest_parent_id": team_history2.league_history.league.pk,
-                "team_contributor_id": None,
-                "picture_url": request.build_absolute_uri(team2.get_club_pic),
-                "country": team_history2.get_country,
-                "season": team_history2.league_history.season.name,
-            },
         },
     ]
 

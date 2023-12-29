@@ -118,7 +118,6 @@ class TestCreateProfileAPI(APITestCase):
                 {
                     "role": "P",
                     "team_object_id": 1,
-                    "team_history_object_id": 1,
                 }
             ],
             [
@@ -717,7 +716,7 @@ class ProfileTeamsApiTest(APITestCase):
             factories.SeasonFactory.create(name=season_name)
             for season_name in SEASON_NAMES
         ]
-        self.team_history = factories.TeamHistoryFactory.create()
+        self.team_history = factories.TeamFactory.create()
         self.season = all_seasons[0]
 
     def test_get_profiles_teams(self):
@@ -809,7 +808,7 @@ class ProfileTeamsApiTest(APITestCase):
         )
 
         assert response.status_code == 200
-        assert response.data["team_name"] == self.team_history.team.name
+        assert response.data["team_name"] == self.team_history.name
         assert (
             response.data["league_name"] == self.team_history.league_history.league.name
         )
@@ -837,7 +836,7 @@ class ProfileTeamsApiTest(APITestCase):
         )
 
         assert response.status_code == 200
-        assert response.data["team_name"] == self.team_history.team.name
+        assert response.data["team_name"] == self.team_history.name
         assert (
             response.data["league_name"] == self.team_history.league_history.league.name
         )
@@ -874,7 +873,7 @@ class ProfileTeamsApiTest(APITestCase):
         assert response.status_code == 200
         assert (
             response.data[0]["team_name"]
-            == self.team_contributor.team_history.first().team.name
+            == self.team_contributor.team_history.first().name
         )
         assert (
             response.data[0]["league_name"]
@@ -894,7 +893,7 @@ class ProfileTeamsApiTest(APITestCase):
         assert response.status_code == 200
         assert (
             response.data[0]["team_name"]
-            == self.non_player_team_contributor.team_history.first().team.name
+            == self.non_player_team_contributor.team_history.first().name
         )
         assert (
             response.data[0]["league_name"]

@@ -176,15 +176,13 @@ class TestProfileListAPI(APITestCase):
     def test_get_bulk_profiles_filter_league(self) -> None:
         """get player profiles filter by league"""
         current_season = get_current_season()
-        th1, th2 = factories.TeamHistoryFactory.create_batch(
+        th1, th2 = factories.TeamFactory.create_batch(
             2, league_history__season__name=current_season
         )
-
-        profile1 = factories.PlayerProfileFactory.create(team_object=th1.team)
-        profile2 = factories.PlayerProfileFactory.create(team_object=th2.team)
-        league1_id = profile1.team_object.latest_league_from_lh.highest_parent.id
-        league2_id = profile2.team_object.latest_league_from_lh.highest_parent.id
-
+        profile1 = factories.PlayerProfileFactory.create(team_object=th1)
+        profile2 = factories.PlayerProfileFactory.create(team_object=th2)
+        league1_id = profile1.team_object.league_history.league.id
+        league2_id = profile2.team_object.league_history.league.id
         response = self.client.get(
             self.url,
             {"role": "P", "league": [league1_id]},
