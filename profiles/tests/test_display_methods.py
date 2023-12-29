@@ -13,6 +13,5 @@ class ClubTeamDisplays(TestCase):
         assert self.team.display_team == "TEAMX"
         assert self.team.display_club == "CLUBX"
         assert self.team.display_voivodeship == "VIVOX"
-        assert self.team.display_league == "LEAGUEX"
         assert self.team.display_seniority == "SENIORITYX"
         assert self.team.display_gender == "GENDERX"

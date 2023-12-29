@@ -4,11 +4,10 @@ import typing
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
+from backend.settings.environment import Environment
 from clubs.models import Club, Gender, League, Seniority, Team
 from roles import definitions
 from voivodeships.models import Voivodeships
-from backend.settings.environment import Environment
-
 
 User = get_user_model()
 
@@ -37,7 +36,7 @@ class RunWithDifferentEnvironment:
         destination_env - environment to run something with
         call - function to call with different environment
         """
-        # TODO(bartnyk): env will be changed to enum, here: https://gitlab.com/playmaker1/webapp/-/merge_requests/313
+        # TODO(bartnyk): env will be changed to enum, here: https://gitlab.com/playmaker1/webapp/-/merge_requests/313  # noqa 501
         self.current_environment: Environment = (
             settings.CONFIGURATION
         )  # save current environment
@@ -70,7 +69,6 @@ def get_team():
     team, _ = Team.objects.get_or_create(
         club=club,
         name="TEAMX",
-        league=league,
         seniority=seniority,
         gender=gender,
         defaults={"mapping": "XXX, YYY,"},

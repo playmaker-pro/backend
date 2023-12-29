@@ -1,16 +1,16 @@
 import datetime
-from functools import cached_property, lru_cache
-from typing import List, Union, Optional
+from functools import cached_property
+from typing import List, Optional, Union
 from urllib.parse import urljoin
 
 from address.models import AddressField
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
-from django.contrib.contenttypes.fields import GenericRelation
 
 from external_links.models import ExternalLinks
 from mapper.models import Mapper
@@ -255,8 +255,6 @@ class Club(models.Model, MappingMixin):
         null=True,
     )
 
-    labels = GenericRelation("labels.Label")
-
     def get_permalink(self):
         return reverse("clubs:show_club", kwargs={"slug": self.slug})
 
@@ -288,10 +286,15 @@ class Club(models.Model, MappingMixin):
 
 
 class LeagueHistory(models.Model):
+    name = models.CharField(
+        _("Plays name"),
+        max_length=255,
+        help_text="Displayed Name of plays",
+        null=True,
+    )
     season = models.ForeignKey(
         "Season", on_delete=models.SET_NULL, null=True, blank=True
     )
-
     index = models.CharField(max_length=255, null=True, blank=True)
     league = models.ForeignKey(
         "League", on_delete=models.CASCADE, related_name="historical"
@@ -330,10 +333,19 @@ class LeagueHistory(models.Model):
     )
     enabled = models.BooleanField(
         default=True,
-        help_text="Flag indicating whether the league history should be displayed in the API.",
+        help_text="Flag indicating whether the league history should be displayed in the API.",  # noqa 501
     )
     year = models.IntegerField(
         null=True, blank=True, help_text="Year the league history represents."
+    )
+    voivodeship_obj = models.ForeignKey(
+        Voivodeships,
+        verbose_name=_("Województwo"),
+        help_text="Wybierz województwo.",
+        max_length=20,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     def __str__(self):
@@ -411,6 +423,10 @@ class SectionGrouping(models.Model):
 
 
 class League(models.Model):
+    class LeagueTypes(models.TextChoices):
+        CUP = "CUP", "Cup"
+        LEAGUE = "LEAGUE", "League"
+
     name = models.CharField(max_length=355, help_text="eg. Ekstraklasa")
     virtual = models.BooleanField(default=False)
     visible = models.BooleanField(
@@ -448,16 +464,6 @@ class League(models.Model):
         max_length=5,
         help_text="League code -- Deprecated, will be removed in future",
     )
-    parent = models.ForeignKey(
-        "self",
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name="childs",
-    )
-    highest_parent = models.ForeignKey(
-        "self", on_delete=models.SET_NULL, blank=True, null=True
-    )
     country = CountryField(
         _("Kraj"),
         default="PL",
@@ -478,13 +484,11 @@ class League(models.Model):
     rw = models.BooleanField(default=False, help_text="Spring round (runda wiosenna)")
     # auto calculated fields & flags
     slug = models.CharField(max_length=255, blank=True, editable=False)
-    isparent = models.BooleanField(default=False)
 
     zpn = models.CharField(max_length=255, null=True, blank=True)
     # @todo(rkesik): zpn mapped looks like deprecated. Shall we remove that?
     zpn_mapped = models.CharField(max_length=255, null=True, blank=True)
     index = models.CharField(max_length=255, null=True, blank=True)
-
     search_tokens = models.CharField(max_length=255, null=True, blank=True)
 
     scrapper_autocreated = models.BooleanField(default=False)
@@ -505,6 +509,12 @@ class League(models.Model):
     enabled = models.BooleanField(
         default=True,
         help_text="Flag indicating whether the league should be displayed in the API.",
+    )
+    league_type = models.CharField(
+        max_length=10,
+        choices=LeagueTypes.choices,
+        default="LEAGUE",
+        help_text="Type of the league (e.g., Cup, League)",
     )
 
     def has_season_data(self, season_name: str) -> bool:
@@ -534,25 +544,6 @@ class League(models.Model):
         return self.data_seasons.all()
 
     @cached_property
-    def is_parent(self):
-        """If has no parent and have children"""
-        return self.parent is None and self.get_childs.count() != 0
-
-    @cached_property
-    def standalone(self):
-        """If has no parent and represents own data"""
-        return self.parent is None and self.childs.all().count() == 0
-
-    @cached_property
-    def childs_ids(self) -> list:
-        id_list = []
-        if self.childs:
-            id_list = id_list + list(self.get_childs.values_list("id", flat=True))
-            for child in self.get_childs:
-                id_list = id_list + child.childs_ids
-        return id_list
-
-    @cached_property
     def display_league(self) -> str:
         return self.name
 
@@ -560,26 +551,6 @@ class League(models.Model):
     def display_name_junior(self) -> str:
         if self.name_junior and not self.name_junior.name.isspace():
             return self.name_junior.name
-
-    @cached_property
-    def display_league_top_parent(self) -> str:
-        if self.highest_parent:
-            return self.highest_parent.display_league
-
-    @lru_cache
-    def get_highest_parent(self):
-        """Loops to find last (top) parent in a tree"""
-        if self.parent:
-            parent = self.parent
-        else:
-            return self
-        while True:
-            if parent.parent is None:
-                return parent
-            else:
-                parent = parent.parent
-                continue
-            break
 
     @cached_property
     @supress_exception
@@ -603,43 +574,13 @@ class League(models.Model):
             else "#"
         )
 
-    def get_slug_value(self):
-        return self.get_upper_parent_names(spliter="--")
-
     def save(self, *args, **kwargs):
-        # is a virtual parent?
-        if self.is_parent:
-            # isparent flag is due to historical reasons
-            self.isparent = True
-            # virtual set to true it means that this is an virtual group
-            # and do not contains any league data.
-            self.virtual = True
-
-        # We set a new/modify parent attribute
-        # so we need to trigger our parent object
-        # to recalclate data and set a proper flag.
-        if self.parent is not None:
-            self.parent.isparent = True
-            self.parent.save()
-
-        unique_slugify(self, self.get_slug_value())
-        # make search index
         self.search_tokens = self.build_search_tokens()
         super().save(*args, **kwargs)
-
-    def get_upper_parent_names(self, spliter=", "):
-        name = self.name
-        if self.parent:
-            name = (
-                f"{self.parent.get_upper_parent_names(spliter=spliter)}{spliter}{name}"
-            )
-        return name
 
     def set_league_season(self, seasons: List[Season]):
         """Mechanism to set and propagate changes in data seasons."""
         self.data_seasons.add(*seasons)
-        if self.parent:
-            self.parent.set_league_season(list(self.data_seasons.all()))
 
     def build_search_tokens(self):
         """Creates string which will be used to text based searches
@@ -649,21 +590,11 @@ class League(models.Model):
         fields = [self.name, self.zpn, self.city_name, group_name]
         return " ".join(filter(None, fields))
 
-    def clean(self):
-        from django.core.exceptions import ValidationError
-
-        if self.parent and self.id == self.parent.id:
-            raise ValidationError({"parent": ["You cant have yourself as a parent!"]})
-
-    @property
-    def full_name(self):
-        return self.get_upper_parent_names()
-
     def __str__(self):
-        return self.full_name
+        return self.name
 
     class Meta:
-        unique_together = ("name", "country", "parent")
+        unique_together = ("name", "country")
         ordering = ("order", "section__name")
 
 
@@ -718,6 +649,21 @@ class Team(models.Model, MappingMixin):
         "fizo",
         "diet_suplements",
     ]
+    AGE_CATEGORIES = (
+        ("U19", "U19"),
+        ("U17", "U17"),
+        ("U16", "U16"),
+        ("U15", "U15"),
+        ("U14", "U14"),
+        ("U13", "U13"),
+        ("U12", "U12"),
+        ("U11", "U11"),
+        ("U10", "U10"),
+        ("U9", "U9"),
+        ("U8", "U8"),
+        ("U7", "U7"),
+        ("U6", "U6"),
+    )
 
     mapping = models.TextField(
         null=True,
@@ -728,8 +674,28 @@ class Team(models.Model, MappingMixin):
     autocreated = models.BooleanField(default=False, help_text="Autocreated from s38")
     gender = models.ForeignKey(Gender, on_delete=models.SET_NULL, null=True, blank=True)
 
-    # That would be deprecated since TeamHistory introduction
-    league = models.ForeignKey(League, on_delete=models.SET_NULL, null=True, blank=True)
+    league = models.ForeignKey(
+        "League",
+        on_delete=models.SET_NULL,
+        related_name="team_league",
+        null=True,
+        blank=True,
+    )
+    league_history = models.ForeignKey(
+        "LeagueHistory",
+        on_delete=models.SET_NULL,
+        related_name="team_league_history",
+        null=True,
+        blank=True,
+    )
+
+    age_category = models.CharField(
+        max_length=3,
+        choices=AGE_CATEGORIES,
+        null=True,
+        blank=True,
+        help_text="Age category of the team.",
+    )
 
     seniority = models.ForeignKey(
         Seniority, on_delete=models.SET_NULL, null=True, blank=True
@@ -820,31 +786,15 @@ class Team(models.Model, MappingMixin):
             return False
 
     @property
-    def latest_league_from_lh(self):
-        ths = self.get_latest_team_history()
-        if ths and ths.league_history:
-            return ths.league_history.league
+    def team_name_with_current_league(self) -> str:
+        return self.display_team + (" " + f"({self.league})" if self.league else "")
 
     @property
-    def team_name_with_current_league(self):
-        return self.display_team + (
-            " " + f"({self.latest_league_from_lh})"
-            if self.latest_league_from_lh
-            else ""
-        )
+    def name_with_league_full(self) -> str:
+        return f"{self.name}" + (f" ({self.league.name})" if self.league else "")
 
     @property
-    def league_with_parents(self):
-        return self.league.get_upper_parent_names(spliter=", ")
-
-    @property
-    def name_with_league_full(self):
-        return f"{self.name}" + (
-            f" ({self.league_with_parents})" if self.league else ""
-        )
-
-    @property
-    def display_team(self):
+    def display_team(self) -> str:
         return self.short_name or self.name
 
     @property
@@ -861,26 +811,6 @@ class Team(models.Model, MappingMixin):
     @supress_exception
     def display_voivodeship(self):
         return self.club.display_voivodeship
-
-    @property
-    @supress_exception
-    def display_league(self):
-        return self.league.display_league
-
-    def get_latest_team_history(self) -> List["TeamHistory"]:
-        sorted_team_histories = self.historical.all().order_by(
-            "-league_history__season__name"
-        )
-        if sorted_team_histories:
-            return sorted_team_histories.first()
-
-    @property
-    @supress_exception
-    def display_league_top_parent(self):
-        th = self.get_latest_team_history()
-        if th:
-            return th.league_history.league.display_league_top_parent
-        return self.league.display_league_top_parent
 
     @property
     @supress_exception
@@ -933,12 +863,12 @@ class Team(models.Model, MappingMixin):
         return self.gender.display_gender
 
     @property
-    def display_team_with_league_top_parent(self) -> str:
+    def display_team_with_league(self) -> str:
         """
         Returns a formatted string representing the team
-        along with its top parent league.
+        along with its league.
         """
-        return f"({self.display_league_top_parent}, {self.display_team})"
+        return f"({self.league}, {self.display_team})"
 
     name = models.CharField(
         _("Nazwa drużyny"),
@@ -990,14 +920,20 @@ class Team(models.Model, MappingMixin):
         if not self.external_links:
             self.create_external_links_obj()
 
+        if self.league_history and not self.league:
+            self.league = self.league_history.league
+
+        if self.league and not self.gender:
+            self.gender = self.league.gender
+
         super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = _("Team")
         verbose_name_plural = _("Teams")
-        unique_together = ("name", "club", "seniority", "league")
+        unique_together = ("name", "club", "seniority", "league_history")
 
-    # common team fileds
+    # common team fields
     travel_refunds = models.BooleanField(_("Zwrot za dojazdy"), default=False)
 
     game_bonus = models.BooleanField(
@@ -1045,8 +981,10 @@ class Team(models.Model, MappingMixin):
 
 
 class TeamHistory(models.Model):
-    """Definition of a  team history object
+    """
+    [Deprecated since PM20-792]
 
+    Definition of a  team history object
     Keeps track of a team history in a past
     """
 
@@ -1111,7 +1049,7 @@ class TeamHistory(models.Model):
     )
     enabled = models.BooleanField(
         default=True,
-        help_text="Flag indicating whether the team history should be displayed in the API.",
+        help_text="Flag indicating whether the team history should be displayed in the API.",  # noqa 501
     )
 
     def __str__(self):
@@ -1128,8 +1066,8 @@ class TeamHistory(models.Model):
     @property
     def get_country(self) -> Optional[str]:
         """
-        Attempts to retrieve the country name either from the team's club or the league's history.
-        Returns None if neither is available.
+        Attempts to retrieve the country name either from the team's club or the
+        league's history. Returns None if neither is available.
         """
         club_country = getattr(self.team.club, "country", None)
         if club_country:
@@ -1157,7 +1095,7 @@ class TeamManagers(models.Model):
         Team,
         on_delete=models.CASCADE,
         related_name="managers",
-        help_text="Reference to the team with which this manager is associated. A team can have multiple managers.",
+        help_text="Reference to the team with which this manager is associated. A team can have multiple managers.",  # noqa 501
     )
     manager = models.ForeignKey(
         settings.AUTH_USER_MODEL,

@@ -1,14 +1,16 @@
+from typing import List
+
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import TestCase
-from django.contrib.auth import get_user_model
+
 from app import errors
+from app.management.commands.mock_database import Command as Mocker
+from backend.settings.environment import Environment
 from clubs import models as clubs_models
 from profiles import models as profiles_models
-from typing import List
 from utils.testutils import RunWithDifferentEnvironment
-from backend.settings.environment import Environment
-from app.management.commands.mock_database import Command as Mocker
-from django.conf import settings
 
 User = get_user_model()
 
@@ -179,11 +181,11 @@ class TestMockDatabaseCommand(TestCase):
         assert not self.clubprofiles
         assert not self.scoutprofiles
         assert not self.guestprofiles
-        assert not self.seasons
+        assert self.seasons
         assert self.clubs
         assert self.teams
-        assert not self.leagues
-        assert not self.leaguehistories
+        assert self.leagues
+        assert self.leaguehistories
         assert not self.teamhistories
 
     def test_setup_leagues(self) -> None:

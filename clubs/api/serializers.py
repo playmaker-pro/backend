@@ -80,7 +80,6 @@ class LeagueSerializer(serializers.ModelSerializer):
     data_seasons = SeasonSerializer(many=True, required=False)
     gender = GenderSerializer(required=False)
     seniority = SenioritySerializer(required=False)
-    name = serializers.CharField(source="get_upper_parent_names", read_only=True)
 
     class Meta:
         model = models.League
@@ -150,16 +149,15 @@ class TeamSerializer(serializers.ModelSerializer):
 
     def get_current_team_league_history(self, obj: models.Team) -> dict:
         """Get current, serialized league history of team"""
-        if latest_th := obj.get_latest_team_history():  # noqa: E999
-            return LeagueHistorySerializer(latest_th.league_history).data
+        return LeagueHistorySerializer(obj.league_history).data
 
 
 class CustomTeamHistorySerializer(serializers.ModelSerializer):
     """
-    Serializer for the TeamHistory model providing customized fields.
+    Serializer for the Team model providing customized fields.
 
     The CustomTeamHistorySerializer is designed to represent the historical data of
-    teams, with details about the highest parent league a team was part of,
+    teams, with details about the league a team was part of,
     its division, and some general team information like name and gender.
 
     The division field can represent an age group for junior teams
@@ -168,12 +166,12 @@ class CustomTeamHistorySerializer(serializers.ModelSerializer):
     """
 
     division = serializers.SerializerMethodField()
-    historical_league_name = serializers.SerializerMethodField()
-    name = serializers.CharField(source="team.short_name")
-    gender = GenderSerializer(source="team.gender")
+    historical_league_name = serializers.CharField(source="league_history.league.name")
+    name = serializers.CharField(source="short_name")
+    gender = GenderSerializer()
 
     class Meta:
-        model = models.TeamHistory
+        model = models.Team
         fields = [
             "id",
             "name",
@@ -182,19 +180,7 @@ class CustomTeamHistorySerializer(serializers.ModelSerializer):
             "historical_league_name",
         ]
 
-    def get_historical_league_name(
-        self, obj: models.TeamHistory
-    ) -> typing.Optional[str]:
-        """
-        Retrieve the historical league data.
-        """
-        return (
-            obj.league_history.league.get_highest_parent().name
-            if obj.league_history
-            else None
-        )
-
-    def get_division(self, obj: models.TeamHistory) -> typing.Optional[str]:
+    def get_division(self, obj: models.Team) -> typing.Optional[str]:
         """
         Retrieve the division of a team based on its junior group or seniority.
 
@@ -203,10 +189,10 @@ class CustomTeamHistorySerializer(serializers.ModelSerializer):
         For senior teams, the division will indicate the seniority level
         (e.g., "seniorzy").
         """
-        if obj.team.junior_group and hasattr(obj.team.junior_group, "name"):
-            return obj.team.junior_group.name
-        elif obj.team.seniority and hasattr(obj.team.seniority, "name"):
-            return obj.team.seniority.name
+        if obj.junior_group and hasattr(obj.junior_group, "name"):
+            return obj.junior_group.name
+        elif obj.seniority and hasattr(obj.seniority, "name"):
+            return obj.seniority.name
         return None
 
 
@@ -251,14 +237,14 @@ class ClubTeamSerializer(serializers.ModelSerializer):
         season = self.context.get("season")
         gender = self.context.get("gender")
 
-        filters = {"team__club": obj}
+        filters = {"club": obj}
 
         # Filtering by gender
         if gender:
             if gender.upper() == models.Gender.MALE:
-                filters["team__gender"] = models.Gender.get_male_object().id
+                filters["gender"] = models.Gender.get_male_object().id
             elif gender.upper() == models.Gender.FEMALE:
-                filters["team__gender"] = models.Gender.get_female_object().id
+                filters["gender"] = models.Gender.get_female_object().id
 
         # Filtering by season
         if season:
@@ -266,15 +252,10 @@ class ClubTeamSerializer(serializers.ModelSerializer):
 
         # Applying filters
         team_histories_qs = (
-            models.TeamHistory.objects.select_related(
-                "team", "league_history", "team__gender"
-            )
-            .prefetch_related(
-                "team__junior_group", "team__seniority", "league_history__league"
-            )
+            models.Team.objects.select_related("league_history", "gender")
+            .prefetch_related("junior_group", "seniority", "league_history__league")
             .filter(**filters)
         )
-
         return CustomTeamHistorySerializer(
             team_histories_qs, many=True, context=self.context
         ).data
@@ -285,25 +266,25 @@ class TeamHistorySerializer(serializers.ModelSerializer):
     league_history = LeagueHistorySerializer(required=False)
 
     class Meta:
-        model = models.TeamHistory
+        model = models.Team
         exclude = ("data_mapper_id", "autocreated")
 
 
 class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
     """
-    Serializer for the TeamHistory model focused on providing base profile information.
+    Serializer for the Team model focused on providing base profile information.
 
     This serializer extracts the essential information about the team and its
-    associated league from the TeamHistory model.
-    It provides the team's name and details about the league's highest parent entity.
+    associated league.
+    It provides the team's name and details about the league's entity.
     """
 
     team_name = serializers.SerializerMethodField()
     league_highest_parent_name = serializers.CharField(
-        source="league_history.league.get_highest_parent.name"
+        source="league_history.league.name"
     )
     league_highest_parent_id = serializers.IntegerField(
-        source="league_history.league.get_highest_parent.id"
+        source="league_history.league.id"
     )
     team_contributor_id = serializers.SerializerMethodField()
     picture_url = serializers.SerializerMethodField()
@@ -311,7 +292,7 @@ class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
     season = serializers.SerializerMethodField()
 
     class Meta:
-        model = models.TeamHistory
+        model = models.Team
         fields = [
             "id",
             "team_name",
@@ -323,30 +304,30 @@ class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
             "season",
         ]
 
-    def get_team_name(self, obj: models.TeamHistory) -> str:
+    def get_team_name(self, obj: models.Team) -> str:
         """
         Retrieve the team's short name if available; otherwise, return the
         team's full name.
         """
-        return obj.team.short_name or obj.team.name
+        return getattr(obj, "short_name", obj.name)
 
-    def get_picture_url(self, obj: models.TeamHistory) -> typing.Optional[str]:
+    def get_picture_url(self, obj: models.Team) -> typing.Optional[str]:
         """
         Retrieve the absolute url of the club logo.
         """
         request = self.context.get("request")
         try:
-            url = request.build_absolute_uri(obj.team.club.picture.url)
+            url = request.build_absolute_uri(obj.club.picture.url)
         except (ValueError, AttributeError):
             return None
         return url
 
     @staticmethod
-    def get_season(obj: models.TeamHistory) -> typing.Optional[str]:
+    def get_season(obj: models.Team) -> typing.Optional[str]:
         """
-        Retrieve the season name associated with the TeamHistory instance.
+        Retrieve the season name associated with the Team instance.
         """
-        team_history_season = getattr(obj, "season", None)
+        team_history_season = getattr(obj, "league_history__season", None)
         if team_history_season:
             return team_history_season.name
 
@@ -356,11 +337,11 @@ class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
 
     def get_team_contributor_id(
         self,
-        obj: models.TeamHistory,
+        obj: models.Team,
     ) -> typing.Optional[int]:
         """
         Retrieve the ID of the primary TeamContributor associated with the given
-        TeamHistory object.
+        Team object.
         """
         profile_uuid: typing.Optional[uuid.UUID] = self.context.get("profile_uuid")
         primary_contributor: typing.Optional[

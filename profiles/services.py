@@ -548,13 +548,11 @@ class ProfileFilterService:
         current_season = get_current_season()
 
         distinct_user_ids = (
-            queryset.filter(
-                team_object__historical__league_history__league__highest_parent__in=league_ids  # noqa: E501
-            )
+            queryset.filter(team_object__league_history__league__in=league_ids)
             .annotate(
                 is_current_season=Case(
                     When(
-                        team_object__historical__league_history__season__name=current_season,  # noqa: E501
+                        team_object__league_history__season__name=current_season,
                         then=Value(1),
                     ),
                     default=Value(0),
@@ -850,7 +848,7 @@ class TeamContributorService:
 
     @staticmethod
     def create_or_get_team_contributor(
-        profile_uuid: uuid.UUID, team_history: clubs_models.TeamHistory, **kwargs
+        profile_uuid: uuid.UUID, team: clubs_models.Team, **kwargs
     ) -> typing.Tuple[models.TeamContributor, bool]:
         """
         Create or retrieve a TeamContributor instance for a given profile
@@ -878,7 +876,7 @@ class TeamContributorService:
         # except IntegrityError:
         #     raise errors.TeamContributorAlreadyExistServiceException
 
-        team_contributor_instance.team_history.add(team_history)
+        team_contributor_instance.team_history.add(team)
 
         return team_contributor_instance, True
 
@@ -1038,32 +1036,30 @@ class TeamContributorService:
         )
 
     def update_profile_team_fields(
-        self, profile_uuid: uuid.UUID, team_history: clubs_models.TeamHistory
+        self, profile_uuid: uuid.UUID, team_history: clubs_models.Team
     ) -> None:
         """
-        Updates the team fields (`team_object` and `team_history_object`)
+        Updates the team field (`team_object`)
         of a profile instance.
         """
         profile_instance: models.PROFILE_MODELS = (
             self.profile_service.get_profile_by_uuid(profile_uuid)
         )
 
-        profile_instance.team_object = team_history.team
-        profile_instance.team_history_object = team_history
+        profile_instance.team_object = team_history
 
         profile_instance.save()
 
     def update_profile_with_current_team_history(
         self,
         profile_uuid: uuid.UUID,
-        matched_team_histories: typing.List[clubs_models.TeamHistory],
+        matched_team_histories: typing.List[clubs_models.Team],
     ) -> None:
         """
         Updates the profile's team fields with the most current team history.
         """
         if not matched_team_histories:
             return
-
         # Sort the matched_team_histories by season in descending order
         sorted_team_histories = sorted(
             matched_team_histories,
@@ -1170,7 +1166,7 @@ class TeamContributorService:
 
     def get_or_create_team_history(
         self, data: dict, profile_uuid: uuid.UUID
-    ) -> typing.List[typing.Union[clubs_models.TeamHistory, typing.Any]]:
+    ) -> typing.List[typing.Union[clubs_models.Team, typing.Any]]:
         """
         Retrieve or create a team history based on the provided data and profile UUID.
         """
@@ -1183,7 +1179,7 @@ class TeamContributorService:
 
             if not is_player:  # non-player scenario
                 # Extract attributes from team_history_instance, for example:
-                team_parameter = team_history_instance.team.id
+                team_parameter = team_history_instance.id
                 league_identifier = team_history_instance.league_history.league.id
 
                 # Use these extracted values to call
@@ -1255,7 +1251,7 @@ class TeamContributorService:
         self,
         team_contributor: models.TeamContributor,
         data: dict,
-        team_histories: typing.List[clubs_models.TeamHistory],
+        team_histories: typing.List[clubs_models.Team],
     ) -> None:
         """
         Update attributes of a TeamContributor instance based on provided data.
@@ -1299,7 +1295,7 @@ class TeamContributorService:
         if team_history_instance:
             current_data = {
                 "round": team_contributor.round,
-                "team_parameter": team_history_instance.team.id,
+                "team_parameter": team_history_instance.id,
                 "league_identifier": team_history_instance.league_history.league.id,
                 "season": team_history_instance.league_history.season.id,
                 "is_primary": team_contributor.is_primary,
@@ -1360,12 +1356,11 @@ class TeamContributorService:
         contributor instance with the new data provided.
         """
         team_history_instance = team_contributor.team_history.first()
-
         if team_history_instance:
             current_data = {
                 "start_date": team_contributor.start_date,
                 "end_date": team_contributor.end_date,
-                "team_parameter": team_history_instance.team.id,
+                "team_parameter": team_history_instance.id,
                 "league_identifier": team_history_instance.league_history.league.id,
                 "is_primary": team_contributor.is_primary,
                 "role": team_contributor.role,
