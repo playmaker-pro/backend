@@ -401,18 +401,19 @@ class ProfileService:
             raise ValueError("Search term must be at least 3 characters long.")
         search_term = utils.preprocess_search_term(search_term)
 
-        potential_matches = User.objects.all()
+        # First, get users who have a declared role
+        users_with_declared_role = User.objects.filter(declared_role__isnull=False)
 
+        # Then, apply the custom search term processing
         matching_users = filter(
-            lambda user: search_term
-            in utils.preprocess_search_term(
-                (user.first_name or "") + (user.last_name or "")
+            lambda user: search_term in utils.preprocess_search_term(
+                (user.first_name or "") + " " + (user.last_name or "")
             ),
-            potential_matches,
+            users_with_declared_role
         )
 
-        matching_users_ids = [user.id for user in matching_users]
-        return User.objects.filter(id__in=matching_users_ids)
+        matching_user_ids = [user.id for user in matching_users]
+        return User.objects.filter(id__in=matching_user_ids)
 
     @staticmethod
     def is_player_or_guest_profile(profile) -> bool:

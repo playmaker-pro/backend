@@ -24,7 +24,7 @@ class TestProfileSearchAPI(APITestCase):
         self.user3 = UserFactory.create(declared_role=definitions.PLAYER_SHORT)
         PlayerProfileFactory.create(user=self.user1)
         PlayerProfileFactory.create(user=self.user3)
-        CoachProfileFactory.create(user=self.user2)
+        CoachProfileFactory.create(user=self.user2, coach_role="IC")
         UserPreferencesFactory.create(user=self.user1)
         UserPreferencesFactory.create(user=self.user2)
         UserPreferencesFactory.create(user=self.user3)
