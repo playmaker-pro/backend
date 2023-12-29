@@ -4,6 +4,11 @@ from django.conf import settings
 from django.db import migrations, models
 
 
+def delete_visit_history(apps, schema_editor) -> None:  # noqa
+    ProfileVisitHistory = apps.get_model("profiles", "ProfileVisitHistory")
+    ProfileVisitHistory.objects.all().delete()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -12,6 +17,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(delete_visit_history),
         migrations.AddField(
             model_name='profilevisithistory',
             name='user_logged_in',
