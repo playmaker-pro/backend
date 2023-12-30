@@ -1,5 +1,4 @@
 import os as _os
-from urllib.parse import urljoin as _urljoin
 
 from pm_core.config import APIAuthorization as _APIAuthorization
 from pm_core.config import ServiceSettings as _ScrapperServiceSettings
