@@ -602,7 +602,6 @@ class League(models.Model):
         return self.name
 
     class Meta:
-        unique_together = ("name", "country")
         ordering = ("order", "section__name")
 
 
