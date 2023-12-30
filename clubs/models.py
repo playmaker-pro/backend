@@ -13,7 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 
 from external_links.models import ExternalLinks
-from mapper.models import Mapper
+from mapper.models import Mapper, MapperEntity
 from profiles.utils import conver_vivo_for_api, supress_exception, unique_slugify
 from utils import remove_polish_chars
 from voivodeships.models import Voivodeships
@@ -113,6 +113,7 @@ class MappingMixin:
 
 
 class Club(models.Model, MappingMixin):
+    MAPPER_RELATED = MapperEntity.MapperRelatedModel.CLUB
     PROFILE_TYPE = "klub"
 
     autocreated = models.BooleanField(default=False, help_text="Autocreated from s38")
@@ -286,6 +287,8 @@ class Club(models.Model, MappingMixin):
 
 
 class LeagueHistory(models.Model):
+    MAPPER_RELATED = MapperEntity.MapperRelatedModel.PLAY
+
     name = models.CharField(
         _("Plays name"),
         max_length=255,
@@ -423,6 +426,8 @@ class SectionGrouping(models.Model):
 
 
 class League(models.Model):
+    MAPPER_RELATED = MapperEntity.MapperRelatedModel.LEAGUE
+
     class LeagueTypes(models.TextChoices):
         CUP = "CUP", "Cup"
         LEAGUE = "LEAGUE", "League"
@@ -515,6 +520,9 @@ class League(models.Model):
         choices=LeagueTypes.choices,
         default="LEAGUE",
         help_text="Type of the league (e.g., Cup, League)",
+    )
+    mapper = models.OneToOneField(
+        Mapper, on_delete=models.SET_NULL, blank=True, null=True
     )
 
     def has_season_data(self, season_name: str) -> bool:
@@ -609,6 +617,21 @@ class Seniority(models.Model):
     def __str__(self):
         return f"{self.name}"
 
+    @classmethod
+    def get_senior_object(cls) -> "Seniority":
+        """Get senior object"""
+        return cls.objects.get(name__istartswith="senior")
+
+    @classmethod
+    def get_junior_object(cls) -> "Seniority":
+        """Get junior object"""
+        return cls.objects.get(name__istartswith="junior")
+
+    @classmethod
+    def get_clj_object(cls) -> "Seniority":
+        """Get seniority object"""
+        return cls.objects.get(name__istartswith="Centralna")
+
 
 class Gender(models.Model):
     MALE = "M"
@@ -635,6 +658,8 @@ class Gender(models.Model):
 
 
 class Team(models.Model, MappingMixin):
+    MAPPER_RELATED = MapperEntity.MapperRelatedModel.TEAM
+
     PROFILE_TYPE = "team"
 
     EDITABLE_FIELDS = [

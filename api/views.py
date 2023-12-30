@@ -12,13 +12,12 @@ from app.utils import cities
 from profiles.api.serializers import LanguageSerializer
 from profiles.models import Language, PlayerProfile
 from users.models import UserPreferences
+
 from . import errors
 from . import serializers as api_serializers
 from .services import LocaleDataService
 
 locale_service: LocaleDataService = LocaleDataService()
-
-
 
 
 class LocaleDataView(EndpointView):
@@ -120,6 +119,7 @@ class LocaleDataView(EndpointView):
 
 class PreferenceChoicesView(EndpointView):
     """View for listing gender and preferred leg choices"""
+
     from api.swagger_schemas import PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA
 
     authentication_classes = []

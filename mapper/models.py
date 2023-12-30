@@ -30,22 +30,20 @@ class MapperSource(models.Model):
 
 
 class MapperEntity(models.Model):
-    RELATED_MODELS = (
-        ("team", "team"),
-        ("player", "player profile"),
-        ("coach", "coach profile"),
-        ("club", "club"),
-        ("team history", "team history"),
-        ("league", "league history highest parent"),
-        ("play", "league history"),
-    )
+    class MapperRelatedModel(models.TextChoices):
+        TEAM = "team", "team"
+        PLAYER = "player", "player profile"
+        COACH = "coach", "coach profile"
+        CLUB = "club", "club"
+        TEAM_HISTORY = "team history", "team history"
+        LEAGUE = "league", "league history highest parent"
+        PLAY = "play", "league history"
 
-    DATA_SOURCES = (
-        ("scrapper_mongodb", "scrapper_mongodb"),
-        ("s38", "s38"),
-        ("external", "external"),
-        ("xlsx", "xlsx"),
-    )
+    class MapperDataSource(models.TextChoices):
+        MONGODB = "scrapper_mongodb", "scrapper_mongodb"
+        S38 = "s38", "s38"
+        EXTERNAL = "external", "external"
+        XLSX = "xlsx", "xlsx"
 
     target = models.ForeignKey(Mapper, on_delete=models.SET_NULL, null=True, blank=True)
     mapper_id = models.CharField(max_length=100, null=True, blank=True)
@@ -53,8 +51,8 @@ class MapperEntity(models.Model):
         MapperSource, on_delete=models.SET_NULL, null=True, blank=True
     )
     url = models.URLField(max_length=500, null=True, blank=True)
-    related_type = models.CharField(max_length=100, choices=RELATED_MODELS)
-    database_source = models.CharField(max_length=100, choices=DATA_SOURCES)
+    related_type = models.CharField(max_length=100, choices=MapperRelatedModel.choices)
+    database_source = models.CharField(max_length=100, choices=MapperDataSource.choices)
     description = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
