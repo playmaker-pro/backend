@@ -1,7 +1,5 @@
-import pytz
 from django.conf import settings
 from django.db import models
-from django.utils.timezone import make_naive
 
 
 class Item(models.Model):
@@ -26,22 +24,24 @@ class Pin(models.Model):
     message = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def create_activity(self):
-        print("ere")
-        from stream_framework.activity import Activity
+    # Muted cuz we don't use stream framework anymore
 
-        from .verbs import Pin as PinVerb
-
-        activity = Activity(
-            self.user.id,
-            PinVerb,
-            self.id,
-            self.influencer.id,
-            time=make_naive(self.created_at, pytz.utc),
-            extra_context=dict(item_id=200),
-        )
-        print("activity", activity)
-        return activity
+    # def create_activity(self):
+    #     print("ere")
+    #     # from stream_framework.activity import Activity
+    #
+    #     # from .verbs import Pin as PinVerb
+    #
+    #     activity = Activity(
+    #         self.user.id,
+    #         PinVerb,
+    #         self.id,
+    #         self.influencer.id,
+    #         time=make_naive(self.created_at, pytz.utc),
+    #         extra_context=dict(item_id=200),
+    #     )
+    #     print("activity", activity)
+    #     return activity
 
 
 class Follow(models.Model):
