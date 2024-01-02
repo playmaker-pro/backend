@@ -1,16 +1,16 @@
 import datetime
 from functools import cached_property, lru_cache
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 from urllib.parse import urljoin
 
 from address.models import AddressField
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
-from django.contrib.contenttypes.fields import GenericRelation
 
 from external_links.models import ExternalLinks
 from mapper.models import Mapper
@@ -191,11 +191,11 @@ class Club(models.Model, MappingMixin):
     def display_voivodeship(self):
         return conver_vivo_for_api(self.voivodeship_obj.name)
 
-    def get_file_path(self, filename) -> str:
+    def get_file_path(self, filename: str) -> str:
         """define club picture image path, remove Polish chars"""
-        curr_date: str = str(datetime.datetime.now().date())
-        format: str = filename.split(".")[-1]
-        return f"club_pics/{curr_date}/{remove_polish_chars(str(self.name))}.{format}"
+        extension: str = filename.split(".")[-1]
+        name: str = remove_polish_chars(self.name)
+        return f"club_pics/{name}.{extension}"
 
     picture = models.ImageField(
         _("Herb klubu"), upload_to=get_file_path, null=True, blank=True
@@ -222,14 +222,6 @@ class Club(models.Model, MappingMixin):
         null=True,
         blank=True,
     )
-
-    voivodeship_raw = models.CharField(
-        _("Województwo"),
-        help_text=_("Wojewódźtwo w którym grasz."),
-        max_length=255,
-        blank=True,
-        null=True,
-    )  # TODO:(l.remkowicz): followup needed to see if that can be safely removed from database scheme follow-up: PM-365  # noqa: E501
 
     country = CountryField(
         _("Kraj"),
@@ -330,7 +322,8 @@ class LeagueHistory(models.Model):
     )
     enabled = models.BooleanField(
         default=True,
-        help_text="Flag indicating whether the league history should be displayed in the API.",
+        help_text="Flag indicating whether the league history should be displayed in "
+                  "the API.",
     )
     year = models.IntegerField(
         null=True, blank=True, help_text="Year the league history represents."
@@ -1111,7 +1104,8 @@ class TeamHistory(models.Model):
     )
     enabled = models.BooleanField(
         default=True,
-        help_text="Flag indicating whether the team history should be displayed in the API.",
+        help_text="Flag indicating whether the team history should be displayed in the "
+                  "API.",
     )
 
     def __str__(self):
@@ -1128,8 +1122,8 @@ class TeamHistory(models.Model):
     @property
     def get_country(self) -> Optional[str]:
         """
-        Attempts to retrieve the country name either from the team's club or the league's history.
-        Returns None if neither is available.
+        Attempts to retrieve the country name either from the team's club or the
+        league's history. Returns None if neither is available.
         """
         club_country = getattr(self.team.club, "country", None)
         if club_country:
@@ -1157,7 +1151,8 @@ class TeamManagers(models.Model):
         Team,
         on_delete=models.CASCADE,
         related_name="managers",
-        help_text="Reference to the team with which this manager is associated. A team can have multiple managers.",
+        help_text="Reference to the team with which this manager is associated. "
+                  "A team can have multiple managers.",
     )
     manager = models.ForeignKey(
         settings.AUTH_USER_MODEL,

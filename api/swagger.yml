@@ -5924,13 +5924,15 @@ components:
                 description: "Object name"
             required: ["id", "name"]
         number_of_trainings:
-          type: object
-          properties:
-            id:
-              type: string
-            name:
-              type: string
-          required: ["id", "name"]
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+            required: ["id", "name"]
         salary:
           type: object
           properties:
@@ -5993,12 +5995,10 @@ components:
                   "name": "Zwrot za buty lub rękawice"
               }
           ],
-          "salary": [
-              {
-                  "id": "1",
-                  "name": "0 - 499 zł"
-              }
-          ],
+          "salary": {
+              "id": "1",
+              "name": "0 - 499 zł"
+          },
           "number_of_trainings": [
               {
                   "id": "1",
@@ -6018,7 +6018,7 @@ components:
         status:
           type: integer
           description: "Status object id."
-        position:
+        player_position:
           type: array
           items:
             type: integer
@@ -6055,7 +6055,7 @@ components:
         status:
           type: integer
           description: "Status object id."
-        position:
+        player_position:
           type: array
           items:
             type: integer
@@ -6080,7 +6080,7 @@ components:
               type: integer
             number:
               type: string
-      required: ["requesting_team", "status", "position"]
+      required: ["requesting_team", "status", "player_position"]
 
     TransferRequestGetTeamContributor:
       type: object
@@ -6123,7 +6123,12 @@ components:
             type: string
           name:
             type: string
-        required: ["id", "name"]
+          shortcut:
+            type: string
+            description: "ENglish shortcut."
+          shortcut_pl:
+            type: string
+        required: ["id", "name", "shortcut", "shortcut_pl"]
 
     TransferRequestGet:
       type: object
@@ -6143,7 +6148,7 @@ components:
               type: string
               description: "Transfer status name"
           required: ["id", "name"]
-        position:
+        player_position:
           $ref: '#/components/schemas/TransferRequestPositions'
         number_of_trainings:
           type: object
@@ -6206,18 +6211,18 @@ components:
               "id": "1",
               "name": "Nieznany"
           },
-          "position": [
+          "player_position": [
               {
-                  "id": "6",
-                  "name": "Defensywny pomocnik"
+                  "id": 102,
+                  "name": "Defensywny Pomocnik #6",
+                  "shortcut": "DM",
+                  "shortcut_pl": "DP"
               },
               {
-                  "id": "7",
-                  "name": "Środkowy pomocnik"
-              },
-              {
-                  "id": "8",
-                  "name": "Ofensywny pomocnik"
+                  "id": 103,
+                  "name": "Środkowy Pomocnik #8",
+                  "shortcut": "CM",
+                  "shortcut_pl": "ŚP"
               }
           ],
           "number_of_trainings": {

@@ -8,6 +8,7 @@ from pydantic import parse_obj_as
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import empty
+from rest_framework.relations import PrimaryKeyRelatedField
 
 from api.consts import ChoicesTuple
 from api.serializers import CitySerializer, CountrySerializer
@@ -29,6 +30,7 @@ from profiles.api.serializers import (
     CoachLicenceSerializer,
     CourseSerializer,
     LanguageSerializer,
+    PlayerPositionSerializer,
     ProfileEnumChoicesSerializer,
     ProfileLabelsSerializer,
     ProfileVideoSerializer,
@@ -44,6 +46,7 @@ from profiles.models import (
     PROFILE_TYPE,
     BaseProfile,
     Language,
+    PlayerPosition,
     PlayerProfile,
     ProfileTransferRequest,
     ProfileTransferStatus,
@@ -60,7 +63,6 @@ from profiles.services import (
 from roles.definitions import (
     PROFILE_TYPE_SHORT_MAP,
     TRANSFER_BENEFITS_CHOICES,
-    TRANSFER_REQUEST_POSITIONS_CHOICES,
     TRANSFER_SALARY_CHOICES,
     TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES,
     TRANSFER_TRAININGS_CHOICES,
@@ -402,7 +404,7 @@ class ProfileTransferStatusSerializer(
                 for transfer in TRANSFER_SALARY_CHOICES
                 if transfer[0] in str(instance.salary)
             ]
-            serializer = ProfileEnumChoicesSerializer(salary, many=True)
+            serializer = ProfileEnumChoicesSerializer(instance=salary[0])
             data["salary"] = serializer.data
         if instance.number_of_trainings:
             number_of_trainings = [
@@ -449,7 +451,7 @@ class ProfileTransferRequestSerializer(
             "requesting_team",
             "gender",
             "status",
-            "position",
+            "player_position",
             "number_of_trainings",
             "benefits",
             "salary",
@@ -463,7 +465,7 @@ class ProfileTransferRequestSerializer(
     status = ProfileEnumChoicesSerializer(
         model=ProfileTransferRequest,
     )
-    position = serializers.ListField()
+    player_position = PlayerPositionSerializer(many=True)
     number_of_trainings = serializers.IntegerField(required=False, allow_null=True)
     benefits = serializers.ListField(required=False, allow_null=True)
     salary = serializers.IntegerField(required=False, allow_null=True)
@@ -478,7 +480,7 @@ class ProfileTransferRequestSerializer(
         serializer = ProfileEnumChoicesSerializer
         data = super().to_representation(instance)
         data["requesting_team"] = TeamContributorSerializer(
-            instance=instance.requesting_team, read_only=True
+            instance=instance.requesting_team, read_only=True, context=self.context
         ).data
         if instance.benefits:
             info = [
@@ -488,14 +490,11 @@ class ProfileTransferRequestSerializer(
             ]
             info_serialized = serializer(info, many=True)
             data["benefits"] = info_serialized.data
-        if instance.position:
-            positions = [
-                ChoicesTuple(*transfer)
-                for transfer in TRANSFER_REQUEST_POSITIONS_CHOICES
-                if transfer[0] in str(instance.position)
-            ]
-            position_serialized = serializer(positions, many=True)
-            data["position"] = position_serialized.data
+        if instance.player_position:
+            positions = PlayerPositionSerializer(
+                instance=instance.player_position, many=True
+            )
+            data["player_position"] = positions.data
         if instance.number_of_trainings:
             num_of_training_serialized = serializer(
                 instance=instance.number_of_trainings,
@@ -536,6 +535,12 @@ class ProfileTransferRequestSerializer(
             validated_data, profile
         )
         return super().create(validated_data)
+
+
+class UpdateOrCreateProfileTransferSerializer(ProfileTransferRequestSerializer):
+    player_position = PrimaryKeyRelatedField(
+        queryset=PlayerPosition.objects.all(), many=True
+    )
 
 
 class BaseProfileSerializer(serializers.ModelSerializer):
