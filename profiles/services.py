@@ -2,6 +2,7 @@ import datetime
 import logging
 import typing
 import uuid
+from dataclasses import dataclass, field
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
@@ -12,7 +13,9 @@ from django.db import models as django_base_models
 from django.db.models import (
     Case,
     IntegerField,
+    Model,
     ObjectDoesNotExist,
+    Q,
     QuerySet,
     Value,
     When,
@@ -33,17 +36,20 @@ from profiles.models import (
     REVERSED_MODEL_MAP,
     BaseProfile,
     LicenceType,
+    PlayerPosition,
     ProfileTransferStatus,
 )
 from roles.definitions import (
     CLUB_ROLES,
     PROFILE_TYPE_MAP,
     TRANSFER_BENEFITS_CHOICES,
-    TRANSFER_REQUEST_POSITIONS_CHOICES,
     TRANSFER_REQUEST_STATUS_CHOICES,
     TRANSFER_SALARY_CHOICES,
     TRANSFER_STATUS_CHOICES,
     TRANSFER_TRAININGS_CHOICES,
+    PlayerPositions,
+    PlayerPositionShortcutsEN,
+    PlayerPositionShortcutsPL,
 )
 from utils import get_current_season
 
@@ -430,10 +436,11 @@ class ProfileService:
 
         # Then, apply the custom search term processing
         matching_users = filter(
-            lambda user: search_term in utils.preprocess_search_term(
+            lambda user: search_term
+            in utils.preprocess_search_term(
                 (user.first_name or "") + " " + (user.last_name or "")
             ),
-            users_with_declared_role
+            users_with_declared_role,
         )
 
         matching_user_ids = [user.id for user in matching_users]
@@ -778,6 +785,132 @@ class PlayerProfilePositionService:
                 position.save()
             except IntegrityError:
                 logger.error("Error saving player position", exc_info=True)
+
+
+@dataclass
+class PlayerPositionService:
+    """Service for handling player position operation."""
+
+    model: Model = field(default=PlayerPosition)
+
+    def get_initial_position_data(self) -> typing.List[typing.List[str]]:
+        """Get initial position data from consts enum classes."""
+        positions: list = PlayerPositions.values()
+        shortcuts_en: list = PlayerPositionShortcutsEN.values()
+        shortcuts_pl: list = PlayerPositionShortcutsPL.values()
+        if len(positions) == len(shortcuts_en) == len(shortcuts_pl):
+            return [positions, shortcuts_en, shortcuts_pl]
+        raise ValueError("Enum data is not equal")
+
+    def get_old_raw_names(self) -> typing.List[str]:
+        """Get old position names."""
+        old_names = [
+            "Bramkarz",
+            "Obrońca Środkowy",
+            "Obrońca Lewy",
+            "Obrońca Prawy",
+            "Pomocnik Defensywny (6)",
+            "Pomocnik Środkowy (8)",
+            "Pomocnik Ofensywny (10)",
+            "Lewy pomocnik",
+            "Prawy pomocnik",
+            "Napastnik",
+            "Skrzydłowy",
+        ]
+        return old_names
+
+    @staticmethod
+    def score_raw_mapping() -> dict:
+        """Return mapping of position names to score names"""
+        return {
+            "Bramkarz": "Bramkarz",
+            "Lewy Obrońca": "Obrońca",
+            "Prawy Obrońca": "Obrońca",
+            "Środkowy Obrońca": "Obrońca",
+            "Defensywny Pomocnik #6": "Defensywny pomocnik",
+            "Środkowy Pomocnik #8": "Ofensywny pomocnik",
+            "Ofensywny Pomocnik #10": "Ofensywny pomocnik",
+            "Lewy Pomocnik": "Ofensywny pomocnik",
+            "Prawy Pomocnik": "Ofensywny pomocnik",
+            "Skrzydłowy": "Ofensywny pomocnik",
+            "Napastnik": "Napastnik",
+        }
+
+    def get_zipped_position_data(self) -> typing.Optional[zip]:
+        """Get zipped position data from consts enum classes."""
+        if len(self.get_initial_position_data()[0]) == len(self.get_old_raw_names()):
+            return zip(*self.get_initial_position_data(), self.get_old_raw_names())
+        raise ValueError("Enum data is not equal")
+
+    def get_position_by_names(
+        self, old_name: str, new_name: str
+    ) -> typing.Tuple[typing.Optional[Model], bool]:
+        """
+        Get position by old or new name. Returns tuple with position object and
+        boolean value if position exists.
+        """
+        obj = self.model.objects.filter(Q(name=old_name) | Q(name=new_name))
+        if obj.exists():
+            return obj.first(), True
+        return None, False
+
+    def update_instance(self, instance, **kwargs):
+        """Update instance with given kwargs"""
+        for kwarg in kwargs:
+            setattr(instance, kwarg, kwargs[kwarg])
+        instance.save()
+
+    def create(self, **kwargs):
+        """Create instance with given kwargs"""
+        return self.model.objects.create(**kwargs)
+
+    def update_score_for_position(self) -> None:
+        """
+        Updates the score of a given position.
+
+        The method fetches the position object based on the provided name and updates
+        its score_position name.
+        """
+        positions = self.model.objects.all()
+        for position in positions:
+            position.score_position = self.score_raw_mapping().get(position.name)
+            position.save()
+
+    def start_position_cleanup_process(self):
+        """
+        Method to start position cleanup process. It is responsible for
+        updating position names, shortcuts, filling score_position field.
+        """
+        position_data = self.get_zipped_position_data()
+        for order_number, position_dt in enumerate(position_data, start=1):
+            name, shortcut_en, shortcut_pl, old_name = position_dt
+            pp_from_db: PlayerPosition
+            exists: bool
+            pp_from_db, exists = self.get_position_by_names(
+                old_name=old_name, new_name=name
+            )
+
+            if exists:
+                self.update_instance(
+                    pp_from_db,
+                    name=name,
+                    shortcut=shortcut_en,
+                    shortcut_pl=shortcut_pl,
+                    ordering=order_number,
+                )
+                logger.info(f"Updated position: {pp_from_db.pk}")
+            else:
+                self.create(
+                    name=name,
+                    shortcut=shortcut_en,
+                    shortcut_pl=shortcut_pl,
+                    ordering=order_number,
+                )
+                logger.info(f"Created position: {name}")
+
+    def all(self):
+        """Return all positions from DB."""
+        return self.model.objects.all()
 
 
 class ProfileVideoService:
@@ -1161,6 +1294,7 @@ class TeamContributorService:
             self.update_profile_with_current_team_history(
                 profile_uuid, matched_team_histories
             )
+            self.synchronize_profile_role(team_contributor, profile_uuid)
 
         return team_contributor
 
@@ -1267,12 +1401,16 @@ class TeamContributorService:
             fields_to_update.append("custom_role")
 
         # Update the fields from the data provided.
-        for field in fields_to_update:
-            if field in data and field != "custom_role":
-                setattr(team_contributor, field, data[field])
+        for field_to_update in fields_to_update:
+            if field_to_update in data and field_to_update != "custom_role":
+                setattr(team_contributor, field_to_update, data[field_to_update])
 
         # Now save only the fields that were updated.
         team_contributor.save(update_fields=fields_to_update)
+        if team_contributor.is_primary:
+            self.synchronize_profile_role(
+                team_contributor, team_contributor.profile_uuid
+            )
 
     def update_player_contributor(
         self,
@@ -1366,7 +1504,6 @@ class TeamContributorService:
                 "role": team_contributor.role,
                 "custom_role": team_contributor.custom_role,
             }
-
         current_data.update(data)
 
         if "team_history" in current_data and current_data.get("team_history"):
@@ -1399,7 +1536,6 @@ class TeamContributorService:
 
         # if existing_contributor:
         #     raise errors.TeamContributorAlreadyExistServiceException()
-
         self.handle_primary_contributor(
             team_contributor,
             profile_uuid,
@@ -1415,6 +1551,41 @@ class TeamContributorService:
             )
 
         return team_contributor
+
+    def synchronize_profile_role(
+        self, team_contributor: models.TeamContributor, profile_uuid: uuid.UUID
+    ) -> None:
+        """
+        Synchronizes the role or custom role from a TeamContributor instance to the
+        corresponding profile.
+
+        This method updates the role field in a profile based on the role or
+        custom role specified in the TeamContributor instance.
+        If the role in TeamContributor is marked as 'OTC' or 'O'
+        (indicating a custom role), it updates the profile's custom role field
+        ('custom_coach_role' or 'custom_club_role'). Otherwise, it updates the
+        standard role field ('coach_role' or 'club_role').
+        """
+        profile = self.profile_service.get_profile_by_uuid(profile_uuid)
+
+        if team_contributor.role in ["OTC", "O"]:
+            # Update the custom role fields if they exist in the profile
+            if hasattr(profile, "custom_coach_role"):
+                profile.coach_role = team_contributor.role
+                profile.custom_coach_role = team_contributor.custom_role
+                profile.save()
+            elif hasattr(profile, "custom_club_role"):
+                profile.club_role = team_contributor.role
+                profile.custom_club_role = team_contributor.custom_role
+                profile.save()
+        else:
+            # Normal role update logic
+            if hasattr(profile, "coach_role"):
+                profile.coach_role = team_contributor.role
+                profile.save()
+            elif hasattr(profile, "club_role"):
+                profile.club_role = team_contributor.role
+                profile.save()
 
 
 class LanguageService:
@@ -1481,7 +1652,7 @@ class TransferRequestService:
     """Service for transfer request operation."""
 
     def get_transfer_request_status_by_id(
-        self, transfer_status_id: int
+        self, transfer_status_id: typing.Union[int, str]
     ) -> typing.Optional[typing.Dict[str, str]]:
         """Get a transfer status by id."""
         result: list = self.__get_list_transfer_request_choices(
@@ -1489,17 +1660,8 @@ class TransferRequestService:
         )
         return result[0] if result else None
 
-    def get_transfer_request_position_by_id(
-        self, position_id: int
-    ) -> typing.Optional[typing.Dict[str, str]]:
-        """Get a transfer status by position id."""
-        result: list = self.__get_list_transfer_request_choices(
-            id=position_id, choices_tuple=TRANSFER_REQUEST_POSITIONS_CHOICES
-        )
-        return result[0] if result else None
-
     def get_num_of_trainings_by_id(
-        self, trainings_id: int
+        self, trainings_id: typing.Union[int, str]
     ) -> typing.Optional[typing.Dict[str, str]]:
         """Get a transfer status by number of trainings id."""
         result: list = self.__get_list_transfer_request_choices(
@@ -1517,7 +1679,7 @@ class TransferRequestService:
         return result[0] if result else None
 
     def get_salary_by_id(
-        self, salary_id: int
+        self, salary_id: typing.Union[int, str]
     ) -> typing.Optional[typing.Dict[str, str]]:
         """Get a transfer status by salary id."""
         result: list = self.__get_list_transfer_request_choices(
@@ -1529,12 +1691,6 @@ class TransferRequestService:
         """Get a list of transfer statuses for specified status choices."""
         return self.__get_list_transfer_request_choices(
             choices_tuple=TRANSFER_REQUEST_STATUS_CHOICES
-        )
-
-    def get_list_transfer_positions(self) -> typing.List[dict]:
-        """Get a list of transfer statuses for specified positions choices."""
-        return self.__get_list_transfer_request_choices(
-            choices_tuple=TRANSFER_REQUEST_POSITIONS_CHOICES
         )
 
     def get_list_transfer_num_of_trainings(self) -> typing.List[dict]:

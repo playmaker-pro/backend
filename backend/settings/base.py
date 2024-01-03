@@ -70,40 +70,12 @@ INSTALLED_APPS = [
     "premium",
     "events",
     "mailing",
-    # "resources",
-    # "data",  # external repo DEPRECATED: PM-1015
-    # "stats",  # external repo DEPRECATED: PM-1015
     "django_countries",
-    # "crispy_forms",
     "easy_thumbnails",
-    # "djcelery",
     "django_user_agents",
-    # "wagtail.contrib.forms",
-    # "wagtail.contrib.modeladmin",
-    # "wagtail.contrib.redirects",
-    # "wagtail.embeds",
-    # "wagtail.sites",
-    # "wagtail.users",
-    # "wagtail.snippets",
-    # "wagtail.documents",
-    # "wagtail.images",
-    # "wagtail.search",
-    # "wagtail.admin",
-    # "wagtail.core",
-    # "wagtail.contrib.routable_page",
-    # "wagtail.api.v2",
-    # "wagtailmetadata",
-    # 'comments_wagtail_xtd',
-    # 'django_comments',
-    # "modelcluster",  @wag
-    # "taggit",
-    # "blog",
-    # "flex",
-    # "streams",
     "django_fsm",
     "phonenumber_field",
     "address",
-    # "compressor",  # @dep - 2
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -114,8 +86,8 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "django.contrib.humanize",
     "rest_framework",
-    # TODO deprecated. Changed to jwt
-    "rest_framework.authtoken",  # <-- Here
+    # TODO authtoken deprecated. Changed to jwt
+    "rest_framework.authtoken",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "allauth",
@@ -267,9 +239,9 @@ CITIES_LIGHT_TRANSLATION_LANGUAGES = ["pl"]
 CITIES_LIGHT_INCLUDE_COUNTRIES = ["PL"]
 
 CITIES_LIGHT_CITY_SOURCES = [
-    "http://download.geonames.org/export/dump/cities15000.zip",  # all cities with a population > 15000
-    "http://download.geonames.org/export/dump/cities5000.zip",  # all cities with a population > 5000
-    "http://download.geonames.org/export/dump/cities1000.zip",  # all cities with a population > 1000
+    "http://download.geonames.org/export/dump/cities15000.zip",  # all cities with a population > 15000  # noqa
+    "http://download.geonames.org/export/dump/cities5000.zip",  # all cities with a population > 5000  # noqa
+    "http://download.geonames.org/export/dump/cities1000.zip",  # all cities with a population > 1000  # noqa
 ]  # more here: https://download.geonames.org/export/dump/readme.txt
 
 TIME_ZONE = "Europe/Warsaw"

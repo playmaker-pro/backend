@@ -630,9 +630,16 @@ class PlayerPosition(models.Model):
     name = models.CharField(max_length=255)
     score_position = models.CharField(max_length=255, blank=True, null=True)
     shortcut = models.CharField(max_length=4, null=True, blank=True)
+    shortcut_pl = models.CharField(max_length=4, null=True, blank=True)
+    ordering = models.IntegerField(default=-1)
 
     def __str__(self):
         return f"{self.name} - {self.shortcut}"
+
+    class Meta:
+        verbose_name = "Player Position"
+        verbose_name_plural = "Player Positions"
+        ordering = ["ordering"]
 
 
 class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
@@ -951,15 +958,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         on_delete=models.SET_NULL,
     )
-    voivodeship_raw = models.CharField(
-        # TODO:(l.remkowicz):followup needed to check if that can be safely removed from database scheme follow-up: PM-365  # noqa: E501
-        _("Wojewódźtwo (raw)"),
-        help_text=_("Wojewódźtwo w którym grasz. Nie uzywane pole"),
-        max_length=68,
-        blank=True,
-        null=True,
-        choices=settings.VOIVODESHIP_CHOICES,
-    )
     address = AddressField(
         help_text=_("Miasto z którego dojeżdżam na trening"), blank=True, null=True
     )
@@ -1035,65 +1033,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         f.calculate_fantasy_for_player(self, season, is_senior=True)
         f.calculate_fantasy_for_player(self, season, is_senior=False)
 
-    # DEPRECATED: PM-1015
-    # def calculate_data_from_data_models(self, adpt=None, *args, **kwargs):
-    #     """Interaction with s38: league, vivo, team <- s38"""
-    #     if self.attached:
-    #         adpt = adpt or PlayerAdapter(
-    #             int(
-    #                 self.mapper.get_entity(
-    #                     related_type="player", database_source="s38"
-    #                 ).mapper_id
-    #             )
-    #         )
-    #         if adpt.has_player:
-    #             self.league = adpt.get_current_league()
-    #             self.voivodeship = adpt.get_current_voivodeship()
-    #             # self.club = adpt.get_current_club()  # not yet implemented. Maybe after 1.12  # noqa: E501
-    #             self.team = adpt.get_current_team()
-
-    # DEPRECATED: PM-1015
-    # def update_data_player_object(self, adpt=None):
-    #     """Interaction with s38: updates --> s38 wix_id and fantasy position"""
-    #     if self.attached:
-    #         adpt = adpt or PlayerAdapter(
-    #             self.mapper.get_entity(
-    #                 related_type="player", database_source="s38"
-    #             ).mapper_id
-    #         )
-    #         adpt.update_wix_id_and_position(
-    #             email=self.user.email, position=self.position_fantasy
-    #         )
-
-    # DEPRECATED: PM-1015
-    # def fetch_data_player_meta(self, adpt=None, save=True, *args, **kwargs):
-    #     """Interaction with s38: updates meta from <--- s38"""
-    #     if self.attached:
-    #         adpt = adpt or PlayerAdapter(
-    #             int(
-    #                 self.mapper.get_entity(
-    #                     related_type="player", database_source="s38"
-    #                 ).mapper_id
-    #             )
-    #         )
-    #         self.meta = adpt.player.meta
-    #         self.meta_updated = timezone.now()
-    #         if save:
-    #             self.save()
-
-    # DEPRECATED: PM-1015
-    # def trigger_refresh_data_player_stats(self, adpt=None, *args, **kwargs):
-    #     """Trigger update of player stats --> s38"""
-    #     if self.attached:
-    #         adpt = adpt or PlayerAdapter(
-    #             int(
-    #                 self.mapper.get_entity(
-    #                     related_type="player", database_source="s38"
-    #                 ).mapper_id
-    #             )
-    #         )
-    #         adpt.calculate_stats(season_name=utilites.get_current_season())
-
     def get_team_object_based_on_meta(self, season_name, retries: int = 3):
         """set TeamObject based on meta data"""
         if retries <= 0 or self.meta is None:
@@ -1155,77 +1094,13 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         self.external_links = ExternalLinks.objects.create()
 
     def save(self, *args, **kwargs):
-        """'Nie jest wyświetlana na profilu.
-        Pole wykorzystywane wyłącznie do gry Fantasy.
-        Użytkownik nie ingeruje w nie, bo ustawiony jest trigger przy wyborze pozycji z A18.
-        'Bramkarz' -> 'bramkarz';
-        'Obrońca%' ->  'obronca';
-        '%pomocnik' -> pomocnik;
-        'Skrzydłowy' -> 'pomocnik';
-        'Napastnik' -> 'napastnik'
-
-           POSITION_CHOICES = [
-        (1, 'Bramkarz'),
-        (2, 'Obrońca Lewy'),
-        (3, 'Obrońca Prawy'),
-        (4, 'Obrońca Środkowy'),
-        (5, 'Pomocnik defensywny (6)'),
-        (6, 'Pomocnik środkowy (8)'),
-        (7, 'Pomocnik ofensywny (10)'),
-        (8, 'Skrzydłowy'),
-        (9, 'Napastnik'),
-        ]
-        """  # noqa: E501
-        if self.position_raw is not None:
-            self.position_fantasy = self.FANTASY_MAPPING.get(self.position_raw, None)
-
         if not self.mapper:
             self.create_mapper_obj()
 
         if not self.external_links:
             self.create_external_links_obj()
 
-        # adpt = None
-        # Each time actions
-        # if self.attached:
-        #     old = self.playermetrics.how_old_days
-        #     # logger.error(
-        #     f'xxxxx {any([old(season=True) >= 1,
-        #     old(fantasy=True) >= 1,
-        #     old(games=True) >= 1])}
-        #     {old(season=True) >= 1}
-        #     {old(fantasy=True) >= 1}
-        #     {old(games=True) >= 1}'
-        #     )
-        #     if any([old(season=True) >= 1, old(fantasy=True) >= 1, old(games=True) >= 1]):  # noqa: E501
-        #         logger.debug(f'Stats old enough {self}')
-        #         self.playermetrics.refresh_metrics()  # download: metrics data
-
-        # print(f'---------- Datamapper: {self.data_mapper_changed}')
         super().save(*args, **kwargs)
-        # print(f'---------- Datamapper: {self.data_mapper_changed}')
-
-        # DEPRECATED: PM-1015
-        # Onetime actions:
-        # if (
-        #     self.data_mapper_changed and self.attached
-        # ):  # if datamapper changed after save and it is not None
-        #     logger.info(f"Calculating metrics for player {self}")
-        #     adpt = PlayerAdapter(
-        #         int(
-        #             self.mapper.get_entity(
-        #                 related_type="player", database_source="s38"
-        #             ).mapper_id
-        #         )
-        #     )  # commonly use adpt
-        #     if utilites.is_allowed_interact_with_s38():  # are we on PROD and not Debug  # noqa: E501
-        #         self.update_data_player_object(adpt)  # send data to s38
-        #         self.trigger_refresh_data_player_stats(adpt)  # send trigger to s38
-        #     self.calculate_data_from_data_models(
-        #         adpt
-        #     )  # update league, vivo, team from Players meta
-        #     self.fetch_data_player_meta(adpt)  # update update meta
-        # create_or_update_player_external_links(self)
 
     class Meta:
         verbose_name = "Player Profile"
@@ -2183,7 +2058,6 @@ class ScoutProfile(BaseProfile):
         blank=True,
         null=True,
     )
-
     voivodeship_obj = models.ForeignKey(
         Voivodeships,
         verbose_name=_("Województwo zamieszkania"),
@@ -2193,14 +2067,6 @@ class ScoutProfile(BaseProfile):
         null=True,
         on_delete=models.SET_NULL,
     )
-
-    voivodeship_raw = models.CharField(
-        _("Deklarowane wojewódźtwo"),
-        help_text=_("Wojewódźtwo w którym grasz."),
-        max_length=68,
-        blank=True,
-        null=True,
-    )  # TODO:(l.remkowicz): followup needed to see if that can be safely removed from database scheme follow-up: PM-365  # noqa: E501
     team_object = models.ForeignKey(
         "clubs.Team",
         on_delete=models.SET_NULL,
@@ -2556,6 +2422,10 @@ class TeamContributor(models.Model):
         # TODO: kgarczewski: FUTURE ADDITION: Reference: PM 20-697[SPIKE]
         # unique_together = ("profile_uuid", "role", "start_date")
 
+    def __str__(self):
+        team = self.team_history.first()
+        return f"Team {team.team.name} contributor"
+
     @staticmethod
     def get_other_roles():
         return ["O", "OTC"]
@@ -2620,7 +2490,11 @@ class ProfileVisitHistory(models.Model):
     class Meta:
         unique_together = ("user", "created_at")
         indexes = [
-            models.Index(fields=["user",]),
+            models.Index(
+                fields=[
+                    "user",
+                ]
+            ),
         ]
 
 
@@ -2740,13 +2614,15 @@ class ProfileTransferRequest(TransferBaseModel):
         choices=definitions.TRANSFER_REQUEST_STATUS_CHOICES,
         help_text="Defines a status of the transfer for the profile.",
     )
-    position = ArrayField(
-        models.CharField(
-            max_length=10,
-            choices=definitions.TRANSFER_REQUEST_POSITIONS_CHOICES,
-            help_text="Define team position",
-        )
+    player_position = models.ManyToManyField(
+        PlayerPosition,
+        related_name="transfer_requests",
+        help_text="The position that the team is requesting.",
     )
+
+    @property
+    def profile(self):
+        return self.content_object
 
 
 PROFILE_MODELS = (

@@ -16,9 +16,10 @@ from profiles.api.errors import (
     PhoneNumberMustBeADictionaryHTTPException,
     TransferRequestDoesNotExistHTTPException,
 )
+from profiles.api.serializers import PlayerPositionSerializer
 from profiles.models import BaseProfile, ProfileTransferRequest, TeamContributor
 from profiles.schemas import TransferRequestSchema
-from profiles.services import TransferRequestService
+from profiles.services import PlayerPositionService, TransferRequestService
 from utils.factories import (
     PlayerProfileFactory,
     TeamContributorFactory,
@@ -52,11 +53,16 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         team_contributor: TeamContributor = TeamContributorFactory.create(
             profile_uuid=self.profile.uuid
         )
+        position_service = PlayerPositionService()
+        position_service.start_position_cleanup_process()
+
+        player_position1 = position_service.all().first()
+        player_position2 = position_service.all().last()
         self.data = {
             "requesting_team": team_contributor.pk,
             "gender": "M",
             "status": 1,
-            "position": [3, 4],
+            "player_position": [player_position1.pk, player_position2.pk],
             "benefits": [2, 4],
             "number_of_trainings": 1,
             "salary": 1,
@@ -74,20 +80,6 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         assert len(response.json()) > 0
 
         expected_response = transfer_service.get_list_transfer_statutes()
-
-        assert response.json() == expected_response
-
-    def test_list_transfer_request_positions(self):
-        """Test list transfer positions. Expected status code 200."""
-        response: Response = self.client.get(
-            reverse("api:profiles:list_transfer_request_position")
-        )
-        assert response.status_code == 200
-        assert isinstance(response.json(), list)
-        assert len(response.json()) > 0
-
-        expected_response = transfer_service.get_list_transfer_positions()
-
         assert response.json() == expected_response
 
     def test_list_transfer_request_num_of_trainings(self):
@@ -163,11 +155,10 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         assert response.json().get("status") == expected_status
 
         expected_positions = []
-        for position in transfer_request_obj.position:
-            expected_positions.append(
-                transfer_service.get_transfer_request_position_by_id(position)
-            )
-        assert response.json().get("position") == expected_positions
+        for position in transfer_request_obj.player_position.all():
+            expected_positions.append(PlayerPositionSerializer(position).data)
+
+        assert response.json().get("player_position") == expected_positions
 
         expected_trainings = transfer_service.get_num_of_trainings_by_id(
             transfer_request_obj.number_of_trainings

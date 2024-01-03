@@ -46,6 +46,7 @@ from profiles.serializers_detailed.base_serializers import (
     ProfileTransferRequestSerializer,
     ProfileTransferStatusSerializer,
     TeamContributorSerializer,
+    UpdateOrCreateProfileTransferSerializer,
 )
 from profiles.services import (
     ProfileFilterService,
@@ -57,7 +58,6 @@ from profiles.services import (
 from profiles.utils import map_service_exception
 from roles.definitions import (
     TRANSFER_BENEFITS_CHOICES,
-    TRANSFER_REQUEST_POSITIONS_CHOICES,
     TRANSFER_REQUEST_STATUS_CHOICES,
     TRANSFER_SALARY_CHOICES,
     TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES,
@@ -291,7 +291,9 @@ class ProfileSearchView(EndpointView):
         except ValueError:
             raise api_errors.InvalidSearchTerm()
         paginated_profiles = self.get_paginated_queryset(matching_users_queryset)
-        serializer = serializers.ProfileSearchSerializer(paginated_profiles, many=True, context={"request": request})
+        serializer = serializers.ProfileSearchSerializer(
+            paginated_profiles, many=True, context={"request": request}
+        )
 
         return self.get_paginated_response(serializer.data)
 
@@ -375,7 +377,7 @@ class PlayerPositionAPI(EndpointView):
         """
         Retrieve all player positions ordered by ID.
         """
-        positions = models.PlayerPosition.objects.all().order_by("id")
+        positions = models.PlayerPosition.objects.all()
         serializer = serializers.PlayerPositionSerializer(positions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -908,16 +910,6 @@ class TransferRequestAPIView(EndpointView):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def list_transfer_request_position(self, request: Request) -> Response:  # noqa
-        """Retrieve and display transfer status positions for the profiles."""
-        transfer_request_positions_choices = (
-            ChoicesTuple(*transfer) for transfer in TRANSFER_REQUEST_POSITIONS_CHOICES
-        )
-        serializer = ProfileEnumChoicesSerializer(
-            transfer_request_positions_choices, many=True
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
     def list_transfer_request_number_of_trainings(
         self, request: Request  # noqa
     ) -> Response:
@@ -995,7 +987,7 @@ class TransferRequestAPIView(EndpointView):
         if profile.user != request.user:
             raise PermissionDeniedHTTPException
 
-        serializer = ProfileTransferRequestSerializer(
+        serializer = UpdateOrCreateProfileTransferSerializer(
             data=request.data, context={"profile": profile}
         )
         serializer.is_valid(raise_exception=True)
@@ -1014,7 +1006,9 @@ class TransferRequestAPIView(EndpointView):
         if not transfer_request:
             raise TransferRequestDoesNotExistHTTPException
 
-        serializer = ProfileTransferRequestSerializer(transfer_request)
+        serializer = ProfileTransferRequestSerializer(
+            transfer_request, context={"request": request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update_transfer_request(
@@ -1035,7 +1029,7 @@ class TransferRequestAPIView(EndpointView):
         if not transfer_request:
             raise api_errors.TransferRequestDoesNotExistHTTPException
 
-        serializer = ProfileTransferRequestSerializer(
+        serializer = UpdateOrCreateProfileTransferSerializer(
             instance=transfer_request,
             data=request.data,
             partial=True,

@@ -43,7 +43,7 @@ class PlayerPositionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.PlayerPosition
-        fields = ["id", "name", "shortcut"]
+        fields = ["id", "name", "shortcut", "shortcut_pl"]
 
 
 class PlayerProfilePositionSerializer(serializers.ModelSerializer):

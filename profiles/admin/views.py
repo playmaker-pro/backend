@@ -28,6 +28,7 @@ from profiles.admin.actions import (
     update_with_profile_data,
 )
 from profiles.models import PROFILE_TYPES_AS_STRING, BaseProfile
+from profiles.services import ProfileService
 from utils import linkify
 
 
@@ -88,7 +89,6 @@ class ProfileAdminBase(admin.ModelAdmin):
     search_fields = DEFAULT_PROFILE_SEARCHABLES
     display_fileds = DEFAULT_PROFILE_DISPLAY_FIELDS
     readonly_fields = ("data_prettified",)
-    exclude = ("voivodeship_raw",)
 
     def active(self, obj):
         return obj.is_active
@@ -106,7 +106,6 @@ class ManagerProfileAdmin(ProfileAdminBase):
 
 @admin.register(models.ScoutProfile)
 class ScoutProfileAdmin(ProfileAdminBase):
-    exclude = ("voivodeship_raw",)
     readonly_fields = ("external_links", "uuid")
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
         "pk",
@@ -361,7 +360,7 @@ class TeamContributorAdmin(admin.ModelAdmin):
         "get_name",
         "get_team",
         "get_team_pk",
-        "profile_uuid",
+        "get_profile_uuid",
         "is_primary",
         "start_date",
         "end_date",
@@ -370,7 +369,12 @@ class TeamContributorAdmin(admin.ModelAdmin):
     def get_team(self, obj: models.TeamContributor) -> str:
         """Return user email."""
         team_history = obj.team_history.first()
-        return team_history.team.name if team_history else None
+        view_name = (
+            f"admin:{team_history._meta.app_label}_"  # noqa
+            f"{team_history.__class__.__name__.lower()}_change"
+        )
+        link_url = reverse(view_name, args=[team_history.pk])
+        return format_html(f'<a href="{link_url}">{team_history}</a>')
 
     def get_team_pk(self, obj: models.TeamContributor) -> str:
         """Return user email."""
@@ -379,7 +383,26 @@ class TeamContributorAdmin(admin.ModelAdmin):
 
     def get_name(self, obj: models.TeamContributor) -> str:
         """Return user email."""
-        return str(obj)
+        return mark_safe(f'<a href="{obj.pk}">{obj}</a>')
+
+    def get_profile_uuid(
+        self, obj: Union[models.ProfileTransferStatus, models.ProfileTransferRequest]
+    ) -> str:
+        """Return profile uuid."""
+        profile_service = ProfileService()
+        profile = profile_service.get_profile_by_uuid(obj.profile_uuid)
+        view_name = (
+            f"admin:{profile._meta.app_label}_"  # noqa
+            f"{profile.__class__.__name__.lower()}_change"
+        )
+        link_url = reverse(view_name, args=[profile.pk])
+        return format_html(f'<a href="{link_url}">{profile.uuid}</a>')
+
+    get_profile_uuid.short_description = "Profile uuid"
+
+
+class CustomQuerySet(models.QuerySet):
+    ...
 
 
 @admin.register(models.CoachLicence)

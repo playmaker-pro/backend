@@ -2,9 +2,11 @@ import random
 
 import factory
 from django.contrib.auth import get_user_model
+from factory import post_generation
 from faker import Faker
 
 from profiles import models
+from profiles.models import PlayerPosition
 from profiles.services import TransferStatusService
 from utils.factories.mapper_factories import MapperFactory
 
@@ -339,7 +341,6 @@ class TransferRequestFactory(factory.django.DjangoModelFactory):
     benefits = [1, 2]
     requesting_team = factory.SubFactory(TeamContributorFactory)
     gender = "M"
-    position = [1]
     number_of_trainings = "1"
     salary = "1"
     dial_code = factory.Faker("pyint", min_value=0, max_value=1000)
@@ -356,3 +357,13 @@ class TransferRequestFactory(factory.django.DjangoModelFactory):
             profile = kwargs.pop("profile")
         kwargs = TransferStatusService.prepare_generic_type_content(kwargs, profile)
         return super().create(**kwargs)
+
+    @post_generation
+    def player_position(self, create, extracted, **kwargs):  # noqa
+        if not create:
+            return
+        if not self.player_position.all().exists():  # noqa
+            positions = PlayerPosition.objects.all()
+            random_positions = random.sample(list(positions), 2)
+            for random_position in random_positions:
+                self.player_position.add(random_position.pk)  # noqa

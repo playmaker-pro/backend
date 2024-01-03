@@ -192,11 +192,11 @@ class Club(models.Model, MappingMixin):
     def display_voivodeship(self):
         return conver_vivo_for_api(self.voivodeship_obj.name)
 
-    def get_file_path(self, filename) -> str:
+    def get_file_path(self, filename: str) -> str:
         """define club picture image path, remove Polish chars"""
-        curr_date: str = str(datetime.datetime.now().date())
-        format: str = filename.split(".")[-1]
-        return f"club_pics/{curr_date}/{remove_polish_chars(str(self.name))}.{format}"
+        extension: str = filename.split(".")[-1]
+        name: str = remove_polish_chars(self.name)
+        return f"club_pics/{name}.{extension}"
 
     picture = models.ImageField(
         _("Herb klubu"), upload_to=get_file_path, null=True, blank=True
@@ -223,14 +223,6 @@ class Club(models.Model, MappingMixin):
         null=True,
         blank=True,
     )
-
-    voivodeship_raw = models.CharField(
-        _("Województwo"),
-        help_text=_("Wojewódźtwo w którym grasz."),
-        max_length=255,
-        blank=True,
-        null=True,
-    )  # TODO:(l.remkowicz): followup needed to see if that can be safely removed from database scheme follow-up: PM-365  # noqa: E501
 
     country = CountryField(
         _("Kraj"),

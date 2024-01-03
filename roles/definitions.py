@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from typing import List
 
 PLAYER_SHORT, PLAYER_FULL = "P", "Piłkarz"
 COACH_SHORT, COACH_FULL = "T", "Trener"
@@ -132,39 +133,70 @@ TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES = (
 )
 
 
-# Transfer request choices
-@dataclass
-class TransferRequestPositions:
+class PlayerPositions(str, Enum):
     """Enum for transfer request positions field."""
 
-    ANY = "Dowolna pozycja"
     GOALKEEPER = "Bramkarz"
-    CENTER_BACK = "Środkowy obrońca"
-    LEFT_BACK = "Lewy obrońca"
-    RIGHT_BACK = "Prawy obrońca"
-    DEFENSIVE_MIDFIELDER = "Defensywny pomocnik"
-    CENTRAL_MIDFIELDER = "Środkowy pomocnik"
-    OFFENSIVE_MIDFIELDER = "Ofensywny pomocnik"
-    LEFT_MIDFIELDER = "Lewy pomocnik"
-    RIGHT_MIDFIELDER = "Prawy pomocnik"
+    CENTER_BACK = "Środkowy Obrońca"
+    LEFT_BACK = "Lewy Obrońca"
+    RIGHT_BACK = "Prawy Obrońca"
+    DEFENSIVE_MIDFIELDER = "Defensywny Pomocnik #6"
+    CENTRAL_MIDFIELDER = "Środkowy Pomocnik #8"
+    OFFENSIVE_MIDFIELDER = "Ofensywny Pomocnik #10"
+    LEFT_MIDFIELDER = "Lewy Pomocnik"
+    RIGHT_MIDFIELDER = "Prawy Pomocnik"
     ATTACKER = "Napastnik"
+    WINGER = "Skrzydłowy"
+
+    @classmethod
+    def values(cls) -> List[str]:
+        """Returns values as list of strings."""
+        return [member.value for member in cls]
 
 
-TRANSFER_REQUEST_POSITIONS_CHOICES = (
-    ("1", TransferRequestPositions.ANY),
-    ("2", TransferRequestPositions.GOALKEEPER),
-    ("3", TransferRequestPositions.CENTER_BACK),
-    ("4", TransferRequestPositions.LEFT_BACK),
-    ("5", TransferRequestPositions.RIGHT_BACK),
-    ("6", TransferRequestPositions.DEFENSIVE_MIDFIELDER),
-    ("7", TransferRequestPositions.CENTRAL_MIDFIELDER),
-    ("8", TransferRequestPositions.OFFENSIVE_MIDFIELDER),
-    ("9", TransferRequestPositions.LEFT_MIDFIELDER),
-    ("10", TransferRequestPositions.RIGHT_MIDFIELDER),
-    ("11", TransferRequestPositions.ATTACKER),
-)
+class PlayerPositionShortcutsEN(str, Enum):
+    """Enum for transfer request positions field."""
+
+    GOALKEEPER = "GK"
+    CENTER_BACK = "CB"
+    LEFT_BACK = "LB"
+    RIGHT_BACK = "RB"
+    DEFENSIVE_MIDFIELDER = "DM"
+    CENTRAL_MIDFIELDER = "CM"
+    OFFENSIVE_MIDFIELDER = "CAM"
+    LEFT_MIDFIELDER = "LM"
+    RIGHT_MIDFIELDER = "RM"
+    ATTACKER = "F"
+    WINGER = "W"
+
+    @classmethod
+    def values(cls) -> List[str]:
+        """Returns values as list of strings."""
+        return [member.value for member in cls]
 
 
+class PlayerPositionShortcutsPL(str, Enum):
+    """Enum for transfer request positions field."""
+
+    GOALKEEPER = "BR"
+    CENTER_BACK = "ŚO"
+    LEFT_BACK = "LO"
+    RIGHT_BACK = "PO"
+    DEFENSIVE_MIDFIELDER = "DP"
+    CENTRAL_MIDFIELDER = "ŚP"
+    OFFENSIVE_MIDFIELDER = "OP"
+    LEFT_MIDFIELDER = "LP"
+    RIGHT_MIDFIELDER = "PP"
+    ATTACKER = "N"
+    WINGER = "SK"
+
+    @classmethod
+    def values(cls) -> List[str]:
+        """Returns values as list of strings."""
+        return [member.value for member in cls]
+
+
+# Transfer request choices
 @dataclass
 class TransferRequestTrainings:
     """Enum for transfer request trainings field."""
