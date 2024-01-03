@@ -1298,6 +1298,7 @@ class TeamContributorService:
             self.update_profile_with_current_team_history(
                 profile_uuid, matched_team_histories
             )
+            self.synchronize_profile_role(team_contributor, profile_uuid)
 
         return team_contributor
 
@@ -1410,6 +1411,10 @@ class TeamContributorService:
 
         # Now save only the fields that were updated.
         team_contributor.save(update_fields=fields_to_update)
+        if team_contributor.is_primary:
+            self.synchronize_profile_role(
+                team_contributor, team_contributor.profile_uuid
+            )
 
     def update_player_contributor(
         self,
@@ -1504,7 +1509,6 @@ class TeamContributorService:
                 "role": team_contributor.role,
                 "custom_role": team_contributor.custom_role,
             }
-
         current_data.update(data)
 
         if "team_history" in current_data and current_data.get("team_history"):
@@ -1537,7 +1541,6 @@ class TeamContributorService:
 
         # if existing_contributor:
         #     raise errors.TeamContributorAlreadyExistServiceException()
-
         self.handle_primary_contributor(
             team_contributor,
             profile_uuid,
@@ -1553,6 +1556,41 @@ class TeamContributorService:
             )
 
         return team_contributor
+
+    def synchronize_profile_role(
+        self, team_contributor: models.TeamContributor, profile_uuid: uuid.UUID
+    ) -> None:
+        """
+        Synchronizes the role or custom role from a TeamContributor instance to the
+        corresponding profile.
+
+        This method updates the role field in a profile based on the role or
+        custom role specified in the TeamContributor instance.
+        If the role in TeamContributor is marked as 'OTC' or 'O'
+        (indicating a custom role), it updates the profile's custom role field
+        ('custom_coach_role' or 'custom_club_role'). Otherwise, it updates the
+        standard role field ('coach_role' or 'club_role').
+        """
+        profile = self.profile_service.get_profile_by_uuid(profile_uuid)
+
+        if team_contributor.role in ["OTC", "O"]:
+            # Update the custom role fields if they exist in the profile
+            if hasattr(profile, "custom_coach_role"):
+                profile.coach_role = team_contributor.role
+                profile.custom_coach_role = team_contributor.custom_role
+                profile.save()
+            elif hasattr(profile, "custom_club_role"):
+                profile.club_role = team_contributor.role
+                profile.custom_club_role = team_contributor.custom_role
+                profile.save()
+        else:
+            # Normal role update logic
+            if hasattr(profile, "coach_role"):
+                profile.coach_role = team_contributor.role
+                profile.save()
+            elif hasattr(profile, "club_role"):
+                profile.club_role = team_contributor.role
+                profile.save()
 
 
 class LanguageService:
