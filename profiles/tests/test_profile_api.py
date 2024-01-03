@@ -635,7 +635,9 @@ class TestUpdateProfileAPI(APITestCase):
 
         # Assign the goalkeeper position to the player profile
         factories.PlayerProfilePositionFactory(
-            player_profile=profile, player_position=self.goalkeeper_position, is_main=True
+            player_profile=profile,
+            player_position=self.goalkeeper_position,
+            is_main=True,
         )
 
         # Update the height to a value over 185
@@ -666,7 +668,9 @@ class TestUpdateProfileAPI(APITestCase):
 
         # Assign the goalkeeper position to the player profile
         factories.PlayerProfilePositionFactory(
-            player_profile=profile, player_position=self.goalkeeper_position, is_main=True
+            player_profile=profile,
+            player_position=self.goalkeeper_position,
+            is_main=True,
         )
 
         # Assign the 'Bramkarz 185+' label
@@ -788,6 +792,8 @@ class ProfileTeamsApiTest(APITestCase):
 
         assert response.status_code == 201
         assert response.data["end_date"] is None
+        self.non_player_user.refresh_from_db()
+        assert self.non_player_user.profile.coach_role == "IC"
 
     def test_patch_team_history(self):
         """Test updating (patching) a team history."""
@@ -925,6 +931,8 @@ class ProfileTeamsApiTest(APITestCase):
             ),
             data1,
         )
+        self.non_player_user.profile.save()
+        self.non_player_team_contributor.refresh_from_db()
         assert response1.status_code == 200
         assert response1.data["is_primary"] is True
         assert response1.data["end_date"] is None
@@ -1078,6 +1086,8 @@ class ProfileTeamsApiTest(APITestCase):
         assert response1.data["is_primary"] is True
         assert response1.data["end_date"] is None
         assert response1.data["role"]["id"] == "IC"
+        self.non_player_user.refresh_from_db()
+        assert self.non_player_user.profile.coach_role == "IC"
 
         # Unset the role to the Other and provide the custom_role
         data2 = {"role": "OTC", "custom_role": "custom role"}
@@ -1093,11 +1103,13 @@ class ProfileTeamsApiTest(APITestCase):
         )
 
         assert response2.status_code == 200
-
+        self.non_player_user.refresh_from_db()
         self.non_player_team_contributor.refresh_from_db()
 
         assert self.non_player_team_contributor.role == "OTC"
         assert self.non_player_team_contributor.custom_role == "custom role"
+        assert self.non_player_user.profile.coach_role == "OTC"
+        assert self.non_player_user.profile.custom_coach_role == "custom role"
 
 
 class TestSetMainProfileAPI(APITestCase):
@@ -1151,7 +1163,6 @@ class TestSetMainProfileAPI(APITestCase):
 
 
 class TestProfileVisitHistory(APITestCase):
-
     @factory.django.mute_signals(signals.pre_save, signals.post_save)
     def setUp(self) -> None:
         """set up object factories"""
@@ -1182,9 +1193,8 @@ class TestProfileVisitHistory(APITestCase):
         self.non_profile_user.declared_role = "P"
         self.non_profile_user.save()
         url = reverse(
-            self.url_reverse, kwargs={
-            "profile_uuid": self.requested_profile.uuid}
-       )
+            self.url_reverse, kwargs={"profile_uuid": self.requested_profile.uuid}
+        )
         response = self.client.get(url, **self.non_profile_user_headers)
         assert response.status_code == 404
         assert response.data["detail"] == "Requestor has no profile"
@@ -1193,9 +1203,8 @@ class TestProfileVisitHistory(APITestCase):
     def test_invalid_role_exception(self) -> None:
         """Test that invalid role raises exception"""
         url = reverse(
-            self.url_reverse, kwargs={
-            "profile_uuid": self.requested_profile.uuid}
-       )
+            self.url_reverse, kwargs={"profile_uuid": self.requested_profile.uuid}
+        )
         response = self.client.get(url, **self.non_profile_user_headers)
         assert response.status_code == 400
         assert response.data["detail"] == "Requestor has invalid role"
@@ -1204,9 +1213,8 @@ class TestProfileVisitHistory(APITestCase):
     def test_get_visit_history(self) -> None:
         """Test that visit history is returned"""
         url = reverse(
-            self.url_reverse, kwargs={
-            "profile_uuid": self.requested_profile.uuid}
-       )
+            self.url_reverse, kwargs={"profile_uuid": self.requested_profile.uuid}
+        )
         response = self.client.get(url, **self.user_profile_headers)
         assert response.status_code == 200
 
