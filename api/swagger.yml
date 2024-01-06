@@ -440,38 +440,6 @@ paths:
                       "code": "es"
                     }, ...
                   ]
-  /clubs/club-teams/search/:
-    get:
-      operationId: clubs_club_teams_search_retrieve
-      description: Return list of teams assigned for given club.
-      summary: Club teams list endpoint
-      parameters:
-        - in: query
-          name: club_id
-          schema:
-            type: integer
-          description: Club id
-          required: true
-      tags:
-      - clubs
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                description: 'List of teams for given club'
-                items:
-                  type: object
-                  description: 'Team object'
-              example: [{'id': 1, text: 'team1', ...}, {'id': 2, text: 'team2', ...}]
-          description: 'List of teams for given club'
-        '404':
-          description: 'Given club does not exist'
-        '401':
-          description: 'Unauthorized'
   /clubs/club-teams/:
     get:
       operationId: clubs_teams_retrieve
@@ -696,38 +664,6 @@ paths:
                   description: 'Club name with id'
                 example: [{'id': 1, 'text': 'club 1'}, {'id': 2, 'text': 'club 2'}]
           description: 'List of clubs, name with ID'
-  /clubs/team-histories/search/:
-    get:
-      operationId: clubs_team_histories_search_retrieve
-      description: 'List of team histories'
-      summary: Team Histories list endpoint
-      tags:
-      - clubs
-      security:
-      - jwtAuth: []
-      parameters:
-        - in: query
-          name: season
-          schema:
-            type: string
-          description: 'Season name'
-        - in: query
-          name: q
-          schema:
-            type: string
-          description: 'Team name query, LIKE'
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                description: 'List of top 20 Team histories based on params, order by name'
-                items:
-                  type: object
-                  description: 'Team History name with id'
-                example: [ { 'id': 1, 'text': 'team 1' }, { 'id': 2, 'text': 'team 2' } ]
-          description: 'List of team histories, name with ID'
   /clubs/teams/search/:
     get:
       operationId: clubs_teams_search_retrieve
@@ -5952,10 +5888,7 @@ components:
               name:
                 type: string
                 description: "Object name"
-              is_parent:
-                type: boolean
-                description: "Is league parent?"
-            required: ["id", "name", "is_parent"]
+            required: ["id", "name"]
       required: ["contact_email", "phone_number", "status", "additional_info", "league", "benefits", "salary", "number_of_trainings"]
       example:
         {

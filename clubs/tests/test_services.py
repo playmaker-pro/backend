@@ -6,7 +6,7 @@ import pytest
 from rest_framework.test import APITestCase
 
 from clubs import errors
-from clubs.models import Gender, League, Team, TeamHistory
+from clubs.models import Gender, League, Team
 from clubs.services import ClubTeamService, SeasonService, TeamHistoryCreationService
 from profiles.api.serializers import PlayerProfileTeamContributorInputSerializer
 from roles import definitions
@@ -25,10 +25,8 @@ class TestClubTeamService(APITestCase):
         """
         Set up test data.
         """
-        male_gender = GenderFactory(name="M")
-        female_gender = GenderFactory(name="F")
-        TeamFactory(gender=male_gender)
-        TeamFactory(gender=female_gender)
+        TeamFactory(gender__name="kobiety")
+        TeamFactory(gender__name="mężczyźni")
 
     def test_get_clubs(self) -> None:
         """
@@ -140,7 +138,7 @@ class TeamHistoryCreationServicesTest(APITestCase):
             assert field in serializer.errors
 
     def test_create_or_get_team_with_foreign_team_string_parameter(self) -> None:
-        """Should retrieve or create a foreign (non-Polish) Team using its string name."""
+        """Should retrieve or create a foreign (non-Polish) Team using its string name."""  # noqa 501
         gender = GenderFactory.create()
         validated_data = {
             "team_parameter": "Foreign Test Team",
@@ -217,25 +215,18 @@ class TeamHistoryCreationServicesTest(APITestCase):
         league_identifier = self.league.pk
         country_code = "PL"
 
-        assert not TeamHistory.objects.filter(
-            team__name=team_parameter,
+        assert not Team.objects.filter(
+            name=team_parameter,
             league_history__league=self.league,
-            season=season,
         ).exists()
 
         team_history = self.service.create_or_get_team_history_for_player(
             season.id, team_parameter, league_identifier, country_code, self.user
         )
 
-        assert team_history.team.name == team_parameter
+        assert team_history.name == team_parameter
         assert team_history.league_history.league == self.league
-        assert team_history.season == season
-
-        same_team_history = self.service.create_or_get_team_history_for_player(
-            season.id, team_parameter, league_identifier, country_code, self.user
-        )
-
-        assert same_team_history.pk == team_history.pk
+        assert team_history.league_history.season == season
 
     def test_create_or_get_team_history_date_based(self):
         # Define the date range (from 2020 to 2022, spanning 3 seasons)
@@ -258,7 +249,7 @@ class TeamHistoryCreationServicesTest(APITestCase):
         assert len(team_histories) == 4
 
         for th in team_histories:
-            assert th.team.name == team_parameter
+            assert th.name == team_parameter
             assert th.league_history.league == self.league
 
     def test_create_or_get_team_history_date_based_invalid_dates(self):

@@ -1,3 +1,5 @@
+import typing
+
 import factory
 
 from clubs import models as clubs_models
@@ -54,34 +56,6 @@ class SeniorityFactory(CustomObjectFactory):
         self.is_senior = self.name == "Senior"
 
 
-class TeamFactory(CustomObjectFactory):
-    class Meta:
-        model = clubs_models.Team
-        django_get_or_create = ("name",)
-
-    name = factory.Iterator(TEAM_NAMES)
-    short_name = factory.LazyAttribute(lambda o: generate_club_or_team_short_name(o))
-    club = factory.SubFactory(ClubFactory)
-    manager = UserFactory.random_object()
-    game_bonus = factory.LazyAttribute(lambda _: utils.get_random_bool())
-    gloves_shoes_refunds = factory.LazyAttribute(lambda _: utils.get_random_bool())
-    scolarships = factory.LazyAttribute(lambda _: utils.get_random_bool())
-    traning_gear = factory.LazyAttribute(lambda _: utils.get_random_bool())
-    regular_gear = factory.LazyAttribute(lambda _: utils.get_random_bool())
-    secondary_trainer = factory.LazyAttribute(lambda _: utils.get_random_bool())
-    fizo = factory.LazyAttribute(lambda _: utils.get_random_bool())
-    diet_suplements = factory.LazyAttribute(lambda _: utils.get_random_bool())
-    travel_refunds = factory.LazyAttribute(lambda _: utils.get_random_bool())
-    seniority = factory.SubFactory(SeniorityFactory)
-    gender = factory.SubFactory(GenderFactory)
-
-    @factory.post_generation
-    def manager(self, *args, **kwargs) -> None:
-        """Set manager, None if User is already manager of other Team"""
-        if self.manager and clubs_models.Team.objects.filter(manager=self.manager):
-            self.manager = None
-
-
 class SeasonFactory(CustomObjectFactory):
     class Meta:
         model = clubs_models.Season
@@ -118,6 +92,53 @@ class LeagueHistoryFactory(CustomObjectFactory):
     season = factory.SubFactory(SeasonFactory)
 
 
+class TeamFactory(CustomObjectFactory):
+    class Meta:
+        model = clubs_models.Team
+        django_get_or_create = ("name",)
+
+    name = factory.Iterator(TEAM_NAMES)
+    short_name = factory.LazyAttribute(lambda o: generate_club_or_team_short_name(o))
+    club = factory.SubFactory(ClubFactory)
+    manager = UserFactory.random_object()
+    game_bonus = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    gloves_shoes_refunds = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    scolarships = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    traning_gear = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    regular_gear = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    secondary_trainer = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    fizo = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    diet_suplements = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    travel_refunds = factory.LazyAttribute(lambda _: utils.get_random_bool())
+    seniority = factory.SubFactory(SeniorityFactory)
+    gender = factory.SubFactory(GenderFactory)
+    league_history = factory.SubFactory(LeagueHistoryFactory)
+    league = factory.SubFactory(LeagueFactory)
+
+    @factory.post_generation
+    def manager(self, *args, **kwargs) -> None:
+        """Set manager, None if User is already manager of other Team"""
+        if self.manager and clubs_models.Team.objects.filter(manager=self.manager):
+            self.manager = None
+
+    @factory.post_generation
+    def set_league(self, create: bool, extracted: typing.Any, **kwargs) -> None:
+        """
+        Post-generation method to set the league field on the Team model based
+        on the league_history.
+
+        This method is called after a Team instance is created by the factory.
+        It checks if the team has a related league_history, and if so, assigns the
+        league from this history to the team's league field.
+        """
+        if not create or self.league_history is None:
+            return
+
+        # Assign the league directly from league_history
+        self.league = self.league_history.league
+        self.save()  # Save the team instance to persist the league assignment
+
+
 class TeamHistoryFactory(CustomObjectFactory):
     class Meta:
         model = clubs_models.TeamHistory
@@ -147,15 +168,15 @@ class ClubWithHistoryFactory(CustomObjectFactory):
     @factory.post_generation
     def add_history(self, create: bool, extracted, **kwargs) -> None:
         """
-        Post-generation method to create a historical record for a club.
+        Post-generation method to create a team (with historical data) for a club.
 
         When a club is created using the factory, this method will automatically create
-        a corresponding team for the club, a league history, and then associate both
-        through a TeamHistory record.
+        a corresponding team for the club with its league history.
         """
         if not create:
             return
 
-        team = TeamFactory(club=self)
+        # Create a league history instance
         league_history = LeagueHistoryFactory()
-        TeamHistoryFactory(team=team, league_history=league_history)
+        # Create a team and associate it with the created club and league history
+        TeamFactory(club=self, league_history=league_history)

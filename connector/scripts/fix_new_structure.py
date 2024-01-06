@@ -30,7 +30,7 @@ class Command(BaseCommand):
         """
         all_rw_lhs = LeagueHistory.objects.filter(league__name="RW")
         for rw_lh in all_rw_lhs:
-            parent_l = rw_lh.league.parent
+            parent_l = rw_lh.league
             try:
                 rj_l = parent_l.childs.get(name="RJ")
                 rj_lh, _ = LeagueHistory.objects.get_or_create(
@@ -213,7 +213,7 @@ class Command(BaseCommand):
                 if not th:
                     continue
                 try:
-                    l_highest_parent = th[0].league_history.league.highest_parent.name
+                    l_highest_parent = th[0].league_history.league.name
                 except AttributeError:
                     l_highest_parent = th[0].league_history.league.get_highest_parent()
                 if l_highest_parent in SENIOR_MALE_LEAGUE_NAMES:

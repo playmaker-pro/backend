@@ -261,15 +261,10 @@ class LeagueSerializer(serializers.ModelSerializer):
     """Player profile league serializer"""
 
     name = serializers.CharField(source="get_upper_parent_names", read_only=True)
-    is_parent = serializers.SerializerMethodField()
 
     class Meta:
         model = League
-        fields = ("id", "name", "is_parent")
-
-    def get_is_parent(self, obj: League) -> bool:
-        """Get is parent by league."""
-        return obj.isparent
+        fields = ("id", "name")
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -357,7 +352,7 @@ class ProfileTransferStatusSerializer(
     status = ProfileEnumChoicesSerializer(model=ProfileTransferStatus)
     additional_info = serializers.ListField(required=False, allow_null=True)
     league = serializers.PrimaryKeyRelatedField(
-        queryset=LeagueService().get_highest_parents(), many=True
+        queryset=LeagueService().get_leagues(), many=True
     )
     phone_number = PhoneNumberField(source="*", required=False)
     benefits = serializers.ListField(required=False, allow_null=True)
@@ -667,19 +662,14 @@ class BaseProfileSerializer(serializers.ModelSerializer):
             }
 
             # Check if there is a primary team contributor for the team history
-            if (
-                hasattr(instance, "team_history_object")
-                and instance.team_history_object
-            ):
-                primary_contributor = (
-                    instance.team_history_object.teamcontributor_set.filter(
-                        is_primary=True, profile_uuid=instance.uuid
-                    ).first()
-                )
+            if hasattr(instance, "team_object") and instance.team_object:
+                primary_contributor = instance.team_object.teamcontributor_set.filter(
+                    is_primary=True, profile_uuid=instance.uuid
+                ).first()
 
                 if primary_contributor:
                     team_history_serializer = TeamHistoryBaseProfileSerializer(
-                        instance.team_history_object,
+                        instance.team_object,
                         context=team_history_serializer_context,
                     )
                     repr_dict["team_history_object"] = team_history_serializer.data
@@ -687,7 +677,6 @@ class BaseProfileSerializer(serializers.ModelSerializer):
                     repr_dict["team_history_object"] = None
         else:
             repr_dict["team_history_object"] = None
-
         return repr_dict
 
     def get_profile_video(self, obj: PROFILE_TYPE) -> dict:

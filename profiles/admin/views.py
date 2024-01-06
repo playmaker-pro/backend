@@ -379,7 +379,7 @@ class TeamContributorAdmin(admin.ModelAdmin):
     def get_team_pk(self, obj: models.TeamContributor) -> str:
         """Return user email."""
         team_history = obj.team_history.first()
-        return team_history.team.pk if team_history else None
+        return team_history.pk if team_history else None
 
     def get_name(self, obj: models.TeamContributor) -> str:
         """Return user email."""

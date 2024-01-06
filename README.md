@@ -46,7 +46,7 @@ Create local env file
     ```
 
 
-#### Extra scripts:
+## Extra scripts:
 
 - Migrate old voivodeship field to new one (Voivodeships model)
 ```bash
@@ -67,3 +67,8 @@ python manage.py cities_light
 ```bash
 python manage.py create_short_name_for_club_and_team
 ```
+
+## Standalone scripts:
+Scripts from *tools/scripts*. Respectively as .sh (linux) and .bat (windows).
+- **create_dotenv_template** - create empty .env template file inside project root directory.
+- **initialize_db** - run initial scripts on unmodified database created from dump.

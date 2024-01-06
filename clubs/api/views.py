@@ -130,14 +130,12 @@ class ClubsAPI(EndpointView):
         filters = request.query_params.dict()
         season: str = filters.get("season")
         gender: str = filters.get("gender")
-
         if not season:
             raise errors.SeasonParameterMissing
         try:
             self.club_service.validate_gender(gender)
         except (ValueError, AttributeError):
             raise errors.InvalidGender
-
         clubs = self.club_service.get_clubs(filters=filters)
         paginated_clubs = self.paginate_queryset(clubs)
 
@@ -165,12 +163,10 @@ class LeagueAPI(EndpointView):
     league_service = services.LeagueService()
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def get_queryset(self, highest_only: bool = False, **kwargs) -> QuerySet:
+    def get_queryset(self, **kwargs) -> QuerySet:
         """Get Leagues queryset"""
-        if highest_only:
-            qs = self.league_service.get_highest_parents()
-        else:
-            qs = self.league_service.get_leagues()
+
+        qs = self.league_service.get_leagues()
 
         return self.filter_queryset(qs, **kwargs)
 
@@ -213,8 +209,7 @@ class LeagueAPI(EndpointView):
                 raise errors.InvalidCurrentSeasonFormatException()
 
             search_params["current_season"] = json.loads(current_season.lower())
-
-        qs = self.get_queryset(highest_only=True, **search_params)
+        qs = self.get_queryset(**search_params)
         serializer = serializers.LeagueBaseDataSerializer(qs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

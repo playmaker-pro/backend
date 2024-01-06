@@ -6,7 +6,6 @@ from utils.factories.clubs_factories import (
     LeagueFactory,
     LeagueHistoryFactory,
     TeamFactory,
-    TeamHistoryFactory,
 )
 
 
@@ -87,7 +86,7 @@ class TestShortNameCreation:
 
     def test_club_with_teams_in_futsal_league(self):
         """
-        Test that clubs with all teams playing in the futsal league receive the appropriate futsal suffix.
+        Test that clubs with all teams playing in the futsal league receive the appropriate futsal suffix.  # noqa 501
         """
         # 1. Create a club using the ClubFactory
         club = ClubFactory(name="Wisla Plock", short_name="Wisla Plock")
@@ -96,11 +95,9 @@ class TestShortNameCreation:
         futsal_league = LeagueFactory(name="Futsal")
         league_history = LeagueHistoryFactory(league=futsal_league)
 
-        team_1 = TeamFactory(club=club, name="Wisla Plock Team 1")
-        team_2 = TeamFactory(club=club, name="Wisla Plock Team 2")
+        TeamFactory(club=club, name="Wisla Plock Team 1", league_history=league_history)
+        TeamFactory(club=club, name="Wisla Plock Team 2", league_history=league_history)
 
-        TeamHistoryFactory(team=team_1, league_history=league_history)
-        TeamHistoryFactory(team=team_2, league_history=league_history)
         assert club.name == "Wisla Plock"
         club_short_name = generate_club_or_team_short_name(club)
         # 4. Verify the output

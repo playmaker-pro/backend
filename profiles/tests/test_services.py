@@ -28,7 +28,7 @@ from utils.factories import (
     PositionFactory,
     SeasonFactory,
     TeamContributorFactory,
-    TeamHistoryFactory,
+    TeamFactory,
     UserFactory,
 )
 
@@ -181,7 +181,7 @@ class TeamContributorServiceTests(TestCase):
 
     def test_create_or_get_team_contributor_create(self):
         """Test creating a new team contributor when it doesn't already exist."""
-        team_history = TeamHistoryFactory.create()
+        team_history = TeamFactory.create()
 
         (
             team_contributor,
@@ -239,7 +239,7 @@ class TeamContributorServiceTests(TestCase):
 
     def test_create_or_get_all_related_entities_with_team_history(self):
         """Test creating or fetching related entities, including team history."""
-        team_history = TeamHistoryFactory.create()
+        team_history = TeamFactory.create()
         data = {
             "team_parameter": "Test Team",
             "league_identifier": self.league.pk,
@@ -288,10 +288,8 @@ class TeamContributorServiceTests(TestCase):
         )
 
     def test_profile_fields_update_on_contributor_creation(self):
-        """
-        Test that profile fields are updated when a primary team contributor is created.
-        """
-        team_history = TeamHistoryFactory.create()
+        """Test that profile fields are updated when a primary team contributor is created."""  # noqa 501
+        team_history = TeamFactory.create()
         data = {
             "team_history": team_history,
             "is_primary": True,
@@ -300,13 +298,7 @@ class TeamContributorServiceTests(TestCase):
             self.user.profile.uuid, data, "player"
         )
         profile_instance = models.PlayerProfile.objects.get(uuid=self.user.profile.uuid)
-        assert (
-            profile_instance.team_object == team_contributor.team_history.all()[0].team
-        )
-        assert (
-            profile_instance.team_history_object
-            == team_contributor.team_history.all()[0]
-        )
+        assert profile_instance.team_object == team_contributor.team_history.all()[0]
 
     def test_profile_fields_reset_on_contributor_deletion(self):
         """

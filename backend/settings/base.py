@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
-from .environment import Environment
+from backend.settings.environment import Environment
 
 # This loads additional settings for our environemnt
 CONFIGURATION = (
@@ -32,7 +32,6 @@ PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 BASE_DIR = os.path.dirname(PROJECT_DIR)
 
-
 MANAGERS = [
     ("Rafal", "rafal.kesik@gmail.com"),
 ]
@@ -52,7 +51,7 @@ INSTALLED_APPS = [
     "transfers",
     # "contact",
     # Deprecation(rkesik): since we are working on a new FE
-    # "followers",
+    "followers",
     "inquiries",
     "clubs",
     "external_links",
@@ -513,6 +512,12 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "filename": join(LOGFILE_ROOT, "mailing.log"),
                 "formatter": "verbose",
             },
+            "commands": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "commands.log"),
+                "formatter": "verbose",
+            },
         },
         "loggers": {
             "profiles": {
@@ -546,6 +551,10 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
             },
             "mailing": {
                 "handlers": ["console", "mailing_file"],
+                "level": "DEBUG",
+            },
+            "commands": {
+                "handlers": ["console", "data_log_file"],
                 "level": "DEBUG",
             },
         },
