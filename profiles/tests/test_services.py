@@ -19,7 +19,7 @@ from profiles.services import (
     TransferStatusService,
 )
 from roles import definitions
-from roles.definitions import TRANSFER_STATUS_CHOICES
+from roles.definitions import TRANSFER_STATUS_CHOICES_WITH_UNDEFINED
 from utils import testutils as utils
 from utils.factories import (
     SEASON_NAMES,
@@ -346,7 +346,7 @@ class TestTransferStatusService:
         obj = service.get_transfer_status_by_id(transfer_status_id=transfer_id)
         expected = [
             ChoicesTuple(*transfer)._asdict()
-            for transfer in TRANSFER_STATUS_CHOICES
+            for transfer in TRANSFER_STATUS_CHOICES_WITH_UNDEFINED
             if transfer[0] == str(transfer_id)
         ]
 
@@ -356,6 +356,6 @@ class TestTransferStatusService:
         """Test get list transfer status."""
         obj = service.get_list_transfer_statutes()
         expected = [
-            ChoicesTuple(*transfer)._asdict() for transfer in TRANSFER_STATUS_CHOICES
+            ChoicesTuple(*transfer)._asdict() for transfer in TRANSFER_STATUS_CHOICES_WITH_UNDEFINED
         ]
         assert obj == expected

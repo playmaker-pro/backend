@@ -46,6 +46,7 @@ from roles.definitions import (
     TRANSFER_REQUEST_STATUS_CHOICES,
     TRANSFER_SALARY_CHOICES,
     TRANSFER_STATUS_CHOICES,
+    TRANSFER_STATUS_CHOICES_WITH_UNDEFINED,
     TRANSFER_TRAININGS_CHOICES,
     PlayerPositions,
     PlayerPositionShortcutsEN,
@@ -671,6 +672,27 @@ class ProfileFilterService:
         for name in licence_keys:
             if name not in available_keys:
                 raise ValueError(f"Invalid licence name: {name}")
+
+    @staticmethod
+    def filter_transfer_status(
+        queryset: django_base_models.QuerySet, statuses: list
+    ) -> django_base_models.QuerySet:
+        """
+        Filter a queryset of profiles based on multiple transfer statuses.
+
+        This method iterates over a list of transfer status identifiers and applies
+        filters to the queryset. Profiles with a status matching any of the specified
+        identifiers are included in the result. Additionally, a special status identifier "5"
+        is used to include profiles that do not have an associated TransferStatus object.
+        """
+        condition = Q()
+        for status in statuses:
+            if status == "5":
+                condition |= Q(transfer_status_related__isnull=True)
+            else:
+                condition |= Q(transfer_status_related__status=status)
+
+        return queryset.filter(condition)
 
 
 class PlayerProfilePositionService:
@@ -1642,7 +1664,7 @@ class TransferStatusService:
 
         result = [
             ChoicesTuple(*transfer)._asdict()
-            for transfer in TRANSFER_STATUS_CHOICES
+            for transfer in TRANSFER_STATUS_CHOICES_WITH_UNDEFINED
             if lambda_function(transfer)
         ]
         return result
