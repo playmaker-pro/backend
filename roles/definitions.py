@@ -110,6 +110,12 @@ TRANSFER_STATUS_CHOICES = (
     ("4", TransferStatusChoices.FOOTBALL_PENSION),
 )
 
+# UNDEFINED_STATUS for representing profiles without a defined transfer status
+UNDEFINED_STATUS = ("5", "Status nieznany")
+
+# Extended status choices including 'undefined' for filtering purposes
+TRANSFER_STATUS_CHOICES_WITH_UNDEFINED = TRANSFER_STATUS_CHOICES + (UNDEFINED_STATUS,)
+
 
 @dataclass
 class TransferStatusAdditionalInfo:

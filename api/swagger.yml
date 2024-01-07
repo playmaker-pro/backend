@@ -985,19 +985,24 @@ paths:
       description: Create initial profile for user
       summary: Create profile
       requestBody:
-        description: "role shortcut {P, C, S...} required, rest of fields based on profile type, fields listed below"
+        description: "role shortcut {P, C, S...} required. Additional 'custom_role' field is required for roles 'G' (Kibic) and 'O' (Inne).
+        Rest of fields based on profile type, fields listed below"
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                role:
-                  type: string
-              required:
-                - role
+              oneOf:
+                - $ref: '#/components/schemas/StandardRoleRequest'
+                - $ref: '#/components/schemas/CustomRoleRequest'
               description: 'It is possible to pass other,
               related with given profile fields to be initialized with new created profile'
+            examples:
+              standardRole:
+                summary: Example for standard roles
+                value: { "role": "P" }
+              customRole:
+                summary: Example for roles requiring custom_role
+                value: { "role": "G", "custom_role": "obserwator" }
       tags:
       - profiles
       security:
@@ -1135,6 +1140,13 @@ paths:
           schema:
             type: boolean
           description: "Shuffle results?"
+        - in: query
+          name: transfer_status
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Filter profiles by transfer status, multiple choices possible like: ?transfer_status=1&transfer_status=5"
       tags:
         - profiles
       responses:
@@ -6697,6 +6709,23 @@ components:
           type: string
           description: "Contact phone number for the managing agency."
           example: "123456789"
+    StandardRoleRequest:
+      type: object
+      properties:
+        role:
+          type: string
+      required:
+        - role
+    CustomRoleRequest:
+      type: object
+      properties:
+        role:
+          type: string
+        custom_role:
+          type: string
+      required:
+        - role
+        - custom_role
 
   securitySchemes:
     jwtAuth:

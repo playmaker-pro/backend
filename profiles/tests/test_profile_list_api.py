@@ -21,6 +21,7 @@ from utils.factories import (
     LabelDefinitionFactory,
     LabelFactory,
     PlayerProfileFactory,
+    TransferStatusFactory,
     UserFactory,
 )
 from utils.test.test_utils import UserManager
@@ -598,6 +599,70 @@ class TestProfileListAPI(APITestCase):
         )
         assert count_response.status_code == 200
         assert response.data["count"] == 0
+
+    def test_get_bulk_profiles_with_transfer_status(self) -> None:
+        """
+        Test the ability to filter player profiles based on transfer status.
+
+        This test verifies the functionality of the transfer status filter by creating player
+        profiles with different transfer statuses and then making API requests to filter these
+        profiles based on their transfer status. The test cases cover filtering by a single status,
+        multiple statuses, and the special case of status "5" which represents profiles
+        without an associated transfer status object.
+        """
+        # Create profiles with various transfer statuses
+        player_with_status_1 = PlayerProfileFactory.create()
+        TransferStatusFactory.create(profile=player_with_status_1, status="1")
+
+        player_with_status_2 = PlayerProfileFactory.create()
+        TransferStatusFactory.create(profile=player_with_status_2, status="2")
+
+        player_without_transfer_status = PlayerProfileFactory.create()
+
+        # Test filtering for status "1"
+        response = self.client.get(
+            self.url, {"role": "P", "transfer_status": "1"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert (
+            len(response.data["results"]) == 1
+        )  # Only player_with_status_1 should be returned
+
+        # Test filtering for status "2"
+        response = self.client.get(
+            self.url, {"role": "P", "transfer_status": "2"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert (
+            len(response.data["results"]) == 1
+        )  # Only player_with_status_2 should be returned
+
+        # Test filtering for status "5" (no transfer status)
+        response = self.client.get(
+            self.url, {"role": "P", "transfer_status": "5"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert (
+            len(response.data["results"]) == 1
+        )  # Only player_without_transfer_status should be returned
+
+        # Test filtering for status "1" and "2"
+        response = self.client.get(
+            self.url, {"role": "P", "transfer_status": ["1", "2"]}, **self.headers
+        )
+        assert response.status_code == 200
+        assert (
+            len(response.data["results"]) == 2
+        )  # player_with_status_1 and player_with_status2 should be returned
+
+        # Test filtering for status "1" and "5"
+        response = self.client.get(
+            self.url, {"role": "P", "transfer_status": ["1", "5"]}, **self.headers
+        )
+        assert response.status_code == 200
+        assert (
+            len(response.data["results"]) == 2
+        )  # player_with_status_1 and player_without_transfer_status should be returned
 
 
 @override_settings(SUSPEND_SIGNALS=True)

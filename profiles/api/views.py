@@ -61,7 +61,7 @@ from roles.definitions import (
     TRANSFER_REQUEST_STATUS_CHOICES,
     TRANSFER_SALARY_CHOICES,
     TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES,
-    TRANSFER_STATUS_CHOICES,
+    TRANSFER_STATUS_CHOICES_WITH_UNDEFINED,
     TRANSFER_TRAININGS_CHOICES,
 )
 from users.api.serializers import UserMainRoleSerializer
@@ -796,7 +796,7 @@ class TransferStatusAPIView(EndpointView):
     def list_transfer_status(self, request: Request) -> Response:  # noqa
         """Retrieve and display transfer statuses for the profiles."""
         transfer_choices = (
-            ChoicesTuple(*transfer) for transfer in TRANSFER_STATUS_CHOICES
+            ChoicesTuple(*transfer) for transfer in TRANSFER_STATUS_CHOICES_WITH_UNDEFINED
         )
         serializer = ProfileEnumChoicesSerializer(transfer_choices, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

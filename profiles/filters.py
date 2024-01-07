@@ -16,6 +16,7 @@ from labels.utils import (
 )
 from profiles import models, services
 from profiles.api.errors import IncorrectProfileRole
+from roles.definitions import TRANSFER_STATUS_CHOICES
 
 
 class ProfileListAPIFilter(APIFilter):
@@ -39,6 +40,7 @@ class ProfileListAPIFilter(APIFilter):
         "not_me": api_utils.convert_bool,
         "licence": api_utils.convert_str_list,
         "labels": api_utils.convert_str_list,
+        "transfer_status": api_utils.convert_str_list,
     }
 
     @cached_property
@@ -87,6 +89,7 @@ class ProfileListAPIFilter(APIFilter):
         self.filter_youth()
         self.filter_league()
         self.filter_gender()
+        self.filter_players_by_transfer_status()
 
         self.queryset = self.queryset.order_by("-user__date_joined")
 
@@ -204,7 +207,6 @@ class ProfileListAPIFilter(APIFilter):
                 user__licences__licence__name__in=licence_names
             ).distinct()
 
-
     def filter_by_labels(self) -> None:
         """
         Filters the queryset based on label criteria.
@@ -221,4 +223,12 @@ class ProfileListAPIFilter(APIFilter):
 
             self.queryset = apply_label_filters(
                 self.queryset, profile_specific_ids, user_related_ids, self.model
+            )
+
+    def filter_players_by_transfer_status(self) -> None:
+        """Filter queryset by players transfer status."""
+        transfer_statuses = self.query_params.get("transfer_status")
+        if transfer_statuses:
+            self.queryset = self.service.filter_transfer_status(
+                self.queryset, transfer_statuses
             )
