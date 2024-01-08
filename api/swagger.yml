@@ -979,6 +979,55 @@ paths:
                       "name": "Stałe fragmenty"
                   }
                 ]
+
+  /profiles/catalogue/transfer-request/:
+    get:
+      operationId: transfer_request_catalogue
+      description: Return paginated list of transfer requests.
+      summary: Transfer request list endpoint
+      parameters:
+        - in: query
+          name: player_position
+          schema:
+            type: string
+        - in: query
+          name: league
+          schema:
+            type: string
+          description: league name
+        - in: query
+          name: voivodeship
+          schema:
+            type: string
+        - in: query
+          name: number_of_trainings
+          schema:
+            type: integer
+          description: "Number of trainings object ID"
+        - in: query
+          name: salary
+          schema:
+            type: integer
+          description: "Salary object ID"
+        - in: query
+          name: benefits
+          schema:
+            type: integer
+          description: "Benefits object ID"
+      tags:
+        - catalogues
+      security:
+        - jwtAuth: [ ]
+      responses:
+        "200":
+          description: "Get transfer request list."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransferRequestGet'
+
   /profiles/:
     post:
       operationId: profiles_create
@@ -6044,9 +6093,9 @@ components:
               description: "Team object id"
             team_name:
               type: string
-            league_highest_parent_name:
+            league_name:
               type: string
-            league_highest_parent_id:
+            league_id:
               type: integer
             team_contributor_id:
               type: integer
@@ -6056,7 +6105,7 @@ components:
               type: string
             season:
               type: string
-          required: ["id", "team_name", "league_highest_parent_name", "league_highest_parent_id", "team_contributor_id", "picture_url", "country", "season"]
+          required: ["id", "team_name", "league_name", "league_id", "team_contributor_id", "picture_url", "country", "season"]
       required: ["id", "round", "team"]
 
     TransferRequestPositions:

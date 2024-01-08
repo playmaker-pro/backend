@@ -15,8 +15,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import PermissionDenied
 
+from api.base_view import EndpointViewWithFilter
 from api.consts import ChoicesTuple
 from api.errors import NotOwnerOfAnObject
+from api.pagination import TransferRequestCataloguePagePagination
 from api.serializers import ProfileEnumChoicesSerializer
 from api.swagger_schemas import (
     COACH_ROLES_API_SWAGGER_SCHEMA,
@@ -38,15 +40,20 @@ from profiles.api.errors import (
     TransferRequestDoesNotExistHTTPException,
     TransferStatusDoesNotExistHTTPException,
 )
+from profiles.api.filters import TransferRequestCatalogueFilter
 from profiles.api.managers import SerializersManager
 from profiles.errors import ProfileVisitHistoryDoesNotExistException
 from profiles.filters import ProfileListAPIFilter
 from profiles.interfaces import ProfileVisitHistoryProtocol
+from profiles.models import ProfileTransferRequest
 from profiles.serializers_detailed.base_serializers import (
     ProfileTransferRequestSerializer,
     ProfileTransferStatusSerializer,
     TeamContributorSerializer,
     UpdateOrCreateProfileTransferSerializer,
+)
+from profiles.serializers_detailed.catalogue_serializers import (
+    TransferRequestCatalogueSerializer,
 )
 from profiles.services import (
     ProfileFilterService,
@@ -1060,3 +1067,23 @@ class TransferRequestAPIView(EndpointView):
         transfer_request.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TransferRequestCatalogueAPIView(EndpointViewWithFilter):
+    permission_classes = [
+        AllowAny,
+    ]
+    serializer_class = TransferRequestCatalogueSerializer
+    pagination_class = TransferRequestCataloguePagePagination
+    queryset = ProfileTransferRequest.objects.all().order_by("-created_at")
+    filterset_class = TransferRequestCatalogueFilter
+
+    def list_transfer_requests(self, request: Request) -> Response:
+        """Retrieve and display transfer requests."""
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        paginated = self.get_paginated_queryset(queryset)
+        serializer = self.serializer_class(
+            paginated, many=True, context={"request": request}
+        )
+        return self.get_paginated_response(serializer.data)

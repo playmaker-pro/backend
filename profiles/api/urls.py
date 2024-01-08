@@ -259,4 +259,14 @@ urlpatterns = [
         ),
         name="list_transfer_request_actual_teams",
     ),
+    #  Catalogues
+    path(
+        r"catalogue/transfer-request/",
+        views.TransferRequestCatalogueAPIView.as_view(
+            {
+                "get": "list_transfer_requests",
+            }
+        ),
+        name="list_transfer_request",
+    ),
 ]

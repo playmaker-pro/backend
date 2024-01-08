@@ -166,17 +166,7 @@ AUTHENTICATION_BACKENDS = [
 WSGI_APPLICATION = "backend.wsgi.application"
 
 # Database
-# https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-
-# DEPRECATED: PM-1015
-# DATABASE_ROUTERS = ["data.routers.DataRouter", "data.routers.DefaultDBRouter"]
-
-# DB_ITERATOR = '11'
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    # },
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
         "NAME": "local_pm",
@@ -185,15 +175,6 @@ DATABASES = {
         "HOST": "localhost",
         "PORT": "5432",
     },
-    # DEPRECATED: PM-1015
-    # "datadb": {
-    #     "ENGINE": "django.db.backends.postgresql_psycopg2",
-    #     "NAME": "local_data",
-    #     "USER": "arsen",
-    #     "PASSWORD": "postgres",
-    #     "HOST": "localhost",
-    #     "PORT": "5432",
-    # },
 }
 
 # Password validation
@@ -591,7 +572,10 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "DEFAULT_PAGINATION_CLASS": "api.pagination.PagePagination",
+    # "DEFAULT_PAGINATION_CLASS": "api.pagination.PagePagination",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 10,
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 }
 
 SPECTACULAR_SETTINGS = {
@@ -670,13 +654,6 @@ USER_AGENTS_CACHE = "default"
 
 SCRAPPER = True
 
-# Loading of locally stored settings.
-
-try:
-    from backend.settings._local import *  # noqa
-except ImportError:
-    pass
-
 
 if FORCED_SEASON_NAME is not None:
     print(f"Force to use season for dispaly metrics: {FORCED_SEASON_NAME}")
@@ -721,3 +698,11 @@ FACEBOOK_GRAPH_API_VERSION = "v17.0"
 
 THROTTLE_EMAIL_CHECK_LIMITATION = 5
 DEFAULT_THROTTLE = 5
+
+
+# Loading of locally stored settings.
+
+try:
+    from backend.settings._local import *  # noqa
+except ImportError:
+    pass

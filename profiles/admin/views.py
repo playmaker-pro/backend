@@ -4,7 +4,7 @@ from django import forms
 from django.apps import apps
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Field
+from django.db.models import Field, QuerySet
 from django.forms.models import ModelChoiceField
 from django.http import HttpRequest
 from django.urls import reverse
@@ -27,6 +27,7 @@ from profiles.admin.actions import (
     update_season_score,
     update_with_profile_data,
 )
+from profiles.admin.mixins import RemoveM2MDuplicatesMixin
 from profiles.models import PROFILE_TYPES_AS_STRING, BaseProfile
 from profiles.services import ProfileService
 from utils import linkify
@@ -354,7 +355,7 @@ class VerificationStageAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.TeamContributor)
-class TeamContributorAdmin(admin.ModelAdmin):
+class TeamContributorAdmin(RemoveM2MDuplicatesMixin, admin.ModelAdmin):
     list_display = (
         "pk",
         "get_name",
@@ -369,6 +370,8 @@ class TeamContributorAdmin(admin.ModelAdmin):
     def get_team(self, obj: models.TeamContributor) -> str:
         """Return user email."""
         team_history = obj.team_history.first()
+        if team_history is None:
+            return None
         view_name = (
             f"admin:{team_history._meta.app_label}_"  # noqa
             f"{team_history.__class__.__name__.lower()}_change"
@@ -376,18 +379,22 @@ class TeamContributorAdmin(admin.ModelAdmin):
         link_url = reverse(view_name, args=[team_history.pk])
         return format_html(f'<a href="{link_url}">{team_history}</a>')
 
+    get_team.short_description = "Team"
+
     def get_team_pk(self, obj: models.TeamContributor) -> str:
         """Return user email."""
         team_history = obj.team_history.first()
         return team_history.pk if team_history else None
 
+    get_team_pk.short_description = "Team id"
+
     def get_name(self, obj: models.TeamContributor) -> str:
         """Return user email."""
         return mark_safe(f'<a href="{obj.pk}">{obj}</a>')
 
-    def get_profile_uuid(
-        self, obj: Union[models.ProfileTransferStatus, models.ProfileTransferRequest]
-    ) -> str:
+    get_name.short_description = "Name"
+
+    def get_profile_uuid(self, obj: models.TeamContributor) -> str:
         """Return profile uuid."""
         profile_service = ProfileService()
         profile = profile_service.get_profile_by_uuid(obj.profile_uuid)
@@ -400,9 +407,10 @@ class TeamContributorAdmin(admin.ModelAdmin):
 
     get_profile_uuid.short_description = "Profile uuid"
 
-
-class CustomQuerySet(models.QuerySet):
-    ...
+    def get_queryset(self, request) -> QuerySet:
+        """Due to m2m field problem, we have to override this method."""
+        queryset = super().get_queryset(request).prefetch_related("team_history")
+        return queryset
 
 
 @admin.register(models.CoachLicence)
@@ -523,5 +531,6 @@ class ProfileTransferRequestAdmin(admin.ModelAdmin, ContentTypeMixin):
         "profile_type",
         "created_at",
         "updated_at",
+        "voivodeship",
     )
     form = TransferStatusForm
