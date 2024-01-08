@@ -12,3 +12,13 @@ class PagePagination(pagination.PageNumberPagination):
     page_size: int = 10
     page_size_query_param: str = "page_size"
     max_page_size: int = 100
+
+
+class TransferRequestCataloguePagePagination(pagination.PageNumberPagination):
+    """
+    Custom pagination class for transfer request catalogue page.
+    """
+
+    page_size: int = 10
+    page_size_query_param: str = "page_size"
+    max_page_size: int = 100

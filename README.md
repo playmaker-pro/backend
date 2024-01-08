@@ -68,6 +68,11 @@ python manage.py cities_light
 python manage.py create_short_name_for_club_and_team
 ```
 
+- To generate language translation, you have to compile .po files:
+```bash
+python manage.py compilemessages
+```
+
 ## Standalone scripts:
 Scripts from *tools/scripts*. Respectively as .sh (linux) and .bat (windows).
 - **create_dotenv_template** - create empty .env template file inside project root directory.

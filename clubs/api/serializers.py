@@ -280,12 +280,8 @@ class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
     """
 
     team_name = serializers.SerializerMethodField()
-    league_highest_parent_name = serializers.CharField(
-        source="league_history.league.name"
-    )
-    league_highest_parent_id = serializers.IntegerField(
-        source="league_history.league.id"
-    )
+    league_name = serializers.CharField(source="league.name")
+    league_id = serializers.IntegerField(source="league.id")
     team_contributor_id = serializers.SerializerMethodField()
     picture_url = serializers.SerializerMethodField()
     country = serializers.CharField(source="get_country", read_only=True)
@@ -296,8 +292,8 @@ class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "team_name",
-            "league_highest_parent_name",
-            "league_highest_parent_id",
+            "league_name",
+            "league_id",
             "team_contributor_id",
             "picture_url",
             "country",

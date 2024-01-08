@@ -710,7 +710,7 @@ class Team(models.Model, MappingMixin):
         choices=AGE_CATEGORIES,
         null=True,
         blank=True,
-        help_text="Age category of the team.",
+        help_text=_("Age category of the team. Specified for the juniors"),
     )
 
     seniority = models.ForeignKey(

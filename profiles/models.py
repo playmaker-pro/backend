@@ -2394,7 +2394,10 @@ class TeamContributor(models.Model):
     role = models.CharField(
         max_length=50,
         choices=CoachProfile.COACH_ROLE_CHOICES + definitions.CLUB_ROLES,
-        help_text="Role of the contributor in the team.",
+        help_text=_(
+            "Role of the contributor in the team. "
+            "Role specified for club/coach profile"
+        ),
         null=True,
         blank=True,
     )
@@ -2421,8 +2424,10 @@ class TeamContributor(models.Model):
         # unique_together = ("profile_uuid", "role", "start_date")
 
     def __str__(self):
-        team = self.team_history.first()
-        return f"Team {team.team.name} contributor"
+        team_history = self.team_history.first()
+        if team_history:
+            return f"Team {team_history.name} contributor"
+        return "Team contributor"
 
     @staticmethod
     def get_other_roles():
@@ -2535,6 +2540,7 @@ class TransferBaseModel(models.Model):
         ),
         null=True,
         blank=True,
+        help_text=_("Benefits defines as integers with comma. Example: 1,2"),
     )
     number_of_trainings = models.CharField(
         max_length=10,
@@ -2617,10 +2623,42 @@ class ProfileTransferRequest(TransferBaseModel):
         related_name="transfer_requests",
         help_text="The position that the team is requesting.",
     )
+    league = models.CharField(
+        max_length=128,
+        null=True,
+        blank=True,
+        help_text=_("League name filled automatically from team.club.voivodeship_obj"),
+    )
+    voivodeship = models.CharField(
+        max_length=128,
+        null=True,
+        blank=True,
+        help_text=_(
+            "Voivodeship name filled automatically from team.club.voivodeship_obj"
+        ),
+    )
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to fill league and voivodeship fields. Fields are needed
+        for filtering transfer requests in the transfer request search.
+        """
+        if self.team.league:
+            self.league = self.team.league.name
+        club = self.team.club
+        if club and club.voivodeship_obj:
+            self.voivodeship = club.voivodeship_obj.name
+        return super().save(*args, **kwargs)
 
     @property
     def profile(self):
+        """Returns the user profile."""
         return self.content_object
+
+    @property
+    def team(self):
+        """Returns the requesting team."""
+        return self.requesting_team.team_history.first()
 
 
 PROFILE_MODELS = (
