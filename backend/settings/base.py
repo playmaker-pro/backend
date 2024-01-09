@@ -1,9 +1,12 @@
 import os
 from datetime import timedelta
 
+import sentry_sdk
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
+from dotenv import load_dotenv
+from sentry_sdk.integrations.django import DjangoIntegration
 
 from backend.settings.environment import Environment
 
@@ -14,6 +17,9 @@ CONFIGURATION = (
 
 # This flag allow us to see debug panel on each page.
 DEBUG_PANEL = False
+
+
+load_dotenv()
 
 
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
@@ -698,6 +704,18 @@ FACEBOOK_GRAPH_API_VERSION = "v17.0"
 
 THROTTLE_EMAIL_CHECK_LIMITATION = 5
 DEFAULT_THROTTLE = 5
+
+ENABLE_SENTRY = os.getenv("ENABLE_SENTRY", False) in ["True", "true", "1", "yes"]
+
+if ENABLE_SENTRY:
+    sentry_sdk.init(
+        dsn=os.getenv("SENTRY_DSN"),
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=1.0,
+        send_default_pii=True,
+        enable_tracing=True,
+        environment=os.getenv("ENVIRONMENT"),
+    )
 
 
 # Loading of locally stored settings.

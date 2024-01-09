@@ -77,3 +77,8 @@ python manage.py compilemessages
 Scripts from *tools/scripts*. Respectively as .sh (linux) and .bat (windows).
 - **create_dotenv_template** - create empty .env template file inside project root directory.
 - **initialize_db** - run initial scripts on unmodified database created from dump.
+
+
+## Additional tools:
+
+- Sentry: Debug tool available at https://playmaker-pro.sentry.io. You can enable sentry by setting `SENTRY_DSN` and `ENABLE_SENTRY` flag in your `.env` file.
