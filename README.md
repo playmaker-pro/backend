@@ -21,7 +21,7 @@ for other commands see `Makefile`
 
 
 
-Create local env file
+1. Create local "env" file
     If you use defauly postgres settings, ofc you need to create database (for example: local_pm)  and allow user to use it.
 
     `backend/settings/local.py`
@@ -40,11 +40,11 @@ Create local env file
    SYSTEM_USER_EMAIL = "your_admin_email"
     ```
 
-11. To have database synced with production or staging, you have to fill DB with voivodeships.
+2. To have database synced with production or staging, you have to fill DB with voivodeships.
     ```
     python manage.py add_voivodeships
     ```
-
+3. Copy EXAMPLE.env content to .env file and fill it with your data.
 
 ## Extra scripts:
 
