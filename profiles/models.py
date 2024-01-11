@@ -2643,9 +2643,9 @@ class ProfileTransferRequest(TransferBaseModel):
         Override save method to fill league and voivodeship fields. Fields are needed
         for filtering transfer requests in the transfer request search.
         """
-        if self.team.league:
+        if self.team and self.team.league:
             self.league = self.team.league.name
-        club = self.team.club
+        club = self.team.club if self.team else None
         if club and club.voivodeship_obj:
             self.voivodeship = club.voivodeship_obj.name
         return super().save(*args, **kwargs)
