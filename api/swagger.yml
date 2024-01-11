@@ -6602,6 +6602,8 @@ components:
               type: integer
             player_position:
               $ref: '#/components/schemas/PlayerPosition'
+            team_history_object:
+              $ref: '#/components/schemas/TeamHistoryProfileView'
     InquiryRequest:
       type: object
       properties:
@@ -6672,8 +6674,15 @@ components:
     InquiryRequestUserContact:
       type: object
       properties:
-        phone:
-          type: string
+        phone_number:
+          type: object
+          properties:
+            dial_code:
+              type: integer
+              description: "Represents a phone number dial code"
+            number:
+              type: string
+              description: "Profile phone number"
         email:
           type: string
     InquiryRequestUserMeta:
@@ -6695,11 +6704,22 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserInquiryLog'
+        inquiries_left:
+          type: integer
+          description: "The number of inquiries remaining under the user's current plan. 
+          This value indicates how many more inquiries the user can make before reaching the plan's limit."
+          readOnly: true
+        days_until_expiry:
+          type: integer
+          description: "The number of days remaining until the next inquiry expiration date."
+          readOnly: true
       required:
         - user
         - plan
         - contact
         - counter
+        - inquiries_left
+        - days_until_expiry
 
     UserInquiryLog:
       type: object

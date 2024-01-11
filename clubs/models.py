@@ -886,6 +886,22 @@ class Team(models.Model, MappingMixin):
         """
         return f"({self.league}, {self.display_team})"
 
+    @property
+    def get_country(self) -> Optional[str]:
+        """
+        Attempts to retrieve the country name either from the team's club or the
+        league's history. Returns None if neither is available.
+        """
+        club_country = getattr(self.club, "country", None)
+        if club_country:
+            return club_country.name
+
+        league_country = getattr(self.league_history.league, "country", None)
+        if league_country:
+            return league_country.name
+
+        return None
+
     name = models.CharField(
         _("Nazwa drużyny"),
         max_length=255,

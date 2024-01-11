@@ -16,13 +16,14 @@ from utils.factories import GuestProfileFactory
 from utils.test.test_utils import UserManager
 
 sender_contact_data = {
-    "phone": "+123456789",
+    "phone_number": {"dial_code": "+1", "number": "123456789"},
     "email": "sender@playmaker.pro",
 }
 recipient_contact_data = {
-    "phone": "+987654321",
+    "phone_number": {"dial_code": "+2", "number": "978654321"},
     "email": "recipient@playmaker.pro",
 }
+
 
 URL_SEND = lambda uuid: reverse(
     "api:inquiries:send_inquiry", kwargs={"recipient_profile_uuid": uuid}
@@ -75,7 +76,12 @@ class TestInquiriesAPI(APITestCase):
             **headers,
         )
         assert response.status_code == 200
-        assert response.data == data
+        assert response.data["email"] == data["email"]
+        expected_phone_number = {
+            "dial_code": f"+{data['phone_number']['dial_code']}",
+            "number": data["phone_number"]["number"],
+        }
+        assert response.data["phone_number"] == expected_phone_number
 
     def test_valid_accept_request_full_flow(self) -> None:
         """Test should success, full flow of accepting inquiry request"""
@@ -129,10 +135,19 @@ class TestInquiriesAPI(APITestCase):
         # Check contacts data correctly exchanged
         assert contacts_response.data[0].get(
             "body"
-        ) == InquiryContact.parse_custom_body(*sender_contact_data.values())
+        ) == InquiryContact.parse_custom_body(
+            sender_contact_data["phone_number"]["number"],
+            int(sender_contact_data["phone_number"]["dial_code"].replace("+", "")),
+            sender_contact_data["email"],
+        )
+
         assert contacts_response.data[0].get(
             "body_recipient"
-        ) == InquiryContact.parse_custom_body(*recipient_contact_data.values())
+        ) == InquiryContact.parse_custom_body(
+            recipient_contact_data["phone_number"]["number"],
+            int(recipient_contact_data["phone_number"]["dial_code"].replace("+", "")),
+            recipient_contact_data["email"],
+        )
 
         assert (
             UserInquiryLog.objects.filter(
