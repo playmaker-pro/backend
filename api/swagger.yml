@@ -1014,6 +1014,16 @@ paths:
           schema:
             type: integer
           description: "Benefits object ID"
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: "Page number"
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+          description: "Count of objects by page"
       tags:
         - catalogues
       security:
@@ -1024,9 +1034,23 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TransferRequestGet'
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    nullable: true
+                    description: "Next page"
+                  previous:
+                    type: string
+                    nullable: true
+                    description: "Previous page"
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TransferRequestGet'
+                required: ["count", "next", "previous", "results"]
 
   /profiles/:
     post:
