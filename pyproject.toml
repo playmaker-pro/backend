@@ -17,7 +17,7 @@ include = '\.py$'
 line-length = 88
 
 [tool.poetry]
-name = "webapp"
+name = "backend"
 version = "2.1.0"
 description = ""
 authors = ["rkesik <rafal.kesik@gmail.com>"]
