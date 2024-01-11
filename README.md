@@ -6,47 +6,31 @@ Backend side for PlayMaker project.
 # Installation
 
 To set up a development environment quickly you need to have following prerequisits:
-> Python 3.8.2
-> poetry in version `1.6.1`
-> makefile
-> PostgreSQL (latest)
+- Python ^3.8
+- poetry in version `1.6.1`
+- makefile (NOTE: Windows users have to install it manually via chocolatey. See: https://chocolatey.org/install#individual)
+- PostgreSQL (latest) / docker deamon
 
 ## Bootstrap project:
 
 
-`make setup`
-`make run`
+1. `make setup python_path={python interpreter system path}` - to initialize poetry and create an virtual environment
+2. `make start-db` - to start postgresql docker container
+3. Copy EXAMPLE.env content to .env file and fill it with your data.
 
 for other commands see `Makefile`
 
+**_NOTE:_**
 
+    If you want to use local postgres database instead of docker container, you have to change credentials in .env file.
 
-1. Create local "env" file
-    If you use defauly postgres settings, ofc you need to create database (for example: local_pm)  and allow user to use it.
-
-    `backend/settings/local.py`
-    ```
-    CONFIGURATION = 'dev'
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'local_pm',
-            'USER': 'jacek',
-            'PASSWORD': 'postgres',
-            'HOST': 'localhost',
-            'PORT': '5432',
-        },
-   }
-   SYSTEM_USER_EMAIL = "your_admin_email"
-    ```
-
-2. To have database synced with production or staging, you have to fill DB with voivodeships.
-    ```
-    python manage.py add_voivodeships
-    ```
-3. Copy EXAMPLE.env content to .env file and fill it with your data.
 
 ## Extra scripts:
+
+- Fill DB with voivodeships.
+```bash
+python manage.py add_voivodeships
+```
 
 - Migrate old voivodeship field to new one (Voivodeships model)
 ```bash
