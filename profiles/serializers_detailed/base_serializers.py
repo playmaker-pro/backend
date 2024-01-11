@@ -460,7 +460,7 @@ class ProfileTransferRequestSerializer(
     status = ProfileEnumChoicesSerializer(
         model=ProfileTransferRequest,
     )
-    player_position = PlayerPositionSerializer(many=True)
+    player_position = PlayerPositionSerializer(many=True, required=True)
     number_of_trainings = serializers.IntegerField(required=False, allow_null=True)
     benefits = serializers.ListField(required=False, allow_null=True)
     salary = serializers.IntegerField(required=False, allow_null=True)
