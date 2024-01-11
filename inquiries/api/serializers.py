@@ -4,10 +4,12 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from api.serializers import ProfileEnumChoicesSerializer
+from clubs.api.serializers import TeamHistoryBaseProfileSerializer
 from inquiries import models as _models
 from profiles.api.serializers import (
     PlayerProfilePositionSerializer as _PlayerProfilePositionSerializer,
 )
+from profiles.serializers_detailed.base_serializers import PhoneNumberField
 from users.api.serializers import BaseUserDataSerializer as _BaseUserDataSerializer
 
 User = get_user_model()
@@ -23,6 +25,7 @@ class InquiryUserDataSerializer(_BaseUserDataSerializer):
     player_position = _PlayerProfilePositionSerializer(
         source="profile.get_main_position", read_only=True
     )
+    team_history_object = serializers.SerializerMethodField()
 
     def get_specific_role(self, obj: User) -> dict:
         """Get specific role for profile (Coach, Club)"""
@@ -36,6 +39,16 @@ class InquiryUserDataSerializer(_BaseUserDataSerializer):
                 )
                 return serializer.to_representation(serializer.parse(val))
 
+    def get_team_history_object(self, obj: User) -> typing.Optional[dict]:
+        """
+        Custom method to handle team history serialization.
+        Checks if the user has a profile with a team_object and serializes it.
+        """
+        profile = getattr(obj, "profile", None)
+        if profile and hasattr(profile, "team_object"):
+            return TeamHistoryBaseProfileSerializer(profile.team_object).data
+        return None
+
     class Meta(_BaseUserDataSerializer.Meta):
         fields = _BaseUserDataSerializer.Meta.fields + (
             "age",
@@ -43,6 +56,7 @@ class InquiryUserDataSerializer(_BaseUserDataSerializer):
             "uuid",
             "player_position",
             "specific_role",
+            "team_history_object",
         )
 
 
@@ -132,11 +146,12 @@ class InquiryPlanSerializer(serializers.ModelSerializer):
 
 class InquiryContactSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source="_email", allow_null=True)
+    phone_number = PhoneNumberField(source="*", required=False)
 
     class Meta:
         model = _models.InquiryContact
         fields = (
-            "phone",
+            "phone_number",
             "email",
         )
 
@@ -159,6 +174,8 @@ class UserInquiryLogSerializer(serializers.ModelSerializer):
 class UserInquirySerializer(serializers.ModelSerializer):
     plan = InquiryPlanSerializer(read_only=True)
     contact = InquiryContactSerializer(source="user.inquiry_contact", read_only=True)
+    inquiries_left = serializers.IntegerField(source="left")
+    days_until_expiry = serializers.IntegerField(read_only=True, source="get_days_until_next_reference")
     logs = UserInquiryLogSerializer(many=True, read_only=True)
 
     class Meta:

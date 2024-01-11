@@ -1,6 +1,7 @@
 import logging
+import typing
 from datetime import date
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 
 from django.db.models import QuerySet
 from django_countries import countries
@@ -283,7 +284,7 @@ class TeamSerializer(serializers.ModelSerializer):
         )
 
 
-class PhoneNumberField(serializers.Serializer):
+class PhoneNumberField(serializers.Field):
     """
     A custom field for handling phone numbers in the ManagerProfile serializer.
 
@@ -292,11 +293,13 @@ class PhoneNumberField(serializers.Serializer):
     of combining these two separate fields into a single nested object for API
     representation, and it also processes incoming data for these fields
     in API requests.
-    #  FIXME: lremkowicz: this is duplicated code, think about merging it with
-    #  PhoneNumberField from ManagerProfileSerializer.
     """
 
-    dial_code = serializers.IntegerField()
+    def __init__(self, phone_field_name="phone_number", *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.phone_field_name = (
+            phone_field_name  # This can be 'phone_number' or 'agency_phone'
+        )
 
     def run_validation(self, data=...):
         """Validate phone number field before creating object."""
@@ -305,29 +308,38 @@ class PhoneNumberField(serializers.Serializer):
             raise PhoneNumberMustBeADictionaryHTTPException
         return super().run_validation(data)
 
-    def to_representation(self, obj: ProfileTransferStatus) -> dict:
+    def to_representation(self, obj: Any) -> Optional[typing.Dict[str, str]]:
         """
-        Converts the ManagerProfile instance's phone number information into
-        a nested JSON object suitable for API output.
+        Converts the object's phone number information into a nested JSON object for API output.
         """
-        if not obj or (obj.dial_code is None and obj.phone_number is None):
+        dial_code = getattr(obj, "dial_code", None)
+        phone_number = getattr(obj, self.phone_field_name, None)
+
+        if dial_code is None and phone_number is None:
             return None
-        return {"dial_code": f"+{obj.dial_code}", "number": obj.phone_number}
+
+        return {
+            "dial_code": f"+{dial_code}" if dial_code is not None else None,
+            "number": phone_number,
+        }
 
     def to_internal_value(self, data: dict) -> dict:
         """
         Processes the incoming data for the phone number field.
-
-        This method is responsible for parsing and validating the 'dial_code' and
-        'number' from the incoming nested object. It ensures that partial updates
-        are correctly handled by not overriding existing values with None when
-        not provided.
         """
         internal_value = {}
-        if "dial_code" in data:
-            internal_value["dial_code"] = data["dial_code"]
-        if "number" in data:
-            internal_value["phone_number"] = data["number"]
+        dial_code = data.get("dial_code")
+        phone_number = (
+            data.get("number")
+            if self.phone_field_name == "phone_number"
+            else data.get("agency_phone")
+        )
+
+        if dial_code is not None:
+            internal_value["dial_code"] = dial_code
+        if phone_number is not None:
+            internal_value[self.phone_field_name] = phone_number
+
         return internal_value
 
 
