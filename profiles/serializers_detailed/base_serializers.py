@@ -464,8 +464,12 @@ class ProfileTransferRequestSerializer(
             "salary",
             "contact_email",
             "phone_number",
+            "profile_uuid",
+            "club_voivodeship",
         )
 
+    club_voivodeship = serializers.CharField(source="voivodeship", read_only=True)
+    profile_uuid = serializers.UUIDField(source="profile.uuid", read_only=True)
     requesting_team = serializers.PrimaryKeyRelatedField(
         queryset=TeamContributor.objects.all()
     )
@@ -485,7 +489,12 @@ class ProfileTransferRequestSerializer(
         by their names and ids.
         """
         serializer = ProfileEnumChoicesSerializer
-        data = super().to_representation(instance)
+        try:
+            data = super().to_representation(instance)
+        except AttributeError as exc:
+            logger.error(f"Instance: {instance.__dict__} has wrong data", exc_info=True)
+            raise AttributeError from exc
+
         data["requesting_team"] = TeamContributorSerializer(
             instance=instance.requesting_team, read_only=True, context=self.context
         ).data

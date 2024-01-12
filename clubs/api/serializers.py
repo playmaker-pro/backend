@@ -305,7 +305,7 @@ class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
         Retrieve the team's short name if available; otherwise, return the
         team's full name.
         """
-        return getattr(obj, "short_name", obj.name)
+        return obj.short_name or obj.name
 
     def get_picture_url(self, obj: models.Team) -> typing.Optional[str]:
         """

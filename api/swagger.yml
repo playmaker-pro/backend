@@ -6206,7 +6206,11 @@ components:
             number:
               type: string
           required: ["dial_code", "number"]
-      required: ["requesting_team", "gender", "status", "position", "number_of_trainings", "salary", "contact_email", "phone_number", "benefits",]
+        profile_uuid:
+          type: string
+        club_voivodeship:
+          type: string
+      required: ["requesting_team", "gender", "status", "position", "number_of_trainings", "salary", "contact_email", "phone_number", "benefits", "profile_uuid", "club_voivodeship"]
 
       example:
         {
