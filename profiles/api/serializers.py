@@ -1292,16 +1292,12 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
             ):
                 team_history_instance = team_contrib.team_history.all().first()
                 if team_history_instance:
-                    return (
-                        team_history_instance.display_team_with_league
-                    )
+                    return team_history_instance.display_team_with_league
 
             else:
                 team_history_instance = team_contrib.team_history.all().first()
                 if team_history_instance:
-                    return (
-                        team_history_instance.display_team_with_league
-                    )
+                    return team_history_instance.display_team_with_league
 
         if hasattr(obj.profile, "team_object") and obj.profile.team_object:
             return obj.profile.team_object.display_team_with_league

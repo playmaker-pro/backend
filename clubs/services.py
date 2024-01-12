@@ -104,6 +104,7 @@ class ClubService:
 
 class LeagueService:
     model = models.League
+
     def get_leagues(self) -> QuerySet:
         """Get all leagues"""
         return self.model.objects.all()
@@ -311,23 +312,33 @@ class TeamHistoryCreationService:
         Retrieve or create a history record for the given team and league history.
         """
         # Find an existing team with the same name
-        team_history = models.Team.objects.filter(
-            name=team.name, league_history__isnull=True
+        existing_team_history = models.Team.objects.filter(
+            name=team.name, league_history=league_history, league=league_history.league
         ).first()
 
-        if team_history:
-            # Update the existing team with the league_history
-            team_history.league_history = league_history
-            team_history.league = league_history.league
-            team_history.save()
+        if existing_team_history:
+            # A team with the same name and league_history exists, so return it
+            return existing_team_history
         else:
-            # If no existing team is found, create a new one
-            team_history = models.Team.objects.create(
-                name=team.name,
-                league_history=league_history,
-                league=league_history.league,
-            )
-            self.initialize_model_instance(team_history, user)
+            # Find an existing team with the same name but no league history
+            team_history = models.Team.objects.filter(
+                name=team.name, league_history__isnull=True
+            ).first()
+
+            if team_history:
+                # Update the existing team with the league_history
+                team_history.league_history = league_history
+                team_history.league = league_history.league
+                team_history.save()
+            else:
+                # If no existing team is found, create a new one
+                team_history = models.Team.objects.create(
+                    name=team.name,
+                    league_history=league_history,
+                    league=league_history.league,
+                )
+                self.initialize_model_instance(team_history, user)
+
         return team_history
 
     def create_or_get_league_history(
@@ -348,7 +359,9 @@ class TeamHistoryCreationService:
             )
         except models.LeagueHistory.MultipleObjectsReturned:
             # Get the first record as a fallback
-            league_history = models.LeagueHistory.objects.filter().first()
+            league_history = models.LeagueHistory.objects.filter(
+                league=league, year=year
+            ).first()
             created = False
         except ObjectDoesNotExist:
             raise errors.SeasonDoesNotExistServiceException()
