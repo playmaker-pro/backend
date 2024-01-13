@@ -1335,7 +1335,7 @@ class TeamContributorService:
 
             if not is_player:  # non-player scenario
                 # Extract attributes from team_history_instance, for example:
-                team_parameter = team_history_instance.id
+                team_parameter = team_history_instance.name
                 league_identifier = team_history_instance.league_history.league.id
 
                 # Use these extracted values to call
