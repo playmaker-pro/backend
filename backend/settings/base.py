@@ -139,6 +139,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     # "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     "middleware.user_activity_middleware.UserActivityMiddleware",
+    "middleware.redirect_middleware.RedirectMiddleware",
 ]
 
 ROOT_URLCONF = "backend.urls"
