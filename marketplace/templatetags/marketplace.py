@@ -1,9 +1,8 @@
-import logging
 import json
-import django
+import logging
 from datetime import date, datetime
 
-from clubs.models import Club, Team, League
+import django
 from django import template
 from django.conf import settings
 from django.urls import reverse
@@ -18,10 +17,13 @@ from django.utils.translation import (
     pgettext,
     round_away_from_one,
 )
-from followers.models import Follow, FollowTeam
+
+from clubs.models import Club, League, Team
+
+# Deprecation(rkesik): since we are working on a new FE
+# from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from profiles.utils import extract_video_id
-
 
 TEMPLATE_ACTION_SCRIPT = "platform/buttons/action_script.html"
 TEMPLATE_ACTION_LINK = "platform/buttons/action_link.html"

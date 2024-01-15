@@ -393,3 +393,19 @@ msgstr ""
 #: users/templates/account/signup.html:5
 msgid "Signup"
 msgstr ""
+
+msgid "Benefits defines as integers with comma. Example: 1,2"
+msgstr "Benefity zdefiniowane jako liczby całkowite z przecinkiem. Przykład: 1,2"
+
+
+msgid "Age category of the team. Specified for the juniors"
+msgstr "Kategoria wiekowa drużyny. Określone dla juniorów"
+
+msgid "League name filled automatically from team.club.voivodeship_obj"
+msgstr "Nazwa ligi wypełniona automatycznie z team.club.voivodeship_obj"
+
+msgid "Voivodeship name filled automatically from team.club.voivodeship_obj"
+msgstr "Nazwa województwa wypełniona automatycznie z team.club.voivodeship_obj"
+
+msgid "Role of the contributor in the team. Role specified for club/coach profile"
+msgstr "Rola współpracownika w zespole. Rola określona dla profilu klubu / trenera"

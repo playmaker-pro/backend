@@ -1,0 +1,282 @@
+import json
+
+from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
+from rest_framework.test import APIClient, APITestCase
+
+from labels.models import Label, LabelDefinition
+from profiles.models import LicenceType
+from utils import factories
+from utils.test.test_utils import UserManager
+
+User = get_user_model()
+
+
+class TestGetCreateCoachLicenceAPI(APITestCase):
+    def setUp(self) -> None:
+        self.client: APIClient = APIClient()
+        self.manager = UserManager(self.client)
+        self.user_obj = self.manager.create_superuser()
+        self.headers = self.manager.get_headers()
+        self.url = reverse("api:profiles:coach_licences")
+
+    def test_list_licence_choices(self) -> None:
+        """test list all available licence types"""
+        response = self.client.get(self.url)
+
+        assert response.status_code == 200
+        assert response.data
+
+    def test_success_create_licence_for_coach(self) -> None:
+        """test create licence for coach"""
+        response = self.client.post(
+            self.url,
+            data=json.dumps(
+                {
+                    "licence_id": 1,
+                    "expiry_date": "2025-01-01",
+                }
+            ),
+            **self.headers,
+        )
+        # Check if the UEFA PRO label has been assigned
+        licence_label_exists = Label.objects.filter(
+            content_type=ContentType.objects.get_for_model(User),
+            object_id=self.user_obj.id,
+        ).exists()
+
+        assert response.status_code == 201
+        assert licence_label_exists, "Licence label not assigned as expected"
+
+    def test_create_licence_for_coach_with_invalid_licence_id(self) -> None:
+        """test create licence for coach with invalid licence id"""
+        response = self.client.post(
+            self.url,
+            data={
+                "licence_id": 100,
+                "expiry_date": "2025-01-01",
+            },
+            **self.headers,
+        )
+
+        assert response.status_code == 400
+
+    def test_create_licence_for_coach_with_invalid_expire_date(self) -> None:
+        """test create licence for coach with invalid expire date"""
+        response = self.client.post(
+            self.url,
+            data={
+                "licence_id": 2,
+                "expiry_date": "01-01-01",
+            },
+            **self.headers,
+        )
+
+        assert response.status_code == 400
+
+    def test_create_licence_for_coach_with_empty_licence_id(self) -> None:
+        """test create licence for coach with empty licence id"""
+        response = self.client.post(
+            self.url,
+            data={
+                "licence_id": "",
+                "expiry_date": "2025-01-01",
+            },
+            **self.headers,
+        )
+
+        assert response.status_code == 400
+
+    def test_create_licence_for_coach_unauthenticated(self) -> None:
+        """test create licence for coach without authentication"""
+        response = self.client.post(
+            self.url,
+            data={
+                "licence_id": 1,
+                "expiry_date": "2025-01-01",
+            },
+        )
+
+        assert response.status_code == 401
+
+    def test_create_same_licence_twice_for_coach(self) -> None:
+        """test create same licence twice for coach"""
+        response = self.client.post(
+            self.url,
+            data=json.dumps(
+                {
+                    "licence_id": 2,
+                    "expiry_date": "2025-01-01",
+                }
+            ),
+            **self.headers,
+        )
+
+        assert response.status_code == 201
+
+        response = self.client.post(
+            self.url,
+            data={
+                "licence_id": 1,
+                "expiry_date": "2025-01-01",
+            },
+            **self.headers,
+        )
+
+        assert response.status_code == 400
+
+
+class TestUpdateDeleteCoachLicenceAPI(APITestCase):
+    def setUp(self) -> None:
+        self.client: APIClient = APIClient()
+        self.manager = UserManager(self.client)
+        self.user_obj = self.manager.create_superuser()
+        self.headers = self.manager.get_headers()
+        self.licence = factories.CoachLicenceFactory(owner=self.user_obj, pk=1)
+        self.url = lambda licence_id: reverse(
+            "api:profiles:coach_licences_modify", kwargs={"licence_id": licence_id}
+        )
+
+    def test_patch_licence_for_user(self) -> None:
+        """test patch licence for user"""
+        response = self.client.patch(
+            self.url(self.licence.pk),
+            data=json.dumps(
+                {
+                    "expiry_date": "2025-01-01",
+                    "is_in_progress": True,
+                    "release_year": 2010,
+                }
+            ),
+            **self.headers,
+        )
+
+        assert response.status_code == 200
+
+    def test_patch_licence_for_user_with_invalid_licence_id(self) -> None:
+        """test patch licence for user with invalid licence id"""
+        response = self.client.patch(
+            self.url(100),
+            data={"expiry_date": "2025-01-01", "release_year": 2010},
+            **self.headers,
+        )
+
+        assert response.status_code == 404
+
+    def test_patch_licence_for_user_with_invalid_expire_date(self) -> None:
+        """test patch licence for user with invalid expire date"""
+        response = self.client.patch(
+            self.url(self.licence.pk),
+            data=json.dumps({"expiry_date": "01-01-01", "release_year": 2010}),
+            **self.headers,
+        )
+
+        assert response.status_code == 400
+
+    def test_patch_licence_for_user_unauthenticated(self) -> None:
+        """test patch licence for user without authentication"""
+        response = self.client.patch(
+            self.url(self.licence.pk),
+            data={
+                "expiry_date": "2025-01-01",
+            },
+        )
+
+        assert response.status_code == 401
+
+    def test_patch_licence_assing_already_owned_licence(self) -> None:
+        """test patch licence to already owned licence"""
+        second_licence = factories.CoachLicenceFactory(owner=self.user_obj)
+
+        response = self.client.patch(
+            self.url(second_licence.pk),
+            data={"licence_id": self.licence.licence.pk},
+            **self.headers,
+        )
+
+        assert response.status_code == 400
+
+    def test_patch_somebody_licence(self) -> None:
+        """test patch licence to somebody else licence"""
+        another_user = factories.UserFactory.create()
+        another_user_licence = factories.CoachLicenceFactory(owner=another_user)
+
+        response = self.client.patch(
+            self.url(another_user_licence.pk), data={"licence_id": 2}, **self.headers
+        )
+
+        assert response.status_code == 400
+
+    def test_patch_licence_change_owner(self) -> None:
+        """test patch licence change owner"""
+        another_user = factories.UserFactory.create()
+
+        response = self.client.patch(
+            self.url(self.licence.pk),
+            data=json.dumps({"owner_id": another_user.pk}),
+            **self.headers,
+        )
+
+        assert response.data["owner"] == self.user_obj.pk
+
+    def test_delete_licence_for_user(self) -> None:
+        """test delete licence for user"""
+        response = self.client.delete(self.url(self.licence.pk), **self.headers)
+
+        assert response.status_code == 204
+
+    def test_delete_licence_for_somebody_else(self) -> None:
+        """test delete licence for somebody else"""
+        another_user = factories.UserFactory.create()
+        another_user_licence = factories.CoachLicenceFactory(owner=another_user)
+
+        response = self.client.delete(self.url(another_user_licence.pk), **self.headers)
+
+        assert response.status_code == 400
+
+    def test_delete_licence_for_user_unauthenticated(self) -> None:
+        """test delete licence for user without authentication"""
+        response = self.client.delete(self.url(self.licence.pk))
+
+        assert response.status_code == 401
+
+    def test_label_removal_on_licence_deletion(self):
+        """Test label removal when a coach licence is deleted."""
+        # Create UEFA PRO LicenceType using factory
+        uefa_pro_licence, _ = LicenceType.objects.get_or_create(name="UEFA PRO")
+
+        # Create a CoachLicence with the UEFA PRO LicenceType
+        factories.CoachLicenceFactory(owner=self.user_obj, licence=uefa_pro_licence)
+
+        # Create UEFA PRO label using factory
+        label_def, _ = LabelDefinition.objects.get_or_create(label_name="LICENCE_PRO")
+        factories.LabelFactory(
+            content_type=ContentType.objects.get_for_model(User),
+            object_id=self.user_obj.id,
+            label_definition=label_def,
+            visible=True,
+        )
+
+        # Ensure the label exists before deletion
+        licence_label_exists_before = Label.objects.filter(
+            content_type=ContentType.objects.get_for_model(User),
+            object_id=self.user_obj.id,
+            label_definition=label_def,
+        ).exists()
+        assert (
+            licence_label_exists_before
+        ), f"{self.licence} label does not exist before deletion"
+
+        # Delete the licence
+        response = self.client.delete(self.url(self.licence.id), **self.headers)
+        assert response.status_code == 204
+
+        # Check if the label is removed after deletion
+        licence_label_exists_after = Label.objects.filter(
+            content_type=ContentType.objects.get_for_model(User),
+            object_id=self.user_obj.id,
+        ).exists()
+        assert (
+            not licence_label_exists_after
+        ), f"{self.licence} label not removed as expected"

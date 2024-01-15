@@ -1,11 +1,14 @@
-from django.utils.html import format_html
-
-from wagtail.contrib.modeladmin.options import (
-    ModelAdmin,
-    ModelAdminGroup,
-    modeladmin_register,
-)
 from django.urls import reverse
+from django.utils.html import format_html
+from django.contrib import admin
+
+ModelAdmin = admin.ModelAdmin
+# from wagtail.contrib.modeladmin.options import (
+#     ModelAdmin,
+#     ModelAdminGroup,
+#     modeladmin_register,
+# )
+
 from . import models
 
 
@@ -68,18 +71,19 @@ class RoleChangeAdmin(ModelAdmin):
     )
 
 
-class ProfilesAdminGroup(ModelAdminGroup):
-    menu_label = "Profiles"
-    menu_icon = "folder-open-inverse"  # change as required
-    menu_order = 200  # will put in 3rd place (000 being 1st, 100 2nd)
-    items = (
-        RegularProfileAdmin,
-        PlayerProfileAdmin,
-        CoachProfileAdmin,
-        RoleChangeAdmin,
-    )
+# @wag
+# class ProfilesAdminGroup(ModelAdminGroup):
+#     menu_label = "Profiles"
+#     menu_icon = "folder-open-inverse"  # change as required
+#     menu_order = 200  # will put in 3rd place (000 being 1st, 100 2nd)
+#     items = (
+#         RegularProfileAdmin,
+#         PlayerProfileAdmin,
+#         CoachProfileAdmin,
+#         RoleChangeAdmin,
+#     )
 
-
-# When using a ModelAdminGroup class to group several ModelAdmin classes together,
-# you only need to register the ModelAdminGroup class with Wagtail:
-modeladmin_register(ProfilesAdminGroup)
+# @wag
+# # When using a ModelAdminGroup class to group several ModelAdmin classes together,
+# # you only need to register the ModelAdminGroup class with Wagtail:
+# modeladmin_register(ProfilesAdminGroup)

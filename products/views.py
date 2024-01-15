@@ -1,35 +1,14 @@
-# external dependencies
-import json
 import logging
-import math
-import operator
-from functools import reduce
-from django.core.mail import mail_managers, send_mail
-from clubs.models import Club, Team, Seniority, League, Gender, Voivodeship
-from crispy_forms.utils import render_crispy_form
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.mail import mail_managers
 from django.core.paginator import Paginator
-from django.db.models import Q
-from django.http import JsonResponse
-from django.http.response import HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
-from django.utils import timezone
+from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext_lazy as _
-from django.views import View, generic
-from followers.models import Follow, FollowTeam
-from inquiries.models import InquiryRequest
-from app import mixins
-from profiles.utils import get_datetime_from_age
-from roles import definitions
-from stats import adapters
-from users.models import User
-from notifications import message
-from profiles.models import PlayerPosition
-from .models import Product, Request, Tag
+from django.views import View
 
+from .models import Product, Request, Tag
 
 User = get_user_model()
 
@@ -38,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 from app.base.views import BasePMView
+
 from .view_mixins import ProductFilterMixn
 
 

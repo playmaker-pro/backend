@@ -7,30 +7,26 @@ from voivodeships.services import VoivodeshipService
 
 
 def map_vivos(apps, schema_editor):
-
     vivos_manager = VoivodeshipService()
 
-    clubs = apps.get_model('clubs', 'Club')
+    clubs = apps.get_model("clubs", "Club")
 
     for club in clubs.objects.all():
-
         try:
             get_voivo = vivos_manager.get_voivodeship_by_name(club.voivodeship.name)
             if get_voivo.exists():
-
-                vivo = apps.get_model('voivodeships', 'Voivodeships')
+                vivo = apps.get_model("voivodeships", "Voivodeships")
                 vivo = vivo.objects.get(id=get_voivo[0].id)
 
                 club.voivodeship_obj = vivo
                 club.save()
         except (ObjectDoesNotExist, AttributeError):
-            print(f'Something went wrong with {club}')
+            print(f"Something went wrong with {club}")
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('clubs', '0069_auto_20220716_1048'),
+        ("clubs", "0069_auto_20220716_1048"),
     ]
 
     operations = [

@@ -1,12 +1,160 @@
 import logging
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_fsm import FSMField, transition
-from notifications.mail import request_accepted, request_declined, request_new
 
-logger = logging.getLogger(__name__)
+from inquiries.errors import ForbiddenLogAction
+from inquiries.plans import basic_plan, premium_plan
+from inquiries.signals import (
+    inquiry_accepted,
+    inquiry_pool_exhausted,
+    inquiry_rejected,
+    inquiry_reminder,
+    inquiry_restored,
+    inquiry_sent,
+)
+from inquiries.utils import InquiryMessageContentParser as _ContentParser
+from mailing.models import EmailTemplate as _EmailTemplate
+from mailing.schemas import EmailSchema as _EmailSchema
+
+logger = logging.getLogger("inquiries")
+
+
+class InquiryLogMessage(models.Model):
+    EMAIL_PATTERN = _(
+        "Type '#male_form|female_form#' - to mark something that should be determined by gender (e.g. #Otrzymałeś|Otrzymałaś#).\n"
+        "<> - to include user related with log.\n"
+        "'#r#' to include user related with log with role.\n"
+        "'#rb#' to include user related with log with role in objective case (biernik).\n"
+        "#url# - to include additional url."
+    )
+
+    class MessageType(models.TextChoices):
+        ACCEPTED = "ACCEPTED_INQUIRY", _("Accepted inquiry")
+        REJECTED = "REJECTED_INQUIRY", _("Rejected inquiry")
+        NEW = "NEW_INQUIRY", _("New inquiry")
+        OUTDATED = "OUTDATED_INQUIRY", _("Outdated inquiry")
+        UNDEFINED = "UNDEFINED_INQUIRY", _("Undefined inquiry")
+        OUTDATED_REMINDER = "OUTDATED_REMINDER", _("Reminder about outdated inquiry")
+
+    log_body = models.TextField(
+        help_text=_(
+            "Message should include '<>' as placeholder for user related with log."
+        ),
+        blank=True,
+        null=True,
+    )
+
+    email_title = models.TextField(
+        help_text=EMAIL_PATTERN,
+        blank=True,
+        null=True,
+    )
+    email_body = models.TextField(
+        help_text=EMAIL_PATTERN,
+        blank=True,
+        null=True,
+    )
+    send_mail = models.BooleanField(
+        default=False,
+        help_text=_("Should email be sent automatically when log is created?"),
+    )
+
+    log_type = models.CharField(
+        max_length=20,
+        choices=MessageType.choices,
+        default=MessageType.UNDEFINED,
+        unique=True,
+    )
+
+    def __str__(self) -> str:
+        return f"{self.log_type}: {self.log_body}"
+
+
+class UserInquiryLog(models.Model):
+    """User Inquiry Log"""
+
+    log_owner = models.ForeignKey(
+        "UserInquiry",
+        on_delete=models.CASCADE,
+        related_name="logs",
+    )
+    related_with = models.ForeignKey(
+        "UserInquiry",
+        on_delete=models.CASCADE,
+        related_name="related_logs",
+    )
+    ref = models.ForeignKey(
+        "InquiryRequest", on_delete=models.CASCADE, related_name="logs"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    message = models.ForeignKey(
+        InquiryLogMessage,
+        on_delete=models.PROTECT,
+        related_name="logs",
+    )
+
+    def __str__(self) -> str:
+        return (
+            f"{self.log_owner.user} -- "
+            f"{self.created_at_readable} -- "
+            f"{self.log_message_body}"
+        )
+
+    @property
+    def created_at_readable(self) -> str:
+        """Get created_at in readable format."""
+        return self.created_at.strftime("%H:%M, %d.%m.%Y")
+
+    def create_email_schema(self) -> _EmailSchema:
+        """Create email schema based on log message and related user."""
+        return _EmailSchema(
+            body=self.email_body,
+            subject=self.email_title,
+            recipients=[self.log_owner.user.email],
+            type=self.message.log_type,
+        )
+
+    def send_email_to_user(self) -> None:
+        """Send email to user with new inquiry request state"""
+        schema = self.create_email_schema()
+        _EmailTemplate.send_email(schema)
+
+    @property
+    def log_message_body(self) -> str:
+        """Parse message body to include user related with log"""
+        return _ContentParser(self).parse_log_body
+
+    @property
+    def email_title(self) -> str:
+        """Parse email title to include user related with log"""
+        return _ContentParser(self).parse_email_title
+
+    @property
+    def email_body(self) -> str:
+        """Parse email body to include user related with log"""
+        return _ContentParser(self, url=self.ulr_to_profile).parse_email_body
+
+    @property
+    def ulr_to_profile(self) -> str:
+        """Get url to profile based on log type"""
+        # TODO(bartnyk): We need await for routing from frontend.
+        # Then, based on user declared_role field we can generate url to profile.
+        if self.message.log_type == InquiryLogMessage.MessageType.OUTDATED:
+            return f"URL_FOR_SENDER"
+        elif self.message.log_type == InquiryLogMessage.MessageType.OUTDATED_REMINDER:
+            return f"URL_FOR_RECIPIENT"
+        return ""
+
+    def save(self, *args, **kwargs):
+        if self.message.send_mail and self._state.adding:
+            self.send_email_to_user()
+        super().save(*args, **kwargs)
+        logger.info(f"New UserInquiryLog (ID: {self.pk}) created: {self}")
 
 
 class InquiryPlan(models.Model):
@@ -49,8 +197,25 @@ class InquiryPlan(models.Model):
     def __str__(self):
         return f"{self.name}({self.limit})"
 
+    @classmethod
+    def basic(cls) -> "InquiryPlan":
+        """Get basic plan"""
+        return cls.objects.get_or_create(**basic_plan.dict())[0]
+
+    @classmethod
+    def premium(cls) -> "InquiryPlan":
+        """Get premium plan"""
+        return cls.objects.get_or_create(**premium_plan.dict())[0]
+
 
 class UserInquiry(models.Model):
+    class UserInquiryManager(models.Manager):
+        def limit_reached(self) -> models.QuerySet:
+            """Get users with limit reached"""
+            return self.filter(counter__gte=models.F("plan__limit"))
+
+    objects = UserInquiryManager()
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True
     )
@@ -65,7 +230,7 @@ class UserInquiry(models.Model):
 
     @property
     def can_make_request(self):
-        return self.limit >= self.counter
+        return self.counter < self.limit
 
     @property
     def left(self):
@@ -82,37 +247,141 @@ class UserInquiry(models.Model):
 
     def increment(self):
         """Increase by one counter"""
-        self.counter += 1
-        self.save()
+        if self.counter < self.plan.limit:
+            self.counter += 1
+            self.save(update_fields=("counter",))
+        self.check_limit_to_notify()
+
+    def check_limit_to_notify(self) -> None:
+        """Decide user should be notified about reaching the limit"""
+        if self.counter == self.plan.limit:
+            self.notify_about_limit(force=True)
+
+    def notify_about_limit(self, force: bool = False) -> None:
+        """Notify user about reaching the limit"""
+        self.mail_about_limit(force_send=force)
+        self.notification_about_limit(force_send=force)
+
+    def mail_about_limit(self, force_send: bool = False) -> None:
+        """Send email notification about reaching the limit"""
+        if (
+            _EmailTemplate.objects.can_sent_inquiry_limit_reached_email(self.user)
+            or force_send
+        ):
+            template = _EmailTemplate.objects.inquiry_limit_reached_template()
+            schema = _EmailSchema(
+                body=template.body,
+                subject=template.subject,
+                recipients=[self.user.email],
+                type=_EmailTemplate.EmailType.INQUIRY_LIMIT,
+            )
+            _EmailTemplate.send_email(schema)
+
+    def notification_about_limit(self, force_send: bool = False) -> None:
+        """Create notification about reaching the limit"""
+        inquiry_pool_exhausted.send(
+            sender=self.__class__, user=self.user, force=force_send
+        )
+
+    def decrement(self):
+        """Decrease by one counter"""
+        if self.counter > 0:
+            self.counter -= 1
+            self.save()
+
+    @property
+    def get_days_until_next_reference(self) -> int:
+        """
+        Calculate the number of days remaining until the next reference date.
+
+        The reference dates are May 31st and November 30th of the current year.
+        If today's date is on or before May 31st, the reference date is May 31st.
+        If today's date is after May 31st, the reference date is November 30th.
+        """
+        today = datetime.today()
+        year = today.year
+
+        # Define reference dates for the current year
+        may_31_this_year = datetime(year, 5, 31)
+        nov_30_this_year = datetime(year, 11, 30)
+
+        # Determine the next reference date based on the current date
+        if today <= may_31_this_year:
+            next_reference_date = may_31_this_year
+        else:
+            next_reference_date = nov_30_this_year
+
+        # Calculate the difference in days until the next reference date
+        days_until_next_reference = (next_reference_date - today).days
+        return max(days_until_next_reference, 0)
 
     def __str__(self):
         return f"{self.user}: {self.counter}/{self.plan.limit}"
 
 
-class RequestType(models.Model):
-    name = models.CharField(max_length=240)
-
-
-class InquiryRequestQuerySet(models.QuerySet):
-    def resolved(self):
-        return self.filter(status=self.model.RESOLVED_STATES)
-
-    def active(self):
-        return self.filter(status=self.model.ACTIVE_STATES)
-
-
 class InquiryRequestManager(models.Manager):
-    def get_queryset(self):
-        return InquiryRequestQuerySet(self.model, using=self._db)
+    def contacts(self, user_instance: settings.AUTH_USER_MODEL) -> models.QuerySet:
+        """Query user contacts (accepted requests)"""
+        return self.filter(
+            models.Q(status=InquiryRequest.STATUS_ACCEPTED)
+            & (models.Q(sender=user_instance) | models.Q(recipient=user_instance))
+        )
 
-    def resolved(self):
-        return self.get_queryset().resolved()
+    def outdated_for_sender(self) -> models.QuerySet:
+        """
+        Filter unread InquiryRequest that are older than week
+        """
+        week_ago = timezone.now() - timedelta(days=7)
+        return self.filter(status=InquiryRequest.STATUS_SENT, created_at__lte=week_ago)
 
-    def active(self):
-        return self.get_queryset().active()
+    def to_notify_sender_about_outdated(self) -> models.QuerySet:
+        """Filter outdated InquiryRequest have not been logged yet."""
+        return self.outdated_for_sender().exclude(
+            logs__message__log_type=InquiryLogMessage.MessageType.OUTDATED
+        )
+
+    def to_remind_recipient_about_outdated(self) -> models.QuerySet:
+        """
+        Filter InquiryRequest in conditions:
+        - older than 3 days and no reminder logs created
+        - older than 6 days and only 1 reminder log created
+
+        Queries are that complicated because we want to ensure that user won't get spam.
+        """
+        curr_date = timezone.now()
+        _3_days = curr_date - timedelta(days=3)
+        _6_days = curr_date - timedelta(days=6)
+
+        # older than 3 days and no reminder logs created
+        _3_days_qs = self.filter(
+            status=InquiryRequest.STATUS_SENT, created_at__lte=_3_days
+        ).exclude(
+            logs__message__log_type=InquiryLogMessage.MessageType.OUTDATED_REMINDER
+        )
+
+        # older than 6 days and only 1 reminder log created
+        _6_days_qs = (
+            self.filter(status=InquiryRequest.STATUS_SENT, created_at__lte=_6_days)
+            .alias(
+                reminder_count=models.Count(
+                    models.Case(
+                        models.When(
+                            logs__message__log_type=InquiryLogMessage.MessageType.OUTDATED_REMINDER,
+                            then=1,
+                        ),
+                        output_field=models.IntegerField(),
+                    )
+                )
+            )
+            .filter(reminder_count=1)
+        )
+
+        return _3_days_qs.union(_6_days_qs)  # concat querysets without duplicates
 
 
 class InquiryRequest(models.Model):
+    objects = InquiryRequestManager()
+
     STATUS_NEW = "NOWE"
     STATUS_SENT = "WYSŁANO"
     STATUS_RECEIVED = "PRZECZYTANE"
@@ -121,16 +390,6 @@ class InquiryRequest(models.Model):
     UNSEEN_STATES = [STATUS_SENT]
     ACTIVE_STATES = [STATUS_NEW, STATUS_SENT, STATUS_RECEIVED]
     RESOLVED_STATES = [STATUS_ACCEPTED, STATUS_REJECTED]
-
-    CATEGORY_CLUB = "club"
-    CATEGORY_TEAM = "team"
-    CATEGORY_USER = "user"
-
-    CATEGORY_CHOICES = (
-        (CATEGORY_USER, CATEGORY_USER),
-        (CATEGORY_TEAM, CATEGORY_TEAM),
-        (CATEGORY_CLUB, CATEGORY_CLUB),
-    )
 
     STATUS_CHOICES = (
         (STATUS_NEW, STATUS_NEW),
@@ -164,21 +423,25 @@ class InquiryRequest(models.Model):
         on_delete=models.CASCADE,
     )
 
-    category = models.CharField(
-        default=CATEGORY_USER, choices=CATEGORY_CHOICES, max_length=255
-    )
+    def create_log_for_sender(self, log_type: InquiryLogMessage.MessageType) -> None:
+        """Create log for sender"""
+        message = InquiryLogMessage.objects.get(log_type=log_type)
+        UserInquiryLog.objects.create(
+            log_owner=self.sender.userinquiry,
+            related_with=self.recipient.userinquiry,
+            message=message,
+            ref=self,
+        )
 
-    @property
-    def is_user_type(self):
-        return self.category == self.CATEGORY_USER
-
-    @property
-    def is_club_type(self):
-        return self.category == self.CATEGORY_CLUB
-
-    @property
-    def is_team_type(self):
-        return self.category == self.CATEGORY_TEAM
+    def create_log_for_recipient(self, log_type: InquiryLogMessage.MessageType) -> None:
+        """Create log for recipient"""
+        message = InquiryLogMessage.objects.get(log_type=log_type)
+        UserInquiryLog.objects.create(
+            log_owner=self.recipient.userinquiry,
+            related_with=self.sender.userinquiry,
+            message=message,
+            ref=self,
+        )
 
     def is_active(self):
         return self.status in self.ACTIVE_STATES
@@ -195,53 +458,160 @@ class InquiryRequest(models.Model):
     @transition(field=status, source=[STATUS_NEW], target=STATUS_SENT)
     def send(self):
         """Should be appeared when message was distributed to recipient"""
-        request_new(self)
 
     @transition(field=status, source=[STATUS_SENT], target=STATUS_RECEIVED)
     def read(self):
         """Should be appeared when message readed/seen by recipient"""
+        logger.info(
+            f"{self.recipient} read request from {self.sender}. -- InquiryRequestID: {self.pk}"
+        )
 
     @transition(
         field=status,
-        source=[STATUS_NEW, STATUS_SENT, STATUS_RECEIVED],
+        source=ACTIVE_STATES,
         target=STATUS_ACCEPTED,
     )
-    def accept(self):
+    def accept(self) -> None:
         """Should be appeared when message was accepted by recipient"""
+
         logger.debug(
             f"#{self.pk} reuqest accepted creating sender and recipient contanct body"
         )
-        self.body = ContactBodySnippet.generate(self.sender)
-        self.body_recipient = ContactBodySnippet.generate(self.recipient)
-        request_accepted(self)
+        self.create_log_for_sender(InquiryLogMessage.MessageType.ACCEPTED)
+        self.set_bodies()
+        logger.info(
+            f"{self.recipient} accepted request from {self.sender}. -- InquiryRequestID: {self.pk}"
+        )
+        inquiry_accepted.send(sender=self.__class__, inquiry_request=self)
 
     @transition(
         field=status,
-        source=[STATUS_NEW, STATUS_SENT, STATUS_RECEIVED],
+        source=ACTIVE_STATES,
         target=STATUS_REJECTED,
     )
-    def reject(self):
+    def reject(self) -> None:
         """Should be appeared when message was rejected by recipient"""
-        request_declined(self)
+
+        self.create_log_for_sender(InquiryLogMessage.MessageType.REJECTED)
+        logger.info(
+            f"{self.recipient} rejected request from {self.sender}. -- InquiryRequestID: {self.pk}"
+        )
+        inquiry_rejected.send(sender=self.__class__, inquiry_request=self)
 
     def save(self, *args, **kwargs):
+        recipient_profile_uuid = kwargs.pop("recipient_profile_uuid", None)
+        self._recipient_profile_uuid = recipient_profile_uuid
+        adding = self._state.adding
+
         if self.status == self.STATUS_NEW:
-            self.send()  # @todo due to problem with detecting changes of paramters here is hax to alter status to send, durgin which message is sedn via mail
+            self.send()
+
         super().save(*args, **kwargs)
+        if recipient_profile_uuid:
+            inquiry_sent.send(
+                sender=self.__class__,
+                inquiry_request=self,
+                profile_uuid=recipient_profile_uuid,
+            )
+
+        if adding:
+            self.sender.userinquiry.increment()  # type: ignore
+            self.create_log_for_recipient(
+                InquiryLogMessage.MessageType.NEW,
+            )
+            logger.info(
+                f"{self.sender} sent request to {self.recipient}. -- InquiryRequestID: {self.pk}"
+            )
+
+    def set_bodies(self) -> None:
+        """Set contact bodies for inquire request"""
+        self.body = self.sender.inquiry_contact.contact_body  # type: ignore
+        self.body_recipient = self.recipient.inquiry_contact.contact_body  # type: ignore
+        super().save(update_fields=["body", "body_recipient"])
+
+    def reward_sender(self) -> None:
+        """Reward sender if request is outdated. Create log for sender."""
+        if not self.can_be_rewarded:
+            raise ForbiddenLogAction("Cannot reward sender anymore.")
+
+        self.sender.userinquiry.decrement()
+        inquiry_restored.send(sender=self.__class__, inquiry_request=self)
+        self.create_log_for_sender(InquiryLogMessage.MessageType.OUTDATED)
+
+    def notify_recipient_about_outdated(self) -> None:
+        """
+        Create log for recipient that request require action.
+        Raise ForbiddenLogAction if recipient cannot be reminded anymore.
+        """
+        if not self.can_be_reminded:
+            raise ForbiddenLogAction("Cannot create more than 2 reminders.")
+        inquiry_reminder.send(sender=self.__class__, inquiry_request=self)
+        self.create_log_for_recipient(InquiryLogMessage.MessageType.OUTDATED_REMINDER)
+
+    @property
+    def can_be_reminded(self) -> bool:
+        """Check if request recipient can be reminded"""
+        return self in self.__class__.objects.to_remind_recipient_about_outdated()
+
+    @property
+    def can_be_rewarded(self) -> bool:
+        """Check if request sender can be rewarded"""
+        return self in self.__class__.objects.to_notify_sender_about_outdated()
 
     def __str__(self):
         return f"{self.sender} --({self.status})-> {self.recipient}"
 
 
-class ContactBodySnippet:
+class InquiryContact(models.Model):
+    phone_number = models.CharField(
+        _("Numer telefonu"), max_length=15, blank=True, null=True
+    )
+    dial_code = models.IntegerField(
+        _("Dial Code"),
+        blank=True,
+        null=True,
+        help_text=_("Country dial code for the phone number."),
+    )
+    email = models.EmailField(_("Email"), max_length=100, blank=True, null=True)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name="inquiry_contact",
+    )
+
+    @property
+    def _phone(self) -> str:
+        """Get phone number with dial code"""
+        if self.dial_code and self.phone_number:
+            return f"+{self.dial_code} {self.phone_number}"
+        elif self.phone_number:
+            return self.phone_number
+        return ""
+
+    @property
+    def _email(self) -> str:
+        """Get email"""
+        return self.email or self.user.email  # type: ignore
+
+    @_email.setter
+    def _email(self, value: str) -> None:
+        """Set email"""
+        self.email = value
+
+    @property
+    def contact_body(self) -> str:
+        """Get text-based contact body"""
+        return (
+            f"{_('Numer telefonu')}: {self._phone or '-'} / "
+            f"{_('Email')}: {self._email}"
+        )
+
     @classmethod
-    def generate(cls, user):
+    def parse_custom_body(cls, phone_number: str, dial_code: int, email: str) -> str:
+        """Parse custom body"""
+        dummy_contact = cls(phone_number=phone_number, dial_code=dial_code, email=email)
+        return dummy_contact.contact_body
 
-        body = ""
-        if user.profile.phone:
-            body += f"{user.profile.phone} / \n"
-
-        body += f"{user.email}\n"
-        # if user.profile.facebook_url:
-        #     body += f'FB: {user.profile.facebook_url}\n'
-        return body
+    def __str__(self) -> str:
+        return f"{self.user} -- {self.contact_body}"

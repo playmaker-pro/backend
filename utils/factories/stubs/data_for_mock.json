@@ -1,0 +1,162 @@
+{
+  "User": [
+    {
+      "first_name": "Imie",
+      "last_name": "Nazwisko",
+      "password": "admin",
+      "is_staff": true,
+      "is_superuser": true,
+      "email": "admin@playmaker.pro",
+      "declared_role": "G"
+    }
+  ],
+  "PlayerProfile": [
+    {
+      "user": {
+        "first_name": "Jan",
+        "last_name": "Nowak",
+        "email": "jannowak@playmaker.pro",
+        "declared_role": "P"
+      },
+      "team_object": {
+          "name": "Team 1",
+          "club": {
+            "name": "Club 1"
+          }
+      },
+      "team_history_object": {
+        "team": {
+          "name": "Team 1",
+          "club": {
+            "name": "Club 1"
+          }
+        },
+        "league_history": {
+          "league": {
+            "name": "League 1"
+          },
+          "season": {
+            "name": "2022/2023"
+          }
+        }
+      }
+    },
+    {
+      "user": {
+        "first_name": "Marcin",
+        "last_name": "Kowalski",
+        "email": "marcinkowalski@playmaker.pro",
+        "declared_role": "P"
+      },
+      "team_object": {
+          "name": "Team 2",
+          "club": {
+            "name": "Club 2"
+          }
+        },
+      "team_history_object": {
+        "team": {
+          "name": "Team 2",
+          "club": {
+            "name": "Club 2"
+          }
+        },
+        "league_history": {
+          "league": {
+            "name": "League 2"
+          },
+          "season": {
+            "name": "2022/2023"
+          }
+        }
+      }
+    }
+  ],
+  "CoachProfile": [
+    {
+      "user": {
+        "first_name": "Kamil",
+        "last_name": "Ślimak",
+        "email": "kamilslimak@playmaker.pro",
+        "declared_role": "T"
+      },
+      "team_object": {
+          "name": "Team 1",
+          "club": {
+            "name": "Club 1"
+          }
+        },
+      "team_history_object": {
+        "team": {
+          "name": "Team 1",
+          "club": {
+            "name": "Club 1"
+          }
+        },
+        "league_history": {
+          "league": {
+            "name": "League 1"
+          },
+          "season": {
+            "name": "2022/2023"
+          }
+        }
+      }
+    }
+  ],
+  "GuestProfile": [
+    {
+      "user": {
+        "first_name": "Jan",
+        "last_name": "Naj",
+        "email": "jannaj@playmaker.pro"
+      }
+    },
+    {
+      "user": {
+        "email": "admin@playmaker.pro"
+      }
+    }
+  ],
+  "TeamHistory": [
+    {
+      "team": {
+        "name": "Legia Warszawa"
+      },
+      "league_history": {
+        "league": {
+          "name": "Ekstraklasa"
+        },
+        "season": {
+          "name": "2020/2021"
+        }
+      }
+    },
+    {
+      "team": {
+        "name": "Legia Warszawa"
+      },
+      "league_history": {
+        "league": {
+          "name": "Ekstraklasa"
+        },
+        "season": {
+          "name": "2021/2022"
+        }
+      }
+    },
+    {
+      "team": {
+        "name": "Legia Warszawa"
+      },
+      "league_history": {
+        "league": {
+          "name": "Ekstraklasa"
+        },
+        "season": {
+          "name": "2022/2023"
+        }
+      }
+    }
+  ]
+}

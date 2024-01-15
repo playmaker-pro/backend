@@ -1,14 +1,15 @@
-from django.core.management.base import BaseCommand
 import csv
+
+from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
+
+from clubs.models import Team
 from profiles import models
 from profiles.views import (
     get_profile_model,
 )  # @todo this shoudl goes to utilities, views and commands are using this utility
-from django.contrib.auth import get_user_model
 
-from .base import BaseCsvDump, BaseCommandCsvHandler
-from clubs.models import Team
-
+from .base import BaseCommandCsvHandler, BaseCsvDump
 
 User = get_user_model()
 
@@ -17,7 +18,6 @@ class Command(BaseCommandCsvHandler, BaseCommand, BaseCsvDump):
     help = "Uploads data from csv"
 
     def handle(self, *args, **options):
-
         _type = options.get("type")
         _marker = options.get("marker")
         _dryrun = options.get("dryrun")
@@ -61,7 +61,7 @@ class Command(BaseCommandCsvHandler, BaseCommand, BaseCsvDump):
                     print(f"Save for that row not possible. Checksums are different.")
                     continue
                 else:
-                    from clubs.models import League, Club
+                    from clubs.models import Club, League
 
                     if changed_data_mapper_id:
                         team.data_mapper_id = int(changed_data_mapper_id)

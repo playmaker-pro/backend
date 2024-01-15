@@ -1,23 +1,22 @@
 import typing
 from abc import abstractmethod
 from datetime import datetime
+from itertools import groupby
+
 from django.core.exceptions import ObjectDoesNotExist
 from pm_core.services.models import (
-    GameSchema,
     EventSchema,
-    PlayerSeasonStatsSchema,
-    PlayerSeasonStatsListSchema,
+    GameSchema,
     GamesSchema,
     PlayerScoreSchema,
-    PlayerSeasonScoreSchema,
     PlayerSeasonScoreListSchema,
+    PlayerSeasonScoreSchema,
+    PlayerSeasonStatsListSchema,
+    PlayerSeasonStatsSchema,
 )
-from adapters.exceptions import (
-    WrongDataFormatException,
-    DataShortageLogger,
-)
+
+from adapters.exceptions import DataShortageLogger, WrongDataFormatException
 from adapters.utils import resolve_stats_list
-from itertools import groupby
 from mapper.models import MapperEntity
 
 
@@ -41,7 +40,7 @@ class BasePlayerSerializer:
         """get league name from s51 (scrapper has different league names)"""
         entity = MapperEntity.objects.filter(mapper_id=_id).first()
         if entity:
-            return entity.target.leaguehistory.league.highest_parent.name
+            return entity.target.leaguehistory.league.name
 
 
 class GameSerializer(BasePlayerSerializer):

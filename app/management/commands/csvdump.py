@@ -1,16 +1,17 @@
-from django.core.management.base import BaseCommand
 import csv
+
+from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
+
 from profiles import models
 from profiles.views import (
     get_profile_model,
 )  # @todo this shoudl goes to utilities, views and commands are using this utility
-from django.contrib.auth import get_user_model
-
 
 User = get_user_model()
 
 
-from .base import BaseCsvDump, BaseCommandCsvHandler
+from .base import BaseCommandCsvHandler, BaseCsvDump
 
 
 class Command(BaseCommandCsvHandler, BaseCommand, BaseCsvDump):
@@ -27,7 +28,6 @@ class Command(BaseCommandCsvHandler, BaseCommand, BaseCsvDump):
         if _type == "player":
             _marker += "_player_"
             for player in models.PlayerProfile.objects.all().order_by("user__id"):
-
                 structure = self.get_player_structure(player)
                 checksum = self.calculate_checksum(structure)
                 structure[self._moderate_field("checksum")] = checksum

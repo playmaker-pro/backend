@@ -4,24 +4,41 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('mapper', '0001_initial'),
+        ("mapper", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='mapperentity',
-            name='database_source',
-            field=models.CharField(choices=[('scrapper_mongodb', 'scrapper_mongodb'), ('s38', 's38'), ('external', 'external'), ('xlsx', 'xlsx')], max_length=100),
+            model_name="mapperentity",
+            name="database_source",
+            field=models.CharField(
+                choices=[
+                    ("scrapper_mongodb", "scrapper_mongodb"),
+                    ("s38", "s38"),
+                    ("external", "external"),
+                    ("xlsx", "xlsx"),
+                ],
+                max_length=100,
+            ),
         ),
         migrations.AddField(
-            model_name='mapperentity',
-            name='related_type',
-            field=models.CharField(choices=[('team', 'team'), ('player', 'playerprofile'), ('club', 'club'), ('team history', 'teamhistory'), ('league', 'league_history__league'), ('play', 'league_history')], max_length=100),
+            model_name="mapperentity",
+            name="related_type",
+            field=models.CharField(
+                choices=[
+                    ("team", "team"),
+                    ("player", "playerprofile"),
+                    ("club", "club"),
+                    ("team history", "teamhistory"),
+                    ("league", "league_history__league"),
+                    ("play", "league_history"),
+                ],
+                max_length=100,
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='mapperentity',
-            unique_together={('target', 'related_type')},
+            name="mapperentity",
+            unique_together={("target", "related_type")},
         ),
     ]

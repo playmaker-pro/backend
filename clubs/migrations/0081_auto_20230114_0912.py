@@ -4,20 +4,25 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('clubs', '0080_auto_20230105_1950'),
+        ("clubs", "0080_auto_20230105_1950"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='team',
-            name='data_mapper_id',
-            field=models.PositiveIntegerField(blank=True, help_text='ID of object placed in data_ database. It should always reflect scheme which represents.', null=True),
+            model_name="team",
+            name="data_mapper_id",
+            field=models.PositiveIntegerField(
+                blank=True,
+                help_text="ID of object placed in data_ database. It should always reflect scheme which represents.",
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='team',
-            name='scrapper_autocreated',
-            field=models.BooleanField(default=False, help_text='Auto-created from new scrapper'),
+            model_name="team",
+            name="scrapper_autocreated",
+            field=models.BooleanField(
+                default=False, help_text="Auto-created from new scrapper"
+            ),
         ),
     ]

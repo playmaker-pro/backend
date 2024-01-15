@@ -1,12 +1,10 @@
 import logging
-from .notify import notify_duplicated_default_annoucement_plan
-from django.conf import settings
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
-from .models import AnnouncementPlan, AnnouncementUserQuota
 from datetime import timedelta
 
+from django.conf import settings
+
+from .models import AnnouncementPlan, AnnouncementUserQuota
+from .notify import notify_duplicated_default_annoucement_plan
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +43,7 @@ class MarketPlaceService:
             )
             self.create_default_plans()
             if retry:
-                self._get_default_plan(
+                return self._get_default_plan(
                     retry=False
                 )  # this prevent any infinitve loop if there is no plans defined in settings.
         except AnnouncementPlan.MultipleObjectsReturned:

@@ -1,29 +1,32 @@
+import logging
 import typing
-from requests.exceptions import ConnectionError
+
+from django.core.exceptions import ObjectDoesNotExist
 from pm_core.services.errors import ServiceRaisedException
 from pm_core.services.models import (
-    PlayerBaseSchema,
-    TeamSchema,
     BaseLeagueSchema,
-    GameSchema,
     EventSchema,
-    PlayerSeasonStatsListSchema,
+    GameSchema,
     GamesSchema,
+    PlayerBaseSchema,
+    PlayerSeasonStatsListSchema,
+    TeamSchema,
     PlayerScoreSchema,
     PlayerSeasonScoreListSchema,
 )
-from pm_core.services.models.consts import ExcludedLeague, DEFAULT_LEAGUE_EXCLUDE
-from .serializers import GameSerializer, StatsSerializer, ScoreSerializer
+from pm_core.services.models.consts import DEFAULT_LEAGUE_EXCLUDE, ExcludedLeague
+from requests.exceptions import ConnectionError
+
 from mapper.models import Mapper
+
+from .base_adapter import BaseAdapter
 from .exceptions import (
+    DataShortageLogger,
     PlayerHasNoMapperException,
     PlayerMapperEntityNotFoundLogger,
-    DataShortageLogger,
     ScrapperIsNotRespongingLogger,
 )
-from .base_adapter import BaseAdapter
-import logging
-from django.core.exceptions import ObjectDoesNotExist
+from .serializers import GameSerializer, StatsSerializer, ScoreSerializer
 from .utils import resolve_stats_list
 
 logger = logging.getLogger(__name__)
@@ -31,7 +34,6 @@ NO_CONNECTION_LOG = ScrapperIsNotRespongingLogger()
 
 
 class PlayerAdapterBase(BaseAdapter):
-
     data: PlayerBaseSchema = None
 
     def __init__(self, player, *args, **kwargs) -> None:

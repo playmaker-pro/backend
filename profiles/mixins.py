@@ -1,5 +1,6 @@
-from functools import cached_property, lru_cache
-from .utils import supress_exception, conver_vivo_for_api
+from functools import cached_property
+
+from profiles import utils
 
 
 class SoccerDisplayMixin:
@@ -23,9 +24,7 @@ class SoccerDisplayMixin:
 
     @property
     def display_voivodeship(self):
-        if self.voivodeship_raw:
-            return conver_vivo_for_api(self.voivodeship_raw)
-        return conver_vivo_for_api(self.voivodeship)
+        return utils.conver_vivo_for_api(self.voivodeship)
 
 
 class TeamObjectsDisplayMixin:
@@ -43,73 +42,73 @@ class TeamObjectsDisplayMixin:
     def get_team_object(self):
         return self.team_object
 
-    @supress_exception
+    @utils.supress_exception
     @property
     def club_object(self):
         if self.get_team_object:
             return self.get_team_object.club
 
     @property
-    @supress_exception
+    @utils.supress_exception
     def display_club(self):
         return self.get_team_object.club.display_club
 
     @property
-    @supress_exception
+    @utils.supress_exception
     def display_team(self):
         return self.get_team_object.display_team
 
     @property
-    @supress_exception
+    @utils.supress_exception
     def display_seniority(self):
         return self.get_team_object.display_seniority
 
     @property
-    @supress_exception
+    @utils.supress_exception
     def display_name_junior(self):
         return self.get_team_object.display_name_junior
 
     @property
-    @supress_exception
+    @utils.supress_exception
     def display_gender(self):
         return self.get_team_object.display_gender
 
     @property
-    @supress_exception
+    @utils.supress_exception
     def display_voivodeship(self):
         return self.get_team_object.club.display_voivodeship
 
     @property
-    @supress_exception
+    @utils.supress_exception
     def display_league(self):
         return self.get_team_object.display_league
 
     @property
-    @supress_exception
+    @utils.supress_exception
     def display_league_top_parent(self):
         return self.get_team_object.display_league_top_parent
 
     @property
-    @supress_exception
+    @utils.supress_exception
     def display_league_seniority_name(self):
         return self.get_team_object.display_league_seniority_name
 
     @property
-    @supress_exception
+    @utils.supress_exception
     def display_league_group_name(self):
         return self.get_team_object.display_league_group_name
 
     @property
-    @supress_exception
+    @utils.supress_exception
     def display_league_voivodeship(self):
         return self.get_team_object.display_league_voivodeship
 
     @property
-    @supress_exception
+    @utils.supress_exception
     def get_league_permalink(self):
         return self.get_team_object.get_league_permalink
 
     @property
-    @supress_exception
+    @utils.supress_exception
     def get_team_permalink(self):
         return self.get_team_object.get_permalink()

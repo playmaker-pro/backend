@@ -1,19 +1,17 @@
 from django.test import TestCase
+
 from profiles import models
 from roles import definitions
 from users.models import User
 from utils import testutils as utils
-
+from utils.factories import CoachProfileFactory, PlayerProfileFactory
 
 utils.silence_explamation_mark()
 
 
 class ChangeRoleTests(TestCase):
     def setUp(self):
-        utils.create_system_user()
-        self.user = User.objects.create(
-            email="username", declared_role=definitions.PLAYER_SHORT
-        )
+        self.user = PlayerProfileFactory.create(user__email="username").user
         self.user.profile.VERIFICATION_FIELDS = ["bio"]
         self.user.profile.COMPLETE_FIELDS = ["team"]  # , 'club_raw']
         self.user.profile.bio = "Lubie Herbate"
@@ -23,7 +21,7 @@ class ChangeRoleTests(TestCase):
         assert self.user.is_verified is True
         print(f"----> setUp {self.user.state}")
 
-    def test__1__changing_role_to_coach_from_player_cause_user_sate_to_missing_verification_data(
+    def test__1__changing_role_to_coach_from_player_cause_user_sate_to_missing_verification_data(  # noqa: E501
         self,
     ):
         assert self.user.is_verified is True
@@ -42,7 +40,9 @@ class ChangeRoleTests(TestCase):
         assert self.user.is_verified is False
         assert self.user.is_missing_verification_data is False
 
-    def test_changing_role_to_geust_from_player_cause_user_to_be_still_verified(self):
+    def test_changing_role_to_geust_from_player_cause_user_to_be_still_verified(
+        self,
+    ):  # noqa: E501
         assert self.user.is_verified is True
         change = models.RoleChangeRequest.objects.create(
             user=self.user, new=definitions.GUEST_SHORT
@@ -54,7 +54,7 @@ class ChangeRoleTests(TestCase):
         print(f"---->  {self.user.state}")
         assert self.user.is_verified is True
 
-    def test_changing_role_to_scout_from_unverifed_player_cause_user_to_be_auto_verified(
+    def test_changing_role_to_scout_from_unverifed_player_cause_user_to_be_auto_verified(  # noqa: E501
         self,
     ):
         assert self.user.is_verified is True
@@ -73,7 +73,7 @@ class ChangeRoleTests(TestCase):
         assert self.user.is_verified is True
         assert self.user.is_missing_verification_data is False
 
-    def test_changing_role_to_guest_from_unverifed_player_cause_user_to_be_auto_verified(
+    def test_changing_role_to_guest_from_unverifed_player_cause_user_to_be_auto_verified(  # noqa: E501
         self,
     ):
         assert self.user.is_verified is True
@@ -99,8 +99,7 @@ class ChangeRoleTests(TestCase):
 
 class TestProfilePercentageTests(TestCase):
     def setUp(self):
-        utils.create_system_user()
-        user = User.objects.create(email="username", declared_role="P")
+        user = PlayerProfileFactory.create(user__email="username", bio=None).user
         user.profile.VERIFICATION_FIELDS = ["bio"]
         user.profile.COMPLETE_FIELDS = ["team"]  # , 'club_raw']
         self.profile = user.profile
@@ -122,7 +121,7 @@ class TestProfilePercentageTests(TestCase):
         assert self.profile.percentage_left_verified == 0
 
     def test_initialy_only_verification_fields(self):
-        """This scenario cannot occure. Only by overwriting base code of profile model."""
+        """This scenario cannot occure. Only by overwriting base code of profile model."""  # noqa: E501
         self.profile.COMPLETE_FIELDS = []
         assert self.profile.percentage_completion == 0  # here
         # with pytest.raises(models.VerificationCompletionFieldsWrongSetup):
@@ -161,52 +160,18 @@ class InitialBaseProfileCreationTests(TestCase):
     """Idea is to create any profile and check if statuses are corectly behaved"""
 
     def setUp(self):
-        utils.create_system_user()
-        user = User.objects.create(email="username", declared_role="T")
+        user = CoachProfileFactory.create(user__email="username").user
         user.profile.VERIFICATION_FIELDS = ["bio"]
         self.profile = user.profile
 
     def test__has_data_id__should_be_false(self):
         assert self.profile.has_data_id is False
 
-    # def test_initial_state_of_fresh_profile_is_not_ready(self):
-    #     assert self.profile.is_ready_for_verification() is False
-
-
-class InitalPlayerProfileCreationTests(TestCase):
-    """Idea is to create PLAYER profile and check if statuses are corectly behaved"""
-
-    def setUp(self):
-        utils.create_system_user()
-        user = User.objects.create(email="username", declared_role="P")
-        self.profile = user.profile
-
-    def test_initial_paramters(self):
-        assert self.profile.position_fantasy is None
-
-    def test_player_profile_set__position__should_affect__fantasy_position(self):
-        """FANTASY_MAPPING = {
-        1: FANTASY_GOAL_KEEPER,
-        ...
-        """
-        for number, result in self.profile.FANTASY_MAPPING.items():
-            self.profile.position_raw = number
-            self.profile.save()
-            # assert isinstance(number, int)
-            assert isinstance(result, str)
-            assert self.profile.position_fantasy is not None
-            assert self.profile.position_fantasy == result
-            print(
-                f"position:{self.profile.position_raw} ({number}, {result}) fantasy:{self.profile.position_fantasy}"
-            )
-
-
 class ProfileVerificationExistingProfileWithReadyForVerificationTests(TestCase):
     """Freshly created user is modifing profile fields which are Verification fields."""
 
     def setUp(self):
-        utils.create_system_user()
-        self.user = User.objects.create(email="username", declared_role="T")
+        self.user = CoachProfileFactory.create(user__email="username").user
         self.user.profile.VERIFICATION_FIELDS = ["bio"]
         self.user.profile.bio = "bbbb"
         self.user.profile.save()
@@ -246,8 +211,7 @@ class ProfileVerificationExistingProfileWithReadyForVerificationTests(TestCase):
 
 class ProfileUserIsVerifiedAndModifiesVerificationFields(TestCase):
     def setUp(self):
-        utils.create_system_user()
-        self.user = User.objects.create(email="username", declared_role="T")
+        self.user = CoachProfileFactory.create(user__email="username").user
         self.user.profile.VERIFICATION_FIELDS = ["bio"]
         self.user.profile.bio = "bbbb"
         self.user.profile.save()
@@ -271,8 +235,7 @@ class ProfileUserIsVerifiedAndModifiesVerificationFields(TestCase):
 
 class ProfileCompletnesTests(TestCase):
     def test_profile_is_complete(self):
-        utils.create_system_user()
-        user = User.objects.create(email="username", declared_role="T")
+        user = CoachProfileFactory.create(user__email="username", bio=None).user
         user.profile.COMPLETE_FIELDS = ["bio"]
         user.profile.VERIFICATION_FIELDS = []
         assert user.profile.is_complete is False

@@ -2,21 +2,19 @@ import logging
 import operator
 from functools import reduce
 
-from app import mixins
-from app.base.views import BasePMView
-from clubs.models import League
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.db.models import F, Q, Value, Window
 from django.db.models.functions import Concat, DenseRank
-
 from django.utils.translation import gettext_lazy as _
-from profiles.utils import get_datetime_from_age
 
-from clubs.models import Season
-from .models import PlayerFantasyRank
+from app import mixins
+from app.base.views import BasePMView
+from clubs.models import League, Season
+from profiles.utils import get_datetime_from_age
 from voivodeships.services import VoivodeshipService
 
+from .models import PlayerFantasyRank
 
 User = get_user_model()
 
@@ -32,7 +30,6 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
     paginate_limit = 20
 
     def filter_queryset(self, queryset):
-
         if self.filter_season_exact:
             queryset = queryset.filter(season__name=self.filter_season_exact)
 
@@ -69,9 +66,7 @@ class FantasyView(BasePMView, mixins.ViewFilterMixin, mixins.FilterPlayerViewMix
         if self.filter_vivo is not None:
             vivos = [i for i in self.filter_vivo]
             clauses = (
-                Q(
-                    player__playerprofile__team_object__club__voivodeship_obj__name=p
-                )
+                Q(player__playerprofile__team_object__club__voivodeship_obj__name=p)
                 for p in vivos
             )
             query = reduce(operator.or_, clauses)

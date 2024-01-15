@@ -1,0 +1,351 @@
+from unittest import TestCase
+
+import factory
+import pytest
+from django.core.management import CommandError, call_command
+from django.db.models import QuerySet
+
+from clubs import models as _models
+from clubs.management.commands.change_league_seniorty import (
+    Command as ChangeLeagueSeniorityCommand,
+)
+from utils.factories import (
+    ClubFactory,
+    LeagueFactory,
+    LeagueHistoryFactory,
+    SeniorityFactory,
+    TeamFactory,
+    TeamHistoryFactory,
+)
+
+
+@pytest.mark.django_db
+class TestChangeLeagueSeniority(TestCase):
+    command_name = "change_league_seniorty"
+    CENTRAL_JUNIOR_LEAGUE_NAME = "Centralna Liga Juniorow"
+
+    def setUp(self) -> None:
+        seniority = SeniorityFactory.create_batch(2)
+        self.clj_seniority: _models.Seniority = SeniorityFactory.create(
+            name=self.CENTRAL_JUNIOR_LEAGUE_NAME
+        )
+
+        leagues_names = [
+            "CLJ U-19",
+            "Liga Makroregionalna U-19",
+            "CLJ U-18",
+            "CLJ U-17",
+            "CLJ U-15",
+            "CLJ U-17 K",
+            "CLJ U-15 K",
+        ]
+        LeagueFactory.create_batch(
+            7,
+            name=factory.Sequence(lambda n: leagues_names[n % 7]),
+            seniority=factory.Sequence(lambda n: seniority[n % 2]),
+        )
+        self.seniority_command = ChangeLeagueSeniorityCommand()
+
+    def test_call_command(self):
+        """
+        Test if command change league seniority to "Centralna Liga Juniorow"
+        if requires are satisfied
+        """
+        leagues = _models.League.objects.all()
+        assert leagues.count() == 7
+        assert (
+            leagues.filter(seniority__name=self.CENTRAL_JUNIOR_LEAGUE_NAME).count() == 0
+        )
+
+        call_command(self.command_name)
+        leagues_refreshed: QuerySet[_models.League] = _models.League.objects.all()
+        assert leagues_refreshed.count() == 7
+        assert (
+            leagues_refreshed.filter(
+                seniority__name=self.CENTRAL_JUNIOR_LEAGUE_NAME
+            ).count()
+            == 7
+        )
+
+        for league in leagues:
+            assert league.seniority.name == self.CENTRAL_JUNIOR_LEAGUE_NAME
+
+        call_command(self.command_name)
+        LeagueFactory.create_batch(2)
+        leagues_refreshed2: QuerySet[_models.League] = _models.League.objects.all()
+        assert leagues_refreshed2.count() == 9
+        assert (
+            leagues_refreshed2.filter(
+                seniority__name=self.CENTRAL_JUNIOR_LEAGUE_NAME
+            ).count()
+            == 7
+        )
+
+    def test_call_command_no_seniority_object_found(self):
+        """Test if command creates new seniority object if it is not found in db"""
+        self.clj_seniority.delete()
+        call_command(self.command_name)
+        assert _models.Seniority.objects.count() == 3
+        assert _models.Seniority.objects.filter(
+            name=self.CENTRAL_JUNIOR_LEAGUE_NAME
+        ).exists()
+
+    def test_central_league_seniority_method(self):
+        """Test if central_league_seniority method returns proper object"""
+        result: _models.Seniority = self.seniority_command.central_league_seniority
+        assert isinstance(result, _models.Seniority)
+        assert result.name == self.CENTRAL_JUNIOR_LEAGUE_NAME
+
+    def test_change_league_seniority(self):
+        """Test if change_league_seniority method changes seniority of league objects"""
+        leagues = _models.League.objects.all()
+        self.seniority_command.change_league_seniority(leagues=leagues)
+
+        for league in leagues:
+            assert league.seniority.name == self.CENTRAL_JUNIOR_LEAGUE_NAME
+
+    def test_create_new_central_junior_seniority(self):
+        """
+        Test if create_new_central_junior_seniority method
+        creates new seniority object
+        """
+        self.clj_seniority.delete()
+        self.seniority_command.create_new_central_junior_seniority()
+        assert _models.Seniority.objects.count() == 3
+        assert _models.Seniority.objects.filter(
+            name=self.CENTRAL_JUNIOR_LEAGUE_NAME
+        ).exists()
+
+
+@pytest.mark.django_db
+class TestHidePredefinedLeagues(TestCase):
+    command_name = "hide_predefined_leagues"
+    LEAGUES_TO_HIDE = [
+        "II Liga PLF K",
+        "Futsal Ekstraklasa",
+        "Liga Makroregionalna U-19",
+        "I Liga PLF K",
+        "I Liga PLF",
+        "II Liga PLF",
+        "III Liga PLF",
+        "Ekstraliga PLF K",
+    ]
+
+    def setUp(self) -> None:
+        LeagueFactory.create_batch(
+            8, name=factory.Sequence(lambda n: self.LEAGUES_TO_HIDE[n % 8])
+        )
+
+    def test_call_command(self):
+        """Test if command hides predefined leagues"""
+        leagues = _models.League.objects.all()
+        assert leagues.count() == 8
+        assert leagues.filter(visible=True).count() == 8
+
+        call_command(self.command_name)
+        leagues_refreshed: QuerySet[_models.League] = _models.League.objects.all()
+        assert leagues_refreshed.count() == 8
+        assert leagues_refreshed.filter(visible=True).count() == 0
+
+    def test_call_command_no_league_found(self):
+        """Test if command does not raise error if no league is found in db"""
+        _models.League.objects.all().delete()
+        call_command(self.command_name)
+        assert _models.League.objects.count() == 0
+
+
+@pytest.mark.django_db
+class TestShortNameCommand(TestCase):
+    def setUp(self):
+        """
+        Set up testing environment with various clubs and teams using factories.
+        This setup creates different scenarios of club and team names to validate
+        the functionality of the short name creation logic.
+
+        Specific patterns like years, prefixes, and hyphens are chosen because they
+        are common in club names and have distinct handling rules in the short
+        name logic.
+        """
+        self.league = LeagueFactory.create(
+            name="Futsal"
+        )  # Use "Futsal" as it's a key term that affects short name generation
+        self.league_history = LeagueHistoryFactory.create(league=self.league)
+
+        self.club_with_year = ClubFactory(
+            name="Example Club With Year 1998"
+        )  # Test removal of years in club names
+        self.club_with_prefix_wrong_order = ClubFactory(
+            name="CLUB FC"
+        )  # Test rearranging prefixes
+        self.club_with_hyphen = ClubFactory(
+            name="Example-brand Club"
+        )  # Test handling of hyphens
+        self.club_with_hyphen_in_city_name = ClubFactory(
+            name="Kędzierzyn-Koźle Club"
+        )  # Ensure cities with hyphens are handled correctly
+        self.futsal_club = ClubFactory(
+            name="Example Club"
+        )  # Ensure cities with hyphens are handled correctly
+        self.primary_team = TeamFactory(
+            name="Example Team 1998", club=self.club_with_year
+        )  # Test suffix addition for clubs in the "Futsal" league
+        self.secondary_team = TeamFactory(
+            name="Example Team II", club=self.club_with_year
+        )
+        self.futsal_team = TeamFactory(
+            name="Example Futsal Team",
+            club=self.futsal_club,
+            league_history=self.league_history,
+        )
+
+    def test_command_output(self):
+        """
+        Test the correctness of the short name generation logic by checking the output
+        of the "create_short_name_for_club_and_team" command. This test focuses
+        on predefined scenarios, ensuring that names with specific patterns are
+        processed as expected.
+        """
+        call_command("create_short_name_for_club_and_team")
+
+        # Refresh the objects from the database
+        self.club_with_year.refresh_from_db()
+        self.club_with_prefix_wrong_order.refresh_from_db()
+        self.club_with_hyphen.refresh_from_db()
+        self.club_with_hyphen_in_city_name.refresh_from_db()
+        self.futsal_club.refresh_from_db()
+        self.primary_team.refresh_from_db()
+        self.secondary_team.refresh_from_db()
+        self.futsal_team.refresh_from_db()
+
+        # Assertions
+        assert self.club_with_year.short_name == "Example Club With Year"
+        assert self.club_with_prefix_wrong_order.short_name == "FC Club"
+        assert self.club_with_hyphen.short_name == "Example Club"
+        assert self.club_with_hyphen_in_city_name.short_name == "Kędzierzyn-Koźle Club"
+        assert self.futsal_club.short_name == "Example Club (Futsal)"
+        assert self.primary_team.short_name == "Example Club With Year"
+        assert self.secondary_team.short_name == "Example Club With Year II"
+        assert self.futsal_team.short_name == "Example Club"
+
+    def test_random_names(self):
+        """
+        Test the robustness of the short name generation logic using randomly generated
+        club and team names.
+        Note: For teams, the short name is based on its associated club's name
+        and not the team's own name.
+        The goal is to ensure that, even with unexpected input, the generated
+        short names adhere to certain standards.
+        """
+        clubs = ClubFactory.create_batch(20)
+        teams = TeamFactory.create_batch(20)
+
+        call_command("create_short_name_for_club_and_team")
+
+        for club in clubs:
+            club.refresh_from_db()
+            assert club.short_name  # ensure it's not an empty string
+            assert len(club.short_name) <= len(
+                club.name
+            )  # ensure it's shorter or equal to the original name
+
+        for team in teams:
+            team.refresh_from_db()
+            assert team.short_name  # ensure it's not an empty string
+            assert len(team.short_name) <= len(
+                team.club.name
+            )  # ensure the team's short name is shorter or equal to its club's name
+
+
+@pytest.mark.django_db
+class AddSeasonsCommandTest(TestCase):
+    command_name = "add_seasons"
+
+    def test_add_seasons_command(self):
+        """
+        Test the functionality of the `add_seasons` management command.
+
+        This test ensures that:
+        - Seasons in the specified range are added to the database.
+        """
+        # Call the management command
+        call_command(self.command_name, 2010, 2013)
+
+        # Assert that the seasons have been added
+        assert _models.Season.objects.filter(name="2010/2011").count() == 1
+        assert _models.Season.objects.filter(name="2011/2012").count() == 1
+        assert _models.Season.objects.filter(name="2012/2013").count() == 1
+        assert _models.Season.objects.filter(name="2013/2014").count() == 1
+
+    def test_add_seasons_command_only_accepts_integers(self):
+        """
+        Test that the command raises an error when provided with non-integer arguments.
+        """
+        with self.assertRaises(CommandError):
+            call_command(self.command_name, "abc", 2023)
+
+        with self.assertRaises(CommandError):
+            call_command(self.command_name, 2020, "def")
+
+        with self.assertRaises(CommandError):
+            call_command(self.command_name, "xyz", "def")
+
+    def test_add_seasons_command_requires_4_digit_years(self):
+        """
+        Test that the command raises an error when provided years are not in the format YYYY.  # noqa: E501
+        """
+        with self.assertRaises(CommandError):
+            call_command(self.command_name, 20, 2023)
+
+        with self.assertRaises(CommandError):
+            call_command(self.command_name, 2020, 200)
+
+    def test_add_seasons_command_start_year_greater_than_end_year(self):
+        """
+        Test that the command raises an error when the provided start_year is greater than end_year.  # noqa: E501
+        """
+        with self.assertRaises(CommandError):
+            call_command(self.command_name, 2025, 2020)
+
+
+class ClearDataCommandTest(TestCase):
+
+    """
+    Tests for the custom management command 'clear_data'.
+
+    This command is intended to clear data from specific tables in the database.
+    These tests ensure that the command works as expected and all the specified
+    tables are properly cleared.
+    """
+
+    def setUp(self):
+        ClubFactory.create_batch(5)
+        TeamFactory.create_batch(5)
+        TeamHistoryFactory.create_batch(5)
+        LeagueFactory.create_batch(5)
+        LeagueHistoryFactory.create_batch(5)
+
+    @pytest.mark.django_db()
+    def test_clear_data_command(self):
+        """
+        Test the execution of the clear_data command.
+
+        This test ensures that after running the clear_data command, all records
+        in the specified tables (FollowTeam, Club, Team, TeamHistory, League, LeagueHistory)
+        are successfully deleted.
+        """
+        # Assert that each table initially has records
+        assert _models.Club.objects.count() > 0
+        assert _models.Team.objects.count() > 0
+        assert _models.TeamHistory.objects.count() > 0
+        assert _models.League.objects.count() > 0
+        assert _models.LeagueHistory.objects.count() > 0
+
+        # Execute the clear_data command
+        call_command("clear_clubs_teams_leagues_data")
+
+        # Assert that each table is empty
+        assert _models.Club.objects.count() == 0
+        assert _models.Team.objects.count() == 0
+        assert _models.TeamHistory.objects.count() == 0
+        assert _models.League.objects.count() == 0
+        assert _models.LeagueHistory.objects.count() == 0

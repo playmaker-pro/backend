@@ -1,4 +1,5 @@
 import typing
+
 from pm_core.services.stubs.base import ScrapperAPIStub
 from adapters.strategy import Strategy
 from pm_core.services.scrapper_service import ScrapperAPI

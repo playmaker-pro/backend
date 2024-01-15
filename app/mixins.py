@@ -1,13 +1,15 @@
 import operator
 from functools import reduce
-from typing import Union, List
+from typing import List, Union
 
-from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.db.models import Q, Value, QuerySet
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db.models import Q, QuerySet, Value
 from django.db.models.functions import Concat
-from profiles.utils import get_datetime_from_age
-from .utils.paginate import page_object_elements_count
 from django.utils import timezone
+
+from profiles.utils import get_datetime_from_age
+
+from .utils.paginate import page_object_elements_count
 
 
 class PaginateMixin:
@@ -25,7 +27,6 @@ class PaginateMixin:
     def paginate(
         self, data: Union[QuerySet, List], limit: Union[int, None]
     ) -> Paginator:
-
         limit = limit or self.paginate_limit
         paginator = Paginator(data, limit)
         page_number = self.page
@@ -237,7 +238,6 @@ class ViewFilterMixin:
 
     @property
     def filter_position(self):
-
         POSITION_CHOICES = {
             "Bramkarz": 1,
             "Obrońca Lewy": 2,
@@ -260,7 +260,6 @@ class ViewFilterMixin:
 
     @property
     def filter_fantasy_position(self) -> Union[list, None]:
-
         fantasy_positions = {
             "Bramkarz": 1,
             "Obrońca": [2, 3, 4],
@@ -327,7 +326,9 @@ class ViewFilterMixin:
 class ViewModalLoadingMixin:
     modal_verification_force_loading = False
 
-    def modal_activity(self, user, register_auto=None, verification_auto=None, *args, **kwargs):
+    def modal_activity(
+        self, user, register_auto=None, verification_auto=None, *args, **kwargs
+    ):
         modals = {
             "action_limit_exceeded": {
                 "name": "actionLimitExceedModal",
@@ -475,7 +476,6 @@ class ViewModalLoadingMixin:
 
 class FilterPlayerViewMixin:
     def filter_queryset(self, queryset):
-
         if self.filter_is_foregin:
             queryset = queryset.exclude(playerprofile__country="PL")
 

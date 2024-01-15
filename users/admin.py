@@ -1,23 +1,15 @@
-from django import forms
 from django.contrib import admin
+from django.contrib.admin import ChoicesFieldListFilter, SimpleListFilter
 from django.contrib.auth.admin import UserAdmin  # as BaseUserAdmin
+from django.core.handlers.wsgi import WSGIRequest
+from django.db.models import Case, F, Q, QuerySet, When
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
-from profiles.models import CoachProfile
 from utils import linkify
-from django.contrib.admin import SimpleListFilter, ChoicesFieldListFilter
+
 from . import models
-from django.db.models import (
-    Q,
-    Value,
-    BooleanField,
-    Case,
-    When,
-    ForeignKey,
-    IntegerField,
-    F,
-)
+from .forms import UserPreferencesForm
 
 
 def verify_one(modeladmin, request, queryset):
@@ -47,12 +39,16 @@ class VerificationFilter(ChoicesFieldListFilter):
         ]
 
     def queryset(self, request, queryset):
-        queryset = queryset.select_related(
-            "coachprofile", "playerprofile"
-        ).annotate(
+        queryset = queryset.select_related("coachprofile", "playerprofile").annotate(
             mapper_id=Case(
-                When(declared_role="T", then=F("coachprofile__mapper__mapperentity__mapper_id")),
-                When(declared_role="P", then=F("playerprofile__mapper__mapperentity__mapper_id")),
+                When(
+                    declared_role="T",
+                    then=F("coachprofile__mapper__mapperentity__mapper_id"),
+                ),
+                When(
+                    declared_role="P",
+                    then=F("playerprofile__mapper__mapperentity__mapper_id"),
+                ),
             ),
             team_club_league_voivodeship_ver=Case(
                 When(
@@ -148,28 +144,49 @@ class HasDataMapperIdFilter(SimpleListFilter):
         queryset = queryset.distinct()
         if self.value() == "1":
             queryset = queryset.filter(
-                Q(declared_role="T", coachprofile__mapper__mapperentity__mapper_id__isnull=False,
-                  coachprofile__mapper__mapperentity__database_source='s38') |
-                Q(declared_role="P", playerprofile__mapper__mapperentity__mapper_id__isnull=False,
-                  playerprofile__mapper__mapperentity__database_source='s38')
+                Q(
+                    declared_role="T",
+                    coachprofile__mapper__mapperentity__mapper_id__isnull=False,
+                    coachprofile__mapper__mapperentity__database_source="s38",
+                )
+                | Q(
+                    declared_role="P",
+                    playerprofile__mapper__mapperentity__mapper_id__isnull=False,
+                    playerprofile__mapper__mapperentity__database_source="s38",
+                )
             )
         elif self.value() == "2":
             queryset = queryset.exclude(
-                Q(declared_role="T", coachprofile__mapper__mapperentity__mapper_id__isnull=False) &
-                Q(coachprofile__mapper__mapperentity__database_source='s38')
+                Q(
+                    declared_role="T",
+                    coachprofile__mapper__mapperentity__mapper_id__isnull=False,
+                )
+                & Q(coachprofile__mapper__mapperentity__database_source="s38")
             ).exclude(
-                Q(declared_role="P", playerprofile__mapper__mapperentity__mapper_id__isnull=False) &
-                Q(playerprofile__mapper__mapperentity__database_source='s38')
+                Q(
+                    declared_role="P",
+                    playerprofile__mapper__mapperentity__mapper_id__isnull=False,
+                )
+                & Q(playerprofile__mapper__mapperentity__database_source="s38")
             )
         return queryset
-
 
 
 @admin.register(models.User)
 class UserAdminPanel(UserAdmin):
     fieldsets = (
         (None, {"fields": ("password",)}),  # 'username',
-        (_("Personal info"), {"fields": ("first_name", "last_name", "email")}),
+        (
+            _("Personal info"),
+            {
+                "fields": (
+                    "first_name",
+                    "last_name",
+                    "email",
+                    "userpreferences",
+                )
+            },
+        ),
         (
             _("Piłkarskie fakty"),
             {"fields": ("declared_role", "state", "picture", "declared_club")},
@@ -193,7 +210,12 @@ class UserAdminPanel(UserAdmin):
             None,
             {
                 "classes": ("wide",),
-                "fields": ("username", "password1", "password2"),
+                "fields": (
+                    "username",
+                    "password1",
+                    "password2",
+                    "userpreferences",
+                ),
             },
         ),
     )
@@ -213,10 +235,11 @@ class UserAdminPanel(UserAdmin):
         "get_mapper",
         "get_team_object",
         "get_team_club_league_voivodeship_ver",
+        "last_activity",
     )
     list_filter = ("state", "declared_role", HasDataMapperIdFilter)
     search_fields = ("username", "first_name", "last_name", "declared_role")
-
+    readonly_fields = ("userpreferences",)
     actions = [verify_one]
 
     def get_team_object(self, obj):
@@ -224,7 +247,7 @@ class UserAdminPanel(UserAdmin):
             if obj.profile.club_object:
                 return obj.profile.club_object
         elif obj.is_coach or obj.is_player:
-            if obj.profile.team_object:
+            if obj.profile and obj.profile.team_object:
                 return obj.profile.team_object
 
     def get_team_club_league_voivodeship_ver(self, obj):
@@ -234,29 +257,31 @@ class UserAdminPanel(UserAdmin):
             return ""
 
     def get_mapper(self, obj):
-        if hasattr(obj.profile, 'mapper'):
+        if hasattr(obj.profile, "mapper"):
             if obj.profile.mapper is not None:
                 old_mapper = obj.profile.mapper.get_entity(
-                    related_type__in=['player', 'coach'], database_source='s38')
+                    related_type__in=["player", "coach"], database_source="s38"
+                )
                 if old_mapper is not None:
                     return old_mapper.mapper_id
         return None
 
     def get_profile_percentage(self, obj):
-        percentage = obj.profile.percentage_completion
-        return format_html(
-            f"""
-            <progress value="{percentage}" max="100"></progress>
-            <span style="font-weight:bold">{percentage}%</span>
-            """
-        )
+        if obj.profile:
+            percentage = obj.profile.percentage_completion
+            return format_html(
+                f"""
+                <progress value="{percentage}" max="100"></progress>
+                <span style="font-weight:bold">{percentage}%</span>
+                """
+            )
 
     get_profile_percentage.short_description = "Profile %"
 
     def get_profile_permalink(self, obj):
-        url = obj.profile.get_permalink
-        # Unicode hex b6 is the Pilcrow sign
-        return format_html('<a href="{}">{}</a>'.format(url, "\xb6"))
+        if obj.profile:
+            url = obj.profile.get_permalink
+            return format_html('<a href="{}">{}</a>'.format(url, "\xb6"))
 
     get_profile_permalink.short_description = "Profile Link"
 
@@ -267,3 +292,34 @@ class UserAdminPanel(UserAdmin):
             return "missing profile"
 
     get_profile.short_description = "Profile Type"
+
+
+@admin.register(models.UserPreferences)
+class UserPreferencesAdminPanel(admin.ModelAdmin):
+    list_display = ("user", "localization", "display_languages", "citizenship")
+    search_fields = ("user__last_name", "user__email")
+    form = UserPreferencesForm
+    autocomplete_fields = ("user",)
+
+    def display_languages(self, obj):
+        return ", ".join([str(language) for language in obj.spoken_languages.all()])
+
+    display_languages.short_description = "Spoken Languages"
+
+    def get_search_results(
+        self,
+        request: WSGIRequest,
+        queryset: QuerySet[models.UserPreferences],
+        search_term: str,
+    ):
+        queryset, use_distinct = super().get_search_results(
+            request, queryset, search_term
+        )
+
+        # Custom search logic
+        user_query = Q(user__username__icontains=search_term) | Q(
+            user__email__icontains=search_term
+        )
+        queryset |= self.model.objects.filter(user_query)
+
+        return queryset, use_distinct

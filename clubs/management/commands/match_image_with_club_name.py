@@ -1,11 +1,13 @@
 import json
 import os
 import re
+
+from django.core.management import BaseCommand
 from unidecode import unidecode
 
 from clubs.models import Club
-from django.core.management import BaseCommand
-from .utils import get_club_without_img, PATH_TO_FILE, PATH_TO_FLAGS
+
+from .utils import PATH_TO_FILE, PATH_TO_FLAGS, get_club_without_img
 
 
 class Command(BaseCommand):
@@ -29,7 +31,6 @@ class Command(BaseCommand):
         clubs_without_pic_matched = {}
 
         for key, values in clubs_dict.items():
-
             name = unidecode(values["name"])
             name_length = len(name.split(" "))
             url = values["picture"]
@@ -40,7 +41,6 @@ class Command(BaseCommand):
                 clubs_without_pic[key] = values
 
                 for file in club_pic_names:
-
                     file_name = list(file.keys())[0]
                     file_whole_name = list(file.values())[0]
 
@@ -64,7 +64,6 @@ class Command(BaseCommand):
                         # LKS/KS/TS). Probably there are clubs in base which wont have this word in name.
 
                         if len_file_name >= 2:
-
                             for element in file_name_splitted:
                                 if element in name.lower() and len(element) >= 4:
                                     # check if word from list isnt a short word like LKS/TS/GKS. If true, break loop

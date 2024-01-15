@@ -35,7 +35,6 @@ def send_mass_basic(emails=None):
             "rafal.kesik@gmail.com",
         ]
     for i in emails:
-
         message = (
             "PlayMaker.pro nowa platforma",
             f"Witaj, \n\nDziękujemy za dołączenie do społeczności PlayMaker.pro\n\nPrzenieśliśmy Twoje konto na zupełnie nową platformę. Wejdź i sprawdź nowe możliwości klikając w poniższy link. \n\n https://playmaker.pro/password/reset/?email={i} \n\n\n Pozdrawiamy zespół PlayMaker.pro",

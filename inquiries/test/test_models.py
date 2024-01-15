@@ -1,15 +1,20 @@
-import logging
+import datetime
 
 import pytest
 from django.test import TestCase
-from inquiries.models import InquiryRequest, InquiryPlan, UserInquiry
+
+from inquiries.models import (
+    InquiryLogMessage,
+    InquiryPlan,
+    InquiryRequest,
+    UserInquiryLog,
+)
+from inquiries.plans import basic_plan, premium_plan
 from roles import definitions
 from users.models import User
 from utils import testutils as utils
-
-from django.conf import settings
-
-from unittest.mock import patch
+from utils.factories.inquiry_factories import InquiryRequestFactory
+from utils.factories.user_factories import UserFactory
 
 utils.silence_explamation_mark()
 
@@ -23,9 +28,6 @@ class InitialClassCreationTest(TestCase):
     """
 
     def setUp(self):
-        with pytest.raises(InquiryPlan.DoesNotExist):
-            InquiryPlan.objects.get(default=True)
-        utils.create_system_user()
         self.player = User.objects.create(
             email="username-player", declared_role=definitions.PLAYER_SHORT
         )
@@ -34,8 +36,8 @@ class InitialClassCreationTest(TestCase):
         )
 
     def test_basic_plans_from_settings_shoudl_exists(self):
-        for args in settings.INQUIRIES_INITAL_PLANS:
-            InquiryPlan.objects.get(name=args["name"], default=args["default"])
+        for plan in [basic_plan, premium_plan]:
+            InquiryPlan.objects.get(**plan.dict())
 
     def test_player_user_should_have_basic_plan(self):
         assert self.player.userinquiry.plan.default is True
@@ -43,9 +45,6 @@ class InitialClassCreationTest(TestCase):
 
 class ModelMethodsRequest(TestCase):
     def setUp(self):
-        with pytest.raises(InquiryPlan.DoesNotExist):
-            InquiryPlan.objects.get(default=True)
-        utils.create_system_user()
         self.player = User.objects.create(
             email="username-player", declared_role=definitions.PLAYER_SHORT
         )
@@ -54,13 +53,49 @@ class ModelMethodsRequest(TestCase):
         )
         self.request = InquiryRequest(sender=self.coach, recipient=self.player)
 
-    @patch("stats.adapters.player.PlayerAdapter.__init__", "")
-    def test__status_display(self):
-        assert self.request.status == InquiryRequest.STATUS_NEW
-
     def test__send_status_differs_from_role(self):
         self.request.send()
         self.request.save()
         assert self.request.status == InquiryRequest.STATUS_SENT
         assert self.request.status_display_for(self.player) == "OTRZYMANO"
         assert self.request.status_display_for(self.coach) == "WYSŁANO"
+
+
+@pytest.mark.usefixtures("silence_mails")
+class RewardOutdatedInquiryRequest(TestCase):
+    def setUp(self) -> None:
+        sender = UserFactory(userpreferences__gender="M")
+        recipient = UserFactory(userpreferences__gender="K")
+        self.inquiry_request = InquiryRequestFactory(
+            sender=sender, recipient=recipient
+        )
+        sender.save()
+        recipient.save()
+
+        return super().setUp()
+
+    def test_reward_sender(self) -> None:
+        """
+        Test if reward_sender method works correctly.
+        Create InquiryRequest, set it's created_at to 30 days ago.
+        reward_sender() should mark this inquiry as outdated as so
+        should create UserInquiryLog as OUTDATED and decrease UserInquiry counter.
+        """
+        month_ago = datetime.datetime.now() - datetime.timedelta(days=30)
+
+        self.inquiry_request.created_at = month_ago
+        self.inquiry_request.save()
+        self.inquiry_request.refresh_from_db()
+
+        assert self.inquiry_request.sender.userinquiry.counter == 1
+
+        self.inquiry_request.reward_sender()
+
+        assert self.inquiry_request.sender.userinquiry.counter == 0
+        assert (
+            UserInquiryLog.objects.get(
+                log_owner=self.inquiry_request.sender.userinquiry,
+                ref=self.inquiry_request,
+            ).message.log_type
+            == InquiryLogMessage.MessageType.OUTDATED
+        )

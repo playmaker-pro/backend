@@ -1,27 +1,35 @@
 from typing import Union
+
 from .models import ExternalLinks, ExternalLinksEntity, LinkSource
 
 LINK_TYPES = {
-    'transfermarket': 'statistics',
-    'min90': 'statistics',
-    'laczynaspilka': 'statistics',
-    'scoutmaker': 'statistics',
-    'inStat': 'statistics',
-    'instagram': 'social',
-    'linkedIn': 'social',
-    'tikTok': 'social',
-    'facebook': 'social',
-    'twitter': 'social',
-    'website': 'social',
-    'other': 'social',
+    "transfermarket": "statistics",
+    "min90": "statistics",
+    "laczynaspilka": "statistics",
+    "scoutmaker": "statistics",
+    "inStat": "statistics",
+    "instagram": "social",
+    "linkedIn": "social",
+    "tikTok": "social",
+    "facebook": "social",
+    "twitter": "social",
+    "website": "social",
+    "other": "social",
 }
 
 EXT_LINK_MODEL = Union[
-    'PlayerProfile', 'CoachProfile', 'ScoutProfile', 'ManagerProfile', 'Club', 'Team', 'LeagueHistory'
+    "PlayerProfile",
+    "CoachProfile",
+    "ScoutProfile",
+    "ManagerProfile",
+    "RefereeProfile",
+    "Club",
+    "Team",
+    "LeagueHistory",
 ]
 
 
-def create_or_update_player_external_links(obj: EXT_LINK_MODEL) -> None:
+def create_or_update_profile_external_links(obj: EXT_LINK_MODEL) -> None:
     """
     Update or create ExternalLinks instances for a given profile object, which can be any of the following types:
     'PlayerProfile', 'CoachProfile', 'ScoutProfile', 'ManagerProfile', 'Club', 'Team', or 'League'. The function
@@ -38,14 +46,16 @@ def create_or_update_player_external_links(obj: EXT_LINK_MODEL) -> None:
         **{f"{model_name}": obj}
     )
     if created:
-        setattr(obj, 'external_links', external_links)
+        setattr(obj, "external_links", external_links)
         obj.save()
 
     # "Get all link sources from the database"
     link_sources = LinkSource.objects.all()
 
     # "Get all link fields from the profile model"
-    link_fields = [field.name for field in obj._meta.get_fields() if field.name.endswith("_url")]
+    link_fields = [
+        field.name for field in obj._meta.get_fields() if field.name.endswith("_url")
+    ]
 
     # "Determine the related type for the ExternalLinksEntity instance based on the profile model name"
     related_type = model_name.replace("profile", "")
@@ -74,10 +84,10 @@ def create_or_update_player_external_links(obj: EXT_LINK_MODEL) -> None:
             source=link_source,
             related_type=related_type,
             defaults={
-                'creator_type': 'user',
-                'link_type': LINK_TYPES[link_source.name],
-                'url': link,
-            }
+                "creator_type": "user",
+                "link_type": LINK_TYPES[link_source.name],
+                "url": link,
+            },
         )
         if not created:
             entity.url = link

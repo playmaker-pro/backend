@@ -3,10 +3,8 @@ import logging
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from notifications.mail import mail_role_change_request, mail_admins_about_new_user
-from roles import definitions
-from . import models
 
+from . import models
 
 logger = logging.getLogger(__name__)
 

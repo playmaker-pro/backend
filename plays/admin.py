@@ -1,6 +1,8 @@
 from django.contrib import admin
-from utils import linkify
+
 from app.utils.admin import json_filed_data_prettified
+from utils import linkify
+
 from . import models
 
 
