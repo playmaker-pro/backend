@@ -1,9 +1,10 @@
+# from blog.models import BlogPage  @wag
 from django.contrib import sitemaps
+from django.contrib.sitemaps import GenericSitemap
 from django.urls import reverse
-from blog.models import BlogPage
+
 from profiles.models import PlayerProfile
 from users.models import User
-from django.contrib.sitemaps import GenericSitemap
 
 
 class StaticViewSitemap(sitemaps.Sitemap):
@@ -27,7 +28,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
 sitemaps = {
     "sitemaps": {
         "static": StaticViewSitemap,
-        "blog": GenericSitemap({"queryset": BlogPage.objects.all()}, priority=0.6),
+        #  "blog": GenericSitemap({"queryset": BlogPage.objects.all()}, priority=0.6),
         "players": GenericSitemap(
             {
                 "queryset": PlayerProfile.objects.filter(

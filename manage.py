@@ -2,9 +2,10 @@
 import os
 import sys
 
-if __name__ == "__main__":
+from backend.settings.environment import Environment
 
-    config = "dev"
+if __name__ == "__main__":
+    config = Environment.DEV
 
     try:
         from backend.settings import local
@@ -14,6 +15,7 @@ if __name__ == "__main__":
     except:
         pass
 
+    assert config
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", f"backend.settings.{config}")
 
     from django.core.management import execute_from_command_line

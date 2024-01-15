@@ -6,7 +6,7 @@ class Voivodeships(models.Model):
     code = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
-        return f'{self.name}'
+        return f"{self.name}"
 
     @classmethod
     def voivodeships_choices(cls):

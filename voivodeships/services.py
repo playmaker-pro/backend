@@ -1,22 +1,21 @@
 import json
 import logging
-from typing import Union, Tuple
+from typing import Optional, Tuple, Union
 
+from django.apps import apps
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import QuerySet
-from voivodeships.models import Voivodeships  # noqa
 
-from clubs.models import Team  # noqa
-from django.apps import apps
-
-from profiles.models import PlayerProfile, CoachProfile, ScoutProfile  # noqa
-from marketplace.models import (  # noqa
-    ClubForPlayerAnnouncement,
-    PlayerForClubAnnouncement,
+from clubs.models import Club, Team
+from marketplace.models import (
     ClubForCoachAnnouncement,
-    CoachForClubAnnouncement,  # noqa
+    ClubForPlayerAnnouncement,
+    CoachForClubAnnouncement,
+    PlayerForClubAnnouncement,
 )
-from clubs.models import Club  # noqa
+from profiles.models import CoachProfile, PlayerProfile, ScoutProfile
+from voivodeships.exceptions import VoivodeshipDoesNotExist
+from voivodeships.models import Voivodeships
 
 ModelsToMap = Union[
     PlayerProfile,
@@ -51,7 +50,7 @@ class VoivodeshipService:
             return obj.voivodeship_obj
 
     @staticmethod
-    def get_voivodeship(obj) -> Voivodeships:
+    def get_voivodeship(obj) -> Optional[Voivodeships]:
         """Returning Voivodeship object"""
 
         if not obj.voivodeship_obj:
@@ -61,6 +60,15 @@ class VoivodeshipService:
     @property
     def get_voivodeships(self) -> QuerySet:
         return self.voivodeships_model.objects.all()
+
+    def get_voivo_by_id(self, voivo_id: int) -> Optional[Voivodeships]:
+        """Returning Voivodeship object by id. Raise exception if doesn't exist"""
+        try:
+            voivo = self.voivodeships_model.objects.get(id=voivo_id)
+            return voivo
+        except ObjectDoesNotExist:
+            logger.exception(f"Voivo with id {voivo_id} does not exist")
+            raise VoivodeshipDoesNotExist
 
     def get_voivodeship_by_name(self, name) -> QuerySet:
         qry = self.voivodeships_model.objects.filter(name=name)
@@ -125,14 +133,12 @@ class VoivodeshipService:
             data = json.loads(f.read())
 
             for voivodeship in data:
-
                 assert isinstance(voivodeship, dict), "element is not a dict"
 
                 voivodeship_name = voivodeship.get("name").capitalize()
                 voivodeship_code = voivodeship.get("code")
 
                 try:
-
                     assert isinstance(
                         voivodeship_name, str
                     ), f"{voivodeship_name} is not a string"
@@ -170,7 +176,6 @@ class VoivodeshipService:
             model: ModelsToMap = apps.get_model(name[1], name[0])
 
             for profile in model.objects.all():
-
                 try:
                     if name[1] == "profiles":
                         voivodeship: QuerySet = self.get_voivodeship_by_name(
@@ -188,7 +193,6 @@ class VoivodeshipService:
                         continue
 
                     if voivodeship.exists():
-
                         voivodeship_model: Voivodeships = apps.get_model(
                             "voivodeships", "Voivodeships"
                         )
@@ -200,13 +204,12 @@ class VoivodeshipService:
                         profile.save()
                         logger.info(
                             f"[LOGER VOIVODESHIPS] "
-                            f'Model {name[0]} with id {profile.id if name[1] != "profiles" else profile.user_id} '
+                            f'Model {name[0]} with id {profile.id if name[1] != "profiles" else profile.user_id} '  # noqa: 501
                             f"updated"
                         )
                         print(
-                            f'Model {name[0]} with id {profile.id if name[1] != "profiles" else profile.user_id} '
+                            f'Model {name[0]} with id {profile.id if name[1] != "profiles" else profile.user_id} '  # noqa: 501
                             f"updated"
                         )
                 except (ObjectDoesNotExist, AttributeError):
-
                     print(f"Something went wrong with {profile}")

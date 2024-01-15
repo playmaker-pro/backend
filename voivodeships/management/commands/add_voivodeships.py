@@ -7,6 +7,5 @@ class Command(BaseCommand):
     help = "Create voivodeships"
 
     def handle(self, *args, **options):
-
         manager = VoivodeshipService()
         manager.save_to_db()

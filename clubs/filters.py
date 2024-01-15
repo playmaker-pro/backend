@@ -6,6 +6,7 @@ class IsParentFilter(SimpleListFilter):
     A Django SimpleListFilter subclass that allows the user to filter the queryset
     based on whether the object is the highest parent or not.
     """
+
     title = "is highest parent"
     parameter_name = "isparent"
 
@@ -29,7 +30,7 @@ class IsParentFilter(SimpleListFilter):
         """
         if self.value() == "true":
             return queryset.distinct().filter(parent__isnull=True)
-        if self.value() == 'false':
+        if self.value() == "false":
             return queryset.distinct().filter(parent__isnull=False)
 
 
@@ -38,8 +39,9 @@ class CountryListFilter(SimpleListFilter):
     A Django SimpleListFilter subclass that allows the user
     to filter the queryset based on the country field.
     """
-    title = 'Country'
-    parameter_name = 'country'
+
+    title = "Country"
+    parameter_name = "country"
 
     def lookups(self, request, model_admin):
         """
@@ -67,6 +69,7 @@ class HasManagerFilter(SimpleListFilter):
     A Django SimpleListFilter subclass that allows the user
     to filter the queryset based on whether the object has a manager or not.
     """
+
     title = "hasManager"
     parameter_name = "manager"
 
@@ -98,8 +101,9 @@ class ZpnListFilter(SimpleListFilter):
     A Django SimpleListFilter subclass that allows the user
     to filter the queryset based on the Zpn field.
     """
+
     title = "Zpn"
-    parameter_name = 'zpn'
+    parameter_name = "zpn"
 
     def lookups(self, request, model_admin):
         """
@@ -107,7 +111,12 @@ class ZpnListFilter(SimpleListFilter):
         and the display names for the filter. Zpn for
         the option will appear in the right sidebar.
         """
-        zpns = set([z.league.zpn for z in model_admin.model.objects.exclude(league__zpn__isnull=True)])
+        zpns = set(
+            [
+                z.league.zpn
+                for z in model_admin.model.objects.exclude(league__zpn__isnull=True)
+            ]
+        )
         lookups = [(zpn, zpn) for zpn in zpns]
         lookups.append(("-", "-"))
         return lookups
@@ -121,7 +130,7 @@ class ZpnListFilter(SimpleListFilter):
         value. If no value is selected in the filter then return the original queryset.
         """
         if self.value():
-            if self.value() == '-':
+            if self.value() == "-":
                 return queryset.filter(league__zpn=None)
             else:
                 return queryset.filter(league__zpn=self.value())

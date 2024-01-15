@@ -11,7 +11,6 @@ class Command(BaseCommand):
     help = "Load dumped profiles from csv file."
 
     def add_arguments(self, parser):
-
         parser.add_argument("path", type=str)
         # arser.add_argument('off', type=str)
 
@@ -19,7 +18,6 @@ class Command(BaseCommand):
         return row[param_name] if row[param_name] != "" else None
 
     def handle(self, *args, **options):
-
         with open(options["path"], newline="") as csvfile:
             reader = csv.DictReader(csvfile)
 

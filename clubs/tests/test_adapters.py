@@ -1,15 +1,15 @@
-import logging
-
-import pytest
-from django.test import TestCase
-from profiles import models
-from roles import definitions
-from users.models import User
-from utils import testutils as utils
-from clubs.services import TeamAdapter
-
-
-utils.silence_explamation_mark()
+# import logging
+#
+# import pytest
+# from django.test import TestCase
+#
+# from clubs.services import TeamAdapter
+# from profiles import models
+# from roles import definitions
+# from users.models import User
+# from utils import testutils as utils
+#
+# utils.silence_explamation_mark()
 
 # todo (rkeisk): that is not being used anyware
 # class TestTeamAdapter(TestCase):

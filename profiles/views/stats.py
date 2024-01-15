@@ -1,22 +1,22 @@
 import logging
+import typing
 from os.path import basename
 from random import randint
 from urllib.parse import parse_qs, urlparse
-import typing
-from typing_extensions import runtime
-from django.shortcuts import get_object_or_404, redirect
-from rest_framework.views import View
-from app import mixins
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext_lazy as _
 from django.views import generic
-from utils import get_current_season
-from profiles.utils import get_metrics_update_date
-from profiles.models import PlayerVideo
-from stats import adapters, utilites
+from rest_framework.views import View
+from app import mixins
 from profiles.forms.regular import PlayerVideoForm
+from profiles.models import PlayerVideo
+from profiles.utils import get_metrics_update_date
+
+# from stats import adapters, utilites   DEPRECATED: PM-1015
+from utils import get_current_season
+
 from .base import SlugyViewMixin
 
 User = get_user_model()
@@ -84,23 +84,21 @@ class ProfileFantasy(ProfileStatsPageView):
     page_title = _("Twoje fantasy")
 
     def get_data_or_calculate(self, user):
-        # TODO(bartnyk): temporary show no stats
-        return None
-
-        season_name = get_current_season()
-        _id = int(
-            user.profile.mapper.get_entity(
-                related_type="player", database_source="s38"
-            ).mapper_id
-        )
-        if (
-            user.profile.playermetrics.how_old_days(fantasy=True) >= 7
-            and user.profile.has_data_id
-        ):
-            fantasy = adapters.PlayerFantasyDataAdapter(_id).get(
-                season=season_name, full=True
-            )
-            user.profile.playermetrics.update_fantasy(fantasy)
+        # DEPRECATED: PM-1015
+        # season_name = get_current_season()
+        # _id = int(
+        #     user.profile.mapper.get_entity(
+        #         related_type="player", database_source="s38"
+        #     ).mapper_id
+        # )
+        # if (
+        #     user.profile.playermetrics.how_old_days(fantasy=True) >= 7
+        #     and user.profile.has_data_id
+        # ):
+        #     fantasy = adapters.PlayerFantasyDataAdapter(_id).get(
+        #         season=season_name, full=True
+        #     )
+        #     user.profile.playermetrics.update_fantasy(fantasy)
         return user.profile.playermetrics.fantasy
 
 
@@ -109,9 +107,6 @@ class ProfileCarrierRows(ProfileStatsPageView):
     page_title = _("Twoja kariera")
 
     def get_data_or_calculate(self, user):
-        # TODO(bartnyk): temporary show no stats
-        return []
-
         if (
             user.profile.playermetrics.how_old_days(games=True) >= 7
             and user.profile.has_data_id
@@ -142,9 +137,6 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
     page_title = _("Twoja kariera")
 
     def get_data_or_calculate(self, user):
-        # TODO(bartnyk): temporary show no stats
-        return self.paginate([], limit=self.paginate_limit)
-
         data = []
         if user.is_player:
             if (
@@ -173,7 +165,6 @@ class ProfileCarrier(ProfileStatsPageView, mixins.PaginateMixin):
     def flattern_coach_carrier_structure(self, data: dict) -> list:
         out = []
         for season, season_data in data.items():
-
             if not season_data.get("carrier"):
                 continue
             if not season_data.get("carrier").get("teams"):
@@ -235,9 +226,6 @@ class ProfileGames(ProfileStatsPageView, mixins.PaginateMixin):
     page_title = _("Twoje mecze")
 
     def get_data_or_calculate(self, user):
-        # TODO(bartnyk): temporary show no stats
-        return self.paginate([], limit=self.paginate_limit)
-
         if user.is_player:
             if (
                 user.profile.playermetrics.how_old_days(games=True) >= 7

@@ -1,4 +1,5 @@
 from .dev import *  # type: ignore
+import tempfile
 
-
-CONFIGURATION = "test"
+CONFIGURATION = Environment.TEST
+MEDIA_ROOT = tempfile.mkdtemp()

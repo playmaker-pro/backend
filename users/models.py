@@ -1,14 +1,26 @@
-from django.db import models
-from django.contrib.auth.models import AbstractUser
+import datetime
+import uuid
+from urllib.parse import urljoin
+
 from django.conf import settings
+from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.fields import ArrayField
+from django.db import models
+from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+from django_countries import countries
 from django_fsm import FSMField, transition
 from pydantic import typing
-from notifications.mail import mail_user_waiting_for_verification
-from django.urls import reverse
+
+from inquiries.models import InquiryRequest
+from notifications.mail import (
+    mail_user_waiting_for_verification,
+    verification_notification,
+)
 from roles import definitions
-from notifications.mail import verification_notification
 from users.managers import CustomUserManager
+from utils import calculate_age
 
 
 class UserRoleMixin:
@@ -33,33 +45,14 @@ class UserRoleMixin:
         return self.role == definitions.SCOUT_SHORT
 
     @property
-    def is_parent(self):
-        return self.role == definitions.PARENT_SHORT
-
-    @property
     def is_guest(self):
         return self.role == definitions.GUEST_SHORT
 
     @property
     def profile(self):
-        if self.is_player:
-            return self.playerprofile
-        elif self.is_coach:  # @todo unified access to this T P... and other types.
-            return self.coachprofile
-        elif self.is_club:
-            return self.clubprofile
-        elif self.is_manager:
-            return self.managerprofile
-        elif self.is_scout:
-            return self.scoutprofile
-        elif self.is_parent:
-            return self.parentprofile
-        elif self.is_guest:
-            return self.guestprofile
-        elif self.role is None:
-            return self.guestprofile
-        else:
-            return None
+        """Get profile based on declared role"""
+        if role_name := definitions.PROFILE_TYPE_MAP.get(self.role, None):
+            return getattr(self, f"{role_name}profile", None)
 
     def get_admin_url(self):
         return reverse(
@@ -69,7 +62,6 @@ class UserRoleMixin:
 
 
 class User(AbstractUser, UserRoleMixin):
-
     ROLE_CHOICES = definitions.ACCOUNT_ROLES
 
     STATE_NEW = "New"
@@ -96,6 +88,11 @@ class User(AbstractUser, UserRoleMixin):
     # Verfied means - user is who he declar
 
     state = FSMField(default=STATE_NEW, choices=STATES)
+
+    first_name = models.CharField(
+        _("first name"), max_length=150, blank=True, null=True
+    )
+    last_name = models.CharField(_("last name"), max_length=150, blank=True, null=True)
 
     @transition(
         field=state,
@@ -231,6 +228,11 @@ class User(AbstractUser, UserRoleMixin):
     def get_system_user(cls):
         return cls.objects.get(email=settings.SYSTEM_USER_EMAIL)
 
+    def set_role(self, role: str) -> None:
+        """set role and save, role need to be validated!"""
+        self.declared_role = role
+        self.save()
+
     @property
     def pm_score(self) -> typing.Optional[int]:
         """Get PlayMaker Score of given user (players only)"""
@@ -249,18 +251,11 @@ class User(AbstractUser, UserRoleMixin):
 
     email = models.EmailField(_("Adres email"), unique=True)
 
-    def get_file_path(instance, filename):
-        filename = (
-            filename.replace("ł", "l")
-            .replace("ą", "a")
-            .replace("ó", "o")
-            .replace("ż", "z")
-            .replace("ź", "z")
-            .replace("ń", "n")
-            .replace("ę", "e")
-            .replace("ś", "s")
-        )
-        return f"profile_pics/%Y-%m-%d/{filename}"
+    def get_file_path(self, filename: str) -> str:
+        """define user profile picture image path"""
+        curr_date: str = str(datetime.datetime.now().date())
+        format: str = filename.split(".")[-1]
+        return f"profile_pics/{curr_date}/{str(uuid.uuid4())}.{format}"
 
     picture = models.ImageField(
         _("Zdjęcie"), upload_to=get_file_path, null=True, blank=True
@@ -282,6 +277,9 @@ class User(AbstractUser, UserRoleMixin):
         blank=True,
         help_text="Users declaration in which role he has. It is main paramter.",
     )
+    last_activity = models.DateTimeField(
+        _("Last Activity"), default=None, null=True, blank=True
+    )
 
     # verification = models.OneToOneField(
     #     "VerificationStatus",
@@ -299,11 +297,9 @@ class User(AbstractUser, UserRoleMixin):
         return f"{self.get_full_name()} ({self.get_declared_role_display()})"
 
     def save(self, *args, **kwargs):
-
         if self.role in [
             definitions.GUEST_SHORT,
             definitions.SCOUT_SHORT,
-            definitions.PARENT_SHORT,
             definitions.MANAGER_SHORT,
         ]:
             if self.state != self.STATE_ACCOUNT_VERIFIED:
@@ -316,6 +312,75 @@ class User(AbstractUser, UserRoleMixin):
         #     pass
         # verification_notification(self)
 
+    def new_user_activity(self):
+        """
+        Update the user's last activity timestamp.
+
+        This method sets the user's `last_activity` attribute to the current time and
+        then saves the change to the database.
+        """
+        self.last_activity = timezone.now()
+        self.save(update_fields=["last_activity"])
+
+    @property
+    def picture_url(self) -> str:
+        """Generate club picture url"""
+        if self.picture:
+            return urljoin(settings.BASE_URL, self.picture.url)
+
+    @property
+    def inquiries_contacts(self) -> models.QuerySet:
+        """Get user contacts - accepted InquiryRequests"""
+        return InquiryRequest.objects.contacts(self)
+
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
+
+
+class UserPreferences(models.Model):
+    COUNTRIES = countries
+
+    GENDER_CHOICES = (
+        ("M", _("Mężczyzna")),
+        ("K", _("Kobieta")),
+    )
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    localization = models.ForeignKey(
+        "cities_light.City",
+        verbose_name=_("Localization"),
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        help_text="User's localization (city and voivodeship)",
+    )
+    citizenship = ArrayField(
+        models.CharField(max_length=100, choices=COUNTRIES),
+        blank=True,
+        null=True,
+        help_text="User's citizenship (country of citizenship)",
+    )
+    spoken_languages = models.ManyToManyField(
+        "profiles.Language",
+        blank=True,
+        help_text="User's known languages (languages spoken by the user)",
+    )
+    gender = models.CharField(
+        _("Gender"),
+        choices=GENDER_CHOICES,
+        max_length=1,
+        blank=True,
+        null=True,
+        help_text="User's gender (represents the gender identity of the user)",
+    )
+    birth_date = models.DateField(
+        _("Data urodzenia"), blank=True, null=True, help_text="User's date of birth"
+    )
+
+    @property
+    def age(self):
+        return calculate_age(self.birth_date)
+
+    class Meta:
+        verbose_name = "User Preference"
+        verbose_name_plural = "User Preferences"

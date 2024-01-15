@@ -2,17 +2,14 @@ import json
 import tempfile
 
 from django.test import TestCase
-from django.contrib.auth import get_user_model
 
+from utils.factories import PlayerProfileFactory
 from voivodeships.models import Voivodeships
 from voivodeships.services import VoivodeshipService
-from roles import definitions
-from utils import testutils as utils
 
 
 class TestVoivodeshipService(TestCase):
     def setUp(self) -> None:
-        utils.create_system_user()
         self.voivodeship_data = {"name": "Warmińsko-Mazurskie"}
 
         self.voivodeship, _ = Voivodeships.objects.get_or_create(
@@ -20,11 +17,11 @@ class TestVoivodeshipService(TestCase):
         )
         self.manager = VoivodeshipService()
         self.user_data = {
-            "password": "super_secret_password",
-            "declared_role": definitions.PLAYER_SHORT,
-            "email": "test_user@test.com",
+            "user__password": "super_secret_password",
+            "user__email": "test_user@test.com",
         }
-        self.user = get_user_model().objects.create_user(**self.user_data)
+
+        self.user = PlayerProfileFactory.create(**self.user_data).user
 
         self.user.profile.voivodeship_obj = self.voivodeship
         self.user.profile.save()

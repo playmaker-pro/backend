@@ -1,14 +1,15 @@
-from django.test import TestCase
-from pm_core.services.models.player import PlayerBaseSchema
-from pm_core.services.models.models import (
-    VoivodeshipSchema,
-    TeamSchema,
-    BaseLeagueSchema,
-)
-from adapters.player_adapter import PlayerDataAdapter
-from utils.factories.mapper_factories import ID
-from adapters.tests.utils import get_adapter
 import pytest
+from django.test import TestCase
+from pm_core.services.models.models import (
+    BaseLeagueSchema,
+    TeamSchema,
+    VoivodeshipSchema,
+)
+from pm_core.services.models.player import PlayerBaseSchema
+
+from adapters.player_adapter import PlayerDataAdapter
+from adapters.tests.utils import get_adapter
+from utils.factories.mapper_factories import ID
 
 
 @pytest.mark.django_db

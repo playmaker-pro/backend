@@ -5,14 +5,14 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from profiles import forms
 from django.http import Http404, JsonResponse
-
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import View
-from clubs.api.serizalizer import ClubSelect2Serializer, TeamHistorySelect2Serializer
+
+from clubs.api.serializers import ClubSelect2Serializer, TeamHistorySelect2Serializer
 from clubs.models import Season
+from profiles import forms
 from utils import get_current_season
 
 User = get_user_model()
@@ -22,7 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 class AccountVerification(LoginRequiredMixin, View):
-
     http_method_names = ["post", "get"]
 
     def get(self, request, *args, **kwargs):
@@ -47,7 +46,9 @@ class AccountVerification(LoginRequiredMixin, View):
                 preselected = TeamHistorySelect2Serializer(
                     request.user.profile.team_history_object
                 ).data
-                season_name = request.user.profile.team_history_object.leaguehistory.season.name
+                season_name = (
+                    request.user.profile.team_history_object.leaguehistory.season.name
+                )
         # Selecting right form
         if request.user.is_coach:
             form = forms.CoachVerificationForm(
@@ -87,7 +88,9 @@ class AccountVerification(LoginRequiredMixin, View):
                 preselected = TeamHistorySelect2Serializer(
                     request.user.profile.team_history_object
                 ).data
-                season_name = request.user.profile.team_history_object.leaguehistory.season.name
+                season_name = (
+                    request.user.profile.team_history_object.leaguehistory.season.name
+                )
 
         season = Season.objects.get(name=season_name)
         if request.user.is_coach:

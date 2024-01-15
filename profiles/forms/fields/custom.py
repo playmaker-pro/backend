@@ -1,13 +1,15 @@
 from __future__ import unicode_literals
+
 from django import forms
-from django.utils.translation import gettext_lazy as _
-from clubs.models import Club, TeamHistory
-from clubs.models import TeamHistory as Team
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
+
+from clubs.models import Club
+from clubs.models import TeamHistory
+from clubs.models import TeamHistory as Team
 
 
 class ModelChoiceFieldNoValidation(forms.ChoiceField):
-
     verification_model = TeamHistory
 
     def to_python(self, value):

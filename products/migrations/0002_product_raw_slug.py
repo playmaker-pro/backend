@@ -4,15 +4,17 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('products', '0001_squashed_0010_product_extra_css'),
+        ("products", "0001_squashed_0010_product_extra_css"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='product',
-            name='raw_slug',
-            field=models.BooleanField(default=False, help_text='if so, slug will not include /products/... subdir'),
+            model_name="product",
+            name="raw_slug",
+            field=models.BooleanField(
+                default=False,
+                help_text="if so, slug will not include /products/... subdir",
+            ),
         ),
     ]

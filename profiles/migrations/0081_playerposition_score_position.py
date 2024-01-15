@@ -7,7 +7,7 @@ def populate_score_position(apps, schema_editor: BaseDatabaseSchemaEditor) -> No
     Populates the `score_position` field of all `PlayerPosition` objects with their corresponding
     position name. Uses a mapping of position names to score position names to achieve this.
     """
-    PlayerPosition = apps.get_model('profiles', 'PlayerPosition')
+    PlayerPosition = apps.get_model("profiles", "PlayerPosition")
     mapping = {
         "Bramkarz": "Bramkarz",
         "Wahadłowy lewy": "Obrońca",
@@ -27,15 +27,14 @@ def populate_score_position(apps, schema_editor: BaseDatabaseSchemaEditor) -> No
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('profiles', '0080_auto_20230318_0028'),
+        ("profiles", "0080_auto_20230318_0028"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='playerposition',
-            name='score_position',
+            model_name="playerposition",
+            name="score_position",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.RunPython(populate_score_position),

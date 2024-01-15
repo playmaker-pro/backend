@@ -8,124 +8,124 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.paginator import Paginator
 from django.http import JsonResponse
-from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import View, generic
-from followers.models import Follow, FollowTeam
+
+# Deprecated(rkesik): since we are working on a new FE
+# from followers.models import Follow, FollowTeam
 from inquiries.models import InquiryRequest
 from profiles import forms, models
 from profiles.model_utils import (
     get_profile_form_model,
-    get_profile_model,
     get_profile_model_from_slug,
 )
-from roles import definitions
-from utils import calculate_prev_season, get_current_season
 from profiles.utils import get_metrics_update_date
+from roles import definitions
 
-from stats import adapters
+# from stats import adapters     DEPRECATED: PM-1015
+from utils import calculate_prev_season, get_current_season
 
 User = get_user_model()
 from clubs.models import Team
 
 logger = logging.getLogger(__name__)
 from app import mixins, utils
-from inquiries.services import unseen_requests, update_requests_with_read_status
+from inquiries.services import InquireService
 
 
 def redirect_to_profile_with_full_name(request):
     return redirect("profiles:show", slug=request.user.profile.slug)
 
 
-class MyObservers(
-    generic.TemplateView,
-    LoginRequiredMixin,
-    mixins.PaginateMixin,
-    mixins.ViewModalLoadingMixin,
-):
-    template_name = "profiles/observers.html"
-    http_method_names = ["get"]
+#  Deprecated(rkesik): since we are working on a new FE
+# class MyObservers(
+#     generic.TemplateView,
+#     LoginRequiredMixin,
+#     mixins.PaginateMixin,
+#     mixins.ViewModalLoadingMixin,
+# ):
+#     template_name = "profiles/observers.html"
+#     http_method_names = ["get"]
 
-    def get(self, request, *args, **kwargs):
-        user = request.user
-        tabs = []
+#     def get(self, request, *args, **kwargs):
+#         user = request.user
+#         tabs = []
 
-        qs_players_ids = list(
-            Follow.objects.filter(
-                user=user, target__declared_role=definitions.PLAYER_SHORT
-            ).values_list("target__id", flat=True)
-        )
-        qs_players = User.objects.filter(id__in=qs_players_ids)
+#         qs_players_ids = list(
+#             Follow.objects.filter(
+#                 user=user, target__declared_role=definitions.PLAYER_SHORT
+#             ).values_list("target__id", flat=True)
+#         )
+#         qs_players = User.objects.filter(id__in=qs_players_ids)
 
-        qs_teams_ids = FollowTeam.objects.filter(user=user).values_list(
-            "target__id", flat=True
-        )
-        qs_teams = Team.objects.filter(id__in=qs_teams_ids)
-        qs_coaches_ids = list(
-            Follow.objects.filter(
-                user=user, target__declared_role=definitions.COACH_SHORT
-            ).values_list("target__id", flat=True)
-        )
-        qs_coaches = User.objects.filter(id__in=qs_coaches_ids)
+#         qs_teams_ids = FollowTeam.objects.filter(user=user).values_list(
+#             "target__id", flat=True
+#         )
+#         qs_teams = Team.objects.filter(id__in=qs_teams_ids)
+#         qs_coaches_ids = list(
+#             Follow.objects.filter(
+#                 user=user, target__declared_role=definitions.COACH_SHORT
+#             ).values_list("target__id", flat=True)
+#         )
+#         qs_coaches = User.objects.filter(id__in=qs_coaches_ids)
 
-        tabs.append(
-            {
-                "name": "players",
-                "title": "Obserwowani pilkarze",
-                "objects": qs_players,
-                "empty": {
-                    "text_body": "",
-                    "text_header": "Jeszcze nie obserwujesz żadnego piłkarza",
-                },
-                "badge": {
-                    "class": "badge-info",
-                    "number": qs_players.count(),
-                },
-                "actions": True,
-            }
-        )
+#         tabs.append(
+#             {
+#                 "name": "players",
+#                 "title": "Obserwowani pilkarze",
+#                 "objects": qs_players,
+#                 "empty": {
+#                     "text_body": "",
+#                     "text_header": "Jeszcze nie obserwujesz żadnego piłkarza",
+#                 },
+#                 "badge": {
+#                     "class": "badge-info",
+#                     "number": qs_players.count(),
+#                 },
+#                 "actions": True,
+#             }
+#         )
 
-        tabs.append(
-            {
-                "name": "coaches",
-                "title": "Obserwowani trenerzy",
-                "objects": qs_coaches,
-                "empty": {
-                    "text_body": "",
-                    "text_header": "Jeszcze nie obserwujesz żadnego trenera",
-                },
-                "badge": {
-                    "class": "badge-info",
-                    "number": qs_coaches.count(),
-                },
-                "actions": True,
-            }
-        )
+# tabs.append(
+#     {
+#         "name": "coaches",
+#         "title": "Obserwowani trenerzy",
+#         "objects": qs_coaches,
+#         "empty": {
+#             "text_body": "",
+#             "text_header": "Jeszcze nie obserwujesz żadnego trenera",
+#         },
+#         "badge": {
+#             "class": "badge-info",
+#             "number": qs_coaches.count(),
+#         },
+#         "actions": True,
+#     }
+# )
 
-        tabs.append(
-            {
-                "name": "teams",
-                "title": "Obserwowane kluby",
-                "objects": qs_teams,
-                "empty": {
-                    "text_body": "",
-                    "text_header": "Jeszcze nie obserwujesz żadnego klubu",
-                },
-                "badge": {
-                    "class": "badge-info",
-                    "number": qs_teams.count(),
-                },
-                "actions": True,
-            }
-        )
-        kwargs["page_title"] = "Obserwowani"
-        kwargs["tabs"] = tabs
-        kwargs["modals"] = self.modal_activity(user, verification_auto=False)
-        return super().get(request, *args, **kwargs)
+# tabs.append(
+#     {
+#         "name": "teams",
+#         "title": "Obserwowane kluby",
+#         "objects": qs_teams,
+#         "empty": {
+#             "text_body": "",
+#             "text_header": "Jeszcze nie obserwujesz żadnego klubu",
+#         },
+#         "badge": {
+#             "class": "badge-info",
+#             "number": qs_teams.count(),
+#         },
+#         "actions": True,
+#     }
+# )
+# kwargs["page_title"] = "Obserwowani"
+# kwargs["tabs"] = tabs
+# kwargs["modals"] = self.modal_activity(user, verification_auto=False)
+# return super().get(request, *args, **kwargs)
 
 
 class TabStructure:
@@ -166,7 +166,7 @@ def build_request_tab(user, name, title, qs, empty_text, empty_header, actions=T
         actions=actions,
         unseen=",".join(unseen),
     )
-    tab.add_badge(number=unseen_requests(qs, user).count())
+    tab.add_badge(number=InquireService.unseen_requests(qs, user).count())
     tab.add_empty(text=empty_text, header=empty_header)
     return tab.get()
 
@@ -509,12 +509,6 @@ class ShowProfile(generic.TemplateView, mixins.ViewModalLoadingMixin):
             games_summary = metrics.games_summary
             fantasy_summary = metrics.fantasy_summary
             season_summary = metrics.season_summary
-
-            # TODO(bartnyk): temporary show no stats
-            games_summary = None
-            fantasy_summary = None
-            season_summary = None
-
             kwargs["metrics_updated_date"] = get_metrics_update_date(metrics)
             kwargs["last_games"] = games_summary
             kwargs["fantasy"] = fantasy_summary
@@ -754,7 +748,6 @@ class EditProfile(
 
 
 class AccountMissingFirstLastName(LoginRequiredMixin, View):
-
     http_method_names = ["post", "get"]
 
     def get(self, request, *args, **kwargs):

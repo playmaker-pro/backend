@@ -4,30 +4,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('profiles', '0083_language'),
+        ("profiles", "0083_language"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='playermetrics',
-            name='pm_score',
+            model_name="playermetrics",
+            name="pm_score",
             field=models.IntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='playermetrics',
-            name='pm_score_updated',
+            model_name="playermetrics",
+            name="pm_score_updated",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='playermetrics',
-            name='season_score',
+            model_name="playermetrics",
+            name="season_score",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='playermetrics',
-            name='season_score_updated',
+            model_name="playermetrics",
+            name="season_score_updated",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

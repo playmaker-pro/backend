@@ -1,8 +1,10 @@
 from django.contrib import admin
-from users.queries import get_users_manger_roles
-from . import models
-from utils import linkify
 from django.utils.html import format_html
+
+from users.queries import get_users_manger_roles
+from utils import linkify
+
+from . import models
 
 
 def calculate(modeladmin, request, queryset):

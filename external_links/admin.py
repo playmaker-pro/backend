@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import ExternalLinksEntity, ExternalLinks, LinkSource
+
+from .models import ExternalLinks, ExternalLinksEntity, LinkSource
 
 
 class ExternalLinksEntityAdmin(admin.TabularInline):
@@ -9,7 +10,9 @@ class ExternalLinksEntityAdmin(admin.TabularInline):
 
 
 class ExternalLinksAdmin(admin.ModelAdmin):
-    inlines = [ExternalLinksEntityAdmin, ]
+    inlines = [
+        ExternalLinksEntityAdmin,
+    ]
     readonly_fields = ("created_at", "updated_at")
 
     def has_add_permission(self, request, obj=None):

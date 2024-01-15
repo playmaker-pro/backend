@@ -1,16 +1,25 @@
 import os
-import logging
+from datetime import timedelta
 
+import sentry_sdk
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
+from dotenv import load_dotenv
+from sentry_sdk.integrations.django import DjangoIntegration
 
+from backend.settings.environment import Environment
 
 # This loads additional settings for our environemnt
-CONFIGURATION = "dev"  # following options are allowed ['dev', 'production', 'staging']
+CONFIGURATION = (
+    Environment.DEV
+)  # following options are allowed ['dev', 'production', 'staging']
 
 # This flag allow us to see debug panel on each page.
 DEBUG_PANEL = False
+
+
+load_dotenv()
 
 
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
@@ -29,7 +38,6 @@ PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 BASE_DIR = os.path.dirname(PROJECT_DIR)
 
-
 MANAGERS = [
     ("Rafal", "rafal.kesik@gmail.com"),
 ]
@@ -42,12 +50,13 @@ MANAGERS = [
 
 INSTALLED_APPS = [
     "users",
-    "home",
-    "search",
-    "news",
+    # "home",
+    # "search",
+    # "news",
     "profiles",
     "transfers",
-    "contact",
+    # "contact",
+    # Deprecation(rkesik): since we are working on a new FE
     "followers",
     "inquiries",
     "clubs",
@@ -63,41 +72,16 @@ INSTALLED_APPS = [
     "landingpage",
     "voivodeships",
     "mapper",
+    "labels",
     "premium",
-    "resources",
-    "data",  # external repo
-    "stats",  # external repo
+    "events",
+    "mailing",
     "django_countries",
-    "crispy_forms",
     "easy_thumbnails",
-    "djcelery",
     "django_user_agents",
-    "wagtail.contrib.forms",
-    "wagtail.contrib.modeladmin",
-    "wagtail.contrib.redirects",
-    "wagtail.embeds",
-    "wagtail.sites",
-    "wagtail.users",
-    "wagtail.snippets",
-    "wagtail.documents",
-    "wagtail.images",
-    "wagtail.search",
-    "wagtail.admin",
-    "wagtail.core",
-    "wagtail.contrib.routable_page",
-    "wagtail.api.v2",
-    "wagtailmetadata",
-    # 'comments_wagtail_xtd',
-    # 'django_comments',
-    "modelcluster",
-    "taggit",
-    "blog",
-    "flex",
-    "streams",
     "django_fsm",
     "phonenumber_field",
     "address",
-    "compressor",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -108,14 +92,30 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "django.contrib.humanize",
     "rest_framework",
-    "rest_framework.authtoken",  # <-- Here
+    # TODO authtoken deprecated. Changed to jwt
+    "rest_framework.authtoken",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
     "allauth.socialaccount.providers.facebook",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
+    "cities_light",
+    "features",
+    "django_extensions",
+    "django_filters",
+    "django_cleanup.apps.CleanupConfig",  # delete old files/images on update
 ]
+
+SWAGGER_SETTINGS = {
+    "SECURITY_DEFINITIONS": {
+        "Basic": {"type": "basic"},
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"},
+    }
+}
 
 
 SITE_ID = 1
@@ -137,7 +137,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+    # "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+    "middleware.user_activity_middleware.UserActivityMiddleware",
+    "middleware.redirect_middleware.RedirectMiddleware",
 ]
 
 ROOT_URLCONF = "backend.urls"
@@ -146,7 +148,7 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
-            os.path.join(PROJECT_DIR, "templates"),
+            # os.path.join(PROJECT_DIR, "templates"), # DEPRECATED UI
         ],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -171,32 +173,14 @@ AUTHENTICATION_BACKENDS = [
 WSGI_APPLICATION = "backend.wsgi.application"
 
 # Database
-# https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-
-
-DATABASE_ROUTERS = ["data.routers.DataRouter", "data.routers.DefaultDBRouter"]
-
-# DB_ITERATOR = '11'
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    # },
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "local_pm",
-        "USER": "arsen",
-        "PASSWORD": "postgres",
+        "NAME": os.getenv("POSTGRES_DB", None),
+        "USER": os.getenv("POSTGRES_USER", None),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", None),
         "HOST": "localhost",
-        "PORT": "5432",
-    },
-    "datadb": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "local_data",
-        "USER": "arsen",
-        "PASSWORD": "postgres",
-        "HOST": "localhost",
-        "PORT": "5432",
+        "PORT": os.getenv("POSTGRES_PORT", None),
     },
 }
 
@@ -205,7 +189,7 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",  # noqa
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
@@ -232,6 +216,22 @@ LANGUAGES = (
     ("en-us", _("Angielski")),
 )
 
+# Configuration for django-cities-light library.
+# For more information, refer to the documentation:
+# https://django-cities-light.readthedocs.io/en/stable-3.x.x/
+
+# This setting specifies the translation languages to be included for city names.
+CITIES_LIGHT_TRANSLATION_LANGUAGES = ["pl"]
+
+# This setting specifies the countries to include when importing city data.
+CITIES_LIGHT_INCLUDE_COUNTRIES = ["PL"]
+
+CITIES_LIGHT_CITY_SOURCES = [
+    "http://download.geonames.org/export/dump/cities15000.zip",  # all cities with a population > 15000  # noqa
+    "http://download.geonames.org/export/dump/cities5000.zip",  # all cities with a population > 5000  # noqa
+    "http://download.geonames.org/export/dump/cities1000.zip",  # all cities with a population > 1000  # noqa
+]  # more here: https://download.geonames.org/export/dump/readme.txt
+
 TIME_ZONE = "Europe/Warsaw"
 
 USE_I18N = True
@@ -247,7 +247,7 @@ COMPRESS_ENABLED = False
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-    "compressor.finders.CompressorFinder",
+    # "compressor.finders.CompressorFinder",  ## @dep - 2
 ]
 
 STATICFILES_DIRS = [
@@ -256,7 +256,7 @@ STATICFILES_DIRS = [
 
 # ManifestStaticFilesStorage is recommended in production, to prevent outdated
 # Javascript / CSS assets being served from cache (e.g. after a Wagtail upgrade).
-# See https://docs.djangoproject.com/en/3.1/ref/contrib/staticfiles/#manifeststaticfilesstorage
+# See https://docs.djangoproject.com/en/3.1/ref/contrib/staticfiles/#manifeststaticfilesstorage  # noqa
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
@@ -296,9 +296,6 @@ THUMBNAIL_ALIASES = {
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 CRISPY_FAIL_SILENTLY = False
 
-# For Bootstrap 4, change error alert to 'danger'
-MESSAGE_TAGS = {messages.ERROR: "danger"}
-
 CUSTOM_URL_ENDPOINTS = {"limits": "limit"}
 # Announcement app
 ANNOUNCEMENT_DEFAULT_PLANS = [
@@ -307,9 +304,9 @@ ANNOUNCEMENT_DEFAULT_PLANS = [
         "limit": 1,
         "days": 14,
         "name": "Podstawowe",
-        "description": "Możesz dodać jedno 14-dniowe ogłoszenie w ramach jednego półrocza. "
+        "description": "Możesz dodać jedno 14-dniowe ogłoszenie w ramach jednego półrocza. "  # noqa
         "Po zakupie konta premium będziesz mógł podpiąć 3 ogłoszenia na stałe."
-        "Pozwoli to na prowadzenie naboru np. dla seniorów, drugiej drużyny oraz grup młodzieżowych.",
+        "Pozwoli to na prowadzenie naboru np. dla seniorów, drugiej drużyny oraz grup młodzieżowych.",  # noqa
     },
     {
         "default": False,
@@ -317,7 +314,7 @@ ANNOUNCEMENT_DEFAULT_PLANS = [
         "days": 365,
         "name": "Premium",
         "description": "Możesz dodać trzy ogłoszenie w ramach jednego półrocza. "
-        "Możesz jednocześnie prowadzić nabór np. dla seniorów, drugiej drużyny oraz grup młodzieżowych.",
+        "Możesz jednocześnie prowadzić nabór np. dla seniorów, drugiej drużyny oraz grup młodzieżowych.",  # noqa
     },
 ]
 
@@ -384,7 +381,6 @@ ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 
 ACCOUNT_FORMS = {"signup": "users.forms.CustomSignupForm"}
-# ACCOUNT_ADAPTER = 'users.adapter.CustomAccountAdapter'
 
 
 # Provider specific settings
@@ -427,17 +423,19 @@ ACCOUNT_FORMS = {"signup": "users.forms.CustomSignupForm"}
 BLOG_PAGINATION_PER_PAGE = 4
 
 
-from os.path import join
-import logging.config
+import logging.config  # noqa
+from os.path import join  # noqa
+
+LOGGING_ROOTDIR = "_logs"
 
 
-def get_logging_structure(LOGFILE_ROOT):
+def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
     return {
         "version": 1,
         "disable_existing_loggers": False,
         "formatters": {
             "verbose": {
-                "format": "[%(asctime)s] %(levelname)s [%(pathname)s:%(lineno)s] %(message)s",
+                "format": "[%(asctime)s] %(levelname)s [%(pathname)s:%(lineno)s] %(message)s",  # noqa
                 "datefmt": "%d/%b/%Y %H:%M:%S",
             },
             "simple": {"format": "%(levelname)s %(message)s"},
@@ -484,6 +482,30 @@ def get_logging_structure(LOGFILE_ROOT):
                 "class": "logging.StreamHandler",
                 "formatter": "simple",
             },
+            "user_activity_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "user_activity.log"),
+                "formatter": "verbose",
+            },
+            "inquiries_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "inquiries.log"),
+                "formatter": "verbose",
+            },
+            "mailing_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "mailing.log"),
+                "formatter": "verbose",
+            },
+            "commands": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "commands.log"),
+                "formatter": "verbose",
+            },
         },
         "loggers": {
             "profiles": {
@@ -491,7 +513,7 @@ def get_logging_structure(LOGFILE_ROOT):
                 "level": "DEBUG",
             },
             "django": {
-                "handlers": ["django_log_file"],
+                "handlers": ["django_log_file", "console"],
                 "propagate": True,
                 "level": "ERROR",
             },
@@ -507,25 +529,39 @@ def get_logging_structure(LOGFILE_ROOT):
                 "handlers": ["console", "route_updater"],
                 "level": "DEBUG",
             },
+            "user_activity": {
+                "handlers": ["console", "user_activity_file"],
+                "level": "DEBUG",
+            },
+            "inquiries": {
+                "handlers": ["console", "inquiries_file"],
+                "level": "DEBUG",
+            },
+            "mailing": {
+                "handlers": ["console", "mailing_file"],
+                "level": "DEBUG",
+            },
+            "commands": {
+                "handlers": ["console", "data_log_file"],
+                "level": "DEBUG",
+            },
         },
     }
 
 
 # Reset logging
-# (see http://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/)
+# (see http://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/)  # noqa
 LOGGING_CONFIG = None
-LOGGING = get_logging_structure("_logs")
+LOGGING = get_logging_structure()
 logging.config.dictConfig(LOGGING)
-
 logger = logging.getLogger(f"project.{__name__}")
 
 
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
 CELERY_ALWAYS_EAGER = True
 CELERY_TASK_SERIALIZER = "pickle"
-import djcelery
 
-djcelery.setup_loader()
+
 # Redis & stream activity
 STREAM_REDIS_CONFIG = {
     "default": {"host": "127.0.0.1", "port": 6379, "db": 0, "password": None},
@@ -536,12 +572,25 @@ STREAM_REDIS_CONFIG = {
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # "DEFAULT_PAGINATION_CLASS": "api.pagination.PagePagination",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 10,
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+}
+
+SPECTACULAR_SETTINGS = {
+    "SWAGGER_UI_DIST": "SIDECAR",  # shorthand to use the sidecar instead
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "REDOC_DIST": "SIDECAR",
+    "SCHEMA_PATH_PREFIX": r"/api/v[0-9]",
+    # 'SERVE_AUTHENTICATION': ['rest_framework.authentication.BasicAuthentication',],
 }
 
 
@@ -552,8 +601,8 @@ JQUERY_URL = False
 
 COUNTRIES_FIRST = ["PL", "GER", "CZ", "UA", "GB"]
 
-from django.views.generic import RedirectView
-from django.urls import include, path
+from django.urls import path  # noqa
+from django.views.generic import RedirectView  # noqa
 
 # urlpatterns = patterns('',
 #     url(r'^some-page/$', RedirectView.as_view(url='/')),
@@ -612,19 +661,6 @@ USER_AGENTS_CACHE = "default"
 
 SCRAPPER = True
 
-# Loading of locally stored settings.
-
-try:
-    from backend.settings._local import *
-except Exception as e:
-    print(f"No local settings. {e}")
-
-
-try:
-    from backend.settings.data_settings import *
-except Exception as e:
-    print(f"No backend.settings.data_settings file. {e}")
-
 
 if FORCED_SEASON_NAME is not None:
     print(f"Force to use season for dispaly metrics: {FORCED_SEASON_NAME}")
@@ -655,3 +691,37 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 VERIFICATION_FORM = {"DEFAULT_SEASON_NAME": "2021/2022"}
 
+
+# Setup token and refresh token lifetime.
+# Refresh token is used to get new token, if auth token is expired.
+# If refresh token is expired, user need to send login/ request again.
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=2),
+}
+
+GOOGLE_OAUTH2_PROJECT_ID = "playmaker-pro"
+FACEBOOK_GRAPH_API_VERSION = "v17.0"
+
+THROTTLE_EMAIL_CHECK_LIMITATION = 5
+DEFAULT_THROTTLE = 5
+
+ENABLE_SENTRY = os.getenv("ENABLE_SENTRY", False) in ["True", "true", "1", "yes"]
+
+if ENABLE_SENTRY:
+    sentry_sdk.init(
+        dsn=os.getenv("SENTRY_DSN"),
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=1.0,
+        send_default_pii=True,
+        enable_tracing=True,
+        environment=os.getenv("ENVIRONMENT"),
+    )
+
+
+# Loading of locally stored settings.
+
+try:
+    from backend.settings._local import *  # noqa
+except ImportError:
+    pass
