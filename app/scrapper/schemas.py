@@ -7,6 +7,8 @@ from uuid import UUID as _UUID
 from pydantic import BaseModel as _BaseModel
 from pydantic.fields import Field as _Field
 
+from clubs.management.commands.utils import unify_club_name, unify_team_name
+
 
 class BaseModel(_BaseModel, metaclass=ABCMeta):
     __to_dict__ = {}
@@ -76,6 +78,18 @@ class ClubSchema(BaseModel):
     voivodeship: _typing.Optional["VoivodeshipSchema"]
     stadion_address: _typing.Optional[str] = _Field(alias="address")
 
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+        try:
+            self._parse_name()
+        except:
+            pass
+
+    def _parse_name(self) -> None:
+        """Parse name and set abbreviation"""
+        self.name = unify_club_name(self.name)
+
 
 class TeamSchema(BaseModel):
     __to_dict__ = {
@@ -95,6 +109,15 @@ class TeamSchema(BaseModel):
         super().__init__(**kwargs)
         self._define_age_category()
         self._define_seniority()
+
+        try:
+            self._parse_name()
+        except:
+            pass
+
+    def _parse_name(self) -> None:
+        """Parse name and set abbreviation"""
+        self.name = unify_team_name(self.name)
 
     def _define_age_category(self) -> None:
         """Define age category based on team name"""

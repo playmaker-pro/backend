@@ -275,7 +275,10 @@ class Command(_BaseCommand):
         logger.info(
             f"New object: [{instance.__class__.__name__} -- {mapper_entity.mapper_id}]"
         )
-        instance.save()
+        try:
+            instance.save()
+        except Exception as e:
+            logger.error(f"Unable to create {instance} with id: {mapper_id}. {e}")
 
     def _define_voivodeship_object(
         self, voivodeship_name: _typing.Optional[str]

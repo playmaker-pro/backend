@@ -963,7 +963,12 @@ class Team(models.Model, MappingMixin):
     class Meta:
         verbose_name = _("Team")
         verbose_name_plural = _("Teams")
-        unique_together = ("name", "club", "seniority", "league_history")
+        unique_together = (
+            "name",
+            "club",
+            "seniority",
+            "league_history",
+        )
 
     # common team fields
     travel_refunds = models.BooleanField(_("Zwrot za dojazdy"), default=False)
