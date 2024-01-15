@@ -3,7 +3,7 @@ import typing
 
 from django.contrib.auth.models import User
 from django.db import models as django_models
-from django.db.models import F, ObjectDoesNotExist, QuerySet
+from django.db.models import ObjectDoesNotExist, QuerySet
 
 from clubs import errors, models
 from clubs.api.api_filters import ClubFilter
@@ -280,7 +280,7 @@ class TeamHistoryCreationService:
 
         This function first tries to get a team by its name and gender.
         If the team is found, and it's marked as visible and enabled, it's returned.
-        If the team isn't found, a new team is created with the provided name and gender.
+        If the team isn't found, a new team is created with the provided name and gender.  # noqa 501
         The newly created team is then initialized with default values.
         """
         team = models.Team.objects.filter(
@@ -321,7 +321,7 @@ class TeamHistoryCreationService:
         else:
             # Find an existing team with the same name but no league history
             team_history = models.Team.objects.filter(
-                name=team.name, league_history__isnull=True
+                name=team.name, league_history__isnull=True, league__isnull=True
             ).first()
 
             if team_history:
@@ -539,7 +539,9 @@ class TeamHistoryCreationService:
                 name=current_season_name, defaults={"is_in_verify_form": False}
             )
 
-            existing_team = self.search_for_existing_team(team_parameter, season_obj)
+            existing_team = self.search_for_existing_team(
+                team_parameter, season_obj, league_identifier
+            )
             if existing_team:
                 # If existing team is found, use it directly
                 team_history = existing_team
@@ -574,21 +576,31 @@ class TeamHistoryCreationService:
         return team_histories
 
     @staticmethod
-    def search_for_existing_team(team_name: str, season_obj: models.Season) -> models.Team:
+    def search_for_existing_team(
+        team_name: str,
+        season_obj: models.Season,
+        league_identifier: typing.Union[str, int],
+    ) -> models.Team:
         """
-        Search for an existing team based on team name and the season.
-
-        Args:
-        team_name: The name of the team.
-        season_obj: The season object or identifier for which the team is associated.
-
-        Returns:
-        The found Team object or None if no matching team is found.
+        Search for an existing team based on team name, season
+        and league associated with the team.
         """
 
-        # Find the team with the matching name and linked to the specified season's league history
-        existing_team = models.Team.objects.filter(
-            name=team_name, league_history__season=season_obj
-        ).first()
+        # Find the team with the matching name and linked to the specified season's league history  # noqa 501
+        # Check if the league_identifier is a string (league name) or an integer (league ID)  # noqa 501
+        if isinstance(league_identifier, str):
+            # If league_identifier is a string, search using the league name
+            existing_team = models.Team.objects.filter(
+                name=team_name,
+                league_history__season=season_obj,
+                league__name=league_identifier,
+            ).first()
+        else:
+            # If league_identifier is an integer, search using the league ID
+            existing_team = models.Team.objects.filter(
+                name=team_name,
+                league_history__season=season_obj,
+                league_id=league_identifier,
+            ).first()
 
         return existing_team

@@ -11,14 +11,13 @@ from rest_framework.test import APIClient, APITestCase
 
 from labels.models import Label
 from labels.services import LabelService
-from profiles.api.errors import ProfileDoesNotExist
-from profiles.models import PlayerPosition, ProfileVisitHistory
+from profiles.models import ProfileVisitHistory, TeamContributor
 from profiles.schemas import PlayerProfileGET
 from profiles.services import ProfileService
 from profiles.tests import utils
 from roles.definitions import CLUB_ROLE_TEAM_LEADER
 from users.models import User, UserPreferences
-from utils import factories
+from utils import factories, get_current_season
 from utils.factories import SEASON_NAMES, UserFactory
 from utils.test.test_utils import UserManager
 
@@ -547,7 +546,9 @@ class TestUpdateProfileAPI(APITestCase):
     def test_patch_user_userpreferences_and_label_assignment_for_coach_and_player(
         self, key1, val1, key2, val2, profile_type, expected_label
     ) -> None:
-        """Test updating userpreferences and label assignment for both coach and player profiles"""
+        """
+        Test updating userpreferences and label assignment for both coach and player profiles  # noqa 501
+        """
         profile = utils.create_empty_profile(
             role=profile_type, user_id=self.user_obj.pk
         )
@@ -588,7 +589,9 @@ class TestUpdateProfileAPI(APITestCase):
     def test_userpreferences_update_removes_label_if_no_longer_applicable(
         self, key1, val1, key2, val2, profile_type, label_to_check, expected_existence
     ):
-        """Test that updating userpreferences removes label if conditions are no longer met"""
+        """
+        Test that updating userpreferences removes label if conditions are no longer met
+        """
         profile = utils.create_empty_profile(
             role=profile_type, user_id=self.user_obj.pk
         )
@@ -658,7 +661,7 @@ class TestUpdateProfileAPI(APITestCase):
     def test_goalkeeper_height_label_removal(self):
         """
         Tests the removal of the 'Bramkarz 185+' label from a player
-        profile when the player is no longer a goalkeeper or their height is below 185 cm.
+        profile when the player is no longer a goalkeeper or their height is below 185 cm.  # noqa 501
         """
         # Setup: Create a goalkeeper with a height over 185 cm
         profile = utils.create_empty_profile(user_id=self.user_obj.pk, role="P")
@@ -1110,6 +1113,62 @@ class ProfileTeamsApiTest(APITestCase):
         assert self.non_player_user.profile.coach_role == "OTC"
         assert self.non_player_user.profile.custom_coach_role == "custom role"
 
+    def test_add_correct_team_to_non_player_profile(self):
+        """
+        Test that the correct team is assigned as the primary team in a non-player
+        profile when multiple teams exist in the same club.
+        """
+        coach_user = factories.CoachProfileFactory.create(
+            user__email="coachuser@example.com"
+        ).user
+        self.client.force_authenticate(user=coach_user)
+        season = get_current_season()
+        club = factories.ClubFactory(name="test club")
+        league_1 = factories.LeagueFactory(name="1 liga")
+        league_history_1 = factories.LeagueHistoryFactory(
+            league=league_1, season__name=season
+        )
+        team_1 = factories.TeamFactory(
+            name="test team", league_history=league_history_1, club=club
+        )
+        league_2 = factories.LeagueFactory(name="2 liga")
+        league_history_2 = factories.LeagueHistoryFactory(
+            league=league_2, season__name="2022/2023"
+        )
+        team_2 = factories.TeamFactory(
+            name="test team", league_history=league_history_2, club=club
+        )
+
+        data = {
+            "team_history": team_1.id,
+            "start_date": "2021-01-01",
+            "is_primary": True,
+            "role": "IIC",
+        }
+
+        response = self.client.post(
+            reverse(
+                "api:profiles:add_team_to_profile",
+                kwargs={"profile_uuid": coach_user.profile.uuid},
+            ),
+            data,
+        )
+
+        assert response.status_code == 201
+        assert response.data["end_date"] is None
+        coach_user.refresh_from_db()
+        assert coach_user.profile.coach_role == "IIC"
+        # Fetch the related TeamContributor object and assert the correct team is primary  # noqa 501
+        team_contributor = TeamContributor.objects.filter(
+            profile_uuid=coach_user.profile.uuid
+        ).first()
+        assert team_contributor is not None
+        assert team_contributor.team_history.filter(id=team_1.id).exists()
+        # Additional assertions can be added if there are specific attributes
+        # in TeamContributor to indicate a team is primary
+
+        assert coach_user.profile.team_object.id == team_1.id
+
 
 class TestSetMainProfileAPI(APITestCase):
     def setUp(self) -> None:
@@ -1231,7 +1290,7 @@ class TestProfileVisitHistory(APITestCase):
         visit_object.refresh_from_db()
         assert visit_object.counter_anonymoususer == 1
         assert getattr(visit_object, f"counter_{field_name}") == 1
-        assert visit_object.user_logged_in == True
+        assert visit_object.user_logged_in is True
 
         # Check if counter doesn't count if requestor is the same as requested
         assert visit_object.total_visits == 2
