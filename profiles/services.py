@@ -45,7 +45,6 @@ from roles.definitions import (
     TRANSFER_BENEFITS_CHOICES,
     TRANSFER_REQUEST_STATUS_CHOICES,
     TRANSFER_SALARY_CHOICES,
-    TRANSFER_STATUS_CHOICES,
     TRANSFER_STATUS_CHOICES_WITH_UNDEFINED,
     TRANSFER_TRAININGS_CHOICES,
     PlayerPositions,
@@ -682,8 +681,8 @@ class ProfileFilterService:
 
         This method iterates over a list of transfer status identifiers and applies
         filters to the queryset. Profiles with a status matching any of the specified
-        identifiers are included in the result. Additionally, a special status identifier "5"
-        is used to include profiles that do not have an associated TransferStatus object.
+        identifiers are included in the result. Additionally, a special status identifier "5"  # noqa 501
+        is used to include profiles that do not have an associated TransferStatus object.  # noqa 501
         """
         condition = Q()
         for status in statuses:
@@ -1317,7 +1316,6 @@ class TeamContributorService:
                 profile_uuid, matched_team_histories
             )
             self.synchronize_profile_role(team_contributor, profile_uuid)
-
         return team_contributor
 
     def get_or_create_team_history(
