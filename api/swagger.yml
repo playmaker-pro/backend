@@ -1520,7 +1520,15 @@ paths:
                     shortcut:
                       type: string
                       description: 'Shortcut representing the player position.'
-                  example: {id: 1, name: "Napastnik", shortcut: "F"}
+                    shortcut_pl:
+                      type: string
+                      description: 'Shortcut representing the player position in Polish.'
+                  required:
+                    - id
+                    - name
+                    - shortcut
+                    - shortcut_pl
+                  example: {id: 1, name: "Napastnik", shortcut: "F", shortcut_pl: "N"}
           description: Returns player positions, including names and shortcuts
   /profiles/formations/:
     get:
@@ -4384,8 +4392,8 @@ components:
       type: object
       required:
         - team_name
-        - league_highest_parent_name
-        - league_highest_parent_id
+        - league_name
+        - league_id
         - team_contributor_id
         - picture_url
         - season
@@ -4393,9 +4401,9 @@ components:
       properties:
         team_name:
           type: string
-        league_highest_parent_name:
+        league_name:
           type: string
-        league_highest_parent_id:
+        league_id:
           type: integer
         team_contributor_id:
           type: integer
@@ -4891,8 +4899,8 @@ components:
             },
             "team_history_object": {
               "team_name": "Team",
-              "league_highest_parent_name": "League",
-              "league_highest_parent_id": 5251
+              "league_name": "League",
+              "league_id": 5251
             },
             "visits": 10
           }
@@ -5014,8 +5022,8 @@ components:
             },
             "team_history_object": {
               "team_name": "Team",
-              "league_highest_parent_name": "League",
-              "league_highest_parent_id": 5251
+              "league_name": "League",
+              "league_id": 5251
             },
             "visits": 10
           }
@@ -5203,8 +5211,8 @@ components:
             },
             "team_history_object": {
               "team_name": "Team",
-              "league_highest_parent_name": "League",
-              "league_highest_parent_id": 5251
+              "league_name": "League",
+              "league_id": 5251
             },
             "visits": 10
           }
@@ -5537,6 +5545,9 @@ components:
           nullable: true
         player_position:
           $ref: '#/components/schemas/PlayerPosition'
+          nullable: true
+        picture:
+          type: string
           nullable: true
 
     Country:

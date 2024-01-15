@@ -1309,9 +1309,11 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
         if obj.profile:
             if field_name := obj.profile.specific_role_field_name:
                 val = getattr(obj.profile, field_name, None)
-                serializer = ProfileEnumChoicesSerializer(
-                    source=field_name,
-                    read_only=True,
-                    model=obj.profile.__class__,
-                )
-                return serializer.to_representation(serializer.parse(val))
+                if val is not None:
+                    serializer = ProfileEnumChoicesSerializer(
+                        source=field_name,
+                        read_only=True,
+                        model=obj.profile.__class__,
+                    )
+                    return serializer.to_representation(serializer.parse(val))
+                return None
