@@ -5,7 +5,7 @@ from typing import Optional, Union
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
-from django.db.models import ObjectDoesNotExist, QuerySet
+from django.db.models import ObjectDoesNotExist, OuterRef, QuerySet, Subquery
 from django.db.models.functions import Random
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
@@ -25,6 +25,7 @@ from api.swagger_schemas import (
     FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA,
 )
 from api.views import EndpointView
+from clubs.models import Team
 from clubs.services import LeagueService
 from external_links import serializers as external_links_serializers
 from external_links.errors import LinkSourceNotFound, LinkSourceNotFoundServiceException
@@ -582,14 +583,18 @@ class ProfileTeamsApi(EndpointView):
             profile = profile_service.get_profile_by_uuid(profile_uuid)
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExist()
-        qs: QuerySet = team_contributor_service.get_teams_for_profile(
+
+        # Get sorted list of team contributors
+        sorted_contributors: list = team_contributor_service.get_teams_for_profile(
             profile_uuid
-        ).prefetch_related("team_history", "team_history__league_history__league")
+        )
         # Using the manager to get the right serializer
         serializer_class = self.serializer_manager.get_serializer_class(
             profile, "output"
         )
-        serializer = serializer_class(qs, many=True, context={"request": request})
+        serializer = serializer_class(
+            sorted_contributors, many=True, context={"request": request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def add_team_contributor_to_profile(
@@ -803,7 +808,8 @@ class TransferStatusAPIView(EndpointView):
     def list_transfer_status(self, request: Request) -> Response:  # noqa
         """Retrieve and display transfer statuses for the profiles."""
         transfer_choices = (
-            ChoicesTuple(*transfer) for transfer in TRANSFER_STATUS_CHOICES_WITH_UNDEFINED
+            ChoicesTuple(*transfer)
+            for transfer in TRANSFER_STATUS_CHOICES_WITH_UNDEFINED
         )
         serializer = ProfileEnumChoicesSerializer(transfer_choices, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

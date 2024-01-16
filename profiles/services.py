@@ -1012,21 +1012,31 @@ class TeamContributorService:
 
     def get_teams_for_profile(
         self, profile_uuid: uuid.UUID, **kwargs
-    ) -> django_base_models.QuerySet:
+    ) -> typing.List[models.TeamContributor]:
         """
-        Fetches all the teams associated with a given profile, following the model's
-        Meta ordering.
+        Fetches all the teams associated with a given profile and returns them
+        as a list.
+        The resulting list is sorted first by the 'is_primary' field in
+        descending order, and then by the latest season associated with
+        each team contributor's team history, also in descending order.
         """
-        return self.filter_team_contributor(profile_uuid=profile_uuid, **kwargs)
+        queryset = self.filter_team_contributor(
+            profile_uuid=profile_uuid, **kwargs
+        ).prefetch_related("team_history", "team_history__league_history__season")
+        # Sort the queryset
+        sorted_contributors = sorted(
+            queryset,
+            key=lambda x: (
+                -x.is_primary,
+                -self.get_latest_season(x),
+            ),
+        )
+        return sorted_contributors
 
     @staticmethod
     def filter_team_contributor(**kwargs):
         """Filter team contributor by given kwargs"""
-        return (
-            models.TeamContributor.objects.filter(**kwargs)
-            .distinct("id")
-            .order_by("id")
-        )
+        return models.TeamContributor.objects.filter(**kwargs).order_by("id")
 
     def get_profile_actual_teams(
         self, profile_uuid: uuid.UUID
@@ -1038,6 +1048,16 @@ class TeamContributorService:
         return self.filter_team_contributor(
             profile_uuid=profile_uuid, end_date__isnull=True
         )
+
+    @staticmethod
+    def get_latest_season(team_contributor):
+        seasons = team_contributor.team_history.values_list(
+            "league_history__season__name", flat=True
+        )
+        # Convert each season to a sortable integer (e.g., "2024/2023" to 2024)
+        sortable_seasons = [int(season.split("/")[0]) for season in seasons if season]
+        # Sort seasons in descending order and return the first (latest) one
+        return max(sortable_seasons) if sortable_seasons else 0
 
     @staticmethod
     def create_or_get_team_contributor(
