@@ -265,6 +265,7 @@ class TeamAdmin(admin.ModelAdmin):
 class ClubAdmin(admin.ModelAdmin):
     list_display = (
         "name",
+        "visible",
         "short_name",
         "mapping",
         "autocreated",
@@ -275,6 +276,7 @@ class ClubAdmin(admin.ModelAdmin):
         linkify("external_links"),
     )
     readonly_fields = ("mapper",)
+    actions = [set_visibility, set_invisibility]
     autocomplete_fields: Sequence[str] = ("manager",)
     search_fields: Sequence[str] = ("name",)
     list_filter: Sequence[str] = (
