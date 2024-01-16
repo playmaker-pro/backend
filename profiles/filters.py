@@ -16,7 +16,6 @@ from labels.utils import (
 )
 from profiles import models, services
 from profiles.api.errors import IncorrectProfileRole
-from roles.definitions import TRANSFER_STATUS_CHOICES
 
 
 class ProfileListAPIFilter(APIFilter):
@@ -41,6 +40,11 @@ class ProfileListAPIFilter(APIFilter):
         "licence": api_utils.convert_str_list,
         "labels": api_utils.convert_str_list,
         "transfer_status": api_utils.convert_str_list,
+        "additional_info": api_utils.convert_str_list,
+        "number_of_trainings": api_utils.convert_str,
+        "benefits": api_utils.convert_str_list,
+        "salary": api_utils.convert_str,
+        "transfer_status_league": api_utils.convert_int_list,
     }
 
     @cached_property
@@ -90,6 +94,11 @@ class ProfileListAPIFilter(APIFilter):
         self.filter_league()
         self.filter_gender()
         self.filter_players_by_transfer_status()
+        self.filter_by_salary()
+        self.filter_by_benefits()
+        self.filter_by_transfer_status_league()
+        self.filter_by_additional_info()
+        self.filter_by_number_of_trainings()
 
         self.queryset = self.queryset.order_by("-user__date_joined")
 
@@ -232,3 +241,40 @@ class ProfileListAPIFilter(APIFilter):
             self.queryset = self.service.filter_transfer_status(
                 self.queryset, transfer_statuses
             )
+
+    def filter_by_transfer_status_league(self) -> None:
+        """
+        Filter the queryset by leagues associated with the profile's transfer status.
+        """
+        if league_ids := self.query_params.get("transfer_status_league"):
+            self.queryset = self.service.filter_by_transfer_status_league(self.queryset, league_ids)
+
+    def filter_by_additional_info(self) -> None:
+        """
+        Filter the queryset by additional information related to the profile's transfer status.
+        """
+        if info := self.query_params.get("additional_info"):
+            self.queryset = self.service.filter_by_additional_info(self.queryset, info)
+
+    def filter_by_number_of_trainings(self) -> None:
+        """
+        Filter the queryset by the number of trainings per week as specified in the profile's transfer status.
+        """
+        if trainings := self.query_params.get("number_of_trainings"):
+            self.queryset = self.service.filter_by_number_of_trainings(
+                self.queryset, trainings
+            )
+
+    def filter_by_benefits(self) -> None:
+        """
+        Filter the queryset by benefits associated with the profile's transfer status.
+        """
+        if benefits := self.query_params.get("benefits"):
+            self.queryset = self.service.filter_by_benefits(self.queryset, benefits)
+
+    def filter_by_salary(self) -> None:
+        """
+        Filter the queryset by salary range as indicated in the profile's transfer status.
+        """
+        if salary := self.query_params.get("salary"):
+            self.queryset = self.service.filter_by_salary(self.queryset, salary)
