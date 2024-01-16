@@ -6,6 +6,13 @@ import pytest
 )
 @pytest.mark.django_db(transaction=True)
 def test_clear_data_migration(migrator) -> None:
+    """
+    Test the 'clear_data' data migration in the 'clubs' app.
+
+    This test ensures that the specified data migration effectively clears all
+    data from the Club, Team, TeamHistory, League, and LeagueHistory models.
+    """
+
     # Apply the initial migration to set the state before the tested migration
     old_state = migrator.apply_initial_migration([("clubs", "0090_auto_20231226_2335")])
     # Fetch model classes using old_state

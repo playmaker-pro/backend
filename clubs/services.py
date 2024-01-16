@@ -147,12 +147,15 @@ class ClubTeamService:
         """
         Return all clubs filtered by the provided filters.
         """
-        queryset = models.Club.objects.all().prefetch_related("teams").order_by("name")
 
+        queryset = models.Club.objects.all().prefetch_related("teams").order_by("name")
         if filters:
-            filter = ClubFilter(filters, queryset=queryset)
-            return filter.qs
-        return queryset
+            queryset = ClubFilter(filters, queryset=queryset).qs
+        return queryset.prefetch_related(
+            django_models.Prefetch(
+                "teams", queryset=models.Team.objects.filter(visible=True)
+            )
+        )
 
     @staticmethod
     def validate_gender(gender: str) -> None:

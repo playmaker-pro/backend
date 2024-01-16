@@ -1,6 +1,6 @@
 from typing import List
 
-from django.db.models import Q, QuerySet
+from django.db.models import QuerySet
 from django_filters import rest_framework as filters
 
 from api.filters import MultipleFilter

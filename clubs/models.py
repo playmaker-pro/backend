@@ -117,7 +117,7 @@ class Club(models.Model, MappingMixin):
     PROFILE_TYPE = "klub"
 
     autocreated = models.BooleanField(default=False, help_text="Autocreated from s38")
-
+    visible = models.BooleanField(default=True, help_text="Visible on database")
     mapping = models.TextField(
         null=True,
         blank=True,
