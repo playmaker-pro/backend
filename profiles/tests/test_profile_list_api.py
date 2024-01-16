@@ -20,6 +20,7 @@ from utils import factories, get_current_season
 from utils.factories import (
     LabelDefinitionFactory,
     LabelFactory,
+    LeagueFactory,
     PlayerProfileFactory,
     TransferStatusFactory,
     UserFactory,
@@ -663,6 +664,117 @@ class TestProfileListAPI(APITestCase):
         assert (
             len(response.data["results"]) == 2
         )  # player_with_status_1 and player_without_transfer_status should be returned
+
+    def test_filter_profiles_by_transfer_status_league(self) -> None:
+        """
+        Test the ability to filter player profiles based on their associated leagues.
+
+        This test verifies that profiles can be correctly filtered by the league associated
+        with their transfer status. It creates two profiles each linked to a different league,
+        then performs an API request to filter by one of the leagues and checks if the response
+        contains only the profile associated with that league.
+        """
+        # Create leagues
+        league1 = LeagueFactory.create()
+        league2 = LeagueFactory.create()
+
+        # Create profiles with transfer statuses linked to different leagues
+        player_in_league1 = PlayerProfileFactory.create()
+        TransferStatusFactory.create(
+            profile=player_in_league1, leagues=[league1]
+        )  # Pass league instance
+
+        player_in_league2 = PlayerProfileFactory.create()
+        TransferStatusFactory.create(
+            profile=player_in_league2, leagues=[league2]
+        )  # Pass league instance
+
+        # Perform API request to filter by league1
+        response = self.client.get(
+            self.url, {"role": "P", "transfer_status_league": league1.id}, **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+
+    def test_filter_profiles_by_additional_info(self) -> None:
+        """
+        Test the ability to filter player profiles based on additional information in their transfer status.
+
+        This test checks if profiles can be filtered based on specific additional information
+        identifiers associated with their transfer status. It ensures that the API correctly
+        returns profiles matching the requested additional information.
+        """
+        player_with_additional_info = PlayerProfileFactory.create()
+        TransferStatusFactory.create(
+            profile=player_with_additional_info, additional_info=["1", "2"]
+        )
+
+        player_without_additional_info = PlayerProfileFactory.create()
+        TransferStatusFactory.create(
+            profile=player_without_additional_info, additional_info=[]
+        )
+
+        # Filter for profiles with specific additional info
+        response = self.client.get(
+            self.url, {"role": "P", "additional_info": "1"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+
+    def test_filter_profiles_by_number_of_trainings(self) -> None:
+        """
+        Test the ability to filter player profiles based on the number of trainings per week specified in their transfer status.
+
+        This test creates profiles with specified training frequencies in their transfer status
+        and checks if the API can filter these profiles based on the given number of trainings.
+        """
+        player_with_trainings = PlayerProfileFactory.create()
+        TransferStatusFactory.create(
+            profile=player_with_trainings, number_of_trainings="1"
+        )
+
+        # Filter for profiles with specific number of trainings
+        response = self.client.get(
+            self.url, {"role": "P", "number_of_trainings": "1"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+
+    def test_filter_profiles_by_benefits(self) -> None:
+        """
+        Test the ability to filter player profiles based on the benefits mentioned in their transfer status.
+
+        This test verifies the functionality of filtering profiles by specific benefits.
+        It creates profiles with varying benefits in their transfer status and checks if
+        the API accurately filters profiles based on these benefits.
+        """
+        player_with_benefits = PlayerProfileFactory.create()
+        TransferStatusFactory.create(profile=player_with_benefits, benefits=["1", "2"])
+
+        # Filter for profiles with specific benefits
+        response = self.client.get(
+            self.url, {"role": "P", "benefits": "1"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+
+    def test_filter_profiles_by_salary(self) -> None:
+        """
+        Test the ability to filter player profiles based on the salary range specified in their transfer status.
+
+        This test checks if the API can accurately filter profiles based on the salary range
+        defined in their transfer status, ensuring that only profiles matching the specified
+        salary criteria are returned in the response.
+        """
+        player_with_salary = PlayerProfileFactory.create()
+        TransferStatusFactory.create(profile=player_with_salary, salary="1")
+
+        # Filter for profiles with specific salary
+        response = self.client.get(
+            self.url, {"role": "P", "salary": "1"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
 
 
 @override_settings(SUSPEND_SIGNALS=True)

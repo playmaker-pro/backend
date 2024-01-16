@@ -693,6 +693,45 @@ class ProfileFilterService:
 
         return queryset.filter(condition)
 
+    @staticmethod
+    def filter_by_transfer_status_league(
+        queryset: QuerySet, league_ids: typing.List[int]
+    ) -> QuerySet:
+        """
+        Filter the queryset based on the league IDs associated with the profile's transfer status.
+        """
+        return queryset.filter(transfer_status_related__league__id__in=league_ids)
+
+    @staticmethod
+    def filter_by_additional_info(
+        queryset: QuerySet, info: typing.List[str]
+    ) -> QuerySet:
+        """
+        Filter the queryset based on additional information associated with the profile's transfer status.
+        """
+        return queryset.filter(transfer_status_related__additional_info__overlap=info)
+
+    @staticmethod
+    def filter_by_number_of_trainings(queryset: QuerySet, trainings: str) -> QuerySet:
+        """
+        Filter the queryset based on the number of trainings specified in the profile's transfer status.
+        """
+        return queryset.filter(transfer_status_related__number_of_trainings=trainings)
+
+    @staticmethod
+    def filter_by_benefits(queryset: QuerySet, benefits: typing.List[str]) -> QuerySet:
+        """
+        Filter the queryset based on benefits associated with the profile's transfer status.
+        """
+        return queryset.filter(transfer_status_related__benefits__overlap=benefits)
+
+    @staticmethod
+    def filter_by_salary(queryset, salary: str) -> QuerySet:
+        """
+        Filter the queryset based on the salary specified in the profile's transfer status.
+        """
+        return queryset.filter(transfer_status_related__salary=salary)
+
 
 class PlayerProfilePositionService:
     def validate_positions(self, positions_data: typing.List[PositionData]) -> None:
