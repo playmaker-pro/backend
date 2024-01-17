@@ -432,8 +432,9 @@ class ProfileService:
         search_term = utils.preprocess_search_term(search_term)
 
         # First, get users who have a declared role
-        users_with_declared_role = User.objects.filter(declared_role__isnull=False)
-
+        users_with_declared_role = User.objects.filter(
+            Q(declared_role__isnull=False) | Q(historical_role__isnull=False)
+        )
         # Then, apply the custom search term processing
         matching_users = filter(
             lambda user: search_term

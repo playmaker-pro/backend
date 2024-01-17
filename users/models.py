@@ -178,7 +178,7 @@ class User(AbstractUser, UserRoleMixin):
 
     @property
     def role(self):
-        return self.declared_role
+        return self.declared_role or self.historical_role
 
     @property
     def is_missing_verification_data(self):
@@ -276,6 +276,14 @@ class User(AbstractUser, UserRoleMixin):
         null=True,
         blank=True,
         help_text="Users declaration in which role he has. It is main paramter.",
+    )
+    historical_role = models.CharField(
+        _("Deklaracja historycznej roli"),
+        choices=ROLE_CHOICES,
+        max_length=355,
+        null=True,
+        blank=True,
+        help_text="User role declaration from previous app version.",
     )
     last_activity = models.DateTimeField(
         _("Last Activity"), default=None, null=True, blank=True
