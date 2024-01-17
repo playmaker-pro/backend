@@ -67,6 +67,8 @@ class ProfileVideoSerializer(serializers.ModelSerializer):
 
     def get_label(self, obj: models.ProfileVideo) -> Optional[dict]:
         """Get label name. If label is not defined, return empty dict"""
+        if not obj.label:
+            return None
         serializer = ProfileEnumChoicesSerializer(
             model=models.ProfileVideo,
             required=False,
@@ -75,10 +77,10 @@ class ProfileVideoSerializer(serializers.ModelSerializer):
             data=obj.label,
         )
         try:
-            serializer.is_valid()
+            serializer.is_valid(raise_exception=True)
             return serializer.data
         except ChoiceFieldValueErrorException:
-            return {}
+            return None
 
     def __init__(self, *args, **kwargs) -> None:
         """
