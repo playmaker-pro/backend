@@ -41,12 +41,12 @@ from profiles.api.errors import (
     TransferRequestDoesNotExistHTTPException,
     TransferStatusDoesNotExistHTTPException,
 )
-from profiles.api.filters import TransferRequestCatalogueFilter
+from profiles.api.filters import PlayerProfileFilters, TransferRequestCatalogueFilter
 from profiles.api.managers import SerializersManager
 from profiles.errors import ProfileVisitHistoryDoesNotExistException
 from profiles.filters import ProfileListAPIFilter
 from profiles.interfaces import ProfileVisitHistoryProtocol
-from profiles.models import ProfileTransferRequest
+from profiles.models import PlayerProfile, ProfileTransferRequest
 from profiles.serializers_detailed.base_serializers import (
     ProfileTransferRequestSerializer,
     ProfileTransferStatusSerializer,
@@ -84,6 +84,7 @@ visit_history_service = ProfileVisitHistoryService()
 logger = logging.getLogger(__name__)
 
 
+# FIXME: lremkowicz: what about a django-filter library?
 class ProfileAPI(ProfileListAPIFilter, EndpointView):
     permission_classes = [IsAuthenticatedOrReadOnly]
     allowed_methods = ["post", "patch", "get"]

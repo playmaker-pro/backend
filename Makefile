@@ -11,6 +11,8 @@ else
 	poetry env use $(python_path)
 	poetry install
 endif
+
+
 .PHONY: test
 test:
 	poetry run pytest .

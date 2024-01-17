@@ -2618,7 +2618,7 @@ class ProfileTransferRequest(TransferBaseModel):
         choices=definitions.TRANSFER_REQUEST_STATUS_CHOICES,
         help_text="Defines a status of the transfer for the profile.",
     )
-    player_position = models.ManyToManyField(
+    position = models.ManyToManyField(
         PlayerPosition,
         related_name="transfer_requests",
         help_text="The position that the team is requesting.",

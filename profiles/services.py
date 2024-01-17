@@ -538,6 +538,13 @@ class ProfileFilterService:
         )
 
     @staticmethod
+    def filter_qs_by_player_position_id(
+        queryset: django_base_models.QuerySet, positions: typing.List[int]
+    ) -> django_base_models.QuerySet:
+        """Filter queryset by player position id."""
+        return queryset.filter(player_positions__player_position_id__in=positions)
+
+    @staticmethod
     def filter_player_league(
         queryset: django_base_models.QuerySet, league_ids: list
     ) -> django_base_models.QuerySet:

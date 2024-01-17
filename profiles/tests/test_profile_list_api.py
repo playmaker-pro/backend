@@ -138,39 +138,42 @@ class TestProfileListAPI(APITestCase):
 
     def test_get_bulk_profiles_filter_position(self) -> None:
         """get player profiles filter by position"""
-        factories.PlayerProfileFactory.create(
+        player1 = factories.PlayerProfileFactory.create(
             player_positions__player_position__shortcut="CAM",
             player_positions__is_main=True,
         )
-        factories.PlayerProfileFactory.create(
+        player2 = factories.PlayerProfileFactory.create(
             player_positions__player_position__shortcut="GK",
             player_positions__is_main=True,
         )
 
+        player1_position_id = player1.player_positions.first().player_position.id
+        player2_position_id = player2.player_positions.first().player_position.id
+
         response = self.client.get(
             self.url,
-            {"role": "P", "position": "CAM"},
+            {"role": "P", "position": player1_position_id},
         )
         assert response.status_code == 200
         assert len(response.data["results"]) == 1
 
         response = self.client.get(
             self.url,
-            {"role": "P", "position": ["CAM", "GK"]},
+            {"role": "P", "position": [player1_position_id, player2_position_id]},
         )
         assert response.status_code == 200
         assert len(response.data["results"]) == 2
 
         count_response = self.client.get(
             self.count_url,
-            {"role": "P", "position": "CAM"},
+            {"role": "P", "position": player1_position_id},
         )
         assert count_response.status_code == 200
         assert count_response.data["count"] == 1
 
         count_response = self.client.get(
             self.count_url,
-            {"role": "P", "position": ["CAM", "GK"]},
+            {"role": "P", "position": [player1_position_id, player2_position_id]},
         )
         assert count_response.status_code == 200
         assert count_response.data["count"] == 2
@@ -605,11 +608,12 @@ class TestProfileListAPI(APITestCase):
         """
         Test the ability to filter player profiles based on transfer status.
 
-        This test verifies the functionality of the transfer status filter by creating player
-        profiles with different transfer statuses and then making API requests to filter these
-        profiles based on their transfer status. The test cases cover filtering by a single status,
-        multiple statuses, and the special case of status "5" which represents profiles
-        without an associated transfer status object.
+        This test verifies the functionality of the transfer status filter by
+        creating player profiles with different transfer statuses and then making API
+        requests to filter these profiles based on their transfer status. The test cases
+        cover filtering by a single status, multiple statuses, and the special case of
+        status "5" which represents profiles without an associated transfer
+        status object.
         """
         # Create profiles with various transfer statuses
         player_with_status_1 = PlayerProfileFactory.create()
@@ -618,7 +622,7 @@ class TestProfileListAPI(APITestCase):
         player_with_status_2 = PlayerProfileFactory.create()
         TransferStatusFactory.create(profile=player_with_status_2, status="2")
 
-        player_without_transfer_status = PlayerProfileFactory.create()
+        PlayerProfileFactory.create()
 
         # Test filtering for status "1"
         response = self.client.get(

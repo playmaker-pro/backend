@@ -989,31 +989,45 @@ paths:
         - in: query
           name: player_position
           schema:
-            type: string
+            type: array
+            items:
+              type: string
         - in: query
           name: league
+          style: form
+          explode: true
           schema:
-            type: string
+            type: array
+            items:
+              type: string
           description: league name
         - in: query
           name: voivodeship
           schema:
-            type: string
+            type: array
+            items:
+              type: string
         - in: query
           name: number_of_trainings
           schema:
-            type: integer
-          description: "Number of trainings object ID"
+            type: array
+            items:
+              type: integer
+              description: "Number of trainings object ID."
         - in: query
           name: salary
           schema:
-            type: integer
-          description: "Salary object ID"
+            type: array
+            items:
+              type: integer
+              description: "Salary object ID"
         - in: query
           name: benefits
           schema:
-            type: integer
-          description: "Benefits object ID"
+            type: array
+            items:
+              type: integer
+              description: "Benefits object ID"
         - in: query
           name: page
           schema:
@@ -3316,7 +3330,8 @@ paths:
       tags:
         - features
       security:
-        - jwtAuth: []
+        - jwtAuth: [ ]
+        - { }
       responses:
         '201':
           description: "Feature notifications saved successfully."
@@ -6177,7 +6192,7 @@ components:
               type: string
               description: "Transfer status name"
           required: ["id", "name"]
-        player_position:
+        position:
           $ref: '#/components/schemas/TransferRequestPositions'
         number_of_trainings:
           type: object
@@ -6244,7 +6259,7 @@ components:
               "id": "1",
               "name": "Nieznany"
           },
-          "player_position": [
+          "position": [
               {
                   "id": 102,
                   "name": "Defensywny Pomocnik #6",

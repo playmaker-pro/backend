@@ -356,6 +356,7 @@ class TestTransferStatusService:
         """Test get list transfer status."""
         obj = service.get_list_transfer_statutes()
         expected = [
-            ChoicesTuple(*transfer)._asdict() for transfer in TRANSFER_STATUS_CHOICES_WITH_UNDEFINED
+            ChoicesTuple(*transfer)._asdict()
+            for transfer in TRANSFER_STATUS_CHOICES_WITH_UNDEFINED
         ]
         assert obj == expected

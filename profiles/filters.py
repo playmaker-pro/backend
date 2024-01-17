@@ -27,7 +27,7 @@ class ProfileListAPIFilter(APIFilter):
         "youth": api_utils.convert_bool,
         "min_age": api_utils.convert_int,
         "max_age": api_utils.convert_int,
-        "position": api_utils.convert_str_list,
+        "position": api_utils.convert_list_with_string_to_int,
         "league": api_utils.convert_int_list,
         "latitude": api_utils.convert_float,
         "longitude": api_utils.convert_float,
@@ -186,7 +186,9 @@ class ProfileListAPIFilter(APIFilter):
     def filter_position(self) -> None:
         """Filter queryset by player position"""
         if position := self.query_params.get("position"):
-            self.queryset = self.service.filter_player_position(self.queryset, position)
+            self.queryset = self.service.filter_qs_by_player_position_id(
+                self.queryset, position
+            )
 
     def filter_youth(self) -> None:
         """Filter queryset by youth players"""
@@ -220,8 +222,9 @@ class ProfileListAPIFilter(APIFilter):
         """
         Filters the queryset based on label criteria.
 
-        The method relies on utility functions to validate label names, get specific IDs for profile and
-        user-related labels, and apply these filters to the queryset.
+        The method relies on utility functions to validate label names, get specific
+        IDs for profile and user-related labels, and apply these filters to the
+        queryset.
         """
         if label_names := self.query_params.get("labels"):
             valid_label_names = validate_labels(label_names)
