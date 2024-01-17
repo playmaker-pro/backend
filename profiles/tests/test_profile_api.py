@@ -1135,7 +1135,7 @@ class ProfileTeamsApiTest(APITestCase):
         league_history_2 = factories.LeagueHistoryFactory(
             league=league_2, season__name="2022/2023"
         )
-        team_2 = factories.TeamFactory(
+        factories.TeamFactory(
             name="test team", league_history=league_history_2, club=club
         )
 

@@ -167,6 +167,7 @@ class InitialBaseProfileCreationTests(TestCase):
     def test__has_data_id__should_be_false(self):
         assert self.profile.has_data_id is False
 
+
 class ProfileVerificationExistingProfileWithReadyForVerificationTests(TestCase):
     """Freshly created user is modifing profile fields which are Verification fields."""
 

@@ -310,7 +310,8 @@ class PhoneNumberField(serializers.Field):
 
     def to_representation(self, obj: Any) -> Optional[typing.Dict[str, str]]:
         """
-        Converts the object's phone number information into a nested JSON object for API output.
+        Converts the object's phone number information into a nested
+        JSON object for API output.
         """
         dial_code = getattr(obj, "dial_code", None)
         phone_number = getattr(obj, self.phone_field_name, None)
@@ -458,7 +459,7 @@ class ProfileTransferRequestSerializer(
             "requesting_team",
             "gender",
             "status",
-            "player_position",
+            "position",
             "number_of_trainings",
             "benefits",
             "salary",
@@ -476,7 +477,7 @@ class ProfileTransferRequestSerializer(
     status = ProfileEnumChoicesSerializer(
         model=ProfileTransferRequest,
     )
-    player_position = PlayerPositionSerializer(many=True, required=True)
+    position = PlayerPositionSerializer(many=True, required=True)
     number_of_trainings = serializers.IntegerField(required=False, allow_null=True)
     benefits = serializers.ListField(required=False, allow_null=True)
     salary = serializers.IntegerField(required=False, allow_null=True)
@@ -506,10 +507,8 @@ class ProfileTransferRequestSerializer(
             ]
             info_serialized = serializer(info, many=True)
             data["benefits"] = info_serialized.data
-        if instance.player_position:
-            positions = PlayerPositionSerializer(
-                instance=instance.player_position, many=True
-            )
+        if instance.position:
+            positions = PlayerPositionSerializer(instance=instance.position, many=True)
             data["player_position"] = positions.data
         if instance.number_of_trainings:
             num_of_training_serialized = serializer(
@@ -554,9 +553,7 @@ class ProfileTransferRequestSerializer(
 
 
 class UpdateOrCreateProfileTransferSerializer(ProfileTransferRequestSerializer):
-    player_position = PrimaryKeyRelatedField(
-        queryset=PlayerPosition.objects.all(), many=True
-    )
+    position = PrimaryKeyRelatedField(queryset=PlayerPosition.objects.all(), many=True)
 
 
 class BaseProfileSerializer(serializers.ModelSerializer):

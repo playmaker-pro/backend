@@ -379,11 +379,11 @@ class TransferRequestFactory(factory.django.DjangoModelFactory):
         return super().create(**kwargs)
 
     @post_generation
-    def player_position(self, create, extracted, **kwargs):  # noqa
+    def position(self, create, extracted, **kwargs):  # noqa
         if not create:
             return
-        if not self.player_position.all().exists():  # noqa
+        if not self.position.all().exists():  # noqa
             positions = PlayerPosition.objects.all()
             random_positions = random.sample(list(positions), 2)
             for random_position in random_positions:
-                self.player_position.add(random_position.pk)  # noqa
+                self.position.add(random_position.pk)  # noqa

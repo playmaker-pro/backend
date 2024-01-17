@@ -62,7 +62,7 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
             "requesting_team": team_contributor.pk,
             "gender": "M",
             "status": 1,
-            "player_position": [player_position1.pk, player_position2.pk],
+            "position": [player_position1.pk, player_position2.pk],
             "benefits": [2, 4],
             "number_of_trainings": 1,
             "salary": 1,
@@ -155,10 +155,10 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         assert response.json().get("status") == expected_status
 
         expected_positions = []
-        for position in transfer_request_obj.player_position.all():
+        for position in transfer_request_obj.position.all():
             expected_positions.append(PlayerPositionSerializer(position).data)
 
-        assert response.json().get("player_position") == expected_positions
+        assert response.json().get("position") == expected_positions
 
         expected_trainings = transfer_service.get_num_of_trainings_by_id(
             transfer_request_obj.number_of_trainings
@@ -405,18 +405,30 @@ def test_profile_transfer_request_teams_endpoint(
         {
             "id": team_contributor1.pk,
             "round": team_contributor1.round,
-            "is_primary": team_contributor1.is_primary,
-            "is_primary_for_round": team_contributor1.is_primary_for_round,
+            "team": {
+                "id": team1.pk,
+                "team_name": team1.name,
+                "league_name": team1.league_history.league.name,  # noqa: E501
+                "league_id": team1.league_history.league.pk,
+                "team_contributor_id": None,
+                "picture_url": request.build_absolute_uri(team1.get_club_pic),
+                "country": team1.get_country,
+                "season": team1.league_history.season.name,
+            },
         },
         {
             "id": team_contributor2.pk,
-            "team_id": team2.pk,
-            "picture_url": request.build_absolute_uri(team2.get_club_pic),
-            "team_name": team2.name,
-            "league_name": team2.league_history.league.name,
-            "league_id": team2.league_history.league.pk,
-            "season_name": team2.league_history.season.name,
             "round": team_contributor2.round,
+            "team": {
+                "id": team2.pk,
+                "team_name": team2.name,
+                "league_name": team2.league_history.league.name,  # noqa: E501
+                "league_id": team2.league_history.league.pk,
+                "team_contributor_id": None,
+                "picture_url": request.build_absolute_uri(team2.get_club_pic),
+                "country": team2.get_country,
+                "season": team2.league_history.season.name,
+            },
         },
     ]
 
