@@ -39,6 +39,7 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
         read_only=True, method_name="my_profile_uuid"
     )
     picture = serializers.CharField(source="picture_url", read_only=True)
+    gender = serializers.SerializerMethodField("get_gender")
 
     class Meta:
         model = User
@@ -49,6 +50,7 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
             "last_name",
             "role",
             "uuid",
+            "gender",
         )
 
     def my_profile_uuid(self, instance: User) -> Optional[str]:
@@ -56,6 +58,26 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
         if not instance.declared_role:
             return None
         return instance.profile.uuid
+
+    def get_gender(self, obj: User) -> Optional[dict]:
+        """
+        Retrieves and serializes the gender information from the user's preferences.
+
+        This method accesses the gender attribute from the user's associated
+        UserPreferences model. It then uses the ProfileEnumChoicesSerializer to
+        serialize the gender value into a more readable format (e.g., converting
+        a gender code to its corresponding descriptive name).
+        """
+        # Ensure the userpreferences relation exists
+        if obj.userpreferences:
+            gender_value = obj.userpreferences.gender
+            if gender_value is not None:
+                # Using ProfileEnumChoicesSerializer for the gender field
+                serializer = ProfileEnumChoicesSerializer(
+                    source="gender", model=UserPreferences
+                )
+                return serializer.to_representation(serializer.parse(gender_value))
+            return None
 
 
 class UserPreferencesSerializer(serializers.ModelSerializer):
