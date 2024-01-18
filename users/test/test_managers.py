@@ -313,7 +313,7 @@ class UserTokenManagerTest(TestCase):
         on the DEBUG setting. It should contain the user's ID and the provided endpoint.
         """
         # Construct the URL using the method under test
-        url = UserTokenManager.create_url(self.user, self.endpoint_name)
+        url = UserTokenManager.create_url(self.user)
 
         # Some basic assertions to check if the URL contains necessary components
         uidb = urlsafe_base64_encode(force_bytes(self.user.id))
