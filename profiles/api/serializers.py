@@ -23,6 +23,7 @@ from profiles.api import consts
 from profiles.api import errors as api_errors
 from profiles.services import ProfileVideoService
 from roles.definitions import CLUB_ROLES, GUEST_SHORT, PROFILE_TYPE_SHORT_MAP
+from users.models import UserPreferences
 from users.services import UserService
 from utils import translate_to
 from utils.factories import utils
@@ -1225,6 +1226,7 @@ class BaseProfileDataSerializer(serializers.Serializer):
 class ProfileSearchSerializer(serializers.ModelSerializer):
     team = serializers.SerializerMethodField()
     age = serializers.IntegerField(read_only=True, source="userpreferences.age")
+    gender = serializers.SerializerMethodField("get_gender")
     player_position = PlayerProfilePositionSerializer(
         source="profile.get_main_position", read_only=True
     )
@@ -1243,6 +1245,7 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
             "last_name",
             "team",
             "age",
+            "gender",
             "player_position",
             "specific_role",
             "custom_role",
@@ -1319,3 +1322,23 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
                     )
                     return serializer.to_representation(serializer.parse(val))
                 return None
+
+    def get_gender(self, obj: User) -> Optional[dict]:
+        """
+        Retrieves and serializes the gender information from the user's preferences.
+
+        This method accesses the gender attribute from the user's associated
+        UserPreferences model. It then uses the ProfileEnumChoicesSerializer to
+        serialize the gender value into a more readable format (e.g., converting
+        a gender code to its corresponding descriptive name).
+        """
+        # Ensure the userpreferences relation exists
+        if obj.userpreferences:
+            gender_value = obj.userpreferences.gender
+            if gender_value is not None:
+                # Using ProfileEnumChoicesSerializer for the gender field
+                serializer = ProfileEnumChoicesSerializer(
+                    source="gender", model=UserPreferences
+                )
+                return serializer.to_representation(serializer.parse(gender_value))
+            return None

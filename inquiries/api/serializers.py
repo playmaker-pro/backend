@@ -11,6 +11,7 @@ from profiles.api.serializers import (
 )
 from profiles.serializers_detailed.base_serializers import PhoneNumberField
 from users.api.serializers import BaseUserDataSerializer as _BaseUserDataSerializer
+from users.models import UserPreferences
 
 User = get_user_model()
 
@@ -26,6 +27,7 @@ class InquiryUserDataSerializer(_BaseUserDataSerializer):
         source="profile.get_main_position", read_only=True
     )
     team_history_object = serializers.SerializerMethodField()
+    gender = serializers.SerializerMethodField("get_gender")
 
     def get_specific_role(self, obj: User) -> dict:
         """Get specific role for profile (Coach, Club)"""
@@ -49,6 +51,26 @@ class InquiryUserDataSerializer(_BaseUserDataSerializer):
             return TeamHistoryBaseProfileSerializer(profile.team_object).data
         return None
 
+    def get_gender(self, obj: User) -> typing.Optional[dict]:
+        """
+        Retrieves and serializes the gender information from the user's preferences.
+
+        This method accesses the gender attribute from the user's associated
+        UserPreferences model. It then uses the ProfileEnumChoicesSerializer to
+        serialize the gender value into a more readable format (e.g., converting
+        a gender code to its corresponding descriptive name).
+        """
+        # Ensure the userpreferences relation exists
+        if obj.userpreferences:
+            gender_value = obj.userpreferences.gender
+            if gender_value is not None:
+                # Using ProfileEnumChoicesSerializer for the gender field
+                serializer = ProfileEnumChoicesSerializer(
+                    source="gender", model=UserPreferences
+                )
+                return serializer.to_representation(serializer.parse(gender_value))
+            return None
+
     class Meta(_BaseUserDataSerializer.Meta):
         fields = _BaseUserDataSerializer.Meta.fields + (
             "age",
@@ -57,6 +79,7 @@ class InquiryUserDataSerializer(_BaseUserDataSerializer):
             "player_position",
             "specific_role",
             "team_history_object",
+            "gender",
         )
 
 
@@ -175,7 +198,9 @@ class UserInquirySerializer(serializers.ModelSerializer):
     plan = InquiryPlanSerializer(read_only=True)
     contact = InquiryContactSerializer(source="user.inquiry_contact", read_only=True)
     inquiries_left = serializers.IntegerField(source="left")
-    days_until_expiry = serializers.IntegerField(read_only=True, source="get_days_until_next_reference")
+    days_until_expiry = serializers.IntegerField(
+        read_only=True, source="get_days_until_next_reference"
+    )
     logs = UserInquiryLogSerializer(many=True, read_only=True)
 
     class Meta:

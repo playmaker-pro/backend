@@ -3301,6 +3301,8 @@ paths:
                     type: string
                   uuid:
                     type: string
+                  gender:
+                    $ref: '#/components/schemas/Gender'
           description: Get user main profile uuid with role.
   /users/feature-sets/:
     get:
@@ -4143,14 +4145,14 @@ components:
           $ref: '#/components/schemas/BaseUserProfilePreferences'
         picture:
           type: string
-        last_login:
+        last_activity:
           type: string
       required:
         - id
         - first_name
         - last_name
         - userpreferences
-        - last_login
+        - last_activity
 
     CoachProfileUserDataUpdate:
       type: object
@@ -4190,7 +4192,7 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
         name:
           type: string
       required:
@@ -4804,6 +4806,8 @@ components:
             slug:
               type: string
               readOnly: true
+            uuid:
+              type: string
             user:
               $ref: '#/components/schemas/UserProfileBase'
             external_links:
@@ -4847,6 +4851,7 @@ components:
               description: "Total profile visits per last 30 days"
           example: {
             "slug": "player-slug",
+            "uuid": "uuid",
             "user": {
               "id": 1,
               "first_name": "Player",
@@ -4921,6 +4926,7 @@ components:
           }
           required: [
             slug,
+            uuid,
             user,
             team_object,
             voivodeship_obj,
@@ -4945,6 +4951,8 @@ components:
         - type: object
           properties:
             slug:
+              type: string
+            uuid:
               type: string
             user:
               $ref: '#/components/schemas/UserProfileBase'
@@ -4984,6 +4992,7 @@ components:
               description: "Total profile visits per last 30 days"
           example: {
             "slug": "coach-miz-shoty",
+            "uuid": "uuid",
             "user": {
                 "id": 7404,
                 "first_name": "MiZ",
@@ -5044,6 +5053,7 @@ components:
           }
       required:
         - slug
+        - uuid
         - user
         - voivodeship_obj
         - external_links
@@ -5161,6 +5171,8 @@ components:
           properties:
             slug:
               type: string
+            uuid:
+              type: string
             user:
               $ref: '#/components/schemas/UserProfileBase'
             external_links:
@@ -5233,6 +5245,7 @@ components:
           }
       required:
         - slug
+        - uuid
         - user
         - role
         - external_links
@@ -5247,6 +5260,8 @@ components:
         - type: object
           properties:
             slug:
+              type: string
+            uuid:
               type: string
             user:
               $ref: '#/components/schemas/UserProfileBase'
@@ -5306,6 +5321,7 @@ components:
               description: "Total profile visits per last 30 days"
           example:
             slug: "coach-miz-shoty"
+            "uuid": "uuid"
             user:
               id: 7404
               first_name: "MiZ"
@@ -5345,6 +5361,7 @@ components:
             visits: 10
       required:
         - slug
+        - uuid
         - user
         - external_links
         - profile_video
@@ -5369,6 +5386,8 @@ components:
             slug:
               type: string
               description: profile slug
+            uuid:
+              type: string
             user:
               $ref: '#/components/schemas/UserProfileBase'
             labels:
@@ -5403,6 +5422,7 @@ components:
               description: "Total profile visits per last 30 days"
           required:
           - slug
+          - uuid
           - user
           - labels
           - club_role
@@ -5417,6 +5437,7 @@ components:
           example:
            {
             "slug": "club-slug",
+            "uuid": "uuid",
             "user": {
                 "id": 19,
                 "first_name": "first_name",
@@ -5545,6 +5566,8 @@ components:
           type: integer
           description: 'Age of the user.'
           nullable: true
+        gender:
+          $ref: '#/components/schemas/Gender'
         team:
           type: string
           description: 'Team of the user with league.'
@@ -6658,6 +6681,8 @@ components:
               $ref: '#/components/schemas/PlayerPosition'
             team_history_object:
               $ref: '#/components/schemas/TeamHistoryProfileView'
+            gender:
+              $ref: '#/components/schemas/Gender'
     InquiryRequest:
       type: object
       properties:
