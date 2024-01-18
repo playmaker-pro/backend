@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from dotenv import load_dotenv
+from sentry_sdk import set_level
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from backend.settings.environment import Environment
@@ -26,6 +27,7 @@ load_dotenv()
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 BASE_URL = "http://localhost:8000"
 
+FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL")
 
 VERSION = "1.3.16"
 
@@ -50,13 +52,8 @@ MANAGERS = [
 
 INSTALLED_APPS = [
     "users",
-    # "home",
-    # "search",
-    # "news",
     "profiles",
     "transfers",
-    # "contact",
-    # Deprecation(rkesik): since we are working on a new FE
     "followers",
     "inquiries",
     "clubs",
@@ -137,7 +134,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    # "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     "middleware.user_activity_middleware.UserActivityMiddleware",
     "middleware.redirect_middleware.RedirectMiddleware",
 ]
@@ -148,7 +144,6 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
-            # os.path.join(PROJECT_DIR, "templates"), # DEPRECATED UI
         ],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -360,7 +355,6 @@ LOGIN_URL = reverse_lazy("account_login")
 LOGIN_REDIRECT_URL = reverse_lazy("profiles:show_self")
 
 # allauth-settings
-# ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
@@ -374,50 +368,11 @@ ACCOUNT_USERNAME_BLACKLIST = []  # @todo
 ACCOUNT_USERNAME_MIN_LENGTH = 3
 
 # To enable email as indedifier
-# ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-# ACCOUNT_USER_MODEL_USERNAME_FIELD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 
 ACCOUNT_FORMS = {"signup": "users.forms.CustomSignupForm"}
-
-
-# Provider specific settings
-# SOCIALACCOUNT_PROVIDERS = {
-#     'google': {
-#         # For each OAuth based provider, either add a ``SocialApp``
-#         # (``socialaccount`` app) containing the required client
-#         # credentials, or list them here:
-#         'APP': {
-#             'client_id': '123',
-#             'secret': '456',
-#             'key': ''
-#         }
-#     }
-# }
-# SOCIALACCOUNT_PROVIDERS = \
-#     {'facebook':
-#        {'METHOD': 'oauth2',
-#         'SCOPE': ['email','public_profile', 'user_friends'],
-#         'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
-#         'FIELDS': [
-#             'id',
-#             'email',
-#             'name',
-#             'first_name',
-#             'last_name',
-#             'verified',
-#             'locale',
-#             'timezone',
-#             'link',
-#             'gender',
-#             'updated_time'],
-#         'EXCHANGE_TOKEN': True,
-#         'LOCALE_FUNC': lambda request: 'kr_KR',
-#         'VERIFIED_EMAIL': False,
-#         'VERSION': 'v2.4'}
-# }
 
 # Blog settingss
 BLOG_PAGINATION_PER_PAGE = 4
@@ -604,10 +559,6 @@ COUNTRIES_FIRST = ["PL", "GER", "CZ", "UA", "GB"]
 from django.urls import path  # noqa
 from django.views.generic import RedirectView  # noqa
 
-# urlpatterns = patterns('',
-#     url(r'^some-page/$', RedirectView.as_view(url='/')),
-#     ...
-
 CONSTANTS_DIR = os.path.join(BASE_DIR, "constants")
 
 
@@ -717,6 +668,7 @@ if ENABLE_SENTRY:
         enable_tracing=True,
         environment=os.getenv("ENVIRONMENT"),
     )
+    set_level("warning")
 
 
 # Loading of locally stored settings.

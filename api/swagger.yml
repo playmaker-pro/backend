@@ -987,7 +987,7 @@ paths:
       summary: Transfer request list endpoint
       parameters:
         - in: query
-          name: player_position
+          name: position
           schema:
             type: array
             items:
@@ -3821,13 +3821,13 @@ paths:
         - users
       parameters:
         - name: uidb64
-          in: path
+          in: query
           description: Encoded user ID.
           required: true
           schema:
             type: string
         - name: token
-          in: path
+          in: query
           description: Token for password reset.
           required: true
           schema:
@@ -3857,8 +3857,12 @@ paths:
                   detail:
                     type: string
                     description: Message indicating password reset successful.
+                  email:
+                    type: string
+                    format: email
                 example:
                   detail: Password reset successful.
+                  email: "email@email.com"
           description: ''
         '400':
           description: Bad Request

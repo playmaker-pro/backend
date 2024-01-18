@@ -8,7 +8,7 @@ from profiles.models import PlayerProfile, ProfileTransferRequest
 
 
 class TransferRequestCatalogueFilter(filters.FilterSet):
-    player_position = MultipleFilter()
+    position = MultipleFilter()
     league = MultipleFilter()
     voivodeship = MultipleFilter()
     number_of_trainings = MultipleFilter()
@@ -18,7 +18,7 @@ class TransferRequestCatalogueFilter(filters.FilterSet):
     class Meta:
         model = ProfileTransferRequest
         fields = [
-            "player_position",
+            "position",
             "league",
             "voivodeship",
             "number_of_trainings",

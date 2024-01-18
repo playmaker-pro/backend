@@ -55,7 +55,7 @@ urlpatterns = [
         name="api-password-reset",
     ),
     path(
-        "password/reset/new-password/<uidb64>/<token>/",
+        "password/reset/new-password/",
         views.PasswordManagementAPIView.as_view({"post": "create_new_password"}),
         name="api-password-reset-confirm",
     ),
