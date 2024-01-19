@@ -212,23 +212,21 @@ class PasswordResetService:
         """
         Send a password reset email to the user.
         """
-        if settings.DEBUG:
-            # Log the reset URL instead of sending an email
-            query = urlparse(reset_url).query
-            params = parse_qs(query)
-            uidb64 = params.get("uidb64", [""])[0]
-            token = params.get("token", [""])[0]
+        # Log the reset URL for debugging purposes
+        query = urlparse(reset_url).query
+        params = parse_qs(query)
+        uidb64 = params.get("uidb64", [""])[0]
+        token = params.get("token", [""])[0]
 
-            # Use the mailing logger or a general logger
-            logger = logging.getLogger("user_activity")
-            logger.info(
-                f"Password reset details for {user.email}: uidb64={uidb64}, token={token}"
-            )
-        else:
-            # Actual email sending logic for non-development environments
-            email_template = _EmailTemplate.objects.password_reset_template()
-            schema = email_template.create_email_schema(user=user, url=reset_url)
-            email_template.send_email(schema)
+        logger = logging.getLogger("user_activity")
+        logger.debug(
+            f"Password reset details for {user.email}: uidb64={uidb64}, token={token}"
+        )
+
+        # Actual email sending logic
+        email_template = _EmailTemplate.objects.password_reset_template()
+        schema = email_template.create_email_schema(user=user, url=reset_url)
+        email_template.send_email(schema)
 
     def get_user_from_token(self, uidb64: str, token: str) -> Optional[User]:
         """

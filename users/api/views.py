@@ -338,13 +338,12 @@ class PasswordManagementAPIView(EndpointView):
             status=status.HTTP_200_OK,
         )
 
-    def create_new_password(self, request: Request) -> Response:
+    def create_new_password(
+        self, request: Request, uidb64: str, token: str
+    ) -> Response:
         """
         Process the request to reset a user's password using a token.
         """
-        uidb64 = request.query_params.get("uidb64")
-        token = request.query_params.get("token")
-
         # Use the serializer for validation.
         serializer = CreateNewPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -371,7 +370,7 @@ class PasswordManagementAPIView(EndpointView):
             {
                 "success": True,
                 "detail": "Password reset successful",
-                "email": user.email,
+                "email": user.email
             },
             status=status.HTTP_200_OK,
         )

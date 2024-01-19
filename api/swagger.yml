@@ -3821,13 +3821,13 @@ paths:
         - users
       parameters:
         - name: uidb64
-          in: query
+          in: path
           description: Encoded user ID.
           required: true
           schema:
             type: string
         - name: token
-          in: query
+          in: path
           description: Token for password reset.
           required: true
           schema:
@@ -3906,7 +3906,6 @@ paths:
                   value:
                     success: "False"
                     detail: "Invalid token"
-
   /events/{event_id}/read:
     get:
       operationId: ReadEvent

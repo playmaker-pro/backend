@@ -995,7 +995,9 @@ class TestPasswordChangeEndpoint(TestCase, MethodsNotAllowedTestsMixin):
 
         # The URL for the password reset confirmation with dummy args
         # Used for MethodsNotAllowedTestsMixin
-        self.url = reverse("api:users:api-password-reset-confirm")
+        self.url = reverse(
+            "api:users:api-password-reset-confirm", args=["dummy_uidb64", "dummy_token"]
+        )
 
         # The URL for initiating the password reset process
         self.initiate_reset_url = reverse("api:users:api-password-reset")
@@ -1011,7 +1013,9 @@ class TestPasswordChangeEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         uidb64, token = extract_uidb64_and_token_from_email(email.body)
 
         # Use these values to reverse the change password URL
-        change_password_url = f"{self.url}?uidb64={uidb64}&token={token}"
+        change_password_url = reverse(
+            "api:users:api-password-reset-confirm", args=[uidb64, token]
+        )
 
         # Perform the password change request using the valid token.
         new_password = "newSecurePassword123!"
@@ -1045,8 +1049,8 @@ class TestPasswordChangeEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         )  # Just to make sure we aren't coincidentally using a valid token.
 
         # Construct the password reset confirm URL with the invalid token.
-        change_password_url_with_invalid_token = (
-            f"{self.url}?uidb64={uidb64}&token={invalid_token}"
+        change_password_url_with_invalid_token = reverse(
+            "api:users:api-password-reset-confirm", args=[uidb64, invalid_token]
         )
 
         # Try to reset the password with the invalid token.
