@@ -1234,6 +1234,38 @@ paths:
             items:
               type: string
           description: "Filter profiles by transfer status, multiple choices possible like: ?transfer_status=1&transfer_status=5"
+        - in: query
+          name: transfer_status_league
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Filter profiles by transfer status league IDs, multiple choices possible like: ?transfer_status_league=123&transfer_status_league=456"
+        - in: query
+          name: additional_info
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Filter profiles by additional transfer status information, multiple choices possible like: ?additional_info=1&additional_info=2"
+        - in: query
+          name: number_of_trainings
+          schema:
+            type: string
+          description: "Filter profiles by number of trainings in transfer status, single choice like: ?number_of_trainings=3"
+        - in: query
+          name: benefits
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Filter profiles by benefits in transfer status, multiple choices possible like: ?benefits=1&benefits=2"
+        - in: query
+          name: salary
+          schema:
+            type: string
+          description: "Filter profiles by salary in transfer status, single choice like: ?salary=1"
+          tags:
       tags:
         - profiles
       responses:
