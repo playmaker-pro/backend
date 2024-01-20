@@ -1,8 +1,11 @@
+import string
+
 import factory
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.db.models import signals
 from factory import fuzzy
+from factory.fuzzy import FuzzyText
 
 from users.models import UserPreferences
 
@@ -66,6 +69,9 @@ class UserPreferencesFactory(CustomObjectFactory):
     gender = fuzzy.FuzzyChoice(["M", "K"])
     birth_date = factory.Faker("date_of_birth")
     citizenship = factory.List(["PL"])
+    dial_code = factory.Faker("pyint", min_value=0, max_value=1000)
+    phone_number = FuzzyText(length=4, chars=string.digits)
+    contact_email = factory.Faker("email")
 
     class Meta:
         model = UserPreferences

@@ -4789,7 +4789,7 @@ components:
       type: object
       properties:
         user:
-          $ref: '#/components/schemas/UserData'
+          $ref: '#/components/schemas/UserProfileBase'
         history_id:
           type: integer
           description: '*'
@@ -5755,6 +5755,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Course'
+        dial_code:
+          type: integer
+        phone_number:
+          type: string
+        contact_email:
+          type: string
       required:
        - age
        - localization
@@ -5764,6 +5770,9 @@ components:
        - birth_date
        - licences
        - courses
+       - dial_code
+       - phone_number
+       - contact_email
 
     BaseUserProfilePreferencesUpdate:
       type: object

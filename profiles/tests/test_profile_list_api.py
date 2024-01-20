@@ -673,10 +673,11 @@ class TestProfileListAPI(APITestCase):
         """
         Test the ability to filter player profiles based on their associated leagues.
 
-        This test verifies that profiles can be correctly filtered by the league associated
-        with their transfer status. It creates two profiles each linked to a different league,
-        then performs an API request to filter by one of the leagues and checks if the response
-        contains only the profile associated with that league.
+        This test verifies that profiles can be correctly filtered by the league
+        associated with their transfer status. It creates two profiles each linked to
+        a different league, then performs an API request to filter by one of the
+        leagues and checks if the response contains only the profile associated with
+        that league.
         """
         # Create leagues
         league1 = LeagueFactory.create()
@@ -695,18 +696,22 @@ class TestProfileListAPI(APITestCase):
 
         # Perform API request to filter by league1
         response = self.client.get(
-            self.url, {"role": "P", "transfer_status_league": league1.id}, **self.headers
+            self.url,
+            {"role": "P", "transfer_status_league": league1.id},
+            **self.headers
         )
         assert response.status_code == 200
         assert len(response.data["results"]) == 1
 
     def test_filter_profiles_by_additional_info(self) -> None:
         """
-        Test the ability to filter player profiles based on additional information in their transfer status.
+        Test the ability to filter player profiles based on additional information in
+        their transfer status.
 
-        This test checks if profiles can be filtered based on specific additional information
-        identifiers associated with their transfer status. It ensures that the API correctly
-        returns profiles matching the requested additional information.
+        This test checks if profiles can be filtered based on specific additional
+        information identifiers associated with their transfer status. It ensures that
+        the API correctly returns profiles matching the requested additional
+        information.
         """
         player_with_additional_info = PlayerProfileFactory.create()
         TransferStatusFactory.create(
@@ -727,10 +732,12 @@ class TestProfileListAPI(APITestCase):
 
     def test_filter_profiles_by_number_of_trainings(self) -> None:
         """
-        Test the ability to filter player profiles based on the number of trainings per week specified in their transfer status.
+        Test the ability to filter player profiles based on the number of trainings per
+        week specified in their transfer status.
 
-        This test creates profiles with specified training frequencies in their transfer status
-        and checks if the API can filter these profiles based on the given number of trainings.
+        This test creates profiles with specified training frequencies in their
+        transfer status and checks if the API can filter these profiles based on the
+        given number of trainings.
         """
         player_with_trainings = PlayerProfileFactory.create()
         TransferStatusFactory.create(
@@ -746,7 +753,8 @@ class TestProfileListAPI(APITestCase):
 
     def test_filter_profiles_by_benefits(self) -> None:
         """
-        Test the ability to filter player profiles based on the benefits mentioned in their transfer status.
+        Test the ability to filter player profiles based on the benefits mentioned in
+        their transfer status.
 
         This test verifies the functionality of filtering profiles by specific benefits.
         It creates profiles with varying benefits in their transfer status and checks if
@@ -764,11 +772,12 @@ class TestProfileListAPI(APITestCase):
 
     def test_filter_profiles_by_salary(self) -> None:
         """
-        Test the ability to filter player profiles based on the salary range specified in their transfer status.
+        Test the ability to filter player profiles based on the salary range specified
+        in their transfer status.
 
-        This test checks if the API can accurately filter profiles based on the salary range
-        defined in their transfer status, ensuring that only profiles matching the specified
-        salary criteria are returned in the response.
+        This test checks if the API can accurately filter profiles based on the salary
+        range defined in their transfer status, ensuring that only profiles matching
+        the specified salary criteria are returned in the response.
         """
         player_with_salary = PlayerProfileFactory.create()
         TransferStatusFactory.create(profile=player_with_salary, salary="1")

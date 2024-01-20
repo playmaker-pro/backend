@@ -5,7 +5,7 @@ from typing import Optional, Union
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
-from django.db.models import ObjectDoesNotExist, OuterRef, QuerySet, Subquery
+from django.db.models import ObjectDoesNotExist, QuerySet
 from django.db.models.functions import Random
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
@@ -25,7 +25,6 @@ from api.swagger_schemas import (
     FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA,
 )
 from api.views import EndpointView
-from clubs.models import Team
 from clubs.services import LeagueService
 from external_links import serializers as external_links_serializers
 from external_links.errors import LinkSourceNotFound, LinkSourceNotFoundServiceException
@@ -41,12 +40,12 @@ from profiles.api.errors import (
     TransferRequestDoesNotExistHTTPException,
     TransferStatusDoesNotExistHTTPException,
 )
-from profiles.api.filters import PlayerProfileFilters, TransferRequestCatalogueFilter
+from profiles.api.filters import TransferRequestCatalogueFilter
 from profiles.api.managers import SerializersManager
 from profiles.errors import ProfileVisitHistoryDoesNotExistException
 from profiles.filters import ProfileListAPIFilter
 from profiles.interfaces import ProfileVisitHistoryProtocol
-from profiles.models import PlayerProfile, ProfileTransferRequest
+from profiles.models import ProfileTransferRequest
 from profiles.serializers_detailed.base_serializers import (
     ProfileTransferRequestSerializer,
     ProfileTransferStatusSerializer,
@@ -849,7 +848,10 @@ class TransferStatusAPIView(EndpointView):
             raise api_errors.TransferStatusDoesNotExistHTTPException
 
         serializer = ProfileTransferStatusSerializer(
-            instance=transfer_status, data=request.data, partial=True
+            instance=transfer_status,
+            data=request.data,
+            partial=True,
+            context={"profile": profile},
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()

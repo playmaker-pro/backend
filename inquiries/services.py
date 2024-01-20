@@ -37,7 +37,9 @@ class InquireService:
         logger.info(f"Created {basic_plan.description} plan for {user}")
 
     def create_default_basic_plan_if_not_present(self) -> InquiryPlan:
-        """In case when there is no Default plan we would like to create it at first time"""
+        """
+        In case when there is no Default plan we would like to create it at first time
+        """
 
         args = settings.INQUIRIES_INITAL_PLAN
         try:
@@ -72,6 +74,7 @@ class InquireService:
     def get_user_contacts(user: User) -> QuerySet:
         """Get all inquiries contacts by user"""
         return user.inquiries_contacts.order_by("-updated_at")
+        # return user.userpreferenses.order_by("-updated_at")
 
     @classmethod
     def get_user_received_inquiries(cls, user: User) -> QuerySet:

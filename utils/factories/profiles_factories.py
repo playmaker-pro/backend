@@ -311,11 +311,16 @@ class TransferStatusFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.ProfileTransferStatus
 
-    contact_email = factory.Faker("email")
-    phone_number = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
     status = 1
     additional_info = factory.List(
-        [factory.Iterator([info[0] for info in definitions.TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES])]
+        [
+            factory.Iterator(
+                [
+                    info[0]
+                    for info in definitions.TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES
+                ]
+            )
+        ]
     )
     number_of_trainings = factory.Iterator(
         [training[0] for training in definitions.TRANSFER_TRAININGS_CHOICES]
@@ -355,15 +360,12 @@ class TransferRequestFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.ProfileTransferRequest
 
-    contact_email = factory.Faker("email")
-    phone_number = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
     status = "1"
     benefits = [1, 2]
     requesting_team = factory.SubFactory(TeamContributorFactory)
     gender = "M"
     number_of_trainings = "1"
     salary = "1"
-    dial_code = factory.Faker("pyint", min_value=0, max_value=1000)
 
     class Params:
         profile = None

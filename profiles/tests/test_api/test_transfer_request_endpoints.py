@@ -191,8 +191,10 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
     @factory.django.mute_signals(signals.pre_save, signals.post_save)
     def test_update_profile_transfer_request_email(self):
         """Test update profile transfer request. Expected status code 200."""
+        self.profile.user.userpreferences.contact_email = None
+        self.profile.user.userpreferences.save()
         transfer_request_obj: ProfileTransferRequest = TransferRequestFactory.create(
-            profile=self.profile, contact_email=None
+            profile=self.profile
         )
         new_address_email = "test_email@test.test"
         response: Response = self.update_profile_transfer_request(
@@ -203,14 +205,20 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         assert isinstance(response.json(), dict)
         assert response.json().get("contact_email") == new_address_email
 
-        transfer_request_obj.refresh_from_db()
-        assert transfer_request_obj.contact_email == new_address_email
+        transfer_request_obj.profile.user.userpreferences.refresh_from_db()
+        assert (
+            transfer_request_obj.profile.user.userpreferences.contact_email
+            == new_address_email
+        )
 
     @factory.django.mute_signals(signals.pre_save, signals.post_save)
     def test_update_profile_transfer_request_phone(self):
         """Test update profile transfer request. Expected status code 200."""
+        self.profile.user.userpreferences.phone_number = None
+        self.profile.user.userpreferences.dial_code = None
+        self.profile.user.userpreferences.save()
         transfer_request_obj: ProfileTransferRequest = TransferRequestFactory.create(
-            profile=self.profile, phone_number=None
+            profile=self.profile
         )
         new_contact_phone = "123456789"
         response: Response = self.update_profile_transfer_request(
@@ -222,7 +230,10 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         assert response.json().get("phone_number").get("number") == new_contact_phone
 
         transfer_request_obj.refresh_from_db()
-        assert transfer_request_obj.phone_number == new_contact_phone
+        assert (
+            transfer_request_obj.profile.user.userpreferences.phone_number
+            == new_contact_phone
+        )
 
     @factory.django.mute_signals(signals.pre_save, signals.post_save)
     def test_update_profile_transfer_request_status(self):
