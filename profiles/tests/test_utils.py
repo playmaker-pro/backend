@@ -4,6 +4,7 @@ from parameterized import parameterized
 from clubs import errors as club_errors
 from profiles import errors as errors
 from profiles.api import errors as api_errors
+from profiles.models import ProfileTransferRequest
 from profiles.utils import map_service_exception
 
 
@@ -50,3 +51,19 @@ class MapServiceExceptionTest(TestCase):
         dummy_exception_instance = DummyException()
         mapped_exception = map_service_exception(dummy_exception_instance)
         assert mapped_exception is None, "Expected None for unmapped exceptions."
+
+
+def set_stadion_address(
+    transfer_request: ProfileTransferRequest, latitude: float, longitude: float
+) -> None:
+    """
+    Helper method to set latitude and longitude for a Transfer Request
+    team's stadion address.
+    """
+    address = transfer_request.requesting_team.team_history.all()[
+        0
+    ].club.stadion_address
+    address.latitude = latitude
+    address.longitude = longitude
+    address.save()
+    address.refresh_from_db()

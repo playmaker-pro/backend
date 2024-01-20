@@ -57,6 +57,11 @@ python manage.py create_short_name_for_club_and_team
 python manage.py compilemessages
 ```
 
+- To populate address details for all clubs
+```bash
+python manage.py populate_club_address_details
+```
+
 ## Standalone scripts:
 Scripts from *tools/scripts*. Respectively as .sh (linux) and .bat (windows).
 - **create_dotenv_template** - create empty .env template file inside project root directory.
