@@ -2504,24 +2504,6 @@ class ProfileVisitHistory(models.Model):
 class TransferBaseModel(models.Model):
     """Transfer base model."""
 
-    phone_number = models.CharField(
-        max_length=15,
-        null=True,
-        blank=True,
-        help_text="Phone number for the transfer.",
-    )
-    dial_code = models.IntegerField(
-        _("Dial Code"),
-        blank=True,
-        null=True,
-        help_text=_("Country dial code for the phone number."),
-    )
-    contact_email = models.EmailField(
-        _("Contact Email"),
-        blank=True,
-        null=True,
-        help_text=_("Contact email address for the transfer."),
-    )
     salary = models.CharField(
         max_length=10,
         default=None,
@@ -2587,6 +2569,11 @@ class ProfileTransferStatus(TransferBaseModel):
         null=True,
     )
 
+    @property
+    def profile(self) -> BaseProfile:
+        """Returns the user profile."""
+        return self.content_object
+
 
 class ProfileTransferRequest(TransferBaseModel):
     """
@@ -2651,7 +2638,7 @@ class ProfileTransferRequest(TransferBaseModel):
         return super().save(*args, **kwargs)
 
     @property
-    def profile(self):
+    def profile(self) -> BaseProfile:
         """Returns the user profile."""
         return self.content_object
 
