@@ -1002,11 +1002,22 @@ paths:
               type: string
           description: league name
         - in: query
-          name: voivodeship
+          name: latitude
           schema:
-            type: array
-            items:
-              type: string
+            type: number
+            format: float
+            description: "Geolocation latitude for filtering transfer requests"
+        - in: query
+          name: longitude
+          schema:
+            type: number
+            format: float
+            description: "Geolocation longitude for filtering transfer requests"
+        - in: query
+          name: radius
+          schema:
+            type: integer
+            description: "Radius in kilometers for filtering transfer requests around the given geolocation"
         - in: query
           name: number_of_trainings
           schema:
@@ -1265,7 +1276,6 @@ paths:
           schema:
             type: string
           description: "Filter profiles by salary in transfer status, single choice like: ?salary=1"
-          tags:
       tags:
         - profiles
       responses:

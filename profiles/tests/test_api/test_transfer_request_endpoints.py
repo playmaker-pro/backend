@@ -20,6 +20,8 @@ from profiles.api.serializers import PlayerPositionSerializer
 from profiles.models import BaseProfile, ProfileTransferRequest, TeamContributor
 from profiles.schemas import TransferRequestSchema
 from profiles.services import PlayerPositionService, TransferRequestService
+from profiles.tests.test_utils import set_stadion_address
+from utils import factories
 from utils.factories import (
     PlayerProfileFactory,
     TeamContributorFactory,
@@ -29,6 +31,7 @@ from utils.factories import (
 from utils.test.test_utils import MethodsNotAllowedTestsMixin, UserManager
 
 transfer_service = TransferRequestService()
+url: str = "api:profiles:list_transfer_request"
 
 
 class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
@@ -445,3 +448,51 @@ def test_profile_transfer_request_teams_endpoint(
 
     response: Response = api_client.get(url, **headers)
     assert response.json() == expected_response
+
+
+class TestTransferRequestCatalogue(APITestCase):
+    def setUp(self) -> None:
+        """set up object factories"""
+        self.client: APIClient = APIClient()
+        self.user = UserManager(self.client)
+        self.user_obj = self.user.create_superuser()
+        self.headers = self.user.get_headers()
+        self.url = reverse(url)
+
+    def test_localization_filter(self) -> None:
+        """Test localization filter."""
+        start_latitude, start_longitude = 54.25451551801814, 18.315362070454498
+
+        # Create three transfer requests
+        team_a = factories.TransferRequestFactory.create()
+        team_b = factories.TransferRequestFactory.create()
+        team_c = factories.TransferRequestFactory.create()
+
+        # Set latitude and longitude for each team's stadion address
+        set_stadion_address(team_a, start_latitude, start_longitude)
+        set_stadion_address(team_b, 54.21354701964793, 18.36439364315754)
+        set_stadion_address(team_c, 54.13695015319587, 18.458313275377453)
+
+        # Test with radius = 2 km
+        response = self.client.get(
+            self.url, {"latitude": start_latitude,
+                       "longitude": start_longitude,
+                       "radius": 2}
+        )
+        assert len(response.data["results"]) == 1
+
+        # Test with radius = 10 km
+        response = self.client.get(
+            self.url, {"latitude": start_latitude,
+                       "longitude": start_longitude,
+                       "radius": 10}
+        )
+        assert len(response.data["results"]) == 2
+
+        # Test with radius = 20 km
+        response = self.client.get(
+            self.url, {"latitude": start_latitude,
+                       "longitude": start_longitude,
+                       "radius": 20}
+        )
+        assert len(response.data["results"]) == 3
