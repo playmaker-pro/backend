@@ -118,7 +118,8 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError(
                         "This user has already accepted your request."
                     )
-                self._accept_cross_request(cross_request)
+                if cross_request.status != _models.InquiryRequest.STATUS_REJECTED:
+                    self._accept_cross_request(cross_request)
 
         return attrs
 
