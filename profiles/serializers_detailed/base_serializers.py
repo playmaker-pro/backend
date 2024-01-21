@@ -266,7 +266,7 @@ class ClubSerializer(serializers.ModelSerializer):
 class LeagueSerializer(serializers.ModelSerializer):
     """Player profile league serializer"""
 
-    name = serializers.CharField(source="get_upper_parent_names", read_only=True)
+    name = serializers.CharField(read_only=True)
 
     class Meta:
         model = League

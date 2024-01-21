@@ -2645,10 +2645,7 @@ paths:
               {
                 "benefits": [1,2],
                 "status": 1,
-                "league": [13],
                 "gender": "M",
-                "requesting_team": 5,
-                "position": [6,7,8],
                 "salary": 1,
                 "contact_email": "email@email.com",
                 "phone_number": {"dial_code": 1, "number": 123},
@@ -6862,7 +6859,7 @@ components:
         log_type:
           type: string
         body:
-          type: string  
+          type: string
       required:
         - created_at
         - log_type
