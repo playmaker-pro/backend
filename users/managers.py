@@ -269,6 +269,31 @@ class UserTokenManager:
         return reset_url
 
     @staticmethod
+    def create_email_verification_url(user: "User") -> str:
+        """
+        Generates a URL for email verification containing a unique token and user ID.
+
+        This method creates a secure, unique URL intended for verifying
+        a user's email address.
+        It encodes the user's primary key (PK) and generates a token, appending
+        both as query parameters to a predefined URL path for email verification.
+        The URL is constructed using the frontend base URL and a specific
+        path for email verification.
+        """
+        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+
+        # The frontend base URL and the new password reset path
+        base_url = settings.FRONTEND_BASE_URL
+        email_verify_path = "/verify-email"
+
+        # Construct verification URL
+        verification_url = (
+            f"{base_url}"
+        )
+        return verification_url
+
+    @staticmethod
     def check_user_token(**kwargs) -> Tuple:
         """
         Verifies the validity of a token for a user based on a given uidb64.

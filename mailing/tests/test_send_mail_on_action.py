@@ -5,6 +5,7 @@ from django.core import mail
 
 from mailing.models import EmailTemplate as _EmailTemplate
 from mailing.models import UserEmailOutbox as _UserEmailOutbox
+from users.managers import UserTokenManager
 from users.services import PasswordResetService
 
 User = get_user_model()
@@ -34,7 +35,8 @@ class TestSendMailForNewUser:
         """Test send email to user to reset password"""
         mail.outbox.clear()
         assert len(mail.outbox) == 0
-        PasswordResetService.send_reset_email(new_user, "reset_url")
+        reset_url = UserTokenManager.create_url(new_user)
+        PasswordResetService.send_reset_email(new_user, reset_url)
         assert len(mail.outbox) == 1
         assert mail.outbox[0].to == [new_user.email]
 

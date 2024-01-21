@@ -210,3 +210,10 @@ def remove_polish_chars(filename: str) -> str:
     """Unify Polish chars to default"""
     trans_map: dict = str.maketrans("ŻŹĆŃĄŚŁĘÓżźćńąśłęó", "ZZCNASLEOzzcnasleo")
     return filename.translate(trans_map)
+
+
+def generate_fe_url_path(path: str) -> str:
+    """
+    Generates a full URL by concatenating the front-end base URL with a given path.
+    """
+    return f"{settings.FRONTEND_BASE_URL}{path}"

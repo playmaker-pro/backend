@@ -20,6 +20,11 @@ from inquiries.signals import (
 from inquiries.utils import InquiryMessageContentParser as _ContentParser
 from mailing.models import EmailTemplate as _EmailTemplate
 from mailing.schemas import EmailSchema as _EmailSchema
+from utils.constants import (
+    INQUIRY_CONTACT_URL,
+    INQUIRY_LIMIT_INCREASE_URL,
+    TRANSFER_MARKET_URL,
+)
 
 logger = logging.getLogger("inquiries")
 
@@ -142,12 +147,10 @@ class UserInquiryLog(models.Model):
     @property
     def ulr_to_profile(self) -> str:
         """Get url to profile based on log type"""
-        # TODO(bartnyk): We need await for routing from frontend.
-        # Then, based on user declared_role field we can generate url to profile.
         if self.message.log_type == InquiryLogMessage.MessageType.OUTDATED:
-            return f"URL_FOR_SENDER"
+            return TRANSFER_MARKET_URL
         elif self.message.log_type == InquiryLogMessage.MessageType.OUTDATED_REMINDER:
-            return f"URL_FOR_RECIPIENT"
+            return INQUIRY_CONTACT_URL
         return ""
 
     def save(self, *args, **kwargs):
@@ -269,8 +272,9 @@ class UserInquiry(models.Model):
             or force_send
         ):
             template = _EmailTemplate.objects.inquiry_limit_reached_template()
+            email_body = template.body.replace("#url#", INQUIRY_LIMIT_INCREASE_URL)
             schema = _EmailSchema(
-                body=template.body,
+                body=email_body,
                 subject=template.subject,
                 recipients=[self.user.email],
                 type=_EmailTemplate.EmailType.INQUIRY_LIMIT,
