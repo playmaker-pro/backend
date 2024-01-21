@@ -189,8 +189,8 @@ class UserService:
     def send_email_to_confirm_new_user(user: User) -> None:
         """Send email to user with"""
         email_template = _EmailTemplate.objects.new_user_template()
-        # TODO(bartnyk): add url to verify email address
-        schema = email_template.create_email_schema(user=user, url="ADD_URL_HERE")
+        verification_url = UserTokenManager.create_email_verification_url(user)
+        schema = email_template.create_email_schema(user=user, url=verification_url)
         email_template.send_email(schema)
 
 
