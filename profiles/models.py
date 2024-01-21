@@ -600,9 +600,11 @@ class BaseProfile(models.Model, EventLogMixin):
     class ProfileManager(models.Manager):
         def to_list_by_api(self, **kwargs) -> models.QuerySet:
             """Filter profiles which should be listed by api"""
-            return self.filter(**kwargs).exclude(
-                user__first_name__isnull=True, user__last_name__isnull=True
-            ).exclude(user__first_name=models.F("user__last_name"))
+            return (
+                self.filter(**kwargs)
+                .exclude(user__first_name__isnull=True, user__last_name__isnull=True)
+                .exclude(user__first_name=models.F("user__last_name"))
+            )
 
     objects = ProfileManager()
 
