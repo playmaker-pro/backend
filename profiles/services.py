@@ -440,7 +440,7 @@ class ProfileService:
             lambda user: search_term
             in utils.preprocess_search_term(
                 (user.first_name or "") + " " + (user.last_name or "")
-            ),
+            ) and user.should_be_listed,
             users_with_declared_role,
         )
 

@@ -58,7 +58,7 @@ class ProfileListAPIFilter(APIFilter):
 
     def get_queryset(self) -> QuerySet:
         """Get queryset based on role"""
-        self.queryset: QuerySet = self.model.objects.all()
+        self.queryset: QuerySet = self.model.objects.to_list_by_api()
         self.filter_queryset(self.queryset)
 
         if self.query_params.get("shuffle", False):
@@ -250,7 +250,9 @@ class ProfileListAPIFilter(APIFilter):
         Filter the queryset by leagues associated with the profile's transfer status.
         """
         if league_ids := self.query_params.get("transfer_status_league"):
-            self.queryset = self.service.filter_by_transfer_status_league(self.queryset, league_ids)
+            self.queryset = self.service.filter_by_transfer_status_league(
+                self.queryset, league_ids
+            )
 
     def filter_by_additional_info(self) -> None:
         """

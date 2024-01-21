@@ -597,6 +597,15 @@ class BaseProfile(models.Model, EventLogMixin):
     def _get_verification_field_values(self, obj):
         return [getattr(obj, field) for field in self.VERIFICATION_FIELDS]
 
+    class ProfileManager(models.Manager):
+        def to_list_by_api(self, **kwargs) -> models.QuerySet:
+            """Filter profiles which should be listed by api"""
+            return self.filter(**kwargs).exclude(
+                user__first_name__isnull=True, user__last_name__isnull=True
+            ).exclude(user__first_name=models.F("user__last_name"))
+
+    objects = ProfileManager()
+
     @property
     def profile_based_custom_role(self) -> typing.Optional[str]:
         """

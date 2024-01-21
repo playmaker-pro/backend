@@ -304,6 +304,11 @@ class User(AbstractUser, UserRoleMixin):
     def __str__(self):
         return f"{self.get_full_name()} ({self.get_declared_role_display()})"
 
+    @property
+    def should_be_listed(self) -> bool:
+        """If user has no name or name is created from email, then user should not be listed"""
+        return self.first_name and self.last_name and self.first_name != self.last_name
+
     def save(self, *args, **kwargs):
         if self.role in [
             definitions.GUEST_SHORT,
