@@ -535,7 +535,10 @@ class TeamHistoryCreationService:
 
         cursor_date = start_date
         team_histories = []
+        i = 0  # FIXME: temporary solution to avoid infinite loop
         while cursor_date <= end_date:
+            i += 1
+
             # Retrieve Season for the cursor_date
             current_season_name = models.Season.define_current_season(cursor_date)
             season_obj, created = models.Season.objects.get_or_create(
@@ -574,8 +577,14 @@ class TeamHistoryCreationService:
             # Move cursor_date to the next season start. E.g., if current season is
             # 2020/2021, move to 01-07-2021
             next_season_start_year = int(current_season_name.split("/")[1])
-            cursor_date = datetime.date(next_season_start_year, 7, 1)
 
+            # FIXME: this didn't work,
+            #  described here: https://playmaker-org.slack.com/archives/C04BH9G199T/p1705929880067299
+            # cursor_date = datetime.date(next_season_start_year, 7, 1)
+            cursor_date = datetime.date(cursor_date.year + 1, 7, 1)
+
+            if i >= 10:
+                raise ValueError
         return team_histories
 
     @staticmethod

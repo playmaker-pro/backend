@@ -135,7 +135,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "middleware.user_activity_middleware.UserActivityMiddleware",
-    "middleware.redirect_middleware.RedirectMiddleware",
+    # "middleware.redirect_middleware.RedirectMiddleware",
 ]
 
 ROOT_URLCONF = "backend.urls"
@@ -143,8 +143,7 @@ ROOT_URLCONF = "backend.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-        ],
+        "DIRS": [],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
