@@ -14,7 +14,7 @@ from api.errors import ChoiceFieldValueErrorException, NotOwnerOfAnObject
 from api.serializers import ProfileEnumChoicesSerializer
 from api.services import LocaleDataService
 from clubs import errors as clubs_errors
-from clubs.models import Season, TeamHistory
+from clubs.models import Season, Team
 from clubs.services import ClubService
 from external_links.serializers import ExternalLinksSerializer
 from labels.services import LabelService
@@ -23,6 +23,7 @@ from profiles.api import consts
 from profiles.api import errors as api_errors
 from profiles.services import ProfileVideoService
 from roles.definitions import CLUB_ROLES, GUEST_SHORT, PROFILE_TYPE_SHORT_MAP
+from users.models import UserPreferences
 from users.services import UserService
 from utils import translate_to
 from utils.factories import utils
@@ -43,7 +44,7 @@ class PlayerPositionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.PlayerPosition
-        fields = ["id", "name", "shortcut"]
+        fields = ["id", "name", "shortcut", "shortcut_pl"]
 
 
 class PlayerProfilePositionSerializer(serializers.ModelSerializer):
@@ -67,6 +68,8 @@ class ProfileVideoSerializer(serializers.ModelSerializer):
 
     def get_label(self, obj: models.ProfileVideo) -> Optional[dict]:
         """Get label name. If label is not defined, return empty dict"""
+        if not obj.label:
+            return None
         serializer = ProfileEnumChoicesSerializer(
             model=models.ProfileVideo,
             required=False,
@@ -75,10 +78,10 @@ class ProfileVideoSerializer(serializers.ModelSerializer):
             data=obj.label,
         )
         try:
-            serializer.is_valid()
+            serializer.is_valid(raise_exception=True)
             return serializer.data
         except ChoiceFieldValueErrorException:
-            return {}
+            return None
 
     def __init__(self, *args, **kwargs) -> None:
         """
@@ -173,7 +176,7 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {
                         "error": f"Invalid date format, must be YYYY between "
-                                 f"{min_year} and {max_year}."
+                        f"{min_year} and {max_year}."
                     }
                 )
 
@@ -358,7 +361,7 @@ class CourseSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {
                     "error": f"Invalid date format, must be YYYY between 1970 "
-                             f"and {datetime.now().year}."
+                    f"and {datetime.now().year}."
                 }
             )
 
@@ -386,7 +389,7 @@ class BaseTeamContributorInputSerializer(serializers.Serializer):
     team_parameter = serializers.CharField(required=True)
     league_identifier = serializers.CharField(required=True)
     team_history = serializers.PrimaryKeyRelatedField(
-        queryset=TeamHistory.objects.all(), required=False, many=True
+        queryset=Team.objects.all(), required=False, many=True
     )
     gender = serializers.IntegerField(required=False)
     is_primary = serializers.BooleanField(required=False)
@@ -663,7 +666,7 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         team_history = obj.team_history.first()
         try:
-            url = request.build_absolute_uri(team_history.team.club.picture.url)
+            url = request.build_absolute_uri(team_history.club.picture.url)
         except (ValueError, AttributeError):
             return None
         return url
@@ -671,14 +674,14 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
     def get_team_id(self, obj: models.TeamContributor) -> Optional[int]:
         """Returns team id"""
         team_history = obj.team_history.first()
-        return team_history.team.pk if team_history else None
+        return team_history.pk if team_history else None
 
     def get_team_name(self, obj):
         """
         Retrieves the name of the team associated with the first team_history instance.
         """
         team_history = obj.team_history.first()
-        return team_history.team.name if team_history else None
+        return team_history.name if team_history else None
 
     def get_league_name(self, obj):
         """
@@ -687,7 +690,7 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
         """
         team_history = obj.team_history.first()
         if team_history and team_history.league_history:
-            return team_history.league_history.league.display_league_top_parent
+            return team_history.league_history.league.name
         return None
 
     def get_league_id(self, obj):
@@ -696,7 +699,7 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
         """
         team_history = obj.team_history.first()
         if team_history and team_history.league_history:
-            return team_history.league_history.league.highest_parent.id
+            return team_history.league_history.league.id
         return None
 
     def get_season_name(self, obj):
@@ -738,7 +741,7 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
 
     def get_team_name(self, obj: models.TeamContributor) -> str:
         team_histories = obj.team_history.all()
-        return ", ".join(set(th.team.name for th in team_histories))
+        return ", ".join(set(th.name for th in team_histories))
 
     def get_picture_url(self, obj: models.TeamContributor) -> typing.Optional[str]:
         """
@@ -747,16 +750,14 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         team_history = obj.team_history.first()
         try:
-            url = request.build_absolute_uri(team_history.team.club.picture.url)
+            url = request.build_absolute_uri(team_history.club.picture.url)
         except (ValueError, AttributeError):
             return None
         return url
 
     def get_league_name(self, obj: models.TeamContributor) -> str:
         if obj.team_history.all().exists():
-            return (
-                obj.team_history.last().league_history.league.display_league_top_parent
-            )
+            return obj.team_history.last().league_history.league.name
         return ""
 
     def get_league_id(self, obj: models.TeamContributor) -> typing.Optional[int]:
@@ -766,7 +767,7 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
         """
         team_history = obj.team_history.first()
         if team_history and team_history.league_history:
-            return team_history.league_history.league.highest_parent.id
+            return team_history.league_history.league.id
         return None
 
     @staticmethod
@@ -941,8 +942,8 @@ class ProfileSerializer(serializers.Serializer):
         # include 'profile_uuid'
         if (
             "team_history_object" in ret
-            and hasattr(obj, "team_history_object")
-            and obj.team_history_object
+            and hasattr(obj, "team_object")
+            and obj.team_object
         ):
             team_history_serializer_context = {
                 "request": self.context.get("request"),
@@ -950,13 +951,13 @@ class ProfileSerializer(serializers.Serializer):
             }
 
             # Check if there is a primary team contributor for the team history
-            primary_contributor = obj.team_history_object.teamcontributor_set.filter(
+            primary_contributor = obj.team_object.teamcontributor_set.filter(
                 is_primary=True, profile_uuid=obj.uuid
             ).first()
 
             if primary_contributor:
                 team_history_serializer = self.TeamHistoryBaseProfileSerializer(
-                    obj.team_history_object,
+                    obj.team_object,
                     context=team_history_serializer_context,
                 )
                 ret["team_history_object"] = team_history_serializer.data
@@ -973,7 +974,6 @@ class ProfileSerializer(serializers.Serializer):
 
             ret.pop("dial_code", None)
             ret.pop("agency_phone", None)
-
         return ret
 
     def get_serializer_field(
@@ -1111,7 +1111,7 @@ class CreateProfileSerializer(ProfileSerializer):
                 raise serializers.ValidationError(
                     {
                         "custom_role": f"This field is required when role is "
-                                       f"{GUEST_SHORT} (GuestProfile)."
+                        f"{GUEST_SHORT} (GuestProfile)."
                     }
                 )
 
@@ -1225,7 +1225,17 @@ class BaseProfileDataSerializer(serializers.Serializer):
 
 class ProfileSearchSerializer(serializers.ModelSerializer):
     team = serializers.SerializerMethodField()
-    age = serializers.SerializerMethodField()
+    age = serializers.IntegerField(read_only=True, source="userpreferences.age")
+    gender = serializers.SerializerMethodField("get_gender")
+    player_position = PlayerProfilePositionSerializer(
+        source="profile.get_main_position", read_only=True
+    )
+    specific_role = serializers.SerializerMethodField()
+    custom_role = serializers.CharField(
+        source="profile.profile_based_custom_role", read_only=True
+    )
+    picture = serializers.CharField(source="picture_url", read_only=True)
+    uuid = serializers.UUIDField(source="profile.uuid", read_only=True)
 
     class Meta:
         model = models.User
@@ -1235,15 +1245,15 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
             "last_name",
             "team",
             "age",
+            "gender",
+            "player_position",
+            "specific_role",
+            "custom_role",
+            "picture",
+            "uuid",
         )
 
-    def get_age(self, obj: User) -> typing.Union[int, None]:
-        """
-        Retrieve the age for a given user from userpreferences.
-        """
-        return obj.userpreferences.age
-
-    def get_team(self, obj: User) -> str:
+    def get_team(self, obj: User) -> Optional[str]:
         """
         Retrieve the team for a given profile.
 
@@ -1266,8 +1276,12 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
         returns "bez klubu"
         indicating that the profile does not have an associated team.
         """
+
+        # Check if the user has an associated profile
+        if not hasattr(obj, "profile") or not obj.profile:
+            return None
+
         current_season = Season.define_current_season()
-        current_round = Season.get_current_round()
 
         team_contrib = models.TeamContributor.objects.filter(
             profile_uuid=obj.profile.uuid,
@@ -1277,25 +1291,54 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
         if team_contrib:
             if (
                 obj.role == "P"
-                and team_contrib.round == current_round
                 and team_contrib.team_history.filter(
                     league_history__season__name=current_season
                 ).exists()
             ):
                 team_history_instance = team_contrib.team_history.all().first()
                 if team_history_instance:
-                    return (
-                        team_history_instance.team.display_team_with_league_top_parent
-                    )
+                    return team_history_instance.display_team_with_league
 
             else:
                 team_history_instance = team_contrib.team_history.all().first()
                 if team_history_instance:
-                    return (
-                        team_history_instance.team.display_team_with_league_top_parent
-                    )
+                    return team_history_instance.display_team_with_league
 
         if hasattr(obj.profile, "team_object") and obj.profile.team_object:
-            return obj.profile.team_object.display_team_with_league_top_parent
+            return obj.profile.team_object.display_team_with_league
 
-        return "bez klubu"
+        return None
+
+    def get_specific_role(self, obj: User) -> dict:
+        """Get specific role for profile (Coach, Club)"""
+        if obj.profile:
+            if field_name := obj.profile.specific_role_field_name:
+                val = getattr(obj.profile, field_name, None)
+                if val is not None:
+                    serializer = ProfileEnumChoicesSerializer(
+                        source=field_name,
+                        read_only=True,
+                        model=obj.profile.__class__,
+                    )
+                    return serializer.to_representation(serializer.parse(val))
+                return None
+
+    def get_gender(self, obj: User) -> Optional[dict]:
+        """
+        Retrieves and serializes the gender information from the user's preferences.
+
+        This method accesses the gender attribute from the user's associated
+        UserPreferences model. It then uses the ProfileEnumChoicesSerializer to
+        serialize the gender value into a more readable format (e.g., converting
+        a gender code to its corresponding descriptive name).
+        """
+        # Ensure the userpreferences relation exists
+        if obj.userpreferences:
+            gender_value = obj.userpreferences.gender
+            if gender_value is not None:
+                # Using ProfileEnumChoicesSerializer for the gender field
+                serializer = ProfileEnumChoicesSerializer(
+                    source="gender", model=UserPreferences
+                )
+                return serializer.to_representation(serializer.parse(gender_value))
+            return None

@@ -1,11 +1,15 @@
 import os
 from datetime import timedelta
 
+import sentry_sdk
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
+from dotenv import load_dotenv
+from sentry_sdk import set_level
+from sentry_sdk.integrations.django import DjangoIntegration
 
-from .environment import Environment
+from backend.settings.environment import Environment
 
 # This loads additional settings for our environemnt
 CONFIGURATION = (
@@ -16,10 +20,14 @@ CONFIGURATION = (
 DEBUG_PANEL = False
 
 
+load_dotenv()
+
+
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 BASE_URL = "http://localhost:8000"
 
+FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL")
 
 VERSION = "1.3.16"
 
@@ -31,7 +39,6 @@ PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 BASE_DIR = os.path.dirname(PROJECT_DIR)
-
 
 MANAGERS = [
     ("Rafal", "rafal.kesik@gmail.com"),
@@ -45,14 +52,9 @@ MANAGERS = [
 
 INSTALLED_APPS = [
     "users",
-    # "home",
-    # "search",
-    # "news",
     "profiles",
     "transfers",
-    # "contact",
-    # Deprecation(rkesik): since we are working on a new FE
-    # "followers",
+    "followers",
     "inquiries",
     "clubs",
     "external_links",
@@ -72,40 +74,12 @@ INSTALLED_APPS = [
     "events",
     "mailing",
     "payments",
-    # "resources",
-    # "data",  # external repo DEPRECATED: PM-1015
-    # "stats",  # external repo DEPRECATED: PM-1015
     "django_countries",
-    # "crispy_forms",
     "easy_thumbnails",
-    # "djcelery",
     "django_user_agents",
-    # "wagtail.contrib.forms",
-    # "wagtail.contrib.modeladmin",
-    # "wagtail.contrib.redirects",
-    # "wagtail.embeds",
-    # "wagtail.sites",
-    # "wagtail.users",
-    # "wagtail.snippets",
-    # "wagtail.documents",
-    # "wagtail.images",
-    # "wagtail.search",
-    # "wagtail.admin",
-    # "wagtail.core",
-    # "wagtail.contrib.routable_page",
-    # "wagtail.api.v2",
-    # "wagtailmetadata",
-    # 'comments_wagtail_xtd',
-    # 'django_comments',
-    # "modelcluster",  @wag
-    # "taggit",
-    # "blog",
-    # "flex",
-    # "streams",
     "django_fsm",
     "phonenumber_field",
     "address",
-    # "compressor",  # @dep - 2
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -116,8 +90,8 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "django.contrib.humanize",
     "rest_framework",
-    # TODO deprecated. Changed to jwt
-    "rest_framework.authtoken",  # <-- Here
+    # TODO authtoken deprecated. Changed to jwt
+    "rest_framework.authtoken",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "allauth",
@@ -161,8 +135,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    # "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     "middleware.user_activity_middleware.UserActivityMiddleware",
+    # "middleware.redirect_middleware.RedirectMiddleware",
 ]
 
 ROOT_URLCONF = "backend.urls"
@@ -170,9 +144,7 @@ ROOT_URLCONF = "backend.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-            # os.path.join(PROJECT_DIR, "templates"), # DEPRECATED UI
-        ],
+        "DIRS": [],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -196,34 +168,15 @@ AUTHENTICATION_BACKENDS = [
 WSGI_APPLICATION = "backend.wsgi.application"
 
 # Database
-# https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-
-# DEPRECATED: PM-1015
-# DATABASE_ROUTERS = ["data.routers.DataRouter", "data.routers.DefaultDBRouter"]
-
-# DB_ITERATOR = '11'
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    # },
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "local_pm",
-        "USER": "arsen",
-        "PASSWORD": "postgres",
+        "NAME": os.getenv("POSTGRES_DB", None),
+        "USER": os.getenv("POSTGRES_USER", None),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", None),
         "HOST": "localhost",
-        "PORT": "5432",
+        "PORT": os.getenv("POSTGRES_PORT", None),
     },
-    # DEPRECATED: PM-1015
-    # "datadb": {
-    #     "ENGINE": "django.db.backends.postgresql_psycopg2",
-    #     "NAME": "local_data",
-    #     "USER": "arsen",
-    #     "PASSWORD": "postgres",
-    #     "HOST": "localhost",
-    #     "PORT": "5432",
-    # },
 }
 
 # Password validation
@@ -269,9 +222,9 @@ CITIES_LIGHT_TRANSLATION_LANGUAGES = ["pl"]
 CITIES_LIGHT_INCLUDE_COUNTRIES = ["PL"]
 
 CITIES_LIGHT_CITY_SOURCES = [
-    "http://download.geonames.org/export/dump/cities15000.zip",  # all cities with a population > 15000
-    "http://download.geonames.org/export/dump/cities5000.zip",  # all cities with a population > 5000
-    "http://download.geonames.org/export/dump/cities1000.zip",  # all cities with a population > 1000
+    "http://download.geonames.org/export/dump/cities15000.zip",  # all cities with a population > 15000  # noqa
+    "http://download.geonames.org/export/dump/cities5000.zip",  # all cities with a population > 5000  # noqa
+    "http://download.geonames.org/export/dump/cities1000.zip",  # all cities with a population > 1000  # noqa
 ]  # more here: https://download.geonames.org/export/dump/readme.txt
 
 TIME_ZONE = "Europe/Warsaw"
@@ -402,7 +355,6 @@ LOGIN_URL = reverse_lazy("account_login")
 LOGIN_REDIRECT_URL = reverse_lazy("profiles:show_self")
 
 # allauth-settings
-# ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
@@ -416,50 +368,11 @@ ACCOUNT_USERNAME_BLACKLIST = []  # @todo
 ACCOUNT_USERNAME_MIN_LENGTH = 3
 
 # To enable email as indedifier
-# ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-# ACCOUNT_USER_MODEL_USERNAME_FIELD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 
 ACCOUNT_FORMS = {"signup": "users.forms.CustomSignupForm"}
-
-
-# Provider specific settings
-# SOCIALACCOUNT_PROVIDERS = {
-#     'google': {
-#         # For each OAuth based provider, either add a ``SocialApp``
-#         # (``socialaccount`` app) containing the required client
-#         # credentials, or list them here:
-#         'APP': {
-#             'client_id': '123',
-#             'secret': '456',
-#             'key': ''
-#         }
-#     }
-# }
-# SOCIALACCOUNT_PROVIDERS = \
-#     {'facebook':
-#        {'METHOD': 'oauth2',
-#         'SCOPE': ['email','public_profile', 'user_friends'],
-#         'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
-#         'FIELDS': [
-#             'id',
-#             'email',
-#             'name',
-#             'first_name',
-#             'last_name',
-#             'verified',
-#             'locale',
-#             'timezone',
-#             'link',
-#             'gender',
-#             'updated_time'],
-#         'EXCHANGE_TOKEN': True,
-#         'LOCALE_FUNC': lambda request: 'kr_KR',
-#         'VERIFIED_EMAIL': False,
-#         'VERSION': 'v2.4'}
-# }
 
 # Blog settingss
 BLOG_PAGINATION_PER_PAGE = 4
@@ -542,6 +455,12 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "filename": join(LOGFILE_ROOT, "mailing.log"),
                 "formatter": "verbose",
             },
+            "commands": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "commands.log"),
+                "formatter": "verbose",
+            },
         },
         "loggers": {
             "profiles": {
@@ -575,6 +494,10 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
             },
             "mailing": {
                 "handlers": ["console", "mailing_file"],
+                "level": "DEBUG",
+            },
+            "commands": {
+                "handlers": ["console", "data_log_file"],
                 "level": "DEBUG",
             },
         },
@@ -611,7 +534,10 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "DEFAULT_PAGINATION_CLASS": "api.pagination.PagePagination",
+    # "DEFAULT_PAGINATION_CLASS": "api.pagination.PagePagination",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 10,
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 }
 
 SPECTACULAR_SETTINGS = {
@@ -632,10 +558,6 @@ COUNTRIES_FIRST = ["PL", "GER", "CZ", "UA", "GB"]
 
 from django.urls import path  # noqa
 from django.views.generic import RedirectView  # noqa
-
-# urlpatterns = patterns('',
-#     url(r'^some-page/$', RedirectView.as_view(url='/')),
-#     ...
 
 CONSTANTS_DIR = os.path.join(BASE_DIR, "constants")
 
@@ -690,13 +612,6 @@ USER_AGENTS_CACHE = "default"
 
 SCRAPPER = True
 
-# Loading of locally stored settings.
-
-try:
-    from backend.settings._local import *  # noqa
-except ImportError:
-    pass
-
 
 if FORCED_SEASON_NAME is not None:
     print(f"Force to use season for dispaly metrics: {FORCED_SEASON_NAME}")
@@ -741,3 +656,24 @@ FACEBOOK_GRAPH_API_VERSION = "v17.0"
 
 THROTTLE_EMAIL_CHECK_LIMITATION = 5
 DEFAULT_THROTTLE = 5
+
+ENABLE_SENTRY = os.getenv("ENABLE_SENTRY", False) in ["True", "true", "1", "yes"]
+
+if ENABLE_SENTRY:
+    sentry_sdk.init(
+        dsn=os.getenv("SENTRY_DSN"),
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=1.0,
+        send_default_pii=True,
+        enable_tracing=True,
+        environment=os.getenv("ENVIRONMENT"),
+    )
+    set_level("warning")
+
+
+# Loading of locally stored settings.
+
+try:
+    from backend.settings._local import *  # noqa
+except ImportError:
+    pass

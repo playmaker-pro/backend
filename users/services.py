@@ -1,7 +1,10 @@
+import logging
 from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Union
+from urllib.parse import parse_qs, urlparse
 
 from allauth.socialaccount.models import SocialAccount
 from cities_light.models import City
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.validators import validate_email
@@ -12,6 +15,7 @@ from mailing.models import EmailTemplate as _EmailTemplate
 from profiles.models import PROFILE_TYPE
 from users.errors import CityDoesNotExistException
 from users.managers import UserTokenManager
+from users.models import UserPreferences
 from users.schemas import (
     RegisterSchema,
     UserFacebookDetailPydantic,
@@ -185,8 +189,8 @@ class UserService:
     def send_email_to_confirm_new_user(user: User) -> None:
         """Send email to user with"""
         email_template = _EmailTemplate.objects.new_user_template()
-        # TODO(bartnyk): add url to verify email address
-        schema = email_template.create_email_schema(user=user, url="ADD_URL_HERE")
+        verification_url = UserTokenManager.create_email_verification_url(user)
+        schema = email_template.create_email_schema(user=user, url=verification_url)
         email_template.send_email(schema)
 
 
@@ -208,6 +212,18 @@ class PasswordResetService:
         """
         Send a password reset email to the user.
         """
+        # Log the reset URL for debugging purposes
+        query = urlparse(reset_url).query
+        params = parse_qs(query)
+        uidb64 = params.get("uidb64", [""])[0]
+        token = params.get("token", [""])[0]
+
+        logger = logging.getLogger("user_activity")
+        logger.debug(
+            f"Password reset details for {user.email}: uidb64={uidb64}, token={token}"
+        )
+
+        # Actual email sending logic
         email_template = _EmailTemplate.objects.password_reset_template()
         schema = email_template.create_email_schema(user=user, url=reset_url)
         email_template.send_email(schema)
@@ -237,3 +253,10 @@ class UserPreferencesService:
             return city
         except City.DoesNotExist:
             raise CityDoesNotExistException
+
+    @staticmethod
+    def get_users_with_missing_location() -> User:
+        user_ids = UserPreferences.objects.filter(
+            localization__isnull=True
+        ).values_list("user_id", flat=True)
+        return User.objects.filter(id__in=user_ids)

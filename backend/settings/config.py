@@ -1,5 +1,10 @@
 import os as _os
 
+from pm_core.config import APIAuthorization as _APIAuthorization
+from pm_core.config import ServiceSettings as _ScrapperServiceSettings
+from pydantic import BaseSettings as _BaseSettings
+
+from backend.settings.base import BASE_DIR
 from django.conf import settings as _settings
 from pm_core.config import APIAuthorization as _APIAuthorization
 from pm_core.config import ServiceSettings as _ScrapperServiceSettings
@@ -11,7 +16,7 @@ class BaseConfig(_BaseSettings):
     """Base settings for webapp"""
 
     class Config:
-        env_file = _os.path.join(getattr(_settings, "BASE_DIR"), ".env")
+        env_file = _os.path.join(BASE_DIR, ".env")
         env_file_encoding = "utf-8"
         env_nested_delimiter = "__"
         extra = "allow"

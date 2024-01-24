@@ -1,5 +1,4 @@
 import json
-from datetime import date
 
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
@@ -10,9 +9,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api import errors as base_errors
-from api.base_view import EndpointView
+from api.base_view import EndpointView, EndpointViewWithFilter
+from api.pagination import ClubTeamsPagination
 from clubs import errors, models, services
 from clubs.api import serializers
+from clubs.api.api_filters import ClubFilter
 from clubs.services import SeasonService
 from labels.utils import fetch_all_labels
 
@@ -121,30 +122,31 @@ class ClubTeamsSearchApi(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ClubsAPI(EndpointView):
+class ClubsAPI(EndpointViewWithFilter):
     permission_classes = []
-    club_service = services.ClubTeamService()
+    filterset_class = ClubFilter
+    serializer_class = serializers.ClubTeamSerializer
+    pagination_class = ClubTeamsPagination
+    queryset = models.Club.objects.filter(visible=True).order_by("name")
 
     def get_all(self, request: Request) -> Response:
-        """Retrieve filtered clubs and serialize them."""
-        filters = request.query_params.dict()
-        season: str = filters.get("season")
-        gender: str = filters.get("gender")
+        """
+        Handle GET requests to retrieve a list of clubs, optionally filtered by season and gender.
 
-        if not season:
-            raise errors.SeasonParameterMissing
-        try:
-            self.club_service.validate_gender(gender)
-        except (ValueError, AttributeError):
-            raise errors.InvalidGender
-
-        clubs = self.club_service.get_clubs(filters=filters)
-        paginated_clubs = self.paginate_queryset(clubs)
-
-        serializer = serializers.ClubTeamSerializer(
-            paginated_clubs,
-            many=True,
-            context={"gender": gender, "season": season, "request": request},
+        The method retrieves the complete queryset of clubs, applies any filters specified in the
+        request's query parameters, and then paginates the results. The filtered and paginated
+        queryset is then serialized and returned in the response. The 'season' and 'gender' query
+        parameters are used to further filter the related teams in the club data, which is handled
+        in the serialization context.
+        """
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        paginated = self.get_paginated_queryset(queryset)
+        season = request.query_params.get("season")
+        gender = request.query_params.get("gender")
+        context = {"request": request, "season": season, "gender": gender}
+        serializer = self.serializer_class(
+            paginated, many=True, context=context
         )
         return self.get_paginated_response(serializer.data)
 
@@ -165,12 +167,10 @@ class LeagueAPI(EndpointView):
     league_service = services.LeagueService()
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def get_queryset(self, highest_only: bool = False, **kwargs) -> QuerySet:
+    def get_queryset(self, **kwargs) -> QuerySet:
         """Get Leagues queryset"""
-        if highest_only:
-            qs = self.league_service.get_highest_parents()
-        else:
-            qs = self.league_service.get_leagues()
+
+        qs = self.league_service.get_leagues()
 
         return self.filter_queryset(qs, **kwargs)
 
@@ -213,8 +213,7 @@ class LeagueAPI(EndpointView):
                 raise errors.InvalidCurrentSeasonFormatException()
 
             search_params["current_season"] = json.loads(current_season.lower())
-
-        qs = self.get_queryset(highest_only=True, **search_params)
+        qs = self.get_queryset(**search_params)
         serializer = serializers.LeagueBaseDataSerializer(qs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

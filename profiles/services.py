@@ -2,13 +2,24 @@ import datetime
 import logging
 import typing
 import uuid
+from dataclasses import dataclass, field
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
 from django.db import models as django_base_models
-from django.db.models import Case, IntegerField, ObjectDoesNotExist, Value, When
+from django.db.models import (
+    Case,
+    IntegerField,
+    Model,
+    ObjectDoesNotExist,
+    Q,
+    QuerySet,
+    Value,
+    When,
+)
 from django.db.models import functions as django_base_functions
 from pydantic import BaseModel
 
@@ -20,16 +31,25 @@ from clubs.models import Club as CClub
 from clubs.models import Team as CTeam
 from profiles import errors, models, utils
 from profiles.api import errors as api_errors
-from profiles.models import REVERSED_MODEL_MAP, LicenceType, ProfileTransferStatus
+from profiles.interfaces import ProfileVisitHistoryProtocol
+from profiles.models import (
+    REVERSED_MODEL_MAP,
+    BaseProfile,
+    LicenceType,
+    PlayerPosition,
+    ProfileTransferStatus,
+)
 from roles.definitions import (
     CLUB_ROLES,
     PROFILE_TYPE_MAP,
     TRANSFER_BENEFITS_CHOICES,
-    TRANSFER_REQUEST_POSITIONS_CHOICES,
     TRANSFER_REQUEST_STATUS_CHOICES,
     TRANSFER_SALARY_CHOICES,
-    TRANSFER_STATUS_CHOICES,
+    TRANSFER_STATUS_CHOICES_WITH_UNDEFINED,
     TRANSFER_TRAININGS_CHOICES,
+    PlayerPositions,
+    PlayerPositionShortcutsEN,
+    PlayerPositionShortcutsPL,
 )
 from utils import get_current_season
 
@@ -329,6 +349,16 @@ class ProfileService:
         except KeyError:
             raise ValueError("Invalid role shortcut.")
 
+    def get_profile_by_role_and_user(
+        self, role: str, user: User
+    ) -> typing.Optional[models.PROFILE_TYPE]:
+        """Get and return profile based on role and user"""
+        profile_type = self.get_model_by_role(role)
+        try:
+            return profile_type.objects.get(user=user)
+        except ObjectDoesNotExist:
+            return None
+
     @staticmethod
     def get_role_by_model(model: typing.Type[models.PROFILE_TYPE]) -> str:
         """Get and return role shortcut based on profile type"""
@@ -401,18 +431,21 @@ class ProfileService:
             raise ValueError("Search term must be at least 3 characters long.")
         search_term = utils.preprocess_search_term(search_term)
 
-        potential_matches = User.objects.all()
-
+        # First, get users who have a declared role
+        users_with_declared_role = User.objects.filter(
+            Q(declared_role__isnull=False) | Q(historical_role__isnull=False)
+        )
+        # Then, apply the custom search term processing
         matching_users = filter(
             lambda user: search_term
             in utils.preprocess_search_term(
-                (user.first_name or "") + (user.last_name or "")
-            ),
-            potential_matches,
+                (user.first_name or "") + " " + (user.last_name or "")
+            ) and user.should_be_listed,
+            users_with_declared_role,
         )
 
-        matching_users_ids = [user.id for user in matching_users]
-        return User.objects.filter(id__in=matching_users_ids)
+        matching_user_ids = [user.id for user in matching_users]
+        return User.objects.filter(id__in=matching_user_ids)
 
     @staticmethod
     def is_player_or_guest_profile(profile) -> bool:
@@ -506,6 +539,13 @@ class ProfileFilterService:
         )
 
     @staticmethod
+    def filter_qs_by_player_position_id(
+        queryset: django_base_models.QuerySet, positions: typing.List[int]
+    ) -> django_base_models.QuerySet:
+        """Filter queryset by player position id."""
+        return queryset.filter(player_positions__player_position_id__in=positions)
+
+    @staticmethod
     def filter_player_league(
         queryset: django_base_models.QuerySet, league_ids: list
     ) -> django_base_models.QuerySet:
@@ -523,13 +563,11 @@ class ProfileFilterService:
         current_season = get_current_season()
 
         distinct_user_ids = (
-            queryset.filter(
-                team_object__historical__league_history__league__highest_parent__in=league_ids  # noqa: E501
-            )
+            queryset.filter(team_object__league_history__league__in=league_ids)
             .annotate(
                 is_current_season=Case(
                     When(
-                        team_object__historical__league_history__season__name=current_season,  # noqa: E501
+                        team_object__league_history__season__name=current_season,
                         then=Value(1),
                     ),
                     default=Value(0),
@@ -641,6 +679,66 @@ class ProfileFilterService:
         for name in licence_keys:
             if name not in available_keys:
                 raise ValueError(f"Invalid licence name: {name}")
+
+    @staticmethod
+    def filter_transfer_status(
+        queryset: django_base_models.QuerySet, statuses: list
+    ) -> django_base_models.QuerySet:
+        """
+        Filter a queryset of profiles based on multiple transfer statuses.
+
+        This method iterates over a list of transfer status identifiers and applies
+        filters to the queryset. Profiles with a status matching any of the specified
+        identifiers are included in the result. Additionally, a special status identifier "5"  # noqa 501
+        is used to include profiles that do not have an associated TransferStatus object.  # noqa 501
+        """
+        condition = Q()
+        for status in statuses:
+            if status == "5":
+                condition |= Q(transfer_status_related__isnull=True)
+            else:
+                condition |= Q(transfer_status_related__status=status)
+
+        return queryset.filter(condition)
+
+    @staticmethod
+    def filter_by_transfer_status_league(
+        queryset: QuerySet, league_ids: typing.List[int]
+    ) -> QuerySet:
+        """
+        Filter the queryset based on the league IDs associated with the profile's transfer status.
+        """
+        return queryset.filter(transfer_status_related__league__id__in=league_ids)
+
+    @staticmethod
+    def filter_by_additional_info(
+        queryset: QuerySet, info: typing.List[str]
+    ) -> QuerySet:
+        """
+        Filter the queryset based on additional information associated with the profile's transfer status.
+        """
+        return queryset.filter(transfer_status_related__additional_info__overlap=info)
+
+    @staticmethod
+    def filter_by_number_of_trainings(queryset: QuerySet, trainings: str) -> QuerySet:
+        """
+        Filter the queryset based on the number of trainings specified in the profile's transfer status.
+        """
+        return queryset.filter(transfer_status_related__number_of_trainings=trainings)
+
+    @staticmethod
+    def filter_by_benefits(queryset: QuerySet, benefits: typing.List[str]) -> QuerySet:
+        """
+        Filter the queryset based on benefits associated with the profile's transfer status.
+        """
+        return queryset.filter(transfer_status_related__benefits__overlap=benefits)
+
+    @staticmethod
+    def filter_by_salary(queryset, salary: str) -> QuerySet:
+        """
+        Filter the queryset based on the salary specified in the profile's transfer status.
+        """
+        return queryset.filter(transfer_status_related__salary=salary)
 
 
 class PlayerProfilePositionService:
@@ -757,6 +855,132 @@ class PlayerProfilePositionService:
                 logger.error("Error saving player position", exc_info=True)
 
 
+@dataclass
+class PlayerPositionService:
+    """Service for handling player position operation."""
+
+    model: Model = field(default=PlayerPosition)
+
+    def get_initial_position_data(self) -> typing.List[typing.List[str]]:
+        """Get initial position data from consts enum classes."""
+        positions: list = PlayerPositions.values()
+        shortcuts_en: list = PlayerPositionShortcutsEN.values()
+        shortcuts_pl: list = PlayerPositionShortcutsPL.values()
+        if len(positions) == len(shortcuts_en) == len(shortcuts_pl):
+            return [positions, shortcuts_en, shortcuts_pl]
+        raise ValueError("Enum data is not equal")
+
+    def get_old_raw_names(self) -> typing.List[str]:
+        """Get old position names."""
+        old_names = [
+            "Bramkarz",
+            "Obrońca Środkowy",
+            "Obrońca Lewy",
+            "Obrońca Prawy",
+            "Pomocnik Defensywny (6)",
+            "Pomocnik Środkowy (8)",
+            "Pomocnik Ofensywny (10)",
+            "Lewy pomocnik",
+            "Prawy pomocnik",
+            "Napastnik",
+            "Skrzydłowy",
+        ]
+        return old_names
+
+    @staticmethod
+    def score_raw_mapping() -> dict:
+        """Return mapping of position names to score names"""
+        return {
+            "Bramkarz": "Bramkarz",
+            "Lewy Obrońca": "Obrońca",
+            "Prawy Obrońca": "Obrońca",
+            "Środkowy Obrońca": "Obrońca",
+            "Defensywny Pomocnik #6": "Defensywny pomocnik",
+            "Środkowy Pomocnik #8": "Ofensywny pomocnik",
+            "Ofensywny Pomocnik #10": "Ofensywny pomocnik",
+            "Lewy Pomocnik": "Ofensywny pomocnik",
+            "Prawy Pomocnik": "Ofensywny pomocnik",
+            "Skrzydłowy": "Ofensywny pomocnik",
+            "Napastnik": "Napastnik",
+        }
+
+    def get_zipped_position_data(self) -> typing.Optional[zip]:
+        """Get zipped position data from consts enum classes."""
+        if len(self.get_initial_position_data()[0]) == len(self.get_old_raw_names()):
+            return zip(*self.get_initial_position_data(), self.get_old_raw_names())
+        raise ValueError("Enum data is not equal")
+
+    def get_position_by_names(
+        self, old_name: str, new_name: str
+    ) -> typing.Tuple[typing.Optional[Model], bool]:
+        """
+        Get position by old or new name. Returns tuple with position object and
+        boolean value if position exists.
+        """
+        obj = self.model.objects.filter(Q(name=old_name) | Q(name=new_name))
+        if obj.exists():
+            return obj.first(), True
+        return None, False
+
+    def update_instance(self, instance, **kwargs):
+        """Update instance with given kwargs"""
+        for kwarg in kwargs:
+            setattr(instance, kwarg, kwargs[kwarg])
+        instance.save()
+
+    def create(self, **kwargs):
+        """Create instance with given kwargs"""
+        return self.model.objects.create(**kwargs)
+
+    def update_score_for_position(self) -> None:
+        """
+        Updates the score of a given position.
+
+        The method fetches the position object based on the provided name and updates
+        its score_position name.
+        """
+        positions = self.model.objects.all()
+        for position in positions:
+            position.score_position = self.score_raw_mapping().get(position.name)
+            position.save()
+
+    def start_position_cleanup_process(self):
+        """
+        Method to start position cleanup process. It is responsible for
+        updating position names, shortcuts, filling score_position field.
+        """
+        position_data = self.get_zipped_position_data()
+        for order_number, position_dt in enumerate(position_data, start=1):
+            name, shortcut_en, shortcut_pl, old_name = position_dt
+            pp_from_db: PlayerPosition
+            exists: bool
+            pp_from_db, exists = self.get_position_by_names(
+                old_name=old_name, new_name=name
+            )
+
+            if exists:
+                self.update_instance(
+                    pp_from_db,
+                    name=name,
+                    shortcut=shortcut_en,
+                    shortcut_pl=shortcut_pl,
+                    ordering=order_number,
+                )
+                logger.info(f"Updated position: {pp_from_db.pk}")
+            else:
+                self.create(
+                    name=name,
+                    shortcut=shortcut_en,
+                    shortcut_pl=shortcut_pl,
+                    ordering=order_number,
+                )
+                logger.info(f"Created position: {name}")
+
+    def all(self):
+        """Return all positions from DB."""
+        return self.model.objects.all()
+
+
 class ProfileVideoService:
     @staticmethod
     def get_labels(role: str = None) -> tuple:
@@ -796,21 +1020,31 @@ class TeamContributorService:
 
     def get_teams_for_profile(
         self, profile_uuid: uuid.UUID, **kwargs
-    ) -> django_base_models.QuerySet:
+    ) -> typing.List[models.TeamContributor]:
         """
-        Fetches all the teams associated with a given profile, following the model's
-        Meta ordering.
+        Fetches all the teams associated with a given profile and returns them
+        as a list.
+        The resulting list is sorted first by the 'is_primary' field in
+        descending order, and then by the latest season associated with
+        each team contributor's team history, also in descending order.
         """
-        return self.filter_team_contributor(profile_uuid=profile_uuid, **kwargs)
+        queryset = self.filter_team_contributor(
+            profile_uuid=profile_uuid, **kwargs
+        ).prefetch_related("team_history", "team_history__league_history__season")
+        # Sort the queryset
+        sorted_contributors = sorted(
+            queryset,
+            key=lambda x: (
+                -x.is_primary,
+                -self.get_latest_season(x),
+            ),
+        )
+        return sorted_contributors
 
     @staticmethod
     def filter_team_contributor(**kwargs):
         """Filter team contributor by given kwargs"""
-        return (
-            models.TeamContributor.objects.filter(**kwargs)
-            .distinct("id")
-            .order_by("id")
-        )
+        return models.TeamContributor.objects.filter(**kwargs).order_by("id")
 
     def get_profile_actual_teams(
         self, profile_uuid: uuid.UUID
@@ -824,8 +1058,18 @@ class TeamContributorService:
         )
 
     @staticmethod
+    def get_latest_season(team_contributor):
+        seasons = team_contributor.team_history.values_list(
+            "league_history__season__name", flat=True
+        )
+        # Convert each season to a sortable integer (e.g., "2024/2023" to 2024)
+        sortable_seasons = [int(season.split("/")[0]) for season in seasons if season]
+        # Sort seasons in descending order and return the first (latest) one
+        return max(sortable_seasons) if sortable_seasons else 0
+
+    @staticmethod
     def create_or_get_team_contributor(
-        profile_uuid: uuid.UUID, team_history: clubs_models.TeamHistory, **kwargs
+        profile_uuid: uuid.UUID, team: clubs_models.Team, **kwargs
     ) -> typing.Tuple[models.TeamContributor, bool]:
         """
         Create or retrieve a TeamContributor instance for a given profile
@@ -853,7 +1097,7 @@ class TeamContributorService:
         # except IntegrityError:
         #     raise errors.TeamContributorAlreadyExistServiceException
 
-        team_contributor_instance.team_history.add(team_history)
+        team_contributor_instance.team_history.add(team)
 
         return team_contributor_instance, True
 
@@ -1013,32 +1257,30 @@ class TeamContributorService:
         )
 
     def update_profile_team_fields(
-        self, profile_uuid: uuid.UUID, team_history: clubs_models.TeamHistory
+        self, profile_uuid: uuid.UUID, team_history: clubs_models.Team
     ) -> None:
         """
-        Updates the team fields (`team_object` and `team_history_object`)
+        Updates the team field (`team_object`)
         of a profile instance.
         """
         profile_instance: models.PROFILE_MODELS = (
             self.profile_service.get_profile_by_uuid(profile_uuid)
         )
 
-        profile_instance.team_object = team_history.team
-        profile_instance.team_history_object = team_history
+        profile_instance.team_object = team_history
 
         profile_instance.save()
 
     def update_profile_with_current_team_history(
         self,
         profile_uuid: uuid.UUID,
-        matched_team_histories: typing.List[clubs_models.TeamHistory],
+        matched_team_histories: typing.List[clubs_models.Team],
     ) -> None:
         """
         Updates the profile's team fields with the most current team history.
         """
         if not matched_team_histories:
             return
-
         # Sort the matched_team_histories by season in descending order
         sorted_team_histories = sorted(
             matched_team_histories,
@@ -1140,12 +1382,12 @@ class TeamContributorService:
             self.update_profile_with_current_team_history(
                 profile_uuid, matched_team_histories
             )
-
+            self.synchronize_profile_role(team_contributor, profile_uuid)
         return team_contributor
 
     def get_or_create_team_history(
         self, data: dict, profile_uuid: uuid.UUID
-    ) -> typing.List[typing.Union[clubs_models.TeamHistory, typing.Any]]:
+    ) -> typing.List[typing.Union[clubs_models.Team, typing.Any]]:
         """
         Retrieve or create a team history based on the provided data and profile UUID.
         """
@@ -1158,7 +1400,7 @@ class TeamContributorService:
 
             if not is_player:  # non-player scenario
                 # Extract attributes from team_history_instance, for example:
-                team_parameter = team_history_instance.team.id
+                team_parameter = team_history_instance.name
                 league_identifier = team_history_instance.league_history.league.id
 
                 # Use these extracted values to call
@@ -1230,7 +1472,7 @@ class TeamContributorService:
         self,
         team_contributor: models.TeamContributor,
         data: dict,
-        team_histories: typing.List[clubs_models.TeamHistory],
+        team_histories: typing.List[clubs_models.Team],
     ) -> None:
         """
         Update attributes of a TeamContributor instance based on provided data.
@@ -1246,12 +1488,16 @@ class TeamContributorService:
             fields_to_update.append("custom_role")
 
         # Update the fields from the data provided.
-        for field in fields_to_update:
-            if field in data and field != "custom_role":
-                setattr(team_contributor, field, data[field])
+        for field_to_update in fields_to_update:
+            if field_to_update in data and field_to_update != "custom_role":
+                setattr(team_contributor, field_to_update, data[field_to_update])
 
         # Now save only the fields that were updated.
         team_contributor.save(update_fields=fields_to_update)
+        if team_contributor.is_primary:
+            self.synchronize_profile_role(
+                team_contributor, team_contributor.profile_uuid
+            )
 
     def update_player_contributor(
         self,
@@ -1274,7 +1520,7 @@ class TeamContributorService:
         if team_history_instance:
             current_data = {
                 "round": team_contributor.round,
-                "team_parameter": team_history_instance.team.id,
+                "team_parameter": team_history_instance.id,
                 "league_identifier": team_history_instance.league_history.league.id,
                 "season": team_history_instance.league_history.season.id,
                 "is_primary": team_contributor.is_primary,
@@ -1335,18 +1581,16 @@ class TeamContributorService:
         contributor instance with the new data provided.
         """
         team_history_instance = team_contributor.team_history.first()
-
         if team_history_instance:
             current_data = {
                 "start_date": team_contributor.start_date,
                 "end_date": team_contributor.end_date,
-                "team_parameter": team_history_instance.team.id,
+                "team_parameter": team_history_instance.id,
                 "league_identifier": team_history_instance.league_history.league.id,
                 "is_primary": team_contributor.is_primary,
                 "role": team_contributor.role,
                 "custom_role": team_contributor.custom_role,
             }
-
         current_data.update(data)
 
         if "team_history" in current_data and current_data.get("team_history"):
@@ -1379,7 +1623,6 @@ class TeamContributorService:
 
         # if existing_contributor:
         #     raise errors.TeamContributorAlreadyExistServiceException()
-
         self.handle_primary_contributor(
             team_contributor,
             profile_uuid,
@@ -1395,6 +1638,41 @@ class TeamContributorService:
             )
 
         return team_contributor
+
+    def synchronize_profile_role(
+        self, team_contributor: models.TeamContributor, profile_uuid: uuid.UUID
+    ) -> None:
+        """
+        Synchronizes the role or custom role from a TeamContributor instance to the
+        corresponding profile.
+
+        This method updates the role field in a profile based on the role or
+        custom role specified in the TeamContributor instance.
+        If the role in TeamContributor is marked as 'OTC' or 'O'
+        (indicating a custom role), it updates the profile's custom role field
+        ('custom_coach_role' or 'custom_club_role'). Otherwise, it updates the
+        standard role field ('coach_role' or 'club_role').
+        """
+        profile = self.profile_service.get_profile_by_uuid(profile_uuid)
+
+        if team_contributor.role in ["OTC", "O"]:
+            # Update the custom role fields if they exist in the profile
+            if hasattr(profile, "custom_coach_role"):
+                profile.coach_role = team_contributor.role
+                profile.custom_coach_role = team_contributor.custom_role
+                profile.save()
+            elif hasattr(profile, "custom_club_role"):
+                profile.club_role = team_contributor.role
+                profile.custom_club_role = team_contributor.custom_role
+                profile.save()
+        else:
+            # Normal role update logic
+            if hasattr(profile, "coach_role"):
+                profile.coach_role = team_contributor.role
+                profile.save()
+            elif hasattr(profile, "club_role"):
+                profile.club_role = team_contributor.role
+                profile.save()
 
 
 class LanguageService:
@@ -1451,7 +1729,7 @@ class TransferStatusService:
 
         result = [
             ChoicesTuple(*transfer)._asdict()
-            for transfer in TRANSFER_STATUS_CHOICES
+            for transfer in TRANSFER_STATUS_CHOICES_WITH_UNDEFINED
             if lambda_function(transfer)
         ]
         return result
@@ -1461,7 +1739,7 @@ class TransferRequestService:
     """Service for transfer request operation."""
 
     def get_transfer_request_status_by_id(
-        self, transfer_status_id: int
+        self, transfer_status_id: typing.Union[int, str]
     ) -> typing.Optional[typing.Dict[str, str]]:
         """Get a transfer status by id."""
         result: list = self.__get_list_transfer_request_choices(
@@ -1469,17 +1747,8 @@ class TransferRequestService:
         )
         return result[0] if result else None
 
-    def get_transfer_request_position_by_id(
-        self, position_id: int
-    ) -> typing.Optional[typing.Dict[str, str]]:
-        """Get a transfer status by position id."""
-        result: list = self.__get_list_transfer_request_choices(
-            id=position_id, choices_tuple=TRANSFER_REQUEST_POSITIONS_CHOICES
-        )
-        return result[0] if result else None
-
     def get_num_of_trainings_by_id(
-        self, trainings_id: int
+        self, trainings_id: typing.Union[int, str]
     ) -> typing.Optional[typing.Dict[str, str]]:
         """Get a transfer status by number of trainings id."""
         result: list = self.__get_list_transfer_request_choices(
@@ -1497,7 +1766,7 @@ class TransferRequestService:
         return result[0] if result else None
 
     def get_salary_by_id(
-        self, salary_id: int
+        self, salary_id: typing.Union[int, str]
     ) -> typing.Optional[typing.Dict[str, str]]:
         """Get a transfer status by salary id."""
         result: list = self.__get_list_transfer_request_choices(
@@ -1509,12 +1778,6 @@ class TransferRequestService:
         """Get a list of transfer statuses for specified status choices."""
         return self.__get_list_transfer_request_choices(
             choices_tuple=TRANSFER_REQUEST_STATUS_CHOICES
-        )
-
-    def get_list_transfer_positions(self) -> typing.List[dict]:
-        """Get a list of transfer statuses for specified positions choices."""
-        return self.__get_list_transfer_request_choices(
-            choices_tuple=TRANSFER_REQUEST_POSITIONS_CHOICES
         )
 
     def get_list_transfer_num_of_trainings(self) -> typing.List[dict]:
@@ -1554,3 +1817,41 @@ class TransferRequestService:
             if lambda_function(transfer)
         ]
         return result
+
+
+class ProfileVisitHistoryService:
+    model = models.ProfileVisitHistory
+
+    def filter(self, **kwargs) -> QuerySet:
+        """Filter profile visit history based on given parameters."""
+        return self.model.objects.filter(**kwargs)
+
+    def get_user_profile_visit_history(self, **kwargs) -> models.ProfileVisitHistory:
+        """
+        Retrieve a specific profile visit history based on given parameters.
+
+        Raises errors.ProfileVisitHistoryDoesNotExistException if no history is found.
+        """
+
+        try:
+            return self.model.objects.get(**kwargs)
+        except ObjectDoesNotExist:
+            raise errors.ProfileVisitHistoryDoesNotExistException()
+
+    @staticmethod
+    def increment(
+        instance: ProfileVisitHistoryProtocol,
+        requestor: typing.Union[BaseProfile, AnonymousUser],
+    ) -> None:
+        """Increment the profile visit count for a user."""
+        instance.increment(requestor=requestor)
+
+    def create(self, **kwargs) -> models.ProfileVisitHistory:
+        """Create a new profile visit history entry with specified kwargs."""
+        return self.model.objects.create(**kwargs)
+
+    def profile_visit_history_last_month(self, user: User) -> int:
+        """Get the total number of visits for a user in the last 30 days."""
+        return self.model.total_visits_from_range(
+            user=user, date=utils.get_past_date(days=30)
+        )

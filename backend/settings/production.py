@@ -5,7 +5,7 @@ from .base import *  # noqa
 DEBUG = False
 CONFIGURATION = Environment.PRODUCTION
 
-BASE_URL = "https://playmaker.pro"
+BASE_URL = "https://be.playmaker.pro"
 
 
 COMPRESS_ENABLED = True

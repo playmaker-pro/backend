@@ -1,4 +1,4 @@
-from django.db.models import QuerySet, OuterRef, Exists
+from django.db.models import Exists, OuterRef, QuerySet
 from django_filters import rest_framework as filters
 
 from clubs import models
@@ -6,49 +6,55 @@ from clubs import models
 
 class ClubFilter(filters.FilterSet):
     """
-    A filterset class for the Club model, allowing filtering by season, gender, and name.
+    A filterset class for the Club model, allowing filtering by season, gender, and name.  # noqa 501
     """
 
-    season = filters.CharFilter(method="filter_by_criteria")
-    gender = filters.CharFilter(method="filter_by_criteria")
+    season = filters.CharFilter(method="filter_season")
+    gender = filters.CharFilter(method="filter_gender")
     name = filters.CharFilter(field_name="short_name", lookup_expr="icontains")
 
     class Meta:
         model = models.Club
         fields = ["season", "name", "gender"]
 
-    def filter_by_criteria(self, queryset: QuerySet, name: str, value: str) -> QuerySet:
+    def filter_season(self, queryset: QuerySet, name: str, value: str) -> QuerySet:
         """
-        Filter the queryset by season and gender criteria.
-        This method constructs a subquery to filter clubs based on related team attributes.
+        Filter the queryset by the season.
 
-        Note: The 'name' and 'value' parameters are part of the standard
-        signature for filter methods in Django Filters, but in this case,
-        they are not used because the method relies on self.data to access filter criteria.
+        This method constructs a subquery to filter clubs based on the season
+        of the related teams. Only clubs that have at least one team playing
+        in the specified season are included in the final queryset.
         """
-        teams_subquery = models.Team.objects.filter(club=OuterRef("pk"))
-
-        # Filter by season
-        if "season" in self.data:
-            teams_subquery = teams_subquery.filter(
-                historical__league_history__season__name=self.data["season"]
+        if value:
+            teams_subquery = models.Team.objects.filter(
+                club=OuterRef("pk"), league_history__season__name=value
             )
+            return queryset.annotate(has_season_team=Exists(teams_subquery)).filter(
+                has_season_team=True
+            )
+        return queryset
 
-        # Filter by gender
-        if "gender" in self.data:
+    def filter_gender(self, queryset: QuerySet, name: str, value: str) -> QuerySet:
+        """
+        Filter the queryset by gender.
+
+        This method constructs a subquery to filter clubs based on the gender
+        of the related teams. Only clubs that have at least one team matching
+        the specified gender are included in the final queryset.
+        """
+        if value.upper() in ["M", "F"]:
             gender_filter = (
                 models.Gender.get_male_object()
-                if self.data["gender"].upper() == models.Gender.MALE
+                if value.upper() == models.Gender.MALE
                 else models.Gender.get_female_object()
             )
-            teams_subquery = teams_subquery.filter(gender=gender_filter)
-
-        # Apply filter
-        queryset = queryset.annotate(has_matching_team=Exists(teams_subquery)).filter(
-            has_matching_team=True
-        )
-
-        return queryset.distinct()
+            teams_subquery = models.Team.objects.filter(
+                club=OuterRef("pk"), gender=gender_filter
+            )
+            return queryset.annotate(has_gender_team=Exists(teams_subquery)).filter(
+                has_gender_team=True
+            )
+        return queryset
 
     def filter_queryset(self, queryset: QuerySet) -> QuerySet:
         """

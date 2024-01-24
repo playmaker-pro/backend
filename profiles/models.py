@@ -13,6 +13,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.db import models
+from django.db.models import QuerySet
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -49,18 +50,16 @@ GLOBAL_TRAINING_READY_CHOCIES = (
 )
 
 FORMATION_CHOICES = (
-    ("5-3-2", "5-3-2"),
-    ("5-4-1", "5-4-1"),
-    ("4-4-2", "4-4-2"),
-    ("4-5-1", "4-5-1"),
-    ("4-3-3", "4-3-3"),
-    ("4-2-3-1", "4-2-3-1"),
-    ("4-1-4-1", "4-1-4-1"),
-    ("4-3-2-1", "4-3-2-1"),
-    ("3-5-2", "3-5-2"),
-    ("3-4-3", "3-4-3"),
-    ("4-3-1-2", "4-3-1-2"),
-    ("4-4-1-1", "4-4-1-1"),
+    ("1-3-4-3", "1-3-4-3"),
+    ("1-5-3-2", "1-5-3-2"),
+    ("1-4-3-1-2", "1-4-3-1-2"),
+    ("1-4-1-4-1", "1-4-1-4-1"),
+    ("1-4-3-3", "1-4-3-3"),
+    ("1-4-2-3-1", "1-4-2-3-1"),
+    ("1-4-4-2", "1-4-4-2"),
+    ("1-5-4-1", "1-5-4-1"),
+    ("1-4-2-4", "1-4-2-4"),
+    ("1-5-2-3", "1-5-2-3"),
 )
 
 
@@ -598,6 +597,17 @@ class BaseProfile(models.Model, EventLogMixin):
     def _get_verification_field_values(self, obj):
         return [getattr(obj, field) for field in self.VERIFICATION_FIELDS]
 
+    class ProfileManager(models.Manager):
+        def to_list_by_api(self, **kwargs) -> models.QuerySet:
+            """Filter profiles which should be listed by api"""
+            return (
+                self.filter(**kwargs)
+                .exclude(user__first_name__isnull=True, user__last_name__isnull=True)
+                .exclude(user__first_name=models.F("user__last_name"))
+            )
+
+    objects = ProfileManager()
+
     @property
     def profile_based_custom_role(self) -> typing.Optional[str]:
         """
@@ -629,9 +639,16 @@ class PlayerPosition(models.Model):
     name = models.CharField(max_length=255)
     score_position = models.CharField(max_length=255, blank=True, null=True)
     shortcut = models.CharField(max_length=4, null=True, blank=True)
+    shortcut_pl = models.CharField(max_length=4, null=True, blank=True)
+    ordering = models.IntegerField(default=-1)
 
     def __str__(self):
         return f"{self.name} - {self.shortcut}"
+
+    class Meta:
+        verbose_name = "Player Position"
+        verbose_name_plural = "Player Positions"
+        ordering = ["ordering"]
 
 
 class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
@@ -950,15 +967,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         on_delete=models.SET_NULL,
     )
-    voivodeship_raw = models.CharField(
-        # TODO:(l.remkowicz):followup needed to check if that can be safely removed from database scheme follow-up: PM-365  # noqa: E501
-        _("Wojewódźtwo (raw)"),
-        help_text=_("Wojewódźtwo w którym grasz. Nie uzywane pole"),
-        max_length=68,
-        blank=True,
-        null=True,
-        choices=settings.VOIVODESHIP_CHOICES,
-    )
     address = AddressField(
         help_text=_("Miasto z którego dojeżdżam na trening"), blank=True, null=True
     )
@@ -1034,65 +1042,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         f.calculate_fantasy_for_player(self, season, is_senior=True)
         f.calculate_fantasy_for_player(self, season, is_senior=False)
 
-    # DEPRECATED: PM-1015
-    # def calculate_data_from_data_models(self, adpt=None, *args, **kwargs):
-    #     """Interaction with s38: league, vivo, team <- s38"""
-    #     if self.attached:
-    #         adpt = adpt or PlayerAdapter(
-    #             int(
-    #                 self.mapper.get_entity(
-    #                     related_type="player", database_source="s38"
-    #                 ).mapper_id
-    #             )
-    #         )
-    #         if adpt.has_player:
-    #             self.league = adpt.get_current_league()
-    #             self.voivodeship = adpt.get_current_voivodeship()
-    #             # self.club = adpt.get_current_club()  # not yet implemented. Maybe after 1.12  # noqa: E501
-    #             self.team = adpt.get_current_team()
-
-    # DEPRECATED: PM-1015
-    # def update_data_player_object(self, adpt=None):
-    #     """Interaction with s38: updates --> s38 wix_id and fantasy position"""
-    #     if self.attached:
-    #         adpt = adpt or PlayerAdapter(
-    #             self.mapper.get_entity(
-    #                 related_type="player", database_source="s38"
-    #             ).mapper_id
-    #         )
-    #         adpt.update_wix_id_and_position(
-    #             email=self.user.email, position=self.position_fantasy
-    #         )
-
-    # DEPRECATED: PM-1015
-    # def fetch_data_player_meta(self, adpt=None, save=True, *args, **kwargs):
-    #     """Interaction with s38: updates meta from <--- s38"""
-    #     if self.attached:
-    #         adpt = adpt or PlayerAdapter(
-    #             int(
-    #                 self.mapper.get_entity(
-    #                     related_type="player", database_source="s38"
-    #                 ).mapper_id
-    #             )
-    #         )
-    #         self.meta = adpt.player.meta
-    #         self.meta_updated = timezone.now()
-    #         if save:
-    #             self.save()
-
-    # DEPRECATED: PM-1015
-    # def trigger_refresh_data_player_stats(self, adpt=None, *args, **kwargs):
-    #     """Trigger update of player stats --> s38"""
-    #     if self.attached:
-    #         adpt = adpt or PlayerAdapter(
-    #             int(
-    #                 self.mapper.get_entity(
-    #                     related_type="player", database_source="s38"
-    #                 ).mapper_id
-    #             )
-    #         )
-    #         adpt.calculate_stats(season_name=utilites.get_current_season())
-
     def get_team_object_based_on_meta(self, season_name, retries: int = 3):
         """set TeamObject based on meta data"""
         if retries <= 0 or self.meta is None:
@@ -1154,77 +1103,13 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         self.external_links = ExternalLinks.objects.create()
 
     def save(self, *args, **kwargs):
-        """'Nie jest wyświetlana na profilu.
-        Pole wykorzystywane wyłącznie do gry Fantasy.
-        Użytkownik nie ingeruje w nie, bo ustawiony jest trigger przy wyborze pozycji z A18.
-        'Bramkarz' -> 'bramkarz';
-        'Obrońca%' ->  'obronca';
-        '%pomocnik' -> pomocnik;
-        'Skrzydłowy' -> 'pomocnik';
-        'Napastnik' -> 'napastnik'
-
-           POSITION_CHOICES = [
-        (1, 'Bramkarz'),
-        (2, 'Obrońca Lewy'),
-        (3, 'Obrońca Prawy'),
-        (4, 'Obrońca Środkowy'),
-        (5, 'Pomocnik defensywny (6)'),
-        (6, 'Pomocnik środkowy (8)'),
-        (7, 'Pomocnik ofensywny (10)'),
-        (8, 'Skrzydłowy'),
-        (9, 'Napastnik'),
-        ]
-        """  # noqa: E501
-        if self.position_raw is not None:
-            self.position_fantasy = self.FANTASY_MAPPING.get(self.position_raw, None)
-
         if not self.mapper:
             self.create_mapper_obj()
 
         if not self.external_links:
             self.create_external_links_obj()
 
-        # adpt = None
-        # Each time actions
-        # if self.attached:
-        #     old = self.playermetrics.how_old_days
-        #     # logger.error(
-        #     f'xxxxx {any([old(season=True) >= 1,
-        #     old(fantasy=True) >= 1,
-        #     old(games=True) >= 1])}
-        #     {old(season=True) >= 1}
-        #     {old(fantasy=True) >= 1}
-        #     {old(games=True) >= 1}'
-        #     )
-        #     if any([old(season=True) >= 1, old(fantasy=True) >= 1, old(games=True) >= 1]):  # noqa: E501
-        #         logger.debug(f'Stats old enough {self}')
-        #         self.playermetrics.refresh_metrics()  # download: metrics data
-
-        # print(f'---------- Datamapper: {self.data_mapper_changed}')
         super().save(*args, **kwargs)
-        # print(f'---------- Datamapper: {self.data_mapper_changed}')
-
-        # DEPRECATED: PM-1015
-        # Onetime actions:
-        # if (
-        #     self.data_mapper_changed and self.attached
-        # ):  # if datamapper changed after save and it is not None
-        #     logger.info(f"Calculating metrics for player {self}")
-        #     adpt = PlayerAdapter(
-        #         int(
-        #             self.mapper.get_entity(
-        #                 related_type="player", database_source="s38"
-        #             ).mapper_id
-        #         )
-        #     )  # commonly use adpt
-        #     if utilites.is_allowed_interact_with_s38():  # are we on PROD and not Debug  # noqa: E501
-        #         self.update_data_player_object(adpt)  # send data to s38
-        #         self.trigger_refresh_data_player_stats(adpt)  # send trigger to s38
-        #     self.calculate_data_from_data_models(
-        #         adpt
-        #     )  # update league, vivo, team from Players meta
-        #     self.fetch_data_player_meta(adpt)  # update update meta
-        # create_or_update_player_external_links(self)
 
     class Meta:
         verbose_name = "Player Profile"
@@ -1803,7 +1688,7 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
 
     formation = models.CharField(
         _("Formacja"),
-        max_length=7,
+        max_length=15,
         choices=FORMATION_CHOICES,
         blank=True,
         null=True,
@@ -2182,7 +2067,6 @@ class ScoutProfile(BaseProfile):
         blank=True,
         null=True,
     )
-
     voivodeship_obj = models.ForeignKey(
         Voivodeships,
         verbose_name=_("Województwo zamieszkania"),
@@ -2192,14 +2076,6 @@ class ScoutProfile(BaseProfile):
         null=True,
         on_delete=models.SET_NULL,
     )
-
-    voivodeship_raw = models.CharField(
-        _("Deklarowane wojewódźtwo"),
-        help_text=_("Wojewódźtwo w którym grasz."),
-        max_length=68,
-        blank=True,
-        null=True,
-    )  # TODO:(l.remkowicz): followup needed to see if that can be safely removed from database scheme follow-up: PM-365  # noqa: E501
     team_object = models.ForeignKey(
         "clubs.Team",
         on_delete=models.SET_NULL,
@@ -2502,7 +2378,9 @@ class TeamContributor(models.Model):
         ("jesienna", "jesienna"),
     ]
 
-    team_history = models.ManyToManyField("clubs.TeamHistory")
+    team_history = models.ManyToManyField(
+        "clubs.Team", help_text="Teams associated with the contributor."
+    )
     profile_uuid = models.UUIDField(
         db_index=True, help_text="UUID of the related profile."
     )
@@ -2527,7 +2405,10 @@ class TeamContributor(models.Model):
     role = models.CharField(
         max_length=50,
         choices=CoachProfile.COACH_ROLE_CHOICES + definitions.CLUB_ROLES,
-        help_text="Role of the contributor in the team.",
+        help_text=_(
+            "Role of the contributor in the team. "
+            "Role specified for club/coach profile"
+        ),
         null=True,
         blank=True,
     )
@@ -2553,6 +2434,12 @@ class TeamContributor(models.Model):
         # TODO: kgarczewski: FUTURE ADDITION: Reference: PM 20-697[SPIKE]
         # unique_together = ("profile_uuid", "role", "start_date")
 
+    def __str__(self):
+        team_history = self.team_history.first()
+        if team_history:
+            return f"Team {team_history.name} contributor"
+        return "Team contributor"
+
     @staticmethod
     def get_other_roles():
         return ["O", "OTC"]
@@ -2577,103 +2464,57 @@ class ProfileVisitHistory(models.Model):
     counter_guestprofile = models.PositiveIntegerField(default=0)
     counter_refereeprofile = models.PositiveIntegerField(default=0)
     counter_anonymoususer = models.PositiveIntegerField(default=0)
+    user_logged_in = models.BooleanField(default=False)
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def increment(self, requester: typing.Union[BaseProfile, AnonymousUser]):
+    def increment(self, requestor: typing.Union[BaseProfile, AnonymousUser]):
         """Increments counter based on requester"""
-
-        setattr(self, f"counter_{requester.__name__}")
+        counter_field = f"counter_{requestor.__class__.__name__.lower()}"
+        try:
+            counter = getattr(self, counter_field)
+        except AttributeError:
+            raise AttributeError(f"Invalid counter field: {counter_field}")
+        setattr(self, counter_field, counter + 1)
         self.save()
 
-    #     if requester.__name__ == "PlayerProfile":
-    #         self.increment_player()
-    #     elif requester.__name__ == "ClubProfile":
-    #         self.increment_club()
-    #     elif requester.__name__ == "CoachProfile":
-    #         self.increment_coach()
-    #     elif requester.__name__ == "ScoutProfile":
-    #         self.increment_scout()
-    #     elif requester.__name__ == "ManagerProfile":
-    #         self.increment_manager()
-    #     elif requester.__name__ == "GuestProfile":
-    #         self.increment_guest()
-    #     elif requester.__name__ == "RefereeProfile":
-    #         self.increment_referee()
-    #     else:
-    #         self.increment_anonymous()
-    #
-    # def increment_coach(self, commit=True):
-    #     """Increments coach counter"""
-    #     self.counter_coach += 1
-    #     if commit:
-    #         self.save()
-    #
-    # def increment_scout(self, commit=True):
-    #     """Increments scout counter"""
-    #     self.counter_scout += 1
-    #     if commit:
-    #         self.save()
-    #
-    # def increment_player(self, commit=True):
-    #     """Increments player counter"""
-    #     self.counter_player += 1
-    #     if commit:
-    #         self.save()
-    #
-    # def increment_club(self, commit=True):
-    #     """Increments club counter"""
-    #     self.counter_club += 1
-    #     if commit:
-    #         self.save()
-    #
-    # def increment_manager(self, commit=True):
-    #     """Increments manager counter"""
-    #     self.counter_manager += 1
-    #     if commit:
-    #         self.save()
-    #
-    # def increment_guest(self, commit=True):
-    #     """Increments guest counter"""
-    #     self.counter_guest += 1
-    #     if commit:
-    #         self.save()
-    #
-    # def increment_referee(self, commit=True):
-    #     """Increments referee counter"""
-    #     self.counter_referee += 1
-    #     if commit:
-    #         self.save()
-    #
-    # def increment_anonymous(self, commit=True):
-    #     """Increments anonymous counter"""
-    #     self.counter_anonymous += 1
-    #     if commit:
-    #         self.save()
+    @property
+    def total_visits(self) -> int:
+        """Returns the total number of visits across all fields"""
+        counter_fields = [
+            field.attname
+            for field in self._meta.fields
+            if field.attname.startswith("counter_")
+        ]
+
+        return sum(getattr(self, field) for field in counter_fields)
+
+    @staticmethod
+    def total_visits_from_range(date: datetime, user: User) -> int:
+        """
+        Returns the total number of visits across all fields from given date
+        for specified user.
+        """
+        qs: QuerySet = ProfileVisitHistory.objects.filter(
+            user=user, created_at__gte=date
+        )
+        return sum(obj.total_visits for obj in qs)
+
+    class Meta:
+        unique_together = ("user", "created_at")
+        indexes = [
+            models.Index(
+                fields=[
+                    "user",
+                ]
+            ),
+        ]
 
 
 class TransferBaseModel(models.Model):
     """Transfer base model."""
 
-    phone_number = models.CharField(
-        max_length=15,
-        null=True,
-        blank=True,
-        help_text="Phone number for the transfer.",
-    )
-    dial_code = models.IntegerField(
-        _("Dial Code"),
-        blank=True,
-        null=True,
-        help_text=_("Country dial code for the phone number."),
-    )
-    contact_email = models.EmailField(
-        _("Contact Email"),
-        blank=True,
-        null=True,
-        help_text=_("Contact email address for the transfer."),
-    )
     salary = models.CharField(
         max_length=10,
         default=None,
@@ -2692,6 +2533,7 @@ class TransferBaseModel(models.Model):
         ),
         null=True,
         blank=True,
+        help_text=_("Benefits defines as integers with comma. Example: 1,2"),
     )
     number_of_trainings = models.CharField(
         max_length=10,
@@ -2738,6 +2580,11 @@ class ProfileTransferStatus(TransferBaseModel):
         null=True,
     )
 
+    @property
+    def profile(self) -> BaseProfile:
+        """Returns the user profile."""
+        return self.content_object
+
 
 class ProfileTransferRequest(TransferBaseModel):
     """
@@ -2769,13 +2616,47 @@ class ProfileTransferRequest(TransferBaseModel):
         choices=definitions.TRANSFER_REQUEST_STATUS_CHOICES,
         help_text="Defines a status of the transfer for the profile.",
     )
-    position = ArrayField(
-        models.CharField(
-            max_length=10,
-            choices=definitions.TRANSFER_REQUEST_POSITIONS_CHOICES,
-            help_text="Define team position",
-        )
+    position = models.ManyToManyField(
+        PlayerPosition,
+        related_name="transfer_requests",
+        help_text="The position that the team is requesting.",
     )
+    league = models.CharField(
+        max_length=128,
+        null=True,
+        blank=True,
+        help_text=_("League name filled automatically from team.club.voivodeship_obj"),
+    )
+    voivodeship = models.CharField(
+        max_length=128,
+        null=True,
+        blank=True,
+        help_text=_(
+            "Voivodeship name filled automatically from team.club.voivodeship_obj"
+        ),
+    )
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to fill league and voivodeship fields. Fields are needed
+        for filtering transfer requests in the transfer request search.
+        """
+        if self.team and self.team.league:
+            self.league = self.team.league.name
+        club = self.team.club if self.team else None
+        if club and club.voivodeship_obj:
+            self.voivodeship = club.voivodeship_obj.name
+        return super().save(*args, **kwargs)
+
+    @property
+    def profile(self) -> BaseProfile:
+        """Returns the user profile."""
+        return self.content_object
+
+    @property
+    def team(self):
+        """Returns the requesting team."""
+        return self.requesting_team.team_history.first()
 
 
 PROFILE_MODELS = (

@@ -114,7 +114,7 @@ class InquiresAPIView(EndpointView):
     def update_contact_data(self, request: Request) -> Response:
         """Update user inquiry contact data"""
         contact = request.user.inquiry_contact
-        serializer = InquiryContactSerializer(contact, data=request.data)
+        serializer = InquiryContactSerializer(contact, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 

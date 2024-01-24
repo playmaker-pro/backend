@@ -18,6 +18,15 @@ urlpatterns = [
         name="create_or_list_profiles",
     ),
     path(
+        "count/",
+        views.ProfileAPI.as_view(
+            {
+                "get": "get_filtered_profile_count",
+            }
+        ),
+        name="filtered_profile_count",
+    ),
+    path(
         "search/",
         views.ProfileSearchView.as_view({"get": "search_profiles"}),
         name="profile_search",
@@ -46,7 +55,6 @@ urlpatterns = [
         views.ProfileAPI.as_view({"get": "get_profile_labels"}),
         name="get_profile_labels",
     ),
-    # path(r"playerupdate/", WebhookPlayer.as_view(), name="player_webhook"), DEPRECATED: PM20-245  # noqa: 501
     path(
         r"formations/",
         views.FormationChoicesView.as_view({"get": "list_formations"}),
@@ -216,15 +224,6 @@ urlpatterns = [
         name="list_transfer_request_status",
     ),
     path(
-        r"transfer-request/position/",
-        views.TransferRequestAPIView.as_view(
-            {
-                "get": "list_transfer_request_position",
-            }
-        ),
-        name="list_transfer_request_position",
-    ),
-    path(
         r"transfer-request/number-of-trainings/",
         views.TransferRequestAPIView.as_view(
             {
@@ -259,5 +258,15 @@ urlpatterns = [
             }
         ),
         name="list_transfer_request_actual_teams",
+    ),
+    #  Catalogues
+    path(
+        r"catalogue/transfer-request/",
+        views.TransferRequestCatalogueAPIView.as_view(
+            {
+                "get": "list_transfer_requests",
+            }
+        ),
+        name="list_transfer_request",
     ),
 ]

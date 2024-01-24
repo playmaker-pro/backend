@@ -1,3 +1,6 @@
+from typing import List
+
+
 def convert_bool(key: str, value: str) -> bool:
     """convert GET param as bool, raise exception if value isn't bool"""
     if value.lower() == "true":
@@ -38,4 +41,9 @@ def convert_str_list(key: str, value: list) -> list:
     return [convert_str(key, sub_val) for sub_val in value]
 
 
-LIST_PARSERS = [convert_int_list, convert_str_list]
+def convert_list_with_string_to_int(_, value: List[str]) -> List[int]:
+    """convert GET param as array of strings to array of integers"""
+    return [int(val) for val in value if val.isdigit()]
+
+
+LIST_PARSERS = [convert_int_list, convert_str_list, convert_list_with_string_to_int]

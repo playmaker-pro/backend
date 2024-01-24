@@ -12,13 +12,12 @@ from app.utils import cities
 from profiles.api.serializers import LanguageSerializer
 from profiles.models import Language, PlayerProfile
 from users.models import UserPreferences
+
 from . import errors
 from . import serializers as api_serializers
 from .services import LocaleDataService
 
 locale_service: LocaleDataService = LocaleDataService()
-
-
 
 
 class LocaleDataView(EndpointView):
@@ -30,9 +29,12 @@ class LocaleDataView(EndpointView):
     def list_countries(self, request: Request) -> Response:
         """
         Return list of countries and mark prior among them
-        [{"country": "Polska", "priority": True}, {"country": "Angola", "priority": False}, ...]
-        Select language of countries on output by param (e.g. ?language=en, Default: pl - polish).
-        All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+        [{"country": "Polska", "priority": True},
+        {"country": "Angola", "priority": False}, ...]
+        Select language of countries on output by param
+        (e.g. ?language=en, Default: pl - polish).
+        All language codes (ISO 639-1):
+        https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
         """
         language = request.GET.get("language", "pl")
 
@@ -63,12 +65,15 @@ class LocaleDataView(EndpointView):
         matched_voivodeships = cities.match_voivodeship(decoded_city_query)
 
         # Check if the query matches any custom mappings
-        # This handles the case where the name_ascii field in django-cities-light does not match the Polish city names.
+        # This handles the case where the name_ascii field in django-cities-light
+        # does not match the Polish city names.
         # For example, "Warszawa" is stored as "Warsaw" in the name_ascii field.
-        # If a match is found, the decoded_query is updated with the corresponding key from the CUSTOM_CITY_MAPPING.
+        # If a match is found, the decoded_query is updated with the corresponding
+        # key from the CUSTOM_CITY_MAPPING.
         mapped_city_query = cities.handle_custom_city_mapping(decoded_city_query)
 
-        # Filter cities based on the decoded query (matching city names) or matched voivodeships
+        # Filter cities based on the decoded query (matching city names)
+        # or matched voivodeships
         # If request has no param, return just prior countries
         if not city_query:
             cities_qs: QuerySet = locale_service.get_prior_cities_queryset()
@@ -85,7 +90,8 @@ class LocaleDataView(EndpointView):
         """
         Return list of languages.
         View takes one optional param: ?language=<lang_code> (Default: pl - polish)
-        All language codes (ISO 639-1): https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+        All language codes (ISO 639-1):
+        https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
 
         {
             language - name of language translated in langauge described by param
@@ -120,6 +126,7 @@ class LocaleDataView(EndpointView):
 
 class PreferenceChoicesView(EndpointView):
     """View for listing gender and preferred leg choices"""
+
     from api.swagger_schemas import PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA
 
     authentication_classes = []
@@ -128,7 +135,8 @@ class PreferenceChoicesView(EndpointView):
     @extend_schema(**PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA)
     def list_preference_choices(self, request: Request) -> Response:
         """
-        Retrieve the choices for gender and preferred leg fields and return as a response
+        Retrieve the choices for gender and preferred leg fields and return
+        as a response
         """
 
         gender_choices = [

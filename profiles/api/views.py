@@ -1,12 +1,13 @@
+import logging
 import uuid
-from datetime import date
-from typing import Optional
+from typing import Optional, Union
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist, QuerySet
 from django.db.models.functions import Random
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, status
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
@@ -14,8 +15,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import PermissionDenied
 
+from api.base_view import EndpointViewWithFilter
 from api.consts import ChoicesTuple
 from api.errors import NotOwnerOfAnObject
+from api.pagination import TransferRequestCataloguePagePagination
 from api.serializers import ProfileEnumChoicesSerializer
 from api.swagger_schemas import (
     COACH_ROLES_API_SWAGGER_SCHEMA,
@@ -31,31 +34,41 @@ from profiles import errors, models
 from profiles.api import errors as api_errors
 from profiles.api import serializers
 from profiles.api.errors import (
+    InvalidProfileRole,
     PermissionDeniedHTTPException,
+    ProfileDoesNotExist,
     TransferRequestDoesNotExistHTTPException,
     TransferStatusDoesNotExistHTTPException,
 )
+from profiles.api.filters import TransferRequestCatalogueFilter
 from profiles.api.managers import SerializersManager
+from profiles.errors import ProfileVisitHistoryDoesNotExistException
 from profiles.filters import ProfileListAPIFilter
+from profiles.interfaces import ProfileVisitHistoryProtocol
+from profiles.models import ProfileTransferRequest
 from profiles.serializers_detailed.base_serializers import (
     ProfileTransferRequestSerializer,
     ProfileTransferStatusSerializer,
     TeamContributorSerializer,
+    UpdateOrCreateProfileTransferSerializer,
+)
+from profiles.serializers_detailed.catalogue_serializers import (
+    TransferRequestCatalogueSerializer,
 )
 from profiles.services import (
     ProfileFilterService,
     ProfileService,
     ProfileVideoService,
+    ProfileVisitHistoryService,
     TeamContributorService,
 )
 from profiles.utils import map_service_exception
 from roles.definitions import (
     TRANSFER_BENEFITS_CHOICES,
-    TRANSFER_REQUEST_POSITIONS_CHOICES,
     TRANSFER_REQUEST_STATUS_CHOICES,
     TRANSFER_SALARY_CHOICES,
     TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES,
-    TRANSFER_STATUS_CHOICES,
+    TRANSFER_STATUS_CHOICES_WITH_UNDEFINED,
     TRANSFER_TRAININGS_CHOICES,
 )
 from users.api.serializers import UserMainRoleSerializer
@@ -64,8 +77,13 @@ profile_service = ProfileService()
 team_contributor_service = TeamContributorService()
 external_links_services = ExternalLinksService()
 User = get_user_model()
+visit_history_service = ProfileVisitHistoryService()
 
 
+logger = logging.getLogger(__name__)
+
+
+# FIXME: lremkowicz: what about a django-filter library?
 class ProfileAPI(ProfileListAPIFilter, EndpointView):
     permission_classes = [IsAuthenticatedOrReadOnly]
     allowed_methods = ["post", "patch", "get"]
@@ -91,6 +109,35 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
             profile_object = profile_service.get_profile_by_uuid(profile_uuid)
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExist
+
+        # Profile visit counter
+        if profile_object.user != request.user:
+            requestor_profile: Union[models.BaseProfile, AnonymousUser] = request.user
+            if request.user.is_authenticated:
+                try:
+                    requestor_profile = profile_service.get_profile_by_role_and_user(
+                        user=request.user, role=request.user.role
+                    )
+                    if not requestor_profile:
+                        raise ProfileDoesNotExist(details="Requestor has no profile")
+                except ValueError:
+                    raise InvalidProfileRole(details="Requestor has invalid role")
+
+            history: ProfileVisitHistoryProtocol
+            try:
+                history = visit_history_service.get_user_profile_visit_history(
+                    user=profile_object.user, created_at=timezone.now()
+                )
+                visit_history_service.increment(
+                    instance=history, requestor=requestor_profile
+                )
+
+            except ProfileVisitHistoryDoesNotExistException:
+                logger.error("Profile visit history does not exist. Creating one..")
+                history = visit_history_service.create(user=profile_object.user)
+                visit_history_service.increment(
+                    instance=history, requestor=requestor_profile
+                )
 
         serializer_class = self.get_serializer_class(
             model_name=profile_object.__class__.__name__
@@ -192,6 +239,38 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         serializer.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    def get_filtered_profile_count(self, request: Request) -> Response:
+        """
+        Retrieve the count of profiles matching the specified filter criteria.
+
+        This method processes a GET request containing various filter parameters
+        and returns the count of profiles that match these filters, without
+        actually fetching or returning the profile data. It's useful for getting
+        a quick overview of how many profiles meet certain criteria before
+        fetching the detailed data.
+
+        The method works by extracting query parameters from the request,
+        applying these filters to the queryset using ProfileListAPIFilter, and
+        then counting the number of profiles in the filtered queryset.
+        """
+        # Extract and format query parameters
+        query_params = {
+            key: request.query_params.get(key) for key in request.query_params
+        }
+
+        # Instantiate ProfileListAPIFilter with formatted query parameters
+        filter_service = ProfileListAPIFilter()
+        filter_service.request = request
+        filter_service.query_params = query_params  # Set the formatted query parameters
+
+        # Apply the filters and get the filtered queryset
+        filtered_queryset = filter_service.get_queryset()
+
+        # Get the count of the filtered queryset
+        count = filtered_queryset.count()
+
+        return Response({"count": count})
+
 
 class ProfileSearchView(EndpointView):
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -219,9 +298,10 @@ class ProfileSearchView(EndpointView):
             )
         except ValueError:
             raise api_errors.InvalidSearchTerm()
-
         paginated_profiles = self.get_paginated_queryset(matching_users_queryset)
-        serializer = serializers.ProfileSearchSerializer(paginated_profiles, many=True)
+        serializer = serializers.ProfileSearchSerializer(
+            paginated_profiles, many=True, context={"request": request}
+        )
 
         return self.get_paginated_response(serializer.data)
 
@@ -305,7 +385,7 @@ class PlayerPositionAPI(EndpointView):
         """
         Retrieve all player positions ordered by ID.
         """
-        positions = models.PlayerPosition.objects.all().order_by("id")
+        positions = models.PlayerPosition.objects.all()
         serializer = serializers.PlayerPositionSerializer(positions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -503,14 +583,18 @@ class ProfileTeamsApi(EndpointView):
             profile = profile_service.get_profile_by_uuid(profile_uuid)
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExist()
-        qs: QuerySet = team_contributor_service.get_teams_for_profile(
+
+        # Get sorted list of team contributors
+        sorted_contributors: list = team_contributor_service.get_teams_for_profile(
             profile_uuid
-        ).prefetch_related("team_history", "team_history__league_history__league")
+        )
         # Using the manager to get the right serializer
         serializer_class = self.serializer_manager.get_serializer_class(
             profile, "output"
         )
-        serializer = serializer_class(qs, many=True, context={"request": request})
+        serializer = serializer_class(
+            sorted_contributors, many=True, context={"request": request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def add_team_contributor_to_profile(
@@ -724,7 +808,8 @@ class TransferStatusAPIView(EndpointView):
     def list_transfer_status(self, request: Request) -> Response:  # noqa
         """Retrieve and display transfer statuses for the profiles."""
         transfer_choices = (
-            ChoicesTuple(*transfer) for transfer in TRANSFER_STATUS_CHOICES
+            ChoicesTuple(*transfer)
+            for transfer in TRANSFER_STATUS_CHOICES_WITH_UNDEFINED
         )
         serializer = ProfileEnumChoicesSerializer(transfer_choices, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -763,7 +848,10 @@ class TransferStatusAPIView(EndpointView):
             raise api_errors.TransferStatusDoesNotExistHTTPException
 
         serializer = ProfileTransferStatusSerializer(
-            instance=transfer_status, data=request.data, partial=True
+            instance=transfer_status,
+            data=request.data,
+            partial=True,
+            context={"profile": profile},
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -835,16 +923,6 @@ class TransferRequestAPIView(EndpointView):
         )
         serializer = ProfileEnumChoicesSerializer(
             transfer_request_status_choices, many=True
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def list_transfer_request_position(self, request: Request) -> Response:  # noqa
-        """Retrieve and display transfer status positions for the profiles."""
-        transfer_request_positions_choices = (
-            ChoicesTuple(*transfer) for transfer in TRANSFER_REQUEST_POSITIONS_CHOICES
-        )
-        serializer = ProfileEnumChoicesSerializer(
-            transfer_request_positions_choices, many=True
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -925,7 +1003,7 @@ class TransferRequestAPIView(EndpointView):
         if profile.user != request.user:
             raise PermissionDeniedHTTPException
 
-        serializer = ProfileTransferRequestSerializer(
+        serializer = UpdateOrCreateProfileTransferSerializer(
             data=request.data, context={"profile": profile}
         )
         serializer.is_valid(raise_exception=True)
@@ -944,7 +1022,9 @@ class TransferRequestAPIView(EndpointView):
         if not transfer_request:
             raise TransferRequestDoesNotExistHTTPException
 
-        serializer = ProfileTransferRequestSerializer(transfer_request)
+        serializer = ProfileTransferRequestSerializer(
+            transfer_request, context={"request": request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update_transfer_request(
@@ -965,7 +1045,7 @@ class TransferRequestAPIView(EndpointView):
         if not transfer_request:
             raise api_errors.TransferRequestDoesNotExistHTTPException
 
-        serializer = ProfileTransferRequestSerializer(
+        serializer = UpdateOrCreateProfileTransferSerializer(
             instance=transfer_request,
             data=request.data,
             partial=True,
@@ -996,3 +1076,23 @@ class TransferRequestAPIView(EndpointView):
         transfer_request.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TransferRequestCatalogueAPIView(EndpointViewWithFilter):
+    permission_classes = [
+        AllowAny,
+    ]
+    serializer_class = TransferRequestCatalogueSerializer
+    pagination_class = TransferRequestCataloguePagePagination
+    queryset = ProfileTransferRequest.objects.all().order_by("-created_at")
+    filterset_class = TransferRequestCatalogueFilter
+
+    def list_transfer_requests(self, request: Request) -> Response:
+        """Retrieve and display transfer requests."""
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        paginated = self.get_paginated_queryset(queryset)
+        serializer = self.serializer_class(
+            paginated, many=True, context={"request": request}
+        )
+        return self.get_paginated_response(serializer.data)

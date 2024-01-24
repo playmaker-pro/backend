@@ -327,9 +327,7 @@ class PasswordManagementAPIView(EndpointView):
         user = password_reset_service.get_user_by_email(email)
 
         if user:
-            reset_url = UserTokenManager.create_url(
-                user, "api:users:api-password-reset-confirm"
-            )
+            reset_url = UserTokenManager.create_url(user)
             password_reset_service.send_reset_email(user, reset_url)
 
         return Response(
@@ -369,6 +367,10 @@ class PasswordManagementAPIView(EndpointView):
                 raise TokenProcessingError()
 
         return Response(
-            {"success": True, "detail": "Password reset successful"},
+            {
+                "success": True,
+                "detail": "Password reset successful",
+                "email": user.email
+            },
             status=status.HTTP_200_OK,
         )

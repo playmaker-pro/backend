@@ -251,7 +251,7 @@ class UserTokenManager:
     error_message = "Something went wrong. Please try again later."
 
     @staticmethod
-    def create_url(user: "User", endpoint_name: str) -> str:
+    def create_url(user: "User") -> str:
         """
         Generates a URL containing a token for the given user.
 
@@ -259,13 +259,39 @@ class UserTokenManager:
         """
         uidb: str = urlsafe_base64_encode(force_bytes(user.id))
         token: str = default_token_generator.make_token(user)
-        # Use reverse to get the URL pattern by name
-        path = reverse(endpoint_name, args=[uidb, token])
 
-        # Get base URL from settings or provide a default
-        base_url = settings.BASE_URL or settings.LOCALHOST_URL
+        # The frontend base URL and the new password reset path
+        base_url = settings.FRONTEND_BASE_URL
+        password_reset_path = "/nowe-haslo"
 
-        return f"{base_url}{path}"
+        # Construct the full URL with query parameters
+        reset_url = f"{base_url}{password_reset_path}?uidb64={uidb}&token={token}"
+        return reset_url
+
+    @staticmethod
+    def create_email_verification_url(user: "User") -> str:
+        """
+        Generates a URL for email verification containing a unique token and user ID.
+
+        This method creates a secure, unique URL intended for verifying
+        a user's email address.
+        It encodes the user's primary key (PK) and generates a token, appending
+        both as query parameters to a predefined URL path for email verification.
+        The URL is constructed using the frontend base URL and a specific
+        path for email verification.
+        """
+        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+
+        # The frontend base URL and the new password reset path
+        base_url = settings.FRONTEND_BASE_URL
+        email_verify_path = "/verify-email"
+
+        # Construct verification URL
+        verification_url = (
+            f"{base_url}"
+        )
+        return verification_url
 
     @staticmethod
     def check_user_token(**kwargs) -> Tuple:

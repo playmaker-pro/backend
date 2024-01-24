@@ -27,7 +27,7 @@ class ProfileListAPIFilter(APIFilter):
         "youth": api_utils.convert_bool,
         "min_age": api_utils.convert_int,
         "max_age": api_utils.convert_int,
-        "position": api_utils.convert_str_list,
+        "position": api_utils.convert_list_with_string_to_int,
         "league": api_utils.convert_int_list,
         "latitude": api_utils.convert_float,
         "longitude": api_utils.convert_float,
@@ -39,6 +39,12 @@ class ProfileListAPIFilter(APIFilter):
         "not_me": api_utils.convert_bool,
         "licence": api_utils.convert_str_list,
         "labels": api_utils.convert_str_list,
+        "transfer_status": api_utils.convert_str_list,
+        "additional_info": api_utils.convert_str_list,
+        "number_of_trainings": api_utils.convert_str,
+        "benefits": api_utils.convert_str_list,
+        "salary": api_utils.convert_str,
+        "transfer_status_league": api_utils.convert_int_list,
     }
 
     @cached_property
@@ -52,7 +58,7 @@ class ProfileListAPIFilter(APIFilter):
 
     def get_queryset(self) -> QuerySet:
         """Get queryset based on role"""
-        self.queryset: QuerySet = self.model.objects.all()
+        self.queryset: QuerySet = self.model.objects.to_list_by_api()
         self.filter_queryset(self.queryset)
 
         if self.query_params.get("shuffle", False):
@@ -87,6 +93,12 @@ class ProfileListAPIFilter(APIFilter):
         self.filter_youth()
         self.filter_league()
         self.filter_gender()
+        self.filter_players_by_transfer_status()
+        self.filter_by_salary()
+        self.filter_by_benefits()
+        self.filter_by_transfer_status_league()
+        self.filter_by_additional_info()
+        self.filter_by_number_of_trainings()
 
         self.queryset = self.queryset.order_by("-user__date_joined")
 
@@ -174,7 +186,9 @@ class ProfileListAPIFilter(APIFilter):
     def filter_position(self) -> None:
         """Filter queryset by player position"""
         if position := self.query_params.get("position"):
-            self.queryset = self.service.filter_player_position(self.queryset, position)
+            self.queryset = self.service.filter_qs_by_player_position_id(
+                self.queryset, position
+            )
 
     def filter_youth(self) -> None:
         """Filter queryset by youth players"""
@@ -204,13 +218,13 @@ class ProfileListAPIFilter(APIFilter):
                 user__licences__licence__name__in=licence_names
             ).distinct()
 
-
     def filter_by_labels(self) -> None:
         """
         Filters the queryset based on label criteria.
 
-        The method relies on utility functions to validate label names, get specific IDs for profile and
-        user-related labels, and apply these filters to the queryset.
+        The method relies on utility functions to validate label names, get specific
+        IDs for profile and user-related labels, and apply these filters to the
+        queryset.
         """
         if label_names := self.query_params.get("labels"):
             valid_label_names = validate_labels(label_names)
@@ -222,3 +236,50 @@ class ProfileListAPIFilter(APIFilter):
             self.queryset = apply_label_filters(
                 self.queryset, profile_specific_ids, user_related_ids, self.model
             )
+
+    def filter_players_by_transfer_status(self) -> None:
+        """Filter queryset by players transfer status."""
+        transfer_statuses = self.query_params.get("transfer_status")
+        if transfer_statuses:
+            self.queryset = self.service.filter_transfer_status(
+                self.queryset, transfer_statuses
+            )
+
+    def filter_by_transfer_status_league(self) -> None:
+        """
+        Filter the queryset by leagues associated with the profile's transfer status.
+        """
+        if league_ids := self.query_params.get("transfer_status_league"):
+            self.queryset = self.service.filter_by_transfer_status_league(
+                self.queryset, league_ids
+            )
+
+    def filter_by_additional_info(self) -> None:
+        """
+        Filter the queryset by additional information related to the profile's transfer status.
+        """
+        if info := self.query_params.get("additional_info"):
+            self.queryset = self.service.filter_by_additional_info(self.queryset, info)
+
+    def filter_by_number_of_trainings(self) -> None:
+        """
+        Filter the queryset by the number of trainings per week as specified in the profile's transfer status.
+        """
+        if trainings := self.query_params.get("number_of_trainings"):
+            self.queryset = self.service.filter_by_number_of_trainings(
+                self.queryset, trainings
+            )
+
+    def filter_by_benefits(self) -> None:
+        """
+        Filter the queryset by benefits associated with the profile's transfer status.
+        """
+        if benefits := self.query_params.get("benefits"):
+            self.queryset = self.service.filter_by_benefits(self.queryset, benefits)
+
+    def filter_by_salary(self) -> None:
+        """
+        Filter the queryset by salary range as indicated in the profile's transfer status.
+        """
+        if salary := self.query_params.get("salary"):
+            self.queryset = self.service.filter_by_salary(self.queryset, salary)

@@ -13,6 +13,88 @@ from clubs.management.commands.club_name_processing_data import (
 )
 from clubs.models import Club, Team
 
+NAMES_BLACKLISTED_PHRASES = (
+    ("/", " "),
+    ('"', ""),
+    ("SP. Z O.O.", ""),
+    ("S.A.", ""),
+    ("SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ", ""),
+    ("SPÓŁKA Z O. O.", ""),
+    ("SP. Z.O.O", ""),
+    (".", ""),
+)
+
+TO_CUT = (
+    "KSAP",
+    "GLKS",
+    "CWKS",
+    "MLKS",
+    "MUKS",
+    "APIS",
+    "MOSP",
+    "KTS-K",
+    "CWZS",
+    "ULKS",
+    "GMKS",
+    "WRKS",
+    "MGKS",
+    "BPAP",
+    "MŁKS",
+    "BBTS",
+    "SSIR",
+    "GSKS",
+    "LMKS",
+    "ZZPD",
+    "LPFA",
+    "ELPA",
+    "GZPN",
+    "(RW)",
+    "(RJ)",
+)
+RE_ROMAN = r"([IΙ]X|[IΙ]V|V?[IΙ]{0,3})?"
+
+
+def unify_team_name(obj_name: str) -> str:
+    """
+    Remove redundant phrases from Team name
+    """
+    for t_from, t_to in NAMES_BLACKLISTED_PHRASES:
+        obj_name = obj_name.replace(t_from, t_to)
+    unified_name = list(
+        filter(
+            lambda word: word not in TO_CUT or re.match(RE_ROMAN, word).group(),
+            re.sub(" +", " ", re.sub("[0-9]", "", obj_name)).strip().split(),
+        )
+    )
+    if unified_name:
+        if re.match(RE_ROMAN, unified_name[0]).group():
+            unified_name[0], unified_name[-1] = unified_name[-1], unified_name[0]
+    capitalized = " ".join(
+        [word.capitalize() if len(word) > 3 else word for word in unified_name]
+    )
+    return capitalized
+
+
+def unify_club_name(obj_name: str) -> str:
+    """
+    Remove redundant phrases from Club name
+    """
+
+    for t_from, t_to in NAMES_BLACKLISTED_PHRASES:
+        obj_name = obj_name.replace(t_from, t_to)
+    obj_name = re.sub(r"\b([IΙ]X|[IΙ]V|V?[IΙ]{0,3})\b\.?", "", obj_name)
+    unified_name = list(
+        filter(
+            lambda word: word not in TO_CUT,
+            re.sub(" +", " ", re.sub("[0-9]", "", obj_name)).strip().split(),
+        )
+    )
+    capitalized = " ".join(
+        [word.capitalize() if len(word) > 3 else word for word in unified_name]
+    )
+    return capitalized
+
+
 LEAGUES = [
     "Ekstraklasa",
     "1 Liga",
@@ -39,11 +121,7 @@ def get_club_without_img(clubs: Club, herbs: bool = False) -> Union[list, dict]:
 
     for club in clubs:
         for team in club.teams.all():
-            if (
-                team.league
-                and team.league.highest_parent
-                and team.league.highest_parent.name in LEAGUES
-            ):
+            if team.league and team.league and team.league.name in LEAGUES:
                 if herbs:
                     herbs_list.append(
                         {
@@ -54,8 +132,7 @@ def get_club_without_img(clubs: Club, herbs: bool = False) -> Union[list, dict]:
                             if club.voivodeship
                             else None,
                             "team_name": [
-                                (team, team.league.highest_parent.name)
-                                for team in club.teams.all()
+                                (team, team.league.name) for team in club.teams.all()
                             ],
                         }
                     )
@@ -65,7 +142,7 @@ def get_club_without_img(clubs: Club, herbs: bool = False) -> Union[list, dict]:
                     "name": club.name,
                     "picture": club.picture.url if club.picture else None,
                     "team_name": team.name,
-                    "team_league": team.league.highest_parent.name,
+                    "team_league": team.league.name,
                 }
                 break
 

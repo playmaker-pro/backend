@@ -6,47 +6,31 @@ Backend side for PlayMaker project.
 # Installation
 
 To set up a development environment quickly you need to have following prerequisits:
-> Python 3.8.2
-> poetry in version `1.6.1`
-> makefile
-> PostgreSQL (latest)
+- Python ^3.8
+- poetry in version `1.6.1`
+- makefile (NOTE: Windows users have to install it manually via chocolatey. See: https://chocolatey.org/install#individual)
+- PostgreSQL (latest) / docker deamon
 
 ## Bootstrap project:
 
 
-`make setup`
-`make run`
+1. `make setup python_path={python interpreter system path}` - to initialize poetry and create an virtual environment
+2. `make start-db` - to start postgresql docker container
+3. Copy EXAMPLE.env content to .env file and fill it with your data.
 
 for other commands see `Makefile`
 
+**_NOTE:_**
+
+    If you want to use local postgres database instead of docker container, you have to change credentials in .env file.
 
 
-Create local env file
-    If you use defauly postgres settings, ofc you need to create database (for example: local_pm)  and allow user to use it.
+## Extra scripts:
 
-    `backend/settings/local.py`
-    ```
-    CONFIGURATION = 'dev'
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'local_pm',
-            'USER': 'jacek',
-            'PASSWORD': 'postgres',
-            'HOST': 'localhost',
-            'PORT': '5432',
-        },
-   }
-   SYSTEM_USER_EMAIL = "your_admin_email"
-    ```
-
-11. To have database synced with production or staging, you have to fill DB with voivodeships.
-    ```
-    python manage.py add_voivodeships
-    ```
-
-
-#### Extra scripts:
+- Fill DB with voivodeships.
+```bash
+python manage.py add_voivodeships
+```
 
 - Migrate old voivodeship field to new one (Voivodeships model)
 ```bash
@@ -67,3 +51,23 @@ python manage.py cities_light
 ```bash
 python manage.py create_short_name_for_club_and_team
 ```
+
+- To generate language translation, you have to compile .po files:
+```bash
+python manage.py compilemessages
+```
+
+- To populate address details for all clubs
+```bash
+python manage.py populate_club_address_details
+```
+
+## Standalone scripts:
+Scripts from *tools/scripts*. Respectively as .sh (linux) and .bat (windows).
+- **create_dotenv_template** - create empty .env template file inside project root directory.
+- **initialize_db** - run initial scripts on unmodified database created from dump.
+
+
+## Additional tools:
+
+- Sentry: Debug tool available at https://playmaker-pro.sentry.io. You can enable sentry by setting `SENTRY_DSN` and `ENABLE_SENTRY` flag in your `.env` file.

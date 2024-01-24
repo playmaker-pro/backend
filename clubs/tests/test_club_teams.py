@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from clubs import api, models
-from utils.factories import ClubWithHistoryFactory, GenderFactory
+from utils.factories import ClubWithHistoryFactory, GenderFactory, TeamFactory
 from utils.test.test_utils import UserManager
 
 User = get_user_model()
@@ -20,6 +20,7 @@ class TestClubAPI(APITestCase):
         self.headers: dict = user_manager.get_headers()
         self.club_teams_endpoint = reverse("api:clubs:get_all_clubs_teams")
 
+        GenderFactory(name="kobiety")
         male_gender = GenderFactory(name="mężczyźni")
         self.club = ClubWithHistoryFactory.create()
 
@@ -27,8 +28,7 @@ class TestClubAPI(APITestCase):
         self.club.teams.update(gender=male_gender)
 
         self.team = self.club.teams.first()
-        self.team_history = self.team.historical.first()
-        self.league_history = self.team_history.league_history
+        self.league_history = self.team.league_history
         self.season = self.league_history.season
         self.league = self.league_history.league
 
@@ -44,16 +44,40 @@ class TestClubAPI(APITestCase):
 
     def test_filter_by_club_name(self) -> None:
         """
-        Test if club teams can be filtered by club name for a given season.
+        Test if club teams can be filtered by club name for a given season and ensure
+        that only teams marked as visible are included in the response.
+
+        This test verifies that:
+        1. The API correctly filters clubs by a specific club name and season.
+        2. Within the filtered club, only teams that are marked as visible (`visible=True`)
+        are returned in the response, while invisible teams (`visible=False`) are excluded.
+
+        The test sets up one visible and one invisible team within the same club and
+        checks the API response to ensure that only the visible team is included.
         """
+        visible_team = TeamFactory(
+            club=self.club, visible=True, league_history=self.league_history
+        )
+        invisible_team = TeamFactory(
+            club=self.club, visible=False, league_history=self.league_history
+        )
         response = self.client.get(
             self.club_teams_endpoint,
-            data={"season": self.season.name, "name": self.club.name},
+            data={"season": self.league_history.season.name, "name": self.club.name},
             **self.headers
         )
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data["results"]) == 1
         assert response.data["results"][0]["name"] == self.club.name
+        team_ids_in_response = [
+            team["id"] for team in response.data["results"][0]["club_teams"]
+        ]
+        assert (
+            visible_team.id in team_ids_in_response
+        ), "Visible team should be in response"
+        assert (
+            invisible_team.id not in team_ids_in_response
+        ), "Invisible team should not be in response"
 
     def test_pagination(self) -> None:
         """
@@ -65,7 +89,7 @@ class TestClubAPI(APITestCase):
         # This count helps us determine the expected number of results
         # when paginating through the API endpoint
         num_clubs = models.Club.objects.filter(
-            teams__historical__league_history__season__name=self.season
+            teams__league_history__season__name=self.season
         ).count()
 
         # Request the first page
@@ -172,6 +196,29 @@ class TestClubAPI(APITestCase):
         )
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data["results"]) == 0, "Results returned for female teams"
+
+    def test_invisible_club_excluded_from_response(self) -> None:
+        """
+        Test that a club marked as invisible (visible=False) is not included in the API response.
+
+        This test verifies that when a club is set to visible=False, it does not appear in the
+        response of the API, regardless of the season or any other filters applied.
+        """
+        # Set the club to invisible
+        self.club.visible = False
+        self.club.save()
+
+        # Attempt to retrieve clubs, including the now invisible one
+        response = self.client.get(
+            self.club_teams_endpoint,
+            data={"season": self.league_history.season.name},
+            **self.headers
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+        # Check that the invisible club is not in the response
+        assert response.data["count"] == 0, "Invisible club should not be in response"
+        assert not response.data["results"], "Response should not contain any clubs"
 
     def test_get_club_labels(self):
         pass

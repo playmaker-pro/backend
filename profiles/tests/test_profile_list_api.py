@@ -20,13 +20,16 @@ from utils import factories, get_current_season
 from utils.factories import (
     LabelDefinitionFactory,
     LabelFactory,
+    LeagueFactory,
     PlayerProfileFactory,
+    TransferStatusFactory,
     UserFactory,
 )
 from utils.test.test_utils import UserManager
 
 profile_service = ProfileService()
 url: str = "api:profiles:create_or_list_profiles"
+count_url: str = "api:profiles:filtered_profile_count"
 
 
 class TestProfileListAPI(APITestCase):
@@ -37,6 +40,7 @@ class TestProfileListAPI(APITestCase):
         self.user_obj = self.user.create_superuser()
         self.headers = self.user.get_headers()
         self.url = reverse(url)
+        self.count_url = reverse(count_url)
 
     def test_shuffle_list(self) -> None:
         """
@@ -62,12 +66,20 @@ class TestProfileListAPI(APITestCase):
         assert len(response.data["results"]) == 1
         assert response.status_code == 200
 
+        count_response = self.client.get(self.count_url, param)
+        assert count_response.data["count"] == 1
+        assert count_response.status_code == 200
+
     @parameterized.expand([[{}], [{"role": "Piłkarz"}], [{"role": "p"}]])
     def test_get_bulk_profiles_invalid_param(self, param) -> None:
         """get profiles by invalid role param"""
         response = self.client.get(self.url, param, **self.headers)
 
         assert response.status_code == 400
+
+        count_response = self.client.get(self.count_url, param, **self.headers)
+
+        assert count_response.status_code == 400
 
     def test_get_bulk_profiles_youth_only(self) -> None:
         """get only youth player profiles"""
@@ -85,6 +97,13 @@ class TestProfileListAPI(APITestCase):
 
         assert response.status_code == 200
         assert len(response.data["results"]) == 1
+
+        count_response = self.client.get(
+            self.count_url, {"role": "P", "youth": "true"}, **self.headers
+        )
+
+        assert count_response.status_code == 200
+        assert count_response.data["count"] == 1
 
     def test_get_bulk_profiles_filter_age(self) -> None:
         """get player profiles with age between"""
@@ -108,43 +127,67 @@ class TestProfileListAPI(APITestCase):
         assert response.status_code == 200
         assert len(response.data["results"]) == 1
 
+        count_response = self.client.get(
+            self.count_url,
+            {"role": "P", "min_age": "22", "max_age": "27"},
+            **self.headers
+        )
+
+        assert count_response.status_code == 200
+        assert count_response.data["count"] == 1
+
     def test_get_bulk_profiles_filter_position(self) -> None:
         """get player profiles filter by position"""
-        factories.PlayerProfileFactory.create(
+        player1 = factories.PlayerProfileFactory.create(
             player_positions__player_position__shortcut="CAM",
             player_positions__is_main=True,
         )
-        factories.PlayerProfileFactory.create(
+        player2 = factories.PlayerProfileFactory.create(
             player_positions__player_position__shortcut="GK",
             player_positions__is_main=True,
         )
 
+        player1_position_id = player1.player_positions.first().player_position.id
+        player2_position_id = player2.player_positions.first().player_position.id
+
         response = self.client.get(
             self.url,
-            {"role": "P", "position": "CAM"},
+            {"role": "P", "position": player1_position_id},
         )
         assert response.status_code == 200
         assert len(response.data["results"]) == 1
 
         response = self.client.get(
             self.url,
-            {"role": "P", "position": ["CAM", "GK"]},
+            {"role": "P", "position": [player1_position_id, player2_position_id]},
         )
         assert response.status_code == 200
         assert len(response.data["results"]) == 2
 
+        count_response = self.client.get(
+            self.count_url,
+            {"role": "P", "position": player1_position_id},
+        )
+        assert count_response.status_code == 200
+        assert count_response.data["count"] == 1
+
+        count_response = self.client.get(
+            self.count_url,
+            {"role": "P", "position": [player1_position_id, player2_position_id]},
+        )
+        assert count_response.status_code == 200
+        assert count_response.data["count"] == 2
+
     def test_get_bulk_profiles_filter_league(self) -> None:
         """get player profiles filter by league"""
         current_season = get_current_season()
-        th1, th2 = factories.TeamHistoryFactory.create_batch(
+        th1, th2 = factories.TeamFactory.create_batch(
             2, league_history__season__name=current_season
         )
-
-        profile1 = factories.PlayerProfileFactory.create(team_object=th1.team)
-        profile2 = factories.PlayerProfileFactory.create(team_object=th2.team)
-        league1_id = profile1.team_object.latest_league_from_lh.highest_parent.id
-        league2_id = profile2.team_object.latest_league_from_lh.highest_parent.id
-
+        profile1 = factories.PlayerProfileFactory.create(team_object=th1)
+        profile2 = factories.PlayerProfileFactory.create(team_object=th2)
+        league1_id = profile1.team_object.league_history.league.id
+        league2_id = profile2.team_object.league_history.league.id
         response = self.client.get(
             self.url,
             {"role": "P", "league": [league1_id]},
@@ -165,6 +208,27 @@ class TestProfileListAPI(APITestCase):
         )
         assert response.status_code == 200
         assert len(response.data["results"]) == 0
+
+        count_response = self.client.get(
+            self.count_url,
+            {"role": "P", "league": [league1_id]},
+        )
+        assert count_response.status_code == 200
+        assert count_response.data["count"] == 1
+
+        count_response = self.client.get(
+            self.count_url,
+            {"role": "P", "league": [league1_id, league2_id]},
+        )
+        assert count_response.status_code == 200
+        assert count_response.data["count"] == 2
+
+        count_response = self.client.get(
+            self.count_url,
+            {"role": "P", "league": [1111111]},  # fake league_id
+        )
+        assert count_response.status_code == 200
+        assert count_response.data["count"] == 0
 
     def test_get_bulk_profiles_filter_localization(self) -> None:
         """test localization filter"""
@@ -221,6 +285,39 @@ class TestProfileListAPI(APITestCase):
         )
         assert len(response.data["results"]) == 3
 
+        count_response = self.client.get(
+            self.count_url,
+            {
+                "role": "P",
+                "latitude": start_latitude,
+                "longitude": start_longitude,
+                "radius": 2,
+            },
+        )
+        assert count_response.data["count"] == 1
+
+        count_response = self.client.get(
+            self.count_url,
+            {
+                "role": "P",
+                "latitude": start_latitude,
+                "longitude": start_longitude,
+                "radius": 10,
+            },
+        )
+        assert count_response.data["count"] == 2
+
+        count_response = self.client.get(
+            self.url,
+            {
+                "role": "P",
+                "latitude": start_latitude,
+                "longitude": start_longitude,
+                "radius": 20,
+            },
+        )
+        assert count_response.data["count"] == 3
+
     def test_get_bulk_profiles_filter_citizenship(self) -> None:
         """test filter citizenship"""
         factories.PlayerProfileFactory.create(user__userpreferences__citizenship=["PL"])
@@ -256,6 +353,33 @@ class TestProfileListAPI(APITestCase):
         )
         assert len(response.data["results"]) == 3
 
+        count_response = self.client.get(
+            self.count_url,
+            {
+                "role": "P",
+                "country": ["PL"],
+            },
+        )
+        assert count_response.data["count"] == 2
+
+        count_response = self.client.get(
+            self.count_url,
+            {
+                "role": "P",
+                "country": ["UA"],
+            },
+        )
+        assert count_response.data["count"] == 1
+
+        count_response = self.client.get(
+            self.count_url,
+            {
+                "role": "P",
+                "country": ["UA", "PL", "DE"],
+            },
+        )
+        assert count_response.data["count"] == 3
+
     @parameterized.expand([[["Polska"]], [["DE", "Poland"]]])
     def test_get_bulk_profiles_filter_citizenship_invalid_param(
         self, country_codes: list
@@ -269,6 +393,15 @@ class TestProfileListAPI(APITestCase):
             },
         )
         assert response.status_code == 400
+
+        count_response = self.client.get(
+            self.count_url,
+            {
+                "role": "P",
+                "country": country_codes,
+            },
+        )
+        assert count_response.status_code == 400
 
     def test_get_bulk_profiles_filter_language(self) -> None:
         """test filter language"""
@@ -303,6 +436,33 @@ class TestProfileListAPI(APITestCase):
         )
         assert len(response.data["results"]) == 3
 
+        count_response = self.client.get(
+            self.count_url,
+            {
+                "role": "P",
+                "language": ["pl"],
+            },
+        )
+        assert count_response.data["count"] == 2
+
+        count_response = self.client.get(
+            self.count_url,
+            {
+                "role": "P",
+                "language": ["de"],
+            },
+        )
+        assert count_response.data["count"] == 1
+
+        count_response = self.client.get(
+            self.count_url,
+            {
+                "role": "P",
+                "language": ["fr", "de", "es"],
+            },
+        )
+        assert count_response.data["count"] == 3
+
     @parameterized.expand([[["polski"]], [["DE", "Polish"]]])
     def test_get_bulk_profiles_filter_language_invalid_param(
         self, country_codes: list
@@ -316,6 +476,15 @@ class TestProfileListAPI(APITestCase):
             },
         )
         assert response.status_code == 400
+
+        count_response = self.client.get(
+            self.count_url,
+            {
+                "role": "P",
+                "country": country_codes,
+            },
+        )
+        assert count_response.status_code == 400
 
     def test_get_bulk_profiles_filter_licence(self) -> None:
         """test filter licence"""
@@ -333,6 +502,15 @@ class TestProfileListAPI(APITestCase):
             },
         )
         assert len(response.data["results"]) == 1
+
+        count_response = self.client.get(
+            self.count_url,
+            {
+                "role": "P",
+                "licence": [licence.licence.name],
+            },
+        )
+        assert count_response.data["count"] == 1
 
     def test_get_bulk_profiles_filter_licence_invalid(self) -> None:
         """
@@ -356,6 +534,21 @@ class TestProfileListAPI(APITestCase):
             "LicenceType. Field must be one of:"
         )
         assert expected_error_msg in response.data["detail"]
+
+        count_response = self.client.get(
+            self.count_url,
+            {
+                "role": "P",
+                "licence": [invalid_licence_name],
+            },
+        )
+
+        assert count_response.status_code == 400
+        expected_error_msg = (
+            "Invalid value for field: licence in model: "
+            "LicenceType. Field must be one of:"
+        )
+        assert expected_error_msg in count_response.data["detail"]
 
     def test_get_bulk_profiles_filter_by_labels(self) -> None:
         """Test profile filtering by labels"""
@@ -393,6 +586,209 @@ class TestProfileListAPI(APITestCase):
         assert response.status_code == 200
         assert len(response.data["results"]) == 0
 
+        count_response = self.client.get(
+            self.count_url, {"role": "P", "labels": "Label1"}, **self.headers
+        )
+        assert count_response.status_code == 200
+        assert count_response.data["count"] == 1
+
+        count_response = self.client.get(
+            self.count_url, {"role": "P", "labels": "Label2"}, **self.headers
+        )
+        assert count_response.status_code == 200
+        assert count_response.data["count"] == 1
+
+        count_response = self.client.get(
+            self.count_url, {"role": "P", "labels": "Label3"}, **self.headers
+        )
+        assert count_response.status_code == 200
+        assert response.data["count"] == 0
+
+    def test_get_bulk_profiles_with_transfer_status(self) -> None:
+        """
+        Test the ability to filter player profiles based on transfer status.
+
+        This test verifies the functionality of the transfer status filter by
+        creating player profiles with different transfer statuses and then making API
+        requests to filter these profiles based on their transfer status. The test cases
+        cover filtering by a single status, multiple statuses, and the special case of
+        status "5" which represents profiles without an associated transfer
+        status object.
+        """
+        # Create profiles with various transfer statuses
+        player_with_status_1 = PlayerProfileFactory.create()
+        TransferStatusFactory.create(profile=player_with_status_1, status="1")
+
+        player_with_status_2 = PlayerProfileFactory.create()
+        TransferStatusFactory.create(profile=player_with_status_2, status="2")
+
+        PlayerProfileFactory.create()
+
+        # Test filtering for status "1"
+        response = self.client.get(
+            self.url, {"role": "P", "transfer_status": "1"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert (
+            len(response.data["results"]) == 1
+        )  # Only player_with_status_1 should be returned
+
+        # Test filtering for status "2"
+        response = self.client.get(
+            self.url, {"role": "P", "transfer_status": "2"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert (
+            len(response.data["results"]) == 1
+        )  # Only player_with_status_2 should be returned
+
+        # Test filtering for status "5" (no transfer status)
+        response = self.client.get(
+            self.url, {"role": "P", "transfer_status": "5"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert (
+            len(response.data["results"]) == 1
+        )  # Only player_without_transfer_status should be returned
+
+        # Test filtering for status "1" and "2"
+        response = self.client.get(
+            self.url, {"role": "P", "transfer_status": ["1", "2"]}, **self.headers
+        )
+        assert response.status_code == 200
+        assert (
+            len(response.data["results"]) == 2
+        )  # player_with_status_1 and player_with_status2 should be returned
+
+        # Test filtering for status "1" and "5"
+        response = self.client.get(
+            self.url, {"role": "P", "transfer_status": ["1", "5"]}, **self.headers
+        )
+        assert response.status_code == 200
+        assert (
+            len(response.data["results"]) == 2
+        )  # player_with_status_1 and player_without_transfer_status should be returned
+
+    def test_filter_profiles_by_transfer_status_league(self) -> None:
+        """
+        Test the ability to filter player profiles based on their associated leagues.
+
+        This test verifies that profiles can be correctly filtered by the league
+        associated with their transfer status. It creates two profiles each linked to
+        a different league, then performs an API request to filter by one of the
+        leagues and checks if the response contains only the profile associated with
+        that league.
+        """
+        # Create leagues
+        league1 = LeagueFactory.create()
+        league2 = LeagueFactory.create()
+
+        # Create profiles with transfer statuses linked to different leagues
+        player_in_league1 = PlayerProfileFactory.create()
+        TransferStatusFactory.create(
+            profile=player_in_league1, leagues=[league1]
+        )  # Pass league instance
+
+        player_in_league2 = PlayerProfileFactory.create()
+        TransferStatusFactory.create(
+            profile=player_in_league2, leagues=[league2]
+        )  # Pass league instance
+
+        # Perform API request to filter by league1
+        response = self.client.get(
+            self.url,
+            {"role": "P", "transfer_status_league": league1.id},
+            **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+
+    def test_filter_profiles_by_additional_info(self) -> None:
+        """
+        Test the ability to filter player profiles based on additional information in
+        their transfer status.
+
+        This test checks if profiles can be filtered based on specific additional
+        information identifiers associated with their transfer status. It ensures that
+        the API correctly returns profiles matching the requested additional
+        information.
+        """
+        player_with_additional_info = PlayerProfileFactory.create()
+        TransferStatusFactory.create(
+            profile=player_with_additional_info, additional_info=["1", "2"]
+        )
+
+        player_without_additional_info = PlayerProfileFactory.create()
+        TransferStatusFactory.create(
+            profile=player_without_additional_info, additional_info=[]
+        )
+
+        # Filter for profiles with specific additional info
+        response = self.client.get(
+            self.url, {"role": "P", "additional_info": "1"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+
+    def test_filter_profiles_by_number_of_trainings(self) -> None:
+        """
+        Test the ability to filter player profiles based on the number of trainings per
+        week specified in their transfer status.
+
+        This test creates profiles with specified training frequencies in their
+        transfer status and checks if the API can filter these profiles based on the
+        given number of trainings.
+        """
+        player_with_trainings = PlayerProfileFactory.create()
+        TransferStatusFactory.create(
+            profile=player_with_trainings, number_of_trainings="1"
+        )
+
+        # Filter for profiles with specific number of trainings
+        response = self.client.get(
+            self.url, {"role": "P", "number_of_trainings": "1"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+
+    def test_filter_profiles_by_benefits(self) -> None:
+        """
+        Test the ability to filter player profiles based on the benefits mentioned in
+        their transfer status.
+
+        This test verifies the functionality of filtering profiles by specific benefits.
+        It creates profiles with varying benefits in their transfer status and checks if
+        the API accurately filters profiles based on these benefits.
+        """
+        player_with_benefits = PlayerProfileFactory.create()
+        TransferStatusFactory.create(profile=player_with_benefits, benefits=["1", "2"])
+
+        # Filter for profiles with specific benefits
+        response = self.client.get(
+            self.url, {"role": "P", "benefits": "1"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+
+    def test_filter_profiles_by_salary(self) -> None:
+        """
+        Test the ability to filter player profiles based on the salary range specified
+        in their transfer status.
+
+        This test checks if the API can accurately filter profiles based on the salary
+        range defined in their transfer status, ensuring that only profiles matching
+        the specified salary criteria are returned in the response.
+        """
+        player_with_salary = PlayerProfileFactory.create()
+        TransferStatusFactory.create(profile=player_with_salary, salary="1")
+
+        # Filter for profiles with specific salary
+        response = self.client.get(
+            self.url, {"role": "P", "salary": "1"}, **self.headers
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+
 
 @override_settings(SUSPEND_SIGNALS=True)
 class TestPlayerProfileListByGenderAPI(APITestCase):
@@ -401,6 +797,7 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
     def setUp(self) -> None:
         self.client: APIClient = APIClient()
         self.url = reverse(url)
+        self.count_url = reverse(count_url)
 
     @parameterized.expand(
         [
@@ -421,6 +818,11 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
         assert len(response.data["results"]) == expected_count
         assert response.status_code == 200
 
+        count_response: Response = self.client.get(self.count_url, param)
+
+        assert count_response.data["count"] == expected_count
+        assert count_response.status_code == 200
+
     @parameterized.expand(
         [[{"role": "P", "gender": "K"}], [{"role": "P", "gender": "M"}]]
     )
@@ -431,6 +833,11 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
 
         assert len(response.data["results"]) == 0
         assert response.status_code == 200
+
+        count_response = self.client.get(self.count_url, param)
+
+        assert count_response.data["count"] == 0
+        assert count_response.status_code == 200
 
 
 @pytest.mark.django_db

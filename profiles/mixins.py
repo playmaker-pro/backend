@@ -24,8 +24,6 @@ class SoccerDisplayMixin:
 
     @property
     def display_voivodeship(self):
-        if self.voivodeship_raw:
-            return utils.conver_vivo_for_api(self.voivodeship_raw)
         return utils.conver_vivo_for_api(self.voivodeship)
 
 

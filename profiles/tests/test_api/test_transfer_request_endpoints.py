@@ -10,15 +10,18 @@ from django.urls import reverse
 from requests import Response
 from rest_framework.test import APIClient, APITestCase
 
-from clubs.models import Team, TeamHistory
+from clubs.models import Team
 from profiles.api.errors import (
     NotAOwnerOfTheTeamContributorHTTPException,
     PhoneNumberMustBeADictionaryHTTPException,
     TransferRequestDoesNotExistHTTPException,
 )
+from profiles.api.serializers import PlayerPositionSerializer
 from profiles.models import BaseProfile, ProfileTransferRequest, TeamContributor
 from profiles.schemas import TransferRequestSchema
-from profiles.services import TransferRequestService
+from profiles.services import PlayerPositionService, TransferRequestService
+from profiles.tests.test_utils import set_stadion_address
+from utils import factories
 from utils.factories import (
     PlayerProfileFactory,
     TeamContributorFactory,
@@ -28,6 +31,7 @@ from utils.factories import (
 from utils.test.test_utils import MethodsNotAllowedTestsMixin, UserManager
 
 transfer_service = TransferRequestService()
+url: str = "api:profiles:list_transfer_request"
 
 
 class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
@@ -52,11 +56,16 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         team_contributor: TeamContributor = TeamContributorFactory.create(
             profile_uuid=self.profile.uuid
         )
+        position_service = PlayerPositionService()
+        position_service.start_position_cleanup_process()
+
+        player_position1 = position_service.all().first()
+        player_position2 = position_service.all().last()
         self.data = {
             "requesting_team": team_contributor.pk,
             "gender": "M",
             "status": 1,
-            "position": [3, 4],
+            "position": [player_position1.pk, player_position2.pk],
             "benefits": [2, 4],
             "number_of_trainings": 1,
             "salary": 1,
@@ -74,20 +83,6 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         assert len(response.json()) > 0
 
         expected_response = transfer_service.get_list_transfer_statutes()
-
-        assert response.json() == expected_response
-
-    def test_list_transfer_request_positions(self):
-        """Test list transfer positions. Expected status code 200."""
-        response: Response = self.client.get(
-            reverse("api:profiles:list_transfer_request_position")
-        )
-        assert response.status_code == 200
-        assert isinstance(response.json(), list)
-        assert len(response.json()) > 0
-
-        expected_response = transfer_service.get_list_transfer_positions()
-
         assert response.json() == expected_response
 
     def test_list_transfer_request_num_of_trainings(self):
@@ -163,10 +158,9 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         assert response.json().get("status") == expected_status
 
         expected_positions = []
-        for position in transfer_request_obj.position:
-            expected_positions.append(
-                transfer_service.get_transfer_request_position_by_id(position)
-            )
+        for position in transfer_request_obj.position.all():
+            expected_positions.append(PlayerPositionSerializer(position).data)
+
         assert response.json().get("position") == expected_positions
 
         expected_trainings = transfer_service.get_num_of_trainings_by_id(
@@ -200,8 +194,10 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
     @factory.django.mute_signals(signals.pre_save, signals.post_save)
     def test_update_profile_transfer_request_email(self):
         """Test update profile transfer request. Expected status code 200."""
+        self.profile.user.userpreferences.contact_email = None
+        self.profile.user.userpreferences.save()
         transfer_request_obj: ProfileTransferRequest = TransferRequestFactory.create(
-            profile=self.profile, contact_email=None
+            profile=self.profile
         )
         new_address_email = "test_email@test.test"
         response: Response = self.update_profile_transfer_request(
@@ -212,14 +208,20 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         assert isinstance(response.json(), dict)
         assert response.json().get("contact_email") == new_address_email
 
-        transfer_request_obj.refresh_from_db()
-        assert transfer_request_obj.contact_email == new_address_email
+        transfer_request_obj.profile.user.userpreferences.refresh_from_db()
+        assert (
+            transfer_request_obj.profile.user.userpreferences.contact_email
+            == new_address_email
+        )
 
     @factory.django.mute_signals(signals.pre_save, signals.post_save)
     def test_update_profile_transfer_request_phone(self):
         """Test update profile transfer request. Expected status code 200."""
+        self.profile.user.userpreferences.phone_number = None
+        self.profile.user.userpreferences.dial_code = None
+        self.profile.user.userpreferences.save()
         transfer_request_obj: ProfileTransferRequest = TransferRequestFactory.create(
-            profile=self.profile, phone_number=None
+            profile=self.profile
         )
         new_contact_phone = "123456789"
         response: Response = self.update_profile_transfer_request(
@@ -231,7 +233,10 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         assert response.json().get("phone_number").get("number") == new_contact_phone
 
         transfer_request_obj.refresh_from_db()
-        assert transfer_request_obj.phone_number == new_contact_phone
+        assert (
+            transfer_request_obj.profile.user.userpreferences.phone_number
+            == new_contact_phone
+        )
 
     @factory.django.mute_signals(signals.pre_save, signals.post_save)
     def test_update_profile_transfer_request_status(self):
@@ -396,19 +401,14 @@ def test_profile_transfer_request_teams_endpoint(
         profile_uuid=profile.uuid
     )
 
-    team_history1: TeamHistory = team_contributor1.team_history.first()
-    team_history2: TeamHistory = team_contributor2.team_history.first()
+    team1: Team = team_contributor1.team_history.first()
+    team2: Team = team_contributor2.team_history.first()
 
-    league = team_history1.league_history.league
-    league.highest_parent = league
+    league = team1.league_history.league
     league.save()
 
-    league2 = team_history2.league_history.league
-    league2.highest_parent = league2
+    league2 = team2.league_history.league
     league2.save()
-
-    team1: Team = team_history1.team
-    team2: Team = team_history2.team
 
     team1.club.picture.save(uploaded_file.name, uploaded_file, save=True)
     team2.club.picture.save(uploaded_file.name, uploaded_file, save=True)
@@ -420,31 +420,79 @@ def test_profile_transfer_request_teams_endpoint(
             "id": team_contributor1.pk,
             "round": team_contributor1.round,
             "team": {
-                "id": team_history1.pk,
+                "id": team1.pk,
                 "team_name": team1.name,
-                "league_highest_parent_name": team_history1.league_history.league.display_league_top_parent,  # noqa: E501
-                "league_highest_parent_id": team_history1.league_history.league.pk,
+                "league_name": team1.league_history.league.name,  # noqa: E501
+                "league_id": team1.league_history.league.pk,
                 "team_contributor_id": None,
                 "picture_url": request.build_absolute_uri(team1.get_club_pic),
-                "country": team_history1.get_country,
-                "season": team_history1.league_history.season.name,
+                "country": team1.get_country,
+                "season": team1.league_history.season.name,
             },
         },
         {
             "id": team_contributor2.pk,
             "round": team_contributor2.round,
             "team": {
-                "id": team_history2.pk,
+                "id": team2.pk,
                 "team_name": team2.name,
-                "league_highest_parent_name": team_history2.league_history.league.display_league_top_parent,  # noqa: E501
-                "league_highest_parent_id": team_history2.league_history.league.pk,
+                "league_name": team2.league_history.league.name,  # noqa: E501
+                "league_id": team2.league_history.league.pk,
                 "team_contributor_id": None,
                 "picture_url": request.build_absolute_uri(team2.get_club_pic),
-                "country": team_history2.get_country,
-                "season": team_history2.league_history.season.name,
+                "country": team2.get_country,
+                "season": team2.league_history.season.name,
             },
         },
     ]
 
     response: Response = api_client.get(url, **headers)
     assert response.json() == expected_response
+
+
+class TestTransferRequestCatalogue(APITestCase):
+    def setUp(self) -> None:
+        """set up object factories"""
+        self.client: APIClient = APIClient()
+        self.user = UserManager(self.client)
+        self.user_obj = self.user.create_superuser()
+        self.headers = self.user.get_headers()
+        self.url = reverse(url)
+
+    def test_localization_filter(self) -> None:
+        """Test localization filter."""
+        start_latitude, start_longitude = 54.25451551801814, 18.315362070454498
+
+        # Create three transfer requests
+        team_a = factories.TransferRequestFactory.create()
+        team_b = factories.TransferRequestFactory.create()
+        team_c = factories.TransferRequestFactory.create()
+
+        # Set latitude and longitude for each team's stadion address
+        set_stadion_address(team_a, start_latitude, start_longitude)
+        set_stadion_address(team_b, 54.21354701964793, 18.36439364315754)
+        set_stadion_address(team_c, 54.13695015319587, 18.458313275377453)
+
+        # Test with radius = 2 km
+        response = self.client.get(
+            self.url, {"latitude": start_latitude,
+                       "longitude": start_longitude,
+                       "radius": 2}
+        )
+        assert len(response.data["results"]) == 1
+
+        # Test with radius = 10 km
+        response = self.client.get(
+            self.url, {"latitude": start_latitude,
+                       "longitude": start_longitude,
+                       "radius": 10}
+        )
+        assert len(response.data["results"]) == 2
+
+        # Test with radius = 20 km
+        response = self.client.get(
+            self.url, {"latitude": start_latitude,
+                       "longitude": start_longitude,
+                       "radius": 20}
+        )
+        assert len(response.data["results"]) == 3

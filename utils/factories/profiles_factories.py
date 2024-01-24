@@ -2,10 +2,13 @@ import random
 
 import factory
 from django.contrib.auth import get_user_model
+from factory import post_generation
 from faker import Faker
 
 from profiles import models
+from profiles.models import PlayerPosition
 from profiles.services import TransferStatusService
+from roles import definitions
 from utils.factories.mapper_factories import MapperFactory
 
 from . import clubs_factories, user_factories, utils
@@ -197,6 +200,33 @@ class ScoutProfileFactory(ProfileFactory):
     address = factory.LazyAttribute(lambda _: utils.get_random_address())
 
 
+class ManagerProfileFactory(ProfileFactory):
+    class Meta:
+        model = models.ManagerProfile
+
+    facebook_url = factory.Faker("url")
+    other_url = factory.Faker("url")
+    agency_phone = factory.Sequence(lambda n: f"+4812345{n:04d}")
+    dial_code = factory.Sequence(lambda n: f"+{n%99:02d}")
+    agency_email = factory.Faker("email")
+    agency_transfermarkt_url = factory.Faker("url")
+    agency_website_url = factory.Faker("url")
+    agency_instagram_url = factory.Faker("url")
+    agency_twitter_url = factory.Faker("url")
+    agency_facebook_url = factory.Faker("url")
+    agency_other_url = factory.Faker("url")
+
+    @factory.post_generation
+    def post_create(self, create, extracted, **kwargs):
+        """
+        This method is called after a new instance is created with the factory.
+        It is used to perform additional actions or setup that is not covered by
+        the default factory creation process.
+        """
+        if not create:
+            return
+
+
 class GuestProfileFactory(ProfileFactory):
     class Meta:
         model = models.GuestProfile
@@ -272,7 +302,7 @@ class TeamContributorFactory(factory.django.DjangoModelFactory):
             for team_hist in extracted:
                 obj.team_history.add(team_hist)
         else:
-            obj.team_history.add(clubs_factories.TeamHistoryFactory())
+            obj.team_history.add(clubs_factories.TeamFactory())
 
 
 class TransferStatusFactory(factory.django.DjangoModelFactory):
@@ -281,23 +311,47 @@ class TransferStatusFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.ProfileTransferStatus
 
-    contact_email = factory.Faker("email")
-    phone_number = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
     status = 1
-    additional_info = [1, 2]
+    additional_info = factory.List(
+        [
+            factory.Iterator(
+                [
+                    info[0]
+                    for info in definitions.TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES
+                ]
+            )
+        ]
+    )
+    number_of_trainings = factory.Iterator(
+        [training[0] for training in definitions.TRANSFER_TRAININGS_CHOICES]
+    )
+    salary = factory.Iterator(
+        [salary[0] for salary in definitions.TRANSFER_SALARY_CHOICES]
+    )
 
     class Params:
         profile = None
+        leagues = factory.List([])
 
     @classmethod
     def create(cls, **kwargs) -> models.PROFILE_TYPE:
-        """Override for GenericForeignKey purposes."""
-        if not kwargs.get("profile"):
+        """Override for GenericForeignKey and ManyToMany fields handling."""
+        leagues = kwargs.pop(
+            "leagues", None
+        )  # Extract leagues before instance creation
+        profile = kwargs.pop("profile", None)
+
+        if not profile:
             profile = PlayerProfileFactory.create()
-        else:
-            profile = kwargs.pop("profile")
+
         kwargs = TransferStatusService.prepare_generic_type_content(kwargs, profile)
-        return super().create(**kwargs)
+        transfer_status_instance = super().create(**kwargs)  # Create the instance
+
+        # Set the leagues using the set method, if leagues are provided
+        if leagues is not None:
+            transfer_status_instance.league.set(leagues)
+
+        return transfer_status_instance
 
 
 class TransferRequestFactory(factory.django.DjangoModelFactory):
@@ -306,16 +360,12 @@ class TransferRequestFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.ProfileTransferRequest
 
-    contact_email = factory.Faker("email")
-    phone_number = factory.LazyAttribute(lambda _: utils.get_random_phone_number())
     status = "1"
     benefits = [1, 2]
     requesting_team = factory.SubFactory(TeamContributorFactory)
     gender = "M"
-    position = [1]
     number_of_trainings = "1"
     salary = "1"
-    dial_code = factory.Faker("pyint", min_value=0, max_value=1000)
 
     class Params:
         profile = None
@@ -329,3 +379,13 @@ class TransferRequestFactory(factory.django.DjangoModelFactory):
             profile = kwargs.pop("profile")
         kwargs = TransferStatusService.prepare_generic_type_content(kwargs, profile)
         return super().create(**kwargs)
+
+    @post_generation
+    def position(self, create, extracted, **kwargs):  # noqa
+        if not create:
+            return
+        if not self.position.all().exists():  # noqa
+            positions = PlayerPosition.objects.all()
+            random_positions = random.sample(list(positions), 2)
+            for random_position in random_positions:
+                self.position.add(random_position.pk)  # noqa

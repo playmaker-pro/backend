@@ -5,10 +5,10 @@ import pytest
 from django.core.management import CommandError, call_command
 from django.db.models import QuerySet
 
+from clubs import models as _models
 from clubs.management.commands.change_league_seniorty import (
     Command as ChangeLeagueSeniorityCommand,
 )
-from clubs.models import League, Season, Seniority
 from utils.factories import (
     ClubFactory,
     LeagueFactory,
@@ -26,7 +26,7 @@ class TestChangeLeagueSeniority(TestCase):
 
     def setUp(self) -> None:
         seniority = SeniorityFactory.create_batch(2)
-        self.clj_seniority: Seniority = SeniorityFactory.create(
+        self.clj_seniority: _models.Seniority = SeniorityFactory.create(
             name=self.CENTRAL_JUNIOR_LEAGUE_NAME
         )
 
@@ -51,14 +51,14 @@ class TestChangeLeagueSeniority(TestCase):
         Test if command change league seniority to "Centralna Liga Juniorow"
         if requires are satisfied
         """
-        leagues = League.objects.all()
+        leagues = _models.League.objects.all()
         assert leagues.count() == 7
         assert (
             leagues.filter(seniority__name=self.CENTRAL_JUNIOR_LEAGUE_NAME).count() == 0
         )
 
         call_command(self.command_name)
-        leagues_refreshed: QuerySet[League] = League.objects.all()
+        leagues_refreshed: QuerySet[_models.League] = _models.League.objects.all()
         assert leagues_refreshed.count() == 7
         assert (
             leagues_refreshed.filter(
@@ -72,7 +72,7 @@ class TestChangeLeagueSeniority(TestCase):
 
         call_command(self.command_name)
         LeagueFactory.create_batch(2)
-        leagues_refreshed2: QuerySet[League] = League.objects.all()
+        leagues_refreshed2: QuerySet[_models.League] = _models.League.objects.all()
         assert leagues_refreshed2.count() == 9
         assert (
             leagues_refreshed2.filter(
@@ -85,18 +85,20 @@ class TestChangeLeagueSeniority(TestCase):
         """Test if command creates new seniority object if it is not found in db"""
         self.clj_seniority.delete()
         call_command(self.command_name)
-        assert Seniority.objects.count() == 3
-        assert Seniority.objects.filter(name=self.CENTRAL_JUNIOR_LEAGUE_NAME).exists()
+        assert _models.Seniority.objects.count() == 3
+        assert _models.Seniority.objects.filter(
+            name=self.CENTRAL_JUNIOR_LEAGUE_NAME
+        ).exists()
 
     def test_central_league_seniority_method(self):
         """Test if central_league_seniority method returns proper object"""
-        result: Seniority = self.seniority_command.central_league_seniority
-        assert isinstance(result, Seniority)
+        result: _models.Seniority = self.seniority_command.central_league_seniority
+        assert isinstance(result, _models.Seniority)
         assert result.name == self.CENTRAL_JUNIOR_LEAGUE_NAME
 
     def test_change_league_seniority(self):
         """Test if change_league_seniority method changes seniority of league objects"""
-        leagues = League.objects.all()
+        leagues = _models.League.objects.all()
         self.seniority_command.change_league_seniority(leagues=leagues)
 
         for league in leagues:
@@ -109,8 +111,10 @@ class TestChangeLeagueSeniority(TestCase):
         """
         self.clj_seniority.delete()
         self.seniority_command.create_new_central_junior_seniority()
-        assert Seniority.objects.count() == 3
-        assert Seniority.objects.filter(name=self.CENTRAL_JUNIOR_LEAGUE_NAME).exists()
+        assert _models.Seniority.objects.count() == 3
+        assert _models.Seniority.objects.filter(
+            name=self.CENTRAL_JUNIOR_LEAGUE_NAME
+        ).exists()
 
 
 @pytest.mark.django_db
@@ -134,20 +138,20 @@ class TestHidePredefinedLeagues(TestCase):
 
     def test_call_command(self):
         """Test if command hides predefined leagues"""
-        leagues = League.objects.all()
+        leagues = _models.League.objects.all()
         assert leagues.count() == 8
         assert leagues.filter(visible=True).count() == 8
 
         call_command(self.command_name)
-        leagues_refreshed: QuerySet[League] = League.objects.all()
+        leagues_refreshed: QuerySet[_models.League] = _models.League.objects.all()
         assert leagues_refreshed.count() == 8
         assert leagues_refreshed.filter(visible=True).count() == 0
 
     def test_call_command_no_league_found(self):
         """Test if command does not raise error if no league is found in db"""
-        League.objects.all().delete()
+        _models.League.objects.all().delete()
         call_command(self.command_name)
-        assert League.objects.count() == 0
+        assert _models.League.objects.count() == 0
 
 
 @pytest.mark.django_db
@@ -191,9 +195,7 @@ class TestShortNameCommand(TestCase):
         self.futsal_team = TeamFactory(
             name="Example Futsal Team",
             club=self.futsal_club,
-        )
-        self.futsal_team_history_factory = TeamHistoryFactory(
-            team=self.futsal_team, league_history=self.league_history
+            league_history=self.league_history,
         )
 
     def test_command_output(self):
@@ -269,10 +271,10 @@ class AddSeasonsCommandTest(TestCase):
         call_command(self.command_name, 2010, 2013)
 
         # Assert that the seasons have been added
-        assert Season.objects.filter(name="2010/2011").count() == 1
-        assert Season.objects.filter(name="2011/2012").count() == 1
-        assert Season.objects.filter(name="2012/2013").count() == 1
-        assert Season.objects.filter(name="2013/2014").count() == 1
+        assert _models.Season.objects.filter(name="2010/2011").count() == 1
+        assert _models.Season.objects.filter(name="2011/2012").count() == 1
+        assert _models.Season.objects.filter(name="2012/2013").count() == 1
+        assert _models.Season.objects.filter(name="2013/2014").count() == 1
 
     def test_add_seasons_command_only_accepts_integers(self):
         """
@@ -303,3 +305,47 @@ class AddSeasonsCommandTest(TestCase):
         """
         with self.assertRaises(CommandError):
             call_command(self.command_name, 2025, 2020)
+
+
+class ClearDataCommandTest(TestCase):
+
+    """
+    Tests for the custom management command 'clear_data'.
+
+    This command is intended to clear data from specific tables in the database.
+    These tests ensure that the command works as expected and all the specified
+    tables are properly cleared.
+    """
+
+    def setUp(self):
+        ClubFactory.create_batch(5)
+        TeamFactory.create_batch(5)
+        TeamHistoryFactory.create_batch(5)
+        LeagueFactory.create_batch(5)
+        LeagueHistoryFactory.create_batch(5)
+
+    @pytest.mark.django_db()
+    def test_clear_data_command(self):
+        """
+        Test the execution of the clear_data command.
+
+        This test ensures that after running the clear_data command, all records
+        in the specified tables (FollowTeam, Club, Team, TeamHistory, League, LeagueHistory)
+        are successfully deleted.
+        """
+        # Assert that each table initially has records
+        assert _models.Club.objects.count() > 0
+        assert _models.Team.objects.count() > 0
+        assert _models.TeamHistory.objects.count() > 0
+        assert _models.League.objects.count() > 0
+        assert _models.LeagueHistory.objects.count() > 0
+
+        # Execute the clear_data command
+        call_command("clear_clubs_teams_leagues_data")
+
+        # Assert that each table is empty
+        assert _models.Club.objects.count() == 0
+        assert _models.Team.objects.count() == 0
+        assert _models.TeamHistory.objects.count() == 0
+        assert _models.League.objects.count() == 0
+        assert _models.LeagueHistory.objects.count() == 0

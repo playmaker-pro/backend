@@ -3,7 +3,7 @@ import typing
 
 from django.contrib.auth.models import User
 from django.db import models as django_models
-from django.db.models import F, ObjectDoesNotExist, QuerySet
+from django.db.models import ObjectDoesNotExist, QuerySet
 
 from clubs import errors, models
 from clubs.api.api_filters import ClubFilter
@@ -105,10 +105,6 @@ class ClubService:
 class LeagueService:
     model = models.League
 
-    def get_highest_parents(self) -> QuerySet:
-        """Get all highest parents"""
-        return self.model.objects.filter(highest_parent=F("id"))
-
     def get_leagues(self) -> QuerySet:
         """Get all leagues"""
         return self.model.objects.all()
@@ -151,16 +147,15 @@ class ClubTeamService:
         """
         Return all clubs filtered by the provided filters.
         """
-        queryset = (
-            models.Club.objects.all()
-            .prefetch_related("teams", "teams__historical")
-            .order_by("name")
-        )
 
+        queryset = models.Club.objects.all().prefetch_related("teams").order_by("name")
         if filters:
-            filter = ClubFilter(filters, queryset=queryset)
-            return filter.qs
-        return queryset
+            queryset = ClubFilter(filters, queryset=queryset).qs
+        return queryset.prefetch_related(
+            django_models.Prefetch(
+                "teams", queryset=models.Team.objects.filter(visible=True)
+            )
+        )
 
     @staticmethod
     def validate_gender(gender: str) -> None:
@@ -287,17 +282,16 @@ class TeamHistoryCreationService:
         Retrieve an existing team by name or create a new one if it doesn't exist.
 
         This function first tries to get a team by its name and gender.
-        If the team is found, and it's marked as visible and enabled, it raises
-        a TeamAlreadyExist error. If the team isn't found, a new team is created
-        with the provided name and gender. The newly created team is then initialized
-        with default values.
+        If the team is found, and it's marked as visible and enabled, it's returned.
+        If the team isn't found, a new team is created with the provided name and gender.  # noqa 501
+        The newly created team is then initialized with default values.
         """
         team = models.Team.objects.filter(
             name__iexact=team_name, gender=gender, seniority=seniority
         ).first()
 
         if team and team.visible and team.enabled:
-            raise errors.TeamAlreadyExist()
+            return team
         if not team:
             team = models.Team(name=team_name, gender=gender, seniority=seniority)
             self.initialize_model_instance(team, user)
@@ -315,19 +309,37 @@ class TeamHistoryCreationService:
 
     def create_or_get_team_history(
         self, team: models.Team, league_history: models.LeagueHistory, user
-    ) -> models.TeamHistory:
+    ) -> models.Team:
         """
         Retrieve or create a history record for the given team and league history.
         """
-        team_history = models.TeamHistory.objects.filter(
-            team=team, league_history=league_history, season=league_history.season
+        # Find an existing team with the same name
+        existing_team_history = models.Team.objects.filter(
+            name=team.name, league_history=league_history, league=league_history.league
         ).first()
 
-        if not team_history:
-            team_history = models.TeamHistory.objects.create(
-                team=team, league_history=league_history, season=league_history.season
-            )
-            self.initialize_model_instance(team_history, user)
+        if existing_team_history:
+            # A team with the same name and league_history exists, so return it
+            return existing_team_history
+        else:
+            # Find an existing team with the same name but no league history
+            team_history = models.Team.objects.filter(
+                name=team.name, league_history__isnull=True, league__isnull=True
+            ).first()
+
+            if team_history:
+                # Update the existing team with the league_history
+                team_history.league_history = league_history
+                team_history.league = league_history.league
+                team_history.save()
+            else:
+                # If no existing team is found, create a new one
+                team_history = models.Team.objects.create(
+                    name=team.name,
+                    league_history=league_history,
+                    league=league_history.league,
+                )
+                self.initialize_model_instance(team_history, user)
 
         return team_history
 
@@ -349,7 +361,9 @@ class TeamHistoryCreationService:
             )
         except models.LeagueHistory.MultipleObjectsReturned:
             # Get the first record as a fallback
-            league_history = models.LeagueHistory.objects.filter().first()
+            league_history = models.LeagueHistory.objects.filter(
+                league=league, season_id=season_id
+            ).first()
             created = False
         except ObjectDoesNotExist:
             raise errors.SeasonDoesNotExistServiceException()
@@ -445,15 +459,11 @@ class TeamHistoryCreationService:
         Fetch the team_history and associated season based on a team_history_id.
         """
         try:
-            team_history: models.TeamHistory = (
-                models.TeamHistory.objects.select_related("league_history").get(
-                    id=team_history_id
-                )
-            )
-
-        except models.TeamHistory.DoesNotExist:
-            raise errors.TeamHistoryNotFoundServiceException()
-
+            team_history: models.Team = models.Team.objects.select_related(
+                "league_history"
+            ).get(id=team_history_id)
+        except models.Team.DoesNotExist:
+            raise errors.TeamNotFoundServiceException()
         season: int = team_history.league_history.season.id
         return team_history, season
 
@@ -464,11 +474,11 @@ class TeamHistoryCreationService:
         league_identifier: typing.Union[str, int],
         country_code: str,
         user: User,
-    ) -> models.TeamHistory:
+    ) -> models.Team:
         """
-        Creates or retrieves the TeamHistory instances for a given season and round.
+        Creates or retrieves the Team instances for a given season and round.
 
-        The method checks if a corresponding TeamHistory exists for the provided
+        The method checks if a corresponding Team exists for the provided
         season and round. If it does, the instance is returned; otherwise,
         a new one is created.
         """
@@ -498,7 +508,6 @@ class TeamHistoryCreationService:
         )
 
         team_history = self.create_or_get_team_history(team, league_history, user)
-
         return team_history
 
     def create_or_get_team_history_date_based(
@@ -509,13 +518,13 @@ class TeamHistoryCreationService:
         league_identifier: typing.Union[str, int],
         country_code: str,
         user: User,
-    ) -> typing.List[models.TeamHistory]:
+    ) -> typing.List[models.Team]:
         """
-        Creates or retrieves the TeamHistory instances for a given date range.
+        Creates or retrieves the Team instances for a given date range.
 
-        For each date within the range, the method checks if a corresponding TeamHistory
+        For each date within the range, the method checks if a corresponding Team
         exists. If it does, the instance is added to the list of results; otherwise,
-        a new one is created. The method returns all TeamHistory instances
+        a new one is created. The method returns all Team instances
         corresponding to the date range.
         """
         if end_date is None:
@@ -526,38 +535,84 @@ class TeamHistoryCreationService:
 
         cursor_date = start_date
         team_histories = []
+        i = 0  # FIXME: temporary solution to avoid infinite loop
         while cursor_date <= end_date:
+            i += 1
+
             # Retrieve Season for the cursor_date
             current_season_name = models.Season.define_current_season(cursor_date)
-            season_obj, created = models.Season.objects.get_or_create(name=current_season_name)
-
-            year = cursor_date.year if not season_obj else None
-
-            league, league_history = self.create_or_get_league_and_history(
-                league_identifier,
-                country_code,
-                season_obj.id if season_obj else None,
-                user,
-                {"team_parameter": team_parameter},
-                year=year,
+            season_obj, created = models.Season.objects.get_or_create(
+                name=current_season_name, defaults={"is_in_verify_form": False}
             )
 
-            # Use existing method to get or create TeamHistory
-            team = self.get_or_create(
-                {
-                    "team_parameter": team_parameter,
-                    "league_identifier": league_identifier,
-                },
-                user,
-                country_code,
+            existing_team = self.search_for_existing_team(
+                team_parameter, season_obj, league_identifier
             )
-            team_history = self.create_or_get_team_history(team, league_history, user)
+            if existing_team:
+                # If existing team is found, use it directly
+                team_history = existing_team
+            else:
+                # If no existing team, create a new team and its history
+                league, league_history = self.create_or_get_league_and_history(
+                    league_identifier,
+                    country_code,
+                    season_obj.id,
+                    user,
+                    {"team_parameter": team_parameter},
+                )
+                team = self.get_or_create(
+                    {
+                        "team_parameter": team_parameter,
+                        "league_identifier": league_identifier,
+                    },
+                    user,
+                    country_code,
+                )
+                team_history = self.create_or_get_team_history(
+                    team, league_history, user
+                )
 
             team_histories.append(team_history)
 
             # Move cursor_date to the next season start. E.g., if current season is
             # 2020/2021, move to 01-07-2021
             next_season_start_year = int(current_season_name.split("/")[1])
-            cursor_date = datetime.date(next_season_start_year, 7, 1)
 
+            # FIXME: this didn't work,
+            #  described here: https://playmaker-org.slack.com/archives/C04BH9G199T/p1705929880067299
+            # cursor_date = datetime.date(next_season_start_year, 7, 1)
+            cursor_date = datetime.date(cursor_date.year + 1, 7, 1)
+
+            if i >= 10:
+                raise ValueError
         return team_histories
+
+    @staticmethod
+    def search_for_existing_team(
+        team_name: str,
+        season_obj: models.Season,
+        league_identifier: typing.Union[str, int],
+    ) -> models.Team:
+        """
+        Search for an existing team based on team name, season
+        and league associated with the team.
+        """
+
+        # Find the team with the matching name and linked to the specified season's league history  # noqa 501
+        # Check if the league_identifier is a string (league name) or an integer (league ID)  # noqa 501
+        if isinstance(league_identifier, str):
+            # If league_identifier is a string, search using the league name
+            existing_team = models.Team.objects.filter(
+                name=team_name,
+                league_history__season=season_obj,
+                league__name=league_identifier,
+            ).first()
+        else:
+            # If league_identifier is an integer, search using the league ID
+            existing_team = models.Team.objects.filter(
+                name=team_name,
+                league_history__season=season_obj,
+                league_id=league_identifier,
+            ).first()
+
+        return existing_team

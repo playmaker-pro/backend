@@ -2,21 +2,23 @@ import json
 import uuid
 from datetime import datetime
 
+import factory
 import pytest
+from django.db.models import signals
 from django.urls import reverse
 from parameterized import parameterized
 from rest_framework.test import APIClient, APITestCase
 
 from labels.models import Label
 from labels.services import LabelService
-from profiles.models import PlayerPosition
+from profiles.models import ProfileVisitHistory, TeamContributor
 from profiles.schemas import PlayerProfileGET
 from profiles.services import ProfileService
 from profiles.tests import utils
 from roles.definitions import CLUB_ROLE_TEAM_LEADER
 from users.models import User, UserPreferences
-from utils import factories
-from utils.factories import SEASON_NAMES
+from utils import factories, get_current_season
+from utils.factories import SEASON_NAMES, UserFactory
 from utils.test.test_utils import UserManager
 
 label_service = LabelService()
@@ -115,7 +117,6 @@ class TestCreateProfileAPI(APITestCase):
                 {
                     "role": "P",
                     "team_object_id": 1,
-                    "team_history_object_id": 1,
                 }
             ],
             [
@@ -545,7 +546,9 @@ class TestUpdateProfileAPI(APITestCase):
     def test_patch_user_userpreferences_and_label_assignment_for_coach_and_player(
         self, key1, val1, key2, val2, profile_type, expected_label
     ) -> None:
-        """Test updating userpreferences and label assignment for both coach and player profiles"""
+        """
+        Test updating userpreferences and label assignment for both coach and player profiles  # noqa 501
+        """
         profile = utils.create_empty_profile(
             role=profile_type, user_id=self.user_obj.pk
         )
@@ -586,7 +589,9 @@ class TestUpdateProfileAPI(APITestCase):
     def test_userpreferences_update_removes_label_if_no_longer_applicable(
         self, key1, val1, key2, val2, profile_type, label_to_check, expected_existence
     ):
-        """Test that updating userpreferences removes label if conditions are no longer met"""
+        """
+        Test that updating userpreferences removes label if conditions are no longer met
+        """
         profile = utils.create_empty_profile(
             role=profile_type, user_id=self.user_obj.pk
         )
@@ -632,7 +637,9 @@ class TestUpdateProfileAPI(APITestCase):
 
         # Assign the goalkeeper position to the player profile
         factories.PlayerProfilePositionFactory(
-            player_profile=profile, player_position=self.goalkeeper_position, is_main=True
+            player_profile=profile,
+            player_position=self.goalkeeper_position,
+            is_main=True,
         )
 
         # Update the height to a value over 185
@@ -654,7 +661,7 @@ class TestUpdateProfileAPI(APITestCase):
     def test_goalkeeper_height_label_removal(self):
         """
         Tests the removal of the 'Bramkarz 185+' label from a player
-        profile when the player is no longer a goalkeeper or their height is below 185 cm.
+        profile when the player is no longer a goalkeeper or their height is below 185 cm.  # noqa 501
         """
         # Setup: Create a goalkeeper with a height over 185 cm
         profile = utils.create_empty_profile(user_id=self.user_obj.pk, role="P")
@@ -663,7 +670,9 @@ class TestUpdateProfileAPI(APITestCase):
 
         # Assign the goalkeeper position to the player profile
         factories.PlayerProfilePositionFactory(
-            player_profile=profile, player_position=self.goalkeeper_position, is_main=True
+            player_profile=profile,
+            player_position=self.goalkeeper_position,
+            is_main=True,
         )
 
         # Assign the 'Bramkarz 185+' label
@@ -714,7 +723,7 @@ class ProfileTeamsApiTest(APITestCase):
             factories.SeasonFactory.create(name=season_name)
             for season_name in SEASON_NAMES
         ]
-        self.team_history = factories.TeamHistoryFactory.create()
+        self.team_history = factories.TeamFactory.create()
         self.season = all_seasons[0]
 
     def test_get_profiles_teams(self):
@@ -785,6 +794,8 @@ class ProfileTeamsApiTest(APITestCase):
 
         assert response.status_code == 201
         assert response.data["end_date"] is None
+        self.non_player_user.refresh_from_db()
+        assert self.non_player_user.profile.coach_role == "IC"
 
     def test_patch_team_history(self):
         """Test updating (patching) a team history."""
@@ -806,7 +817,7 @@ class ProfileTeamsApiTest(APITestCase):
         )
 
         assert response.status_code == 200
-        assert response.data["team_name"] == self.team_history.team.name
+        assert response.data["team_name"] == self.team_history.name
         assert (
             response.data["league_name"] == self.team_history.league_history.league.name
         )
@@ -834,7 +845,7 @@ class ProfileTeamsApiTest(APITestCase):
         )
 
         assert response.status_code == 200
-        assert response.data["team_name"] == self.team_history.team.name
+        assert response.data["team_name"] == self.team_history.name
         assert (
             response.data["league_name"] == self.team_history.league_history.league.name
         )
@@ -871,7 +882,7 @@ class ProfileTeamsApiTest(APITestCase):
         assert response.status_code == 200
         assert (
             response.data[0]["team_name"]
-            == self.team_contributor.team_history.first().team.name
+            == self.team_contributor.team_history.first().name
         )
         assert (
             response.data[0]["league_name"]
@@ -891,7 +902,7 @@ class ProfileTeamsApiTest(APITestCase):
         assert response.status_code == 200
         assert (
             response.data[0]["team_name"]
-            == self.non_player_team_contributor.team_history.first().team.name
+            == self.non_player_team_contributor.team_history.first().name
         )
         assert (
             response.data[0]["league_name"]
@@ -922,6 +933,8 @@ class ProfileTeamsApiTest(APITestCase):
             ),
             data1,
         )
+        self.non_player_user.profile.save()
+        self.non_player_team_contributor.refresh_from_db()
         assert response1.status_code == 200
         assert response1.data["is_primary"] is True
         assert response1.data["end_date"] is None
@@ -1075,6 +1088,8 @@ class ProfileTeamsApiTest(APITestCase):
         assert response1.data["is_primary"] is True
         assert response1.data["end_date"] is None
         assert response1.data["role"]["id"] == "IC"
+        self.non_player_user.refresh_from_db()
+        assert self.non_player_user.profile.coach_role == "IC"
 
         # Unset the role to the Other and provide the custom_role
         data2 = {"role": "OTC", "custom_role": "custom role"}
@@ -1090,11 +1105,69 @@ class ProfileTeamsApiTest(APITestCase):
         )
 
         assert response2.status_code == 200
-
+        self.non_player_user.refresh_from_db()
         self.non_player_team_contributor.refresh_from_db()
 
         assert self.non_player_team_contributor.role == "OTC"
         assert self.non_player_team_contributor.custom_role == "custom role"
+        assert self.non_player_user.profile.coach_role == "OTC"
+        assert self.non_player_user.profile.custom_coach_role == "custom role"
+
+    def test_add_correct_team_to_non_player_profile(self):
+        """
+        Test that the correct team is assigned as the primary team in a non-player
+        profile when multiple teams exist in the same club.
+        """
+        coach_user = factories.CoachProfileFactory.create(
+            user__email="coachuser@example.com"
+        ).user
+        self.client.force_authenticate(user=coach_user)
+        season = get_current_season()
+        club = factories.ClubFactory(name="test club")
+        league_1 = factories.LeagueFactory(name="1 liga")
+        league_history_1 = factories.LeagueHistoryFactory(
+            league=league_1, season__name=season
+        )
+        team_1 = factories.TeamFactory(
+            name="test team", league_history=league_history_1, club=club
+        )
+        league_2 = factories.LeagueFactory(name="2 liga")
+        league_history_2 = factories.LeagueHistoryFactory(
+            league=league_2, season__name="2022/2023"
+        )
+        factories.TeamFactory(
+            name="test team", league_history=league_history_2, club=club
+        )
+
+        data = {
+            "team_history": team_1.id,
+            "start_date": "2021-01-01",
+            "is_primary": True,
+            "role": "IIC",
+        }
+
+        response = self.client.post(
+            reverse(
+                "api:profiles:add_team_to_profile",
+                kwargs={"profile_uuid": coach_user.profile.uuid},
+            ),
+            data,
+        )
+
+        assert response.status_code == 201
+        assert response.data["end_date"] is None
+        coach_user.refresh_from_db()
+        assert coach_user.profile.coach_role == "IIC"
+        # Fetch the related TeamContributor object and assert the correct team is primary  # noqa 501
+        team_contributor = TeamContributor.objects.filter(
+            profile_uuid=coach_user.profile.uuid
+        ).first()
+        assert team_contributor is not None
+        assert team_contributor.team_history.filter(id=team_1.id).exists()
+        # Additional assertions can be added if there are specific attributes
+        # in TeamContributor to indicate a team is primary
+
+        assert coach_user.profile.team_object.id == team_1.id
 
 
 class TestSetMainProfileAPI(APITestCase):
@@ -1145,3 +1218,79 @@ class TestSetMainProfileAPI(APITestCase):
         )
 
         assert response.status_code == 400
+
+
+class TestProfileVisitHistory(APITestCase):
+    @factory.django.mute_signals(signals.pre_save, signals.post_save)
+    def setUp(self) -> None:
+        """set up object factories"""
+        self.client: APIClient = APIClient()
+        self.user_manager = UserManager(self.client)
+        self.non_profile_user = self.user_manager.create_superuser()
+        self.non_profile_user_headers = self.user_manager.get_headers()
+
+        user = UserFactory.create(password="password")
+        self.user_profile = factories.PlayerProfileFactory.create(user=user)
+        self.user_profile_headers = self.user_manager.custom_user_headers(
+            password="password", email=user.email
+        )
+
+        requested_user = UserFactory.create(password="password")
+        self.requested_user_headers = self.user_manager.custom_user_headers(
+            password="password", email=requested_user.email
+        )
+        self.requested_profile = factories.PlayerProfileFactory.create(
+            user=requested_user
+        )
+
+        self.url_reverse = "api:profiles:get_or_update_profile"
+
+    @factory.django.mute_signals(signals.pre_save, signals.post_save)
+    def test_no_profile_exception(self) -> None:
+        """Test that no profile raises exception"""
+        self.non_profile_user.declared_role = "P"
+        self.non_profile_user.save()
+        url = reverse(
+            self.url_reverse, kwargs={"profile_uuid": self.requested_profile.uuid}
+        )
+        response = self.client.get(url, **self.non_profile_user_headers)
+        assert response.status_code == 404
+        assert response.data["detail"] == "Requestor has no profile"
+
+    @factory.django.mute_signals(signals.pre_save, signals.post_save)
+    def test_invalid_role_exception(self) -> None:
+        """Test that invalid role raises exception"""
+        url = reverse(
+            self.url_reverse, kwargs={"profile_uuid": self.requested_profile.uuid}
+        )
+        response = self.client.get(url, **self.non_profile_user_headers)
+        assert response.status_code == 400
+        assert response.data["detail"] == "Requestor has invalid role"
+
+    @factory.django.mute_signals(signals.pre_save, signals.post_save)
+    def test_get_visit_history(self) -> None:
+        """Test that visit history is returned"""
+        url = reverse(
+            self.url_reverse, kwargs={"profile_uuid": self.requested_profile.uuid}
+        )
+        response = self.client.get(url, **self.user_profile_headers)
+        assert response.status_code == 200
+
+        visit_object = ProfileVisitHistory.objects.get(user=self.requested_profile.user)
+        field_name = self.user_profile.__class__.__name__.lower()
+        assert getattr(visit_object, f"counter_{field_name}") == 1
+
+        response = self.client.get(url)
+        assert response.status_code == 200
+        visit_object.refresh_from_db()
+        assert visit_object.counter_anonymoususer == 1
+
+        response = self.client.get(url, **self.requested_user_headers)
+        assert response.status_code == 200
+        visit_object.refresh_from_db()
+        assert visit_object.counter_anonymoususer == 1
+        assert getattr(visit_object, f"counter_{field_name}") == 1
+        assert visit_object.user_logged_in is True
+
+        # Check if counter doesn't count if requestor is the same as requested
+        assert visit_object.total_visits == 2

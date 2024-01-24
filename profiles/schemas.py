@@ -21,6 +21,7 @@ class PlayerProfileGET(BaseModel):
     training_ready: Optional[dict]
     playermetrics: Optional[dict]
     role: str
+    visits: int
 
 
 class TransferStatusPhoneNumberSchema(BaseModel):
@@ -87,7 +88,7 @@ class TransferRequestSchema(BaseModel):
     requesting_team: dict
     gender: str
     status: dict
-    position: dict
+    player_position: dict
     number_of_trainings: dict
     benefits: List[dict]
     salary: dict

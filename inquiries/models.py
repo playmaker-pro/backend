@@ -1,5 +1,5 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.db import models
@@ -20,6 +20,11 @@ from inquiries.signals import (
 from inquiries.utils import InquiryMessageContentParser as _ContentParser
 from mailing.models import EmailTemplate as _EmailTemplate
 from mailing.schemas import EmailSchema as _EmailSchema
+from utils.constants import (
+    INQUIRY_CONTACT_URL,
+    INQUIRY_LIMIT_INCREASE_URL,
+    TRANSFER_MARKET_URL,
+)
 
 logger = logging.getLogger("inquiries")
 
@@ -142,12 +147,10 @@ class UserInquiryLog(models.Model):
     @property
     def ulr_to_profile(self) -> str:
         """Get url to profile based on log type"""
-        # TODO(bartnyk): We need await for routing from frontend.
-        # Then, based on user declared_role field we can generate url to profile.
         if self.message.log_type == InquiryLogMessage.MessageType.OUTDATED:
-            return f"URL_FOR_SENDER"
+            return TRANSFER_MARKET_URL
         elif self.message.log_type == InquiryLogMessage.MessageType.OUTDATED_REMINDER:
-            return f"URL_FOR_RECIPIENT"
+            return INQUIRY_CONTACT_URL
         return ""
 
     def save(self, *args, **kwargs):
@@ -269,8 +272,9 @@ class UserInquiry(models.Model):
             or force_send
         ):
             template = _EmailTemplate.objects.inquiry_limit_reached_template()
+            email_body = template.body.replace("#url#", INQUIRY_LIMIT_INCREASE_URL)
             schema = _EmailSchema(
-                body=template.body,
+                body=email_body,
                 subject=template.subject,
                 recipients=[self.user.email],
                 type=_EmailTemplate.EmailType.INQUIRY_LIMIT,
@@ -288,6 +292,32 @@ class UserInquiry(models.Model):
         if self.counter > 0:
             self.counter -= 1
             self.save()
+
+    @property
+    def get_days_until_next_reference(self) -> int:
+        """
+        Calculate the number of days remaining until the next reference date.
+
+        The reference dates are May 31st and November 30th of the current year.
+        If today's date is on or before May 31st, the reference date is May 31st.
+        If today's date is after May 31st, the reference date is November 30th.
+        """
+        today = datetime.today()
+        year = today.year
+
+        # Define reference dates for the current year
+        may_31_this_year = datetime(year, 5, 31)
+        nov_30_this_year = datetime(year, 11, 30)
+
+        # Determine the next reference date based on the current date
+        if today <= may_31_this_year:
+            next_reference_date = may_31_this_year
+        else:
+            next_reference_date = nov_30_this_year
+
+        # Calculate the difference in days until the next reference date
+        days_until_next_reference = (next_reference_date - today).days
+        return max(days_until_next_reference, 0)
 
     def __str__(self):
         return f"{self.user}: {self.counter}/{self.plan.limit}"
@@ -537,7 +567,15 @@ class InquiryRequest(models.Model):
 
 
 class InquiryContact(models.Model):
-    phone = models.CharField(_("Numer telefonu"), max_length=15, blank=True, null=True)
+    phone_number = models.CharField(
+        _("Numer telefonu"), max_length=15, blank=True, null=True
+    )
+    dial_code = models.IntegerField(
+        _("Dial Code"),
+        blank=True,
+        null=True,
+        help_text=_("Country dial code for the phone number."),
+    )
     email = models.EmailField(_("Email"), max_length=100, blank=True, null=True)
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -548,8 +586,12 @@ class InquiryContact(models.Model):
 
     @property
     def _phone(self) -> str:
-        """Get phone number"""
-        return self.phone  # type: ignore
+        """Get phone number with dial code"""
+        if self.dial_code and self.phone_number:
+            return f"+{self.dial_code} {self.phone_number}"
+        elif self.phone_number:
+            return self.phone_number
+        return ""
 
     @property
     def _email(self) -> str:
@@ -570,9 +612,9 @@ class InquiryContact(models.Model):
         )
 
     @classmethod
-    def parse_custom_body(cls, phone: str, email: str) -> str:
+    def parse_custom_body(cls, phone_number: str, dial_code: int, email: str) -> str:
         """Parse custom body"""
-        dummy_contact = cls(phone=phone, email=email)
+        dummy_contact = cls(phone_number=phone_number, dial_code=dial_code, email=email)
         return dummy_contact.contact_body
 
     def __str__(self) -> str:

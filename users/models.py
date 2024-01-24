@@ -107,7 +107,8 @@ class User(AbstractUser, UserRoleMixin):
     def verify_email(self, silent: bool = False, extra: dict = None):
         """Account's email has been verified by user
 
-        :param: extra dict where additional information can be putted by entity changing state.
+        :param: extra dict where additional information can be putted by entity
+        changing state.
         example:
             extra['reason'] = 'User removed field1'
         """
@@ -116,7 +117,8 @@ class User(AbstractUser, UserRoleMixin):
     def verify(self, silent: bool = False, extra: dict = None):
         """Account is verified by admins/site managers.
 
-        :param: extra - dict where additional information can be putted by entity changing state.
+        :param: extra - dict where additional information can be putted by entity
+        changing state.
         example:
             extra['reason'] = 'User removed field1'
         """
@@ -127,10 +129,12 @@ class User(AbstractUser, UserRoleMixin):
         field=state, source="*", target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION_DATA
     )
     def missing_verification_data(self, silent: bool = False, extra: dict = None):
-        """In case when user remove or alter verification fields in his account transition to this state should occure.
+        """In case when user remove or alter verification fields in his account
+        transition to this state should occure.
         Which means that account has missing verification fields in profile.
 
-        :param: extra - dict where additional information can be putted by entity changing state.
+        :param: extra - dict where additional information can be putted by entity
+        changing state.
                example:
                     extra['reason'] = 'User removed field1'
         """
@@ -139,7 +143,8 @@ class User(AbstractUser, UserRoleMixin):
     def waiting_for_verification(self, silent: bool = False, extra: dict = None):
         """Account is verified by admins/site managers.
 
-        :param: extra  - dict where additional information can be putted by entity changing state.
+        :param: extra  - dict where additional information can be putted by entity
+        changing state.
         example:
             extra['reason'] = 'User removed field1'
         """
@@ -153,7 +158,8 @@ class User(AbstractUser, UserRoleMixin):
     def unverify(self, silent: bool = False, extra: dict = None):
         """Account is verified by admins/site managers.
 
-        :param: extra  - dict where additional information can be putted by entity changing state.
+        :param: extra  - dict where additional information can be putted by entity
+        changing state.
         example:
             extra['reason'] = 'User removed field1'
         """
@@ -178,7 +184,7 @@ class User(AbstractUser, UserRoleMixin):
 
     @property
     def role(self):
-        return self.declared_role
+        return self.declared_role or self.historical_role
 
     @property
     def is_missing_verification_data(self):
@@ -277,6 +283,14 @@ class User(AbstractUser, UserRoleMixin):
         blank=True,
         help_text="Users declaration in which role he has. It is main paramter.",
     )
+    historical_role = models.CharField(
+        _("Deklaracja historycznej roli"),
+        choices=ROLE_CHOICES,
+        max_length=355,
+        null=True,
+        blank=True,
+        help_text="User role declaration from previous app version.",
+    )
     last_activity = models.DateTimeField(
         _("Last Activity"), default=None, null=True, blank=True
     )
@@ -296,6 +310,11 @@ class User(AbstractUser, UserRoleMixin):
     def __str__(self):
         return f"{self.get_full_name()} ({self.get_declared_role_display()})"
 
+    @property
+    def should_be_listed(self) -> bool:
+        """If user has no name or name is created from email, then user should not be listed"""
+        return self.first_name and self.last_name and self.first_name != self.last_name
+
     def save(self, *args, **kwargs):
         if self.role in [
             definitions.GUEST_SHORT,
@@ -305,12 +324,6 @@ class User(AbstractUser, UserRoleMixin):
             if self.state != self.STATE_ACCOUNT_VERIFIED:
                 self.state = self.STATE_ACCOUNT_VERIFIED
         super().save(*args, **kwargs)
-
-        # state_after = self.state
-        # raise RuntimeError(state_after, state_before)
-        # if state_before != self.STATE_ACCOUNT_VERIFIED and state_after == self.STATE_ACCOUNT_VERIFIED:
-        #     pass
-        # verification_notification(self)
 
     def new_user_activity(self):
         """
@@ -376,6 +389,28 @@ class UserPreferences(models.Model):
     birth_date = models.DateField(
         _("Data urodzenia"), blank=True, null=True, help_text="User's date of birth"
     )
+    phone_number = models.CharField(
+        max_length=15,
+        null=True,
+        blank=True,
+        help_text="Phone number for the transfer.",
+    )
+    dial_code = models.IntegerField(
+        _("Dial Code"),
+        blank=True,
+        null=True,
+        help_text=_("Country dial code for the phone number."),
+    )
+    contact_email = models.EmailField(
+        _("Contact Email"),
+        blank=True,
+        null=True,
+        help_text=_("Contact email address for the transfer."),
+    )
+
+    @property
+    def inquiries_contact(self):
+        return f"+{self.dial_code}{self.phone_number}"
 
     @property
     def age(self):

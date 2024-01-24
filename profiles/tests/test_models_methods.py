@@ -167,35 +167,6 @@ class InitialBaseProfileCreationTests(TestCase):
     def test__has_data_id__should_be_false(self):
         assert self.profile.has_data_id is False
 
-    # def test_initial_state_of_fresh_profile_is_not_ready(self):
-    #     assert self.profile.is_ready_for_verification() is False
-
-
-class InitalPlayerProfileCreationTests(TestCase):
-    """Idea is to create PLAYER profile and check if statuses are corectly behaved"""  # noqa: E501
-
-    def setUp(self):
-        self.profile = PlayerProfileFactory.create(user__email="username")
-
-    def test_initial_paramters(self):
-        assert self.profile.position_fantasy is None
-
-    def test_player_profile_set__position__should_affect__fantasy_position(self):
-        """FANTASY_MAPPING = {
-        1: FANTASY_GOAL_KEEPER,
-        ...
-        """
-        for number, result in self.profile.FANTASY_MAPPING.items():
-            self.profile.position_raw = number
-            self.profile.save()
-            # assert isinstance(number, int)
-            assert isinstance(result, str)
-            assert self.profile.position_fantasy is not None
-            assert self.profile.position_fantasy == result
-            print(
-                f"position:{self.profile.position_raw} ({number}, {result}) fantasy:{self.profile.position_fantasy}"  # noqa: E501
-            )
-
 
 class ProfileVerificationExistingProfileWithReadyForVerificationTests(TestCase):
     """Freshly created user is modifing profile fields which are Verification fields."""

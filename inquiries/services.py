@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from django.conf import settings
@@ -37,7 +38,9 @@ class InquireService:
         logger.info(f"Created {basic_plan.description} plan for {user}")
 
     def create_default_basic_plan_if_not_present(self) -> InquiryPlan:
-        """In case when there is no Default plan we would like to create it at first time"""
+        """
+        In case when there is no Default plan we would like to create it at first time
+        """
 
         args = settings.INQUIRIES_INITAL_PLAN
         try:
@@ -72,11 +75,18 @@ class InquireService:
     def get_user_contacts(user: User) -> QuerySet:
         """Get all inquiries contacts by user"""
         return user.inquiries_contacts.order_by("-updated_at")
+        # return user.userpreferenses.order_by("-updated_at")
 
     @classmethod
     def get_user_received_inquiries(cls, user: User) -> QuerySet:
         """Get all received inquiries by user"""
-        queryset = user.inquiry_request_recipient.all().order_by("-created_at")
+        # queryset = user.inquiry_request_recipient.all().order_by("-created_at")
+
+        # FIXME: Temporary we do not want to show old requests
+        till_date = datetime.date(2024, 1, 21)
+        queryset = user.inquiry_request_recipient.filter(
+            created_at__gte=till_date
+        ).order_by("-created_at")
         cls.update_requests_with_read_status(queryset, user)
         return queryset
 

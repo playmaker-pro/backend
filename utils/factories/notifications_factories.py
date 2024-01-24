@@ -16,7 +16,7 @@ class NotificationFactory(factory.django.DjangoModelFactory):
     details = factory.Dict({})
     content = factory.Faker("sentence")
     is_read = False
-    object_id = factory.SelfAttribute("user.id")  # Set default object_id to user's ID
+    object_id = factory.SelfAttribute("user.id")
     content_type = factory.LazyAttribute(
         lambda obj: ContentType.objects.get_for_model(obj.user.__class__)
     )

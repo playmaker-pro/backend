@@ -1,6 +1,7 @@
 import logging
+import typing
 from datetime import date
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 
 from django.db.models import QuerySet
 from django_countries import countries
@@ -8,6 +9,7 @@ from pydantic import parse_obj_as
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import empty
+from rest_framework.relations import PrimaryKeyRelatedField
 
 from api.consts import ChoicesTuple
 from api.serializers import CitySerializer, CountrySerializer
@@ -29,6 +31,7 @@ from profiles.api.serializers import (
     CoachLicenceSerializer,
     CourseSerializer,
     LanguageSerializer,
+    PlayerPositionSerializer,
     ProfileEnumChoicesSerializer,
     ProfileLabelsSerializer,
     ProfileVideoSerializer,
@@ -44,22 +47,24 @@ from profiles.models import (
     PROFILE_TYPE,
     BaseProfile,
     Language,
+    PlayerPosition,
     PlayerProfile,
     ProfileTransferRequest,
     ProfileTransferStatus,
     TeamContributor,
 )
+from profiles.serializers_detailed.mixins import EmailUpdateMixin, PhoneNumberMixin
 from profiles.services import (
     LanguageService,
     PlayerProfilePositionService,
     PositionData,
     ProfileService,
+    ProfileVisitHistoryService,
     TransferStatusService,
 )
 from roles.definitions import (
     PROFILE_TYPE_SHORT_MAP,
     TRANSFER_BENEFITS_CHOICES,
-    TRANSFER_REQUEST_POSITIONS_CHOICES,
     TRANSFER_SALARY_CHOICES,
     TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES,
     TRANSFER_TRAININGS_CHOICES,
@@ -169,10 +174,14 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
 
     def update(self, instance: UserPreferences, validated_data) -> UserPreferences:
         """Update nested user preferences data"""
-        profile_uuid = self.context.get("profile_uuid")
-        profile_type = ProfileService.get_profile_by_uuid(
-            profile_uuid
-        ).__class__.__name__
+        if profile := self.context.get("profile"):
+            profile_type = profile.__class__.__name__
+            profile_uuid = profile.uuid
+        else:
+            profile_uuid = self.context.get("profile_uuid")
+            profile_type = ProfileService.get_profile_by_uuid(
+                profile_uuid
+            ).__class__.__name__
         citizenship_updated = (
             "citizenship" in validated_data
             and "PL" not in validated_data["citizenship"]
@@ -257,16 +266,11 @@ class ClubSerializer(serializers.ModelSerializer):
 class LeagueSerializer(serializers.ModelSerializer):
     """Player profile league serializer"""
 
-    name = serializers.CharField(source="get_upper_parent_names", read_only=True)
-    is_parent = serializers.SerializerMethodField()
+    name = serializers.CharField(read_only=True)
 
     class Meta:
         model = League
-        fields = ("id", "name", "is_parent")
-
-    def get_is_parent(self, obj: League) -> bool:
-        """Get is parent by league."""
-        return obj.isparent
+        fields = ("id", "name")
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -285,7 +289,7 @@ class TeamSerializer(serializers.ModelSerializer):
         )
 
 
-class PhoneNumberField(serializers.Serializer):
+class PhoneNumberField(serializers.Field):
     """
     A custom field for handling phone numbers in the ManagerProfile serializer.
 
@@ -294,11 +298,13 @@ class PhoneNumberField(serializers.Serializer):
     of combining these two separate fields into a single nested object for API
     representation, and it also processes incoming data for these fields
     in API requests.
-    #  FIXME: lremkowicz: this is duplicated code, think about merging it with
-    #  PhoneNumberField from ManagerProfileSerializer.
     """
 
-    dial_code = serializers.IntegerField()
+    def __init__(self, phone_field_name="phone_number", *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.phone_field_name = (
+            phone_field_name  # This can be 'phone_number' or 'agency_phone'
+        )
 
     def run_validation(self, data=...):
         """Validate phone number field before creating object."""
@@ -307,34 +313,47 @@ class PhoneNumberField(serializers.Serializer):
             raise PhoneNumberMustBeADictionaryHTTPException
         return super().run_validation(data)
 
-    def to_representation(self, obj: ProfileTransferStatus) -> dict:
+    def to_representation(self, obj: Any) -> Optional[typing.Dict[str, str]]:
         """
-        Converts the ManagerProfile instance's phone number information into
-        a nested JSON object suitable for API output.
+        Converts the object's phone number information into a nested
+        JSON object for API output.
         """
-        if not obj or (obj.dial_code is None and obj.phone_number is None):
+        dial_code = getattr(obj, "dial_code", None)
+        phone_number = getattr(obj, self.phone_field_name, None)
+
+        if dial_code is None and phone_number is None:
             return None
-        return {"dial_code": f"+{obj.dial_code}", "number": obj.phone_number}
+
+        return {
+            "dial_code": f"+{dial_code}" if dial_code is not None else None,
+            "number": phone_number,
+        }
 
     def to_internal_value(self, data: dict) -> dict:
         """
         Processes the incoming data for the phone number field.
-
-        This method is responsible for parsing and validating the 'dial_code' and
-        'number' from the incoming nested object. It ensures that partial updates
-        are correctly handled by not overriding existing values with None when
-        not provided.
         """
         internal_value = {}
-        if "dial_code" in data:
-            internal_value["dial_code"] = data["dial_code"]
-        if "number" in data:
-            internal_value["phone_number"] = data["number"]
+        dial_code = data.get("dial_code")
+        phone_number = (
+            data.get("number")
+            if self.phone_field_name == "phone_number"
+            else data.get("agency_phone")
+        )
+
+        if dial_code is not None:
+            internal_value["dial_code"] = dial_code
+        if phone_number is not None:
+            internal_value[self.phone_field_name] = phone_number
+
         return internal_value
 
 
 class ProfileTransferStatusSerializer(
-    serializers.ModelSerializer, SharedValidatorsMixin
+    serializers.ModelSerializer,
+    SharedValidatorsMixin,
+    PhoneNumberMixin,
+    EmailUpdateMixin,
 ):
     """Transfer status serializer for user profile view"""
 
@@ -351,10 +370,11 @@ class ProfileTransferStatusSerializer(
             "number_of_trainings",
         )
 
+    contact_email = serializers.EmailField(required=False, allow_null=True)
     status = ProfileEnumChoicesSerializer(model=ProfileTransferStatus)
     additional_info = serializers.ListField(required=False, allow_null=True)
     league = serializers.PrimaryKeyRelatedField(
-        queryset=LeagueService().get_highest_parents(), many=True
+        queryset=LeagueService().get_leagues(), many=True
     )
     phone_number = PhoneNumberField(source="*", required=False)
     benefits = serializers.ListField(required=False, allow_null=True)
@@ -369,8 +389,22 @@ class ProfileTransferStatusSerializer(
         validated_data: dict = TransferStatusService.prepare_generic_type_content(
             validated_data, profile
         )
-        instance = super().create(validated_data)
-        return instance
+        phone_number = validated_data.pop("phone_number", None)
+        dial_code = validated_data.pop("dial_code", None)
+        if phone_number or dial_code:
+            self.update_phone_number(
+                new_data={"phone_number": phone_number, "dial_code": dial_code},
+                profile=profile,
+                user_data_serializer=UserDataSerializer,
+            )
+        contact_email: Optional[str] = validated_data.pop("contact_email", None)
+        if contact_email:
+            self.update_email(
+                new_email=contact_email,
+                profile=profile,
+                user_data_serializer=UserPreferencesSerializerDetailed,
+            )
+        return super().create(validated_data)
 
     def to_representation(self, instance: ProfileTransferStatus) -> dict:
         """
@@ -401,7 +435,7 @@ class ProfileTransferStatusSerializer(
                 for transfer in TRANSFER_SALARY_CHOICES
                 if transfer[0] in str(instance.salary)
             ]
-            serializer = ProfileEnumChoicesSerializer(salary, many=True)
+            serializer = ProfileEnumChoicesSerializer(instance=salary[0])
             data["salary"] = serializer.data
         if instance.number_of_trainings:
             number_of_trainings = [
@@ -411,12 +445,39 @@ class ProfileTransferStatusSerializer(
             ]
             serializer = ProfileEnumChoicesSerializer(number_of_trainings, many=True)
             data["number_of_trainings"] = serializer.data
+        user_preferences = instance.profile.user.userpreferences
+        if user_preferences.phone_number:
+            data["phone_number"] = PhoneNumberField(source="*").to_representation(
+                user_preferences
+            )
+        if user_preferences.contact_email:
+            data["contact_email"] = user_preferences.contact_email
         return data
 
     def to_internal_value(self, data):
         internal_value = super().to_internal_value(data)
         internal_value["additional_info"] = data.get("additional_info")
         return internal_value
+
+    def update(self, instance: ProfileTransferStatus, validated_data: dict):
+        """Update transfer status"""
+        phone_number = validated_data.pop("phone_number", None)
+        dial_code = validated_data.pop("dial_code", None)
+        if phone_number or dial_code:
+            self.update_partial_phone_number(
+                new_data={"phone_number": phone_number, "dial_code": dial_code},
+                instance=instance,
+                user_data_serializer=UserDataSerializer,
+            )
+        contact_email: Optional[str] = validated_data.pop("contact_email", None)
+        if contact_email:
+            self.update_partial_email(
+                new_email=contact_email,
+                profile=self.context.get("profile"),
+                user_data_serializer=UserPreferencesSerializerDetailed,
+            )
+
+        return super().update(instance, validated_data)
 
 
 class TeamContributorSerializer(serializers.ModelSerializer):
@@ -438,7 +499,10 @@ class TeamContributorSerializer(serializers.ModelSerializer):
 
 
 class ProfileTransferRequestSerializer(
-    serializers.ModelSerializer, SharedValidatorsMixin
+    serializers.ModelSerializer,
+    SharedValidatorsMixin,
+    PhoneNumberMixin,
+    EmailUpdateMixin,
 ):
     """Transfer request serializer for user profile view"""
 
@@ -454,15 +518,20 @@ class ProfileTransferRequestSerializer(
             "salary",
             "contact_email",
             "phone_number",
+            "profile_uuid",
+            "club_voivodeship",
         )
 
+    contact_email = serializers.EmailField(required=False, allow_null=True)
+    club_voivodeship = serializers.CharField(source="voivodeship", read_only=True)
+    profile_uuid = serializers.UUIDField(source="profile.uuid", read_only=True)
     requesting_team = serializers.PrimaryKeyRelatedField(
         queryset=TeamContributor.objects.all()
     )
     status = ProfileEnumChoicesSerializer(
         model=ProfileTransferRequest,
     )
-    position = serializers.ListField()
+    position = PlayerPositionSerializer(many=True, required=True)
     number_of_trainings = serializers.IntegerField(required=False, allow_null=True)
     benefits = serializers.ListField(required=False, allow_null=True)
     salary = serializers.IntegerField(required=False, allow_null=True)
@@ -475,9 +544,14 @@ class ProfileTransferRequestSerializer(
         by their names and ids.
         """
         serializer = ProfileEnumChoicesSerializer
-        data = super().to_representation(instance)
+        try:
+            data = super().to_representation(instance)
+        except AttributeError as exc:
+            logger.error(f"Instance: {instance.__dict__} has wrong data", exc_info=True)
+            raise AttributeError from exc
+
         data["requesting_team"] = TeamContributorSerializer(
-            instance=instance.requesting_team, read_only=True
+            instance=instance.requesting_team, read_only=True, context=self.context
         ).data
         if instance.benefits:
             info = [
@@ -488,13 +562,8 @@ class ProfileTransferRequestSerializer(
             info_serialized = serializer(info, many=True)
             data["benefits"] = info_serialized.data
         if instance.position:
-            positions = [
-                ChoicesTuple(*transfer)
-                for transfer in TRANSFER_REQUEST_POSITIONS_CHOICES
-                if transfer[0] in str(instance.position)
-            ]
-            position_serialized = serializer(positions, many=True)
-            data["position"] = position_serialized.data
+            positions = PlayerPositionSerializer(instance=instance.position, many=True)
+            data["player_position"] = positions.data
         if instance.number_of_trainings:
             num_of_training_serialized = serializer(
                 instance=instance.number_of_trainings,
@@ -509,6 +578,13 @@ class ProfileTransferRequestSerializer(
                 model=ProfileTransferRequest,
             )
             data["salary"] = salary_serialized.data
+        user_preferences = instance.profile.user.userpreferences
+        if user_preferences.phone_number:
+            data["phone_number"] = PhoneNumberField(source="*").to_representation(
+                user_preferences
+            )
+        if user_preferences.contact_email:
+            data["contact_email"] = user_preferences.contact_email
         return data
 
     def validate_requesting_team(
@@ -524,7 +600,7 @@ class ProfileTransferRequestSerializer(
             raise NotAOwnerOfTheTeamContributorHTTPException
         return requesting_team
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict):
         """Create transfer request"""
         profile = self.context.get("profile")
         transfer_request = ProfileService().get_profile_transfer_request(profile)
@@ -534,7 +610,44 @@ class ProfileTransferRequestSerializer(
         validated_data: dict = TransferStatusService.prepare_generic_type_content(
             validated_data, profile
         )
+        phone_number = validated_data.pop("phone_number", None)
+        dial_code = validated_data.pop("dial_code", None)
+        if phone_number or dial_code:
+            self.update_phone_number(
+                new_data={"phone_number": phone_number, "dial_code": dial_code},
+                profile=profile,
+                user_data_serializer=UserDataSerializer,
+            )
+        contact_email: Optional[str] = validated_data.pop("contact_email", None)
+        if contact_email:
+            self.update_email(
+                new_email=contact_email,
+                profile=profile,
+                user_data_serializer=UserPreferencesSerializerDetailed,
+            )
         return super().create(validated_data)
+
+
+class UpdateOrCreateProfileTransferSerializer(ProfileTransferRequestSerializer):
+    position = PrimaryKeyRelatedField(queryset=PlayerPosition.objects.all(), many=True)
+
+    def update(self, instance, validated_data):
+        phone_number = validated_data.pop("phone_number", None)
+        dial_code = validated_data.pop("dial_code", None)
+        if phone_number or dial_code:
+            self.update_partial_phone_number(
+                new_data={"phone_number": phone_number, "dial_code": dial_code},
+                instance=instance,
+                user_data_serializer=UserDataSerializer,
+            )
+        contact_email: Optional[str] = validated_data.pop("contact_email", None)
+        if contact_email:
+            self.update_partial_email(
+                new_email=contact_email,
+                profile=self.context.get("profile"),
+                user_data_serializer=UserPreferencesSerializerDetailed,
+            )
+        return super().update(instance, validated_data)
 
 
 class BaseProfileSerializer(serializers.ModelSerializer):
@@ -551,6 +664,12 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(read_only=True)
     transfer_status = serializers.SerializerMethodField()
     transfer_requests = ProfileTransferRequestSerializer(many=True, read_only=True)
+    visits = serializers.SerializerMethodField()
+
+    def get_visits(self, obj: BaseProfile) -> int:
+        """Get profile visits from last month."""
+        history_service = ProfileVisitHistoryService()
+        return history_service.profile_visit_history_last_month(obj.user)
 
     def update(self, instance: PROFILE_TYPE, validated_data: dict):
         self.validate_data()
@@ -655,19 +774,14 @@ class BaseProfileSerializer(serializers.ModelSerializer):
             }
 
             # Check if there is a primary team contributor for the team history
-            if (
-                hasattr(instance, "team_history_object")
-                and instance.team_history_object
-            ):
-                primary_contributor = (
-                    instance.team_history_object.teamcontributor_set.filter(
-                        is_primary=True, profile_uuid=instance.uuid
-                    ).first()
-                )
+            if hasattr(instance, "team_object") and instance.team_object:
+                primary_contributor = instance.team_object.teamcontributor_set.filter(
+                    is_primary=True, profile_uuid=instance.uuid
+                ).first()
 
                 if primary_contributor:
                     team_history_serializer = TeamHistoryBaseProfileSerializer(
-                        instance.team_history_object,
+                        instance.team_object,
                         context=team_history_serializer_context,
                     )
                     repr_dict["team_history_object"] = team_history_serializer.data
@@ -675,7 +789,6 @@ class BaseProfileSerializer(serializers.ModelSerializer):
                     repr_dict["team_history_object"] = None
         else:
             repr_dict["team_history_object"] = None
-
         return repr_dict
 
     def get_profile_video(self, obj: PROFILE_TYPE) -> dict:

@@ -440,38 +440,6 @@ paths:
                       "code": "es"
                     }, ...
                   ]
-  /clubs/club-teams/search/:
-    get:
-      operationId: clubs_club_teams_search_retrieve
-      description: Return list of teams assigned for given club.
-      summary: Club teams list endpoint
-      parameters:
-        - in: query
-          name: club_id
-          schema:
-            type: integer
-          description: Club id
-          required: true
-      tags:
-      - clubs
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                description: 'List of teams for given club'
-                items:
-                  type: object
-                  description: 'Team object'
-              example: [{'id': 1, text: 'team1', ...}, {'id': 2, text: 'team2', ...}]
-          description: 'List of teams for given club'
-        '404':
-          description: 'Given club does not exist'
-        '401':
-          description: 'Unauthorized'
   /clubs/club-teams/:
     get:
       operationId: clubs_teams_retrieve
@@ -696,38 +664,6 @@ paths:
                   description: 'Club name with id'
                 example: [{'id': 1, 'text': 'club 1'}, {'id': 2, 'text': 'club 2'}]
           description: 'List of clubs, name with ID'
-  /clubs/team-histories/search/:
-    get:
-      operationId: clubs_team_histories_search_retrieve
-      description: 'List of team histories'
-      summary: Team Histories list endpoint
-      tags:
-      - clubs
-      security:
-      - jwtAuth: []
-      parameters:
-        - in: query
-          name: season
-          schema:
-            type: string
-          description: 'Season name'
-        - in: query
-          name: q
-          schema:
-            type: string
-          description: 'Team name query, LIKE'
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                description: 'List of top 20 Team histories based on params, order by name'
-                items:
-                  type: object
-                  description: 'Team History name with id'
-                example: [ { 'id': 1, 'text': 'team 1' }, { 'id': 2, 'text': 'team 2' } ]
-          description: 'List of team histories, name with ID'
   /clubs/teams/search/:
     get:
       operationId: clubs_teams_search_retrieve
@@ -1043,25 +979,128 @@ paths:
                       "name": "Stałe fragmenty"
                   }
                 ]
+
+  /profiles/catalogue/transfer-request/:
+    get:
+      operationId: transfer_request_catalogue
+      description: Return paginated list of transfer requests.
+      summary: Transfer request list endpoint
+      parameters:
+        - in: query
+          name: position
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: league
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          description: league name
+        - in: query
+          name: latitude
+          schema:
+            type: number
+            format: float
+            description: "Geolocation latitude for filtering transfer requests"
+        - in: query
+          name: longitude
+          schema:
+            type: number
+            format: float
+            description: "Geolocation longitude for filtering transfer requests"
+        - in: query
+          name: radius
+          schema:
+            type: integer
+            description: "Radius in kilometers for filtering transfer requests around the given geolocation"
+        - in: query
+          name: number_of_trainings
+          schema:
+            type: array
+            items:
+              type: integer
+              description: "Number of trainings object ID."
+        - in: query
+          name: salary
+          schema:
+            type: array
+            items:
+              type: integer
+              description: "Salary object ID"
+        - in: query
+          name: benefits
+          schema:
+            type: array
+            items:
+              type: integer
+              description: "Benefits object ID"
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: "Page number"
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+          description: "Count of objects by page"
+      tags:
+        - catalogues
+      security:
+        - jwtAuth: [ ]
+      responses:
+        "200":
+          description: "Get transfer request list."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    nullable: true
+                    description: "Next page"
+                  previous:
+                    type: string
+                    nullable: true
+                    description: "Previous page"
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TransferRequestGet'
+                required: ["count", "next", "previous", "results"]
+
   /profiles/:
     post:
       operationId: profiles_create
       description: Create initial profile for user
       summary: Create profile
       requestBody:
-        description: "role shortcut {P, C, S...} required, rest of fields based on profile type, fields listed below"
+        description: "role shortcut {P, C, S...} required. Additional 'custom_role' field is required for roles 'G' (Kibic) and 'O' (Inne).
+        Rest of fields based on profile type, fields listed below"
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                role:
-                  type: string
-              required:
-                - role
+              oneOf:
+                - $ref: '#/components/schemas/StandardRoleRequest'
+                - $ref: '#/components/schemas/CustomRoleRequest'
               description: 'It is possible to pass other,
               related with given profile fields to be initialized with new created profile'
+            examples:
+              standardRole:
+                summary: Example for standard roles
+                value: { "role": "P" }
+              customRole:
+                summary: Example for roles requiring custom_role
+                value: { "role": "G", "custom_role": "obserwator" }
       tags:
       - profiles
       security:
@@ -1199,6 +1238,44 @@ paths:
           schema:
             type: boolean
           description: "Shuffle results?"
+        - in: query
+          name: transfer_status
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Filter profiles by transfer status, multiple choices possible like: ?transfer_status=1&transfer_status=5"
+        - in: query
+          name: transfer_status_league
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Filter profiles by transfer status league IDs, multiple choices possible like: ?transfer_status_league=123&transfer_status_league=456"
+        - in: query
+          name: additional_info
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Filter profiles by additional transfer status information, multiple choices possible like: ?additional_info=1&additional_info=2"
+        - in: query
+          name: number_of_trainings
+          schema:
+            type: string
+          description: "Filter profiles by number of trainings in transfer status, single choice like: ?number_of_trainings=3"
+        - in: query
+          name: benefits
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Filter profiles by benefits in transfer status, multiple choices possible like: ?benefits=1&benefits=2"
+        - in: query
+          name: salary
+          schema:
+            type: string
+          description: "Filter profiles by salary in transfer status, single choice like: ?salary=1"
       tags:
         - profiles
       responses:
@@ -1229,6 +1306,112 @@ paths:
                         - $ref: '#/components/schemas/ManagerProfile'
                         - $ref: '#/components/schemas/GuestProfile'
                 description: "Paginated list profile based on profile type"
+  /profiles/count/:
+    'get':
+      operationId: profile_count_retrieve
+      description: "Get count of profiles matching the given filters"
+      summary: "Get count of profiles based on filters"
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+          required: true
+          description: 'Profile role shortcut {P, C, T, G, S, ...}'
+        - in: query
+          name: gender
+          schema:
+            type: string
+            enum: [ 'M', 'K' ]
+          required: false
+          description: 'Player gender.'
+        - in: query
+          name: youth
+          schema:
+            type: boolean
+          description: "Is youth?"
+        - in: query
+          name: min_age
+          schema:
+            type: integer
+          description: "Age minimum"
+        - in: query
+          name: max_age
+          schema:
+            type: integer
+          description: "Age maximum"
+        - in: query
+          name: position
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Player positions shortcut (default sort by is_main),
+            multiple choices possible like: ?position=CAM&position=ST"
+        - in: query
+          name: league
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Player league,
+            multiple choices possible like: ?league=123&league=321"
+        - in: query
+          name: latitude
+          schema:
+            type: number
+          description: "Profile localization latitude"
+        - in: query
+          name: longitude
+          schema:
+            type: number
+          description: "Profile localization longitude"
+        - in: query
+          name: radius
+          schema:
+            type: integer
+          description: "Profile localization radius range"
+        - in: query
+          name: country
+          schema:
+            type: array
+            items:
+              type: string
+            description: "Country, like: ?country=PL&country=UA"
+        - in: query
+          name: language
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Spoken languages,
+            multiple choices possible like: ?language=pl&league=fr"
+        - in: query
+          name: labels
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Filter profiles by labels, multiple choices possible like: ?labels=label1&labels=label2"
+        - in: query
+          name: not_me
+          schema:
+            type: string
+          description: "Exclude authenticated profile when set to 'true'"
+      tags:
+        - profiles
+      responses:
+        '200':
+          description: 'Count of profiles matching filters obtained successfully'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: 'Total count of profiles matching the given filters'
+
   /profiles/owned/:
     'get':
       operationId: owned_profile_list
@@ -1393,7 +1576,15 @@ paths:
                     shortcut:
                       type: string
                       description: 'Shortcut representing the player position.'
-                  example: {id: 1, name: "Napastnik", shortcut: "F"}
+                    shortcut_pl:
+                      type: string
+                      description: 'Shortcut representing the player position in Polish.'
+                  required:
+                    - id
+                    - name
+                    - shortcut
+                    - shortcut_pl
+                  example: {id: 1, name: "Napastnik", shortcut: "F", shortcut_pl: "N"}
           description: Returns player positions, including names and shortcuts
   /profiles/formations/:
     get:
@@ -2454,10 +2645,7 @@ paths:
               {
                 "benefits": [1,2],
                 "status": 1,
-                "league": [13],
                 "gender": "M",
-                "requesting_team": 5,
-                "position": [6,7,8],
                 "salary": 1,
                 "contact_email": "email@email.com",
                 "phone_number": {"dial_code": 1, "number": 123},
@@ -3152,6 +3340,8 @@ paths:
                     type: string
                   uuid:
                     type: string
+                  gender:
+                    $ref: '#/components/schemas/Gender'
           description: Get user main profile uuid with role.
   /users/feature-sets/:
     get:
@@ -3181,7 +3371,8 @@ paths:
       tags:
         - features
       security:
-        - jwtAuth: []
+        - jwtAuth: [ ]
+        - { }
       responses:
         '201':
           description: "Feature notifications saved successfully."
@@ -3439,12 +3630,8 @@ paths:
                   access:
                     type: string
                     description: Access Token
-                  refresh:
-                    type: string
-                    description: Refresh Token
                 example:
                   access: some_super_secret_jwt_token
-                  refresh: refresh_token
           description: ''
         '400':
           content:
@@ -3709,8 +3896,12 @@ paths:
                   detail:
                     type: string
                     description: Message indicating password reset successful.
+                  email:
+                    type: string
+                    format: email
                 example:
                   detail: Password reset successful.
+                  email: "email@email.com"
           description: ''
         '400':
           description: Bad Request
@@ -3754,7 +3945,6 @@ paths:
                   value:
                     success: "False"
                     detail: "Invalid token"
-
   /events/{event_id}/read:
     get:
       operationId: ReadEvent
@@ -3997,14 +4187,14 @@ components:
           $ref: '#/components/schemas/BaseUserProfilePreferences'
         picture:
           type: string
-        last_login:
+        last_activity:
           type: string
       required:
         - id
         - first_name
         - last_name
         - userpreferences
-        - last_login
+        - last_activity
 
     CoachProfileUserDataUpdate:
       type: object
@@ -4044,7 +4234,7 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
         name:
           type: string
       required:
@@ -4261,8 +4451,8 @@ components:
       type: object
       required:
         - team_name
-        - league_highest_parent_name
-        - league_highest_parent_id
+        - league_name
+        - league_id
         - team_contributor_id
         - picture_url
         - season
@@ -4270,9 +4460,9 @@ components:
       properties:
         team_name:
           type: string
-        league_highest_parent_name:
+        league_name:
           type: string
-        league_highest_parent_id:
+        league_id:
           type: integer
         team_contributor_id:
           type: integer
@@ -4606,7 +4796,7 @@ components:
       type: object
       properties:
         user:
-          $ref: '#/components/schemas/UserData'
+          $ref: '#/components/schemas/UserProfileBase'
         history_id:
           type: integer
           description: '*'
@@ -4638,6 +4828,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProfileLabel'
+        visits:
+              type: integer
+              description: "Total profile visits per last 30 days"
 
       required:
         - uuid
@@ -4646,6 +4839,7 @@ components:
         - slug
         - step
         - role
+        - visits
 
     PlayerProfileView:
       allOf:
@@ -4654,6 +4848,8 @@ components:
             slug:
               type: string
               readOnly: true
+            uuid:
+              type: string
             user:
               $ref: '#/components/schemas/UserProfileBase'
             external_links:
@@ -4692,8 +4888,12 @@ components:
               $ref: '#/components/schemas/VerificationStage'
             team_history_object:
               $ref: '#/components/schemas/TeamHistoryProfileView'
+            visits:
+              type: integer
+              description: "Total profile visits per last 30 days"
           example: {
             "slug": "player-slug",
+            "uuid": "uuid",
             "user": {
               "id": 1,
               "first_name": "Player",
@@ -4761,12 +4961,14 @@ components:
             },
             "team_history_object": {
               "team_name": "Team",
-              "league_highest_parent_name": "League",
-              "league_highest_parent_id": 5251
+              "league_name": "League",
+              "league_id": 5251
             },
+            "visits": 10
           }
           required: [
             slug,
+            uuid,
             user,
             team_object,
             voivodeship_obj,
@@ -4782,270 +4984,17 @@ components:
             training_ready,
             role,
             verification_stage,
-            team_history_object
+            team_history_object,
+            visits
           ]
-
-    PlayerProfile:
-      allOf:
-        - $ref: '#/components/schemas/BaseProfile'
-        - type: object
-          properties:
-            team_object:
-              $ref: '#/components/schemas/Team'
-            team_history_object:
-              $ref: '#/components/schemas/TeamHistoryProfileView'
-            voivodeship_obj:
-              $ref: '#/components/schemas/Voivodeship'
-            external_links:
-              type: array
-              items:
-                $ref: '#/components/schemas/ExternalLink'
-            player_positions:
-              $ref: '#/components/schemas/PlayerPositions'
-            profile_video:
-              type: array
-              items:
-                $ref: '#/components/schemas/ProfileVideo'
-            player_metrics:
-              $ref: '#/components/schemas/PlayerMetrics'
-            player_stats:
-              type: object
-              properties:
-                last_goals_count:
-                  type: integer
-                matches:
-                  type: integer
-                avg_minutes:
-                  type: integer
-            meta:
-              type: string
-              description: Player
-            meta_updated:
-              type: boolean
-              description: Player
-            team_club_league_voivodeship_ver:
-              type: string
-              description: Player,Coach,Club
-            team_object_id:
-              type: integer
-              description: "Used to change object in PATCH request, just pass id"
-            team_history_object_id:
-              type: integer
-              description: "Used to change object in PATCH request, just pass id"
-            team_object_alt_id:
-              type: integer
-              description: Player
-            club:
-              type: string
-              description: Player
-            team:
-              type: string
-              description: Player
-            league:
-              type: string
-              description: Player
-            birth_date:
-              type: string
-              description: Player
-            height:
-              type: integer
-              description: Player
-            weight:
-              type: integer
-              description: Player
-            position_raw:
-              type: string
-              description: Player
-            position_raw_alt:
-              type: string
-              description: Player
-            position_fantasy:
-              type: string
-              description: Player
-            formation:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            formation_alt:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            prefered_leg:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            transfer_status:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            card:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            soccer_goal:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            phone:
-              type: string
-              description: Player,Coach,Club,Guest
-            facebook_url:
-              type: string
-              description: Player,Coach,Scout,Guest
-            mapper_id:
-              type: integer
-              description: Player,Coach
-            external_links_id:
-              type: integer
-              description: Player,Coach,Scout,Guest
-            laczynaspilka_url:
-              type: string
-              description: Player
-            min90_url:
-              type: string
-              description: Player
-            transfermarket_url:
-              type: string
-              description: Player
-            voivodeship:
-              type: string
-              description: Player
-            voivodeship_obj_id:
-              type: integer
-              description: "Used to change object in PATCH request, just pass id"
-            voivodeship_raw:
-              type: string
-              description: Player
-            address_id:
-              type: integer
-              description: Player,Coach,Scout,Club,Guest
-            practice_distance:
-              type: integer
-              description: Player,Coach,Scout,Guest
-            about:
-              type: string
-              description: Player,Coach
-            training_ready:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            country:
-              type: string
-              description: Player,Coach,Scout
-            agent_status:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            agent_name:
-              type: string
-              description: Player
-            agent_phone:
-              type: string
-              description: Player
-            agent_foreign:
-              type: string
-              description: Player
-            updated:
-              type: boolean
-          example: {
-            "user": {
-                "id": 8248,
-                "first_name": "Arek",
-                "last_name": "Goclon",
-                "last_login": "2023-03-31T12:55:00.240615+02:00",
-                "last_activity": null,
-                "userpreferences": {
-                    "id": 5504,
-                    "age": null,
-                    "localization": null,
-                    "spoken_languages": [],
-                    "citizenship": null,
-                    "gender": null,
-                    "birth_date": null,
-                    "user": 8248
-                }
-            },
-            "team_object": null,
-            "team_history_object": {
-              "team_name": "Team",
-              "league_highest_parent_name": "League",
-              "league_highest_parent_id": 5251
-            },
-            "voivodeship_obj": null,
-            "history": {
-                "id": 9859,
-                "counter": 0,
-                "counter_coach": 0,
-                "counter_scout": 0
-            },
-            "external_links": null,
-            "player_positions": [],
-            "profile_video": [],
-            "playermetrics": {
-                "id": 8871,
-                "created_at": "2023-03-31T12:55:12.989811+02:00",
-                "updated_at": null,
-                "games_summary": null,
-                "games_summary_updated": null,
-                "games": null,
-                "games_updated": null,
-                "fantasy_summary": null,
-                "fantasy_summary_updated": null,
-                "fantasy": null,
-                "fantasy_updated": null,
-                "season_summary": null,
-                "season_summary_updated": null,
-                "season": null,
-                "season_updated": null,
-                "player": 8248
-            },
-            "player_stats": {
-                "last_goals_count": 1,
-                "matches": 69,
-                "avg_minutes": 52
-            },
-            "role": "P",
-            "verification_id": 14173,
-            "user_id": 8248,
-            "history_id": 9859,
-            "data_mapper_id": null,
-            "slug": "player-arek-goclon",
-            "bio": null,
-            "event_log": null,
-            "step": null,
-            "uuid": "4a144e1b-0254-4991-a534-a3b45bb41636",
-            "meta": null,
-            "meta_updated": null,
-            "team_club_league_voivodeship_ver": null,
-            "team_object_id": null,
-            "team_history_object_id": null,
-            "team_object_alt_id": null,
-            "club": null,
-            "team": null,
-            "league": null,
-            "birth_date": null,
-            "height": null,
-            "weight": null,
-            "position_raw": null,
-            "position_raw_alt": null,
-            "position_fantasy": null,
-            "formation": null,
-            "formation_alt": null,
-            "prefered_leg": null,
-            "transfer_status": null,
-            "card": null,
-            "soccer_goal": null,
-            "phone": null,
-            "facebook_url": null,
-            "mapper_id": 72331,
-            "external_links_id": null,
-            "laczynaspilka_url": null,
-            "min90_url": null,
-            "transfermarket_url": null,
-            "voivodeship": null,
-            "voivodeship_obj_id": null,
-            "voivodeship_raw": null,
-            "address_id": null,
-            "practice_distance": null,
-            "about": null,
-            "training_ready": null,
-            "country": "PL",
-            "agent_status": null,
-            "agent_name": null,
-            "agent_phone": null,
-            "agent_foreign": null,
-            "updated": false
-          }
 
     CoachProfile:
       allOf:
         - type: object
           properties:
             slug:
+              type: string
+            uuid:
               type: string
             user:
               $ref: '#/components/schemas/UserProfileBase'
@@ -5080,8 +5029,12 @@ components:
               $ref: '#/components/schemas/VerificationStage'
             team_history_object:
               $ref: '#/components/schemas/TeamHistoryProfileView'
+            visits:
+              type: integer
+              description: "Total profile visits per last 30 days"
           example: {
             "slug": "coach-miz-shoty",
+            "uuid": "uuid",
             "user": {
                 "id": 7404,
                 "first_name": "MiZ",
@@ -5135,12 +5088,14 @@ components:
             },
             "team_history_object": {
               "team_name": "Team",
-              "league_highest_parent_name": "League",
-              "league_highest_parent_id": 5251
+              "league_name": "League",
+              "league_id": 5251
             },
+            "visits": 10
           }
       required:
         - slug
+        - uuid
         - user
         - voivodeship_obj
         - external_links
@@ -5153,40 +5108,7 @@ components:
         - role
         - verification_stage
         - team_history_object
-
-    CoachProfileUpdate:
-      allOf:
-        - type: object
-          properties:
-            user:
-              $ref: '#/components/schemas/CoachProfileUserDataUpdate'
-            voivodeship_obj:
-              $ref: '#/components/schemas/VoivodeshipUpdate'
-            coach_role:
-              $ref: '#/components/schemas/ProfileEnumChoicesUpdate'
-            formation:
-              $ref: '#/components/schemas/ProfileEnumChoicesUpdate'
-          example: {
-            "user": {
-                "first_name": "MiZ",
-                "last_name": "SHOTY",
-                "userpreferences": {
-                    "localization": null,
-                    "spoken_languages": [],
-                    "citizenship": null,
-                    "gender": null,
-                    "birth_date": null,
-                }
-            },
-            "voivodeship_obj": {
-                "id": 1,
-            },
-            "address": "address",
-            "coach_role": {
-                "id": "IIC",
-            },
-            "formation": "4-3-2-1",
-          }
+        - visits
 
     BaseProfileUpdateFields:
       allOf:
@@ -5291,6 +5213,8 @@ components:
           properties:
             slug:
               type: string
+            uuid:
+              type: string
             user:
               $ref: '#/components/schemas/UserProfileBase'
             external_links:
@@ -5314,6 +5238,9 @@ components:
               $ref: '#/components/schemas/VerificationStage'
             team_history_object:
               $ref: '#/components/schemas/TeamHistoryProfileView'
+            visits:
+              type: integer
+              description: "Total profile visits per last 30 days"
           example: {
             "slug": "scout-kacper-skalski",
             "user": {
@@ -5353,12 +5280,14 @@ components:
             },
             "team_history_object": {
               "team_name": "Team",
-              "league_highest_parent_name": "League",
-              "league_highest_parent_id": 5251
+              "league_name": "League",
+              "league_id": 5251
             },
+            "visits": 10
           }
       required:
         - slug
+        - uuid
         - user
         - role
         - external_links
@@ -5366,37 +5295,15 @@ components:
         - labels
         - verification_stage
         - team_history_object
+        - visits
 
-    ScoutProfileUpdate:
-      allOf:
-        - type: object
-          properties:
-            user:
-              $ref: '#/components/schemas/ScoutProfileUserDataUpdate'
-            voivodeship_obj:
-              $ref: '#/components/schemas/VoivodeshipUpdate'
-          example: {
-            "user": {
-              "first_name": "Kacper",
-              "last_name": "Skalski",
-              "userpreferences": {
-                "localization": null,
-                "spoken_languages": [ ],
-                "citizenship": null,
-                "gender": null,
-                "birth_date": null,
-              }
-            },
-            "voivodeship_obj": {
-              "id": 1,
-            },
-            "address": "address",
-          }
     ManagerProfile:
       allOf:
         - type: object
           properties:
             slug:
+              type: string
+            uuid:
               type: string
             user:
               $ref: '#/components/schemas/UserProfileBase'
@@ -5451,8 +5358,12 @@ components:
               $ref: '#/components/schemas/VerificationStage'
             team_history_object:
               $ref: '#/components/schemas/TeamHistoryProfileView'
+            visits:
+              type: integer
+              description: "Total profile visits per last 30 days"
           example:
             slug: "coach-miz-shoty"
+            "uuid": "uuid"
             user:
               id: 7404
               first_name: "MiZ"
@@ -5489,8 +5400,10 @@ components:
               step: 0
               date_updated: "2023-09-09T10:18:34.070304+02:00"
               done: false
+            visits: 10
       required:
         - slug
+        - uuid
         - user
         - external_links
         - profile_video
@@ -5506,84 +5419,7 @@ components:
         - agency_other_url
         - verification_stage
         - team_history_object
-
-    ParentProfile:
-      allOf:
-        - $ref: '#/components/schemas/BaseProfile'
-        - type: object
-          properties:
-            facebook_url:
-              type: string
-    RefereeProfile:
-      allOf:
-        - $ref: '#/components/schemas/BaseProfile'
-        - type: object
-          properties:
-            facebook_url:
-              type: string
-            external_links:
-              type: array
-              items:
-                $ref: '#/components/schemas/ExternalLink'
-
-    ClubProfile:
-      allOf:
-        - $ref: '#/components/schemas/BaseProfile'
-        - type: object
-          properties:
-            club_object_id:
-              type: integer
-            phone:
-              type: string
-              description: Player,Coach,Club,Guest
-            team_club_league_voivodeship_ver:
-              type: string
-              description: Player,Coach,Club
-            club_role:
-              $ref: '#/components/schemas/ProfileEnumChoices'
-            custom_club_role:
-              type: string
-              nullable: true
-            verification_stage:
-              $ref: '#/components/schemas/VerificationStage'
-            team_history_object:
-              $ref: '#/components/schemas/TeamHistoryProfileView'
-          example: {
-            "user": {
-                "id": 7300,
-                "first_name": "B",
-                "last_name": "Kobi",
-                "last_login": "2022-06-24T12:12:25.348516+02:00",
-                "last_activity": null,
-                "userpreferences": null
-            },
-            "history": {
-                "id": 8676,
-                "counter": 0,
-                "counter_coach": 0,
-                "counter_scout": 0
-            },
-            "club_object": null,
-            "role": "C",
-            "verification_id": 6552,
-            "user_id": 7300,
-            "history_id": 8676,
-            "data_mapper_id": null,
-            "slug": "club-b-kobi",
-            "bio": null,
-            "event_log": null,
-            "step": null,
-            "uuid": "03bde658-f6af-41a5-b617-a6cd647ce168",
-            "club_object_id": null,
-            "phone": null,
-            "team_club_league_voivodeship_ver": null,
-            "club_role": null,
-            "verification_stage": {
-              "step": 0,
-              "date_updated": "2023-09-09T10:18:34.070304+02:00",
-              "done": false
-            }
-          }
+        - visits
 
     ClubProfileView:
       allOf:
@@ -5592,6 +5428,8 @@ components:
             slug:
               type: string
               description: profile slug
+            uuid:
+              type: string
             user:
               $ref: '#/components/schemas/UserProfileBase'
             labels:
@@ -5600,9 +5438,6 @@ components:
                 $ref: '#/components/schemas/ProfileLabel'
             club_role:
               $ref: '#/components/schemas/ProfileEnumChoices'
-              required:
-                - id
-                - name
             custom_club_role:
               type: string
               nullable: true
@@ -5624,8 +5459,12 @@ components:
               description: "Player role"
             verification_stage:
               $ref: '#/components/schemas/VerificationStage'
+            visits:
+              type: integer
+              description: "Total profile visits per last 30 days"
           required:
           - slug
+          - uuid
           - user
           - labels
           - club_role
@@ -5635,10 +5474,12 @@ components:
           - role
           - verification_stage
           - team_history_object
+          - visits
 
           example:
            {
             "slug": "club-slug",
+            "uuid": "uuid",
             "user": {
                 "id": 19,
                 "first_name": "first_name",
@@ -5697,7 +5538,8 @@ components:
               "step": 0,
               "date_updated": "2023-09-09T10:18:34.070304+02:00",
               "done": false
-            }
+            },
+            "visits": 10
           }
 
     GuestProfile:
@@ -5747,7 +5589,8 @@ components:
             "event_log": null,
             "step": null,
             "uuid": "104ac6d7-6bf7-490e-abac-9b4c8d42ac49",
-            "facebook_url": null
+            "facebook_url": null,
+            "visits": 10
           }
     ProfileSearchResult:
       type: object
@@ -5761,19 +5604,31 @@ components:
         last_name:
           type: string
           description: 'Last name of the user.'
-        team:
-          type: string
-          description: 'Team of the user with league top parent or "bez klubu" if no team associated.'
         age:
           type: integer
           description: 'Age of the user.'
           nullable: true
-      required:
-        - role
-        - first_name
-        - last_name
-        - team
-        - age
+        gender:
+          $ref: '#/components/schemas/Gender'
+        team:
+          type: string
+          description: 'Team of the user with league.'
+          nullable: true
+        uuid:
+          type: string
+          format: uuid
+        custom_role:
+          type: string
+          nullable: true
+        specific_role:
+          $ref: '#/components/schemas/ProfileEnumChoices'
+          nullable: true
+        player_position:
+          $ref: '#/components/schemas/PlayerPosition'
+          nullable: true
+        picture:
+          type: string
+          nullable: true
 
     Country:
       type: object
@@ -5907,6 +5762,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Course'
+        dial_code:
+          type: integer
+        phone_number:
+          type: string
+        contact_email:
+          type: string
       required:
        - age
        - localization
@@ -5916,6 +5777,9 @@ components:
        - birth_date
        - licences
        - courses
+       - dial_code
+       - phone_number
+       - contact_email
 
     BaseUserProfilePreferencesUpdate:
       type: object
@@ -6181,13 +6045,15 @@ components:
                 description: "Object name"
             required: ["id", "name"]
         number_of_trainings:
-          type: object
-          properties:
-            id:
-              type: string
-            name:
-              type: string
-          required: ["id", "name"]
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+            required: ["id", "name"]
         salary:
           type: object
           properties:
@@ -6207,10 +6073,7 @@ components:
               name:
                 type: string
                 description: "Object name"
-              is_parent:
-                type: boolean
-                description: "Is league parent?"
-            required: ["id", "name", "is_parent"]
+            required: ["id", "name"]
       required: ["contact_email", "phone_number", "status", "additional_info", "league", "benefits", "salary", "number_of_trainings"]
       example:
         {
@@ -6250,12 +6113,10 @@ components:
                   "name": "Zwrot za buty lub rękawice"
               }
           ],
-          "salary": [
-              {
-                  "id": "1",
-                  "name": "0 - 499 zł"
-              }
-          ],
+          "salary": {
+              "id": "1",
+              "name": "0 - 499 zł"
+          },
           "number_of_trainings": [
               {
                   "id": "1",
@@ -6275,7 +6136,7 @@ components:
         status:
           type: integer
           description: "Status object id."
-        position:
+        player_position:
           type: array
           items:
             type: integer
@@ -6312,7 +6173,7 @@ components:
         status:
           type: integer
           description: "Status object id."
-        position:
+        player_position:
           type: array
           items:
             type: integer
@@ -6337,7 +6198,7 @@ components:
               type: integer
             number:
               type: string
-      required: ["requesting_team", "status", "position"]
+      required: ["requesting_team", "status", "player_position"]
 
     TransferRequestGetTeamContributor:
       type: object
@@ -6356,9 +6217,9 @@ components:
               description: "Team object id"
             team_name:
               type: string
-            league_highest_parent_name:
+            league_name:
               type: string
-            league_highest_parent_id:
+            league_id:
               type: integer
             team_contributor_id:
               type: integer
@@ -6368,7 +6229,7 @@ components:
               type: string
             season:
               type: string
-          required: ["id", "team_name", "league_highest_parent_name", "league_highest_parent_id", "team_contributor_id", "picture_url", "country", "season"]
+          required: ["id", "team_name", "league_name", "league_id", "team_contributor_id", "picture_url", "country", "season"]
       required: ["id", "round", "team"]
 
     TransferRequestPositions:
@@ -6380,7 +6241,12 @@ components:
             type: string
           name:
             type: string
-        required: ["id", "name"]
+          shortcut:
+            type: string
+            description: "ENglish shortcut."
+          shortcut_pl:
+            type: string
+        required: ["id", "name", "shortcut", "shortcut_pl"]
 
     TransferRequestGet:
       type: object
@@ -6440,7 +6306,11 @@ components:
             number:
               type: string
           required: ["dial_code", "number"]
-      required: ["requesting_team", "gender", "status", "position", "number_of_trainings", "salary", "contact_email", "phone_number", "benefits",]
+        profile_uuid:
+          type: string
+        club_voivodeship:
+          type: string
+      required: ["requesting_team", "gender", "status", "position", "number_of_trainings", "salary", "contact_email", "phone_number", "benefits", "profile_uuid", "club_voivodeship"]
 
       example:
         {
@@ -6465,16 +6335,16 @@ components:
           },
           "position": [
               {
-                  "id": "6",
-                  "name": "Defensywny pomocnik"
+                  "id": 102,
+                  "name": "Defensywny Pomocnik #6",
+                  "shortcut": "DM",
+                  "shortcut_pl": "DP"
               },
               {
-                  "id": "7",
-                  "name": "Środkowy pomocnik"
-              },
-              {
-                  "id": "8",
-                  "name": "Ofensywny pomocnik"
+                  "id": 103,
+                  "name": "Środkowy Pomocnik #8",
+                  "shortcut": "CM",
+                  "shortcut_pl": "ŚP"
               }
           ],
           "number_of_trainings": {
@@ -6860,6 +6730,10 @@ components:
               type: integer
             player_position:
               $ref: '#/components/schemas/PlayerPosition'
+            team_history_object:
+              $ref: '#/components/schemas/TeamHistoryProfileView'
+            gender:
+              $ref: '#/components/schemas/Gender'
     InquiryRequest:
       type: object
       properties:
@@ -6930,8 +6804,15 @@ components:
     InquiryRequestUserContact:
       type: object
       properties:
-        phone:
-          type: string
+        phone_number:
+          type: object
+          properties:
+            dial_code:
+              type: integer
+              description: "Represents a phone number dial code"
+            number:
+              type: string
+              description: "Profile phone number"
         email:
           type: string
     InquiryRequestUserMeta:
@@ -6953,11 +6834,22 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserInquiryLog'
+        inquiries_left:
+          type: integer
+          description: "The number of inquiries remaining under the user's current plan. 
+          This value indicates how many more inquiries the user can make before reaching the plan's limit."
+          readOnly: true
+        days_until_expiry:
+          type: integer
+          description: "The number of days remaining until the next inquiry expiration date."
+          readOnly: true
       required:
         - user
         - plan
         - contact
         - counter
+        - inquiries_left
+        - days_until_expiry
 
     UserInquiryLog:
       type: object
@@ -6967,7 +6859,7 @@ components:
         log_type:
           type: string
         body:
-          type: string  
+          type: string
       required:
         - created_at
         - log_type
@@ -7016,6 +6908,23 @@ components:
           type: string
           description: "Contact phone number for the managing agency."
           example: "123456789"
+    StandardRoleRequest:
+      type: object
+      properties:
+        role:
+          type: string
+      required:
+        - role
+    CustomRoleRequest:
+      type: object
+      properties:
+        role:
+          type: string
+        custom_role:
+          type: string
+      required:
+        - role
+        - custom_role
 
   securitySchemes:
     jwtAuth:
