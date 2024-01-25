@@ -254,15 +254,24 @@ class UserTokenManager:
     def create_url(user: "User") -> str:
         """
         Generates a URL containing a token for the given user.
-
         Returns a complete URL containing the token for the user.
+
+        TODO: Future Enhancements
+        - Ensure the randomness of the link is sufficient according to the
+        latest security standards.
+        - Review and possibly shorten the token expiration time to enhance security,
+        e.g., set to 1 hour.
+        - Consider implementing one-time use tokens that get invalidated after
+         a single use, to further secure the process against potential email leaks.
+         Reference:
+         https://niebezpiecznik.pl/post/najczestsze-bledy-programistow-w-formularzu-resetu-hasla/
         """
         uidb: str = urlsafe_base64_encode(force_bytes(user.id))
         token: str = default_token_generator.make_token(user)
 
         # The frontend base URL and the new password reset path
         base_url = settings.FRONTEND_BASE_URL
-        password_reset_path = "/nowe-haslo"
+        password_reset_path = "nowe-haslo"
 
         # Construct the full URL with query parameters
         reset_url = f"{base_url}{password_reset_path}?uidb64={uidb}&token={token}"
@@ -285,48 +294,21 @@ class UserTokenManager:
 
         # The frontend base URL and the new password reset path
         base_url = settings.FRONTEND_BASE_URL
-        email_verify_path = "/verify-email"
+        email_verify_path = "zweryfikuj-email"
 
         # Construct verification URL
         verification_url = (
-            f"{base_url}"
+            f"{base_url}{email_verify_path}?uidb64={uidb64}&token={token}"
         )
         return verification_url
 
     @staticmethod
-    def check_user_token(**kwargs) -> Tuple:
+    def is_token_valid(user: "User", token: str) -> bool:
         """
-        Verifies the validity of a token for a user based on a given uidb64.
+        Checks if the provided token is valid for the given user.
 
-        Returns tuple containing a dictionary message (success/error), an HTTP status code,
-        and the associated user (or None if not found or in case of an error).
-        """  # noqa: E501
-
-        uidb64 = kwargs.get("user", None)
-        token = kwargs.get("token", None)
-
-        try:
-            user_id = force_text(urlsafe_base64_decode(uidb64))
-            # Ensure that the decoded user_id only contains digit characters for safety.
-            # This guards against any anomalies in the uidb64 encoding/decoding process.
-            if not user_id.isdigit():
-                raise ValueError("UID contains non-digit characters.")
-        except (DjangoUnicodeDecodeError, ValueError):
-            logger.error("Error decoding uidb64 token: %s", uidb64, exc_info=True)
-            raise ValueError("Error processing the token")
-
-        try:
-            user = get_user_model().objects.get(pk=user_id)
-        except ObjectDoesNotExist:
-            logger.error("User not found for decoded uid: %s", user_id, exc_info=True)
-            raise ValueError("Error processing the token")
-
-        if not default_token_generator.check_token(user, token):
-            raise ValueError("Invalid token")
-
-        user.last_login = timezone.now()
-        return (
-            {"success": "True", "detail": UserTokenManager.success_message},
-            status.HTTP_200_OK,
-            user,
-        )
+        This method uses the default token generator to verify the token's validity.
+        It is intended to validate tokens typically used in password reset or email
+        verification processes.
+        """
+        return default_token_generator.check_token(user, token)

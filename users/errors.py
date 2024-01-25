@@ -85,27 +85,30 @@ class SocialAccountInstanceNotCreatedException(Exception):
     ...
 
 
-class InvalidTokenException(CoreAPIException):
-    status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = "Invalid token"
-
-
-class TokenProcessingError(CoreAPIException):
-    status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = "Something went wrong"
-
-
-class EmailValidationException(CoreAPIException):
-    status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = "Something went wrong. Check fields list for more details."
-
-
 class CityDoesNotExistException(Exception):
     """Raises when city couldn't be found in DB"""
+
     ...
 
 
 class CityDoesNotExistHTTPException(CoreAPIException):
     """API HTTP exception raised when city does not exist in DB"""
+
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "City with given id does not exist"
+
+
+class InvalidUIDException(CoreAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Invalid User ID provided."
+
+
+class InvalidUIDServiceException(Exception):
+    """Exception raised when the UID in the UserService is invalid."""
+
+
+class InvalidTokenException(CoreAPIException):
+    """API exception raised when a token validation fails."""
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "The provided token is invalid or has expired."

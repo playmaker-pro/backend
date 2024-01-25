@@ -1131,3 +1131,63 @@ class TestUserManagementAPI(APITestCase):
                 self.picture_url, data=data, **self.image_headers
             )
             assert res.status_code == 429
+
+
+@pytest.mark.django_db
+class TestEmailVerificationEndpoint(TestCase):
+    def setUp(self) -> None:
+        self.client = APIClient()
+        self.register_url = reverse("api:users:api-register")
+        self.user_data = {
+            "password": "super secret password",
+            "first_name": "first_name",
+            "last_name": "last_name",
+            "email": "testuser@example.com",
+        }
+        self.verify_email_base_url = reverse("api:users:verify_email", args=["dummy_uidb64", "dummy_token"])
+
+
+    def test_email_verification_process(self) -> None:
+        """
+        Tests the email verification process for a registered user.
+        """
+        # Simulate user registration
+        self.client.post(self.register_url, data=self.user_data)
+
+        # Extract verification URL from the email
+        email = mail.outbox[0]
+        uidb64, token = extract_uidb64_and_token_from_email(email.body)
+        # Construct the complete verification URL
+        verification_url = reverse("api:users:verify_email", args=[uidb64, token])
+
+        # Simulate clicking the verification link
+        response = self.client.get(verification_url)
+        assert response.status_code == 200
+
+        # Fetch the user and check if the email is verified
+        user = User.objects.get(email=self.user_data["email"])
+        assert user.is_email_verified is True
+
+    def test_email_verification_with_invalid_token(self) -> None:
+        """
+        Tests the email verification process with an invalid token.
+        """
+        # Simulate user registration
+        self.client.post(self.register_url, data=self.user_data)
+
+        # Extract the real uidb64 from the email
+        email = mail.outbox[0]
+        uidb64, _ = extract_uidb64_and_token_from_email(email.body)
+
+        # Use an invalid token
+        invalid_token = "invalid-token"
+
+        # Construct the verification URL with the invalid token
+        verification_url_with_invalid_token = reverse("api:users:verify_email", args=[uidb64, invalid_token])
+        # Simulate clicking the verification link with an invalid token
+        response = self.client.get(verification_url_with_invalid_token)
+        assert response.status_code == 400  # or the appropriate status code for failure
+
+        # Fetch the user and check if the email is still not verified
+        user = User.objects.get(email=self.user_data["email"])
+        assert user.is_email_verified is False

@@ -36,10 +36,11 @@ from users.errors import (
     EmailNotAvailable,
     EmailNotValid,
     InvalidTokenException,
+    InvalidUIDException,
+    InvalidUIDServiceException,
     NoSocialTokenSent,
     NoUserCredentialFetchedException,
     SocialAccountInstanceNotCreatedException,
-    TokenProcessingError,
     UserEmailNotValidException,
 )
 from users.managers import FacebookManager, GoogleManager, UserTokenManager
@@ -75,6 +76,33 @@ class UserRegisterEndpointView(EndpointView):
         serialized_data.pop("password")
 
         return Response(serialized_data)
+
+    def verify_email(self, request: Request, uidb64: str, token: str) -> Response:
+        """
+        Verifies a user's email address using a token and user ID (uidb64)
+        passed in the request.
+
+        This method is designed to handle a GET request containing an uidb64
+        and token as query parameters.
+
+        It validates these parameters to ensure they correspond to a valid user
+        and that the token is legitimate. If validation is successful, the user's
+        'is_email_verified' field is set to True.
+        """
+
+        try:
+            user = UserService.get_user_from_uid(uidb64)
+        except InvalidUIDServiceException:
+            raise InvalidUIDException
+
+        if not UserTokenManager.is_token_valid(user, token):
+            raise InvalidTokenException
+
+        UserService.change_email_verify_flag(user)
+        return Response(
+            {"success": True, "detail": "Email verified successfully"},
+            status=status.HTTP_200_OK,
+        )
 
 
 class UsersAPI(EndpointView):
@@ -347,30 +375,24 @@ class PasswordManagementAPIView(EndpointView):
         # Use the serializer for validation.
         serializer = CreateNewPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         try:
-            success_message, status_code, user = UserTokenManager.check_user_token(
-                user=uidb64, token=token
-            )
+            user = UserService.get_user_from_uid(uidb64)
+        except InvalidUIDServiceException:
+            raise InvalidUIDException
 
-            if status_code != status.HTTP_200_OK:
-                return Response(success_message, status=status.HTTP_400_BAD_REQUEST)
-
+        if UserTokenManager.is_token_valid(user, token):
+            # Reset the user's password
             password_reset_service.reset_user_password(
                 user, serializer.validated_data["new_password"]
             )
 
-        except ValueError as e:
-            if str(e) == "Invalid token":
-                raise InvalidTokenException()
-            else:
-                raise TokenProcessingError()
+            return Response(
+                {
+                    "success": True,
+                    "detail": "Password reset successful",
+                    "email": user.email,
+                },
+                status=status.HTTP_200_OK,
+            )
 
-        return Response(
-            {
-                "success": True,
-                "detail": "Password reset successful",
-                "email": user.email
-            },
-            status=status.HTTP_200_OK,
-        )
+        raise InvalidTokenException
