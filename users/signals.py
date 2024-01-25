@@ -12,14 +12,6 @@ logger = logging.getLogger("project")
 
 User = get_user_model()
 
-# TODO(rkesik): deprecated - do wywalenia - zostawiamy do konca budowy API pod FE
-# @receiver(email_confirmed)
-# def email_confirmed_(request, email_address, **kwargs):
-#     '''Set User.state to email verified'''
-#     user = User.objects.get(email=email_address.email)
-#     user.verify_email()
-#     user.save()
-
 
 @receiver(pre_save, sender=User)
 def pre_save_user(sender, instance, **kwargs):

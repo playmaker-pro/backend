@@ -32,9 +32,6 @@ class UserFactory(CustomObjectFactory):
     userinquiry = factory.RelatedFactory(
         "utils.factories.inquiry_factories.UserInquiryFactory", "user"
     )
-    inquiry_contact = factory.RelatedFactory(
-        "utils.factories.inquiry_factories.InquiryContactFactory", "user"
-    )
 
     @classmethod
     def create_admin_user(

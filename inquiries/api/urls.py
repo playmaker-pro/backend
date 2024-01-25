@@ -32,11 +32,6 @@ urlpatterns = [
         name="my_inquiry_data",
     ),
     path(
-        r"my/meta-data/update-contact/",
-        views.InquiresAPIView.as_view({"post": "update_contact_data"}),
-        name="update_contact_data",
-    ),
-    path(
         r"<int:request_id>/accept/",
         views.InquiresAPIView.as_view({"post": "accept_inquiry_request"}),
         name="accept_inquiry_request",

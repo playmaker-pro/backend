@@ -123,10 +123,7 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
         assert response.json().get("contact_email") == new_address_email
 
         transfer_status_obj.refresh_from_db()
-        assert (
-            transfer_status_obj.profile.user.userpreferences.contact_email
-            == new_address_email
-        )
+        assert transfer_status_obj.profile.user.contact_email == new_address_email
 
     @factory.django.mute_signals(signals.pre_save, signals.post_save)
     def test_update_profile_transfer_status_phone(self):

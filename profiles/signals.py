@@ -15,7 +15,9 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def user_handler(sender, instance, created, **kwargs):
-    """Signal reponsible for creating and attaching proper profile to user during creation process.
+    """
+    Signal responsible for creating and attaching proper profile to user during
+    creation process.
 
     Based on declared role append proper role (profile)
     """
@@ -23,8 +25,9 @@ def user_handler(sender, instance, created, **kwargs):
 
     if (
         not created
-    ):  # this place is point where we decide if we want to update user's profile each time.
-        # mechanism to prevent double db queries would be to detect if role has been requested to update.
+    ):  # this place is point where we decide if we want to update user's profile
+        # each time. mechanism to prevent double db queries would be to detect
+        # if role has been requested to update.
         msgprefix = "Updated"
 
     if created:
@@ -34,7 +37,6 @@ def user_handler(sender, instance, created, **kwargs):
 
     try:
         instance.userinquiry
-        instance.inquiry_contact
     except ObjectDoesNotExist:
         inquire_service.create_basic_inquiry_plan(instance)
     logger.info(f"{msgprefix} user: {instance}.")
@@ -45,7 +47,8 @@ def change_profile_approved_handler(sender, instance, created, **kwargs):
     """users.User.declared_role is central point to navigate with role changes.
     admin can alter somees role just changing User.declared_role
     """
-    # we assume that when object is created RoleChangedRequest only admin should receive notification.
+    # we assume that when object is created RoleChangedRequest only admin
+    # should receive notification.
     if created:
         mail_role_change_request(instance)
         return
@@ -57,5 +60,6 @@ def change_profile_approved_handler(sender, instance, created, **kwargs):
         user.save()  # this should invoke create_profile_handler signal
         # set_and_create_user_profile(user)
         logger.info(
-            f"User {user} profile changed to {instance.new} sucessfully due to: accepted RoleChangeRequest"
+            f"User {user} profile changed to {instance.new} "
+            f"sucessfully due to: accepted RoleChangeRequest"
         )
