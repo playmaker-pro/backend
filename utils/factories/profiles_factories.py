@@ -184,6 +184,7 @@ class ClubProfileFactory(ProfileFactory):
     club_object = factory.LazyAttribute(
         lambda _: clubs_factories.ClubFactory.random_object()
     )
+    team_object = clubs_factories.TeamFactory.get_random_or_create_subfactory()
     club_role = factory.LazyAttribute(
         lambda _: random.choice(models.ClubProfile.CLUB_ROLE)[0]
     )
