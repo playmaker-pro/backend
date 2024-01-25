@@ -525,3 +525,14 @@ def preprocess_search_term(term: str) -> str:
     # Convert to lowercase
     term = term.lower()
     return term
+
+
+# Mapping of English profile types to their Polish equivalents
+profile_type_english_to_polish = {
+    'player': 'pilkarz',
+    'coach': 'trener',
+    'club': 'dzialacz-klubowy',
+    'scout': 'skaut',
+    'guest': 'kibic',
+    'manager': 'menadzer'
+}

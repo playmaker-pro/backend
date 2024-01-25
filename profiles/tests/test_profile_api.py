@@ -76,6 +76,36 @@ class TestGetProfileAPI(APITestCase):
         for field in fields_schema:
             assert field in list(response.data.keys())
 
+    def test_get_profile_by_slug_valid(self) -> None:
+        """Correct GET request with a valid slug"""
+        profile = factories.PlayerProfileFactory.create(user_id=self.user_obj.pk)
+        slug_url = reverse(
+            "api:profiles:get_profile_by_slug", kwargs={"profile_slug": profile.slug}
+        )
+        response = self.client.get(slug_url, **self.headers)
+        assert response.status_code == 200
+
+    def test_get_profile_by_slug_invalid(self) -> None:
+        """GET request with a non-existent slug should return 404"""
+        slug_url = reverse(
+            "api:profiles:get_profile_by_slug", kwargs={"profile_slug": "nonexistent-slug"}
+        )
+        response = self.client.get(slug_url, **self.headers)
+        assert response.status_code == 404
+
+    def test_get_profile_by_slug_valid_schema(self) -> None:
+        """GET request with a valid slug should return the correct schema"""
+        profile = factories.PlayerProfileFactory.create(user_id=self.user_obj.pk)
+        fields_schema = list(PlayerProfileGET.__fields__.keys())
+        slug_url = reverse(
+            "api:profiles:get_profile_by_slug", kwargs={"profile_slug": profile.slug}
+        )
+        response = self.client.get(slug_url, **self.headers)
+
+        assert response.status_code == 200
+        for field in fields_schema:
+            assert field in response.data
+
 
 class TestCreateProfileAPI(APITestCase):
     def setUp(self) -> None:

@@ -383,6 +383,22 @@ class ProfileService:
             raise ObjectDoesNotExist
 
     @staticmethod
+    def get_profile_by_slug(slug: str) -> models.PROFILE_TYPE:
+        """
+        Get profile object using slug.
+        Iterate through each profile type.
+        Iterated object (PROFILE_MODEL_MAP) should include each subclass of BaseProfile.
+        Raise ProfileDoesNotExist if no profile with the given slug exists.
+        """
+        for profile_type in models.PROFILE_MODEL_MAP.values():
+            try:
+                return profile_type.objects.get(slug=slug)
+            except profile_type.DoesNotExist:
+                continue
+        else:
+            raise ObjectDoesNotExist
+
+    @staticmethod
     def is_valid_uuid(value: str) -> bool:
         try:
             uuid_obj = uuid.UUID(value)

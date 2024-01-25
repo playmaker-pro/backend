@@ -51,6 +51,15 @@ urlpatterns = [
         name="get_or_update_profile",
     ),
     path(
+        r"slug/<slug:profile_slug>/",
+        views.ProfileAPI.as_view(
+            {
+                "get": "get_profile_by_slug",
+            }
+        ),
+        name="get_profile_by_slug",
+    ),
+    path(
         r"<uuid:profile_uuid>/labels",
         views.ProfileAPI.as_view({"get": "get_profile_labels"}),
         name="get_profile_labels",
