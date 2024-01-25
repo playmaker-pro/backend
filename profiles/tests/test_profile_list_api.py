@@ -178,55 +178,51 @@ class TestProfileListAPI(APITestCase):
         assert count_response.status_code == 200
         assert count_response.data["count"] == 2
 
-    def test_get_bulk_profiles_filter_league(self) -> None:
-        """get player profiles filter by league"""
+    @parameterized.expand(
+        [
+            ({"role": "P"}, "PlayerProfileFactory"),
+            ({"role": "T"}, "CoachProfileFactory"),
+            ({"role": "C"}, "ClubProfileFactory"),
+        ]
+    )
+    def test_get_bulk_profiles_filter_league(self, param, factory_name) -> None:
+        """test league filter"""
+        factory = getattr(factories, factory_name)
         current_season = get_current_season()
-        th1, th2 = factories.TeamFactory.create_batch(
+        team1, team2 = factories.TeamFactory.create_batch(
             2, league_history__season__name=current_season
         )
-        profile1 = factories.PlayerProfileFactory.create(team_object=th1)
-        profile2 = factories.PlayerProfileFactory.create(team_object=th2)
-        league1_id = profile1.team_object.league_history.league.id
-        league2_id = profile2.team_object.league_history.league.id
-        response = self.client.get(
-            self.url,
-            {"role": "P", "league": [league1_id]},
-        )
+        factory.create(team_object=team1)
+        factory.create(team_object=team2)
+
+        league1_id = team1.league_history.league.id
+        league2_id = team2.league_history.league.id
+
+        # Test for valid league_id
+        response = self.client.get(self.url, {**param, "league": [league1_id]})
         assert response.status_code == 200
         assert len(response.data["results"]) == 1
 
-        response = self.client.get(
-            self.url,
-            {"role": "P", "league": [league1_id, league2_id]},
-        )
-        assert response.status_code == 200
-        assert len(response.data["results"]) == 2
-
-        response = self.client.get(
-            self.url,
-            {"role": "P", "league": [1111111]},  # fake league_id
-        )
-        assert response.status_code == 200
-        assert len(response.data["results"]) == 0
-
         count_response = self.client.get(
-            self.count_url,
-            {"role": "P", "league": [league1_id]},
+            self.count_url, {**param, "league": [league1_id]}
         )
         assert count_response.status_code == 200
         assert count_response.data["count"] == 1
 
-        count_response = self.client.get(
-            self.count_url,
-            {"role": "P", "league": [league1_id, league2_id]},
+        # Test for both leagues
+        response = self.client.get(
+            self.url,
+            {**param, "league": [league1_id, league2_id]},
         )
-        assert count_response.status_code == 200
-        assert count_response.data["count"] == 2
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 2  # Expecting 2 profiles
 
-        count_response = self.client.get(
-            self.count_url,
-            {"role": "P", "league": [1111111]},  # fake league_id
-        )
+        # Test for invalid league_id (e.g., 1111111)
+        response = self.client.get(self.url, {**param, "league": [1111111]})
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 0
+
+        count_response = self.client.get(self.count_url, {**param, "league": [1111111]})
         assert count_response.status_code == 200
         assert count_response.data["count"] == 0
 

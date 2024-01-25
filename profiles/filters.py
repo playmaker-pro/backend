@@ -91,7 +91,6 @@ class ProfileListAPIFilter(APIFilter):
     def player_filters(self) -> None:
         """Filters related with PlayerProfile"""
         self.filter_youth()
-        self.filter_league()
         self.filter_gender()
         self.filter_players_by_transfer_status()
         self.filter_by_salary()
@@ -122,6 +121,7 @@ class ProfileListAPIFilter(APIFilter):
         self.filter_language()
         self.filter_licence()
         self.filter_by_labels()
+        self.filter_league()
 
     def define_query_params(self) -> None:
         """Validate query_params and save as self.query_params"""
@@ -176,7 +176,7 @@ class ProfileListAPIFilter(APIFilter):
     def filter_league(self) -> None:
         """Filter queryset by player league"""
         if league := self.query_params.get("league"):
-            self.queryset = self.service.filter_player_league(self.queryset, league)
+            self.queryset = self.service.filter_league(self.queryset, league)
 
     def filter_gender(self) -> None:
         """Filter queryset by player gender"""

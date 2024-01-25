@@ -456,7 +456,8 @@ class ProfileService:
             lambda user: search_term
             in utils.preprocess_search_term(
                 (user.first_name or "") + " " + (user.last_name or "")
-            ) and user.should_be_listed,
+            )
+            and user.should_be_listed,
             users_with_declared_role,
         )
 
@@ -562,18 +563,18 @@ class ProfileFilterService:
         return queryset.filter(player_positions__player_position_id__in=positions)
 
     @staticmethod
-    def filter_player_league(
+    def filter_league(
         queryset: django_base_models.QuerySet, league_ids: list
     ) -> django_base_models.QuerySet:
         """
-        Filter a queryset of players based on their association with the specified
+        Filter a queryset of profiles based on their association with the specified
         league IDs.
 
-        The method prioritizes players who are associated with the leagues in the
-        current season. If a player has been associated with one of the given leagues in
+        The method prioritizes profiles who are associated with the leagues in the
+        current season. If a profile has been associated with one of the given leagues in
         the current season, they are included in the results.
         If they haven't been associated in the current season but have been in
-        past seasons, they are also included. However, players with current season
+        past seasons, they are also included. However, profiles with current season
         associations are prioritized over those with only past associations.
         """
         current_season = get_current_season()
