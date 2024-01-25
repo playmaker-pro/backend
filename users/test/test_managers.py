@@ -6,8 +6,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes, force_text
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
 from users.managers import (
     FacebookManager,
@@ -319,30 +319,23 @@ class UserTokenManagerTest(TestCase):
         uidb = urlsafe_base64_encode(force_bytes(self.user.id))
         assert uidb in url
 
-    def test_check_user_token(self):
+    def test_is_token_valid(self):
         """
-        Test the check_user_token function.
+        Test the is_token_valid function.
         Ensure it validates a user's token correctly
         and responds with the right status and messages.
         """
-        uidb = urlsafe_base64_encode(force_bytes(self.user.id))
+        uidb64 = urlsafe_base64_encode(force_bytes(self.user.id))
         token = default_token_generator.make_token(self.user)
 
+        # Decode uidb64 to get the user's ID and fetch the User object
+        user_id = force_text(urlsafe_base64_decode(uidb64))
+        user_obj = User.objects.get(pk=user_id)
+
         # Validate using a correct token
-        try:
-            message, status_code, user = UserTokenManager.check_user_token(
-                user=uidb, token=token
-            )
-            assert status_code == 200
-            assert message == {
-                "success": "True",
-                "detail": UserTokenManager.success_message,
-            }
-            assert user == self.user
-        except ValueError as e:
-            pytest.fail(f"Unexpected ValueError: {e}")
+        is_valid = UserTokenManager.is_token_valid(user=user_obj, token=token)
+        self.assertTrue(is_valid)
 
         # Validate using an incorrect token
-        with pytest.raises(ValueError) as e_info:
-            UserTokenManager.check_user_token(user=uidb, token="invalid_token")
-        assert str(e_info.value) == "Invalid token"
+        is_valid = UserTokenManager.is_token_valid(user=user_obj, token="invalid_token")
+        self.assertFalse(is_valid)

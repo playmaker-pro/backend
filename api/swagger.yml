@@ -3923,6 +3923,55 @@ paths:
                   value:
                     success: "False"
                     detail: "Invalid token"
+
+  /users/verify-email/{uidb64}/{token}/:
+    get:
+      operationId: users_verify_email
+      description: Verifies a user's email address using a token and uidb64 passed in the query parameters.
+      summary: Verify User Email
+      tags:
+        - users
+      parameters:
+        - name: uidb64
+          in: path
+          required: true
+          description: The base64 encoded ID of the user.
+          schema:
+            type: string
+        - name: token
+          in: path
+          required: true
+          description: The token for email verification.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Email verified successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  detail:
+                    type: string
+                    example: "Email verified successfully."
+        '400':
+          description: Bad request - invalid token or uidb64.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  detail:
+                    type: string
+                    example: "Invalid token or user ID."
+
   /events/{event_id}/read:
     get:
       operationId: ReadEvent

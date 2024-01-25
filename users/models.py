@@ -257,6 +257,12 @@ class User(AbstractUser, UserRoleMixin):
 
     email = models.EmailField(_("Adres email"), unique=True)
 
+    # Note: As of now, this flag does not impact user access or functionalities.
+    is_email_verified = models.BooleanField(
+        default=False,
+        help_text="Indicates whether the user's email address has been verified.",
+    )
+
     def get_file_path(self, filename: str) -> str:
         """define user profile picture image path"""
         curr_date: str = str(datetime.datetime.now().date())
