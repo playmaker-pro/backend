@@ -1,13 +1,12 @@
 import logging
 import uuid
-from typing import Optional, Union
+from typing import Optional
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist, QuerySet
 from django.db.models.functions import Random
-from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, status
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
@@ -34,17 +33,14 @@ from profiles import errors, models
 from profiles.api import errors as api_errors
 from profiles.api import serializers
 from profiles.api.errors import (
-    InvalidProfileRole,
     PermissionDeniedHTTPException,
-    ProfileDoesNotExist,
     TransferRequestDoesNotExistHTTPException,
     TransferStatusDoesNotExistHTTPException,
 )
 from profiles.api.filters import TransferRequestCatalogueFilter
 from profiles.api.managers import SerializersManager
-from profiles.errors import ProfileVisitHistoryDoesNotExistException
+from profiles.api.mixins import ProfileRetrieveMixin
 from profiles.filters import ProfileListAPIFilter
-from profiles.interfaces import ProfileVisitHistoryProtocol
 from profiles.models import ProfileTransferRequest
 from profiles.serializers_detailed.base_serializers import (
     ProfileTransferRequestSerializer,
@@ -84,7 +80,7 @@ logger = logging.getLogger(__name__)
 
 
 # FIXME: lremkowicz: what about a django-filter library?
-class ProfileAPI(ProfileListAPIFilter, EndpointView):
+class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
     permission_classes = [IsAuthenticatedOrReadOnly]
     allowed_methods = ["post", "patch", "get"]
 
@@ -101,53 +97,23 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
     def get_serializer_class(self, **kwargs):
         return SerializersManager().get_serializer(kwargs.get("model_name"))
 
-    def get_profile_by_uuid(
-        self, request: Request, profile_uuid: uuid.UUID
-    ) -> Response:
-        """GET single profile by uuid"""
+    def get_profile_by_uuid(self, request: Request, profile_uuid: uuid.UUID) -> Response:
+        """GET single profile by uuid."""
         try:
             profile_object = profile_service.get_profile_by_uuid(profile_uuid)
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExist
 
-        # Profile visit counter
-        if profile_object.user != request.user:
-            requestor_profile: Union[models.BaseProfile, AnonymousUser] = request.user
-            if request.user.is_authenticated:
-                try:
-                    requestor_profile = profile_service.get_profile_by_role_and_user(
-                        user=request.user, role=request.user.role
-                    )
-                    if not requestor_profile:
-                        raise ProfileDoesNotExist(details="Requestor has no profile")
-                except ValueError:
-                    raise InvalidProfileRole(details="Requestor has invalid role")
+        return self.retrieve_profile_and_respond(request, profile_object)
 
-            history: ProfileVisitHistoryProtocol
-            try:
-                history = visit_history_service.get_user_profile_visit_history(
-                    user=profile_object.user, created_at=timezone.now()
-                )
-                visit_history_service.increment(
-                    instance=history, requestor=requestor_profile
-                )
+    def get_profile_by_slug(self, request: Request, profile_slug: str) -> Response:
+        """GET single profile by slug."""
+        try:
+            profile_object = profile_service.get_profile_by_slug(profile_slug)
+        except ObjectDoesNotExist:
+            raise api_errors.ProfileDoesNotExistBySlug
 
-            except ProfileVisitHistoryDoesNotExistException:
-                logger.error("Profile visit history does not exist. Creating one..")
-                history = visit_history_service.create(user=profile_object.user)
-                visit_history_service.increment(
-                    instance=history, requestor=requestor_profile
-                )
-
-        serializer_class = self.get_serializer_class(
-            model_name=profile_object.__class__.__name__
-        )
-        if not serializer_class:
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        serializer = serializer_class(
-            profile_object, context={"request": request, "label_context": "profile"}
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return self.retrieve_profile_and_respond(request, profile_object)
 
     def update_profile(self, request: Request, profile_uuid: uuid.UUID) -> Response:
         """PATCH request for profile (require UUID in body)"""

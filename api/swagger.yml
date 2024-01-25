@@ -1497,6 +1497,42 @@ paths:
           description: 'Profile with given uuid does not exist'
         '401':
           description: 'Unauthorized'
+  /profiles/slug/{profile_slug}/:
+    get:
+      operationId: profiles_retrieve_by_slug
+      description: "Get profile by slug"
+      summary: "Get profile"
+      parameters:
+        - in: path
+          name: profile_slug
+          schema:
+            type: string
+          required: true
+          description: 'Profile slug'
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+        - { }
+      responses:
+        '200':
+          description: 'Profile obtain successfully'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlayerProfileView'
+                  - $ref: '#/components/schemas/CoachProfile'
+                  - $ref: '#/components/schemas/ScoutProfile'
+                  - $ref: '#/components/schemas/ClubProfileView'
+                  - $ref: '#/components/schemas/ManagerProfile'
+                  - $ref: '#/components/schemas/GuestProfile'
+        '400':
+          description: 'Invalid slug'
+        '401':
+          description: 'Unauthorized'
+        '404':
+          description: 'Profile with given slug does not exist'
   /profiles/{profile_uuid}/labels:
     get:
       operationId: profiles_retrieve_labels

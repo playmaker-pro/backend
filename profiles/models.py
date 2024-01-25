@@ -487,11 +487,13 @@ class BaseProfile(models.Model, EventLogMixin):
         except type(self).DoesNotExist:
             obj_before_save = None
 
-        slug_str = "%s %s %s" % (
-            self.PROFILE_TYPE,
-            self.user.first_name,
-            self.user.last_name,
+        # Use Polish profile type for slug
+        polish_profile_type = profile_utils.profile_type_english_to_polish.get(
+            self.PROFILE_TYPE, self.PROFILE_TYPE
         )
+
+        slug_str = f"{polish_profile_type} {self.user.first_name} {self.user.last_name}"
+
         profile_utils.unique_slugify(self, slug_str)
 
         ver_old, object_exists = self._get_verification_object_verification_fields(
