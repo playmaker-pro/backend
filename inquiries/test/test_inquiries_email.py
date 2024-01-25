@@ -34,7 +34,7 @@ class TestSendEmails(TestCase):
     def test_send_email_on_send_request(self) -> None:
         """Send email to recipient on new request"""
         assert len(mail.outbox) == 1
-        assert mail.outbox[0].to == [self.user2.inquiry_contact._email]
+        assert mail.outbox[0].to == [self.user2.contact_email]
 
     def test_send_email_on_accepted_request(self) -> None:
         """Send email to sender on accept request"""
@@ -42,7 +42,7 @@ class TestSendEmails(TestCase):
         self.inquiry_request.accept()
         self.inquiry_request.save()
         assert len(mail.outbox) == 1
-        assert mail.outbox[0].to == [self.user1.inquiry_contact._email]
+        assert mail.outbox[0].to == [self.user1.contact_email]
 
     def test_send_email_on_reject_request(self) -> None:
         """Send email to sender on reject request"""
@@ -50,7 +50,7 @@ class TestSendEmails(TestCase):
         self.inquiry_request.reject()
         self.inquiry_request.save()
         assert len(mail.outbox) == 1
-        assert mail.outbox[0].to == [self.user1.inquiry_contact._email]
+        assert mail.outbox[0].to == [self.user1.contact_email]
 
     def test_send_email_on_outdated_request_to_sender(self) -> None:
         """Send email to sender on outdated request"""
@@ -87,7 +87,7 @@ class TestSendEmails(TestCase):
             == 1
         )
         assert len(mail.outbox) == 1
-        assert mail.outbox[0].to == [self.user2.inquiry_contact._email]
+        assert mail.outbox[0].to == [self.user2.contact_email]
 
         # second time should not be sent without changing date
         with pytest.raises(ForbiddenLogAction):
@@ -105,7 +105,7 @@ class TestSendEmails(TestCase):
         self.inquiry_request.refresh_from_db()
 
         assert len(mail.outbox) == 2
-        assert mail.outbox[1].to == [self.user2.inquiry_contact._email]
+        assert mail.outbox[1].to == [self.user2.contact_email]
         assert (
             self.inquiry_request.logs.filter(
                 message__log_type=InquiryLogMessage.MessageType.OUTDATED_REMINDER
@@ -129,7 +129,7 @@ class TestSendEmails(TestCase):
         self.inquiry_request.reward_sender()
 
         assert len(mail.outbox) == 1
-        assert mail.outbox[0].to == [self.user1.inquiry_contact._email]
+        assert mail.outbox[0].to == [self.user1.contact_email]
 
         # Assert we can't reward sender twice
         with pytest.raises(ForbiddenLogAction):
@@ -147,7 +147,7 @@ class TestSendEmails(TestCase):
         self.user1.userinquiry.notify_about_limit(force=True)
 
         assert len(mail.outbox) == 1
-        assert mail.outbox[0].to == [self.user1.inquiry_contact._email]
+        assert mail.outbox[0].to == [self.user1.contact_email]
 
 
 @pytest.mark.django_db

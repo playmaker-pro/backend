@@ -10,11 +10,7 @@ from rest_framework.response import Response
 
 from api.base_view import EndpointView
 from api.errors import NotOwnerOfAnObject
-from inquiries.api.serializers import (
-    InquiryContactSerializer,
-    InquiryRequestSerializer,
-    UserInquirySerializer,
-)
+from inquiries.api.serializers import InquiryRequestSerializer, UserInquirySerializer
 from inquiries.models import InquiryRequest
 from inquiries.services import InquireService
 from notifications.services import NotificationService
@@ -108,14 +104,5 @@ class InquiresAPIView(EndpointView):
             ).reject()
         except TransitionNotAllowed:
             raise ValidationError("You can't reject this request")
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def update_contact_data(self, request: Request) -> Response:
-        """Update user inquiry contact data"""
-        contact = request.user.inquiry_contact
-        serializer = InquiryContactSerializer(contact, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)

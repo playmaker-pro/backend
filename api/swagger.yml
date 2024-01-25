@@ -208,29 +208,7 @@ paths:
                 $ref: '#/components/schemas/InquiryRequestUserMeta'
         '401':
           description: "Unauthorized"
-  /inquiries/my/meta-data/update-contact/:
-    post:
-      operationId: update_my_inquiry_contact
-      description: Update my inquiry contact
-      summary: Update my inquiry contact
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InquiryRequestUserContact'
-      tags:
-        - inquiries
-      security:
-        - jwtAuth: [ ]
-      responses:
-        '200':
-          description: "Inquiry contact updated successfully"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InquiryRequestUserContact'
-        '401':
-          description: "Unauthorized"
+
   /inquiries/{iq_id}/accept/:
     post:
       operationId: accept_inquiry_request
@@ -6734,6 +6712,8 @@ components:
               $ref: '#/components/schemas/TeamHistoryProfileView'
             gender:
               $ref: '#/components/schemas/Gender'
+            contact:
+              $ref: '#/components/schemas/ContactSchema'
     InquiryRequest:
       type: object
       properties:
@@ -6745,12 +6725,6 @@ components:
           type: string
           readOnly: true
         updated_at:
-          type: string
-          readOnly: true
-        body:
-          type: string
-          readOnly: true
-        body_recipient:
           type: string
           readOnly: true
         status:
@@ -6925,6 +6899,20 @@ components:
       required:
         - role
         - custom_role
+
+    ContactSchema:
+      type: object
+      properties:
+        phone_number:
+          type: object
+          properties:
+            number:
+              type: string
+            dial_code:
+              type: string
+        email:
+          type: string
+
 
   securitySchemes:
     jwtAuth:

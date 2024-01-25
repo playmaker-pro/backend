@@ -16,6 +16,18 @@ from users.models import UserPreferences
 User = get_user_model()
 
 
+class InquiryContactSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="contact_email", allow_null=True)
+    phone_number = PhoneNumberField(source="*", required=False)
+
+    class Meta:
+        model = UserPreferences
+        fields = (
+            "phone_number",
+            "email",
+        )
+
+
 class InquiryUserDataSerializer(_BaseUserDataSerializer):
     age = serializers.IntegerField(read_only=True, source="userpreferences.age")
     specific_role = serializers.SerializerMethodField()
@@ -28,6 +40,7 @@ class InquiryUserDataSerializer(_BaseUserDataSerializer):
     )
     team_history_object = serializers.SerializerMethodField()
     gender = serializers.SerializerMethodField("get_gender")
+    contact = InquiryContactSerializer(source="userpreferences", read_only=True)
 
     def get_specific_role(self, obj: User) -> dict:
         """Get specific role for profile (Coach, Club)"""
@@ -80,6 +93,7 @@ class InquiryUserDataSerializer(_BaseUserDataSerializer):
             "specific_role",
             "team_history_object",
             "gender",
+            "contact",
         )
 
 
@@ -101,7 +115,8 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
 
             if not userinquiry.can_make_request:
                 raise serializers.ValidationError(
-                    f"You have reached your limit of inquiries ({userinquiry.counter}/{userinquiry.limit})."
+                    f"You have reached your limit of inquiries "
+                    f"({userinquiry.counter}/{userinquiry.limit})."
                 )
 
             if _models.InquiryRequest.objects.filter(
@@ -151,10 +166,10 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         """
         Overrides the default create method to handle the creation of an InquiryRequest.
 
-        This method extracts the recipient_profile_uuid from the validated data if present,
-        then creates an InquiryRequest instance with the remaining validated data. The
-        recipient_profile_uuid is used to perform additional logic specific to the InquiryRequest
-        during its creation.
+        This method extracts the recipient_profile_uuid from the validated data if
+        present, then creates an InquiryRequest instance with the remaining
+        validated data. The recipient_profile_uuid is used to perform additional
+        logic specific to the InquiryRequest during its creation.
         """
         recipient_profile_uuid = validated_data.pop("recipient_profile_uuid", None)
         inquiry_request = _models.InquiryRequest(**validated_data)
@@ -166,18 +181,6 @@ class InquiryPlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = _models.InquiryPlan
         exclude = ("sort",)
-
-
-class InquiryContactSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(source="_email", allow_null=True)
-    phone_number = PhoneNumberField(source="*", required=False)
-
-    class Meta:
-        model = _models.InquiryContact
-        fields = (
-            "phone_number",
-            "email",
-        )
 
 
 class UserInquiryLogSerializer(serializers.ModelSerializer):
@@ -197,7 +200,7 @@ class UserInquiryLogSerializer(serializers.ModelSerializer):
 
 class UserInquirySerializer(serializers.ModelSerializer):
     plan = InquiryPlanSerializer(read_only=True)
-    contact = InquiryContactSerializer(source="user.inquiry_contact", read_only=True)
+    contact = InquiryContactSerializer(source="user.userpreferences", read_only=True)
     inquiries_left = serializers.IntegerField(source="left")
     days_until_expiry = serializers.IntegerField(
         read_only=True, source="get_days_until_next_reference"

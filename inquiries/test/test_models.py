@@ -66,9 +66,7 @@ class RewardOutdatedInquiryRequest(TestCase):
     def setUp(self) -> None:
         sender = UserFactory(userpreferences__gender="M")
         recipient = UserFactory(userpreferences__gender="K")
-        self.inquiry_request = InquiryRequestFactory(
-            sender=sender, recipient=recipient
-        )
+        self.inquiry_request = InquiryRequestFactory(sender=sender, recipient=recipient)
         sender.save()
         recipient.save()
 

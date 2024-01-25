@@ -31,10 +31,12 @@ logger = logging.getLogger("inquiries")
 
 class InquiryLogMessage(models.Model):
     EMAIL_PATTERN = _(
-        "Type '#male_form|female_form#' - to mark something that should be determined by gender (e.g. #Otrzymałeś|Otrzymałaś#).\n"
+        "Type '#male_form|female_form#' - to mark something that should be determined "
+        "by gender (e.g. #Otrzymałeś|Otrzymałaś#).\n"
         "<> - to include user related with log.\n"
         "'#r#' to include user related with log with role.\n"
-        "'#rb#' to include user related with log with role in objective case (biernik).\n"
+        "'#rb#' to include user related with log with role in objective case (biernik)."
+        "\n"
         "#url# - to include additional url."
     )
 
@@ -120,7 +122,7 @@ class UserInquiryLog(models.Model):
         return _EmailSchema(
             body=self.email_body,
             subject=self.email_title,
-            recipients=[self.log_owner.user.email],
+            recipients=[self.log_owner.user.contact_email],
             type=self.message.log_type,
         )
 
@@ -173,7 +175,8 @@ class InquiryPlan(models.Model):
         ("Soring"),
         default=0,
         help_text=_(
-            "Used to sort plans low numbers threaded as lowest plans. Default=0 which means this is not set."
+            "Used to sort plans low numbers threaded as lowest plans. Default=0 "
+            "which means this is not set."
         ),
     )
 
@@ -182,7 +185,8 @@ class InquiryPlan(models.Model):
         null=True,
         blank=True,
         help_text=_(
-            "Short description what is rationale behind plan. Used only for internal purpose."
+            "Short description what is rationale behind plan. Used only for "
+            "internal purpose."
         ),
     )
 
@@ -276,7 +280,7 @@ class UserInquiry(models.Model):
             schema = _EmailSchema(
                 body=email_body,
                 subject=template.subject,
-                recipients=[self.user.email],
+                recipients=[self.user.contact_email],
                 type=_EmailTemplate.EmailType.INQUIRY_LIMIT,
             )
             _EmailTemplate.send_email(schema)
@@ -370,7 +374,7 @@ class InquiryRequestManager(models.Manager):
                 reminder_count=models.Count(
                     models.Case(
                         models.When(
-                            logs__message__log_type=InquiryLogMessage.MessageType.OUTDATED_REMINDER,
+                            logs__message__log_type=InquiryLogMessage.MessageType.OUTDATED_REMINDER,  # noqa: E501
                             then=1,
                         ),
                         output_field=models.IntegerField(),
@@ -403,16 +407,6 @@ class InquiryRequest(models.Model):
         (STATUS_REJECTED, STATUS_REJECTED),
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    updated_at = models.DateTimeField(auto_now=True)
-
-    # content = models.JSONField(null=True, blank=True)
-
-    body = models.TextField(null=True, blank=True)
-
-    body_recipient = models.TextField(null=True, blank=True)
-
     status = FSMField(default=STATUS_NEW, choices=STATUS_CHOICES)
 
     sender = models.ForeignKey(
@@ -426,6 +420,9 @@ class InquiryRequest(models.Model):
         related_name="inquiry_request_recipient",
         on_delete=models.CASCADE,
     )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def create_log_for_sender(self, log_type: InquiryLogMessage.MessageType) -> None:
         """Create log for sender"""
@@ -467,7 +464,8 @@ class InquiryRequest(models.Model):
     def read(self):
         """Should be appeared when message readed/seen by recipient"""
         logger.info(
-            f"{self.recipient} read request from {self.sender}. -- InquiryRequestID: {self.pk}"
+            f"{self.recipient} read request from {self.sender}. -- "
+            f"InquiryRequestID: {self.pk}"
         )
 
     @transition(
@@ -482,9 +480,9 @@ class InquiryRequest(models.Model):
             f"#{self.pk} reuqest accepted creating sender and recipient contanct body"
         )
         self.create_log_for_sender(InquiryLogMessage.MessageType.ACCEPTED)
-        self.set_bodies()
         logger.info(
-            f"{self.recipient} accepted request from {self.sender}. -- InquiryRequestID: {self.pk}"
+            f"{self.recipient} accepted request from {self.sender}. -- "
+            f"InquiryRequestID: {self.pk}"
         )
         inquiry_accepted.send(sender=self.__class__, inquiry_request=self)
 
@@ -498,7 +496,8 @@ class InquiryRequest(models.Model):
 
         self.create_log_for_sender(InquiryLogMessage.MessageType.REJECTED)
         logger.info(
-            f"{self.recipient} rejected request from {self.sender}. -- InquiryRequestID: {self.pk}"
+            f"{self.recipient} rejected request from {self.sender}. -- "
+            f"InquiryRequestID: {self.pk}"
         )
         inquiry_rejected.send(sender=self.__class__, inquiry_request=self)
 
@@ -524,14 +523,9 @@ class InquiryRequest(models.Model):
                 InquiryLogMessage.MessageType.NEW,
             )
             logger.info(
-                f"{self.sender} sent request to {self.recipient}. -- InquiryRequestID: {self.pk}"
+                f"{self.sender} sent request to {self.recipient}. -- "
+                f"InquiryRequestID: {self.pk}"
             )
-
-    def set_bodies(self) -> None:
-        """Set contact bodies for inquire request"""
-        self.body = self.sender.inquiry_contact.contact_body  # type: ignore
-        self.body_recipient = self.recipient.inquiry_contact.contact_body  # type: ignore
-        super().save(update_fields=["body", "body_recipient"])
 
     def reward_sender(self) -> None:
         """Reward sender if request is outdated. Create log for sender."""
@@ -564,58 +558,3 @@ class InquiryRequest(models.Model):
 
     def __str__(self):
         return f"{self.sender} --({self.status})-> {self.recipient}"
-
-
-class InquiryContact(models.Model):
-    phone_number = models.CharField(
-        _("Numer telefonu"), max_length=15, blank=True, null=True
-    )
-    dial_code = models.IntegerField(
-        _("Dial Code"),
-        blank=True,
-        null=True,
-        help_text=_("Country dial code for the phone number."),
-    )
-    email = models.EmailField(_("Email"), max_length=100, blank=True, null=True)
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        primary_key=True,
-        related_name="inquiry_contact",
-    )
-
-    @property
-    def _phone(self) -> str:
-        """Get phone number with dial code"""
-        if self.dial_code and self.phone_number:
-            return f"+{self.dial_code} {self.phone_number}"
-        elif self.phone_number:
-            return self.phone_number
-        return ""
-
-    @property
-    def _email(self) -> str:
-        """Get email"""
-        return self.email or self.user.email  # type: ignore
-
-    @_email.setter
-    def _email(self, value: str) -> None:
-        """Set email"""
-        self.email = value
-
-    @property
-    def contact_body(self) -> str:
-        """Get text-based contact body"""
-        return (
-            f"{_('Numer telefonu')}: {self._phone or '-'} / "
-            f"{_('Email')}: {self._email}"
-        )
-
-    @classmethod
-    def parse_custom_body(cls, phone_number: str, dial_code: int, email: str) -> str:
-        """Parse custom body"""
-        dummy_contact = cls(phone_number=phone_number, dial_code=dial_code, email=email)
-        return dummy_contact.contact_body
-
-    def __str__(self) -> str:
-        return f"{self.user} -- {self.contact_body}"

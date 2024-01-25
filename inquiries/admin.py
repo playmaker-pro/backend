@@ -41,16 +41,6 @@ class InquiryRequestAdmin(admin.ModelAdmin):
         "status",
         "recipient",
         "created_at",
-        "body",
-        "body_recipient",
-    )
-
-
-@admin.register(models.InquiryContact)
-class InquiryContactAdmin(admin.ModelAdmin):
-    search_fields = (
-        "user__email",
-        "user__full_name",
     )
 
 

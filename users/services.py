@@ -4,7 +4,6 @@ from urllib.parse import parse_qs, urlparse
 
 from allauth.socialaccount.models import SocialAccount
 from cities_light.models import City
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.validators import validate_email
@@ -12,7 +11,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from features.models import AccessPermission, Feature, FeatureElement
 from mailing.models import EmailTemplate as _EmailTemplate
-from profiles.models import PROFILE_TYPE
 from users.errors import CityDoesNotExistException
 from users.managers import UserTokenManager
 from users.models import UserPreferences
@@ -83,12 +81,15 @@ class UserService:
 
     @staticmethod
     def access_permission_filtered_by_user_role(**kwargs) -> Set[int]:
-        #  TODO Access permission is a "Mock", because there is no Role model in user application.
-        #   If model will be created, we should get role from request: requests.user.role
-        #   In addition, AccessPermission model has and attribute called role (not a table field),
-        #   that's why we can't filter by this name.
+        #  TODO Access permission is a "Mock", because there is no Role model in
+        #   user application. If model will be created, we should get role from
+        #   request: requests.user.role. In addition, AccessPermission model has and
+        #   attribute called role (not a table field), that's why we can't filter by
+        #   this name.
         #   access_permissions_ids = {
-        #   obj.id for obj in AccessPermission.objects.filter(role__id=kwargs.get('role_id'))
+        #   obj.id for obj in AccessPermission.objects.filter(
+        #   role__id=kwargs.get('role_id')
+        #   )
         #   }
 
         access_permissions_ids: Set[int] = {

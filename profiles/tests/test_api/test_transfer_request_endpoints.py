@@ -475,24 +475,21 @@ class TestTransferRequestCatalogue(APITestCase):
 
         # Test with radius = 2 km
         response = self.client.get(
-            self.url, {"latitude": start_latitude,
-                       "longitude": start_longitude,
-                       "radius": 2}
+            self.url,
+            {"latitude": start_latitude, "longitude": start_longitude, "radius": 2},
         )
         assert len(response.data["results"]) == 1
 
         # Test with radius = 10 km
         response = self.client.get(
-            self.url, {"latitude": start_latitude,
-                       "longitude": start_longitude,
-                       "radius": 10}
+            self.url,
+            {"latitude": start_latitude, "longitude": start_longitude, "radius": 10},
         )
         assert len(response.data["results"]) == 2
 
         # Test with radius = 20 km
         response = self.client.get(
-            self.url, {"latitude": start_latitude,
-                       "longitude": start_longitude,
-                       "radius": 20}
+            self.url,
+            {"latitude": start_latitude, "longitude": start_longitude, "radius": 20},
         )
         assert len(response.data["results"]) == 3

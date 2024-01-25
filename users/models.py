@@ -312,7 +312,10 @@ class User(AbstractUser, UserRoleMixin):
 
     @property
     def should_be_listed(self) -> bool:
-        """If user has no name or name is created from email, then user should not be listed"""
+        """
+        If user has no name or name is created from email, then user should not
+        be listed
+        """
         return self.first_name and self.last_name and self.first_name != self.last_name
 
     def save(self, *args, **kwargs):
@@ -345,6 +348,15 @@ class User(AbstractUser, UserRoleMixin):
     def inquiries_contacts(self) -> models.QuerySet:
         """Get user contacts - accepted InquiryRequests"""
         return InquiryRequest.objects.contacts(self)
+
+    @property
+    def contact_email(self) -> str:
+        """
+        Returns user contact email.
+        This is the main place, from which we take user contact email used for
+        example in sending notifications.
+        """
+        return self.userpreferences.contact_email or self.email
 
     class Meta:
         verbose_name = "User"
@@ -409,7 +421,7 @@ class UserPreferences(models.Model):
     )
 
     @property
-    def inquiries_contact(self):
+    def inquiry_contact(self) -> str:
         return f"+{self.dial_code}{self.phone_number}"
 
     @property
