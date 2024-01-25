@@ -281,3 +281,19 @@ TRANSFER_REQUEST_STATUS_CHOICES = (
     ("2", TransferRequestStatus.LOOKING_FOR_A_PLAYER),
     ("3", TransferRequestStatus.NOT_LOOKING_FOR_A_PLAYER),
 )
+
+
+@dataclass
+class PmScoreState:
+    """Enum for PlayMaker Score state."""
+
+    NOT_CALCULATED: str = 'Not Calculated'
+    IN_PROGRESS: str = 'In Progress'
+    CALCULATED: str = 'Calculated'
+
+
+PM_SCORE_STATE_CHOICES = (
+    ('not_calculated', PmScoreState.NOT_CALCULATED),
+    ('in_progress', PmScoreState.IN_PROGRESS),
+    ('calculated', PmScoreState.CALCULATED),
+)

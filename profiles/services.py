@@ -751,11 +751,21 @@ class ProfileFilterService:
         return queryset.filter(transfer_status_related__benefits__overlap=benefits)
 
     @staticmethod
-    def filter_by_salary(queryset, salary: str) -> QuerySet:
+    def filter_by_salary(queryset: QuerySet, salary: str) -> QuerySet:
         """
         Filter the queryset based on the salary specified in the profile's transfer status.
         """
         return queryset.filter(transfer_status_related__salary=salary)
+
+    @staticmethod
+    def filter_min_pm_score(queryset: QuerySet, min_score: int) -> QuerySet:
+        """Filter profiles with a minimum PlayMaker Score"""
+        return queryset.filter(playermetrics__pm_score__gte=min_score)
+
+    @staticmethod
+    def filter_max_pm_score(queryset: QuerySet, max_score: int) -> QuerySet:
+        """Filter profiles with a maximum PlayMaker Score"""
+        return queryset.filter(playermetrics__pm_score__lte=max_score)
 
 
 class PlayerProfilePositionService:

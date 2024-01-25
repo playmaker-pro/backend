@@ -785,6 +785,48 @@ class TestProfileListAPI(APITestCase):
         assert response.status_code == 200
         assert len(response.data["results"]) == 1
 
+    def test_filter_profiles_by_pm_score_range(self) -> None:
+        """Test filtering profiles by PlayMaker Score range."""
+        # Create player profiles with various pm_scores
+        factories.PlayerProfileFactory.create(playermetrics__pm_score=40)
+        factories.PlayerProfileFactory.create(playermetrics__pm_score=60)
+        factories.PlayerProfileFactory.create(playermetrics__pm_score=80)
+        # Test filtering for profiles with pm_score between 50 and 70
+        response = self.client.get(
+            self.url, {"role": "P", "min_pm_score": 40, "max_pm_score": 50}
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+
+        response = self.client.get(
+            self.url, {"role": "P", "min_pm_score": 40, "max_pm_score": 70}
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 2
+
+        response = self.client.get(
+            self.url, {"role": "P", "min_pm_score": 40, "max_pm_score": 80}
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 3
+
+    def test_filter_profiles_by_pm_score_single_bound(self) -> None:
+        """Test filtering profiles by PlayMaker Score with a single bound."""
+        # Create player profiles with various pm_scores
+        factories.PlayerProfileFactory.create(playermetrics__pm_score=40)
+        factories.PlayerProfileFactory.create(playermetrics__pm_score=60)
+        factories.PlayerProfileFactory.create(playermetrics__pm_score=80)
+
+        # Test filtering for profiles with pm_score at least 60
+        response = self.client.get(self.url, {"role": "P", "min_pm_score": 60})
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 2
+
+        # Test filtering for profiles with pm_score at least 99
+        response = self.client.get(self.url, {"role": "P", "max_pm_score": 50})
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+
 
 @override_settings(SUSPEND_SIGNALS=True)
 class TestPlayerProfileListByGenderAPI(APITestCase):

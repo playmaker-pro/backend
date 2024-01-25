@@ -45,6 +45,8 @@ class ProfileListAPIFilter(APIFilter):
         "benefits": api_utils.convert_str_list,
         "salary": api_utils.convert_str,
         "transfer_status_league": api_utils.convert_int_list,
+        "min_pm_score": api_utils.convert_int,
+        "max_pm_score": api_utils.convert_int,
     }
 
     @cached_property
@@ -98,6 +100,7 @@ class ProfileListAPIFilter(APIFilter):
         self.filter_by_transfer_status_league()
         self.filter_by_additional_info()
         self.filter_by_number_of_trainings()
+        self.filter_by_pm_score()
 
         self.queryset = self.queryset.order_by("-user__date_joined")
 
@@ -283,3 +286,14 @@ class ProfileListAPIFilter(APIFilter):
         """
         if salary := self.query_params.get("salary"):
             self.queryset = self.service.filter_by_salary(self.queryset, salary)
+
+    def filter_by_pm_score(self) -> None:
+        """Filter queryset based on the range of PlayMaker Score"""
+        min_score = self.query_params.get("min_pm_score")
+        max_score = self.query_params.get("max_pm_score")
+
+        if min_score is not None:
+            self.queryset = self.service.filter_min_pm_score(self.queryset, min_score)
+
+        if max_score is not None:
+            self.queryset = self.service.filter_max_pm_score(self.queryset, max_score)
