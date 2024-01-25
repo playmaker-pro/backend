@@ -1254,6 +1254,19 @@ paths:
           schema:
             type: string
           description: "Filter profiles by salary in transfer status, single choice like: ?salary=1"
+        - in: query
+          name: min_pm_score
+          schema:
+            type: integer
+          required: false
+          description: "Minimum PlayMaker Score for filtering player profiles, use in combination with max_pm_score for range filtering. For example: ?min_pm_score=50"
+        - in: query
+          name: max_pm_score
+          schema:
+            type: integer
+          required: false
+          description: "Maximum PlayMaker Score for filtering player profiles, use in combination with min_pm_score for range filtering. For example: ?max_pm_score=70"
+
       tags:
         - profiles
       responses:
@@ -4777,9 +4790,13 @@ components:
         season_score:
           type: number
           readOnly: true
+        pm_score_state:
+          type: string
+          readOnly: true
       required:
        - pm_score
        - season_score
+       - pm_score_state
 
     PlayerMetrics:
       type: object

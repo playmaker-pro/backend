@@ -1149,7 +1149,12 @@ class PlayerMetrics(models.Model):
     pm_score_updated = models.DateTimeField(
         null=True, blank=True, verbose_name="PlayMaker Score date updated"
     )
-
+    pm_score_state = models.CharField(
+        max_length=20,
+        choices=definitions.PM_SCORE_STATE_CHOICES,
+        default="not_calculated",
+        help_text="Defines a status of the player's pm_score.",
+    )
     season_score = models.JSONField(null=True, blank=True, verbose_name="Season Score")
     season_score_updated = models.DateTimeField(
         null=True, blank=True, verbose_name="Season Score date updated"
