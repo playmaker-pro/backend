@@ -68,42 +68,46 @@ class TransferRequestCatalogueFilter(filters.FilterSet):
             default_radius = 1  # Default radius in kilometers
             radius = Decimal(radius) if radius else default_radius
 
-            return queryset.annotate(
-                distance=ExpressionWrapper(
-                    earth_radius
-                    * django_base_functions.ACos(
-                        django_base_functions.Cos(
-                            django_base_functions.Radians(latitude)
-                        )
-                        * django_base_functions.Cos(
-                            django_base_functions.Radians(
-                                F(
-                                    "requesting_team__team_history__club__stadion_address__latitude"  # noqa 501
+            return (
+                queryset.annotate(
+                    distance=ExpressionWrapper(
+                        earth_radius
+                        * django_base_functions.ACos(
+                            django_base_functions.Cos(
+                                django_base_functions.Radians(latitude)
+                            )
+                            * django_base_functions.Cos(
+                                django_base_functions.Radians(
+                                    F(
+                                        "requesting_team__team_history__club__stadion_address__latitude"  # noqa 501
+                                    )
                                 )
                             )
-                        )
-                        * django_base_functions.Cos(
-                            django_base_functions.Radians(
-                                F(
-                                    "requesting_team__team_history__club__stadion_address__longitude"  # noqa 501
+                            * django_base_functions.Cos(
+                                django_base_functions.Radians(
+                                    F(
+                                        "requesting_team__team_history__club__stadion_address__longitude"  # noqa 501
+                                    )
+                                )
+                                - django_base_functions.Radians(longitude)
+                            )
+                            + django_base_functions.Sin(
+                                django_base_functions.Radians(latitude)
+                            )
+                            * django_base_functions.Sin(
+                                django_base_functions.Radians(
+                                    F(
+                                        "requesting_team__team_history__club__stadion_address__latitude"  # noqa 501
+                                    )
                                 )
                             )
-                            - django_base_functions.Radians(longitude)
-                        )
-                        + django_base_functions.Sin(
-                            django_base_functions.Radians(latitude)
-                        )
-                        * django_base_functions.Sin(
-                            django_base_functions.Radians(
-                                F(
-                                    "requesting_team__team_history__club__stadion_address__latitude"  # noqa 501
-                                )
-                            )
-                        )
-                    ),
-                    output_field=FloatField(),
+                        ),
+                        output_field=FloatField(),
+                    )
                 )
-            ).filter(distance__lt=radius)
+                .filter(distance__lt=radius)
+                .distinct()
+            )
         return queryset
 
 
