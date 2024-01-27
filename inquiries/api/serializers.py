@@ -10,6 +10,9 @@ from profiles.api.serializers import (
     PlayerProfilePositionSerializer as _PlayerProfilePositionSerializer,
 )
 from profiles.serializers_detailed.base_serializers import PhoneNumberField
+from profiles.serializers_detailed.player_profile_serializers import (
+    PlayerMetricsSerializer,
+)
 from users.api.serializers import BaseUserDataSerializer as _BaseUserDataSerializer
 from users.models import UserPreferences
 
@@ -35,12 +38,14 @@ class InquiryUserDataSerializer(_BaseUserDataSerializer):
         source="profile.profile_based_custom_role", read_only=True
     )
     uuid = serializers.UUIDField(source="profile.uuid", read_only=True)
+    slug = serializers.CharField(source="profile.slug", read_only=True)
     player_position = _PlayerProfilePositionSerializer(
         source="profile.get_main_position", read_only=True
     )
     team_history_object = serializers.SerializerMethodField()
     gender = serializers.SerializerMethodField("get_gender")
     contact = InquiryContactSerializer(source="userpreferences", read_only=True)
+    playermetrics = PlayerMetricsSerializer(read_only=True, source="profile.playermetrics")
 
     def get_specific_role(self, obj: User) -> dict:
         """Get specific role for profile (Coach, Club)"""
@@ -89,11 +94,13 @@ class InquiryUserDataSerializer(_BaseUserDataSerializer):
             "age",
             "custom_role",
             "uuid",
+            "slug",
             "player_position",
             "specific_role",
             "team_history_object",
             "gender",
             "contact",
+            "playermetrics",
         )
 
 

@@ -1236,6 +1236,7 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
     )
     picture = serializers.CharField(source="picture_url", read_only=True)
     uuid = serializers.UUIDField(source="profile.uuid", read_only=True)
+    slug = serializers.CharField(source="profile.slug", read_only=True)
 
     class Meta:
         model = models.User
@@ -1251,6 +1252,7 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
             "custom_role",
             "picture",
             "uuid",
+            "slug",
         )
 
     def get_team(self, obj: User) -> Optional[str]:

@@ -3367,6 +3367,8 @@ paths:
                     type: string
                   uuid:
                     type: string
+                  slug:
+                    type: string
                   gender:
                     $ref: '#/components/schemas/Gender'
           description: Get user main profile uuid with role.
@@ -4946,7 +4948,7 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ProfileLabel'
-            player_metrics:
+            playermetrics:
               $ref: '#/components/schemas/PlayerProfileMetrics'
             height:
               type: integer
@@ -5056,7 +5058,7 @@ components:
             player_positions,
             profile_video,
             labels,
-            player_metrics,
+            playermetrics,
             height,
             weight,
             prefered_leg,
@@ -5697,6 +5699,8 @@ components:
         uuid:
           type: string
           format: uuid
+        slug:
+          type: string
         custom_role:
           type: string
           nullable: true
@@ -6802,6 +6806,9 @@ components:
             uuid:
               type: string
               format: uuid
+            slug:
+              type: string
+              readOnly: true
             custom_role:
               type: string
             specific_role:
@@ -6816,6 +6823,8 @@ components:
               $ref: '#/components/schemas/Gender'
             contact:
               $ref: '#/components/schemas/ContactSchema'
+            playermetrics:
+                $ref: '#/components/schemas/PlayerProfileMetrics'
     InquiryRequest:
       type: object
       properties:

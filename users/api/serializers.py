@@ -38,6 +38,7 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
     uuid = serializers.SerializerMethodField(
         read_only=True, method_name="my_profile_uuid"
     )
+    slug = serializers.CharField(source="profile.slug", read_only=True)
     picture = serializers.CharField(source="picture_url", read_only=True)
     gender = serializers.SerializerMethodField("get_gender")
 
@@ -50,6 +51,7 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
             "last_name",
             "role",
             "uuid",
+            "slug",
             "gender",
         )
 
