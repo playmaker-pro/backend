@@ -1510,6 +1510,36 @@ paths:
           description: 'Profile with given uuid does not exist'
         '401':
           description: 'Unauthorized'
+
+  /profiles/{profile_uuid}/contact/:
+    patch:
+      operationId: update_profile_contact_data
+      description: "Update profile contact data"
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+          required: true
+      tags:
+        - profiles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileOwnerUserPreferencesUpdate'
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: 'Profile updated successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileOwnerUserPreferencesUpdate'
+
   /profiles/slug/{profile_slug}/:
     get:
       operationId: profiles_retrieve_by_slug
@@ -5846,12 +5876,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Course'
-        dial_code:
-          type: integer
-        phone_number:
-          type: string
-        contact_email:
-          type: string
       required:
        - age
        - localization
@@ -5861,9 +5885,6 @@ components:
        - birth_date
        - licences
        - courses
-       - dial_code
-       - phone_number
-       - contact_email
 
     BaseUserProfilePreferencesUpdate:
       type: object
@@ -5887,6 +5908,18 @@ components:
         birth_date:
           type: string
           description: "Format: YYYY-MM-DD"
+
+    ProfileOwnerUserPreferencesUpdate:
+      allOf:
+        - $ref:  '#/components/schemas/BaseUserProfilePreferencesUpdate'
+        - type: object
+          properties:
+            contact_email:
+              type: string
+            phone_number:
+              type: string
+            dial_code:
+              type: integer
 
     BaseUserProfileUpdate:
       type: object
@@ -6220,7 +6253,7 @@ components:
         status:
           type: integer
           description: "Status object id."
-        player_position:
+        position:
           type: array
           items:
             type: integer
@@ -6257,7 +6290,7 @@ components:
         status:
           type: integer
           description: "Status object id."
-        player_position:
+        position:
           type: array
           items:
             type: integer

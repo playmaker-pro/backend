@@ -47,6 +47,7 @@ from profiles.serializers_detailed.base_serializers import (
     ProfileTransferStatusSerializer,
     TeamContributorSerializer,
     UpdateOrCreateProfileTransferSerializer,
+    UserPreferencesUpdateSerializer,
 )
 from profiles.serializers_detailed.catalogue_serializers import (
     TransferRequestCatalogueSerializer,
@@ -68,6 +69,7 @@ from roles.definitions import (
     TRANSFER_TRAININGS_CHOICES,
 )
 from users.api.serializers import UserMainRoleSerializer
+from users.errors import UserPreferencesDoesNotExistHTTPException
 
 profile_service = ProfileService()
 team_contributor_service = TeamContributorService()
@@ -97,7 +99,9 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
     def get_serializer_class(self, **kwargs):
         return SerializersManager().get_serializer(kwargs.get("model_name"))
 
-    def get_profile_by_uuid(self, request: Request, profile_uuid: uuid.UUID) -> Response:
+    def get_profile_by_uuid(
+        self, request: Request, profile_uuid: uuid.UUID
+    ) -> Response:
         """GET single profile by uuid."""
         try:
             profile_object = profile_service.get_profile_by_uuid(profile_uuid)
@@ -236,6 +240,33 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         count = filtered_queryset.count()
 
         return Response({"count": count})
+
+    def update_profile_contact(
+        self, request: Request, profile_uuid: uuid.UUID
+    ) -> Response:
+        """User preferences contact update endpoint"""
+        try:
+            profile = profile_service.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist:
+            raise api_errors.ProfileDoesNotExist
+        except ValidationError:
+            raise api_errors.InvalidUUID
+
+        if profile.user != request.user:
+            raise NotOwnerOfAnObject
+        if not (user_preferences := request.user.userpreferenses):
+            raise UserPreferencesDoesNotExistHTTPException
+
+        serializer = UserPreferencesUpdateSerializer(
+            user_preferences,
+            data=request.data,
+            partial=True,
+            context={"profile_uuid": profile_uuid},
+        )
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+
+        return Response(serializer.data)
 
 
 class ProfileSearchView(EndpointView):
