@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 class PhoneNumberMixin:
     """Mixin for updating phone number for profile transfer request."""
+
     def update_phone_number(
         self,
         new_data: dict,
@@ -75,6 +76,7 @@ class PhoneNumberMixin:
 
 class EmailUpdateMixin:
     """Mixin for updating email for profile transfer request."""
+
     def partial_serializer(
         self,
         profile: BaseProfile,

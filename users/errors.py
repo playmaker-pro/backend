@@ -30,21 +30,24 @@ class NoUserCredentialFetchedException(CoreAPIException):
 class GoogleInvalidGrantError(CoreAPIException):
     """
     Invalid grant error from Google.
-    This can happen if the user try access to log in via Google, but params in url are wrong (out-dated).
+    This can happen if the user try access to log in via Google, but params in url
+    are wrong (out-dated).
     """
 
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = (
-        "The provided authorization grant (e.g., authorization code, resource owner credentials) "
-        "or refresh token is invalid, expired, revoked, does not match the redirection "
-        "URI used in the authorization request, or was issued to another client"
+        "The provided authorization grant (e.g., authorization code, resource "
+        "owner credentials) or refresh token is invalid, expired, revoked, does not "
+        "match the redirection URI used in the authorization request, or was "
+        "issued to another client"
     )
 
 
 class ApplicationError(CoreAPIException):
     """
     Application error.
-    This can happen if the user try access to log in via Google, but api didn't return requested data
+    This can happen if the user try access to log in via Google, but api didn't return
+    requested data
     """
 
     status_code = status.HTTP_400_BAD_REQUEST
@@ -112,3 +115,10 @@ class InvalidTokenException(CoreAPIException):
 
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "The provided token is invalid or has expired."
+
+
+class UserPreferencesDoesNotExistHTTPException(CoreAPIException):
+    """API HTTP exception raised when user preferences do not exist in DB"""
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "User preferences for profile do not exist"

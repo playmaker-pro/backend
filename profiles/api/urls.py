@@ -51,6 +51,14 @@ urlpatterns = [
         name="get_or_update_profile",
     ),
     path(
+        r"<uuid:profile_uuid>/contact/",
+        views.ProfileAPI.as_view(
+            {
+                "patch": "update_profile_contact",
+            }
+        ),
+    ),
+    path(
         r"slug/<slug:profile_slug>/",
         views.ProfileAPI.as_view(
             {
