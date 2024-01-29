@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 import factory
 import pytest
+from django.contrib.auth import get_user_model
 from django.db.models import signals
 from django.test import override_settings
 from django.urls import reverse
@@ -26,6 +27,8 @@ from utils.factories import (
     UserFactory,
 )
 from utils.test.test_utils import UserManager
+
+User = get_user_model()
 
 profile_service = ProfileService()
 url: str = "api:profiles:create_or_list_profiles"
@@ -826,6 +829,22 @@ class TestProfileListAPI(APITestCase):
         response = self.client.get(self.url, {"role": "P", "max_pm_score": 50})
         assert response.status_code == 200
         assert len(response.data["results"]) == 1
+
+    def test_filter_profiles_by_display_status(self) -> None:
+        """Test profiles are filtered based on display_status."""
+        # Create users with different display statuses
+        user_1 = factories.UserFactory(display_status=User.DisplayStatus.VERIFIED)
+        user_2 = factories.UserFactory(display_status=User.DisplayStatus.UNDER_REVIEW)
+        user_3 = factories.UserFactory(display_status=User.DisplayStatus.NOT_SHOWN)
+        factories.PlayerProfileFactory(user=user_1)  # Should be listed
+        factories.PlayerProfileFactory(user=user_2)  # Should be listed
+        factories.PlayerProfileFactory(user=user_3)  # Should not be listed
+
+        response = self.client.get(self.url, {"role": "P"}, **self.headers)
+        assert response.status_code == 200
+        assert (
+            len(response.data["results"]) == 2
+        )  # Only verified and under review should be listed
 
 
 @override_settings(SUSPEND_SIGNALS=True)
