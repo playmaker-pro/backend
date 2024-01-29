@@ -681,7 +681,13 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
         Retrieves the name of the team associated with the first team_history instance.
         """
         team_history = obj.team_history.first()
-        return team_history.name if team_history else None
+        if team_history:
+            return (
+                team_history.short_name
+                if hasattr(team_history, "short_name")
+                else team_history.name
+            )
+        return None
 
     def get_league_name(self, obj):
         """
@@ -741,7 +747,14 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
 
     def get_team_name(self, obj: models.TeamContributor) -> str:
         team_histories = obj.team_history.all()
-        return ", ".join(set(th.name for th in team_histories))
+        return ", ".join(
+            set(
+                th.short_name
+                if hasattr(th, "short_name") and th.short_name
+                else th.name
+                for th in team_histories
+            )
+        )
 
     def get_picture_url(self, obj: models.TeamContributor) -> typing.Optional[str]:
         """
