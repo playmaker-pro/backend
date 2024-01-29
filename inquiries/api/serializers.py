@@ -20,7 +20,7 @@ User = get_user_model()
 
 
 class InquiryContactSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(source="contact_email", allow_null=True)
+    email = serializers.EmailField(source="user.contact_email", allow_null=True)
     phone_number = PhoneNumberField(source="*", required=False)
 
     class Meta:
