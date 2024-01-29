@@ -606,6 +606,7 @@ class BaseProfile(models.Model, EventLogMixin):
                 self.filter(**kwargs)
                 .exclude(user__first_name__isnull=True, user__last_name__isnull=True)
                 .exclude(user__first_name=models.F("user__last_name"))
+                .exclude(user__display_status=User.DisplayStatus.NOT_SHOWN)
             )
 
     objects = ProfileManager()
@@ -1105,6 +1106,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         self.external_links = ExternalLinks.objects.create()
 
     def save(self, *args, **kwargs):
+        # Check if this is a new PlayerProfile instance being created
+        creating = self._state.adding
+
         if not self.mapper:
             self.create_mapper_obj()
 
@@ -1112,6 +1116,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             self.create_external_links_obj()
 
         super().save(*args, **kwargs)
+
+        if creating:
+            PlayerMetrics.objects.create(player=self)
 
     class Meta:
         verbose_name = "Player Profile"

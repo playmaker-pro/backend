@@ -1,22 +1,15 @@
 from dataclasses import dataclass, field
-from typing import Optional, TYPE_CHECKING, Type, Dict
+from typing import TYPE_CHECKING, Dict, Optional, Type
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
 from profiles.interfaces import FulfillScoreProtocol
-
 from roles.definitions import ProfileDataScore
 
-
 if TYPE_CHECKING:
-    from profiles.models import (
-        BaseProfile,
-        ClubProfile,
-        CoachProfile,
-        PlayerProfile,
-    )
+    from profiles.models import BaseProfile, ClubProfile, CoachProfile, PlayerProfile
 
 User = get_user_model()
 
@@ -45,7 +38,7 @@ class PlayerProfileFulFillScore:
             - first_name
             - birth_date
             - player_positions
-            - team_history_object
+            - team_object
 
         Returns:
             ProfileDataScore: The level of profile data fulfillment or None.
@@ -65,7 +58,7 @@ class PlayerProfileFulFillScore:
             and instance.user.first_name
             and instance.user.userpreferences.birth_date
             and instance.player_positions.exists()
-            and instance.team_history_object
+            and instance.team_object
         ):
             return ProfileDataScore.TWO.value
         return ProfileDataScore.THREE.value
@@ -85,7 +78,7 @@ class CoachProfileFulFillScore:
             - first_name
             - birth_date
             - licences
-            - team_history_object
+            - team_object
 
         Returns:
             OProfileDataScore: The level of profile data fulfillment or None.
@@ -104,7 +97,7 @@ class CoachProfileFulFillScore:
             and instance.user.first_name
             and instance.user.userpreferences.birth_date
             and instance.user.licences.exists()
-            and instance.team_history_object
+            and instance.team_object
         ):
             return ProfileDataScore.TWO.value
         return ProfileDataScore.THREE.value
@@ -124,7 +117,7 @@ class ClubProfileFulFillScore:
             - first_name
             - birth_date
             - licences
-            - team_history_object
+            - team_object
 
         Returns:
             ProfileDataScore: The level of profile data fulfillment or None.
@@ -137,7 +130,7 @@ class ClubProfileFulFillScore:
             instance.user.last_name
             and instance.user.first_name
             and instance.club_role
-            and instance.team_history_object
+            and instance.team_object
         ):
             return ProfileDataScore.TWO.value
 

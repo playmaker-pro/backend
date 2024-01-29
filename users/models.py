@@ -62,6 +62,11 @@ class UserRoleMixin:
 
 
 class User(AbstractUser, UserRoleMixin):
+    class DisplayStatus(models.TextChoices):
+        NOT_SHOWN = "Niewyświetlany"
+        UNDER_REVIEW = "W trakcie analizy"
+        VERIFIED = "Zweryfikowany"
+
     ROLE_CHOICES = definitions.ACCOUNT_ROLES
 
     STATE_NEW = "New"
@@ -93,6 +98,13 @@ class User(AbstractUser, UserRoleMixin):
         _("first name"), max_length=150, blank=True, null=True
     )
     last_name = models.CharField(_("last name"), max_length=150, blank=True, null=True)
+
+    display_status = models.CharField(
+        max_length=20,
+        choices=DisplayStatus.choices,
+        default=DisplayStatus.VERIFIED,
+        help_text="Status for managing visibility in databases",
+    )
 
     @transition(
         field=state,
@@ -319,10 +331,18 @@ class User(AbstractUser, UserRoleMixin):
     @property
     def should_be_listed(self) -> bool:
         """
-        If user has no name or name is created from email, then user should not
-        be listed
+        Determines if a user should be listed based on their name and display status.
+        Users are listed if they have a proper name (not created from email) and their
+        display status is either Verified or Under Review.
         """
-        return self.first_name and self.last_name and self.first_name != self.last_name
+        name_condition = (
+            self.first_name and self.last_name and self.first_name != self.last_name
+        )
+        display_status_condition = self.display_status in [
+            User.DisplayStatus.VERIFIED,
+            User.DisplayStatus.UNDER_REVIEW,
+        ]
+        return name_condition and display_status_condition
 
     def save(self, *args, **kwargs):
         if self.role in [

@@ -533,59 +533,38 @@ class TeamHistoryCreationService:
         if end_date < start_date:
             raise ValueError("End date cannot be before start date.")
 
-        cursor_date = start_date
-        team_histories = []
-        i = 0  # FIXME: temporary solution to avoid infinite loop
-        while cursor_date <= end_date:
-            i += 1
+        season = models.Season.define_current_season(end_date)
 
-            # Retrieve Season for the cursor_date
-            current_season_name = models.Season.define_current_season(cursor_date)
-            season_obj, created = models.Season.objects.get_or_create(
-                name=current_season_name, defaults={"is_in_verify_form": False}
+        season_obj, created = models.Season.objects.get_or_create(
+            name=season, defaults={"is_in_verify_form": False}
+        )
+
+        existing_team = self.search_for_existing_team(
+            team_parameter, season_obj, league_identifier
+        )
+        if existing_team:
+            # If existing team is found, use it directly
+            team_history = existing_team
+        else:
+            # If no existing team, create a new team and its history
+            league, league_history = self.create_or_get_league_and_history(
+                league_identifier,
+                country_code,
+                season_obj.id,
+                user,
+                {"team_parameter": team_parameter},
             )
-
-            existing_team = self.search_for_existing_team(
-                team_parameter, season_obj, league_identifier
+            team = self.get_or_create(
+                {
+                    "team_parameter": team_parameter,
+                    "league_identifier": league_identifier,
+                },
+                user,
+                country_code,
             )
-            if existing_team:
-                # If existing team is found, use it directly
-                team_history = existing_team
-            else:
-                # If no existing team, create a new team and its history
-                league, league_history = self.create_or_get_league_and_history(
-                    league_identifier,
-                    country_code,
-                    season_obj.id,
-                    user,
-                    {"team_parameter": team_parameter},
-                )
-                team = self.get_or_create(
-                    {
-                        "team_parameter": team_parameter,
-                        "league_identifier": league_identifier,
-                    },
-                    user,
-                    country_code,
-                )
-                team_history = self.create_or_get_team_history(
-                    team, league_history, user
-                )
+            team_history = self.create_or_get_team_history(team, league_history, user)
 
-            team_histories.append(team_history)
-
-            # Move cursor_date to the next season start. E.g., if current season is
-            # 2020/2021, move to 01-07-2021
-            next_season_start_year = int(current_season_name.split("/")[1])
-
-            # FIXME: this didn't work,
-            #  described here: https://playmaker-org.slack.com/archives/C04BH9G199T/p1705929880067299
-            # cursor_date = datetime.date(next_season_start_year, 7, 1)
-            cursor_date = datetime.date(cursor_date.year + 1, 7, 1)
-
-            if i >= 10:
-                raise ValueError
-        return team_histories
+        return [team_history]
 
     @staticmethod
     def search_for_existing_team(
