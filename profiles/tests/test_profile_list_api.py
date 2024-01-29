@@ -788,9 +788,9 @@ class TestProfileListAPI(APITestCase):
     def test_filter_profiles_by_pm_score_range(self) -> None:
         """Test filtering profiles by PlayMaker Score range."""
         # Create player profiles with various pm_scores
-        factories.PlayerProfileFactory.create(playermetrics__pm_score=40)
-        factories.PlayerProfileFactory.create(playermetrics__pm_score=60)
-        factories.PlayerProfileFactory.create(playermetrics__pm_score=80)
+        PlayerProfileFactory.create_player_profile_with_metrics(pm_score=40)
+        PlayerProfileFactory.create_player_profile_with_metrics(pm_score=60)
+        PlayerProfileFactory.create_player_profile_with_metrics(pm_score=80)
         # Test filtering for profiles with pm_score between 50 and 70
         response = self.client.get(
             self.url, {"role": "P", "min_pm_score": 40, "max_pm_score": 50}
@@ -813,9 +813,9 @@ class TestProfileListAPI(APITestCase):
     def test_filter_profiles_by_pm_score_single_bound(self) -> None:
         """Test filtering profiles by PlayMaker Score with a single bound."""
         # Create player profiles with various pm_scores
-        factories.PlayerProfileFactory.create(playermetrics__pm_score=40)
-        factories.PlayerProfileFactory.create(playermetrics__pm_score=60)
-        factories.PlayerProfileFactory.create(playermetrics__pm_score=80)
+        PlayerProfileFactory.create_player_profile_with_metrics(pm_score=40)
+        PlayerProfileFactory.create_player_profile_with_metrics(pm_score=60)
+        PlayerProfileFactory.create_player_profile_with_metrics(pm_score=80)
 
         # Test filtering for profiles with pm_score at least 60
         response = self.client.get(self.url, {"role": "P", "min_pm_score": 60})
