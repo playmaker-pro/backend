@@ -254,7 +254,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
 
         if profile.user != request.user:
             raise NotOwnerOfAnObject
-        if not (user_preferences := request.user.userpreferenses):
+        if not (user_preferences := request.user.userpreferences):
             raise UserPreferencesDoesNotExistHTTPException
 
         serializer = UserPreferencesUpdateSerializer(
