@@ -606,6 +606,7 @@ class BaseProfile(models.Model, EventLogMixin):
                 self.filter(**kwargs)
                 .exclude(user__first_name__isnull=True, user__last_name__isnull=True)
                 .exclude(user__first_name=models.F("user__last_name"))
+                .exclude(user__display_status=User.DisplayStatus.NOT_SHOWN)
             )
 
     objects = ProfileManager()

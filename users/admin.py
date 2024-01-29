@@ -189,7 +189,15 @@ class UserAdminPanel(UserAdmin):
         ),
         (
             _("Piłkarskie fakty"),
-            {"fields": ("declared_role", "state", "picture", "declared_club")},
+            {
+                "fields": (
+                    "declared_role",
+                    "state",
+                    "display_status",
+                    "picture",
+                    "declared_club",
+                )
+            },
         ),
         (_("Important dates"), {"fields": ("last_login", "date_joined")}),
         (
@@ -224,6 +232,7 @@ class UserAdminPanel(UserAdmin):
         "first_name",
         "last_name",
         "state",
+        "display_status",
         "is_active",
         "last_login",
         "date_joined",
