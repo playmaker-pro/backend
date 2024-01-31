@@ -14,6 +14,7 @@ class ExternalLinksAdmin(admin.ModelAdmin):
         ExternalLinksEntityAdmin,
     ]
     readonly_fields = ("created_at", "updated_at")
+    search_fields = ("name", "url")
 
     def has_add_permission(self, request, obj=None):
         return False

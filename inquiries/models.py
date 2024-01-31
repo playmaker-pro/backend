@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from django_fsm import FSMField, transition
 
 from inquiries.errors import ForbiddenLogAction
-from inquiries.plans import basic_plan, premium_plan
+from inquiries.schemas import InquiryPlanTypeRef as _InquiryPlanTypeRef
 from inquiries.signals import (
     inquiry_accepted,
     inquiry_pool_exhausted,
@@ -163,12 +163,17 @@ class UserInquiryLog(models.Model):
 class InquiryPlan(models.Model):
     """Holds information about user's inquiry plans."""
 
-    name = models.CharField(_("Plan Name"), max_length=255, help_text=_("Plan name"))
+    class InquiryTypeRef(models.TextChoices):
+        BASIC = _InquiryPlanTypeRef.BASIC.text_choice
+        TEST = _InquiryPlanTypeRef.ADMIN.text_choice
+        PREMIUM5 = _InquiryPlanTypeRef.PREMIUM5.text_choice
+        PREMIUM10 = _InquiryPlanTypeRef.PREMIUM10.text_choice
+        PREMIUM25 = _InquiryPlanTypeRef.PREMIUM25.text_choice
 
+    name = models.CharField(_("Plan Name"), max_length=255, help_text=_("Plan name"))
     limit = models.PositiveIntegerField(
         _("Plan limit"), help_text=_("Limit how many actions are allowed")
     )
-
     sort = models.PositiveIntegerField(
         ("Soring"),
         default=0,
@@ -176,7 +181,6 @@ class InquiryPlan(models.Model):
             "Used to sort plans low numbers threaded as lowest plans. Default=0 which means this is not set."
         ),
     )
-
     description = models.TextField(
         _("Description"),
         null=True,
@@ -185,12 +189,21 @@ class InquiryPlan(models.Model):
             "Short description what is rationale behind plan. Used only for internal purpose."
         ),
     )
-
     default = models.BooleanField(
         _("Default Plan"),
         default=False,
         help_text=_(
             "Defines if this is default plan selected during account creation."
+        ),
+    )
+    type_ref = models.CharField(
+        max_length=50,
+        choices=InquiryTypeRef.choices,
+        null=True,
+        blank=True,
+        unique=True,
+        help_text=_(
+            "Defines if this is premium plan and what type of premium plan it is."
         ),
     )
 
@@ -202,13 +215,8 @@ class InquiryPlan(models.Model):
 
     @classmethod
     def basic(cls) -> "InquiryPlan":
-        """Get basic plan"""
-        return cls.objects.get_or_create(**basic_plan.dict())[0]
-
-    @classmethod
-    def premium(cls) -> "InquiryPlan":
-        """Get premium plan"""
-        return cls.objects.get_or_create(**premium_plan.dict())[0]
+        """Get a basic plan"""
+        return cls.objects.get(default=True)
 
 
 class UserInquiry(models.Model):
@@ -318,6 +326,11 @@ class UserInquiry(models.Model):
         # Calculate the difference in days until the next reference date
         days_until_next_reference = (next_reference_date - today).days
         return max(days_until_next_reference, 0)
+
+    def set_new_plan(self, plan: InquiryPlan) -> None:
+        """Set a new plan for user"""
+        self.plan = plan
+        self.save(update_fields=["plan"])
 
     def __str__(self):
         return f"{self.user}: {self.counter}/{self.plan.limit}"

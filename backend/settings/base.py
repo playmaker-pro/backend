@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from sentry_sdk import set_level
 from sentry_sdk.integrations.django import DjangoIntegration
 
+from backend.settings.config import config as _env_config
 from backend.settings.environment import Environment
 
 # This loads additional settings for our environemnt
@@ -461,6 +462,12 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "filename": join(LOGFILE_ROOT, "commands.log"),
                 "formatter": "verbose",
             },
+            "payments_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "payments.log"),
+                "formatter": "verbose",
+            },
         },
         "loggers": {
             "profiles": {
@@ -498,6 +505,10 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
             },
             "commands": {
                 "handlers": ["console", "data_log_file"],
+                "level": "DEBUG",
+            },
+            "payments": {
+                "handlers": ["console", "payments_file"],
                 "level": "DEBUG",
             },
         },
@@ -670,7 +681,7 @@ if ENABLE_SENTRY:
     )
     set_level("warning")
 
-
+ENV_CONFIG: _env_config.Config = _env_config
 # Loading of locally stored settings.
 
 try:

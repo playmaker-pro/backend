@@ -64,7 +64,6 @@ python manage.py populate_club_address_details
 
 ## Standalone scripts:
 Scripts from *tools/scripts*. Respectively as .sh (linux) and .bat (windows).
-- **create_dotenv_template** - create empty .env template file inside project root directory.
 - **initialize_db** - run initial scripts on unmodified database created from dump.
 
 

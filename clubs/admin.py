@@ -277,7 +277,7 @@ class ClubAdmin(admin.ModelAdmin):
     )
     readonly_fields = ("mapper",)
     actions = [set_visibility, set_invisibility]
-    autocomplete_fields: Sequence[str] = ("manager",)
+    autocomplete_fields: Sequence[str] = ("manager", "external_links",)
     search_fields: Sequence[str] = ("name",)
     list_filter: Sequence[str] = (
         "voivodeship_obj__name",

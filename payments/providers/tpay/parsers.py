@@ -1,0 +1,41 @@
+import json as _json
+
+from django.conf import settings as _settings
+
+from payments.models import Transaction as _Transaction
+from payments.providers.tpay import schemas as _schemas
+
+_TpayConfig = _settings.ENV_CONFIG.tpay
+
+
+class TpayTransactionParser:
+    def __init__(self, transaction: _Transaction, config: _TpayConfig) -> None:
+        self._transaction = transaction
+        self._config = config
+
+    @property
+    def _payer(self) -> _schemas.TpayPayerData:
+        """Get payer data from transaction"""
+        return _schemas.TpayPayerData(
+            email=self._transaction.user.email,
+            name=self._transaction.user.display_full_name,
+        )
+
+    @property
+    def transaction_body(self) -> _json:
+        """Create new transaction body schema to send to tpay"""
+        schema = _schemas.TpayTransactionBody(
+            amount=self._transaction.amount,
+            description=self._transaction.description,
+            hiddenDescription=str(self._transaction.uuid),
+            payer=self._payer,
+            callbacks=self._config.callbacks,
+        )
+        return schema.json(by_alias=True, exclude_none=True)
+
+    @property
+    def auth_body(self) -> _json:
+        """Create new auth body schema to send to tpay"""
+        return _schemas.TpayAuthBody.from_config(self._config.credentials).json(
+            by_alias=True
+        )

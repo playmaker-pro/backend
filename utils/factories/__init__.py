@@ -5,6 +5,7 @@ from .clubs_factories import *
 from .inquiry_factories import *
 from .labels_factories import *
 from .mapper_factories import *
+from .payment_factories import *
 from .profiles_factories import *
 from .user_factories import *
 
