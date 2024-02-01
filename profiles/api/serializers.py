@@ -278,7 +278,7 @@ class LanguageSerializer(serializers.ModelSerializer):
 
     def define_priority(self, obj: models.Language) -> bool:
         """Define language priority"""
-        return locale_service.is_prior_language(obj.code)
+        return locale_service.is_prior_language(obj.priority)
 
     def translate_name(self, obj) -> str:
         """Translate language name"""

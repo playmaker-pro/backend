@@ -30,14 +30,6 @@ class LocaleDataService:
         return ["PL", "UA", "SK", "CZ", "BY", "LT"]
 
     @property
-    def prior_languages(self) -> list:
-        """
-        Get list of prior languages
-        [Polish, German, Ukrainian, English]
-        """
-        return ["pl", "de", "uk", "en"]
-
-    @property
     def prior_cities(self) -> list:
         """
         Get list of prior cities
@@ -52,9 +44,9 @@ class LocaleDataService:
         """Check if given city is priority"""
         return city_name in self.prior_cities
 
-    def is_prior_language(self, language_code: str) -> bool:
+    def is_prior_language(self, priority: int) -> bool:
         """Check if language is priority"""
-        return language_code in self.prior_languages
+        return priority == 1
 
     def get_dial_code(self, country_code: str) -> str:
         """Get country dial code with country code"""
