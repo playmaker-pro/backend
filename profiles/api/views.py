@@ -1,17 +1,18 @@
 import logging
 import uuid
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
+from django.core.paginator import EmptyPage, InvalidPage, Page, Paginator
 from django.db.models import ObjectDoesNotExist, QuerySet
-from django.db.models.functions import Random
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, status
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.utils.urls import replace_query_param
 from rest_framework.views import PermissionDenied
 
 from api.base_view import EndpointViewWithFilter
@@ -147,10 +148,26 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
 
         return Response(serializer.data)
 
-    def get_paginated_queryset(self, qs: QuerySet = None) -> Optional[list]:
-        """Paginate queryset to optimize serialization"""
-        qs: QuerySet = qs or self.get_queryset()
-        return self.paginate_queryset(qs.order_by("data_fulfill_status"))
+    def get_paginated_queryset(
+        self, qs=None
+    ) -> Union[Tuple[list, Page], Tuple[QuerySet, None]]:
+        """
+        Paginate the queryset or list and return paginated data and the page object.
+        """
+        queryset_or_list = qs or self.get_queryset()
+
+        if isinstance(queryset_or_list, list):
+            # If it's a list, use standard Django Paginator
+            paginator = Paginator(queryset_or_list, self.pagination_class.page_size)
+            page_number = self.request.query_params.get("page", 1)
+            try:
+                page = paginator.page(page_number)
+            except (EmptyPage, InvalidPage):
+                page = paginator.page(paginator.num_pages)
+            return page.object_list, page
+        else:
+            # If it's a QuerySet, use DRF's pagination class
+            return super().paginate_queryset(queryset_or_list), None
 
     def get_bulk_profiles(self, request: Request) -> Response:
         """
@@ -159,21 +176,50 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         Full list of choices can be found in roles/definitions.py
         """
 
-        qs: QuerySet = self.get_queryset().order_by("data_fulfill_status", Random())
-
-        serializer_class = self.get_serializer_class(
-            model_name=request.query_params.get("role")
+        paginated_data, page = self.get_paginated_queryset()
+        serializer_class = (
+            self.get_serializer_class(model_name=request.query_params.get("role"))
+            or serializers.ProfileSerializer
         )
-        if not serializer_class:
-            serializer_class = serializers.ProfileSerializer
-
-        paginated_query = self.paginate_queryset(qs)
         serializer = serializer_class(
-            paginated_query,
+            paginated_data,
             context={"requestor": request.user, "label_context": "base"},
             many=True,
         )
-        return self.get_paginated_response(serializer.data)
+        # Manually construct the paginated response
+        if page is not None:
+            return Response(
+                {
+                    "count": page.paginator.count,
+                    "next": self.get_next_link(page),
+                    "previous": self.get_previous_link(page),
+                    "results": serializer.data,
+                }
+            )
+        else:
+            return self.get_paginated_response(serializer.data)
+
+    def get_next_link(self, page: Page) -> Optional[str]:
+        """
+        Generate the link for the next page.
+        """
+        if not page.has_next():
+            return None
+        page_number = page.next_page_number()
+        return replace_query_param(
+            self.request.build_absolute_uri(), "page", page_number
+        )
+
+    def get_previous_link(self, page: Page) -> Optional[str]:
+        """
+        Generate the link for the previous page.
+        """
+        if not page.has_previous():
+            return None
+        page_number = page.previous_page_number()
+        return replace_query_param(
+            self.request.build_absolute_uri(), "page", page_number
+        )
 
     def get_profile_labels(self, request: Request, profile_uuid: uuid.UUID) -> Response:
         try:
@@ -237,7 +283,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         filtered_queryset = filter_service.get_queryset()
 
         # Get the count of the filtered queryset
-        count = filtered_queryset.count()
+        count = len(filtered_queryset)
 
         return Response({"count": count})
 
