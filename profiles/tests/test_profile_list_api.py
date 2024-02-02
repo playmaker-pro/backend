@@ -58,6 +58,29 @@ class TestProfileListAPI(APITestCase):
 
         assert response1.data["results"] != response2.data["results"]
 
+    def test_list_consistent_within_session(self) -> None:
+        """
+        Test if results are consistently within the same session.
+        This ensures that the randomize logic based on session seed works as intended.
+        """
+        # Create a batch of profiles
+        factories.PlayerProfileFactory.create_batch(30)
+
+        # Simulate a session for the client
+        session = self.client.session
+        session.save()
+
+        # First request to shuffle
+        response1 = self.client.get(self.url, {"role": "P"})
+
+        # Second request to shuffle within the same session
+        response2 = self.client.get(self.url, {"role": "P"})
+
+        # Assert that the two responses within the same session are identical
+        assert (
+            response1.data["results"] == response2.data["results"]
+        ), "Shuffled results should be consistent within the same session"
+
     @parameterized.expand([[{"role": "P"}], [{"role": "C"}], [{"role": "T"}]])
     def test_get_bulk_profiles(self, param) -> None:
         """get profiles by role param"""

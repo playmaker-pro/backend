@@ -1,8 +1,10 @@
 import random
 import typing
 from functools import cached_property
+from itertools import groupby
+from operator import attrgetter
 
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 
 from api import errors as api_errors
 from api import utils as api_utils
@@ -58,24 +60,58 @@ class ProfileListAPIFilter(APIFilter):
         except ValueError:
             raise IncorrectProfileRole
 
-    def get_queryset(self) -> QuerySet:
-        """Get queryset based on role"""
-        self.queryset: QuerySet = self.model.objects.to_list_by_api()
+    def get_queryset(self) -> typing.Union[QuerySet, typing.List]:
+        """Get queryset based on role, apply filters, and handle shuffle parameter."""
+        self.queryset = self.model.objects.to_list_by_api()
         self.filter_queryset(self.queryset)
 
+        # Handle shuffle parameter
         if self.query_params.get("shuffle", False):
-            # Random shuffle -> get random sample of 10 -> return list of random choices
-            shuffled_queryset = self.queryset.order_by("?")
-            queryset_length = shuffled_queryset.count()
+            return self.handle_shuffle()
 
-            if queryset_length >= 10:
-                selected_items = random.sample(list(shuffled_queryset), 10)
-                return self.queryset.filter(pk__in=[item.pk for item in selected_items])
-            else:
-                # Handle cases where the queryset has fewer than 10 elements
-                return shuffled_queryset
+        # Apply consistent randomization
+        return self.apply_consistent_randomization()
 
-        return self.queryset
+    def handle_shuffle(self) -> QuerySet:
+        """Handle the shuffle logic."""
+        shuffled_queryset = self.queryset.order_by("?")
+        queryset_length = shuffled_queryset.count()
+        if queryset_length >= 10:
+            selected_items = random.sample(list(shuffled_queryset), 10)
+            return self.queryset.filter(pk__in=[item.pk for item in selected_items])
+        else:
+            return shuffled_queryset
+
+    def apply_consistent_randomization(
+        self,
+    ) -> typing.List[typing.Union[models.PROFILE_MODELS]]:
+        """Apply consistent randomization based on session seed."""
+        if "random_seed" not in self.request.session:
+            self.request.session["random_seed"] = random.randint(0, 9999999)
+            self.request.session.modified = True
+
+        seed = self.request.session["random_seed"]
+        random.seed(seed)
+
+        grouped_queryset = []
+        for _, group in groupby(
+            sorted(self.queryset, key=self.custom_sort),
+            key=attrgetter("data_fulfill_status"),
+        ):
+            group_list = list(group)
+            grouped_queryset.extend(group_list)
+
+        return grouped_queryset
+
+    @staticmethod
+    def custom_sort(profile: models.PROFILE_MODELS) -> typing.Tuple[int, float]:
+        """
+        Custom sorting function for profiles.
+
+        Sorts profiles based on data_fulfill_status in ascending order and introduces
+        randomization within each group using random.random().
+        """
+        return profile.data_fulfill_status, random.random()
 
     def filter_queryset(self, queryset: QuerySet) -> QuerySet:
         """Filter given queryset based on validated query_params"""
