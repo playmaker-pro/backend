@@ -685,6 +685,7 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
             return (
                 team_history.short_name
                 if hasattr(team_history, "short_name")
+                and team_history.short_name is not None
                 else team_history.name
             )
         return None
