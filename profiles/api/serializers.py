@@ -278,7 +278,7 @@ class LanguageSerializer(serializers.ModelSerializer):
 
     def define_priority(self, obj: models.Language) -> bool:
         """Define language priority"""
-        return locale_service.is_prior_language(obj.code)
+        return locale_service.is_prior_language(obj.priority)
 
     def translate_name(self, obj) -> str:
         """Translate language name"""
@@ -1358,3 +1358,15 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
                 )
                 return serializer.to_representation(serializer.parse(gender_value))
             return None
+
+
+class SimilarProfileSerializer(serializers.Serializer):
+    uuid = serializers.UUIDField(read_only=True)
+    first_name = serializers.CharField(source="user.first_name")
+    last_name = serializers.CharField(source="user.last_name")
+    age = serializers.IntegerField(read_only=True, source="user.userpreferences.age")
+    player_position = PlayerProfilePositionSerializer(
+        source="get_main_position", read_only=True
+    )
+    coach_role = serializers.CharField(read_only=True)
+    pm_score = serializers.IntegerField(read_only=True, source="playermetrics.pm_score")

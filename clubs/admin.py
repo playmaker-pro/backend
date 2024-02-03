@@ -54,17 +54,10 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
         "id",
         "name",
         "visible",
-        "created_by",
         "voivodeship_obj",
         "season",
         "league",
-        "get_league_slug",
-        "index",
-        "is_table_data",
-        "is_matches_data",
-        "data_updated",
-        "is_data",
-        linkify("external_links"),
+        "enabled",
     )
     list_filter = (
         ZpnListFilter,
@@ -74,11 +67,12 @@ class LeagueHistoryAdmin(admin.ModelAdmin):
     )
     ordering: Optional[Sequence[str]] = ("-league",)
     search_fields = ("league__name",)
-    autocomplete_fields = ("league",)
+    autocomplete_fields = ("league", "mapper", "external_links")
     readonly_fields = ("data_prettified",)
     actions = [
         reset_history,
     ]
+    exclude = ("created_by",)
 
     def get_league_slug(self, obj):
         return obj.league.slug
@@ -143,19 +137,15 @@ class LeagueAdmin(admin.ModelAdmin):
     )
     readonly_fields: Sequence[str] = ("slug", "search_tokens", "virtual")
     actions = [resave]
-    exclude = ["code", "order", "section"]
+    exclude = ["code", "order", "section", "created_by"]
     list_display = (
         "pk",
         "seniority",
         "name",
         "get_data_seasons",
-        "virtual",
         "visible",
-        "created_by",
-        "league_history",
         "country",
         "gender",
-        "index",
         "slug",
         "search_tokens",
     )
@@ -165,6 +155,7 @@ class LeagueAdmin(admin.ModelAdmin):
         "seniority",
         CountryListFilter,
     )
+    autocomplete_fields = ("mapper",)
 
     def get_data_seasons(self, obj):
         return "\n".join([season.name for season in obj.data_seasons.all()])
@@ -232,6 +223,7 @@ class TeamAdmin(admin.ModelAdmin):
         "scrapper_autocreated",
         linkify("external_links"),
     )
+    exclude = ("created_by",)
     search_fields = ("name",)
     list_filter = (
         "gender__name",
@@ -243,6 +235,10 @@ class TeamAdmin(admin.ModelAdmin):
     autocomplete_fields = (
         "manager",
         "club",
+        "league",
+        "league_history",
+        "mapper",
+        "external_links",
     )
 
     def get_name(self, obj: models.Team) -> str:
@@ -277,7 +273,7 @@ class ClubAdmin(admin.ModelAdmin):
     )
     readonly_fields = ("mapper",)
     actions = [set_visibility, set_invisibility]
-    autocomplete_fields: Sequence[str] = ("manager",)
+    autocomplete_fields: Sequence[str] = ("manager", "external_links",)
     search_fields: Sequence[str] = ("name",)
     list_filter: Sequence[str] = (
         "voivodeship_obj__name",

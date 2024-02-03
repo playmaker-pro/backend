@@ -1,17 +1,18 @@
 import logging
 import uuid
-from typing import Optional
+from typing import TYPE_CHECKING, Optional, Tuple, Union
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
+from django.core.paginator import EmptyPage, InvalidPage, Page, Paginator
 from django.db.models import ObjectDoesNotExist, QuerySet
-from django.db.models.functions import Random
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, status
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.utils.urls import replace_query_param
 from rest_framework.views import PermissionDenied
 
 from api.base_view import EndpointViewWithFilter
@@ -37,7 +38,12 @@ from profiles.api.errors import (
     TransferRequestDoesNotExistHTTPException,
     TransferStatusDoesNotExistHTTPException,
 )
-from profiles.api.filters import TransferRequestCatalogueFilter
+from profiles.api.filters import (
+    CoachProfileFilter,
+    DefaultProfileFilter,
+    PlayerProfileFilter,
+    TransferRequestCatalogueFilter,
+)
 from profiles.api.managers import SerializersManager
 from profiles.api.mixins import ProfileRetrieveMixin
 from profiles.filters import ProfileListAPIFilter
@@ -70,6 +76,9 @@ from roles.definitions import (
 )
 from users.api.serializers import UserMainRoleSerializer
 from users.errors import UserPreferencesDoesNotExistHTTPException
+
+if TYPE_CHECKING:
+    from django_filters import rest_framework as filters
 
 profile_service = ProfileService()
 team_contributor_service = TeamContributorService()
@@ -147,10 +156,26 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
 
         return Response(serializer.data)
 
-    def get_paginated_queryset(self, qs: QuerySet = None) -> Optional[list]:
-        """Paginate queryset to optimize serialization"""
-        qs: QuerySet = qs or self.get_queryset()
-        return self.paginate_queryset(qs.order_by("data_fulfill_status"))
+    def get_paginated_queryset(
+        self, qs=None
+    ) -> Union[Tuple[list, Page], Tuple[QuerySet, None]]:
+        """
+        Paginate the queryset or list and return paginated data and the page object.
+        """
+        queryset_or_list = qs or self.get_queryset()
+
+        if isinstance(queryset_or_list, list):
+            # If it's a list, use standard Django Paginator
+            paginator = Paginator(queryset_or_list, self.pagination_class.page_size)
+            page_number = self.request.query_params.get("page", 1)
+            try:
+                page = paginator.page(page_number)
+            except (EmptyPage, InvalidPage):
+                page = paginator.page(paginator.num_pages)
+            return page.object_list, page
+        else:
+            # If it's a QuerySet, use DRF's pagination class
+            return super().paginate_queryset(queryset_or_list), None
 
     def get_bulk_profiles(self, request: Request) -> Response:
         """
@@ -159,21 +184,50 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         Full list of choices can be found in roles/definitions.py
         """
 
-        qs: QuerySet = self.get_queryset().order_by("data_fulfill_status", Random())
-
-        serializer_class = self.get_serializer_class(
-            model_name=request.query_params.get("role")
+        paginated_data, page = self.get_paginated_queryset()
+        serializer_class = (
+            self.get_serializer_class(model_name=request.query_params.get("role"))
+            or serializers.ProfileSerializer
         )
-        if not serializer_class:
-            serializer_class = serializers.ProfileSerializer
-
-        paginated_query = self.paginate_queryset(qs)
         serializer = serializer_class(
-            paginated_query,
+            paginated_data,
             context={"requestor": request.user, "label_context": "base"},
             many=True,
         )
-        return self.get_paginated_response(serializer.data)
+        # Manually construct the paginated response
+        if page is not None:
+            return Response(
+                {
+                    "count": page.paginator.count,
+                    "next": self.get_next_link(page),
+                    "previous": self.get_previous_link(page),
+                    "results": serializer.data,
+                }
+            )
+        else:
+            return self.get_paginated_response(serializer.data)
+
+    def get_next_link(self, page: Page) -> Optional[str]:
+        """
+        Generate the link for the next page.
+        """
+        if not page.has_next():
+            return None
+        page_number = page.next_page_number()
+        return replace_query_param(
+            self.request.build_absolute_uri(), "page", page_number
+        )
+
+    def get_previous_link(self, page: Page) -> Optional[str]:
+        """
+        Generate the link for the previous page.
+        """
+        if not page.has_previous():
+            return None
+        page_number = page.previous_page_number()
+        return replace_query_param(
+            self.request.build_absolute_uri(), "page", page_number
+        )
 
     def get_profile_labels(self, request: Request, profile_uuid: uuid.UUID) -> Response:
         try:
@@ -237,7 +291,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         filtered_queryset = filter_service.get_queryset()
 
         # Get the count of the filtered queryset
-        count = filtered_queryset.count()
+        count = len(filtered_queryset)
 
         return Response({"count": count})
 
@@ -267,6 +321,89 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
             serializer.save()
 
         return Response(serializer.data)
+
+
+class SimilarProfilesAPIView(EndpointViewWithFilter):
+    """
+    API view for retrieving profiles similar to a specified profile based
+    on certain criteria.
+
+    This view applies a combination of Django filters and custom filtering logic to
+    identify profiles similar to the given target profile.
+    It supports different types of profiles like PlayerProfile and CoachProfile,
+    applying specific filters based on the profile type.
+    """
+
+    pagination_class = TransferRequestCataloguePagePagination
+    serializer_class = serializers.SimilarProfileSerializer
+
+    def get_similar_profiles(self, request, profile_uuid: uuid) -> Response:
+        """
+        Retrieves profiles similar to the target profile specified by the UUID.
+        """
+        # Fetch the target user's profile
+        try:
+            target_profile = ProfileService.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist:
+            raise api_errors.ProfileDoesNotExist
+
+        # Determine the model based on the profile type and create the initial queryset
+        model = type(target_profile)
+        queryset = model.objects.all()
+        # Construct filter parameters based on target_profile attributes
+        filter_params = self.construct_filter_params(target_profile)
+        # Apply Django filters
+        filterset_class = self.get_filterset_class(target_profile)
+        filterset = filterset_class(filter_params, queryset=queryset)
+
+        # Exclude the profile of the requesting user
+        if request.user.is_authenticated:
+            queryset.exclude(user=self.request.user)
+        # Apply custom filtering logic
+        queryset = ProfileFilterService.apply_custom_filters(
+            filterset.qs, target_profile
+        )
+
+        # Serialize and return the response
+        paginated = self.get_paginated_queryset(queryset)
+        serializer = self.serializer_class(
+            paginated, many=True, context={"request": request}
+        )
+        return self.get_paginated_response(serializer.data)
+
+    def construct_filter_params(self, target_profile: models.PROFILE_MODELS) -> dict:
+        """
+        Constructs filter parameters for Django filters based on the attributes
+        of the target profile.
+        """
+        # Initialize gender filter parameters
+        filter_params = {"gender": target_profile.user.userpreferences.gender}
+
+        # Specific filter parameters based on profile type
+        if isinstance(target_profile, models.PlayerProfile):
+            main_position = target_profile.player_positions.filter(is_main=True).first()
+            if main_position:
+                filter_params["position"] = main_position.player_position_id
+        elif (
+            isinstance(target_profile, models.CoachProfile)
+            and target_profile.coach_role
+        ):
+            filter_params["coach_role"] = target_profile.coach_role
+        return filter_params
+
+    def get_filterset_class(
+        self, profile: models.PROFILE_MODELS
+    ) -> "filters.FilterSet":
+        """
+        Returns the appropriate filterset class based on the type of the given profile.
+        """
+        if isinstance(profile, models.PlayerProfile):
+            return PlayerProfileFilter
+        elif isinstance(profile, models.CoachProfile):
+            return CoachProfileFilter
+        else:
+            # Return the default filter for other profile types
+            return DefaultProfileFilter
 
 
 class ProfileSearchView(EndpointView):

@@ -68,6 +68,15 @@ urlpatterns = [
         name="get_profile_by_slug",
     ),
     path(
+        r"similar-profiles/<uuid:profile_uuid>/",
+        views.SimilarProfilesAPIView.as_view(
+            {
+                "get": "get_similar_profiles",
+            }
+        ),
+        name="get_similar_profiles",
+    ),
+    path(
         r"<uuid:profile_uuid>/labels",
         views.ProfileAPI.as_view({"get": "get_profile_labels"}),
         name="get_profile_labels",
