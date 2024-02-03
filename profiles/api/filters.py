@@ -7,7 +7,7 @@ from django.db.models import functions as django_base_functions
 from django_filters import rest_framework as filters
 
 from api.filters import MultipleFilter
-from profiles.models import PlayerProfile, ProfileTransferRequest
+from profiles.models import CoachProfile, PlayerProfile, ProfileTransferRequest
 
 
 class TransferRequestCatalogueFilter(filters.FilterSet):
@@ -109,6 +109,49 @@ class TransferRequestCatalogueFilter(filters.FilterSet):
                 .distinct()
             )
         return queryset
+
+
+class DefaultProfileFilter(filters.FilterSet):
+    """
+    Default filter set for profiles, primarily filtering based on gender.
+    This filter set can be used as a fallback for profile types that do not require
+    specialized filtering beyond gender.
+    """
+
+    gender = filters.CharFilter(field_name="user__userpreferences__gender")
+
+    class Meta:
+        fields = ["gender"]
+
+
+class PlayerProfileFilter(filters.FilterSet):
+    """
+    Filter set for PlayerProfile models, allowing filtering by position and gender.
+    This filter set is designed to accommodate the specific attributes of player profiles,
+    such as their main playing position.
+    """
+
+    position = filters.CharFilter(field_name="player_positions__player_position_id")
+    gender = filters.CharFilter(field_name="user__userpreferences__gender")
+
+    class Meta:
+        model = PlayerProfile
+        fields = ["position", "gender"]
+
+
+class CoachProfileFilter(filters.FilterSet):
+    """
+    Filter set for CoachProfile models, allowing filtering by coach role and gender.
+    This filter set caters to the unique attributes of coach profiles,
+    including their specific coaching roles.
+    """
+
+    coach_role = filters.CharFilter(field_name="coach_role")
+    gender = filters.CharFilter(field_name="user__userpreferences__gender")
+
+    class Meta:
+        model = CoachProfile
+        fields = ["coach_role", "gender"]
 
 
 class PlayerProfileFilters(filters.FilterSet):
