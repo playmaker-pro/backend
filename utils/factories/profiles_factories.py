@@ -36,7 +36,7 @@ class PlayerProfilePositionFactory(CustomObjectFactory):
 
     player_position = factory.SubFactory(PlayerPositionFactory)
     player_profile = factory.SubFactory(
-        "utils.factories.profiles.factories.PlayerProfileFactory"
+        "utils.factories.profiles_factories.PlayerProfileFactory"
     )
 
 
@@ -161,6 +161,9 @@ class CoachProfileFactory(ProfileFactory):
     )
     club_role = factory.LazyAttribute(
         lambda _: random.choice(models.CoachProfile.CLUB_ROLE)[0]
+    )
+    coach_role = factory.LazyAttribute(
+        lambda _: random.choice(models.CoachProfile.COACH_ROLE_CHOICES)[0]
     )
     team_history_object = (
         clubs_factories.TeamHistoryFactory.get_random_or_create_subfactory()
