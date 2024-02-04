@@ -747,15 +747,20 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
         ]
 
     def get_team_name(self, obj: models.TeamContributor) -> str:
+        """
+        Get the team name for a TeamContributor object by prioritizing the short name
+        over the full name for each associated team history object.
+        """
         team_histories = obj.team_history.all()
-        return ", ".join(
-            set(
-                th.short_name
-                if hasattr(th, "short_name") and th.short_name
-                else th.name
-                for th in team_histories
-            )
-        )
+        preferred_name = ""
+        for th in team_histories:
+            if hasattr(th, "short_name") and th.short_name:
+                preferred_name = th.short_name
+                break  # Exit loop as soon as a short name is found
+            elif th.name:
+                preferred_name = th.name
+
+        return preferred_name
 
     def get_picture_url(self, obj: models.TeamContributor) -> typing.Optional[str]:
         """
