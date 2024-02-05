@@ -1,10 +1,13 @@
+import hashlib
 import random
 import typing
+from datetime import datetime
 from functools import cached_property
 from itertools import groupby
 from operator import attrgetter
 
-from django.db.models import Q, QuerySet
+from django.db.models import QuerySet
+from rest_framework.request import Request
 
 from api import errors as api_errors
 from api import utils as api_utils
@@ -85,23 +88,28 @@ class ProfileListAPIFilter(APIFilter):
     def apply_consistent_randomization(
         self,
     ) -> typing.List[typing.Union[models.PROFILE_MODELS]]:
-        """Apply consistent randomization based on session seed."""
-        if "random_seed" not in self.request.session:
-            self.request.session["random_seed"] = random.randint(0, 9999999)
-            self.request.session.modified = True
+        """
+        Applies consistent randomization to the queryset, ensuring that the order of
+        profiles is randomized within each 'data_fulfill_status' group,
+        but remains consistent across user sessions for a given day.
+        This method utilizes a deterministic seed derived from the user's authentication
+        status and the current date (for authenticated users) or a default seed that
+        changes daily (for unauthenticated users), to shuffle the profiles
+        within each 'data_fulfill_status' group.
+        """
+        seed_sample = self.get_deterministic_seed(self.request)
+        random.seed(seed_sample)
 
-        seed = self.request.session["random_seed"]
-        random.seed(seed)
+        sorted_queryset = sorted(self.queryset, key=attrgetter("data_fulfill_status"))
 
-        grouped_queryset = []
-        for _, group in groupby(
-            sorted(self.queryset, key=self.custom_sort),
-            key=attrgetter("data_fulfill_status"),
-        ):
+        # Group by 'data_fulfill_status' and shuffle within each group
+        grouped_and_shuffled = []
+        for _, group in groupby(sorted_queryset, key=attrgetter("data_fulfill_status")):
             group_list = list(group)
-            grouped_queryset.extend(group_list)
+            random.shuffle(group_list)  # Apply randomization within each group
+            grouped_and_shuffled.extend(group_list)
 
-        return grouped_queryset
+        return grouped_and_shuffled
 
     @staticmethod
     def custom_sort(profile: models.PROFILE_MODELS) -> typing.Tuple[int, float]:
@@ -112,6 +120,35 @@ class ProfileListAPIFilter(APIFilter):
         randomization within each group using random.random().
         """
         return profile.data_fulfill_status, random.random()
+
+    def get_deterministic_seed(self, request: Request) -> int:
+        """
+        Generates a deterministic seed for randomizing content. This method creates a
+        seed based on the user's authentication status and the current date.
+        Authenticated users receive a personalized seed derived from their user ID,
+        ensuring consistent randomization across sessions.
+        Unauthenticated users are assigned a default seed, which still changes daily
+        to vary the content, but is the same for all users on a given day.
+        """
+
+        # Use the current date to ensure the randomization changes daily
+        current_date = datetime.now().date().isoformat()
+
+        # Default identifier for unauthenticated users
+        default_identifier = "default-guest-id"
+
+        if request.user.is_authenticated:
+            # Use user ID for authenticated users to generate a personalized seed
+            identifier = str(request.user.id)
+        else:
+            # Use a fixed identifier for unauthenticated users, still varied by date
+            identifier = default_identifier
+
+        # The seed incorporates the date, making it change daily
+        seed_input = f"{identifier}:{current_date}"
+        seed = int(hashlib.sha256(seed_input.encode()).hexdigest(), 16) % (10**8)
+
+        return seed
 
     def filter_queryset(self, queryset: QuerySet) -> QuerySet:
         """Filter given queryset based on validated query_params"""
