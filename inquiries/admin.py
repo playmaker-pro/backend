@@ -42,6 +42,7 @@ class InquiryRequestAdmin(admin.ModelAdmin):
         "recipient",
         "created_at",
     )
+    autocomplete_fields = ("sender", "recipient",)
 
 
 @admin.register(models.InquiryLogMessage)

@@ -1,8 +1,13 @@
+import hashlib
 import random
 import typing
+from datetime import datetime
 from functools import cached_property
+from itertools import groupby
+from operator import attrgetter
 
 from django.db.models import QuerySet
+from rest_framework.request import Request
 
 from api import errors as api_errors
 from api import utils as api_utils
@@ -58,24 +63,92 @@ class ProfileListAPIFilter(APIFilter):
         except ValueError:
             raise IncorrectProfileRole
 
-    def get_queryset(self) -> QuerySet:
-        """Get queryset based on role"""
-        self.queryset: QuerySet = self.model.objects.to_list_by_api()
+    def get_queryset(self) -> typing.Union[QuerySet, typing.List]:
+        """Get queryset based on role, apply filters, and handle shuffle parameter."""
+        self.queryset = self.model.objects.to_list_by_api()
         self.filter_queryset(self.queryset)
 
+        # Handle shuffle parameter
         if self.query_params.get("shuffle", False):
-            # Random shuffle -> get random sample of 10 -> return list of random choices
-            shuffled_queryset = self.queryset.order_by("?")
-            queryset_length = shuffled_queryset.count()
+            return self.handle_shuffle()
 
-            if queryset_length >= 10:
-                selected_items = random.sample(list(shuffled_queryset), 10)
-                return self.queryset.filter(pk__in=[item.pk for item in selected_items])
-            else:
-                # Handle cases where the queryset has fewer than 10 elements
-                return shuffled_queryset
+        # Apply consistent randomization
+        return self.apply_consistent_randomization()
 
-        return self.queryset
+    def handle_shuffle(self) -> QuerySet:
+        """Handle the shuffle logic."""
+        shuffled_queryset = self.queryset.order_by("?")
+        queryset_length = shuffled_queryset.count()
+        if queryset_length >= 10:
+            selected_items = random.sample(list(shuffled_queryset), 10)
+            return self.queryset.filter(pk__in=[item.pk for item in selected_items])
+        else:
+            return shuffled_queryset
+
+    def apply_consistent_randomization(
+        self,
+    ) -> typing.List[typing.Union[models.PROFILE_MODELS]]:
+        """
+        Applies consistent randomization to the queryset, ensuring that the order of
+        profiles is randomized within each 'data_fulfill_status' group,
+        but remains consistent across user sessions for a given day.
+        This method utilizes a deterministic seed derived from the user's authentication
+        status and the current date (for authenticated users) or a default seed that
+        changes daily (for unauthenticated users), to shuffle the profiles
+        within each 'data_fulfill_status' group.
+        """
+        seed_sample = self.get_deterministic_seed(self.request)
+        random.seed(seed_sample)
+
+        sorted_queryset = sorted(self.queryset, key=attrgetter("data_fulfill_status"))
+
+        # Group by 'data_fulfill_status' and shuffle within each group
+        grouped_and_shuffled = []
+        for _, group in groupby(sorted_queryset, key=attrgetter("data_fulfill_status")):
+            group_list = list(group)
+            random.shuffle(group_list)  # Apply randomization within each group
+            grouped_and_shuffled.extend(group_list)
+
+        return grouped_and_shuffled
+
+    @staticmethod
+    def custom_sort(profile: models.PROFILE_MODELS) -> typing.Tuple[int, float]:
+        """
+        Custom sorting function for profiles.
+
+        Sorts profiles based on data_fulfill_status in ascending order and introduces
+        randomization within each group using random.random().
+        """
+        return profile.data_fulfill_status, random.random()
+
+    def get_deterministic_seed(self, request: Request) -> int:
+        """
+        Generates a deterministic seed for randomizing content. This method creates a
+        seed based on the user's authentication status and the current date.
+        Authenticated users receive a personalized seed derived from their user ID,
+        ensuring consistent randomization across sessions.
+        Unauthenticated users are assigned a default seed, which still changes daily
+        to vary the content, but is the same for all users on a given day.
+        """
+
+        # Use the current date to ensure the randomization changes daily
+        current_date = datetime.now().date().isoformat()
+
+        # Default identifier for unauthenticated users
+        default_identifier = "default-guest-id"
+
+        if request.user.is_authenticated:
+            # Use user ID for authenticated users to generate a personalized seed
+            identifier = str(request.user.id)
+        else:
+            # Use a fixed identifier for unauthenticated users, still varied by date
+            identifier = default_identifier
+
+        # The seed incorporates the date, making it change daily
+        seed_input = f"{identifier}:{current_date}"
+        seed = int(hashlib.sha256(seed_input.encode()).hexdigest(), 16) % (10**8)
+
+        return seed
 
     def filter_queryset(self, queryset: QuerySet) -> QuerySet:
         """Filter given queryset based on validated query_params"""

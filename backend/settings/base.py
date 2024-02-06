@@ -29,7 +29,7 @@ BASE_URL = "http://localhost:8000"
 
 FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL")
 
-VERSION = "2.1.0"
+VERSION = "2.2.0"
 
 
 SYSTEM_USER_EMAIL = "rafal.kesik@gmail.com"

@@ -14,6 +14,7 @@ class MapperAdmin(admin.ModelAdmin):
         MapperEntityAdmin,
     ]
     readonly_fields = ("created_at", "updated_at")
+    search_fields = ("name",)
 
     def has_add_permission(self, request, obj=None):
         return False
