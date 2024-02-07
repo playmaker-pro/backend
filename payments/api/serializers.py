@@ -11,8 +11,6 @@ class NewTransactionSerializer(_serializers.ModelSerializer):
         fields = (
             "uuid",
             "url",
-            "created_at",
-            "updated_at",
         )
 
 
