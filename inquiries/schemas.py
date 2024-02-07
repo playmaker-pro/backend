@@ -3,7 +3,6 @@ from enum import Enum as _Enum
 
 class InquiryPlanTypeRef(str, _Enum):
     BASIC: str = "BASIC"
-    ADMIN: str = "ADMIN"
     PREMIUM5: str = "PREMIUM_INQUIRIES_5"
     PREMIUM10: str = "PREMIUM_INQUIRIES_10"
     PREMIUM25: str = "PREMIUM_INQUIRIES_25"

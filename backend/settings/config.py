@@ -66,6 +66,7 @@ class TpayConfig(BaseConfig):
     callbacks: CallbackConfig
     security_code: str  # tpay security code (settings -> notifications -> security)
     base_url: str
+    test_mode: bool
 
 
 class Config(BaseConfig):

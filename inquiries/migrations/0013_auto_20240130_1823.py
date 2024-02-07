@@ -48,19 +48,6 @@ def create_initial_premium_plans(apps, schema_editor):
     )
 
 
-def create_admin_inquiry_plan(apps, schema_editor):
-    """Create an admin inquiry plan."""
-    InquiryPlan = apps.get_model("inquiries", "InquiryPlan")
-
-    InquiryPlan.objects.get_or_create(
-        pk=1234,
-        name="ADMIN",
-        description="ADMIN ONLY - SHOULD NOT BE VISIBLE IN API",
-        limit=1000,
-        type_ref=_InquiryPlanTypeRef.ADMIN,
-    )
-
-
 class Migration(migrations.Migration):
     dependencies = [
         ("inquiries", "0012_inquiryplan_type_ref"),
@@ -75,8 +62,5 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(
             create_initial_premium_plans, reverse_code=migrations.RunPython.noop
-        ),
-        migrations.RunPython(
-            create_admin_inquiry_plan, reverse_code=migrations.RunPython.noop
         ),
     ]

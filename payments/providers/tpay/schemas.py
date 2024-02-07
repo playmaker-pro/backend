@@ -10,11 +10,6 @@ from pydantic import BaseSettings as _BaseSettings
 from pydantic import Field as _Field
 from pydantic import HttpUrl as _HttpUrl
 
-#
-#   DOCS:
-#   https://openapi.tpay.com/
-#
-
 
 class TpayResponseResultEnum(str, _Enum):
     SUCCESS: str = "success"
@@ -156,15 +151,16 @@ class TpayTransactionResponse(_BaseModel):
 
 
 class TpayValidationErrors(str, _Enum):
-    INVALID_MD5 = "MD5 checksum is invalid."
-    TRANSACTION_NOT_FOUND = "Transaction not found."
-    INVALID_DATA = "Invalid data."
+    INVALID_MD5 = "MD5 checksum is invalid"
+    TRANSACTION_NOT_FOUND = "Transaction not found"
+    INVALID_DATA = "Invalid data"
+    TEST_MODE_NOT_ALLOWED = "Application does not accept test_mode transactions"
 
 
 class DataAssertingErrors(str, _Enum):
-    AMOUNT = "Amount is invalid."
-    UUID = "UUID is invalid."
-    DESCRIPTION = "Description is invalid."
+    AMOUNT = "Amount is invalid"
+    UUID = "UUID is invalid"
+    DESCRIPTION = "Description is invalid"
 
     @property
     def parse_full(self) -> str:
@@ -195,6 +191,10 @@ class TpayTransactionMode(str, _Enum):
     TEST: str = "1"
     PRODUCTION: str = "0"
 
+    @property
+    def is_test(self) -> bool:
+        return self.value is self.TEST
+
 
 class TpayTransactionResult(_BaseModel):
     """Transaction result - response from tpay"""
@@ -217,10 +217,3 @@ class TpayTransactionResult(_BaseModel):
     def prepare_to_hash(self, secret: str) -> str:
         """Parse response for django"""
         return f"{self.merchant_id}{self.tr_id}{self.tr_amount}{self.tr_crc}{secret}"
-
-    def post_validate(self) -> None:
-        """Check if the transaction is valid"""
-        assert self.test_mode == TpayTransactionMode.PRODUCTION, "TEST MODE"
-        assert self.tr_error.acceptable, "UNDERPAID"
-        assert self.tr_status.acceptable, "CHARGEBACK"
-        assert self.tr_paid >= self.tr_amount, "UNDERPAID"

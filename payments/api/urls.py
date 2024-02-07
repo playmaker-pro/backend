@@ -15,7 +15,7 @@ urlpatterns = [
     ),
     _path(
         "resolve/tpay/",
-        _views.TpayReceiverAPI.as_view({"post": "resolve_transaction"}),
+        _views.TpayWebhook.as_view({"post": "resolve_transaction"}),
         name="resolve_tpay_result",
     ),
 ]

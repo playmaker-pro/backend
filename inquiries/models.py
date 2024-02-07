@@ -165,7 +165,6 @@ class InquiryPlan(models.Model):
 
     class InquiryTypeRef(models.TextChoices):
         BASIC = _InquiryPlanTypeRef.BASIC.text_choice
-        TEST = _InquiryPlanTypeRef.ADMIN.text_choice
         PREMIUM5 = _InquiryPlanTypeRef.PREMIUM5.text_choice
         PREMIUM10 = _InquiryPlanTypeRef.PREMIUM10.text_choice
         PREMIUM25 = _InquiryPlanTypeRef.PREMIUM25.text_choice

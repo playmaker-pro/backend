@@ -115,7 +115,7 @@ class EmailTemplate(models.Model):
         NEW_USER = "NEW_USER", "NEW_USER"
         PASSWORD_CHANGE = "PASSWORD_CHANGE", "PASSWORD_CHANGE"
         INQUIRY_LIMIT = "INQUIRY_LIMIT", "INQUIRY_LIMIT"
-        ...
+        SYSTEM = "SYSTEM", "SYSTEM"
 
     subject = models.CharField(max_length=255)
     body = models.TextField(help_text=EMAIL_PATTERN)

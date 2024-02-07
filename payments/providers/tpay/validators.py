@@ -17,7 +17,7 @@ class TpayResponseValidator:
     def __init__(self, schema: _schemas.TpayTransactionResult) -> None:
         self._schema = schema
         self._initialized = False
-        self._errors: _typing.List[_schemas.TpayValidationErrors] = []
+        self._errors: _typing.List[str] = []
 
     @property
     def crc(self) -> _UUID:
@@ -32,7 +32,7 @@ class TpayResponseValidator:
         except _Transaction.DoesNotExist:
             return
 
-    def validate_md5_checksum(self) -> None:
+    def _validate_md5_checksum(self) -> None:
         """Validate md5 checksum of tpay response"""
         to_hash = self._schema.prepare_to_hash(
             secret=_config.tpay.security_code
@@ -42,33 +42,37 @@ class TpayResponseValidator:
         md5_hash.update(to_hash)
 
         if md5_hash.hexdigest() != self._schema.md5sum:
-            self._errors.append(_schemas.TpayValidationErrors.INVALID_MD5)
+            self._errors.append(_schemas.TpayValidationErrors.INVALID_MD5.value)
 
-    def compare_with_object(self) -> None:
+    def _compare_with_object(self) -> None:
         """Compare transaction that came from tpay with object in database"""
         transaction = self.transaction
 
         if transaction is None:
-            self._errors.append(_schemas.TpayValidationErrors.TRANSACTION_NOT_FOUND)
+            self._errors.append(
+                _schemas.TpayValidationErrors.TRANSACTION_NOT_FOUND.value
+            )
             return
 
-        try:
-            assert (
-                transaction.amount == self._schema.tr_amount
-            ), _schemas.DataAssertingErrors.AMOUNT
-            assert (
-                transaction.uuid == self._schema.tr_crc
-            ), _schemas.DataAssertingErrors.UUID
-            assert (
-                transaction.description == self._schema.tr_desc
-            ), _schemas.DataAssertingErrors.DESCRIPTION
-        except AssertionError as e:
-            self._errors.append(e.args[0].parse_full)  # type: ignore
+        if transaction.amount != self._schema.tr_amount:
+            self._errors.append(_schemas.DataAssertingErrors.AMOUNT.parse_full)
+        if transaction.uuid != self._schema.tr_crc:
+            self._errors.append(_schemas.DataAssertingErrors.UUID.parse_full)
+        if transaction.description != self._schema.tr_desc:
+            self._errors.append(_schemas.DataAssertingErrors.DESCRIPTION.parse_full)
+
+    def _check_test_mode(self):
+        if self._schema.test_mode.is_test and not _config.tpay.test_mode:
+            self._errors.append(
+                _schemas.TpayValidationErrors.TEST_MODE_NOT_ALLOWED.value
+            )
 
     def validate(self) -> None:
         """Perform validation for transaction response"""
-        self.validate_md5_checksum()
-        self.compare_with_object()
+        self._check_test_mode()
+        self._validate_md5_checksum()
+        self._compare_with_object()
+
         self._initialized = True
 
     @classmethod
@@ -93,5 +97,4 @@ class TpayResponseValidator:
 
     def resolve_transaction(self) -> None:
         """Assert that transaction response is valid, then perform transaction object resolve"""
-        assert self.is_valid, "Unable to resolve invalid transaction."
-        self.transaction.resolve_from_tpay_schema(self._schema)
+        self.transaction.resolve_from_tpay_schema(self._schema, self.errors)

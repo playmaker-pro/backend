@@ -1,5 +1,3 @@
-import logging as _logging
-
 from django.http import HttpResponse as _HttpResponse
 from rest_framework import status as _status
 from rest_framework.exceptions import PermissionDenied as _PermissionDenied
@@ -9,6 +7,7 @@ from rest_framework.response import Response as _Response
 
 from api.views import EndpointView as _EndpointView
 from payments.api import serializers as _serializers
+from payments.logging import logger as _logger
 from payments.models import TransactionType as _TransactionType
 from payments.providers.errors import TransactionError as _TransactionError
 from payments.providers.tpay import schemas as _tpay_schemas
@@ -18,7 +17,6 @@ from payments.providers.tpay.validators import (
 )
 from payments.services import TransactionService as _TransactionService
 
-_logger = _logging.getLogger("payments")
 _TpayProvider = _TpayHttpService()
 
 
@@ -45,9 +43,7 @@ class TransactionAPI(_EndpointView):
         )
 
         try:
-            transaction = _TransactionService.register_transaction(
-                transaction, _TpayProvider
-            )
+            transaction = _TpayProvider.handle(transaction)
         except _TransactionError:
             return _Response(
                 "Something went wrong. Try again later.",
@@ -64,7 +60,7 @@ class TransactionAPI(_EndpointView):
         return _Response(serializer.data)
 
 
-class TpayReceiverAPI(_EndpointView):
+class TpayWebhook(_EndpointView):
     permission_classes = [_AllowAny]
     authentication_classes = []
 
@@ -73,8 +69,8 @@ class TpayReceiverAPI(_EndpointView):
         schema = _tpay_schemas.TpayTransactionResult.parse_obj(request.data.dict())
         validator = _TpayResponseValidator.handle(schema)
         if validator.is_valid:
-            validator.resolve_transaction()
-            _logger.info(f"-- RESOLVE -- SUCCESS: {validator.crc}")
+            _logger.info(f"-- RESOLVE ({validator.crc}) -- SUCCESS")
         else:
-            _logger.error(f"-- RESOLVE -- ERRORS: {validator.errors}")
+            _logger.error(f"-- RESOLVE ({validator.crc}) -- ERRORS: {validator.errors}")
+        validator.resolve_transaction()
         return _HttpResponse("TRUE")

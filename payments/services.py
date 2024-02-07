@@ -5,7 +5,6 @@ from django.db.models import QuerySet as _QuerySet
 
 from payments.models import Transaction as _Transaction
 from payments.models import TransactionType as _TransactionType
-from payments.providers.base import BaseTransactionHttpService as _Provider
 
 
 class TransactionService:
@@ -15,19 +14,6 @@ class TransactionService:
     ) -> _Transaction:
         """Create new transaction for given type and user"""
         return _Transaction.objects.create(user=user, transaction_type=transaction_type)
-
-    @staticmethod
-    def register_transaction(
-        transaction: _Transaction, provider: _Provider
-    ) -> _Transaction:
-        """
-        Register transaction with given provider.
-        With provider handle method we can create transaction in external service (eq. Tpay).
-        """
-        service = provider.handle(transaction)
-        result_schema = service.create_transaction()
-        service.transaction.update_from_dict(result_schema.to_update_django_object)
-        return service.transaction
 
     @staticmethod
     def list_inquiry_transaction_types() -> _QuerySet[_TransactionType]:

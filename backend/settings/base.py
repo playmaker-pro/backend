@@ -34,7 +34,7 @@ VERSION = "1.3.16"
 
 
 SYSTEM_USER_EMAIL = "rafal.kesik@gmail.com"
-
+ADMIN_EMAIL = "biuro.playmaker.pro@gmail.com"
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

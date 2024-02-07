@@ -2,22 +2,6 @@
 
 from django.db import migrations, models
 
-from inquiries.schemas import InquiryPlanTypeRef as _InquiryPlanTypeRef
-from payments.models import TransactionType as _TransactionType
-
-
-def create_admin_transaction_type(apps, schema_editor):
-    """Create admin transaction types."""
-    TransactionType = apps.get_model("payments", "TransactionType")
-
-    TransactionType.objects.get_or_create(
-        name=_InquiryPlanTypeRef.ADMIN,
-        name_readable="ADMIN",
-        price=0.01,
-        ref=_TransactionType.TransactionTypeRef.INQUIRIES,
-        visible=False,
-    )
-
 
 class Migration(migrations.Migration):
     dependencies = [
@@ -29,8 +13,5 @@ class Migration(migrations.Migration):
             model_name="transactiontype",
             name="visible",
             field=models.BooleanField(default=True),
-        ),
-        migrations.RunPython(
-            create_admin_transaction_type, reverse_code=migrations.RunPython.noop
         ),
     ]

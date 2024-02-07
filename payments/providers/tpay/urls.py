@@ -1,9 +1,9 @@
+from urllib.parse import urljoin as _urljoin
+
 from django.conf import settings as _settings
 
-from app.http.urls import URLs as _URLs
 
-
-class TpayURLs(_URLs):
+class TpayURLs:
     _BASE_URL = _settings.ENV_CONFIG.tpay.base_url
 
     TRANSACTION_URL = "/transactions"
@@ -12,9 +12,9 @@ class TpayURLs(_URLs):
     @property
     def auth_url(self) -> str:
         """URL to authorize tpay client"""
-        return self._compose_url(self.AUTH_URL)
+        return _urljoin(self._BASE_URL, self.AUTH_URL)
 
     @property
     def transaction_url(self) -> str:
         """URL to create tpay transaction"""
-        return self._compose_url(self.TRANSACTION_URL)
+        return _urljoin(self._BASE_URL, self.TRANSACTION_URL)

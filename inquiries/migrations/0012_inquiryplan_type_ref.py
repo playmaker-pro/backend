@@ -16,7 +16,6 @@ class Migration(migrations.Migration):
                 blank=True,
                 choices=[
                     ("BASIC", "BASIC"),
-                    ("ADMIN", "ADMIN"),
                     ("PREMIUM_INQUIRIES_5", "PREMIUM_INQUIRIES_5"),
                     ("PREMIUM_INQUIRIES_10", "PREMIUM_INQUIRIES_10"),
                     ("PREMIUM_INQUIRIES_25", "PREMIUM_INQUIRIES_25"),

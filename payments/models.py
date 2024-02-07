@@ -1,6 +1,6 @@
-import logging as _logging
 import uuid as _uuid
 from decimal import Decimal as _Decimal
+from typing import List as _List
 
 from django.conf import settings as _settings
 from django.db import models as _models
@@ -8,9 +8,8 @@ from django_fsm import FSMField as _FSMField
 from django_fsm import transition as _transition
 
 from inquiries.models import InquiryPlan as _InquiryPlan
+from payments.logging import logger as _logger
 from payments.providers.tpay import schemas as _tpay_schemas
-
-_logger = _logging.getLogger("payments")
 
 
 class Transaction(_models.Model):
@@ -35,6 +34,7 @@ class Transaction(_models.Model):
     error = _models.CharField(
         choices=TransactionError.choices, max_length=30, null=True, blank=True
     )
+    validation_errors = _models.TextField(null=True, blank=True)
 
     raw_create_response = _models.JSONField(null=True, blank=True)
     raw_resolve_response = _models.JSONField(null=True, blank=True)
@@ -60,9 +60,8 @@ class Transaction(_models.Model):
         source=TransactionStatus.PENDING,
         target=TransactionStatus.FAILED,
     )
-    def failed(self, error: str) -> None:
+    def failed(self) -> None:
         """Set transaction status as FAILED"""
-        _logger.info(f"Transaction {self.uuid} failed, error: {error}")
 
     @_transition(
         transaction_status,
@@ -72,6 +71,7 @@ class Transaction(_models.Model):
     def outdated(self) -> None:
         """Set transaction status as OUTDATED"""
         # TODO: may be implemented with celery to mark transaction as outdated after some time
+        raise NotImplementedError
 
     @property
     def amount(self) -> _Decimal:
@@ -94,20 +94,18 @@ class Transaction(_models.Model):
         self.save()
 
     def resolve_from_tpay_schema(
-        self, schema: _tpay_schemas.TpayTransactionResult
+        self, schema: _tpay_schemas.TpayTransactionResult, errors: _List[str]
     ) -> None:
         """Resolve transaction based on validated tpay response schema"""
         self.raw_resolve_response = schema.json(by_alias=True)
         self.error = self.TransactionError(schema.tr_error)
 
-        try:
-            schema.post_validate()
-        except AttributeError as e:
-            self.failed(str(e))
+        if errors:
+            self.validation_errors = ". ".join(errors)
+            self.failed()
         else:
             self.success()
-        finally:
-            self.save()
+        self.save()
 
     def change_user_plan(self) -> None:
         """Change user plan based on a transaction type"""
@@ -127,7 +125,6 @@ class Transaction(_models.Model):
 class TransactionType(_models.Model):
     class TransactionTypeRef(_models.TextChoices):
         INQUIRIES = "INQUIRIES", "INQUIRIES"
-        ...
 
     name = _models.CharField(max_length=30, unique=True)
     name_readable = _models.CharField(max_length=50)
