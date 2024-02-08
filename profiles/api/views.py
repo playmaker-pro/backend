@@ -285,6 +285,7 @@ class SimilarProfilesAPIView(EndpointViewWithFilter):
     applying specific filters based on the profile type.
     """
 
+    permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = TransferRequestCataloguePagePagination
     serializer_class = serializers.SimilarProfileSerializer
 

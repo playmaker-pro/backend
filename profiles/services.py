@@ -788,6 +788,9 @@ class ProfileFilterService:
                 f"Multiple main positions found for profile {target_profile.uuid}"
             )
             return queryset
+        except ObjectDoesNotExist:
+            # Handle the case where no main position is found
+            return queryset
 
     @staticmethod
     def filter_by_coach_role(
