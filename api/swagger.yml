@@ -1612,9 +1612,7 @@ paths:
                     type: array
                     items:
                       oneOf:
-                        - $ref: '#/components/schemas/SimilarPlayerProfile'
-                        - $ref: '#/components/schemas/SimilarCoachProfile'
-                        - $ref: '#/components/schemas/SimilarOtherProfile'
+                        - $ref: '#/components/schemas/SimilarProfile'
                 description: "Paginated list of profiles similar to the specified profile."
   /profiles/{profile_uuid}/labels:
     get:
@@ -7097,63 +7095,56 @@ components:
         email:
           type: string
 
-    SimilarPlayerProfile:
+    SimilarProfile:
       type: object
       properties:
         uuid:
           type: string
           format: uuid
+        slug:
+          type: string
+        role:
+          type: string
+        picture:
+          type: string
+          nullable: true
         first_name:
           type: string
         last_name:
           type: string
         age:
           type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
         player_position:
           $ref: '#/components/schemas/PlayerPosition'
+          nullable: true
+        playermetrics:
+          $ref: '#/components/schemas/PlayerProfileMetrics'
+          nullable: true
+        specific_role:
+          $ref: '#/components/schemas/ProfileEnumChoices'
+          nullable: true
+        custom_role:
+          type: string
+          nullable: true
+        team_history_object:
+          $ref: '#/components/schemas/TeamHistoryProfileView'
+          nullable: true
       required:
         - uuid
+        - slug
+        - role
+        - picture
         - first_name
         - last_name
         - age
+        - gender
         - player_position
-    SimilarCoachProfile:
-      type: object
-      properties:
-        uuid:
-          type: string
-          format: uuid
-        first_name:
-          type: string
-        last_name:
-          type: string
-        age:
-          type: integer
-        coach_role:
-          type: string
-      required:
-        - uuid
-        - first_name
-        - last_name
-        - age
-        - coach_role
-    SimilarOtherProfile:
-      type: object
-      properties:
-        uuid:
-          type: string
-          format: uuid
-        first_name:
-          type: string
-        last_name:
-          type: string
-        age:
-          type: integer
-      required:
-        - uuid
-        - first_name
-        - last_name
-        - age
+        - playermetrics
+        - specific_role
+        - custom_role
+        - team_history_object
 
   securitySchemes:
     jwtAuth:
