@@ -164,7 +164,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         Full list of choices can be found in roles/definitions.py
         """
 
-        qs: QuerySet = self.get_queryset().order_by("data_fulfill_status")
+        qs: QuerySet = self.get_queryset().order_by("data_fulfill_status", "uuid")
 
         serializer_class = self.get_serializer_class(
             model_name=request.query_params.get("role")
