@@ -238,17 +238,15 @@ class UserInquiry(models.Model):
         help_text=_("Current number of used inquiries."),
     )
 
+    limit = models.PositiveIntegerField(default=5)
+
     @property
     def can_make_request(self):
         return self.counter < self.limit
 
     @property
     def left(self):
-        return self.plan.limit - self.counter
-
-    @property
-    def limit(self):
-        return self.plan.limit
+        return self.limit - self.counter
 
     def reset(self):
         """Reset current counter"""
@@ -257,14 +255,14 @@ class UserInquiry(models.Model):
 
     def increment(self):
         """Increase by one counter"""
-        if self.counter < self.plan.limit:
+        if self.counter < self.limit:
             self.counter += 1
             self.save(update_fields=("counter",))
         self.check_limit_to_notify()
 
     def check_limit_to_notify(self) -> None:
         """Decide user should be notified about reaching the limit"""
-        if self.counter == self.plan.limit:
+        if self.counter == self.limit:
             self.notify_about_limit(force=True)
 
     def notify_about_limit(self, force: bool = False) -> None:
@@ -329,10 +327,11 @@ class UserInquiry(models.Model):
     def set_new_plan(self, plan: InquiryPlan) -> None:
         """Set a new plan for user"""
         self.plan = plan
-        self.save(update_fields=["plan"])
+        self.limit += plan.limit
+        self.save(update_fields=["plan", "limit"])
 
     def __str__(self):
-        return f"{self.user}: {self.counter}/{self.plan.limit}"
+        return f"{self.user}: {self.counter}/{self.limit}"
 
 
 class InquiryRequestManager(models.Manager):

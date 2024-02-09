@@ -32,7 +32,7 @@ class TransactionAPI(_EndpointView):
         except _TransactionType.DoesNotExist:
             return _Response(
                 "Invalid transaction type id.",
-                status=_status.HTTP_400_BAD_REQUEST,
+                status=_status.HTTP_404_NOT_FOUND,
             )
 
         if not transaction_type.visible and not request.user.is_staff:
@@ -52,6 +52,7 @@ class TransactionAPI(_EndpointView):
 
         serializer = _serializers.NewTransactionSerializer(transaction)
         return _Response(serializer.data)
+        return _Response(serializer.data, status=_status.HTTP_201_CREATED)
 
     def list_inquiry_transaction_types(self, request: _Request) -> _Response:
         """List transaction types"""
