@@ -278,7 +278,7 @@ class LanguageSerializer(serializers.ModelSerializer):
 
     def define_priority(self, obj: models.Language) -> bool:
         """Define language priority"""
-        return locale_service.is_prior_language(obj.code)
+        return locale_service.is_prior_language(obj.priority)
 
     def translate_name(self, obj) -> str:
         """Translate language name"""
@@ -681,7 +681,14 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
         Retrieves the name of the team associated with the first team_history instance.
         """
         team_history = obj.team_history.first()
-        return team_history.name if team_history else None
+        if team_history:
+            return (
+                team_history.short_name
+                if hasattr(team_history, "short_name")
+                and team_history.short_name is not None
+                else team_history.name
+            )
+        return None
 
     def get_league_name(self, obj):
         """
@@ -740,8 +747,20 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
         ]
 
     def get_team_name(self, obj: models.TeamContributor) -> str:
+        """
+        Get the team name for a TeamContributor object by prioritizing the short name
+        over the full name for each associated team history object.
+        """
         team_histories = obj.team_history.all()
-        return ", ".join(set(th.name for th in team_histories))
+        preferred_name = ""
+        for th in team_histories:
+            if hasattr(th, "short_name") and th.short_name:
+                preferred_name = th.short_name
+                break  # Exit loop as soon as a short name is found
+            elif th.name:
+                preferred_name = th.name
+
+        return preferred_name
 
     def get_picture_url(self, obj: models.TeamContributor) -> typing.Optional[str]:
         """
@@ -1236,6 +1255,7 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
     )
     picture = serializers.CharField(source="picture_url", read_only=True)
     uuid = serializers.UUIDField(source="profile.uuid", read_only=True)
+    slug = serializers.CharField(source="profile.slug", read_only=True)
 
     class Meta:
         model = models.User
@@ -1251,6 +1271,7 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
             "custom_role",
             "picture",
             "uuid",
+            "slug",
         )
 
     def get_team(self, obj: User) -> Optional[str]:
@@ -1335,6 +1356,71 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
         # Ensure the userpreferences relation exists
         if obj.userpreferences:
             gender_value = obj.userpreferences.gender
+            if gender_value is not None:
+                # Using ProfileEnumChoicesSerializer for the gender field
+                serializer = ProfileEnumChoicesSerializer(
+                    source="gender", model=UserPreferences
+                )
+                return serializer.to_representation(serializer.parse(gender_value))
+            return None
+
+
+class SimilarProfileSerializer(serializers.Serializer):
+    # recursive imports
+    from clubs.api.serializers import TeamHistoryBaseProfileSerializer
+
+    uuid = serializers.UUIDField(read_only=True)
+    slug = serializers.CharField()
+    role = serializers.CharField(read_only=True, source="user.declared_role")
+    picture = serializers.CharField(source="user.picture_url", read_only=True)
+    first_name = serializers.CharField(source="user.first_name")
+    last_name = serializers.CharField(source="user.last_name")
+    age = serializers.IntegerField(read_only=True, source="user.userpreferences.age")
+    gender = serializers.SerializerMethodField("get_gender")
+    player_position = PlayerProfilePositionSerializer(
+        source="get_main_position", read_only=True
+    )
+    specific_role = serializers.SerializerMethodField()
+    custom_role = serializers.CharField(
+        source="profile_based_custom_role", read_only=True
+    )
+    playermetrics = PlayerMetricsSerializer(read_only=True)
+    team_history_object = serializers.SerializerMethodField()
+
+    def get_specific_role(self, obj: models.PROFILE_MODELS) -> dict:
+        """Get specific role for profile (Coach, Club)"""
+        if obj:
+            if field_name := obj.specific_role_field_name:
+                val = getattr(obj, field_name, None)
+                serializer = ProfileEnumChoicesSerializer(
+                    source=field_name,
+                    read_only=True,
+                    model=obj.__class__,
+                )
+                return serializer.to_representation(serializer.parse(val))
+
+    def get_team_history_object(
+        self, profile: models.PROFILE_MODELS
+    ) -> typing.Optional[dict]:
+        """
+        Custom method to handle team history serialization.
+        """
+        if profile.team_object is not None:
+            return self.TeamHistoryBaseProfileSerializer(profile.team_object).data
+        return None
+
+    def get_gender(self, obj: models.PROFILE_MODELS) -> Optional[dict]:
+        """
+        Retrieves and serializes the gender information from the user's preferences.
+
+        This method accesses the gender attribute from the user's associated
+        UserPreferences model. It then uses the ProfileEnumChoicesSerializer to
+        serialize the gender value into a more readable format (e.g., converting
+        a gender code to its corresponding descriptive name).
+        """
+        # Ensure the userpreferences relation exists
+        if obj.user.userpreferences:
+            gender_value = obj.user.userpreferences.gender
             if gender_value is not None:
                 # Using ProfileEnumChoicesSerializer for the gender field
                 serializer = ProfileEnumChoicesSerializer(

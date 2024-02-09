@@ -487,11 +487,13 @@ class BaseProfile(models.Model, EventLogMixin):
         except type(self).DoesNotExist:
             obj_before_save = None
 
-        slug_str = "%s %s %s" % (
-            self.PROFILE_TYPE,
-            self.user.first_name,
-            self.user.last_name,
+        # Use Polish profile type for slug
+        polish_profile_type = profile_utils.profile_type_english_to_polish.get(
+            self.PROFILE_TYPE, self.PROFILE_TYPE
         )
+
+        slug_str = f"{polish_profile_type} {self.user.first_name} {self.user.last_name}"
+
         profile_utils.unique_slugify(self, slug_str)
 
         ver_old, object_exists = self._get_verification_object_verification_fields(
@@ -604,6 +606,7 @@ class BaseProfile(models.Model, EventLogMixin):
                 self.filter(**kwargs)
                 .exclude(user__first_name__isnull=True, user__last_name__isnull=True)
                 .exclude(user__first_name=models.F("user__last_name"))
+                .exclude(user__display_status=User.DisplayStatus.NOT_SHOWN)
             )
 
     objects = ProfileManager()
@@ -1103,6 +1106,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         self.external_links = ExternalLinks.objects.create()
 
     def save(self, *args, **kwargs):
+        # Check if this is a new PlayerProfile instance being created
+        creating = self._state.adding
+
         if not self.mapper:
             self.create_mapper_obj()
 
@@ -1110,6 +1116,9 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             self.create_external_links_obj()
 
         super().save(*args, **kwargs)
+
+        if creating:
+            PlayerMetrics.objects.create(player=self)
 
     class Meta:
         verbose_name = "Player Profile"
@@ -1147,7 +1156,12 @@ class PlayerMetrics(models.Model):
     pm_score_updated = models.DateTimeField(
         null=True, blank=True, verbose_name="PlayMaker Score date updated"
     )
-
+    pm_score_state = models.CharField(
+        max_length=20,
+        choices=definitions.PM_SCORE_STATE_CHOICES,
+        default="not_calculated",
+        help_text="Defines a status of the player's pm_score.",
+    )
     season_score = models.JSONField(null=True, blank=True, verbose_name="Season Score")
     season_score_updated = models.DateTimeField(
         null=True, blank=True, verbose_name="Season Score date updated"
@@ -2556,12 +2570,6 @@ class ProfileTransferStatus(TransferBaseModel):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
-    contact_email = models.EmailField(
-        _("Contact Email"),
-        blank=True,
-        null=True,
-        help_text=_("Contact email address for the transfer."),
-    )
     status = models.CharField(
         max_length=255,
         choices=definitions.TRANSFER_STATUS_CHOICES,

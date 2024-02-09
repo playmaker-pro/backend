@@ -30,11 +30,3 @@ class UserInquiryFactory(factory.django.DjangoModelFactory):
 
     user = factory.SubFactory(_UserFactory)
     plan = factory.SubFactory(InquiryPlanFactory)
-
-
-class InquiryContactFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = _models.InquiryContact
-        django_get_or_create = ("user",)
-
-    user = factory.SubFactory(_UserFactory)

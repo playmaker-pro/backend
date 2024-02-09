@@ -62,6 +62,11 @@ class UserRoleMixin:
 
 
 class User(AbstractUser, UserRoleMixin):
+    class DisplayStatus(models.TextChoices):
+        NOT_SHOWN = "Niewyświetlany"
+        UNDER_REVIEW = "W trakcie analizy"
+        VERIFIED = "Zweryfikowany"
+
     ROLE_CHOICES = definitions.ACCOUNT_ROLES
 
     STATE_NEW = "New"
@@ -93,6 +98,13 @@ class User(AbstractUser, UserRoleMixin):
         _("first name"), max_length=150, blank=True, null=True
     )
     last_name = models.CharField(_("last name"), max_length=150, blank=True, null=True)
+
+    display_status = models.CharField(
+        max_length=20,
+        choices=DisplayStatus.choices,
+        default=DisplayStatus.VERIFIED,
+        help_text="Status for managing visibility in databases",
+    )
 
     @transition(
         field=state,
@@ -257,6 +269,12 @@ class User(AbstractUser, UserRoleMixin):
 
     email = models.EmailField(_("Adres email"), unique=True)
 
+    # Note: As of now, this flag does not impact user access or functionalities.
+    is_email_verified = models.BooleanField(
+        default=False,
+        help_text="Indicates whether the user's email address has been verified.",
+    )
+
     def get_file_path(self, filename: str) -> str:
         """define user profile picture image path"""
         curr_date: str = str(datetime.datetime.now().date())
@@ -312,8 +330,19 @@ class User(AbstractUser, UserRoleMixin):
 
     @property
     def should_be_listed(self) -> bool:
-        """If user has no name or name is created from email, then user should not be listed"""
-        return self.first_name and self.last_name and self.first_name != self.last_name
+        """
+        Determines if a user should be listed based on their name and display status.
+        Users are listed if they have a proper name (not created from email) and their
+        display status is either Verified or Under Review.
+        """
+        name_condition = (
+            self.first_name and self.last_name and self.first_name != self.last_name
+        )
+        display_status_condition = self.display_status in [
+            User.DisplayStatus.VERIFIED,
+            User.DisplayStatus.UNDER_REVIEW,
+        ]
+        return name_condition and display_status_condition
 
     def save(self, *args, **kwargs):
         if self.role in [
@@ -345,6 +374,15 @@ class User(AbstractUser, UserRoleMixin):
     def inquiries_contacts(self) -> models.QuerySet:
         """Get user contacts - accepted InquiryRequests"""
         return InquiryRequest.objects.contacts(self)
+
+    @property
+    def contact_email(self) -> str:
+        """
+        Returns user contact email.
+        This is the main place, from which we take user contact email used for
+        example in sending notifications.
+        """
+        return self.userpreferences.contact_email or self.email
 
     class Meta:
         verbose_name = "User"
@@ -409,7 +447,7 @@ class UserPreferences(models.Model):
     )
 
     @property
-    def inquiries_contact(self):
+    def inquiry_contact(self) -> str:
         return f"+{self.dial_code}{self.phone_number}"
 
     @property

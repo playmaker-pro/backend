@@ -1,16 +1,9 @@
-import json
-
 import pytest
 from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
-from inquiries.models import (
-    InquiryContact,
-    InquiryLogMessage,
-    InquiryRequest,
-    UserInquiryLog,
-)
+from inquiries.models import InquiryLogMessage, InquiryRequest, UserInquiryLog
 from notifications.models import Notification
 from utils.factories import GuestProfileFactory
 from utils.test.test_utils import UserManager
@@ -38,7 +31,6 @@ URL_MY_SENT = reverse("api:inquiries:my_sent_inquiries")
 URL_MY_CONTACTS = reverse("api:inquiries:my_inquiry_contacts")
 URL_MY_RECEIVED = reverse("api:inquiries:my_received_inquiries")
 URL_MY_DATA = reverse("api:inquiries:my_inquiry_data")
-URL_UPDATE_CONTACT_DATA = reverse("api:inquiries:update_contact_data")
 
 
 @pytest.mark.usefixtures("silence_mails")
@@ -69,24 +61,8 @@ class TestInquiriesAPI(APITestCase):
     def recipient_profile_uuid(self) -> str:
         return str(self.recipient_obj.profile.uuid)
 
-    def update_contact_data(self, data: dict, headers: dict) -> None:
-        response = self.client.post(
-            URL_UPDATE_CONTACT_DATA,
-            data=json.dumps(data),
-            **headers,
-        )
-        assert response.status_code == 200
-        assert response.data["email"] == data["email"]
-        expected_phone_number = {
-            "dial_code": f"+{data['phone_number']['dial_code']}",
-            "number": data["phone_number"]["number"],
-        }
-        assert response.data["phone_number"] == expected_phone_number
-
     def test_valid_accept_request_full_flow(self) -> None:
-        """Test should success, full flow of accepting inquiry request"""
-        self.update_contact_data(*self.sender_contact_data)
-        self.update_contact_data(*self.recipient_contact_data)
+        """Test should be success, full flow of accepting inquiry request"""
         send_response = self.client.post(
             URL_SEND(self.recipient_profile_uuid),
             **self.sender_headers,
@@ -133,21 +109,15 @@ class TestInquiriesAPI(APITestCase):
         assert len(contacts_response.data) == 1
 
         # Check contacts data correctly exchanged
-        assert contacts_response.data[0].get(
-            "body"
-        ) == InquiryContact.parse_custom_body(
-            sender_contact_data["phone_number"]["number"],
-            int(sender_contact_data["phone_number"]["dial_code"].replace("+", "")),
-            sender_contact_data["email"],
-        )
-
-        assert contacts_response.data[0].get(
-            "body_recipient"
-        ) == InquiryContact.parse_custom_body(
-            recipient_contact_data["phone_number"]["number"],
-            int(recipient_contact_data["phone_number"]["dial_code"].replace("+", "")),
-            recipient_contact_data["email"],
-        )
+        sender_contact = {
+            "phone_number": {
+                "number": self.sender_obj.userpreferences.phone_number,
+                "dial_code": f"+{self.sender_obj.userpreferences.dial_code}",
+            },
+            "email": self.sender_obj.userpreferences.contact_email,
+        }
+        sender_response: dict = contacts_response.json()[0].get("sender_object")
+        assert sender_response["contact"] == sender_contact
 
         assert (
             UserInquiryLog.objects.filter(
@@ -254,17 +224,9 @@ class TestInquiriesAPI(APITestCase):
             ).status_code
             == 401
         )
-        assert (
-            self.client.post(
-                URL_UPDATE_CONTACT_DATA,
-            ).status_code
-            == 401
-        )
 
     def test_get_user_inquire_metadata(self) -> None:
         """Test should success, get user inquire metadata"""
-        self.update_contact_data(*self.sender_contact_data)
-
         response = self.client.get(
             URL_MY_DATA,
             **self.sender_headers,

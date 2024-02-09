@@ -4,16 +4,16 @@ from urllib.parse import parse_qs, urlparse
 
 from allauth.socialaccount.models import SocialAccount
 from cities_light.models import City
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.validators import validate_email
+from django.utils.encoding import DjangoUnicodeDecodeError, force_text
+from django.utils.http import urlsafe_base64_decode
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from features.models import AccessPermission, Feature, FeatureElement
 from mailing.models import EmailTemplate as _EmailTemplate
-from profiles.models import PROFILE_TYPE
-from users.errors import CityDoesNotExistException
+from users.errors import CityDoesNotExistException, InvalidUIDServiceException
 from users.managers import UserTokenManager
 from users.models import UserPreferences
 from users.schemas import (
@@ -83,12 +83,15 @@ class UserService:
 
     @staticmethod
     def access_permission_filtered_by_user_role(**kwargs) -> Set[int]:
-        #  TODO Access permission is a "Mock", because there is no Role model in user application.
-        #   If model will be created, we should get role from request: requests.user.role
-        #   In addition, AccessPermission model has and attribute called role (not a table field),
-        #   that's why we can't filter by this name.
+        #  TODO Access permission is a "Mock", because there is no Role model in
+        #   user application. If model will be created, we should get role from
+        #   request: requests.user.role. In addition, AccessPermission model has and
+        #   attribute called role (not a table field), that's why we can't filter by
+        #   this name.
         #   access_permissions_ids = {
-        #   obj.id for obj in AccessPermission.objects.filter(role__id=kwargs.get('role_id'))
+        #   obj.id for obj in AccessPermission.objects.filter(
+        #   role__id=kwargs.get('role_id')
+        #   )
         #   }
 
         access_permissions_ids: Set[int] = {
@@ -187,11 +190,31 @@ class UserService:
 
     @staticmethod
     def send_email_to_confirm_new_user(user: User) -> None:
-        """Send email to user with"""
+        """Sends an email to a newly registered user to confirm their email address."""
         email_template = _EmailTemplate.objects.new_user_template()
         verification_url = UserTokenManager.create_email_verification_url(user)
         schema = email_template.create_email_schema(user=user, url=verification_url)
         email_template.send_email(schema)
+
+    @staticmethod
+    def change_email_verify_flag(user: User) -> None:
+        """
+        Verifies a user's email address.
+        """
+        user.is_email_verified = True
+        user.save()
+
+    @staticmethod
+    def get_user_from_uid(uidb64: str) -> User:
+        try:
+            user_id = force_text(urlsafe_base64_decode(uidb64))
+            # Ensure that the decoded user_id only contains digit characters for safety
+            if not user_id.isdigit():
+                raise ValueError("UID contains non-digit characters.")
+
+            return User.objects.get(pk=user_id)
+        except (TypeError, ValueError, DjangoUnicodeDecodeError, ObjectDoesNotExist):
+            raise InvalidUIDServiceException
 
 
 class PasswordResetService:
@@ -227,13 +250,6 @@ class PasswordResetService:
         email_template = _EmailTemplate.objects.password_reset_template()
         schema = email_template.create_email_schema(user=user, url=reset_url)
         email_template.send_email(schema)
-
-    def get_user_from_token(self, uidb64: str, token: str) -> Optional[User]:
-        """
-        Retrieve the user associated with a given token and encoded user ID.
-        """
-        _, _, user = UserTokenManager.check_user_token(user=uidb64, token=token)
-        return user
 
     @staticmethod
     def reset_user_password(user: User, new_password: str) -> None:

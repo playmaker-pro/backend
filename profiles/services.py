@@ -8,6 +8,7 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import MultipleObjectsReturned
 from django.db import IntegrityError
 from django.db import models as django_base_models
 from django.db.models import (
@@ -383,6 +384,22 @@ class ProfileService:
             raise ObjectDoesNotExist
 
     @staticmethod
+    def get_profile_by_slug(slug: str) -> models.PROFILE_TYPE:
+        """
+        Get profile object using slug.
+        Iterate through each profile type.
+        Iterated object (PROFILE_MODEL_MAP) should include each subclass of BaseProfile.
+        Raise ProfileDoesNotExist if no profile with the given slug exists.
+        """
+        for profile_type in models.PROFILE_MODEL_MAP.values():
+            try:
+                return profile_type.objects.get(slug=slug)
+            except profile_type.DoesNotExist:
+                continue
+        else:
+            raise ObjectDoesNotExist
+
+    @staticmethod
     def is_valid_uuid(value: str) -> bool:
         try:
             uuid_obj = uuid.UUID(value)
@@ -440,7 +457,8 @@ class ProfileService:
             lambda user: search_term
             in utils.preprocess_search_term(
                 (user.first_name or "") + " " + (user.last_name or "")
-            ) and user.should_be_listed,
+            )
+            and user.should_be_listed,
             users_with_declared_role,
         )
 
@@ -546,18 +564,18 @@ class ProfileFilterService:
         return queryset.filter(player_positions__player_position_id__in=positions)
 
     @staticmethod
-    def filter_player_league(
+    def filter_league(
         queryset: django_base_models.QuerySet, league_ids: list
     ) -> django_base_models.QuerySet:
         """
-        Filter a queryset of players based on their association with the specified
+        Filter a queryset of profiles based on their association with the specified
         league IDs.
 
-        The method prioritizes players who are associated with the leagues in the
-        current season. If a player has been associated with one of the given leagues in
+        The method prioritizes profiles who are associated with the leagues in the
+        current season. If a profile has been associated with one of the given leagues in
         the current season, they are included in the results.
         If they haven't been associated in the current season but have been in
-        past seasons, they are also included. However, players with current season
+        past seasons, they are also included. However, profiles with current season
         associations are prioritized over those with only past associations.
         """
         current_season = get_current_season()
@@ -734,11 +752,87 @@ class ProfileFilterService:
         return queryset.filter(transfer_status_related__benefits__overlap=benefits)
 
     @staticmethod
-    def filter_by_salary(queryset, salary: str) -> QuerySet:
+    def filter_by_salary(queryset: QuerySet, salary: str) -> QuerySet:
         """
         Filter the queryset based on the salary specified in the profile's transfer status.
         """
         return queryset.filter(transfer_status_related__salary=salary)
+
+    @staticmethod
+    def filter_min_pm_score(queryset: QuerySet, min_score: int) -> QuerySet:
+        """Filter profiles with a minimum PlayMaker Score"""
+        return queryset.filter(playermetrics__pm_score__gte=min_score)
+
+    @staticmethod
+    def filter_max_pm_score(queryset: QuerySet, max_score: int) -> QuerySet:
+        """Filter profiles with a maximum PlayMaker Score"""
+        return queryset.filter(playermetrics__pm_score__lte=max_score)
+
+    @staticmethod
+    def filter_by_position(
+        queryset: QuerySet, target_profile: models.PROFILE_MODELS
+    ) -> QuerySet:
+        """
+        Filters a queryset of profiles by the main position of the target player profile.
+        es"""
+        try:
+            # Attempt to get the single main position
+            main_position = target_profile.player_positions.get(is_main=True)
+            return queryset.filter(
+                player_positions__player_position=main_position.player_position,
+                player_positions__is_main=True,
+            ).distinct()
+        except MultipleObjectsReturned:
+            # Handle the case where more than one main position is found
+            logger.warning(
+                f"Multiple main positions found for profile {target_profile.uuid}"
+            )
+            return queryset
+        except ObjectDoesNotExist:
+            # Handle the case where no main position is found
+            return queryset
+
+    @staticmethod
+    def filter_by_coach_role(
+        queryset: QuerySet, target_profile: models.PROFILE_MODELS
+    ) -> QuerySet:
+        if target_profile.coach_role:
+            return queryset.filter(coach_role=target_profile.coach_role).distinct()
+        return queryset
+
+    @staticmethod
+    def apply_custom_filters(
+        queryset: QuerySet, target_profile: models.PROFILE_MODELS
+    ) -> QuerySet:
+        model = type(target_profile)
+
+        # Exclude the target profile itself
+        queryset = queryset.exclude(uuid=target_profile.uuid)
+
+        # Apply filters based on profile type
+        if isinstance(target_profile, models.PlayerProfile):
+            queryset = ProfileFilterService.filter_by_position(queryset, target_profile)
+        elif isinstance(target_profile, models.CoachProfile):
+            queryset = ProfileFilterService.filter_by_coach_role(
+                queryset, target_profile
+            )
+
+        # Relax criteria if fewer than 10 profiles
+        if queryset.count() < 10:
+            # Relax position or coach role filter
+            queryset = (
+                model.objects.filter(
+                    user__userpreferences__gender=target_profile.user.userpreferences.gender
+                )
+                .exclude(uuid=target_profile.uuid)
+                .distinct()
+            )
+
+            # If still fewer than 10, relax gender filter
+            if queryset.count() < 10:
+                queryset = model.objects.exclude(uuid=target_profile.uuid).distinct()
+
+        return queryset
 
 
 class PlayerProfilePositionService:

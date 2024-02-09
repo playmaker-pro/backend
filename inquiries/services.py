@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 
-from .models import InquiryContact, InquiryPlan, InquiryRequest, UserInquiry
+from .models import InquiryPlan, InquiryRequest, UserInquiry
 
 logger: logging.Logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -23,10 +23,6 @@ class InquireService:
             )
             plan = InquiryPlan.objects.create(**args)
         return plan
-
-    def create_inquiry_contact_for_user(self, user) -> None:
-        """Create InquiryContact object for each new user"""
-        InquiryContact.objects.get_or_create(user=user)
 
     def create_basic_inquiry_plan(self, user) -> None:
         """Create a basic inquiry plan and contact instance for user"""
@@ -73,7 +69,6 @@ class InquireService:
     def get_user_contacts(user: User) -> QuerySet:
         """Get all inquiries contacts by user"""
         return user.inquiries_contacts.order_by("-updated_at")
-        # return user.userpreferenses.order_by("-updated_at")
 
     @classmethod
     def get_user_received_inquiries(cls, user: User) -> QuerySet:

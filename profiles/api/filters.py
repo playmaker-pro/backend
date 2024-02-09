@@ -7,7 +7,7 @@ from django.db.models import functions as django_base_functions
 from django_filters import rest_framework as filters
 
 from api.filters import MultipleFilter
-from profiles.models import PlayerProfile, ProfileTransferRequest
+from profiles.models import CoachProfile, PlayerProfile, ProfileTransferRequest
 
 
 class TransferRequestCatalogueFilter(filters.FilterSet):
@@ -68,43 +68,90 @@ class TransferRequestCatalogueFilter(filters.FilterSet):
             default_radius = 1  # Default radius in kilometers
             radius = Decimal(radius) if radius else default_radius
 
-            return queryset.annotate(
-                distance=ExpressionWrapper(
-                    earth_radius
-                    * django_base_functions.ACos(
-                        django_base_functions.Cos(
-                            django_base_functions.Radians(latitude)
-                        )
-                        * django_base_functions.Cos(
-                            django_base_functions.Radians(
-                                F(
-                                    "requesting_team__team_history__club__stadion_address__latitude"  # noqa 501
+            return (
+                queryset.annotate(
+                    distance=ExpressionWrapper(
+                        earth_radius
+                        * django_base_functions.ACos(
+                            django_base_functions.Cos(
+                                django_base_functions.Radians(latitude)
+                            )
+                            * django_base_functions.Cos(
+                                django_base_functions.Radians(
+                                    F(
+                                        "requesting_team__team_history__club__stadion_address__latitude"  # noqa 501
+                                    )
                                 )
                             )
-                        )
-                        * django_base_functions.Cos(
-                            django_base_functions.Radians(
-                                F(
-                                    "requesting_team__team_history__club__stadion_address__longitude"  # noqa 501
+                            * django_base_functions.Cos(
+                                django_base_functions.Radians(
+                                    F(
+                                        "requesting_team__team_history__club__stadion_address__longitude"  # noqa 501
+                                    )
+                                )
+                                - django_base_functions.Radians(longitude)
+                            )
+                            + django_base_functions.Sin(
+                                django_base_functions.Radians(latitude)
+                            )
+                            * django_base_functions.Sin(
+                                django_base_functions.Radians(
+                                    F(
+                                        "requesting_team__team_history__club__stadion_address__latitude"  # noqa 501
+                                    )
                                 )
                             )
-                            - django_base_functions.Radians(longitude)
-                        )
-                        + django_base_functions.Sin(
-                            django_base_functions.Radians(latitude)
-                        )
-                        * django_base_functions.Sin(
-                            django_base_functions.Radians(
-                                F(
-                                    "requesting_team__team_history__club__stadion_address__latitude"  # noqa 501
-                                )
-                            )
-                        )
-                    ),
-                    output_field=FloatField(),
+                        ),
+                        output_field=FloatField(),
+                    )
                 )
-            ).filter(distance__lt=radius)
+                .filter(distance__lt=radius)
+                .distinct()
+            )
         return queryset
+
+
+class DefaultProfileFilter(filters.FilterSet):
+    """
+    Default filter set for profiles, primarily filtering based on gender.
+    This filter set can be used as a fallback for profile types that do not require
+    specialized filtering beyond gender.
+    """
+
+    gender = filters.CharFilter(field_name="user__userpreferences__gender")
+
+    class Meta:
+        fields = ["gender"]
+
+
+class PlayerProfileFilter(filters.FilterSet):
+    """
+    Filter set for PlayerProfile models, allowing filtering by position and gender.
+    This filter set is designed to accommodate the specific attributes of player profiles,
+    such as their main playing position.
+    """
+
+    position = filters.CharFilter(field_name="player_positions__player_position_id")
+    gender = filters.CharFilter(field_name="user__userpreferences__gender")
+
+    class Meta:
+        model = PlayerProfile
+        fields = ["position", "gender"]
+
+
+class CoachProfileFilter(filters.FilterSet):
+    """
+    Filter set for CoachProfile models, allowing filtering by coach role and gender.
+    This filter set caters to the unique attributes of coach profiles,
+    including their specific coaching roles.
+    """
+
+    coach_role = filters.CharFilter(field_name="coach_role")
+    gender = filters.CharFilter(field_name="user__userpreferences__gender")
+
+    class Meta:
+        model = CoachProfile
+        fields = ["coach_role", "gender"]
 
 
 class PlayerProfileFilters(filters.FilterSet):

@@ -258,29 +258,7 @@ paths:
                 $ref: '#/components/schemas/InquiryRequestUserMeta'
         '401':
           description: "Unauthorized"
-  /inquiries/my/meta-data/update-contact/:
-    post:
-      operationId: update_my_inquiry_contact
-      description: Update my inquiry contact
-      summary: Update my inquiry contact
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InquiryRequestUserContact'
-      tags:
-        - inquiries
-      security:
-        - jwtAuth: [ ]
-      responses:
-        '200':
-          description: "Inquiry contact updated successfully"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InquiryRequestUserContact'
-        '401':
-          description: "Unauthorized"
+
   /inquiries/{iq_id}/accept/:
     post:
       operationId: accept_inquiry_request
@@ -1326,6 +1304,19 @@ paths:
           schema:
             type: string
           description: "Filter profiles by salary in transfer status, single choice like: ?salary=1"
+        - in: query
+          name: min_pm_score
+          schema:
+            type: integer
+          required: false
+          description: "Minimum PlayMaker Score for filtering player profiles, use in combination with max_pm_score for range filtering. For example: ?min_pm_score=50"
+        - in: query
+          name: max_pm_score
+          schema:
+            type: integer
+          required: false
+          description: "Maximum PlayMaker Score for filtering player profiles, use in combination with min_pm_score for range filtering. For example: ?max_pm_score=70"
+
       tags:
         - profiles
       responses:
@@ -1569,6 +1560,110 @@ paths:
           description: 'Profile with given uuid does not exist'
         '401':
           description: 'Unauthorized'
+
+  /profiles/{profile_uuid}/contact/:
+    patch:
+      operationId: update_profile_contact_data
+      description: "Update profile contact data"
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+          required: true
+      tags:
+        - profiles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileOwnerUserPreferencesUpdate'
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: 'Profile updated successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileOwnerUserPreferencesUpdate'
+
+  /profiles/slug/{profile_slug}/:
+    get:
+      operationId: profiles_retrieve_by_slug
+      description: "Get profile by slug"
+      summary: "Get profile"
+      parameters:
+        - in: path
+          name: profile_slug
+          schema:
+            type: string
+          required: true
+          description: 'Profile slug'
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+        - { }
+      responses:
+        '200':
+          description: 'Profile obtain successfully'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlayerProfileView'
+                  - $ref: '#/components/schemas/CoachProfile'
+                  - $ref: '#/components/schemas/ScoutProfile'
+                  - $ref: '#/components/schemas/ClubProfileView'
+                  - $ref: '#/components/schemas/ManagerProfile'
+                  - $ref: '#/components/schemas/GuestProfile'
+        '400':
+          description: 'Invalid slug'
+        '401':
+          description: 'Unauthorized'
+        '404':
+          description: 'Profile with given slug does not exist'
+  /profiles/similar-profiles/{profile_uuid}/:
+    get:
+      operationId: similar_profiles_retrieve
+      description: "Retrieve a list of profiles similar to the specified profile, based on role, gender, position or coach role, and progressively relaxing these criteria if necessary."
+      summary: "Get similar profiles"
+      parameters:
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: 'Unique identifier (UUID) of the profile for which similar profiles are to be retrieved.'
+      tags:
+        - profiles
+      responses:
+        '200':
+          description: 'List of similar profiles retrieved successfully.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: 'Total count of similar profiles'
+                  next:
+                    type: string
+                    description: "Next paginated request URL"
+                  previous:
+                    type: string
+                    description: "Previous paginated request URL"
+                  results:
+                    type: array
+                    items:
+                      oneOf:
+                        - $ref: '#/components/schemas/SimilarProfile'
+                description: "Paginated list of profiles similar to the specified profile."
   /profiles/{profile_uuid}/labels:
     get:
       operationId: profiles_retrieve_labels
@@ -3390,6 +3485,8 @@ paths:
                     type: string
                   uuid:
                     type: string
+                  slug:
+                    type: string
                   gender:
                     $ref: '#/components/schemas/Gender'
           description: Get user main profile uuid with role.
@@ -3995,6 +4092,55 @@ paths:
                   value:
                     success: "False"
                     detail: "Invalid token"
+
+  /users/verify-email/{uidb64}/{token}/:
+    get:
+      operationId: users_verify_email
+      description: Verifies a user's email address using a token and uidb64 passed in the query parameters.
+      summary: Verify User Email
+      tags:
+        - users
+      parameters:
+        - name: uidb64
+          in: path
+          required: true
+          description: The base64 encoded ID of the user.
+          schema:
+            type: string
+        - name: token
+          in: path
+          required: true
+          description: The token for email verification.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Email verified successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  detail:
+                    type: string
+                    example: "Email verified successfully."
+        '400':
+          description: Bad request - invalid token or uidb64.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  detail:
+                    type: string
+                    example: "Invalid token or user ID."
+
   /events/{event_id}/read:
     get:
       operationId: ReadEvent
@@ -4764,9 +4910,13 @@ components:
         season_score:
           type: number
           readOnly: true
+        pm_score_state:
+          type: string
+          readOnly: true
       required:
        - pm_score
        - season_score
+       - pm_score_state
 
     PlayerMetrics:
       type: object
@@ -4916,7 +5066,7 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ProfileLabel'
-            player_metrics:
+            playermetrics:
               $ref: '#/components/schemas/PlayerProfileMetrics'
             height:
               type: integer
@@ -5026,7 +5176,7 @@ components:
             player_positions,
             profile_video,
             labels,
-            player_metrics,
+            playermetrics,
             height,
             weight,
             prefered_leg,
@@ -5667,6 +5817,8 @@ components:
         uuid:
           type: string
           format: uuid
+        slug:
+          type: string
         custom_role:
           type: string
           nullable: true
@@ -5812,12 +5964,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Course'
-        dial_code:
-          type: integer
-        phone_number:
-          type: string
-        contact_email:
-          type: string
       required:
        - age
        - localization
@@ -5827,9 +5973,6 @@ components:
        - birth_date
        - licences
        - courses
-       - dial_code
-       - phone_number
-       - contact_email
 
     BaseUserProfilePreferencesUpdate:
       type: object
@@ -5853,6 +5996,18 @@ components:
         birth_date:
           type: string
           description: "Format: YYYY-MM-DD"
+
+    ProfileOwnerUserPreferencesUpdate:
+      allOf:
+        - $ref:  '#/components/schemas/BaseUserProfilePreferencesUpdate'
+        - type: object
+          properties:
+            contact_email:
+              type: string
+            phone_number:
+              type: string
+            dial_code:
+              type: integer
 
     BaseUserProfileUpdate:
       type: object
@@ -6186,7 +6341,7 @@ components:
         status:
           type: integer
           description: "Status object id."
-        player_position:
+        position:
           type: array
           items:
             type: integer
@@ -6223,7 +6378,7 @@ components:
         status:
           type: integer
           description: "Status object id."
-        player_position:
+        position:
           type: array
           items:
             type: integer
@@ -6772,6 +6927,9 @@ components:
             uuid:
               type: string
               format: uuid
+            slug:
+              type: string
+              readOnly: true
             custom_role:
               type: string
             specific_role:
@@ -6784,6 +6942,10 @@ components:
               $ref: '#/components/schemas/TeamHistoryProfileView'
             gender:
               $ref: '#/components/schemas/Gender'
+            contact:
+              $ref: '#/components/schemas/ContactSchema'
+            playermetrics:
+                $ref: '#/components/schemas/PlayerProfileMetrics'
     InquiryRequest:
       type: object
       properties:
@@ -6795,12 +6957,6 @@ components:
           type: string
           readOnly: true
         updated_at:
-          type: string
-          readOnly: true
-        body:
-          type: string
-          readOnly: true
-        body_recipient:
           type: string
           readOnly: true
         status:
@@ -7005,6 +7161,70 @@ components:
           type: string
           format: uri
           description: "URL to the payment gateway."
+
+    ContactSchema:
+      type: object
+      properties:
+        phone_number:
+          type: object
+          properties:
+            number:
+              type: string
+            dial_code:
+              type: string
+        email:
+          type: string
+
+    SimilarProfile:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        role:
+          type: string
+        picture:
+          type: string
+          nullable: true
+        first_name:
+          type: string
+        last_name:
+          type: string
+        age:
+          type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
+        player_position:
+          $ref: '#/components/schemas/PlayerPosition'
+          nullable: true
+        playermetrics:
+          $ref: '#/components/schemas/PlayerProfileMetrics'
+          nullable: true
+        specific_role:
+          $ref: '#/components/schemas/ProfileEnumChoices'
+          nullable: true
+        custom_role:
+          type: string
+          nullable: true
+        team_history_object:
+          $ref: '#/components/schemas/TeamHistoryProfileView'
+          nullable: true
+      required:
+        - uuid
+        - slug
+        - role
+        - picture
+        - first_name
+        - last_name
+        - age
+        - gender
+        - player_position
+        - playermetrics
+        - specific_role
+        - custom_role
+        - team_history_object
 
   securitySchemes:
     jwtAuth:

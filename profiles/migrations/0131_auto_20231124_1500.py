@@ -7,80 +7,114 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
-        ('inquiries', '0007_created_mail_notification'),
+        ("contenttypes", "0002_remove_content_type_name"),
+        ("inquiries", "0007_created_mail_notification"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('profiles', '0130_guestprofile_custom_role'),
+        ("profiles", "0130_guestprofile_custom_role"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='profilevisithistory',
-            old_name='counter',
-            new_name='counter_anonymoususer',
+            model_name="profilevisithistory",
+            old_name="counter",
+            new_name="counter_anonymoususer",
         ),
         migrations.RenameField(
-            model_name='profilevisithistory',
-            old_name='counter_coach',
-            new_name='counter_clubprofile',
+            model_name="profilevisithistory",
+            old_name="counter_coach",
+            new_name="counter_clubprofile",
         ),
         migrations.RenameField(
-            model_name='profilevisithistory',
-            old_name='counter_scout',
-            new_name='counter_coachprofile',
+            model_name="profilevisithistory",
+            old_name="counter_scout",
+            new_name="counter_coachprofile",
         ),
         migrations.AddField(
-            model_name='profilevisithistory',
-            name='counter_guestprofile',
+            model_name="profilevisithistory",
+            name="counter_guestprofile",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='profilevisithistory',
-            name='counter_managerprofile',
+            model_name="profilevisithistory",
+            name="counter_managerprofile",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='profilevisithistory',
-            name='counter_playerprofile',
+            model_name="profilevisithistory",
+            name="counter_playerprofile",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='profilevisithistory',
-            name='counter_refereeprofile',
+            model_name="profilevisithistory",
+            name="counter_refereeprofile",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='profilevisithistory',
-            name='counter_scoutprofile',
+            model_name="profilevisithistory",
+            name="counter_scoutprofile",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='profilevisithistory',
-            name='created_at',
-            field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
+            model_name="profilevisithistory",
+            name="created_at",
+            field=models.DateTimeField(
+                auto_now_add=True, default=django.utils.timezone.now
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='profilevisithistory',
-            name='updated_at',
+            model_name="profilevisithistory",
+            name="updated_at",
             field=models.DateTimeField(auto_now=True),
         ),
         migrations.AddField(
-            model_name='profilevisithistory',
-            name='user',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, related_name='profile_visit_history', to='users.user'),
+            model_name="profilevisithistory",
+            name="user",
+            field=models.ForeignKey(
+                default=1,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="profile_visit_history",
+                to="users.user",
+            ),
             preserve_default=False,
         ),
         migrations.CreateModel(
-            name='ProfileTransferStatus',
+            name="ProfileTransferStatus",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('object_id', models.PositiveIntegerField()),
-                ('status', models.CharField(blank=True, choices=[('1', 'Szukam klubu'), ('2', 'Rozważę propozycje'), ('3', 'Nie szukam klubu'), ('4', 'Piłkarska emerytura')], help_text='Defines a status of the transfer for the profile.', max_length=255, null=True)),
-                ('contact', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='inquiries.inquirycontact')),
-                ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.contenttype')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("object_id", models.PositiveIntegerField()),
+                (
+                    "status",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("1", "Szukam klubu"),
+                            ("2", "Rozważę propozycje"),
+                            ("3", "Nie szukam klubu"),
+                            ("4", "Piłkarska emerytura"),
+                        ],
+                        help_text="Defines a status of the transfer for the profile.",
+                        max_length=255,
+                        null=True,
+                    ),
+                ),
+                # ('contact', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='inquiries.inquirycontact')),
+                (
+                    "content_type",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="contenttypes.contenttype",
+                    ),
+                ),
             ],
         ),
     ]

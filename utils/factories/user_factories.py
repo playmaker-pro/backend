@@ -32,9 +32,7 @@ class UserFactory(CustomObjectFactory):
     userinquiry = factory.RelatedFactory(
         "utils.factories.inquiry_factories.UserInquiryFactory", "user"
     )
-    inquiry_contact = factory.RelatedFactory(
-        "utils.factories.inquiry_factories.InquiryContactFactory", "user"
-    )
+    display_status = User.DisplayStatus.VERIFIED
 
     @classmethod
     def create_admin_user(
@@ -52,6 +50,7 @@ class UserFactory(CustomObjectFactory):
     def create(cls, **kwargs) -> User:
         """Override create() method to hash user password"""
         kwargs["password"] = make_password(kwargs.get("password", "test"))
+        kwargs.setdefault("display_status", User.DisplayStatus.VERIFIED)
 
         return super().create(**kwargs)
 

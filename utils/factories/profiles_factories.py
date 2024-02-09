@@ -36,7 +36,7 @@ class PlayerProfilePositionFactory(CustomObjectFactory):
 
     player_position = factory.SubFactory(PlayerPositionFactory)
     player_profile = factory.SubFactory(
-        "utils.factories.profiles.factories.PlayerProfileFactory"
+        "utils.factories.profiles_factories.PlayerProfileFactory"
     )
 
 
@@ -105,9 +105,6 @@ class PlayerProfileFactory(ProfileFactory):
     practice_distance = factory.LazyAttribute(lambda _: utils.get_random_int(30, 100))
     voivodeship_obj = factory.LazyAttribute(lambda _: utils.get_random_voivo())
     address = factory.LazyAttribute(lambda _: utils.get_random_address())
-    playermetrics = factory.RelatedFactory(
-        PlayerMetricsFactory, factory_related_name="player"
-    )
     player_positions = factory.RelatedFactory(
         PlayerProfilePositionFactory, "player_profile"
     )
@@ -141,6 +138,18 @@ class PlayerProfileFactory(ProfileFactory):
         obj.playermetrics.wipe_metrics()
         return obj
 
+    @classmethod
+    def create_player_profile_with_metrics(cls, pm_score: int) -> models.PlayerProfile:
+        """
+        Creates a PlayerProfile instance along with associated PlayerMetrics,
+        setting the 'pm_score' of the PlayerMetrics to the specified value.
+        """
+        player_profile = PlayerProfileFactory.create()
+        player_metrics = player_profile.playermetrics
+        player_metrics.pm_score = pm_score
+        player_metrics.save()
+        return player_profile
+
 
 class CoachProfileFactory(ProfileFactory):
     class Meta:
@@ -152,6 +161,9 @@ class CoachProfileFactory(ProfileFactory):
     )
     club_role = factory.LazyAttribute(
         lambda _: random.choice(models.CoachProfile.CLUB_ROLE)[0]
+    )
+    coach_role = factory.LazyAttribute(
+        lambda _: random.choice(models.CoachProfile.COACH_ROLE_CHOICES)[0]
     )
     team_history_object = (
         clubs_factories.TeamHistoryFactory.get_random_or_create_subfactory()
@@ -184,6 +196,7 @@ class ClubProfileFactory(ProfileFactory):
     club_object = factory.LazyAttribute(
         lambda _: clubs_factories.ClubFactory.random_object()
     )
+    team_object = clubs_factories.TeamFactory.get_random_or_create_subfactory()
     club_role = factory.LazyAttribute(
         lambda _: random.choice(models.ClubProfile.CLUB_ROLE)[0]
     )

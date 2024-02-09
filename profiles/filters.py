@@ -1,8 +1,13 @@
+import hashlib
 import random
 import typing
+from datetime import datetime
 from functools import cached_property
+from itertools import groupby
+from operator import attrgetter
 
 from django.db.models import QuerySet
+from rest_framework.request import Request
 
 from api import errors as api_errors
 from api import utils as api_utils
@@ -45,6 +50,8 @@ class ProfileListAPIFilter(APIFilter):
         "benefits": api_utils.convert_str_list,
         "salary": api_utils.convert_str,
         "transfer_status_league": api_utils.convert_int_list,
+        "min_pm_score": api_utils.convert_int,
+        "max_pm_score": api_utils.convert_int,
     }
 
     @cached_property
@@ -56,9 +63,9 @@ class ProfileListAPIFilter(APIFilter):
         except ValueError:
             raise IncorrectProfileRole
 
-    def get_queryset(self) -> QuerySet:
-        """Get queryset based on role"""
-        self.queryset: QuerySet = self.model.objects.to_list_by_api()
+    def get_queryset(self) -> typing.Union[QuerySet, typing.List]:
+        """Get queryset based on role, apply filters, and handle shuffle parameter."""
+        self.queryset = self.model.objects.to_list_by_api()
         self.filter_queryset(self.queryset)
 
         if self.query_params.get("shuffle", False):
@@ -91,7 +98,6 @@ class ProfileListAPIFilter(APIFilter):
     def player_filters(self) -> None:
         """Filters related with PlayerProfile"""
         self.filter_youth()
-        self.filter_league()
         self.filter_gender()
         self.filter_players_by_transfer_status()
         self.filter_by_salary()
@@ -99,6 +105,7 @@ class ProfileListAPIFilter(APIFilter):
         self.filter_by_transfer_status_league()
         self.filter_by_additional_info()
         self.filter_by_number_of_trainings()
+        self.filter_by_pm_score()
 
         self.queryset = self.queryset.order_by("-user__date_joined")
 
@@ -122,6 +129,7 @@ class ProfileListAPIFilter(APIFilter):
         self.filter_language()
         self.filter_licence()
         self.filter_by_labels()
+        self.filter_league()
 
     def define_query_params(self) -> None:
         """Validate query_params and save as self.query_params"""
@@ -176,7 +184,7 @@ class ProfileListAPIFilter(APIFilter):
     def filter_league(self) -> None:
         """Filter queryset by player league"""
         if league := self.query_params.get("league"):
-            self.queryset = self.service.filter_player_league(self.queryset, league)
+            self.queryset = self.service.filter_league(self.queryset, league)
 
     def filter_gender(self) -> None:
         """Filter queryset by player gender"""
@@ -283,3 +291,14 @@ class ProfileListAPIFilter(APIFilter):
         """
         if salary := self.query_params.get("salary"):
             self.queryset = self.service.filter_by_salary(self.queryset, salary)
+
+    def filter_by_pm_score(self) -> None:
+        """Filter queryset based on the range of PlayMaker Score"""
+        min_score = self.query_params.get("min_pm_score")
+        max_score = self.query_params.get("max_pm_score")
+
+        if min_score is not None:
+            self.queryset = self.service.filter_min_pm_score(self.queryset, min_score)
+
+        if max_score is not None:
+            self.queryset = self.service.filter_max_pm_score(self.queryset, max_score)

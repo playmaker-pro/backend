@@ -106,7 +106,7 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
 
     class Meta:
         model = UserPreferences
-        exclude = ("user", "id")
+        exclude = ("user", "id", "phone_number", "contact_email", "dial_code")
 
     age = serializers.IntegerField(read_only=True)
     localization = CitySerializer(required=False, allow_null=True)
@@ -201,6 +201,15 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
                 label_service.assign_coach_age_labels(profile_uuid)
 
         return instance
+
+
+class UserPreferencesUpdateSerializer(UserPreferencesSerializerDetailed):
+    class Meta:
+        model = UserPreferences
+        exclude = (
+            "user",
+            "id",
+        )
 
 
 class UserDataSerializer(serializers.ModelSerializer):

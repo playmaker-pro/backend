@@ -1,18 +1,19 @@
 import logging
 import uuid
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Tuple, Union
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
+from django.core.paginator import EmptyPage, InvalidPage, Page, Paginator
 from django.db.models import ObjectDoesNotExist, QuerySet
 from django.db.models.functions import Random
-from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, status
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.utils.urls import replace_query_param
 from rest_framework.views import PermissionDenied
 
 from api.base_view import EndpointViewWithFilter
@@ -34,23 +35,26 @@ from profiles import errors, models
 from profiles.api import errors as api_errors
 from profiles.api import serializers
 from profiles.api.errors import (
-    InvalidProfileRole,
     PermissionDeniedHTTPException,
-    ProfileDoesNotExist,
     TransferRequestDoesNotExistHTTPException,
     TransferStatusDoesNotExistHTTPException,
 )
-from profiles.api.filters import TransferRequestCatalogueFilter
+from profiles.api.filters import (
+    CoachProfileFilter,
+    DefaultProfileFilter,
+    PlayerProfileFilter,
+    TransferRequestCatalogueFilter,
+)
 from profiles.api.managers import SerializersManager
-from profiles.errors import ProfileVisitHistoryDoesNotExistException
+from profiles.api.mixins import ProfileRetrieveMixin
 from profiles.filters import ProfileListAPIFilter
-from profiles.interfaces import ProfileVisitHistoryProtocol
 from profiles.models import ProfileTransferRequest
 from profiles.serializers_detailed.base_serializers import (
     ProfileTransferRequestSerializer,
     ProfileTransferStatusSerializer,
     TeamContributorSerializer,
     UpdateOrCreateProfileTransferSerializer,
+    UserPreferencesUpdateSerializer,
 )
 from profiles.serializers_detailed.catalogue_serializers import (
     TransferRequestCatalogueSerializer,
@@ -72,6 +76,10 @@ from roles.definitions import (
     TRANSFER_TRAININGS_CHOICES,
 )
 from users.api.serializers import UserMainRoleSerializer
+from users.errors import UserPreferencesDoesNotExistHTTPException
+
+if TYPE_CHECKING:
+    from django_filters import rest_framework as filters
 
 profile_service = ProfileService()
 team_contributor_service = TeamContributorService()
@@ -84,7 +92,7 @@ logger = logging.getLogger(__name__)
 
 
 # FIXME: lremkowicz: what about a django-filter library?
-class ProfileAPI(ProfileListAPIFilter, EndpointView):
+class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
     permission_classes = [IsAuthenticatedOrReadOnly]
     allowed_methods = ["post", "patch", "get"]
 
@@ -104,50 +112,22 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
     def get_profile_by_uuid(
         self, request: Request, profile_uuid: uuid.UUID
     ) -> Response:
-        """GET single profile by uuid"""
+        """GET single profile by uuid."""
         try:
             profile_object = profile_service.get_profile_by_uuid(profile_uuid)
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExist
 
-        # Profile visit counter
-        if profile_object.user != request.user:
-            requestor_profile: Union[models.BaseProfile, AnonymousUser] = request.user
-            if request.user.is_authenticated:
-                try:
-                    requestor_profile = profile_service.get_profile_by_role_and_user(
-                        user=request.user, role=request.user.role
-                    )
-                    if not requestor_profile:
-                        raise ProfileDoesNotExist(details="Requestor has no profile")
-                except ValueError:
-                    raise InvalidProfileRole(details="Requestor has invalid role")
+        return self.retrieve_profile_and_respond(request, profile_object)
 
-            history: ProfileVisitHistoryProtocol
-            try:
-                history = visit_history_service.get_user_profile_visit_history(
-                    user=profile_object.user, created_at=timezone.now()
-                )
-                visit_history_service.increment(
-                    instance=history, requestor=requestor_profile
-                )
+    def get_profile_by_slug(self, request: Request, profile_slug: str) -> Response:
+        """GET single profile by slug."""
+        try:
+            profile_object = profile_service.get_profile_by_slug(profile_slug)
+        except ObjectDoesNotExist:
+            raise api_errors.ProfileDoesNotExistBySlug
 
-            except ProfileVisitHistoryDoesNotExistException:
-                logger.error("Profile visit history does not exist. Creating one..")
-                history = visit_history_service.create(user=profile_object.user)
-                visit_history_service.increment(
-                    instance=history, requestor=requestor_profile
-                )
-
-        serializer_class = self.get_serializer_class(
-            model_name=profile_object.__class__.__name__
-        )
-        if not serializer_class:
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        serializer = serializer_class(
-            profile_object, context={"request": request, "label_context": "profile"}
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return self.retrieve_profile_and_respond(request, profile_object)
 
     def update_profile(self, request: Request, profile_uuid: uuid.UUID) -> Response:
         """PATCH request for profile (require UUID in body)"""
@@ -177,11 +157,6 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
 
         return Response(serializer.data)
 
-    def get_paginated_queryset(self, qs: QuerySet = None) -> Optional[list]:
-        """Paginate queryset to optimize serialization"""
-        qs: QuerySet = qs or self.get_queryset()
-        return self.paginate_queryset(qs.order_by("data_fulfill_status"))
-
     def get_bulk_profiles(self, request: Request) -> Response:
         """
         Get list of profile for role delivered as param
@@ -189,7 +164,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         Full list of choices can be found in roles/definitions.py
         """
 
-        qs: QuerySet = self.get_queryset().order_by("data_fulfill_status", Random())
+        qs: QuerySet = self.get_queryset().order_by("data_fulfill_status", "uuid")
 
         serializer_class = self.get_serializer_class(
             model_name=request.query_params.get("role")
@@ -267,9 +242,120 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView):
         filtered_queryset = filter_service.get_queryset()
 
         # Get the count of the filtered queryset
-        count = filtered_queryset.count()
+        count = len(filtered_queryset)
 
         return Response({"count": count})
+
+    def update_profile_contact(
+        self, request: Request, profile_uuid: uuid.UUID
+    ) -> Response:
+        """User preferences contact update endpoint"""
+        try:
+            profile = profile_service.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist:
+            raise api_errors.ProfileDoesNotExist
+        except ValidationError:
+            raise api_errors.InvalidUUID
+
+        if profile.user != request.user:
+            raise NotOwnerOfAnObject
+        if not (user_preferences := request.user.userpreferences):
+            raise UserPreferencesDoesNotExistHTTPException
+
+        serializer = UserPreferencesUpdateSerializer(
+            user_preferences,
+            data=request.data,
+            partial=True,
+            context={"profile_uuid": profile_uuid},
+        )
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+
+        return Response(serializer.data)
+
+
+class SimilarProfilesAPIView(EndpointViewWithFilter):
+    """
+    API view for retrieving profiles similar to a specified profile based
+    on certain criteria.
+
+    This view applies a combination of Django filters and custom filtering logic to
+    identify profiles similar to the given target profile.
+    It supports different types of profiles like PlayerProfile and CoachProfile,
+    applying specific filters based on the profile type.
+    """
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    pagination_class = TransferRequestCataloguePagePagination
+    serializer_class = serializers.SimilarProfileSerializer
+
+    def get_similar_profiles(self, request, profile_uuid: uuid) -> Response:
+        """
+        Retrieves profiles similar to the target profile specified by the UUID.
+        """
+        # Fetch the target user's profile
+        try:
+            target_profile = ProfileService.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist:
+            raise api_errors.ProfileDoesNotExist
+
+        # Determine the model based on the profile type and create the initial queryset
+        model = type(target_profile)
+        queryset = model.objects.all()
+        # Construct filter parameters based on target_profile attributes
+        filter_params = self.construct_filter_params(target_profile)
+        # Apply Django filters
+        filterset_class = self.get_filterset_class(target_profile)
+        filterset = filterset_class(filter_params, queryset=queryset)
+
+        # Exclude the profile of the requesting user
+        if request.user.is_authenticated:
+            queryset.exclude(user=self.request.user)
+        # Apply custom filtering logic
+        queryset = ProfileFilterService.apply_custom_filters(
+            filterset.qs, target_profile
+        )
+
+        # Serialize and return the response
+        paginated = self.get_paginated_queryset(queryset)
+        serializer = self.serializer_class(
+            paginated, many=True, context={"request": request}
+        )
+        return self.get_paginated_response(serializer.data)
+
+    def construct_filter_params(self, target_profile: models.PROFILE_MODELS) -> dict:
+        """
+        Constructs filter parameters for Django filters based on the attributes
+        of the target profile.
+        """
+        # Initialize gender filter parameters
+        filter_params = {"gender": target_profile.user.userpreferences.gender}
+
+        # Specific filter parameters based on profile type
+        if isinstance(target_profile, models.PlayerProfile):
+            main_position = target_profile.player_positions.filter(is_main=True).first()
+            if main_position:
+                filter_params["position"] = main_position.player_position_id
+        elif (
+            isinstance(target_profile, models.CoachProfile)
+            and target_profile.coach_role
+        ):
+            filter_params["coach_role"] = target_profile.coach_role
+        return filter_params
+
+    def get_filterset_class(
+        self, profile: models.PROFILE_MODELS
+    ) -> "filters.FilterSet":
+        """
+        Returns the appropriate filterset class based on the type of the given profile.
+        """
+        if isinstance(profile, models.PlayerProfile):
+            return PlayerProfileFilter
+        elif isinstance(profile, models.CoachProfile):
+            return CoachProfileFilter
+        else:
+            # Return the default filter for other profile types
+            return DefaultProfileFilter
 
 
 class ProfileSearchView(EndpointView):

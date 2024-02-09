@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 import factory
 import pytest
+from django.contrib.auth import get_user_model
 from django.db.models import signals
 from django.test import override_settings
 from django.urls import reverse
@@ -26,6 +27,8 @@ from utils.factories import (
     UserFactory,
 )
 from utils.test.test_utils import UserManager
+
+User = get_user_model()
 
 profile_service = ProfileService()
 url: str = "api:profiles:create_or_list_profiles"
@@ -54,6 +57,29 @@ class TestProfileListAPI(APITestCase):
         response2 = self.client.get(self.url, {"role": "P", "shuffle": True})
 
         assert response1.data["results"] != response2.data["results"]
+
+    def test_list_consistent_within_session(self) -> None:
+        """
+        Test if results are consistently within the same session.
+        This ensures that the randomize logic based on session seed works as intended.
+        """
+        # Create a batch of profiles
+        factories.PlayerProfileFactory.create_batch(30)
+
+        # Simulate a session for the client
+        session = self.client.session
+        session.save()
+
+        # First request to shuffle
+        response1 = self.client.get(self.url, {"role": "P"})
+
+        # Second request to shuffle within the same session
+        response2 = self.client.get(self.url, {"role": "P"})
+
+        # Assert that the two responses within the same session are identical
+        assert (
+            response1.data["results"] == response2.data["results"]
+        ), "Shuffled results should be consistent within the same session"
 
     @parameterized.expand([[{"role": "P"}], [{"role": "C"}], [{"role": "T"}]])
     def test_get_bulk_profiles(self, param) -> None:
@@ -178,55 +204,51 @@ class TestProfileListAPI(APITestCase):
         assert count_response.status_code == 200
         assert count_response.data["count"] == 2
 
-    def test_get_bulk_profiles_filter_league(self) -> None:
-        """get player profiles filter by league"""
+    @parameterized.expand(
+        [
+            ({"role": "P"}, "PlayerProfileFactory"),
+            ({"role": "T"}, "CoachProfileFactory"),
+            ({"role": "C"}, "ClubProfileFactory"),
+        ]
+    )
+    def test_get_bulk_profiles_filter_league(self, param, factory_name) -> None:
+        """test league filter"""
+        factory = getattr(factories, factory_name)
         current_season = get_current_season()
-        th1, th2 = factories.TeamFactory.create_batch(
+        team1, team2 = factories.TeamFactory.create_batch(
             2, league_history__season__name=current_season
         )
-        profile1 = factories.PlayerProfileFactory.create(team_object=th1)
-        profile2 = factories.PlayerProfileFactory.create(team_object=th2)
-        league1_id = profile1.team_object.league_history.league.id
-        league2_id = profile2.team_object.league_history.league.id
-        response = self.client.get(
-            self.url,
-            {"role": "P", "league": [league1_id]},
-        )
+        factory.create(team_object=team1)
+        factory.create(team_object=team2)
+
+        league1_id = team1.league_history.league.id
+        league2_id = team2.league_history.league.id
+
+        # Test for valid league_id
+        response = self.client.get(self.url, {**param, "league": [league1_id]})
         assert response.status_code == 200
         assert len(response.data["results"]) == 1
 
-        response = self.client.get(
-            self.url,
-            {"role": "P", "league": [league1_id, league2_id]},
-        )
-        assert response.status_code == 200
-        assert len(response.data["results"]) == 2
-
-        response = self.client.get(
-            self.url,
-            {"role": "P", "league": [1111111]},  # fake league_id
-        )
-        assert response.status_code == 200
-        assert len(response.data["results"]) == 0
-
         count_response = self.client.get(
-            self.count_url,
-            {"role": "P", "league": [league1_id]},
+            self.count_url, {**param, "league": [league1_id]}
         )
         assert count_response.status_code == 200
         assert count_response.data["count"] == 1
 
-        count_response = self.client.get(
-            self.count_url,
-            {"role": "P", "league": [league1_id, league2_id]},
+        # Test for both leagues
+        response = self.client.get(
+            self.url,
+            {**param, "league": [league1_id, league2_id]},
         )
-        assert count_response.status_code == 200
-        assert count_response.data["count"] == 2
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 2  # Expecting 2 profiles
 
-        count_response = self.client.get(
-            self.count_url,
-            {"role": "P", "league": [1111111]},  # fake league_id
-        )
+        # Test for invalid league_id (e.g., 1111111)
+        response = self.client.get(self.url, {**param, "league": [1111111]})
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 0
+
+        count_response = self.client.get(self.count_url, {**param, "league": [1111111]})
         assert count_response.status_code == 200
         assert count_response.data["count"] == 0
 
@@ -788,6 +810,64 @@ class TestProfileListAPI(APITestCase):
         )
         assert response.status_code == 200
         assert len(response.data["results"]) == 1
+
+    def test_filter_profiles_by_pm_score_range(self) -> None:
+        """Test filtering profiles by PlayMaker Score range."""
+        # Create player profiles with various pm_scores
+        PlayerProfileFactory.create_player_profile_with_metrics(pm_score=40)
+        PlayerProfileFactory.create_player_profile_with_metrics(pm_score=60)
+        PlayerProfileFactory.create_player_profile_with_metrics(pm_score=80)
+        # Test filtering for profiles with pm_score between 50 and 70
+        response = self.client.get(
+            self.url, {"role": "P", "min_pm_score": 40, "max_pm_score": 50}
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+
+        response = self.client.get(
+            self.url, {"role": "P", "min_pm_score": 40, "max_pm_score": 70}
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 2
+
+        response = self.client.get(
+            self.url, {"role": "P", "min_pm_score": 40, "max_pm_score": 80}
+        )
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 3
+
+    def test_filter_profiles_by_pm_score_single_bound(self) -> None:
+        """Test filtering profiles by PlayMaker Score with a single bound."""
+        # Create player profiles with various pm_scores
+        PlayerProfileFactory.create_player_profile_with_metrics(pm_score=40)
+        PlayerProfileFactory.create_player_profile_with_metrics(pm_score=60)
+        PlayerProfileFactory.create_player_profile_with_metrics(pm_score=80)
+
+        # Test filtering for profiles with pm_score at least 60
+        response = self.client.get(self.url, {"role": "P", "min_pm_score": 60})
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 2
+
+        # Test filtering for profiles with pm_score at least 99
+        response = self.client.get(self.url, {"role": "P", "max_pm_score": 50})
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+
+    def test_filter_profiles_by_display_status(self) -> None:
+        """Test profiles are filtered based on display_status."""
+        # Create users with different display statuses
+        user_1 = factories.UserFactory(display_status=User.DisplayStatus.VERIFIED)
+        user_2 = factories.UserFactory(display_status=User.DisplayStatus.UNDER_REVIEW)
+        user_3 = factories.UserFactory(display_status=User.DisplayStatus.NOT_SHOWN)
+        factories.PlayerProfileFactory(user=user_1)  # Should be listed
+        factories.PlayerProfileFactory(user=user_2)  # Should be listed
+        factories.PlayerProfileFactory(user=user_3)  # Should not be listed
+
+        response = self.client.get(self.url, {"role": "P"}, **self.headers)
+        assert response.status_code == 200
+        assert (
+            len(response.data["results"]) == 2
+        )  # Only verified and under review should be listed
 
 
 @override_settings(SUSPEND_SIGNALS=True)

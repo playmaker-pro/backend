@@ -29,7 +29,8 @@ class InquirySignalTests(TestCase):
 
     def test_inquiry_sent_signal(self):
         """
-        Test if the 'inquiry_sent' signal is correctly triggered when an inquiry is sent.
+        Test if the 'inquiry_sent' signal is correctly triggered when an inquiry
+        is sent.
         """
 
         # Connect a mock receiver to the signal
@@ -39,7 +40,8 @@ class InquirySignalTests(TestCase):
 
         self.signal_triggered = False
 
-        # Manually create and save an inquiry instance to trigger the save method correctly
+        # Manually create and save an inquiry instance to trigger the save
+        # method correctly
         inquiry = InquiryRequestFactory(sender=self.sender, recipient=self.recipient)
         inquiry.save(recipient_profile_uuid=self.recipient.profile.uuid)
 
@@ -48,7 +50,8 @@ class InquirySignalTests(TestCase):
 
     def test_inquiry_accepted_signal(self):
         """
-        Test if the 'inquiry_accepted' signal is correctly triggered when an inquiry is accepted.
+        Test if the 'inquiry_accepted' signal is correctly triggered when an inquiry
+        is accepted.
         """
 
         # Similar setup as above
@@ -67,7 +70,8 @@ class InquirySignalTests(TestCase):
 
     def test_inquiry_rejected_signal(self):
         """
-        Test if the 'inquiry_rejected' signal is correctly triggered when an inquiry is rejected.
+        Test if the 'inquiry_rejected' signal is correctly triggered when an inquiry
+        is rejected.
         """
 
         @receiver(inquiry_rejected)
@@ -86,8 +90,9 @@ class InquirySignalTests(TestCase):
         """
         Tests the signal for when a user's inquiry pool is exhausted.
 
-        This test simulates a user sending inquiries until their pool is exhausted. It then checks
-        if the corresponding notification for the pool exhaustion is created as expected.
+        This test simulates a user sending inquiries until their pool is exhausted.
+        It then checks if the corresponding notification for the pool exhaustion
+        is created as expected.
         """
         # Set the sender's inquiry count just below the limit
         self.sender.userinquiry.counter = self.sender.userinquiry.limit - 1
@@ -107,10 +112,12 @@ class InquirySignalTests(TestCase):
 
     def test_inquiry_reminder_signal(self):
         """
-        Tests the signal for sending a reminder to a recipient about an outstanding inquiry.
+        Tests the signal for sending a reminder to a recipient about an outstanding
+        inquiry.
 
-        This test creates an inquiry request and triggers a reminder signal. It then checks if a
-        notification is created for the recipient to remind them about the pending inquiry.
+        This test creates an inquiry request and triggers a reminder signal.
+        It then checks if a notification is created for the recipient to remind
+        them about the pending inquiry.
         """
         # Create an inquiry request
         inquiry_request = InquiryRequestFactory(
@@ -128,11 +135,13 @@ class InquirySignalTests(TestCase):
 
     def test_inquiry_restored_signal(self):
         """
-        Tests the signal for when an inquiry request is restored to a sender's inquiry pool.
+        Tests the signal for when an inquiry request is restored to a sender's
+        inquiry pool.
 
-        This test simulates the restoration of an inquiry request back to the sender's inquiry pool,
-        typically due to a lack of response from the recipient. It checks if a notification is created
-        for the sender informing them about the restored inquiry.
+        This test simulates the restoration of an inquiry request back to the sender's
+        inquiry pool, typically due to a lack of response from the recipient.
+        It checks if a notification is created for the sender informing them about
+        the restored inquiry.
         """
         # Create an inquiry request
         inquiry_request = InquiryRequestFactory(

@@ -69,4 +69,9 @@ urlpatterns = [
         views.UsersAPI.as_view({"get": "my_main_profile"}),
         name="my_main_profile",
     ),
+    path(
+        "verify-email/<str:uidb64>/<str:token>/",
+        views.UserRegisterEndpointView.as_view({"get": "verify_email"}),
+        name="verify_email",
+    ),
 ]

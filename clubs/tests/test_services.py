@@ -246,11 +246,10 @@ class TeamHistoryCreationServicesTest(APITestCase):
             self.user,
         )
 
-        assert len(team_histories) == 4
-
         for th in team_histories:
             assert th.name == team_parameter
             assert th.league_history.league == self.league
+            assert str(end_date.year) in th.league_history.season.name
 
     def test_create_or_get_team_history_date_based_invalid_dates(self):
         start_date = datetime.date(2022, 1, 1)
