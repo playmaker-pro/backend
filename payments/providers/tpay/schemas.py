@@ -61,7 +61,7 @@ class TpayTransactionBody(_BaseModel):
 
         class TpayNotification(_BaseModel):
             email: str
-            # result_url: _HttpUrl
+            url: _HttpUrl
 
         payerUrls: TpayPayerUrls
         notification: TpayNotification

@@ -57,7 +57,7 @@ class TpayConfig(BaseConfig):
 
         class Notification(BaseConfig):
             email: str  # email address for payment notification
-            result_url: str  # url to which tpay will send payment notification
+            url: str  # url to which tpay will send payment notification
 
         payerUrls: Redirect = _Field(alias="redirect")
         notification: Notification
