@@ -18,7 +18,7 @@ line-length = 88
 
 [tool.poetry]
 name = "backend"
-version = "2.2.1"
+version = "2.2.2"
 description = ""
 authors = ["rkesik <rafal.kesik@gmail.com>"]
 readme = "README.md"
