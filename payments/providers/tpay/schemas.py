@@ -1,10 +1,9 @@
 import typing as _typing
-from datetime import datetime as _datetime
-from datetime import timedelta as _timedelta
 from decimal import Decimal as _Decimal
 from enum import Enum as _Enum
 from uuid import UUID as _UUID
 
+from django.utils import timezone as _timezone
 from pydantic import BaseModel as _BaseModel
 from pydantic import BaseSettings as _BaseSettings
 from pydantic import Field as _Field
@@ -82,15 +81,18 @@ class TpayAuthResponse(_BaseModel):
     scope: str
     client_id: str
 
-    @property
-    def expires_at(self) -> _datetime:
-        """Get expiration date as python datetime"""
-        return _datetime.utcnow() + _timedelta(seconds=self.expires_in)
+    expires_at: _timezone.datetime
+
+    def __init__(self, **kwargs):
+        kwargs["expires_at"] = _timezone.datetime.utcnow() + _timezone.timedelta(
+            seconds=kwargs["expires_in"]
+        )
+        super().__init__(**kwargs)
 
     @property
     def is_valid(self) -> bool:
         """Check if token is still valid"""
-        return self.expires_at > _datetime.utcnow()
+        return self.expires_at > _timezone.datetime.utcnow()
 
     @property
     def headers(self) -> dict:
@@ -115,8 +117,8 @@ class TpayErrorResponse(_BaseModel):
 
 
 class TpayTransactionDate(_BaseModel):
-    creation: _typing.Optional[_datetime]
-    realization: _typing.Optional[_datetime]
+    creation: _typing.Optional[_timezone.datetime]
+    realization: _typing.Optional[_timezone.datetime]
 
 
 class TpayTransactionResponse(_BaseModel):
@@ -201,7 +203,7 @@ class TpayTransactionResult(_BaseModel):
 
     merchant_id: int = _Field(alias="id")
     tr_id: str
-    tr_date: _datetime
+    tr_date: _timezone.datetime
     tr_crc: _UUID
     tr_amount: _Decimal
     tr_paid: _Decimal

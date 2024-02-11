@@ -71,7 +71,9 @@ class TpayWebhook(_EndpointView):
         validator = _TpayResponseValidator.handle(schema)
         if validator.is_valid:
             _logger.info(f"-- RESOLVE ({validator.crc}) -- SUCCESS")
+            response = _HttpResponse("TRUE")
         else:
             _logger.error(f"-- RESOLVE ({validator.crc}) -- ERRORS: {validator.errors}")
+            response = _HttpResponse("FALSE")
         validator.resolve_transaction()
-        return _HttpResponse("TRUE")
+        return response
