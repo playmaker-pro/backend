@@ -6,13 +6,14 @@ from django.db.models import ExpressionWrapper, F, FloatField, QuerySet
 from django.db.models import functions as django_base_functions
 from django_filters import rest_framework as filters
 
-from api.filters import MultipleFilter
+from api.filters import MultipleFilter, NumberInFilter
+from clubs.models import League
 from profiles.models import CoachProfile, PlayerProfile, ProfileTransferRequest
 
 
 class TransferRequestCatalogueFilter(filters.FilterSet):
     position = MultipleFilter()
-    league = MultipleFilter()
+    league = NumberInFilter(field_name="league", method="filter_by_league_ids")
     latitude = filters.NumberFilter(method="filter_by_location")
     longitude = filters.NumberFilter(method="filter_by_location")
     radius = filters.NumberFilter(method="filter_by_location")
@@ -109,6 +110,21 @@ class TransferRequestCatalogueFilter(filters.FilterSet):
                 .distinct()
             )
         return queryset
+
+    def filter_by_league_ids(
+        self, queryset: QuerySet, name: str, values: List
+    ) -> QuerySet:
+        """
+        Filters the queryset based on a list of league IDs, converting those IDs to
+        league names and filtering the queryset to include only entries that match one
+        of the league names.
+        """
+        league_ids = self.request.GET.getlist("league")
+        int_values = [int(league_id) for league_id in league_ids if league_id.isdigit()]
+        league_names = League.objects.filter(id__in=int_values).values_list(
+            "name", flat=True
+        )
+        return queryset.filter(league__in=league_names)
 
 
 class DefaultProfileFilter(filters.FilterSet):
