@@ -1,19 +1,16 @@
 import logging
 import uuid
-from typing import TYPE_CHECKING, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
-from django.core.paginator import EmptyPage, InvalidPage, Page, Paginator
 from django.db.models import ObjectDoesNotExist, QuerySet
-from django.db.models.functions import Random
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, status
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.utils.urls import replace_query_param
 from rest_framework.views import PermissionDenied
 
 from api.base_view import EndpointViewWithFilter
@@ -64,6 +61,7 @@ from profiles.services import (
     ProfileService,
     ProfileVideoService,
     ProfileVisitHistoryService,
+    RandomizationService,
     TeamContributorService,
 )
 from profiles.utils import map_service_exception
@@ -86,6 +84,7 @@ team_contributor_service = TeamContributorService()
 external_links_services = ExternalLinksService()
 User = get_user_model()
 visit_history_service = ProfileVisitHistoryService()
+randomization_service = RandomizationService()
 
 
 logger = logging.getLogger(__name__)
@@ -164,8 +163,8 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         Full list of choices can be found in roles/definitions.py
         """
 
-        qs: QuerySet = self.get_queryset().order_by("data_fulfill_status", "uuid")
-
+        qs: QuerySet = self.get_queryset()
+        qs = randomization_service.apply_seeded_randomization(qs, request.user)
         serializer_class = self.get_serializer_class(
             model_name=request.query_params.get("role")
         )

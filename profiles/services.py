@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 import logging
 import typing
 import uuid
@@ -9,7 +10,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import MultipleObjectsReturned
-from django.db import IntegrityError
+from django.db import IntegrityError, connection
 from django.db import models as django_base_models
 from django.db.models import (
     Case,
@@ -1949,3 +1950,36 @@ class ProfileVisitHistoryService:
         return self.model.total_visits_from_range(
             user=user, date=utils.get_past_date(days=30)
         )
+
+
+class RandomizationService:
+    @staticmethod
+    def get_daily_user_seed(user: User) -> int:
+        """
+        Generates a daily unique seed for randomization based on the user's identity.
+
+        This method ensures that the seed changes daily and is unique to each user,
+        providing a consistent randomized order of querysets for each user
+        across requests.
+        """
+        current_date = datetime.datetime.now().date().isoformat()
+        default_identifier = "default-guest-id"
+        identifier = str(user.id) if user.is_authenticated else default_identifier
+        seed_input = f"{identifier}:{current_date}"
+        seed = int(hashlib.sha256(seed_input.encode()).hexdigest(), 16) % (10**8)
+        return seed
+
+    def apply_seeded_randomization(self, queryset: QuerySet, user: User) -> QuerySet:
+        """
+        Applies a seeded randomization to a queryset based on a daily unique seed.
+
+        The randomization ensures that the order of items in the queryset is consistently
+        randomized across requests for a given user and changes daily. This method is
+        particularly useful for providing each user with a unique perspective of dataset
+        listings that refresh daily.
+        """
+        seed = RandomizationService.get_daily_user_seed(user)
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT setseed(%s)", [seed / float(10**8)])
+        queryset = queryset.order_by("data_fulfill_status", "?")
+        return queryset
