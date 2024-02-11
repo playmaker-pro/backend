@@ -5,20 +5,23 @@ from django.db import migrations, models
 from django.db.migrations.state import StateApps
 
 from inquiries.models import InquiryPlan
-from inquiries.plans import basic_plan, premium_plan
 
 
 def get_new_plans(apps: StateApps) -> (InquiryPlan, InquiryPlan):
     """Get new plans."""
     InquiryPlan = apps.get_model("inquiries", "InquiryPlan")
     return (
-        InquiryPlan.objects.get_or_create(**basic_plan.dict())[0],
-        InquiryPlan.objects.get_or_create(**premium_plan.dict())[0],
+        InquiryPlan.objects.get_or_create(
+            name="Basic", description="Basic plan", limit=5, default=True
+        )[0],
+        InquiryPlan.objects.get_or_create(
+            name="Premium", description="Premium plan", limit=10
+        )[0],
     )
 
 
 def migrate_all_inquiries_plan_to_basic(apps: StateApps, *_) -> None:
-    """Migrate all inquiry plan to basic. Create UserInquiry if not exists."""
+    """Migrate all inquiry plans to basic. Create UserInquiry if not exists."""
     User = apps.get_model("users", "User")
     UserInquiry = apps.get_model("inquiries", "UserInquiry")
 

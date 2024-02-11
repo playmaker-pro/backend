@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from django_fsm import FSMField, transition
 
 from inquiries.errors import ForbiddenLogAction
-from inquiries.plans import basic_plan, premium_plan
+from inquiries.schemas import InquiryPlanTypeRef as _InquiryPlanTypeRef
 from inquiries.signals import (
     inquiry_accepted,
     inquiry_pool_exhausted,
@@ -165,12 +165,16 @@ class UserInquiryLog(models.Model):
 class InquiryPlan(models.Model):
     """Holds information about user's inquiry plans."""
 
-    name = models.CharField(_("Plan Name"), max_length=255, help_text=_("Plan name"))
+    class InquiryTypeRef(models.TextChoices):
+        BASIC = _InquiryPlanTypeRef.BASIC.text_choice
+        PREMIUM5 = _InquiryPlanTypeRef.PREMIUM5.text_choice
+        PREMIUM10 = _InquiryPlanTypeRef.PREMIUM10.text_choice
+        PREMIUM25 = _InquiryPlanTypeRef.PREMIUM25.text_choice
 
+    name = models.CharField(_("Plan Name"), max_length=255, help_text=_("Plan name"))
     limit = models.PositiveIntegerField(
         _("Plan limit"), help_text=_("Limit how many actions are allowed")
     )
-
     sort = models.PositiveIntegerField(
         ("Soring"),
         default=0,
@@ -179,7 +183,6 @@ class InquiryPlan(models.Model):
             "which means this is not set."
         ),
     )
-
     description = models.TextField(
         _("Description"),
         null=True,
@@ -189,12 +192,21 @@ class InquiryPlan(models.Model):
             "internal purpose."
         ),
     )
-
     default = models.BooleanField(
         _("Default Plan"),
         default=False,
         help_text=_(
             "Defines if this is default plan selected during account creation."
+        ),
+    )
+    type_ref = models.CharField(
+        max_length=50,
+        choices=InquiryTypeRef.choices,
+        null=True,
+        blank=True,
+        unique=True,
+        help_text=_(
+            "Defines if this is premium plan and what type of premium plan it is."
         ),
     )
 
@@ -206,13 +218,8 @@ class InquiryPlan(models.Model):
 
     @classmethod
     def basic(cls) -> "InquiryPlan":
-        """Get basic plan"""
-        return cls.objects.get_or_create(**basic_plan.dict())[0]
-
-    @classmethod
-    def premium(cls) -> "InquiryPlan":
-        """Get premium plan"""
-        return cls.objects.get_or_create(**premium_plan.dict())[0]
+        """Get a basic plan"""
+        return cls.objects.get(default=True)
 
 
 class UserInquiry(models.Model):
@@ -235,17 +242,15 @@ class UserInquiry(models.Model):
         help_text=_("Current number of used inquiries."),
     )
 
+    limit = models.PositiveIntegerField(default=5)
+
     @property
     def can_make_request(self):
         return self.counter < self.limit
 
     @property
     def left(self):
-        return self.plan.limit - self.counter
-
-    @property
-    def limit(self):
-        return self.plan.limit
+        return self.limit - self.counter
 
     def reset(self):
         """Reset current counter"""
@@ -254,14 +259,14 @@ class UserInquiry(models.Model):
 
     def increment(self):
         """Increase by one counter"""
-        if self.counter < self.plan.limit:
+        if self.counter < self.limit:
             self.counter += 1
             self.save(update_fields=("counter",))
         self.check_limit_to_notify()
 
     def check_limit_to_notify(self) -> None:
         """Decide user should be notified about reaching the limit"""
-        if self.counter == self.plan.limit:
+        if self.counter == self.limit:
             self.notify_about_limit(force=True)
 
     def notify_about_limit(self, force: bool = False) -> None:
@@ -323,8 +328,14 @@ class UserInquiry(models.Model):
         days_until_next_reference = (next_reference_date - today).days
         return max(days_until_next_reference, 0)
 
+    def set_new_plan(self, plan: InquiryPlan) -> None:
+        """Set a new plan for user"""
+        self.plan = plan
+        self.limit += plan.limit
+        self.save(update_fields=["plan", "limit"])
+
     def __str__(self):
-        return f"{self.user}: {self.counter}/{self.plan.limit}"
+        return f"{self.user}: {self.counter}/{self.limit}"
 
 
 class InquiryRequestManager(models.Manager):
