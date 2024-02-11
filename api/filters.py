@@ -36,3 +36,12 @@ class MultipleFilter(filters.MultipleChoiceFilter):
     """Custom multiple choice filter needed for filtering by multiple values."""
 
     field_class = MultipleField
+
+
+class NumberInFilter(filters.BaseInFilter, filters.NumberFilter):
+    """
+    A custom filter class that extends django-filters to allow filtering
+    by multiple numeric values.
+    """
+
+    pass
