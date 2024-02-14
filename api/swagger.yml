@@ -7049,6 +7049,9 @@ components:
           type: integer
           description: "The number of days remaining until the next inquiry expiration date."
           readOnly: true
+        limit:
+          type: integer
+          description: "Limit of inquiries"
       required:
         - user
         - plan
@@ -7141,7 +7144,7 @@ components:
         name_readable:
           type: string
         price:
-          type: number
+          type: string
         ref:
           type: string
       required:
