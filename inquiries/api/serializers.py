@@ -47,11 +47,13 @@ class InquiryUserDataSerializer(_BaseUserDataSerializer):
     contact = InquiryContactSerializer(source="userpreferences", read_only=True)
     playermetrics = PlayerMetricsSerializer(read_only=True, source="profile.playermetrics")
 
-    def get_specific_role(self, obj: User) -> dict:
+    def get_specific_role(self, obj: User) -> typing.Optional[dict]:
         """Get specific role for profile (Coach, Club)"""
         if obj.profile:
             if field_name := obj.profile.specific_role_field_name:
                 val = getattr(obj.profile, field_name, None)
+                if val is None:
+                    return None
                 serializer = ProfileEnumChoicesSerializer(
                     source=field_name,
                     read_only=True,

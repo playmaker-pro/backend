@@ -1387,11 +1387,13 @@ class SimilarProfileSerializer(serializers.Serializer):
     playermetrics = PlayerMetricsSerializer(read_only=True)
     team_history_object = serializers.SerializerMethodField()
 
-    def get_specific_role(self, obj: models.PROFILE_MODELS) -> dict:
+    def get_specific_role(self, obj: models.PROFILE_MODELS) -> Optional[dict]:
         """Get specific role for profile (Coach, Club)"""
         if obj:
             if field_name := obj.specific_role_field_name:
                 val = getattr(obj, field_name, None)
+                if val is None:
+                    return None
                 serializer = ProfileEnumChoicesSerializer(
                     source=field_name,
                     read_only=True,
