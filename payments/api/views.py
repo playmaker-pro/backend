@@ -2,6 +2,7 @@ from django.http import HttpResponse as _HttpResponse
 from rest_framework import status as _status
 from rest_framework.exceptions import PermissionDenied as _PermissionDenied
 from rest_framework.permissions import AllowAny as _AllowAny
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.request import Request as _Request
 from rest_framework.response import Response as _Response
 
@@ -21,6 +22,8 @@ _TpayProvider = _TpayHttpService()
 
 
 class TransactionAPI(_EndpointView):
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+
     def create_transaction_for_type(
         self, request: _Request, transaction_type_id: int
     ) -> _Response:
