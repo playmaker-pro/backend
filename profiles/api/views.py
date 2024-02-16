@@ -174,7 +174,11 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         paginated_query = self.paginate_queryset(qs)
         serializer = serializer_class(
             paginated_query,
-            context={"requestor": request.user, "label_context": "base"},
+            context={
+                "requestor": request.user,
+                "request": request,
+                "label_context": "base",
+            },
             many=True,
         )
         return self.get_paginated_response(serializer.data)
