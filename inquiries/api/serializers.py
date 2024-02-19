@@ -45,7 +45,9 @@ class InquiryUserDataSerializer(_BaseUserDataSerializer):
     team_history_object = serializers.SerializerMethodField()
     gender = serializers.SerializerMethodField("get_gender")
     contact = InquiryContactSerializer(source="userpreferences", read_only=True)
-    playermetrics = PlayerMetricsSerializer(read_only=True, source="profile.playermetrics")
+    playermetrics = PlayerMetricsSerializer(
+        read_only=True, source="profile.playermetrics"
+    )
 
     def get_specific_role(self, obj: User) -> typing.Optional[dict]:
         """Get specific role for profile (Coach, Club)"""
@@ -182,6 +184,8 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         """
         recipient_profile_uuid = validated_data.pop("recipient_profile_uuid", None)
         inquiry_request = _models.InquiryRequest(**validated_data)
+        inquiry_request.is_read_by_sender = True
+        inquiry_request.is_read_by_recipient = False
         inquiry_request.save(recipient_profile_uuid=recipient_profile_uuid)
         return inquiry_request
 
@@ -215,7 +219,11 @@ class UserInquirySerializer(serializers.ModelSerializer):
         read_only=True, source="get_days_until_next_reference"
     )
     logs = UserInquiryLogSerializer(many=True, read_only=True)
+    has_unread_inquiries = serializers.SerializerMethodField()
 
     class Meta:
         model = _models.UserInquiry
         fields = "__all__"
+
+    def get_has_unread_inquiries(self, obj):
+        return obj.has_unread_inquiries

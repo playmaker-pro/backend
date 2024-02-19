@@ -36,6 +36,7 @@ class InquiresAPIView(EndpointView):
 
     def get_my_received_inquiries(self, request: Request) -> Response:
         """Get all received inquiries by user"""
+        InquireService.update_inquiry_read_status_based_on_role(request.user)
         received_inquiries: QuerySet = InquireService.get_user_received_inquiries(
             request.user
         )

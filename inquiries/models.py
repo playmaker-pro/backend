@@ -328,6 +328,20 @@ class UserInquiry(models.Model):
         days_until_next_reference = (next_reference_date - today).days
         return max(days_until_next_reference, 0)
 
+    @property
+    def has_unread_inquiries(self):
+        # Check for any sent inquiries that have been responded to but not read by the sender
+        unread_sent = InquiryRequest.objects.filter(
+            sender=self.user, is_read_by_sender=False
+        ).exists()
+
+        # Check for any received inquiries that have not been read by the recipient
+        unread_received = InquiryRequest.objects.filter(
+            recipient=self.user, is_read_by_recipient=False
+        ).exists()
+
+        return unread_sent or unread_received
+
     def set_new_plan(self, plan: InquiryPlan) -> None:
         """Set a new plan for user"""
         self.plan = plan
@@ -435,6 +449,9 @@ class InquiryRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    is_read_by_sender = models.BooleanField(default=False)
+    is_read_by_recipient = models.BooleanField(default=False)
+
     def create_log_for_sender(self, log_type: InquiryLogMessage.MessageType) -> None:
         """Create log for sender"""
         message = InquiryLogMessage.objects.get(log_type=log_type)
@@ -496,6 +513,7 @@ class InquiryRequest(models.Model):
             f"InquiryRequestID: {self.pk}"
         )
         inquiry_accepted.send(sender=self.__class__, inquiry_request=self)
+        self.is_read_by_sender = False
 
     @transition(
         field=status,
@@ -511,6 +529,7 @@ class InquiryRequest(models.Model):
             f"InquiryRequestID: {self.pk}"
         )
         inquiry_rejected.send(sender=self.__class__, inquiry_request=self)
+        self.is_read_by_sender = False
 
     def save(self, *args, **kwargs):
         recipient_profile_uuid = kwargs.pop("recipient_profile_uuid", None)

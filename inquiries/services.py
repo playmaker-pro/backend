@@ -86,3 +86,24 @@ class InquireService:
     def get_user_inquiry_metadata(user: User) -> UserInquiry:
         """Get all received inquiries by user"""
         return user.userinquiry
+
+    @staticmethod
+    def update_inquiry_read_status_based_on_role(user: User) -> None:
+        """
+        Updates the read status of inquiries based on the role of the user.
+
+        This method checks both sent and received inquiries for a given user.
+        For received inquiries. it marks them as read by the recipient if they haven't
+        been marked as such already. Similarly, for sent inquiries, it marks them as
+        read by the sender, indicating that the sender has acknowledged any responses
+        or actions taken by the recipient on those inquiries.
+        """
+        # Update received inquiries as read by the recipient
+        InquiryRequest.objects.filter(
+            recipient=user, is_read_by_recipient=False
+        ).update(is_read_by_recipient=True)
+
+        # Update received inquiries as read by the sender
+        InquiryRequest.objects.filter(sender=user, is_read_by_sender=False).update(
+            is_read_by_sender=True
+        )
