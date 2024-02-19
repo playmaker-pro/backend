@@ -329,8 +329,18 @@ class UserInquiry(models.Model):
         return max(days_until_next_reference, 0)
 
     @property
-    def has_unread_inquiries(self):
-        # Check for any sent inquiries that have been responded to but not read by the sender
+    def has_unread_inquiries(self) -> bool:
+        """
+        Determines if there are any unread inquiries related to the user,
+        either as a sender or recipient.
+
+        This property checks two conditions:
+        1. Inquiries sent by the user that have not been read by their recipients.
+        2. Inquiries received by the user that they have not read.
+        """
+
+        # Check for any sent inquiries that have been responded to but not read
+        # by the sender
         unread_sent = InquiryRequest.objects.filter(
             sender=self.user, is_read_by_sender=False
         ).exists()
