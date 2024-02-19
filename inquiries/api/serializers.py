@@ -225,5 +225,8 @@ class UserInquirySerializer(serializers.ModelSerializer):
         model = _models.UserInquiry
         fields = "__all__"
 
-    def get_has_unread_inquiries(self, obj):
+    def get_has_unread_inquiries(self, obj: _models.UserInquiry) -> bool:
+        """
+        Determines if there are any unread inquiries associated with the user.
+        """
         return obj.has_unread_inquiries
