@@ -5,8 +5,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 
-from inquiries.plans import basic_plan
-
 from .models import InquiryPlan, InquiryRequest, UserInquiry
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -30,7 +28,7 @@ class InquireService:
         """Create basic inquiry plan and contact instance for user"""
         plan = InquiryPlan.basic()
         UserInquiry.objects.get_or_create(user=user, plan=plan)
-        logger.info(f"Created {basic_plan.description} plan for {user}")
+        logger.info(f"Created {plan.description} plan for {user}")
 
     def create_default_basic_plan_if_not_present(self) -> InquiryPlan:
         """

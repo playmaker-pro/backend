@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from sentry_sdk import set_level
 from sentry_sdk.integrations.django import DjangoIntegration
 
+from backend.settings.config import config as _env_config
 from backend.settings.environment import Environment
 
 # This loads additional settings for our environemnt
@@ -29,11 +30,11 @@ BASE_URL = "http://localhost:8000"
 
 FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL")
 
-VERSION = "2.2.2"
+VERSION = "2.3.0"
 
 
 SYSTEM_USER_EMAIL = "rafal.kesik@gmail.com"
-
+ADMIN_EMAIL = "biuro.playmaker.pro@gmail.com"
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -73,6 +74,7 @@ INSTALLED_APPS = [
     "premium",
     "events",
     "mailing",
+    "payments",
     "django_countries",
     "easy_thumbnails",
     "django_user_agents",
@@ -460,6 +462,12 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "filename": join(LOGFILE_ROOT, "commands.log"),
                 "formatter": "verbose",
             },
+            "payments_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "payments.log"),
+                "formatter": "verbose",
+            },
         },
         "loggers": {
             "profiles": {
@@ -497,6 +505,10 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
             },
             "commands": {
                 "handlers": ["console", "data_log_file"],
+                "level": "DEBUG",
+            },
+            "payments": {
+                "handlers": ["console", "payments_file"],
                 "level": "DEBUG",
             },
         },
@@ -669,7 +681,7 @@ if ENABLE_SENTRY:
     )
     set_level("warning")
 
-
+ENV_CONFIG: _env_config.Config = _env_config
 # Loading of locally stored settings.
 
 try:

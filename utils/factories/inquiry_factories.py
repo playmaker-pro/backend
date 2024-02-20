@@ -1,7 +1,6 @@
 import factory
 
 from inquiries import models as _models
-from inquiries.plans import basic_plan
 from utils.factories import UserFactory as _UserFactory
 
 
@@ -14,16 +13,14 @@ class InquiryRequestFactory(factory.django.DjangoModelFactory):
 
 
 class InquiryPlanFactory(factory.django.DjangoModelFactory):
-    _plan = basic_plan
-
     class Meta:
         model = _models.InquiryPlan
         django_get_or_create = ("name",)
 
-    name = _plan.name
-    description = _plan.description
-    limit = _plan.limit
-    default = _plan.default
+    name = "Basic"
+    description = "Basic plan"
+    limit = 5
+    default = True
 
 
 class UserInquiryFactory(factory.django.DjangoModelFactory):

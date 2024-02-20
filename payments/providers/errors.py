@@ -1,0 +1,6 @@
+class TransactionError(Exception):
+    ...
+
+
+class NotAuthorizedError(TransactionError):
+    ...

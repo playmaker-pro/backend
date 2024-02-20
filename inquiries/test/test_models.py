@@ -9,7 +9,6 @@ from inquiries.models import (
     InquiryRequest,
     UserInquiryLog,
 )
-from inquiries.plans import basic_plan, premium_plan
 from roles import definitions
 from users.models import User
 from utils import testutils as utils
@@ -35,9 +34,8 @@ class InitialClassCreationTest(TestCase):
             email="username-coach", declared_role=definitions.COACH_SHORT
         )
 
-    def test_basic_plans_from_settings_shoudl_exists(self):
-        for plan in [basic_plan, premium_plan]:
-            InquiryPlan.objects.get(**plan.dict())
+    def test_default_plan_should_exist(self):
+        assert InquiryPlan.objects.get(default=True)
 
     def test_player_user_should_have_basic_plan(self):
         assert self.player.userinquiry.plan.default is True
