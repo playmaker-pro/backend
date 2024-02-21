@@ -41,6 +41,7 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
     slug = serializers.CharField(source="profile.slug", read_only=True)
     picture = serializers.CharField(source="picture_url", read_only=True)
     gender = serializers.SerializerMethodField("get_gender")
+    has_unread_inquiries = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -53,6 +54,7 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
             "uuid",
             "slug",
             "gender",
+            "has_unread_inquiries",
         )
 
     def my_profile_uuid(self, instance: User) -> Optional[str]:
@@ -80,6 +82,12 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
                 )
                 return serializer.to_representation(serializer.parse(gender_value))
             return None
+
+    def get_has_unread_inquiries(self, obj: User) -> bool:
+        """
+        Determines if there are any unread inquiries associated with the user.
+        """
+        return obj.has_unread_inquiries
 
 
 class UserPreferencesSerializer(serializers.ModelSerializer):

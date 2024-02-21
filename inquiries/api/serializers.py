@@ -219,14 +219,7 @@ class UserInquirySerializer(serializers.ModelSerializer):
         read_only=True, source="get_days_until_next_reference"
     )
     logs = UserInquiryLogSerializer(many=True, read_only=True)
-    has_unread_inquiries = serializers.SerializerMethodField()
 
     class Meta:
         model = _models.UserInquiry
         fields = "__all__"
-
-    def get_has_unread_inquiries(self, obj: _models.UserInquiry) -> bool:
-        """
-        Determines if there are any unread inquiries associated with the user.
-        """
-        return obj.has_unread_inquiries
