@@ -284,3 +284,54 @@ class TestInquiriesAPI(APITestCase):
         obj.refresh_from_db()
 
         assert obj.status == InquiryRequest.STATUS_RECEIVED
+
+    def test_inquiry_read_status_flow(self):
+        """
+        Test the flow of inquiry read statuses from the perspective of both the
+        sender and recipient.
+        """
+        # Sender sends an inquiry to the recipient
+        send_response = self.client.post(
+            URL_SEND(self.recipient_profile_uuid), **self.sender_headers
+        )
+        assert send_response.status_code == 201
+
+        inquiry_id = send_response.data["id"]
+        inquiry = InquiryRequest.objects.get(pk=inquiry_id)
+
+        # Initially, the inquiry should be unread by the recipient and read by the
+        # sender (since sending doesn't count as unread)
+        assert not inquiry.is_read_by_recipient
+        assert inquiry.is_read_by_sender
+
+        # Recipient accesses received inquiries, which should mark the inquiry
+        # as read by the recipient
+        received_inquiries_response = self.client.get(
+            URL_MY_RECEIVED, **self.recipient_headers
+        )
+        assert received_inquiries_response.status_code == 200
+
+        inquiry.refresh_from_db()
+        assert inquiry.is_read_by_recipient
+
+        # Recipient accepts the inquiry, marking it as unread for the sender
+        accept_response = self.client.post(
+            URL_ACCEPT(inquiry_id), **self.recipient_headers
+        )
+        assert accept_response.status_code == 200
+
+        inquiry.refresh_from_db()
+        assert not inquiry.is_read_by_sender
+
+        # Sender accesses their sent inquiries, which should mark the
+        # inquiry as read by the sender again
+        sent_inquiries_response = self.client.get(
+            URL_MY_RECEIVED, **self.sender_headers
+        )
+        assert sent_inquiries_response.status_code == 200
+
+        inquiry.refresh_from_db()
+        assert inquiry.is_read_by_sender
+
+        self.assertEqual(inquiry.status, InquiryRequest.STATUS_ACCEPTED)
+        assert inquiry.status == InquiryRequest.STATUS_ACCEPTED

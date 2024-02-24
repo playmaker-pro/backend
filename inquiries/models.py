@@ -435,6 +435,9 @@ class InquiryRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    is_read_by_sender = models.BooleanField(default=False)
+    is_read_by_recipient = models.BooleanField(default=False)
+
     def create_log_for_sender(self, log_type: InquiryLogMessage.MessageType) -> None:
         """Create log for sender"""
         message = InquiryLogMessage.objects.get(log_type=log_type)
@@ -496,6 +499,7 @@ class InquiryRequest(models.Model):
             f"InquiryRequestID: {self.pk}"
         )
         inquiry_accepted.send(sender=self.__class__, inquiry_request=self)
+        self.is_read_by_sender = False
 
     @transition(
         field=status,
@@ -511,6 +515,7 @@ class InquiryRequest(models.Model):
             f"InquiryRequestID: {self.pk}"
         )
         inquiry_rejected.send(sender=self.__class__, inquiry_request=self)
+        self.is_read_by_sender = False
 
     def save(self, *args, **kwargs):
         recipient_profile_uuid = kwargs.pop("recipient_profile_uuid", None)

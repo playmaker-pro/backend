@@ -384,6 +384,30 @@ class User(AbstractUser, UserRoleMixin):
         """
         return self.userpreferences.contact_email or self.email
 
+    @property
+    def has_unread_inquiries(self) -> bool:
+        """
+        Determines if there are any unread inquiries related to the user,
+        either as a sender or recipient.
+
+        This property checks two conditions:
+        1. Inquiries sent by the user that have not been read by their recipients.
+        2. Inquiries received by the user that they have not read.
+        """
+
+        # Check for any sent inquiries that have been responded to but not read
+        # by the sender
+        unread_sent = InquiryRequest.objects.filter(
+            sender=self, is_read_by_sender=False
+        ).exists()
+
+        # Check for any received inquiries that have not been read by the recipient
+        unread_received = InquiryRequest.objects.filter(
+            recipient=self, is_read_by_recipient=False
+        ).exists()
+
+        return unread_sent or unread_received
+
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
