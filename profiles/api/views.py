@@ -304,7 +304,9 @@ class SimilarProfilesAPIView(EndpointViewWithFilter):
 
         # Determine the model based on the profile type and create the initial queryset
         model = type(target_profile)
-        queryset = model.objects.all()
+        queryset = model.objects.all().exclude(
+            user__display_status=User.DisplayStatus.NOT_SHOWN
+        )
         # Construct filter parameters based on target_profile attributes
         filter_params = self.construct_filter_params(target_profile)
         # Apply Django filters
