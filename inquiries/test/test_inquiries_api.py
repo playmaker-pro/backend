@@ -305,7 +305,7 @@ class TestInquiriesAPI(APITestCase):
         assert inquiry.is_read_by_sender
 
         # Recipient accesses received inquiries, which should mark the inquiry
-        # as read by the recipient
+        # as read by the recipient and also mark it as not read by the sender
         received_inquiries_response = self.client.get(
             URL_MY_RECEIVED, **self.recipient_headers
         )
@@ -313,6 +313,7 @@ class TestInquiriesAPI(APITestCase):
 
         inquiry.refresh_from_db()
         assert inquiry.is_read_by_recipient
+        assert not inquiry.is_read_by_sender
 
         # Recipient accepts the inquiry, marking it as unread for the sender
         accept_response = self.client.post(

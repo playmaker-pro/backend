@@ -85,6 +85,7 @@ class InquireService:
     @staticmethod
     def get_user_inquiry_metadata(user: User) -> UserInquiry:
         """Get all received inquiries by user"""
+
         return user.userinquiry
 
     @staticmethod
