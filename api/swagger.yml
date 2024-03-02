@@ -3489,6 +3489,9 @@ paths:
                     type: string
                   gender:
                     $ref: '#/components/schemas/Gender'
+                  has_unread_inquiries:
+                    type: boolean
+                    description: Determines if there are any inquiries sent or received by the user that have not been read
           description: Get user main profile uuid with role.
   /users/feature-sets/:
     get:
@@ -6972,6 +6975,12 @@ components:
         recipient:
           type: integer
           description: Recipient ID
+        is_read_by_sender:
+          type: boolean
+          description: Indicates whether the sender of the inquiry has viewed the recipient's response
+        is_read_by_recipient:
+          type: boolean
+          description: Specifies whether the inquiry has been read by the recipient
       required:
         - id
         - created_at
@@ -6979,6 +6988,8 @@ components:
         - status
         - sender
         - recipient
+        - is_read_by_sender
+        - is_read_by_recipient
 
     InquiryPlan:
       type: object
