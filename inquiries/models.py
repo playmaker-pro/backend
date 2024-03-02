@@ -481,6 +481,7 @@ class InquiryRequest(models.Model):
             f"{self.recipient} read request from {self.sender}. -- "
             f"InquiryRequestID: {self.pk}"
         )
+        self.is_read_by_sender = False
 
     @transition(
         field=status,
