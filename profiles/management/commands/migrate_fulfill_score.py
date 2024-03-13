@@ -1,5 +1,3 @@
-from typing import List
-
 from django.core.management.base import BaseCommand
 
 from profiles.managers import ProfileManager
@@ -8,7 +6,19 @@ from profiles.models import PROFILE_MODELS
 
 class Command(BaseCommand):
     """
-    Match players with their videos based on data from csv file
+    Populate the data_fulfill_status field for all profiles.
+
+    This command iterates over all profile models specified in PROFILE_MODELS
+    and calculates the data fulfillment status for each profile using the
+    ProfileManager's get_data_score method. The calculated status is then
+    assigned to the data_fulfill_status field of each profile instance and
+    saved to the database.
+
+    The data fulfillment status is determined based on various acceptance
+    criteria, including verification stage completion and the presence of
+    essential profile data such as last name, first name, birth date, etc.
+    Additionally, profiles may achieve level 0 fulfillment if they have either
+    a populated profile picture or a pm_score value.
     """
 
     def handle(self, *args, **kwargs) -> None:
