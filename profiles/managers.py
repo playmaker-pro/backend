@@ -45,6 +45,9 @@ class PlayerProfileFulFillScore:
         """  # noqa: 501
         instance: "PlayerProfile" = obj  # noqa
 
+        if instance.verification_stage and instance.verification_stage.done is True and instance.user.picture or instance.playermetrics.pm_score:
+            return ProfileDataScore.ZERO.value
+
         if instance.verification_stage and instance.verification_stage.done is True:
             return ProfileDataScore.ONE.value
 
@@ -84,6 +87,9 @@ class CoachProfileFulFillScore:
             OProfileDataScore: The level of profile data fulfillment or None.
         """  # noqa: 501
         instance: "CoachProfile" = obj  # noqa
+        if instance.verification_stage and instance.verification_stage.done is True and instance.user.picture:
+            return ProfileDataScore.ZERO.value
+
         if instance.verification_stage and instance.verification_stage.done is True:
             return ProfileDataScore.ONE.value
 
@@ -123,6 +129,9 @@ class ClubProfileFulFillScore:
             ProfileDataScore: The level of profile data fulfillment or None.
         """  # noqa: 501
         instance: "ClubProfile" = obj  # noqa
+        if instance.verification_stage and instance.verification_stage.done is True and instance.user.picture:
+            return ProfileDataScore.ZERO.value
+
         if instance.verification_stage and instance.verification_stage.done is True:
             return ProfileDataScore.ONE.value
 
@@ -147,6 +156,9 @@ class OtherProfilesFulFillScore:
         Acceptance criteria for level 1 is verification stage.
         There is no level 2.
         """
+        if obj.verification_stage and obj.verification_stage.done is True and obj.user.picture:
+            return ProfileDataScore.ZERO.value
+
         if obj.verification_stage and obj.verification_stage.done is True:
             return ProfileDataScore.ONE.value
 
