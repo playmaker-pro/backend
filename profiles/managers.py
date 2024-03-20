@@ -52,7 +52,7 @@ class PlayerProfileFulFillScore:
             instance.verification_stage
             and instance.verification_stage.done is True
             and (
-                instance.user.picture is not None
+                bool(instance.user.picture)
                 or instance.playermetrics.pm_score is not None
             )
         ):
