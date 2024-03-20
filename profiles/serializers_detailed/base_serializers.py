@@ -674,6 +674,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     transfer_status = serializers.SerializerMethodField()
     transfer_requests = ProfileTransferRequestSerializer(many=True, read_only=True)
     visits = serializers.SerializerMethodField()
+    data_fulfill_status = serializers.CharField(required=True)
 
     def get_visits(self, obj: BaseProfile) -> int:
         """Get profile visits from last month."""
