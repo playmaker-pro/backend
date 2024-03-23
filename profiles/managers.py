@@ -39,11 +39,24 @@ class PlayerProfileFulFillScore:
             - birth_date
             - player_positions
             - team_object
+            
+        Additionally, profile may achieve level 0 fulfillment if either of the following conditions are met:
+        - The verification stage is completed, and either a profile picture or a pm_score value is populated.
 
         Returns:
             ProfileDataScore: The level of profile data fulfillment or None.
         """  # noqa: 501
         instance: "PlayerProfile" = obj  # noqa
+
+        if (
+            instance.verification_stage
+            and instance.verification_stage.done is True
+            and (
+                bool(instance.user.picture)
+                or instance.playermetrics.pm_score is not None
+            )
+        ):
+            return ProfileDataScore.ZERO.value
 
         if instance.verification_stage and instance.verification_stage.done is True:
             return ProfileDataScore.ONE.value
@@ -79,11 +92,22 @@ class CoachProfileFulFillScore:
             - birth_date
             - licences
             - team_object
+            
+        Additionally, profile may achieve level 0 fulfillment if the following condition is met:
+        - The verification stage is completed, and a profile picture is populated.
+
 
         Returns:
             OProfileDataScore: The level of profile data fulfillment or None.
         """  # noqa: 501
         instance: "CoachProfile" = obj  # noqa
+        if (
+            instance.verification_stage
+            and instance.verification_stage.done is True
+            and instance.user.picture
+        ):
+            return ProfileDataScore.ZERO.value
+
         if instance.verification_stage and instance.verification_stage.done is True:
             return ProfileDataScore.ONE.value
 
@@ -118,11 +142,21 @@ class ClubProfileFulFillScore:
             - birth_date
             - licences
             - team_object
+            
+        Additionally, profile may achieve level 0 fulfillment if the following condition is met:
+        - The verification stage is completed, and a profile picture is populated.
 
         Returns:
             ProfileDataScore: The level of profile data fulfillment or None.
         """  # noqa: 501
         instance: "ClubProfile" = obj  # noqa
+        if (
+            instance.verification_stage
+            and instance.verification_stage.done is True
+            and instance.user.picture
+        ):
+            return ProfileDataScore.ZERO.value
+
         if instance.verification_stage and instance.verification_stage.done is True:
             return ProfileDataScore.ONE.value
 
@@ -146,7 +180,17 @@ class OtherProfilesFulFillScore:
         Verify if other profiles data is fulfilled.
         Acceptance criteria for level 1 is verification stage.
         There is no level 2.
-        """
+
+        Additionally, profile may achieve level 0 fulfillment if the following condition is met:
+        - The verification stage is completed, and a profile picture is populated.
+        """ # noqa: 501
+        if (
+            obj.verification_stage
+            and obj.verification_stage.done is True
+            and obj.user.picture
+        ):
+            return ProfileDataScore.ZERO.value
+
         if obj.verification_stage and obj.verification_stage.done is True:
             return ProfileDataScore.ONE.value
 
