@@ -48,12 +48,17 @@ class PlayerProfileFulFillScore:
         """  # noqa: 501
         instance: "PlayerProfile" = obj  # noqa
 
+        try:
+            pm_score_exists = instance.playermetrics.pm_score is not None
+        except ObjectDoesNotExist:
+            pm_score_exists = False
+
         if (
             instance.verification_stage
             and instance.verification_stage.done is True
             and (
                 bool(instance.user.picture)
-                or instance.playermetrics.pm_score is not None
+                or pm_score_exists
             )
         ):
             return ProfileDataScore.ZERO.value

@@ -13,14 +13,20 @@ def reset_plan(modeladmin, request, queryset):
         ui.reset()  # save comes inside
 
 
+def reset_inquiries(modeladmin, request, queryset):
+    for ui in queryset:
+        ui.reset_inquiries()
+
+
 reset_plan.short_description = "Reset plan"
+reset_inquiries.short_description = "Reset inquiries"
 
 
 @admin.register(models.UserInquiry)
 class UserInquiryAdmin(admin.ModelAdmin):
     search_fields = ("user__email",)
     list_display = ("user", "plan", "counter")
-    actions = [reset_plan]
+    actions = [reset_plan, reset_inquiries]
     autocomplete_fields = ("user",)
 
 
@@ -42,7 +48,10 @@ class InquiryRequestAdmin(admin.ModelAdmin):
         "recipient",
         "created_at",
     )
-    autocomplete_fields = ("sender", "recipient",)
+    autocomplete_fields = (
+        "sender",
+        "recipient",
+    )
 
 
 @admin.register(models.InquiryLogMessage)
