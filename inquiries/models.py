@@ -257,6 +257,16 @@ class UserInquiry(models.Model):
         self.counter = 0
         self.save()
 
+    def reset_inquiries(self) -> None:
+        """
+        Reset current counter based on the base limit and any additional purchased inquiries.
+        """
+        basic_plan_limit = (
+            InquiryPlan.basic().limit
+        )  # Fetch the base limit from the default (basic) plan
+        self.counter = max(self.counter - basic_plan_limit, 0)
+        self.save(update_fields=["counter"])
+
     def increment(self):
         """Increase by one counter"""
         if self.counter < self.limit:
