@@ -164,6 +164,7 @@ class Club(models.Model, MappingMixin):
     )
 
     labels = GenericRelation("labels.Label")
+    follows = GenericRelation("followers.GenericFollow")
 
     def is_editor(self, user):
         if user == self.manager or user in self.editors.all():
@@ -761,6 +762,7 @@ class Team(models.Model, MappingMixin):
     )
 
     labels = GenericRelation("labels.Label")
+    follows = GenericRelation("followers.GenericFollow")
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
