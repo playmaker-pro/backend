@@ -568,28 +568,31 @@ class TeamHistoryCreationService:
 
     @staticmethod
     def search_for_existing_team(
-        team_name: str,
+        team_parameter: str,
         season_obj: models.Season,
         league_identifier: typing.Union[str, int],
     ) -> models.Team:
         """
-        Search for an existing team based on team name, season
+        Search for an existing team based on team_parameter, season
         and league associated with the team.
         """
 
+        # Find the team with matching team id
+        if isinstance(team_parameter, int):
+            existing_team = models.Team.objects.get(id=team_parameter)
         # Find the team with the matching name and linked to the specified season's league history  # noqa 501
         # Check if the league_identifier is a string (league name) or an integer (league ID)  # noqa 501
-        if isinstance(league_identifier, str):
+        elif isinstance(team_parameter, str) and isinstance(league_identifier, str):
             # If league_identifier is a string, search using the league name
             existing_team = models.Team.objects.filter(
-                name=team_name,
+                name=team_parameter,
                 league_history__season=season_obj,
                 league__name=league_identifier,
             ).first()
         else:
             # If league_identifier is an integer, search using the league ID
             existing_team = models.Team.objects.filter(
-                name=team_name,
+                name=team_parameter,
                 league_history__season=season_obj,
                 league_id=league_identifier,
             ).first()
