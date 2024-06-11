@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     "users",
     "profiles",
     "transfers",
+    # "contact",
+    # Deprecation(rkesik): since we are working on a new FE
     "followers",
     "inquiries",
     "clubs",

@@ -105,3 +105,19 @@ class InvalidCitizenshipListException(CoreAPIException):
 
 class ProfileVisitHistoryDoesNotExistException(Exception):
     """Raises when profile visit history does not exist in DB"""
+
+
+class CatalogNotFoundServiceException(Exception):
+    """
+    Raised when a Catalog object is not found in service-level functions.
+    This is a generic exception meant to signal the absence of a TeamContributor
+    """
+
+
+class CatalogDoesNotExist(CoreAPIException):
+    """
+    Raised when a Catalog entity is not found in the system.
+    """
+
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = "Given catalog does not exist"

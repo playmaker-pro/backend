@@ -1104,6 +1104,151 @@ paths:
                     items:
                       $ref: '#/components/schemas/TransferRequestGet'
                 required: ["count", "next", "previous", "results"]
+  /followers/my-follows/:
+    'get':
+      operationId: followed_profiles_list
+      description: "List of profiles followed by user"
+      summary: "List of profiles followed by user"
+      tags:
+        - followers
+      security:
+        - jwtAuth: [ ]
+        - { }
+      responses:
+        '200':
+          description: 'List of profiles followed by user'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/PlayerProfileView'
+                    - $ref: '#/components/schemas/CoachProfile'
+                    - $ref: '#/components/schemas/ScoutProfile'
+                    - $ref: '#/components/schemas/ClubProfileView'
+                    - $ref: '#/components/schemas/ManagerProfile'
+                    - $ref: '#/components/schemas/GuestProfile'
+        '401':
+          description: "Unauthorized"
+  /followers/profile/{profile_uuid}/follow/:
+    post:
+      operationId: follow_profile
+      description: "Follow a profile identified by its UUID."
+      summary: "Follow a profile"
+      tags:
+        - followers
+      security:
+        - jwtAuth: [ ]
+      parameters:
+        - name: profile_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "The UUID of the profile to follow"
+      responses:
+        '201':
+          description: "Profile followed successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Profile followed successfully"
+        '401':
+          description: "Unauthorized - Authentication credentials were not provided or are invalid"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Authentication credentials were not provided or are invalid."
+        '400':
+          description: "Bad Request - You cannot follow your own profile."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "You cannot follow your own profile."
+        '403':
+          description: "Forbidden - You are already following this profile."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "You are already following this profile."
+        '404':
+          description: "Not Found - The requested profile was not found."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Profile with given UUID does not exist."
+  /followers/profile/{profile_uuid}/unfollow/:
+    delete:
+      operationId: unfollow_profile
+      description: "Unfollow a profile identified by its UUID."
+      summary: "Unfollow a profile"
+      tags:
+        - followers
+      security:
+        - jwtAuth: [ ]
+      parameters:
+        - name: profile_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "The UUID of the profile to unfollow"
+      responses:
+        '204':
+          description: "Profile unfollowed successfully"
+        '401':
+          description: "Unauthorized - User not authenticated."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Authentication credentials were not provided or are invalid."
+        '403':
+          description: "Forbidden - You do not have permission to perform this action."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "You do not have permission to perform this action."
+        '404':
+          description: "Not Found - The specified profile or follow relationship does not exist."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "The specified profile or follow relationship does not exist."
 
   /profiles/:
     post:

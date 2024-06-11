@@ -47,6 +47,7 @@ class ProfileListAPIFilter(APIFilter):
         "transfer_status_league": api_utils.convert_int_list,
         "min_pm_score": api_utils.convert_int,
         "max_pm_score": api_utils.convert_int,
+        "observed": api_utils.convert_bool,
     }
 
     @cached_property
@@ -125,6 +126,7 @@ class ProfileListAPIFilter(APIFilter):
         self.filter_licence()
         self.filter_by_labels()
         self.filter_league()
+        self.observed()
 
     def define_query_params(self) -> None:
         """Validate query_params and save as self.query_params"""
@@ -297,3 +299,11 @@ class ProfileListAPIFilter(APIFilter):
 
         if max_score is not None:
             self.queryset = self.service.filter_max_pm_score(self.queryset, max_score)
+
+    def observed(self) -> None:
+        """Include only profiles that are observed by the user"""
+        if self.query_params.get("observed") and self.request.user.is_authenticated:
+            followed_profile_ids = self.service.get_followed_profile_ids(
+                self.request.user, self.model
+            )
+            self.queryset = self.queryset.filter(user__id__in=followed_profile_ids)

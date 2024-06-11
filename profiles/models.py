@@ -294,6 +294,7 @@ class BaseProfile(models.Model, EventLogMixin):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
 
     labels = GenericRelation("labels.Label")
+    follows = GenericRelation("followers.GenericFollow")
     notifications = GenericRelation("notifications.Notification")
     transfer_status_related = GenericRelation(
         "ProfileTransferStatus", related_query_name="transfer_status_related"
@@ -2665,6 +2666,16 @@ class ProfileTransferRequest(TransferBaseModel):
     def team(self):
         """Returns the requesting team."""
         return self.requesting_team.team_history.first()
+
+
+class Catalog(models.Model):
+    name = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    slug = models.CharField(max_length=255, blank=False, null=False, editable=False)
+    description = models.TextField(blank=True, null=True)
+    follows = GenericRelation("followers.GenericFollow")
+
+    def __str__(self):
+        return self.name
 
 
 PROFILE_MODELS = (

@@ -534,3 +534,19 @@ class ProfileTransferRequestAdmin(admin.ModelAdmin, ContentTypeMixin):
         "voivodeship",
     )
     form = TransferStatusForm
+
+
+@admin.register(models.Catalog)
+class CatalogAdmin(admin.ModelAdmin):
+    """Admin for Catalog model."""
+
+    list_display = ("name", "slug", "description")
+
+    def slug(self, obj: models.Catalog) -> str:
+        """Get the slug for display in the admin."""
+        return obj.slug
+
+    slug.short_description = "Catalog Slug"
+
+    class Meta:
+        model = models.Catalog

@@ -91,6 +91,14 @@ class LeagueHistoryNotFoundServiceException(Exception):
     pass
 
 
+class ClubNotFoundServiceException(Exception):
+    """
+    Raised by service-level functions when a Club entity is sought but not located.
+    """
+
+    pass
+
+
 class TeamNotFoundServiceException(Exception):
     """
     Raised by service-level functions when a Team entity is sought but not located.
