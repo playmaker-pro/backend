@@ -4269,12 +4269,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    example: true
-                  detail:
+                  id:
+                    type: integer
+                    description: User id.
+                    example: 123
+                  refresh_token:
                     type: string
-                    example: "Email verified successfully."
+                    description: JWT refresh token.
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                  access_token:
+                    type: string
+                    description: JWT access token.
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                  first_name:
+                    type: string
+                    description: User firstname.
+                    example: "John"
+                  last_name:
+                    type: string
+                    description: User lastname.
+                    example: "Doe"
         '400':
           description: Bad request - invalid token or uidb64.
           content:
@@ -6160,6 +6174,14 @@ components:
     BaseUserProfileUpdate:
       type: object
       properties:
+        first_name:
+          type: string
+          description: "The user's first name."
+          example: "John"
+        last_name:
+          type: string
+          description: "The user's last name."
+          example: "Doe"
         userpreferences:
           $ref: '#/components/schemas/BaseUserProfilePreferencesUpdate'
 
