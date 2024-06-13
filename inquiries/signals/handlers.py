@@ -1,3 +1,4 @@
+import datetime
 from datetime import timedelta
 from typing import Any, Optional, Type
 
@@ -105,11 +106,22 @@ def handle_inquiry_restored(sender, **kwargs) -> None:
     """
     inquiry_request = kwargs.get("inquiry_request")
     if inquiry_request:
-        NotificationService.create_user_associated_notification(
+        # Get today's date
+        today = datetime.datetime.now().date()
+
+        # Check if a notification of this type has been sent today
+        recent_notification_exists = Notification.objects.filter(
             user=inquiry_request.sender,
             event_type=Notification.EventType.INQUIRY_REQUEST_RESTORED,
-            notification_type=Notification.NotificationType.BUILT_IN,
-        )
+            created_at__date=today,
+        ).exists()
+
+        if not recent_notification_exists:
+            NotificationService.create_user_associated_notification(
+                user=inquiry_request.sender,
+                event_type=Notification.EventType.INQUIRY_REQUEST_RESTORED,
+                notification_type=Notification.NotificationType.BUILT_IN,
+            )
 
 
 @receiver(inquiry_reminder)

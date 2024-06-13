@@ -6,7 +6,6 @@ from datetime import datetime
 import django.db.utils
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpRequest
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.html import format_html

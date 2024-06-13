@@ -2,6 +2,7 @@ import random
 
 import factory
 from django.contrib.auth import get_user_model
+from django.utils.text import slugify
 from factory import post_generation
 from faker import Faker
 
@@ -402,3 +403,12 @@ class TransferRequestFactory(factory.django.DjangoModelFactory):
             random_positions = random.sample(list(positions), 2)
             for random_position in random_positions:
                 self.position.add(random_position.pk)  # noqa
+
+
+class CatalogFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Catalog
+
+    name = factory.Sequence(lambda n: f"Catalog {n}")
+    slug = factory.LazyAttribute(lambda obj: slugify(obj.name))
+    description = "Sample catalog description"

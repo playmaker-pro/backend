@@ -1,3 +1,4 @@
+from clubs.api.serializers import ClubSerializer, TeamSerializer
 from profiles.api.serializers import (
     AggregatedTeamContributorSerializer,
     OtherProfilesTeamContributorInputSerializer,
@@ -45,6 +46,8 @@ class SerializersManager:
         "GuestProfile_update": GuestProfileUpdateSerializer,
         "ManagerProfile": ManagerProfileViewSerializer,
         "ManagerProfile_update": ManagerProfileUpdateSerializer,
+        "Club": ClubSerializer,
+        "Team": TeamSerializer,
         # GET /api/v3/profiles?role=
         RoleShortcut.PLAYER: PlayerProfileViewSerializer,
         RoleShortcut.COACH: CoachProfileViewSerializer,

@@ -39,7 +39,7 @@ class PlayerProfileFulFillScore:
             - birth_date
             - player_positions
             - team_object
-            
+
         Additionally, profile may achieve level 0 fulfillment if either of the following conditions are met:
         - The verification stage is completed, and either a profile picture or a pm_score value is populated.
 
@@ -53,7 +53,10 @@ class PlayerProfileFulFillScore:
             and instance.verification_stage.done is True
             and (
                 bool(instance.user.picture)
-                or instance.playermetrics.pm_score is not None
+                or (
+                    hasattr(instance, "playermetrics")
+                    and instance.playermetrics.pm_score is not None
+                )
             )
         ):
             return ProfileDataScore.ZERO.value
@@ -92,7 +95,7 @@ class CoachProfileFulFillScore:
             - birth_date
             - licences
             - team_object
-            
+
         Additionally, profile may achieve level 0 fulfillment if the following condition is met:
         - The verification stage is completed, and a profile picture is populated.
 
@@ -142,7 +145,7 @@ class ClubProfileFulFillScore:
             - birth_date
             - licences
             - team_object
-            
+
         Additionally, profile may achieve level 0 fulfillment if the following condition is met:
         - The verification stage is completed, and a profile picture is populated.
 
@@ -183,7 +186,7 @@ class OtherProfilesFulFillScore:
 
         Additionally, profile may achieve level 0 fulfillment if the following condition is met:
         - The verification stage is completed, and a profile picture is populated.
-        """ # noqa: 501
+        """  # noqa: 501
         if (
             obj.verification_stage
             and obj.verification_stage.done is True

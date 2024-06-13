@@ -1104,6 +1104,151 @@ paths:
                     items:
                       $ref: '#/components/schemas/TransferRequestGet'
                 required: ["count", "next", "previous", "results"]
+  /followers/my-follows/:
+    'get':
+      operationId: followed_profiles_list
+      description: "List of profiles followed by user"
+      summary: "List of profiles followed by user"
+      tags:
+        - followers
+      security:
+        - jwtAuth: [ ]
+        - { }
+      responses:
+        '200':
+          description: 'List of profiles followed by user'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/PlayerProfileView'
+                    - $ref: '#/components/schemas/CoachProfile'
+                    - $ref: '#/components/schemas/ScoutProfile'
+                    - $ref: '#/components/schemas/ClubProfileView'
+                    - $ref: '#/components/schemas/ManagerProfile'
+                    - $ref: '#/components/schemas/GuestProfile'
+        '401':
+          description: "Unauthorized"
+  /followers/profile/{profile_uuid}/follow/:
+    post:
+      operationId: follow_profile
+      description: "Follow a profile identified by its UUID."
+      summary: "Follow a profile"
+      tags:
+        - followers
+      security:
+        - jwtAuth: [ ]
+      parameters:
+        - name: profile_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "The UUID of the profile to follow"
+      responses:
+        '201':
+          description: "Profile followed successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Profile followed successfully"
+        '401':
+          description: "Unauthorized - Authentication credentials were not provided or are invalid"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Authentication credentials were not provided or are invalid."
+        '400':
+          description: "Bad Request - You cannot follow your own profile."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "You cannot follow your own profile."
+        '403':
+          description: "Forbidden - You are already following this profile."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "You are already following this profile."
+        '404':
+          description: "Not Found - The requested profile was not found."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Profile with given UUID does not exist."
+  /followers/profile/{profile_uuid}/unfollow/:
+    delete:
+      operationId: unfollow_profile
+      description: "Unfollow a profile identified by its UUID."
+      summary: "Unfollow a profile"
+      tags:
+        - followers
+      security:
+        - jwtAuth: [ ]
+      parameters:
+        - name: profile_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "The UUID of the profile to unfollow"
+      responses:
+        '204':
+          description: "Profile unfollowed successfully"
+        '401':
+          description: "Unauthorized - User not authenticated."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Authentication credentials were not provided or are invalid."
+        '403':
+          description: "Forbidden - You do not have permission to perform this action."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "You do not have permission to perform this action."
+        '404':
+          description: "Not Found - The specified profile or follow relationship does not exist."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "The specified profile or follow relationship does not exist."
 
   /profiles/:
     post:
@@ -1626,6 +1771,63 @@ paths:
           description: 'Unauthorized'
         '404':
           description: 'Profile with given slug does not exist'
+
+  /profiles/{profile_uuid}/main-data/:
+    get:
+      summary: Retrieve main user data
+      operationId: getMainUserData
+      tags:
+        - profiles
+      parameters:
+        - in: path
+          name: profile_uuid
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Main user data retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MainUserData'
+        '404':
+          description: Profile not found.
+    patch:
+      summary: Update main user data
+      operationId: updateMainUserData
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      parameters:
+        - in: path
+          name: profile_uuid
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MainUserDataUpdateRequest'
+      responses:
+        '200':
+          description: Main user data updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MainUserData'
+        '400':
+          description: Invalid input.
+        '404':
+          description: Profile not found.
+        '401':
+          description: Unauthorized.
+
   /profiles/similar-profiles/{profile_uuid}/:
     get:
       operationId: similar_profiles_retrieve
@@ -4124,12 +4326,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    example: true
-                  detail:
+                  id:
+                    type: integer
+                    description: User id.
+                    example: 123
+                  refresh_token:
                     type: string
-                    example: "Email verified successfully."
+                    description: JWT refresh token.
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                  access_token:
+                    type: string
+                    description: JWT access token.
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                  first_name:
+                    type: string
+                    description: User firstname.
+                    example: "John"
+                  last_name:
+                    type: string
+                    description: User lastname.
+                    example: "Doe"
         '400':
           description: Bad request - invalid token or uidb64.
           content:
@@ -6015,6 +6231,14 @@ components:
     BaseUserProfileUpdate:
       type: object
       properties:
+        first_name:
+          type: string
+          description: "The user's first name."
+          example: "John"
+        last_name:
+          type: string
+          description: "The user's last name."
+          example: "Doe"
         userpreferences:
           $ref: '#/components/schemas/BaseUserProfilePreferencesUpdate'
 
@@ -7239,6 +7463,44 @@ components:
         - specific_role
         - custom_role
         - team_history_object
+
+    MainUserData:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        first_name:
+          type: string
+        last_name:
+          type: string
+        gender_display:
+          $ref: '#/components/schemas/Gender'
+          readOnly: true
+        display_status:
+          type: string
+          readOnly: true
+      required:
+        - id
+        - first_name
+        - last_name
+        - gender_display
+        - display_status
+
+    MainUserDataUpdateRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: "Jan"
+          description: "User's first name."
+        last_name:
+          type: string
+          example: "Kowalski"
+          description: "User's last name."
+        gender:
+          type: string
+          description: "User's gender, where 'M' stands for Male and 'K' for Female."
 
   securitySchemes:
     jwtAuth:

@@ -30,7 +30,7 @@ BASE_URL = "http://localhost:8000"
 
 FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL")
 
-VERSION = "2.3.2"
+VERSION = "2.3.3"
 
 
 SYSTEM_USER_EMAIL = "rafal.kesik@gmail.com"
@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     "users",
     "profiles",
     "transfers",
+    # "contact",
+    # Deprecation(rkesik): since we are working on a new FE
     "followers",
     "inquiries",
     "clubs",

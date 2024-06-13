@@ -88,7 +88,8 @@ class TestGetProfileAPI(APITestCase):
     def test_get_profile_by_slug_invalid(self) -> None:
         """GET request with a non-existent slug should return 404"""
         slug_url = reverse(
-            "api:profiles:get_profile_by_slug", kwargs={"profile_slug": "nonexistent-slug"}
+            "api:profiles:get_profile_by_slug",
+            kwargs={"profile_slug": "nonexistent-slug"},
         )
         response = self.client.get(slug_url, **self.headers)
         assert response.status_code == 404
@@ -1324,3 +1325,37 @@ class TestProfileVisitHistory(APITestCase):
 
         # Check if counter doesn't count if requestor is the same as requested
         assert visit_object.total_visits == 2
+
+
+class TestProfileMainData(APITestCase):
+    def setUp(self) -> None:
+        self.main_data_url = "api:profiles:get_or_update_main_data"
+        self.profile = factories.PlayerProfileFactory.create(user__email="username")
+        self.user_manager = UserManager(self.client)
+
+    def test_get_profile_main_data(self):
+        """Test retrieve profile main data"""
+        response = self.client.get(
+            reverse(self.main_data_url, kwargs={"profile_uuid": self.profile.uuid})
+        )
+        fields = ["first_name", "last_name", "gender_display", "display_status"]
+        for field in fields:
+            assert field in response.data
+        assert response.status_code is 200
+
+    def test_patch_profile_main_data(self):
+        """Test update profile main data"""
+        self.client.force_authenticate(user=self.profile.user)
+        data = {
+            "first_name": "first name after patch",
+            "last_name": "last name after patch",
+            "gender": "K",
+        }
+        self.client.patch(
+            reverse(self.main_data_url, kwargs={"profile_uuid": self.profile.uuid}),
+            data,
+        )
+        self.profile.refresh_from_db()
+        assert self.profile.user.first_name == data["first_name"]
+        assert self.profile.user.last_name == data["last_name"]
+        assert self.profile.user.userpreferences.gender == data["gender"]

@@ -4,6 +4,7 @@ from api import views
 from clubs.api.api_urls import urlpatterns as clubs_urls
 from events.urls import urlpatterns as events_urls
 from features.api_urls import urlpatterns as features_urls
+from followers.api.api_urls import urlpatterns as followers_urls
 from inquiries.api.urls import urlpatterns as inquiries_urls
 from labels.api.urls import urlpatterns as labels_urls
 from notifications.api.urls import urlpatterns as notifications_urls
@@ -20,6 +21,7 @@ urlpatterns = [
     url(r"^profiles/", include((profiles_urls, "profiles"))),
     url(r"^roles/", include((roles_urls, "roles"))),
     url(r"^features/", include((features_urls, "features"))),
+    url(r"^followers/", include((followers_urls, "followers"))),
     url(r"^events/", include((events_urls, "events"))),
     url(r"^inquiries/", include((inquiries_urls, "inquiries"))),
     url(r"^notifications/", include((notifications_urls, "notifications"))),

@@ -31,12 +31,14 @@ from clubs import models as clubs_models
 from clubs import services as club_services
 from clubs.models import Club as CClub
 from clubs.models import Team as CTeam
+from followers.models import GenericFollow
 from profiles import errors, models, utils
 from profiles.api import errors as api_errors
 from profiles.interfaces import ProfileVisitHistoryProtocol
 from profiles.models import (
     REVERSED_MODEL_MAP,
     BaseProfile,
+    Catalog,
     LicenceType,
     PlayerPosition,
     ProfileTransferStatus,
@@ -499,6 +501,15 @@ class ProfileService:
         transfer_status: ProfileTransferStatus = profile.transfer_status_related.first()
         return transfer_status or None
 
+    def get_catalog_by_slug(self, catalog_slug: str) -> Catalog:
+        """
+        Retrieve a catalog based on its slug.
+        """
+        try:
+            return Catalog.objects.get(slug=catalog_slug)
+        except Catalog.DoesNotExist:
+            raise errors.CatalogNotFoundServiceException
+
     @staticmethod
     def get_profile_transfer_request(
         profile: models.BaseProfile,
@@ -698,6 +709,17 @@ class ProfileFilterService:
         for name in licence_keys:
             if name not in available_keys:
                 raise ValueError(f"Invalid licence name: {name}")
+
+    @staticmethod
+    def get_followed_profile_ids(
+        user: User, profile_model: models.PROFILE_MODELS
+    ) -> list:
+        """Return a list of profile IDs that the user is following."""
+        profile_content_type = ContentType.objects.get_for_model(profile_model)
+        followed_profile_ids = GenericFollow.objects.filter(
+            user=user, content_type=profile_content_type.id
+        ).values_list("object_id", flat=True)
+        return list(followed_profile_ids)
 
     @staticmethod
     def filter_transfer_status(
