@@ -47,6 +47,7 @@ from profiles.api.mixins import ProfileRetrieveMixin
 from profiles.filters import ProfileListAPIFilter
 from profiles.models import ProfileTransferRequest
 from profiles.serializers_detailed.base_serializers import (
+    MainUserDataSerializer,
     ProfileTransferRequestSerializer,
     ProfileTransferStatusSerializer,
     TeamContributorSerializer,
@@ -270,6 +271,48 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
             data=request.data,
             partial=True,
             context={"profile_uuid": profile_uuid},
+        )
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+
+        return Response(serializer.data)
+
+    def get_main_user_data(self, request: Request, profile_uuid: uuid.UUID) -> Response:
+        """Retrieve User main data"""
+        try:
+            profile = profile_service.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist:
+            raise api_errors.ProfileDoesNotExist
+        except ValidationError:
+            raise api_errors.InvalidUUID
+
+        if not profile.user.userpreferences:
+            raise UserPreferencesDoesNotExistHTTPException
+
+        serializer = MainUserDataSerializer(profile.user)
+
+        return Response(serializer.data)
+
+    def update_main_user_data(
+        self, request: Request, profile_uuid: uuid.UUID
+    ) -> Response:
+        """User main data update endpoint"""
+        try:
+            profile = profile_service.get_profile_by_uuid(profile_uuid)
+        except ObjectDoesNotExist:
+            raise api_errors.ProfileDoesNotExist
+        except ValidationError:
+            raise api_errors.InvalidUUID
+
+        if profile.user != request.user:
+            raise NotOwnerOfAnObject
+        if not request.user.userpreferences:
+            raise UserPreferencesDoesNotExistHTTPException
+
+        serializer = MainUserDataSerializer(
+            request.user,
+            data=request.data,
+            partial=True,
         )
         if serializer.is_valid(raise_exception=True):
             serializer.save()

@@ -1771,6 +1771,63 @@ paths:
           description: 'Unauthorized'
         '404':
           description: 'Profile with given slug does not exist'
+
+  /profiles/{profile_uuid}/main-data/:
+    get:
+      summary: Retrieve main user data
+      operationId: getMainUserData
+      tags:
+        - profiles
+      parameters:
+        - in: path
+          name: profile_uuid
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Main user data retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MainUserData'
+        '404':
+          description: Profile not found.
+    patch:
+      summary: Update main user data
+      operationId: updateMainUserData
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      parameters:
+        - in: path
+          name: profile_uuid
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MainUserDataUpdateRequest'
+      responses:
+        '200':
+          description: Main user data updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MainUserData'
+        '400':
+          description: Invalid input.
+        '404':
+          description: Profile not found.
+        '401':
+          description: Unauthorized.
+
   /profiles/similar-profiles/{profile_uuid}/:
     get:
       operationId: similar_profiles_retrieve
@@ -4269,12 +4326,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    example: true
-                  detail:
+                  id:
+                    type: integer
+                    description: User id.
+                    example: 123
+                  refresh_token:
                     type: string
-                    example: "Email verified successfully."
+                    description: JWT refresh token.
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                  access_token:
+                    type: string
+                    description: JWT access token.
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                  first_name:
+                    type: string
+                    description: User firstname.
+                    example: "John"
+                  last_name:
+                    type: string
+                    description: User lastname.
+                    example: "Doe"
         '400':
           description: Bad request - invalid token or uidb64.
           content:
@@ -6160,6 +6231,14 @@ components:
     BaseUserProfileUpdate:
       type: object
       properties:
+        first_name:
+          type: string
+          description: "The user's first name."
+          example: "John"
+        last_name:
+          type: string
+          description: "The user's last name."
+          example: "Doe"
         userpreferences:
           $ref: '#/components/schemas/BaseUserProfilePreferencesUpdate'
 
@@ -7384,6 +7463,44 @@ components:
         - specific_role
         - custom_role
         - team_history_object
+
+    MainUserData:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        first_name:
+          type: string
+        last_name:
+          type: string
+        gender_display:
+          $ref: '#/components/schemas/Gender'
+          readOnly: true
+        display_status:
+          type: string
+          readOnly: true
+      required:
+        - id
+        - first_name
+        - last_name
+        - gender_display
+        - display_status
+
+    MainUserDataUpdateRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: "Jan"
+          description: "User's first name."
+        last_name:
+          type: string
+          example: "Kowalski"
+          description: "User's last name."
+        gender:
+          type: string
+          description: "User's gender, where 'M' stands for Male and 'K' for Female."
 
   securitySchemes:
     jwtAuth:

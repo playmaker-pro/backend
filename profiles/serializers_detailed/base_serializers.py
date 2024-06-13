@@ -249,6 +249,66 @@ class UserDataSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
+class MainUserDataSerializer(serializers.ModelSerializer):
+    """Main user data serializer"""
+
+    gender_display = serializers.SerializerMethodField()
+    gender = serializers.CharField(write_only=True, required=False, allow_null=True)
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "first_name",
+            "last_name",
+            "gender_display",
+            "gender",
+            "display_status",
+        )
+
+    def get_gender_display(self, obj: User) -> typing.Optional[dict]:
+        """
+        Retrieves and serializes the gender information from the user's preferences.
+
+        This method accesses the gender attribute from the user's associated
+        UserPreferences model. It then uses the ProfileEnumChoicesSerializer to
+        serialize the gender value into a more readable format (e.g., converting
+        a gender code to its corresponding descriptive name).
+        """
+        # Ensure the userpreferences relation exists
+        if obj.userpreferences:
+            gender_value = obj.userpreferences.gender
+            if gender_value is not None:
+                # Using ProfileEnumChoicesSerializer for the gender field
+                serializer = ProfileEnumChoicesSerializer(
+                    source="gender", model=UserPreferences
+                )
+                return serializer.to_representation(serializer.parse(gender_value))
+            return None
+
+    def update(self, instance: User, validated_data: dict) -> User:
+        """Update User main data"""
+        instance = super().update(instance, validated_data)
+
+        # Custom handling for gender update
+        gender_code = validated_data.get("gender", None)
+        if gender_code is not None:
+            instance.userpreferences.gender = gender_code
+            instance.userpreferences.save()
+
+        # display_status update
+        instance.display_status = User.DisplayStatus.UNDER_REVIEW
+        instance.save()
+
+        return instance
+
+    def validate_gender(self, value: str) -> str:
+        """Validate gender field"""
+        if value not in ["M", "K"]:
+            raise InvalidGender
+        return value
+
+
 class ClubSerializer(serializers.ModelSerializer):
     """Player profile club serializer"""
 

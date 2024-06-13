@@ -99,10 +99,14 @@ class UserRegisterEndpointView(EndpointView):
             raise InvalidTokenException
 
         UserService.change_email_verify_flag(user)
-        return Response(
-            {"success": True, "detail": "Email verified successfully"},
-            status=status.HTTP_200_OK,
-        )
+        response = {
+            "id": user.pk,
+            "success": True,
+            **user_service.create_tokens(user),
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+        }
+        return Response(response)
 
 
 class UsersAPI(EndpointView):

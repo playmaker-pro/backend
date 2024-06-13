@@ -59,6 +59,13 @@ urlpatterns = [
         ),
     ),
     path(
+        r"<uuid:profile_uuid>/main-data/",
+        views.ProfileAPI.as_view(
+            {"get": "get_main_user_data", "patch": "update_main_user_data"}
+        ),
+        name="get_or_update_main_data",
+    ),
+    path(
         r"slug/<slug:profile_slug>/",
         views.ProfileAPI.as_view(
             {
