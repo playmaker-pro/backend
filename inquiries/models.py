@@ -242,7 +242,13 @@ class UserInquiry(models.Model):
         help_text=_("Current number of used inquiries."),
     )
 
-    limit = models.PositiveIntegerField(default=5)
+    limit_raw = models.PositiveIntegerField(default=5)
+
+    @property
+    def limit(self):
+        if self.user.profile and self.user.profile.has_premium_inquiries:
+            return self.limit_raw + 20  # 20 is a bonus for premium users
+        return self.limit_raw
 
     @property
     def can_make_request(self):

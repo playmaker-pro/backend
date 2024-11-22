@@ -30,6 +30,7 @@ from adapters.player_adapter import (
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_profile_external_links
 from mapper.models import Mapper
+from premium.models import PremiumProduct, PromoteProfileProduct
 from profiles.errors import VerificationCompletionFieldsWrongSetup
 from profiles.managers import ProfileManager
 from profiles.mixins import TeamObjectsDisplayMixin
@@ -250,15 +251,9 @@ class BaseProfile(models.Model, EventLogMixin):
 
     PROFILE_TYPE = None
     AUTO_VERIFY = False  # flag to perform auto verification of User based on profile. If true - User.state will be switched to Verified  # noqa: E501
-    VERIFICATION_FIELDS = (
-        []
-    )  # this is definition of profile fields which will be threaded as must-have params.  # noqa: E501
-    COMPLETE_FIELDS = (
-        []
-    )  # this is definition of profile fields which will be threaded as mandatory for full profile.  # noqa: E501
-    OPTIONAL_FIELDS = (
-        []
-    )  # this is definition of profile fields which will be threaded optional
+    VERIFICATION_FIELDS = []  # this is definition of profile fields which will be threaded as must-have params.  # noqa: E501
+    COMPLETE_FIELDS = []  # this is definition of profile fields which will be threaded as mandatory for full profile.  # noqa: E501
+    OPTIONAL_FIELDS = []  # this is definition of profile fields which will be threaded optional
 
     data_mapper_changed = None
     verification = models.OneToOneField(
@@ -301,6 +296,13 @@ class BaseProfile(models.Model, EventLogMixin):
     )
     transfer_requests = GenericRelation(
         "ProfileTransferRequest", related_query_name="transfer_requests"
+    )
+
+    premium_products = models.OneToOneField(
+        "premium.PremiumProduct",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
     )
 
     def get_absolute_url(self):
@@ -462,6 +464,35 @@ class BaseProfile(models.Model, EventLogMixin):
         """Returns list of video labels for profile"""
         return cls._video_labels.choices
 
+    @property
+    def is_promoted(self) -> bool:
+        """Check if profile is promoted"""
+        return self.premium_products.is_profile_promoted
+
+    @property
+    def promotion(self) -> PromoteProfileProduct:
+        if self.is_promoted:
+            return self.premium_products.promotion
+
+    @property
+    def is_premium(self) -> bool:
+        """Check if profile is promoted"""
+        return self.premium_products.is_profile_premium
+
+    @property
+    def has_premium_inquiries(self) -> bool:
+        """Check if profile has premium inquiries"""
+        return self.premium_products.is_premium_inquiries_active
+
+    def ensure_premium_products_exist(self, commit: bool = True) -> None:
+        """Create PremiumProduct for profile if it doesn't exist"""
+        if not self.premium_products:
+            self.premium_products, _ = PremiumProduct.objects.get_or_create(
+                profile_uuid=self.uuid
+            )
+            if commit:
+                self.save()
+
     def save(self, *args, **kwargs):
         # silent_param = kwargs.get('silent', False)
         # if silent_param is not None:
@@ -476,6 +507,7 @@ class BaseProfile(models.Model, EventLogMixin):
             self.user.save(update_fields=["declared_role"])
 
         self.ensure_verification_stage_exist(commit=False)
+        self.ensure_premium_products_exist(commit=False)
 
         # When profile changes, update data score level
         profile_manager: ProfileManager = ProfileManager()

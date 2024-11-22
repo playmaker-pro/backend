@@ -3,7 +3,7 @@ max-line-length = 88
 
 [tool.isort]
 profile = "black"
-multi_line_output=3
+multi_line_output = 3
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "backend.settings.test"
@@ -39,12 +39,12 @@ django-address = "0.2.5"
 djangorestframework = "3.12.1"
 djangorestframework-simplejwt = "5.2.2"
 django-cors-headers = "3.4.0"
-django-allauth = "0.42.0"
+django-allauth = "0.50.0"
 drf-spectacular = "^0.26.4"
 drf-yasg = "^1.21.7"
 drf-spectacular-sidecar = "^2023.9.1"
 django-select2 = "^7.10"
-pm-core = {version = "^1.0.0", source = "pm"}
+pm-core = { version = "^1.0.0", source = "pm" }
 django-filter = "^23.2"
 psycopg2-binary = "^2.9.7"
 pygments = "^2.1"
@@ -65,7 +65,7 @@ pre-commit = "3.3.1"
 parameterized = "^0.9.0"
 black = "^23.9.0"
 isort = "^5.13.2"
-flake8="^7.0.0"
+flake8 = "^7.0.0"
 
 
 [[tool.poetry.source]]

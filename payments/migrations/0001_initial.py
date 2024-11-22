@@ -8,7 +8,6 @@ from django.conf import settings
 from django.db import migrations, models
 
 from inquiries.schemas import InquiryPlanTypeRef as _InquiryPlanTypeRef
-from payments.models import TransactionType as _TransactionType
 
 
 def create_initial_inquiry_transaction_types(apps, schema_editor) -> None:
@@ -16,19 +15,19 @@ def create_initial_inquiry_transaction_types(apps, schema_editor) -> None:
     TransactionType = apps.get_model("payments", "TransactionType")
 
     TransactionType.objects.get_or_create(
-        ref=_TransactionType.TransactionTypeRef.INQUIRIES,
+        ref="INQUIRIES",
         name=_InquiryPlanTypeRef.PREMIUM5,
         name_readable="5 zapytań",
         price=19.99,
     )
     TransactionType.objects.get_or_create(
-        ref=_TransactionType.TransactionTypeRef.INQUIRIES,
+        ref="INQUIRIES",
         name=_InquiryPlanTypeRef.PREMIUM10,
         name_readable="10 zapytań",
         price=34.99,
     )
     TransactionType.objects.get_or_create(
-        ref=_TransactionType.TransactionTypeRef.INQUIRIES,
+        ref="INQUIRIES",
         name=_InquiryPlanTypeRef.PREMIUM25,
         name_readable="25 zapytań",
         price=69.99,

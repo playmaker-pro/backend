@@ -80,6 +80,9 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
             "team_history_object",
             "visits",
             "data_fulfill_status",
+            "is_promoted",
+            "is_premium",
+            "promotion",
         )
 
     player_positions = ProfileVIewPlayerProfilePositionSerializer(

@@ -2,23 +2,19 @@ import logging
 import traceback
 from datetime import datetime as dt
 from datetime import timedelta
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 import requests
 from allauth.socialaccount.models import SocialApp
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
-from django.urls import reverse
-from django.utils import timezone
-from django.utils.encoding import DjangoUnicodeDecodeError, force_bytes, force_text
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from django.utils.translation import ugettext_lazy as _
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
+from django.utils.translation import gettext_lazy as _
 from pydantic import ValidationError
 from requests import Response
-from rest_framework import status
 
 from users.schemas import (
     GoogleSdkLoginCredentials,

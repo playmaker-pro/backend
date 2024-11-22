@@ -2,7 +2,8 @@ import random
 import typing
 from functools import cached_property
 
-from django.db.models import QuerySet
+from django.db.models import BooleanField, Case, QuerySet, Value, When
+from django.utils import timezone
 
 from api import errors as api_errors
 from api import utils as api_utils
@@ -59,10 +60,24 @@ class ProfileListAPIFilter(APIFilter):
         except ValueError:
             raise IncorrectProfileRole
 
+    def default_init_sorting(self) -> None:
+        """Set default sorting for queryset"""
+        now = timezone.now()
+        self.queryset = self.queryset.annotate(
+            is_promoted=Case(
+                When(
+                    premium_products__promotion__valid_until__gt=now, then=Value(True)
+                ),
+                default=Value(False),
+                output_field=BooleanField(),
+            )
+        ).order_by("-is_promoted", "-last_activity")
+
     def get_queryset(self) -> typing.Union[QuerySet, typing.List]:
         """Get queryset based on role, apply filters, and handle shuffle parameter."""
         self.queryset = self.model.objects.to_list_by_api()
         self.filter_queryset(self.queryset)
+        self.default_init_sorting()
 
         if self.query_params.get("shuffle", False):
             # Random shuffle -> get random sample of 10 -> return list of random choices
