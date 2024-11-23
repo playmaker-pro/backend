@@ -7,7 +7,6 @@ from django.db import models as models
 from django_fsm import FSMField as _FSMField
 from django_fsm import transition as _transition
 
-from inquiries.models import InquiryPlan
 from payments.logging import logger as _logger
 from payments.providers.tpay import schemas as _tpay_schemas
 
@@ -50,7 +49,7 @@ class Transaction(models.Model):
     )
     def success(self) -> None:
         """Set transaction status as SUCCESS"""
-        self.change_user_plan()
+        self.product.apply_product_for_transaction(self)
         _logger.info(
             f"Transaction {self.uuid} for user ID={self.user.pk} has been approved."
         )
@@ -106,11 +105,6 @@ class Transaction(models.Model):
         else:
             self.success()
         self.save()
-
-    def change_user_plan(self) -> None:
-        """Change user plan based on a transaction type"""
-        plan = InquiryPlan.objects.get(type_ref=self.product.name)
-        self.user.userinquiry.set_new_plan(plan)
 
     def __str__(self) -> str:
         return (

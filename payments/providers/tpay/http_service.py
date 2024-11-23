@@ -72,7 +72,9 @@ class TpayHttpService(_HttpService):
     def create_transaction(self) -> _schemas.TpayTransactionResponse:
         """Send create transaction request to tpay and return response"""
         try:
-            response = self.session.post(self.urls.transaction_url, data=self._parser.transaction_body)  # type: ignore
+            response = self.session.post(
+                self.urls.transaction_url, data=self._parser.transaction_body
+            )  # type: ignore
             response.raise_for_status()
         except (_requests.HTTPError, _requests.RequestException) as e:
             _logger.error(

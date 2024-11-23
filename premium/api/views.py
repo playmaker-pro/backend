@@ -14,6 +14,8 @@ from premium.models import Product
 class ProductInfoView(EndpointView):
     queryset = Product.objects.filter(visible=True)
     serializer_class = ProductSerializer
+    authentication_classes = []
+    permission_classes = []
 
     def list_inquiry_products(self, request: Request) -> Response:
         queryset = self.get_queryset().filter(ref=Product.ProductReference.INQUIRIES)

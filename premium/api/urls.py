@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import ProductInfoView
+from .views import ProductInfoView, ProductView
 
 app_name = "premium"
 
@@ -17,7 +17,7 @@ urlpatterns = [
     ),
     path(
         "transaction/<int:product_id>/create/",
-        ProductInfoView.as_view({"post": "create_transaction"}),
+        ProductView.as_view({"post": "create_transaction"}),
         name="create_transaction",
     ),
 ]

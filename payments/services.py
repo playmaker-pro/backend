@@ -17,7 +17,7 @@ class TransactionService:
         cls, user: settings.AUTH_USER_MODEL, product: Product
     ) -> Transaction:
         """Create new transaction for given type and user"""
-        transaction = Transaction.objects.create(user=user, transaction_type=product)
+        transaction = Transaction.objects.create(user=user, product=product)
         return cls(transaction)
 
     @staticmethod

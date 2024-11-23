@@ -2,6 +2,8 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
+from inquiries.models import InquiryPlan
+from payments.models import Transaction
 from premium.utils import get_date_days_after
 
 
@@ -235,3 +237,11 @@ class Product(models.Model):
 
     def __str__(self) -> str:
         return f"{self.ref} -- {self.name} -- {self.name_readable} -- {self.price}"
+
+    def apply_product_for_transaction(self, transaction: Transaction) -> None:
+        if self.ref == Product.ProductReference.PREMIUM:
+            premium = transaction.user.profile.premium_products.setup_premium_profile()
+            premium.setup()
+        elif self.ref == Product.ProductReference.INQUIRIES:
+            plan = InquiryPlan.objects.get(type_ref=self.name)
+            transaction.user.userinquiry.set_new_plan(plan)

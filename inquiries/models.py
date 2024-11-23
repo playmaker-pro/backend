@@ -347,8 +347,8 @@ class UserInquiry(models.Model):
     def set_new_plan(self, plan: InquiryPlan) -> None:
         """Set a new plan for user"""
         self.plan = plan
-        self.limit += plan.limit
-        self.save(update_fields=["plan", "limit"])
+        self.limit_raw += plan.limit
+        self.save(update_fields=["plan", "limit_raw"])
 
     def __str__(self):
         return f"{self.user}: {self.counter}/{self.limit}"

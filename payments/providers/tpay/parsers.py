@@ -31,9 +31,10 @@ class TpayTransactionParser:
             payer=self._payer,
             callbacks=self._config.callbacks,
         )
-        schema.callbacks.payerUrls.success += (
-            f"&inquiry_count={self._transaction.transaction_type.inquiry_plan.limit}"
-        )
+        if self._transaction.product.ref == "INQUIRIES":
+            schema.callbacks.payerUrls.success += (
+                f"&inquiry_count={self._transaction.user.userinquiry.plan.limit}"
+            )
         return schema.json(by_alias=True, exclude_none=True)
 
     @property
