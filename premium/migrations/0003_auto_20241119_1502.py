@@ -9,9 +9,13 @@ from profiles.models import PROFILE_MODELS
 
 
 def create_premium_product_for_each_profile(apps, schema_editor):
-    for profile_model in PROFILE_MODELS:
+    PremiumProduct = apps.get_model("premium", "PremiumProduct")
+
+    for profile_model_class in PROFILE_MODELS:
+        profile_model = apps.get_model("profiles", profile_model_class.__name__)
         for profile in profile_model.objects.all():
-            profile.ensure_premium_products_exist()
+            profile.premium_products = PremiumProduct.objects.create()
+            profile.save()
 
 
 class Migration(migrations.Migration):
