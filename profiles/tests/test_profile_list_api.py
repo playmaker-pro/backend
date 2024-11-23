@@ -1043,12 +1043,15 @@ def test_sort_player_profiles_promoted_and_last_activity_first(
     """
     Test if profiles are sorted by promoted and last_activity first.
     """
-    PlayerProfile.objects.all().delete()  # Delete all previoysly created profiles
 
     # Promoted player with latest activity
     player1 = PlayerProfileFactory.create()
     player1.premium_products.setup_premium_profile()
     player1.user.new_user_activity()
+
+    PlayerProfileFactory.create(
+        user__last_activity=timezone.now() - timedelta(days=123)
+    )  # Random profile between
 
     # Not promoted player with latest activity
     player2 = PlayerProfileFactory.create()
@@ -1066,6 +1069,10 @@ def test_sort_player_profiles_promoted_and_last_activity_first(
     player4.user.new_user_activity()
 
     timezone_now.return_value = timezone.now() - timedelta(days=2)
+
+    PlayerProfileFactory.create(
+        user__last_activity=timezone.now() - timedelta(days=321)
+    )  # Random profile between
 
     # Promoted player with 2 days old activity
     player5 = PlayerProfileFactory.create()
@@ -1090,6 +1097,6 @@ def test_sort_player_profiles_promoted_and_last_activity_first(
     headers = user_manager.custom_user_headers(email=user.email, password="test1234")
     url_to_hit: str = reverse(url)
     response = api_client.get(url_to_hit + "?role=P", **headers)
-    ids_expect_order = [profile["uuid"] for profile in response.json()["results"]]
+    ids_expect_order = [profile["uuid"] for profile in response.json()["results"][:6]]
 
     assert ids_expect_order == ids_expect_order

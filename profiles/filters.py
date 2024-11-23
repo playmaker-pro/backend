@@ -63,15 +63,16 @@ class ProfileListAPIFilter(APIFilter):
     def default_init_sorting(self) -> None:
         """Set default sorting for queryset"""
         now = timezone.now()
+
         self.queryset = self.queryset.annotate(
-            is_promoted=Case(
+            is_profile_promoted=Case(
                 When(
                     premium_products__promotion__valid_until__gt=now, then=Value(True)
                 ),
                 default=Value(False),
                 output_field=BooleanField(),
             )
-        ).order_by("-is_promoted", "-last_activity")
+        ).order_by("-is_profile_promoted", "-user__last_activity")
 
     def get_queryset(self) -> typing.Union[QuerySet, typing.List]:
         """Get queryset based on role, apply filters, and handle shuffle parameter."""

@@ -609,7 +609,8 @@ class ProfileVideoAPI(EndpointView):
             raise api_errors.IncorrectProfileRole
         labels_choices = (ChoicesTuple(*label) for label in labels)
         serializer = ProfileEnumChoicesSerializer(
-            labels_choices, many=True  # type: ignore
+            labels_choices,
+            many=True,  # type: ignore
         )  # noqa: 501
         return Response(serializer.data)
 
@@ -949,7 +950,9 @@ class TransferStatusAPIView(EndpointView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def get_profile_transfer_status(
-        self, request: Request, profile_uuid: uuid.UUID  # noqa
+        self,
+        request: Request,
+        profile_uuid: uuid.UUID,  # noqa
     ) -> Response:
         """Retrieve and display transfer status for the user."""
         try:
@@ -993,7 +996,9 @@ class TransferStatusAPIView(EndpointView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create_profile_transfer_status(
-        self, request: Request, profile_uuid: uuid.UUID  # noqa
+        self,
+        request: Request,
+        profile_uuid: uuid.UUID,  # noqa
     ) -> Response:
         # views.py
         """Create transfer status for the profile."""
@@ -1014,7 +1019,9 @@ class TransferStatusAPIView(EndpointView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete_profile_transfer_status(
-        self, request: Request, profile_uuid: uuid.UUID  # noqa
+        self,
+        request: Request,
+        profile_uuid: uuid.UUID,  # noqa
     ) -> Response:
         """Delete transfer status for the profile."""
         try:
@@ -1061,7 +1068,8 @@ class TransferRequestAPIView(EndpointView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def list_transfer_request_number_of_trainings(
-        self, request: Request  # noqa
+        self,
+        request: Request,  # noqa
     ) -> Response:
         """
         Retrieve and display transfer status number of trainings for the profiles.
@@ -1075,7 +1083,8 @@ class TransferRequestAPIView(EndpointView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def list_transfer_request_benefits(
-        self, request: Request  # noqa
+        self,
+        request: Request,  # noqa
     ) -> Response:  # noqa
         """
         Retrieve and display transfer status additional information for the profiles.
@@ -1145,7 +1154,9 @@ class TransferRequestAPIView(EndpointView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get_profile_transfer_request(
-        self, request: Request, profile_uuid: uuid.UUID  # noqa
+        self,
+        request: Request,
+        profile_uuid: uuid.UUID,  # noqa
     ) -> Response:
         """Retrieve and display transfer request for the user."""
         try:
@@ -1162,7 +1173,9 @@ class TransferRequestAPIView(EndpointView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update_transfer_request(
-        self, request: Request, profile_uuid: uuid.UUID  # noqa
+        self,
+        request: Request,
+        profile_uuid: uuid.UUID,  # noqa
     ) -> Response:
         """Update transfer request for the user."""
 

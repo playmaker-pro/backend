@@ -34,31 +34,47 @@ paths:
         '401':
           description: "Unauthorized"
 
-  /payments/inquiries/list-types/:
+  /premium/products/inquiries/:
     get:
-      operationId: get_inquiry_payment_types
-      description: Get payment types for inquiries
-      summary: Get payment types for inquiries
+      operationId: get_premium_inquiries_product
+      description: Get list of premium inquiries products.
+      summary: Get list of premium inquiries products.
       tags:
-        - payments
+        - premium_products
       security:
         - jwtAuth: [ ]
       responses:
         '200':
-          description: "List of payment types for inquiries"
+          description: "List of premium inquiries products."
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/InquiryPaymentType'
-  /payments/create/{id}/:
-    post:
-      operationId: create_transaction
-      description: Create transaction
-      summary: Create transaction
+                  $ref: '#/components/schemas/PremiumProduct'
+  /premium/products/premium/:
+    get:
+      operationId: get_premium_profile_product
+      description: Get get premium profile product info.
+      summary: Get get premium profile product info.
       tags:
-        - payments
+        - premium_products
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: "Premium profile product info."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PremiumProduct'
+  /premium/transaction/{id}/create/:
+    post:
+      operationId: create_transaction_for_premium_product
+      description: Create transaction for premium product.
+      summary: Create transaction for premium product.
+      tags:
+        - premium_products
       security:
         - jwtAuth: [ ]
       parameters:
@@ -67,7 +83,7 @@ paths:
           schema:
             type: integer
           required: true
-          description: "Transaction type ID"
+          description: "Product ID"
       responses:
         '201':
           description: "Transaction has been created"
@@ -4862,6 +4878,15 @@ components:
       required:
         - id
         - name
+    ProfilePromotion:
+      type: object
+      properties:
+        is_active:
+          type: boolean
+        days_left:
+          type: integer
+        days_count:
+          type: integer
     TeamHistoryProfileView:
       type: object
       required:
@@ -5310,6 +5335,14 @@ components:
             visits:
               type: integer
               description: "Total profile visits per last 30 days"
+            is_promoted:
+              type: boolean
+              description: "Is player promoted"
+            is_premium:
+              type: boolean
+              description: "Is player premium"
+            promotion:
+              $ref: '#/components/schemas/ProfilePromotion'
           example: {
             "slug": "player-slug",
             "uuid": "uuid",
@@ -5451,6 +5484,14 @@ components:
             visits:
               type: integer
               description: "Total profile visits per last 30 days"
+            is_promoted:
+              type: boolean
+              description: "Is player promoted"
+            is_premium:
+              type: boolean
+              description: "Is player premium"
+            promotion:
+              $ref: '#/components/schemas/ProfilePromotion'
           example: {
             "slug": "coach-miz-shoty",
             "uuid": "uuid",
@@ -5660,6 +5701,14 @@ components:
             visits:
               type: integer
               description: "Total profile visits per last 30 days"
+            is_promoted:
+              type: boolean
+              description: "Is player promoted"
+            is_premium:
+              type: boolean
+              description: "Is player premium"
+            promotion:
+              $ref: '#/components/schemas/ProfilePromotion'
           example: {
             "slug": "scout-kacper-skalski",
             "user": {
@@ -5780,6 +5829,14 @@ components:
             visits:
               type: integer
               description: "Total profile visits per last 30 days"
+            is_promoted:
+              type: boolean
+              description: "Is player promoted"
+            is_premium:
+              type: boolean
+              description: "Is player premium"
+            promotion:
+              $ref: '#/components/schemas/ProfilePromotion'
           example:
             slug: "coach-miz-shoty"
             "uuid": "uuid"
@@ -5881,6 +5938,14 @@ components:
             visits:
               type: integer
               description: "Total profile visits per last 30 days"
+            is_promoted:
+              type: boolean
+              description: "Is player promoted"
+            is_premium:
+              type: boolean
+              description: "Is player premium"
+            promotion:
+              $ref: '#/components/schemas/ProfilePromotion'
           required:
           - slug
           - uuid
@@ -5974,6 +6039,14 @@ components:
             custom_role:
               type: string
               description: Custom role description provided by the user
+            is_promoted:
+              type: boolean
+              description: "Is player promoted"
+            is_premium:
+              type: boolean
+              description: "Is player premium"
+            promotion:
+              $ref: '#/components/schemas/ProfilePromotion'
           example: {
             "user": {
                 "id": 1,
@@ -7369,7 +7442,7 @@ components:
       required:
         - role
         - custom_role
-    InquiryPaymentType:
+    PremiumProduct:
       type: object
       properties:
         id:
@@ -7399,7 +7472,9 @@ components:
           type: string
           format: uri
           description: "URL to the payment gateway."
-
+      required:
+        - uuid
+        - url
     ContactSchema:
       type: object
       properties:
