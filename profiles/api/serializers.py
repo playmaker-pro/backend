@@ -469,9 +469,9 @@ class BaseTeamContributorInputSerializer(serializers.Serializer):
                 if not isinstance(league_identifier, int):
                     # Check if country is provided
                     if not data.get("country"):
-                        validation_errors[
-                            "country"
-                        ] = "This field is required for foreign teams."
+                        validation_errors["country"] = (
+                            "This field is required for foreign teams."
+                        )
 
                     # Check if gender is provided for the foreign team
                     if not data.get("gender"):
@@ -592,9 +592,9 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
 
         # Specific validations for non-player profiles
         if data.get("is_primary") is True and end_date:
-            validation_errors[
-                "end_date"
-            ] = "End date should not be provided if is_primary is True."
+            validation_errors["end_date"] = (
+                "End date should not be provided if is_primary is True."
+            )
         if self.instance:
             # Case where is_primary changes from True to False,
             # and no end_date is provided
@@ -615,9 +615,9 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
             role not in models.TeamContributor.get_other_roles()
             and data.get("custom_role") is not None
         ):
-            validation_errors[
-                "custom_role"
-            ] = "Custom role should not be provided unless the role is 'Other'."
+            validation_errors["custom_role"] = (
+                "Custom role should not be provided unless the role is 'Other'."
+            )
 
         # Specific logic based on the profile type
         profile_short_type = self.context.get("profile_short_type")
@@ -1430,3 +1430,11 @@ class SimilarProfileSerializer(serializers.Serializer):
                 )
                 return serializer.to_representation(serializer.parse(gender_value))
             return None
+
+
+class VisitorSerializer(serializers.Serializer):
+    def to_representation(self, instance):
+        return {
+            "timestamp": instance.timestamp,
+            "visitor": SimilarProfileSerializer(instance.visitor.profile).data,
+        }

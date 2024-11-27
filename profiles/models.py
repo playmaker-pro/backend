@@ -297,6 +297,9 @@ class BaseProfile(models.Model, EventLogMixin):
     transfer_requests = GenericRelation(
         "ProfileTransferRequest", related_query_name="transfer_requests"
     )
+    visitation = models.OneToOneField(
+        "Visitation", on_delete=models.PROTECT, null=True, blank=True
+    )
 
     premium_products = models.OneToOneField(
         "premium.PremiumProduct",
@@ -493,6 +496,11 @@ class BaseProfile(models.Model, EventLogMixin):
             if commit:
                 self.save()
 
+    def ensure_visitation_exist(self) -> None:
+        if self.visitation is None:
+            self.visitation = Visitation.objects.create()
+            self.save(updated_fields=["visitation"])
+
     def save(self, *args, **kwargs):
         # silent_param = kwargs.get('silent', False)
         # if silent_param is not None:
@@ -508,6 +516,7 @@ class BaseProfile(models.Model, EventLogMixin):
 
         self.ensure_verification_stage_exist(commit=False)
         self.ensure_premium_products_exist(commit=False)
+        self.ensure_visitation_exist()
 
         # When profile changes, update data score level
         profile_manager: ProfileManager = ProfileManager()
@@ -2493,6 +2502,70 @@ class TeamContributor(models.Model):
 
     def is_other_role(self):
         return self.role in TeamContributor.get_other_roles()
+
+
+class Visitation(models.Model):
+    @property
+    def profile(self) -> BaseProfile:
+        for profile_model_name in (
+            "playerprofile",
+            "coachprofile",
+            "scoutprofile",
+            "managerprofile",
+            "guestprofile",
+            "clubprofile",
+            "otherprofile",
+            "refereeprofile",
+        ):
+            if profile := getattr(self, profile_model_name, None):
+                return profile
+
+    @property
+    def count_who_visited_me(self) -> int:
+        return self.who_visited_me.count()
+
+    @property
+    def who_visited_me(self):
+        return self.visited_objects.all()
+
+    @property
+    def who_i_visited(self):
+        return self.visited_by_me.all()
+
+
+class ProfileVisitation(models.Model):
+    visited = models.ForeignKey(
+        Visitation, on_delete=models.CASCADE, related_name="visited_objects"
+    )
+    visitor = models.ForeignKey(
+        Visitation, on_delete=models.CASCADE, related_name="visited_by_me"
+    )
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-timestamp"]
+
+    def __str__(self):
+        return (
+            f"{self.visitor.profile} visited {self.visited.profile} | {self.timestamp}"
+        )
+
+    @classmethod
+    def upsert(cls, visitor: BaseProfile, visited: BaseProfile) -> "ProfileVisitation":
+        """
+        Create or update ProfileVisitation pased on profiles objects.
+        If visitation exists, update timestamp.
+        """
+        if obj := cls.objects.filter(
+            visitor=visitor.visitation, visited=visited.visitation
+        ).first():
+            obj.timestamp = timezone.now()
+            obj.save()
+        else:
+            obj = cls.objects.create(
+                visitor=visitor.visitation, visited=visited.visitation
+            )
+        return obj
 
 
 class ProfileVisitHistory(models.Model):
