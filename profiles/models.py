@@ -505,10 +505,11 @@ class BaseProfile(models.Model, EventLogMixin):
             if commit:
                 self.save()
 
-    def ensure_visitation_exist(self) -> None:
+    def ensure_visitation_exist(self, commit: bool = True) -> None:
         if self.visitation is None:
             self.visitation = Visitation.objects.create()
-            self.save(updated_fields=["visitation"])
+            if commit:
+                self.save()
 
     def save(self, *args, **kwargs):
         # silent_param = kwargs.get('silent', False)
@@ -525,7 +526,7 @@ class BaseProfile(models.Model, EventLogMixin):
 
         self.ensure_verification_stage_exist(commit=False)
         self.ensure_premium_products_exist(commit=False)
-        self.ensure_visitation_exist()
+        self.ensure_visitation_exist(commit=False)
 
         # When profile changes, update data score level
         profile_manager: ProfileManager = ProfileManager()
@@ -2592,6 +2593,10 @@ class ProfileVisitation(models.Model):
                 visitor=visitor.visitation, visited=visited.visitation
             )
         return obj
+
+    @property
+    def days_ago(self) -> int:
+        return (timezone.now() - self.timestamp).days
 
 
 class ProfileVisitHistory(models.Model):

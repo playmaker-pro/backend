@@ -1152,6 +1152,8 @@ class CreateProfileSerializer(ProfileSerializer):
 
 
 class UpdateProfileSerializer(ProfileSerializer):
+    from users.api.serializers import UserDataSerializer
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.user = self.instance.user
@@ -1169,7 +1171,7 @@ class UpdateProfileSerializer(ProfileSerializer):
     def update_fields(self) -> None:
         """Update fields given in payload"""
         if user_data := self.initial_data.pop("user", None):
-            self.user = UserDataSerializer(
+            self.user = UserDataSerializer( # type: ignore  # noqa: F821
                 instance=self.instance.user,
                 data=user_data,
                 partial=True,
@@ -1432,9 +1434,7 @@ class SimilarProfileSerializer(serializers.Serializer):
             return None
 
 
-class VisitorSerializer(serializers.Serializer):
-    def to_representation(self, instance):
-        return {
-            "timestamp": instance.timestamp,
-            "visitor": SimilarProfileSerializer(instance.visitor.profile).data,
-        }
+class ProfileVisitorSerializer(serializers.Serializer):
+    timestamp = serializers.DateTimeField()
+    days_ago = serializers.IntegerField()
+    visitor = SimilarProfileSerializer(source="visitor.profile", read_only=True)

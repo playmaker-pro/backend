@@ -67,11 +67,4 @@ class ProfileRetrieveMixin:
             history = visit_history_service.create(user=profile_object.user)
             visit_history_service.increment(instance=history, requestor=requestor)
 
-        try:
-            requestor_profile = requestor.profile
-        except:
-            return
-
-        models.ProfileVisitation.upsert(
-            visitor=requestor_profile, visited=profile_object
-        )
+        models.ProfileVisitation.upsert(visitor=requestor, visited=profile_object)

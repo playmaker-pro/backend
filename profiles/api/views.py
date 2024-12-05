@@ -1255,7 +1255,12 @@ class VisitationView(EndpointView):
                 {"detail": "Profile not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        serializer = serializers.VisitorSerializer(
+        if not profile.is_premium:
+            return Response(
+                "Available only for premium users", status=status.HTTP_204_NO_CONTENT
+            )
+
+        serializer = serializers.ProfileVisitorSerializer(
             profile.visitation.who_visited_me,
             many=True,
         )
