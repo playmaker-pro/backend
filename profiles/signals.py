@@ -8,7 +8,6 @@ from django.utils import timezone
 
 from inquiries.services import InquireService
 from notifications.mail import mail_admins_about_new_user, mail_role_change_request
-
 from . import models
 
 logger = logging.getLogger(__name__)
@@ -72,7 +71,7 @@ def enforce_visitation_limit(sender, instance, created, **kwargs):
     Delete visitations older than 30 days to prevent the database from growing.
     """
     if created:
-        cutoff_date = timezone.now() - timezone.timedelta(days=30)
+        cutoff_date = timezone.now() - timezone.timedelta(days=31)
 
         old_visitations = models.ProfileVisitation.objects.filter(
             visited=instance.visited, timestamp__lt=cutoff_date

@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.request import Request
@@ -67,4 +68,5 @@ class ProfileRetrieveMixin:
             history = visit_history_service.create(user=profile_object.user)
             visit_history_service.increment(instance=history, requestor=requestor)
 
-        models.ProfileVisitation.upsert(visitor=requestor, visited=profile_object)
+        if not isinstance(requestor, AnonymousUser):
+            models.ProfileVisitation.upsert(visitor=requestor, visited=profile_object)

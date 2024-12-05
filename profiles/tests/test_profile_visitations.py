@@ -47,11 +47,11 @@ def test_who_visited_my_profile(client, subject):
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == []
 
-    # 31 days ago - should not be displayed
+    # 32 days ago - should not be displayed
     pv4 = ProfileVisitation.upsert(
         visited=subject_profile, visitor=PlayerProfileFactory()
     )
-    pv4.timestamp = timezone.now() - timedelta(days=31)
+    pv4.timestamp = timezone.now() - timedelta(days=32)
     pv4.save()
 
     # 15 days ago
