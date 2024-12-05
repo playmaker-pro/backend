@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from premium.models import Product, PromoteProfileProduct
+from premium.models import Product, PromoteProfileProduct, PremiumProfile
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -13,3 +13,10 @@ class PromoteProfileProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = PromoteProfileProduct
         fields = ("is_active", "days_count", "days_left")
+
+
+class PremiumProfileProductSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PremiumProfile
+        fields = ("valid_since", "valid_until", "period", "is_active")

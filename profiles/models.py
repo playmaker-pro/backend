@@ -30,7 +30,7 @@ from adapters.player_adapter import (
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_profile_external_links
 from mapper.models import Mapper
-from premium.models import PremiumProduct, PromoteProfileProduct
+from premium.models import PremiumProduct, PremiumProfile, PromoteProfileProduct
 from profiles.errors import VerificationCompletionFieldsWrongSetup
 from profiles.managers import ProfileManager
 from profiles.mixins import TeamObjectsDisplayMixin
@@ -478,6 +478,15 @@ class BaseProfile(models.Model, EventLogMixin):
     def is_premium(self) -> bool:
         """Check if profile is promoted"""
         return self.premium_products.is_profile_premium
+
+    @property
+    def premium(self) -> PremiumProfile:
+        if self.is_premium:
+            return self.premium_products.premium
+
+    @property
+    def premium_already_tested(self) -> bool:
+        return self.premium_products.trial_tested
 
     @property
     def has_premium_inquiries(self) -> bool:
@@ -1925,6 +1934,9 @@ class GuestProfile(BaseProfile):
     custom_role = models.CharField(
         _("Custom Role"), max_length=255, blank=True, null=True
     )
+    external_links = models.OneToOneField(
+        ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
+    )
 
     @property
     def profile_based_custom_role(self) -> typing.Optional[str]:
@@ -1932,6 +1944,20 @@ class GuestProfile(BaseProfile):
         Get custom role of GuestProfile
         """
         return self.custom_role
+
+    def create_external_links_obj(self) -> None:
+        """
+        Create a new ExternalLinks object and associate it with this GuestProfile instance.
+        """
+        self.external_links = ExternalLinks.objects.create()
+
+    def save(self, *args, **kwargs):
+        if not self.external_links:
+            self.create_external_links_obj()
+        super().save(*args, **kwargs)
+        # Update or create external links associated with the guest.
+        # This ensures that the guest's external links are always up-to-date.
+        create_or_update_profile_external_links(self)
 
     class Meta:
         verbose_name = "Guest Profile"

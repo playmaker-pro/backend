@@ -173,16 +173,17 @@ class TestPremiumProduct:
 class TestPromoteProfileProduct:
     @pytest.fixture
     def promote_profile_product(self, premium_product, timezone_now):
+        PremiumProfile.objects.create(product=premium_product)
         return PromoteProfileProduct.objects.create(product=premium_product)
 
     def test_promote_profile_product(self, promote_profile_product, timezone_now):
-        assert promote_profile_product.days_count == 30
+        assert promote_profile_product.days_count == 7
         assert promote_profile_product.is_active is True
         assert promote_profile_product.valid_since == make_aware(
             datetime(2020, 1, 1, 12, 00, 00)
         )
         assert promote_profile_product.valid_until == make_aware(
-            datetime(2020, 1, 31, 12, 00, 00)
+            datetime(2020, 1, 8, 12, 00, 00)
         )
 
         timezone_now.return_value = make_aware(datetime(2020, 2, 15, 12, 00, 00))
@@ -214,8 +215,8 @@ class TestPremiumProfile:
             datetime(2020, 1, 1, 12, 00, 00)
         )
         assert premium_profile.valid_until == make_aware(
-            datetime(2020, 1, 31, 12, 00, 00)
-        )
+            datetime(2020, 1, 8, 12, 00, 00)
+        ) # first is test for 7 days
         mock_setup_premium_products.assert_not_called()
 
         timezone_now.return_value = make_aware(datetime(2020, 2, 15, 12, 00, 00))
@@ -299,7 +300,7 @@ class TestPremiumInquiriesProduct:
         assert premium_inquiries.valid_until == make_aware(
             datetime(2020, 1, 31, 12, 00, 00)
         )
-        assert user_inquiries.limit == 25
+        assert user_inquiries.limit == 5
 
         timezone_now.return_value = make_aware(datetime(2020, 2, 15, 12, 00, 00))
         user_inquiries.refresh_from_db()
@@ -317,7 +318,8 @@ class TestPremiumInquiriesProduct:
         assert premium_inquiries.valid_until == make_aware(
             datetime(2020, 3, 16, 12, 00, 00)
         )
-        assert user_inquiries.limit == 25
+        assert user_inquiries.limit == 5
+        assert user_inquiries.has_unlimited_inquiries is True
 
 
 class TestProduct:
