@@ -72,49 +72,22 @@ def test_buy_premium(product_premium, player_profile):
     transaction.success()
 
     assert player_profile.is_premium
-    assert player_profile.user.userinquiry.limit == 25
+    assert player_profile.user.userinquiry.limit == 5
+    assert player_profile.user.userinquiry.has_unlimited_inquiries
     assert player_profile.is_promoted
     assert player_profile.premium_products.calculate_pm_score
     assert player_profile.user.userinquiry.plan.type_ref == "BASIC"
-
-
-def test_buy_premium_for_profile_with_premium_inquiries(
-    product_premium, player_profile, product_25_inquiries
-):
-    user = player_profile.user
-
-    transaction_inquiries = Transaction.objects.create(
-        product=product_25_inquiries, user=user
-    )
-    transaction_inquiries.success()
-
-    assert player_profile.user.userinquiry.plan.type_ref == "PREMIUM_INQUIRIES_25"
-    assert player_profile.user.userinquiry.limit == 30
-
-    transaction_premium = Transaction.objects.create(product=product_premium, user=user)
-    transaction_premium.success()
-
-    assert player_profile.is_premium
-    assert player_profile.user.userinquiry.plan.type_ref == "PREMIUM_INQUIRIES_25"
-    assert player_profile.user.userinquiry.limit == 50
-    assert player_profile.user.userinquiry.left == 50
 
 
 def test_buy_inquries_for_profile_with_premium(
     product_25_inquiries, player_profile, product_premium
 ):
     user = player_profile.user
+    assert not player_profile.user.userinquiry.has_unlimited_inquiries
 
     transaction_premium = Transaction.objects.create(product=product_premium, user=user)
     transaction_premium.success()
 
     assert player_profile.is_premium
     assert player_profile.user.userinquiry.plan.type_ref == "BASIC"
-
-    transaction_inquiries = Transaction.objects.create(
-        product=product_25_inquiries, user=user
-    )
-    transaction_inquiries.success()
-
-    assert player_profile.user.userinquiry.limit == 50
-    assert player_profile.user.userinquiry.left == 50
+    assert player_profile.user.userinquiry.has_unlimited_inquiries

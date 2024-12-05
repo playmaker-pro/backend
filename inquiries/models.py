@@ -246,9 +246,11 @@ class UserInquiry(models.Model):
 
     @property
     def limit(self):
-        if self.user.profile and self.user.profile.has_premium_inquiries:
-            return self.limit_raw + 20  # 20 is a bonus for premium users
         return self.limit_raw
+
+    @property
+    def has_unlimited_inquiries(self) -> bool:
+        return self.user.profile and self.user.profile.has_premium_inquiries
 
     @property
     def can_make_request(self):

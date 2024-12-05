@@ -1,3 +1,5 @@
+import math
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -8,6 +10,8 @@ from premium.utils import get_date_days_after
 
 
 class PremiumProfile(models.Model):
+    period = models.PositiveIntegerField(default=7, help_text="Period in days")
+
     product = models.OneToOneField(
         "PremiumProduct", on_delete=models.PROTECT, related_name="premium"
     )
@@ -16,14 +20,15 @@ class PremiumProfile(models.Model):
 
     def refresh(self) -> None:
         """Refresh the validity of the premium profile."""
+        self.period = 30
         self.valid_since = timezone.now()
-        self.valid_until = get_date_days_after(self.valid_since, days=30)
+        self.valid_until = get_date_days_after(self.valid_since, days=self.period)
         self.setup()
         self.save()
 
     def save(self, *args, **kwargs) -> None:
         if self.pk is None:
-            self.valid_until = get_date_days_after(timezone.now(), days=30)
+            self.valid_until = get_date_days_after(timezone.now(), days=self.period)
 
         super().save(*args, **kwargs)
 
@@ -86,13 +91,15 @@ class PromoteProfileProduct(models.Model):
     product = models.OneToOneField(
         "PremiumProduct", on_delete=models.PROTECT, related_name="promotion"
     )
-    days_count = models.PositiveIntegerField(default=30)
+    days_count = models.PositiveIntegerField(default=7)
     valid_since = models.DateTimeField(auto_now_add=True)
     valid_until = models.DateTimeField()
 
     def save(self, *args, **kwargs):
         if self.pk is None:
             self.valid_until = get_date_days_after(timezone.now(), self.days_count)
+        if self.product.premium:
+            self.days_count = self.product.premium.period
         super().save(*args, **kwargs)
 
     @property
@@ -101,10 +108,11 @@ class PromoteProfileProduct(models.Model):
 
     @property
     def days_left(self):
-        return (self.valid_until - timezone.now()).days
+        return math.ceil((self.valid_until - timezone.now()).total_seconds() / 86400)
 
     def refresh(self) -> None:
         """Refresh the validity of the promotion."""
+        self.days_count = 30
         self.valid_since = timezone.now()
         self.valid_until = get_date_days_after(self.valid_since, self.days_count)
         self.save()
@@ -136,6 +144,7 @@ class PremiumInquiriesProduct(models.Model):
 
 class PremiumProduct(models.Model):
     profile_uuid = models.UUIDField(unique=True, blank=True, null=True)
+    trial_tested = models.BooleanField(default=False, help_text="Trial already tested?")
 
     @property
     def user(self):
@@ -190,8 +199,11 @@ class PremiumProduct(models.Model):
         """Create/refresh premium profile"""
         premium, premium_created = PremiumProfile.objects.get_or_create(product=self)
 
-        if not premium_created:
+        if not premium_created and not self.trial_tested:
             premium.refresh()
+        else:
+            self.trial_tested = True
+            self.save(update_fields=["trial_tested"])
 
         return premium
 

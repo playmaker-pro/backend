@@ -99,6 +99,26 @@ paths:
           description: "Something went wrong with payment provider."
         '500':
           description: "Internal server error."
+  /premium/products/test-premium/:
+    post:
+      operationId: activate_test_premium_profile
+      description: Activate trial for premium profile.
+      summary: Activate trial for premium profile.
+      tags:
+        - premium_products
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: "Trial premium profile has been activated"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PremiumProfile'
+        '401':
+          description: "Unauthorized"
+        '400':
+          description: "Profile has already test premium."
   /notifications/{profile_uuid}:
     get:
       operationId: get_notifications
@@ -3710,6 +3730,19 @@ paths:
                   has_unread_inquiries:
                     type: boolean
                     description: Determines if there are any inquiries sent or received by the user that have not been read
+                  is_promoted:
+                    type: boolean
+                    description: Determines if the user has active profile promotion.
+                  is_premium:
+                    type: boolean
+                    description: Determines if the user has active premium profile.
+                  premium:
+                    $ref: '#/components/schemas/PremiumProfile'
+                  promotion:
+                    $ref: '#/components/schemas/ProfilePromotion'
+                  premium_already_tested:
+                    type: boolean
+                    description: Did user test the premium product? If so, he cannot setup 7days trial.
           description: Get user main profile uuid with role.
   /users/feature-sets/:
     get:
@@ -6499,6 +6532,24 @@ components:
        - date_updated
        - done
 
+    PremiumProfile:
+      type: object
+      properties:
+        valid_since:
+          type: string
+          format: date
+          description: "Date when the profile became premium"
+        valid_until:
+            type: string
+            format: date
+            description: "Date when the profile will no longer be premium"
+        is_active:
+          type: boolean
+          description: "Is the profile currently premium"
+        period:
+          type: number
+          description: "Number of days the profile is premium"
+
     TransferStatusGet:
       type: object
       properties:
@@ -7360,6 +7411,9 @@ components:
         limit:
           type: integer
           description: "Limit of inquiries"
+        unlimited:
+          type: boolean
+          description: "User has unlimited inquiries (premium profile)."
       required:
         - user
         - plan
