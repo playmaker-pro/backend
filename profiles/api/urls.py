@@ -302,4 +302,13 @@ urlpatterns = [
         ),
         name="list_transfer_request",
     ),
+    path(
+        r"who-visited-my-profile/",
+        views.VisitationView.as_view(
+            {
+                "get": "list_my_visitors",
+            }
+        ),
+        name="list_my_visitors",
+    ),
 ]

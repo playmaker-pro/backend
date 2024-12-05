@@ -1243,3 +1243,25 @@ class TransferRequestCatalogueAPIView(EndpointViewWithFilter):
             paginated, many=True, context={"request": request}
         )
         return self.get_paginated_response(serializer.data)
+
+
+class VisitationView(EndpointView):
+    def list_my_visitors(self, request: Request) -> Response:
+        """List visitors of the profile."""
+        try:
+            profile = request.user.profile
+        except:
+            return Response(
+                {"detail": "Profile not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if not profile.is_premium:
+            return Response(
+                "Available only for premium users", status=status.HTTP_204_NO_CONTENT
+            )
+
+        serializer = serializers.ProfileVisitorSerializer(
+            profile.visitation.who_visited_me,
+            many=True,
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
