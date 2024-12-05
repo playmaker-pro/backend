@@ -7,7 +7,7 @@ from api.views import EndpointView
 from payments.api.serializers import NewTransactionSerializer
 from payments.providers.errors import TransactionError
 from payments.services import TransactionService
-from premium.api.serializers import ProductSerializer
+from premium.api.serializers import PremiumProfileProductSerializer, ProductSerializer
 from premium.models import Product
 
 
@@ -37,7 +37,6 @@ class ProductView(EndpointView):
             raise PermissionError(
                 "You are not allowed to create transaction for this product."
             )
-
         transaction_service = TransactionService.create_new_transaction_object(
             user=request.user, product=product
         )
@@ -52,3 +51,20 @@ class ProductView(EndpointView):
 
         serializer = self.serializer_class(transaction)
         return Response(serializer.data)
+
+    def activate_test_premium_product(self, request: Request) -> Response:
+        profile = request.user.profile
+        profile.ensure_premium_products_exist()
+
+        if profile.premium_products.trial_tested:
+            return Response(
+                "You have already tested the premium product.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        premium = profile.premium_products.setup_premium_profile()
+        premium.setup()
+        serializer = PremiumProfileProductSerializer(premium)
+        return Response(serializer.data)
+
+

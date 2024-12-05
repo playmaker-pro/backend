@@ -219,7 +219,9 @@ class UserInquirySerializer(serializers.ModelSerializer):
         read_only=True, source="get_days_until_next_reference"
     )
     logs = UserInquiryLogSerializer(many=True, read_only=True)
+    unlimited = serializers.BooleanField(read_only=True, source="has_unlimited_inquiries")
+    limit = serializers.IntegerField(read_only=True, source="limit_raw")
 
     class Meta:
         model = _models.UserInquiry
-        fields = "__all__"
+        exclude = ("limit_raw",)

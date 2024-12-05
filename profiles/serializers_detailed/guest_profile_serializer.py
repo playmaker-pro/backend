@@ -12,6 +12,7 @@ class GuestProfileViewSerializer(BaseProfileSerializer):
             "uuid",
             "user",
             "labels",
+            "external_links",
             "verification_stage",
             "role",
             "custom_role",
@@ -19,7 +20,7 @@ class GuestProfileViewSerializer(BaseProfileSerializer):
             "visits",
             "is_promoted",
             "is_premium",
-            "promotion"
+            "promotion",
         )
 
 

@@ -16,6 +16,11 @@ urlpatterns = [
         name="get_premium_product",
     ),
     path(
+        "products/test-premium/",
+        ProductView.as_view({"post": "activate_test_premium_product"}),
+        name="get_test_premium_product",
+    ),
+    path(
         "transaction/<int:product_id>/create/",
         ProductView.as_view({"post": "create_transaction"}),
         name="create_transaction",
