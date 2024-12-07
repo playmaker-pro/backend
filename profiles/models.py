@@ -1157,20 +1157,23 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         """
         self.external_links = ExternalLinks.objects.create()
 
-    def save(self, *args, **kwargs):
-        # Check if this is a new PlayerProfile instance being created
-        creating = self._state.adding
+    def ensure_playermetrics_exist(self, commit: bool = True) -> None:
+        """Create PlayerMetrics for player if it doesn't exist"""
+        if not hasattr(self, "playermetrics"):
+            PlayerMetrics.objects.create(player=self)
+            if commit:
+                self.save()
 
+    def save(self, *args, **kwargs):
         if not self.mapper:
             self.create_mapper_obj()
 
         if not self.external_links:
             self.create_external_links_obj()
 
-        super().save(*args, **kwargs)
+        self.ensure_playermetrics_exist(commit=False)
 
-        if creating:
-            PlayerMetrics.objects.create(player=self)
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Player Profile"
