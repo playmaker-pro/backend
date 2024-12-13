@@ -45,7 +45,7 @@ def test_who_visited_my_profile(client, subject):
     subject_profile.premium_products.setup_premium_profile()
     response = client.get(url)
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == []
+    assert response.json() == {"total": 0, "visits": []}
 
     # 32 days ago - should not be displayed
     pv4 = ProfileVisitation.upsert(
@@ -79,13 +79,13 @@ def test_who_visited_my_profile(client, subject):
     data = response.json()
 
     assert response.status_code == status.HTTP_200_OK
-    assert len(data) == 3
-    assert data[0]["visitor"]["uuid"] == str(pv1.visitor.profile.uuid)
-    assert data[0]["days_ago"] == 3
-    assert data[1]["visitor"]["uuid"] == str(pv2.visitor.profile.uuid)
-    assert data[1]["days_ago"] == 15
-    assert data[2]["visitor"]["uuid"] == str(pv3.visitor.profile.uuid)
-    assert data[2]["days_ago"] == 30
+    assert data["total"] == 3
+    assert data["visits"][0]["visitor"]["uuid"] == str(pv1.visitor.profile.uuid)
+    assert data["visits"][0]["days_ago"] == 3
+    assert data["visits"][1]["visitor"]["uuid"] == str(pv2.visitor.profile.uuid)
+    assert data["visits"][1]["days_ago"] == 15
+    assert data["visits"][2]["visitor"]["uuid"] == str(pv3.visitor.profile.uuid)
+    assert data["visits"][2]["days_ago"] == 30
 
     # visitor via get profile url
     client.force_authenticate(user=pv4.visitor.profile.user)
@@ -100,4 +100,4 @@ def test_who_visited_my_profile(client, subject):
     response = client.get(url)
 
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.json()) == 4
+    assert response.json()["total"] == 4

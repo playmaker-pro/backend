@@ -77,3 +77,12 @@ def enforce_visitation_limit(sender, instance, created, **kwargs):
             visited=instance.visited, timestamp__lt=cutoff_date
         )
         old_visitations.delete()
+
+
+@receiver(post_save, sender=models.PlayerProfile)
+def ensure_metrics_exist(sender, instance, created, **kwargs):
+    """
+    Create metrics for a player profile if they don't exist.
+    """
+    if not hasattr(instance, "playermetrics"):
+        models.PlayerMetrics.objects.get_or_create(player=instance)

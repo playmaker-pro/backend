@@ -1824,7 +1824,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ProfileVisitor'
+                  $ref: '#/components/schemas/ProfileVisitorSummary'
         '204':
           description: 'Most likely you have no premium profile.'
 
@@ -5350,9 +5350,12 @@ components:
             user:
               $ref: '#/components/schemas/UserProfileBase'
             external_links:
-              type: array
-              items:
-                $ref: '#/components/schemas/ExternalLink'
+              type: object
+              properties:
+                links:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ExternalLink'
             player_positions:
               $ref: '#/components/schemas/PlayerPositions'
             profile_video:
@@ -6100,6 +6103,13 @@ components:
               description: "Is player premium"
             promotion:
               $ref: '#/components/schemas/ProfilePromotion'
+            external_links:
+              type: object
+              properties:
+                links:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ExternalLink'
           example: {
             "user": {
               "id": 1,
@@ -7202,6 +7212,15 @@ components:
         - is_primary
         - is_primary_for_round
         - team_id
+    ProfileVisitorSummary:
+      type: object
+      properties:
+        total:
+          type: number
+        visitors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileVisitor'
     ProfileVisitor:
       type: object
       properties:
@@ -7610,6 +7629,8 @@ components:
         team_history_object:
           $ref: '#/components/schemas/TeamHistoryProfileView'
           nullable: true
+        is_premium:
+          type: boolean
       required:
         - uuid
         - slug

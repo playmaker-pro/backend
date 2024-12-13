@@ -1171,8 +1171,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         if not self.external_links:
             self.create_external_links_obj()
 
-        self.ensure_playermetrics_exist(commit=False)
-
         super().save(*args, **kwargs)
 
     class Meta:

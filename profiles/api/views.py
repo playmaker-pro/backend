@@ -1260,8 +1260,7 @@ class VisitationView(EndpointView):
                 "Available only for premium users", status=status.HTTP_204_NO_CONTENT
             )
 
-        serializer = serializers.ProfileVisitorSerializer(
+        serializer = serializers.ProfileVisitSummarySerializer(
             profile.visitation.who_visited_me,
-            many=True,
         )
         return Response(serializer.data, status=status.HTTP_200_OK)

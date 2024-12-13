@@ -1152,8 +1152,6 @@ class CreateProfileSerializer(ProfileSerializer):
 
 
 class UpdateProfileSerializer(ProfileSerializer):
-    from users.api.serializers import UserDataSerializer
-
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.user = self.instance.user
@@ -1171,7 +1169,7 @@ class UpdateProfileSerializer(ProfileSerializer):
     def update_fields(self) -> None:
         """Update fields given in payload"""
         if user_data := self.initial_data.pop("user", None):
-            self.user = UserDataSerializer( # type: ignore  # noqa: F821
+            self.user = UserDataSerializer(  # type: ignore  # noqa: F821
                 instance=self.instance.user,
                 data=user_data,
                 partial=True,
@@ -1388,6 +1386,7 @@ class SimilarProfileSerializer(serializers.Serializer):
     )
     playermetrics = PlayerMetricsSerializer(read_only=True)
     team_history_object = serializers.SerializerMethodField()
+    is_premium = serializers.BooleanField(read_only=True)
 
     def get_specific_role(self, obj: models.PROFILE_MODELS) -> Optional[dict]:
         """Get specific role for profile (Coach, Club)"""
@@ -1438,3 +1437,11 @@ class ProfileVisitorSerializer(serializers.Serializer):
     timestamp = serializers.DateTimeField()
     days_ago = serializers.IntegerField()
     visitor = SimilarProfileSerializer(source="visitor.profile", read_only=True)
+
+
+class ProfileVisitSummarySerializer(serializers.Serializer):
+    total = serializers.SerializerMethodField()
+    visits = ProfileVisitorSerializer(many=True, read_only=True, source="*")
+
+    def get_total(self, profile_qs: QuerySet[models.PROFILE_TYPE]) -> int:
+        return profile_qs.count()
