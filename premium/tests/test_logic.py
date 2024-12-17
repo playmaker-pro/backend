@@ -216,7 +216,7 @@ class TestPremiumProfile:
         )
         assert premium_profile.valid_until == make_aware(
             datetime(2020, 1, 8, 12, 00, 00)
-        ) # first is test for 7 days
+        )  # first is test for 7 days
         mock_setup_premium_products.assert_not_called()
 
         timezone_now.return_value = make_aware(datetime(2020, 2, 15, 12, 00, 00))
@@ -334,7 +334,12 @@ class TestProduct:
         assert inquiry_products.count() == 3
 
     def test_premium_product(self):
-        premium_product = Product.objects.get(ref="PREMIUM", visible=True)
+        premium_products = Product.objects.filter(ref="PREMIUM", visible=True)
 
-        assert premium_product.name == "PREMIUM"
-        assert premium_product.name_readable == "Profil Premium"
+        assert premium_products.count() == 4
+        assert [product.name for product in premium_products] == [
+            "PLAYER_PREMIUM_PROFILE_MONTH",
+            "PLAYER_PREMIUM_PROFILE_YEAR",
+            "PREMIUM_PROFILE_MONTH",
+            "PREMIUM_PROFILE_YEAR",
+        ]

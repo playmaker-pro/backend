@@ -7558,6 +7558,10 @@ components:
           type: string
         price:
           type: string
+          description: "How much the whole product costs."
+        price_per_cycle:
+          type: string
+          description: "How much the product costs per cycle (per month - in terms of subscription)."
         ref:
           type: string
       required:

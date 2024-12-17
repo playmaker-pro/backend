@@ -12,7 +12,7 @@ urlpatterns = [
     ),
     path(
         "products/premium/",
-        ProductInfoView.as_view({"get": "get_premium_product"}),
+        ProductInfoView.as_view({"get": "get_premium_products"}),
         name="get_premium_product",
     ),
     path(

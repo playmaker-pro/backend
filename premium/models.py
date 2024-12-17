@@ -1,4 +1,5 @@
 import math
+from decimal import ROUND_DOWN, Decimal
 
 from django.conf import settings
 from django.db import models
@@ -242,7 +243,7 @@ class Product(models.Model):
         INQUIRIES = "INQUIRIES", "INQUIRIES"
 
     name = models.CharField(max_length=30, unique=True)
-    name_readable = models.CharField(max_length=50)
+    name_readable = models.CharField(max_length=100)
     price = models.DecimalField(decimal_places=2, max_digits=5)
     ref = models.CharField(max_length=30, choices=ProductReference.choices)
     visible = models.BooleanField(default=True)
@@ -257,3 +258,12 @@ class Product(models.Model):
         elif self.ref == Product.ProductReference.INQUIRIES:
             plan = InquiryPlan.objects.get(type_ref=self.name)
             transaction.user.userinquiry.set_new_plan(plan)
+
+    def price_per_cycle(self) -> Decimal:
+        """
+        Some prices are defined as yearly, we need to display price by cycle.
+
+        """
+        if self.name.endswith("_YEAR") and self.ref == self.ProductReference.PREMIUM:
+            return (self.price / 10).quantize(Decimal("1.00"), rounding=ROUND_DOWN)
+        return self.price

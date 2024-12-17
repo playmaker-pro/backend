@@ -21,9 +21,9 @@ class ProductInfoView(EndpointView):
         queryset = self.get_queryset().filter(ref=Product.ProductReference.INQUIRIES)
         return Response(self.serializer_class(queryset, many=True).data)
 
-    def get_premium_product(self, request: Request) -> Response:
-        obj = self.get_queryset().get(ref=Product.ProductReference.PREMIUM)
-        return Response(self.serializer_class(obj).data)
+    def get_premium_products(self, request: Request) -> Response:
+        obj = self.get_queryset().filter(ref=Product.ProductReference.PREMIUM)
+        return Response(self.serializer_class(obj, many=True).data)
 
 
 class ProductView(EndpointView):
@@ -66,5 +66,3 @@ class ProductView(EndpointView):
         premium.setup()
         serializer = PremiumProfileProductSerializer(premium)
         return Response(serializer.data)
-
-

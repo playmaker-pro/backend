@@ -44,3 +44,15 @@ class PromoteProfileProductAdmin(admin.ModelAdmin):
 
     def profile_object(self, obj):
         return obj.product.profile
+
+
+@admin.register(models.Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "visible",
+        "ref",
+        "price",
+    )
+    list_filter = ("visible", "ref")
+    search_fields = ("name", "ref")
