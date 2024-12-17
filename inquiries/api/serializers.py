@@ -110,7 +110,9 @@ class InquiryUserDataSerializer(_BaseUserDataSerializer):
 
 class InquiryRequestSerializer(serializers.ModelSerializer):
     sender_object = InquiryUserDataSerializer(read_only=True, source="sender")
-    recipient_object = InquiryUserDataSerializer(read_only=True, source="recipient")
+    recipient_object = InquiryUserDataSerializer(
+        read_only=True, source="recipient", required=False
+    )
     recipient_profile_uuid = serializers.UUIDField(write_only=True)
 
     class Meta:
@@ -189,6 +191,14 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         inquiry_request.save(recipient_profile_uuid=recipient_profile_uuid)
         return inquiry_request
 
+    @property
+    def data(self) -> dict:
+        """Get data, but remove contact information if request is not accepted yet"""
+        data = super().data
+        if data.get("status") != _models.InquiryRequest.STATUS_ACCEPTED:
+            data["recipient_object"]["contact"] = {}
+        return data
+
 
 class InquiryPlanSerializer(serializers.ModelSerializer):
     class Meta:
@@ -219,7 +229,9 @@ class UserInquirySerializer(serializers.ModelSerializer):
         read_only=True, source="get_days_until_next_reference"
     )
     logs = UserInquiryLogSerializer(many=True, read_only=True)
-    unlimited = serializers.BooleanField(read_only=True, source="has_unlimited_inquiries")
+    unlimited = serializers.BooleanField(
+        read_only=True, source="has_unlimited_inquiries"
+    )
     limit = serializers.IntegerField(read_only=True, source="limit_raw")
 
     class Meta:
