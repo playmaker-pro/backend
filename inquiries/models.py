@@ -277,6 +277,9 @@ class UserInquiry(models.Model):
 
     def increment(self):
         """Increase by one counter"""
+        if self.has_unlimited_inquiries:
+            return
+
         if self.counter < self.limit:
             self.counter += 1
             self.save(update_fields=("counter",))
