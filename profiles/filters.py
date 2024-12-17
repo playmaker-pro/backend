@@ -60,11 +60,11 @@ class ProfileListAPIFilter(APIFilter):
         except ValueError:
             raise IncorrectProfileRole
 
-    def default_init_sorting(self) -> None:
+    def filter_promoted_first(self, qs: QuerySet) -> QuerySet:
         """Set default sorting for queryset"""
         now = timezone.now()
 
-        self.queryset = self.queryset.annotate(
+        return qs.annotate(
             is_profile_promoted=Case(
                 When(
                     premium_products__promotion__valid_until__gt=now, then=Value(True)
@@ -78,7 +78,6 @@ class ProfileListAPIFilter(APIFilter):
         """Get queryset based on role, apply filters, and handle shuffle parameter."""
         self.queryset = self.model.objects.to_list_by_api()
         self.filter_queryset(self.queryset)
-        self.default_init_sorting()
 
         if self.query_params.get("shuffle", False):
             # Random shuffle -> get random sample of 10 -> return list of random choices

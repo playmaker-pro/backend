@@ -165,7 +165,9 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         """
 
         qs: QuerySet = self.get_queryset()
-        qs = randomization_service.apply_seeded_randomization(qs, request.user)
+        # qs = randomization_service.apply_seeded_randomization(qs, request.user) # we do not want to randomize profiles
+        qs = self.filter_promoted_first(qs)
+
         serializer_class = self.get_serializer_class(
             model_name=request.query_params.get("role")
         )
