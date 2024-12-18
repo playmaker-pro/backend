@@ -36,7 +36,7 @@ paths:
 
   /premium/products/inquiries/:
     get:
-      operationId: get_premium_inquiries_product
+      operationId: get_premium_inquiries_products
       description: Get list of premium inquiries products.
       summary: Get list of premium inquiries products.
       tags:
@@ -54,20 +54,22 @@ paths:
                   $ref: '#/components/schemas/PremiumProduct'
   /premium/products/premium/:
     get:
-      operationId: get_premium_profile_product
-      description: Get get premium profile product info.
-      summary: Get get premium profile product info.
+      operationId: get_premium_profile_products
+      description: Get list of premium profile products.
+      summary: Get list of premium profile products.
       tags:
         - premium_products
       security:
         - jwtAuth: [ ]
       responses:
         '200':
-          description: "Premium profile product info."
+          description: "Premium profile products info."
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PremiumProduct'
+                type: array
+                items:
+                  $ref: '#/components/schemas/PremiumProduct'
   /premium/transaction/{id}/create/:
     post:
       operationId: create_transaction_for_premium_product
