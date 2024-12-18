@@ -1,5 +1,6 @@
 import math
 from decimal import ROUND_DOWN, Decimal
+from enum import Enum
 
 from django.conf import settings
 from django.db import models
@@ -10,6 +11,21 @@ from payments.models import Transaction
 from premium.utils import get_date_days_after
 
 
+class PremiumType(Enum):
+    YEAR = "YEAR"
+    MONTH = "MONTH"
+    TRIAL = "TRIAL"
+
+    @property
+    def period(self) -> int:
+        if self == self.YEAR:
+            return 365
+        elif self == self.MONTH:
+            return 30
+        elif self == self.TRIAL:
+            return 7
+
+
 class PremiumProfile(models.Model):
     period = models.PositiveIntegerField(default=7, help_text="Period in days")
 
@@ -17,29 +33,32 @@ class PremiumProfile(models.Model):
         "PremiumProduct", on_delete=models.PROTECT, related_name="premium"
     )
     valid_since = models.DateTimeField(auto_now_add=True)
-    valid_until = models.DateTimeField()
+    valid_until = models.DateTimeField(blank=True, null=True)
 
-    def refresh(self) -> None:
-        """Refresh the validity of the premium profile."""
-        self.period = 30
+    def _fresh_init(self) -> None:
+        """Initialize the premium profile."""
         self.valid_since = timezone.now()
         self.valid_until = get_date_days_after(self.valid_since, days=self.period)
-        self.setup()
+
+    def _refresh(self) -> None:
+        """Refresh the validity of the premium profile."""
+        if self.is_active:
+            self.valid_until = get_date_days_after(self.valid_since, days=self.period)
+        else:
+            self._fresh_init()
         self.save()
-
-    def save(self, *args, **kwargs) -> None:
-        if self.pk is None:
-            self.valid_until = get_date_days_after(timezone.now(), days=self.period)
-
-        super().save(*args, **kwargs)
 
     @property
     def is_active(self) -> bool:
+        if not self.valid_until:
+            return False
         return self.valid_until > timezone.now()
 
-    def setup(self) -> None:
+    def setup(self, premium_type: PremiumType = PremiumType.TRIAL) -> None:
         """Setup the premium profile."""
-        self.product.setup_premium_products()
+        self.period = premium_type.period
+        self._refresh()
+        self.product.setup_premium_products(premium_type)
 
 
 class CalculatePMScoreProduct(models.Model):
@@ -94,28 +113,30 @@ class PromoteProfileProduct(models.Model):
     )
     days_count = models.PositiveIntegerField(default=7)
     valid_since = models.DateTimeField(auto_now_add=True)
-    valid_until = models.DateTimeField()
+    valid_until = models.DateTimeField(null=True, blank=True)
 
-    def save(self, *args, **kwargs):
-        if self.pk is None:
-            self.valid_until = get_date_days_after(timezone.now(), self.days_count)
-        if self.product.premium:
-            self.days_count = self.product.premium.period
-        super().save(*args, **kwargs)
+    def _fresh_init(self) -> None:
+        """Initialize the promotion."""
+        self.valid_since = timezone.now()
+        self.valid_until = get_date_days_after(self.valid_since, days=self.days_count)
 
     @property
     def is_active(self):
+        if not self.valid_until:
+            return False
         return self.valid_until > timezone.now()
 
     @property
     def days_left(self):
         return math.ceil((self.valid_until - timezone.now()).total_seconds() / 86400)
 
-    def refresh(self) -> None:
+    def refresh(self, premium_type: PremiumType) -> None:
         """Refresh the validity of the promotion."""
-        self.days_count = 30
-        self.valid_since = timezone.now()
-        self.valid_until = get_date_days_after(self.valid_since, self.days_count)
+        self.days_count = premium_type.period
+        if self.is_active:
+            self.valid_until = get_date_days_after(self.valid_since, self.days_count)
+        else:
+            self._fresh_init()
         self.save()
 
 
@@ -127,19 +148,24 @@ class PremiumInquiriesProduct(models.Model):
     valid_since = models.DateTimeField(auto_now_add=True)
     valid_until = models.DateTimeField(blank=True, null=True)
 
-    def save(self, *args, **kwargs):
-        if self.pk is None:
-            self.valid_until = get_date_days_after(timezone.now(), days=30)
-        super().save(*args, **kwargs)
+    def _fresh_init(self, period: int) -> None:
+        """Initialize the premium inquiries."""
+        self.valid_since = timezone.now()
+        self.valid_until = get_date_days_after(self.valid_since, days=period)
 
     @property
     def is_active(self) -> bool:
+        if not self.valid_until:
+            return False
         return self.valid_until > timezone.now()
 
-    def refresh(self) -> None:
+    def refresh(self, premium_type: PremiumType) -> None:
         """Refresh the validity of the premium inquiries."""
-        self.valid_since = timezone.now()
-        self.valid_until = get_date_days_after(self.valid_since, days=30)
+        period = premium_type.period
+        if self.is_active:
+            self.valid_until = get_date_days_after(self.valid_since, days=period)
+        else:
+            self._fresh_init(period)
         self.save()
 
 
@@ -196,32 +222,37 @@ class PremiumProduct(models.Model):
             f"{self.profile} -- {'PREMIUM' if self.is_profile_premium else 'FREEMIUM'}"
         )
 
-    def setup_premium_profile(self) -> "PremiumProfile":
+    def setup_premium_profile(
+        self, premium_type: PremiumType = PremiumType.TRIAL
+    ) -> "PremiumProfile":
         """Create/refresh premium profile"""
-        premium, premium_created = PremiumProfile.objects.get_or_create(product=self)
+        premium, created = PremiumProfile.objects.get_or_create(product=self)
 
-        if not premium_created and not self.trial_tested:
-            premium.refresh()
-        else:
+        if not created:
+            if self.trial_tested and premium_type == PremiumType.TRIAL:
+                raise ValueError("Trial already tested.")
+            elif premium.is_active and premium_type == PremiumType.TRIAL:
+                raise ValueError(
+                    "Cannot activate trial on active premium subscription."
+                )
+        print(1)
+        premium.setup(premium_type)
+        print(2)
+        if premium_type == PremiumType.TRIAL:
             self.trial_tested = True
             self.save(update_fields=["trial_tested"])
 
         return premium
 
-    def setup_premium_products(self) -> None:
+    def setup_premium_products(
+        self, premium_type: PremiumType = PremiumType.TRIAL
+    ) -> None:
         """Create/refresh all premium products for the profile."""
-        inquiries, inquiries_created = PremiumInquiriesProduct.objects.get_or_create(
-            product=self
-        )
-        promotion, promotion_created = PromoteProfileProduct.objects.get_or_create(
-            product=self
-        )
+        inquiries, _ = PremiumInquiriesProduct.objects.get_or_create(product=self)
+        promotion, _ = PromoteProfileProduct.objects.get_or_create(product=self)
 
-        if not inquiries_created:
-            inquiries.refresh()
-
-        if not promotion_created:
-            promotion.refresh()
+        inquiries.refresh(premium_type)
+        promotion.refresh(premium_type)
 
         if self.profile.__class__.__name__ == "PlayerProfile":
             calculate_pms, calculate_pms_created = (
@@ -253,8 +284,12 @@ class Product(models.Model):
 
     def apply_product_for_transaction(self, transaction: Transaction) -> None:
         if self.ref == Product.ProductReference.PREMIUM:
-            premium = transaction.user.profile.premium_products.setup_premium_profile()
-            premium.setup()
+            premium_type = (
+                PremiumType.YEAR if self.name.endswith("_YEAR") else PremiumType.MONTH
+            )
+            premium = transaction.user.profile.premium_products.setup_premium_profile(
+                premium_type
+            )
         elif self.ref == Product.ProductReference.INQUIRIES:
             plan = InquiryPlan.objects.get(type_ref=self.name)
             transaction.user.userinquiry.set_new_plan(plan)
@@ -267,3 +302,7 @@ class Product(models.Model):
         if self.name.endswith("_YEAR") and self.ref == self.ProductReference.PREMIUM:
             return (self.price / 10).quantize(Decimal("1.00"), rounding=ROUND_DOWN)
         return self.price
+
+    @property
+    def player_only(self) -> bool:
+        return self.name.startswith("PLAYER_")

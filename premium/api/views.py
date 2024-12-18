@@ -37,6 +37,20 @@ class ProductView(EndpointView):
             raise PermissionError(
                 "You are not allowed to create transaction for this product."
             )
+
+        if not request.user.profile:
+            raise PermissionError("You need to have a profile to create a transaction.")
+
+        profile_class_name = request.user.profile.__class__.__name__
+        if (
+            request.user.profile
+            and (product.player_only and profile_class_name != "PlayerProfile")
+            or (not product.player_only and profile_class_name == "PlayerProfile")
+        ):
+            raise PermissionError(
+                "Your profile is not allowed to create transaction for this product.",
+            )
+
         transaction_service = TransactionService.create_new_transaction_object(
             user=request.user, product=product
         )
