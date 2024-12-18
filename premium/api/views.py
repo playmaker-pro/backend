@@ -34,12 +34,16 @@ class ProductView(EndpointView):
         product: Product = get_object_or_404(Product, pk=product_id)
 
         if not product.visible:
-            raise PermissionError(
-                "You are not allowed to create transaction for this product."
+            return Response(
+                "You are not allowed to create transaction for this product.",
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         if not request.user.profile:
-            raise PermissionError("You need to have a profile to create a transaction.")
+            return Response(
+                "You need to have a profile to create a transaction.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         profile_class_name = request.user.profile.__class__.__name__
         if (
