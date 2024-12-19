@@ -43,7 +43,7 @@ class PremiumProfile(models.Model):
     def _refresh(self) -> None:
         """Refresh the validity of the premium profile."""
         if self.is_active:
-            self.valid_until = get_date_days_after(self.valid_since, days=self.period)
+            self.valid_until = get_date_days_after(self.valid_until, days=self.period)
         else:
             self._fresh_init()
         self.save()
@@ -134,7 +134,7 @@ class PromoteProfileProduct(models.Model):
         """Refresh the validity of the promotion."""
         self.days_count = premium_type.period
         if self.is_active:
-            self.valid_until = get_date_days_after(self.valid_since, self.days_count)
+            self.valid_until = get_date_days_after(self.valid_until, self.days_count)
         else:
             self._fresh_init()
         self.save()
@@ -163,7 +163,7 @@ class PremiumInquiriesProduct(models.Model):
         """Refresh the validity of the premium inquiries."""
         period = premium_type.period
         if self.is_active:
-            self.valid_until = get_date_days_after(self.valid_since, days=period)
+            self.valid_until = get_date_days_after(self.valid_until, days=period)
         else:
             self._fresh_init(period)
         self.save()
@@ -235,9 +235,9 @@ class PremiumProduct(models.Model):
                 raise ValueError(
                     "Cannot activate trial on active premium subscription."
                 )
-        print(1)
+
         premium.setup(premium_type)
-        print(2)
+
         if premium_type == PremiumType.TRIAL:
             self.trial_tested = True
             self.save(update_fields=["trial_tested"])

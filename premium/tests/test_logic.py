@@ -1,5 +1,5 @@
-from datetime import datetime
-from unittest.mock import call, patch
+from datetime import datetime, timedelta
+from unittest.mock import patch
 
 import pytest
 from django.utils.timezone import make_aware
@@ -173,6 +173,21 @@ class TestPremiumProduct:
 
         with pytest.raises(ValueError):
             products.setup_premium_profile(PremiumType.TRIAL)
+
+    def test_paid_during_trial(self, player_profile):
+        products = player_profile.premium_products
+        products.setup_premium_profile(PremiumType.TRIAL)
+        products.setup_premium_profile(PremiumType.MONTH)
+
+        should_be_valid_until_date = make_aware(
+            datetime.now()
+            + timedelta(PremiumType.TRIAL.period + PremiumType.MONTH.period)
+        ).date()
+        products.refresh_from_db()
+
+        assert products.premium.valid_until.date() == should_be_valid_until_date
+        assert products.inquiries.valid_until.date() == should_be_valid_until_date
+        assert products.promotion.valid_until.date() == should_be_valid_until_date
 
 
 class TestPromoteProfileProduct:
