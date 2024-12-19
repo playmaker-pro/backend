@@ -7217,8 +7217,12 @@ components:
     ProfileVisitorSummary:
       type: object
       properties:
-        total:
+        this_month_count:
           type: number
+          description: "Number of visits in last 30 days"
+        this_year_count:
+          type: number
+          description: "Number of visits in current calendar year"
         visitors:
           type: array
           items:

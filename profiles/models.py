@@ -1277,7 +1277,7 @@ class PlayerMetrics(models.Model):
     def get_games_data(
         self, method: typing.Type[API_METHOD] = ScrapperAPI
     ) -> typing.List:
-        player_obj = getattr(self, "player")
+        player_obj = self.player
         games_adapter = PlayerGamesAdapter(
             player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
         )
@@ -1288,7 +1288,7 @@ class PlayerMetrics(models.Model):
     def get_games_summary_data(
         self, method: typing.Type[API_METHOD] = ScrapperAPI
     ) -> typing.List:
-        player_obj = getattr(self, "player")
+        player_obj = self.player
         games_adapter = PlayerGamesAdapter(
             player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
         )
@@ -1299,7 +1299,7 @@ class PlayerMetrics(models.Model):
     def get_season_data(
         self, method: typing.Type[API_METHOD] = ScrapperAPI
     ) -> typing.Dict:
-        player_obj = getattr(self, "player")
+        player_obj = self.player
         stats_adapter = PlayerSeasonStatsAdapter(
             player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
         )
@@ -1310,7 +1310,7 @@ class PlayerMetrics(models.Model):
     def get_season_summary_data(
         self, method: typing.Type[API_METHOD] = ScrapperAPI
     ) -> typing.Dict:
-        player_obj = getattr(self, "player")
+        player_obj = self.player
         stats_adapter = PlayerSeasonStatsAdapter(
             player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
         )
@@ -1320,7 +1320,7 @@ class PlayerMetrics(models.Model):
 
     def get_score(self, method: typing.Type[API_METHOD] = ScrapperAPI) -> dict:
         """get scoring for player"""
-        player_obj = getattr(self, "player")
+        player_obj = self.player
         score_adapter = PlayerScoreAdapter(
             player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
         )
@@ -2533,6 +2533,23 @@ class TeamContributor(models.Model):
 
 
 class Visitation(models.Model):
+    _visitors_count_per_year = models.JSONField(default=dict)
+
+    @property
+    def visitors_count_this_year(self) -> int:
+        current_year = str(timezone.now().year)
+        return self._visitors_count_per_year.get(current_year, 0)
+
+    def increment_visitors_count_this_year(self) -> None:
+        """
+        Increment the count of visitors for the current year.
+        """
+        current_year = str(timezone.now().year)
+        self._visitors_count_per_year[current_year] = (
+            self._visitors_count_per_year.get(current_year, 0) + 1
+        )
+        self.save()
+
     @property
     def profile(self) -> BaseProfile:
         for profile_model_name in (
@@ -2593,6 +2610,8 @@ class ProfileVisitation(models.Model):
             obj = cls.objects.create(
                 visitor=visitor.visitation, visited=visited.visitation
             )
+        visited.visitation.increment_visitors_count_this_year()
+
         return obj
 
     @property
