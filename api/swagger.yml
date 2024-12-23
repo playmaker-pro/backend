@@ -5210,6 +5210,11 @@ components:
         pm_score_state:
           type: string
           readOnly: true
+        pm_score_history:
+          type: object
+        pm_score_change:
+          type: number
+
       required:
         - pm_score
         - season_score

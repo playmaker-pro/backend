@@ -3,6 +3,7 @@ import typing
 import uuid
 from collections import Counter
 from datetime import datetime
+from typing import Optional
 
 from address.models import AddressField
 from django.conf import settings
@@ -1215,6 +1216,10 @@ class PlayerMetrics(models.Model):
         default="not_calculated",
         help_text="Defines a status of the player's pm_score.",
     )
+    pm_score_history = models.JSONField(
+        default=dict, verbose_name="PlayMaker Score history"
+    )
+
     season_score = models.JSONField(null=True, blank=True, verbose_name="Season Score")
     season_score_updated = models.DateTimeField(
         null=True, blank=True, verbose_name="Season Score date updated"
@@ -1336,7 +1341,18 @@ class PlayerMetrics(models.Model):
 
     def update_pm_score(self, *args, **kwargs) -> None:
         """Update PlayMaker Score"""
+        pm_score = args[0]
+        if pm_score and float(pm_score) > 0:
+            self.pm_score_history[str(timezone.now().date())] = pm_score
+
         self._update_cached_field("pm_score", *args, **kwargs)
+
+    @property
+    def pm_score_change(self) -> Optional[float]:
+        if len(self.pm_score_history) > 1:
+            last_score = list(self.pm_score_history.values())[-2]
+            current_score = list(self.pm_score_history.values())[-1]
+            return round(current_score - last_score, 2)
 
     def update_season_score(self, *args, **kwargs) -> None:
         """Update Season Score"""

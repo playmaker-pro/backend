@@ -4,6 +4,7 @@ from django.conf import settings as _settings
 
 from payments.models import Transaction as _Transaction
 from payments.providers.tpay import schemas as _schemas
+from premium.models import Product
 
 _TpayConfig = _settings.ENV_CONFIG.tpay
 
@@ -32,10 +33,13 @@ class TpayTransactionParser:
             payer=self._payer,
             callbacks=self._config.callbacks,
         )
-        if self._transaction.product.ref == "INQUIRIES":
+        if self._transaction.product.ref == Product.ProductReference.INQUIRIES:
             schema.callbacks.payerUrls.success += (
                 f"&inquiry_count={self._transaction.user.userinquiry.plan.limit}"
             )
+        schema.callbacks.payerUrls.success += (
+            f"&product={self._transaction.product.ref.lower()}"
+        )
         print(f"Transaction {transaction_uuid} callback: {schema.callbacks}")
         return schema.json(by_alias=True, exclude_none=True)
 
