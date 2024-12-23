@@ -300,7 +300,7 @@ class Product(models.Model):
 
         """
         if self.name.endswith("_YEAR") and self.ref == self.ProductReference.PREMIUM:
-            return (self.price / 10).quantize(Decimal("1.00"), rounding=ROUND_DOWN)
+            return (self.price / 12).quantize(Decimal("1.00"), rounding=ROUND_DOWN)
         return self.price
 
     @property
