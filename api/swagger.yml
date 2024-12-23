@@ -1824,9 +1824,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProfileVisitorSummary'
+                $ref: '#/components/schemas/ProfileVisitorSummary'
         '204':
           description: 'Most likely you have no premium profile.'
 
@@ -7223,7 +7221,7 @@ components:
         this_year_count:
           type: number
           description: "Number of visits in current calendar year"
-        visitors:
+        visits:
           type: array
           items:
             $ref: '#/components/schemas/ProfileVisitor'
