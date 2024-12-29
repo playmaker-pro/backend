@@ -2,7 +2,7 @@ import random
 import typing
 from functools import cached_property
 
-from django.db.models import BooleanField, Case, QuerySet, Value, When
+from django.db.models import BooleanField, Case, F, QuerySet, Value, When
 from django.utils import timezone
 
 from api import errors as api_errors
@@ -49,6 +49,7 @@ class ProfileListAPIFilter(APIFilter):
         "min_pm_score": api_utils.convert_int,
         "max_pm_score": api_utils.convert_int,
         "observed": api_utils.convert_bool,
+        "sort": api_utils.convert_str,
     }
 
     @cached_property
@@ -91,7 +92,24 @@ class ProfileListAPIFilter(APIFilter):
                 # Handle cases where the queryset has fewer than 10 elements
                 return shuffled_queryset
 
+        self.sort_queryset()
+
         return self.queryset
+
+    def sort_queryset(self) -> None:
+        """Sort queryset based on sort parameter"""
+        if sort_param := self.query_params.get("sort"):
+            if self.request.query_params.get("role") == "P":
+                if sort_param == "-pm_score":
+                    self.queryset = self.queryset.order_by(
+                        F("playermetrics__pm_score").desc(nulls_last=True)
+                    )
+                elif sort_param == "pm_score":
+                    self.queryset = self.queryset.order_by(
+                        F("playermetrics__pm_score").asc(nulls_last=True)
+                    )
+        else:
+            self.queryset = self.filter_promoted_first(self.queryset)
 
     def filter_queryset(self, queryset: QuerySet) -> QuerySet:
         """Filter given queryset based on validated query_params"""
