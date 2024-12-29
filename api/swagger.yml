@@ -1349,11 +1349,11 @@ paths:
       summary: "Get list of profiles by role"
       parameters:
         - in: query
-          name: role
+          name: sort
           schema:
             type: string
-          required: true
-          description: 'Profile role shortcut {P, C, T, G, S, ...}'
+          required: false
+          description: 'Sort query. Options: {"pm_score", "-pm_score"}'
         - in: query
           name: gender
           schema:
