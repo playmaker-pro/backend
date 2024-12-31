@@ -1,5 +1,6 @@
 import random
 import typing
+from datetime import timedelta
 from functools import cached_property
 
 from django.db.models import BooleanField, Case, F, QuerySet, Value, When
@@ -50,6 +51,7 @@ class ProfileListAPIFilter(APIFilter):
         "max_pm_score": api_utils.convert_int,
         "observed": api_utils.convert_bool,
         "sort": api_utils.convert_str,
+        "last_activity": api_utils.convert_str,
     }
 
     @cached_property
@@ -61,8 +63,34 @@ class ProfileListAPIFilter(APIFilter):
         except ValueError:
             raise IncorrectProfileRole
 
-    def filter_promoted_first(self, qs: QuerySet) -> QuerySet:
-        """Set default sorting for queryset"""
+    def filter_last_activity(self) -> None:
+        """Filter queryset by last activity"""
+        if last_activity := self.query_params.get("last_activity"):
+            now = timezone.now()
+            last_activity_timestamp_mapper = {
+                "last_week": now - timedelta(weeks=1),
+                "last_month": now - timedelta(weeks=4),
+                "last_two_months": now - timedelta(weeks=8),
+                "last_six_months": now - timedelta(weeks=24),
+                "last_year": now - timedelta(weeks=52),
+                "more_than_year_ago": now - timedelta(weeks=52),
+            }
+
+            try:
+                last_activity_timestamp = last_activity_timestamp_mapper[last_activity]
+            except KeyError:
+                return
+            if last_activity == "more_than_year_ago":
+                self.queryset = self.queryset.filter(
+                    user__last_activity__lt=last_activity_timestamp
+                )
+            else:
+                self.queryset = self.queryset.filter(
+                    user__last_activity__gte=last_activity_timestamp
+                )
+
+    def sort_promoted_first(self, qs: QuerySet) -> QuerySet:
+        """Set default sorting for queryset - promoted profiles first, then by last activity"""
         now = timezone.now()
 
         return qs.annotate(
@@ -109,7 +137,7 @@ class ProfileListAPIFilter(APIFilter):
                         F("playermetrics__pm_score").asc(nulls_last=True)
                     )
         else:
-            self.queryset = self.filter_promoted_first(self.queryset)
+            self.queryset = self.sort_promoted_first(self.queryset)
 
     def filter_queryset(self, queryset: QuerySet) -> QuerySet:
         """Filter given queryset based on validated query_params"""
@@ -159,6 +187,7 @@ class ProfileListAPIFilter(APIFilter):
         self.filter_licence()
         self.filter_by_labels()
         self.filter_league()
+        self.filter_last_activity()
         self.observed()
 
     def define_query_params(self) -> None:

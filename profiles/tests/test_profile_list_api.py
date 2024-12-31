@@ -14,11 +14,12 @@ from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
 from profiles.managers import ProfileManager
-from profiles.models import LicenceType, PlayerProfile
+from profiles.models import GuestProfile, LicenceType, PlayerProfile
 from profiles.services import ProfileService
 from profiles.utils import get_past_date
 from utils import factories, get_current_season
 from utils.factories import (
+    GuestProfileFactory,
     LabelDefinitionFactory,
     LabelFactory,
     LeagueFactory,
@@ -1098,3 +1099,39 @@ def test_sort_player_profiles_promoted_and_last_activity_first(
     ids_expect_order = [profile["uuid"] for profile in response.json()["results"][:6]]
 
     assert ids_expect_order == ids_expect_order
+
+
+def test_filter_last_activity(api_client):
+    now = timezone.now()
+
+    GuestProfile.objects.all().delete()
+
+    g1 = GuestProfileFactory.create(user__last_activity=now)
+    g2 = GuestProfileFactory.create(
+        user__last_activity=now - timedelta(days=1, weeks=1)
+    )
+    GuestProfileFactory.create(user__last_activity=now - timedelta(days=1, weeks=4))
+    GuestProfileFactory.create(user__last_activity=now - timedelta(days=1, weeks=8))
+    GuestProfileFactory.create(user__last_activity=now - timedelta(days=1, weeks=24))
+    GuestProfileFactory.create(user__last_activity=now - timedelta(days=1, weeks=52))
+
+    user = UserFactory.create(password="test1234")
+    user_manager = UserManager(api_client)
+    headers = user_manager.custom_user_headers(email=user.email, password="test1234")
+    url_to_hit: str = reverse(url)
+
+    for last_activity_param, count in [
+        ("last_week", 1),
+        ("last_month", 2),
+        ("last_two_months", 3),
+        ("last_six_months", 4),
+        ("last_year", 5),
+        ("more_than_year_ago", 1),
+        ("", 6),
+    ]:
+        response = api_client.get(
+            url_to_hit + f"?role=G&last_activity={last_activity_param}", **headers
+        )
+
+        assert response.status_code == 200
+        assert response.json()["count"] == count

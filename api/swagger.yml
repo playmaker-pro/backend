@@ -1352,8 +1352,16 @@ paths:
           name: sort
           schema:
             type: string
+            enum: [ 'pm_score', '-pm_score' ]
           required: false
-          description: 'Sort query. Options: {"pm_score", "-pm_score"}'
+          description: "Sort queryset. Promoted and profiles with latest activity are first."
+        - in: query
+          name: last_activity
+          schema:
+            type: string
+            enum: [ 'last_week', 'last_month', 'last_two_months', 'last_six_months', 'last_year', 'more_than_year_ago' ]
+          required: false
+          description: 'User last activity filter.'
         - in: query
           name: gender
           schema:
