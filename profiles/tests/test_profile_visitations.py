@@ -91,7 +91,7 @@ def test_who_visited_my_profile(client, subject):
         [
             is_curr
             for is_curr in [pv1, pv2, pv3, pv4]
-            if is_curr.timestamp.year == current_year
+            if is_curr.timestamp > timezone.now() - timedelta(weeks=52)
         ]
     )
     assert data["visits"][0]["visitor"]["uuid"] == str(pv1.visitor.profile.uuid)

@@ -221,6 +221,24 @@ class UserInquiryLogSerializer(serializers.ModelSerializer):
         return obj.log_message_body
 
 
+class InquiryPoolDetailsSerializer(serializers.Serializer):
+    used = serializers.IntegerField()
+    total = serializers.IntegerField()
+
+    def to_representation(self, data):
+        if isinstance(data, tuple):
+            return {
+                "used": data[0],
+                "total": data[1],
+            }
+        return super().to_representation(data)
+
+
+class InquiryPoolSerializer(serializers.Serializer):
+    premium_profile = InquiryPoolDetailsSerializer(source="premium_profile_pool")
+    regular = InquiryPoolDetailsSerializer(source="regular_pool")
+
+
 class UserInquirySerializer(serializers.ModelSerializer):
     plan = InquiryPlanSerializer(read_only=True)
     contact = InquiryContactSerializer(source="user.userpreferences", read_only=True)
@@ -232,8 +250,10 @@ class UserInquirySerializer(serializers.ModelSerializer):
     unlimited = serializers.BooleanField(
         read_only=True, source="has_unlimited_inquiries"
     )
-    limit = serializers.IntegerField(read_only=True, source="limit_raw")
+    limit = serializers.IntegerField(read_only=True)
+    counter = serializers.IntegerField(read_only=True)
+    pools = InquiryPoolSerializer(source="*", read_only=True)
 
     class Meta:
         model = _models.UserInquiry
-        exclude = ("limit_raw",)
+        exclude = ("counter_raw", "limit_raw")

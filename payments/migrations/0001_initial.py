@@ -7,8 +7,6 @@ import django_fsm
 from django.conf import settings
 from django.db import migrations, models
 
-from inquiries.schemas import InquiryPlanTypeRef as _InquiryPlanTypeRef
-
 
 def create_initial_inquiry_transaction_types(apps, schema_editor) -> None:
     """Create initial transaction types."""
@@ -16,19 +14,19 @@ def create_initial_inquiry_transaction_types(apps, schema_editor) -> None:
 
     TransactionType.objects.get_or_create(
         ref="INQUIRIES",
-        name=_InquiryPlanTypeRef.PREMIUM5,
+        name="PREMIUM_INQUIRIES_5",
         name_readable="5 zapytań",
         price=19.99,
     )
     TransactionType.objects.get_or_create(
         ref="INQUIRIES",
-        name=_InquiryPlanTypeRef.PREMIUM10,
+        name="PREMIUM_INQUIRIES_10",
         name_readable="10 zapytań",
         price=34.99,
     )
     TransactionType.objects.get_or_create(
         ref="INQUIRIES",
-        name=_InquiryPlanTypeRef.PREMIUM25,
+        name="PREMIUM_INQUIRIES_25",
         name_readable="25 zapytań",
         price=69.99,
     )

@@ -1,4 +1,5 @@
 import math
+from datetime import timedelta
 from decimal import ROUND_DOWN, Decimal
 from enum import Enum
 
@@ -141,6 +142,8 @@ class PromoteProfileProduct(models.Model):
 
 
 class PremiumInquiriesProduct(models.Model):
+    INQUIRIES_LIMIT = 10
+
     product = models.OneToOneField(
         "PremiumProduct", on_delete=models.CASCADE, related_name="inquiries"
     )
@@ -148,8 +151,33 @@ class PremiumInquiriesProduct(models.Model):
     valid_since = models.DateTimeField(auto_now_add=True)
     valid_until = models.DateTimeField(blank=True, null=True)
 
+    current_counter = models.PositiveIntegerField(default=0)
+    counter_updated_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    def increment_counter(self) -> None:
+        if self.can_use_premium_inquiries:
+            self.current_counter += 1
+            self.save()
+        else:
+            raise ValueError("This profile cannot use premium inquiries.")
+
+    @property
+    def can_use_premium_inquiries(self) -> bool:
+        return self.is_active and self.current_counter < self.INQUIRIES_LIMIT
+
+    def _reset_counter(self) -> None:
+        self.current_counter = 0
+        self.counter_updated_at = timezone.now()
+        self.save()
+
+    def check_refresh(self) -> None:
+        should_refresh_at = self.counter_updated_at + timedelta(days=30)
+        if self.is_active and timezone.now() > should_refresh_at:
+            self._reset_counter()
+
     def _fresh_init(self, period: int) -> None:
         """Initialize the premium inquiries."""
+        self.counter_updated_at = timezone.now()
         self.valid_since = timezone.now()
         self.valid_until = get_date_days_after(self.valid_since, days=period)
 

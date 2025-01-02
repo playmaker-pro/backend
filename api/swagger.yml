@@ -7448,6 +7448,21 @@ components:
               description: "Profile phone number"
         email:
           type: string
+    InquiryPool:
+      type: object
+      properties:
+        used:
+          type: integer
+          description: "Number of inquiries already used in the pool"
+          readOnly: true
+        total:
+          type: integer
+          description: "Limit of inquiries in the pool"
+          readOnly: true
+      required:
+        - count
+        - limit
+
     InquiryRequestUserMeta:
       type: object
       properties:
@@ -7463,6 +7478,16 @@ components:
           type: integer
           description: "Current sent inquiry request count"
           readOnly: true
+        pools:
+          type: object
+          properties:
+            premium_profile:
+              $ref: '#/components/schemas/InquiryPool'
+              description: "Inquiry pool assigned to the premium profile (if possessed)"
+            regular:
+              $ref: '#/components/schemas/InquiryPool'
+              description: "Inquiry pool out of plan assigned to the user"
+
         logs:
           type: array
           items:

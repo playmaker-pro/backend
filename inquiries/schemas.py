@@ -3,11 +3,24 @@ from enum import Enum as _Enum
 
 class InquiryPlanTypeRef(str, _Enum):
     BASIC: str = "BASIC"
-    PREMIUM5: str = "PREMIUM_INQUIRIES_5"
-    PREMIUM10: str = "PREMIUM_INQUIRIES_10"
-    PREMIUM25: str = "PREMIUM_INQUIRIES_25"
+    PREMIUM_L: str = "PREMIUM_INQUIRIES_L"
+    PREMIUM_XL: str = "PREMIUM_INQUIRIES_XL"
+    PREMIUM_XXL: str = "PREMIUM_INQUIRIES_XXL"
 
     @property
-    def text_choice(self) -> tuple:
-        """Get text choice for TransactionType"""
-        return self.value, self.value
+    def inquiry_count(self) -> int:
+        return {
+            InquiryPlanTypeRef.BASIC: 2,
+            InquiryPlanTypeRef.PREMIUM_L: 3,
+            InquiryPlanTypeRef.PREMIUM_XL: 5,
+            InquiryPlanTypeRef.PREMIUM_XXL: 10,
+        }[self]
+
+    @property
+    def price(self) -> float:
+        return {
+            InquiryPlanTypeRef.BASIC: 0,
+            InquiryPlanTypeRef.PREMIUM_L: 7.99,
+            InquiryPlanTypeRef.PREMIUM_XL: 12.99,
+            InquiryPlanTypeRef.PREMIUM_XXL: 19.99,
+        }[self]

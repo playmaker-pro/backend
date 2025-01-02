@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timedelta
+from typing import Optional
 
 from django.conf import settings
 from django.db import models
@@ -165,12 +166,6 @@ class UserInquiryLog(models.Model):
 class InquiryPlan(models.Model):
     """Holds information about user's inquiry plans."""
 
-    class InquiryTypeRef(models.TextChoices):
-        BASIC = _InquiryPlanTypeRef.BASIC.text_choice
-        PREMIUM5 = _InquiryPlanTypeRef.PREMIUM5.text_choice
-        PREMIUM10 = _InquiryPlanTypeRef.PREMIUM10.text_choice
-        PREMIUM25 = _InquiryPlanTypeRef.PREMIUM25.text_choice
-
     name = models.CharField(_("Plan Name"), max_length=255, help_text=_("Plan name"))
     limit = models.PositiveIntegerField(
         _("Plan limit"), help_text=_("Limit how many actions are allowed")
@@ -201,7 +196,7 @@ class InquiryPlan(models.Model):
     )
     type_ref = models.CharField(
         max_length=50,
-        choices=InquiryTypeRef.choices,
+        choices=((ref.value, ref.value) for ref in _InquiryPlanTypeRef),
         null=True,
         blank=True,
         unique=True,
@@ -221,12 +216,17 @@ class InquiryPlan(models.Model):
         """Get a basic plan"""
         return cls.objects.get(default=True)
 
+    def save(self, *args, **kwargs):
+        if self.default and self is not InquiryPlan.objects.get(default=True):
+            raise ValueError("There can be only one default plan.")
+        super().save(*args, **kwargs)
+
 
 class UserInquiry(models.Model):
     class UserInquiryManager(models.Manager):
         def limit_reached(self) -> models.QuerySet:
             """Get users with limit reached"""
-            return self.filter(counter__gte=models.F("plan__limit"))
+            return self.filter(counter_raw__gte=models.F("plan__limit"))
 
     objects = UserInquiryManager()
 
@@ -236,21 +236,29 @@ class UserInquiry(models.Model):
 
     plan = models.ForeignKey(InquiryPlan, on_delete=models.CASCADE)
 
-    counter = models.PositiveIntegerField(
+    counter_raw = models.PositiveIntegerField(
         _("Obecna ilość zapytań"),
         default=0,
         help_text=_("Current number of used inquiries."),
     )
 
-    limit_raw = models.PositiveIntegerField(default=5)
+    limit_raw = models.PositiveIntegerField(default=2)
 
     @property
     def limit(self):
+        if self.premium_inquiries:
+            return self.limit_raw + self.premium_inquiries.INQUIRIES_LIMIT
         return self.limit_raw
 
     @property
-    def has_unlimited_inquiries(self) -> bool:
-        return self.user.profile and self.user.profile.has_premium_inquiries
+    def counter(self):
+        if self.premium_inquiries:
+            return self.counter_raw + self.premium_inquiries.current_counter
+        return self.counter_raw
+
+    @counter.setter
+    def counter(self, value):
+        self.counter_raw = value
 
     @property
     def can_make_request(self):
@@ -262,27 +270,52 @@ class UserInquiry(models.Model):
 
     def reset(self):
         """Reset current counter"""
-        self.counter = 0
+        self.counter_raw = 0
         self.save()
 
     def reset_inquiries(self) -> None:
         """
-        Reset current counter based on the base limit and any additional purchased inquiries.
+        Set basic plan and reset counter to 0.
         """
-        basic_plan_limit = (
-            InquiryPlan.basic().limit
-        )  # Fetch the base limit from the default (basic) plan
-        self.counter = max(self.counter - basic_plan_limit, 0)
-        self.save(update_fields=["counter"])
+        self.plan = InquiryPlan.basic()
+        self.counter_raw = 0
+        self.limit_raw = self.plan.limit
+        self.save()
+
+    @property
+    def premium_inquiries_status(self) -> (int, int):
+        if pi := self.premium_inquiries:
+            return pi.status
+        return 0, 0
+
+    @property
+    def premium_inquiries(self) -> Optional["premium.models.PremiumInquiriesProduct"]:  # noqa: F821
+        if self.user.profile and self.user.profile.has_premium_inquiries:
+            premium_inquiries = self.user.profile.premium_products.inquiries
+            premium_inquiries.check_refresh()
+            return premium_inquiries
+
+    @property
+    def regular_pool(self) -> (int, int):
+        return self.counter_raw, self.limit_raw
+
+    @property
+    def premium_profile_pool(self) -> (int, int):
+        if self.premium_inquiries:
+            return (
+                self.premium_inquiries.current_counter,
+                self.premium_inquiries.INQUIRIES_LIMIT,
+            )
+        return 0, 0
 
     def increment(self):
         """Increase by one counter"""
-        if self.has_unlimited_inquiries:
-            return
-
-        if self.counter < self.limit:
-            self.counter += 1
-            self.save(update_fields=("counter",))
+        if self.premium_inquiries and self.premium_inquiries.can_use_premium_inquiries:
+            self.premium_inquiries.increment_counter()
+        else:
+            if self.counter < self.limit:
+                self.counter_raw += 1
+                self.save()
         self.check_limit_to_notify()
 
     def check_limit_to_notify(self) -> None:

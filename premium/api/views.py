@@ -45,6 +45,15 @@ class ProductView(EndpointView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
+        if (
+            not request.user.profile.is_premium
+            and product.ref == Product.ProductReference.INQUIRIES
+        ):
+            return Response(
+                "Product is available only for premium users.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         profile_class_name = request.user.profile.__class__.__name__
         if (
             request.user.profile

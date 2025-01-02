@@ -335,13 +335,13 @@ class TestPremiumInquiriesProduct:
         assert premium_inquiries.valid_until == make_aware(
             datetime(2020, 1, 31, 12, 00, 00)
         )
-        assert user_inquiries.limit == 5
+        assert user_inquiries.limit == 12
 
         timezone_now.return_value = make_aware(datetime(2020, 2, 15, 12, 00, 00))
         user_inquiries.refresh_from_db()
 
         assert premium_inquiries.is_active is False
-        assert user_inquiries.limit == 5
+        assert user_inquiries.limit == 2
 
         premium_inquiries.refresh(PremiumType.MONTH)
         user_inquiries.refresh_from_db()
@@ -354,8 +354,7 @@ class TestPremiumInquiriesProduct:
         assert premium_inquiries.valid_until == make_aware(
             datetime(2020, 3, 16, 12, 00)
         )
-        assert user_inquiries.limit == 5
-        assert user_inquiries.has_unlimited_inquiries is True
+        assert user_inquiries.limit == 12
 
 
 class TestProduct:
@@ -363,9 +362,9 @@ class TestProduct:
         inquiry_products = Product.objects.filter(visible=True, ref="INQUIRIES")
 
         assert [product.name for product in inquiry_products] == [
-            "PREMIUM_INQUIRIES_5",
-            "PREMIUM_INQUIRIES_10",
-            "PREMIUM_INQUIRIES_25",
+            "PREMIUM_INQUIRIES_L",
+            "PREMIUM_INQUIRIES_XL",
+            "PREMIUM_INQUIRIES_XXL",
         ]
         assert inquiry_products.count() == 3
 
