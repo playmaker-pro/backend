@@ -234,7 +234,9 @@ class UserInquiry(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True
     )
 
-    plan = models.ForeignKey(InquiryPlan, on_delete=models.CASCADE)
+    plan = models.ForeignKey(
+        InquiryPlan, on_delete=models.SET_NULL, null=True, blank=True
+    )
 
     counter_raw = models.PositiveIntegerField(
         _("Obecna ilość zapytań"),
