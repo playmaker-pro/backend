@@ -39,30 +39,10 @@ class ProductView(EndpointView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        if not request.user.profile:
-            return Response(
-                "You need to have a profile to create a transaction.",
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        if (
-            not request.user.profile.is_premium
-            and product.ref == Product.ProductReference.INQUIRIES
-        ):
-            return Response(
-                "Product is available only for premium users.",
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        profile_class_name = request.user.profile.__class__.__name__
-        if (
-            request.user.profile
-            and (product.player_only and profile_class_name != "PlayerProfile")
-            or (not product.player_only and profile_class_name == "PlayerProfile")
-        ):
-            raise PermissionError(
-                "Your profile is not allowed to create transaction for this product.",
-            )
+        try:
+            product.can_user_buy(request.user)
+        except PermissionError as e:
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         transaction_service = TransactionService.create_new_transaction_object(
             user=request.user, product=product

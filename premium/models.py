@@ -310,6 +310,22 @@ class Product(models.Model):
     def __str__(self) -> str:
         return f"{self.ref} -- {self.name} -- {self.name_readable} -- {self.price}"
 
+    def can_user_buy(self, user) -> None:
+        if not user.profile:
+            raise Exception("User has no profile.")
+
+        if self.ref == self.ProductReference.INQUIRIES and not user.profile.is_premium:
+            raise PermissionError("Product is available only for premium users.")
+
+        profile_class_name = user.profile.__class__.__name__
+        if self.ref == self.ProductReference.PREMIUM and (
+            (self.player_only and profile_class_name != "PlayerProfile")
+            or (not self.player_only and profile_class_name == "PlayerProfile")
+        ):
+            raise PermissionError(
+                "Your profile is not allowed to create transaction for this product."
+            )
+
     def apply_product_for_transaction(self, transaction: Transaction) -> None:
         if self.ref == Product.ProductReference.PREMIUM:
             premium_type = (
