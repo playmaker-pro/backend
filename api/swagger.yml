@@ -1349,6 +1349,12 @@ paths:
       summary: "Get list of profiles by role"
       parameters:
         - in: query
+          name: role
+          schema:
+            type: string
+          required: true
+          description: 'Profile role shortcut {P, C, T, G, S, ...}'
+        - in: query
           name: sort
           schema:
             type: string
@@ -5227,46 +5233,6 @@ components:
         - pm_score
         - season_score
         - pm_score_state
-
-    PlayerMetrics:
-      type: object
-      properties:
-        id:
-          type: integer
-        created_at:
-          type: string
-        updated_at:
-          type: string
-        games_summary:
-          type: array
-          items:
-            type: object
-        games_summary_updated:
-          type: string
-        games:
-          type: array
-          items:
-            type: object
-        games_updated:
-          type: string
-        fantasy_summary:
-          type: object
-        fantasy_summary_updated:
-          type: string
-        fantasy:
-          type: object
-        fantasy_updated:
-          type: string
-        season_summary:
-          type: object
-        season_summary_updated:
-          type: string
-        season:
-          type: object
-        season_updated:
-          type: string
-      required:
-        - id
 
     ProfileLabel:
       type: object

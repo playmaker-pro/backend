@@ -128,12 +128,6 @@ class ProfileVideoSerializer(serializers.ModelSerializer):
         return super().update(instance, self.initial_data)
 
 
-class PlayerMetricsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.PlayerMetrics
-        fields = ("season", "pm_score", "season_score")
-
-
 class LicenceTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.LicenceType
@@ -874,7 +868,7 @@ class ProfileSerializer(serializers.Serializer):
         many=True, required=False, read_only=True
     )
     player_video = ProfileVideoSerializer(many=True, read_only=True)
-    playermetrics = PlayerMetricsSerializer(read_only=True)
+    # playermetrics = PlayerMetricsSerializer(read_only=True)
     licences = CoachLicenceSerializer(many=True, required=False)
 
     enums = (
@@ -1367,7 +1361,11 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
 
 class SimilarProfileSerializer(serializers.Serializer):
     # recursive imports
+
     from clubs.api.serializers import TeamHistoryBaseProfileSerializer
+    from profiles.serializers_detailed.player_profile_serializers import (
+        PlayerMetricsSerializer,
+    )
 
     uuid = serializers.UUIDField(read_only=True)
     slug = serializers.CharField()
