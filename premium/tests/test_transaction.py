@@ -287,3 +287,15 @@ def test_try_trial_after_subscription(player_profile, mck_timezone_now):
     assert (
         str(exc.value) == "Cannot activate trial, you already had valid subscription."
     )
+
+
+def test_double_trial(trial_premium_player_profile):
+    assert trial_premium_player_profile.is_premium
+    assert trial_premium_player_profile.premium_products.trial_tested
+
+    with pytest.raises(ValueError) as exc:
+        trial_premium_player_profile.premium_products.setup_premium_profile(
+            PremiumType.TRIAL
+        )
+
+    assert str(exc.value) == "Trial already tested."

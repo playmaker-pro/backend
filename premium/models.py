@@ -268,17 +268,14 @@ class PremiumProduct(models.Model):
         """Create/refresh premium profile"""
         premium, created = PremiumProfile.objects.get_or_create(product=self)
 
-        if not created:
-            if self.trial_tested and premium_type == PremiumType.TRIAL:
-                raise ValueError("Trial already tested.")
-            elif premium.is_active and premium_type == PremiumType.TRIAL:
-                raise ValueError(
-                    "Cannot activate trial on active premium subscription."
-                )
-            elif premium.valid_until and premium_type == PremiumType.TRIAL:
-                raise ValueError(
-                    "Cannot activate trial, you already had valid subscription."
-                )
+        if self.trial_tested and premium_type == PremiumType.TRIAL:
+            raise ValueError("Trial already tested.")
+        elif premium.is_active and premium_type == PremiumType.TRIAL:
+            raise ValueError("Cannot activate trial on active premium subscription.")
+        elif premium.valid_until and premium_type == PremiumType.TRIAL:
+            raise ValueError(
+                "Cannot activate trial, you already had valid subscription."
+            )
 
         premium.setup(premium_type)
 

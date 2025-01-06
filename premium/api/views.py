@@ -8,7 +8,7 @@ from payments.api.serializers import NewTransactionSerializer
 from payments.providers.errors import TransactionError
 from payments.services import TransactionService
 from premium.api.serializers import PremiumProfileProductSerializer, ProductSerializer
-from premium.models import Product
+from premium.models import PremiumType, Product
 
 
 class ProductInfoView(EndpointView):
@@ -69,7 +69,6 @@ class ProductView(EndpointView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        premium = profile.premium_products.setup_premium_profile()
-        premium.setup()
+        premium = profile.premium_products.setup_premium_profile(PremiumType.TRIAL)
         serializer = PremiumProfileProductSerializer(premium)
         return Response(serializer.data)
