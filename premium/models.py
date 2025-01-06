@@ -36,6 +36,10 @@ class PremiumProfile(models.Model):
     valid_since = models.DateTimeField(auto_now_add=True)
     valid_until = models.DateTimeField(blank=True, null=True)
 
+    @property
+    def subscription_days(self) -> timedelta:
+        return self.valid_until.date() - self.valid_since.date()
+
     def _fresh_init(self) -> None:
         """Initialize the premium profile."""
         self.valid_since = timezone.now()
@@ -116,6 +120,10 @@ class PromoteProfileProduct(models.Model):
     valid_since = models.DateTimeField(auto_now_add=True)
     valid_until = models.DateTimeField(null=True, blank=True)
 
+    @property
+    def subscription_days(self) -> timedelta:
+        return self.valid_until.date() - self.valid_since.date()
+
     def _fresh_init(self) -> None:
         """Initialize the promotion."""
         self.valid_since = timezone.now()
@@ -162,6 +170,10 @@ class PremiumInquiriesProduct(models.Model):
             raise ValueError("This profile cannot use premium inquiries.")
 
     @property
+    def subscription_days(self) -> timedelta:
+        return self.valid_until.date() - self.valid_since.date()
+
+    @property
     def can_use_premium_inquiries(self) -> bool:
         return self.is_active and self.current_counter < self.INQUIRIES_LIMIT
 
@@ -177,7 +189,7 @@ class PremiumInquiriesProduct(models.Model):
 
     def _fresh_init(self, period: int) -> None:
         """Initialize the premium inquiries."""
-        self.counter_updated_at = timezone.now()
+        # self.counter_updated_at = timezone.now()
         self.valid_since = timezone.now()
         self.valid_until = get_date_days_after(self.valid_since, days=period)
 
@@ -262,6 +274,10 @@ class PremiumProduct(models.Model):
             elif premium.is_active and premium_type == PremiumType.TRIAL:
                 raise ValueError(
                     "Cannot activate trial on active premium subscription."
+                )
+            elif premium.valid_until and premium_type == PremiumType.TRIAL:
+                raise ValueError(
+                    "Cannot activate trial, you already had valid subscription."
                 )
 
         premium.setup(premium_type)
