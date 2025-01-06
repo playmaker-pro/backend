@@ -4,7 +4,11 @@ import pytest
 from django.utils import timezone
 
 from premium.models import PremiumType, Product
-from utils.factories import CoachProfileFactory, PlayerProfileFactory
+from utils.factories import (
+    CoachProfileFactory,
+    GuestProfileFactory,
+    PlayerProfileFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -18,6 +22,11 @@ def mck_timezone_now():
 @pytest.fixture
 def player_profile():
     yield PlayerProfileFactory.create()
+
+
+@pytest.fixture
+def guest_profile():
+    yield GuestProfileFactory.create()
 
 
 @pytest.fixture

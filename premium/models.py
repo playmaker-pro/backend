@@ -342,6 +342,10 @@ class Product(models.Model):
                 "Your profile is not allowed to create transaction for this product."
             )
 
+    @property
+    def inquiry_plan(self) -> InquiryPlan:
+        return InquiryPlan.objects.get(type_ref=self.name)
+
     def apply_product_for_transaction(self, transaction: Transaction) -> None:
         if self.ref == Product.ProductReference.PREMIUM:
             premium_type = (
@@ -351,7 +355,7 @@ class Product(models.Model):
                 premium_type
             )
         elif self.ref == Product.ProductReference.INQUIRIES:
-            plan = InquiryPlan.objects.get(type_ref=self.name)
+            plan = self.inquiry_plan
             transaction.user.userinquiry.set_new_plan(plan)
 
     def price_per_cycle(self) -> Decimal:

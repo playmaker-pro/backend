@@ -35,7 +35,7 @@ class TpayTransactionParser:
         )
         if self._transaction.product.ref == Product.ProductReference.INQUIRIES:
             schema.callbacks.payerUrls.success += (
-                f"&inquiry_count={self._transaction.user.userinquiry.plan.limit}"
+                f"&inquiry_count={self._transaction.product.inquiry_plan.limit}"
             )
         schema.callbacks.payerUrls.success += (
             f"&product={self._transaction.product.ref.lower()}"

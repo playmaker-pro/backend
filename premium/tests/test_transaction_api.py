@@ -352,3 +352,17 @@ def test_buy_premium_for_other_after_trial_expiration(
     assert profile.user.userinquiry.limit == 12
     assert profile.user.userinquiry.left == 12
     assert profile.premium_products.trial_tested
+
+
+def test_buy_premium_for_guest(api_client, guest_profile, product_premium_other_month):
+    api_client.force_authenticate(user=guest_profile.user)
+    url = create_transaction_url(product_premium_other_month.id)
+    response = api_client.post(url)
+
+    assert response.status_code == 200
+
+    approve_transaction(response.json()["uuid"])
+
+    assert guest_profile.is_premium
+    assert guest_profile.is_promoted
+    assert guest_profile.has_premium_inquiries
