@@ -1558,6 +1558,20 @@ class ClubProfile(BaseProfile):
         """
         return "club_role"
 
+    def create_external_links_obj(self) -> None:
+        """
+        Create a new ExternalLinks object and associate it with this ClubProfile instance.
+        """
+        self.external_links = ExternalLinks.objects.create()
+
+    def save(self, *args, **kwargs):
+        if not self.external_links:
+            self.create_external_links_obj()
+        super().save(*args, **kwargs)
+        # Update or create external links associated with the club.
+        # This ensures that the club's external links are always up-to-date.
+        create_or_update_profile_external_links(self)
+
     class Meta:
         verbose_name = "Club Profile"
         verbose_name_plural = "Club Profiles"
