@@ -223,7 +223,7 @@ def test_extend_premium_during_trial(
 
     assert transaction.product == product_premium_player_month
     assert transaction.user == trial_premium_player_profile.user
-    assert trial_premium_player_profile.premium.subscription_days == timedelta(days=37)
+    assert trial_premium_player_profile.premium.subscription_days == timedelta(days=33)
     assert trial_premium_player_profile.is_premium
     assert trial_premium_player_profile.premium_products.calculate_pm_score.awaiting_approval
     assert trial_premium_player_profile.is_promoted
@@ -273,7 +273,7 @@ def test_buy_premium_for_player_after_trial_expiration(
     profile = trial_premium_player_profile
 
     assert profile.premium_products.trial_tested
-    assert profile.premium.subscription_days == timedelta(days=7)
+    assert profile.premium.subscription_days == timedelta(days=3)
     assert profile.is_premium
     assert profile.premium_products.calculate_pm_score.awaiting_approval
     assert profile.is_promoted
@@ -318,7 +318,7 @@ def test_buy_premium_for_other_after_trial_expiration(
     profile = trial_premium_coach_profile
 
     assert profile.premium_products.trial_tested
-    assert profile.premium.subscription_days == timedelta(days=7)
+    assert profile.premium.subscription_days == timedelta(days=3)
     assert profile.is_premium
     assert not hasattr(profile.premium_products, "calculate_pm_score")
     assert profile.is_promoted

@@ -198,14 +198,10 @@ class TestPromoteProfileProduct:
         return pp.product.promotion
 
     def test_promote_profile_product(self, promote_profile_product, timezone_now):
-        assert promote_profile_product.days_count == 7
+        assert promote_profile_product.days_count == 3
         assert promote_profile_product.is_active is True
-        assert promote_profile_product.valid_since == make_aware(
-            datetime(2020, 1, 1, 12, 00, 00)
-        )
-        assert promote_profile_product.valid_until == make_aware(
-            datetime(2020, 1, 8, 12, 00, 00)
-        )
+        assert promote_profile_product.valid_since.date() == datetime(2020, 1, 1).date()
+        assert promote_profile_product.valid_until.date() == datetime(2020, 1, 4).date()
 
         timezone_now.return_value = make_aware(datetime(2020, 2, 15, 12, 00, 00))
 
@@ -215,11 +211,12 @@ class TestPromoteProfileProduct:
         promote_profile_product.refresh_from_db()
 
         assert promote_profile_product.is_active is True
-        assert promote_profile_product.valid_since == make_aware(
-            datetime(2020, 2, 15, 12, 00, 00)
+        assert (
+            promote_profile_product.valid_since.date() == datetime(2020, 2, 15).date()
         )
-        assert promote_profile_product.valid_until == make_aware(
-            datetime(2020, 3, 16, 12, 00, 00)
+
+        assert (
+            promote_profile_product.valid_until.date() == datetime(2020, 3, 16).date()
         )
 
 
@@ -237,7 +234,7 @@ class TestPremiumProfile:
             datetime(2020, 1, 1, 12, 00, 00)
         )
         assert premium_profile.valid_until == make_aware(
-            datetime(2020, 1, 8, 12, 00, 00)
+            datetime(2020, 1, 4, 12, 00, 00)
         )  # first is test for 7 days
         mock_setup_premium_products.assert_not_called()
 

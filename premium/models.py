@@ -24,11 +24,11 @@ class PremiumType(Enum):
         elif self == self.MONTH:
             return 30
         elif self == self.TRIAL:
-            return 7
+            return 3
 
 
 class PremiumProfile(models.Model):
-    period = models.PositiveIntegerField(default=7, help_text="Period in days")
+    period = models.PositiveIntegerField(default=3, help_text="Period in days")
 
     product = models.OneToOneField(
         "PremiumProduct", on_delete=models.PROTECT, related_name="premium"
@@ -116,7 +116,7 @@ class PromoteProfileProduct(models.Model):
     product = models.OneToOneField(
         "PremiumProduct", on_delete=models.PROTECT, related_name="promotion"
     )
-    days_count = models.PositiveIntegerField(default=7)
+    days_count = models.PositiveIntegerField(default=3)
     valid_since = models.DateTimeField(auto_now_add=True)
     valid_until = models.DateTimeField(null=True, blank=True)
 
