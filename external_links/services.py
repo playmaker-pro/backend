@@ -22,7 +22,6 @@ class ExternalLinksService:
         existing_links = models.ExternalLinksEntity.objects.filter(
             target=external_links_instance
         )
-        breakpoint()
         link_sources_dict = self.fetch_link_sources(links_data)
         links_to_delete, links_to_create_or_update = self.determine_links_operations(
             links_data, link_sources_dict, external_links_instance, related_type
