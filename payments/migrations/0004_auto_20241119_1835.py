@@ -3,13 +3,23 @@
 import django.db.models.deletion
 from django.db import migrations, models
 
+from inquiries.schemas import InquiryPlanTypeRef
+
+new_naming = {
+    "PREMIUM_INQUIRIES_5": InquiryPlanTypeRef.PREMIUM_L,
+    "PREMIUM_INQUIRIES_10": InquiryPlanTypeRef.PREMIUM_XL,
+    "PREMIUM_INQUIRIES_25": InquiryPlanTypeRef.PREMIUM_XXL,
+}
+
 
 def map_transaction_types_to_products(apps, schema_editor):
     Product = apps.get_model("premium", "Product")
     Transaction = apps.get_model("payments", "Transaction")
 
     for transaction in Transaction.objects.all():
-        product = Product.objects.get(name=transaction.transaction_type.name)
+        product = Product.objects.get(
+            name=new_naming[transaction.transaction_type.name]
+        )
         transaction.product = product
         transaction.save()
 

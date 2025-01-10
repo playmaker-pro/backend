@@ -229,6 +229,7 @@ class UserInquiry(models.Model):
             return self.filter(counter_raw__gte=models.F("plan__limit"))
 
     objects = UserInquiryManager()
+    _default_limit = 2
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True
@@ -244,13 +245,21 @@ class UserInquiry(models.Model):
         help_text=_("Current number of used inquiries."),
     )
 
-    limit_raw = models.PositiveIntegerField(default=2)
+    limit_raw = models.PositiveIntegerField(default=_default_limit)
 
     @property
     def limit(self):
         if self.premium_inquiries:
             return self.limit_raw + self.premium_inquiries.INQUIRIES_LIMIT
         return self.limit_raw
+
+    @property
+    def limit_to_show(self) -> int:
+        return (
+            self._default_limit + self.premium_inquiries.INQUIRIES_LIMIT
+            if self.premium_inquiries
+            else self._default_limit
+        )
 
     @property
     def counter(self):
@@ -270,6 +279,10 @@ class UserInquiry(models.Model):
     def left(self):
         return self.limit - self.counter
 
+    @property
+    def left_to_show(self):
+        return self.limit - self.counter
+
     def reset(self):
         """Reset current counter"""
         self.counter_raw = 0
@@ -282,6 +295,15 @@ class UserInquiry(models.Model):
         self.plan = InquiryPlan.basic()
         self.counter_raw = 0
         self.limit_raw = self.plan.limit
+        self.save()
+
+    def reset_plan(self):
+        self.plan = InquiryPlan.basic()
+        self.limit_raw = self.plan.limit
+
+        if self.counter_raw >= self.limit_raw:
+            self.counter_raw = self.limit_raw
+
         self.save()
 
     @property

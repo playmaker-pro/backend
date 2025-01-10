@@ -6558,6 +6558,9 @@ components:
         period:
           type: number
           description: "Number of days the profile is premium"
+        is_trial:
+          type: boolean
+          description: "Is current subscription a trial?"
 
     TransferStatusGet:
       type: object

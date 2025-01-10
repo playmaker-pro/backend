@@ -56,3 +56,11 @@ class ProductAdmin(admin.ModelAdmin):
     )
     list_filter = ("visible", "ref")
     search_fields = ("name", "ref")
+
+
+@admin.register(models.PremiumProfile)
+class PremiumProfileAdmin(admin.ModelAdmin): ...
+
+
+@admin.register(models.PremiumProduct)
+class PremiumProductAdmin(admin.ModelAdmin): ...

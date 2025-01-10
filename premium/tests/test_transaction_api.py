@@ -139,6 +139,10 @@ def test_buy_premium_year_other(api_client, coach_profile, product_premium_other
 
 def test_buy_L_inquiries(api_client, trial_premium_player_profile, product_inquiries_L):
     api_client.force_authenticate(user=trial_premium_player_profile.user)
+    trial_premium_player_profile.user.userinquiry.counter = 2
+    trial_premium_player_profile.user.userinquiry.premium_inquiries.current_counter = 10
+    trial_premium_player_profile.user.userinquiry.save()
+    trial_premium_player_profile.user.userinquiry.premium_inquiries.save()
     url = create_transaction_url(product_inquiries_L.id)
     response = api_client.post(url)
 
@@ -155,7 +159,10 @@ def test_buy_L_inquiries(api_client, trial_premium_player_profile, product_inqui
     )
     assert trial_premium_player_profile.user.userinquiry.limit_raw == 5
     assert trial_premium_player_profile.user.userinquiry.limit == 15
-    assert trial_premium_player_profile.user.userinquiry.left == 15
+    assert trial_premium_player_profile.user.userinquiry.left == 3
+    assert trial_premium_player_profile.user.userinquiry.counter_raw == 2
+    assert trial_premium_player_profile.user.userinquiry.limit_to_show == 12
+    assert trial_premium_player_profile.user.userinquiry.left_to_show == 3
     assert trial_premium_player_profile.premium_products.trial_tested
 
 
@@ -163,6 +170,10 @@ def test_buy_XL_inquiries(
     api_client, trial_premium_player_profile, product_inquiries_XL
 ):
     api_client.force_authenticate(user=trial_premium_player_profile.user)
+    trial_premium_player_profile.user.userinquiry.counter = 2
+    trial_premium_player_profile.user.userinquiry.premium_inquiries.current_counter = 10
+    trial_premium_player_profile.user.userinquiry.save()
+    trial_premium_player_profile.user.userinquiry.premium_inquiries.save()
     url = create_transaction_url(product_inquiries_XL.id)
     response = api_client.post(url)
 
@@ -179,14 +190,32 @@ def test_buy_XL_inquiries(
     )
     assert trial_premium_player_profile.user.userinquiry.limit_raw == 7
     assert trial_premium_player_profile.user.userinquiry.limit == 17
-    assert trial_premium_player_profile.user.userinquiry.left == 17
+    assert trial_premium_player_profile.user.userinquiry.left == 5
+    assert trial_premium_player_profile.user.userinquiry.left_to_show == 5
+    assert trial_premium_player_profile.user.userinquiry.limit_to_show == 12
     assert trial_premium_player_profile.premium_products.trial_tested
+
+
+def test_buy_inquiries_with_some_left(
+    api_client, trial_premium_player_profile, product_inquiries_L
+):
+    api_client.force_authenticate(user=trial_premium_player_profile.user)
+    url = create_transaction_url(product_inquiries_L.id)
+    response = api_client.post(url)
+
+    assert response.status_code == 400
+    assert response.json() == "You need to use all inquiries before buying new ones."
 
 
 def test_buy_XXL_inquiries(
     api_client, trial_premium_player_profile, product_inquiries_XXL
 ):
     api_client.force_authenticate(user=trial_premium_player_profile.user)
+    trial_premium_player_profile.user.userinquiry.counter = 2
+    trial_premium_player_profile.user.userinquiry.premium_inquiries.current_counter = 10
+    trial_premium_player_profile.user.userinquiry.save()
+    trial_premium_player_profile.user.userinquiry.premium_inquiries.save()
+
     url = create_transaction_url(product_inquiries_XXL.id)
     response = api_client.post(url)
 
@@ -202,8 +231,11 @@ def test_buy_XXL_inquiries(
         == product_inquiries_XXL.name
     )
     assert trial_premium_player_profile.user.userinquiry.limit_raw == 12
+    assert trial_premium_player_profile.user.userinquiry.counter_raw == 2
     assert trial_premium_player_profile.user.userinquiry.limit == 22
-    assert trial_premium_player_profile.user.userinquiry.left == 22
+    assert trial_premium_player_profile.user.userinquiry.left == 10
+    assert trial_premium_player_profile.user.userinquiry.left_to_show == 10
+    assert trial_premium_player_profile.user.userinquiry.limit_to_show == 12
     assert trial_premium_player_profile.premium_products.trial_tested
 
 
@@ -256,12 +288,12 @@ def test_extend_premium_with_trial(
     assert player_profile.user.userinquiry.limit_raw == 2
     assert player_profile.user.userinquiry.limit == 12
     assert player_profile.user.userinquiry.left == 12
-    assert not player_profile.premium_products.trial_tested
+    assert player_profile.premium_products.trial_tested
 
     with pytest.raises(ValueError) as exc:
         player_profile.premium_products.setup_premium_profile(PremiumType.TRIAL)
 
-    assert str(exc.value) == "Cannot activate trial on active premium subscription."
+    assert str(exc.value) == "Trial already tested or cannot be set."
 
 
 def test_buy_premium_for_player_after_trial_expiration(

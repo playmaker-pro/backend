@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 from django.utils import timezone
 
+from mailing.models import UserEmailOutbox
 from payments.models import Transaction
 from premium.models import PremiumType
 
@@ -16,41 +17,8 @@ def mck_tpay_parser():
         yield mck
 
 
-def test_buy_L_inquiries(product_inquiries_L, player_profile):
-    user = player_profile.user
-
-    transaction = Transaction.objects.create(product=product_inquiries_L, user=user)
-    transaction.success()
-
-    assert user.userinquiry.plan.type_ref == product_inquiries_L.name
-    assert user.userinquiry.limit == 5
-    assert user.userinquiry.left == 5
-
-
-def test_buy_XL_inquiries(product_inquiries_XL, player_profile):
-    user = player_profile.user
-
-    transaction = Transaction.objects.create(product=product_inquiries_XL, user=user)
-    transaction.success()
-
-    assert user.userinquiry.plan.type_ref == product_inquiries_XL.name
-    assert user.userinquiry.limit == 7
-    assert user.userinquiry.left == 7
-
-
-def test_buy_XXL_inquiries(product_inquiries_XXL, player_profile):
-    user = player_profile.user
-    transaction = Transaction.objects.create(product=product_inquiries_XXL, user=user)
-    transaction.success()
-
-    assert user.userinquiry.plan.type_ref == product_inquiries_XXL.name
-    assert user.userinquiry.limit == 12
-    assert user.userinquiry.left == 12
-
-
 def test_buy_premium(product_premium_player_month, player_profile):
     user = player_profile.user
-
     transaction = Transaction.objects.create(
         product=product_premium_player_month, user=user
     )
@@ -64,7 +32,7 @@ def test_buy_premium(product_premium_player_month, player_profile):
 
 
 def test_buy_inquiries_for_profile_with_premium(
-    player_profile, product_premium_player_month
+    player_profile, product_premium_player_month, product_inquiries_L
 ):
     user = player_profile.user
     transaction_premium = Transaction.objects.create(
@@ -74,6 +42,13 @@ def test_buy_inquiries_for_profile_with_premium(
 
     assert player_profile.is_premium
     assert player_profile.user.userinquiry.plan.type_ref == "BASIC"
+
+    transaction_inquiries = Transaction.objects.create(
+        product=product_inquiries_L, user=user
+    )
+    transaction_inquiries.success()
+
+    assert player_profile.user.userinquiry.plan.type_ref == "PREMIUM_INQUIRIES_L"
 
 
 def test_check_if_premium_inquiries_refresh(
@@ -146,7 +121,9 @@ def test_check_if_premium_inquiries_refresh(
     transaction.success()
 
     assert user.userinquiry.left == 3
+    assert user.userinquiry.left_to_show == 3
     assert user.userinquiry.limit == 15
+    assert user.userinquiry.limit_to_show == 12
     assert user.userinquiry.counter == 12
     assert user.userinquiry.counter_raw == 2
     assert user.userinquiry.limit_raw == 5
@@ -159,19 +136,14 @@ def test_check_if_premium_inquiries_refresh(
     )
     new_current_date = timezone.now().date()
 
-    assert user.userinquiry.left == 13
-    assert user.userinquiry.limit == 15
+    assert user.userinquiry.left == 10
+    assert user.userinquiry.limit == 12
     assert user.userinquiry.counter == 2
     assert user.userinquiry.counter_raw == 2
-    assert user.userinquiry.limit_raw == 5
+    assert user.userinquiry.limit_raw == 2
 
     current_updated_at_date = (
         player_profile.premium_products.inquiries.counter_updated_at.date()
-    )
-
-    assert (
-        current_updated_at_date == new_current_date
-        and current_updated_at_date == primary_date + timedelta(days=60, hours=2)
     )
     assert player_profile.premium_products.inquiries.current_counter == 0
 
@@ -202,7 +174,16 @@ def test_premium_inquiries_on_trial(
     assert user.userinquiry.limit_raw == 2
     assert trial_premium_coach_profile.premium_products.inquiries.current_counter == 3
 
+    assert not UserEmailOutbox.objects.filter(
+        recipient=trial_premium_coach_profile.user.email, email_type="PREMIUM_EXPIRED"
+    ).exists()
+
     mck_timezone_now.return_value += timedelta(days=7, hours=1)
+    assert not trial_premium_coach_profile.is_premium
+
+    assert UserEmailOutbox.objects.filter(
+        recipient=trial_premium_coach_profile.user.email, email_type="PREMIUM_EXPIRED"
+    ).exists()
 
     assert user.userinquiry.left == 2
     assert user.userinquiry.limit == 2
@@ -231,17 +212,22 @@ def test_premium_inquiries_on_trial(
 
     mck_timezone_now.return_value += timedelta(days=30, hours=1)
 
+    assert user.userinquiry.limit == 12
+    assert user.userinquiry.left == 12
+    assert user.userinquiry.counter == 0
+    assert user.userinquiry.counter_raw == 0
+
     # increment 12x
-    for _ in range(11):
+    for _ in range(12):
         user.userinquiry.increment()
 
-    assert user.userinquiry.left == 1
+    assert user.userinquiry.left == 0
     assert user.userinquiry.limit == 12
-    assert user.userinquiry.counter == 11
-    assert user.userinquiry.counter_raw == 1
+    assert user.userinquiry.counter == 12
+    assert user.userinquiry.counter_raw == 2
     assert user.userinquiry.limit_raw == 2
     assert trial_premium_coach_profile.premium_products.inquiries.current_counter == 10
-    assert user.userinquiry.can_make_request
+    assert not user.userinquiry.can_make_request
     assert (
         trial_premium_coach_profile.premium_products.inquiries.counter_updated_at.date()
         == timezone.now().date()
@@ -250,22 +236,34 @@ def test_premium_inquiries_on_trial(
     transaction = Transaction.objects.create(product=product_inquiries_XL, user=user)
     transaction.success()
 
-    assert user.userinquiry.left == 6
+    assert user.userinquiry.left == 5
     assert user.userinquiry.limit == 17
-    assert user.userinquiry.counter == 11
-    assert user.userinquiry.counter_raw == 1
+    assert user.userinquiry.limit_to_show == 12
+    assert user.userinquiry.left_to_show == 5
+    assert user.userinquiry.counter == 12
+    assert user.userinquiry.counter_raw == 2
     assert user.userinquiry.limit_raw == 7
     assert trial_premium_coach_profile.premium_products.inquiries.current_counter == 10
     assert user.userinquiry.can_make_request
 
-    transaction = Transaction.objects.create(product=product_inquiries_XL, user=user)
-    transaction.success()
+    assert (
+        UserEmailOutbox.objects.filter(
+            recipient=trial_premium_coach_profile.user.email,
+            email_type="PREMIUM_EXPIRED",
+        ).count()
+        == 1
+    )
 
-    assert user.userinquiry.left == 11
-    assert user.userinquiry.limit == 22
-    assert user.userinquiry.counter == 11
-    assert user.userinquiry.counter_raw == 1
-    assert user.userinquiry.limit_raw == 12
+    mck_timezone_now.return_value += timedelta(days=370, hours=1)
+    assert not trial_premium_coach_profile.is_premium
+
+    assert (
+        UserEmailOutbox.objects.filter(
+            recipient=trial_premium_coach_profile.user.email,
+            email_type="PREMIUM_EXPIRED",
+        ).count()
+        == 2
+    )
 
 
 def test_try_trial_after_subscription(player_profile, mck_timezone_now):
@@ -275,7 +273,16 @@ def test_try_trial_after_subscription(player_profile, mck_timezone_now):
     assert player_profile.is_premium
     assert player_profile.is_promoted
 
+    assert not UserEmailOutbox.objects.filter(
+        recipient=player_profile.user.email, email_type="PREMIUM_EXPIRED"
+    ).exists()
+
     mck_timezone_now.return_value += timedelta(days=30, hours=1)
+
+    assert not player_profile.is_premium
+    assert UserEmailOutbox.objects.filter(
+        recipient=player_profile.user.email, email_type="PREMIUM_EXPIRED"
+    ).exists()
 
     assert not player_profile.has_premium_inquiries
     assert not player_profile.is_premium
@@ -284,9 +291,7 @@ def test_try_trial_after_subscription(player_profile, mck_timezone_now):
     with pytest.raises(ValueError) as exc:
         player_profile.premium_products.setup_premium_profile(PremiumType.TRIAL)
 
-    assert (
-        str(exc.value) == "Cannot activate trial, you already had valid subscription."
-    )
+    assert str(exc.value) == "Trial already tested or cannot be set."
 
 
 def test_double_trial(trial_premium_player_profile):
@@ -298,4 +303,54 @@ def test_double_trial(trial_premium_player_profile):
             PremiumType.TRIAL
         )
 
-    assert str(exc.value) == "Trial already tested."
+    assert str(exc.value) == "Trial already tested or cannot be set."
+
+
+@pytest.mark.parametrize("period", (2, 56, 123))
+def test_player_custom_period(player_profile, period, mck_timezone_now):
+    player_profile.premium_products.setup_premium_profile(
+        PremiumType.CUSTOM, period=period
+    )
+
+    assert player_profile.premium_products.trial_tested
+    assert player_profile.premium.subscription_days == timedelta(days=period)
+    assert player_profile.promotion.subscription_days == timedelta(days=period)
+    assert player_profile.premium_products.inquiries.subscription_days == timedelta(
+        days=period
+    )
+
+    assert not UserEmailOutbox.objects.filter(
+        recipient=player_profile.user.email, email_type="PREMIUM_EXPIRED"
+    ).exists()
+
+    mck_timezone_now.return_value += timedelta(days=period, hours=1)
+
+    assert not player_profile.is_premium
+    assert UserEmailOutbox.objects.filter(
+        recipient=player_profile.user.email, email_type="PREMIUM_EXPIRED"
+    ).exists()
+
+
+@pytest.mark.parametrize("period", (2, 56, 123))
+def test_custom_period(coach_profile, period, mck_timezone_now):
+    coach_profile.premium_products.setup_premium_profile(
+        PremiumType.CUSTOM, period=period
+    )
+
+    assert coach_profile.premium_products.trial_tested
+    assert coach_profile.premium.subscription_days == timedelta(days=period)
+    assert coach_profile.promotion.subscription_days == timedelta(days=period)
+    assert coach_profile.premium_products.inquiries.subscription_days == timedelta(
+        days=period
+    )
+
+    assert not UserEmailOutbox.objects.filter(
+        recipient=coach_profile.user.email, email_type="PREMIUM_EXPIRED"
+    ).exists()
+
+    mck_timezone_now.return_value += timedelta(days=period, hours=1)
+    assert not coach_profile.is_premium
+
+    assert UserEmailOutbox.objects.filter(
+        recipient=coach_profile.user.email, email_type="PREMIUM_EXPIRED"
+    ).exists()

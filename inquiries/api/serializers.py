@@ -242,7 +242,7 @@ class InquiryPoolSerializer(serializers.Serializer):
 class UserInquirySerializer(serializers.ModelSerializer):
     plan = InquiryPlanSerializer(read_only=True)
     contact = InquiryContactSerializer(source="user.userpreferences", read_only=True)
-    inquiries_left = serializers.IntegerField(source="left")
+    inquiries_left = serializers.IntegerField(source="left_to_show")
     days_until_expiry = serializers.IntegerField(
         read_only=True, source="get_days_until_next_reference"
     )
@@ -250,7 +250,7 @@ class UserInquirySerializer(serializers.ModelSerializer):
     unlimited = serializers.BooleanField(
         read_only=True, source="has_unlimited_inquiries"
     )
-    limit = serializers.IntegerField(read_only=True)
+    limit = serializers.IntegerField(read_only=True, source="limit_to_show")
     counter = serializers.IntegerField(read_only=True)
     pools = InquiryPoolSerializer(source="*", read_only=True)
 

@@ -8,6 +8,7 @@ from django.db import models
 from django.utils import timezone
 
 from inquiries.models import InquiryPlan
+from mailing.models import EmailTemplate, UserEmailOutbox
 from payments.models import Transaction
 from premium.utils import get_date_days_after
 
@@ -16,6 +17,9 @@ class PremiumType(Enum):
     YEAR = "YEAR"
     MONTH = "MONTH"
     TRIAL = "TRIAL"
+    CUSTOM = "CUSTOM"
+
+    _custom_periods = {}
 
     @property
     def period(self) -> int:
@@ -28,8 +32,12 @@ class PremiumType(Enum):
 
 
 class PremiumProfile(models.Model):
-    period = models.PositiveIntegerField(default=3, help_text="Period in days")
+    _default_trial_period = 3
 
+    period = models.PositiveIntegerField(
+        default=_default_trial_period, help_text="Period in days"
+    )
+    is_trial = models.BooleanField(default=False)
     product = models.OneToOneField(
         "PremiumProduct", on_delete=models.PROTECT, related_name="premium"
     )
@@ -39,6 +47,22 @@ class PremiumProfile(models.Model):
     @property
     def subscription_days(self) -> timedelta:
         return self.valid_until.date() - self.valid_since.date()
+
+    @property
+    def should_email_be_sent(self) -> bool:
+        if self.product.profile:
+            return not UserEmailOutbox.objects.filter(
+                recipient=self.product.profile.user.email,
+                sent_date__gte=self.valid_until,
+            ).exists()
+        return False
+
+    def sent_email_that_premium_expired(self) -> None:
+        template = EmailTemplate.objects.get(
+            email_type=EmailTemplate.EmailType.PREMIUM_EXPIRED
+        )
+        schema = template.create_email_schema(self.product.profile.user)
+        EmailTemplate.send_email(schema)
 
     def _fresh_init(self) -> None:
         """Initialize the premium profile."""
@@ -57,13 +81,28 @@ class PremiumProfile(models.Model):
     def is_active(self) -> bool:
         if not self.valid_until:
             return False
-        return self.valid_until > timezone.now()
+        elif self.valid_until <= timezone.now():
+            if self.should_email_be_sent:
+                self.sent_email_that_premium_expired()
+            return False
+        return True
+
+    def __getattribute__(self, item):
+        return super().__getattribute__(item)
 
     def setup(self, premium_type: PremiumType = PremiumType.TRIAL) -> None:
         """Setup the premium profile."""
+        if premium_type == PremiumType.TRIAL:
+            self.is_trial = True
         self.period = premium_type.period
         self._refresh()
         self.product.setup_premium_products(premium_type)
+
+    def setup_by_days(self, days: int) -> None:
+        """Setup the premium profile by days."""
+        self.period = days
+        self._refresh()
+        self.product.setup_premium_products(PremiumType.CUSTOM, period=days)
 
 
 class CalculatePMScoreProduct(models.Model):
@@ -139,9 +178,9 @@ class PromoteProfileProduct(models.Model):
     def days_left(self):
         return math.ceil((self.valid_until - timezone.now()).total_seconds() / 86400)
 
-    def refresh(self, premium_type: PremiumType) -> None:
+    def refresh(self, premium_type: PremiumType, period: int = None) -> None:
         """Refresh the validity of the promotion."""
-        self.days_count = premium_type.period
+        self.days_count = period or premium_type.period
         if self.is_active:
             self.valid_until = get_date_days_after(self.valid_until, self.days_count)
         else:
@@ -181,6 +220,7 @@ class PremiumInquiriesProduct(models.Model):
         self.current_counter = 0
         self.counter_updated_at = timezone.now()
         self.save()
+        self.product.profile.user.userinquiry.reset_plan()
 
     def check_refresh(self) -> None:
         should_refresh_at = self.counter_updated_at + timedelta(days=30)
@@ -199,9 +239,10 @@ class PremiumInquiriesProduct(models.Model):
             return False
         return self.valid_until > timezone.now()
 
-    def refresh(self, premium_type: PremiumType) -> None:
+    def refresh(self, premium_type: PremiumType, period: int = None) -> None:
         """Refresh the validity of the premium inquiries."""
-        period = premium_type.period
+        period = period or premium_type.period
+
         if self.is_active:
             self.valid_until = get_date_days_after(self.valid_until, days=period)
         else:
@@ -263,37 +304,36 @@ class PremiumProduct(models.Model):
         )
 
     def setup_premium_profile(
-        self, premium_type: PremiumType = PremiumType.TRIAL
+        self, premium_type: PremiumType = PremiumType.TRIAL, period: int = None
     ) -> "PremiumProfile":
         """Create/refresh premium profile"""
         premium, created = PremiumProfile.objects.get_or_create(product=self)
 
         if self.trial_tested and premium_type == PremiumType.TRIAL:
-            raise ValueError("Trial already tested.")
-        elif premium.is_active and premium_type == PremiumType.TRIAL:
-            raise ValueError("Cannot activate trial on active premium subscription.")
-        elif premium.valid_until and premium_type == PremiumType.TRIAL:
-            raise ValueError(
-                "Cannot activate trial, you already had valid subscription."
-            )
+            raise ValueError("Trial already tested or cannot be set.")
 
-        premium.setup(premium_type)
+        if premium_type == PremiumType.CUSTOM and period:
+            premium.setup_by_days(period)
+        elif premium_type != PremiumType.CUSTOM:
+            premium.setup(premium_type)
+        else:
+            raise ValueError("Custom period requires period value.")
 
-        if premium_type == PremiumType.TRIAL:
+        if not self.trial_tested:
             self.trial_tested = True
             self.save(update_fields=["trial_tested"])
 
         return premium
 
     def setup_premium_products(
-        self, premium_type: PremiumType = PremiumType.TRIAL
+        self, premium_type: PremiumType = PremiumType.TRIAL, period: int = None
     ) -> None:
         """Create/refresh all premium products for the profile."""
         inquiries, _ = PremiumInquiriesProduct.objects.get_or_create(product=self)
         promotion, _ = PromoteProfileProduct.objects.get_or_create(product=self)
 
-        inquiries.refresh(premium_type)
-        promotion.refresh(premium_type)
+        inquiries.refresh(premium_type, period)
+        promotion.refresh(premium_type, period)
 
         if self.profile.__class__.__name__ == "PlayerProfile":
             calculate_pms, calculate_pms_created = (
@@ -305,7 +345,7 @@ class PremiumProduct(models.Model):
 
     def save(self, *args, **kwargs):
         if self.profile_uuid is None and self.profile:
-            self.uuid = self.profile.uuid
+            self.profile_uuid = self.profile.uuid
         super().save(*args, **kwargs)
 
 
@@ -327,8 +367,13 @@ class Product(models.Model):
         if not user.profile:
             raise Exception("User has no profile.")
 
-        if self.ref == self.ProductReference.INQUIRIES and not user.profile.is_premium:
-            raise PermissionError("Product is available only for premium users.")
+        if self.ref == self.ProductReference.INQUIRIES:
+            if not user.profile.is_premium:
+                raise PermissionError("Product is available only for premium users.")
+            if user.userinquiry.left:
+                raise PermissionError(
+                    "You need to use all inquiries before buying new ones."
+                )
 
         profile_class_name = user.profile.__class__.__name__
         if self.ref == self.ProductReference.PREMIUM and (

@@ -20,4 +20,4 @@ class PromoteProfileProductSerializer(serializers.ModelSerializer):
 class PremiumProfileProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = PremiumProfile
-        fields = ("valid_since", "valid_until", "period", "is_active")
+        fields = ("valid_since", "valid_until", "period", "is_active", "is_trial")

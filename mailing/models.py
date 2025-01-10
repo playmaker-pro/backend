@@ -40,6 +40,12 @@ class EmailTemplate(models.Model):
                 email_type=self.model.EmailType.INQUIRY_LIMIT, is_default=True
             )
 
+        def premium_profile_expired_template(self) -> "EmailTemplate":
+            """Return default email template about reaching inquiry limit."""
+            return self.get(
+                email_type=self.model.EmailType.PREMIUM_EXPIRED, is_default=True
+            )
+
         def can_sent_inquiry_limit_reached_email(
             self, user: settings.AUTH_USER_MODEL
         ) -> bool:
@@ -116,6 +122,7 @@ class EmailTemplate(models.Model):
         PASSWORD_CHANGE = "PASSWORD_CHANGE", "PASSWORD_CHANGE"
         INQUIRY_LIMIT = "INQUIRY_LIMIT", "INQUIRY_LIMIT"
         SYSTEM = "SYSTEM", "SYSTEM"
+        PREMIUM_EXPIRED = "PREMIUM_EXPIRED", "PREMIUM_EXPIRED"
 
     subject = models.CharField(max_length=255)
     body = models.TextField(help_text=EMAIL_PATTERN)

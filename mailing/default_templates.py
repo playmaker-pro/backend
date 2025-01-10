@@ -39,3 +39,14 @@ Zespół PlayMaker.pro
 
 Wiadomość została wygenerowana automatycznie. Prosimy na nią nie odpowiadać.
 W przypadku pytań, jesteśmy dostępni pod adresem: biuro@playmaker.pro"""
+
+PREMIUM_PROFILE_EXPIRED = """Cześć, 
+
+Twoje konto Premium na PLAYMAKER.pro wygasło. Nie przegap korzyści, jakie daje dostęp do zaawansowanych funkcji! 
+Kliknij w link i odnów je teraz 👉 https://www.playmaker.pro/premium 
+
+Do zobaczenia na platformie! ⚽
+Zespół PLAYMAKER.pro
+
+Wiadomość została wygenerowana automatycznie. Prosimy na nią nie odpowiadać.
+W przypadku pytań, jesteśmy dostępni pod adresem: biuro@playmaker.pro"""

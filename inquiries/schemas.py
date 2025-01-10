@@ -21,6 +21,6 @@ class InquiryPlanTypeRef(str, _Enum):
         return {
             InquiryPlanTypeRef.BASIC: 0,
             InquiryPlanTypeRef.PREMIUM_L: 7.99,
-            InquiryPlanTypeRef.PREMIUM_XL: 12.99,
+            InquiryPlanTypeRef.PREMIUM_XL: 10.99,
             InquiryPlanTypeRef.PREMIUM_XXL: 19.99,
         }[self]

@@ -29,20 +29,9 @@ def create_new_objects(apps, schema_editor):
             else "Podstawowy plan",
         }
         if inquiry_plan_ref == "BASIC":
-            inquiry_plan = InquiryPlan.objects.create(default=True, **data)
+            InquiryPlan.objects.create(default=True, **data)
         else:
-            inquiry_plan = InquiryPlan.objects.create(**data)
-
-
-def reset_all_inquiry_plans(apps, schema_editor):
-    UserInquiry = apps.get_model("inquiries", "UserInquiry")
-    InquiryPlan = apps.get_model("inquiries", "InquiryPlan")
-
-    for user_inquiry in UserInquiry.objects.all():
-        user_inquiry.plan = InquiryPlan.objects.get(default=True)
-        user_inquiry.counter_raw = 0
-        user_inquiry.limit_raw = user_inquiry.plan.limit
-        user_inquiry.save()
+            InquiryPlan.objects.create(**data)
 
 
 class Migration(migrations.Migration):
@@ -93,8 +82,5 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(
             create_new_objects, reverse_code=migrations.RunPython.noop
-        ),
-        migrations.RunPython(
-            reset_all_inquiry_plans, reverse_code=migrations.RunPython.noop
         ),
     ]
