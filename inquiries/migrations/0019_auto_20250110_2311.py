@@ -23,7 +23,7 @@ def reward_with_premium_profile(apps, schema_editor):
 
         if days_left > 20:
             premium_profile_period = 60
-        elif 20 <= days_left <= 10:
+        elif 10 <= days_left <= 20:
             premium_profile_period = 30
         elif 10 > days_left > 2:
             premium_profile_period = 7
