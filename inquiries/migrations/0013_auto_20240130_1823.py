@@ -32,19 +32,19 @@ def create_initial_premium_plans(apps, schema_editor):
         name="Premium 5",
         description="Additional 5 inquiries",
         limit=5,
-        type_ref=_InquiryPlanTypeRef.PREMIUM5,
+        type_ref="PREMIUM_INQUIRIES_5",
     )
     InquiryPlan.objects.get_or_create(
         name="Premium 10",
         description="Additional 10 inquiries",
         limit=10,
-        type_ref=_InquiryPlanTypeRef.PREMIUM10,
+        type_ref="PREMIUM_INQUIRIES_10",
     )
     InquiryPlan.objects.get_or_create(
         name="Premium 25",
         description="Additional 25 inquiries",
         limit=25,
-        type_ref=_InquiryPlanTypeRef.PREMIUM25,
+        type_ref="PREMIUM_INQUIRIES_25",
     )
 
 

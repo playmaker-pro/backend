@@ -1,10 +1,7 @@
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 from inquiries.models import UserInquiry
-from profiles.views import (
-    get_profile_model,
-)  # @todo this shoudl goes to utilities, views and commands are using this utility
 
 User = get_user_model()
 
@@ -14,4 +11,4 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         for inq in UserInquiry.objects.all():
-            inq.reset()
+            inq.reset_inquiries()

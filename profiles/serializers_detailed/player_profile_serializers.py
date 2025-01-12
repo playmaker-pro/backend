@@ -54,7 +54,13 @@ class PlayerProfileViewProfileEnumChoicesSerializer(ProfileEnumChoicesSerializer
 class PlayerMetricsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PlayerMetrics
-        fields = ("pm_score", "season_score", "pm_score_state")
+        fields = (
+            "pm_score",
+            "season_score",
+            "pm_score_state",
+            "pm_score_change",
+            "pm_score_history",
+        )
 
 
 class PlayerProfileViewSerializer(BaseProfileSerializer):
@@ -80,6 +86,9 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
             "team_history_object",
             "visits",
             "data_fulfill_status",
+            "is_promoted",
+            "is_premium",
+            "promotion",
         )
 
     player_positions = ProfileVIewPlayerProfilePositionSerializer(

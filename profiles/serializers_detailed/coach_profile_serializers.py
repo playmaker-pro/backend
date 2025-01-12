@@ -53,6 +53,9 @@ class CoachProfileViewSerializer(BaseProfileSerializer):
             "verification_stage",
             "team_history_object",
             "visits",
+            "is_promoted",
+            "is_premium",
+            "promotion",
         )
 
     coach_role = ProfileEnumChoicesSerializer(model=CoachProfile, required=False)

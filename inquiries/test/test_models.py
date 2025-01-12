@@ -1,7 +1,10 @@
 import datetime
+from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 from django.test import TestCase
+from django.utils import timezone
 
 from inquiries.models import (
     InquiryLogMessage,
@@ -9,16 +12,18 @@ from inquiries.models import (
     InquiryRequest,
     UserInquiryLog,
 )
+from premium.models import PremiumType
 from roles import definitions
 from users.models import User
 from utils import testutils as utils
+from utils.factories import CoachProfileFactory, PlayerProfileFactory
 from utils.factories.inquiry_factories import InquiryRequestFactory
 from utils.factories.user_factories import UserFactory
 
 utils.silence_explamation_mark()
 
 
-class InitialClassCreationTest(TestCase):
+class TestModels(TestCase):
     """
     When Coach user is created we would like to add different plan than Player.
 
@@ -27,18 +32,89 @@ class InitialClassCreationTest(TestCase):
     """
 
     def setUp(self):
-        self.player = User.objects.create(
-            email="username-player", declared_role=definitions.PLAYER_SHORT
+        self.player = PlayerProfileFactory(
+            user__email="username-player", user__declared_role=definitions.PLAYER_SHORT
         )
-        self.coach = User.objects.create(
-            email="username-coach", declared_role=definitions.COACH_SHORT
+        self.coach = CoachProfileFactory(
+            user__email="username-coach", user__declared_role=definitions.COACH_SHORT
         )
 
     def test_default_plan_should_exist(self):
         assert InquiryPlan.objects.get(default=True)
 
     def test_player_user_should_have_basic_plan(self):
-        assert self.player.userinquiry.plan.default is True
+        assert self.player.user.userinquiry.plan.default is True
+
+    def test_plans_with_premium_profile(self):
+        assert self.player.user.userinquiry.counter == 0
+        assert self.player.user.userinquiry.limit == 2
+        assert self.player.user.userinquiry.plan.type_ref == "BASIC"
+
+        premium = self.player.premium_products.setup_premium_profile()
+
+        assert self.player.has_premium_inquiries
+        assert self.player.user.userinquiry.counter == 0
+        assert self.player.user.userinquiry.limit == 12
+        assert self.player.user.userinquiry.plan.type_ref == "BASIC"
+
+        self.player.user.userinquiry.increment()
+
+        assert self.player.user.userinquiry.counter == 1
+        assert self.player.user.userinquiry.limit == 12
+        assert self.player.user.userinquiry.counter_raw == 0
+        assert self.player.user.userinquiry.premium_inquiries.current_counter == 1
+
+        plan = InquiryPlan.objects.get(type_ref="PREMIUM_INQUIRIES_XXL")
+        self.player.user.userinquiry.set_new_plan(plan)
+        self.player.user.userinquiry.increment()
+
+        assert self.player.user.userinquiry.counter == 2
+        assert self.player.user.userinquiry.limit == 22
+        assert self.player.user.userinquiry.counter_raw == 0
+        assert self.player.user.userinquiry.premium_inquiries.current_counter == 2
+
+        with patch(
+            "django.utils.timezone.now",
+            return_value=timezone.now() + timedelta(days=31),
+        ):
+            assert not self.player.has_premium_inquiries
+            assert self.player.user.userinquiry.counter == 0
+            assert self.player.user.userinquiry.limit == 12
+
+    def test_premium_inquiries_will_refresh(self):
+        assert self.player.user.userinquiry.counter == 0
+        assert self.player.user.userinquiry.limit == 2
+        assert not self.player.has_premium_inquiries
+
+        self.player.premium_products.setup_premium_profile(PremiumType.YEAR)
+
+        assert self.player.has_premium_inquiries
+        assert self.player.user.userinquiry.counter == 0
+        assert self.player.user.userinquiry.limit == 12
+
+        self.player.user.userinquiry.increment()
+        self.player.user.userinquiry.increment()
+
+        assert self.player.user.userinquiry.counter == 2
+        assert self.player.user.userinquiry.limit == 12
+        assert self.player.user.userinquiry.premium_inquiries.current_counter == 2
+        assert (
+            self.player.user.userinquiry.premium_inquiries.counter_updated_at.date()
+            == timezone.now().date()
+        )
+
+        with patch(
+            "django.utils.timezone.now",
+            return_value=timezone.now() + timedelta(days=31),
+        ):
+            assert self.player.has_premium_inquiries
+            assert self.player.user.userinquiry.counter == 0
+            assert self.player.user.userinquiry.limit == 12
+            assert self.player.user.userinquiry.premium_inquiries.current_counter == 0
+            assert (
+                self.player.user.userinquiry.premium_inquiries.counter_updated_at.date()
+                == timezone.now().date()
+            )
 
 
 class ModelMethodsRequest(TestCase):

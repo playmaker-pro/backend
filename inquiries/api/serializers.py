@@ -110,7 +110,9 @@ class InquiryUserDataSerializer(_BaseUserDataSerializer):
 
 class InquiryRequestSerializer(serializers.ModelSerializer):
     sender_object = InquiryUserDataSerializer(read_only=True, source="sender")
-    recipient_object = InquiryUserDataSerializer(read_only=True, source="recipient")
+    recipient_object = InquiryUserDataSerializer(
+        read_only=True, source="recipient", required=False
+    )
     recipient_profile_uuid = serializers.UUIDField(write_only=True)
 
     class Meta:
@@ -189,6 +191,14 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         inquiry_request.save(recipient_profile_uuid=recipient_profile_uuid)
         return inquiry_request
 
+    @property
+    def data(self) -> dict:
+        """Get data, but remove contact information if request is not accepted yet"""
+        data = super().data
+        if data.get("status") != _models.InquiryRequest.STATUS_ACCEPTED:
+            data["recipient_object"]["contact"] = {}
+        return data
+
 
 class InquiryPlanSerializer(serializers.ModelSerializer):
     class Meta:
@@ -211,15 +221,39 @@ class UserInquiryLogSerializer(serializers.ModelSerializer):
         return obj.log_message_body
 
 
+class InquiryPoolDetailsSerializer(serializers.Serializer):
+    used = serializers.IntegerField()
+    total = serializers.IntegerField()
+
+    def to_representation(self, data):
+        if isinstance(data, tuple):
+            return {
+                "used": data[0],
+                "total": data[1],
+            }
+        return super().to_representation(data)
+
+
+class InquiryPoolSerializer(serializers.Serializer):
+    premium_profile = InquiryPoolDetailsSerializer(source="premium_profile_pool")
+    regular = InquiryPoolDetailsSerializer(source="regular_pool")
+
+
 class UserInquirySerializer(serializers.ModelSerializer):
     plan = InquiryPlanSerializer(read_only=True)
     contact = InquiryContactSerializer(source="user.userpreferences", read_only=True)
-    inquiries_left = serializers.IntegerField(source="left")
+    inquiries_left = serializers.IntegerField(source="left_to_show")
     days_until_expiry = serializers.IntegerField(
         read_only=True, source="get_days_until_next_reference"
     )
     logs = UserInquiryLogSerializer(many=True, read_only=True)
+    unlimited = serializers.BooleanField(
+        read_only=True, source="has_unlimited_inquiries"
+    )
+    limit = serializers.IntegerField(read_only=True, source="limit_to_show")
+    counter = serializers.IntegerField(read_only=True)
+    pools = InquiryPoolSerializer(source="*", read_only=True)
 
     class Meta:
         model = _models.UserInquiry
-        fields = "__all__"
+        exclude = ("counter_raw", "limit_raw")

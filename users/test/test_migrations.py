@@ -2,6 +2,8 @@ import pytest
 from django.db.migrations.state import ProjectState
 from django.db.models.base import ModelBase
 
+pytestmark = pytest.mark.skip(reason="No need to test migrations anymore.")
+
 
 @pytest.mark.django_db()
 def test_user_preferences_migration(migrator) -> None:

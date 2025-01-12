@@ -60,7 +60,7 @@ class TpayTransactionBody(_BaseModel):
 
         class TpayNotification(_BaseModel):
             email: str
-            url: _HttpUrl
+            url: str
 
         payerUrls: TpayPayerUrls
         notification: TpayNotification

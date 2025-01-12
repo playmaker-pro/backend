@@ -1,0 +1,28 @@
+from django.urls import path
+
+from .views import ProductInfoView, ProductView
+
+app_name = "premium"
+
+urlpatterns = [
+    path(
+        "products/inquiries/",
+        ProductInfoView.as_view({"get": "list_inquiry_products"}),
+        name="list_inquiry_products",
+    ),
+    path(
+        "products/premium/",
+        ProductInfoView.as_view({"get": "get_premium_products"}),
+        name="get_premium_product",
+    ),
+    path(
+        "products/test-premium/",
+        ProductView.as_view({"post": "activate_test_premium_product"}),
+        name="get_test_premium_product",
+    ),
+    path(
+        "transaction/<int:product_id>/create/",
+        ProductView.as_view({"post": "create_transaction"}),
+        name="create_transaction",
+    ),
+]

@@ -4,10 +4,10 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 from inquiries.services import InquireService
 from notifications.mail import mail_admins_about_new_user, mail_role_change_request
-
 from . import models
 
 logger = logging.getLogger(__name__)
@@ -63,3 +63,26 @@ def change_profile_approved_handler(sender, instance, created, **kwargs):
             f"User {user} profile changed to {instance.new} "
             f"sucessfully due to: accepted RoleChangeRequest"
         )
+
+
+@receiver(post_save, sender=models.ProfileVisitation)
+def enforce_visitation_limit(sender, instance, created, **kwargs):
+    """
+    Delete visitations older than 30 days to prevent the database from growing.
+    """
+    if created:
+        cutoff_date = timezone.now() - timezone.timedelta(days=31)
+
+        old_visitations = models.ProfileVisitation.objects.filter(
+            visited=instance.visited, timestamp__lt=cutoff_date
+        )
+        old_visitations.delete()
+
+
+@receiver(post_save, sender=models.PlayerProfile)
+def ensure_metrics_exist(sender, instance, created, **kwargs):
+    """
+    Create metrics for a player profile if they don't exist.
+    """
+    if not hasattr(instance, "playermetrics"):
+        models.PlayerMetrics.objects.get_or_create(player=instance)

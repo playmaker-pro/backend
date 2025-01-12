@@ -15,11 +15,12 @@ class InquiryRequestFactory(factory.django.DjangoModelFactory):
 class InquiryPlanFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = _models.InquiryPlan
-        django_get_or_create = ("name",)
+        django_get_or_create = ("default",)
 
-    name = "Basic"
+    name = "BASIC"
     description = "Basic plan"
-    limit = 5
+    type_ref = "BASIC"
+    limit = 2
     default = True
 
 

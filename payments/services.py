@@ -1,33 +1,30 @@
 from uuid import UUID as _UUID
 
-from django.conf import settings as _settings
-from django.db.models import QuerySet as _QuerySet
+from django.conf import settings
 
-from payments.models import Transaction as _Transaction
-from payments.models import TransactionType as _TransactionType
+from payments.models import Transaction
+from payments.providers.tpay.http_service import TpayHttpService
+from premium.models import Product
 
 
 class TransactionService:
-    @staticmethod
+    def __init__(self, transaction: Transaction) -> None:
+        self.transaction = transaction
+        self.provider = TpayHttpService()
+
+    @classmethod
     def create_new_transaction_object(
-        user: _settings.AUTH_USER_MODEL, transaction_type: _TransactionType
-    ) -> _Transaction:
+        cls, user: settings.AUTH_USER_MODEL, product: Product
+    ) -> "TransactionService":
         """Create new transaction for given type and user"""
-        return _Transaction.objects.create(user=user, transaction_type=transaction_type)
+        transaction = Transaction.objects.create(user=user, product=product)
+        return cls(transaction)
 
     @staticmethod
-    def list_inquiry_transaction_types() -> _QuerySet[_TransactionType]:
-        """List transaction types just for inquiries"""
-        return _TransactionType.objects.filter(
-            ref=_TransactionType.TransactionTypeRef.INQUIRIES, visible=True
-        )
-
-    @staticmethod
-    def get_transaction_type_by_id(transaction_type_id: int) -> _TransactionType:
-        """Get TransactionType by id"""
-        return _TransactionType.objects.get(id=transaction_type_id)
-
-    @staticmethod
-    def get_transaction_by_uuid(transaction_uuid: _UUID) -> _Transaction:
+    def get_transaction_by_uuid(transaction_uuid: _UUID) -> Transaction:
         """Get Transaction by uuid"""
-        return _Transaction.objects.get(uuid=transaction_uuid)
+        return Transaction.objects.get(uuid=transaction_uuid)
+
+    def handle(self) -> Transaction:
+        """Handle transaction"""
+        return self.provider.handle(self.transaction)

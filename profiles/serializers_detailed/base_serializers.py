@@ -20,6 +20,7 @@ from clubs.services import ClubService, LeagueService
 from external_links.serializers import ExternalLinksSerializer
 from labels.services import LabelService
 from labels.utils import fetch_all_labels
+from premium.api.serializers import PromoteProfileProductSerializer
 from profiles.api.errors import (
     InvalidProfileRole,
     NotAOwnerOfTheTeamContributorHTTPException,
@@ -735,6 +736,7 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     transfer_requests = ProfileTransferRequestSerializer(many=True, read_only=True)
     visits = serializers.SerializerMethodField()
     data_fulfill_status = serializers.CharField(required=True)
+    promotion = PromoteProfileProductSerializer(read_only=True)
 
     def get_visits(self, obj: BaseProfile) -> int:
         """Get profile visits from last month."""
