@@ -1,3 +1,4 @@
+import datetime
 import math
 from datetime import timedelta
 from decimal import ROUND_DOWN, Decimal
@@ -223,9 +224,12 @@ class PremiumInquiriesProduct(models.Model):
         self.product.profile.user.userinquiry.reset_plan()
 
     def check_refresh(self) -> None:
-        should_refresh_at = self.counter_updated_at + timedelta(days=30)
-        if self.is_active and timezone.now() > should_refresh_at:
+        if self.is_active and timezone.now() > self.inquiries_refreshed_at:
             self._reset_counter()
+
+    @property
+    def inquiries_refreshed_at(self) -> datetime.datetime:
+        return self.counter_updated_at + timedelta(days=30)
 
     def _fresh_init(self, period: int) -> None:
         """Initialize the premium inquiries."""

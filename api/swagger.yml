@@ -6561,6 +6561,10 @@ components:
         is_trial:
           type: boolean
           description: "Is current subscription a trial?"
+        inquiries_refresh:
+          type: string
+          format: date
+          description: "When the inquiries will be refreshed (10 premium inquiries periodically)"
 
     TransferStatusGet:
       type: object

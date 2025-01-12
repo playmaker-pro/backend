@@ -18,6 +18,17 @@ class PromoteProfileProductSerializer(serializers.ModelSerializer):
 
 
 class PremiumProfileProductSerializer(serializers.ModelSerializer):
+    inquiries_refresh = serializers.DateTimeField(
+        source="product.inquiries.inquiries_refreshed_at"
+    )
+
     class Meta:
         model = PremiumProfile
-        fields = ("valid_since", "valid_until", "period", "is_active", "is_trial")
+        fields = (
+            "valid_since",
+            "valid_until",
+            "period",
+            "is_active",
+            "is_trial",
+            "inquiries_refresh",
+        )
