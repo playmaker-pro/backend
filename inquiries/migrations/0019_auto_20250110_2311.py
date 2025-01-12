@@ -21,11 +21,13 @@ def reward_with_premium_profile(apps, schema_editor):
     for user_inquiry in UserInquiry.objects.filter(limit_raw__gt=5):
         days_left = user_inquiry.left
 
-        if days_left > 20:
+        if days_left >= 20:
             premium_profile_period = 60
-        elif 10 <= days_left <= 20:
+        elif 10 <= days_left < 20:
             premium_profile_period = 30
-        elif 10 > days_left > 2:
+        elif 10 > days_left > 7:
+            premium_profile_period = 14
+        elif 7 >= days_left > 2:
             premium_profile_period = 7
         else:
             premium_profile_period = 0
