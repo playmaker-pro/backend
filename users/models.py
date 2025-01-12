@@ -51,7 +51,7 @@ class UserRoleMixin:
     @property
     def profile(self):
         """Get profile based on declared role"""
-        if role_name := definitions.PROFILE_TYPE_MAP.get(self.role, None):
+        if role_name := definitions.PROFILE_TYPE_MAP.get(self.declared_role, None):
             return getattr(self, f"{role_name}profile", None)
 
     def get_admin_url(self):

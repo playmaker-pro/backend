@@ -1,18 +1,8 @@
 import factory
 
-from payments.models import Transaction, TransactionType
+from payments.models import Transaction
 from utils.factories import UserFactory
-
-
-class TransactionTypeFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = TransactionType
-        django_get_or_create = ("name",)
-
-    name = "Test Type"
-    name_readable = "Test Type Readable"
-    price = 10.00
-    ref = TransactionType.TransactionTypeRef.INQUIRIES
+from utils.factories.premium_factories import ProductFactory
 
 
 class TransactionFactory(factory.django.DjangoModelFactory):
@@ -24,4 +14,4 @@ class TransactionFactory(factory.django.DjangoModelFactory):
         )
 
     user = factory.SubFactory(UserFactory)
-    transaction_type = factory.SubFactory(TransactionTypeFactory)
+    transaction_type = factory.SubFactory(ProductFactory)

@@ -3,6 +3,7 @@ import typing
 import uuid
 from collections import Counter
 from datetime import datetime
+from typing import Optional
 
 from address.models import AddressField
 from django.conf import settings
@@ -30,6 +31,7 @@ from adapters.player_adapter import (
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_profile_external_links
 from mapper.models import Mapper
+from premium.models import PremiumProduct, PremiumProfile, PromoteProfileProduct
 from profiles.errors import VerificationCompletionFieldsWrongSetup
 from profiles.managers import ProfileManager
 from profiles.mixins import TeamObjectsDisplayMixin
@@ -250,15 +252,9 @@ class BaseProfile(models.Model, EventLogMixin):
 
     PROFILE_TYPE = None
     AUTO_VERIFY = False  # flag to perform auto verification of User based on profile. If true - User.state will be switched to Verified  # noqa: E501
-    VERIFICATION_FIELDS = (
-        []
-    )  # this is definition of profile fields which will be threaded as must-have params.  # noqa: E501
-    COMPLETE_FIELDS = (
-        []
-    )  # this is definition of profile fields which will be threaded as mandatory for full profile.  # noqa: E501
-    OPTIONAL_FIELDS = (
-        []
-    )  # this is definition of profile fields which will be threaded optional
+    VERIFICATION_FIELDS = []  # this is definition of profile fields which will be threaded as must-have params.  # noqa: E501
+    COMPLETE_FIELDS = []  # this is definition of profile fields which will be threaded as mandatory for full profile.  # noqa: E501
+    OPTIONAL_FIELDS = []  # this is definition of profile fields which will be threaded optional
 
     data_mapper_changed = None
     verification = models.OneToOneField(
@@ -301,6 +297,16 @@ class BaseProfile(models.Model, EventLogMixin):
     )
     transfer_requests = GenericRelation(
         "ProfileTransferRequest", related_query_name="transfer_requests"
+    )
+    visitation = models.OneToOneField(
+        "Visitation", on_delete=models.PROTECT, null=True, blank=True
+    )
+
+    premium_products = models.OneToOneField(
+        "premium.PremiumProduct",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
     )
 
     def get_absolute_url(self):
@@ -462,6 +468,50 @@ class BaseProfile(models.Model, EventLogMixin):
         """Returns list of video labels for profile"""
         return cls._video_labels.choices
 
+    @property
+    def is_promoted(self) -> bool:
+        """Check if profile is promoted"""
+        return self.premium_products.is_profile_promoted
+
+    @property
+    def promotion(self) -> PromoteProfileProduct:
+        if self.is_promoted:
+            return self.premium_products.promotion
+
+    @property
+    def is_premium(self) -> bool:
+        """Check if profile is promoted"""
+        return self.premium_products.is_profile_premium
+
+    @property
+    def premium(self) -> PremiumProfile:
+        if self.is_premium:
+            return self.premium_products.premium
+
+    @property
+    def premium_already_tested(self) -> bool:
+        return self.premium_products.trial_tested
+
+    @property
+    def has_premium_inquiries(self) -> bool:
+        """Check if profile has premium inquiries"""
+        return self.premium_products.is_premium_inquiries_active
+
+    def ensure_premium_products_exist(self, commit: bool = True) -> None:
+        """Create PremiumProduct for profile if it doesn't exist"""
+        if not self.premium_products:
+            self.premium_products, _ = PremiumProduct.objects.get_or_create(
+                profile_uuid=self.uuid
+            )
+            if commit:
+                self.save()
+
+    def ensure_visitation_exist(self, commit: bool = True) -> None:
+        if self.visitation is None:
+            self.visitation = Visitation.objects.create()
+            if commit:
+                self.save()
+
     def save(self, *args, **kwargs):
         # silent_param = kwargs.get('silent', False)
         # if silent_param is not None:
@@ -476,6 +526,8 @@ class BaseProfile(models.Model, EventLogMixin):
             self.user.save(update_fields=["declared_role"])
 
         self.ensure_verification_stage_exist(commit=False)
+        self.ensure_premium_products_exist(commit=False)
+        self.ensure_visitation_exist(commit=False)
 
         # When profile changes, update data score level
         profile_manager: ProfileManager = ProfileManager()
@@ -1106,10 +1158,14 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         """
         self.external_links = ExternalLinks.objects.create()
 
-    def save(self, *args, **kwargs):
-        # Check if this is a new PlayerProfile instance being created
-        creating = self._state.adding
+    def ensure_playermetrics_exist(self, commit: bool = True) -> None:
+        """Create PlayerMetrics for player if it doesn't exist"""
+        if not hasattr(self, "playermetrics"):
+            PlayerMetrics.objects.create(player=self)
+            if commit:
+                self.save()
 
+    def save(self, *args, **kwargs):
         if not self.mapper:
             self.create_mapper_obj()
 
@@ -1117,9 +1173,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             self.create_external_links_obj()
 
         super().save(*args, **kwargs)
-
-        if creating:
-            PlayerMetrics.objects.create(player=self)
 
     class Meta:
         verbose_name = "Player Profile"
@@ -1163,6 +1216,10 @@ class PlayerMetrics(models.Model):
         default="not_calculated",
         help_text="Defines a status of the player's pm_score.",
     )
+    pm_score_history = models.JSONField(
+        default=dict, verbose_name="PlayMaker Score history"
+    )
+
     season_score = models.JSONField(null=True, blank=True, verbose_name="Season Score")
     season_score_updated = models.DateTimeField(
         null=True, blank=True, verbose_name="Season Score date updated"
@@ -1225,7 +1282,7 @@ class PlayerMetrics(models.Model):
     def get_games_data(
         self, method: typing.Type[API_METHOD] = ScrapperAPI
     ) -> typing.List:
-        player_obj = getattr(self, "player")
+        player_obj = self.player
         games_adapter = PlayerGamesAdapter(
             player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
         )
@@ -1236,7 +1293,7 @@ class PlayerMetrics(models.Model):
     def get_games_summary_data(
         self, method: typing.Type[API_METHOD] = ScrapperAPI
     ) -> typing.List:
-        player_obj = getattr(self, "player")
+        player_obj = self.player
         games_adapter = PlayerGamesAdapter(
             player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
         )
@@ -1247,7 +1304,7 @@ class PlayerMetrics(models.Model):
     def get_season_data(
         self, method: typing.Type[API_METHOD] = ScrapperAPI
     ) -> typing.Dict:
-        player_obj = getattr(self, "player")
+        player_obj = self.player
         stats_adapter = PlayerSeasonStatsAdapter(
             player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
         )
@@ -1258,7 +1315,7 @@ class PlayerMetrics(models.Model):
     def get_season_summary_data(
         self, method: typing.Type[API_METHOD] = ScrapperAPI
     ) -> typing.Dict:
-        player_obj = getattr(self, "player")
+        player_obj = self.player
         stats_adapter = PlayerSeasonStatsAdapter(
             player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
         )
@@ -1268,7 +1325,7 @@ class PlayerMetrics(models.Model):
 
     def get_score(self, method: typing.Type[API_METHOD] = ScrapperAPI) -> dict:
         """get scoring for player"""
-        player_obj = getattr(self, "player")
+        player_obj = self.player
         score_adapter = PlayerScoreAdapter(
             player=player_obj, strategy=strategy.AlwaysUpdate, api_method=method
         )
@@ -1284,7 +1341,18 @@ class PlayerMetrics(models.Model):
 
     def update_pm_score(self, *args, **kwargs) -> None:
         """Update PlayMaker Score"""
+        pm_score = args[0]
+        if pm_score and float(pm_score) > 0:
+            self.pm_score_history[str(timezone.now().date())] = pm_score
+
         self._update_cached_field("pm_score", *args, **kwargs)
+
+    @property
+    def pm_score_change(self) -> Optional[float]:
+        if len(self.pm_score_history) > 1:
+            last_score = list(self.pm_score_history.values())[-2]
+            current_score = list(self.pm_score_history.values())[-1]
+            return round(current_score - last_score, 2)
 
     def update_season_score(self, *args, **kwargs) -> None:
         """Update Season Score"""
@@ -1489,6 +1557,20 @@ class ClubProfile(BaseProfile):
         Get field_name of specific role of ClubProfile
         """
         return "club_role"
+
+    def create_external_links_obj(self) -> None:
+        """
+        Create a new ExternalLinks object and associate it with this ClubProfile instance.
+        """
+        self.external_links = ExternalLinks.objects.create()
+
+    def save(self, *args, **kwargs):
+        if not self.external_links:
+            self.create_external_links_obj()
+        super().save(*args, **kwargs)
+        # Update or create external links associated with the club.
+        # This ensures that the club's external links are always up-to-date.
+        create_or_update_profile_external_links(self)
 
     class Meta:
         verbose_name = "Club Profile"
@@ -1893,6 +1975,9 @@ class GuestProfile(BaseProfile):
     custom_role = models.CharField(
         _("Custom Role"), max_length=255, blank=True, null=True
     )
+    external_links = models.OneToOneField(
+        ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
+    )
 
     @property
     def profile_based_custom_role(self) -> typing.Optional[str]:
@@ -1900,6 +1985,20 @@ class GuestProfile(BaseProfile):
         Get custom role of GuestProfile
         """
         return self.custom_role
+
+    def create_external_links_obj(self) -> None:
+        """
+        Create a new ExternalLinks object and associate it with this GuestProfile instance.
+        """
+        self.external_links = ExternalLinks.objects.create()
+
+    def save(self, *args, **kwargs):
+        if not self.external_links:
+            self.create_external_links_obj()
+        super().save(*args, **kwargs)
+        # Update or create external links associated with the guest.
+        # This ensures that the guest's external links are always up-to-date.
+        create_or_update_profile_external_links(self)
 
     class Meta:
         verbose_name = "Guest Profile"
@@ -2461,6 +2560,93 @@ class TeamContributor(models.Model):
 
     def is_other_role(self):
         return self.role in TeamContributor.get_other_roles()
+
+
+class Visitation(models.Model):
+    _visitors_count_per_year = models.JSONField(default=dict)
+
+    @property
+    def visitors_count_this_year(self) -> int:
+        current_year = str(timezone.now().year)
+        return self._visitors_count_per_year.get(current_year, 0)
+
+    def increment_visitors_count_this_year(self) -> None:
+        """
+        Increment the count of visitors for the current year.
+        """
+        current_year = str(timezone.now().year)
+        self._visitors_count_per_year[current_year] = (
+            self._visitors_count_per_year.get(current_year, 0) + 1
+        )
+        self.save()
+
+    @property
+    def profile(self) -> BaseProfile:
+        for profile_model_name in (
+            "playerprofile",
+            "coachprofile",
+            "scoutprofile",
+            "managerprofile",
+            "guestprofile",
+            "clubprofile",
+            "otherprofile",
+            "refereeprofile",
+        ):
+            if profile := getattr(self, profile_model_name, None):
+                return profile
+
+    @property
+    def count_who_visited_me(self) -> int:
+        return self.who_visited_me.count()
+
+    @property
+    def who_visited_me(self):
+        return self.visited_objects.all()
+
+    @property
+    def who_i_visited(self):
+        return self.visited_by_me.all()
+
+
+class ProfileVisitation(models.Model):
+    visited = models.ForeignKey(
+        Visitation, on_delete=models.CASCADE, related_name="visited_objects"
+    )
+    visitor = models.ForeignKey(
+        Visitation, on_delete=models.CASCADE, related_name="visited_by_me"
+    )
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-timestamp"]
+
+    def __str__(self):
+        return (
+            f"{self.visitor.profile} visited {self.visited.profile} | {self.timestamp}"
+        )
+
+    @classmethod
+    def upsert(cls, visitor: BaseProfile, visited: BaseProfile) -> "ProfileVisitation":
+        """
+        Create or update ProfileVisitation pased on profiles objects.
+        If visitation exists, update timestamp.
+        """
+        if obj := cls.objects.filter(
+            visitor=visitor.visitation, visited=visited.visitation
+        ).first():
+            obj.timestamp = timezone.now()
+            obj.save()
+        else:
+            obj = cls.objects.create(
+                visitor=visitor.visitation, visited=visited.visitation
+            )
+        visited.visitation.increment_visitors_count_this_year()
+
+        return obj
+
+    @property
+    def days_ago(self) -> int:
+        return (timezone.now() - self.timestamp).days
 
 
 class ProfileVisitHistory(models.Model):

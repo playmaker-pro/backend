@@ -30,6 +30,8 @@ class TestGetCreateCoachLicenceAPI(APITestCase):
 
     def test_success_create_licence_for_coach(self) -> None:
         """test create licence for coach"""
+        assert self.user_obj.licences.all().count() == 0
+
         response = self.client.post(
             self.url,
             data=json.dumps(
@@ -40,14 +42,9 @@ class TestGetCreateCoachLicenceAPI(APITestCase):
             ),
             **self.headers,
         )
-        # Check if the UEFA PRO label has been assigned
-        licence_label_exists = Label.objects.filter(
-            content_type=ContentType.objects.get_for_model(User),
-            object_id=self.user_obj.id,
-        ).exists()
 
         assert response.status_code == 201
-        assert licence_label_exists, "Licence label not assigned as expected"
+        assert self.user_obj.licences.all().count() == 1
 
     def test_create_licence_for_coach_with_invalid_licence_id(self) -> None:
         """test create licence for coach with invalid licence id"""

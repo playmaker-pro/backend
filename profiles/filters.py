@@ -1,8 +1,10 @@
 import random
 import typing
+from datetime import timedelta
 from functools import cached_property
 
-from django.db.models import QuerySet
+from django.db.models import BooleanField, Case, F, QuerySet, Value, When
+from django.utils import timezone
 
 from api import errors as api_errors
 from api import utils as api_utils
@@ -48,6 +50,8 @@ class ProfileListAPIFilter(APIFilter):
         "min_pm_score": api_utils.convert_int,
         "max_pm_score": api_utils.convert_int,
         "observed": api_utils.convert_bool,
+        "sort": api_utils.convert_str,
+        "last_activity": api_utils.convert_str,
     }
 
     @cached_property
@@ -58,6 +62,46 @@ class ProfileListAPIFilter(APIFilter):
             return self.service.profile_service.get_model_by_role(role)
         except ValueError:
             raise IncorrectProfileRole
+
+    def filter_last_activity(self) -> None:
+        """Filter queryset by last activity"""
+        if last_activity := self.query_params.get("last_activity"):
+            now = timezone.now()
+            last_activity_timestamp_mapper = {
+                "last_week": now - timedelta(weeks=1),
+                "last_month": now - timedelta(weeks=4),
+                "last_two_months": now - timedelta(weeks=8),
+                "last_six_months": now - timedelta(weeks=24),
+                "last_year": now - timedelta(weeks=52),
+                "more_than_year_ago": now - timedelta(weeks=52),
+            }
+
+            try:
+                last_activity_timestamp = last_activity_timestamp_mapper[last_activity]
+            except KeyError:
+                return
+            if last_activity == "more_than_year_ago":
+                self.queryset = self.queryset.filter(
+                    user__last_activity__lt=last_activity_timestamp
+                )
+            else:
+                self.queryset = self.queryset.filter(
+                    user__last_activity__gte=last_activity_timestamp
+                )
+
+    def sort_promoted_first(self, qs: QuerySet) -> QuerySet:
+        """Set default sorting for queryset - promoted profiles first, then by last activity"""
+        now = timezone.now()
+
+        return qs.annotate(
+            is_profile_promoted=Case(
+                When(
+                    premium_products__promotion__valid_until__gt=now, then=Value(True)
+                ),
+                default=Value(False),
+                output_field=BooleanField(),
+            )
+        ).order_by("-is_profile_promoted", "-user__last_activity")
 
     def get_queryset(self) -> typing.Union[QuerySet, typing.List]:
         """Get queryset based on role, apply filters, and handle shuffle parameter."""
@@ -76,7 +120,24 @@ class ProfileListAPIFilter(APIFilter):
                 # Handle cases where the queryset has fewer than 10 elements
                 return shuffled_queryset
 
+        self.sort_queryset()
+
         return self.queryset
+
+    def sort_queryset(self) -> None:
+        """Sort queryset based on sort parameter"""
+        if sort_param := self.query_params.get("sort"):
+            if self.request.query_params.get("role") == "P":
+                if sort_param == "-pm_score":
+                    self.queryset = self.queryset.order_by(
+                        F("playermetrics__pm_score").desc(nulls_last=True)
+                    )
+                elif sort_param == "pm_score":
+                    self.queryset = self.queryset.order_by(
+                        F("playermetrics__pm_score").asc(nulls_last=True)
+                    )
+        else:
+            self.queryset = self.sort_promoted_first(self.queryset)
 
     def filter_queryset(self, queryset: QuerySet) -> QuerySet:
         """Filter given queryset based on validated query_params"""
@@ -126,6 +187,7 @@ class ProfileListAPIFilter(APIFilter):
         self.filter_licence()
         self.filter_by_labels()
         self.filter_league()
+        self.filter_last_activity()
         self.observed()
 
     def define_query_params(self) -> None:

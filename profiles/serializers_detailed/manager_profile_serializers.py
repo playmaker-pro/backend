@@ -30,6 +30,9 @@ class ManagerProfileViewSerializer(BaseProfileSerializer):
             "agency_other_url",
             "team_history_object",
             "visits",
+            "is_promoted",
+            "is_premium",
+            "promotion",
         )
 
 

@@ -12,11 +12,3 @@ class NewTransactionSerializer(_serializers.ModelSerializer):
             "uuid",
             "url",
         )
-
-
-class TransactionTypeSerializer(_serializers.ModelSerializer):
-    """Serializer for transaction type"""
-
-    class Meta:
-        model = _models.TransactionType
-        exclude = ("visible",)

@@ -1,10 +1,9 @@
 import logging
-from typing import Union
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
-from rest_framework import exceptions, status
+from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -68,3 +67,6 @@ class ProfileRetrieveMixin:
             logger.error("Profile visit history does not exist. Creating one..")
             history = visit_history_service.create(user=profile_object.user)
             visit_history_service.increment(instance=history, requestor=requestor)
+
+        if not isinstance(requestor, AnonymousUser):
+            models.ProfileVisitation.upsert(visitor=requestor, visited=profile_object)

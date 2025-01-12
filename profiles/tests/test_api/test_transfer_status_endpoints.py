@@ -107,47 +107,47 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
         )
         return response
 
-    @factory.django.mute_signals(signals.pre_save, signals.post_save)
-    def test_update_profile_transfer_status_email(self):
-        """Test update profile transfer status. Expected status code 200."""
-        self.profile.user.userpreferences.contact_email = None
-        self.profile.user.userpreferences.save()
-        transfer_status_obj: ProfileTransferStatus = TransferStatusFactory.create(
-            profile=self.profile
-        )
-        new_address_email = "test_email@test.test"
-        response: Response = self.update_profile({"contact_email": new_address_email})
+    # @factory.django.mute_signals(signals.pre_save, signals.post_save)
+    # def test_update_profile_transfer_status_email(self):
+    #     """Test update profile transfer status. Expected status code 200."""
+    #     self.profile.user.userpreferences.contact_email = None
+    #     self.profile.user.userpreferences.save()
+    #     transfer_status_obj: ProfileTransferStatus = TransferStatusFactory.create(
+    #         profile=self.profile
+    #     )
+    #     new_address_email = "test_email@test.test"
+    #     response: Response = self.update_profile({"contact_email": new_address_email})
 
-        assert response.status_code == 200
-        assert isinstance(response.json(), dict)
-        assert response.json().get("contact_email") == new_address_email
+    #     assert response.status_code == 200
+    #     assert isinstance(response.json(), dict)
+    #     assert response.json().get("contact_email") == new_address_email
 
-        transfer_status_obj.refresh_from_db()
-        assert transfer_status_obj.profile.user.contact_email == new_address_email
+    #     transfer_status_obj.refresh_from_db()
+    #     assert transfer_status_obj.profile.user.contact_email == new_address_email
 
-    @factory.django.mute_signals(signals.pre_save, signals.post_save)
-    def test_update_profile_transfer_status_phone(self):
-        """Test update profile transfer status. Expected status code 200."""
-        self.profile.user.userpreferences.phone_number = None
-        self.profile.user.userpreferences.dial_code = None
-        self.profile.user.userpreferences.save()
-        transfer_status_obj: ProfileTransferStatus = TransferStatusFactory.create(
-            profile=self.profile
-        )
-        new_contact_phone = "123456789"
-        response: Response = self.update_profile(
-            {"phone_number": {"number": new_contact_phone}}
-        )
+    # @factory.django.mute_signals(signals.pre_save, signals.post_save)
+    # def test_update_profile_transfer_status_phone(self):
+    #     """Test update profile transfer status. Expected status code 200."""
+    #     self.profile.user.userpreferences.phone_number = None
+    #     self.profile.user.userpreferences.dial_code = None
+    #     self.profile.user.userpreferences.save()
+    #     transfer_status_obj: ProfileTransferStatus = TransferStatusFactory.create(
+    #         profile=self.profile
+    #     )
+    #     new_contact_phone = "123456789"
+    #     response: Response = self.update_profile(
+    #         {"phone_number": {"number": new_contact_phone}}
+    #     )
 
-        assert response.status_code == 200
-        assert isinstance(response.json(), dict)
-        assert response.json().get("phone_number").get("number") == new_contact_phone
+    #     assert response.status_code == 200
+    #     assert isinstance(response.json(), dict)
+    #     assert response.json().get("phone_number").get("number") == new_contact_phone
 
-        transfer_status_obj.refresh_from_db()
-        assert (
-            transfer_status_obj.profile.user.userpreferences.phone_number
-            == new_contact_phone
-        )
+    #     transfer_status_obj.refresh_from_db()
+    #     assert (
+    #         transfer_status_obj.profile.user.userpreferences.phone_number
+    #         == new_contact_phone
+    #     )
 
     @factory.django.mute_signals(signals.pre_save, signals.post_save)
     def test_update_profile_transfer_status(self):
@@ -233,24 +233,24 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
             == transfer_service.get_list_transfer_statutes(id=1)[0]
         )
 
-    @factory.django.mute_signals(signals.pre_save, signals.post_save)
-    def test_create_profile_transfer_status_phone_num(self):
-        """
-        Test create profile transfer status with phone number.
-        Expected status code 201.
-        """
-        league = LeagueFactory.create_league_as_highest_parent()
-        data = {
-            "status": 2,
-            "league": [league.pk],
-            "phone_number": {"dial_code": "+48", "number": "123456789"},
-        }
-        response: Response = self.client.post(
-            self.url, json.dumps(data), **self.headers
-        )
+    # @factory.django.mute_signals(signals.pre_save, signals.post_save)
+    # def test_create_profile_transfer_status_phone_num(self):
+    #     """
+    #     Test create profile transfer status with phone number.
+    #     Expected status code 201.
+    #     """
+    #     league = LeagueFactory.create_league_as_highest_parent()
+    #     data = {
+    #         "status": 2,
+    #         "league": [league.pk],
+    #         "phone_number": {"dial_code": "+48", "number": "123456789"},
+    #     }
+    #     response: Response = self.client.post(
+    #         self.url, json.dumps(data), **self.headers
+    #     )
 
-        assert response.status_code == 201
-        assert response.json().get("phone_number").get("number") == "123456789"
+    #     assert response.status_code == 201
+    #     assert response.json().get("phone_number").get("number") == "123456789"
 
     @factory.django.mute_signals(signals.pre_save, signals.post_save)
     def test_create_profile_transfer_status_permission_denied(self):

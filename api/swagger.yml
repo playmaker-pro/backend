@@ -34,31 +34,49 @@ paths:
         '401':
           description: "Unauthorized"
 
-  /payments/inquiries/list-types/:
+  /premium/products/inquiries/:
     get:
-      operationId: get_inquiry_payment_types
-      description: Get payment types for inquiries
-      summary: Get payment types for inquiries
+      operationId: get_premium_inquiries_products
+      description: Get list of premium inquiries products.
+      summary: Get list of premium inquiries products.
       tags:
-        - payments
+        - premium_products
       security:
         - jwtAuth: [ ]
       responses:
         '200':
-          description: "List of payment types for inquiries"
+          description: "List of premium inquiries products."
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/InquiryPaymentType'
-  /payments/create/{id}/:
-    post:
-      operationId: create_transaction
-      description: Create transaction
-      summary: Create transaction
+                  $ref: '#/components/schemas/PremiumProduct'
+  /premium/products/premium/:
+    get:
+      operationId: get_premium_profile_products
+      description: Get list of premium profile products.
+      summary: Get list of premium profile products.
       tags:
-        - payments
+        - premium_products
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: "Premium profile products info."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PremiumProduct'
+  /premium/transaction/{id}/create/:
+    post:
+      operationId: create_transaction_for_premium_product
+      description: Create transaction for premium product.
+      summary: Create transaction for premium product.
+      tags:
+        - premium_products
       security:
         - jwtAuth: [ ]
       parameters:
@@ -67,7 +85,7 @@ paths:
           schema:
             type: integer
           required: true
-          description: "Transaction type ID"
+          description: "Product ID"
       responses:
         '201':
           description: "Transaction has been created"
@@ -83,6 +101,26 @@ paths:
           description: "Something went wrong with payment provider."
         '500':
           description: "Internal server error."
+  /premium/products/test-premium/:
+    post:
+      operationId: activate_test_premium_profile
+      description: Activate trial for premium profile.
+      summary: Activate trial for premium profile.
+      tags:
+        - premium_products
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: "Trial premium profile has been activated"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PremiumProfile'
+        '401':
+          description: "Unauthorized"
+        '400':
+          description: "Profile has already test premium."
   /notifications/{profile_uuid}:
     get:
       operationId: get_notifications
@@ -182,24 +220,24 @@ paths:
 
   /inquiries/my/sent/:
     get:
-        operationId: get_sent_inquiry_requests
-        description: Get sent inquiry requests
-        summary: Get sent inquiry requests
-        tags:
-          - inquiries
-        security:
-          - jwtAuth: [ ]
-        responses:
-          '200':
-            description: "List of sent inquiry requests"
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/InquiryRequest'
-          '401':
-            description: "Unauthorized"
+      operationId: get_sent_inquiry_requests
+      description: Get sent inquiry requests
+      summary: Get sent inquiry requests
+      tags:
+        - inquiries
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: "List of sent inquiry requests"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InquiryRequest'
+        '401':
+          description: "Unauthorized"
   /inquiries/my/contacts/:
     get:
       operationId: get_my_contacts
@@ -287,7 +325,7 @@ paths:
         '404':
           description: "Inquiry request with given ID doesn't exist"
         '400':
-            description: "You cannot accept your own inquiry request"
+          description: "You cannot accept your own inquiry request"
   /inquiries/{iq_id}/reject/:
     post:
       operationId: reject_inquiry_request
@@ -316,7 +354,7 @@ paths:
         '404':
           description: "Inquiry request with given ID doesn't exist"
         '400':
-            description: "You cannot reject your own inquiry request"
+          description: "You cannot reject your own inquiry request"
   /cities/:
     get:
       operationId: cities_retrieve
@@ -331,23 +369,23 @@ paths:
           "results": [{id: 1, name: Warszawa, voivodeship: Mazowieckie, priority: True}, ...]}}'
       summary: List cities endpoint
       parameters:
-      - in: query
-        name: city
-        schema:
-          type: string
-        description: City or voivodeship name to filter
-      - in: query
-        name: page
-        schema:
-          type: integer
-        description: "Page number"
-      - in: query
-        name: page_size
-        schema:
-          type: integer
-        description: "Count of objects by page"
+        - in: query
+          name: city
+          schema:
+            type: string
+          description: City or voivodeship name to filter
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: "Page number"
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+          description: "Count of objects by page"
       tags:
-      - locale
+        - locale
       responses:
         '200':
           content:
@@ -384,8 +422,8 @@ paths:
                         "name": "Adamów",
                         "voivodeship": "Lubelskie",
                         "priority": false
-                      },...]}
-                required: ["count", "next", "previous", "results"]
+                      },... ] }
+                required: [ "count", "next", "previous", "results" ]
           description: ''
         '400':
           description: 'No coords provided or coords are outside of Poland'
@@ -395,20 +433,20 @@ paths:
       description: 'Get closest city based on longitude and latitude'
       summary: Get my city
       parameters:
-      - in: query
-        name: longitude
-        schema:
-          type: string
-          format: double
-        required: true
-      - in: query
-        name: latitude
-        schema:
-          type: string
-          format: double
-        required: true
+        - in: query
+          name: longitude
+          schema:
+            type: string
+            format: double
+          required: true
+        - in: query
+          name: latitude
+          schema:
+            type: string
+            format: double
+          required: true
       tags:
-      - locale
+        - locale
       responses:
         '200':
           description: "City closest to given longitude and latitude"
@@ -579,7 +617,7 @@ paths:
                 description: 'List of seasons'
                 items:
                   $ref: '#/components/schemas/Season'
-                example: [ {"id": 2, "name": "2021/2022", "is_current": false, "is_in_verify_form": true} ]
+                example: [ { "id": 2, "name": "2021/2022", "is_current": false, "is_in_verify_form": true } ]
           description: 'List of seasons with id, name, is_current and is_in_verify_form'
   /clubs/leagues/highest-parents/:
     get:
@@ -587,9 +625,9 @@ paths:
       description: Return list of highest parent leagues
       summary: List of highest parent leagues
       tags:
-      - clubs
+        - clubs
       security:
-      - jwtAuth: []
+        - jwtAuth: [ ]
       parameters:
         - in: query
           name: gender
@@ -645,18 +683,18 @@ paths:
                     "is_senior": true
                   }
                 },{
-                "id": 1031,
-                "name": "Ekstraklasa",
-                "gender": {
+                  "id": 1031,
+                  "name": "Ekstraklasa",
+                  "gender": {
                     "id": 1,
                     "name": "mężczyźni"
-                },
-                "seniority": {
+                  },
+                  "seniority": {
                     "id": 1,
                     "name": "seniorzy",
                     "is_senior": true
-                }
-               },...]
+                  }
+                },... ]
           description: 'List of highest parent leagues'
         '400':
           description: 'Invalid param'
@@ -666,7 +704,7 @@ paths:
       description: 'Get list of clubs, top 10 ordered by name'
       summary: Clubs list endpoint
       tags:
-      - clubs
+        - clubs
       parameters:
         - in: query
           name: season
@@ -679,7 +717,7 @@ paths:
             type: string
           description: 'Club name query, LIKE'
       security:
-      - jwtAuth: []
+        - jwtAuth: [ ]
       responses:
         '200':
           content:
@@ -690,7 +728,7 @@ paths:
                 items:
                   type: object
                   description: 'Club name with id'
-                example: [{'id': 1, 'text': 'club 1'}, {'id': 2, 'text': 'club 2'}]
+                example: [ { 'id': 1, 'text': 'club 1' }, { 'id': 2, 'text': 'club 2' } ]
           description: 'List of clubs, name with ID'
   /clubs/teams/search/:
     get:
@@ -704,9 +742,9 @@ paths:
             type: string
           description: 'Team name query, LIKE'
       tags:
-      - clubs
+        - clubs
       security:
-      - jwtAuth: []
+        - jwtAuth: [ ]
       responses:
         '200':
           content:
@@ -733,9 +771,9 @@ paths:
             format: int
           required: true
       tags:
-      - clubs
+        - clubs
       security:
-      - jwtAuth: []
+        - jwtAuth: [ ]
       responses:
         '200':
           content:
@@ -772,9 +810,9 @@ paths:
             type: string
             format: date
       tags:
-      - clubs
+        - clubs
       security:
-      - jwtAuth: []
+        - jwtAuth: [ ]
       responses:
         '200':
           content:
@@ -804,7 +842,7 @@ paths:
           description: 'Like: pl, en, de. Described here:
           https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes'
       tags:
-      - locale
+        - locale
       responses:
         '200':
           description: 'List of countries'
@@ -847,7 +885,7 @@ paths:
         as a response
       summary: User preferences endpoint
       tags:
-      - preference-choices
+        - preference-choices
       responses:
         '200':
           content:
@@ -890,8 +928,8 @@ paths:
                   required:
                     - url
             example: {
-               "url": "https://www.youtube.com/watch?v=some_yt_id",
-               "label": "player_goal"
+              "url": "https://www.youtube.com/watch?v=some_yt_id",
+              "label": "player_goal"
             }
       tags:
         - video
@@ -995,16 +1033,16 @@ paths:
                   $ref: '#/components/schemas/ProfileEnumChoices'
                 example: [
                   {
-                      "id": "scout_player_analysis",
-                      "name": "Piłkarz"
+                    "id": "scout_player_analysis",
+                    "name": "Piłkarz"
                   },
                   {
-                      "id": "scout_tactics",
-                      "name": "Taktyka"
+                    "id": "scout_tactics",
+                    "name": "Taktyka"
                   },
                   {
-                      "id": "scout_fragment",
-                      "name": "Stałe fragmenty"
+                    "id": "scout_fragment",
+                    "name": "Stałe fragmenty"
                   }
                 ]
 
@@ -1103,7 +1141,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/TransferRequestGet'
-                required: ["count", "next", "previous", "results"]
+                required: [ "count", "next", "previous", "results" ]
   /followers/my-follows/:
     'get':
       operationId: followed_profiles_list
@@ -1275,9 +1313,9 @@ paths:
                 summary: Example for roles requiring custom_role
                 value: { "role": "G", "custom_role": "obserwator" }
       tags:
-      - profiles
+        - profiles
       security:
-      - jwtAuth: []
+        - jwtAuth: [ ]
       responses:
         '201':
           description: "Profile created successfully"
@@ -1317,10 +1355,24 @@ paths:
           required: true
           description: 'Profile role shortcut {P, C, T, G, S, ...}'
         - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [ 'pm_score', '-pm_score' ]
+          required: false
+          description: "Sort queryset. Promoted and profiles with latest activity are first."
+        - in: query
+          name: last_activity
+          schema:
+            type: string
+            enum: [ 'last_week', 'last_month', 'last_two_months', 'last_six_months', 'last_year', 'more_than_year_ago' ]
+          required: false
+          description: 'User last activity filter.'
+        - in: query
           name: gender
           schema:
             type: string
-            enum: ['M', 'K']
+            enum: [ 'M', 'K' ]
           required: false
           description: 'Player gender.'
         - in: query
@@ -1639,17 +1691,17 @@ paths:
       description: "Get profile with uuid"
       summary: "Get profile"
       parameters:
-      - in: path
-        name: profile_uuid
-        schema:
-          type: string
-          format: uuid
-        required: true
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
       tags:
-      - profiles
+        - profiles
       security:
-      - jwtAuth: []
-      - {}
+        - jwtAuth: [ ]
+        - { }
       responses:
         '200':
           description: 'Profile obtain successfully'
@@ -1725,8 +1777,8 @@ paths:
             schema:
               $ref: '#/components/schemas/ProfileOwnerUserPreferencesUpdate'
       security:
-      - jwtAuth: []
-      - {}
+        - jwtAuth: [ ]
+        - { }
       responses:
         '200':
           description: 'Profile updated successfully'
@@ -1771,6 +1823,24 @@ paths:
           description: 'Unauthorized'
         '404':
           description: 'Profile with given slug does not exist'
+  /profiles/who-visited-my-profile/:
+    get:
+      operationId: who_visited_my_profile
+      description: "Get list of profiles who visited me."
+      summary: "Get list of profiles who visited me."
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: 'List of profiles who visited me'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileVisitorSummary'
+        '204':
+          description: 'Most likely you have no premium profile.'
 
   /profiles/{profile_uuid}/main-data/:
     get:
@@ -1872,17 +1942,17 @@ paths:
       description: "Get labels for a given profile"
       summary: "Get profile labels"
       parameters:
-      - in: path
-        name: profile_uuid
-        schema:
-          type: string
-          format: uuid
-        required: true
+        - in: path
+          name: profile_uuid
+          schema:
+            type: string
+            format: uuid
+          required: true
       tags:
-      - profiles
+        - profiles
       security:
-      - jwtAuth: []
-      - {}
+        - jwtAuth: [ ]
+        - { }
       responses:
         '200':
           description: 'Labels sucesfully retrived'
@@ -1931,7 +2001,7 @@ paths:
                     - name
                     - shortcut
                     - shortcut_pl
-                  example: {id: 1, name: "Napastnik", shortcut: "F", shortcut_pl: "N"}
+                  example: { id: 1, name: "Napastnik", shortcut: "F", shortcut_pl: "N" }
           description: Returns player positions, including names and shortcuts
   /profiles/formations/:
     get:
@@ -2066,26 +2136,26 @@ paths:
       description: Update Course
       summary: Update Course
       tags:
-          - profiles
+        - profiles
       security:
-          - jwtAuth: [ ]
+        - jwtAuth: [ ]
       parameters:
-          - in: path
-            name: course_id
-            schema:
-              type: integer
-            required: true
+        - in: path
+          name: course_id
+          schema:
+            type: integer
+          required: true
       requestBody:
-          content:
-            application/json:
-                schema:
-                  type: object
-                  properties:
-                    name:
-                      type: string
-                    release_year:
-                      type: integer
-                      nullable: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                release_year:
+                  type: integer
+                  nullable: true
       responses:
         '200':
           description: Course updated successfully
@@ -2100,28 +2170,28 @@ paths:
         '404':
           description: 'Course with given ID not found'
     'delete':
-        operationId: course_delete
-        description: Delete Course
-        summary: Delete Course
-        tags:
-            - profiles
-        security:
-            - jwtAuth: [ ]
-        parameters:
-          - in: path
-            name: course_id
-            schema:
-              type: integer
-            required: true
-        responses:
-            '204':
-              description: Coach licence deleted successfully
-            '400':
-              description: 'User is not an owner of given Course'
-            '401':
-              description: 'Unauthorized'
-            '404':
-              description: 'Course with given ID not found'
+      operationId: course_delete
+      description: Delete Course
+      summary: Delete Course
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      parameters:
+        - in: path
+          name: course_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '204':
+          description: Coach licence deleted successfully
+        '400':
+          description: 'User is not an owner of given Course'
+        '401':
+          description: 'Unauthorized'
+        '404':
+          description: 'Course with given ID not found'
   /profiles/course/:
     'post':
       operationId: course_create
@@ -2185,20 +2255,20 @@ paths:
       description: Update coach licence
       summary: Update coach licence
       tags:
-          - profiles
+        - profiles
       security:
-          - jwtAuth: [ ]
+        - jwtAuth: [ ]
       parameters:
-          - in: path
-            name: licence_id
-            schema:
-              type: integer
-            required: true
+        - in: path
+          name: licence_id
+          schema:
+            type: integer
+          required: true
       requestBody:
-          content:
-            application/json:
-                schema:
-                  $ref: '#/components/schemas/CoachLicenceBody'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoachLicenceBody'
       responses:
         '200':
           description: Coach licence updated successfully
@@ -2213,28 +2283,28 @@ paths:
         '404':
           description: 'CoachLicence with given ID not found'
     'delete':
-        operationId: coach_licences_delete
-        description: Delete coach licence
-        summary: Delete coach licence
-        tags:
-            - profiles
-        security:
-            - jwtAuth: [ ]
-        parameters:
-          - in: path
-            name: licence_id
-            schema:
-              type: integer
-            required: true
-        responses:
-            '204':
-              description: Coach licence deleted successfully
-            '400':
-              description: 'User is not an owner of given CoachLicence'
-            '401':
-              description: 'Unauthorized'
-            '404':
-              description: 'CoachLicence with given ID not found'
+      operationId: coach_licences_delete
+      description: Delete coach licence
+      summary: Delete coach licence
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      parameters:
+        - in: path
+          name: licence_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '204':
+          description: Coach licence deleted successfully
+        '400':
+          description: 'User is not an owner of given CoachLicence'
+        '401':
+          description: 'Unauthorized'
+        '404':
+          description: 'CoachLicence with given ID not found'
   /profiles/coach-licence/:
     get:
       operationId: coach_licences_choices_retrieve
@@ -2280,7 +2350,7 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/CoachLicenceBody'
                 - required:
-                  - licence_id
+                    - licence_id
       responses:
         '201':
           description: Coach licence created successfully
@@ -2382,10 +2452,10 @@ paths:
       description: Return a dictionary of available roles.
       summary: Roles endpoint
       tags:
-      - roles
+        - roles
       security:
-      - jwtAuth: []
-      - {}
+        - jwtAuth: [ ]
+        - { }
       responses:
         '200':
           content:
@@ -2532,8 +2602,8 @@ paths:
             application/json:
               schema:
                 oneOf:
-                 - $ref: '#/components/schemas/TeamContributor'
-                 - $ref: '#/components/schemas/TeamContributorNonPlayer'
+                  - $ref: '#/components/schemas/TeamContributor'
+                  - $ref: '#/components/schemas/TeamContributorNonPlayer'
         400:
           description: "Invalid request."
           content:
@@ -2808,7 +2878,7 @@ paths:
       tags:
         - transfer status
       security:
-        - {}
+        - { }
       responses:
         "200":
           description: "List of avaiable transfer statuses."
@@ -2824,26 +2894,26 @@ paths:
                       description: "Id of transfer status"
                     name:
                       type: string
-                  required: ["id", "name"]
+                  required: [ "id", "name" ]
                 example:
                   [
                     {
-                        "id": "1",
-                        "name": "Szukam klubu"
+                      "id": "1",
+                      "name": "Szukam klubu"
                     },
                     {
-                        "id": "2",
-                        "name": "Rozważę propozycje"
+                      "id": "2",
+                      "name": "Rozważę propozycje"
                     },
                     {
-                        "id": "3",
-                        "name": "Nie szukam klubu"
+                      "id": "3",
+                      "name": "Nie szukam klubu"
                     },
                     {
-                        "id": "4",
-                        "name": "Piłkarska emerytura"
+                      "id": "4",
+                      "name": "Piłkarska emerytura"
                     }
-                ]
+                  ]
 
   /profiles/transfer-status/additional-info/:
     get:
@@ -2852,7 +2922,7 @@ paths:
       tags:
         - transfer status
       security:
-        - {}
+        - { }
       responses:
         "200":
           description: "List of avaiable objects."
@@ -2868,34 +2938,34 @@ paths:
                       description: "Id of object"
                     name:
                       type: string
-                  required: ["id", "name"]
+                  required: [ "id", "name" ]
                 example:
                   [
                     {
-                        "id": "1",
-                        "name": "Dostępny od zaraz"
+                      "id": "1",
+                      "name": "Dostępny od zaraz"
                     },
                     {
-                        "id": "2",
-                        "name": "Wracam po kontuzji"
+                      "id": "2",
+                      "name": "Wracam po kontuzji"
                     },
                     {
-                        "id": "3",
-                        "name": "Możliwe wypożyczenie"
+                      "id": "3",
+                      "name": "Możliwe wypożyczenie"
                     },
                     {
-                        "id": "4",
-                        "name": "Po przeprowadzce"
+                      "id": "4",
+                      "name": "Po przeprowadzce"
                     },
                     {
-                        "id": "5",
-                        "name": "Studiuje zaoczne"
+                      "id": "5",
+                      "name": "Studiuje zaoczne"
                     },
                     {
-                        "id": "6",
-                        "name": "Pracuje w nieregularnym trybie pracy"
+                      "id": "6",
+                      "name": "Pracuje w nieregularnym trybie pracy"
                     }
-                ]
+                  ]
 
   /profiles/{profile_uuid}/transfer-status/:
     get:
@@ -2911,14 +2981,14 @@ paths:
       tags:
         - transfer status
       security:
-        - {}
+        - { }
       responses:
         "200":
           description: "Get profile transfer status object."
           content:
             application/json:
               schema:
-                  $ref: '#/components/schemas/TransferStatusGet'
+                $ref: '#/components/schemas/TransferStatusGet'
         "404":
           description: "Transfer status for given profile not found."
           content:
@@ -2945,7 +3015,7 @@ paths:
       tags:
         - transfer status
       security:
-        - jwtAuth: []
+        - jwtAuth: [ ]
       requestBody:
         content:
           application/json:
@@ -2978,8 +3048,8 @@ paths:
                     type: integer
                     description: "Id of an object from: /profiles/transfer-request/benefits"
                 salary:
-                    type: integer
-                    description: "Id of an object from: /profiles/transfer-request/salary"
+                  type: integer
+                  description: "Id of an object from: /profiles/transfer-request/salary"
                 number_of_trainings:
                   type: integer
                   description: "Id of an object from: /profiles/transfer-request/number-of-trainings/"
@@ -2990,13 +3060,13 @@ paths:
                     description: "Id of an highest parent league taken from: /clubs/leagues/highest-parents/"
             example:
               {
-                "benefits": [1,2],
+                "benefits": [ 1,2 ],
                 "status": 1,
                 "gender": "M",
                 "salary": 1,
                 "contact_email": "email@email.com",
-                "phone_number": {"dial_code": 1, "number": 123},
-                "additional_info": [1, 2],
+                "phone_number": { "dial_code": 1, "number": 123 },
+                "additional_info": [ 1, 2 ],
                 "number_of_trainings": 1
               }
       responses:
@@ -3036,7 +3106,7 @@ paths:
       operationId: profile_transfer_status_create
       description: "Create profile transfer status object"
       security:
-      - jwtAuth: []
+        - jwtAuth: [ ]
       tags:
         - transfer status
       parameters:
@@ -3089,14 +3159,14 @@ paths:
                   items:
                     type: integer
                     description: "Id of an highest parent league taken from: /clubs/leagues/highest-parents/"
-              required: ["status", "additional_info", "league"]
+              required: [ "status", "additional_info", "league" ]
       responses:
         "201":
           description: "Returns created profile transfer status object."
           content:
             application/json:
               schema:
-                  $ref: '#/components/schemas/TransferStatusGet'
+                $ref: '#/components/schemas/TransferStatusGet'
         "403":
           description: "User is not allowed to do this action"
           content:
@@ -3124,7 +3194,7 @@ paths:
       tags:
         - transfer status
       security:
-        - jwtAuth: []
+        - jwtAuth: [ ]
       responses:
         "204":
           description: "Object deleted successful"
@@ -3162,39 +3232,39 @@ paths:
       tags:
         - transfer requests
       security:
-        - {}
+        - { }
       responses:
         "200":
           description: "Get profile transfer request status objects."
           content:
             application/json:
               schema:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                        description: "Object id."
-                      name:
-                        type: string
-                        description: "Object name"
-                    required: ["id", "name"]
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: "Object id."
+                    name:
+                      type: string
+                      description: "Object name"
+                  required: [ "id", "name" ]
               example:
                 [
                   {
-                      "id": "1",
-                      "name": "Nieznany"
+                    "id": "1",
+                    "name": "Nieznany"
                   },
                   {
-                      "id": "2",
-                      "name": "Szukam piłkarzy"
+                    "id": "2",
+                    "name": "Szukam piłkarzy"
                   },
                   {
-                      "id": "3",
-                      "name": "Nie szukam piłkarzy"
+                    "id": "3",
+                    "name": "Nie szukam piłkarzy"
                   }
-              ]
+                ]
 
   /profiles/transfer-request/position:
     get:
@@ -3203,71 +3273,71 @@ paths:
       tags:
         - transfer requests
       security:
-        - {}
+        - { }
       responses:
         "200":
           description: "Get profile transfer request position objects."
           content:
             application/json:
               schema:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                        description: "Object id."
-                      name:
-                        type: string
-                        description: "Object name"
-                    required: ["id", "name"]
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: "Object id."
+                    name:
+                      type: string
+                      description: "Object name"
+                  required: [ "id", "name" ]
               example:
                 [
                   {
-                      "id": "1",
-                      "name": "Dowolna pozycja"
+                    "id": "1",
+                    "name": "Dowolna pozycja"
                   },
                   {
-                      "id": "2",
-                      "name": "Bramkarz"
+                    "id": "2",
+                    "name": "Bramkarz"
                   },
                   {
-                      "id": "3",
-                      "name": "Środkowy obrońca"
+                    "id": "3",
+                    "name": "Środkowy obrońca"
                   },
                   {
-                      "id": "4",
-                      "name": "Lewy obrońca"
+                    "id": "4",
+                    "name": "Lewy obrońca"
                   },
                   {
-                      "id": "5",
-                      "name": "Prawy obrońca"
+                    "id": "5",
+                    "name": "Prawy obrońca"
                   },
                   {
-                      "id": "6",
-                      "name": "Defensywny pomocnik"
+                    "id": "6",
+                    "name": "Defensywny pomocnik"
                   },
                   {
-                      "id": "7",
-                      "name": "Środkowy pomocnik"
+                    "id": "7",
+                    "name": "Środkowy pomocnik"
                   },
                   {
-                      "id": "8",
-                      "name": "Ofensywny pomocnik"
+                    "id": "8",
+                    "name": "Ofensywny pomocnik"
                   },
                   {
-                      "id": "9",
-                      "name": "Lewy pomocnik"
+                    "id": "9",
+                    "name": "Lewy pomocnik"
                   },
                   {
-                      "id": "10",
-                      "name": "Prawy pomocnik"
+                    "id": "10",
+                    "name": "Prawy pomocnik"
                   },
                   {
-                      "id": "11",
-                      "name": "Napastnik"
+                    "id": "11",
+                    "name": "Napastnik"
                   }
-              ]
+                ]
 
   /profiles/transfer-request/number-of-trainings:
     get:
@@ -3276,39 +3346,39 @@ paths:
       tags:
         - transfer requests
       security:
-        - {}
+        - { }
       responses:
         "200":
           description: "Get profile transfer request number of trainings objects."
           content:
             application/json:
               schema:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                        description: "Object id."
-                      name:
-                        type: string
-                        description: "Object name"
-                    required: ["id", "name"]
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: "Object id."
+                    name:
+                      type: string
+                      description: "Object name"
+                  required: [ "id", "name" ]
               example:
                 [
                   {
-                      "id": "1",
-                      "name": "1-2 treningi tygodniowo"
+                    "id": "1",
+                    "name": "1-2 treningi tygodniowo"
                   },
                   {
-                      "id": "2",
-                      "name": "3-4 treningi tygodniowo"
+                    "id": "2",
+                    "name": "3-4 treningi tygodniowo"
                   },
                   {
-                      "id": "3",
-                      "name": "5+ treningów tygodniowo"
+                    "id": "3",
+                    "name": "5+ treningów tygodniowo"
                   }
-              ]
+                ]
 
   /profiles/transfer-request/benefits:
     get:
@@ -3317,63 +3387,63 @@ paths:
       tags:
         - transfer requests
       security:
-        - {}
+        - { }
       responses:
         "200":
           description: "Get profile transfer request benefit objects."
           content:
             application/json:
               schema:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                        description: "Object id."
-                      name:
-                        type: string
-                        description: "Object name"
-                    required: ["id", "name"]
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: "Object id."
+                    name:
+                      type: string
+                      description: "Object name"
+                  required: [ "id", "name" ]
               example:
                 [
                   {
-                      "id": "1",
-                      "name": "Zwrot lub organizacja transportu"
+                    "id": "1",
+                    "name": "Zwrot lub organizacja transportu"
                   },
                   {
-                      "id": "2",
-                      "name": "Zwrot za butóy lub rękawice"
+                    "id": "2",
+                    "name": "Zwrot za butóy lub rękawice"
                   },
                   {
-                      "id": "3",
-                      "name": "Sprzęt treningowy"
+                    "id": "3",
+                    "name": "Sprzęt treningowy"
                   },
                   {
-                      "id": "4",
-                      "name": "Dobre zaplecze treningowe"
+                    "id": "4",
+                    "name": "Dobre zaplecze treningowe"
                   },
                   {
-                      "id": "5",
-                      "name": "Premie za wygrane"
+                    "id": "5",
+                    "name": "Premie za wygrane"
                   },
                   {
-                      "id": "6",
-                      "name": "Fizjoterapeuta w sztabie"
+                    "id": "6",
+                    "name": "Fizjoterapeuta w sztabie"
                   },
                   {
-                      "id": "7",
-                      "name": "Siłownia do dyspozycji"
+                    "id": "7",
+                    "name": "Siłownia do dyspozycji"
                   },
                   {
-                      "id": "8",
-                      "name": "Walka o awans"
+                    "id": "8",
+                    "name": "Walka o awans"
                   },
                   {
-                      "id": "9",
-                      "name": "Doświadczony trener"
+                    "id": "9",
+                    "name": "Doświadczony trener"
                   }
-              ]
+                ]
 
   /profiles/transfer-request/salary:
     get:
@@ -3382,47 +3452,47 @@ paths:
       tags:
         - transfer requests
       security:
-        - {}
+        - { }
       responses:
         "200":
           description: "Get profile transfer request salary objects."
           content:
             application/json:
               schema:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                        description: "Object id."
-                      name:
-                        type: string
-                        description: "Object name"
-                    required: ["id", "name"]
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: "Object id."
+                    name:
+                      type: string
+                      description: "Object name"
+                  required: [ "id", "name" ]
               example:
                 [
                   {
-                      "id": "1",
-                      "name": "0 - 499 zł"
+                    "id": "1",
+                    "name": "0 - 499 zł"
                   },
                   {
-                      "id": "2",
-                      "name": "500 - 999 zł"
+                    "id": "2",
+                    "name": "500 - 999 zł"
                   },
                   {
-                      "id": "3",
-                      "name": "1000 - 1999 zł"
+                    "id": "3",
+                    "name": "1000 - 1999 zł"
                   },
                   {
-                      "id": "4",
-                      "name": "2000 - 3999 zł"
+                    "id": "4",
+                    "name": "2000 - 3999 zł"
                   },
                   {
-                      "id": "5",
-                      "name": "4000+ zł"
+                    "id": "5",
+                    "name": "4000+ zł"
                   }
-              ]
+                ]
 
   /profiles/{profile_uuid}/transfer-request/teams:
     get:
@@ -3438,7 +3508,7 @@ paths:
       tags:
         - transfer requests
       security:
-        - {}
+        - { }
       responses:
         "200":
           description: "Get profile actual teams objects."
@@ -3481,14 +3551,14 @@ paths:
       tags:
         - transfer requests
       security:
-        - {}
+        - { }
       responses:
         "200":
           description: "Get profile transfer request object."
           content:
             application/json:
               schema:
-                  $ref: '#/components/schemas/TransferRequestGet'
+                $ref: '#/components/schemas/TransferRequestGet'
         "404":
           description: "Transfer request for given profile not found."
           content:
@@ -3515,7 +3585,7 @@ paths:
       tags:
         - transfer requests
       security:
-        - jwtAuth: []
+        - jwtAuth: [ ]
       requestBody:
         content:
           application/json:
@@ -3558,7 +3628,7 @@ paths:
       operationId: profile_transfer_request_create
       description: "Create profile transfer request object"
       security:
-      - jwtAuth: []
+        - jwtAuth: [ ]
       tags:
         - transfer requests
       parameters:
@@ -3580,7 +3650,7 @@ paths:
           content:
             application/json:
               schema:
-                  $ref: '#/components/schemas/TransferStatusGet'
+                $ref: '#/components/schemas/TransferStatusGet'
         "403":
           description: "User is not allowed to do this action"
           content:
@@ -3608,7 +3678,7 @@ paths:
       tags:
         - transfer requests
       security:
-        - jwtAuth: []
+        - jwtAuth: [ ]
       responses:
         "204":
           description: "Object deleted successful"
@@ -3645,9 +3715,9 @@ paths:
       description: Returns all user feature elements.
       summary: User feature elements.
       tags:
-      - users
+        - users
       security:
-      - jwtAuth: []
+        - jwtAuth: [ ]
       responses:
         '200':
           content:
@@ -3664,9 +3734,9 @@ paths:
       description: Get user main profile data
       summary: Get user main profile data
       tags:
-      - users
+        - users
       security:
-      - jwtAuth: []
+        - jwtAuth: [ ]
       responses:
         '200':
           content:
@@ -3694,6 +3764,19 @@ paths:
                   has_unread_inquiries:
                     type: boolean
                     description: Determines if there are any inquiries sent or received by the user that have not been read
+                  is_promoted:
+                    type: boolean
+                    description: Determines if the user has active profile promotion.
+                  is_premium:
+                    type: boolean
+                    description: Determines if the user has active premium profile.
+                  premium:
+                    $ref: '#/components/schemas/PremiumProfile'
+                  promotion:
+                    $ref: '#/components/schemas/ProfilePromotion'
+                  premium_already_tested:
+                    type: boolean
+                    description: Did user test the premium product? If so, he cannot setup 7days trial.
           description: Get user main profile uuid with role.
   /users/feature-sets/:
     get:
@@ -3701,9 +3784,9 @@ paths:
       description: Returns all user feature sets.
       summary: User feature sets.
       tags:
-      - users
+        - users
       security:
-      - jwtAuth: []
+        - jwtAuth: [ ]
       responses:
         '200':
           content:
@@ -3752,7 +3835,7 @@ paths:
         As a response returns user access and refresh tokens.
       summary: Google auth endpoint
       tags:
-      - social oauth
+        - social oauth
       requestBody:
         content:
           application/json:
@@ -3763,7 +3846,7 @@ paths:
                   type: string
                   description: Token id from Google.
               required:
-              - token_id
+                - token_id
       responses:
         '200':
           content:
@@ -3790,9 +3873,9 @@ paths:
       description: Update user profile picture
       summary: Update user profile picture
       tags:
-          - users
+        - users
       security:
-        - jwtAuth: []
+        - jwtAuth: [ ]
       requestBody:
         content:
           image/jpeg:
@@ -3825,7 +3908,7 @@ paths:
         As a response returns user access and refresh tokens.
       summary: Facebook auth endpoint
       tags:
-      - social oauth
+        - social oauth
       requestBody:
         content:
           application/json:
@@ -3836,7 +3919,7 @@ paths:
                   type: string
                   description: Token id from Facebook.
               required:
-              - token_id
+                - token_id
       responses:
         '200':
           content:
@@ -3865,7 +3948,7 @@ paths:
         token pair to prove the authentication of those credentials.
       summary: User login endpoint
       tags:
-      - users
+        - users
       requestBody:
         content:
           application/json:
@@ -3879,8 +3962,8 @@ paths:
                   type: string
                   description: User super secret password.
               required:
-              - email
-              - password
+                - email
+                - password
       responses:
         '200':
           content:
@@ -3927,9 +4010,9 @@ paths:
         `rest_framework_simplejwt.token_blacklist` app installed.
       summary: User logout endpoint
       tags:
-      - users
+        - users
       security:
-        - jwtAuth: []
+        - jwtAuth: [ ]
       requestBody:
         content:
           application/json:
@@ -3957,9 +4040,9 @@ paths:
         Returns status codes 401 and 400 if the refresh token is expired or invalid, respectively.
       summary: Refresh user token endpoint
       tags:
-      - users
+        - users
       security:
-        - jwtAuth: []
+        - jwtAuth: [ ]
       requestBody:
         content:
           application/json:
@@ -3970,7 +4053,7 @@ paths:
                   type: string
                   description: User refresh token
               required:
-              - refresh
+                - refresh
       responses:
         '200':
           content:
@@ -4019,7 +4102,7 @@ paths:
         Returns serialized User data or validation errors.
       summary: User registration endpoint
       tags:
-      - users
+        - users
       requestBody:
         content:
           application/json:
@@ -4039,8 +4122,8 @@ paths:
                   type: string
                   description: User last name.
               required:
-              - email
-              - password
+                - email
+                - password
       responses:
         '200':
           content:
@@ -4082,12 +4165,12 @@ paths:
                 example:
                   success: "False"
                   detail: "Detailed error message"
-                  fields: {"email": ["this field is required"], "password": ["This field cannot be empty"]}
+                  fields: { "email": [ "this field is required" ], "password": [ "This field cannot be empty" ] }
                 description: Bad request. Data sent in request is invalid.
                 required:
-                 - success
-                 - detail
-                 - fields
+                  - success
+                  - detail
+                  - fields
           description: ''
   /users/email-verification/:
     post:
@@ -4373,9 +4456,9 @@ paths:
             format: int
           required: true
       tags:
-      - events
+        - events
       security:
-      - jwtAuth: []
+        - jwtAuth: [ ]
       responses:
         '200':
           description: 'Sucessfully marked as seeen'
@@ -4397,9 +4480,9 @@ paths:
             format: int
           required: true
       tags:
-      - events
+        - events
       security:
-      - jwtAuth: []
+        - jwtAuth: [ ]
       responses:
         '200':
           content:
@@ -4418,10 +4501,10 @@ components:
   schemas:
     AccessEnum:
       enum:
-      - none
-      - all
-      - club
-      - own
+        - none
+        - all
+        - club
+        - own
       type: string
       description: |-
         * `none` - none
@@ -4437,7 +4520,7 @@ components:
           readOnly: true
         access:
           allOf:
-          - $ref: '#/components/schemas/AccessEnum'
+            - $ref: '#/components/schemas/AccessEnum'
           description: |-
             Access permission name.
 
@@ -4446,7 +4529,7 @@ components:
             * `club` - club
             * `own` - own
       required:
-      - role
+        - role
     FeatureElement:
       type: object
       description: Serializer for feature element.
@@ -4457,15 +4540,15 @@ components:
           maxLength: 255
         permissions:
           type: object
-          additionalProperties: {}
+          additionalProperties: { }
           description: JSON representation of roles permissions.
         access_permissions:
           type: array
           items:
             $ref: '#/components/schemas/AccessPermission'
       required:
-      - access_permissions
-      - name
+        - access_permissions
+        - name
     Features:
       type: object
       description: Serializer for features.
@@ -4486,16 +4569,16 @@ components:
           type: boolean
           description: Flag that says if feature is enabled.
       required:
-      - elements
-      - keyname
-      - name
+        - elements
+        - keyname
+        - name
     TokenBlacklist:
       type: object
       properties:
         refresh:
           type: string
       required:
-      - refresh
+        - refresh
     TokenObtainSerializer:
       type: object
       properties:
@@ -4527,8 +4610,8 @@ components:
           pattern: ^[\w.@+-]+$
           maxLength: 150
       required:
-      - id
-      - username
+        - id
+        - username
     UserRegisterResponse:
       type: object
       description: Serializer for user registration response.
@@ -4554,11 +4637,11 @@ components:
           pattern: ^[\w.@+-]+$
           maxLength: 150
       required:
-      - email
-      - id
-      - username
-      - last_name
-      - first_name
+        - email
+        - id
+        - username
+        - last_name
+        - first_name
 
     BaseUserData:
       type: object
@@ -4663,7 +4746,7 @@ components:
           type: string
           description: "Choices are: M/K"
       required:
-       - name
+        - name
 
     Seniority:
       type: object
@@ -4862,6 +4945,15 @@ components:
       required:
         - id
         - name
+    ProfilePromotion:
+      type: object
+      properties:
+        is_active:
+          type: boolean
+        days_left:
+          type: integer
+        days_count:
+          type: integer
     TeamHistoryProfileView:
       type: object
       required:
@@ -5104,9 +5196,9 @@ components:
         thumbnail:
           type: string
       required:
-       - id
-       - url
-       - thumbnail
+        - id
+        - url
+        - thumbnail
 
     ProfileVideoUpsert:
       type: object
@@ -5132,50 +5224,15 @@ components:
         pm_score_state:
           type: string
           readOnly: true
-      required:
-       - pm_score
-       - season_score
-       - pm_score_state
+        pm_score_history:
+          type: object
+        pm_score_change:
+          type: number
 
-    PlayerMetrics:
-      type: object
-      properties:
-        id:
-          type: integer
-        created_at:
-          type: string
-        updated_at:
-          type: string
-        games_summary:
-          type: array
-          items:
-            type: object
-        games_summary_updated:
-          type: string
-        games:
-          type: array
-          items:
-            type: object
-        games_updated:
-          type: string
-        fantasy_summary:
-          type: object
-        fantasy_summary_updated:
-          type: string
-        fantasy:
-          type: object
-        fantasy_updated:
-          type: string
-        season_summary:
-          type: object
-        season_summary_updated:
-          type: string
-        season:
-          type: object
-        season_updated:
-          type: string
       required:
-        - id
+        - pm_score
+        - season_score
+        - pm_score_state
 
     ProfileLabel:
       type: object
@@ -5248,8 +5305,8 @@ components:
           items:
             $ref: '#/components/schemas/ProfileLabel'
         visits:
-              type: integer
-              description: "Total profile visits per last 30 days"
+          type: integer
+          description: "Total profile visits per last 30 days"
 
       required:
         - uuid
@@ -5272,9 +5329,12 @@ components:
             user:
               $ref: '#/components/schemas/UserProfileBase'
             external_links:
-              type: array
-              items:
-                $ref: '#/components/schemas/ExternalLink'
+              type: object
+              properties:
+                links:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ExternalLink'
             player_positions:
               $ref: '#/components/schemas/PlayerPositions'
             profile_video:
@@ -5310,6 +5370,14 @@ components:
             visits:
               type: integer
               description: "Total profile visits per last 30 days"
+            is_promoted:
+              type: boolean
+              description: "Is player promoted"
+            is_premium:
+              type: boolean
+              description: "Is player premium"
+            promotion:
+              $ref: '#/components/schemas/ProfilePromotion'
           example: {
             "slug": "player-slug",
             "uuid": "uuid",
@@ -5325,11 +5393,11 @@ components:
                 "gender": null,
                 "birth_date": null,
               },
-            "picture": null,
-            "last_activity": "2023-10-21T21:54:55.160773+02:00"
+              "picture": null,
+              "last_activity": "2023-10-21T21:54:55.160773+02:00"
             },
             "external_links": {
-              "links": []
+              "links": [ ]
             },
             "player_positions":
               [
@@ -5340,7 +5408,7 @@ components:
                   },
                   "is_main": false
                 }
-            ],
+              ],
             "profile_video": [
               {
                 "id": 1,
@@ -5352,17 +5420,17 @@ components:
                 "player": 1
               }
             ],
-            "labels": [],
+            "labels": [ ],
             "transfer_status": {
-                "id": 2,
-                "contact": {
-                    "phone": null,
-                    "email": ""
-                },
-                "status": {
-                    "id": "1",
-                    "name": "Szukam klubu"
-                }
+              "id": 2,
+              "contact": {
+                "phone": null,
+                "email": ""
+              },
+              "status": {
+                "id": "1",
+                "name": "Szukam klubu"
+              }
             },
             "height": 186,
             "weight": 101,
@@ -5451,30 +5519,38 @@ components:
             visits:
               type: integer
               description: "Total profile visits per last 30 days"
+            is_promoted:
+              type: boolean
+              description: "Is player promoted"
+            is_premium:
+              type: boolean
+              description: "Is player premium"
+            promotion:
+              $ref: '#/components/schemas/ProfilePromotion'
           example: {
             "slug": "coach-miz-shoty",
             "uuid": "uuid",
             "user": {
-                "id": 7404,
-                "first_name": "MiZ",
-                "last_name": "SHOTY",
-                "userpreferences": {
-                    "age": null,
-                    "localization": null,
-                    "spoken_languages": [],
-                    "citizenship": null,
-                    "gender": null,
-                    "birth_date": null,
-                },
-            "picture": null,
-            "last_activity": "2023-10-21T21:54:55.160773+02:00"
+              "id": 7404,
+              "first_name": "MiZ",
+              "last_name": "SHOTY",
+              "userpreferences": {
+                "age": null,
+                "localization": null,
+                "spoken_languages": [ ],
+                "citizenship": null,
+                "gender": null,
+                "birth_date": null,
+              },
+              "picture": null,
+              "last_activity": "2023-10-21T21:54:55.160773+02:00"
             },
             "external_links": {
-                "links": []
+              "links": [ ]
             },
             "coach_role": {
-                "id": "IIC",
-                "name": "Drugi trener"
+              "id": "IIC",
+              "name": "Drugi trener"
             },
             "formation": "4-3-2-1",
             "profile_video": [
@@ -5487,17 +5563,17 @@ components:
                 "thumbnail": null
               }
             ],
-            "labels": [],
+            "labels": [ ],
             "transfer_status": {
-                "id": 2,
-                "contact": {
-                    "phone": null,
-                    "email": ""
-                },
-                "status": {
-                    "id": "1",
-                    "name": "Szukam klubu"
-                }
+              "id": 2,
+              "contact": {
+                "phone": null,
+                "email": ""
+              },
+              "status": {
+                "id": "1",
+                "name": "Szukam klubu"
+              }
             },
             "role": "T",
             "verification_stage": {
@@ -5566,7 +5642,7 @@ components:
               type: string
               description: "Field for player and coach profile. Choices are: '5-3-2', '5-4-1', '4-4-2', '4-5-1', '4-3-3', '4-2-3-1', '4-1-4-1', ''4-3-2-1', '3-5-2', '3-4-3', '4-3-1-2', '4-4-1-1'"
             phone_number:
-               $ref: '#/components/schemas/PhoneNumber'
+              $ref: '#/components/schemas/PhoneNumber'
             agency_email:
               type: string
               format: email
@@ -5600,20 +5676,20 @@ components:
 
           example: {
             "user": {
-                "first_name": "first_name",
-                "last_name": "last_name",
-                "userpreferences": {
-                    "localization": 100,
-                    "spoken_languages": ["PL", "CZ"],
-                    "citizenship": ["PL", "CZ"],
-                    "gender": "M",
-                    "birth_date": "2012-02-14"
-                },
+              "first_name": "first_name",
+              "last_name": "last_name",
+              "userpreferences": {
+                "localization": 100,
+                "spoken_languages": [ "PL", "CZ" ],
+                "citizenship": [ "PL", "CZ" ],
+                "gender": "M",
+                "birth_date": "2012-02-14"
+              },
             },
             "player_positions": [
               {
-                  "is_main": true,
-                  "player_position": 12
+                "is_main": true,
+                "player_position": 12
               }
             ],
             "transfer_status": 3,
@@ -5624,7 +5700,7 @@ components:
             "club_role": "V-ce prezes",
             "coach_role": "IC",
             "formation": "5-3-2",
-        }
+          }
 
     ScoutProfile:
       allOf:
@@ -5660,6 +5736,14 @@ components:
             visits:
               type: integer
               description: "Total profile visits per last 30 days"
+            is_promoted:
+              type: boolean
+              description: "Is player promoted"
+            is_premium:
+              type: boolean
+              description: "Is player premium"
+            promotion:
+              $ref: '#/components/schemas/ProfilePromotion'
           example: {
             "slug": "scout-kacper-skalski",
             "user": {
@@ -5674,8 +5758,8 @@ components:
                 "gender": null,
                 "birth_date": null,
               },
-            "picture": null,
-            "last_activity": "2023-10-21T21:54:55.160773+02:00"
+              "picture": null,
+              "last_activity": "2023-10-21T21:54:55.160773+02:00"
             },
             "external_links": {
               "links": [ ]
@@ -5780,6 +5864,14 @@ components:
             visits:
               type: integer
               description: "Total profile visits per last 30 days"
+            is_promoted:
+              type: boolean
+              description: "Is player promoted"
+            is_premium:
+              type: boolean
+              description: "Is player premium"
+            promotion:
+              $ref: '#/components/schemas/ProfilePromotion'
           example:
             slug: "coach-miz-shoty"
             "uuid": "uuid"
@@ -5881,85 +5973,93 @@ components:
             visits:
               type: integer
               description: "Total profile visits per last 30 days"
+            is_promoted:
+              type: boolean
+              description: "Is player promoted"
+            is_premium:
+              type: boolean
+              description: "Is player premium"
+            promotion:
+              $ref: '#/components/schemas/ProfilePromotion'
           required:
-          - slug
-          - uuid
-          - user
-          - labels
-          - club_role
-          - custom_club_role
-          - profile_video
-          - external_links
-          - role
-          - verification_stage
-          - team_history_object
-          - visits
+            - slug
+            - uuid
+            - user
+            - labels
+            - club_role
+            - custom_club_role
+            - profile_video
+            - external_links
+            - role
+            - verification_stage
+            - team_history_object
+            - visits
 
           example:
-           {
-            "slug": "club-slug",
-            "uuid": "uuid",
-            "user": {
+            {
+              "slug": "club-slug",
+              "uuid": "uuid",
+              "user": {
                 "id": 19,
                 "first_name": "first_name",
                 "last_name": "last_name",
                 "userpreferences": {
-                    "age": 11,
-                    "localization": {
-                        "id": 1,
-                        "name": "Żyrardów",
-                        "voivodeship": "Mazowieckie",
-                        "priority": false,
-                        "latitude": "52.04880",
-                        "longitude": "20.44599"
+                  "age": 11,
+                  "localization": {
+                    "id": 1,
+                    "name": "Żyrardów",
+                    "voivodeship": "Mazowieckie",
+                    "priority": false,
+                    "latitude": "52.04880",
+                    "longitude": "20.44599"
+                  },
+                  "spoken_languages": [
+                    {
+                      "id": 1,
+                      "priority": false,
+                      "name": "Afrykanerski",
+                      "native_name": "afrikaans",
+                      "code": "af"
+                    }
+                  ],
+                  "citizenship": [
+                    {
+                      "country": "Polska",
+                      "code": "PL",
+                      "priority": true,
+                      "dial_code": "+48"
                     },
-                    "spoken_languages": [
-                        {
-                            "id": 1,
-                            "priority": false,
-                            "name": "Afrykanerski",
-                            "native_name": "afrikaans",
-                            "code": "af"
-                        }
-                    ],
-                    "citizenship": [
-                        {
-                            "country": "Polska",
-                            "code": "PL",
-                            "priority": true,
-                            "dial_code": "+48"
-                        },
-                        {
-                            "country": "Czechy",
-                            "code": "CZ",
-                            "priority": true,
-                            "dial_code": "+420"
-                        }
-                    ],
-                    "gender": {
-                        "id": "K",
-                        "name": "Kobieta"
-                    },
-                    "licences": [],
-                    "courses": [],
-                    "birth_date": "2012-01-01"
+                    {
+                      "country": "Czechy",
+                      "code": "CZ",
+                      "priority": true,
+                      "dial_code": "+420"
+                    }
+                  ],
+                  "gender": {
+                    "id": "K",
+                    "name": "Kobieta"
+                  },
+                  "licences": [ ],
+                  "courses": [ ],
+                  "birth_date": "2012-01-01"
                 },
-            "picture": null,
-            "last_activity": "2023-10-21T21:54:55.160773+02:00"
-            },
-            "labels": [],
-            "club_role": "V-ce prezes",
-            "custom_club_role": null,
-            "profile_video": [],
-            "external_links": [],
-            "role": "C",
-            "verification_stage": {
-              "step": 0,
-              "date_updated": "2023-09-09T10:18:34.070304+02:00",
-              "done": false
-            },
-            "visits": 10
-          }
+                "picture": null,
+                "last_activity": "2023-10-21T21:54:55.160773+02:00"
+              },
+              "labels": [ ],
+              "club_role": "V-ce prezes",
+              "custom_club_role": null,
+              "profile_video": [ ],
+              "external_links": [ ],
+              "role": "C",
+              "verification_stage": {
+                "step": 0,
+                "date_updated": "2023-09-09T10:18:34.070304+02:00",
+                "done": false
+              },
+              "visits": 10
+            }
 
     GuestProfile:
       allOf:
@@ -5974,29 +6074,44 @@ components:
             custom_role:
               type: string
               description: Custom role description provided by the user
+            is_promoted:
+              type: boolean
+              description: "Is player promoted"
+            is_premium:
+              type: boolean
+              description: "Is player premium"
+            promotion:
+              $ref: '#/components/schemas/ProfilePromotion'
+            external_links:
+              type: object
+              properties:
+                links:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ExternalLink'
           example: {
             "user": {
-                "id": 1,
-                "first_name": "",
-                "last_name": "",
-                "last_login": "2023-07-03T20:09:48.118282+02:00",
-                "last_activity": null,
-                "userpreferences": {
-                    "id": 5091,
-                    "age": null,
-                    "localization": null,
-                    "spoken_languages": [],
-                    "citizenship": null,
-                    "gender": null,
-                    "birth_date": null,
-                    "user": 1
-                }
+              "id": 1,
+              "first_name": "",
+              "last_name": "",
+              "last_login": "2023-07-03T20:09:48.118282+02:00",
+              "last_activity": null,
+              "userpreferences": {
+                "id": 5091,
+                "age": null,
+                "localization": null,
+                "spoken_languages": [ ],
+                "citizenship": null,
+                "gender": null,
+                "birth_date": null,
+                "user": 1
+              }
             },
             "history": {
-                "id": 1,
-                "counter": 0,
-                "counter_coach": 0,
-                "counter_scout": 0
+              "id": 1,
+              "counter": 0,
+              "counter_coach": 0,
+              "counter_scout": 0
             },
             "role": "G",
             "verification_id": null,
@@ -6093,7 +6208,7 @@ components:
       items:
         type: integer
       required:
-       - id
+        - id
 
     City:
       type: object
@@ -6184,14 +6299,14 @@ components:
           items:
             $ref: '#/components/schemas/Course'
       required:
-       - age
-       - localization
-       - spoken_languages
-       - citizenship
-       - gender
-       - birth_date
-       - licences
-       - courses
+        - age
+        - localization
+        - spoken_languages
+        - citizenship
+        - gender
+        - birth_date
+        - licences
+        - courses
 
     BaseUserProfilePreferencesUpdate:
       type: object
@@ -6218,7 +6333,7 @@ components:
 
     ProfileOwnerUserPreferencesUpdate:
       allOf:
-        - $ref:  '#/components/schemas/BaseUserProfilePreferencesUpdate'
+        - $ref: '#/components/schemas/BaseUserProfilePreferencesUpdate'
         - type: object
           properties:
             contact_email:
@@ -6410,7 +6525,7 @@ components:
           type: array
           items:
             description: "Paginated result"
-      required: ["count"]
+      required: [ "count" ]
 
     VerificationStage:
       type: object
@@ -6422,9 +6537,34 @@ components:
         done:
           type: boolean
       required:
-       - step
-       - date_updated
-       - done
+        - step
+        - date_updated
+        - done
+
+    PremiumProfile:
+      type: object
+      properties:
+        valid_since:
+          type: string
+          format: date
+          description: "Date when the profile became premium"
+        valid_until:
+          type: string
+          format: date
+          description: "Date when the profile will no longer be premium"
+        is_active:
+          type: boolean
+          description: "Is the profile currently premium"
+        period:
+          type: number
+          description: "Number of days the profile is premium"
+        is_trial:
+          type: boolean
+          description: "Is current subscription a trial?"
+        inquiries_refresh:
+          type: string
+          format: date
+          description: "When the inquiries will be refreshed (10 premium inquiries periodically)"
 
     TransferStatusGet:
       type: object
@@ -6441,7 +6581,7 @@ components:
             number:
               type: string
               description: "Contact mobile phone number."
-          required: ["dial_code", "number"]
+          required: [ "dial_code", "number" ]
         status:
           type: object
           properties:
@@ -6451,7 +6591,7 @@ components:
             name:
               type: string
               description: "Transfer status name"
-          required: ["id", "name"]
+          required: [ "id", "name" ]
         additional_info:
           type: array
           items:
@@ -6463,7 +6603,7 @@ components:
               name:
                 type: string
                 description: "Object name"
-            required: ["id", "name"]
+            required: [ "id", "name" ]
         benefits:
           type: array
           items:
@@ -6475,7 +6615,7 @@ components:
               name:
                 type: string
                 description: "Object name"
-            required: ["id", "name"]
+            required: [ "id", "name" ]
         number_of_trainings:
           type: array
           items:
@@ -6485,7 +6625,7 @@ components:
                 type: string
               name:
                 type: string
-            required: ["id", "name"]
+            required: [ "id", "name" ]
         salary:
           type: object
           properties:
@@ -6493,7 +6633,7 @@ components:
               type: string
             name:
               type: string
-          required: ["id", "name"]
+          required: [ "id", "name" ]
         league:
           type: array
           items:
@@ -6505,57 +6645,57 @@ components:
               name:
                 type: string
                 description: "Object name"
-            required: ["id", "name"]
-      required: ["contact_email", "phone_number", "status", "additional_info", "league", "benefits", "salary", "number_of_trainings"]
+            required: [ "id", "name" ]
+      required: [ "contact_email", "phone_number", "status", "additional_info", "league", "benefits", "salary", "number_of_trainings" ]
       example:
         {
           "contact_email": "email@email.com",
           "phone_number": {
-              "dial_code": "+1",
-              "number": 123
+            "dial_code": "+1",
+            "number": 123
           },
           "status": {
-              "id": "1",
-              "name": "Szukam klubu"
+            "id": "1",
+            "name": "Szukam klubu"
           },
           "additional_info": [
-              {
-                  "id": "1",
-                  "name": "Dostępny od zaraz"
-              },
-              {
-                  "id": "2",
-                  "name": "Wracam po kontuzji"
-              }
+            {
+              "id": "1",
+              "name": "Dostępny od zaraz"
+            },
+            {
+              "id": "2",
+              "name": "Wracam po kontuzji"
+            }
           ],
           "league": [
-              {
-                  "id": 13,
-                  "name": "B klasa",
-                  "is_parent": true
-              }
+            {
+              "id": 13,
+              "name": "B klasa",
+              "is_parent": true
+            }
           ],
           "benefits": [
-              {
-                  "id": "1",
-                  "name": "Zwrot lub organizacja transportu"
-              },
-              {
-                  "id": "2",
-                  "name": "Zwrot za buty lub rękawice"
-              }
+            {
+              "id": "1",
+              "name": "Zwrot lub organizacja transportu"
+            },
+            {
+              "id": "2",
+              "name": "Zwrot za buty lub rękawice"
+            }
           ],
           "salary": {
-              "id": "1",
-              "name": "0 - 499 zł"
+            "id": "1",
+            "name": "0 - 499 zł"
           },
           "number_of_trainings": [
-              {
-                  "id": "1",
-                  "name": "1-2 treningi tygodniowo"
-              }
+            {
+              "id": "1",
+              "name": "1-2 treningi tygodniowo"
+            }
           ]
-      }
+        }
 
     TransferRequestUpdate:
       type: object
@@ -6630,7 +6770,7 @@ components:
               type: integer
             number:
               type: string
-      required: ["requesting_team", "status", "player_position"]
+      required: [ "requesting_team", "status", "player_position" ]
 
     TransferRequestGetTeamContributor:
       type: object
@@ -6661,8 +6801,8 @@ components:
               type: string
             season:
               type: string
-          required: ["id", "team_name", "league_name", "league_id", "team_contributor_id", "picture_url", "country", "season"]
-      required: ["id", "round", "team"]
+          required: [ "id", "team_name", "league_name", "league_id", "team_contributor_id", "picture_url", "country", "season" ]
+      required: [ "id", "round", "team" ]
 
     TransferRequestPositions:
       type: array
@@ -6678,7 +6818,7 @@ components:
             description: "ENglish shortcut."
           shortcut_pl:
             type: string
-        required: ["id", "name", "shortcut", "shortcut_pl"]
+        required: [ "id", "name", "shortcut", "shortcut_pl" ]
 
     TransferRequestGet:
       type: object
@@ -6697,7 +6837,7 @@ components:
             name:
               type: string
               description: "Transfer status name"
-          required: ["id", "name"]
+          required: [ "id", "name" ]
         position:
           $ref: '#/components/schemas/TransferRequestPositions'
         number_of_trainings:
@@ -6709,7 +6849,7 @@ components:
             name:
               type: string
               description: "Transfer status name"
-          required: ["id", "name"]
+          required: [ "id", "name" ]
         benefits:
           type: array
           items:
@@ -6719,7 +6859,7 @@ components:
                 type: string
               name:
                 type: string
-            required: ["id", "name"]
+            required: [ "id", "name" ]
         salary:
           type: object
           properties:
@@ -6727,7 +6867,7 @@ components:
               type: string
             name:
               type: string
-          required: ["id", "name"]
+          required: [ "id", "name" ]
         contact_email:
           type: string
         phone_number:
@@ -6737,72 +6877,72 @@ components:
               type: string
             number:
               type: string
-          required: ["dial_code", "number"]
+          required: [ "dial_code", "number" ]
         profile_uuid:
           type: string
         club_voivodeship:
           type: string
-      required: ["requesting_team", "gender", "status", "position", "number_of_trainings", "salary", "contact_email", "phone_number", "benefits", "profile_uuid", "club_voivodeship"]
+      required: [ "requesting_team", "gender", "status", "position", "number_of_trainings", "salary", "contact_email", "phone_number", "benefits", "profile_uuid", "club_voivodeship" ]
 
       example:
         {
           "requesting_team": {
-              "id": 5,
-              "round": "wiosenna",
-              "team": {
-                  "id": 1,
-                  "team_name": "Sokół Marcinkowice",
-                  "league_highest_parent_name": "1 liga",
-                  "league_highest_parent_id": 5,
-                  "team_contributor_id": null,
-                  "picture_url": null,
-                  "country": "Polska",
-                  "season": "2021/2022"
-              }
+            "id": 5,
+            "round": "wiosenna",
+            "team": {
+              "id": 1,
+              "team_name": "Sokół Marcinkowice",
+              "league_highest_parent_name": "1 liga",
+              "league_highest_parent_id": 5,
+              "team_contributor_id": null,
+              "picture_url": null,
+              "country": "Polska",
+              "season": "2021/2022"
+            }
           },
           "gender": "M",
           "status": {
-              "id": "1",
-              "name": "Nieznany"
+            "id": "1",
+            "name": "Nieznany"
           },
           "position": [
-              {
-                  "id": 102,
-                  "name": "Defensywny Pomocnik #6",
-                  "shortcut": "DM",
-                  "shortcut_pl": "DP"
-              },
-              {
-                  "id": 103,
-                  "name": "Środkowy Pomocnik #8",
-                  "shortcut": "CM",
-                  "shortcut_pl": "ŚP"
-              }
+            {
+              "id": 102,
+              "name": "Defensywny Pomocnik #6",
+              "shortcut": "DM",
+              "shortcut_pl": "DP"
+            },
+            {
+              "id": 103,
+              "name": "Środkowy Pomocnik #8",
+              "shortcut": "CM",
+              "shortcut_pl": "ŚP"
+            }
           ],
           "number_of_trainings": {
-              "id": "1",
-              "name": "1-2 treningi tygodniowo"
+            "id": "1",
+            "name": "1-2 treningi tygodniowo"
           },
           "benefits": [
-              {
-                  "id": "1",
-                  "name": "Zwrot lub organizacja transportu"
-              },
-              {
-                  "id": "2",
-                  "name": "Zwrot za buty lub rękawice"
-              }
+            {
+              "id": "1",
+              "name": "Zwrot lub organizacja transportu"
+            },
+            {
+              "id": "2",
+              "name": "Zwrot za buty lub rękawice"
+            }
           ],
           "salary": {
-              "id": "1",
-              "name": "0 - 499 zł"
+            "id": "1",
+            "name": "0 - 499 zł"
           },
           "contact_email": "email@email.com",
           "phone_number": {
-              "dial_code": "+1",
-              "number": "123"
+            "dial_code": "+1",
+            "number": "123"
           }
-      }
+        }
 
     VerificationStageUpdate:
       type: object
@@ -7058,6 +7198,31 @@ components:
         - is_primary
         - is_primary_for_round
         - team_id
+    ProfileVisitorSummary:
+      type: object
+      properties:
+        this_month_count:
+          type: number
+          description: "Number of visits in last 30 days"
+        this_year_count:
+          type: number
+          description: "Number of visits in current calendar year"
+        visits:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileVisitor'
+    ProfileVisitor:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: "Date and time of the visit"
+        visitor:
+          $ref: '#/components/schemas/SimilarProfile'
+        days_ago:
+          type: integer
+          description: "Number of days since the visit"
     TeamContributorNonPlayer:
       type: object
       properties:
@@ -7172,7 +7337,7 @@ components:
             contact:
               $ref: '#/components/schemas/ContactSchema'
             playermetrics:
-                $ref: '#/components/schemas/PlayerProfileMetrics'
+              $ref: '#/components/schemas/PlayerProfileMetrics'
     InquiryRequest:
       type: object
       properties:
@@ -7256,13 +7421,28 @@ components:
               description: "Profile phone number"
         email:
           type: string
+    InquiryPool:
+      type: object
+      properties:
+        used:
+          type: integer
+          description: "Number of inquiries already used in the pool"
+          readOnly: true
+        total:
+          type: integer
+          description: "Limit of inquiries in the pool"
+          readOnly: true
+      required:
+        - count
+        - limit
+
     InquiryRequestUserMeta:
       type: object
       properties:
         user:
-            type: integer
-            description: User ID
-            readOnly: true
+          type: integer
+          description: User ID
+          readOnly: true
         plan:
           $ref: '#/components/schemas/InquiryPlan'
         contact:
@@ -7271,6 +7451,16 @@ components:
           type: integer
           description: "Current sent inquiry request count"
           readOnly: true
+        pools:
+          type: object
+          properties:
+            premium_profile:
+              $ref: '#/components/schemas/InquiryPool'
+              description: "Inquiry pool assigned to the premium profile (if possessed)"
+            regular:
+              $ref: '#/components/schemas/InquiryPool'
+              description: "Inquiry pool out of plan assigned to the user"
+
         logs:
           type: array
           items:
@@ -7287,6 +7477,9 @@ components:
         limit:
           type: integer
           description: "Limit of inquiries"
+        unlimited:
+          type: boolean
+          description: "User has unlimited inquiries (premium profile)."
       required:
         - user
         - plan
@@ -7369,7 +7562,7 @@ components:
       required:
         - role
         - custom_role
-    InquiryPaymentType:
+    PremiumProduct:
       type: object
       properties:
         id:
@@ -7380,6 +7573,10 @@ components:
           type: string
         price:
           type: string
+          description: "How much the whole product costs."
+        price_per_cycle:
+          type: string
+          description: "How much the product costs per cycle (per month - in terms of subscription)."
         ref:
           type: string
       required:
@@ -7399,7 +7596,9 @@ components:
           type: string
           format: uri
           description: "URL to the payment gateway."
-
+      required:
+        - uuid
+        - url
     ContactSchema:
       type: object
       properties:
@@ -7449,6 +7648,8 @@ components:
         team_history_object:
           $ref: '#/components/schemas/TeamHistoryProfileView'
           nullable: true
+        is_premium:
+          type: boolean
       required:
         - uuid
         - slug

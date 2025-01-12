@@ -138,7 +138,7 @@ class TestSendEmails(TestCase):
     def test_send_email_on_limit_reached(self) -> None:
         """Send email to user if he reached inquiry requests limit"""
         self._purge_outbox()
-        self.user1.userinquiry.counter = 5
+        self.user1.userinquiry.counter = 2
         self.user1.userinquiry.save()
 
         limit_reached = UserInquiry.objects.limit_reached()

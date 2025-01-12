@@ -4,6 +4,7 @@ from django.conf import settings as _settings
 
 from payments.models import Transaction as _Transaction
 from payments.providers.tpay import schemas as _schemas
+from premium.models import Product
 
 _TpayConfig = _settings.ENV_CONFIG.tpay
 
@@ -24,16 +25,22 @@ class TpayTransactionParser:
     @property
     def transaction_body(self) -> _json:
         """Create new transaction body schema to send to tpay"""
+        transaction_uuid = str(self._transaction.uuid)
         schema = _schemas.TpayTransactionBody(
             amount=self._transaction.amount,
             description=self._transaction.description,
-            hiddenDescription=str(self._transaction.uuid),
+            hiddenDescription=transaction_uuid,
             payer=self._payer,
             callbacks=self._config.callbacks,
         )
+        if self._transaction.product.ref == Product.ProductReference.INQUIRIES:
+            schema.callbacks.payerUrls.success += (
+                f"&inquiry_count={self._transaction.product.inquiry_plan.limit}"
+            )
         schema.callbacks.payerUrls.success += (
-            f"&inquiry_count={self._transaction.transaction_type.inquiry_plan.limit}"
+            f"&product={self._transaction.product.ref.lower()}"
         )
+        print(f"Transaction {transaction_uuid} callback: {schema.callbacks}")
         return schema.json(by_alias=True, exclude_none=True)
 
     @property

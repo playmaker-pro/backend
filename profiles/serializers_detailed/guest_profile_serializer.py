@@ -12,11 +12,15 @@ class GuestProfileViewSerializer(BaseProfileSerializer):
             "uuid",
             "user",
             "labels",
+            "external_links",
             "verification_stage",
             "role",
             "custom_role",
             "team_history_object",
             "visits",
+            "is_promoted",
+            "is_premium",
+            "promotion",
         )
 
 

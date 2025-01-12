@@ -128,12 +128,6 @@ class ProfileVideoSerializer(serializers.ModelSerializer):
         return super().update(instance, self.initial_data)
 
 
-class PlayerMetricsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.PlayerMetrics
-        fields = ("season", "pm_score", "season_score")
-
-
 class LicenceTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.LicenceType
@@ -469,9 +463,9 @@ class BaseTeamContributorInputSerializer(serializers.Serializer):
                 if not isinstance(league_identifier, int):
                     # Check if country is provided
                     if not data.get("country"):
-                        validation_errors[
-                            "country"
-                        ] = "This field is required for foreign teams."
+                        validation_errors["country"] = (
+                            "This field is required for foreign teams."
+                        )
 
                     # Check if gender is provided for the foreign team
                     if not data.get("gender"):
@@ -592,9 +586,9 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
 
         # Specific validations for non-player profiles
         if data.get("is_primary") is True and end_date:
-            validation_errors[
-                "end_date"
-            ] = "End date should not be provided if is_primary is True."
+            validation_errors["end_date"] = (
+                "End date should not be provided if is_primary is True."
+            )
         if self.instance:
             # Case where is_primary changes from True to False,
             # and no end_date is provided
@@ -615,9 +609,9 @@ class OtherProfilesTeamContributorInputSerializer(BaseTeamContributorInputSerial
             role not in models.TeamContributor.get_other_roles()
             and data.get("custom_role") is not None
         ):
-            validation_errors[
-                "custom_role"
-            ] = "Custom role should not be provided unless the role is 'Other'."
+            validation_errors["custom_role"] = (
+                "Custom role should not be provided unless the role is 'Other'."
+            )
 
         # Specific logic based on the profile type
         profile_short_type = self.context.get("profile_short_type")
@@ -874,7 +868,7 @@ class ProfileSerializer(serializers.Serializer):
         many=True, required=False, read_only=True
     )
     player_video = ProfileVideoSerializer(many=True, read_only=True)
-    playermetrics = PlayerMetricsSerializer(read_only=True)
+    # playermetrics = PlayerMetricsSerializer(read_only=True)
     licences = CoachLicenceSerializer(many=True, required=False)
 
     enums = (
@@ -1169,7 +1163,7 @@ class UpdateProfileSerializer(ProfileSerializer):
     def update_fields(self) -> None:
         """Update fields given in payload"""
         if user_data := self.initial_data.pop("user", None):
-            self.user = UserDataSerializer(
+            self.user = UserDataSerializer(  # type: ignore  # noqa: F821
                 instance=self.instance.user,
                 data=user_data,
                 partial=True,
@@ -1367,7 +1361,11 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
 
 class SimilarProfileSerializer(serializers.Serializer):
     # recursive imports
+
     from clubs.api.serializers import TeamHistoryBaseProfileSerializer
+    from profiles.serializers_detailed.player_profile_serializers import (
+        PlayerMetricsSerializer,
+    )
 
     uuid = serializers.UUIDField(read_only=True)
     slug = serializers.CharField()
@@ -1386,6 +1384,7 @@ class SimilarProfileSerializer(serializers.Serializer):
     )
     playermetrics = PlayerMetricsSerializer(read_only=True)
     team_history_object = serializers.SerializerMethodField()
+    is_premium = serializers.BooleanField(read_only=True)
 
     def get_specific_role(self, obj: models.PROFILE_MODELS) -> Optional[dict]:
         """Get specific role for profile (Coach, Club)"""
@@ -1430,3 +1429,23 @@ class SimilarProfileSerializer(serializers.Serializer):
                 )
                 return serializer.to_representation(serializer.parse(gender_value))
             return None
+
+
+class ProfileVisitorSerializer(serializers.Serializer):
+    timestamp = serializers.DateTimeField()
+    days_ago = serializers.IntegerField()
+    visitor = SimilarProfileSerializer(source="visitor.profile", read_only=True)
+
+
+class ProfileVisitSummarySerializer(serializers.Serializer):
+    this_month_count = serializers.SerializerMethodField()
+    this_year_count = serializers.SerializerMethodField()
+    visits = ProfileVisitorSerializer(many=True, read_only=True, source="*")
+
+    def get_this_month_count(self, v_qs: QuerySet[models.ProfileVisitation]) -> int:
+        return v_qs.count()
+
+    def get_this_year_count(self, v_qs: QuerySet[models.ProfileVisitation]) -> int:
+        if v_qs.first():
+            return v_qs.first().visited.visitors_count_this_year
+        return 0

@@ -48,7 +48,7 @@ class TestSendMailForNewUser:
     def test_send_email_on_inquiry_limit_reached(self, new_user) -> None:
         """Test send email to user when inquiry limit reached"""
         mail.outbox.clear()
-        new_user.userinquiry.counter = 4
+        new_user.userinquiry.counter = 1
         new_user.userinquiry.save()
         assert len(mail.outbox) == 0
         new_user.userinquiry.increment()

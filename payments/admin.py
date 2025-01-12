@@ -13,8 +13,3 @@ class TransactionAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-
-
-@admin.register(_models.TransactionType)
-class TransactionTypeAdmin(admin.ModelAdmin):
-    pass

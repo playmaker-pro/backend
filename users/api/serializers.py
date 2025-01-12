@@ -12,6 +12,7 @@ from api.serializers import (
     ProfileEnumChoicesSerializer,
 )
 from features.models import AccessPermission, Feature, FeatureElement
+from premium.api.serializers import PremiumProfileProductSerializer, PromoteProfileProductSerializer
 from profiles.api.serializers import (
     CoachLicenceSerializer,
     CourseSerializer,
@@ -42,6 +43,11 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
     picture = serializers.CharField(source="picture_url", read_only=True)
     gender = serializers.SerializerMethodField("get_gender")
     has_unread_inquiries = serializers.SerializerMethodField()
+    promotion = PromoteProfileProductSerializer(read_only=True, source="profile.promotion")
+    is_promoted = serializers.BooleanField(read_only=True, source="profile.is_promoted")
+    is_premium = serializers.BooleanField(read_only=True, source="profile.is_premium")
+    premium_already_tested = serializers.BooleanField(read_only=True, source="profile.premium_already_tested")
+    premium = PremiumProfileProductSerializer(read_only=True, source="profile.premium")
 
     class Meta:
         model = User
@@ -55,6 +61,11 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
             "slug",
             "gender",
             "has_unread_inquiries",
+            "promotion",
+            "is_promoted",
+            "is_premium",
+            "premium",
+            "premium_already_tested"
         )
 
     def my_profile_uuid(self, instance: User) -> Optional[str]:
