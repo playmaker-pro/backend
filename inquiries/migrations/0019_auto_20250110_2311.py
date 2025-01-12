@@ -48,9 +48,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(
-            reset_all_inquiry_plans, reverse_code=migrations.RunPython.noop
+            reward_with_premium_profile, reverse_code=migrations.RunPython.noop
         ),
         migrations.RunPython(
-            reward_with_premium_profile, reverse_code=migrations.RunPython.noop
+            reset_all_inquiry_plans, reverse_code=migrations.RunPython.noop
         ),
     ]
