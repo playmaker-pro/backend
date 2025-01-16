@@ -4,6 +4,33 @@ from django.db import models
 class ExternalLinks(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    target_name = models.CharField(max_length=100, null=True, blank=True)
+
+    @property
+    def owner(self):
+        if not self.target_name:
+            for name in [
+                "playerprofile",
+                "clubprofile",
+                "coachprofile",
+                "guestprofile",
+                "managerprofile",
+                "scoutprofile",
+                "refereeprofile",
+                "club",
+                "leaguehistory",
+                "team",
+            ]:
+                if hasattr(self, name):
+                    self.target_name = name
+                    self.save()
+            else:
+                return None
+
+        return getattr(self, self.target_name)
+
+    def __str__(self):
+        return f"{self.owner} links"
 
 
 class LinkSource(models.Model):
@@ -51,9 +78,17 @@ class ExternalLinksEntity(models.Model):
     link_type = models.CharField(max_length=100, choices=DATA_TYPE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    description = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return self.source.name
+        if not self.description:
+            self.update_description(f"{self.target.owner} - Type: {self.source}")
+
+        return self.description
+
+    def update_description(self, text: str):
+        self.description = text
+        self.save()
 
     class Meta:
         unique_together = ("target", "source")

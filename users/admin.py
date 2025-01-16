@@ -3,6 +3,7 @@ from django.contrib.admin import ChoicesFieldListFilter, SimpleListFilter
 from django.contrib.auth.admin import UserAdmin  # as BaseUserAdmin
 from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import Case, F, Q, QuerySet, When
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
@@ -184,6 +185,7 @@ class UserAdminPanel(UserAdmin):
                     "last_name",
                     "email",
                     "userpreferences",
+                    "profile",
                 )
             },
         ),
@@ -231,12 +233,12 @@ class UserAdminPanel(UserAdmin):
         "email",
         "first_name",
         "last_name",
+        "profile",
         "state",
         "display_status",
         "is_active",
         "last_login",
         "date_joined",
-        "get_profile",
         "get_profile_permalink",
         linkify("profile"),
         "get_profile_percentage",
@@ -248,12 +250,12 @@ class UserAdminPanel(UserAdmin):
     )
     list_filter = ("state", "declared_role", HasDataMapperIdFilter)
     search_fields = ("username", "first_name", "last_name", "declared_role")
-    readonly_fields = ("userpreferences",)
+    readonly_fields = ("userpreferences", "profile")
     actions = [verify_one]
 
     def get_team_object(self, obj):
         if obj.is_club:
-            if obj.profile.club_object:
+            if obj.profile and obj.profile.club_object:
                 return obj.profile.club_object
         elif obj.is_coach or obj.is_player:
             if obj.profile and obj.profile.team_object:
@@ -264,6 +266,15 @@ class UserAdminPanel(UserAdmin):
             return obj.profile.team_club_league_voivodeship_ver
         except:
             return ""
+
+    def profile(self, obj):
+        if profile := obj.profile:
+            view_name = (
+                f"admin:{profile._meta.app_label}_"  # noqa
+                f"{profile.__class__.__name__.lower()}_change"
+            )
+            link_url = reverse(view_name, args=[profile.pk])
+            return format_html(f'<a href="{link_url}">{profile}</a>')
 
     def get_mapper(self, obj):
         if hasattr(obj.profile, "mapper"):

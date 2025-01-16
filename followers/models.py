@@ -49,7 +49,6 @@ class Pin(models.Model):
 
 
 class Follow(models.Model):
-
     """
     A simple table mapping who a user is following.
     For example, if user is Kyle and Kyle is following Alex,
@@ -68,7 +67,6 @@ class Follow(models.Model):
 
 
 class FollowTeam(models.Model):
-
     """
     A simple table mapping who a user is following.
     For example, if user is Kyle and Kyle is following Alex,
@@ -122,3 +120,6 @@ class GenericFollow(models.Model):
         """
         ModelClass = self.content_type.model_class()
         return ModelClass.objects.filter(pk=self.object_id).exists()
+
+    def __str__(self):
+        return f"{self.user} -- follows -- {self.content_object.user}"

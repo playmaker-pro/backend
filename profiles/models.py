@@ -500,9 +500,7 @@ class BaseProfile(models.Model, EventLogMixin):
     def ensure_premium_products_exist(self, commit: bool = True) -> None:
         """Create PremiumProduct for profile if it doesn't exist"""
         if not self.premium_products:
-            self.premium_products, _ = PremiumProduct.objects.get_or_create(
-                profile_uuid=self.uuid
-            )
+            self.premium_products = PremiumProduct.objects.create()
             if commit:
                 self.save()
 
@@ -1441,23 +1439,27 @@ class PlayerMetrics(models.Model):
         verbose_name_plural = _("Metryki graczy")
 
     def __str__(self):
-        def none_or_date(param):
-            _f = "%b/%d/%Hh"
-            return (
-                getattr(self, param).strftime(_f)
-                if getattr(self, param)
-                else getattr(self, param)
-            )
-
-        params = {
-            "g": none_or_date("games_updated"),
-            "gs": none_or_date("games_summary_updated"),
-            "c": none_or_date("season_updated"),
-            "cs": none_or_date("season_summary_updated"),
-            "f": none_or_date("fantasy_updated"),
-            "fs": none_or_date("fantasy_summary_updated"),
-        }
-        return " ".join([f"{name}:{metric}" for name, metric in params.items()])
+        pm_score_info = f"| PMScore: {self.pm_score or '--'}"
+        if self.pm_score_updated:
+            pm_score_info += f" | Updated: {self.pm_score_updated}"
+        return f"{self.player.user.get_full_name()} {pm_score_info}"
+        # def none_or_date(param):
+        #     _f = "%b/%d/%Hh"
+        #     return (
+        #         getattr(self, param).strftime(_f)
+        #         if getattr(self, param)
+        #         else getattr(self, param)
+        #     )
+        #
+        # params = {
+        #     "g": none_or_date("games_updated"),
+        #     "gs": none_or_date("games_summary_updated"),
+        #     "c": none_or_date("season_updated"),
+        #     "cs": none_or_date("season_summary_updated"),
+        #     "f": none_or_date("fantasy_updated"),
+        #     "fs": none_or_date("fantasy_summary_updated"),
+        # }
+        # return " ".join([f"{name}:{metric}" for name, metric in params.items()])
 
 
 class ClubProfile(BaseProfile):

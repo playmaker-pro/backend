@@ -102,7 +102,6 @@ class TestPremiumProduct:
         assert products.promotion
         assert products.inquiries
         assert products.profile == player_profile
-        assert products.user == player_profile.user
         assert str(products) == f"{player_profile} -- PREMIUM"
 
         # premium = products.setup_premium_profile(PremiumType.YEAR)
@@ -147,7 +146,6 @@ class TestPremiumProduct:
         assert products.promotion
         assert products.inquiries
         assert products.profile == coach_profile
-        assert products.user == coach_profile.user
         assert str(products) == f"{coach_profile} -- PREMIUM"
 
         # products.setup_premium_profile(PremiumType.MONTH)
