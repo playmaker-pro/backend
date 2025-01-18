@@ -76,10 +76,10 @@ def test_check_if_premium_inquiries_refresh(
     for _ in range(3):
         user.userinquiry.increment()
 
-    assert player_profile.premium_products.inquiries.current_counter == 3
+    assert player_profile.premium_products.inquiries.current_counter == 1
     assert user.userinquiry.left == 9
     assert user.userinquiry.counter == 3
-    assert user.userinquiry.counter_raw == 0
+    assert user.userinquiry.counter_raw == 2
     assert user.userinquiry.limit_raw == 2
 
     mck_timezone_now.return_value = (
@@ -88,9 +88,9 @@ def test_check_if_premium_inquiries_refresh(
     )
     new_current_date = timezone.now().date()
 
-    assert user.userinquiry.left == 12
-    assert user.userinquiry.counter == 0
-    assert user.userinquiry.counter_raw == 0
+    assert user.userinquiry.left == 10
+    assert user.userinquiry.counter == 2
+    assert user.userinquiry.counter_raw == 2
     assert user.userinquiry.limit_raw == 2
     assert player_profile.premium_products.inquiries.is_active
 
@@ -105,8 +105,8 @@ def test_check_if_premium_inquiries_refresh(
     assert player_profile.premium_products.inquiries.valid_since.date() == primary_date
     assert player_profile.premium_products.inquiries.current_counter == 0
 
-    # increment 12x
-    for _ in range(12):
+    # increment 10x
+    for _ in range(10):
         user.userinquiry.increment()
 
     assert user.userinquiry.left == 0
@@ -170,9 +170,9 @@ def test_premium_inquiries_on_trial(
     assert user.userinquiry.left == 9
     assert user.userinquiry.limit == 12
     assert user.userinquiry.counter == 3
-    assert user.userinquiry.counter_raw == 0
+    assert user.userinquiry.counter_raw == 2
     assert user.userinquiry.limit_raw == 2
-    assert trial_premium_coach_profile.premium_products.inquiries.current_counter == 3
+    assert trial_premium_coach_profile.premium_products.inquiries.current_counter == 1
 
     assert not UserEmailOutbox.objects.filter(
         recipient=trial_premium_coach_profile.user.email, email_type="PREMIUM_EXPIRED"
@@ -185,10 +185,10 @@ def test_premium_inquiries_on_trial(
         recipient=trial_premium_coach_profile.user.email, email_type="PREMIUM_EXPIRED"
     ).exists()
 
-    assert user.userinquiry.left == 2
+    assert user.userinquiry.left == 0
     assert user.userinquiry.limit == 2
-    assert user.userinquiry.counter == 0
-    assert user.userinquiry.counter_raw == 0
+    assert user.userinquiry.counter == 2
+    assert user.userinquiry.counter_raw == 2
     assert not trial_premium_coach_profile.has_premium_inquiries
     assert not trial_premium_coach_profile.premium_products.inquiries.is_active
     assert (
@@ -201,9 +201,9 @@ def test_premium_inquiries_on_trial(
 
     assert trial_premium_coach_profile.has_premium_inquiries
     assert user.userinquiry.limit == 12
-    assert user.userinquiry.left == 12
-    assert user.userinquiry.counter == 0
-    assert user.userinquiry.counter_raw == 0
+    assert user.userinquiry.left == 10
+    assert user.userinquiry.counter == 2
+    assert user.userinquiry.counter_raw == 2
     assert trial_premium_coach_profile.premium_products.inquiries.is_active
     assert (
         trial_premium_coach_profile.premium_products.inquiries.counter_updated_at.date()
@@ -213,12 +213,12 @@ def test_premium_inquiries_on_trial(
     mck_timezone_now.return_value += timedelta(days=30, hours=1)
 
     assert user.userinquiry.limit == 12
-    assert user.userinquiry.left == 12
-    assert user.userinquiry.counter == 0
-    assert user.userinquiry.counter_raw == 0
+    assert user.userinquiry.left == 10
+    assert user.userinquiry.counter == 2
+    assert user.userinquiry.counter_raw == 2
 
-    # increment 12x
-    for _ in range(12):
+    # increment 10x
+    for _ in range(10):
         user.userinquiry.increment()
 
     assert user.userinquiry.left == 0
@@ -264,6 +264,10 @@ def test_premium_inquiries_on_trial(
         ).count()
         == 2
     )
+
+    assert user.userinquiry.left == 0
+    assert user.userinquiry.limit == 2
+    assert user.userinquiry.counter == 2
 
 
 def test_try_trial_after_subscription(player_profile, mck_timezone_now):

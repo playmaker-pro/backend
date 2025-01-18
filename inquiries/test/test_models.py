@@ -61,8 +61,8 @@ class TestModels(TestCase):
 
         assert self.player.user.userinquiry.counter == 1
         assert self.player.user.userinquiry.limit == 12
-        assert self.player.user.userinquiry.counter_raw == 0
-        assert self.player.user.userinquiry.premium_inquiries.current_counter == 1
+        assert self.player.user.userinquiry.counter_raw == 1
+        assert self.player.user.userinquiry.premium_inquiries.current_counter == 0
 
         plan = InquiryPlan.objects.get(type_ref="PREMIUM_INQUIRIES_XXL")
         self.player.user.userinquiry.set_new_plan(plan)
@@ -70,16 +70,16 @@ class TestModels(TestCase):
 
         assert self.player.user.userinquiry.counter == 2
         assert self.player.user.userinquiry.limit == 22
-        assert self.player.user.userinquiry.counter_raw == 0
-        assert self.player.user.userinquiry.premium_inquiries.current_counter == 2
+        assert self.player.user.userinquiry.counter_raw == 2
+        assert self.player.user.userinquiry.premium_inquiries.current_counter == 0
 
         with patch(
             "django.utils.timezone.now",
             return_value=timezone.now() + timedelta(days=31),
         ):
             assert not self.player.has_premium_inquiries
-            assert self.player.user.userinquiry.counter == 0
-            assert self.player.user.userinquiry.limit == 12
+            assert self.player.user.userinquiry.counter == 2
+            assert self.player.user.userinquiry.limit == 2
 
     def test_premium_inquiries_will_refresh(self):
         assert self.player.user.userinquiry.counter == 0
@@ -97,7 +97,7 @@ class TestModels(TestCase):
 
         assert self.player.user.userinquiry.counter == 2
         assert self.player.user.userinquiry.limit == 12
-        assert self.player.user.userinquiry.premium_inquiries.current_counter == 2
+        assert self.player.user.userinquiry.premium_inquiries.current_counter == 0
         assert (
             self.player.user.userinquiry.premium_inquiries.counter_updated_at.date()
             == timezone.now().date()
@@ -108,7 +108,7 @@ class TestModels(TestCase):
             return_value=timezone.now() + timedelta(days=31),
         ):
             assert self.player.has_premium_inquiries
-            assert self.player.user.userinquiry.counter == 0
+            assert self.player.user.userinquiry.counter == 2
             assert self.player.user.userinquiry.limit == 12
             assert self.player.user.userinquiry.premium_inquiries.current_counter == 0
             assert (
