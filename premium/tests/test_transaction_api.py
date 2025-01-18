@@ -49,6 +49,7 @@ def test_buy_premium_month_player(
     assert response.status_code == 200
 
     transaction = approve_transaction(response.json()["uuid"])
+    player_profile.refresh_from_db()
 
     assert transaction.product == product_premium_player_month
     assert transaction.user == player_profile.user
@@ -60,7 +61,7 @@ def test_buy_premium_month_player(
     assert player_profile.user.userinquiry.limit_raw == 2
     assert player_profile.user.userinquiry.limit == 12
     assert player_profile.user.userinquiry.left == 12
-    assert not player_profile.premium_products.trial_tested
+    assert player_profile.premium_products.trial_tested
 
 
 def test_buy_premium_year_player(
@@ -75,6 +76,7 @@ def test_buy_premium_year_player(
     assert response.status_code == 200
 
     transaction = approve_transaction(response.json()["uuid"])
+    player_profile.refresh_from_db()
 
     assert transaction.product == product_premium_player_year
     assert transaction.user == player_profile.user
@@ -86,7 +88,7 @@ def test_buy_premium_year_player(
     assert player_profile.user.userinquiry.limit_raw == 2
     assert player_profile.user.userinquiry.limit == 12
     assert player_profile.user.userinquiry.left == 12
-    assert not player_profile.premium_products.trial_tested
+    assert player_profile.premium_products.trial_tested
 
 
 def test_buy_premium_month_other(

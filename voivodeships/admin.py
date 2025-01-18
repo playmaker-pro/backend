@@ -6,3 +6,4 @@ from .models import Voivodeships
 @admin.register(Voivodeships)
 class VoivodeshipsAdmin(admin.ModelAdmin):
     list_display = ("name", "code")
+    search_fields = ("name", "code")

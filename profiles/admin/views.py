@@ -4,7 +4,7 @@ from django import forms
 from django.apps import apps
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Field, QuerySet
+from django.db.models import Field, ForeignKey, OneToOneField, QuerySet
 from django.forms.models import ModelChoiceField
 from django.http import HttpRequest
 from django.urls import reverse
@@ -60,21 +60,22 @@ class ProfileVisitHistoryAdmin(admin.ModelAdmin):
 
 @admin.register(models.PlayerMetrics)
 class PlayerMetricsAdmin(admin.ModelAdmin):
-    list_display = [
-        "player",
-        "games_updated",
-        "games_summary_updated",
-        "fantasy_updated",
-        "fantasy_summary_updated",
-        "season_updated",
-        "season_summary_updated",
-    ]
+    list_display = ["player", "pm_score", "pm_score_history"]
     search_fields = [
         "player__user__email",
         "player__user__first_name",
         "player__user__last_name",
     ]
+    fields = (
+        "player",
+        "pm_score",
+        "pm_score_history",
+        "pm_score_state",
+        "pm_score_updated",
+    )
+    readonly_fields = ("player",)
     autocomplete_fields = ("player",)
+    ordering = ("pm_score",)
 
 
 @admin.register(models.PlayerPosition)
@@ -88,7 +89,7 @@ DEFAULT_PROFILE_DISPLAY_FIELDS = ("pk", linkify("user"), "slug", "active", "uuid
 
 class ProfileAdminBase(admin.ModelAdmin):
     search_fields = DEFAULT_PROFILE_SEARCHABLES
-    display_fileds = DEFAULT_PROFILE_DISPLAY_FIELDS
+    display_fields = DEFAULT_PROFILE_DISPLAY_FIELDS
     readonly_fields = ("data_prettified",)
 
     def active(self, obj):
@@ -102,22 +103,66 @@ class ProfileAdminBase(admin.ModelAdmin):
 
 @admin.register(models.ManagerProfile)
 class ManagerProfileAdmin(ProfileAdminBase):
-    readonly_fields = ("external_links", "uuid")
+    readonly_fields = (
+        "external_links",
+        "uuid",
+        "premium_products",
+        "visitation",
+        "verification_stage",
+        "verification",
+    )
+    autocomplete_fields = (
+        "user",
+        "external_links",
+        "team_object",
+        "team_history_object",
+        "user",
+    )
 
 
 @admin.register(models.ScoutProfile)
 class ScoutProfileAdmin(ProfileAdminBase):
-    readonly_fields = ("external_links", "uuid")
+    readonly_fields = (
+        "external_links",
+        "uuid",
+        "premium_products",
+        "visitation",
+        "verification",
+        "verification_stage",
+    )
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
         "pk",
         "user",
+    )
+    autocomplete_fields = (
+        "user",
+        "external_links",
+        "team_object",
+        "team_history_object",
+        "user",
+        "voivodeship_obj",
+        "address",
     )
 
 
 @admin.register(models.GuestProfile)
 class GuestProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS
-    readonly_fields = ("uuid",)
+    readonly_fields = (
+        "external_links",
+        "uuid",
+        "premium_products",
+        "visitation",
+        "verification",
+        "verification_stage",
+    )
+    autocomplete_fields = (
+        "user",
+        "external_links",
+        "team_object",
+        "team_history_object",
+        "user",
+    )
 
 
 @admin.register(models.ClubProfile)
@@ -127,8 +172,22 @@ class ClubProfileAdmin(ProfileAdminBase):
         linkify("club_object"),
     )
     search_fields = DEFAULT_PROFILE_SEARCHABLES + ("club_object__name",)
-    autocomplete_fields = ("club_object",)
-    readonly_fields = ("uuid",)
+    autocomplete_fields = (
+        "club_object",
+        "user",
+        "external_links",
+        "team_object",
+        "team_history_object",
+        "user",
+    )
+    readonly_fields = (
+        "external_links",
+        "uuid",
+        "premium_products",
+        "visitation",
+        "verification",
+        "verification_stage",
+    )
 
 
 @admin.register(models.ProfileVerificationStatus)
@@ -148,6 +207,7 @@ class ProfileVerificationStatusAdmin(admin.ModelAdmin):
         linkify("previous"),
         "get_next",
     )
+    autocomplete_fields = ("owner", "team", "club", "set_by")
     list_filter = (
         "owner__declared_role",
         "status",
@@ -160,6 +220,7 @@ class ProfileVerificationStatusAdmin(admin.ModelAdmin):
         filters.HasClubObjectFilter,
     )
     actions = [update_with_profile_data]
+    search_fields = ("owner__first_name", "owner__last_name")
 
     def get_next(self, obj):
         return obj.next
@@ -175,7 +236,7 @@ class ProfileVerificationStatusAdmin(admin.ModelAdmin):
 @admin.register(models.PlayerProfile)
 class PlayerProfileAdmin(ProfileAdminBase):
     list_display = DEFAULT_PROFILE_DISPLAY_FIELDS + (
-        "get_mapper",
+        # "get_mapper",
         linkify("playermetrics"),
         linkify("team_object"),
         linkify("team_history_object"),
@@ -185,8 +246,8 @@ class PlayerProfileAdmin(ProfileAdminBase):
         "display_club",
         "display_seniority",
         "display_gender",
-        "meta_updated",
-        "meta_last",
+        # "meta_updated",
+        # "meta_last",
         linkify("verification"),
         linkify("external_links"),
     )
@@ -205,21 +266,25 @@ class PlayerProfileAdmin(ProfileAdminBase):
         else:
             obj.meta
 
-    def get_mapper(self, obj):
-        if hasattr(obj, "mapper"):
-            if obj.mapper is not None:
-                old_mapper = obj.mapper.get_entity(
-                    related_type="player", database_source="s38"
-                )
-                if old_mapper is not None:
-                    return old_mapper.mapper_id
-        return None
+    # def get_mapper(self, obj):
+    #     if hasattr(obj, "mapper"):
+    #         if obj.mapper is not None:
+    #             old_mapper = obj.mapper.get_entity(
+    #                 related_type="player", database_source="s38"
+    #             )
+    #             if old_mapper is not None:
+    #                 return old_mapper.mapper_id
+    #     return None
 
     autocomplete_fields = (
         "user",
+        "external_links",
         "team_object",
         "team_history_object",
         "team_object_alt",
+        "user",
+        "voivodeship_obj",
+        "address",
     )
 
     actions = [
@@ -234,7 +299,15 @@ class PlayerProfileAdmin(ProfileAdminBase):
         calculate_fantasy,
     ]
 
-    readonly_fields = ("data_prettified", "mapper", "external_links", "uuid")
+    readonly_fields = (
+        "data_prettified",
+        "mapper",
+        "external_links",
+        "uuid",
+        "premium_products",
+        "visitation",
+        "verification_stage",
+    )
     search_fields = ("uuid", "user__email", "user__first_name", "user__last_name")
 
 
@@ -247,7 +320,14 @@ class CoachProfileAdmin(ProfileAdminBase):
         linkify("team_history_object"),
         linkify("external_links"),
     )
-    autocomplete_fields = ("team_object", "team_history_object", "team_history_object")
+    autocomplete_fields = (
+        "user",
+        "team_object",
+        "team_history_object",
+        "user",
+        "voivodeship_obj",
+        "address",
+    )
     exclude = ("voivodeship", "user__email")
 
     def get_mapper(self, obj):
@@ -260,7 +340,15 @@ class CoachProfileAdmin(ProfileAdminBase):
                     return old_mapper.mapper_id
         return None
 
-    readonly_fields = ("mapper", "external_links", "uuid")
+    readonly_fields = (
+        "mapper",
+        "external_links",
+        "uuid",
+        "premium_products",
+        "visitation",
+        "verification",
+        "verification_stage",
+    )
 
 
 @admin.register(models.RoleChangeRequest)
@@ -350,8 +438,7 @@ class LicenceTypeAdmin(ProfileAdminBase):
 
 
 @admin.register(models.VerificationStage)
-class VerificationStageAdmin(admin.ModelAdmin):
-    ...
+class VerificationStageAdmin(admin.ModelAdmin): ...
 
 
 @admin.register(models.TeamContributor)
@@ -413,7 +500,7 @@ class TeamContributorAdmin(RemoveM2MDuplicatesMixin, admin.ModelAdmin):
         return queryset
 
 
-@admin.register(models.CoachLicence)
+# @admin.register(models.CoachLicence)
 class CoachLicenceAdmin(admin.ModelAdmin):
     autocomplete_fields = ("owner",)
 
@@ -550,3 +637,10 @@ class CatalogAdmin(admin.ModelAdmin):
 
     class Meta:
         model = models.Catalog
+
+
+# @admin.register(models.Visitation)
+class VisitationAdmin(admin.ModelAdmin):
+    """Admin for Visitation model."""
+
+    ...

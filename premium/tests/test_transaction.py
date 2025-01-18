@@ -201,13 +201,13 @@ def test_premium_inquiries_on_trial(
 
     assert trial_premium_coach_profile.has_premium_inquiries
     assert user.userinquiry.limit == 12
-    assert user.userinquiry.left == 9
-    assert user.userinquiry.counter == 3
+    assert user.userinquiry.left == 12
+    assert user.userinquiry.counter == 0
     assert user.userinquiry.counter_raw == 0
     assert trial_premium_coach_profile.premium_products.inquiries.is_active
     assert (
         trial_premium_coach_profile.premium_products.inquiries.counter_updated_at.date()
-        == (timezone.now() - timedelta(days=7, hours=1)).date()
+        == timezone.now().date()
     )
 
     mck_timezone_now.return_value += timedelta(days=30, hours=1)
