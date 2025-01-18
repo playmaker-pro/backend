@@ -236,7 +236,10 @@ class PremiumInquiriesProduct(models.Model):
 
     @property
     def subscription_days(self) -> timedelta:
-        return self.valid_until.date() - self.valid_since.date()
+        if self.valid_since and self.valid_until:
+            return self.valid_until.date() - self.valid_since.date()
+        else:
+            return timedelta(days=0)
 
     @property
     def can_use_premium_inquiries(self) -> bool:
@@ -281,16 +284,20 @@ class PremiumInquiriesProduct(models.Model):
         """Refresh the validity of the premium inquiries."""
         period = period or premium_type.period
 
+        if self.subscription_days.days < 30:
+            self.reset_counter(reset_plan=False, commit=False)
+
         if self.is_active:
             self.valid_until = get_date_days_after(self.valid_until, days=period)
         else:
             self._fresh_init(period)
+
         self.save()
 
-    def save(self, *args, **kwargs):
-        if not self.valid_since:
+    def save(self, skip_auto: bool = False, *args, **kwargs):
+        if not self.valid_since and not skip_auto:
             self.valid_since = timezone.now()
-        if not self.counter_updated_at:
+        if not self.counter_updated_at and not skip_auto:
             self.counter_updated_at = timezone.now()
         super().save(*args, **kwargs)
 
@@ -360,9 +367,6 @@ class PremiumProduct(models.Model):
         if self.trial_tested and premium_type == PremiumType.TRIAL:
             raise ValueError("Trial already tested or cannot be set.")
 
-        if premium.is_trial and premium_type != PremiumType.TRIAL:
-            self.inquiries.reset_counter(reset_plan=False)
-
         if premium_type == PremiumType.CUSTOM and period:
             premium.setup_by_days(period)
         elif premium_type != PremiumType.CUSTOM:
@@ -373,6 +377,9 @@ class PremiumProduct(models.Model):
         if not self.trial_tested:
             self.trial_tested = True
             self.save(update_fields=["trial_tested"])
+
+        if premium.is_trial and premium_type != PremiumType.TRIAL:
+            self.inquiries.reset_counter(reset_plan=False)
 
         return premium
 
@@ -387,12 +394,9 @@ class PremiumProduct(models.Model):
         promotion.refresh(premium_type, period)
 
         if self.profile.__class__.__name__ == "PlayerProfile":
-            calculate_pms, calculate_pms_created = (
-                CalculatePMScoreProduct.objects.get_or_create(product=self)
+            calculate_pms, _ = CalculatePMScoreProduct.objects.get_or_create(
+                product=self
             )
-
-            if not calculate_pms_created:
-                calculate_pms.refresh()
 
     def save(self, *args, **kwargs):
         if not self.user and self.profile:
