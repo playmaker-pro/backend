@@ -373,3 +373,22 @@ class TestProduct:
             "PREMIUM_PROFILE_MONTH",
             "PREMIUM_PROFILE_YEAR",
         ]
+
+
+def test_calculate_pm_score_product_auto_update(player_profile, mck_timezone_now):
+    player_profile.premium_products.setup_premium_profile(PremiumType.YEAR)
+
+    assert player_profile.premium_products.calculate_pm_score.awaiting_approval
+
+    player_profile.playermetrics.pm_score = 69
+    player_profile.playermetrics.save()
+
+    assert not player_profile.premium_products.calculate_pm_score.awaiting_approval
+
+    mck_timezone_now.return_value += timedelta(days=29)
+
+    assert not player_profile.premium_products.calculate_pm_score.awaiting_approval
+
+    mck_timezone_now.return_value += timedelta(days=1, hours=1)
+
+    assert player_profile.premium_products.calculate_pm_score.awaiting_approval

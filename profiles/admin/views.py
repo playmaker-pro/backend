@@ -60,21 +60,22 @@ class ProfileVisitHistoryAdmin(admin.ModelAdmin):
 
 @admin.register(models.PlayerMetrics)
 class PlayerMetricsAdmin(admin.ModelAdmin):
-    list_display = [
-        "player",
-        "games_updated",
-        "games_summary_updated",
-        "fantasy_updated",
-        "fantasy_summary_updated",
-        "season_updated",
-        "season_summary_updated",
-    ]
+    list_display = ["player", "pm_score", "pm_score_history"]
     search_fields = [
         "player__user__email",
         "player__user__first_name",
         "player__user__last_name",
     ]
+    fields = (
+        "player",
+        "pm_score",
+        "pm_score_history",
+        "pm_score_state",
+        "pm_score_updated",
+    )
+    readonly_fields = ("player",)
     autocomplete_fields = ("player",)
+    ordering = ("pm_score",)
 
 
 @admin.register(models.PlayerPosition)

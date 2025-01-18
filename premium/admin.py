@@ -24,12 +24,13 @@ def update_pm_score(modeladmin, request, queryset):
 @admin.register(models.CalculatePMScoreProduct)
 class CalculatePMScoreProductAdmin(admin.ModelAdmin):
     list_display = (
-        "player",
+        "pk",
+        linkify("player"),
         "player_team",
+        "metrics",
         "created_at",
         "updated_at",
         "product_name",
-        "approved_by",
         "old_value",
         "new_value",
         "done",
@@ -38,7 +39,8 @@ class CalculatePMScoreProductAdmin(admin.ModelAdmin):
     search_fields = ("player__user__first_name", "player__user__last_name")
     actions = [update_pm_score]
     list_filter = ("player__team_object__league",)
-    readonly_fields = ("product",)
+    exclude = ("old_value", "new_value", "approved_by")
+    readonly_fields = ("product", "metrics")
     ordering = ("updated_at",)
 
     def product_name(self, obj):
@@ -51,7 +53,26 @@ class CalculatePMScoreProductAdmin(admin.ModelAdmin):
         return not obj.awaiting_approval
 
     def player_team(self, obj):
-        return obj.player.team_object
+        if team := obj.player.team_object:
+            view_name = (
+                f"admin:{team._meta.app_label}_"  # noqa
+                f"{team.__class__.__name__.lower()}_change"
+            )
+            link_url = reverse(view_name, args=[team.pk])
+            return format_html(f'<a href="{link_url}">{team}</a>')
+
+    def metrics(self, obj):
+        if obj.product.profile and obj.product.profile.playermetrics:
+            metrics = obj.product.profile.playermetrics
+            view_name = (
+                f"admin:{metrics._meta.app_label}_"  # noqa
+                f"{metrics.__class__.__name__.lower()}_change"
+            )
+            link_url = reverse(view_name, args=[metrics.pk])
+            return format_html(f'<a href="{link_url}">{metrics}</a>')
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
     done.short_description = "Done?"
     done.boolean = True
