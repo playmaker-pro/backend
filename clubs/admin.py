@@ -99,32 +99,32 @@ class SeasonAdmin(admin.ModelAdmin):
     exclude: Optional[Sequence[str]] = ("is_current",)
 
 
-@admin.register(models.LeagueGroup)
+# @admin.register(models.LeagueGroup)
 class LeagueGroupAdmin(admin.ModelAdmin):
     search_fields: Sequence = ("name",)
 
 
-@admin.register(models.Seniority)
+# @admin.register(models.Seniority)
 class SeniorityAdmin(admin.ModelAdmin):
     search_fields: Sequence = ("name",)
 
 
-@admin.register(models.Region)
+# @admin.register(models.Region)
 class RegionAdmin(admin.ModelAdmin):
     search_fields: Sequence = ("name",)
 
 
-@admin.register(models.Gender)
+# @admin.register(models.Gender)
 class GenderAdmin(admin.ModelAdmin):
     search_fields: Sequence = ("name",)
 
 
-@admin.register(models.JuniorLeague)
+# @admin.register(models.JuniorLeague)
 class JuniorLeagueAdmin(admin.ModelAdmin):
     search_fields: Sequence = ("name",)
 
 
-@admin.register(models.SectionGrouping)
+# @admin.register(models.SectionGrouping)
 class SectionGroupingAdmin(admin.ModelAdmin):
     search_fields: Sequence = ("name",)
 
@@ -171,7 +171,7 @@ class LeagueAdmin(admin.ModelAdmin):
         )
 
 
-@admin.register(models.Voivodeship)
+# @admin.register(models.Voivodeship)
 class VoivodeshipAdmin(admin.ModelAdmin):
     search_fields: Sequence[str] = ("name",)
 
@@ -273,7 +273,10 @@ class ClubAdmin(admin.ModelAdmin):
     )
     readonly_fields = ("mapper",)
     actions = [set_visibility, set_invisibility]
-    autocomplete_fields: Sequence[str] = ("manager", "external_links",)
+    autocomplete_fields: Sequence[str] = (
+        "manager",
+        "external_links",
+    )
     search_fields: Sequence[str] = ("name",)
     list_filter: Sequence[str] = (
         "voivodeship_obj__name",
@@ -287,11 +290,9 @@ class ClubAdmin(admin.ModelAdmin):
         return form
 
 
-@admin.register(models.JuniorAgeGroup)
-class JuniorAgeGroupAdmin(admin.ModelAdmin):
-    ...
+# @admin.register(models.JuniorAgeGroup)
+class JuniorAgeGroupAdmin(admin.ModelAdmin): ...
 
 
-@admin.register(models.TeamManagers)
-class TeamManagersAdmin(admin.ModelAdmin):
-    ...
+# @admin.register(models.TeamManagers)
+class TeamManagersAdmin(admin.ModelAdmin): ...

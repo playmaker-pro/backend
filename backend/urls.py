@@ -5,14 +5,6 @@ from django.urls import include, path
 from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
-# from wagtail.admin import urls as wagtailadmin_urls   #wag
-# from wagtail.core import urls as wagtail_urls   #wag
-# from wagtail.documents import urls as wagtaildocs_urls  #wag
-
-# import app.urls
-# import clubs.urls
-# import fantasy.urls
-
 # Deprecation(rkesik): since we are working on new FE
 # import followers.urls  # @to be removed
 # import fqa.urls
@@ -26,10 +18,21 @@ import landingpage.urls
 # import soccerbase.urls
 from api import urls as api_urls
 
-# from search import views as search_views   #wag
-
 # from .api import api_router  #wag
 from .settings.environment import Environment
+
+# from wagtail.admin import urls as wagtailadmin_urls   #wag
+# from wagtail.core import urls as wagtail_urls   #wag
+# from wagtail.documents import urls as wagtaildocs_urls  #wag
+
+# import app.urls
+# import clubs.urls
+# import fantasy.urls
+
+
+
+# from search import views as search_views   #wag
+
 
 admin.site.site_header = "PlayMaker.pro - development"
 admin.site.site_title = "PlayMaker.pro - Admin site"

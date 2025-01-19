@@ -8,6 +8,8 @@ from django.utils import timezone
 
 from inquiries.services import InquireService
 from notifications.mail import mail_admins_about_new_user, mail_role_change_request
+from users.models import User
+
 from . import models
 
 logger = logging.getLogger(__name__)
@@ -86,3 +88,10 @@ def ensure_metrics_exist(sender, instance, created, **kwargs):
     """
     if not hasattr(instance, "playermetrics"):
         models.PlayerMetrics.objects.get_or_create(player=instance)
+
+
+@receiver(post_save, sender=models.PlayerMetrics)
+def update_calculate_pm_score_product(sender, instance, **kwargs):
+    pp = instance.player.premium_products
+    if pp and hasattr(pp, "calculate_pm_score"):
+        pp.calculate_pm_score.approve(User.get_system_user(), instance.pm_score)

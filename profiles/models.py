@@ -495,14 +495,14 @@ class BaseProfile(models.Model, EventLogMixin):
     @property
     def has_premium_inquiries(self) -> bool:
         """Check if profile has premium inquiries"""
-        return self.premium_products.is_premium_inquiries_active
+        if self.premium_products:
+            return self.premium_products.is_premium_inquiries_active
+        return False
 
     def ensure_premium_products_exist(self, commit: bool = True) -> None:
         """Create PremiumProduct for profile if it doesn't exist"""
         if not self.premium_products:
-            self.premium_products, _ = PremiumProduct.objects.get_or_create(
-                profile_uuid=self.uuid
-            )
+            self.premium_products = PremiumProduct.objects.create()
             if commit:
                 self.save()
 
@@ -1205,7 +1205,10 @@ class PlayerMetrics(models.Model):
     season_updated = models.DateTimeField(null=True, blank=True)
 
     pm_score = models.IntegerField(
-        null=True, blank=True, verbose_name="PlayMaker Score"
+        null=True,
+        blank=True,
+        verbose_name="PlayMaker Score",
+        help_text="Tu tylko liczba całkowita, w historię możemy wrzucić zmiennoprzecinkową.",
     )
     pm_score_updated = models.DateTimeField(
         null=True, blank=True, verbose_name="PlayMaker Score date updated"
@@ -1217,7 +1220,9 @@ class PlayerMetrics(models.Model):
         help_text="Defines a status of the player's pm_score.",
     )
     pm_score_history = models.JSONField(
-        default=dict, verbose_name="PlayMaker Score history"
+        default=dict,
+        verbose_name="PlayMaker Score history",
+        help_text="Format daty: YYYY-MM-DD w apostrofach, wartości zmiennoprzecinkowe PMS z kropką: {'2024-11-32': 1.23, '2025-04-19': 3.21}",
     )
 
     season_score = models.JSONField(null=True, blank=True, verbose_name="Season Score")
@@ -1441,23 +1446,29 @@ class PlayerMetrics(models.Model):
         verbose_name_plural = _("Metryki graczy")
 
     def __str__(self):
-        def none_or_date(param):
-            _f = "%b/%d/%Hh"
-            return (
-                getattr(self, param).strftime(_f)
-                if getattr(self, param)
-                else getattr(self, param)
+        pm_score_info = f"| PMScore: {self.pm_score or '--'}"
+        if self.pm_score_updated:
+            pm_score_info += (
+                f" | Updated: {self.pm_score_updated.strftime('%H:%M %d-%m-%Y')}"
             )
-
-        params = {
-            "g": none_or_date("games_updated"),
-            "gs": none_or_date("games_summary_updated"),
-            "c": none_or_date("season_updated"),
-            "cs": none_or_date("season_summary_updated"),
-            "f": none_or_date("fantasy_updated"),
-            "fs": none_or_date("fantasy_summary_updated"),
-        }
-        return " ".join([f"{name}:{metric}" for name, metric in params.items()])
+        return f"{self.player.user.get_full_name()} {pm_score_info}"
+        # def none_or_date(param):
+        #     _f = "%b/%d/%Hh"
+        #     return (
+        #         getattr(self, param).strftime(_f)
+        #         if getattr(self, param)
+        #         else getattr(self, param)
+        #     )
+        #
+        # params = {
+        #     "g": none_or_date("games_updated"),
+        #     "gs": none_or_date("games_summary_updated"),
+        #     "c": none_or_date("season_updated"),
+        #     "cs": none_or_date("season_summary_updated"),
+        #     "f": none_or_date("fantasy_updated"),
+        #     "fs": none_or_date("fantasy_summary_updated"),
+        # }
+        # return " ".join([f"{name}:{metric}" for name, metric in params.items()])
 
 
 class ClubProfile(BaseProfile):

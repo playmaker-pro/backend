@@ -307,17 +307,14 @@ class UserInquiry(models.Model):
         self.save()
 
     @property
-    def premium_inquiries_status(self) -> (int, int):
-        if pi := self.premium_inquiries:
-            return pi.status
-        return 0, 0
-
-    @property
     def premium_inquiries(self) -> Optional["premium.models.PremiumInquiriesProduct"]:  # noqa: F821
-        if self.user.profile and self.user.profile.has_premium_inquiries:
-            premium_inquiries = self.user.profile.premium_products.inquiries
-            premium_inquiries.check_refresh()
-            return premium_inquiries
+        if self.user.profile:
+            if self.user.profile.has_premium_inquiries:
+                premium_inquiries = self.user.profile.premium_products.inquiries
+                premium_inquiries.check_refresh()
+                return premium_inquiries
+            elif not self.plan.default:
+                self.reset_plan()
 
     @property
     def regular_pool(self) -> (int, int):
@@ -334,12 +331,16 @@ class UserInquiry(models.Model):
 
     def increment(self):
         """Increase by one counter"""
-        if self.premium_inquiries and self.premium_inquiries.can_use_premium_inquiries:
-            self.premium_inquiries.increment_counter()
+        if self.counter_raw < self.limit_raw:
+            self.counter_raw += 1
+            self.save()
         else:
-            if self.counter < self.limit:
-                self.counter_raw += 1
-                self.save()
+            if (
+                self.premium_inquiries
+                and self.premium_inquiries.can_use_premium_inquiries
+            ):
+                self.premium_inquiries.increment_counter()
+
         self.check_limit_to_notify()
 
     def check_limit_to_notify(self) -> None:
