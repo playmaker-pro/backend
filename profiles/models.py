@@ -502,7 +502,7 @@ class BaseProfile(models.Model, EventLogMixin):
     def ensure_premium_products_exist(self, commit: bool = True) -> None:
         """Create PremiumProduct for profile if it doesn't exist"""
         if not self.premium_products:
-            self.premium_products = PremiumProduct.objects.create()
+            self.premium_products = PremiumProduct.objects.create(user=self.user)
             if commit:
                 self.save()
 

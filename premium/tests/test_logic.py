@@ -28,19 +28,19 @@ def timezone_now():
 
 
 @pytest.fixture
-def premium_product():
-    return factories.PremiumProductFactory.create()
+def premium_product(player_profile):
+    return player_profile.premium_products
 
 
 @pytest.fixture
-def player_profile(premium_product):
-    player = factories.PlayerProfileFactory.create(premium_products=premium_product)
+def player_profile():
+    player = factories.PlayerProfileFactory.create()
     return player
 
 
 @pytest.fixture
-def coach_profile(premium_product):
-    guest = factories.CoachProfileFactory.create(premium_products=premium_product)
+def coach_profile():
+    guest = factories.CoachProfileFactory.create()
     return guest
 
 

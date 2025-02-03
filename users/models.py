@@ -481,3 +481,39 @@ class UserPreferences(models.Model):
     class Meta:
         verbose_name = "User Preference"
         verbose_name_plural = "User Preferences"
+
+
+class Ref(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, primary_key=True)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"[{self.uuid}] {self.user}"
+
+    @property
+    def registered_users(self):
+        return self.referrals.all()
+
+    @property
+    def registered_users_premium(self):
+        return [user for user in self.registered_users if user.bought_premium]
+
+
+class UserRef(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    ref_by = models.ForeignKey(
+        Ref,
+        on_delete=models.CASCADE,
+        related_name="referrals",
+        verbose_name="Referred by",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.ref_by.user} zaprosił {self.user}"
+
+    @property
+    def bought_premium(self):
+        return self.user.transaction_set.filter(
+            product__ref="PREMIUM", transaction_status="SUCCESS"
+        ).exists()

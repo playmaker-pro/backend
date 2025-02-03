@@ -399,7 +399,7 @@ class PremiumProduct(models.Model):
             )
 
     def save(self, *args, **kwargs):
-        if not self.user and self.profile:
+        if not self.user:
             self.user = self.profile.user
         super().save(*args, **kwargs)
 

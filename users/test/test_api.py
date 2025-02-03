@@ -20,7 +20,7 @@ from users.errors import (
     UserEmailNotValidException,
 )
 from users.managers import FacebookManager, GoogleManager
-from users.models import User
+from users.models import Ref, User
 from users.schemas import (
     GoogleSdkLoginCredentials,
     LoginSchemaOut,
@@ -203,6 +203,29 @@ class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         assert res.data["email"] == self.data.get("email")
         assert res.data["id"]
         assert res.data["username"] == self.data.get("email")
+
+    def test_register_ref_uuid_created(self) -> None:
+        """Test register endpoint. Response OK"""
+
+        res: Response = self.client.post(
+            self.url,
+            data=self.data,
+        )
+
+        assert res.status_code == 200
+        assert User.objects.get(pk=res.data["id"]).ref
+
+    def test_register_with_ref_uuid(self) -> None:
+        """Test register endpoint. Response OK"""
+        user_ref = Ref.objects.create(user=UserFactory())
+        self.client.cookies["referral_uuid"] = str(user_ref.uuid)
+        res: Response = self.client.post(
+            self.url,
+            data=self.data,
+        )
+
+        assert res.status_code == 200
+        assert user_ref.referrals.first().user.pk == res.data["id"]
 
     def test_register_endpoint_no_password_sent(self) -> None:
         """Test register endpoint with no password field"""
@@ -1144,8 +1167,9 @@ class TestEmailVerificationEndpoint(TestCase):
             "last_name": "last_name",
             "email": "testuser@example.com",
         }
-        self.verify_email_base_url = reverse("api:users:verify_email", args=["dummy_uidb64", "dummy_token"])
-
+        self.verify_email_base_url = reverse(
+            "api:users:verify_email", args=["dummy_uidb64", "dummy_token"]
+        )
 
     def test_email_verification_process(self) -> None:
         """
@@ -1183,7 +1207,9 @@ class TestEmailVerificationEndpoint(TestCase):
         invalid_token = "invalid-token"
 
         # Construct the verification URL with the invalid token
-        verification_url_with_invalid_token = reverse("api:users:verify_email", args=[uidb64, invalid_token])
+        verification_url_with_invalid_token = reverse(
+            "api:users:verify_email", args=[uidb64, invalid_token]
+        )
         # Simulate clicking the verification link with an invalid token
         response = self.client.get(verification_url_with_invalid_token)
         assert response.status_code == 400  # or the appropriate status code for failure

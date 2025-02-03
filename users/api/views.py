@@ -44,7 +44,7 @@ from users.errors import (
     UserEmailNotValidException,
 )
 from users.managers import FacebookManager, GoogleManager, UserTokenManager
-from users.models import User
+from users.models import User, UserRef
 from users.schemas import (
     RedirectAfterGoogleLogin,
     UserFacebookDetailPydantic,
@@ -68,12 +68,14 @@ class UserRegisterEndpointView(EndpointView):
         Validate given data and register user if everything is ok.
         Returns serialized User data or validation errors.
         """
-
         user_data: UserRegisterSerializer = UserRegisterSerializer(data=request.data)
         user_data.is_valid(raise_exception=True)
         user: User = user_service.register(user_data.data)
         serialized_data: dict = UserRegisterSerializer(instance=user).data
         serialized_data.pop("password")
+
+        if referral_uuid := request.COOKIES.get("referral_uuid"):
+            UserRef.objects.create(user=user, ref_by_id=referral_uuid)
 
         return Response(serialized_data)
 
