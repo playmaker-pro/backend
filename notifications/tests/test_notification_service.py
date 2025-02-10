@@ -157,7 +157,7 @@ class ProfileCompletionNotificationServiceTests(TestCase):
             details={"inquiry_id": 123},
             object_id=self.user.pk,
             created_at=datetime.datetime.now(),
-            content_type=None
+            content_type=None,
         )
         assert not ProfileCompletionNotificationService.can_send_notification(
             self.user, "test_event"

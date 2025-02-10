@@ -3765,6 +3765,29 @@ paths:
                     type: boolean
                     description: Did user test the premium product? If so, he cannot setup 7days trial.
           description: Get user main profile uuid with role.
+  /users/my-ref-data/:
+    get:
+      operationId: get_my_referral_data
+      description: Get user referral data
+      summary: Get user referral data
+      tags:
+        - users
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  referral_code:
+                    type: string
+                    description: User refferal code
+                  invited_users:
+                    type: integer
+                    description: Number of users invited by the user
+          description: Set COOKIE as "referral_code" with user referral code
   /users/feature-sets/:
     get:
       operationId: users_feature_sets_retrieve

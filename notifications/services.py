@@ -20,7 +20,6 @@ from profiles.models import (
     ProfileVideo,
 )
 from profiles.services import ProfileService
-from users.models import UserPreferences
 from users.services import UserPreferencesService
 
 User = get_user_model()

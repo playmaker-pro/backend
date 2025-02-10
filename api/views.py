@@ -1,7 +1,6 @@
 from cities_light.models import City
 from django.db.models import QuerySet
 from django_countries import countries
-from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, serializers, status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -127,12 +126,9 @@ class LocaleDataView(EndpointView):
 class PreferenceChoicesView(EndpointView):
     """View for listing gender and preferred leg choices"""
 
-    from api.swagger_schemas import PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA
-
     authentication_classes = []
     permission_classes = []
 
-    @extend_schema(**PREFERENCE_CHOICES_VIEW_SWAGGER_SCHEMA)
     def list_preference_choices(self, request: Request) -> Response:
         """
         Retrieve the choices for gender and preferred leg fields and return

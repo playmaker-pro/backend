@@ -306,5 +306,6 @@ class TestSimilarProfilesAPI:
         response = api_client.get(similar_profile_url)
 
         assert response.status_code == 200
-        assert len(response.data) == 1
-        assert response.data[0]["slug"] == some_player2.slug
+        assert len(response.data) == 2
+        assert response.data[0]["slug"] == some_player.slug
+        assert response.data[1]["slug"] == some_player2.slug

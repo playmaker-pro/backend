@@ -218,7 +218,7 @@ class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
     def test_register_with_ref_uuid(self) -> None:
         """Test register endpoint. Response OK"""
         user_ref = Ref.objects.create(user=UserFactory())
-        self.client.cookies["referral_uuid"] = str(user_ref.uuid)
+        self.client.cookies["referral_code"] = str(user_ref.uuid)
         res: Response = self.client.post(
             self.url,
             data=self.data,
@@ -1217,3 +1217,20 @@ class TestEmailVerificationEndpoint(TestCase):
         # Fetch the user and check if the email is still not verified
         user = User.objects.get(email=self.user_data["email"])
         assert user.is_email_verified is False
+
+
+@pytest.mark.django_db
+class TestEmailVerificationEndpoint(TestCase):
+    def setUp(self) -> None:
+        self.client = APIClient()
+        with patch("factory.django.mute_signals"):
+            self.user = UserFactory.create()
+
+    def test_user_ref_endpoint(self):
+        url = reverse("api:users:my_ref_data")
+        self.client.force_authenticate(self.user)
+        response = self.client.get(url)
+
+        assert response.status_code == 200
+        assert response.data["referral_code"]
+        assert response.data["invited_users"] == 0

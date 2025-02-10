@@ -8,7 +8,6 @@ from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist, QuerySet
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, status
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.request import Request
@@ -20,10 +19,6 @@ from api.consts import ChoicesTuple
 from api.errors import NotOwnerOfAnObject
 from api.pagination import TransferRequestCataloguePagePagination
 from api.serializers import ProfileEnumChoicesSerializer
-from api.swagger_schemas import (
-    COACH_ROLES_API_SWAGGER_SCHEMA,
-    FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA,
-)
 from api.views import EndpointView
 from clubs.services import LeagueService
 from external_links import serializers as external_links_serializers
@@ -358,7 +353,7 @@ class SuggestedProfilesAPIView(EndpointView):
                 float(user_localization.longitude),
                 float(user_localization.latitude),
             )
-            loc_params = {"longitude": longitude, "latitude": latitude, "radius": 100}
+            loc_params = {"longitude": longitude, "latitude": latitude, "radius": 50}
 
         if profile.__class__ is models.PlayerProfile:
             clubs = self._get_queryset_for_model(models.ClubProfile, loc_params)
@@ -432,7 +427,6 @@ class FormationChoicesView(EndpointView):
 
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    @extend_schema(**FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA)
     def list_formations(self, request: Request) -> Response:
         """
         Returns a list of formation choices.
@@ -476,7 +470,6 @@ class CoachRolesChoicesView(EndpointView):
 
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    @extend_schema(**COACH_ROLES_API_SWAGGER_SCHEMA)
     def list_coach_roles(self, request: Request) -> Response:
         """
         Return a list of coach roles choices.
