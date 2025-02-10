@@ -1,112 +1,310 @@
+from datetime import timedelta
+
+import pytest
 from django.urls import reverse
-from rest_framework.test import APIClient, APITestCase
+from django.utils import timezone
+from rest_framework.test import APIClient
 
 from utils import factories
+from utils.factories import CityFactory
 
-url = "api:profiles:get_similar_profiles"
+url = "api:profiles:get_suggested_profiles"
+time_now = timezone.now()
+pytestmark = pytest.mark.django_db
 
 
-class TestSimilarProfilesAPI(APITestCase):
-    def setUp(self) -> None:
-        """Set up objects for testing."""
-        self.client: APIClient = APIClient()
-        self.user = factories.UserFactory.create()
-        self.client.force_authenticate(user=self.user)
-        self.main_coach_role = "IC"
-        self.other_coach_role = "GKC"
-        self.cam_position = factories.PlayerPositionFactory.create(name="CAM")
-        self.forward_position = factories.PlayerPositionFactory.create(name="Forward")
+@pytest.fixture()
+def city_wwa():
+    return CityFactory.create_with_coordinates(
+        name="Warsaw",
+        coordinates=(21.0122, 52.2297),
+    )
 
-        # Create a target coach profile
-        self.target_coach = factories.CoachProfileFactory.create(
-            user__userpreferences__gender="M", coach_role=self.main_coach_role
-        )
-        self.women_coach = factories.CoachProfileFactory.create(
-            user__userpreferences__gender="K", coach_role=self.main_coach_role
-        )
 
-        # Create a target player with the CAM position as the main position
-        self.target_player = factories.PlayerProfileFactory.create(
-            user__userpreferences__gender="M",
-        )
-        factories.PlayerProfilePositionFactory.create(
-            player_profile=self.target_player,
-            player_position=self.cam_position,
-            is_main=True,
-        )
+@pytest.fixture
+def city_prsk():
+    return CityFactory.create_with_coordinates(
+        name="Pruszków",
+        coordinates=(20.8072, 52.1684),
+    )
 
-    def test_get_similar_player_profiles(self) -> None:
+
+@pytest.fixture
+def city_rdm():
+    return CityFactory.create_with_coordinates(
+        name="Radom", coordinates=(21.1572, 51.4025)
+    )
+
+
+@pytest.fixture
+def api_client():
+    client: APIClient = APIClient()
+    user = factories.UserFactory.create()
+    client.force_authenticate(user=user)
+    return client
+
+
+@pytest.fixture
+def coach(city_wwa):
+    return factories.CoachProfileFactory.create(
+        user__userpreferences__gender="M",
+        coach_role="IC",
+        user__userpreferences__localization=city_wwa,
+    )
+
+
+@pytest.fixture
+def player(city_wwa):
+    p = factories.PlayerProfileFactory.create(
+        user__userpreferences__gender="M",
+        user__userpreferences__localization=city_wwa,
+    )
+
+    factories.PlayerProfilePositionFactory.create(
+        player_profile=p,
+        player_position=factories.PlayerPositionFactory.create(name="CAM"),
+        is_main=True,
+    )
+    return p
+
+
+class TestSimilarProfilesAPI:
+    def test_get_suggested_profiles_for_player(
+        self, player, api_client, city_wwa
+    ) -> None:
         """
         Test retrieving similar profiles for a player profile with the same position.
         """
-        # Create player profiles with the same main position (CAM)
-        for _ in range(10):
-            player = factories.PlayerProfileFactory.create(
-                user__userpreferences__gender="M",
-            )
-            factories.PlayerProfilePositionFactory.create(
-                player_profile=player, player_position=self.cam_position, is_main=True
-            )
 
-        # Create player profiles with a different main position (Forward)
-        for _ in range(5):
-            player = factories.PlayerProfileFactory.create(
-                user__userpreferences__gender="M",
+        clubs = [
+            factories.ClubProfileFactory.create(
+                user__last_activity=time_now,
+                user__userpreferences__localization=city_wwa,
             )
-            factories.PlayerProfilePositionFactory.create(
-                player_profile=player,
-                player_position=self.forward_position,
-                is_main=True,
+            for _ in range(5)
+        ]
+        coaches = [
+            factories.CoachProfileFactory.create(
+                user__last_activity=time_now,
+                user__userpreferences__localization=city_wwa,
             )
+            for _ in range(5)
+        ]
 
-        # Test API endpoint
         similar_profile_url = reverse(
             url,
-            kwargs={"profile_uuid": self.target_player.uuid},
+            kwargs={"profile_uuid": player.uuid},
         )
-        response = self.client.get(similar_profile_url)
-        assert response.status_code == 200
-        assert "results" in response.data
-        assert self.target_player not in response.data["results"]
-        assert len(response.data["results"]) >= 10
+        response = api_client.get(similar_profile_url)
+        slugs = [dict(item)["slug"] for item in response.data]
 
-    def test_get_similar_coach_profiles(self) -> None:
+        assert response.status_code == 200
+        assert len(response.data) == 10
+
+        for coach in coaches:
+            assert coach.slug in slugs
+
+        for club in clubs:
+            assert club.slug in slugs
+
+    def test_get_suggested_profiles_for_others(
+        self, coach, api_client, city_wwa
+    ) -> None:
         """
         Test retrieving similar profiles for a coach profile with the same coach role.
         """
-        # Create coach profiles with the same coach role
-        factories.CoachProfileFactory.create_batch(
-            10, user__userpreferences__gender="M", coach_role=self.main_coach_role
-        )
-
-        # Create coach profiles with a different coach role
-        factories.CoachProfileFactory.create_batch(
-            5, user__userpreferences__gender="M", coach_role=self.other_coach_role
-        )
+        players = [
+            factories.PlayerProfileFactory.create(
+                user__last_activity=time_now,
+                user__userpreferences__localization=city_wwa,
+            )
+            for _ in range(10)
+        ]
 
         # Test API endpoint
         similar_profile_url = reverse(
             url,
-            kwargs={"profile_uuid": self.target_coach.uuid},
+            kwargs={"profile_uuid": coach.uuid},
         )
-        response = self.client.get(similar_profile_url)
-        assert response.status_code == 200
-        assert "results" in response.data
-        assert self.target_coach not in response.data["results"]
-        assert len(response.data["results"]) >= 10
-        assert self.women_coach not in response.data["results"]
+        response = api_client.get(similar_profile_url)
+        slugs = [dict(item)["slug"] for item in response.data]
 
-    def test_gender_filter_relaxation(self):
+        assert response.status_code == 200
+        assert len(response.data) == 10
+
+        for player in players:
+            assert player.slug in slugs
+
+    def test_suggested_profiles_for_player_choice(
+        self, city_wwa, city_prsk, api_client, player
+    ):
         """
-        Test the relaxation of gender filter when initial criteria do not yield enough results.
+        Test retrieving similar profiles for a player profile with no main position.
         """
-        factories.CoachProfileFactory.create_batch(
-            10, user__userpreferences__gender="M", coach_role=self.main_coach_role
+
+        some_player = factories.PlayerProfileFactory.create(
+            user__userpreferences__localization=city_wwa
+        )
+        some_coach = factories.CoachProfileFactory.create(
+            user__userpreferences__localization=city_wwa,
+            user__last_activity=time_now,
+        )
+        some_club = factories.ClubProfileFactory.create(
+            user__userpreferences__localization=city_prsk,
+            user__last_activity=time_now,
         )
         similar_profile_url = reverse(
             url,
-            kwargs={"profile_uuid": self.women_coach.uuid},
+            kwargs={"profile_uuid": player.uuid},
         )
-        response = self.client.get(similar_profile_url)
-        assert "results" in response.data
-        assert len(response.data["results"]) >= 10
+        response = api_client.get(similar_profile_url)
+
+        assert response.status_code == 200
+        assert len(response.data) == 2
+        assert response.data[0]["slug"] == some_coach.slug
+        assert response.data[1]["slug"] == some_club.slug
+
+    def test_suggested_profiles_for_player_choice2(
+        self, city_wwa, city_prsk, city_rdm, api_client, player
+    ):
+        """
+        Test retrieving similar profiles for a player profile with no main position.
+        """
+
+        some_player = factories.PlayerProfileFactory.create(
+            user__userpreferences__localization=city_wwa
+        )
+        some_coach = factories.CoachProfileFactory.create(
+            user__userpreferences__localization=city_rdm,
+            user__last_activity=time_now,
+        )
+        some_club = factories.ClubProfileFactory.create(
+            user__userpreferences__localization=city_prsk,
+            user__last_activity=time_now,
+        )
+        similar_profile_url = reverse(
+            url,
+            kwargs={"profile_uuid": player.uuid},
+        )
+        response = api_client.get(similar_profile_url)
+
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["slug"] == some_club.slug
+
+    def test_suggested_profiles_for_player_choice3(
+        self, city_wwa, city_prsk, api_client, player
+    ):
+        """
+        Test retrieving similar profiles for a player profile with no main position.
+        """
+
+        some_player = factories.PlayerProfileFactory.create(
+            user__userpreferences__localization=city_wwa
+        )
+        some_coach = factories.CoachProfileFactory.create(
+            user__userpreferences__localization=city_wwa,
+            user__last_activity=time_now - timedelta(days=11),
+        )
+        some_club = factories.ClubProfileFactory.create(
+            user__userpreferences__localization=city_prsk,
+            user__last_activity=time_now,
+        )
+
+        similar_profile_url = reverse(
+            url,
+            kwargs={"profile_uuid": str(player.uuid)},
+        )
+        response = api_client.get(similar_profile_url)
+
+        assert response.status_code == 200
+        assert len(response.data) == 2
+        assert response.data[0]["slug"] == some_coach.slug
+        assert response.data[1]["slug"] == some_club.slug
+
+    def test_suggested_profiles_for_others_choice(
+        self, city_wwa, city_prsk, api_client, coach
+    ):
+        """
+        Test retrieving similar profiles for a player profile with no main position.
+        """
+        some_player = factories.PlayerProfileFactory.create(
+            user__userpreferences__localization=city_wwa,
+            user__last_activity=time_now - timedelta(days=28),
+        )
+        some_player2 = factories.PlayerProfileFactory.create(
+            user__userpreferences__localization=city_prsk,
+            user__last_activity=time_now,
+        )
+        some_player3 = factories.PlayerProfileFactory.create(
+            user__userpreferences__localization=city_wwa,
+            user__last_activity=time_now,
+        )
+        some_player4 = factories.PlayerProfileFactory.create(
+            user__userpreferences__localization=city_prsk,
+            user__last_activity=time_now - timedelta(days=1),
+        )
+        some_coach = factories.CoachProfileFactory.create(
+            user__userpreferences__localization=city_wwa,
+            user__last_activity=time_now,
+        )
+
+        similar_profile_url = reverse(
+            url,
+            kwargs={"profile_uuid": coach.uuid},
+        )
+        response = api_client.get(similar_profile_url)
+
+        assert response.status_code == 200
+        assert len(response.data) == 4
+        assert response.data[0]["slug"] == some_player3.slug
+        assert response.data[1]["slug"] == some_player.slug
+        assert response.data[2]["slug"] == some_player2.slug
+        assert response.data[3]["slug"] == some_player4.slug
+
+    def test_suggested_profiles_for_others_choice2(self, city_wwa, api_client, coach):
+        """
+        Test retrieving similar profiles for a player profile with no main position.
+        """
+
+        some_player = factories.PlayerProfileFactory.create(
+            user__userpreferences__localization=city_wwa,
+            user__last_activity=time_now - timedelta(days=11),
+        )
+        some_player2 = factories.PlayerProfileFactory.create(
+            user__userpreferences__localization=city_wwa,
+            user__last_activity=time_now - timedelta(days=1),
+        )
+
+        similar_profile_url = reverse(
+            url,
+            kwargs={"profile_uuid": coach.uuid},
+        )
+        response = api_client.get(similar_profile_url)
+
+        assert response.status_code == 200
+        assert len(response.data) == 2
+        assert response.data[0]["slug"] == some_player2.slug
+        assert response.data[1]["slug"] == some_player.slug
+
+    def test_suggested_profiles_for_others_choice3(self, city_wwa, coach, api_client):
+        """
+        Test retrieving similar profiles for a player profile with no main position.
+        """
+        some_player = factories.PlayerProfileFactory.create(
+            user__userpreferences__localization=city_wwa
+        )
+        some_player2 = factories.PlayerProfileFactory.create(
+            user__userpreferences__localization=city_wwa,
+            user__last_activity=time_now - timedelta(days=11),
+        )
+
+        similar_profile_url = reverse(
+            url,
+            kwargs={"profile_uuid": coach.uuid},
+        )
+        response = api_client.get(similar_profile_url)
+
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["slug"] == some_player2.slug

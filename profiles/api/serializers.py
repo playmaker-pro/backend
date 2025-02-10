@@ -1359,7 +1359,7 @@ class ProfileSearchSerializer(serializers.ModelSerializer):
             return None
 
 
-class SimilarProfileSerializer(serializers.Serializer):
+class SuggestedProfileSerializer(serializers.Serializer):
     # recursive imports
 
     from clubs.api.serializers import TeamHistoryBaseProfileSerializer
@@ -1434,7 +1434,7 @@ class SimilarProfileSerializer(serializers.Serializer):
 class ProfileVisitorSerializer(serializers.Serializer):
     timestamp = serializers.DateTimeField()
     days_ago = serializers.IntegerField()
-    visitor = SimilarProfileSerializer(source="visitor.profile", read_only=True)
+    visitor = SuggestedProfileSerializer(source="visitor.profile", read_only=True)
 
 
 class ProfileVisitSummarySerializer(serializers.Serializer):

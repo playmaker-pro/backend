@@ -1,11 +1,13 @@
 import logging
 import uuid
-from typing import TYPE_CHECKING
+from datetime import timedelta
+from typing import TYPE_CHECKING, List
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist, QuerySet
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import exceptions, status
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
@@ -36,16 +38,11 @@ from profiles.api.errors import (
     TransferRequestDoesNotExistHTTPException,
     TransferStatusDoesNotExistHTTPException,
 )
-from profiles.api.filters import (
-    CoachProfileFilter,
-    DefaultProfileFilter,
-    PlayerProfileFilter,
-    TransferRequestCatalogueFilter,
-)
+from profiles.api.filters import TransferRequestCatalogueFilter
 from profiles.api.managers import SerializersManager
 from profiles.api.mixins import ProfileRetrieveMixin
 from profiles.filters import ProfileListAPIFilter
-from profiles.models import ProfileTransferRequest
+from profiles.models import PROFILE_TYPE, ProfileTransferRequest
 from profiles.serializers_detailed.base_serializers import (
     MainUserDataSerializer,
     ProfileTransferRequestSerializer,
@@ -78,7 +75,7 @@ from users.api.serializers import UserMainRoleSerializer
 from users.errors import UserPreferencesDoesNotExistHTTPException
 
 if TYPE_CHECKING:
-    from django_filters import rest_framework as filters
+    pass
 
 profile_service = ProfileService()
 team_contributor_service = TeamContributorService()
@@ -320,7 +317,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         return Response(serializer.data)
 
 
-class SimilarProfilesAPIView(EndpointViewWithFilter):
+class SuggestedProfilesAPIView(EndpointView):
     """
     API view for retrieving profiles similar to a specified profile based
     on certain criteria.
@@ -332,12 +329,49 @@ class SimilarProfilesAPIView(EndpointViewWithFilter):
     """
 
     permission_classes = [IsAuthenticatedOrReadOnly]
-    pagination_class = TransferRequestCataloguePagePagination
-    serializer_class = serializers.SimilarProfileSerializer
 
-    def get_similar_profiles(self, request, profile_uuid: uuid) -> Response:
+    def _get_queryset_for_model(
+        self, model: PROFILE_TYPE, loc_filter_params: dict = None
+    ) -> QuerySet:
+        """Get queryset for model"""
+        one_month_ago = timezone.now() - timedelta(days=30)
+
+        qs = model.objects.filter(
+            # user__last_activity__gte=one_month_ago,  # This should be
+        )
+
+        if loc_filter_params is None:
+            return qs
+
+        qs_filtered = ProfileFilterService.filter_localization(
+            queryset=qs, **loc_filter_params
+        ).order_by("distance", "-user__last_activity")
+
+        return qs_filtered
+
+    def _get_data(self, profile: PROFILE_TYPE) -> List[QuerySet]:
+        """Get queryset of suggested profiles"""
+        user_localization = profile.user.userpreferences.localization
+        loc_params = None
+        if user_localization:
+            longitude, latitude = (
+                float(user_localization.longitude),
+                float(user_localization.latitude),
+            )
+            loc_params = {"longitude": longitude, "latitude": latitude, "radius": 100}
+
+        if profile.__class__ is models.PlayerProfile:
+            clubs = self._get_queryset_for_model(models.ClubProfile, loc_params)
+            coaches = self._get_queryset_for_model(models.CoachProfile, loc_params)
+
+            return [coaches, clubs]
+        else:
+            players = self._get_queryset_for_model(models.PlayerProfile, loc_params)
+            return [players]
+
+    def get_suggested_profiles(self, request, profile_uuid: uuid) -> Response:
         """
-        Retrieves profiles similar to the target profile specified by the UUID.
+        Retrieves profiles suggested to the target profile specified by the UUID.
         """
         # Fetch the target user's profile
         try:
@@ -345,65 +379,12 @@ class SimilarProfilesAPIView(EndpointViewWithFilter):
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExist
 
-        # Determine the model based on the profile type and create the initial queryset
-        model = type(target_profile)
-        queryset = model.objects.all().exclude(
-            user__display_status=User.DisplayStatus.NOT_SHOWN
-        )
-        # Construct filter parameters based on target_profile attributes
-        filter_params = self.construct_filter_params(target_profile)
-        # Apply Django filters
-        filterset_class = self.get_filterset_class(target_profile)
-        filterset = filterset_class(filter_params, queryset=queryset)
+        qs = self._get_data(target_profile)
+        data = []
+        for dataset in qs:
+            data += serializers.SuggestedProfileSerializer(dataset[:10], many=True).data
 
-        # Exclude the profile of the requesting user
-        if request.user.is_authenticated:
-            queryset.exclude(user=self.request.user)
-        # Apply custom filtering logic
-        queryset = ProfileFilterService.apply_custom_filters(
-            filterset.qs, target_profile
-        )
-
-        # Serialize and return the response
-        paginated = self.get_paginated_queryset(queryset)
-        serializer = self.serializer_class(
-            paginated, many=True, context={"request": request}
-        )
-        return self.get_paginated_response(serializer.data)
-
-    def construct_filter_params(self, target_profile: models.PROFILE_MODELS) -> dict:
-        """
-        Constructs filter parameters for Django filters based on the attributes
-        of the target profile.
-        """
-        # Initialize gender filter parameters
-        filter_params = {"gender": target_profile.user.userpreferences.gender}
-
-        # Specific filter parameters based on profile type
-        if isinstance(target_profile, models.PlayerProfile):
-            main_position = target_profile.player_positions.filter(is_main=True).first()
-            if main_position:
-                filter_params["position"] = main_position.player_position_id
-        elif (
-            isinstance(target_profile, models.CoachProfile)
-            and target_profile.coach_role
-        ):
-            filter_params["coach_role"] = target_profile.coach_role
-        return filter_params
-
-    def get_filterset_class(
-        self, profile: models.PROFILE_MODELS
-    ) -> "filters.FilterSet":
-        """
-        Returns the appropriate filterset class based on the type of the given profile.
-        """
-        if isinstance(profile, models.PlayerProfile):
-            return PlayerProfileFilter
-        elif isinstance(profile, models.CoachProfile):
-            return CoachProfileFilter
-        else:
-            # Return the default filter for other profile types
-            return DefaultProfileFilter
+        return Response(data[:10], status=status.HTTP_200_OK)
 
 
 class ProfileSearchView(EndpointView):

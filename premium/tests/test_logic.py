@@ -84,6 +84,7 @@ class TestPremiumProduct:
     ):
         products = player_profile.premium_products
 
+        assert products.user == player_profile.user
         assert isinstance(products, PremiumProduct)
         assert products.is_profile_premium is False
         assert products.is_profile_promoted is False
@@ -123,6 +124,7 @@ class TestPremiumProduct:
     ):
         products = coach_profile.premium_products
 
+        assert products.user == coach_profile.user
         assert isinstance(products, PremiumProduct)
         assert products.is_premium_inquiries_active is False
         assert products.is_profile_promoted is False

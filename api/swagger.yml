@@ -1898,11 +1898,11 @@ paths:
         '401':
           description: Unauthorized.
 
-  /profiles/similar-profiles/{profile_uuid}/:
+  /profiles/suggested-profiles/{profile_uuid}/:
     get:
-      operationId: similar_profiles_retrieve
-      description: "Retrieve a list of profiles similar to the specified profile, based on role, gender, position or coach role, and progressively relaxing these criteria if necessary."
-      summary: "Get similar profiles"
+      operationId: suggested_profiles_retrieve
+      description: "Retrieve a list of profiles suggested to the specified profile."
+      summary: "Get suggested profiles"
       parameters:
         - in: path
           name: profile_uuid
@@ -1910,32 +1910,19 @@ paths:
             type: string
             format: uuid
           required: true
-          description: 'Unique identifier (UUID) of the profile for which similar profiles are to be retrieved.'
+          description: 'Unique identifier (UUID) of the profile for which suggested profiles are to be retrieved.'
       tags:
         - profiles
       responses:
         '200':
-          description: 'List of similar profiles retrieved successfully.'
+          description: 'List of suggested profiles retrieved successfully.'
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  count:
-                    type: integer
-                    description: 'Total count of similar profiles'
-                  next:
-                    type: string
-                    description: "Next paginated request URL"
-                  previous:
-                    type: string
-                    description: "Previous paginated request URL"
-                  results:
-                    type: array
-                    items:
-                      oneOf:
-                        - $ref: '#/components/schemas/SimilarProfile'
-                description: "Paginated list of profiles similar to the specified profile."
+                type: array
+                items:
+                  $ref: '#/components/schemas/SuggestedProfile'
+                description: "Paginated list of profiles suggested to the specified profile."
   /profiles/{profile_uuid}/labels:
     get:
       operationId: profiles_retrieve_labels
@@ -7219,7 +7206,7 @@ components:
           format: date-time
           description: "Date and time of the visit"
         visitor:
-          $ref: '#/components/schemas/SimilarProfile'
+          $ref: '#/components/schemas/SuggestedProfile'
         days_ago:
           type: integer
           description: "Number of days since the visit"
@@ -7612,7 +7599,7 @@ components:
         email:
           type: string
 
-    SimilarProfile:
+    SuggestedProfile:
       type: object
       properties:
         uuid:
