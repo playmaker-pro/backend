@@ -213,18 +213,26 @@ class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         )
 
         assert res.status_code == 200
-        assert User.objects.get(pk=res.data["id"]).ref
+
+        user = User.objects.get(pk=res.data["id"])
+
+        assert user.ref
+        assert user.ref.registered_users.count() == 0
 
     def test_register_with_ref_uuid(self) -> None:
         """Test register endpoint. Response OK"""
         user_ref = Ref.objects.create(user=UserFactory())
-        self.client.cookies["referral_code"] = str(user_ref.uuid)
+
+        assert user_ref.registered_users.count() == 0
+
+        self.data["referral_code"] = str(user_ref.uuid)
         res: Response = self.client.post(
             self.url,
             data=self.data,
         )
 
         assert res.status_code == 200
+        assert user_ref.registered_users.count() == 1
         assert user_ref.referrals.first().user.pk == res.data["id"]
 
     def test_register_endpoint_no_password_sent(self) -> None:

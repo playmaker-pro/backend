@@ -688,6 +688,7 @@ DATETIME_FORMAT = "H:i:s d-m-Y"
 
 ENV_CONFIG: _env_config.Config = _env_config
 # Loading of locally stored settings.
+SWAGGER_PATH = os.path.join(BASE_DIR, "api", "swagger.yml")
 
 try:
     from backend.settings._local import *  # noqa

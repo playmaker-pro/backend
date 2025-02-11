@@ -20,12 +20,18 @@ test:
 
 .PHONY: export_requirements
 export_requirements:
+	make export_base_requirements
+	make export_dev_requirements
+
+
+.PHONY: export_base_requirements
+export_base_requirements:
 	poetry export -f requirements.txt --output requirements.txt --without-hashes
 
 
 .PHONY: export_requirements
 export_dev_requirements:
-	poetry export -f requirements.txt --output requirements.txt --without-hashes
+	poetry export --without-hashes -f requirements.txt --only=dev --output requirements.dev.txt
 
 
 .PHONY: start-db

@@ -1,9 +1,13 @@
+import yaml
 from cities_light.models import City
+from django.conf import settings
 from django.db.models import QuerySet
 from django_countries import countries
 from rest_framework import exceptions, serializers, status
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework_yaml.parsers import YAMLParser
+from rest_framework_yaml.renderers import YAMLRenderer
 from unidecode import unidecode
 
 from api.base_view import EndpointView
@@ -148,3 +152,23 @@ class PreferenceChoicesView(EndpointView):
             "player_preferred_leg": leg_choices,
         }
         return Response(preference_choices, status=status.HTTP_200_OK)
+
+
+class SwaggerView(EndpointView):
+    authentication_classes = []
+    permission_classes = []
+    parser_classes = [YAMLParser]
+    renderer_classes = (YAMLRenderer,)
+
+    def get_swagger_body(self, request: Request) -> Response:
+        """
+        Return swagger.yml body as yaml.
+        """
+        if settings.DEBUG is False:
+            raise exceptions.PermissionDenied
+
+        with open(settings.SWAGGER_PATH, 'r', encoding="utf-8") as file:
+
+            content = yaml.safe_load(file)
+            return Response(content, status=status.HTTP_200_OK, content_type='application/yaml')
+        

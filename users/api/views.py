@@ -68,7 +68,7 @@ class UserRegisterEndpointView(EndpointView):
         serialized_data: dict = UserRegisterSerializer(instance=user).data
         serialized_data.pop("password")
 
-        if referral_code := request.COOKIES.get("referral_code"):
+        if referral_code := request.data.get("referral_code"):
             UserRef.objects.create(user=user, ref_by_id=referral_code)
 
         return Response(serialized_data)
