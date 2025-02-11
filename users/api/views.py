@@ -45,7 +45,6 @@ from users.schemas import (
     UserGoogleDetailPydantic,
 )
 from users.services import PasswordResetService, UserService
-from users.tasks import do_smth
 
 user_service: UserService = UserService()
 password_reset_service: PasswordResetService = PasswordResetService()
