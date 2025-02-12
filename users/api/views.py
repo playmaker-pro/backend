@@ -69,7 +69,11 @@ class UserRegisterEndpointView(EndpointView):
         serialized_data.pop("password")
 
         if referral_code := request.data.get("referral_code"):
-            UserRef.objects.create(user=user, ref_by_id=referral_code)
+            try:
+                ref = Ref.objects.get(uuid=referral_code)
+                UserRef.objects.create(user=user, ref_by=ref)
+            except Ref.DoesNotExist:
+                pass
 
         return Response(serialized_data)
 

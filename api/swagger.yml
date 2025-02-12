@@ -34,6 +34,26 @@ paths:
         '401':
           description: "Unauthorized"
 
+  /swagger/:
+    get:
+      operationId: get_swagger_yaml_content
+      description: Get swagger yaml content
+      summary: Get swagger yaml content
+      tags:
+        - swagger
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: "Get content of swagger.yml"
+          content:
+            application/yaml:
+                schema:
+                    type: string
+        '401':
+          description: "Unauthorized"
+    description: "Available only on staging/dev."
+
   /premium/products/inquiries/:
     get:
       operationId: get_premium_inquiries_products
@@ -4131,6 +4151,9 @@ paths:
                 last_name:
                   type: string
                   description: User last name.
+                referral_code:
+                  type: string
+                  description: User referral code
               required:
                 - email
                 - password

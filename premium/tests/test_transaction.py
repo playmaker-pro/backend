@@ -100,7 +100,7 @@ def test_check_if_premium_inquiries_refresh(
 
     assert (
         current_updated_at_date == new_current_date
-        and current_updated_at_date == primary_date + timedelta(days=30, hours=1)
+        and current_updated_at_date == primary_date + timedelta(days=30, seconds=1)
     )
     assert player_profile.premium_products.inquiries.valid_since.date() == primary_date
     assert player_profile.premium_products.inquiries.current_counter == 0
@@ -132,7 +132,7 @@ def test_check_if_premium_inquiries_refresh(
 
     mck_timezone_now.return_value = (
         player_profile.premium_products.inquiries.counter_updated_at
-        + timedelta(days=30, hours=1)
+        + timedelta(days=30, seconds=1)
     )
     new_current_date = timezone.now().date()
 
@@ -142,9 +142,6 @@ def test_check_if_premium_inquiries_refresh(
     assert user.userinquiry.counter_raw == 2
     assert user.userinquiry.limit_raw == 2
 
-    current_updated_at_date = (
-        player_profile.premium_products.inquiries.counter_updated_at.date()
-    )
     assert player_profile.premium_products.inquiries.current_counter == 0
 
 
@@ -178,7 +175,7 @@ def test_premium_inquiries_on_trial(
         recipient=trial_premium_coach_profile.user.email, email_type="PREMIUM_EXPIRED"
     ).exists()
 
-    mck_timezone_now.return_value += timedelta(days=7, hours=1)
+    mck_timezone_now.return_value += timedelta(days=7, seconds=1)
     assert not trial_premium_coach_profile.is_premium
 
     assert UserEmailOutbox.objects.filter(
@@ -193,7 +190,7 @@ def test_premium_inquiries_on_trial(
     assert not trial_premium_coach_profile.premium_products.inquiries.is_active
     assert (
         trial_premium_coach_profile.premium_products.inquiries.counter_updated_at.date()
-        == timezone.now().date() - timedelta(days=7, hours=1)
+        == timezone.now().date() - timedelta(days=7, seconds=1)
     )
 
     trial_premium_coach_profile.premium_products.setup_premium_profile(PremiumType.YEAR)
@@ -210,7 +207,7 @@ def test_premium_inquiries_on_trial(
         == timezone.now().date()
     )
 
-    mck_timezone_now.return_value += timedelta(days=30, hours=1)
+    mck_timezone_now.return_value += timedelta(days=30, seconds=1)
 
     assert user.userinquiry.limit == 12
     assert user.userinquiry.left == 10

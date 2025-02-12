@@ -42,3 +42,8 @@ start-db:
 .PHONY: startapp
 startapp:
 	python manage.py runserver
+
+
+.PHONY: env
+activate:
+	python -m poetry sync && `python -m poetry env activate`
