@@ -47,3 +47,8 @@ startapp:
 .PHONY: env
 activate:
 	python -m poetry sync && `python -m poetry env activate`
+
+
+.PHONY: restart
+restart:
+	touch tmp/restart.txt
