@@ -1,17 +1,5 @@
 SHELL = /bin/bash
 
-.PHONY: setup
-setup:
-ifeq ($(OS),Windows_NT)
-	@if not exist "_logs" mkdir "_logs"
-	poetry env use $(python_path)
-	poetry install
-else
-	[ -d "_logs" ] || mkdir -p _logs
-	poetry env use $(python_path)
-	poetry install
-endif
-
 
 .PHONY: test
 test:
