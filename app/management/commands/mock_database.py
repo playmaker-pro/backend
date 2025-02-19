@@ -4,7 +4,7 @@ from django.db import connection
 from pydantic import typing
 
 from app import errors
-from backend.settings.environment import Environment
+from backend.settings.config import Environment
 from utils import factories, load_json
 from utils.factories import NAME_TO_FACTORY_MAPPER, CustomObjectFactory, clubs_models
 from voivodeships.services import VoivodeshipService

@@ -2,7 +2,6 @@ from .base import *
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-CONFIGURATION = Environment.DEV
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "*hnsl_ifoyr)sj@)vp*yrdnu!k!2&%onnx3ms(wi_a&((z_gov"
@@ -57,9 +56,7 @@ logger = logging.getLogger(f"project.{__name__}")
 
 try:
     from .local import *
-
-    print("::> Loading custom local settings (local.py)")
-except ImportError as e:
-    print(f"[error] Cannot load local settings. Reason={e}")
+except Exception as e:
+    print(f"Error while importing local settings: {e}")
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "public", "media")

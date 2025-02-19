@@ -8,6 +8,8 @@ from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist, QuerySet
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import exceptions, status
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.request import Request
@@ -149,6 +151,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
 
         return Response(serializer.data)
 
+    @method_decorator(cache_page(60 * 15))
     def get_bulk_profiles(self, request: Request) -> Response:
         """
         Get list of profile for role delivered as param
@@ -1208,6 +1211,7 @@ class TransferRequestCatalogueAPIView(EndpointViewWithFilter):
     queryset = ProfileTransferRequest.objects.all().order_by("-created_at")
     filterset_class = TransferRequestCatalogueFilter
 
+    @method_decorator(cache_page(60 * 15))
     def list_transfer_requests(self, request: Request) -> Response:
         """Retrieve and display transfer requests."""
         queryset = self.get_queryset()
