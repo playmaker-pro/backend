@@ -39,20 +39,15 @@ count_url: str = "api:profiles:filtered_profile_count"
 pytestmark = pytest.mark.django_db
 
 
-@pytest.fixture(autouse=True)
-def mock_cache():
-    with patch(
-        "django.views.decorators.cache.cache_page", lambda *args, **kwargs: lambda x: x
-    ):
-        yield
-
-
 @pytest.fixture
 def timezone_now():
     with patch("django.utils.timezone.now", return_value=timezone.now()) as mock_now:
         yield mock_now
 
 
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+)
 class TestProfileListAPI(APITestCase):
     def setUp(self) -> None:
         """set up object factories"""
@@ -971,6 +966,7 @@ def test_if_response_is_ordered_by_data_score(
             )
         )
     ]
+
     assert expected_response == sorted(map(int, profiles_scoring))
 
 

@@ -43,7 +43,7 @@ class UserFactory(CustomObjectFactory):
             is_superuser=True,
             is_staff=True,
             password=make_password(password),
-            **kwargs
+            **kwargs,
         )
 
     @classmethod
