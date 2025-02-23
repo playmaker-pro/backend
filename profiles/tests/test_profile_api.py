@@ -1,11 +1,12 @@
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import factory
 import pytest
 from django.db.models import signals
 from django.urls import reverse
+from django.utils import timezone
 from parameterized import parameterized
 from rest_framework.test import APIClient, APITestCase
 
@@ -21,6 +22,11 @@ from utils.factories import SEASON_NAMES, UserFactory
 from utils.test.test_utils import UserManager
 
 label_service = LabelService()
+
+
+def date_years_ago(years: int) -> str:
+    date = timezone.now() - timedelta(weeks=52 * years)
+    return date.strftime("%Y-%m-%d")
 
 
 class TestGetProfileAPI(APITestCase):
@@ -419,7 +425,7 @@ class TestUpdateProfileAPI(APITestCase):
         response = self.client.patch(
             self.url(str(profile_uuid)), json.dumps(payload), **self.headers
         )
-        breakpoint()
+
         assert response.status_code == 200
         assert response.data["user"]["userpreferences"][key]
 
@@ -554,15 +560,29 @@ class TestUpdateProfileAPI(APITestCase):
             # Testing for player profile
             (
                 "birth_date",
-                "2005-02-14",
+                date_years_ago(20),
                 "citizenship",
                 ["PL"],
                 "P",
                 "YOUTH",
             ),
             # Testing for coach profile
-            ("birth_date", "1990-02-14", None, None, "T", "COACH_AGE_40"),
-            ("birth_date", "1995-02-14", None, None, "T", "COACH_AGE_30"),
+            (
+                "birth_date",
+                date_years_ago(38),
+                None,
+                None,
+                "T",
+                "COACH_AGE_40",
+            ),
+            (
+                "birth_date",
+                date_years_ago(28),
+                None,
+                None,
+                "T",
+                "COACH_AGE_30",
+            ),
         ]
     )
     def test_patch_user_userpreferences_and_label_assignment_for_coach_and_player(
@@ -588,7 +608,7 @@ class TestUpdateProfileAPI(APITestCase):
             object_id=profile.user.id,
             label_definition__label_name=expected_label,
         ).exists()
-        breakpoint()
+
         # Assert label existence
         assert label_exists, f"{expected_label} label not assigned as expected"
 

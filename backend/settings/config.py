@@ -106,3 +106,4 @@ class Config(BaseConfig):
     environment: Environment
     redis: RedisConfig
     postgres: DatabaseConfig
+    # add the rest of settings that should fit here

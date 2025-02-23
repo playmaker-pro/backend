@@ -20,7 +20,7 @@ class Command(RunServerCommand):
         - Note2: you won't see Celery logs in console if you start Celery worker this way.
                  You may want to run celery command directly: 'python manage.py celery'.
         """
-        if not celery_app.control.inspect().active():
+        if celery_app.control.inspect().active() is None:
             if options["celery"]:
                 subprocess.Popen(
                     ["python", "manage.py", "celery"],

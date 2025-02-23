@@ -158,8 +158,10 @@ class UserInquiryLog(models.Model):
         return ""
 
     def save(self, *args, **kwargs):
+        new_object = self.pk is None
         super().save(*args, **kwargs)
-        if self.message.send_mail and self._state.adding:
+
+        if self.message.send_mail and new_object:
             send_inquiry_email.delay(log_id=self.pk)
         logger.info(f"New UserInquiryLog (ID: {self.pk}) created: {self}")
 

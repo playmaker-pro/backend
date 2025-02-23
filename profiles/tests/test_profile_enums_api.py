@@ -59,6 +59,6 @@ class TestProfileEnumChoicesAPI(APITestCase):
         )
 
         response = self.client.get(reverse("api:profiles:players_age_range"))
-        breakpoint()
+
         assert response.status_code == 200
         assert len(response.data) == 4  # +1 caused by 'total' key

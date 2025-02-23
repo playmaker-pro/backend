@@ -45,6 +45,9 @@ def timezone_now():
         yield mock_now
 
 
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+)
 class TestProfileListAPI(APITestCase):
     def setUp(self) -> None:
         """set up object factories"""
@@ -963,6 +966,7 @@ def test_if_response_is_ordered_by_data_score(
             )
         )
     ]
+
     assert expected_response == sorted(map(int, profiles_scoring))
 
 
