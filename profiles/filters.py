@@ -108,17 +108,17 @@ class ProfileListAPIFilter(APIFilter):
         self.queryset = self.model.objects.to_list_by_api()
         self.filter_queryset(self.queryset)
 
-        if self.query_params.get("shuffle", False):
-            # Random shuffle -> get random sample of 10 -> return list of random choices
-            shuffled_queryset = self.queryset.order_by("?")
-            queryset_length = shuffled_queryset.count()
+        # if self.query_params.get("shuffle", False):
+        #     # Random shuffle -> get random sample of 10 -> return list of random choices
+        #     shuffled_queryset = self.queryset.order_by("?")
+        #     queryset_length = shuffled_queryset.count()
 
-            if queryset_length >= 10:
-                selected_items = random.sample(list(shuffled_queryset), 10)
-                return self.queryset.filter(pk__in=[item.pk for item in selected_items])
-            else:
-                # Handle cases where the queryset has fewer than 10 elements
-                return shuffled_queryset
+        # if queryset_length >= 10:
+        #     selected_items = random.sample(list(shuffled_queryset), 10)
+        #     return self.queryset.filter(pk__in=[item.pk for item in selected_items])
+        # else:
+        #     # Handle cases where the queryset has fewer than 10 elements
+        #     return shuffled_queryset
 
         self.sort_queryset()
 
@@ -138,6 +138,9 @@ class ProfileListAPIFilter(APIFilter):
                     )
         else:
             self.queryset = self.sort_promoted_first(self.queryset)
+
+        if self.query_params.get("shuffle"):
+            self.queryset = self.queryset.order_by("?")
 
     def filter_queryset(self, queryset: QuerySet) -> QuerySet:
         """Filter given queryset based on validated query_params"""

@@ -5,24 +5,15 @@ import sentry_sdk
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
-from dotenv import load_dotenv
 from sentry_sdk import set_level
 from sentry_sdk.integrations.django import DjangoIntegration
 
-from backend.settings.config import config as _env_config
-from backend.settings.environment import Environment
+from . import cfg
 
-# This loads additional settings for our environemnt
-CONFIGURATION = (
-    Environment.DEV
-)  # following options are allowed ['dev', 'production', 'staging']
+CONFIGURATION = cfg.environment
 
 # This flag allow us to see debug panel on each page.
 DEBUG_PANEL = False
-
-
-load_dotenv()
-
 
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
@@ -174,11 +165,11 @@ WSGI_APPLICATION = "backend.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": os.getenv("POSTGRES_DB", None),
-        "USER": os.getenv("POSTGRES_USER", None),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", None),
-        "HOST": "localhost",
-        "PORT": os.getenv("POSTGRES_PORT", None),
+        "NAME": cfg.postgres.db,
+        "USER": cfg.postgres.user,
+        "PASSWORD": cfg.postgres.password,
+        "HOST": cfg.postgres.host,
+        "PORT": cfg.postgres.port,
     },
 }
 
@@ -470,6 +461,12 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "filename": join(LOGFILE_ROOT, "payments.log"),
                 "formatter": "verbose",
             },
+            "celery_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "celery.log"),
+                "formatter": "verbose",
+            },
         },
         "loggers": {
             "profiles": {
@@ -513,6 +510,10 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "handlers": ["console", "payments_file"],
                 "level": "DEBUG",
             },
+            "celery": {
+                "handlers": ["celery_file", "console"],
+                "level": "DEBUG",
+            },
         },
     }
 
@@ -525,10 +526,11 @@ logging.config.dictConfig(LOGGING)
 logger = logging.getLogger(f"project.{__name__}")
 
 
-CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
-CELERY_ALWAYS_EAGER = True
-CELERY_TASK_SERIALIZER = "pickle"
-
+CELERY_TASK_ALWAYS_EAGER = False
+CELERY_TASK_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_WORKER_LOGLEVEL = "info"
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 # Redis & stream activity
 STREAM_REDIS_CONFIG = {
@@ -547,10 +549,11 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    # "DEFAULT_PAGINATION_CLASS": "api.pagination.PagePagination",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 10,
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_CACHE_RESPONSE_TIMEOUT": 60 * 15,
+    "DEFAULT_CACHE_BACKEND": "default",
 }
 
 SPECTACULAR_SETTINGS = {
@@ -599,22 +602,6 @@ def build_redirections(redirects):
 
 
 REDIRECTS_LISTS = build_redirections(load_redirects_file())
-
-
-SEO_FILE_PATH = os.path.join(CONSTANTS_DIR, "seo.yaml")
-
-try:
-    import yaml
-
-    with open(SEO_FILE_PATH, encoding="utf8") as f:
-        SEO_DATA = yaml.load(f, Loader=yaml.FullLoader)
-        logger.info(f"SEO data loaded from {SEO_FILE_PATH}")
-    print(f"SEO data loaded from {SEO_FILE_PATH}")
-except Exception as e:
-    print(f"Loading {SEO_FILE_PATH}: Not possible to write SEO_DATA due to: {e}")
-    logger.info(f"Loading {SEO_FILE_PATH}: Not possible to write SEO_DATA due to: {e}")
-    SEO_DATA = {}
-
 
 # To force and replace season on whole system
 # @todo(rkesik): not all elements supports that yet...
@@ -686,9 +673,19 @@ if ENABLE_SENTRY:
 DATETIME_FORMAT = "H:i:s d-m-Y"
 
 
-ENV_CONFIG: _env_config.Config = _env_config
 # Loading of locally stored settings.
 SWAGGER_PATH = os.path.join(BASE_DIR, "api", "swagger.yml")
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": cfg.redis.url,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+
 
 try:
     from backend.settings._local import *  # noqa

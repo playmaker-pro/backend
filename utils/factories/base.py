@@ -7,7 +7,7 @@ from django.db.utils import ProgrammingError
 from faker import Faker
 from pydantic import typing
 
-from backend.settings.environment import Environment
+from backend.settings.config import Environment
 
 logger: logging.Logger = logging.getLogger("mocker")
 fake: Faker = Faker()

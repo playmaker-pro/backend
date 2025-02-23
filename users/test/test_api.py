@@ -1,3 +1,4 @@
+import pty
 from typing import Dict, Tuple
 from unittest import TestCase
 from unittest.mock import patch
@@ -38,6 +39,14 @@ from utils.test.test_utils import (
     UserManager,
     mute_post_save_signal,
 )
+
+
+@pytest.fixture(autouse=True)
+def mock_cache():
+    with patch(
+        "django.views.decorators.cache.cache_page", lambda *args, **kwargs: lambda x: x
+    ):
+        yield
 
 
 @pytest.mark.django_db
@@ -187,6 +196,7 @@ class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             self.url,
             data=self.data,
         )
+
         assert res.status_code == 429
 
     @mute_post_save_signal()
@@ -708,25 +718,25 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             UserService, "create_social_account", return_value=(True, True)
         ).start()
 
-        with (
-            get_user_info_patcher
-        ), google_credentials_patcher, register_from_google_patcher:
-            res: Response = self.client.post(  # type: ignore
-                self.url, data=self.unregistered_user_data
-            )
-            assert res.status_code == 200
+        with get_user_info_patcher:
+            with google_credentials_patcher:
+                with register_from_google_patcher:
+                    res: Response = self.client.post(  # type: ignore
+                        self.url, data=self.unregistered_user_data
+                    )
+                    assert res.status_code == 200
 
-            for element in self.expected_res.keys():
-                assert element in res.json()
+                    for element in self.expected_res.keys():
+                        assert element in res.json()
 
-            assert len(res.json()) == len(self.expected_res)
+                    assert len(res.json()) == len(self.expected_res)
 
-            assert res.json().get("redirect") == "register"
-            assert res.json().get("success") is True
-            assert res.json().get("access_token") is not None
-            assert res.json().get("refresh_token") is not None
-            assert res.json().get("first_name") == self.user_patcher.first_name
-            assert res.json().get("last_name") == self.user_patcher.last_name
+                    assert res.json().get("redirect") == "register"
+                    assert res.json().get("success") is True
+                    assert res.json().get("access_token") is not None
+                    assert res.json().get("refresh_token") is not None
+                    assert res.json().get("first_name") == self.user_patcher.first_name
+                    assert res.json().get("last_name") == self.user_patcher.last_name
 
     def test_response_ok_landing_page(self) -> None:
         """
@@ -744,20 +754,20 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             UserService, "create_social_account", return_value=(True, True)
         ).start()
 
-        with (
-            get_user_info_patcher
-        ), google_credentials_patcher, register_from_google_patcher:
-            res: Response = self.client.post(  # type: ignore
-                self.url, data=self.unregistered_user_data
-            )
+        with get_user_info_patcher:
+            with google_credentials_patcher:
+                with register_from_google_patcher:
+                    res: Response = self.client.post(  # type: ignore
+                        self.url, data=self.unregistered_user_data
+                    )
 
-            assert res.status_code == 200
-            assert res.json().get("redirect") == "landing page"
-            assert res.json().get("success") is True
-            assert res.json().get("access_token") is not None
-            assert res.json().get("refresh_token") is not None
-            assert res.json().get("first_name") == user.first_name
-            assert res.json().get("last_name") == user.last_name
+                    assert res.status_code == 200
+                    assert res.json().get("redirect") == "landing page"
+                    assert res.json().get("success") is True
+                    assert res.json().get("access_token") is not None
+                    assert res.json().get("refresh_token") is not None
+                    assert res.json().get("first_name") == user.first_name
+                    assert res.json().get("last_name") == user.last_name
 
     def test_response_no_user_credentials_exception(self) -> None:
         """Test if response is 400 when no data is fetched from Google"""
@@ -771,16 +781,17 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         patch.object(
             UserService, "create_social_account", return_value=(False, True)
         ).start()
-        with (
-            get_user_info_patcher
-        ), google_credentials_patcher, register_from_google_patcher:
-            res: Response = self.client.post(  # type: ignore
-                self.url, data=self.unregistered_user_data
-            )
-            assert res.status_code == 400
 
-            msg = "No user data fetched from Google or data is not valid. Please try again."  # noqa: E501
-            assert res.json().get("detail") == msg
+        with get_user_info_patcher:
+            with google_credentials_patcher:
+                with register_from_google_patcher:
+                    res: Response = self.client.post(  # type: ignore
+                        self.url, data=self.unregistered_user_data
+                    )
+                    assert res.status_code == 400
+
+                    msg = "No user data fetched from Google or data is not valid. Please try again."  # noqa: E501
+                    assert res.json().get("detail") == msg
 
 
 @pytest.mark.django_db
@@ -808,10 +819,12 @@ class TestEmailAvailabilityEndpoint(TestCase, MethodsNotAllowedTestsMixin):
 
         for _ in range(settings.THROTTLE_EMAIL_CHECK_LIMITATION):
             res: Response = self.client.post(self.url, data={"email": self.test_email})
+
             assert res.status_code == 200
             assert res.json()["success"] is True
 
         res: Response = self.client.post(self.url, data={"email": self.test_email})
+
         assert res.status_code == 429
 
     @pytest.mark.usefixtures("disable_email_check_throttle_for_test")
@@ -1161,6 +1174,7 @@ class TestUserManagementAPI(APITestCase):
             res: Response = self.client.post(
                 self.picture_url, data=data, **self.image_headers
             )
+
             assert res.status_code == 429
 
 

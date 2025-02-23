@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.html import format_html
 
-from backend.settings.environment import Environment
+from backend.settings.config import Environment
 
 
 def translate_league_name(code, name):
@@ -101,7 +101,6 @@ def generate_map(filename):
 
 def generate_teams_map(filename):
     d = []
-    import csv
 
     with open(filename) as f:
         lines = f.readlines()

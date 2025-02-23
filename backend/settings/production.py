@@ -1,9 +1,6 @@
-import os
-
 from .base import *  # noqa
 
 DEBUG = False
-CONFIGURATION = Environment.PRODUCTION
 
 BASE_URL = "https://be.playmaker.pro"
 
@@ -34,15 +31,13 @@ MEMCACHED_CACHE_SOCK = None
 
 try:
     from .local import *
-
-    print("::> Loading custom local settings (local.py)")
-except ImportError as e:
-    print(f"[error] Cannot load local settings. Reason={e}")
+except Exception as e:
+    print(f"Error while importing local settings: {e}")
 
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
-        "LOCATION": MEMCACHED_CACHE_SOCK,
-    }
-}
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
+#         "LOCATION": MEMCACHED_CACHE_SOCK,
+#     }
+# }

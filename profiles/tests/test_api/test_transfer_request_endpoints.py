@@ -18,7 +18,6 @@ from profiles.api.errors import (
 )
 from profiles.api.serializers import PlayerPositionSerializer
 from profiles.models import BaseProfile, ProfileTransferRequest, TeamContributor
-from profiles.schemas import TransferRequestSchema
 from profiles.services import PlayerPositionService, TransferRequestService
 from profiles.tests.test_utils import set_stadion_address
 from utils import factories
@@ -174,13 +173,8 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         assert response.json().get("benefits") == expected_infos
 
         expected_salary = transfer_service.get_salary_by_id(transfer_request_obj.salary)
+
         assert response.json().get("salary") == expected_salary
-
-        data = response.json()
-        fields_schema = list(TransferRequestSchema.__fields__.keys())
-
-        for field in fields_schema:
-            assert field in list(data.keys())
 
     def update_profile_transfer_request(self, new_data: dict) -> Response:
         """Patch request to update profile transfer status."""

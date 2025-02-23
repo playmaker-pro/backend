@@ -1,9 +1,7 @@
-import os
-
 from .base import *  # noqa
 
 DEBUG = False
-CONFIGURATION = Environment.STAGING
+
 BASE_URL = "https://staging.playmakerpro.usermd.net"
 
 COMPRESS_ENABLED = True
@@ -38,15 +36,5 @@ logger = logging.getLogger(f"project.{__name__}")
 
 try:
     from .local import *
-
-    print("::> Loading custom local settings (local.py)")
-except ImportError as e:
-    print(f"[error] Cannot load local settings. Reason={e}")
-
-
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
-        "LOCATION": MEMCACHED_CACHE_SOCK,
-    }
-}
+except Exception as e:
+    print(f"Error while importing local settings: {e}")

@@ -39,6 +39,14 @@ count_url: str = "api:profiles:filtered_profile_count"
 pytestmark = pytest.mark.django_db
 
 
+@pytest.fixture(autouse=True)
+def mock_cache():
+    with patch(
+        "django.views.decorators.cache.cache_page", lambda *args, **kwargs: lambda x: x
+    ):
+        yield
+
+
 @pytest.fixture
 def timezone_now():
     with patch("django.utils.timezone.now", return_value=timezone.now()) as mock_now:

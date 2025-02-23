@@ -2,21 +2,15 @@
 import os
 import sys
 
-from backend.settings.environment import Environment
+from backend.settings import cfg
 
 if __name__ == "__main__":
-    config = Environment.DEV
+    environment = cfg.environment
 
-    try:
-        from backend.settings import local
+    if not environment:
+        raise ValueError("Environment not set")
 
-        config = local.CONFIGURATION
-        print(f":: loading {config} configuration")
-    except:
-        pass
-
-    assert config
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", f"backend.settings.{config}")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", f"backend.settings.{environment}")
 
     from django.core.management import execute_from_command_line
 
