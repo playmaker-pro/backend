@@ -709,8 +709,10 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         ).start()
 
         with (
-            get_user_info_patcher
-        ), google_credentials_patcher, register_from_google_patcher:
+            get_user_info_patcher,
+            google_credentials_patcher,
+            register_from_google_patcher,
+        ):
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
@@ -745,8 +747,10 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         ).start()
 
         with (
-            get_user_info_patcher
-        ), google_credentials_patcher, register_from_google_patcher:
+            get_user_info_patcher,
+            google_credentials_patcher,
+            register_from_google_patcher,
+        ):
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
@@ -772,8 +776,10 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             UserService, "create_social_account", return_value=(False, True)
         ).start()
         with (
-            get_user_info_patcher
-        ), google_credentials_patcher, register_from_google_patcher:
+            get_user_info_patcher,
+            google_credentials_patcher,
+            register_from_google_patcher,
+        ):
             res: Response = self.client.post(  # type: ignore
                 self.url, data=self.unregistered_user_data
             )
@@ -1036,7 +1042,7 @@ class TestPasswordChangeEndpoint(TestCase, MethodsNotAllowedTestsMixin):
     def test_password_change_with_valid_token(self) -> None:
         """Test if the user can reset their password with a valid token."""
 
-        # Request a password reset
+        self.client.force_authenticate(self.user)
         self.client.post(
             self.initiate_reset_url, data={"email": self.user_data["email"]}
         )
@@ -1161,6 +1167,7 @@ class TestUserManagementAPI(APITestCase):
             res: Response = self.client.post(
                 self.picture_url, data=data, **self.image_headers
             )
+            breakpoint()
             assert res.status_code == 429
 
 

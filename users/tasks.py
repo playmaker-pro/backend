@@ -13,8 +13,12 @@ def prepare_new_user(*args, **kwargs) -> None:
     Create required/related objects for new user.
     """
     user = User.objects.get(pk=kwargs.get("user_id"))
-    UserPreferences.objects.get_or_create(user=user)
-    Ref.objects.get_or_create(user=user)
+
+    if not hasattr(user, "userpreferences"):
+        UserPreferences.objects.get_or_create(user=user)
+
+    if not hasattr(user, "ref"):
+        Ref.objects.get_or_create(user=user)
 
 
 @shared_task

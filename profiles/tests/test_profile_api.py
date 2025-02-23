@@ -419,6 +419,7 @@ class TestUpdateProfileAPI(APITestCase):
         response = self.client.patch(
             self.url(str(profile_uuid)), json.dumps(payload), **self.headers
         )
+        breakpoint()
         assert response.status_code == 200
         assert response.data["user"]["userpreferences"][key]
 
@@ -587,7 +588,7 @@ class TestUpdateProfileAPI(APITestCase):
             object_id=profile.user.id,
             label_definition__label_name=expected_label,
         ).exists()
-
+        breakpoint()
         # Assert label existence
         assert label_exists, f"{expected_label} label not assigned as expected"
 

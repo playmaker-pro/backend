@@ -1,20 +1,20 @@
 import string
+from unittest.mock import patch
 
 import factory
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
-from django.db.models import signals
 from factory import fuzzy
 from factory.fuzzy import FuzzyText
 
-from users.models import UserPreferences
+from users.models import Ref, UserPreferences
 
 from .base import CustomObjectFactory
 
 User = get_user_model()
 
 
-@factory.django.mute_signals(signals.post_save)
+# @factory.django.mute_signals(signals.post_save)
 class UserFactory(CustomObjectFactory):
     class Meta:
         model = User
@@ -32,6 +32,7 @@ class UserFactory(CustomObjectFactory):
     userinquiry = factory.RelatedFactory(
         "utils.factories.inquiry_factories.UserInquiryFactory", "user"
     )
+    ref = factory.RelatedFactory("utils.factories.user_factories.RefFactory", "user")
     display_status = User.DisplayStatus.VERIFIED
 
     @classmethod
@@ -43,7 +44,7 @@ class UserFactory(CustomObjectFactory):
             is_superuser=True,
             is_staff=True,
             password=make_password(password),
-            **kwargs
+            **kwargs,
         )
 
     @classmethod
@@ -52,15 +53,16 @@ class UserFactory(CustomObjectFactory):
         kwargs["password"] = make_password(kwargs.get("password", "test"))
         kwargs.setdefault("display_status", User.DisplayStatus.VERIFIED)
 
-        return super().create(**kwargs)
+        with patch("users.tasks.prepare_new_user"):
+            return super().create(**kwargs)
 
-    @factory.post_generation
-    def post_create(self, create, extracted, **kwargs):
-        if not create:
-            return
-
-        # Create UserPreferences for the user
-        UserPreferencesFactory(user=self)
+    # @factory.post_generation
+    # def post_create(self, create, extracted, **kwargs):
+    #     if not create:
+    #         return
+    #
+    #     # Create UserPreferences for the user
+    #     UserPreferencesFactory(user=self)
 
 
 class UserPreferencesFactory(CustomObjectFactory):
@@ -75,3 +77,11 @@ class UserPreferencesFactory(CustomObjectFactory):
     class Meta:
         model = UserPreferences
         django_get_or_create = ("user",)
+
+
+class RefFactory(CustomObjectFactory):
+    class Meta:
+        model = Ref
+        django_get_or_create = ("user",)
+
+    user = factory.SubFactory(UserFactory)
