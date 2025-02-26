@@ -356,17 +356,39 @@ class UserRefInline(admin.TabularInline):
     def has_bought_premium(self, obj):
         return obj.bought_premium
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    has_bought_premium.short_description = "Kupił premium?"
+
 
 @admin.register(models.Ref)
 class RefAdmin(admin.ModelAdmin):
+    class IsCustomRefFilter(SimpleListFilter):
+        title = _("user - czy przypisany do użytkownika?")
+        parameter_name = "has_user"
+
+        def lookups(self, request, model_admin):
+            return [
+                ("1", _("Tak")),
+                ("0", _("Nie")),
+            ]
+
+        def queryset(self, request, queryset):
+            if self.value() == "1":
+                return queryset.filter(user__isnull=False)
+            elif self.value() == "0":
+                return queryset.filter(user__isnull=True)
+            return queryset
+
     list_display = (
         "uuid",
+        "title",
         linkify("user"),
         "ref_count",
         "premium_ref_count",
     )
     inlines = [UserRefInline]
-    ordering = ("-referrals",)
     search_fields = (
         "uuid",
         "user__first_name",
@@ -374,7 +396,8 @@ class RefAdmin(admin.ModelAdmin):
     )
     autocomplete_fields = ("user",)
     ordering = ("referrals",)
-    readonly_fields = ("uuid", "user")
+    readonly_fields = ("uuid", "user", "ref_count", "premium_ref_count", "url")
+    list_filter = (IsCustomRefFilter,)
 
     def ref_count(self, obj):
         return len(obj.registered_users)
@@ -383,6 +406,9 @@ class RefAdmin(admin.ModelAdmin):
         if obj.registered_users:
             return len(obj.registered_users_premium)
         return 0
+
+    ref_count.short_description = "Zaproszeni"
+    premium_ref_count.short_description = "Zaproszeni + kupili premium"
 
 
 @admin.register(models.UserRef)
@@ -398,5 +424,10 @@ class UserRefAdmin(admin.ModelAdmin):
     autocomplete_fields = ("user", "ref_by")
     readonly_fields = ("user", "ref_by", "created_at", "has_bought_premium")
 
+    def has_add_permission(self, request):
+        return False
+
     def has_bought_premium(self, obj):
         return obj.bought_premium
+
+    has_bought_premium.short_description = "Kupił premium?"

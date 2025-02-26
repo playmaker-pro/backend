@@ -1,11 +1,8 @@
 from django.conf import settings
 from django.contrib import admin
-from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path
-from django.views.generic import TemplateView
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from drf_spectacular.views import SpectacularAPIView
 
-import landingpage.urls
 from api import urls as api_urls
 
 # from search import views as search_views   #wag
@@ -52,7 +49,6 @@ urlpatterns = [
     #  path("api/v2/", api_router.urls),  #wag
     path("api/v3/", include(api_urls, namespace="api")),
     path("select2/", include("django_select2.urls")),
-    path("transfer/", include(landingpage.urls, namespace="landingpage")),
     # path("premium/", include(premium.urls, namespace="premium")),
     # path("", include("allauth.urls")),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),

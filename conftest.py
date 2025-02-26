@@ -26,6 +26,8 @@ from rest_framework.test import APIClient
 
 from utils.factories import UserFactory
 
+pytestmark = pytest.mark.django_db
+
 User = get_user_model()
 
 
@@ -52,13 +54,13 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(autouse=True)
-def system_user():
+def system_user(db):
     """Create system user before running tests."""
-    with patch("users.tasks.send_email_to_confirm_new_user"):
+    with patch("mailing.models.EmailTemplate.send_email"):
         User.objects.get_or_create(email=settings.SYSTEM_USER_EMAIL)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def api_client():
     """Create api client before running tests."""
     return APIClient()

@@ -1,10 +1,15 @@
 from celery import shared_task
-from django.contrib.auth import get_user_model
+from django.utils import timezone
 
-from users.models import Ref, UserPreferences
+from inquiries.services import InquireService
+from profiles.errors import ProfileVisitHistoryDoesNotExistException
+from profiles.services import ProfileVisitHistoryService
+from users.models import Ref, User, UserPreferences
 from users.services import UserService
 
-User = get_user_model()
+
+def _get_user(user_id: int) -> User:
+    return User.objects.get(pk=user_id)
 
 
 @shared_task
@@ -12,9 +17,10 @@ def prepare_new_user(*args, **kwargs) -> None:
     """
     Create required/related objects for new user.
     """
-    user = User.objects.get(pk=kwargs.get("user_id"))
+    user = _get_user(kwargs.get("user_id"))
     UserPreferences.objects.get_or_create(user=user)
     Ref.objects.get_or_create(user=user)
+    InquireService.create_basic_inquiry_plan(user)
 
 
 @shared_task
@@ -22,5 +28,33 @@ def send_email_to_confirm_new_user(*args, **kwargs) -> None:
     """
     Send an email to new user to confirm his account.
     """
-    user = User.objects.get(pk=kwargs.get("user_id"))
+    user = _get_user(kwargs.get("user_id"))
     UserService.send_email_to_confirm_new_user(user)
+
+
+@shared_task
+def update_user_last_activity(*args, **kwargs):
+    """
+    Update user's last activity date.
+    """
+    user = _get_user(kwargs.get("user_id"))
+    user.update_activity()
+
+
+@shared_task
+def update_visit_history_for_actual_date(*args, **kwargs):
+    """
+    Update user visit history for actual date.
+    """
+    user = _get_user(kwargs.get("user_id"))
+    visit_history_service = ProfileVisitHistoryService()
+
+    if not user.is_staff and not user.is_superuser:
+        try:
+            user_visit_history = visit_history_service.get_user_profile_visit_history(
+                user=user, created_at=timezone.now()
+            )
+            user_visit_history.user_logged_in = True
+            user_visit_history.save()
+        except ProfileVisitHistoryDoesNotExistException:
+            visit_history_service.create(user=user, user_logged_in=True)

@@ -98,6 +98,15 @@ class DatabaseConfig(BaseConfig):
     password: str = ""
 
 
+class WebappConfig(BaseConfig):
+    """Settings for webapp"""
+
+    url: str = "https://playmaker.pro/"
+
+    def parse_url(self, path: str) -> str:
+        return f"{self.url}{path.lstrip('/')}"
+
+
 class Config(BaseConfig):
     """General settings for webapp"""
 
@@ -106,4 +115,5 @@ class Config(BaseConfig):
     environment: Environment
     redis: RedisConfig
     postgres: DatabaseConfig
+    webapp: WebappConfig
     # add the rest of settings that should fit here

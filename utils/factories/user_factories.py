@@ -4,6 +4,7 @@ from unittest.mock import patch
 import factory
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
+from django.db.models import signals
 from factory import fuzzy
 from factory.fuzzy import FuzzyText
 
@@ -14,7 +15,7 @@ from .base import CustomObjectFactory
 User = get_user_model()
 
 
-# @factory.django.mute_signals(signals.post_save)
+@factory.django.mute_signals(signals.post_save)
 class UserFactory(CustomObjectFactory):
     class Meta:
         model = User
@@ -56,13 +57,14 @@ class UserFactory(CustomObjectFactory):
         with patch("users.tasks.prepare_new_user"):
             return super().create(**kwargs)
 
-    # @factory.post_generation
-    # def post_create(self, create, extracted, **kwargs):
-    #     if not create:
-    #         return
-    #
-    #     # Create UserPreferences for the user
-    #     UserPreferencesFactory(user=self)
+    @factory.post_generation
+    def post_create(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        # Create UserPreferences for the user
+        UserPreferencesFactory(user=self)
+        RefFactory(user=self)
 
 
 class UserPreferencesFactory(CustomObjectFactory):

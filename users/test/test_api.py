@@ -1,4 +1,3 @@
-import pty
 from typing import Dict, Tuple
 from unittest import TestCase
 from unittest.mock import patch
@@ -14,6 +13,9 @@ from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
 from features.models import Feature
+from payments.models import Transaction
+from premium.models import Product
+from profiles.models import GuestProfile
 from users.api.views import UsersAPI
 from users.errors import (
     ApplicationError,
@@ -158,6 +160,91 @@ class TestAuth(APITestCase):
 
 
 @pytest.mark.django_db
+class TestUserReferrals(TestCase):
+    def setUp(self) -> None:
+        self.client: APIClient = APIClient()
+        self.url: str = reverse("api:users:api-register")
+        self.data: Dict[str, str] = {
+            "password": "super secret password",
+            "first_name": "first_name",
+            "last_name": "last_name",
+            "email": TEST_EMAIL,
+        }
+        self.user = UserFactory.create()
+
+    def test_user_ref_endpoint(self):
+        url = reverse("api:users:my_ref_data")
+        self.client.force_authenticate(self.user)
+        response = self.client.get(url)
+
+        assert response.status_code == 200
+        assert response.data["referral_code"]
+        assert response.data["invited_users"] == 0
+
+    def test_register_ref_uuid_created(self) -> None:
+        """Test register endpoint. Response OK"""
+
+        res: Response = self.client.post(
+            self.url,
+            data=self.data,
+        )
+
+        assert res.status_code == 200
+
+        user = User.objects.get(pk=res.data["id"])
+
+        assert user.ref
+        assert user.ref.registered_users.count() == 0
+
+    def test_register_with_ref_uuid(self) -> None:
+        """Test register endpoint. Response OK"""
+        user_ref = UserFactory().ref
+
+        assert user_ref.registered_users.count() == 0
+
+        self.data["referral_code"] = str(user_ref.uuid)
+        res: Response = self.client.post(
+            self.url,
+            data=self.data,
+        )
+
+        assert res.status_code == 200
+        assert user_ref.registered_users.count() == 1
+        assert user_ref.referrals.first().user.pk == res.data["id"]
+        assert len(user_ref.registered_users_premium) == 0
+
+        invited_user = user_ref.registered_users.first().user
+        GuestProfile.objects.create(user=invited_user)
+        premium_product = Product.objects.get(name="PREMIUM_PROFILE_MONTH")
+        transaction = Transaction.objects.create(
+            product=premium_product, user=invited_user
+        )
+        transaction.success()
+        transaction.save()
+
+        user_ref.refresh_from_db()
+
+        assert user_ref.registered_users.count() == 1
+        assert len(user_ref.registered_users_premium) == 1
+
+    def test_create_ref_without_user(self):
+        """Test if Ref can be created without user"""
+        ref = Ref.objects.create(title="test-title", description="test-description")
+
+        assert not ref.user
+        assert ref.uuid
+        assert ref.title == "test-title"
+        assert ref.description == "test-description"
+
+    def test_user_always_have_referral(self):
+        """Test if user always have referral"""
+        user = UserFactory()
+
+        assert user.ref
+        assert user.ref.referrals.count() == 0
+
+
+@pytest.mark.django_db
 class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
     NOT_ALLOWED_METHODS = ["get", "put", "patch", "delete"]
 
@@ -213,37 +300,6 @@ class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         assert res.data["email"] == self.data.get("email")
         assert res.data["id"]
         assert res.data["username"] == self.data.get("email")
-
-    def test_register_ref_uuid_created(self) -> None:
-        """Test register endpoint. Response OK"""
-
-        res: Response = self.client.post(
-            self.url,
-            data=self.data,
-        )
-
-        assert res.status_code == 200
-
-        user = User.objects.get(pk=res.data["id"])
-
-        assert user.ref
-        assert user.ref.registered_users.count() == 0
-
-    def test_register_with_ref_uuid(self) -> None:
-        """Test register endpoint. Response OK"""
-        user_ref = Ref.objects.create(user=UserFactory())
-
-        assert user_ref.registered_users.count() == 0
-
-        self.data["referral_code"] = str(user_ref.uuid)
-        res: Response = self.client.post(
-            self.url,
-            data=self.data,
-        )
-
-        assert res.status_code == 200
-        assert user_ref.registered_users.count() == 1
-        assert user_ref.referrals.first().user.pk == res.data["id"]
 
     def test_register_endpoint_no_password_sent(self) -> None:
         """Test register endpoint with no password field"""
@@ -1212,7 +1268,7 @@ class TestEmailVerificationEndpoint(TestCase):
 
         # Fetch the user and check if the email is verified
         user = User.objects.get(email=self.user_data["email"])
-        assert user.is_email_verified is True
+        assert user.is_email_verified
 
     def test_email_verification_with_invalid_token(self) -> None:
         """
@@ -1239,20 +1295,3 @@ class TestEmailVerificationEndpoint(TestCase):
         # Fetch the user and check if the email is still not verified
         user = User.objects.get(email=self.user_data["email"])
         assert user.is_email_verified is False
-
-
-@pytest.mark.django_db
-class TestEmailVerificationEndpoint(TestCase):
-    def setUp(self) -> None:
-        self.client = APIClient()
-        with patch("factory.django.mute_signals"):
-            self.user = UserFactory.create()
-
-    def test_user_ref_endpoint(self):
-        url = reverse("api:users:my_ref_data")
-        self.client.force_authenticate(self.user)
-        response = self.client.get(url)
-
-        assert response.status_code == 200
-        assert response.data["referral_code"]
-        assert response.data["invited_users"] == 0

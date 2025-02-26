@@ -30,7 +30,9 @@ class Command(RunServerCommand):
             else:
                 print(
                     colored(
-                        "Celery worker is not running. To start it, run 'python manage.py celery'.",
+                        "Celery worker is not running. To start it, run 'python manage.py celery' "
+                        "if you want to see logs. You may also run 'python manage.py runserver --celery' "
+                        "to start Celery worker in background.",
                         "red",
                     )
                 )

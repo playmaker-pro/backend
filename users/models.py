@@ -1,5 +1,6 @@
 import datetime
 import uuid
+from typing import List
 from urllib.parse import urljoin
 
 from django.conf import settings
@@ -20,7 +21,7 @@ from notifications.mail import (
 )
 from roles import definitions
 from users.managers import CustomUserManager
-from utils import calculate_age
+from utils import calculate_age, generate_fe_url_path
 
 
 class UserRoleMixin:
@@ -354,7 +355,7 @@ class User(AbstractUser, UserRoleMixin):
                 self.state = self.STATE_ACCOUNT_VERIFIED
         super().save(*args, **kwargs)
 
-    def new_user_activity(self):
+    def update_activity(self):
         """
         Update the user's last activity timestamp.
 
@@ -485,18 +486,32 @@ class UserPreferences(models.Model):
 
 class Ref(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, primary_key=True)
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
+    )
+    title = models.CharField(
+        max_length=30, verbose_name="Krótki tytuł", null=True, blank=True
+    )
+    description = models.TextField(null=True, blank=True, verbose_name="Opis")
 
-    def __str__(self):
-        return f"[{self.uuid}] {self.user}"
+    def __str__(self) -> str:
+        return f"[{self.uuid}] {self.user or self.title}"
 
     @property
-    def registered_users(self):
+    def registered_users(self) -> models.QuerySet:
         return self.referrals.all()
 
     @property
-    def registered_users_premium(self):
+    def registered_users_premium(self) -> List:
         return [user for user in self.registered_users if user.bought_premium]
+
+    @property
+    def url(self) -> str:
+        return generate_fe_url_path("?ref_code=" + str(self.uuid))
+
+    class Meta:
+        verbose_name = "Afiliacja"
+        verbose_name_plural = "Afiliacje"
 
 
 class UserRef(models.Model):
@@ -510,10 +525,14 @@ class UserRef(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.ref_by.user} zaprosił {self.user}"
+        return f"{self.ref_by} zaprosił {self.user}"
 
     @property
-    def bought_premium(self):
+    def bought_premium(self) -> bool:
         return self.user.transaction_set.filter(
             product__ref="PREMIUM", transaction_status="SUCCESS"
         ).exists()
+
+    class Meta:
+        verbose_name = "Zaproszenie afiliacyjne"
+        verbose_name_plural = "Zaproszenia afiliacyjne"

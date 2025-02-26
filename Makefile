@@ -32,11 +32,12 @@ startapp:
 	python manage.py runserver
 
 
-.PHONY: env
-activate:
-	python -m poetry sync && `python -m poetry env activate`
-
-
 .PHONY: restart
 restart:
 	touch tmp/restart.txt
+
+
+.PHONY: migrate
+migrate:
+	poetry run python manage.py migrate
+

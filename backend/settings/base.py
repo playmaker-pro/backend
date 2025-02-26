@@ -19,8 +19,6 @@ DEBUG_PANEL = False
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 BASE_URL = "http://localhost:8000"
 
-FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL")
-
 VERSION = "2.3.3"
 
 
@@ -60,7 +58,6 @@ INSTALLED_APPS = [
     "fqa",
     "fantasy",
     "plays",
-    "landingpage",
     "voivodeships",
     "mapper",
     "labels",
@@ -147,8 +144,6 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "django.template.context_processors.i18n",
-                "app.context_processors.app_info",
-                "inquiries.context_processors.get_user_info",
             ],
         },
     },
