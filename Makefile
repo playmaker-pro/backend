@@ -48,6 +48,6 @@ start-celery:
 
 
 .PHONY: stop-celery
-start-celery:
+stop-celery:
 	nohup poetry run celery -A backend control shutdown &
 
