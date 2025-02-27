@@ -8,6 +8,7 @@ COMPRESS_ENABLED = True
 
 ADMINS = MANAGERS = [
     ("Jakub", "jakub@bartnyk.pl"),
+    ("Biuro", "biuro@playmaker.pro"),
 ]
 
 MIDDLEWARE = ["django.middleware.common.BrokenLinkEmailsMiddleware"] + MIDDLEWARE

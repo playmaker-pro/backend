@@ -35,6 +35,8 @@ startapp:
 .PHONY: restart
 restart:
 	touch tmp/restart.txt
+	make stop-celery
+	make start-celery
 
 
 .PHONY: migrate
@@ -44,10 +46,8 @@ migrate:
 
 .PHONY: start-celery
 start-celery:
-	nohup poetry run celery -A backend worker --autoscale=0,4 --without-mingle --without-gossip &
-
+	nohup poetry run celery -A backend worker --autoscale=0,4 --without-mingle --without-gossip > /dev/null 2>&1 &
 
 .PHONY: stop-celery
 stop-celery:
-	nohup poetry run celery -A backend control shutdown &
-
+	nohup poetry run celery -A backend control shutdown > /dev/null 2>&1 &
