@@ -22,6 +22,7 @@ from api.errors import NotOwnerOfAnObject
 from api.pagination import TransferRequestCataloguePagePagination
 from api.serializers import ProfileEnumChoicesSerializer
 from api.views import EndpointView
+from backend import settings
 from clubs.services import LeagueService
 from external_links import serializers as external_links_serializers
 from external_links.errors import LinkSourceNotFound, LinkSourceNotFoundServiceException
@@ -151,7 +152,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
 
         return Response(serializer.data)
 
-    @method_decorator(cache_page(60 * 15))
+    @method_decorator(cache_page(settings.DEFAULT_CACHE_LIFESPAN))
     def get_bulk_profiles(self, request: Request) -> Response:
         """
         Get list of profile for role delivered as param
@@ -335,7 +336,7 @@ class SuggestedProfilesAPIView(EndpointView):
         one_month_ago = timezone.now() - timedelta(days=30)
 
         qs = model.objects.filter(
-            # user__last_activity__gte=one_month_ago,  # This should be
+            user__last_activity__gte=one_month_ago,  # This should be
         )
 
         if loc_filter_params is None:
@@ -1211,7 +1212,7 @@ class TransferRequestCatalogueAPIView(EndpointViewWithFilter):
     queryset = ProfileTransferRequest.objects.all().order_by("-created_at")
     filterset_class = TransferRequestCatalogueFilter
 
-    @method_decorator(cache_page(60 * 15))
+    @method_decorator(cache_page(settings.DEFAULT_CACHE_LIFESPAN))
     def list_transfer_requests(self, request: Request) -> Response:
         """Retrieve and display transfer requests."""
         queryset = self.get_queryset()

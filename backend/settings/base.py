@@ -34,6 +34,8 @@ MANAGERS = [
     ("Rafal", "rafal.kesik@gmail.com"),
 ]
 
+DEFAULT_CACHE_LIFESPAN = 60 * 15  # in seconds (60 * 5 = 5min)
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
@@ -547,7 +549,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 10,
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
-    "DEFAULT_CACHE_RESPONSE_TIMEOUT": 60 * 15,
+    "DEFAULT_CACHE_RESPONSE_TIMEOUT": DEFAULT_CACHE_LIFESPAN,
     "DEFAULT_CACHE_BACKEND": "default",
 }
 
