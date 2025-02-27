@@ -41,3 +41,13 @@ restart:
 migrate:
 	poetry run python manage.py migrate
 
+
+.PHONY: start-celery
+start-celery:
+	nohup poetry run celery -A backend worker --autoscale=0,4 --without-mingle --without-gossip &
+
+
+.PHONY: stop-celery
+start-celery:
+	nohup poetry run celery -A backend control shutdown &
+
