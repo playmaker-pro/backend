@@ -314,9 +314,9 @@ def test_player_custom_period(player_profile, period, mck_timezone_now):
     )
 
     assert player_profile.premium_products.trial_tested
-    assert player_profile.premium.subscription_days == timedelta(days=period)
-    assert player_profile.promotion.subscription_days == timedelta(days=period)
-    assert player_profile.premium_products.inquiries.subscription_days == timedelta(
+    assert player_profile.premium.subscription_lifespan == timedelta(days=period)
+    assert player_profile.promotion.subscription_lifespan == timedelta(days=period)
+    assert player_profile.premium_products.inquiries.subscription_lifespan == timedelta(
         days=period
     )
 
@@ -339,9 +339,9 @@ def test_custom_period(coach_profile, period, mck_timezone_now):
     )
 
     assert coach_profile.premium_products.trial_tested
-    assert coach_profile.premium.subscription_days == timedelta(days=period)
-    assert coach_profile.promotion.subscription_days == timedelta(days=period)
-    assert coach_profile.premium_products.inquiries.subscription_days == timedelta(
+    assert coach_profile.premium.subscription_lifespan == timedelta(days=period)
+    assert coach_profile.promotion.subscription_lifespan == timedelta(days=period)
+    assert coach_profile.premium_products.inquiries.subscription_lifespan == timedelta(
         days=period
     )
 

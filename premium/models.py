@@ -59,7 +59,7 @@ class PremiumProfile(models.Model):
     valid_until = models.DateTimeField(blank=True, null=True)
 
     @property
-    def subscription_days(self) -> timedelta:
+    def subscription_lifespan(self) -> timedelta:
         return self.valid_until.date() - self.valid_since.date()
 
     @property
@@ -184,7 +184,7 @@ class PromoteProfileProduct(models.Model):
     valid_until = models.DateTimeField(null=True, blank=True)
 
     @property
-    def subscription_days(self) -> timedelta:
+    def subscription_lifespan(self) -> timedelta:
         return self.valid_until.date() - self.valid_since.date()
 
     def _fresh_init(self) -> None:
@@ -235,7 +235,7 @@ class PremiumInquiriesProduct(models.Model):
         self.save()
 
     @property
-    def subscription_days(self) -> timedelta:
+    def subscription_lifespan(self) -> timedelta:
         if self.valid_since and self.valid_until:
             return self.valid_until.date() - self.valid_since.date()
         else:
@@ -284,7 +284,7 @@ class PremiumInquiriesProduct(models.Model):
         """Refresh the validity of the premium inquiries."""
         period = period or premium_type.period
 
-        if self.subscription_days.days < 30:
+        if self.subscription_lifespan.days < 30:
             self.reset_counter(reset_plan=False, commit=False)
 
         if self.is_active:

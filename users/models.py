@@ -314,13 +314,6 @@ class User(AbstractUser, UserRoleMixin):
         _("Last Activity"), default=None, null=True, blank=True
     )
 
-    # verification = models.OneToOneField(
-    #     "VerificationStatus",
-    #     on_delete=models.SET_NULL,
-    #     null=True,
-    #     blank=True
-    # )
-
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 

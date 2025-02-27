@@ -33,8 +33,9 @@ from users.schemas import (
 )
 from users.services import UserService
 from users.utils.test_utils import extract_uidb64_and_token_from_email
+from utils.factories import PlayerProfileFactory
 from utils.factories.feature_sets_factories import FeatureElementFactory, FeatureFactory
-from utils.factories.user_factories import UserFactory
+from utils.factories.user_factories import UserFactory, UserRefFactory
 from utils.test.test_utils import (
     TEST_EMAIL,
     MethodsNotAllowedTestsMixin,
@@ -242,6 +243,97 @@ class TestUserReferrals(TestCase):
 
         assert user.ref
         assert user.ref.referrals.count() == 0
+
+    def test_reward_user_referral_after_10_invites(self):
+        profile = PlayerProfileFactory()
+        ref = profile.user.ref
+
+        assert ref.registered_users.count() == 0
+        assert not profile.is_premium
+
+        for _ in range(10):
+            UserRefFactory(ref_by=ref)
+
+        last_mail = mail.outbox[-1]
+        profile.refresh_from_db()
+
+        assert ref.registered_users.count() == 10
+        assert profile.is_premium
+        assert profile.premium.subscription_lifespan.days == 10
+        assert (
+            last_mail.subject
+            == f"[Django] Osiągnięto 10 poleconych użytkowników przez {str(ref)}."
+        )
+        assert (
+            last_mail.body
+            == f"Link afiliacyjny {str(ref)} osiągnął 10 poleconych.\nUżytkownikowi {profile} zostało aktywowane/przedłużone premium o 10 dni."
+        )
+
+        for _ in range(10):
+            UserRefFactory(ref_by=ref)
+
+        last_mail = mail.outbox[-1]
+        profile.refresh_from_db()
+
+        assert ref.registered_users.count() == 20
+        assert profile.premium.subscription_lifespan.days == 20
+        assert (
+            last_mail.subject
+            == f"[Django] Osiągnięto 20 poleconych użytkowników przez {str(ref)}."
+        )
+
+        for _ in range(10):
+            UserRefFactory(ref_by=ref)
+
+        last_mail = mail.outbox[-1]
+        profile.refresh_from_db()
+
+        assert ref.registered_users.count() == 30
+        assert profile.premium.subscription_lifespan.days == 30
+        assert (
+            last_mail.subject
+            == f"[Django] Osiągnięto 30 poleconych użytkowników przez {str(ref)}."
+        )
+
+    def test_reward_non_user_referral_after_10_invites(self):
+        ref = Ref.objects.create(title="test-title", description="test-description")
+
+        assert ref.registered_users.count() == 0
+
+        for _ in range(10):
+            UserRefFactory(ref_by=ref)
+
+        last_mail = mail.outbox[-1]
+
+        assert ref.registered_users.count() == 10
+        assert (
+            last_mail.subject
+            == f"[Django] Osiągnięto 10 poleconych użytkowników przez {str(ref)}."
+        )
+        assert (
+            last_mail.body == f"Link afiliacyjny {str(ref)} osiągnął 10 poleconych.\n"
+        )
+
+    def test_failed_to_reward_user_after_10_invites(self):
+        user = UserFactory()
+        ref = user.ref
+
+        assert ref.registered_users.count() == 0
+
+        for _ in range(10):
+            UserRefFactory(ref_by=ref)
+
+        last_mail = mail.outbox[-1]
+
+        assert ref.registered_users.count() == 10
+        assert (
+            last_mail.subject
+            == f"[Django] Osiągnięto 10 poleconych użytkowników przez {str(ref)}."
+        )
+        assert (
+            last_mail.body
+            == f"Link afiliacyjny {str(ref)} osiągnął 10 poleconych.\nNiestety, nie udało się aktywować premium dla {ref.user}."
+        )
 
 
 @pytest.mark.django_db

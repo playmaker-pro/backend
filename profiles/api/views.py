@@ -3,6 +3,7 @@ import uuid
 from datetime import timedelta
 from typing import TYPE_CHECKING, List
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
@@ -22,7 +23,6 @@ from api.errors import NotOwnerOfAnObject
 from api.pagination import TransferRequestCataloguePagePagination
 from api.serializers import ProfileEnumChoicesSerializer
 from api.views import EndpointView
-from backend import settings
 from clubs.services import LeagueService
 from external_links import serializers as external_links_serializers
 from external_links.errors import LinkSourceNotFound, LinkSourceNotFoundServiceException

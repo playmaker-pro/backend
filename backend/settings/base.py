@@ -30,8 +30,8 @@ PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 BASE_DIR = os.path.dirname(PROJECT_DIR)
 
-MANAGERS = [
-    ("Rafal", "rafal.kesik@gmail.com"),
+ADMINS = MANAGERS = [
+    ("Biuro", "biuro@playmaker.pro"),
 ]
 
 DEFAULT_CACHE_LIFESPAN = 60 * 15  # in seconds (60 * 5 = 5min)
@@ -387,6 +387,10 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
             "simple": {"format": "%(levelname)s %(message)s"},
         },
         "handlers": {
+            "mail_admins": {
+                "level": "ERROR",
+                "class": "mailing.handlers.AsyncAdminEmailHandler",
+            },
             "profiles_file": {
                 "level": "DEBUG",
                 "class": "logging.FileHandler",
@@ -471,7 +475,7 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "level": "DEBUG",
             },
             "django": {
-                "handlers": ["django_log_file", "console"],
+                "handlers": ["django_log_file", "console", "mail_admins"],
                 "propagate": True,
                 "level": "ERROR",
             },
@@ -510,6 +514,10 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
             "celery": {
                 "handlers": ["celery_file", "console"],
                 "level": "DEBUG",
+            },
+            "celery.utils.functional": {
+                "handlers": ["celery_file", "console"],
+                "level": "ERROR",
             },
         },
     }

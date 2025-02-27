@@ -8,7 +8,7 @@ from django.db.models import signals
 from factory import fuzzy
 from factory.fuzzy import FuzzyText
 
-from users.models import Ref, UserPreferences
+from users.models import Ref, UserPreferences, UserRef
 
 from .base import CustomObjectFactory
 
@@ -86,4 +86,11 @@ class RefFactory(CustomObjectFactory):
         model = Ref
         django_get_or_create = ("user",)
 
+
+class UserRefFactory(CustomObjectFactory):
+    class Meta:
+        model = UserRef
+        django_get_or_create = ("user",)
+
     user = factory.SubFactory(UserFactory)
+    ref_by = factory.SubFactory(RefFactory)

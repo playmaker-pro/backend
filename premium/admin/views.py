@@ -1,24 +1,10 @@
 from django.contrib import admin
-from django.contrib.admin import SimpleListFilter
 from django.urls import reverse
 from django.utils.html import format_html
 
+from premium import models
+from premium.admin import actions
 from utils import linkify
-
-from . import models
-from .models import PremiumType
-
-
-@admin.action(description="Update PM Score")
-def update_pm_score(modeladmin, request, queryset):
-    for record in queryset:
-        player = record.player
-        player.refresh_scoring()
-
-        player.refresh_from_db()
-        current_score = player.playermetrics.pm_score
-
-        record.approve(request.user, current_score)
 
 
 @admin.register(models.CalculatePMScoreProduct)
@@ -37,14 +23,14 @@ class CalculatePMScoreProductAdmin(admin.ModelAdmin):
     )
     autocomplete_fields = ("player", "product", "approved_by")
     search_fields = ("player__user__first_name", "player__user__last_name")
-    actions = [update_pm_score]
+    actions = [actions.update_pm_score]
     list_filter = ("player__team_object__league",)
     exclude = ("old_value", "new_value", "approved_by")
     readonly_fields = ("product", "metrics")
     ordering = ("updated_at",)
 
     def product_name(self, obj):
-        return PremiumType.get_period_type(obj.product.premium.period)
+        return models.PremiumType.get_period_type(obj.product.premium.period)
 
     def product_expiration_date(self, obj):
         return obj.product.premium.valid_until
@@ -99,7 +85,7 @@ class PromoteProfileProductAdmin(admin.ModelAdmin):
 
     def product_name(self, obj):
         if obj.is_active:
-            return PremiumType.get_period_type(obj.product.premium.period)
+            return models.PremiumType.get_period_type(obj.product.premium.period)
 
 
 @admin.register(models.Product)
@@ -147,7 +133,7 @@ class PremiumProfileAdmin(admin.ModelAdmin):
 
     def product_name(self, obj):
         if obj.is_active:
-            return PremiumType.get_period_type(obj.period)
+            return models.PremiumType.get_period_type(obj.period)
 
 
 @admin.register(models.PremiumProduct)
@@ -162,6 +148,12 @@ class PremiumProductAdmin(admin.ModelAdmin):
     search_fields = ("user__first_name", "user__last_name")
     autocomplete_fields = ("user",)
     readonly_fields = ("user",)
+    actions = [
+        actions.activate_1_day_premium,
+        actions.activate_10_days_premium,
+        actions.activate_1_month_premium,
+        actions.activate_1_year_premium,
+    ]
 
 
 @admin.register(models.PremiumInquiriesProduct)
@@ -185,4 +177,4 @@ class PremiumInquiriesProductAdmin(admin.ModelAdmin):
 
     def product_name(self, obj):
         if obj.is_active:
-            return PremiumType.get_period_type(obj.product.premium.period)
+            return models.PremiumType.get_period_type(obj.product.premium.period)

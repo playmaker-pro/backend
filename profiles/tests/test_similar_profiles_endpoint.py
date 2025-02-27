@@ -141,8 +141,7 @@ class TestSimilarProfilesAPI:
         """
         Test retrieving similar profiles for a player profile with no main position.
         """
-
-        some_player = factories.PlayerProfileFactory.create(
+        _ = factories.PlayerProfileFactory.create(
             user__userpreferences__localization=city_wwa
         )
         some_coach = factories.CoachProfileFactory.create(
@@ -171,10 +170,10 @@ class TestSimilarProfilesAPI:
         Test retrieving similar profiles for a player profile with no main position.
         """
 
-        some_player = factories.PlayerProfileFactory.create(
+        _ = factories.PlayerProfileFactory.create(
             user__userpreferences__localization=city_wwa
         )
-        some_coach = factories.CoachProfileFactory.create(
+        _ = factories.CoachProfileFactory.create(
             user__userpreferences__localization=city_rdm,
             user__last_activity=time_now,
         )
@@ -199,7 +198,7 @@ class TestSimilarProfilesAPI:
         Test retrieving similar profiles for a player profile with no main position.
         """
 
-        some_player = factories.PlayerProfileFactory.create(
+        _ = factories.PlayerProfileFactory.create(
             user__userpreferences__localization=city_wwa
         )
         some_coach = factories.CoachProfileFactory.create(
@@ -244,7 +243,7 @@ class TestSimilarProfilesAPI:
             user__userpreferences__localization=city_prsk,
             user__last_activity=time_now - timedelta(days=1),
         )
-        some_coach = factories.CoachProfileFactory.create(
+        _ = factories.CoachProfileFactory.create(
             user__userpreferences__localization=city_wwa,
             user__last_activity=time_now,
         )
@@ -298,6 +297,7 @@ class TestSimilarProfilesAPI:
             user__userpreferences__localization=city_wwa,
             user__last_activity=time_now - timedelta(days=11),
         )
+        some_player.user.update_activity()
 
         similar_profile_url = reverse(
             url,
