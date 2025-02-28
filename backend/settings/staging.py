@@ -19,8 +19,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, "public", "static")
 MEDIA_ROOT = os.path.join(BASE_DIR, "public", "media")
 
 
-MEMCACHED_CACHE_SOCK = None
-
 LOGGING["handlers"]["mocker"] = {
     "level": "DEBUG",
     "class": "logging.FileHandler",

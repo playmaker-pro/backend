@@ -53,7 +53,7 @@ def referral_rewards(sender, instance, created, **kwargs) -> None:
             )
 
             if pp:
-                message += f"Użytkownikowi {pp.profile} zostało aktywowane/przedłużone premium o 10 dni."
+                message += f"Użytkownikowi {pp.profile} zostało aktywowane/przedłużone premium o 30 dni."
             elif referral.user:
                 message += (
                     f"Niestety, nie udało się aktywować premium dla {referral.user}."

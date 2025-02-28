@@ -1,7 +1,8 @@
 import logging
+import random
 import uuid
 from datetime import timedelta
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -40,7 +41,7 @@ from profiles.api.filters import TransferRequestCatalogueFilter
 from profiles.api.managers import SerializersManager
 from profiles.api.mixins import ProfileRetrieveMixin
 from profiles.filters import ProfileListAPIFilter
-from profiles.models import PROFILE_TYPE, ProfileTransferRequest
+from profiles.models import ProfileTransferRequest
 from profiles.serializers_detailed.base_serializers import (
     MainUserDataSerializer,
     ProfileTransferRequestSerializer,
@@ -329,29 +330,18 @@ class SuggestedProfilesAPIView(EndpointView):
 
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def _get_queryset_for_model(
-        self, model: PROFILE_TYPE, loc_filter_params: dict = None
-    ) -> QuerySet:
-        """Get queryset for model"""
-        one_month_ago = timezone.now() - timedelta(days=30)
-
-        qs = model.objects.filter(
-            user__last_activity__gte=one_month_ago,  # This should be
-        )
-
-        if loc_filter_params is None:
-            return qs
-
-        qs_filtered = ProfileFilterService.filter_localization(
-            queryset=qs, **loc_filter_params
-        ).order_by("distance", "-user__last_activity")
-
-        return qs_filtered
-
-    def _get_data(self, profile: PROFILE_TYPE) -> List[QuerySet]:
-        """Get queryset of suggested profiles"""
-        user_localization = profile.user.userpreferences.localization
+    def get_suggested_profiles(
+        self,
+        request,
+    ) -> Response:
+        """
+        Retrieves profiles suggested to the target profile specified by the UUID.
+        """
         loc_params = None
+
+        profile = request.user.profile
+        user_localization = profile.user.userpreferences.localization
+
         if user_localization:
             longitude, latitude = (
                 float(user_localization.longitude),
@@ -360,30 +350,25 @@ class SuggestedProfilesAPIView(EndpointView):
             loc_params = {"longitude": longitude, "latitude": latitude, "radius": 50}
 
         if profile.__class__ is models.PlayerProfile:
-            clubs = self._get_queryset_for_model(models.ClubProfile, loc_params)
-            coaches = self._get_queryset_for_model(models.CoachProfile, loc_params)
-
-            return [coaches, clubs]
+            qs_model = random.choice(
+                [models.CoachProfile, models.ClubProfile, models.ScoutProfile]
+            )
         else:
-            players = self._get_queryset_for_model(models.PlayerProfile, loc_params)
-            return [players]
+            qs_model = models.PlayerProfile
 
-    def get_suggested_profiles(self, request, profile_uuid: uuid) -> Response:
-        """
-        Retrieves profiles suggested to the target profile specified by the UUID.
-        """
-        # Fetch the target user's profile
-        try:
-            target_profile = ProfileService.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist:
-            raise api_errors.ProfileDoesNotExist
+        qs = qs_model.objects.filter(
+            user__last_activity__gte=timezone.now() - timedelta(days=30)
+        )
 
-        qs = self._get_data(target_profile)
-        data = []
-        for dataset in qs:
-            data += serializers.SuggestedProfileSerializer(dataset[:10], many=True).data
+        if loc_params:
+            qs = ProfileFilterService.filter_localization(
+                queryset=qs, **loc_params
+            ).order_by("distance", "-user__last_activity")
+        else:
+            qs = qs.order_by("-user__last_activity")
 
-        return Response(data[:10], status=status.HTTP_200_OK)
+        serializer = serializers.SuggestedProfileSerializer(qs[:10], many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ProfileSearchView(EndpointView):

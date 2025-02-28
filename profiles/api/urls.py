@@ -75,7 +75,7 @@ urlpatterns = [
         name="get_profile_by_slug",
     ),
     path(
-        r"suggested-profiles/<uuid:profile_uuid>/",
+        r"suggested-profiles/",
         views.SuggestedProfilesAPIView.as_view(
             {
                 "get": "get_suggested_profiles",

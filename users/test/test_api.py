@@ -259,14 +259,14 @@ class TestUserReferrals(TestCase):
 
         assert ref.registered_users.count() == 10
         assert profile.is_premium
-        assert profile.premium.subscription_lifespan.days == 10
+        assert profile.premium.subscription_lifespan.days == 30
         assert (
             last_mail.subject
             == f"[Django] Osiągnięto 10 poleconych użytkowników przez {str(ref)}."
         )
         assert (
             last_mail.body
-            == f"Link afiliacyjny {str(ref)} osiągnął 10 poleconych.\nUżytkownikowi {profile} zostało aktywowane/przedłużone premium o 10 dni."
+            == f"Link afiliacyjny {str(ref)} osiągnął 10 poleconych.\nUżytkownikowi {profile} zostało aktywowane/przedłużone premium o 30 dni."
         )
 
         for _ in range(10):
@@ -276,7 +276,7 @@ class TestUserReferrals(TestCase):
         profile.refresh_from_db()
 
         assert ref.registered_users.count() == 20
-        assert profile.premium.subscription_lifespan.days == 20
+        assert profile.premium.subscription_lifespan.days == 60
         assert (
             last_mail.subject
             == f"[Django] Osiągnięto 20 poleconych użytkowników przez {str(ref)}."
@@ -289,7 +289,7 @@ class TestUserReferrals(TestCase):
         profile.refresh_from_db()
 
         assert ref.registered_users.count() == 30
-        assert profile.premium.subscription_lifespan.days == 30
+        assert profile.premium.subscription_lifespan.days == 90
         assert (
             last_mail.subject
             == f"[Django] Osiągnięto 30 poleconych użytkowników przez {str(ref)}."

@@ -10,4 +10,4 @@ def reward_referrals_with_premium(premium_products_id):
     except PremiumProduct.DoesNotExist:
         return
 
-    pp_object.setup_premium_profile(PremiumType.CUSTOM, 10)
+    pp_object.setup_premium_profile(PremiumType.MONTH)
