@@ -4,7 +4,7 @@ import typing
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
-from backend.settings.environment import Environment
+from backend.settings.config import Environment
 from clubs.models import Club, Gender, League, Seniority, Team
 from roles import definitions
 from voivodeships.models import Voivodeships

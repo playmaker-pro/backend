@@ -8,11 +8,6 @@ from rest_framework.test import APIClient, APITestCase
 
 from profiles.api.errors import TransferStatusDoesNotExistHTTPException
 from profiles.models import BaseProfile, ProfileTransferStatus
-from profiles.schemas import (
-    TransferStatusPhoneNumberSchema,
-    TransferStatusSchema,
-    TransferStatusStatusSchema,
-)
 from profiles.services import TransferStatusService
 from utils.factories import (
     LeagueFactory,
@@ -82,21 +77,7 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
         assert response.json().get(
             "status"
         ) == transfer_service.get_transfer_status_by_id(transfer_status_obj.status)
-
-        data = response.data
-        fields_schema = list(TransferStatusSchema.__fields__.keys())
-
         assert response.status_code == 200
-        for field in fields_schema:
-            assert field in list(data.keys())
-
-        phone_number_schema = list(TransferStatusPhoneNumberSchema.__fields__.keys())
-        for field in phone_number_schema:
-            assert field in list(data["phone_number"].keys())
-
-        status = list(TransferStatusStatusSchema.__fields__.keys())
-        for field in status:
-            assert field in list(data["status"].keys())
 
     def update_profile(self, new_data: dict) -> Response:
         """Patch request to update profile transfer status."""

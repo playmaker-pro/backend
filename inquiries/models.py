@@ -18,6 +18,7 @@ from inquiries.signals import (
     inquiry_restored,
     inquiry_sent,
 )
+from inquiries.tasks import send_inquiry_email
 from inquiries.utils import InquiryMessageContentParser as _ContentParser
 from mailing.models import EmailTemplate as _EmailTemplate
 from mailing.schemas import EmailSchema as _EmailSchema
@@ -157,9 +158,11 @@ class UserInquiryLog(models.Model):
         return ""
 
     def save(self, *args, **kwargs):
-        if self.message.send_mail and self._state.adding:
-            self.send_email_to_user()
+        new_object = self.pk is None
         super().save(*args, **kwargs)
+
+        if self.message.send_mail and new_object:
+            send_inquiry_email.delay(log_id=self.pk)
         logger.info(f"New UserInquiryLog (ID: {self.pk}) created: {self}")
 
 

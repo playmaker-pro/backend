@@ -6,7 +6,6 @@ from rest_framework import serializers
 from clubs import models
 from external_links.serializers import ExternalLinksSerializer
 from profiles.models import TeamContributor
-from users.api.serializers import UserDataSerializer
 from voivodeships.serializers import VoivodeshipSerializer
 
 
@@ -104,6 +103,8 @@ class LeagueHistorySerializer(serializers.ModelSerializer):
 
 
 class ClubSerializer(serializers.ModelSerializer):
+    from users.api.serializers import UserDataSerializer
+
     voivodeship_obj = VoivodeshipSerializer(required=False)
     manager = UserDataSerializer(required=False)
     editors = UserDataSerializer(many=True, required=False)
@@ -133,6 +134,8 @@ class ClubSerializer(serializers.ModelSerializer):
 
 
 class TeamSerializer(serializers.ModelSerializer):
+    from users.api.serializers import UserDataSerializer
+
     club = ClubSerializer(required=False)
     gender = GenderSerializer(required=False)
     seniority = SenioritySerializer(required=False)

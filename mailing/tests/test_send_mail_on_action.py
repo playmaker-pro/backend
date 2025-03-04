@@ -1,5 +1,4 @@
 import pytest
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
 
@@ -20,13 +19,10 @@ def new_user():
 class TestSendMailForNewUser:
     def test_send_email_to_new_created_user(self, new_user) -> None:
         """Test send email to new created user"""
-        assert len(mail.outbox) == 2
-        assert [email.to[0] for email in mail.outbox] == [
-            new_user.email,
-            settings.SYSTEM_USER_EMAIL,
-        ]
-
         last_outbox = _UserEmailOutbox.objects.last()
+
+        assert len(mail.outbox) == 1
+        assert mail.outbox[-1].to == [new_user.email]
         assert last_outbox.recipient == new_user.email, (
             last_outbox.email_type == _EmailTemplate.EmailType.NEW_USER
         )

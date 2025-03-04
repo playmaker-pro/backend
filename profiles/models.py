@@ -502,7 +502,7 @@ class BaseProfile(models.Model, EventLogMixin):
     def ensure_premium_products_exist(self, commit: bool = True) -> None:
         """Create PremiumProduct for profile if it doesn't exist"""
         if not self.premium_products:
-            self.premium_products = PremiumProduct.objects.create()
+            self.premium_products = PremiumProduct.objects.create(user=self.user)
             if commit:
                 self.save()
 
@@ -513,12 +513,6 @@ class BaseProfile(models.Model, EventLogMixin):
                 self.save()
 
     def save(self, *args, **kwargs):
-        # silent_param = kwargs.get('silent', False)
-        # if silent_param is not None:
-        #     kwargs.pop('silent')
-        # if self.event_log is None:
-        #     self.make_default_event_log()
-
         if self._state.adding:
             self.user.declared_role = definitions.PROFILE_TYPE_SHORT_MAP[
                 self.PROFILE_TYPE
@@ -526,7 +520,6 @@ class BaseProfile(models.Model, EventLogMixin):
             self.user.save(update_fields=["declared_role"])
 
         self.ensure_verification_stage_exist(commit=False)
-        self.ensure_premium_products_exist(commit=False)
         self.ensure_visitation_exist(commit=False)
 
         # When profile changes, update data score level
@@ -549,9 +542,6 @@ class BaseProfile(models.Model, EventLogMixin):
 
         profile_utils.unique_slugify(self, slug_str)
 
-        ver_old, object_exists = self._get_verification_object_verification_fields(
-            obj=obj_before_save
-        )
         if obj_before_save is not None:
             before_datamapper = obj.data_mapper_id
         else:
@@ -564,49 +554,12 @@ class BaseProfile(models.Model, EventLogMixin):
         # Queen of the show
         super().save(*args, **kwargs)
 
+        self.ensure_premium_products_exist()
+
         if self.data_mapper_id != before_datamapper:
             self.data_mapper_changed = True
         else:
             self.data_mapper_changed = False
-
-        # we are updating existing model (not first occurence)
-        # rkesik: due to new registration flow that is not needed.
-        # ver_new = self._get_verification_field_values(self)
-        # if not object_exists:
-        #     ver_old = ver_new
-
-        # rkesik: due to new registration flow that is not needed.
-        # Cases when one of verification fields is None
-        # if self._is_verification_fields_filled():
-        #     if not self.user.is_waiting_for_verification and not self.user.is_verified:  # noqa: E501
-        #         reason_text = 'Parametry weryfikacyjne są uzupełnione,
-        #         a użytkownik nie miał wcześniej statusu "zwerfikowany"
-        #         ani że "czeka na weryfikacje"'
-        #         reason = f'[verification-params-ready]: \n {reason_text} \n\n
-        #         params:{self.VERIFICATION_FIELDS})
-        #         \n Old:{ver_old} -> New:{ver_new} \n'
-        #         self.user.waiting_for_verification(extra={'reason': reason})
-        #         self.user.save()
-        #     else:
-        #         if self._verification_fileds_has_changed_and_was_filled(ver_old, ver_new):  # noqa: E501
-        #             reason_text = 'Parametry weryfikacyjne zostały zmienione
-        #             i są wszyskie pola uzupełnione.'
-        #             reason = f'[verification-params-changed] \n {reason_text}
-        #             \n\n params:{self.VERIFICATION_FIELDS})
-        #             \n Old:{ver_old} -> New:{ver_new} \n'
-        #             self.user.unverify(extra={'reason': reason})
-        #             self.user.save()
-        # else:
-        #     if not self.user.is_missing_verification_data:
-        #         self.user.missing_verification_data()  # -> change state to missing ver data  # noqa: E501
-        #         self.user.save()
-
-    # rkesik: due to new registration flow that is not needed.
-    # def _is_verification_fields_filled(self):
-    #     return all(self._get_verification_field_values(self))
-
-    # def _verification_fileds_has_changed_and_was_filled(self, old, new):
-    #     return old != new and all(old) and all(new)
 
     def get_verification_data_from_profile(self, owner: User = None) -> dict:
         """Based on user porfile get default verification-status data."""

@@ -4,7 +4,6 @@ import typing
 
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
@@ -12,12 +11,6 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from api.custom_throttling import DefaultThrottle, EmailCheckerThrottle
-from api.swagger_schemas import (
-    USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA,
-    USER_FEATURE_SETS_SWAGGER_SCHEMA,
-    USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA,
-    USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA,
-)
 from api.views import EndpointView
 from features.models import Feature, FeatureElement
 from users.api.serializers import (
@@ -26,6 +19,7 @@ from users.api.serializers import (
     FeatureElementSerializer,
     FeaturesSerializer,
     MainProfileDataSerializer,
+    RefSerializer,
     ResetPasswordSerializer,
     UserProfilePictureSerializer,
     UserRegisterSerializer,
@@ -44,7 +38,7 @@ from users.errors import (
     UserEmailNotValidException,
 )
 from users.managers import FacebookManager, GoogleManager, UserTokenManager
-from users.models import User
+from users.models import Ref, User, UserRef
 from users.schemas import (
     RedirectAfterGoogleLogin,
     UserFacebookDetailPydantic,
@@ -68,12 +62,18 @@ class UserRegisterEndpointView(EndpointView):
         Validate given data and register user if everything is ok.
         Returns serialized User data or validation errors.
         """
-
         user_data: UserRegisterSerializer = UserRegisterSerializer(data=request.data)
         user_data.is_valid(raise_exception=True)
         user: User = user_service.register(user_data.data)
         serialized_data: dict = UserRegisterSerializer(instance=user).data
         serialized_data.pop("password")
+
+        if referral_code := request.data.get("referral_code"):
+            try:
+                ref = Ref.objects.get(uuid=referral_code)
+                UserRef.objects.create(user=user, ref_by=ref)
+            except Ref.DoesNotExist:
+                pass
 
         return Response(serialized_data)
 
@@ -134,8 +134,7 @@ class UsersAPI(EndpointView):
             self.serializer_class(User.objects.all(), many=True).data,
         )
 
-    def get_queryset(self):
-        ...
+    def get_queryset(self): ...
 
     def my_main_profile(self, request: Request) -> Response:
         """
@@ -145,7 +144,6 @@ class UsersAPI(EndpointView):
         return Response(serializer.data)
 
     @staticmethod
-    @extend_schema(**USER_FEATURE_SETS_SWAGGER_SCHEMA)
     def feature_sets(request) -> Response:
         """Returns all user feature sets."""
         data: typing.List[Feature] = user_service.get_user_features(request.user)
@@ -155,7 +153,6 @@ class UsersAPI(EndpointView):
         return Response(serializer.data)
 
     @staticmethod
-    @extend_schema(**USER_FEATURE_ELEMENTS_SWAGGER_SCHEMA)
     def feature_elements(request) -> Response:
         """Returns all user feature elements."""
         data: typing.List[FeatureElement] = user_service.get_user_feature_elements(
@@ -301,7 +298,6 @@ class LoginView(TokenObtainPairView):
 
     serializer_class = CustomTokenObtainSerializer
 
-    @extend_schema(**USER_LOGIN_ENDPOINT_SWAGGER_SCHEMA)
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -312,7 +308,6 @@ class RefreshTokenCustom(TokenRefreshView):
     Returns status codes 401 and 400 if the refresh token is expired or invalid, respectively.
     """  # noqa: E501
 
-    @extend_schema(**USER_REFRESH_TOKEN_ENDPOINT_SWAGGER_SCHEMA)
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -400,3 +395,19 @@ class PasswordManagementAPIView(EndpointView):
             )
 
         raise InvalidTokenException
+
+
+class UserRefAPIView(EndpointView):
+    def get_my_data(self, request: Request) -> Response:
+        """
+        Get user referral information.
+        """
+        try:
+            ref_obj = Ref.objects.get(user=request.user)
+        except Ref.DoesNotExist:
+            return Response(
+                {"detail": "Referral code not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        serializer = RefSerializer(ref_obj)
+        return Response(serializer.data, status=status.HTTP_200_OK)

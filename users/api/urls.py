@@ -74,4 +74,9 @@ urlpatterns = [
         views.UserRegisterEndpointView.as_view({"get": "verify_email"}),
         name="verify_email",
     ),
+    path(
+        "my-ref-data/",
+        views.UserRefAPIView.as_view({"get": "get_my_data"}),
+        name="my_ref_data",
+    ),
 ]

@@ -16,6 +16,7 @@ from django.utils.translation import gettext_lazy as _
 from pydantic import ValidationError
 from requests import Response
 
+from backend.settings import cfg
 from users.schemas import (
     GoogleSdkLoginCredentials,
     SocialAppPydantic,
@@ -266,7 +267,7 @@ class UserTokenManager:
         token: str = default_token_generator.make_token(user)
 
         # The frontend base URL and the new password reset path
-        base_url = settings.FRONTEND_BASE_URL
+        base_url = cfg.webapp.url
         password_reset_path = "nowe-haslo"
 
         # Construct the full URL with query parameters
@@ -289,7 +290,7 @@ class UserTokenManager:
         token = default_token_generator.make_token(user)
 
         # The frontend base URL and the new password reset path
-        base_url = settings.FRONTEND_BASE_URL
+        base_url = cfg.webapp.url
         email_verify_path = "zweryfikuj-email"
 
         # Construct verification URL

@@ -1,17 +1,5 @@
 SHELL = /bin/bash
 
-.PHONY: setup
-setup:
-ifeq ($(OS),Windows_NT)
-	@if not exist "_logs" mkdir "_logs"
-	poetry env use $(python_path)
-	poetry install
-else
-	[ -d "_logs" ] || mkdir -p _logs
-	poetry env use $(python_path)
-	poetry install
-endif
-
 
 .PHONY: test
 test:
@@ -20,12 +8,18 @@ test:
 
 .PHONY: export_requirements
 export_requirements:
+	make export_base_requirements
+	make export_dev_requirements
+
+
+.PHONY: export_base_requirements
+export_base_requirements:
 	poetry export -f requirements.txt --output requirements.txt --without-hashes
 
 
 .PHONY: export_requirements
 export_dev_requirements:
-	poetry export -f requirements.txt --output requirements.txt --without-hashes
+	poetry export --without-hashes -f requirements.txt --only=dev --output requirements.dev.txt
 
 
 .PHONY: start-db
@@ -36,3 +30,24 @@ start-db:
 .PHONY: startapp
 startapp:
 	python manage.py runserver
+
+
+.PHONY: restart
+restart:
+	touch tmp/restart.txt
+	make stop-celery
+	make start-celery
+
+
+.PHONY: migrate
+migrate:
+	poetry run python manage.py migrate
+
+
+.PHONY: start-celery
+start-celery:
+	nohup poetry run celery -A backend worker --autoscale=0,4 --without-mingle --without-gossip > /dev/null 2>&1 &
+
+.PHONY: stop-celery
+stop-celery:
+	nohup poetry run celery -A backend control shutdown > /dev/null 2>&1 &

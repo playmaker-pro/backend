@@ -1,9 +1,6 @@
 import logging
 
-from django.utils import timezone
-
-from profiles.errors import ProfileVisitHistoryDoesNotExistException
-from profiles.services import ProfileVisitHistoryService
+from users.tasks import update_user_last_activity, update_visit_history_for_actual_date
 
 logger = logging.getLogger("user_activity")
 
@@ -31,21 +28,9 @@ class UserActivityMiddleware:
         # check if user is authenticated and update activity
         if request.user.is_authenticated:
             try:
-                (user := request.user).new_user_activity()
-
-                # Update user visit history for actual date.
-                visit_history_service = ProfileVisitHistoryService()
-                if not user.is_staff and not user.is_superuser:
-                    try:
-                        user_visit_history = (
-                            visit_history_service.get_user_profile_visit_history(
-                                user=user, created_at=timezone.now()
-                            )
-                        )
-                        user_visit_history.user_logged_in = True
-                        user_visit_history.save()
-                    except ProfileVisitHistoryDoesNotExistException:
-                        visit_history_service.create(user=user, user_logged_in=True)
+                user = request.user
+                update_user_last_activity.delay(user_id=user.pk)
+                update_visit_history_for_actual_date.delay(user_id=user.pk)
             except Exception as e:
                 logger.error(f"Error updating user activity: {e}")
         return response

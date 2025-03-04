@@ -1,16 +1,13 @@
 from typing import Callable as _Callable
 
-from django.conf import settings as _settings
-
 from app.http.urls import URLs
-
-_config = _settings.ENV_CONFIG
+from backend.settings import cfg
 
 
 class ScrapperURLs(URLs):
     """Urls for scrapper service"""
 
-    _BASE_URL = _config.scrapper.scrapper_api_url
+    _BASE_URL = cfg.scrapper.scrapper_api_url
     CLUBS_URL: str = "clubs/all/"
     LEAGUES_URL: str = "leagues/all/"
     TEAM_PLAYS: str = "teams/{team_id}/plays/"

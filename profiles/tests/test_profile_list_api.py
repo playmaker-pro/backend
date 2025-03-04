@@ -45,6 +45,9 @@ def timezone_now():
         yield mock_now
 
 
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+)
 class TestProfileListAPI(APITestCase):
     def setUp(self) -> None:
         """set up object factories"""
@@ -963,6 +966,7 @@ def test_if_response_is_ordered_by_data_score(
             )
         )
     ]
+
     assert expected_response == sorted(map(int, profiles_scoring))
 
 
@@ -1046,7 +1050,7 @@ def test_sort_player_profiles_promoted_and_last_activity_first(
     # Promoted player with latest activity
     player1 = PlayerProfileFactory.create()
     player1.premium_products.setup_premium_profile()
-    player1.user.new_user_activity()
+    player1.user.update_activity()
 
     PlayerProfileFactory.create(
         user__last_activity=timezone.now() - timedelta(days=123)
@@ -1054,18 +1058,18 @@ def test_sort_player_profiles_promoted_and_last_activity_first(
 
     # Not promoted player with latest activity
     player2 = PlayerProfileFactory.create()
-    player2.user.new_user_activity()
+    player2.user.update_activity()
 
     timezone_now.return_value = timezone.now() - timedelta(days=1)
 
     # Promoted player with 1 day old activity
     player3 = PlayerProfileFactory.create()
     player3.premium_products.setup_premium_profile()
-    player3.user.new_user_activity()
+    player3.user.update_activity()
 
     # Not promoted player with 1 day old activity
     player4 = PlayerProfileFactory.create()
-    player4.user.new_user_activity()
+    player4.user.update_activity()
 
     timezone_now.return_value = timezone.now() - timedelta(days=2)
 
@@ -1076,11 +1080,11 @@ def test_sort_player_profiles_promoted_and_last_activity_first(
     # Promoted player with 2 days old activity
     player5 = PlayerProfileFactory.create()
     player5.premium_products.setup_premium_profile()
-    player5.user.new_user_activity()
+    player5.user.update_activity()
 
     # Not promoted player with 2 days old activity
     player6 = PlayerProfileFactory.create()
-    player6.user.new_user_activity()
+    player6.user.update_activity()
 
     ids_expect_order = [
         player1.uuid,

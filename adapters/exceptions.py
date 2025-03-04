@@ -1,9 +1,11 @@
 import datetime
 import logging
 from typing import Dict, Type
+
 from django.conf import settings
 from pydantic import BaseModel
-from backend.settings.environment import Environment
+
+from backend.settings.config import Environment
 
 logger = logging.getLogger("adapters")
 

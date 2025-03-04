@@ -1,23 +1,16 @@
 import operator
 from functools import reduce
 
-from django.conf import settings
-from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.paginator import Paginator
 from django.db.models import F, Q, Value
 from django.db.models.functions import Concat
-from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views import View, generic
+from django.views import generic
 
-from app import mixins, utils
-from app.mixins import FilterPlayerViewMixin
-from clubs.models import Club, League, Team
+from app import mixins
+from clubs.models import League, Team
 from profiles.utils import get_datetime_from_age, get_datetime_from_year
 from roles import definitions
 from users.models import User
-from voivodeships.models import Voivodeships
 from voivodeships.services import VoivodeshipService
 
 TABLE_TYPE_PLAYER = definitions.PLAYER_SHORT
@@ -135,12 +128,6 @@ class PlayersTable(TableView):
             queryset = queryset.filter(
                 playerprofile__birth_date__year__lte=maxdate.year
             )
-
-        # breakpoint()
-        # if self.filter_age_range is not None:
-        #     mindate = get_datetime_from_age(self.filter_age_range[0])
-        #     maxdate = get_datetime_from_age(self.filter_age_range[1])
-        #     queryset = queryset.filter(playerprofile__birth_date__range=[maxdate, mindate])  # bo 0,20   to data urodzin 2000-09-01----2020-09-01
 
         if self.filter_position:
             queryset = queryset.filter(
