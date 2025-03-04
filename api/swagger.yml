@@ -1918,19 +1918,11 @@ paths:
         '401':
           description: Unauthorized.
 
-  /profiles/suggested-profiles/{profile_uuid}/:
+  /profiles/suggested-profiles/:
     get:
       operationId: suggested_profiles_retrieve
       description: "Retrieve a list of profiles suggested to the specified profile."
       summary: "Get suggested profiles"
-      parameters:
-        - in: path
-          name: profile_uuid
-          schema:
-            type: string
-            format: uuid
-          required: true
-          description: 'Unique identifier (UUID) of the profile for which suggested profiles are to be retrieved.'
       tags:
         - profiles
       responses:
