@@ -337,6 +337,9 @@ class SuggestedProfilesAPIView(EndpointView):
         """
         Retrieves profiles suggested to the target profile specified by the UUID.
         """
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
         loc_params = None
 
         profile = request.user.profile
