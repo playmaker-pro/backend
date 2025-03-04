@@ -24,7 +24,8 @@ class InquireService:
             plan = InquiryPlan.objects.create(**args)
         return plan
 
-    def create_basic_inquiry_plan(self, user) -> None:
+    @staticmethod
+    def create_basic_inquiry_plan(user) -> None:
         """Create basic inquiry plan and contact instance for user"""
         plan = InquiryPlan.basic()
         UserInquiry.objects.get_or_create(user=user, plan=plan)

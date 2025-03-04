@@ -7,7 +7,7 @@ from django.test import TestCase
 
 from app import errors
 from app.management.commands.mock_database import Command as Mocker
-from backend.settings.environment import Environment
+from backend.settings.config import Environment
 from clubs import models as clubs_models
 from profiles import models as profiles_models
 from utils.testutils import RunWithDifferentEnvironment

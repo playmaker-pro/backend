@@ -54,4 +54,9 @@ urlpatterns = [
         views.LocaleDataView.as_view({"get": "get_my_city"}),
         name="get_my_city",
     ),
+    url(
+        r"^swagger/",
+        views.SwaggerView.as_view({"get": "get_swagger_body"}),
+        name="get_swagger_body",
+    ),
 ]

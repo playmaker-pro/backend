@@ -1,9 +1,9 @@
 import traceback as _traceback
 
 import requests as _requests
-from django.conf import settings as _settings
 
 from app.http.http_service import HttpService as _HttpService
+from backend.settings import cfg
 from payments.logging import logger as _logger
 from payments.models import Transaction as _Transaction
 from payments.providers import errors as _errors
@@ -11,22 +11,20 @@ from payments.providers.tpay import schemas as _schemas
 from payments.providers.tpay.parsers import TpayTransactionParser as _Parser
 from payments.providers.tpay.urls import TpayURLs as _URLs
 
-_config = _settings.ENV_CONFIG
-
 
 class TpayHttpService(_HttpService):
     _auth: _schemas.TpayAuthResponse = None
 
     def __init__(self) -> None:
         super().__init__(urls=_URLs)
-        self._credentials = _config.tpay.credentials
+        self._credentials = cfg.tpay.credentials
         self._transaction = None
         self._parser = None
 
     def handle(self, transaction: _Transaction) -> _Transaction:
         """Handle transaction, ensure an authorization and return service object"""
         self._transaction = transaction
-        self._parser = _Parser(transaction, _config.tpay)
+        self._parser = _Parser(transaction, cfg.tpay)
 
         if not self._is_authorized:
             self._authorize()

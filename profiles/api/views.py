@@ -1,12 +1,17 @@
 import logging
+import random
 import uuid
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models import ObjectDoesNotExist, QuerySet
-from drf_spectacular.utils import extend_schema
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import exceptions, status
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.request import Request
@@ -18,10 +23,6 @@ from api.consts import ChoicesTuple
 from api.errors import NotOwnerOfAnObject
 from api.pagination import TransferRequestCataloguePagePagination
 from api.serializers import ProfileEnumChoicesSerializer
-from api.swagger_schemas import (
-    COACH_ROLES_API_SWAGGER_SCHEMA,
-    FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA,
-)
 from api.views import EndpointView
 from clubs.services import LeagueService
 from external_links import serializers as external_links_serializers
@@ -36,12 +37,7 @@ from profiles.api.errors import (
     TransferRequestDoesNotExistHTTPException,
     TransferStatusDoesNotExistHTTPException,
 )
-from profiles.api.filters import (
-    CoachProfileFilter,
-    DefaultProfileFilter,
-    PlayerProfileFilter,
-    TransferRequestCatalogueFilter,
-)
+from profiles.api.filters import TransferRequestCatalogueFilter
 from profiles.api.managers import SerializersManager
 from profiles.api.mixins import ProfileRetrieveMixin
 from profiles.filters import ProfileListAPIFilter
@@ -78,7 +74,7 @@ from users.api.serializers import UserMainRoleSerializer
 from users.errors import UserPreferencesDoesNotExistHTTPException
 
 if TYPE_CHECKING:
-    from django_filters import rest_framework as filters
+    pass
 
 profile_service = ProfileService()
 team_contributor_service = TeamContributorService()
@@ -157,6 +153,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
 
         return Response(serializer.data)
 
+    @method_decorator(cache_page(settings.DEFAULT_CACHE_LIFESPAN))
     def get_bulk_profiles(self, request: Request) -> Response:
         """
         Get list of profile for role delivered as param
@@ -320,7 +317,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         return Response(serializer.data)
 
 
-class SimilarProfilesAPIView(EndpointViewWithFilter):
+class SuggestedProfilesAPIView(EndpointView):
     """
     API view for retrieving profiles similar to a specified profile based
     on certain criteria.
@@ -332,78 +329,49 @@ class SimilarProfilesAPIView(EndpointViewWithFilter):
     """
 
     permission_classes = [IsAuthenticatedOrReadOnly]
-    pagination_class = TransferRequestCataloguePagePagination
-    serializer_class = serializers.SimilarProfileSerializer
 
-    def get_similar_profiles(self, request, profile_uuid: uuid) -> Response:
+    def get_suggested_profiles(
+        self,
+        request,
+    ) -> Response:
         """
-        Retrieves profiles similar to the target profile specified by the UUID.
+        Retrieves profiles suggested to the target profile specified by the UUID.
         """
-        # Fetch the target user's profile
-        try:
-            target_profile = ProfileService.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist:
-            raise api_errors.ProfileDoesNotExist
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
-        # Determine the model based on the profile type and create the initial queryset
-        model = type(target_profile)
-        queryset = model.objects.all().exclude(
-            user__display_status=User.DisplayStatus.NOT_SHOWN
-        )
-        # Construct filter parameters based on target_profile attributes
-        filter_params = self.construct_filter_params(target_profile)
-        # Apply Django filters
-        filterset_class = self.get_filterset_class(target_profile)
-        filterset = filterset_class(filter_params, queryset=queryset)
+        loc_params = None
 
-        # Exclude the profile of the requesting user
-        if request.user.is_authenticated:
-            queryset.exclude(user=self.request.user)
-        # Apply custom filtering logic
-        queryset = ProfileFilterService.apply_custom_filters(
-            filterset.qs, target_profile
-        )
+        profile = request.user.profile
+        user_localization = profile.user.userpreferences.localization
 
-        # Serialize and return the response
-        paginated = self.get_paginated_queryset(queryset)
-        serializer = self.serializer_class(
-            paginated, many=True, context={"request": request}
-        )
-        return self.get_paginated_response(serializer.data)
+        if user_localization:
+            longitude, latitude = (
+                float(user_localization.longitude),
+                float(user_localization.latitude),
+            )
+            loc_params = {"longitude": longitude, "latitude": latitude, "radius": 50}
 
-    def construct_filter_params(self, target_profile: models.PROFILE_MODELS) -> dict:
-        """
-        Constructs filter parameters for Django filters based on the attributes
-        of the target profile.
-        """
-        # Initialize gender filter parameters
-        filter_params = {"gender": target_profile.user.userpreferences.gender}
-
-        # Specific filter parameters based on profile type
-        if isinstance(target_profile, models.PlayerProfile):
-            main_position = target_profile.player_positions.filter(is_main=True).first()
-            if main_position:
-                filter_params["position"] = main_position.player_position_id
-        elif (
-            isinstance(target_profile, models.CoachProfile)
-            and target_profile.coach_role
-        ):
-            filter_params["coach_role"] = target_profile.coach_role
-        return filter_params
-
-    def get_filterset_class(
-        self, profile: models.PROFILE_MODELS
-    ) -> "filters.FilterSet":
-        """
-        Returns the appropriate filterset class based on the type of the given profile.
-        """
-        if isinstance(profile, models.PlayerProfile):
-            return PlayerProfileFilter
-        elif isinstance(profile, models.CoachProfile):
-            return CoachProfileFilter
+        if profile.__class__ is models.PlayerProfile:
+            qs_model = random.choice(
+                [models.CoachProfile, models.ClubProfile, models.ScoutProfile]
+            )
         else:
-            # Return the default filter for other profile types
-            return DefaultProfileFilter
+            qs_model = models.PlayerProfile
+
+        qs = qs_model.objects.filter(
+            user__last_activity__gte=timezone.now() - timedelta(days=30)
+        )
+
+        if loc_params:
+            qs = ProfileFilterService.filter_localization(
+                queryset=qs, **loc_params
+            ).order_by("distance", "-user__last_activity")
+        else:
+            qs = qs.order_by("-user__last_activity")
+
+        serializer = serializers.SuggestedProfileSerializer(qs[:10], many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ProfileSearchView(EndpointView):
@@ -451,7 +419,6 @@ class FormationChoicesView(EndpointView):
 
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    @extend_schema(**FORMATION_CHOICES_VIEW_SWAGGER_SCHEMA)
     def list_formations(self, request: Request) -> Response:
         """
         Returns a list of formation choices.
@@ -495,7 +462,6 @@ class CoachRolesChoicesView(EndpointView):
 
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    @extend_schema(**COACH_ROLES_API_SWAGGER_SCHEMA)
     def list_coach_roles(self, request: Request) -> Response:
         """
         Return a list of coach roles choices.
@@ -1234,6 +1200,7 @@ class TransferRequestCatalogueAPIView(EndpointViewWithFilter):
     queryset = ProfileTransferRequest.objects.all().order_by("-created_at")
     filterset_class = TransferRequestCatalogueFilter
 
+    @method_decorator(cache_page(settings.DEFAULT_CACHE_LIFESPAN))
     def list_transfer_requests(self, request: Request) -> Response:
         """Retrieve and display transfer requests."""
         queryset = self.get_queryset()
