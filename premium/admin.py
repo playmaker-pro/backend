@@ -133,16 +133,17 @@ class PremiumProfileAdmin(admin.ModelAdmin):
     readonly_fields = ("period", "product")
 
     def profile_object(self, obj):
-        profile = obj.product.profile
-        view_name = (
-            f"admin:{profile._meta.app_label}_"  # noqa
-            f"{profile.__class__.__name__.lower()}_change"
-        )
-        link_url = reverse(view_name, args=[profile.pk])
-        return format_html(f'<a href="{link_url}">{profile}</a>')
+        if profile := obj.product.profile:
+            view_name = (
+                f"admin:{profile._meta.app_label}_"  # noqa
+                f"{profile.__class__.__name__.lower()}_change"
+            )
+            link_url = reverse(view_name, args=[profile.pk])
+            return format_html(f'<a href="{link_url}">{profile}</a>')
 
     def joined(self, obj):
-        return obj.product.user.date_joined
+        if obj.product.user:
+            return obj.product.user.date_joined
 
     def product_name(self, obj):
         if obj.is_active:
