@@ -1,2 +1,0 @@
-class PMMailBase:
-    pass
