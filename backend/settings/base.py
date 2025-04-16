@@ -69,7 +69,6 @@ INSTALLED_APPS = [
     "fqa",
     "fantasy",
     "plays",
-    "landingpage",
     "voivodeships",
     "mapper",
     "labels",

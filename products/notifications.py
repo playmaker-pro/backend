@@ -2,14 +2,11 @@ import logging
 
 from django.conf import settings
 from django.core.mail import mail_managers, send_mail
-from django.urls import reverse
-
-from notifications.base import PMMailBase
 
 logger = logging.getLogger(__name__)
 
 
-class ProductMail(PMMailBase):
+class ProductMail:
     @classmethod
     def mail_admins_about_new_product_request(self, instance, extra_body=None):
         """

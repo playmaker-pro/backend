@@ -280,7 +280,7 @@ class PremiumInquiriesProduct(models.Model):
             return False
         return self.valid_until > timezone.now()
 
-    def refresh(self, premium_type: PremiumType, period: int = None) -> None:
+    def refresh(self, premium_type: PremiumType, period: Optional[int] = None) -> None:
         """Refresh the validity of the premium inquiries."""
         period = period or premium_type.period
 

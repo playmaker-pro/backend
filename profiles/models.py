@@ -291,7 +291,6 @@ class BaseProfile(models.Model, EventLogMixin):
 
     labels = GenericRelation("labels.Label")
     follows = GenericRelation("followers.GenericFollow")
-    notifications = GenericRelation("notifications.Notification")
     transfer_status_related = GenericRelation(
         "ProfileTransferStatus", related_query_name="transfer_status_related"
     )
@@ -304,6 +303,13 @@ class BaseProfile(models.Model, EventLogMixin):
 
     premium_products = models.OneToOneField(
         "premium.PremiumProduct",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    meta = models.OneToOneField(
+        "ProfileMeta",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -512,13 +518,15 @@ class BaseProfile(models.Model, EventLogMixin):
             if commit:
                 self.save()
 
-    def save(self, *args, **kwargs):
-        # silent_param = kwargs.get('silent', False)
-        # if silent_param is not None:
-        #     kwargs.pop('silent')
-        # if self.event_log is None:
-        #     self.make_default_event_log()
+    def ensure_meta_info_exist(self, commit: bool = True) -> None:
+        if self.meta_info is None:
+            self.meta_info = ProfileMeta.objects.create(
+                _profile_class=self.__class__.__name__
+            )
+            if commit:
+                self.save()
 
+    def save(self, *args, **kwargs):
         if self._state.adding:
             self.user.declared_role = definitions.PROFILE_TYPE_SHORT_MAP[
                 self.PROFILE_TYPE
@@ -528,6 +536,7 @@ class BaseProfile(models.Model, EventLogMixin):
         self.ensure_verification_stage_exist(commit=False)
         self.ensure_premium_products_exist(commit=False)
         self.ensure_visitation_exist(commit=False)
+        self.ensure_meta_info_exist(commit=False)
 
         # When profile changes, update data score level
         profile_manager: ProfileManager = ProfileManager()
@@ -568,45 +577,6 @@ class BaseProfile(models.Model, EventLogMixin):
             self.data_mapper_changed = True
         else:
             self.data_mapper_changed = False
-
-        # we are updating existing model (not first occurence)
-        # rkesik: due to new registration flow that is not needed.
-        # ver_new = self._get_verification_field_values(self)
-        # if not object_exists:
-        #     ver_old = ver_new
-
-        # rkesik: due to new registration flow that is not needed.
-        # Cases when one of verification fields is None
-        # if self._is_verification_fields_filled():
-        #     if not self.user.is_waiting_for_verification and not self.user.is_verified:  # noqa: E501
-        #         reason_text = 'Parametry weryfikacyjne są uzupełnione,
-        #         a użytkownik nie miał wcześniej statusu "zwerfikowany"
-        #         ani że "czeka na weryfikacje"'
-        #         reason = f'[verification-params-ready]: \n {reason_text} \n\n
-        #         params:{self.VERIFICATION_FIELDS})
-        #         \n Old:{ver_old} -> New:{ver_new} \n'
-        #         self.user.waiting_for_verification(extra={'reason': reason})
-        #         self.user.save()
-        #     else:
-        #         if self._verification_fileds_has_changed_and_was_filled(ver_old, ver_new):  # noqa: E501
-        #             reason_text = 'Parametry weryfikacyjne zostały zmienione
-        #             i są wszyskie pola uzupełnione.'
-        #             reason = f'[verification-params-changed] \n {reason_text}
-        #             \n\n params:{self.VERIFICATION_FIELDS})
-        #             \n Old:{ver_old} -> New:{ver_new} \n'
-        #             self.user.unverify(extra={'reason': reason})
-        #             self.user.save()
-        # else:
-        #     if not self.user.is_missing_verification_data:
-        #         self.user.missing_verification_data()  # -> change state to missing ver data  # noqa: E501
-        #         self.user.save()
-
-    # rkesik: due to new registration flow that is not needed.
-    # def _is_verification_fields_filled(self):
-    #     return all(self._get_verification_field_values(self))
-
-    # def _verification_fileds_has_changed_and_was_filled(self, old, new):
-    #     return old != new and all(old) and all(new)
 
     def get_verification_data_from_profile(self, owner: User = None) -> dict:
         """Based on user porfile get default verification-status data."""
@@ -852,8 +822,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             return self.team_object_alt
         return self.team_object
 
-    meta = models.JSONField(null=True, blank=True)
-    meta_updated = models.DateTimeField(null=True, blank=True)
     team_club_league_voivodeship_ver = models.CharField(
         _("team_club_league_voivodeship_ver"),
         max_length=355,
@@ -1074,29 +1042,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             return self.position_fantasy
         else:
             return None
-
-    def has_meta_entry_for(self, season: str):
-        """checks if meta info exists for given season"""
-
-        if self.meta is None:
-            return None
-        return self.meta.get(season, None) is not None
-
-    def calculate_fantasy_object(self, *args, **kwargs):
-        season = utilites.get_current_season()
-        if not self.has_meta_entry_for(season):
-            msg = (
-                'Cannot calculate fantasy data object do not have "meta" '
-                f'or "meta" data do not have data for season={season}'
-            )
-            self.add_event_log_message(msg)
-            return
-
-        from fantasy.models import CalculateFantasyStats
-
-        f = CalculateFantasyStats()
-        f.calculate_fantasy_for_player(self, season, is_senior=True)
-        f.calculate_fantasy_for_player(self, season, is_senior=False)
 
     def get_team_object_based_on_meta(self, season_name, retries: int = 3):
         """set TeamObject based on meta data"""
@@ -2873,6 +2818,17 @@ class Catalog(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ProfileMeta(models.Model):
+    _profile_class = models.CharField(max_length=20)
+
+    @property
+    def profile(self) -> "PROFILE_TYPE":
+        """
+        Returns the profile object associated with this meta instance.
+        """
+        return getattr(self, self._profile_class.lower())
 
 
 PROFILE_MODELS = (

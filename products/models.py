@@ -1,21 +1,10 @@
-from datetime import timedelta
 
-from address.models import AddressField
 
 # Create your models here.
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-
-# This can be extracted to models.User.
-from django_countries.fields import CountryField
-from django_fsm import FSMField, transition
-
-from clubs.models import Club, Gender, League, Seniority, Voivodeship
-from notifications.mail import request_accepted, request_declined, request_new
-from profiles.models import PlayerPosition
 
 from .notifications import ProductMail
 

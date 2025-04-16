@@ -7,7 +7,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 from inquiries.services import InquireService
-from notifications.mail import mail_admins_about_new_user, mail_role_change_request
+from mailing.deprecated import mail_admins_about_new_user, mail_role_change_request
 from users.models import User
 
 from . import models

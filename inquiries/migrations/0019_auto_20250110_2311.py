@@ -2,41 +2,40 @@
 
 from django.db import migrations
 
-from inquiries.models import UserInquiry
-from premium.models import PremiumType
+# from inquiries.models import UserInquiry
+# from premium.models import PremiumType
+
+# def reset_all_inquiry_plans(apps, schema_editor):
+#     UserInquiry = apps.get_model("inquiries", "UserInquiry")
+#     InquiryPlan = apps.get_model("inquiries", "InquiryPlan")
+
+#     for user_inquiry in UserInquiry.objects.all():
+#         user_inquiry.plan = InquiryPlan.objects.get(default=True)
+#         user_inquiry.counter_raw = 0
+#         user_inquiry.limit_raw = user_inquiry.plan.limit
+#         user_inquiry.save()
 
 
-def reset_all_inquiry_plans(apps, schema_editor):
-    UserInquiry = apps.get_model("inquiries", "UserInquiry")
-    InquiryPlan = apps.get_model("inquiries", "InquiryPlan")
+# def reward_with_premium_profile(apps, schema_editor):
+#     for user_inquiry in UserInquiry.objects.filter(limit_raw__gt=5):
+#         days_left = user_inquiry.left
 
-    for user_inquiry in UserInquiry.objects.all():
-        user_inquiry.plan = InquiryPlan.objects.get(default=True)
-        user_inquiry.counter_raw = 0
-        user_inquiry.limit_raw = user_inquiry.plan.limit
-        user_inquiry.save()
+#         if days_left >= 20:
+#             premium_profile_period = 60
+#         elif 10 <= days_left < 20:
+#             premium_profile_period = 30
+#         elif 10 > days_left > 7:
+#             premium_profile_period = 14
+#         elif 7 >= days_left > 2:
+#             premium_profile_period = 7
+#         else:
+#             premium_profile_period = 0
 
-
-def reward_with_premium_profile(apps, schema_editor):
-    for user_inquiry in UserInquiry.objects.filter(limit_raw__gt=5):
-        days_left = user_inquiry.left
-
-        if days_left >= 20:
-            premium_profile_period = 60
-        elif 10 <= days_left < 20:
-            premium_profile_period = 30
-        elif 10 > days_left > 7:
-            premium_profile_period = 14
-        elif 7 >= days_left > 2:
-            premium_profile_period = 7
-        else:
-            premium_profile_period = 0
-
-        if premium_profile_period:
-            profile = user_inquiry.user.profile
-            profile.premium_products.setup_premium_profile(
-                PremiumType.CUSTOM, premium_profile_period
-            )
+#         if premium_profile_period:
+#             profile = user_inquiry.user.profile
+#             profile.premium_products.setup_premium_profile(
+#                 PremiumType.CUSTOM, premium_profile_period
+#             )
 
 
 class Migration(migrations.Migration):
@@ -47,10 +46,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(
-            reward_with_premium_profile, reverse_code=migrations.RunPython.noop
-        ),
-        migrations.RunPython(
-            reset_all_inquiry_plans, reverse_code=migrations.RunPython.noop
-        ),
+        # migrations.RunPython(
+        #     reward_with_premium_profile, reverse_code=migrations.RunPython.noop
+        # ),
+        # migrations.RunPython(
+        #     reset_all_inquiry_plans, reverse_code=migrations.RunPython.noop
+        # ),
     ]
