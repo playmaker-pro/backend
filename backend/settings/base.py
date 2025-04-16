@@ -108,6 +108,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "django_filters",
     "django_cleanup.apps.CleanupConfig",  # delete old files/images on update
+    "django_celery_beat",
 ]
 
 SWAGGER_SETTINGS = {

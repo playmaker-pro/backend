@@ -14,10 +14,11 @@ from django_fsm import FSMField, transition
 from pydantic import typing
 
 from inquiries.models import InquiryRequest
-from notifications.mail import (
-    mail_user_waiting_for_verification,
-    verification_notification,
-)
+
+# from notifications.mail import (
+#     mail_user_waiting_for_verification,
+#     verification_notification,
+# )
 from roles import definitions
 from users.managers import CustomUserManager
 from utils import calculate_age
@@ -125,17 +126,17 @@ class User(AbstractUser, UserRoleMixin):
             extra['reason'] = 'User removed field1'
         """
 
-    @transition(field=state, source="*", target=STATE_ACCOUNT_VERIFIED)
-    def verify(self, silent: bool = False, extra: dict = None):
-        """Account is verified by admins/site managers.
+    # @transition(field=state, source="*", target=STATE_ACCOUNT_VERIFIED)
+    # def verify(self, silent: bool = False, extra: dict = None):
+    #     """Account is verified by admins/site managers.
 
-        :param: extra - dict where additional information can be putted by entity
-        changing state.
-        example:
-            extra['reason'] = 'User removed field1'
-        """
-        if not silent:
-            verification_notification(self)
+    #     :param: extra - dict where additional information can be putted by entity
+    #     changing state.
+    #     example:
+    #         extra['reason'] = 'User removed field1'
+    #     """
+    #     if not silent:
+    #         verification_notification(self)
 
     @transition(
         field=state, source="*", target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION_DATA
@@ -151,36 +152,36 @@ class User(AbstractUser, UserRoleMixin):
                     extra['reason'] = 'User removed field1'
         """
 
-    @transition(field=state, source="*", target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION)
-    def waiting_for_verification(self, silent: bool = False, extra: dict = None):
-        """Account is verified by admins/site managers.
+    # @transition(field=state, source="*", target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION)
+    # def waiting_for_verification(self, silent: bool = False, extra: dict = None):
+    #     """Account is verified by admins/site managers.
 
-        :param: extra  - dict where additional information can be putted by entity
-        changing state.
-        example:
-            extra['reason'] = 'User removed field1'
-        """
-        if extra:
-            reason = extra.get("reason")
-        else:
-            reason = None
-        mail_user_waiting_for_verification(self, extra_body=reason)
+    #     :param: extra  - dict where additional information can be putted by entity
+    #     changing state.
+    #     example:
+    #         extra['reason'] = 'User removed field1'
+    #     """
+    #     if extra:
+    #         reason = extra.get("reason")
+    #     else:
+    #         reason = None
+    #     mail_user_waiting_for_verification(self, extra_body=reason)
 
-    @transition(field=state, source="*", target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION)
-    def unverify(self, silent: bool = False, extra: dict = None):
-        """Account is verified by admins/site managers.
+    # @transition(field=state, source="*", target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION)
+    # def unverify(self, silent: bool = False, extra: dict = None):
+    #     """Account is verified by admins/site managers.
 
-        :param: extra  - dict where additional information can be putted by entity
-        changing state.
-        example:
-            extra['reason'] = 'User removed field1'
-        """
+    #     :param: extra  - dict where additional information can be putted by entity
+    #     changing state.
+    #     example:
+    #         extra['reason'] = 'User removed field1'
+    #     """
 
-        if extra:
-            reason = extra.get("reason")
-        else:
-            reason = None
-        mail_user_waiting_for_verification(self, extra_body=reason)
+    #     if extra:
+    #         reason = extra.get("reason")
+    #     else:
+    #         reason = None
+    #     mail_user_waiting_for_verification(self, extra_body=reason)
 
     @property
     def email_username(self):
@@ -480,4 +481,5 @@ class UserPreferences(models.Model):
 
     class Meta:
         verbose_name = "User Preference"
+        verbose_name_plural = "User Preferences"
         verbose_name_plural = "User Preferences"
