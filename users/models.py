@@ -1,5 +1,6 @@
 import datetime
 import uuid
+from typing import List
 from urllib.parse import urljoin
 
 from django.conf import settings
@@ -21,7 +22,7 @@ from inquiries.models import InquiryRequest
 # )
 from roles import definitions
 from users.managers import CustomUserManager
-from utils import calculate_age
+from utils import calculate_age, generate_fe_url_path
 
 
 class UserRoleMixin:
@@ -126,17 +127,17 @@ class User(AbstractUser, UserRoleMixin):
             extra['reason'] = 'User removed field1'
         """
 
-    # @transition(field=state, source="*", target=STATE_ACCOUNT_VERIFIED)
-    # def verify(self, silent: bool = False, extra: dict = None):
-    #     """Account is verified by admins/site managers.
+    @transition(field=state, source="*", target=STATE_ACCOUNT_VERIFIED)
+    def verify(self, silent: bool = False, extra: dict = None):
+        """Account is verified by admins/site managers.
 
-    #     :param: extra - dict where additional information can be putted by entity
-    #     changing state.
-    #     example:
-    #         extra['reason'] = 'User removed field1'
-    #     """
-    #     if not silent:
-    #         verification_notification(self)
+        :param: extra - dict where additional information can be putted by entity
+        changing state.
+        example:
+            extra['reason'] = 'User removed field1'
+        """
+        # if not silent:
+        #     verification_notification(self)
 
     @transition(
         field=state, source="*", target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION_DATA
@@ -152,36 +153,36 @@ class User(AbstractUser, UserRoleMixin):
                     extra['reason'] = 'User removed field1'
         """
 
-    # @transition(field=state, source="*", target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION)
-    # def waiting_for_verification(self, silent: bool = False, extra: dict = None):
-    #     """Account is verified by admins/site managers.
+    @transition(field=state, source="*", target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION)
+    def waiting_for_verification(self, silent: bool = False, extra: dict = None):
+        """Account is verified by admins/site managers.
 
-    #     :param: extra  - dict where additional information can be putted by entity
-    #     changing state.
-    #     example:
-    #         extra['reason'] = 'User removed field1'
-    #     """
-    #     if extra:
-    #         reason = extra.get("reason")
-    #     else:
-    #         reason = None
-    #     mail_user_waiting_for_verification(self, extra_body=reason)
+        :param: extra  - dict where additional information can be putted by entity
+        changing state.
+        example:
+            extra['reason'] = 'User removed field1'
+        """
+        if extra:
+            reason = extra.get("reason")
+        else:
+            reason = None
+        # mail_user_waiting_for_verification(self, extra_body=reason)
 
-    # @transition(field=state, source="*", target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION)
-    # def unverify(self, silent: bool = False, extra: dict = None):
-    #     """Account is verified by admins/site managers.
+    @transition(field=state, source="*", target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION)
+    def unverify(self, silent: bool = False, extra: dict = None):
+        """Account is verified by admins/site managers.
 
-    #     :param: extra  - dict where additional information can be putted by entity
-    #     changing state.
-    #     example:
-    #         extra['reason'] = 'User removed field1'
-    #     """
+        :param: extra  - dict where additional information can be putted by entity
+        changing state.
+        example:
+            extra['reason'] = 'User removed field1'
+        """
 
-    #     if extra:
-    #         reason = extra.get("reason")
-    #     else:
-    #         reason = None
-    #     mail_user_waiting_for_verification(self, extra_body=reason)
+        if extra:
+            reason = extra.get("reason")
+        else:
+            reason = None
+        # mail_user_waiting_for_verification(self, extra_body=reason)
 
     @property
     def email_username(self):
@@ -314,13 +315,6 @@ class User(AbstractUser, UserRoleMixin):
         _("Last Activity"), default=None, null=True, blank=True
     )
 
-    # verification = models.OneToOneField(
-    #     "VerificationStatus",
-    #     on_delete=models.SET_NULL,
-    #     null=True,
-    #     blank=True
-    # )
-
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
@@ -355,7 +349,7 @@ class User(AbstractUser, UserRoleMixin):
                 self.state = self.STATE_ACCOUNT_VERIFIED
         super().save(*args, **kwargs)
 
-    def new_user_activity(self):
+    def update_activity(self):
         """
         Update the user's last activity timestamp.
 
@@ -482,4 +476,57 @@ class UserPreferences(models.Model):
     class Meta:
         verbose_name = "User Preference"
         verbose_name_plural = "User Preferences"
-        verbose_name_plural = "User Preferences"
+
+
+class Ref(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, primary_key=True)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
+    )
+    title = models.CharField(
+        max_length=30, verbose_name="Krótki tytuł", null=True, blank=True
+    )
+    description = models.TextField(null=True, blank=True, verbose_name="Opis")
+
+    def __str__(self) -> str:
+        return f"[{self.uuid}] {self.user or self.title}"
+
+    @property
+    def registered_users(self) -> models.QuerySet:
+        return self.referrals.all()
+
+    @property
+    def registered_users_premium(self) -> List:
+        return [user for user in self.registered_users if user.bought_premium]
+
+    @property
+    def url(self) -> str:
+        return generate_fe_url_path("?ref_code=" + str(self.uuid))
+
+    class Meta:
+        verbose_name = "Afiliacja"
+        verbose_name_plural = "Afiliacje"
+
+
+class UserRef(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    ref_by = models.ForeignKey(
+        Ref,
+        on_delete=models.CASCADE,
+        related_name="referrals",
+        verbose_name="Referred by",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.ref_by} zaprosił {self.user}"
+
+    @property
+    def bought_premium(self) -> bool:
+        return self.user.transaction_set.filter(
+            product__ref="PREMIUM", transaction_status="SUCCESS"
+        ).exists()
+
+    class Meta:
+        verbose_name = "Zaproszenie afiliacyjne"
+        verbose_name_plural = "Zaproszenia afiliacyjne"

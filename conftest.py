@@ -7,11 +7,13 @@ Functions below are taken from the official documentation.
 
 Main purpose of functions is to skip marked tests when running with specific flag (--runslow).
 """  # noqa: E501
+
 from typing import Callable, Optional
 from unittest.mock import patch
 
 import pytest
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models.signals import (
     m2m_changed,
@@ -23,6 +25,10 @@ from django.db.models.signals import (
 from rest_framework.test import APIClient
 
 from utils.factories import UserFactory
+
+pytestmark = pytest.mark.django_db
+
+User = get_user_model()
 
 
 def pytest_addoption(parser):
@@ -48,15 +54,13 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(autouse=True)
-def system_user():
+def system_user(db):
     """Create system user before running tests."""
-    with patch(
-        "django.db.models.signals.post_save", return_value=None
-    ) as mck:  # noqa: F841, E501
-        UserFactory.create(email=settings.SYSTEM_USER_EMAIL)
+    with patch("mailing.models.EmailTemplate.send_email"):
+        User.objects.get_or_create(email=settings.SYSTEM_USER_EMAIL)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def api_client():
     """Create api client before running tests."""
     return APIClient()

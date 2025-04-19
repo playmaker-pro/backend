@@ -508,7 +508,7 @@ class BaseProfile(models.Model, EventLogMixin):
     def ensure_premium_products_exist(self, commit: bool = True) -> None:
         """Create PremiumProduct for profile if it doesn't exist"""
         if not self.premium_products:
-            self.premium_products = PremiumProduct.objects.create()
+            self.premium_products = PremiumProduct.objects.create(user=self.user)
             if commit:
                 self.save()
 
@@ -518,9 +518,9 @@ class BaseProfile(models.Model, EventLogMixin):
             if commit:
                 self.save()
 
-    def ensure_meta_info_exist(self, commit: bool = True) -> None:
-        if self.meta_info is None:
-            self.meta_info = ProfileMeta.objects.create(
+    def ensure_meta_exist(self, commit: bool = True) -> None:
+        if self.meta is None:
+            self.meta = ProfileMeta.objects.create(
                 _profile_class=self.__class__.__name__
             )
             if commit:
@@ -534,9 +534,8 @@ class BaseProfile(models.Model, EventLogMixin):
             self.user.save(update_fields=["declared_role"])
 
         self.ensure_verification_stage_exist(commit=False)
-        self.ensure_premium_products_exist(commit=False)
         self.ensure_visitation_exist(commit=False)
-        self.ensure_meta_info_exist(commit=False)
+        self.ensure_meta_exist(commit=False)
 
         # When profile changes, update data score level
         profile_manager: ProfileManager = ProfileManager()
@@ -558,9 +557,6 @@ class BaseProfile(models.Model, EventLogMixin):
 
         profile_utils.unique_slugify(self, slug_str)
 
-        ver_old, object_exists = self._get_verification_object_verification_fields(
-            obj=obj_before_save
-        )
         if obj_before_save is not None:
             before_datamapper = obj.data_mapper_id
         else:
@@ -572,6 +568,8 @@ class BaseProfile(models.Model, EventLogMixin):
 
         # Queen of the show
         super().save(*args, **kwargs)
+
+        self.ensure_premium_products_exist()
 
         if self.data_mapper_id != before_datamapper:
             self.data_mapper_changed = True

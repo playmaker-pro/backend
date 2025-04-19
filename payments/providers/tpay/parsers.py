@@ -1,16 +1,13 @@
 import json as _json
 
-from django.conf import settings as _settings
-
+from backend.settings import cfg
 from payments.models import Transaction as _Transaction
 from payments.providers.tpay import schemas as _schemas
 from premium.models import Product
 
-_TpayConfig = _settings.ENV_CONFIG.tpay
-
 
 class TpayTransactionParser:
-    def __init__(self, transaction: _Transaction, config: _TpayConfig) -> None:
+    def __init__(self, transaction: _Transaction, config: cfg.tpay) -> None:
         self._transaction = transaction
         self._config = config
 

@@ -10,7 +10,8 @@ from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.html import format_html
 
-from backend.settings.environment import Environment
+from backend.settings import cfg
+from backend.settings.config import Environment
 
 
 def translate_league_name(code, name):
@@ -99,78 +100,6 @@ def generate_map(filename):
         filterfile.write(f"LEAGUE_MAP = {d}")
 
 
-def generate_teams_map(filename):
-    d = []
-    import csv
-
-    with open(filename) as f:
-        lines = f.readlines()
-        out = {}
-        for l in lines:
-            data = l.strip().split(";;")
-            if len(data) == 2:
-                name = data[0].strip()
-                team = data[1].strip()
-                club = None
-            elif len(data) == 3:
-                name = data[0].strip()
-                team = data[1].strip()
-                club = data[2].strip()
-            out[name] = {"name": team, "club": club}
-
-    with open("teams_map.py", "w+") as filterfile:
-        filterfile.write(f"TEAM_MAP = {out}")
-
-
-def generate_league_options():
-    from league_filter_map import LEAGUE_MAP
-
-    out = ""
-    lgs = []
-    for item in LEAGUE_MAP:
-        if item["seniority"] == "seniorskie":
-            league_name = item.get("poziom_rozgrywkowy")
-        else:
-            league_name = item.get("rocznik")
-        if league_name:
-            name = league_name.split(" U")[0]
-            lgs.append(name)
-    for lgn in set(lgs):
-        out += (
-            '<option {% if "'
-            + lgn
-            + '" in request.GET|get_list:"league" %} selected="selected" {% endif %}>'
-            + lgn
-            + "</option>\n"
-        )
-
-    with open("filteroptions_league", "w+") as filterfile:
-        filterfile.write(out)
-
-
-def generate_vivo_options():
-    from league_filter_map import LEAGUE_MAP
-
-    out = ""
-    lgs = []
-    for item in LEAGUE_MAP:
-        vivo_name = item.get("województwo")
-
-        lgs.append(vivo_name)
-
-    for lgn in set(lgs):
-        out += (
-            '<option {% if "'
-            + lgn
-            + '" in request.GET|get_list:"vivo" %} selected="selected" {% endif %}>'
-            + lgn
-            + "</option>\n"
-        )
-
-    with open("filteroptions_vivo", "w+") as filterfile:
-        filterfile.write(out)
-
-
 def update_dict_depth(d, u):
     """Update value of a nested dictionary of varying depth"""
     for k, v in u.items():
@@ -215,4 +144,4 @@ def generate_fe_url_path(path: str) -> str:
     """
     Generates a full URL by concatenating the front-end base URL with a given path.
     """
-    return f"{settings.FRONTEND_BASE_URL}{path}"
+    return cfg.webapp.parse_url(path)

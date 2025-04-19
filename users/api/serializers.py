@@ -12,7 +12,10 @@ from api.serializers import (
     ProfileEnumChoicesSerializer,
 )
 from features.models import AccessPermission, Feature, FeatureElement
-from premium.api.serializers import PremiumProfileProductSerializer, PromoteProfileProductSerializer
+from premium.api.serializers import (
+    PremiumProfileProductSerializer,
+    PromoteProfileProductSerializer,
+)
 from profiles.api.serializers import (
     CoachLicenceSerializer,
     CourseSerializer,
@@ -21,7 +24,7 @@ from profiles.api.serializers import (
 from profiles.services import ProfileService
 from roles.definitions import PROFILE_TYPE_SHORT_MAP
 from users.errors import UserRegisterException
-from users.models import UserPreferences
+from users.models import Ref, UserPreferences
 from users.schemas import LoginSchemaOut
 from users.utils.api_utils import modify2custom_exception
 
@@ -43,10 +46,14 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
     picture = serializers.CharField(source="picture_url", read_only=True)
     gender = serializers.SerializerMethodField("get_gender")
     has_unread_inquiries = serializers.SerializerMethodField()
-    promotion = PromoteProfileProductSerializer(read_only=True, source="profile.promotion")
+    promotion = PromoteProfileProductSerializer(
+        read_only=True, source="profile.promotion"
+    )
     is_promoted = serializers.BooleanField(read_only=True, source="profile.is_promoted")
     is_premium = serializers.BooleanField(read_only=True, source="profile.is_premium")
-    premium_already_tested = serializers.BooleanField(read_only=True, source="profile.premium_already_tested")
+    premium_already_tested = serializers.BooleanField(
+        read_only=True, source="profile.premium_already_tested"
+    )
     premium = PremiumProfileProductSerializer(read_only=True, source="profile.premium")
 
     class Meta:
@@ -65,7 +72,7 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
             "is_promoted",
             "is_premium",
             "premium",
-            "premium_already_tested"
+            "premium_already_tested",
         )
 
     def my_profile_uuid(self, instance: User) -> Optional[str]:
@@ -352,3 +359,15 @@ class UserProfilePictureSerializer(serializers.ModelSerializer):
     @property
     def data(self):
         return UserDataSerializer(self.instance).data
+
+
+class RefSerializer(serializers.ModelSerializer):
+    referral_code = serializers.UUIDField(read_only=True, source="uuid")
+    invited_users = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Ref
+        fields = ("referral_code", "invited_users")
+
+    def get_invited_users(self, obj):
+        return obj.registered_users.count()

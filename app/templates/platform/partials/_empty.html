@@ -1,7 +1,0 @@
-{% with text_header=text_header text_body=text_body position=position %}
-<div class="p-4 m-4 text-{% if position %}{{ position }}{% else %}center{% endif %}" >
-    <i class="icofont-table" style="font-size:89px;"></i>
-    {% if text_header %} <h4> {{ text_header }}</h4>  {% endif %}
-    {% if text_body %} <p> {{ text_body }}</p> {% endif %}
-</div>
-{% endwith %}

@@ -7,6 +7,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import QuerySet
 
 from clubs.models import Club, Team
+from marketplace.models import (
+    ClubForCoachAnnouncement,
+    ClubForPlayerAnnouncement,
+    CoachForClubAnnouncement,
+    PlayerForClubAnnouncement,
+)
 from profiles.models import CoachProfile, PlayerProfile, ScoutProfile
 from voivodeships.exceptions import VoivodeshipDoesNotExist
 from voivodeships.models import Voivodeships
@@ -15,6 +21,10 @@ ModelsToMap = Union[
     PlayerProfile,
     CoachProfile,
     ScoutProfile,
+    ClubForPlayerAnnouncement,
+    PlayerForClubAnnouncement,
+    CoachForClubAnnouncement,
+    ClubForCoachAnnouncement,
     Club,
 ]
 
@@ -155,6 +165,10 @@ class VoivodeshipService:
             ("PlayerProfile", "profiles"),
             ("CoachProfile", "profiles"),
             ("ScoutProfile", "profiles"),
+            ("ClubForPlayerAnnouncement", "marketplace"),
+            ("PlayerForClubAnnouncement", "marketplace"),
+            ("CoachForClubAnnouncement", "marketplace"),
+            ("ClubForCoachAnnouncement", "marketplace"),
             ("Club", "clubs"),
         )
 

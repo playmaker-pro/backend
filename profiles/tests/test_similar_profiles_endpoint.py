@@ -1,112 +1,230 @@
+from datetime import timedelta
+from unittest.mock import patch
+
+import pytest
 from django.urls import reverse
-from rest_framework.test import APIClient, APITestCase
+from django.utils import timezone
+from rest_framework.test import APIClient
 
+from profiles.models import CoachProfile
 from utils import factories
+from utils.factories import CityFactory
 
-url = "api:profiles:get_similar_profiles"
+url = "api:profiles:get_suggested_profiles"
+time_now = timezone.now()
+pytestmark = pytest.mark.django_db
 
 
-class TestSimilarProfilesAPI(APITestCase):
-    def setUp(self) -> None:
-        """Set up objects for testing."""
-        self.client: APIClient = APIClient()
-        self.user = factories.UserFactory.create()
-        self.client.force_authenticate(user=self.user)
-        self.main_coach_role = "IC"
-        self.other_coach_role = "GKC"
-        self.cam_position = factories.PlayerPositionFactory.create(name="CAM")
-        self.forward_position = factories.PlayerPositionFactory.create(name="Forward")
+@pytest.fixture()
+def city_wwa():
+    return CityFactory.create_with_coordinates(
+        name="Warsaw",
+        coordinates=(21.0122, 52.2297),
+    )
 
-        # Create a target coach profile
-        self.target_coach = factories.CoachProfileFactory.create(
-            user__userpreferences__gender="M", coach_role=self.main_coach_role
-        )
-        self.women_coach = factories.CoachProfileFactory.create(
-            user__userpreferences__gender="K", coach_role=self.main_coach_role
-        )
 
-        # Create a target player with the CAM position as the main position
-        self.target_player = factories.PlayerProfileFactory.create(
-            user__userpreferences__gender="M",
-        )
-        factories.PlayerProfilePositionFactory.create(
-            player_profile=self.target_player,
-            player_position=self.cam_position,
-            is_main=True,
-        )
+@pytest.fixture
+def city_prsk():
+    return CityFactory.create_with_coordinates(
+        name="Pruszków",
+        coordinates=(20.8072, 52.1684),
+    )
 
-    def test_get_similar_player_profiles(self) -> None:
+
+@pytest.fixture
+def city_rdm():
+    return CityFactory.create_with_coordinates(
+        name="Radom", coordinates=(21.1572, 51.4025)
+    )
+
+
+@pytest.fixture
+def api_client():
+    client: APIClient = APIClient()
+    return client
+
+
+class TestSimilarProfilesAPI:
+    def test_get_suggested_profiles_for_player(self, api_client, city_wwa) -> None:
         """
         Test retrieving similar profiles for a player profile with the same position.
         """
-        # Create player profiles with the same main position (CAM)
-        for _ in range(10):
-            player = factories.PlayerProfileFactory.create(
-                user__userpreferences__gender="M",
-            )
-            factories.PlayerProfilePositionFactory.create(
-                player_profile=player, player_position=self.cam_position, is_main=True
-            )
-
-        # Create player profiles with a different main position (Forward)
-        for _ in range(5):
-            player = factories.PlayerProfileFactory.create(
-                user__userpreferences__gender="M",
-            )
-            factories.PlayerProfilePositionFactory.create(
-                player_profile=player,
-                player_position=self.forward_position,
-                is_main=True,
-            )
-
-        # Test API endpoint
+        user = factories.PlayerProfileFactory(
+            user__userpreferences__localization=city_wwa
+        ).user
+        api_client.force_authenticate(user)
+        params = {
+            "user__last_activity": timezone.now(),
+            "user__userpreferences__localization": city_wwa,
+        }
+        choices = [
+            factories.ClubProfileFactory.create(**params),
+            factories.CoachProfileFactory.create(**params),
+            factories.ScoutProfileFactory.create(**params),
+        ]
+        uuid_choices = [str(choice.uuid) for choice in choices]
         similar_profile_url = reverse(
             url,
-            kwargs={"profile_uuid": self.target_player.uuid},
         )
-        response = self.client.get(similar_profile_url)
-        assert response.status_code == 200
-        assert "results" in response.data
-        assert self.target_player not in response.data["results"]
-        assert len(response.data["results"]) >= 10
+        response = api_client.get(similar_profile_url)
 
-    def test_get_similar_coach_profiles(self) -> None:
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.json()[0]["uuid"] in uuid_choices
+
+    def test_get_suggested_profiles_for_others(self, api_client, city_wwa) -> None:
         """
         Test retrieving similar profiles for a coach profile with the same coach role.
         """
-        # Create coach profiles with the same coach role
-        factories.CoachProfileFactory.create_batch(
-            10, user__userpreferences__gender="M", coach_role=self.main_coach_role
-        )
 
-        # Create coach profiles with a different coach role
-        factories.CoachProfileFactory.create_batch(
-            5, user__userpreferences__gender="M", coach_role=self.other_coach_role
-        )
-
-        # Test API endpoint
+        user = factories.CoachProfileFactory(
+            user__userpreferences__localization=city_wwa
+        ).user
+        api_client.force_authenticate(user)
+        players = [
+            factories.PlayerProfileFactory.create(
+                user__last_activity=timezone.now(),
+                user__userpreferences__localization=city_wwa,
+            )
+            for _ in range(2)
+        ]
+        _ = [
+            factories.PlayerProfileFactory.create() for _ in range(2)
+        ]  # no loc players
+        uuids = [str(player.uuid) for player in players]
         similar_profile_url = reverse(
             url,
-            kwargs={"profile_uuid": self.target_coach.uuid},
         )
-        response = self.client.get(similar_profile_url)
+        response = api_client.get(similar_profile_url)
+
         assert response.status_code == 200
-        assert "results" in response.data
-        assert self.target_coach not in response.data["results"]
-        assert len(response.data["results"]) >= 10
-        assert self.women_coach not in response.data["results"]
+        assert len(response.data) == 2
 
-    def test_gender_filter_relaxation(self):
-        """
-        Test the relaxation of gender filter when initial criteria do not yield enough results.
-        """
-        factories.CoachProfileFactory.create_batch(
-            10, user__userpreferences__gender="M", coach_role=self.main_coach_role
-        )
+        for uuid in [profile["uuid"] for profile in response.data]:
+            assert uuid in uuids
+
+    def test_get_suggested_profiles_for_player2(
+        self,
+        city_wwa,
+        city_prsk,
+        city_rdm,
+        api_client,
+    ):
+        user = factories.PlayerProfileFactory(
+            user__userpreferences__localization=city_wwa
+        ).user
+        api_client.force_authenticate(user)
+
+        choices = [
+            factories.CoachProfileFactory.create(
+                user__last_activity=timezone.now(),
+                user__userpreferences__localization=city_wwa,
+            ),
+            factories.CoachProfileFactory.create(
+                user__last_activity=timezone.now(),
+                user__userpreferences__localization=city_prsk,
+            ),
+            factories.CoachProfileFactory.create(
+                user__last_activity=timezone.now(),
+                user__userpreferences__localization=city_rdm,
+            ),
+            factories.CoachProfileFactory.create(
+                user__last_activity=timezone.now() - timedelta(days=1),
+                user__userpreferences__localization=city_wwa,
+            ),
+            factories.CoachProfileFactory.create(
+                user__last_activity=timezone.now() - timedelta(days=1),
+                user__userpreferences__localization=city_prsk,
+            ),
+            factories.CoachProfileFactory.create(
+                user__last_activity=timezone.now() - timedelta(days=1),
+                user__userpreferences__localization=city_rdm,
+            ),
+            factories.CoachProfileFactory.create(
+                user__last_activity=timezone.now() - timedelta(days=40),
+                user__userpreferences__localization=city_wwa,
+            ),
+            factories.CoachProfileFactory.create(
+                user__last_activity=timezone.now() - timedelta(days=40),
+                user__userpreferences__localization=city_prsk,
+            ),
+            factories.CoachProfileFactory.create(
+                user__last_activity=timezone.now() - timedelta(days=40),
+                user__userpreferences__localization=city_rdm,
+            ),
+        ]
+        uuids = [str(choice.uuid) for choice in choices[:6]]
+
         similar_profile_url = reverse(
             url,
-            kwargs={"profile_uuid": self.women_coach.uuid},
         )
-        response = self.client.get(similar_profile_url)
-        assert "results" in response.data
-        assert len(response.data["results"]) >= 10
+        with patch("random.choice", return_value=CoachProfile):
+            response = api_client.get(similar_profile_url)
+            data = response.data
+
+            assert response.status_code == 200
+            assert len(response.data) == 4
+            assert data[0]["uuid"] == uuids[0]
+            assert data[1]["uuid"] == uuids[3]
+            assert data[2]["uuid"] == uuids[1]
+            assert data[3]["uuid"] == uuids[4]
+
+    def test_get_suggested_profiles_for_other2(
+        self, city_wwa, city_prsk, city_rdm, api_client
+    ):
+        user = factories.CoachProfileFactory(
+            user__userpreferences__localization=city_wwa
+        ).user
+        api_client.force_authenticate(user)
+
+        choices = [
+            factories.PlayerProfileFactory.create(
+                user__last_activity=timezone.now(),
+                user__userpreferences__localization=city_wwa,
+            ),
+            factories.PlayerProfileFactory.create(
+                user__last_activity=timezone.now(),
+                user__userpreferences__localization=city_prsk,
+            ),
+            factories.PlayerProfileFactory.create(  # NOPE
+                user__last_activity=timezone.now(),
+                user__userpreferences__localization=city_rdm,
+            ),
+            factories.PlayerProfileFactory.create(
+                user__last_activity=timezone.now() - timedelta(days=1),
+                user__userpreferences__localization=city_wwa,
+            ),
+            factories.PlayerProfileFactory.create(
+                user__last_activity=timezone.now() - timedelta(days=1),
+                user__userpreferences__localization=city_prsk,
+            ),
+            factories.PlayerProfileFactory.create(  # NOPE
+                user__last_activity=timezone.now() - timedelta(days=1),
+                user__userpreferences__localization=city_rdm,
+            ),
+            factories.PlayerProfileFactory.create(  # NOPE
+                user__last_activity=timezone.now() - timedelta(days=40),
+                user__userpreferences__localization=city_wwa,
+            ),
+            factories.PlayerProfileFactory.create(  # NOPE
+                user__last_activity=timezone.now() - timedelta(days=40),
+                user__userpreferences__localization=city_prsk,
+            ),
+            factories.PlayerProfileFactory.create(  # NOPE
+                user__last_activity=timezone.now() - timedelta(days=40),
+                user__userpreferences__localization=city_rdm,
+            ),
+        ]
+        uuids = [str(choice.uuid) for choice in choices[:6]]
+
+        similar_profile_url = reverse(
+            url,
+        )
+        response = api_client.get(similar_profile_url)
+        data = response.data
+        assert response.status_code == 200
+        assert len(response.data) == 4
+        assert data[0]["uuid"] == uuids[0]
+        assert data[1]["uuid"] == uuids[3]
+        assert data[2]["uuid"] == uuids[1]
+        assert data[3]["uuid"] == uuids[4]

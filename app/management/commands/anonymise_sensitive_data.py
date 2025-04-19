@@ -1,15 +1,16 @@
 import logging
 import random
 import string
+
 import django.core.exceptions
 from allauth.account.models import EmailAddress
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand, CommandParser
 
 from app.errors import ForbiddenInProduction
+from backend.settings.config import Environment
 from profiles.models import ClubProfile, CoachProfile, PlayerProfile
-from django.core.management.base import CommandParser, BaseCommand
-from backend.settings.environment import Environment
-from django.conf import settings
 
 User = get_user_model()
 logger: logging.Logger = logging.getLogger("mocker")

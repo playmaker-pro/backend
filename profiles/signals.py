@@ -1,7 +1,5 @@
 import logging
 
-from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -13,35 +11,6 @@ from users.models import User
 from . import models
 
 logger = logging.getLogger(__name__)
-
-
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def user_handler(sender, instance, created, **kwargs):
-    """
-    Signal responsible for creating and attaching proper profile to user during
-    creation process.
-
-    Based on declared role append proper role (profile)
-    """
-    inquire_service = InquireService()
-
-    if (
-        not created
-    ):  # this place is point where we decide if we want to update user's profile
-        # each time. mechanism to prevent double db queries would be to detect
-        # if role has been requested to update.
-        msgprefix = "Updated"
-
-    if created:
-        logger.debug(f"Sending email to admins about new user {instance.username}")
-        mail_admins_about_new_user(instance)
-        msgprefix = "New"
-
-    try:
-        instance.userinquiry
-    except ObjectDoesNotExist:
-        inquire_service.create_basic_inquiry_plan(instance)
-    logger.info(f"{msgprefix} user: {instance}.")
 
 
 @receiver(post_save, sender=models.RoleChangeRequest)

@@ -5,30 +5,19 @@ import sentry_sdk
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
-from dotenv import load_dotenv
 from sentry_sdk import set_level
 from sentry_sdk.integrations.django import DjangoIntegration
 
-from backend.settings.config import config as _env_config
-from backend.settings.environment import Environment
+from . import cfg
 
-# This loads additional settings for our environemnt
-CONFIGURATION = (
-    Environment.DEV
-)  # following options are allowed ['dev', 'production', 'staging']
+CONFIGURATION = cfg.environment
 
 # This flag allow us to see debug panel on each page.
 DEBUG_PANEL = False
 
-
-load_dotenv()
-
-
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 BASE_URL = "http://localhost:8000"
-
-FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL")
 
 VERSION = "2.3.3"
 
@@ -41,9 +30,11 @@ PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 BASE_DIR = os.path.dirname(PROJECT_DIR)
 
-MANAGERS = [
-    ("Rafal", "rafal.kesik@gmail.com"),
+ADMINS = MANAGERS = [
+    ("Biuro", "biuro@playmaker.pro"),
 ]
+
+DEFAULT_CACHE_LIFESPAN = 60 * 15  # in seconds (60 * 5 = 5min)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -156,8 +147,6 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "django.template.context_processors.i18n",
-                "app.context_processors.app_info",
-                "inquiries.context_processors.get_user_info",
             ],
         },
     },
@@ -174,11 +163,11 @@ WSGI_APPLICATION = "backend.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": os.getenv("POSTGRES_DB", None),
-        "USER": os.getenv("POSTGRES_USER", None),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", None),
-        "HOST": "localhost",
-        "PORT": os.getenv("POSTGRES_PORT", None),
+        "NAME": cfg.postgres.db,
+        "USER": cfg.postgres.user,
+        "PASSWORD": cfg.postgres.password,
+        "HOST": cfg.postgres.host,
+        "PORT": cfg.postgres.port,
     },
 }
 
@@ -399,6 +388,10 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
             "simple": {"format": "%(levelname)s %(message)s"},
         },
         "handlers": {
+            "mail_admins": {
+                "level": "ERROR",
+                "class": "mailing.handlers.AsyncAdminEmailHandler",
+            },
             "profiles_file": {
                 "level": "DEBUG",
                 "class": "logging.FileHandler",
@@ -470,6 +463,12 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "filename": join(LOGFILE_ROOT, "payments.log"),
                 "formatter": "verbose",
             },
+            "celery_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "celery.log"),
+                "formatter": "verbose",
+            },
         },
         "loggers": {
             "profiles": {
@@ -477,7 +476,7 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "level": "DEBUG",
             },
             "django": {
-                "handlers": ["django_log_file", "console"],
+                "handlers": ["django_log_file", "console", "mail_admins"],
                 "propagate": True,
                 "level": "ERROR",
             },
@@ -513,6 +512,14 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "handlers": ["console", "payments_file"],
                 "level": "DEBUG",
             },
+            "celery": {
+                "handlers": ["celery_file", "console"],
+                "level": "DEBUG",
+            },
+            "celery.utils.functional": {
+                "handlers": ["celery_file", "console"],
+                "level": "ERROR",
+            },
         },
     }
 
@@ -525,10 +532,11 @@ logging.config.dictConfig(LOGGING)
 logger = logging.getLogger(f"project.{__name__}")
 
 
-CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
-CELERY_ALWAYS_EAGER = True
-CELERY_TASK_SERIALIZER = "pickle"
-
+CELERY_TASK_ALWAYS_EAGER = False
+CELERY_TASK_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_WORKER_LOGLEVEL = "info"
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 # Redis & stream activity
 STREAM_REDIS_CONFIG = {
@@ -547,10 +555,11 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    # "DEFAULT_PAGINATION_CLASS": "api.pagination.PagePagination",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 10,
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_CACHE_RESPONSE_TIMEOUT": DEFAULT_CACHE_LIFESPAN,
+    "DEFAULT_CACHE_BACKEND": "default",
 }
 
 SPECTACULAR_SETTINGS = {
@@ -599,22 +608,6 @@ def build_redirections(redirects):
 
 
 REDIRECTS_LISTS = build_redirections(load_redirects_file())
-
-
-SEO_FILE_PATH = os.path.join(CONSTANTS_DIR, "seo.yaml")
-
-try:
-    import yaml
-
-    with open(SEO_FILE_PATH, encoding="utf8") as f:
-        SEO_DATA = yaml.load(f, Loader=yaml.FullLoader)
-        logger.info(f"SEO data loaded from {SEO_FILE_PATH}")
-    print(f"SEO data loaded from {SEO_FILE_PATH}")
-except Exception as e:
-    print(f"Loading {SEO_FILE_PATH}: Not possible to write SEO_DATA due to: {e}")
-    logger.info(f"Loading {SEO_FILE_PATH}: Not possible to write SEO_DATA due to: {e}")
-    SEO_DATA = {}
-
 
 # To force and replace season on whole system
 # @todo(rkesik): not all elements supports that yet...
@@ -686,8 +679,19 @@ if ENABLE_SENTRY:
 DATETIME_FORMAT = "H:i:s d-m-Y"
 
 
-ENV_CONFIG: _env_config.Config = _env_config
 # Loading of locally stored settings.
+SWAGGER_PATH = os.path.join(BASE_DIR, "api", "swagger.yml")
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": cfg.redis.url,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+
 
 try:
     from backend.settings._local import *  # noqa

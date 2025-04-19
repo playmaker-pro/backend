@@ -1,0 +1,562 @@
+import logging
+from itertools import chain
+from crispy_forms.utils import render_crispy_form
+from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import QuerySet
+from django.http import JsonResponse
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+from django.views import View, generic
+from app import mixins
+from clubs.models import Club, Gender, League, Seniority, Team
+from marketplace.models import get_licence_choice_number
+from profiles.models import PlayerPosition
+from voivodeships.services import VoivodeshipService
+
+from .forms import (
+    ClubForCoachAnnouncementForm,
+    ClubForPlayerAnnouncementForm,
+    CoachForClubAnnouncementForm,
+    PlayerForClubAnnouncementForm,
+)
+from .models import (
+    AnnouncementMeta,
+    ClubForCoachAnnouncement,
+    ClubForPlayerAnnouncement,
+    CoachForClubAnnouncement,
+    PlayerForClubAnnouncement,
+)
+from .utils import get_datetime_from_year
+
+User = get_user_model()
+
+logger = logging.getLogger(__name__)
+
+announcement_classname_mapper = {
+    "ClubForPlayerAnnouncement": ClubForPlayerAnnouncement,
+    "PlayerForClubAnnouncement": PlayerForClubAnnouncement,
+    "ClubForCoachAnnouncement": ClubForCoachAnnouncement,
+    "CoachForClubAnnouncement": CoachForClubAnnouncement,
+}
+
+announcement_form_mapper = {
+    "ClubForPlayerAnnouncement": ClubForPlayerAnnouncementForm,
+    "PlayerForClubAnnouncement": PlayerForClubAnnouncementForm,
+    "ClubForCoachAnnouncement": ClubForCoachAnnouncementForm,
+    "CoachForClubAnnouncement": CoachForClubAnnouncementForm,
+}
+
+LICENCE_CHOICES = [
+    "UEFA PRO",
+    "UEFA A",
+    "UEFA EY A",
+    "UEFA B",
+    "UEFA C",
+    "GRASS C",
+    "GRASS D",
+    "UEFA Futsal B",
+    "PZPN A",
+    "PZPN B",
+    "W trakcie kursu",
+]
+
+
+class AnnouncementFilterMixn:
+    @property
+    def filter_my_ann(self):
+        value = self.request.GET.get("my_ann")
+        if value:
+            if value == "on":
+                return True
+        return False
+
+
+class AddAnnouncementView(LoginRequiredMixin, View):
+    """Fetch form for announcements"""
+
+    http_method_names = ["post", "get"]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        data = {
+            "modal": {
+                "body": None,
+                "title": "Dodaj nowe ogłoszenie",
+                "button": {"name": "Dodaj ogłoszenie"},
+            },
+            "form": None,
+            "messages": [],
+        }
+
+        _id = request.GET.get("id")
+        _announcement_type = request.GET.get("announcement_type")
+        _action_name = request.GET.get("action_name")
+        if (
+            user.announcementuserquota
+            and user.announcementuserquota.left <= 0
+            and not _id
+        ):
+            return JsonResponse(data)
+        elif _id and _announcement_type:
+            _id = int(_id)
+            _announcement_class = announcement_classname_mapper.get(_announcement_type)
+            ann = _announcement_class.objects.get(id=_id)
+            data["modal"]["title"] = "Edytuj ogłoszenie"
+            data["modal"]["button"]["name"] = "Aktualizuj"
+            if user != ann.creator:
+                return JsonResponse({})
+            else:
+                form = announcement_form_mapper.get(_announcement_type)(instance=ann)
+                if isinstance(
+                    form, (CoachForClubAnnouncementForm, PlayerForClubAnnouncementForm)
+                ):
+                    form.fields[
+                        "target_league"
+                    ].queryset = League.objects.is_top_parent()
+        else:
+            if _action_name == "coach_looking_for_player":
+                if user.profile.club_object:
+                    profile = user.profile.team_object
+                    club = profile.club if profile else ""
+                    league = profile.league if profile else ""
+                    voivodeship = profile.club.voivodeship_obj if profile else ""
+                    seniority = profile.seniority if profile else ""
+                    gender = profile.gender if profile else ""
+
+                    form = ClubForPlayerAnnouncementForm(
+                        initial={
+                            "club": club,
+                            "league": league,
+                            "voivodeship_obj": voivodeship,
+                            "seniority": seniority,
+                            "gender": gender,
+                        }
+                    )
+
+                    if profile:
+                        form.fields["team"].queryset = Team.objects.filter(
+                            name=profile.name
+                        )
+
+                else:
+                    form = ClubForPlayerAnnouncementForm(initial={})
+                    form.fields["league"].queryset = League.objects.is_top_parent()
+
+            elif _action_name == "coach_looking_for_club":
+                league = (
+                    user.profile.team_object.league
+                    if user.profile.team_object
+                    else None
+                )
+                if user.profile.voivodeship_obj:
+                    voivodeship = user.profile.voivodeship_obj
+                elif not user.profile.voivodeship_obj and league:
+                    voivodeship = user.profile.team_object.club.voivodeship_obj
+                else:
+                    voivodeship = ""
+                form = CoachForClubAnnouncementForm(
+                    initial={
+                        "lic_type": user.profile.licence,
+                        "voivodeship_obj": voivodeship,
+                        "address": user.profile.address,
+                        "practice_distance": user.profile.practice_distance,
+                        "league": league,
+                    }
+                )
+                form.fields["target_league"].queryset = League.objects.is_top_parent()
+
+            elif _action_name == "club_looking_for_player":
+                if user.profile.club_object:
+                    voivo = user.profile.club_object.voivodeship_obj
+
+                    form = ClubForPlayerAnnouncementForm(
+                        initial={
+                            "club": user.profile.club_object,
+                            "voivodeship_obj": voivo,
+                        }
+                    )
+                    teams = user.profile.club_object.teams.all()
+
+                    form.fields["team"].queryset = teams
+                    form.fields["club"].queryset = Club.objects.filter(
+                        name=user.profile.club_object.name
+                    )
+                else:
+                    form = ClubForPlayerAnnouncementForm(initial={})
+                form.fields["league"].queryset = League.objects.is_top_parent()
+
+            elif _action_name == "club_looking_for_coach":
+                if user.profile.club_object:
+                    form = ClubForCoachAnnouncementForm(
+                        initial={
+                            "club": user.profile.club_object,
+                            "voivodeship_obj": user.profile.club_object.voivodeship_obj,
+                        }
+                    )
+                    form.fields["club"].queryset = Club.objects.filter(
+                        name=user.profile.club_object.name
+                    )
+
+                else:
+                    form = ClubForCoachAnnouncementForm(initial={})
+                form.fields["league"].queryset = League.objects.is_top_parent()
+
+            elif user.is_player:
+                if user.profile.voivodeship_obj:
+                    voivodeship = user.profile.voivodeship_obj
+                elif not user.profile.voivodeship_obj and user.profile.team_object:
+                    voivodeship = user.profile.team_object.club.voivodeship_obj
+                else:
+                    voivodeship = ""
+
+                league = None
+
+                if user.profile.team_object:
+                    team_history = user.profile.team_object.get_latest_team_history()
+                    if team_history:
+                        league = team_history.league_history.league.get_highest_parent()
+
+                form = PlayerForClubAnnouncementForm(
+                    initial={
+                        "position": user.profile.position_raw,
+                        "voivodeship_obj": voivodeship,
+                        "address": user.profile.address,
+                        "practice_distance": user.profile.practice_distance,
+                        "league": league,
+                    }
+                )
+                form.fields["target_league"].queryset = League.objects.is_top_parent()
+
+            else:
+                return JsonResponse({})
+
+        form_raw_data = render_crispy_form(form)
+        form_raw_data = form_raw_data.replace(
+            '<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>',
+            "",
+        )
+        data["form"] = form_raw_data
+        return JsonResponse(data)
+
+    def post(self, request, *args, **kwargs):
+        user = self.request.user
+        data = {
+            "redirection_url": None,
+            "success": False,
+            "modal": {
+                "body": None,
+                "title": "Dodaj nowe ogłoszenie",
+                "button": {"name": "Dodaj ogłoszenie o testach"},
+            },
+            "form": None,
+            "messages": [],
+        }
+        _id = request.POST.get("id")
+        _announcement_type = request.POST.get("announcement_type")
+        _action_name = request.POST.get("action_name")
+
+        if user.announcementuserquota.left <= 0 and not _id:
+            return JsonResponse(data)
+        if _id and _announcement_type:
+            _announcement_class = announcement_classname_mapper.get(_announcement_type)
+            _form_class = announcement_form_mapper.get(_announcement_type)
+            new_address = request.POST["address"]
+            # do not know yet why but we need to pass post value to updated object.
+            a = _announcement_class.objects.get(id=int(_id))
+            form = _form_class(request.POST, instance=a)
+            if form.is_valid():
+                # Commit=Flase is necessary to save m2m
+                ann = form.save(commit=False)
+
+                ann.creator = request.user
+                ann.save()
+                form.save_m2m()
+
+                # because we Address here is an FK to modesl.Address and after m2m
+                # we are adding
+                ann.address.formatted = new_address
+                ann.address.save()
+
+                messages.success(
+                    request, _("Ogłoszenia zaktualizowano"), extra_tags="alter-success"
+                )
+
+                data["success"] = True
+                data["redirection_url"] = reverse("marketplace:announcements")
+                return JsonResponse(data)
+            else:
+                data["form"] = render_crispy_form(form)
+                return JsonResponse(data)
+        else:
+            if not user.announcementuserquota.can_make_request:
+                return JsonResponse({"message": "Limit ogłoszeń przekroczony."})
+
+            if user.is_coach:
+                if _action_name == "coach_looking_for_club":
+                    form = CoachForClubAnnouncementForm(request.POST)
+                    # form.fields['target_league'].queryset = League.objects.is_top_parent()
+                if _action_name == "coach_looking_for_player":
+                    form = ClubForPlayerAnnouncementForm(request.POST)
+
+            if user.is_club:
+                if _action_name == "club_looking_for_coach":
+                    form = ClubForCoachAnnouncementForm(request.POST)
+                if _action_name == "club_looking_for_player":
+                    form = ClubForPlayerAnnouncementForm(request.POST)
+
+            if user.is_player:
+                form = PlayerForClubAnnouncementForm(request.POST)
+                # form.fields['target_league'].queryset = League.objects.is_top_parent()
+
+            if form.is_valid() and "positions" in form.cleaned_data:
+                if qse := list(
+                    filter(
+                        lambda qse: qse.name == "Dowolna",
+                        form.cleaned_data["positions"],
+                    )
+                ):
+                    form.cleaned_data["positions"] = qse
+
+            if form.is_valid():
+                ann = form.save(commit=False)
+                ann.creator = request.user
+
+                if user.is_club and _action_name == "club_looking_for_player":
+                    ann.league = form.cleaned_data["team"].league
+                    ann.gender = form.cleaned_data["team"].gender
+                    ann.seniority = form.cleaned_data["team"].seniority
+
+                ann.save()
+                form.save_m2m()
+                user.announcementuserquota.increment()
+                user.announcementuserquota.save()
+                messages.success(
+                    request, _("Przyjęto ogłoszenia."), extra_tags="alter-success"
+                )
+
+                data["success"] = True
+                data["redirection_url"] = reverse("marketplace:announcements")
+                return JsonResponse(data)
+            else:
+                data["form"] = render_crispy_form(form)
+                return JsonResponse(data)
+
+
+class AnnouncementsMetaView(
+    generic.TemplateView,
+    mixins.ViewModalLoadingMixin,
+    mixins.ViewFilterMixin,
+    AnnouncementFilterMixn,
+    mixins.PaginateMixin,
+):
+    template_name = "marketplace/base.html"
+    http_method_names = ["get"]
+    paginate_limit = 25
+    table_type = None
+    page_title = "Ogłoszenia"
+    queried_classes = None
+
+    def filter_queryset(self, queryset):
+        now = timezone.now().date()
+        queryset = queryset.filter(
+            status__in=AnnouncementMeta.ACTIVE_STATES,
+            disabled=False,
+            expire__date__gte=now,
+        )
+        if self.filter_my_ann is not False:
+            queryset = queryset.filter(creator=self.request.user)
+
+        if self.filter_league is not None:
+            queryset = queryset.filter(
+                league__highest_parent__name__in=self.filter_league
+            )
+
+        if self.filter_vivo is not None:
+            queryset = queryset.filter(voivodeship_obj__name__in=self.filter_vivo)
+
+        return queryset
+
+    def get_queryset(self, queried_class=None) -> QuerySet:
+        return queried_class.objects.all()
+
+    def get_filters_values(self):  # @todo add cache from Redis here
+        vivos = VoivodeshipService()
+
+        return {
+            "seniority": list(Seniority.objects.values_list("name", flat=True)),
+            "gender": list(Gender.objects.values_list("name", flat=True)),
+            "voivodeship": list(
+                vivos.voivodeships_model.objects.values_list("name", flat=True)
+            ),
+            "league": list(League.objects.values_list("name", flat=True)),
+            "position": list(PlayerPosition.objects.values_list("name", flat=True)),
+            "licence": LICENCE_CHOICES,
+        }
+
+    def prepare_kwargs(self, kwargs):
+        self._prepare_extra_kwargs(kwargs)
+
+    def _prepare_extra_kwargs(self, kwargs):
+        kwargs["my"] = False
+
+    def get(self, request, *args, **kwargs):
+        lista = []
+
+        total_items = request.GET.get("total_items")
+        if total_items:
+            self.paginate_limit = total_items
+        # pages = request.GET.get('pages')
+        # if pages:
+        #     self.paginate_limit = pages
+
+        for i in self.queried_classes:
+            queryset = self.get_queryset(i)
+            queryset = self.filter_queryset(queryset)
+            lista.append(queryset)
+        queryset = list(chain(*lista))
+        queryset = sorted(queryset, key=lambda x: x.created_at, reverse=True)
+
+        page_obj = self.paginate(queryset, limit=self.paginate_limit)
+
+        # paginator = Paginator(queryset, self.paginate_limit)
+        # page_number = request.GET.get('page') or 1
+        # page_obj = paginator.get_page(page_number)
+
+        # kwargs["page_num_range"] = range(
+        #     page_obj.num_pages - 3, page_obj.num_pages + 1
+        # )
+        kwargs["last_page"] = self.last_page
+        kwargs["page_num_range"] = self.page_num_range
+        kwargs["custom_range"] = self.custom_range
+        kwargs["page_obj"] = page_obj
+        kwargs["page_title"] = self.page_title
+        kwargs["type"] = self.table_type
+        kwargs["filters"] = self.get_filters_values()
+        kwargs["leagues"] = League.objects.is_top_parent()
+
+        self.prepare_kwargs(kwargs)
+
+        kwargs["modals"] = self.modal_activity(
+            request.user, register_auto=False, verification_auto=False
+        )
+        kwargs["modals"]["register"]["load"] = False
+
+        page_obj.elements = page_obj.end_index() - page_obj.start_index() + 1
+        # kwargs['ammount'] = page_obj.count()
+        return super().get(request, *args, **kwargs)
+
+
+class AnnouncementsView(AnnouncementsMetaView):
+    queried_classes = [
+        ClubForPlayerAnnouncement,
+        ClubForCoachAnnouncement,
+        CoachForClubAnnouncement,
+        PlayerForClubAnnouncement,
+    ]
+
+
+class MyAnnouncementsView(AnnouncementsView):
+    def get_queryset(self, queried_class=None):
+        return queried_class.objects.filter(creator=self.request.user)
+
+    def _prepare_extra_kwargs(self, kwargs):
+        kwargs["my"] = True
+
+
+class ClubForPlayerAnnouncementsView(AnnouncementsMetaView):
+    queried_classes = [ClubForPlayerAnnouncement]
+
+    def _prepare_extra_kwargs(self, kwargs):
+        kwargs["view_type"] = "club_for_player"
+        super(ClubForPlayerAnnouncementsView, self)._prepare_extra_kwargs(kwargs)
+
+    def filter_queryset(self, queryset):
+        queryset = super(ClubForPlayerAnnouncementsView, self).filter_queryset(queryset)
+        if self.filter_gender_exact is not None:
+            queryset = queryset.filter(gender__name=self.filter_gender_exact)
+
+        if self.filter_seniority_exact is not None:
+            queryset = queryset.filter(seniority__name=self.filter_seniority_exact)
+
+        if self.filter_position_marketplace is not None:
+            queryset = queryset.filter(
+                positions__name__in=self.filter_position_marketplace
+            ).distinct()
+
+        return queryset
+
+
+class CoachForClubAnnouncementsView(AnnouncementsMetaView):
+    queried_classes = [CoachForClubAnnouncement]
+
+    def _prepare_extra_kwargs(self, kwargs):
+        kwargs["view_type"] = "coach_for_club"
+        super(CoachForClubAnnouncementsView, self)._prepare_extra_kwargs(kwargs)
+
+    def filter_queryset(self, queryset):
+        queryset = super(CoachForClubAnnouncementsView, self).filter_queryset(queryset)
+        if self.filter_target_league_exact is not None:
+            queryset = queryset.filter(
+                target_league__name=self.filter_target_league_exact
+            )
+
+        if self.filter_licence_list is not None:
+            licence_choices = [
+                get_licence_choice_number(i) for i in self.filter_licence_list
+            ]
+            queryset = queryset.filter(lic_type__in=licence_choices)
+        return queryset
+
+
+class ClubForCoachAnnouncementsView(AnnouncementsMetaView):
+    queried_classes = [ClubForCoachAnnouncement]
+
+    def _prepare_extra_kwargs(self, kwargs):
+        kwargs["view_type"] = "club_for_coach"
+        super(ClubForCoachAnnouncementsView, self)._prepare_extra_kwargs(kwargs)
+
+    def filter_queryset(self, queryset):
+        queryset = super(ClubForCoachAnnouncementsView, self).filter_queryset(queryset)
+        if self.filter_licence_list is not None:
+            licence_choices = [
+                get_licence_choice_number(i) for i in self.filter_licence_list
+            ]
+            queryset = queryset.filter(lic_type__in=licence_choices)
+        return queryset
+
+
+class PlayerForClubAnnouncementsView(AnnouncementsMetaView):
+    queried_classes = [PlayerForClubAnnouncement]
+
+    def _prepare_extra_kwargs(self, kwargs):
+        kwargs["view_type"] = "player_for_club"
+        super(PlayerForClubAnnouncementsView, self)._prepare_extra_kwargs(kwargs)
+
+    def filter_queryset(self, queryset):
+        queryset = super(PlayerForClubAnnouncementsView, self).filter_queryset(queryset)
+        if self.filter_position_marketplace is not None:
+            queryset = queryset.filter(
+                position__name__in=self.filter_position_marketplace
+            ).distinct()
+
+        if self.filter_target_league_exact is not None:
+            queryset = queryset.filter(
+                target_league__name=self.filter_target_league_exact
+            )
+
+        if self.filter_year_min is not None:
+            mindate = get_datetime_from_year(self.filter_year_min)
+            queryset = queryset.filter(
+                creator__playerprofile__birth_date__year__gte=mindate.year
+            )
+
+        if self.filter_year_max is not None:
+            maxdate = get_datetime_from_year(self.filter_year_max)
+            queryset = queryset.filter(
+                creator__playerprofile__birth_date__year__lte=maxdate.year
+            )
+
+        return queryset

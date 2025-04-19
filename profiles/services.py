@@ -370,7 +370,7 @@ class ProfileService:
 
     @staticmethod
     def get_profile_by_uuid(
-        profile_uuid: typing.Union[uuid.UUID, str]
+        profile_uuid: typing.Union[uuid.UUID, str],
     ) -> models.PROFILE_TYPE:
         """
         Get profile object using uuid

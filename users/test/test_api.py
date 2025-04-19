@@ -13,6 +13,9 @@ from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
 from features.models import Feature
+from payments.models import Transaction
+from premium.models import Product
+from profiles.models import GuestProfile
 from users.api.views import UsersAPI
 from users.errors import (
     ApplicationError,
@@ -20,7 +23,7 @@ from users.errors import (
     UserEmailNotValidException,
 )
 from users.managers import FacebookManager, GoogleManager
-from users.models import User
+from users.models import Ref, User
 from users.schemas import (
     GoogleSdkLoginCredentials,
     LoginSchemaOut,
@@ -30,14 +33,23 @@ from users.schemas import (
 )
 from users.services import UserService
 from users.utils.test_utils import extract_uidb64_and_token_from_email
+from utils.factories import PlayerProfileFactory
 from utils.factories.feature_sets_factories import FeatureElementFactory, FeatureFactory
-from utils.factories.user_factories import UserFactory
+from utils.factories.user_factories import UserFactory, UserRefFactory
 from utils.test.test_utils import (
     TEST_EMAIL,
     MethodsNotAllowedTestsMixin,
     UserManager,
     mute_post_save_signal,
 )
+
+
+@pytest.fixture(autouse=True)
+def mock_cache():
+    with patch(
+        "django.views.decorators.cache.cache_page", lambda *args, **kwargs: lambda x: x
+    ):
+        yield
 
 
 @pytest.mark.django_db
@@ -149,6 +161,182 @@ class TestAuth(APITestCase):
 
 
 @pytest.mark.django_db
+class TestUserReferrals(TestCase):
+    def setUp(self) -> None:
+        self.client: APIClient = APIClient()
+        self.url: str = reverse("api:users:api-register")
+        self.data: Dict[str, str] = {
+            "password": "super secret password",
+            "first_name": "first_name",
+            "last_name": "last_name",
+            "email": TEST_EMAIL,
+        }
+        self.user = UserFactory.create()
+
+    def test_user_ref_endpoint(self):
+        url = reverse("api:users:my_ref_data")
+        self.client.force_authenticate(self.user)
+        response = self.client.get(url)
+
+        assert response.status_code == 200
+        assert response.data["referral_code"]
+        assert response.data["invited_users"] == 0
+
+    def test_register_ref_uuid_created(self) -> None:
+        """Test register endpoint. Response OK"""
+
+        res: Response = self.client.post(
+            self.url,
+            data=self.data,
+        )
+
+        assert res.status_code == 200
+
+        user = User.objects.get(pk=res.data["id"])
+
+        assert user.ref
+        assert user.ref.registered_users.count() == 0
+
+    def test_register_with_ref_uuid(self) -> None:
+        """Test register endpoint. Response OK"""
+        user_ref = UserFactory().ref
+
+        assert user_ref.registered_users.count() == 0
+
+        self.data["referral_code"] = str(user_ref.uuid)
+        res: Response = self.client.post(
+            self.url,
+            data=self.data,
+        )
+
+        assert res.status_code == 200
+        assert user_ref.registered_users.count() == 1
+        assert user_ref.referrals.first().user.pk == res.data["id"]
+        assert len(user_ref.registered_users_premium) == 0
+
+        invited_user = user_ref.registered_users.first().user
+        GuestProfile.objects.create(user=invited_user)
+        premium_product = Product.objects.get(name="PREMIUM_PROFILE_MONTH")
+        transaction = Transaction.objects.create(
+            product=premium_product, user=invited_user
+        )
+        transaction.success()
+        transaction.save()
+
+        user_ref.refresh_from_db()
+
+        assert user_ref.registered_users.count() == 1
+        assert len(user_ref.registered_users_premium) == 1
+
+    def test_create_ref_without_user(self):
+        """Test if Ref can be created without user"""
+        ref = Ref.objects.create(title="test-title", description="test-description")
+
+        assert not ref.user
+        assert ref.uuid
+        assert ref.title == "test-title"
+        assert ref.description == "test-description"
+
+    def test_user_always_have_referral(self):
+        """Test if user always have referral"""
+        user = UserFactory()
+
+        assert user.ref
+        assert user.ref.referrals.count() == 0
+
+    def test_reward_user_referral_after_10_invites(self):
+        profile = PlayerProfileFactory()
+        ref = profile.user.ref
+
+        assert ref.registered_users.count() == 0
+        assert not profile.is_premium
+
+        for _ in range(10):
+            UserRefFactory(ref_by=ref)
+
+        last_mail = mail.outbox[-1]
+        profile.refresh_from_db()
+
+        assert ref.registered_users.count() == 10
+        assert profile.is_premium
+        assert profile.premium.subscription_lifespan.days == 30
+        assert (
+            last_mail.subject
+            == f"[Django] Osiągnięto 10 poleconych użytkowników przez {str(ref)}."
+        )
+        assert (
+            last_mail.body
+            == f"Link afiliacyjny {str(ref)} osiągnął 10 poleconych.\nUżytkownikowi {profile} zostało aktywowane/przedłużone premium o 30 dni."
+        )
+
+        for _ in range(10):
+            UserRefFactory(ref_by=ref)
+
+        last_mail = mail.outbox[-1]
+        profile.refresh_from_db()
+
+        assert ref.registered_users.count() == 20
+        assert profile.premium.subscription_lifespan.days == 60
+        assert (
+            last_mail.subject
+            == f"[Django] Osiągnięto 20 poleconych użytkowników przez {str(ref)}."
+        )
+
+        for _ in range(10):
+            UserRefFactory(ref_by=ref)
+
+        last_mail = mail.outbox[-1]
+        profile.refresh_from_db()
+
+        assert ref.registered_users.count() == 30
+        assert profile.premium.subscription_lifespan.days == 90
+        assert (
+            last_mail.subject
+            == f"[Django] Osiągnięto 30 poleconych użytkowników przez {str(ref)}."
+        )
+
+    def test_reward_non_user_referral_after_10_invites(self):
+        ref = Ref.objects.create(title="test-title", description="test-description")
+
+        assert ref.registered_users.count() == 0
+
+        for _ in range(10):
+            UserRefFactory(ref_by=ref)
+
+        last_mail = mail.outbox[-1]
+
+        assert ref.registered_users.count() == 10
+        assert (
+            last_mail.subject
+            == f"[Django] Osiągnięto 10 poleconych użytkowników przez {str(ref)}."
+        )
+        assert (
+            last_mail.body == f"Link afiliacyjny {str(ref)} osiągnął 10 poleconych.\n"
+        )
+
+    def test_failed_to_reward_user_after_10_invites(self):
+        user = UserFactory()
+        ref = user.ref
+
+        assert ref.registered_users.count() == 0
+
+        for _ in range(10):
+            UserRefFactory(ref_by=ref)
+
+        last_mail = mail.outbox[-1]
+
+        assert ref.registered_users.count() == 10
+        assert (
+            last_mail.subject
+            == f"[Django] Osiągnięto 10 poleconych użytkowników przez {str(ref)}."
+        )
+        assert (
+            last_mail.body
+            == f"Link afiliacyjny {str(ref)} osiągnął 10 poleconych.\nNiestety, nie udało się aktywować premium dla {ref.user}."
+        )
+
+
+@pytest.mark.django_db
 class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
     NOT_ALLOWED_METHODS = ["get", "put", "patch", "delete"]
 
@@ -187,6 +375,7 @@ class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             self.url,
             data=self.data,
         )
+
         assert res.status_code == 429
 
     @mute_post_save_signal()
@@ -677,25 +866,25 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             UserService, "create_social_account", return_value=(True, True)
         ).start()
 
-        with (
-            get_user_info_patcher
-        ), google_credentials_patcher, register_from_google_patcher:
-            res: Response = self.client.post(  # type: ignore
-                self.url, data=self.unregistered_user_data
-            )
-            assert res.status_code == 200
+        with get_user_info_patcher:
+            with google_credentials_patcher:
+                with register_from_google_patcher:
+                    res: Response = self.client.post(  # type: ignore
+                        self.url, data=self.unregistered_user_data
+                    )
+                    assert res.status_code == 200
 
-            for element in self.expected_res.keys():
-                assert element in res.json()
+                    for element in self.expected_res.keys():
+                        assert element in res.json()
 
-            assert len(res.json()) == len(self.expected_res)
+                    assert len(res.json()) == len(self.expected_res)
 
-            assert res.json().get("redirect") == "register"
-            assert res.json().get("success") is True
-            assert res.json().get("access_token") is not None
-            assert res.json().get("refresh_token") is not None
-            assert res.json().get("first_name") == self.user_patcher.first_name
-            assert res.json().get("last_name") == self.user_patcher.last_name
+                    assert res.json().get("redirect") == "register"
+                    assert res.json().get("success") is True
+                    assert res.json().get("access_token") is not None
+                    assert res.json().get("refresh_token") is not None
+                    assert res.json().get("first_name") == self.user_patcher.first_name
+                    assert res.json().get("last_name") == self.user_patcher.last_name
 
     def test_response_ok_landing_page(self) -> None:
         """
@@ -713,20 +902,20 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
             UserService, "create_social_account", return_value=(True, True)
         ).start()
 
-        with (
-            get_user_info_patcher
-        ), google_credentials_patcher, register_from_google_patcher:
-            res: Response = self.client.post(  # type: ignore
-                self.url, data=self.unregistered_user_data
-            )
+        with get_user_info_patcher:
+            with google_credentials_patcher:
+                with register_from_google_patcher:
+                    res: Response = self.client.post(  # type: ignore
+                        self.url, data=self.unregistered_user_data
+                    )
 
-            assert res.status_code == 200
-            assert res.json().get("redirect") == "landing page"
-            assert res.json().get("success") is True
-            assert res.json().get("access_token") is not None
-            assert res.json().get("refresh_token") is not None
-            assert res.json().get("first_name") == user.first_name
-            assert res.json().get("last_name") == user.last_name
+                    assert res.status_code == 200
+                    assert res.json().get("redirect") == "landing page"
+                    assert res.json().get("success") is True
+                    assert res.json().get("access_token") is not None
+                    assert res.json().get("refresh_token") is not None
+                    assert res.json().get("first_name") == user.first_name
+                    assert res.json().get("last_name") == user.last_name
 
     def test_response_no_user_credentials_exception(self) -> None:
         """Test if response is 400 when no data is fetched from Google"""
@@ -740,16 +929,17 @@ class GoogleAuthUnitTestsEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         patch.object(
             UserService, "create_social_account", return_value=(False, True)
         ).start()
-        with (
-            get_user_info_patcher
-        ), google_credentials_patcher, register_from_google_patcher:
-            res: Response = self.client.post(  # type: ignore
-                self.url, data=self.unregistered_user_data
-            )
-            assert res.status_code == 400
 
-            msg = "No user data fetched from Google or data is not valid. Please try again."  # noqa: E501
-            assert res.json().get("detail") == msg
+        with get_user_info_patcher:
+            with google_credentials_patcher:
+                with register_from_google_patcher:
+                    res: Response = self.client.post(  # type: ignore
+                        self.url, data=self.unregistered_user_data
+                    )
+                    assert res.status_code == 400
+
+                    msg = "No user data fetched from Google or data is not valid. Please try again."  # noqa: E501
+                    assert res.json().get("detail") == msg
 
 
 @pytest.mark.django_db
@@ -777,10 +967,12 @@ class TestEmailAvailabilityEndpoint(TestCase, MethodsNotAllowedTestsMixin):
 
         for _ in range(settings.THROTTLE_EMAIL_CHECK_LIMITATION):
             res: Response = self.client.post(self.url, data={"email": self.test_email})
+
             assert res.status_code == 200
             assert res.json()["success"] is True
 
         res: Response = self.client.post(self.url, data={"email": self.test_email})
+
         assert res.status_code == 429
 
     @pytest.mark.usefixtures("disable_email_check_throttle_for_test")
@@ -1130,6 +1322,7 @@ class TestUserManagementAPI(APITestCase):
             res: Response = self.client.post(
                 self.picture_url, data=data, **self.image_headers
             )
+
             assert res.status_code == 429
 
 
@@ -1144,8 +1337,9 @@ class TestEmailVerificationEndpoint(TestCase):
             "last_name": "last_name",
             "email": "testuser@example.com",
         }
-        self.verify_email_base_url = reverse("api:users:verify_email", args=["dummy_uidb64", "dummy_token"])
-
+        self.verify_email_base_url = reverse(
+            "api:users:verify_email", args=["dummy_uidb64", "dummy_token"]
+        )
 
     def test_email_verification_process(self) -> None:
         """
@@ -1166,7 +1360,7 @@ class TestEmailVerificationEndpoint(TestCase):
 
         # Fetch the user and check if the email is verified
         user = User.objects.get(email=self.user_data["email"])
-        assert user.is_email_verified is True
+        assert user.is_email_verified
 
     def test_email_verification_with_invalid_token(self) -> None:
         """
@@ -1183,7 +1377,9 @@ class TestEmailVerificationEndpoint(TestCase):
         invalid_token = "invalid-token"
 
         # Construct the verification URL with the invalid token
-        verification_url_with_invalid_token = reverse("api:users:verify_email", args=[uidb64, invalid_token])
+        verification_url_with_invalid_token = reverse(
+            "api:users:verify_email", args=[uidb64, invalid_token]
+        )
         # Simulate clicking the verification link with an invalid token
         response = self.client.get(verification_url_with_invalid_token)
         assert response.status_code == 400  # or the appropriate status code for failure

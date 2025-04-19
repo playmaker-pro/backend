@@ -1,10 +1,10 @@
 from urllib.parse import urljoin as _urljoin
 
-from django.conf import settings as _settings
+from backend.settings import cfg
 
 
 class TpayURLs:
-    _BASE_URL = _settings.ENV_CONFIG.tpay.base_url
+    _BASE_URL = cfg.tpay.base_url
 
     TRANSACTION_URL = "/transactions"
     AUTH_URL = "/oauth/auth"

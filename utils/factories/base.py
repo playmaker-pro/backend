@@ -7,15 +7,10 @@ from django.db.utils import ProgrammingError
 from faker import Faker
 from pydantic import typing
 
-from backend.settings.environment import Environment
+from backend.settings.config import Environment
 
 logger: logging.Logger = logging.getLogger("mocker")
 fake: Faker = Faker()
-
-
-def env() -> str:
-    """get environment from settings"""
-    return settings.CONFIGURATION
 
 
 class CustomObjectFactory(factory.django.DjangoModelFactory):
@@ -31,7 +26,7 @@ class CustomObjectFactory(factory.django.DjangoModelFactory):
     def _create(cls, model_class, *args, **kwargs) -> Model:
         """Overwrite _create() method to log results"""
         obj: Model = super()._create(model_class, *args, **kwargs)
-        if env() is not Environment.TEST:
+        if settings.CONFIGURATION is not Environment.TEST:
             logger.info(
                 f"[Factory: {cls.__name__}, model: "
                 f"{type(obj)}] Object: ID={obj.pk} | {obj}",
@@ -52,7 +47,7 @@ class CustomObjectFactory(factory.django.DjangoModelFactory):
     @classmethod
     def random_object(cls, **kwargs) -> Model:
         """get random object from factory's model, unuseable on tests"""
-        if env() is not Environment.TEST:
+        if settings.CONFIGURATION is not Environment.TEST:
             try:
                 return cls._meta.model.objects.filter(**kwargs).order_by("?").first()
             except ProgrammingError:
@@ -66,7 +61,7 @@ class CustomObjectFactory(factory.django.DjangoModelFactory):
         random_object: Model = cls.random_object(**kwargs)
         return (
             random_object or factory.SubFactory(cls, **kwargs)
-            if env() is not Environment.TEST
+            if settings.CONFIGURATION is not Environment.TEST
             else None
         )
 

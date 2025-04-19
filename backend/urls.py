@@ -1,22 +1,11 @@
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
-from drf_spectacular.views import SpectacularAPIView
 
 from api import urls as api_urls
 
 admin.site.site_header = "PlayMaker.pro - development"
 admin.site.site_title = "PlayMaker.pro - Admin site"
-
-
-swagger_urls = [
-    path("api/v3/", include(api_urls, namespace="api")),
-]
-
-
-class MySchemaView(SpectacularAPIView):
-    urlconf = swagger_urls
-    api_version = "v3"
 
 
 urlpatterns = [

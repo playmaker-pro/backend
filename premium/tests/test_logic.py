@@ -28,19 +28,19 @@ def timezone_now():
 
 
 @pytest.fixture
-def premium_product():
-    return factories.PremiumProductFactory.create()
+def premium_product(player_profile):
+    return player_profile.premium_products
 
 
 @pytest.fixture
-def player_profile(premium_product):
-    player = factories.PlayerProfileFactory.create(premium_products=premium_product)
+def player_profile():
+    player = factories.PlayerProfileFactory.create()
     return player
 
 
 @pytest.fixture
-def coach_profile(premium_product):
-    guest = factories.CoachProfileFactory.create(premium_products=premium_product)
+def coach_profile():
+    guest = factories.CoachProfileFactory.create()
     return guest
 
 
@@ -84,6 +84,7 @@ class TestPremiumProduct:
     ):
         products = player_profile.premium_products
 
+        assert products.user == player_profile.user
         assert isinstance(products, PremiumProduct)
         assert products.is_profile_premium is False
         assert products.is_profile_promoted is False
@@ -123,6 +124,7 @@ class TestPremiumProduct:
     ):
         products = coach_profile.premium_products
 
+        assert products.user == coach_profile.user
         assert isinstance(products, PremiumProduct)
         assert products.is_premium_inquiries_active is False
         assert products.is_profile_promoted is False
