@@ -58,9 +58,9 @@ stop-celery:
 
 .PHONY: start-celery-beat
 start-celery-beat:
-	nohup poetry run celery -A backend beat -l info --scheduler django --pidfile ~/celerybeat.pid > /dev/null 2>&1 &
+	nohup poetry run celery -A backend beat -l info --scheduler django --pidfile .celerybeat.pid > /dev/null 2>&1 &
 
 
 .PHONY: stop-celery-beat
 stop-celery-beat:
-	kill -9 `cat ~/celerybeat.pid`
+	kill -9 `cat .celerybeat.pid`
