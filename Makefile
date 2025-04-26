@@ -36,7 +36,9 @@ startapp:
 restart:
 	touch tmp/restart.txt
 	make stop-celery
+	make stop-celery-beat
 	make start-celery
+	make start-celery-beat
 
 
 .PHONY: migrate
@@ -48,6 +50,17 @@ migrate:
 start-celery:
 	nohup poetry run celery -A backend worker --autoscale=0,4 --without-mingle --without-gossip > /dev/null 2>&1 &
 
+
 .PHONY: stop-celery
 stop-celery:
 	nohup poetry run celery -A backend control shutdown > /dev/null 2>&1 &
+
+
+.PHONY: start-celery-beat
+start-celery-beat:
+	nohup poetry run celery -A backend beat -l info --scheduler django --pidfile ~/celerybeat.pid > /dev/null 2>&1 &
+
+
+.PHONY: stop-celery-beat
+stop-celery-beat:
+	kill -9 `cat ~/celerybeat.pid`
