@@ -18,6 +18,7 @@ def create_meta_for_all_profiles(apps, schema_editor):
             if not profile.meta:
                 profile.meta = ProfileMeta.objects.create(
                     _profile_class=profile_type.__name__.lower(),
+                    user=profile.user,
                 )
                 profile.save()
 

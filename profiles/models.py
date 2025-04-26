@@ -553,7 +553,6 @@ class BaseProfile(models.Model, EventLogMixin):
         # Queen of the show
         super().save(*args, **kwargs)
 
-
     def get_verification_data_from_profile(self, owner: User = None) -> dict:
         """Based on user porfile get default verification-status data."""
         owner = owner or self.user
@@ -2452,8 +2451,7 @@ class TeamContributor(models.Model):
         max_length=50,
         choices=CoachProfile.COACH_ROLE_CHOICES + definitions.CLUB_ROLES,
         help_text=_(
-            "Role of the contributor in the team. "
-            "Role specified for club/coach profile"
+            "Role of the contributor in the team. Role specified for club/coach profile"
         ),
         null=True,
         blank=True,
@@ -2815,6 +2813,10 @@ class ProfileMeta(models.Model):
 
     def __str__(self) -> None:
         return f"Meta of {self.profile}"
+
+    class Meta:
+        verbose_name = "Meta"
+        verbose_name_plural = "Metas"
 
 
 PROFILE_MODELS = (
