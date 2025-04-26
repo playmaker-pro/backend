@@ -5,6 +5,9 @@ class AppConfig(AppConfig):
     name = "app"
 
     def ready(self):
-        from app.celery.tasks import refresh_periodic_tasks
+        try:
+            from app.celery.tasks import refresh_periodic_tasks
 
-        refresh_periodic_tasks()
+            refresh_periodic_tasks()
+        except:
+            pass
