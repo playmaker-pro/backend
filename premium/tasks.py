@@ -11,3 +11,4 @@ def reward_referrals_with_premium(premium_products_id):
         return
 
     pp_object.setup_premium_profile(PremiumType.MONTH)
+

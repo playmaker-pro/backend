@@ -1,3 +1,6 @@
+from notifications.services import NotificationService
+
+
 def trigger_refresh_data_player_stats(modeladmin, request, queryset):
     for pp in queryset:
         pp.trigger_refresh_data_player_stats()  # save comes inside
@@ -86,3 +89,11 @@ def update_scoring(modeladmin, request, queryset) -> None:
 
 
 update_scoring.short_description = "Update scoring (PlayMaker, Season, .etc score)"
+
+
+def bind_reccurrent_notifications(modeladmin, request, queryset) -> None:
+    """
+    Bind notifications to the selected profiles.
+    """
+    for profile_meta in queryset:
+        NotificationService(profile_meta).bind_all_reccurrent_notifications()

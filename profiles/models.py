@@ -521,7 +521,8 @@ class BaseProfile(models.Model, EventLogMixin):
     def ensure_meta_exist(self, commit: bool = True) -> None:
         if self.meta is None:
             self.meta = ProfileMeta.objects.create(
-                _profile_class=self.__class__.__name__
+                _profile_class=self.__class__.__name__,
+                user=self.user,
             )
             if commit:
                 self.save()
@@ -532,21 +533,9 @@ class BaseProfile(models.Model, EventLogMixin):
                 self.PROFILE_TYPE
             ]
             self.user.save(update_fields=["declared_role"])
-
-        self.ensure_verification_stage_exist(commit=False)
-        self.ensure_visitation_exist(commit=False)
-        self.ensure_meta_exist(commit=False)
-
         # When profile changes, update data score level
         profile_manager: ProfileManager = ProfileManager()
         self.data_fulfill_status: str = profile_manager.get_data_score(self)
-
-        try:
-            obj_before_save = obj = (
-                type(self).objects.get(pk=self.pk) if self.pk else None
-            )
-        except type(self).DoesNotExist:
-            obj_before_save = None
 
         # Use Polish profile type for slug
         polish_profile_type = profile_utils.profile_type_english_to_polish.get(
@@ -557,11 +546,6 @@ class BaseProfile(models.Model, EventLogMixin):
 
         profile_utils.unique_slugify(self, slug_str)
 
-        if obj_before_save is not None:
-            before_datamapper = obj.data_mapper_id
-        else:
-            before_datamapper = None
-
         # If there is no verification object set we need to create initial for that
         if self.verification is None and self.user.is_need_verfication_role:
             self.verification = ProfileVerificationStatus.create_initial(self.user)
@@ -569,12 +553,6 @@ class BaseProfile(models.Model, EventLogMixin):
         # Queen of the show
         super().save(*args, **kwargs)
 
-        self.ensure_premium_products_exist()
-
-        if self.data_mapper_id != before_datamapper:
-            self.data_mapper_changed = True
-        else:
-            self.data_mapper_changed = False
 
     def get_verification_data_from_profile(self, owner: User = None) -> dict:
         """Based on user porfile get default verification-status data."""
@@ -2820,6 +2798,13 @@ class Catalog(models.Model):
 
 class ProfileMeta(models.Model):
     _profile_class = models.CharField(max_length=20)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="meta_profile",
+        null=True,
+        blank=True,
+    )
 
     @property
     def profile(self) -> "PROFILE_TYPE":
@@ -2827,6 +2812,9 @@ class ProfileMeta(models.Model):
         Returns the profile object associated with this meta instance.
         """
         return getattr(self, self._profile_class.lower())
+
+    def __str__(self) -> None:
+        return f"Meta of {self.profile}"
 
 
 PROFILE_MODELS = (

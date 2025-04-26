@@ -9,7 +9,6 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
-from inquiries.models import InquiryPlan
 from mailing.models import EmailTemplate, UserEmailOutbox
 from payments.models import Transaction
 from premium.utils import get_date_days_after
@@ -97,6 +96,11 @@ class PremiumProfile(models.Model):
             return False
         elif self.valid_until <= timezone.now():
             if self.should_email_be_sent:
+                from notifications.services import NotificationService
+
+                NotificationService(
+                    self.product.profile.meta
+                ).notify_premium_just_expired()
                 self.sent_email_that_premium_expired()
             return False
         return True
@@ -440,7 +444,9 @@ class Product(models.Model):
             )
 
     @property
-    def inquiry_plan(self) -> InquiryPlan:
+    def inquiry_plan(self) -> "inquiries.models.InquiryPlan":
+        from inquiries.models import InquiryPlan
+
         return InquiryPlan.objects.get(type_ref=self.name)
 
     def apply_product_for_transaction(self, transaction: Transaction) -> None:

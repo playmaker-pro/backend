@@ -10,14 +10,7 @@ from django_fsm import FSMField, transition
 
 from inquiries.errors import ForbiddenLogAction
 from inquiries.schemas import InquiryPlanTypeRef as _InquiryPlanTypeRef
-from inquiries.signals import (
-    inquiry_accepted,
-    inquiry_pool_exhausted,
-    inquiry_rejected,
-    inquiry_reminder,
-    inquiry_restored,
-    inquiry_sent,
-)
+from inquiries.signals import inquiry_pool_exhausted
 from inquiries.tasks import send_inquiry_email
 from inquiries.utils import InquiryMessageContentParser as _ContentParser
 from mailing.models import EmailTemplate as _EmailTemplate
@@ -316,7 +309,7 @@ class UserInquiry(models.Model):
                 premium_inquiries = self.user.profile.premium_products.inquiries
                 premium_inquiries.check_refresh()
                 return premium_inquiries
-            elif not self.plan.default:
+            elif not self.plan or not self.plan.default:
                 self.reset_plan()
 
     @property
@@ -555,10 +548,20 @@ class InquiryRequest(models.Model):
     @transition(field=status, source=[STATUS_NEW], target=STATUS_SENT)
     def send(self):
         """Should be appeared when message was distributed to recipient"""
+        from notifications.services import NotificationService
+
+        NotificationService(self.recipient.profile.meta).notify_new_inquiry(
+            self.sender.profile
+        )
 
     @transition(field=status, source=[STATUS_SENT], target=STATUS_RECEIVED)
     def read(self):
         """Should be appeared when message readed/seen by recipient"""
+        from notifications.services import NotificationService
+
+        NotificationService(self.sender.profile.meta).notify_inquiry_read(
+            self.recipient.profile
+        )
         logger.info(
             f"{self.recipient} read request from {self.sender}. -- "
             f"InquiryRequestID: {self.pk}"
@@ -572,6 +575,7 @@ class InquiryRequest(models.Model):
     )
     def accept(self) -> None:
         """Should be appeared when message was accepted by recipient"""
+        from notifications.services import NotificationService
 
         logger.debug(
             f"#{self.pk} reuqest accepted creating sender and recipient contanct body"
@@ -581,8 +585,11 @@ class InquiryRequest(models.Model):
             f"{self.recipient} accepted request from {self.sender}. -- "
             f"InquiryRequestID: {self.pk}"
         )
-        inquiry_accepted.send(sender=self.__class__, inquiry_request=self)
         self.is_read_by_sender = False
+
+        NotificationService(self.sender.profile.meta).notify_inquiry_accepted(
+            self.recipient.profile
+        )
 
     @transition(
         field=status,
@@ -591,14 +598,17 @@ class InquiryRequest(models.Model):
     )
     def reject(self) -> None:
         """Should be appeared when message was rejected by recipient"""
+        from notifications.services import NotificationService
 
         self.create_log_for_sender(InquiryLogMessage.MessageType.REJECTED)
         logger.info(
             f"{self.recipient} rejected request from {self.sender}. -- "
             f"InquiryRequestID: {self.pk}"
         )
-        inquiry_rejected.send(sender=self.__class__, inquiry_request=self)
         self.is_read_by_sender = False
+        NotificationService(self.sender.profile.meta).notify_inquiry_rejected(
+            self.recipient.profile
+        )
 
     def save(self, *args, **kwargs):
         recipient_profile_uuid = kwargs.pop("recipient_profile_uuid", None)
@@ -609,12 +619,6 @@ class InquiryRequest(models.Model):
             self.send()
 
         super().save(*args, **kwargs)
-        if recipient_profile_uuid:
-            inquiry_sent.send(
-                sender=self.__class__,
-                inquiry_request=self,
-                profile_uuid=recipient_profile_uuid,
-            )
 
         if adding:
             self.sender.userinquiry.increment()  # type: ignore
@@ -632,7 +636,6 @@ class InquiryRequest(models.Model):
             raise ForbiddenLogAction("Cannot reward sender anymore.")
 
         self.sender.userinquiry.decrement()
-        inquiry_restored.send(sender=self.__class__, inquiry_request=self)
         self.create_log_for_sender(InquiryLogMessage.MessageType.OUTDATED)
 
     def notify_recipient_about_outdated(self) -> None:
@@ -642,7 +645,6 @@ class InquiryRequest(models.Model):
         """
         if not self.can_be_reminded:
             raise ForbiddenLogAction("Cannot create more than 2 reminders.")
-        inquiry_reminder.send(sender=self.__class__, inquiry_request=self)
         self.create_log_for_recipient(InquiryLogMessage.MessageType.OUTDATED_REMINDER)
 
     @property
