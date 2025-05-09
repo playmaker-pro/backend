@@ -31,6 +31,10 @@ pytestmark = pytest.mark.django_db
 
 User = get_user_model()
 
+pytestmark = pytest.mark.django_db
+
+User = get_user_model()
+
 
 def pytest_addoption(parser):
     """Add custom option to pytest."""
