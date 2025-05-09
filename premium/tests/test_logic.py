@@ -159,15 +159,12 @@ class TestPremiumProduct:
         with pytest.raises(ValueError):
             player_profile.setup_premium_profile(PremiumType.TRIAL)
 
-    def test_paid_during_trial(self, player_profile):
+    def test_paid_during_trial(self, player_profile, timezone_now):
         products = player_profile.products
         player_profile.setup_premium_profile(PremiumType.TRIAL)
         player_profile.setup_premium_profile(PremiumType.MONTH)
 
-        should_be_valid_until_date = make_aware(
-            datetime.now()
-            + timedelta(PremiumType.TRIAL.period + PremiumType.MONTH.period)
-        ).date()
+        should_be_valid_until_date = (timezone_now.return_value + timedelta(PremiumType.TRIAL.period + PremiumType.MONTH.period)).date()
         products.refresh_from_db()
 
         assert products.premium.valid_until.date() == should_be_valid_until_date

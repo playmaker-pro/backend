@@ -57,7 +57,7 @@ def test_check_if_premium_inquiries_refresh(
 ):
     player_profile.setup_premium_profile(PremiumType.YEAR)
     user = player_profile.user
-    primary_date = timezone.now().date()
+    primary_date = mck_timezone_now.return_value.date()
 
     assert player_profile.is_premium
     assert player_profile.has_premium_inquiries
@@ -82,9 +82,9 @@ def test_check_if_premium_inquiries_refresh(
 
     mck_timezone_now.return_value = (
         player_profile.products.inquiries.counter_updated_at
-        + timedelta(days=30, hours=1)
+        + timedelta(days=30, seconds=12)
     )
-    new_current_date = timezone.now().date()
+    new_current_date = mck_timezone_now.return_value.date()
 
     assert user.userinquiry.left == 10
     assert user.userinquiry.counter == 2
@@ -95,9 +95,9 @@ def test_check_if_premium_inquiries_refresh(
     current_updated_at_date = (
         player_profile.products.inquiries.counter_updated_at.date()
     )
-
+    expected = primary_date + timedelta(days=30)
     assert current_updated_at_date == new_current_date and current_updated_at_date == (
-        primary_date + timedelta(days=30)
+       expected
     )
     assert player_profile.products.inquiries.valid_since.date() == primary_date
     assert player_profile.products.inquiries.current_counter == 0
@@ -130,7 +130,7 @@ def test_check_if_premium_inquiries_refresh(
     mck_timezone_now.return_value = (
         player_profile.products.inquiries.counter_updated_at + timedelta(days=32)
     )
-    new_current_date = timezone.now().date()
+    new_current_date = mck_timezone_now.return_value.date()
     player_profile.products.inquiries.check_refresh()
     user.userinquiry.refresh_from_db()
 

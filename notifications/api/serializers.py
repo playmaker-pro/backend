@@ -12,6 +12,7 @@ class NotificationSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "updated_at",
+            "created_at",
             "seen",
             "href",
             "icon",

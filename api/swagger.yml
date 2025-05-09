@@ -147,7 +147,7 @@ paths:
       description: Get notifications
       summary: Get all notifications
       parameters:
-        - in: path
+        - in: query
           name: unseen
           schema:
             type: boolean
@@ -176,6 +176,13 @@ paths:
         - notifications
       security:
         - jwtAuth: [ ]
+      parameters:
+        - in: path
+          name: notification_id
+          schema:
+            type: integer
+          required: true
+          description: "Notification ID"
       responses:
         '200':
           description: "Notification marked as seen"
@@ -7528,6 +7535,13 @@ components:
           type: string
         picture_profile_role:
           type: string
+      required:
+        - id
+        - title
+        - description
+        - updated_at
+        - created_at
+        - seen
     PhoneNumber:
       type: object
       nullable: true

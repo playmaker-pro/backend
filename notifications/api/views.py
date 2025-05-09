@@ -20,7 +20,7 @@ class NotificationsView(EndpointView):
             notifications = request.user.profile.meta.notifications.all()
 
         serializer = NotificationSerializer(
-            notifications.order_by("-updated_at"),
+            notifications.order_by("-created_at"),
             many=True,
         )
         return Response(

@@ -2,6 +2,7 @@ from urllib.parse import urljoin
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class Notification(models.Model):
@@ -29,6 +30,7 @@ class Notification(models.Model):
         Refresh the notification instance for profile
         """
         self.seen = False
+        self.created_at = timezone.now()
         self.save()
 
     def mark_as_read(self) -> None:
