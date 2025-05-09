@@ -1,6 +1,5 @@
-import datetime
 import math
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import ROUND_DOWN, Decimal
 from enum import Enum
 from typing import Optional
@@ -9,8 +8,9 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
-from mailing.models import EmailTemplate, UserEmailOutbox
+from mailing.models import EmailTemplate
 from payments.models import Transaction
+from premium.tasks import premium_expired, setup_premium_profile
 from premium.utils import get_date_days_after
 
 
@@ -61,15 +61,6 @@ class PremiumProfile(models.Model):
     def subscription_lifespan(self) -> timedelta:
         return self.valid_until.date() - self.valid_since.date()
 
-    @property
-    def should_email_be_sent(self) -> bool:
-        if self.product.profile:
-            return not UserEmailOutbox.objects.filter(
-                recipient=self.product.profile.user.email,
-                sent_date__gte=self.valid_until,
-            ).exists()
-        return False
-
     def sent_email_that_premium_expired(self) -> None:
         template = EmailTemplate.objects.get(
             email_type=EmailTemplate.EmailType.PREMIUM_EXPIRED
@@ -95,18 +86,12 @@ class PremiumProfile(models.Model):
         if not self.valid_until:
             return False
         elif self.valid_until <= timezone.now():
-            if self.should_email_be_sent:
-                from notifications.services import NotificationService
+            self.valid_until = None
+            self.save()
 
-                NotificationService(
-                    self.product.profile.meta
-                ).notify_premium_just_expired()
-                self.sent_email_that_premium_expired()
+            premium_expired.delay(self.product.pk)
             return False
         return True
-
-    def __getattribute__(self, item):
-        return super().__getattribute__(item)
 
     def setup(self, premium_type: PremiumType = PremiumType.TRIAL) -> None:
         """Setup the premium profile."""
@@ -268,7 +253,7 @@ class PremiumInquiriesProduct(models.Model):
             self.reset_counter()
 
     @property
-    def inquiries_refreshed_at(self) -> datetime.datetime:
+    def inquiries_refreshed_at(self) -> datetime:
         return self.counter_updated_at + timedelta(days=30)
 
     def _fresh_init(self, period: int) -> None:
@@ -362,31 +347,6 @@ class PremiumProduct(models.Model):
         product_state = "PREMIUM" if self.is_profile_premium else "FREEMIUM"
         return f"{self.profile} -- {product_state}"
 
-    def setup_premium_profile(
-        self, premium_type: PremiumType = PremiumType.TRIAL, period: int = None
-    ) -> "PremiumProfile":
-        """Create/refresh premium profile"""
-        premium, created = PremiumProfile.objects.get_or_create(product=self)
-
-        if self.trial_tested and premium_type == PremiumType.TRIAL:
-            raise ValueError("Trial already tested or cannot be set.")
-
-        if premium_type == PremiumType.CUSTOM and period:
-            premium.setup_by_days(period)
-        elif premium_type != PremiumType.CUSTOM:
-            premium.setup(premium_type)
-        else:
-            raise ValueError("Custom period requires period value.")
-
-        if not self.trial_tested:
-            self.trial_tested = True
-            self.save(update_fields=["trial_tested"])
-
-        if premium.is_trial and premium_type != PremiumType.TRIAL:
-            self.inquiries.reset_counter(reset_plan=False)
-
-        return premium
-
     def setup_premium_products(
         self, premium_type: PremiumType = PremiumType.TRIAL, period: int = None
     ) -> None:
@@ -454,8 +414,9 @@ class Product(models.Model):
             premium_type = (
                 PremiumType.YEAR if self.name.endswith("_YEAR") else PremiumType.MONTH
             )
-            premium = transaction.user.profile.premium_products.setup_premium_profile(
-                premium_type
+            profile = transaction.user.profile
+            setup_premium_profile.delay(
+                profile.pk, profile.__class__.__name__, premium_type.value
             )
         elif self.ref == Product.ProductReference.INQUIRIES:
             plan = self.inquiry_plan

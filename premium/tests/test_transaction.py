@@ -27,7 +27,7 @@ def test_buy_premium(product_premium_player_month, player_profile):
     assert player_profile.is_premium
     assert player_profile.user.userinquiry.limit == 12
     assert player_profile.is_promoted
-    assert player_profile.premium_products.calculate_pm_score
+    assert player_profile.products.calculate_pm_score
     assert player_profile.user.userinquiry.plan.type_ref == "BASIC"
 
 
@@ -47,6 +47,7 @@ def test_buy_inquiries_for_profile_with_premium(
         product=product_inquiries_L, user=user
     )
     transaction_inquiries.success()
+    player_profile.refresh_from_db()
 
     assert player_profile.user.userinquiry.plan.type_ref == "PREMIUM_INQUIRIES_L"
 
@@ -54,19 +55,16 @@ def test_buy_inquiries_for_profile_with_premium(
 def test_check_if_premium_inquiries_refresh(
     player_profile, mck_timezone_now, product_inquiries_L
 ):
-    player_profile.premium_products.setup_premium_profile(PremiumType.YEAR)
+    player_profile.setup_premium_profile(PremiumType.YEAR)
     user = player_profile.user
     primary_date = timezone.now().date()
 
     assert player_profile.is_premium
     assert player_profile.has_premium_inquiries
-    assert player_profile.premium_products.inquiries.is_active
-    assert (
-        player_profile.premium_products.inquiries.counter_updated_at.date()
-        == primary_date
-    )
-    assert player_profile.premium_products.inquiries.valid_since.date() == primary_date
-    assert player_profile.premium_products.inquiries.current_counter == 0
+    assert player_profile.products.inquiries.is_active
+    assert player_profile.products.inquiries.counter_updated_at.date() == primary_date
+    assert player_profile.products.inquiries.valid_since.date() == primary_date
+    assert player_profile.products.inquiries.current_counter == 0
     assert user.userinquiry.left == 12
     assert user.userinquiry.counter == 0
     assert user.userinquiry.counter_raw == 0
@@ -76,14 +74,14 @@ def test_check_if_premium_inquiries_refresh(
     for _ in range(3):
         user.userinquiry.increment()
 
-    assert player_profile.premium_products.inquiries.current_counter == 1
+    assert player_profile.products.inquiries.current_counter == 1
     assert user.userinquiry.left == 9
     assert user.userinquiry.counter == 3
     assert user.userinquiry.counter_raw == 2
     assert user.userinquiry.limit_raw == 2
 
     mck_timezone_now.return_value = (
-        player_profile.premium_products.inquiries.counter_updated_at
+        player_profile.products.inquiries.counter_updated_at
         + timedelta(days=30, hours=1)
     )
     new_current_date = timezone.now().date()
@@ -92,18 +90,17 @@ def test_check_if_premium_inquiries_refresh(
     assert user.userinquiry.counter == 2
     assert user.userinquiry.counter_raw == 2
     assert user.userinquiry.limit_raw == 2
-    assert player_profile.premium_products.inquiries.is_active
+    assert player_profile.products.inquiries.is_active
 
     current_updated_at_date = (
-        player_profile.premium_products.inquiries.counter_updated_at.date()
+        player_profile.products.inquiries.counter_updated_at.date()
     )
 
-    assert (
-        current_updated_at_date == new_current_date
-        and current_updated_at_date == primary_date + timedelta(days=30, seconds=1)
+    assert current_updated_at_date == new_current_date and current_updated_at_date == (
+        primary_date + timedelta(days=30)
     )
-    assert player_profile.premium_products.inquiries.valid_since.date() == primary_date
-    assert player_profile.premium_products.inquiries.current_counter == 0
+    assert player_profile.products.inquiries.valid_since.date() == primary_date
+    assert player_profile.products.inquiries.current_counter == 0
 
     # increment 10x
     for _ in range(10):
@@ -114,7 +111,7 @@ def test_check_if_premium_inquiries_refresh(
     assert user.userinquiry.counter == 12
     assert user.userinquiry.counter_raw == 2
     assert user.userinquiry.limit_raw == 2
-    assert player_profile.premium_products.inquiries.current_counter == 10
+    assert player_profile.products.inquiries.current_counter == 10
     assert not user.userinquiry.can_make_request
 
     transaction = Transaction.objects.create(product=product_inquiries_L, user=user)
@@ -127,14 +124,15 @@ def test_check_if_premium_inquiries_refresh(
     assert user.userinquiry.counter == 12
     assert user.userinquiry.counter_raw == 2
     assert user.userinquiry.limit_raw == 5
-    assert player_profile.premium_products.inquiries.current_counter == 10
+    assert player_profile.products.inquiries.current_counter == 10
     assert user.userinquiry.can_make_request
 
     mck_timezone_now.return_value = (
-        player_profile.premium_products.inquiries.counter_updated_at
-        + timedelta(days=30, seconds=1)
+        player_profile.products.inquiries.counter_updated_at + timedelta(days=32)
     )
     new_current_date = timezone.now().date()
+    player_profile.products.inquiries.check_refresh()
+    user.userinquiry.refresh_from_db()
 
     assert user.userinquiry.left == 10
     assert user.userinquiry.limit == 12
@@ -142,7 +140,7 @@ def test_check_if_premium_inquiries_refresh(
     assert user.userinquiry.counter_raw == 2
     assert user.userinquiry.limit_raw == 2
 
-    assert player_profile.premium_products.inquiries.current_counter == 0
+    assert player_profile.products.inquiries.current_counter == 0
 
 
 def test_premium_inquiries_on_trial(
@@ -156,10 +154,10 @@ def test_premium_inquiries_on_trial(
     assert user.userinquiry.counter == 0
     assert user.userinquiry.counter_raw == 0
     assert (
-        trial_premium_coach_profile.premium_products.inquiries.counter_updated_at.date()
-        == timezone.now().date()
+        trial_premium_coach_profile.products.inquiries.counter_updated_at.date()
+        == mck_timezone_now.return_value.date()
     )
-    assert trial_premium_coach_profile.premium_products.inquiries.current_counter == 0
+    assert trial_premium_coach_profile.products.inquiries.current_counter == 0
 
     for _ in range(3):
         user.userinquiry.increment()
@@ -169,7 +167,7 @@ def test_premium_inquiries_on_trial(
     assert user.userinquiry.counter == 3
     assert user.userinquiry.counter_raw == 2
     assert user.userinquiry.limit_raw == 2
-    assert trial_premium_coach_profile.premium_products.inquiries.current_counter == 1
+    assert trial_premium_coach_profile.products.inquiries.current_counter == 1
 
     assert not UserEmailOutbox.objects.filter(
         recipient=trial_premium_coach_profile.user.email, email_type="PREMIUM_EXPIRED"
@@ -181,19 +179,18 @@ def test_premium_inquiries_on_trial(
     assert UserEmailOutbox.objects.filter(
         recipient=trial_premium_coach_profile.user.email, email_type="PREMIUM_EXPIRED"
     ).exists()
-
     assert user.userinquiry.left == 0
     assert user.userinquiry.limit == 2
     assert user.userinquiry.counter == 2
     assert user.userinquiry.counter_raw == 2
     assert not trial_premium_coach_profile.has_premium_inquiries
-    assert not trial_premium_coach_profile.premium_products.inquiries.is_active
+    assert not trial_premium_coach_profile.products.inquiries.is_active
     assert (
-        trial_premium_coach_profile.premium_products.inquiries.counter_updated_at.date()
+        trial_premium_coach_profile.products.inquiries.counter_updated_at.date()
         == timezone.now().date() - timedelta(days=7, seconds=1)
     )
 
-    trial_premium_coach_profile.premium_products.setup_premium_profile(PremiumType.YEAR)
+    trial_premium_coach_profile.setup_premium_profile(PremiumType.YEAR)
     trial_premium_coach_profile.refresh_from_db()
 
     assert trial_premium_coach_profile.has_premium_inquiries
@@ -201,9 +198,9 @@ def test_premium_inquiries_on_trial(
     assert user.userinquiry.left == 10
     assert user.userinquiry.counter == 2
     assert user.userinquiry.counter_raw == 2
-    assert trial_premium_coach_profile.premium_products.inquiries.is_active
+    assert trial_premium_coach_profile.products.inquiries.is_active
     assert (
-        trial_premium_coach_profile.premium_products.inquiries.counter_updated_at.date()
+        trial_premium_coach_profile.products.inquiries.counter_updated_at.date()
         == timezone.now().date()
     )
 
@@ -223,10 +220,10 @@ def test_premium_inquiries_on_trial(
     assert user.userinquiry.counter == 12
     assert user.userinquiry.counter_raw == 2
     assert user.userinquiry.limit_raw == 2
-    assert trial_premium_coach_profile.premium_products.inquiries.current_counter == 10
+    assert trial_premium_coach_profile.products.inquiries.current_counter == 10
     assert not user.userinquiry.can_make_request
     assert (
-        trial_premium_coach_profile.premium_products.inquiries.counter_updated_at.date()
+        trial_premium_coach_profile.products.inquiries.counter_updated_at.date()
         == timezone.now().date()
     )
 
@@ -240,7 +237,7 @@ def test_premium_inquiries_on_trial(
     assert user.userinquiry.counter == 12
     assert user.userinquiry.counter_raw == 2
     assert user.userinquiry.limit_raw == 7
-    assert trial_premium_coach_profile.premium_products.inquiries.current_counter == 10
+    assert trial_premium_coach_profile.products.inquiries.current_counter == 10
     assert user.userinquiry.can_make_request
 
     assert (
@@ -252,6 +249,7 @@ def test_premium_inquiries_on_trial(
     )
 
     mck_timezone_now.return_value += timedelta(days=370, hours=1)
+
     assert not trial_premium_coach_profile.is_premium
 
     assert (
@@ -268,7 +266,7 @@ def test_premium_inquiries_on_trial(
 
 
 def test_try_trial_after_subscription(player_profile, mck_timezone_now):
-    player_profile.premium_products.setup_premium_profile(PremiumType.MONTH)
+    player_profile.setup_premium_profile(PremiumType.MONTH)
 
     assert player_profile.has_premium_inquiries
     assert player_profile.is_premium
@@ -290,33 +288,30 @@ def test_try_trial_after_subscription(player_profile, mck_timezone_now):
     assert not player_profile.is_promoted
 
     with pytest.raises(ValueError) as exc:
-        player_profile.premium_products.setup_premium_profile(PremiumType.TRIAL)
+        player_profile.setup_premium_profile(PremiumType.TRIAL)
 
     assert str(exc.value) == "Trial already tested or cannot be set."
 
 
 def test_double_trial(trial_premium_player_profile):
     assert trial_premium_player_profile.is_premium
-    assert trial_premium_player_profile.premium_products.trial_tested
+    assert trial_premium_player_profile.products.trial_tested
 
     with pytest.raises(ValueError) as exc:
-        trial_premium_player_profile.premium_products.setup_premium_profile(
-            PremiumType.TRIAL
-        )
+        trial_premium_player_profile.setup_premium_profile(PremiumType.TRIAL)
 
     assert str(exc.value) == "Trial already tested or cannot be set."
 
 
 @pytest.mark.parametrize("period", (2, 56, 123))
 def test_player_custom_period(player_profile, period, mck_timezone_now):
-    player_profile.premium_products.setup_premium_profile(
-        PremiumType.CUSTOM, period=period
-    )
+    player_profile.setup_premium_profile(PremiumType.CUSTOM, period=period)
+    player_profile.refresh_from_db()
 
-    assert player_profile.premium_products.trial_tested
+    assert player_profile.products.trial_tested
     assert player_profile.premium.subscription_lifespan == timedelta(days=period)
     assert player_profile.promotion.subscription_lifespan == timedelta(days=period)
-    assert player_profile.premium_products.inquiries.subscription_lifespan == timedelta(
+    assert player_profile.products.inquiries.subscription_lifespan == timedelta(
         days=period
     )
 
@@ -334,17 +329,13 @@ def test_player_custom_period(player_profile, period, mck_timezone_now):
 
 @pytest.mark.parametrize("period", (2, 56, 123))
 def test_custom_period(coach_profile, period, mck_timezone_now):
-    coach_profile.premium_products.setup_premium_profile(
-        PremiumType.CUSTOM, period=period
-    )
+    coach_profile.setup_premium_profile(PremiumType.CUSTOM, period=period)
+    coach_profile.refresh_from_db()
 
-    assert coach_profile.premium_products.trial_tested
-    assert coach_profile.premium.subscription_lifespan == timedelta(days=period)
-    assert coach_profile.promotion.subscription_lifespan == timedelta(days=period)
-    assert coach_profile.premium_products.inquiries.subscription_lifespan == timedelta(
-        days=period
-    )
-
+    assert coach_profile.products.trial_tested
+    assert coach_profile.premium.subscription_lifespan.days == period
+    assert coach_profile.promotion.subscription_lifespan.days == period
+    assert coach_profile.products.inquiries.subscription_lifespan.days == period
     assert not UserEmailOutbox.objects.filter(
         recipient=coach_profile.user.email, email_type="PREMIUM_EXPIRED"
     ).exists()

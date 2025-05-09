@@ -18,5 +18,4 @@ def post_create_profile_tasks(class_name: str, profile_id: int) -> None:
     profile.ensure_visitation_exist(commit=False)
     profile.ensure_meta_exist(commit=False)
     profile.save()
-    profile.refresh_from_db()
     NotificationService(profile.meta).notify_welcome()

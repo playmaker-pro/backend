@@ -9,10 +9,12 @@ multi_line_output = 3
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "backend.settings.test"
 addopts = "-p no:warnings"
-# -- recommended but optional:
+env = [{ ENVIRONMENT = "test" }]
+pytest_plugins = "utils.fixtures"
+
+
 python_files = "tests/* test/*"
 norecursedirs = "__IGNORE/*"
-
 [tool.black]
 include = '\.py$'
 line-length = 88

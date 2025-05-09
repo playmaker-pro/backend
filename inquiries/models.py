@@ -306,7 +306,7 @@ class UserInquiry(models.Model):
     def premium_inquiries(self) -> Optional["premium.models.PremiumInquiriesProduct"]:  # noqa: F821
         if self.user.profile:
             if self.user.profile.has_premium_inquiries:
-                premium_inquiries = self.user.profile.premium_products.inquiries
+                premium_inquiries = self.user.profile.products.inquiries
                 premium_inquiries.check_refresh()
                 return premium_inquiries
             elif not self.plan or not self.plan.default:

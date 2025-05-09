@@ -25,6 +25,7 @@ from django.db.models.signals import (
 from rest_framework.test import APIClient
 
 from utils.factories import UserFactory
+from utils.fixtures import *
 
 pytestmark = pytest.mark.django_db
 

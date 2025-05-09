@@ -70,7 +70,7 @@ class NotificationTemplate(Enum):
         "icon": "profile-hidden",
     }
 
-    BUY_PREMIUM = {
+    PREMIUM_EXPIRED = {
         "title": "Twoje konto Premium wygasło!",
         "description": "Nie czekaj – wróć do PREMIUM i korzystaj ze wszystkich funkcji!",
         "href": "/premium",

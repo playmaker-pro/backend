@@ -17,14 +17,19 @@ GENDER_BASED_ROLES = {
     None: ("", ""),
 }
 
-qs = ProfileMeta.objects.filter(user__isnull=False)
-
 
 class NotificationService:
     """
     Service responsible for sending notifications to users.
     It uses the NotificationTemplate class to create notifications.
     """
+
+    @staticmethod
+    def get_queryset() -> "QuerySet[ProfileMeta]":
+        """
+        Get the queryset of ProfileMeta objects.
+        """
+        return ProfileMeta.objects.filter(user__isnull=False)
 
     def __init__(self, meta: "profiles.models.ProfileMeta") -> None:  # type: ignore
         self._meta = meta
@@ -66,11 +71,8 @@ class NotificationService:
         """
         Send notifications for users who haven't tested the trial.
         """
-        for meta in qs:
-            if (
-                meta.profile.premium_products
-                and meta.profile.premium_products.trial_tested
-            ):
+        for meta in cls.get_queryset():
+            if meta.profile.products and not meta.profile.products.trial_tested:
                 cls(meta).notify_check_trial()
 
     def notify_check_trial(self) -> None:
@@ -87,7 +89,7 @@ class NotificationService:
         """
         Send notifications for non-premium users.
         """
-        for meta in qs:
+        for meta in cls.get_queryset():
             if not meta.profile.is_premium:
                 cls(meta).notify_go_premium()
 
@@ -105,7 +107,7 @@ class NotificationService:
         """
         Send notifications for unverified profiles.
         """
-        for meta in qs:
+        for meta in cls.get_queryset():
             if not meta.profile.external_links.links.exists():
                 cls(meta).notify_verify_profile()
 
@@ -123,7 +125,7 @@ class NotificationService:
         """
         Send notifications for hidden profiles.
         """
-        for meta in qs:
+        for meta in cls.get_queryset():
             if meta.user.display_status == "Niewyświetlany":
                 cls(meta).notify_profile_hidden()
 
@@ -150,7 +152,7 @@ class NotificationService:
         """
         Send notifications for new PM rankings.
         """
-        for meta in qs:
+        for meta in cls.get_queryset():
             cls(meta).notify_pm_rank()
 
     def notify_pm_rank(self) -> None:
@@ -167,7 +169,7 @@ class NotificationService:
         """
         Send notifications for users with new visit summaries.
         """
-        for meta in qs:
+        for meta in cls.get_queryset():
             if meta.profile.visitation.count_who_visited_me > 0:
                 cls(meta).notify_visits_summary()
 
@@ -243,7 +245,7 @@ class NotificationService:
         """
         Send notifications for setting transfer requests.
         """
-        for meta in qs:
+        for meta in cls.get_queryset():
             if meta.profile.transfer_requests.count() == 0:
                 cls(meta).notify_set_transfer_requests
 
@@ -261,7 +263,7 @@ class NotificationService:
         """
         Send notifications for setting status.
         """
-        for meta in qs:
+        for meta in cls.get_queryset():
             if meta.profile.transfer_status_related.count() == 0:
                 cls(meta).notify_set_status()
 
@@ -279,7 +281,7 @@ class NotificationService:
         """
         Send notifications for inviting friends.
         """
-        for meta in qs:
+        for meta in cls.get_queryset():
             cls(meta).notify_invite_friends()
 
     def notify_invite_friends(self) -> None:
@@ -296,7 +298,7 @@ class NotificationService:
         """
         Send notifications for adding links.
         """
-        for meta in qs:
+        for meta in cls.get_queryset():
             if meta.profile.external_links.links.count() == 0:
                 cls(meta).notify_add_links()
 
@@ -314,7 +316,7 @@ class NotificationService:
         """
         Send notifications for adding videos.
         """
-        for meta in qs:
+        for meta in cls.get_queryset():
             if meta.user.user_video.count() == 0:
                 cls(meta).notify_add_video()
 
@@ -341,7 +343,7 @@ class NotificationService:
         """
         Test notification.
         """
-        for meta in qs.filter(user__is_staff=True):
+        for meta in cls.get_queryset().filter(user__is_staff=True):
             cls(meta).notify_test()
 
     @classmethod
@@ -349,7 +351,7 @@ class NotificationService:
         """
         Send notifications for assigning clubs.
         """
-        for meta in qs:
+        for meta in cls.get_queryset():
             if not meta.profile.team_history_object:
                 cls(meta).notify_assign_club()
 

@@ -31,7 +31,13 @@ from adapters.player_adapter import (
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_profile_external_links
 from mapper.models import Mapper
-from premium.models import PremiumProduct, PremiumProfile, PromoteProfileProduct
+from premium.models import (
+    PremiumProduct,
+    PremiumProfile,
+    PremiumType,
+    PromoteProfileProduct,
+)
+from premium.tasks import setup_premium_profile
 from profiles.errors import VerificationCompletionFieldsWrongSetup
 from profiles.managers import ProfileManager
 from profiles.mixins import TeamObjectsDisplayMixin
@@ -475,35 +481,52 @@ class BaseProfile(models.Model, EventLogMixin):
         return cls._video_labels.choices
 
     @property
+    def products(self) -> PremiumProduct:
+        """Get premium products for profile"""
+        try:
+            self.refresh_from_db()
+            return self.premium_products
+        except Exception:
+            return self.premium_products
+
+    @property
     def is_promoted(self) -> bool:
         """Check if profile is promoted"""
-        return self.premium_products.is_profile_promoted
+        return self.products.is_profile_promoted
 
     @property
     def promotion(self) -> PromoteProfileProduct:
         if self.is_promoted:
-            return self.premium_products.promotion
+            return self.products.promotion
 
     @property
     def is_premium(self) -> bool:
         """Check if profile is promoted"""
-        return self.premium_products.is_profile_premium
+        return self.products.is_profile_premium
 
     @property
     def premium(self) -> PremiumProfile:
         if self.is_premium:
-            return self.premium_products.premium
+            return self.products.premium
 
     @property
     def premium_already_tested(self) -> bool:
-        return self.premium_products.trial_tested
+        return self.products.trial_tested
 
     @property
     def has_premium_inquiries(self) -> bool:
         """Check if profile has premium inquiries"""
-        if self.premium_products:
-            return self.premium_products.is_premium_inquiries_active
+        if p := self.products:
+            return p.is_premium_inquiries_active
         return False
+
+    def setup_premium_profile(
+        self, premium_type: PremiumType = PremiumType.TRIAL, period: int = None
+    ) -> None:
+        """Setup premium profile"""
+        return setup_premium_profile(
+            self.pk, self.__class__.__name__, premium_type.value, period
+        )
 
     def ensure_premium_products_exist(self, commit: bool = True) -> None:
         """Create PremiumProduct for profile if it doesn't exist"""

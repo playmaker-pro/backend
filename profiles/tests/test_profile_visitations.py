@@ -52,7 +52,7 @@ def test_who_visited_my_profile(client, subject):
     client.force_authenticate(user=subject)
     current_year = timezone.now().year
     subject_profile = subject.profile
-    subject_profile.premium_products.setup_premium_profile()
+    subject_profile.setup_premium_profile()
     response = client.get(url)
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
@@ -87,13 +87,11 @@ def test_who_visited_my_profile(client, subject):
     assert sum(subject.profile.visitation._visitors_count_per_year.values()) == 4
     assert response.status_code == status.HTTP_200_OK
     assert data["this_month_count"] == 3
-    assert data["this_year_count"] == len(
-        [
-            is_curr
-            for is_curr in [pv1, pv2, pv3, pv4]
-            if is_curr.timestamp > timezone.now() - timedelta(weeks=52)
-        ]
-    )
+    assert data["this_year_count"] == len([
+        is_curr
+        for is_curr in [pv1, pv2, pv3, pv4]
+        if is_curr.timestamp > timezone.now() - timedelta(weeks=52)
+    ])
     assert data["visits"][0]["visitor"]["uuid"] == str(pv1.visitor.profile.uuid)
     assert data["visits"][0]["days_ago"] == 3
     assert data["visits"][1]["visitor"]["uuid"] == str(pv2.visitor.profile.uuid)

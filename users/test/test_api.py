@@ -215,11 +215,9 @@ class TestUserReferrals(TestCase):
         assert len(user_ref.registered_users_premium) == 0
 
         invited_user = user_ref.registered_users.first().user
-        GuestProfile.objects.create(user=invited_user)
+        gp = GuestProfile.objects.create(user=invited_user)
         premium_product = Product.objects.get(name="PREMIUM_PROFILE_MONTH")
-        transaction = Transaction.objects.create(
-            product=premium_product, user=invited_user
-        )
+        transaction = Transaction.objects.create(product=premium_product, user=gp.user)
         transaction.success()
         transaction.save()
 
@@ -245,7 +243,7 @@ class TestUserReferrals(TestCase):
         assert user.ref.referrals.count() == 0
 
     def test_reward_user_referral_after_10_invites(self):
-        profile = PlayerProfileFactory()
+        profile = PlayerProfileFactory.create()
         ref = profile.user.ref
 
         assert ref.registered_users.count() == 0

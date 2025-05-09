@@ -47,6 +47,7 @@ class TestInquiriesAPI(APITestCase):
         self.sender_headers = self.sender_manager.get_headers()
         self.recipient_headers = self.recipient_manager.get_headers()
         GuestProfileFactory.create(user=self.recipient_obj)
+        GuestProfileFactory.create(user=self.sender_obj)
 
     @property
     def sender_contact_data(self) -> (dict, dict):

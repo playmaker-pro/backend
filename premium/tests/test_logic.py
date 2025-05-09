@@ -13,7 +13,6 @@ from premium.models import (
     Product,
 )
 from premium.utils import get_date_days_after
-from utils import factories
 
 pytestmark = pytest.mark.django_db
 
@@ -29,19 +28,7 @@ def timezone_now():
 
 @pytest.fixture
 def premium_product(player_profile):
-    return player_profile.premium_products
-
-
-@pytest.fixture
-def player_profile():
-    player = factories.PlayerProfileFactory.create()
-    return player
-
-
-@pytest.fixture
-def coach_profile():
-    guest = factories.CoachProfileFactory.create()
-    return guest
+    return player_profile.products
 
 
 @pytest.fixture
@@ -82,7 +69,7 @@ class TestPremiumProduct:
         # mock_refresh_promotion,
         # mock_refresh_pm_score,
     ):
-        products = player_profile.premium_products
+        products = player_profile.products
 
         assert products.user == player_profile.user
         assert isinstance(products, PremiumProduct)
@@ -91,7 +78,7 @@ class TestPremiumProduct:
         assert products.is_premium_inquiries_active is False
         assert str(products) == f"{player_profile} -- FREEMIUM"
 
-        premium = products.setup_premium_profile()
+        player_profile.setup_premium_profile()
 
         products.refresh_from_db()
         player_profile.refresh_from_db()
@@ -122,7 +109,7 @@ class TestPremiumProduct:
         # mock_refresh_promotion,
         # mock_refresh_pm_score,
     ):
-        products = coach_profile.premium_products
+        products = coach_profile.products
 
         assert products.user == coach_profile.user
         assert isinstance(products, PremiumProduct)
@@ -131,7 +118,7 @@ class TestPremiumProduct:
         assert products.is_profile_premium is False
         assert str(products) == f"{coach_profile} -- FREEMIUM"
 
-        premium = products.setup_premium_profile(PremiumType.MONTH)
+        coach_profile.setup_premium_profile(PremiumType.MONTH)
 
         # mock_refresh_inquiries.assert_called_once()
         # mock_refresh_promotion.assert_called_once()
@@ -161,23 +148,21 @@ class TestPremiumProduct:
         # mock_refresh_pm_score.assert_not_called()
 
     def test_setup_trial_twice(self, player_profile, mock_refresh_premium):
-        products = player_profile.premium_products
-        products.setup_premium_profile()
+        player_profile.setup_premium_profile()
 
         with pytest.raises(ValueError):
-            products.setup_premium_profile()
+            player_profile.setup_premium_profile()
 
     def test_setup_trial_during_subscription(self, player_profile):
-        products = player_profile.premium_products
-        products.setup_premium_profile(PremiumType.MONTH)
+        player_profile.setup_premium_profile(PremiumType.MONTH)
 
         with pytest.raises(ValueError):
-            products.setup_premium_profile(PremiumType.TRIAL)
+            player_profile.setup_premium_profile(PremiumType.TRIAL)
 
     def test_paid_during_trial(self, player_profile):
-        products = player_profile.premium_products
-        products.setup_premium_profile(PremiumType.TRIAL)
-        products.setup_premium_profile(PremiumType.MONTH)
+        products = player_profile.products
+        player_profile.setup_premium_profile(PremiumType.TRIAL)
+        player_profile.setup_premium_profile(PremiumType.MONTH)
 
         should_be_valid_until_date = make_aware(
             datetime.now()
@@ -222,8 +207,10 @@ class TestPromoteProfileProduct:
 
 class TestPremiumProfile:
     @pytest.fixture
-    def premium_profile(self, premium_product, timezone_now):
-        return premium_product.setup_premium_profile(PremiumType.TRIAL)
+    def premium_profile(self, player_profile, timezone_now):
+        player_profile.setup_premium_profile(PremiumType.TRIAL)
+        player_profile.refresh_from_db()
+        return player_profile.products.premium
 
     def test_premium_profile(
         self, premium_profile, timezone_now, mock_setup_premium_products
@@ -270,15 +257,11 @@ class TestPremiumProfile:
 class TestCalculatePMScoreProduct:
     @pytest.fixture
     def calculate_pm_score_product(self, player_profile, timezone_now):
-        return CalculatePMScoreProduct.objects.create(
-            product=player_profile.premium_products
-        )
+        return CalculatePMScoreProduct.objects.create(product=player_profile.products)
 
     def test_calculate_pm_score_product_invalid_profile(self, coach_profile):
         with pytest.raises(ValueError) as e:
-            CalculatePMScoreProduct.objects.create(
-                product=coach_profile.premium_products
-            )
+            CalculatePMScoreProduct.objects.create(product=coach_profile.products)
         assert str(e.value) == "Product is available only for PlayerProfile."
 
     def test_calculate_pm_score_product(
@@ -317,9 +300,7 @@ class TestCalculatePMScoreProduct:
 class TestPremiumInquiriesProduct:
     @pytest.fixture
     def premium_inquiries(self, timezone_now, player_profile):
-        pi = PremiumInquiriesProduct.objects.create(
-            product=player_profile.premium_products
-        )
+        pi = PremiumInquiriesProduct.objects.create(product=player_profile.products)
         pi.refresh(PremiumType.MONTH)
         return pi
 
@@ -378,19 +359,19 @@ class TestProduct:
 
 
 def test_calculate_pm_score_product_auto_update(player_profile, mck_timezone_now):
-    player_profile.premium_products.setup_premium_profile(PremiumType.YEAR)
+    player_profile.setup_premium_profile(PremiumType.YEAR)
 
-    assert player_profile.premium_products.calculate_pm_score.awaiting_approval
+    assert player_profile.products.calculate_pm_score.awaiting_approval
 
     player_profile.playermetrics.pm_score = 69
     player_profile.playermetrics.save()
 
-    assert not player_profile.premium_products.calculate_pm_score.awaiting_approval
+    assert not player_profile.products.calculate_pm_score.awaiting_approval
 
     mck_timezone_now.return_value += timedelta(days=29)
 
-    assert not player_profile.premium_products.calculate_pm_score.awaiting_approval
+    assert not player_profile.products.calculate_pm_score.awaiting_approval
 
     mck_timezone_now.return_value += timedelta(days=1, hours=1)
 
-    assert player_profile.premium_products.calculate_pm_score.awaiting_approval
+    assert player_profile.products.calculate_pm_score.awaiting_approval
