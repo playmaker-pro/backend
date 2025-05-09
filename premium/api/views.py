@@ -69,6 +69,6 @@ class ProductView(EndpointView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        premium = profile.premium_products.setup_premium_profile(PremiumType.TRIAL)
+        premium = profile.setup_premium_profile(PremiumType.TRIAL)
         serializer = PremiumProfileProductSerializer(premium)
         return Response(serializer.data)

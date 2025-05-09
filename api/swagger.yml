@@ -141,25 +141,18 @@ paths:
           description: "Unauthorized"
         '400':
           description: "Profile has already test premium."
-  /notifications/{profile_uuid}:
+  /notifications/:
     get:
       operationId: get_notifications
       description: Get notifications
       summary: Get all notifications
       parameters:
-        - in: path
-          name: profile_uuid
-          schema:
-            type: string
-            format: uuid
-          required: true
         - in: query
-          name: latest_only
+          name: unseen
           schema:
             type: boolean
-            default: false
           required: false
-          description: If set to true, only the latest notifications will be returned.
+          description: "Get only unseen notifications"
       tags:
         - notifications
       security:
@@ -175,29 +168,24 @@ paths:
                   $ref: '#/components/schemas/Notification'
         '401':
           description: "Unauthorized"
-  /notifications/{profile_uuid}/{notification_id}:
-    patch:
-      operationId: patch_notifications
+  /notifications/{notification_id}/:
+    post:
+      operationId: mark_notification_as_read
       description: Mark notification as read
+      tags:
+        - notifications
+      security:
+        - jwtAuth: [ ]
       parameters:
-        - in: path
-          name: profile_uuid
-          schema:
-            type: string
-            format: uuid
-          required: true
         - in: path
           name: notification_id
           schema:
             type: integer
           required: true
-      tags:
-        - notifications
-      security:
-        - jwtAuth: [ ]
+          description: "Notification ID"
       responses:
         '200':
-          description: "Notification read"
+          description: "Notification marked as seen"
           content:
             application/json:
               schema:
@@ -7531,32 +7519,29 @@ components:
       properties:
         id:
           type: integer
-        notification_type:
+        title:
           type: string
-        content:
-          type: string
-        is_read:
-          type: boolean
-        created_at:
+        description:
           type: string
         updated_at:
           type: string
-        object_id:
+        seen:
+          type: boolean
+        href:
           type: string
-        redirect_url:
+        icon:
           type: string
-          format: uri
-        user:
-          type: integer
-        content_type:
-          type: integer
-        event_type:
+        picture:
           type: string
-        unread_count:
-          type: integer
-        details:
-          type: object
-          nullable: true
+        picture_profile_role:
+          type: string
+      required:
+        - id
+        - title
+        - description
+        - updated_at
+        - created_at
+        - seen
     PhoneNumber:
       type: object
       nullable: true

@@ -2,6 +2,9 @@
 
 from django.db import migrations
 
+# from inquiries.models import UserInquiry
+# from premium.models import PremiumType
+
 # def reset_all_inquiry_plans(apps, schema_editor):
 #     UserInquiry = apps.get_model("inquiries", "UserInquiry")
 #     InquiryPlan = apps.get_model("inquiries", "InquiryPlan")

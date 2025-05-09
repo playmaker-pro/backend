@@ -1,11 +1,12 @@
 import logging
 
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
-from notifications.mail import mail_role_change_request
-from profiles.tasks import reload_cache_for_transfer_request
+from mailing.deprecated import mail_role_change_request
+from notifications.services import NotificationService
+from profiles.tasks import post_create_profile_tasks
 from users.models import User
 
 from . import models
@@ -66,9 +67,24 @@ def update_calculate_pm_score_product(sender, instance, **kwargs):
         pp.calculate_pm_score.approve(User.get_system_user(), instance.pm_score)
 
 
-@receiver([post_save, post_delete], sender=models.ProfileTransferRequest)
-def reload_cache_on_change(sender, instance, **kwargs):
+@receiver(post_save, sender=models.PlayerProfile)
+@receiver(post_save, sender=models.CoachProfile)
+@receiver(post_save, sender=models.ClubProfile)
+@receiver(post_save, sender=models.ManagerProfile)
+@receiver(post_save, sender=models.ScoutProfile)
+@receiver(post_save, sender=models.GuestProfile)
+def post_create_profile(sender, instance, created, **kwargs):
     """
-    Reload the cache when a profile transfer request is created or updated.
+    Create a profile for the user if it doesn't exist.
     """
-    reload_cache_for_transfer_request.delay()
+    if created:
+        post_create_profile_tasks.delay(instance.__class__.__name__, instance.pk)
+
+
+@receiver(post_save, sender=models.ProfileVisitation)
+def post_profile_visitation(sender, instance, created, **kwargs):
+    """
+    Create a profile visitation for the user if it doesn't exist.
+    """
+    if created:
+        NotificationService(instance.visited.profile.meta).notify_profile_visited()

@@ -1,7 +1,9 @@
+from django.conf import settings
 from django.core.management import BaseCommand
 from django.utils import autoreload
 
 from backend import celery_app
+from backend.settings.config import Environment
 
 
 class Command(BaseCommand):
@@ -26,9 +28,25 @@ class Command(BaseCommand):
 
     def _start_celery_worker(self) -> None:
         """Start celery worker process."""
-        celery_app.worker_main(
-            argv=["worker", "--autoscale=0,4", "--without-mingle", "--without-gossip"]
-        )
+        worker_args = [
+            "worker",
+            "--autoscale=0,4",
+            "--without-mingle",
+            "--without-gossip",
+        ]
+
+        if (
+            settings.CONFIGURATION == Environment.DEV.value
+        ):  # celery beat can be used only in dev env
+            worker_args.extend(
+                [
+                    "--beat",
+                    "--scheduler",
+                    "django",
+                ]
+            )
+
+        celery_app.worker_main(argv=worker_args)
 
     def handle(self, *args, **options):
         autoreload.run_with_reloader(self.restart_celery_worker)

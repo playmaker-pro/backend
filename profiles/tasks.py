@@ -1,10 +1,21 @@
 from celery import shared_task
-from django.core.cache import cache
+
+from notifications.services import NotificationService
+from profiles import models
 
 
 @shared_task
-def reload_cache_for_transfer_request(*args, **kwargs):
+def post_create_profile_tasks(class_name: str, profile_id: int) -> None:
     """
-    Reload the cache for a transfer request.
+    Create a profile for the user if it doesn't exist.
     """
-    cache.delete_pattern("*transfer-requests*")
+
+    model = getattr(models, class_name)
+    profile: models.BaseProfile = model.objects.get(pk=profile_id)
+
+    profile.ensure_verification_stage_exist(commit=False)
+    profile.ensure_premium_products_exist(commit=False)
+    profile.ensure_visitation_exist(commit=False)
+    profile.ensure_meta_exist(commit=False)
+    profile.save()
+    NotificationService(profile.meta).notify_welcome()

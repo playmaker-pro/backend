@@ -116,56 +116,52 @@ class TestCreateProfileAPI(APITestCase):
         )
         self.url = reverse("api:profiles:create_or_list_profiles")
 
-    @parameterized.expand(
-        [
-            [{"role": "Piłkarz"}],
-            [{"role": "s"}],
-            [{"r0l3": "P"}],
-        ]
-    )
+    @parameterized.expand([
+        [{"role": "Piłkarz"}],
+        [{"role": "s"}],
+        [{"r0l3": "P"}],
+    ])
     def test_post_incorrect_role(self, payload: dict) -> None:
         """Test HTTP_400 if request has wrong defined role"""
         response = self.client.post(self.url, json.dumps(payload), **self.headers)
 
         assert response.status_code == 400
 
-    @parameterized.expand(
+    @parameterized.expand([
         [
-            [
-                {
-                    "role": "P",
-                    "height": 180,
-                    "weight": 75,
-                    "practice_distance": 20,
-                    "prefered_leg": 1,
-                },
-            ],
-            [
-                {
-                    "role": "P",
-                    "team_object_id": 1,
-                }
-            ],
-            [
-                {
-                    "role": "T",
-                    "licence": 1,
-                    "team_object_id": 1,
-                    "soccer_goal": 2,
-                }
-            ],
-            [
-                {
-                    "role": "C",
-                    "club_object_id": 1,
-                    "club_role": CLUB_ROLE_TEAM_LEADER,
-                    "phone": "111222333",
-                }
-            ],
-            [{"role": "S", "soccer_goal": 2, "bio": "jakiesbio"}],
-            [{"role": "G", "custom_role": "fizjoterapeuta"}],
-        ]
-    )
+            {
+                "role": "P",
+                "height": 180,
+                "weight": 75,
+                "practice_distance": 20,
+                "prefered_leg": 1,
+            },
+        ],
+        [
+            {
+                "role": "P",
+                "team_object_id": 1,
+            }
+        ],
+        [
+            {
+                "role": "T",
+                "licence": 1,
+                "team_object_id": 1,
+                "soccer_goal": 2,
+            }
+        ],
+        [
+            {
+                "role": "C",
+                "club_object_id": 1,
+                "club_role": CLUB_ROLE_TEAM_LEADER,
+                "phone": "111222333",
+            }
+        ],
+        [{"role": "S", "soccer_goal": 2, "bio": "jakiesbio"}],
+        [{"role": "G", "custom_role": "fizjoterapeuta"}],
+    ])
     def test_successfully_create_profile_for_new_user(self, payload: dict) -> None:
         """Test creating profiles with correctly passed payload"""
         self.manager.login(self.user_obj)
@@ -251,12 +247,10 @@ class TestUpdateProfileAPI(APITestCase):
     def test_patch_user_is_not_an_owner_of_profile(self) -> None:
         """request should return 400 if requestor is not an owner of updated profile"""
         dummy_user = factories.UserFactory.create()
-        profile = utils.create_empty_profile(
-            **{
-                "user_id": dummy_user.pk,
-                "role": "P",
-            }
-        )
+        profile = utils.create_empty_profile(**{
+            "user_id": dummy_user.pk,
+            "role": "P",
+        })
         profile_uuid = str(profile.uuid)
         response = self.client.patch(self.url(profile_uuid), {}, **self.headers)
 
@@ -264,12 +258,10 @@ class TestUpdateProfileAPI(APITestCase):
 
     def test_patch_need_authentication(self) -> None:
         """patch request should require authentication"""
-        profile = utils.create_empty_profile(
-            **{
-                "user_id": self.user_obj.pk,
-                "role": "S",
-            }
-        )
+        profile = utils.create_empty_profile(**{
+            "user_id": self.user_obj.pk,
+            "role": "S",
+        })
         profile_uuid = str(profile.uuid)
         response = self.client.patch(
             self.url(profile_uuid),
@@ -286,62 +278,60 @@ class TestUpdateProfileAPI(APITestCase):
 
         assert response.status_code == 404
 
-    @parameterized.expand(
+    @parameterized.expand([
         [
-            [
-                {
-                    "role": "P",
+            {
+                "role": "P",
+            },
+            {
+                "height": 180,
+                "weight": 75,
+                "prefered_leg": 1,
+            },
+        ],
+        [
+            {
+                "role": "P",
+            },
+            {
+                "user": {
+                    "first_name": "LukaszLukasinski",
+                    "last_name": "Lukasinski",
                 },
-                {
-                    "height": 180,
-                    "weight": 75,
-                    "prefered_leg": 1,
+                "training_ready": 1,
+            },
+        ],
+        [
+            {
+                "role": "C",
+            },
+            {
+                "club_role": "DSp",
+                "user": {"userpreferences": {"birth_date": "1990-01-01"}},
+            },
+        ],
+        [
+            {
+                "role": "S",
+            },
+            {
+                "user": {
+                    "first_name": "scout",
+                    "last_name": "test",
                 },
-            ],
-            [
-                {
-                    "role": "P",
-                },
-                {
-                    "user": {
-                        "first_name": "LukaszLukasinski",
-                        "last_name": "Lukasinski",
-                    },
-                    "training_ready": 1,
-                },
-            ],
-            [
-                {
-                    "role": "C",
-                },
-                {
-                    "club_role": "DSp",
-                    "user": {"userpreferences": {"birth_date": "1990-01-01"}},
-                },
-            ],
-            [
-                {
-                    "role": "S",
-                },
-                {
-                    "user": {
-                        "first_name": "scout",
-                        "last_name": "test",
-                    },
-                },
-            ],
-            [
-                {
-                    "role": "M",
-                },
-                {
-                    "phone_number": {"dial_code": "+9", "agency_phone": "+333333333"},
-                    "agency_email": "example@example.com",
-                    "agency_transfermarkt_url": "https://www.transfermarkt.com/example",
-                },
-            ],
-        ]
-    )
+            },
+        ],
+        [
+            {
+                "role": "M",
+            },
+            {
+                "phone_number": {"dial_code": "+9", "agency_phone": "+333333333"},
+                "agency_email": "example@example.com",
+                "agency_transfermarkt_url": "https://www.transfermarkt.com/example",
+            },
+        ],
+    ])
     def test_successfully_patch_profile_for_new_user(
         self, init_profile: dict, payload: dict
     ) -> None:
@@ -379,12 +369,10 @@ class TestUpdateProfileAPI(APITestCase):
 
     def test_coach_profile_patch_method_complex_payload(self) -> None:
         """Test updating coach profiles with correctly passed payload"""
-        profile = utils.create_empty_profile(
-            **{
-                "user_id": self.user_obj.pk,
-                "role": "T",
-            }
-        )
+        profile = utils.create_empty_profile(**{
+            "user_id": self.user_obj.pk,
+            "role": "T",
+        })
         payload = {
             "coach_role": "IIC",
         }
@@ -406,15 +394,13 @@ class TestUpdateProfileAPI(APITestCase):
         for attr, val in expected_response.items():
             assert response.data.get(attr) == val
 
-    @parameterized.expand(
-        [
-            ("birth_date", "2001-11-14"),
-            ("localization", 1),
-            ("spoken_languages", ["PL"]),
-            ("citizenship", ["UA"]),
-            ("gender", "M"),
-        ]
-    )
+    @parameterized.expand([
+        ("birth_date", "2001-11-14"),
+        ("localization", 1),
+        ("spoken_languages", ["PL"]),
+        ("citizenship", ["UA"]),
+        ("gender", "M"),
+    ])
     def test_patch_user_userpreferences(self, key, val) -> None:
         """Test updating userpreferences with correctly passed payload"""
         factories.UserPreferencesFactory.create(user_id=self.user_obj.pk, gender=None)
@@ -490,40 +476,38 @@ class TestUpdateProfileAPI(APITestCase):
         assert response.status_code == 200
         assert "verification_stage" not in response.data
 
-    @parameterized.expand(
-        [
-            # Testing coach roles
-            ("T", "coach_role", "custom_coach_role", "OTC", "Custom Role", "IIC", None),
-            (
-                "T",
-                "coach_role",
-                "custom_coach_role",
-                "IIC",
-                None,
-                "OTC",
-                "Custom Role II",
-            ),
-            # Testing club roles
-            (
-                "C",
-                "club_role",
-                "custom_club_role",
-                "O",
-                "Custom Club Role",
-                "DSp",
-                None,
-            ),
-            (
-                "C",
-                "club_role",
-                "custom_club_role",
-                "DSp",
-                None,
-                "O",
-                "Custom Club Role II",
-            ),
-        ]
-    )
+    @parameterized.expand([
+        # Testing coach roles
+        ("T", "coach_role", "custom_coach_role", "OTC", "Custom Role", "IIC", None),
+        (
+            "T",
+            "coach_role",
+            "custom_coach_role",
+            "IIC",
+            None,
+            "OTC",
+            "Custom Role II",
+        ),
+        # Testing club roles
+        (
+            "C",
+            "club_role",
+            "custom_club_role",
+            "O",
+            "Custom Club Role",
+            "DSp",
+            None,
+        ),
+        (
+            "C",
+            "club_role",
+            "custom_club_role",
+            "DSp",
+            None,
+            "O",
+            "Custom Club Role II",
+        ),
+    ])
     def test_role_updates(
         self,
         role,
@@ -535,14 +519,12 @@ class TestUpdateProfileAPI(APITestCase):
         expected_custom_role,
     ):
         """Test updating role and custom role fields."""
-        profile = utils.create_empty_profile(
-            **{
-                "user_id": self.user_obj.pk,
-                "role": role,
-                role_field: initial_role,
-                custom_role_field: initial_custom_role,
-            }
-        )
+        profile = utils.create_empty_profile(**{
+            "user_id": self.user_obj.pk,
+            "role": role,
+            role_field: initial_role,
+            custom_role_field: initial_custom_role,
+        })
         payload = {role_field: updated_role}
         if updated_role in ["OTC", "O"]:
             payload[custom_role_field] = expected_custom_role
@@ -555,36 +537,34 @@ class TestUpdateProfileAPI(APITestCase):
         assert getattr(profile, role_field) == updated_role
         assert getattr(profile, custom_role_field) == expected_custom_role
 
-    @parameterized.expand(
-        [
-            # Testing for player profile
-            (
-                "birth_date",
-                date_years_ago(20),
-                "citizenship",
-                ["PL"],
-                "P",
-                "YOUTH",
-            ),
-            # Testing for coach profile
-            (
-                "birth_date",
-                date_years_ago(38),
-                None,
-                None,
-                "T",
-                "COACH_AGE_40",
-            ),
-            (
-                "birth_date",
-                date_years_ago(28),
-                None,
-                None,
-                "T",
-                "COACH_AGE_30",
-            ),
-        ]
-    )
+    @parameterized.expand([
+        # Testing for player profile
+        (
+            "birth_date",
+            date_years_ago(20),
+            "citizenship",
+            ["PL"],
+            "P",
+            "YOUTH",
+        ),
+        # Testing for coach profile
+        (
+            "birth_date",
+            date_years_ago(38),
+            None,
+            None,
+            "T",
+            "COACH_AGE_40",
+        ),
+        (
+            "birth_date",
+            date_years_ago(28),
+            None,
+            None,
+            "T",
+            "COACH_AGE_30",
+        ),
+    ])
     def test_patch_user_userpreferences_and_label_assignment_for_coach_and_player(
         self, key1, val1, key2, val2, profile_type, expected_label
     ) -> None:
@@ -612,22 +592,20 @@ class TestUpdateProfileAPI(APITestCase):
         # Assert label existence
         assert label_exists, f"{expected_label} label not assigned as expected"
 
-    @parameterized.expand(
-        [
-            # Testing removal of Młodzieżowiec label for player profile
-            (
-                "birth_date",
-                "1991-01-01",
-                "citizenship",
-                ["DE"],
-                "P",
-                "YOUTH",
-                False,
-            ),
-            # Testing removal of Trener przed 30 labels for coach profile
-            ("birth_date", "1980-01-01", None, None, "T", "COACH_AGE_30", False),
-        ]
-    )
+    @parameterized.expand([
+        # Testing removal of Młodzieżowiec label for player profile
+        (
+            "birth_date",
+            "1991-01-01",
+            "citizenship",
+            ["DE"],
+            "P",
+            "YOUTH",
+            False,
+        ),
+        # Testing removal of Trener przed 30 labels for coach profile
+        ("birth_date", "1980-01-01", None, None, "T", "COACH_AGE_30", False),
+    ])
     def test_userpreferences_update_removes_label_if_no_longer_applicable(
         self, key1, val1, key2, val2, profile_type, label_to_check, expected_existence
     ):
@@ -666,9 +644,9 @@ class TestUpdateProfileAPI(APITestCase):
         ).exists()
 
         # Assert label existence or non-existence based on the test case
-        assert (
-            label_exists == expected_existence
-        ), f"Label '{label_to_check}' existence not as expected"
+        assert label_exists == expected_existence, (
+            f"Label '{label_to_check}' existence not as expected"
+        )
 
     def test_goalkeeper_height_label_assignment(self):
         """
@@ -1224,12 +1202,10 @@ class TestSetMainProfileAPI(APITestCase):
     def test_set_main_profile(self, role: str) -> None:
         """Test setting declared_role on user"""
         assert self.user_obj.declared_role != role
-        utils.create_empty_profile(
-            **{
-                "user_id": self.user_obj.pk,
-                "role": role,
-            }
-        )
+        utils.create_empty_profile(**{
+            "user_id": self.user_obj.pk,
+            "role": role,
+        })
         response = self.client.post(
             self.url,
             json.dumps({"declared_role": role}),
@@ -1263,7 +1239,7 @@ class TestSetMainProfileAPI(APITestCase):
 
 
 class TestProfileVisitHistory(APITestCase):
-    @factory.django.mute_signals(signals.pre_save, signals.post_save)
+    # @factory.django.mute_signals(signals.pre_save, signals.post_save)
     def setUp(self) -> None:
         """set up object factories"""
         self.client: APIClient = APIClient()

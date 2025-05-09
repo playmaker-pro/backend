@@ -31,7 +31,13 @@ from adapters.player_adapter import (
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_profile_external_links
 from mapper.models import Mapper
-from premium.models import PremiumProduct, PremiumProfile, PromoteProfileProduct
+from premium.models import (
+    PremiumProduct,
+    PremiumProfile,
+    PremiumType,
+    PromoteProfileProduct,
+)
+from premium.tasks import setup_premium_profile
 from profiles.errors import VerificationCompletionFieldsWrongSetup
 from profiles.managers import ProfileManager
 from profiles.mixins import TeamObjectsDisplayMixin
@@ -291,7 +297,6 @@ class BaseProfile(models.Model, EventLogMixin):
 
     labels = GenericRelation("labels.Label")
     follows = GenericRelation("followers.GenericFollow")
-    notifications = GenericRelation("notifications.Notification")
     transfer_status_related = GenericRelation(
         "ProfileTransferStatus", related_query_name="transfer_status_related"
     )
@@ -304,6 +309,13 @@ class BaseProfile(models.Model, EventLogMixin):
 
     premium_products = models.OneToOneField(
         "premium.PremiumProduct",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    meta = models.OneToOneField(
+        "ProfileMeta",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -469,35 +481,52 @@ class BaseProfile(models.Model, EventLogMixin):
         return cls._video_labels.choices
 
     @property
+    def products(self) -> PremiumProduct:
+        """Get premium products for profile"""
+        try:
+            self.refresh_from_db()
+            return self.premium_products
+        except Exception:
+            return self.premium_products
+
+    @property
     def is_promoted(self) -> bool:
         """Check if profile is promoted"""
-        return self.premium_products.is_profile_promoted
+        return self.products.is_profile_promoted
 
     @property
     def promotion(self) -> PromoteProfileProduct:
         if self.is_promoted:
-            return self.premium_products.promotion
+            return self.products.promotion
 
     @property
     def is_premium(self) -> bool:
         """Check if profile is promoted"""
-        return self.premium_products.is_profile_premium
+        return self.products.is_profile_premium
 
     @property
     def premium(self) -> PremiumProfile:
         if self.is_premium:
-            return self.premium_products.premium
+            return self.products.premium
 
     @property
     def premium_already_tested(self) -> bool:
-        return self.premium_products.trial_tested
+        return self.products.trial_tested
 
     @property
     def has_premium_inquiries(self) -> bool:
         """Check if profile has premium inquiries"""
-        if self.premium_products:
-            return self.premium_products.is_premium_inquiries_active
+        if p := self.products:
+            return p.is_premium_inquiries_active
         return False
+
+    def setup_premium_profile(
+        self, premium_type: PremiumType = PremiumType.TRIAL, period: int = None
+    ) -> None:
+        """Setup premium profile"""
+        return setup_premium_profile(
+            self.pk, self.__class__.__name__, premium_type.value, period
+        )
 
     def ensure_premium_products_exist(self, commit: bool = True) -> None:
         """Create PremiumProduct for profile if it doesn't exist"""
@@ -512,26 +541,24 @@ class BaseProfile(models.Model, EventLogMixin):
             if commit:
                 self.save()
 
+    def ensure_meta_exist(self, commit: bool = True) -> None:
+        if self.meta is None:
+            self.meta = ProfileMeta.objects.create(
+                _profile_class=self.__class__.__name__,
+                user=self.user,
+            )
+            if commit:
+                self.save()
+
     def save(self, *args, **kwargs):
         if self._state.adding:
             self.user.declared_role = definitions.PROFILE_TYPE_SHORT_MAP[
                 self.PROFILE_TYPE
             ]
             self.user.save(update_fields=["declared_role"])
-
-        self.ensure_verification_stage_exist(commit=False)
-        self.ensure_visitation_exist(commit=False)
-
         # When profile changes, update data score level
         profile_manager: ProfileManager = ProfileManager()
         self.data_fulfill_status: str = profile_manager.get_data_score(self)
-
-        try:
-            obj_before_save = obj = (
-                type(self).objects.get(pk=self.pk) if self.pk else None
-            )
-        except type(self).DoesNotExist:
-            obj_before_save = None
 
         # Use Polish profile type for slug
         polish_profile_type = profile_utils.profile_type_english_to_polish.get(
@@ -542,24 +569,12 @@ class BaseProfile(models.Model, EventLogMixin):
 
         profile_utils.unique_slugify(self, slug_str)
 
-        if obj_before_save is not None:
-            before_datamapper = obj.data_mapper_id
-        else:
-            before_datamapper = None
-
         # If there is no verification object set we need to create initial for that
         if self.verification is None and self.user.is_need_verfication_role:
             self.verification = ProfileVerificationStatus.create_initial(self.user)
 
         # Queen of the show
         super().save(*args, **kwargs)
-
-        self.ensure_premium_products_exist()
-
-        if self.data_mapper_id != before_datamapper:
-            self.data_mapper_changed = True
-        else:
-            self.data_mapper_changed = False
 
     def get_verification_data_from_profile(self, owner: User = None) -> dict:
         """Based on user porfile get default verification-status data."""
@@ -805,8 +820,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             return self.team_object_alt
         return self.team_object
 
-    meta = models.JSONField(null=True, blank=True)
-    meta_updated = models.DateTimeField(null=True, blank=True)
     team_club_league_voivodeship_ver = models.CharField(
         _("team_club_league_voivodeship_ver"),
         max_length=355,
@@ -1027,29 +1040,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
             return self.position_fantasy
         else:
             return None
-
-    def has_meta_entry_for(self, season: str):
-        """checks if meta info exists for given season"""
-
-        if self.meta is None:
-            return None
-        return self.meta.get(season, None) is not None
-
-    def calculate_fantasy_object(self, *args, **kwargs):
-        season = utilites.get_current_season()
-        if not self.has_meta_entry_for(season):
-            msg = (
-                'Cannot calculate fantasy data object do not have "meta" '
-                f'or "meta" data do not have data for season={season}'
-            )
-            self.add_event_log_message(msg)
-            return
-
-        from fantasy.models import CalculateFantasyStats
-
-        f = CalculateFantasyStats()
-        f.calculate_fantasy_for_player(self, season, is_senior=True)
-        f.calculate_fantasy_for_player(self, season, is_senior=False)
 
     def get_team_object_based_on_meta(self, season_name, retries: int = 3):
         """set TeamObject based on meta data"""
@@ -2484,8 +2474,7 @@ class TeamContributor(models.Model):
         max_length=50,
         choices=CoachProfile.COACH_ROLE_CHOICES + definitions.CLUB_ROLES,
         help_text=_(
-            "Role of the contributor in the team. "
-            "Role specified for club/coach profile"
+            "Role of the contributor in the team. Role specified for club/coach profile"
         ),
         null=True,
         blank=True,
@@ -2826,6 +2815,31 @@ class Catalog(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ProfileMeta(models.Model):
+    _profile_class = models.CharField(max_length=20)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="meta_profile",
+        null=True,
+        blank=True,
+    )
+
+    @property
+    def profile(self) -> "PROFILE_TYPE":
+        """
+        Returns the profile object associated with this meta instance.
+        """
+        return getattr(self, self._profile_class.lower())
+
+    def __str__(self) -> None:
+        return f"Meta of {self.profile}"
+
+    class Meta:
+        verbose_name = "Meta"
+        verbose_name_plural = "Metas"
 
 
 PROFILE_MODELS = (

@@ -4,7 +4,7 @@ from django import forms
 from django.apps import apps
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Field, ForeignKey, OneToOneField, QuerySet
+from django.db.models import Field, QuerySet
 from django.forms.models import ModelChoiceField
 from django.http import HttpRequest
 from django.urls import reverse
@@ -15,18 +15,7 @@ from app.utils.admin import json_filed_data_prettified
 from clubs.models import League
 from profiles import models
 from profiles.admin import filters
-from profiles.admin.actions import (
-    calculate_fantasy,
-    calculate_metrics,
-    fetch_data_player_meta,
-    refresh,
-    set_team_object_based_on_meta,
-    trigger_refresh_data_player_stats,
-    update_pm_score,
-    update_scoring,
-    update_season_score,
-    update_with_profile_data,
-)
+from profiles.admin.actions import *
 from profiles.admin.mixins import RemoveM2MDuplicatesMixin
 from profiles.models import PROFILE_TYPES_AS_STRING, BaseProfile
 from profiles.services import ProfileService
@@ -644,3 +633,20 @@ class VisitationAdmin(admin.ModelAdmin):
     """Admin for Visitation model."""
 
     ...
+
+
+@admin.register(models.ProfileMeta)
+class ProfileMetaAdmin(admin.ModelAdmin):
+    """Admin for ProfileMeta model."""
+
+    search_fields = (
+        "user__email",
+        "user__first_name",
+        "user__last_name",
+    )
+    list_display = (
+        "pk",
+        linkify("profile"),
+    )
+    readonly_fields = ("_profile_class", "user")
+    actions = [bind_reccurrent_notifications]

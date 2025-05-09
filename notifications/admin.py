@@ -3,11 +3,11 @@ from django.contrib import admin
 from . import models
 
 
-@admin.register(models.NotificationSetting)
-class NotificationSettingAdmin(admin.ModelAdmin):
-    pass
-
-
 @admin.register(models.Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    pass
+    search_fields = (
+        "meta__user__first_name",
+        "meta__user__last_name",
+        "meta__user__email",
+    )
+    autocomplete_fields = ("target",)

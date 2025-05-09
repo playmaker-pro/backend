@@ -4,7 +4,8 @@ from datetime import timedelta
 from django.conf import settings
 
 from .models import AnnouncementPlan, AnnouncementUserQuota
-from .notify import notify_duplicated_default_annoucement_plan
+
+# from .notify import notify_duplicated_default_annoucement_plan
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class MarketPlaceService:
     def set_user_plan(self, user):
         plan = self.get_plan()
         if plan is None:
-            notify_duplicated_default_annoucement_plan(user)
+            # notify_duplicated_default_annoucement_plan(user)
             return
         auq, created = AnnouncementUserQuota.objects.get_or_create(
             pk=user.pk, defaults={"plan": plan}

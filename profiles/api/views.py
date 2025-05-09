@@ -1200,9 +1200,7 @@ class TransferRequestCatalogueAPIView(EndpointViewWithFilter):
     queryset = ProfileTransferRequest.objects.all().order_by("-created_at")
     filterset_class = TransferRequestCatalogueFilter
 
-    @method_decorator(
-        cache_page(settings.DEFAULT_CACHE_LIFESPAN, key_prefix="transfer-requests")
-    )
+    @method_decorator(cache_page(settings.DEFAULT_CACHE_LIFESPAN))
     def list_transfer_requests(self, request: Request) -> Response:
         """Retrieve and display transfer requests."""
         queryset = self.get_queryset()

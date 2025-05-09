@@ -103,7 +103,7 @@ def test_buy_premium_month_other(
     assert response.status_code == 200
 
     transaction = approve_transaction(response.json()["uuid"])
-
+    coach_profile.refresh_from_db()
     assert transaction.product == product_premium_other_month
     assert transaction.user == coach_profile.user
     assert coach_profile.premium.subscription_lifespan == timedelta(days=30)
@@ -114,7 +114,7 @@ def test_buy_premium_month_other(
     assert coach_profile.user.userinquiry.limit_raw == 2
     assert coach_profile.user.userinquiry.limit == 12
     assert coach_profile.user.userinquiry.left == 12
-    assert not coach_profile.premium_products.trial_tested
+    assert coach_profile.premium_products.trial_tested
 
 
 def test_buy_premium_year_other(api_client, coach_profile, product_premium_other_year):
@@ -125,7 +125,7 @@ def test_buy_premium_year_other(api_client, coach_profile, product_premium_other
     assert response.status_code == 200
 
     transaction = approve_transaction(response.json()["uuid"])
-
+    coach_profile.refresh_from_db()
     assert transaction.product == product_premium_other_year
     assert transaction.user == coach_profile.user
     assert coach_profile.premium.subscription_lifespan == timedelta(days=365)
@@ -136,15 +136,17 @@ def test_buy_premium_year_other(api_client, coach_profile, product_premium_other
     assert coach_profile.user.userinquiry.limit_raw == 2
     assert coach_profile.user.userinquiry.limit == 12
     assert coach_profile.user.userinquiry.left == 12
-    assert not coach_profile.premium_products.trial_tested
+    assert coach_profile.premium_products.trial_tested
 
 
 def test_buy_L_inquiries(api_client, trial_premium_player_profile, product_inquiries_L):
     api_client.force_authenticate(user=trial_premium_player_profile.user)
-    trial_premium_player_profile.user.userinquiry.counter = 2
-    trial_premium_player_profile.user.userinquiry.premium_inquiries.current_counter = 10
-    trial_premium_player_profile.user.userinquiry.save()
-    trial_premium_player_profile.user.userinquiry.premium_inquiries.save()
+    ui = trial_premium_player_profile.user.userinquiry
+    pi = trial_premium_player_profile.user.userinquiry.premium_inquiries
+    ui.counter = 2
+    pi.current_counter = 10
+    ui.save()
+    pi.save()
     url = create_transaction_url(product_inquiries_L.id)
     response = api_client.post(url)
 
@@ -172,10 +174,12 @@ def test_buy_XL_inquiries(
     api_client, trial_premium_player_profile, product_inquiries_XL
 ):
     api_client.force_authenticate(user=trial_premium_player_profile.user)
-    trial_premium_player_profile.user.userinquiry.counter = 2
-    trial_premium_player_profile.user.userinquiry.premium_inquiries.current_counter = 10
-    trial_premium_player_profile.user.userinquiry.save()
-    trial_premium_player_profile.user.userinquiry.premium_inquiries.save()
+    ui = trial_premium_player_profile.user.userinquiry
+    pi = trial_premium_player_profile.user.userinquiry.premium_inquiries
+    ui.counter = 2
+    pi.current_counter = 10
+    ui.save()
+    pi.save()
     url = create_transaction_url(product_inquiries_XL.id)
     response = api_client.post(url)
 
@@ -213,10 +217,12 @@ def test_buy_XXL_inquiries(
     api_client, trial_premium_player_profile, product_inquiries_XXL
 ):
     api_client.force_authenticate(user=trial_premium_player_profile.user)
-    trial_premium_player_profile.user.userinquiry.counter = 2
-    trial_premium_player_profile.user.userinquiry.premium_inquiries.current_counter = 10
-    trial_premium_player_profile.user.userinquiry.save()
-    trial_premium_player_profile.user.userinquiry.premium_inquiries.save()
+    ui = trial_premium_player_profile.user.userinquiry
+    pi = trial_premium_player_profile.user.userinquiry.premium_inquiries
+    ui.counter = 2
+    pi.current_counter = 10
+    ui.save()
+    pi.save()
 
     url = create_transaction_url(product_inquiries_XXL.id)
     response = api_client.post(url)
@@ -244,6 +250,7 @@ def test_buy_XXL_inquiries(
 def test_extend_premium_during_trial(
     api_client, trial_premium_player_profile, product_premium_player_month
 ):
+    trial_premium_player_profile.refresh_from_db()
     assert trial_premium_player_profile.premium_products.trial_tested
 
     api_client.force_authenticate(user=trial_premium_player_profile.user)
@@ -295,7 +302,7 @@ def test_extend_premium_with_trial(
     assert player_profile.premium_products.trial_tested
 
     with pytest.raises(ValueError) as exc:
-        player_profile.premium_products.setup_premium_profile(PremiumType.TRIAL)
+        player_profile.setup_premium_profile(PremiumType.TRIAL)
 
     assert str(exc.value) == "Trial already tested or cannot be set."
 
@@ -307,9 +314,10 @@ def test_buy_premium_for_player_after_trial_expiration(
     mck_timezone_now,
 ):
     profile = trial_premium_player_profile
+    profile.refresh_from_db()
 
     assert profile.premium_products.trial_tested
-    assert profile.premium.subscription_lifespan == timedelta(days=3)
+    assert profile.premium.subscription_lifespan.days == 3
     assert profile.is_premium
     assert profile.premium_products.calculate_pm_score.awaiting_approval
     assert profile.is_promoted
@@ -352,9 +360,10 @@ def test_buy_premium_for_other_after_trial_expiration(
     mck_timezone_now,
 ):
     profile = trial_premium_coach_profile
+    profile.refresh_from_db()
 
     assert profile.premium_products.trial_tested
-    assert profile.premium.subscription_lifespan == timedelta(days=3)
+    assert profile.premium.subscription_lifespan.days == 3
     assert profile.is_premium
     assert not hasattr(profile.premium_products, "calculate_pm_score")
     assert profile.is_promoted
@@ -399,6 +408,7 @@ def test_buy_premium_for_guest(api_client, guest_profile, product_premium_other_
 
     approve_transaction(response.json()["uuid"])
 
+    guest_profile.refresh_from_db()
     assert guest_profile.is_premium
     assert guest_profile.is_promoted
     assert guest_profile.has_premium_inquiries

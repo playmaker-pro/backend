@@ -90,9 +90,9 @@ class TestProfileListAPI(APITestCase):
         response2 = self.client.get(self.url, {"role": "P"})
 
         # Assert that the two responses within the same session are identical
-        assert (
-            response1.data["results"] == response2.data["results"]
-        ), "Shuffled results should be consistent within the same session"
+        assert response1.data["results"] == response2.data["results"], (
+            "Shuffled results should be consistent within the same session"
+        )
 
     @parameterized.expand([[{"role": "P"}], [{"role": "C"}], [{"role": "T"}]])
     def test_get_bulk_profiles(self, param) -> None:
@@ -177,15 +177,16 @@ class TestProfileListAPI(APITestCase):
 
     def test_get_bulk_profiles_filter_position(self) -> None:
         """get player profiles filter by position"""
-        player1 = factories.PlayerProfileFactory.create(
-            player_positions__player_position__shortcut="CAM",
-            player_positions__is_main=True,
+        player1 = factories.PlayerProfileFactory.create()
+        player2 = factories.PlayerProfileFactory.create()
+        factories.PlayerProfilePositionFactory.create(
+            player_position__shortcut="GK", is_main=True, player_profile=player1
         )
-        player2 = factories.PlayerProfileFactory.create(
-            player_positions__player_position__shortcut="GK",
-            player_positions__is_main=True,
+        factories.PlayerProfilePositionFactory.create(
+            player_position__shortcut="CAM", is_main=True, player_profile=player2
         )
-
+        player1.refresh_from_db()
+        player2.refresh_from_db()
         player1_position_id = player1.player_positions.first().player_position.id
         player2_position_id = player2.player_positions.first().player_position.id
 
@@ -217,13 +218,11 @@ class TestProfileListAPI(APITestCase):
         assert count_response.status_code == 200
         assert count_response.data["count"] == 2
 
-    @parameterized.expand(
-        [
-            ({"role": "P"}, "PlayerProfileFactory"),
-            ({"role": "T"}, "CoachProfileFactory"),
-            ({"role": "C"}, "ClubProfileFactory"),
-        ]
-    )
+    @parameterized.expand([
+        ({"role": "P"}, "PlayerProfileFactory"),
+        ({"role": "T"}, "CoachProfileFactory"),
+        ({"role": "C"}, "ClubProfileFactory"),
+    ])
     def test_get_bulk_profiles_filter_league(self, param, factory_name) -> None:
         """test league filter"""
         factory = getattr(factories, factory_name)
@@ -892,13 +891,11 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
         self.url = reverse(url)
         self.count_url = reverse(count_url)
 
-    @parameterized.expand(
-        [
-            [{"role": "P", "gender": "K"}],
-            [{"role": "P", "gender": "M"}],
-            [{"role": "P", "gender": "Male"}],
-        ]
-    )
+    @parameterized.expand([
+        [{"role": "P", "gender": "K"}],
+        [{"role": "P", "gender": "M"}],
+        [{"role": "P", "gender": "Male"}],
+    ])
     def test_get_bulk_profiles_by_gender(self, param) -> None:
         """get profiles by gender"""
         PlayerProfileFactory.create_batch(10)
@@ -916,9 +913,10 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
         assert count_response.data["count"] == expected_count
         assert count_response.status_code == 200
 
-    @parameterized.expand(
-        [[{"role": "P", "gender": "K"}], [{"role": "P", "gender": "M"}]]
-    )
+    @parameterized.expand([
+        [{"role": "P", "gender": "K"}],
+        [{"role": "P", "gender": "M"}],
+    ])
     def test_get_bulk_profiles_by_gender_res_0(self, param) -> None:
         """get profiles by gender. Result should be 0"""
         PlayerProfileFactory.create_batch(10, user__userpreferences__gender=None)
@@ -951,7 +949,7 @@ def test_if_response_is_ordered_by_data_score(
     profiles: List[PlayerProfile] = PlayerProfileFactory.create_batch(5)
 
     expected_response = [
-        obj.data_fulfill_status
+        int(obj.data_fulfill_status)
         for obj in sorted(profiles, key=lambda x: x.data_fulfill_status)
     ]
 
@@ -1049,7 +1047,7 @@ def test_sort_player_profiles_promoted_and_last_activity_first(
 
     # Promoted player with latest activity
     player1 = PlayerProfileFactory.create()
-    player1.premium_products.setup_premium_profile()
+    player1.setup_premium_profile()
     player1.user.update_activity()
 
     PlayerProfileFactory.create(
@@ -1064,7 +1062,7 @@ def test_sort_player_profiles_promoted_and_last_activity_first(
 
     # Promoted player with 1 day old activity
     player3 = PlayerProfileFactory.create()
-    player3.premium_products.setup_premium_profile()
+    player3.setup_premium_profile()
     player3.user.update_activity()
 
     # Not promoted player with 1 day old activity
@@ -1079,7 +1077,7 @@ def test_sort_player_profiles_promoted_and_last_activity_first(
 
     # Promoted player with 2 days old activity
     player5 = PlayerProfileFactory.create()
-    player5.premium_products.setup_premium_profile()
+    player5.setup_premium_profile()
     player5.user.update_activity()
 
     # Not promoted player with 2 days old activity

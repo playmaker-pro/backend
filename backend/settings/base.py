@@ -46,8 +46,6 @@ INSTALLED_APPS = [
     "users",
     "profiles",
     "transfers",
-    # "contact",
-    # Deprecation(rkesik): since we are working on a new FE
     "followers",
     "inquiries",
     "clubs",
@@ -99,6 +97,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "django_filters",
     "django_cleanup.apps.CleanupConfig",  # delete old files/images on update
+    "django_celery_beat",
 ]
 
 SWAGGER_SETTINGS = {
@@ -536,6 +535,10 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_WORKER_LOGLEVEL = "info"
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_TASK_TIME_LIMIT = 60 * 60
+CELERY_TIMEZONE = TIME_ZONE
+
 
 # Redis & stream activity
 STREAM_REDIS_CONFIG = {
