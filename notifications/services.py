@@ -148,7 +148,7 @@ class NotificationService:
         self.create_notification(body)
 
     @classmethod
-    def bulk_notify_pm_rank(cls, meta: ProfileMeta) -> None:
+    def bulk_notify_pm_rank(cls) -> None:
         """
         Send notifications for new PM rankings.
         """
@@ -165,7 +165,7 @@ class NotificationService:
         self.create_notification(body)
 
     @classmethod
-    def bulk_notify_visits_summary(cls, meta: ProfileMeta) -> None:
+    def bulk_notify_visits_summary(cls) -> None:
         """
         Send notifications for users with new visit summaries.
         """
@@ -241,7 +241,7 @@ class NotificationService:
         self.create_notification(body)
 
     @classmethod
-    def bulk_notify_set_transfer_requests(cls, meta: ProfileMeta) -> None:
+    def bulk_notify_set_transfer_requests(cls) -> None:
         """
         Send notifications for setting transfer requests.
         """
@@ -376,15 +376,15 @@ class NotificationService:
         """
         Bind all notifications to the user.
         """
-        self.bulk_notify_add_links()
-        self.bulk_notify_add_video()
-        self.bulk_notify_set_transfer_requests()
-        self.bulk_notify_set_status()
-        self.bulk_notify_invite_friends()
-        self.bulk_notify_assign_club()
-        self.bulk_notify_profile_hidden()
-        self.bulk_notify_go_premium()
-        self.bulk_notify_verify_profile()
-        self.bulk_notify_check_trial()
-        self.bulk_notify_pm_rank()
-        self.bulk_notify_visits_summary()
+        self.notify_add_links()
+        self.notify_add_video()
+        self.notify_set_transfer_requests()
+        self.notify_set_status()
+        self.notify_invite_friends()
+        self.notify_assign_club()
+        self.notify_profile_hidden()
+        self.notify_go_premium()
+        self.notify_verify_profile()
+        self.notify_check_trial()
+        self.notify_pm_rank()
+        self.notify_visits_summary()

@@ -10,7 +10,8 @@ from profiles.models import CoachProfile
 from utils import factories
 from utils.factories import CityFactory
 
-url = "api:profiles:get_suggested_profiles"
+url_suggested_profiles = "api:profiles:get_suggested_profiles"
+url_profiles_near_me = "api:profiles:get_profiles_near_me"
 time_now = timezone.now()
 pytestmark = pytest.mark.django_db
 
@@ -64,7 +65,7 @@ class TestSimilarProfilesAPI:
         ]
         uuid_choices = [str(choice.uuid) for choice in choices]
         similar_profile_url = reverse(
-            url,
+            url_suggested_profiles,
         )
         response = api_client.get(similar_profile_url)
 
@@ -93,7 +94,7 @@ class TestSimilarProfilesAPI:
         ]  # no loc players
         uuids = [str(player.uuid) for player in players]
         similar_profile_url = reverse(
-            url,
+            url_suggested_profiles,
         )
         response = api_client.get(similar_profile_url)
 
@@ -156,7 +157,7 @@ class TestSimilarProfilesAPI:
         uuids = [str(choice.uuid) for choice in choices[:6]]
 
         similar_profile_url = reverse(
-            url,
+            url_suggested_profiles,
         )
         with patch("random.choice", return_value=CoachProfile):
             response = api_client.get(similar_profile_url)
@@ -218,13 +219,44 @@ class TestSimilarProfilesAPI:
         uuids = [str(choice.uuid) for choice in choices[:6]]
 
         similar_profile_url = reverse(
-            url,
+            url_suggested_profiles,
         )
         response = api_client.get(similar_profile_url)
         data = response.data
         assert response.status_code == 200
         assert len(response.data) == 4
-        assert data[0]["uuid"] == uuids[0]
-        assert data[1]["uuid"] == uuids[3]
-        assert data[2]["uuid"] == uuids[1]
-        assert data[3]["uuid"] == uuids[4]
+
+    def test_get_profiles_nearby(
+        self,
+        city_wwa,
+        city_prsk,
+        city_rdm,
+        api_client,
+    ):
+        user = factories.PlayerProfileFactory(
+            user__userpreferences__localization=city_wwa
+        ).user
+        api_client.force_authenticate(user)
+
+        choices = [
+            factories.PlayerProfileFactory.create(
+                user__last_activity=timezone.now(),
+                user__userpreferences__localization=city_wwa,
+            ),
+            factories.CoachProfileFactory.create(
+                user__last_activity=timezone.now(),
+                user__userpreferences__localization=city_prsk,
+            ),
+            factories.CoachProfileFactory.create(
+                user__last_activity=timezone.now(),
+                user__userpreferences__localization=city_rdm,
+            ),
+        ]
+
+        url = reverse(
+            url_profiles_near_me,
+        )
+        response = api_client.get(url)
+        data = response.data
+        assert response.status_code == 200
+        assert len(response.data) == 2

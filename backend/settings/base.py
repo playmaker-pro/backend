@@ -696,6 +696,6 @@ CACHES = {
 
 
 try:
-    from backend.settings._local import *  # noqa
+    from backend.settings.local import *  # noqa
 except ImportError:
     pass

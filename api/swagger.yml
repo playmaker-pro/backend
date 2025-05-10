@@ -1923,6 +1923,27 @@ paths:
                 items:
                   $ref: '#/components/schemas/SuggestedProfile'
                 description: "Paginated list of profiles suggested to the specified profile."
+        "204":
+          description: "No suggested profiles available."
+  /profiles/near-me/:
+    get:
+      operationId: list_profiles_near_me
+      description: "Retrieve a list of profiles near the specified location."
+      summary: "Get profiles near me"
+      tags:
+        - profiles
+      responses:
+        '200':
+          description: 'List of profiles near me retrieved successfully.'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SuggestedProfile'
+                description: "List of profiles near me."
+        "204":
+          description: "No suggested profiles available."
   /profiles/{profile_uuid}/labels:
     get:
       operationId: profiles_retrieve_labels

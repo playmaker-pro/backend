@@ -7,8 +7,9 @@ from typing import TYPE_CHECKING
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.db.models import ObjectDoesNotExist, QuerySet
+from django.db.models import Case, IntegerField, ObjectDoesNotExist, QuerySet, When
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -41,7 +42,7 @@ from profiles.api.filters import TransferRequestCatalogueFilter
 from profiles.api.managers import SerializersManager
 from profiles.api.mixins import ProfileRetrieveMixin
 from profiles.filters import ProfileListAPIFilter
-from profiles.models import ProfileTransferRequest
+from profiles.models import ProfileMeta, ProfileTransferRequest
 from profiles.serializers_detailed.base_serializers import (
     MainUserDataSerializer,
     ProfileTransferRequestSerializer,
@@ -337,41 +338,80 @@ class SuggestedProfilesAPIView(EndpointView):
         """
         Retrieves profiles suggested to the target profile specified by the UUID.
         """
-        if not request.user.is_authenticated:
+        user = request.user
+        if not user.is_authenticated:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        loc_params = None
+        profile = user.profile
+        params = {"user__last_activity__gte": timezone.now() - timedelta(days=30)}
 
-        profile = request.user.profile
-        user_localization = profile.user.userpreferences.localization
-
-        if user_localization:
-            longitude, latitude = (
-                float(user_localization.longitude),
-                float(user_localization.latitude),
+        if loc := user.userpreferences.localization:
+            cities_nearby = profile_service.get_cities_nearby(loc)
+            params["user__userpreferences__localization__in"] = cities_nearby
+            city_id_order = list(cities_nearby.values_list("id", flat=True))
+            ordering = Case(
+                *[
+                    When(user__userpreferences__localization__pk=cid, then=pos)
+                    for pos, cid in enumerate(city_id_order)
+                ],
+                output_field=IntegerField(),
             )
-            loc_params = {"longitude": longitude, "latitude": latitude, "radius": 50}
 
         if profile.__class__ is models.PlayerProfile:
-            qs_model = random.choice(
-                [models.CoachProfile, models.ClubProfile, models.ScoutProfile]
-            )
+            qs_model = random.choice([
+                models.CoachProfile,
+                models.ClubProfile,
+                models.ScoutProfile,
+            ])
         else:
             qs_model = models.PlayerProfile
 
-        qs = qs_model.objects.filter(
-            user__last_activity__gte=timezone.now() - timedelta(days=30)
+        qs = (
+            qs_model.objects.to_list_by_api(
+                **params,
+            )
+            .annotate(city_order=ordering)
+            .exclude(user__pk=user.pk)
+            .order_by("city_order", "-user__last_activity")[:10]
         )
-
-        if loc_params:
-            qs = ProfileFilterService.filter_localization(
-                queryset=qs, **loc_params
-            ).order_by("distance", "-user__last_activity")
-        else:
-            qs = qs.order_by("-user__last_activity")
 
         serializer = serializers.SuggestedProfileSerializer(qs[:10], many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_profiles_nearby(self, request: Request) -> Response:
+        """Retrieve profiles from the closest area"""
+        user = request.user
+        if not user.is_authenticated or not user.userpreferences.localization:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        cache_key = f"user:{user.id}:get_profiles_nearby"
+        cached_response = cache.get(cache_key)
+
+        if cached_response:
+            return Response(cached_response, status=status.HTTP_200_OK)
+
+        cities_nearby = profile_service.get_cities_nearby(
+            user.userpreferences.localization
+        )
+        city_id_order = list(cities_nearby.values_list("id", flat=True))
+        ordering = Case(
+            *[
+                When(user__userpreferences__localization__pk=cid, then=pos)
+                for pos, cid in enumerate(city_id_order)
+            ],
+            output_field=IntegerField(),
+        )
+        qs = (
+            ProfileMeta.objects.filter(
+                user__userpreferences__localization__in=cities_nearby,
+            )
+            .annotate(city_order=ordering)
+            .exclude(user__pk=user.pk)
+            .exclude(user__display_status=User.DisplayStatus.NOT_SHOWN)
+            .order_by("city_order")[:10]
+        )
+        data = [serializers.SuggestedProfileSerializer(obj.profile).data for obj in qs]
+        cache.set(cache_key, data, timeout=settings.DEFAULT_CACHE_LIFESPAN)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class ProfileSearchView(EndpointView):

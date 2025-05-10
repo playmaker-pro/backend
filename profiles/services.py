@@ -6,6 +6,7 @@ import uuid
 from dataclasses import dataclass, field
 from decimal import Decimal
 
+from cities_light.models import City
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -14,6 +15,7 @@ from django.db import IntegrityError, connection
 from django.db import models as django_base_models
 from django.db.models import (
     Case,
+    F,
     IntegerField,
     Model,
     ObjectDoesNotExist,
@@ -518,6 +520,39 @@ class ProfileService:
         transfer_request: ProfileTransferStatus = profile.transfer_requests.first()
         return transfer_request or None
 
+    @staticmethod
+    def get_cities_nearby(city: City, radius: int = 50) -> QuerySet:
+        """
+        Get cities nearby the given city.
+        This method filters cities based on their geographical location.
+        """
+
+        latitude = city.latitude
+        longitude = city.longitude
+        earth_radius = 6371  # km
+
+        return (
+            City.objects.annotate(
+                distance=earth_radius
+                * django_base_functions.ACos(
+                    django_base_functions.Cos(django_base_functions.Radians(latitude))
+                    * django_base_functions.Cos(
+                        django_base_functions.Radians(F("latitude"))
+                    )
+                    * django_base_functions.Cos(
+                        django_base_functions.Radians(F("longitude"))
+                        - django_base_functions.Radians(longitude)
+                    )
+                    + django_base_functions.Sin(django_base_functions.Radians(latitude))
+                    * django_base_functions.Sin(
+                        django_base_functions.Radians(F("latitude"))
+                    )
+                )
+            )
+            .filter(distance__lt=radius)
+            .order_by("distance")
+        )
+
 
 class ProfileFilterService:
     profile_service = ProfileService
@@ -868,9 +903,9 @@ class PlayerProfilePositionService:
         are found.
         """
         main_positions_count = len([data for data in positions_data if data.is_main])
-        non_main_positions_count = len(
-            [data for data in positions_data if not data.is_main]
-        )
+        non_main_positions_count = len([
+            data for data in positions_data if not data.is_main
+        ])
 
         if main_positions_count > 1:
             raise api_errors.MultipleMainPositionError
@@ -931,9 +966,10 @@ class PlayerProfilePositionService:
                     )
                 elif current_positions[player_position_id].is_main != is_main:
                     # If main position has changed, prepare to update it
-                    positions_to_update.append(
-                        (current_positions[player_position_id], is_main)
-                    )
+                    positions_to_update.append((
+                        current_positions[player_position_id],
+                        is_main,
+                    ))
 
             # Handle non-main positions
             else:
@@ -948,9 +984,10 @@ class PlayerProfilePositionService:
                     )
                 elif current_positions[player_position_id].is_main != is_main:
                     # If non-main position has changed, prepare to update it
-                    positions_to_update.append(
-                        (current_positions[player_position_id], is_main)
-                    )
+                    positions_to_update.append((
+                        current_positions[player_position_id],
+                        is_main,
+                    ))
 
             position_ids_to_keep.add(player_position_id)
 
