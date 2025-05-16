@@ -729,9 +729,10 @@ class BaseProfileSerializer(serializers.ModelSerializer):
         """Get social stats for the profile."""
         request = self.context.get("request")
         if request and request.user and request.user.is_authenticated:
-            hide_values = obj.user != request.user or not self.context.get(
-                "premium_viewer", False
-            )
+            if obj.user == request.user:
+                hide_values = False
+            else:
+                hide_values = not self.context.get("premium_viewer", False)
         else:
             hide_values = True
 
