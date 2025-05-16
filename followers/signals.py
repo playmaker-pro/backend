@@ -5,7 +5,8 @@ from followers import models
 from notifications.services import NotificationService
 
 
-@receiver(post_save, sender=models.Follow)
+@receiver(post_save, sender=models.GenericFollow)
 def post_follow(sender, instance, created, **kwargs) -> None:
     if created:
-        NotificationService(instance.target.profile.meta).notify_new_follower()
+        instance.user.profile.refresh_from_db()
+        NotificationService(instance.user.profile.meta).notify_new_follower()

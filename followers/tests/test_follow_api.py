@@ -4,7 +4,7 @@ from uuid import UUID
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from parameterized import parameterized
-from rest_framework.test import APIClient, APITestCase
+from rest_framework.test import APITestCase
 
 from labels.services import LabelService
 from utils.factories import (
@@ -12,7 +12,6 @@ from utils.factories import (
     ClubFactory,
     PlayerProfileFactory,
     TeamFactory,
-    UserFactory,
 )
 from utils.factories.followers_factories import GenericFollowFactory
 from utils.test.test_utils import UserManager
@@ -23,7 +22,7 @@ label_service = LabelService()
 class TestFollowAPI(APITestCase):
     def setUp(self) -> None:
         self.user = UserManager(self.client)
-        self.superuser = self.user.create_superuser()
+        self.superuser = PlayerProfileFactory().user
         self.client.force_authenticate(user=self.superuser)
 
         self.profile = PlayerProfileFactory.create()
@@ -31,14 +30,12 @@ class TestFollowAPI(APITestCase):
         self.club = ClubFactory.create()
         self.catalog = CatalogFactory.create()
 
-    @parameterized.expand(
-        [
-            ("profile", "profile_uuid", lambda self: self.profile.uuid),
-            ("team", "team_id", lambda self: self.team.id),
-            ("club", "club_id", lambda self: self.club.id),
-            ("catalog", "catalog_slug", lambda self: self.catalog.slug),
-        ]
-    )
+    @parameterized.expand([
+        ("profile", "profile_uuid", lambda self: self.profile.uuid),
+        ("team", "team_id", lambda self: self.team.id),
+        ("club", "club_id", lambda self: self.club.id),
+        ("catalog", "catalog_slug", lambda self: self.catalog.slug),
+    ])
     def test_follow_entity(
         self,
         entity_type: str,
@@ -53,14 +50,12 @@ class TestFollowAPI(APITestCase):
         response = self.client.post(follow_url)
         self.assertEqual(response.status_code, 201)
 
-    @parameterized.expand(
-        [
-            ("profile", "profile_uuid", lambda self: self.profile.uuid),
-            ("team", "team_id", lambda self: self.team.id),
-            ("club", "club_id", lambda self: self.club.id),
-            ("catalog", "catalog_slug", lambda self: self.catalog.slug),
-        ]
-    )
+    @parameterized.expand([
+        ("profile", "profile_uuid", lambda self: self.profile.uuid),
+        ("team", "team_id", lambda self: self.team.id),
+        ("club", "club_id", lambda self: self.club.id),
+        ("catalog", "catalog_slug", lambda self: self.catalog.slug),
+    ])
     def test_unfollow_entity(
         self,
         entity_type: str,
@@ -96,14 +91,12 @@ class TestFollowAPI(APITestCase):
         response = self.client.get(reverse("api:followers:get_user_follows"))
         self.assertEqual(response.status_code, 200)
 
-    @parameterized.expand(
-        [
-            ("profile", "profile_uuid", lambda self: self.profile.uuid),
-            ("team", "team_id", lambda self: self.team.id),
-            ("club", "club_id", lambda self: self.club.id),
-            ("catalog", "catalog_slug", lambda self: self.catalog.slug),
-        ]
-    )
+    @parameterized.expand([
+        ("profile", "profile_uuid", lambda self: self.profile.uuid),
+        ("team", "team_id", lambda self: self.team.id),
+        ("club", "club_id", lambda self: self.club.id),
+        ("catalog", "catalog_slug", lambda self: self.catalog.slug),
+    ])
     def test_follow_entity_unauthenticated(
         self,
         entity_type: str,
@@ -119,14 +112,12 @@ class TestFollowAPI(APITestCase):
         response = self.client.post(follow_url)
         self.assertEqual(response.status_code, 401)
 
-    @parameterized.expand(
-        [
-            ("profile", "profile_uuid", lambda self: self.profile.uuid),
-            ("team", "team_id", lambda self: self.team.id),
-            ("club", "club_id", lambda self: self.club.id),
-            ("catalog", "catalog_slug", lambda self: self.catalog.slug),
-        ]
-    )
+    @parameterized.expand([
+        ("profile", "profile_uuid", lambda self: self.profile.uuid),
+        ("team", "team_id", lambda self: self.team.id),
+        ("club", "club_id", lambda self: self.club.id),
+        ("catalog", "catalog_slug", lambda self: self.catalog.slug),
+    ])
     def test_follow_entity_twice(
         self,
         entity_type: str,

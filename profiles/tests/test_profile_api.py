@@ -10,15 +10,21 @@ from django.utils import timezone
 from parameterized import parameterized
 from rest_framework.test import APIClient, APITestCase
 
+from followers.services import FollowServices
 from labels.models import Label
 from labels.services import LabelService
-from profiles.models import ProfileVisitHistory, TeamContributor
+from profiles.models import ProfileVisitation, ProfileVisitHistory, TeamContributor
 from profiles.services import ProfileService
 from profiles.tests import utils
 from roles.definitions import CLUB_ROLE_TEAM_LEADER
 from users.models import User, UserPreferences
 from utils import factories, get_current_season
 from utils.factories import SEASON_NAMES, UserFactory
+from utils.factories.profiles_factories import (
+    CoachProfileFactory,
+    GuestProfileFactory,
+    PlayerProfileFactory,
+)
 from utils.test.test_utils import UserManager
 
 label_service = LabelService()
@@ -102,6 +108,74 @@ class TestGetProfileAPI(APITestCase):
         response = self.client.get(slug_url, **self.headers)
 
         assert response.status_code == 200
+
+    @property
+    def _profile_for_social_stats(self):
+        """Create a profile for testing social stats"""
+        profile = factories.PlayerProfileFactory.create()
+        follow_service = FollowServices()
+        player_profile = PlayerProfileFactory()
+        guest_profile = GuestProfileFactory()
+        coach_profile = CoachProfileFactory()
+        follow_service.follow_profile(player_profile.uuid, profile.user)
+        follow_service.follow_profile(guest_profile.uuid, profile.user)
+        follow_service.follow_profile(coach_profile.uuid, profile.user)
+        follow_service.follow_profile(profile.uuid, player_profile.user)
+        follow_service.follow_profile(profile.uuid, coach_profile.user)
+        ProfileVisitation.upsert(
+            visited=profile,
+            visitor=player_profile,
+        )
+        ProfileVisitation.upsert(
+            visited=profile,
+            visitor=guest_profile,
+        )
+        return profile
+
+    def test_profile_stats_non_premium(self):
+        """Test retrieve profile stats"""
+        self.client.force_authenticate(user=self._profile_for_social_stats.user)
+
+        response = self.client.get(
+            self.url(profile_uuid=PlayerProfileFactory.create().uuid)
+        )
+
+        assert response.status_code == 200
+        assert response.data["social_stats"] == {
+            "followers": None,
+            "following": None,
+            "views": None,
+        }
+
+    def test_profile_stats_is_owner(self):
+        """Test retrieve profile stats"""
+        self.client.force_authenticate(user=self._profile_for_social_stats.user)
+
+        response = self.client.get(
+            self.url(profile_uuid=self._profile_for_social_stats.uuid)
+        )
+
+        assert response.status_code == 200
+        assert response.data["social_stats"] == {
+            "followers": None,
+            "following": None,
+            "views": None,
+        }
+
+    def test_profile_stats_premium(self):
+        """Test retrieve profile stats"""
+        profile = self._profile_for_social_stats
+        profile.setup_premium_profile()
+        self.client.force_authenticate(user=profile.user)
+
+        response = self.client.get(self.url(profile_uuid=profile.uuid))
+
+        assert response.status_code == 200
+        assert response.data["social_stats"] == {
+            "followers": 2,
+            "following": 3,
+            "views": 2,
+        }
 
 
 class TestCreateProfileAPI(APITestCase):

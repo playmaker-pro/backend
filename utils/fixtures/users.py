@@ -1,18 +1,14 @@
 import pytest
 from django.contrib.auth import get_user_model
+from faker import Faker
 
-from .utils import fake
+from utils.factories.user_factories import UserFactory
 
 User = get_user_model()
+fake = Faker(locale="pl_PL")
 
 
 @pytest.fixture
-def user():
+def unique_user():
     """Create a user instance."""
-    return User.objects.create(
-        username=fake.user_name(),
-        email=fake.email(),
-        password=fake.password(),
-        first_name=fake.first_name(),
-        last_name=fake.last_name(),
-    )
+    yield UserFactory.create()

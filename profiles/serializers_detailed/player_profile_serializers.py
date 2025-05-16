@@ -89,6 +89,7 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
             "is_promoted",
             "is_premium",
             "promotion",
+            "social_stats",
         )
 
     player_positions = ProfileVIewPlayerProfilePositionSerializer(

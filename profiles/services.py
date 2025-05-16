@@ -521,7 +521,7 @@ class ProfileService:
         return transfer_request or None
 
     @staticmethod
-    def get_cities_nearby(city: City, radius: int = 50) -> QuerySet:
+    def get_cities_nearby(city: City, radius: int = 60) -> QuerySet:
         """
         Get cities nearby the given city.
         This method filters cities based on their geographical location.

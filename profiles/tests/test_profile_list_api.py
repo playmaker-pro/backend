@@ -1,7 +1,6 @@
 import random
 from datetime import timedelta
 from typing import List
-from unittest import mock
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,7 +13,13 @@ from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
 from profiles.managers import ProfileManager
-from profiles.models import GuestProfile, LicenceType, PlayerProfile
+from profiles.models import (
+    CoachProfile,
+    GuestProfile,
+    LicenceType,
+    PlayerProfile,
+    ProfileVisitation,
+)
 from profiles.services import ProfileService
 from profiles.utils import get_past_date
 from utils import factories, get_current_season
@@ -881,6 +886,29 @@ class TestProfileListAPI(APITestCase):
             len(response.data["results"]) == 2
         )  # Only verified and under review should be listed
 
+    @parameterized.expand(("popularity", "-popularity"))
+    def test_sort_profiles_by_popularity(self, sort_by: str) -> None:
+        """Test sorting profiles by popularity."""
+        # CoachProfile.objects.all().delete()
+        for _ in range(5):
+            coach = CoachProfile.objects.create(user=factories.UserFactory())
+        coaches = list(CoachProfile.objects.all())
+
+        for coach in coaches:
+            for sub_coach in coaches[coaches.index(coach) + 1 :]:
+                ProfileVisitation.upsert(visitor=sub_coach, visited=coach)
+
+        response = self.client.get(self.url, {"role": "T", "sort": sort_by})
+
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 5
+        if sort_by[0] == "-":
+            assert response.data["results"][0]["uuid"] == str(coaches[0].uuid)
+            assert response.data["results"][-1]["uuid"] == str(coaches[-1].uuid)
+        else:
+            assert response.data["results"][0]["uuid"] == str(coaches[-1].uuid)
+            assert response.data["results"][-1]["uuid"] == str(coaches[0].uuid)
+
 
 @override_settings(SUSPEND_SIGNALS=True)
 class TestPlayerProfileListByGenderAPI(APITestCase):
@@ -932,7 +960,7 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
 
 
 @pytest.mark.django_db
-@mock.patch.object(
+@patch.object(
     ProfileManager,
     "get_data_score",
     side_effect=lambda obj: random.randint(1, 3),

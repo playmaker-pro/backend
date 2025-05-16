@@ -37,6 +37,28 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id", "username"]
 
 
+class UserSocialStatsSerializer(serializers.Serializer):
+    """User social stats serializer for player profile view"""
+
+    followers = serializers.IntegerField(source="profile.who_follows_me.count")
+    following = serializers.IntegerField(source="following.count")
+    views = serializers.IntegerField(source="profile.visitation.count_who_visited_me")
+
+    def to_representation(self, instance):
+        """
+        Convert the instance to a dictionary representation.
+        """
+        # Call the parent class's to_representation method
+        representation = super().to_representation(instance)
+
+        if self.context.get("hide_values", False):
+            representation["followers"] = None
+            representation["following"] = None
+            representation["views"] = None
+
+        return representation
+
+
 class MainProfileDataSerializer(serializers.ModelSerializer):
     role = serializers.CharField(read_only=True, source="declared_role")
     uuid = serializers.SerializerMethodField(
@@ -55,6 +77,7 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
         read_only=True, source="profile.premium_already_tested"
     )
     premium = PremiumProfileProductSerializer(read_only=True, source="profile.premium")
+    social_stats = UserSocialStatsSerializer(read_only=True, source="*")
 
     class Meta:
         model = User
@@ -73,6 +96,7 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
             "is_premium",
             "premium",
             "premium_already_tested",
+            "social_stats",
         )
 
     def my_profile_uuid(self, instance: User) -> Optional[str]:

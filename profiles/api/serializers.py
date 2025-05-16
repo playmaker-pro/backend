@@ -159,20 +159,18 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
             try:
                 datetime.strptime(expiry_date, "%Y-%m-%d")
             except ValueError:
-                raise serializers.ValidationError(
-                    {"error": "Invalid date format, must be YYYY-MM-DD."}
-                )
+                raise serializers.ValidationError({
+                    "error": "Invalid date format, must be YYYY-MM-DD."
+                })
 
         if release_year := attrs.get("release_year"):  # noqa: E999
             min_year = 1970
             max_year = datetime.now().year
             if min_year > release_year or release_year > max_year:
-                raise serializers.ValidationError(
-                    {
-                        "error": f"Invalid date format, must be YYYY between "
-                        f"{min_year} and {max_year}."
-                    }
-                )
+                raise serializers.ValidationError({
+                    "error": f"Invalid date format, must be YYYY between "
+                    f"{min_year} and {max_year}."
+                })
 
         return attrs
 
@@ -198,9 +196,9 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
         try:
             updated_licence = super().update(instance, validated_data)
         except IntegrityError:
-            raise serializers.ValidationError(
-                {"error": "You already have this licence."}
-            )
+            raise serializers.ValidationError({
+                "error": "You already have this licence."
+            })
         # Assign labels based on the updated license
         label_service.assign_licence_labels(updated_licence.owner_id)
 
@@ -217,16 +215,16 @@ class CoachLicenceSerializer(serializers.ModelSerializer):
         try:
             validated_data["licence"] = models.LicenceType.objects.get(id=licence_id)
         except models.LicenceType.DoesNotExist:
-            raise serializers.ValidationError(
-                {"error": "Given licence does not exist."}
-            )
+            raise serializers.ValidationError({
+                "error": "Given licence does not exist."
+            })
 
         try:
             licence_instance = models.CoachLicence.objects.create(**validated_data)
         except IntegrityError:
-            raise serializers.ValidationError(
-                {"error": "You already have this licence."}
-            )
+            raise serializers.ValidationError({
+                "error": "You already have this licence."
+            })
         # Assign labels based on the created license
         label_service.assign_licence_labels(licence_instance.owner_id)
         return licence_instance
@@ -352,12 +350,10 @@ class CourseSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"error": "Name is required."})
 
         if release_year and (1970 > release_year or release_year > datetime.now().year):
-            raise serializers.ValidationError(
-                {
-                    "error": f"Invalid date format, must be YYYY between 1970 "
-                    f"and {datetime.now().year}."
-                }
-            )
+            raise serializers.ValidationError({
+                "error": f"Invalid date format, must be YYYY between 1970 "
+                f"and {datetime.now().year}."
+            })
 
         return attrs
 
@@ -1081,9 +1077,9 @@ class CreateProfileSerializer(ProfileSerializer):
             data["user_id"] = user.pk
             return super().to_internal_value(data)
         else:
-            raise serializers.ValidationError(
-                {"error": "Unable to define owner of a request."}
-            )
+            raise serializers.ValidationError({
+                "error": "Unable to define owner of a request."
+            })
 
     def to_representation(self, *args, **kwargs) -> dict:
         ret = super(ProfileSerializer, self).to_representation(self.instance)
@@ -1121,12 +1117,10 @@ class CreateProfileSerializer(ProfileSerializer):
         if role == GUEST_SHORT:
             custom_role = self.initial_data.get("custom_role")
             if not custom_role:
-                raise serializers.ValidationError(
-                    {
-                        "custom_role": f"This field is required when role is "
-                        f"{GUEST_SHORT} (GuestProfile)."
-                    }
-                )
+                raise serializers.ValidationError({
+                    "custom_role": f"This field is required when role is "
+                    f"{GUEST_SHORT} (GuestProfile)."
+                })
 
     def save(self) -> None:
         """create profile and set role for given user, need to validate data first"""

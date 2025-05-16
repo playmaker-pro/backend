@@ -1,9 +1,8 @@
-import random
 import typing
 from datetime import timedelta
 from functools import cached_property
 
-from django.db.models import BooleanField, Case, F, QuerySet, Value, When
+from django.db.models import BooleanField, Case, Count, F, QuerySet, Value, When
 from django.utils import timezone
 
 from api import errors as api_errors
@@ -107,7 +106,6 @@ class ProfileListAPIFilter(APIFilter):
         """Get queryset based on role, apply filters, and handle shuffle parameter."""
         self.queryset = self.model.objects.to_list_by_api()
         self.filter_queryset(self.queryset)
-
         self.sort_queryset()
 
         return self.queryset
@@ -124,6 +122,23 @@ class ProfileListAPIFilter(APIFilter):
                     self.queryset = self.queryset.order_by(
                         F("playermetrics__pm_score").asc(nulls_last=True)
                     )
+
+            if sort_param == "popularity":
+                self.queryset = (
+                    self.queryset.annotate(
+                        popularity_count=Count("visitation__visited_objects")
+                    )
+                    .order_by("popularity_count")
+                    .distinct()
+                )
+            elif sort_param == "-popularity":
+                self.queryset = (
+                    self.queryset.annotate(
+                        popularity_count=Count("visitation__visited_objects")
+                    )
+                    .order_by("-popularity_count")
+                    .distinct()
+                )
         else:
             self.queryset = self.sort_promoted_first(self.queryset)
 

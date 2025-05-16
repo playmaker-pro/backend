@@ -377,6 +377,15 @@ class BaseProfile(models.Model, EventLogMixin):
             return None
 
     @property
+    def who_follows_me(self) -> models.QuerySet:
+        """Get all users who follows me"""
+        content_type = ContentType.objects.get_for_model(self.__class__)
+        return self.follows.filter(
+            content_type=content_type,
+            object_id=self.pk,
+        )
+
+    @property
     def specific_role_field_name(self) -> str:
         """
         Get field_name of profile secondary role (ClubProfile, CoachProfile)

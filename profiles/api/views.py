@@ -161,9 +161,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         (?role={P, C, S, G, ...})
         Full list of choices can be found in roles/definitions.py
         """
-
         qs: QuerySet = self.get_queryset()
-
         serializer_class = self.get_serializer_class(
             model_name=request.query_params.get("role")
         )
@@ -383,6 +381,7 @@ class SuggestedProfilesAPIView(EndpointView):
         user = request.user
         if not user.is_authenticated or not user.userpreferences.localization:
             return Response(status=status.HTTP_204_NO_CONTENT)
+
         cache_key = f"user:{user.id}:get_profiles_nearby"
         cached_response = cache.get(cache_key)
 
@@ -407,7 +406,7 @@ class SuggestedProfilesAPIView(EndpointView):
             .annotate(city_order=ordering)
             .exclude(user__pk=user.pk)
             .exclude(user__display_status=User.DisplayStatus.NOT_SHOWN)
-            .order_by("city_order")[:10]
+            .order_by("city_order", "-user__last_activity")[:10]
         )
         data = [serializers.SuggestedProfileSerializer(obj.profile).data for obj in qs]
         cache.set(cache_key, data, timeout=settings.DEFAULT_CACHE_LIFESPAN)

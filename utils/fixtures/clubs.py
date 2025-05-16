@@ -1,10 +1,11 @@
 import random
 
 import pytest
+from faker import Faker
 
 from clubs import models
 
-from .utils import fake
+fake = Faker(locale="pl_PL")
 
 
 @pytest.fixture

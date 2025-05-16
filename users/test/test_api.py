@@ -13,9 +13,10 @@ from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
 from features.models import Feature
+from followers.services import FollowServices
 from payments.models import Transaction
 from premium.models import Product
-from profiles.models import GuestProfile
+from profiles.models import GuestProfile, ProfileVisitation
 from users.api.views import UsersAPI
 from users.errors import (
     ApplicationError,
@@ -1385,3 +1386,48 @@ class TestEmailVerificationEndpoint(TestCase):
         # Fetch the user and check if the email is still not verified
         user = User.objects.get(email=self.user_data["email"])
         assert user.is_email_verified is False
+
+
+class TestGetMyProfileEndpoint:
+    url = reverse("api:users:my_main_profile")
+
+    def test_get_my_profile(
+        self, api_client: APIClient, coach_profile, guest_profile
+    ) -> None:
+        """Test if response is OK"""
+        follow_service = FollowServices()
+        profile = PlayerProfileFactory(user__userpreferences__gender="M")
+        api_client.force_authenticate(user=profile.user)
+        follow_service.follow_profile(
+            profile.uuid,
+            coach_profile.user,
+        )
+        follow_service.follow_profile(
+            profile.uuid,
+            guest_profile.user,
+        )
+        follow_service.follow_profile(
+            guest_profile.uuid,
+            profile.user,
+        )
+        ProfileVisitation.upsert(visited=profile, visitor=guest_profile)
+        result = api_client.get(self.url)
+
+        assert result.status_code == 200
+        assert result.json() == {
+            "picture": None,
+            "email": profile.user.email,
+            "first_name": profile.user.first_name,
+            "last_name": profile.user.last_name,
+            "role": "P",
+            "uuid": str(profile.uuid),
+            "slug": profile.slug,
+            "gender": {"id": "M", "name": "Mężczyzna"},
+            "has_unread_inquiries": False,
+            "promotion": None,
+            "is_promoted": False,
+            "is_premium": False,
+            "premium": None,
+            "premium_already_tested": False,
+            "social_stats": {"followers": 2, "following": 1, "views": 1},
+        }

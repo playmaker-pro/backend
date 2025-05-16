@@ -259,4 +259,6 @@ class TestSimilarProfilesAPI:
         response = api_client.get(url)
         data = response.data
         assert response.status_code == 200
-        assert len(response.data) == 2
+        assert len(data) == 2
+        assert data[0]["uuid"] == str(choices[0].uuid)
+        assert data[1]["uuid"] == str(choices[1].uuid)

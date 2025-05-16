@@ -24,15 +24,18 @@ class NotificationService:
     It uses the NotificationTemplate class to create notifications.
     """
 
+    def __init__(self, meta: "profiles.models.ProfileMeta") -> None:  # type: ignore
+        if meta is None:
+            raise ValueError("Meta cannot be None")
+
+        self._meta = meta
+
     @staticmethod
     def get_queryset() -> "QuerySet[ProfileMeta]":
         """
         Get the queryset of ProfileMeta objects.
         """
         return ProfileMeta.objects.filter(user__isnull=False)
-
-    def __init__(self, meta: "profiles.models.ProfileMeta") -> None:  # type: ignore
-        self._meta = meta
 
     def create_notification(
         self,

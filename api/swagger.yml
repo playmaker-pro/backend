@@ -1366,9 +1366,9 @@ paths:
           name: sort
           schema:
             type: string
-            enum: [ 'pm_score', '-pm_score' ]
+            enum: [ 'pm_score', '-pm_score', "popularity", "-popularity" ]
           required: false
-          description: "Sort queryset. Promoted and profiles with latest activity are first."
+          description: "Sort queryset."
         - in: query
           name: last_activity
           schema:
@@ -3785,6 +3785,8 @@ paths:
                   premium_already_tested:
                     type: boolean
                     description: Did user test the premium product? If so, he cannot setup 7days trial.
+                  social_stats:
+                    $ref: '#/components/schemas/SocialStats'
           description: Get user main profile uuid with role.
   /users/my-ref-data/:
     get:
@@ -4721,6 +4723,8 @@ components:
           type: string
         last_activity:
           type: string
+        social_stats:
+          $ref: '#/components/schemas/SocialStats'
       required:
         - id
         - first_name
@@ -5412,6 +5416,8 @@ components:
               description: "Is player premium"
             promotion:
               $ref: '#/components/schemas/ProfilePromotion'
+            social_stats:
+              $ref: '#/components/schemas/SocialStats'
           example: {
             "slug": "player-slug",
             "uuid": "uuid",
@@ -5561,6 +5567,8 @@ components:
               description: "Is player premium"
             promotion:
               $ref: '#/components/schemas/ProfilePromotion'
+            social_stats:
+              $ref: '#/components/schemas/SocialStats'
           example: {
             "slug": "coach-miz-shoty",
             "uuid": "uuid",
@@ -5778,6 +5786,8 @@ components:
               description: "Is player premium"
             promotion:
               $ref: '#/components/schemas/ProfilePromotion'
+            social_stats:
+              $ref: '#/components/schemas/SocialStats'
           example: {
             "slug": "scout-kacper-skalski",
             "user": {
@@ -5906,6 +5916,8 @@ components:
               description: "Is player premium"
             promotion:
               $ref: '#/components/schemas/ProfilePromotion'
+            social_stats:
+              $ref: '#/components/schemas/SocialStats'
           example:
             slug: "coach-miz-shoty"
             "uuid": "uuid"
@@ -6015,6 +6027,8 @@ components:
               description: "Is player premium"
             promotion:
               $ref: '#/components/schemas/ProfilePromotion'
+            social_stats:
+              $ref: '#/components/schemas/SocialStats'
           required:
             - slug
             - uuid
@@ -6123,6 +6137,8 @@ components:
                   type: array
                   items:
                     $ref: '#/components/schemas/ExternalLink'
+            social_stats:
+              $ref: '#/components/schemas/SocialStats'
           example: {
             "user": {
               "id": 1,
@@ -7546,6 +7562,10 @@ components:
           type: string
         updated_at:
           type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
         seen:
           type: boolean
         href:
@@ -7734,6 +7754,15 @@ components:
           type: string
           description: "User's gender, where 'M' stands for Male and 'K' for Female."
 
+    SocialStats:
+      type: object
+      properties:
+        followers:
+          type: integer
+        following:
+          type: integer
+        views:
+          type: integer
   securitySchemes:
     jwtAuth:
       type: http
