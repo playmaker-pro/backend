@@ -108,7 +108,7 @@ class ProfileListAPIFilter(APIFilter):
         self.filter_queryset(self.queryset)
         self.sort_queryset()
 
-        return self.queryset
+        return self.queryset.distinct()
 
     def sort_queryset(self) -> None:
         """Sort queryset based on sort parameter"""
