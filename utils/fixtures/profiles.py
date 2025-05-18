@@ -10,7 +10,10 @@ from roles import definitions
 from utils.factories.profiles_factories import (
     ClubProfileFactory,
     CoachProfileFactory,
+    GuestProfileFactory,
+    ManagerProfileFactory,
     PlayerProfileFactory,
+    ScoutProfileFactory,
 )
 
 from .utils import get_random_bool, get_random_date, get_random_int
@@ -67,27 +70,6 @@ def player_metrics(player_profile):
 @pytest.fixture
 def player_profile(unique_user, mapper, team, team_history, verification_stage):
     """Create a player profile instance."""
-    # yield models.PlayerProfile.objects.create(
-    #     user=unique_user,
-    #     mapper=mapper,
-    #     team_history_object=team_history,
-    #     team_object=team,
-    #     height=get_random_int(150, 200),
-    #     weight=get_random_int(60, 100),
-    #     birth_date=get_random_date(start_date="-50y", end_date="-15y"),
-    #     prefered_leg=random.choice(models.PlayerProfile.LEG_CHOICES)[0],
-    #     transfer_status=random.choice(models.PlayerProfile.TRANSFER_STATUS_CHOICES)[0],
-    #     card=random.choice(models.PlayerProfile.CARD_CHOICES)[0],
-    #     soccer_goal=random.choice(models.PlayerProfile.GOAL_CHOICES)[0],
-    #     about=fake.paragraph(nb_sentences=3),
-    #     bio=fake.paragraph(nb_sentences=3),
-    #     phone=fake.phone_number()[:15],
-    #     agent_phone=fake.phone_number()[:15],
-    #     practice_distance=get_random_int(30, 100),
-    #     voivodeship_obj=get_random_voivo(),
-    #     address=fake.address(),
-    #     verification_stage=verification_stage,
-    # )
     yield PlayerProfileFactory.create()
 
 
@@ -119,79 +101,31 @@ def player_profile_with_specific_metrics(player_profile, pm_score=75):
 @pytest.fixture
 def coach_profile(unique_user, mapper, team, team_history):
     """Create a coach profile instance."""
-    # yield CoachProfileFactory.create(
-    #     user=unique_user,
-    #     mapper=mapper,
-    #     licence=random.choice(models.CoachProfile.LICENCE_CHOICES)[0],
-    #     club_role=random.choice(models.CoachProfile.CLUB_ROLE)[0],
-    #     coach_role=random.choice(models.CoachProfile.COACH_ROLE_CHOICES)[0],
-    #     team_history_object=team_history,
-    #     team_object=team,
-    #     soccer_goal=random.choice(models.CoachProfile.GOAL_CHOICES)[0],
-    #     phone=fake.phone_number()[:15],
-    #     voivodeship_obj=get_random_voivo(),
-    #     address=fake.address(),
-    #     bio=fake.paragraph(nb_sentences=3),
-    # )
     yield CoachProfileFactory.create()
 
 
 @pytest.fixture
 def club_profile(unique_user, team, club):
     """Create a club profile instance."""
-
-    # yield models.ClubProfile.objects.create(
-    #     user=unique_user,
-    #     phone=fake.phone_number(),
-    #     club_object=club,
-    #     team_object=team,
-    #     club_role=random.choice(models.ClubProfile.CLUB_ROLE)[0],
-    #     bio=fake.paragraph(nb_sentences=3),
-    # )
     yield ClubProfileFactory.create()
 
 
 @pytest.fixture
-def scout_profile(unique_user):
+def scout_profile():
     """Create a scout profile instance."""
-    yield models.ScoutProfile.objects.create(
-        user=unique_user,
-        soccer_goal=random.choice(models.ScoutProfile.GOAL_CHOICES)[0],
-        practice_distance=get_random_int(30, 100),
-        address=fake.address(),
-        bio=fake.paragraph(nb_sentences=3),
-    )
+    yield ScoutProfileFactory.create()
 
 
 @pytest.fixture
 def manager_profile(unique_user):
     """Create a manager profile instance."""
-    counter = models.ManagerProfile.objects.count() + 1
-    profile = models.ManagerProfile.objects.create(
-        user=unique_user,
-        facebook_url=fake.url(),
-        other_url=fake.url(),
-        agency_phone=f"+4812345{counter:04d}",
-        dial_code=f"+{counter % 99:02d}",
-        agency_email=fake.email(),
-        agency_transfermarkt_url=fake.url(),
-        agency_website_url=fake.url(),
-        agency_instagram_url=fake.url(),
-        agency_twitter_url=fake.url(),
-        agency_facebook_url=fake.url(),
-        agency_other_url=fake.url(),
-        bio=fake.paragraph(nb_sentences=3),
-    )
-    yield profile
+    yield ManagerProfileFactory.create()
 
 
 @pytest.fixture
-def guest_profile(unique_user):
+def guest_profile():
     """Create a guest profile instance."""
-    yield models.GuestProfile.objects.create(
-        user=unique_user,
-        bio=fake.paragraph(nb_sentences=3),
-    )
+    yield GuestProfileFactory.create()
 
 
 @pytest.fixture

@@ -533,7 +533,7 @@ class BaseProfile(models.Model, EventLogMixin):
         self, premium_type: PremiumType = PremiumType.TRIAL, period: int = None
     ) -> None:
         """Setup premium profile"""
-        return setup_premium_profile(
+        return setup_premium_profile.delay(
             self.pk, self.__class__.__name__, premium_type.value, period
         )
 

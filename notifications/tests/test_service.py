@@ -1,73 +1,143 @@
-import pytest
+from unittest.mock import patch
 
+import pytest
+from django.utils import timezone
+
+from notifications.models import Notification
 from notifications.services import NotificationService
 from premium.models import PremiumType
-from utils.factories.profiles_factories import PlayerProfileFactory
+from profiles.models import ProfileVisitation
+from utils.factories.external_links_factories import ExternalLinksEntityFactory
+
+pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def profile():
-    """Create a player profile."""
-    return PlayerProfileFactory.create()
+def mock_timezone_now():
+    with patch("django.utils.timezone.now", return_value=timezone.now()) as mock:
+        yield mock
 
 
-class TestNotificationService:
-    def test_welcome_notification(self, profile):
-        """Test welcome notification."""
-
-        assert profile.meta.notifications.filter(title="Witaj w PlayMaker!").exists()
-
-    @pytest.mark.parametrize("trial_tested", [True, False])
-    def test_check_trial_premium_notification(self, profile, trial_tested):
-        if trial_tested:
-            products = profile.products
-            products.trial_tested = True
-            products.save()
+class TestNotifications:
+    def test_notify_check_trial(self, player_profile, coach_profile) -> None:
+        """
+        Test the notify_check_trial function.
+        """
+        coach_profile.premium_products.trial_tested = True
+        coach_profile.premium_products.save()
+        coach_profile.refresh_from_db()
 
         NotificationService.bulk_notify_check_trial()
-        notification_exists = profile.meta.notifications.filter(
-            title="Skorzystaj z wersji próbnej Premium"
+
+        assert Notification.objects.filter(
+            target=player_profile.meta, title="Skorzystaj z wersji próbnej Premium"
+        ).exists()
+        assert not Notification.objects.filter(
+            target=coach_profile.meta, title="Skorzystaj z wersji próbnej Premium"
         ).exists()
 
-        if trial_tested:
-            profile.products.trial_tested = True
-            assert notification_exists is False
-        else:
-            profile.products.trial_tested = False
-            assert notification_exists is True
-
-    @pytest.mark.parametrize("premium_enabled", [True, False])
-    def test_go_premium_notification(self, profile, premium_enabled):
-        if premium_enabled:
-            profile.setup_premium_profile(
-                PremiumType.YEAR,
-            )
-
+    def test_notify_go_premium(self, player_profile, coach_profile) -> None:
+        """
+        Test the notify_go_premium function.
+        """
+        coach_profile.setup_premium_profile(PremiumType.MONTH)
         NotificationService.bulk_notify_go_premium()
-        profile.refresh_from_db()
-        notification_exists = profile.meta.notifications.filter(
-            title="Przejdź na Premium"
+
+        assert Notification.objects.filter(
+            target=player_profile.meta, title="Przejdź na Premium"
+        ).exists()
+        assert not Notification.objects.filter(
+            target=coach_profile.meta, title="Przejdź na Premium"
         ).exists()
 
-        if premium_enabled:
-            assert notification_exists is False
-        else:
-            assert notification_exists is True
+    def test_notify_verify_profile(self, player_profile, coach_profile) -> None:
+        """
+        Test the notify_verify_profile function.
+        """
+        ExternalLinksEntityFactory.create(target=player_profile.external_links)
+        NotificationService.bulk_notify_verify_profile()
 
-    # @pytest.mark.parametrize("verification_done", [True, False])
-    # def test_verify_profile_notification(self, profile):
-    #     ...
-    # if verification_done:
-    #     profile.verification_stage = verification_stage
-    #     profile.verification_stage.done = True
-    #     profile.verification_stage.save()
+        assert not Notification.objects.filter(
+            target=player_profile.meta, title="Zweryfikuj swój profil"
+        ).exists()
+        assert Notification.objects.filter(
+            target=coach_profile.meta, title="Zweryfikuj swój profil"
+        ).exists()
 
-    # NotificationService.bulk_notify_verify_profile()
-    # notification_exists = profile.meta.notifications.filter(
-    #     title="Zweryfikuj swój profil"
-    # ).exists()
+    def test_notify_profile_hidden(self, player_profile, coach_profile) -> None:
+        """
+        Test the notify_profile_hidden function.
+        """
+        player_profile.user.display_status = "Niewyświetlany"
+        player_profile.user.save()
+        NotificationService.bulk_notify_profile_hidden()
 
-    # if verification_done:
-    #     assert notification_exists is False
-    # else:
-    #     assert notification_exists is True
+        assert Notification.objects.filter(
+            target=player_profile.meta, title="Profil tymczasowo ukryty"
+        ).exists()
+        assert not Notification.objects.filter(
+            target=coach_profile.meta, title="Profil tymczasowo ukryty"
+        ).exists()
+
+    def test_notyfy_premium_just_expired(
+        self, coach_profile, mock_timezone_now
+    ) -> None:
+        """
+        Test the notify_premium_just_expired function.
+        """
+        coach_profile.setup_premium_profile(PremiumType.MONTH)
+
+        assert not Notification.objects.filter(
+            target=coach_profile.meta, title="Twoje konto Premium wygasło!"
+        ).exists()
+
+        mock_timezone_now.return_value = timezone.now() + timezone.timedelta(days=40)
+
+        assert not coach_profile.is_premium
+        assert Notification.objects.filter(
+            target=coach_profile.meta, title="Twoje konto Premium wygasło!"
+        ).exists()
+
+    def test_notify_pm_rank(self, player_profile, coach_profile) -> None:
+        """
+        Test the notify_pm_rank function.
+        """
+        NotificationService.bulk_notify_pm_rank()
+
+        assert Notification.objects.filter(
+            target=player_profile.meta, title="Ranking PM"
+        ).exists()
+        assert Notification.objects.filter(
+            target=coach_profile.meta, title="Ranking PM"
+        ).exists()
+
+    def test_notify_visits_summary(
+        self, player_profile, coach_profile, guest_profile, scout_profile
+    ) -> None:
+        """
+        Test the notify_visits_summary function.
+        """
+        ProfileVisitation.upsert(coach_profile, player_profile)
+        ProfileVisitation.upsert(player_profile, guest_profile)
+        ProfileVisitation.upsert(coach_profile, guest_profile)
+        ProfileVisitation.upsert(scout_profile, guest_profile)
+        ProfileVisitation.upsert(guest_profile, scout_profile)
+        ProfileVisitation.upsert(scout_profile, player_profile)
+        NotificationService.bulk_notify_visits_summary()
+
+        assert Notification.objects.filter(
+            target=player_profile.meta,
+            title="Już 2 osób wyświetliło Twój profil!",
+        ).exists()
+        assert not Notification.objects.filter(
+            target=coach_profile.meta,
+            title__icontains="osób wyświetliło Twój profil!",
+        ).exists()
+        assert Notification.objects.filter(
+            target=guest_profile.meta,
+            title="Już 3 osób wyświetliło Twój profil!",
+        ).exists()
+        assert Notification.objects.filter(
+            target=scout_profile.meta,
+            title="Już 1 osób wyświetliło Twój profil!",
+        ).exists()

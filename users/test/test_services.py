@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import List, Optional, Set
 from unittest import TestCase
 from unittest.mock import patch
@@ -5,17 +6,28 @@ from unittest.mock import patch
 import pytest
 from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth import get_user_model
+from django.core import mail
+from django.utils import timezone
 
 from features.models import AccessPermission, Feature, FeatureElement
+from mailing.default_templates import (
+    GIFT_FOR_1_REFERRAL_REFERRED,
+    GIFT_FOR_1_REFERRAL_REFERRER,
+    GIFT_FOR_3_REFERRALS,
+    GIFT_FOR_5_REFERRALS,
+    GIFT_FOR_15_REFERRALS,
+)
 from roles.definitions import PLAYER_SHORT
+from users.models import Ref
 from users.schemas import UserGoogleDetailPydantic
 from users.services import UserService
 from utils.factories.feature_sets_factories import (
     AccessPermissionFactory,
     FeatureFactory,
 )
+from utils.factories.profiles_factories import PlayerProfileFactory
 from utils.factories.social_factories import SocialAccountFactory
-from utils.factories.user_factories import UserFactory
+from utils.factories.user_factories import UserFactory, UserRefFactory
 from utils.test.test_utils import TEST_EMAIL
 
 User = get_user_model()
@@ -250,3 +262,192 @@ class TestUserService(TestCase):
         UserFactory.create(email=email)
         res: bool = self.user_service.email_available(email)
         assert res is False
+
+
+class TestRefferalSystem:
+    def test_create_ref_without_user(self):
+        """Test if Ref can be created without user"""
+        ref = Ref.objects.create(title="test-title", description="test-description")
+
+        assert not ref.user
+        assert ref.uuid
+        assert ref.title == "test-title"
+        assert ref.description == "test-description"
+
+    def test_user_always_have_referral(self):
+        """Test if user always have referral"""
+        user = UserFactory()
+
+        assert user.ref
+        assert user.ref.referrals.count() == 0
+
+    def test_reward_user_notify_admins(self):
+        profile = PlayerProfileFactory.create()
+        ref = profile.user.ref
+
+        assert ref.registered_users.count() == 0
+        assert not profile.is_premium
+
+        for _ in range(10):
+            UserRefFactory(ref_by=ref)
+
+        last_mail = mail.outbox[-1]
+
+        assert ref.registered_users.count() == 10
+        assert (
+            last_mail.subject
+            == f"[Django] Osiągnięto 10 poleconych użytkowników przez {str(ref)}."
+        )
+        assert last_mail.body == f"Link afiliacyjny {str(ref)} osiągnął 10 poleconych."
+
+        for _ in range(10):
+            UserRefFactory(ref_by=ref)
+
+        last_mail = mail.outbox[-1]
+
+        assert (
+            last_mail.subject
+            == f"[Django] Osiągnięto 20 poleconych użytkowników przez {str(ref)}."
+        )
+
+        for _ in range(10):
+            UserRefFactory(ref_by=ref)
+
+        last_mail = mail.outbox[-1]
+
+        assert (
+            last_mail.subject
+            == f"[Django] Osiągnięto 30 poleconych użytkowników przez {str(ref)}."
+        )
+
+    def test_reward_non_user_referral_after_10_invites(self):
+        ref = Ref.objects.create(title="test-title", description="test-description")
+
+        assert ref.registered_users.count() == 0
+
+        for _ in range(10):
+            UserRefFactory(ref_by=ref)
+
+        last_mail = mail.outbox[-1]
+
+        assert ref.registered_users.count() == 10
+        assert (
+            last_mail.subject
+            == f"[Django] Osiągnięto 10 poleconych użytkowników przez {str(ref)}."
+        )
+        assert last_mail.body == f"Link afiliacyjny {str(ref)} osiągnął 10 poleconych."
+
+    def test_failed_to_reward_user_after_10_invites(self):
+        user = PlayerProfileFactory.create().user
+        ref = user.ref
+
+        assert ref.registered_users.count() == 0
+
+        for _ in range(10):
+            UserRefFactory(ref_by=ref)
+
+        last_mail = mail.outbox[-1]
+
+        assert ref.registered_users.count() == 10
+        assert (
+            last_mail.subject
+            == f"[Django] Osiągnięto 10 poleconych użytkowników przez {str(ref)}."
+        )
+        assert last_mail.body == f"Link afiliacyjny {str(ref)} osiągnął 10 poleconych."
+
+    def test_reward_1_referral(self):
+        user = PlayerProfileFactory.create().user
+        ref = user.ref
+
+        assert ref.registered_users.count() == 0
+        assert not user.profile.is_premium
+
+        user_ref = UserRefFactory(ref_by=ref).user
+        last_mails = {m.to[0]: m for m in mail.outbox[-2:]}
+
+        assert ref.registered_users.count() == 1
+        assert (
+            last_mails[user_ref.email].subject
+            == "Witaj w PlayMaker.pro! Odbierz swój prezent powitalny"
+        )
+        assert last_mails[user_ref.email].body == GIFT_FOR_1_REFERRAL_REFERRED
+        assert (
+            last_mails[user.email].subject
+            == "Gratulacje! Otrzymujesz nagrodę za polecenie nowego użytkownika"
+        )
+        assert last_mails[user.email].body == GIFT_FOR_1_REFERRAL_REFERRER
+
+    def test_reward_3_referrals(self):
+        user = PlayerProfileFactory.create().user
+        ref = user.ref
+
+        assert ref.registered_users.count() == 0
+        assert not user.profile.is_premium
+
+        for _ in range(3):
+            UserRefFactory(ref_by=ref)
+
+        last_mails = {m.to[0]: m for m in mail.outbox[-1:]}
+
+        assert ref.registered_users.count() == 3
+        assert (
+            last_mails[user.email].subject
+            == "Gratulacje! Nagroda za 3 skuteczne polecenia PlayMaker.pro"
+        )
+        assert last_mails[user.email].body == GIFT_FOR_3_REFERRALS
+        assert user.profile.is_premium
+        assert (
+            user.profile.premium.valid_until.date()
+            == timezone.now().date() + timedelta(days=14)
+        )
+
+    def test_reward_5_referrals(self):
+        user = PlayerProfileFactory.create().user
+        ref = user.ref
+
+        assert ref.registered_users.count() == 0
+        assert not user.profile.is_premium
+
+        for _ in range(5):
+            UserRefFactory(ref_by=ref)
+
+        last_mails = {m.to[0]: m for m in mail.outbox[-1:]}
+
+        assert ref.registered_users.count() == 5
+        assert (
+            last_mails[user.email].subject
+            == "Gratulacje! Otrzymujesz miesiąc Premium i treningi za 5 poleceń PlayMaker.pro"
+        )
+        assert last_mails[user.email].body == GIFT_FOR_5_REFERRALS
+        assert user.profile.is_premium
+        assert (
+            user.profile.premium.valid_until.date()
+            == timezone.now().date() + timedelta(days=30) + timedelta(days=14)
+        )
+
+    def test_reward_15_referrals(self):
+        user = PlayerProfileFactory.create().user
+        ref = user.ref
+
+        assert ref.registered_users.count() == 0
+        assert not user.profile.is_premium
+
+        for _ in range(15):
+            UserRefFactory(ref_by=ref)
+
+        last_mails = {m.to[0]: m for m in mail.outbox[-1:]}
+
+        assert ref.registered_users.count() == 15
+        assert (
+            last_mails[user.email].subject
+            == "Gratulacje! 6 miesięcy Premium za 15 poleceń PlayMaker.pro"
+        )
+        assert last_mails[user.email].body == GIFT_FOR_15_REFERRALS
+        assert user.profile.is_premium
+        assert (
+            user.profile.premium.valid_until.date()
+            == timezone.now().date()
+            + timedelta(days=180)
+            + timedelta(days=30)
+            + timedelta(days=14)
+        )

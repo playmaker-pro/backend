@@ -2,20 +2,6 @@ from celery import shared_task
 
 
 @shared_task
-def reward_referrals_with_premium(premium_products_id):
-    from premium.models import PremiumProduct, PremiumType
-
-    try:
-        pp_object = PremiumProduct.objects.get(pk=premium_products_id)
-    except PremiumProduct.DoesNotExist:
-        return
-
-    setup_premium_profile(
-        pp_object.profile.pk, pp_object.profile.__class__.__name__, PremiumType.MONTH
-    )
-
-
-@shared_task
 def setup_premium_profile(
     profile_id: int, profile_class: str, premium_type: str, period: int = None
 ) -> None:

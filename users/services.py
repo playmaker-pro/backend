@@ -12,7 +12,17 @@ from django.utils.http import urlsafe_base64_decode
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from features.models import AccessPermission, Feature, FeatureElement
+from mailing.default_templates import (
+    GIFT_FOR_1_REFERRAL_REFERRED,
+    GIFT_FOR_1_REFERRAL_REFERRER,
+    GIFT_FOR_3_REFERRALS,
+    GIFT_FOR_5_REFERRALS,
+    GIFT_FOR_15_REFERRALS,
+)
 from mailing.models import EmailTemplate as _EmailTemplate
+from mailing.schemas import EmailSchema
+from mailing.services import MailingService
+from premium.models import PremiumType
 from users.errors import CityDoesNotExistException, InvalidUIDServiceException
 from users.managers import UserTokenManager
 from users.models import UserPreferences
@@ -276,3 +286,81 @@ class UserPreferencesService:
             localization__isnull=True
         ).values_list("user_id", flat=True)
         return User.objects.filter(id__in=user_ids)
+
+
+class ReferralRewardService:
+    def __init__(self, user: User) -> None:
+        self._user = user
+
+    def reward_1_referral(self, referred: User) -> None:
+        """
+        Reward the user for their first referral.
+        """
+        email_referral_schema = EmailSchema(
+            subject="Gratulacje! Otrzymujesz nagrodę za polecenie nowego użytkownika",
+            body=GIFT_FOR_1_REFERRAL_REFERRER,
+            recipients=[self._user.email],
+        )
+        email_referred_schema = EmailSchema(
+            subject="Witaj w PlayMaker.pro! Odbierz swój prezent powitalny",
+            body=GIFT_FOR_1_REFERRAL_REFERRED,
+            recipients=[referred.email],
+        )
+        MailingService(email_referral_schema).send_mail()
+        MailingService(email_referred_schema).send_mail()
+
+    def reward_3_referrals(self) -> None:
+        """
+        Reward the user for their third referral.
+        """
+        self._user.profile.setup_premium_profile(
+            premium_type=PremiumType.CUSTOM, period=14
+        )
+        schema = EmailSchema(
+            subject="Gratulacje! Nagroda za 3 skuteczne polecenia PlayMaker.pro",
+            body=GIFT_FOR_3_REFERRALS,
+            recipients=[self._user.email],
+        )
+        MailingService(schema).send_mail()
+
+    def reward_5_referrals(self) -> None:
+        """
+        Reward the user for their fifth referral.
+        """
+        self._user.profile.setup_premium_profile(premium_type=PremiumType.MONTH)
+        schema = EmailSchema(
+            subject="Gratulacje! Otrzymujesz miesiąc Premium i treningi za 5 poleceń PlayMaker.pro",
+            body=GIFT_FOR_5_REFERRALS,
+            recipients=[self._user.email],
+        )
+        MailingService(schema).send_mail()
+
+    def reward_15_referrals(self) -> None:
+        """
+        Reward the user for their fifteenth referral.
+        """
+        self._user.profile.setup_premium_profile(
+            premium_type=PremiumType.CUSTOM, period=180
+        )
+        schema = EmailSchema(
+            subject="Gratulacje! 6 miesięcy Premium za 15 poleceń PlayMaker.pro",
+            body=GIFT_FOR_15_REFERRALS,
+            recipients=[self._user.email],
+        )
+        MailingService(schema).send_mail()
+
+    def check_and_reward(self) -> None:
+        """
+        Check the number of referrals and reward the user accordingly.
+        """
+        registered_users = self._user.ref.registered_users.all()
+        invited_users = registered_users.count()
+
+        if invited_users == 1:
+            self.reward_1_referral(referred=registered_users.first().user)
+        elif invited_users == 3:
+            self.reward_3_referrals()
+        elif invited_users == 5:
+            self.reward_5_referrals()
+        elif invited_users == 15:
+            self.reward_15_referrals()

@@ -503,6 +503,10 @@ class Ref(models.Model):
     def url(self) -> str:
         return generate_fe_url_path("?ref_code=" + str(self.uuid))
 
+    @property
+    def is_user(self) -> bool:
+        return self.user is not None
+
     class Meta:
         verbose_name = "Afiliacja"
         verbose_name_plural = "Afiliacje"
