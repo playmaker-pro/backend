@@ -40,21 +40,30 @@ class UserSerializer(serializers.ModelSerializer):
 class UserSocialStatsSerializer(serializers.Serializer):
     """User social stats serializer for player profile view"""
 
-    followers = serializers.IntegerField(source="profile.who_follows_me.count")
-    following = serializers.IntegerField(source="following.count")
-    views = serializers.IntegerField(source="profile.visitation.count_who_visited_me")
+    # followers = serializers.IntegerField(source="profile.who_follows_me.count")
+    # following = serializers.IntegerField(source="following.count")
+    # views = serializers.IntegerField(source="profile.visitation.count_who_visited_me")
 
     def to_representation(self, instance):
         """
         Convert the instance to a dictionary representation.
         """
-        # Call the parent class's to_representation method
         representation = super().to_representation(instance)
 
         if self.context.get("hide_values", False):
             representation["followers"] = None
             representation["following"] = None
             representation["views"] = None
+        else:
+            if instance.profile:
+                representation["followers"] = instance.profile.who_follows_me.count()
+                representation["views"] = (
+                    instance.profile.visitation.count_who_visited_me
+                )
+            else:
+                representation["followers"] = 0
+                representation["views"] = 0
+            representation["following"] = instance.following.count()
 
         return representation
 
