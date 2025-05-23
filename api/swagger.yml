@@ -1150,6 +1150,28 @@ paths:
                     items:
                       $ref: '#/components/schemas/TransferRequestGet'
                 required: [ "count", "next", "previous", "results" ]
+  /followers/:
+    get:
+      operationId: followers_list
+      description: "List of profiles following user"
+      summary: "List of profiles following user"
+      tags:
+        - followers
+      security:
+        - jwtAuth: [ ]
+        - { }
+      responses:
+        '200':
+          description: 'List of profiles following user'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SuggestedProfile'
+        '401':
+          description: "Unauthorized"
+
   /followers/my-follows/:
     'get':
       operationId: followed_profiles_list
@@ -1295,7 +1317,67 @@ paths:
                   error:
                     type: string
                     example: "The specified profile or follow relationship does not exist."
-
+  /profiles/popular/:
+    get:
+      operationId: popular_profiles
+      description: "Get list of popular profiles"
+      summary: "Get list of popular profiles"
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: array
+            items:
+              type: string
+          description: 'Profile role shortcut {P, C, T, G, S, ...}'
+        - in: query
+          name: longitude
+          schema:
+            type: number
+          description: "User's longitude"
+        - in: query
+          name: latitude
+          schema:
+            type: number
+          description: "User's latitude"
+        - in: query
+          name: radius
+          schema:
+            type: integer
+          description: Radius in kilometers for filtering profiles around the given geolocation
+        - in: query
+          name: min_age
+          schema:
+            type: integer
+          description: "Age minimum"
+        - in: query
+          name: max_age
+          schema:
+            type: integer
+          description: "Age maximum"
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: "Page number"
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+          description: "Count of objects by page"
+      tags:
+        - profiles
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: "List of popular profiles"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SuggestedProfile'
   /profiles/:
     post:
       operationId: profiles_create

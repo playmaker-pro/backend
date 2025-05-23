@@ -980,7 +980,6 @@ def test_if_response_is_ordered_by_data_score(
         int(obj.data_fulfill_status)
         for obj in sorted(profiles, key=lambda x: x.data_fulfill_status)
     ]
-
     response: Response = api_client.get(reverse(url) + "?role=P")
     user_ids_response = [obj["user"]["id"] for obj in response.data["results"]]
 

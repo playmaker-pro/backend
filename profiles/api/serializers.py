@@ -1434,12 +1434,12 @@ class ProfileVisitorSerializer(serializers.Serializer):
 class ProfileVisitSummarySerializer(serializers.Serializer):
     this_month_count = serializers.SerializerMethodField()
     this_year_count = serializers.SerializerMethodField()
-    visits = ProfileVisitorSerializer(many=True, read_only=True, source="*")
+    visits = ProfileVisitorSerializer(
+        many=True, read_only=True, source="meta.who_visited_me"
+    )
 
-    def get_this_month_count(self, v_qs: QuerySet[models.ProfileVisitation]) -> int:
-        return v_qs.count()
+    def get_this_month_count(self, profile: models.PROFILE_TYPE) -> int:
+        return profile.meta.who_visited_me.count()
 
-    def get_this_year_count(self, v_qs: QuerySet[models.ProfileVisitation]) -> int:
-        if v_qs.first():
-            return v_qs.first().visited.visitors_count_this_year
-        return 0
+    def get_this_year_count(self, profile: models.PROFILE_TYPE) -> int:
+        return profile.visitation.visitors_count_this_year

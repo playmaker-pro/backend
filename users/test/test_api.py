@@ -44,6 +44,8 @@ from utils.test.test_utils import (
     mute_post_save_signal,
 )
 
+pytestmark = pytest.mark.django_db
+
 
 @pytest.fixture(autouse=True)
 def mock_cache():

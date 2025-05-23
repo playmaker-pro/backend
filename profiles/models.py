@@ -40,7 +40,7 @@ from premium.models import (
 from premium.tasks import setup_premium_profile
 from profiles.errors import VerificationCompletionFieldsWrongSetup
 from profiles.managers import ProfileManager
-from profiles.mixins import TeamObjectsDisplayMixin
+from profiles.mixins import TeamObjectsDisplayMixin, VisitationMixin
 from profiles.mixins import utils as profile_utils
 from roles import definitions
 from voivodeships.models import Voivodeships
@@ -2542,40 +2542,21 @@ class Visitation(models.Model):
         )
         self.save()
 
-    @property
-    def profile(self) -> BaseProfile:
-        for profile_model_name in (
-            "playerprofile",
-            "coachprofile",
-            "scoutprofile",
-            "managerprofile",
-            "guestprofile",
-            "clubprofile",
-            "otherprofile",
-            "refereeprofile",
-        ):
-            if profile := getattr(self, profile_model_name, None):
-                return profile
-
-    @property
-    def count_who_visited_me(self) -> int:
-        return self.who_visited_me.count()
-
-    @property
-    def who_visited_me(self):
-        return self.visited_objects.all()
-
-    @property
-    def who_i_visited(self):
-        return self.visited_by_me.all()
-
 
 class ProfileVisitation(models.Model):
     visited = models.ForeignKey(
-        Visitation, on_delete=models.CASCADE, related_name="visited_objects"
+        "ProfileMeta",
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False,
+        related_name="visited_objects",
     )
     visitor = models.ForeignKey(
-        Visitation, on_delete=models.CASCADE, related_name="visited_by_me"
+        "ProfileMeta",
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False,
+        related_name="visited_by_me",
     )
     timestamp = models.DateTimeField(auto_now_add=True)
 
@@ -2594,17 +2575,21 @@ class ProfileVisitation(models.Model):
         If visitation exists, update timestamp.
         """
         if obj := cls.objects.filter(
-            visitor=visitor.visitation, visited=visited.visitation
+            visitor=visitor.meta, visited=visited.meta
         ).first():
-            obj.timestamp = timezone.now()
-            obj.save()
+            obj.refresh()
         else:
-            obj = cls.objects.create(
-                visitor=visitor.visitation, visited=visited.visitation
-            )
+            obj = cls.objects.create(visitor=visitor.meta, visited=visited.meta)
         visited.visitation.increment_visitors_count_this_year()
 
         return obj
+
+    def refresh(self):
+        """
+        Refreshes the visitation object by updating the timestamp to the current time.
+        """
+        self.timestamp = timezone.now()
+        self.save()
 
     @property
     def days_ago(self) -> int:
@@ -2826,7 +2811,7 @@ class Catalog(models.Model):
         return self.name
 
 
-class ProfileMeta(models.Model):
+class ProfileMeta(models.Model, VisitationMixin):
     _profile_class = models.CharField(max_length=20)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

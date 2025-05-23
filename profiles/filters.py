@@ -126,7 +126,7 @@ class ProfileListAPIFilter(APIFilter):
             if sort_param == "popularity":
                 self.queryset = (
                     self.queryset.annotate(
-                        popularity_count=Count("visitation__visited_objects")
+                        popularity_count=Count("meta__visited_objects")
                     )
                     .order_by("popularity_count")
                     .distinct()
@@ -134,7 +134,7 @@ class ProfileListAPIFilter(APIFilter):
             elif sort_param == "-popularity":
                 self.queryset = (
                     self.queryset.annotate(
-                        popularity_count=Count("visitation__visited_objects")
+                        popularity_count=Count("meta__visited_objects")
                     )
                     .order_by("-popularity_count")
                     .distinct()
@@ -234,7 +234,7 @@ class ProfileListAPIFilter(APIFilter):
             except ValueError as e:
                 raise api_errors.InvalidCountryCode(e)
 
-    def filter_localization(self) -> None:
+    def filter_localization(self, user_relation: str = "user") -> None:
         """Filter queryset by localization"""
         longitude, latitude, radius = (
             self.query_params.get("longitude"),
@@ -243,7 +243,7 @@ class ProfileListAPIFilter(APIFilter):
         )
         if longitude and latitude:
             self.queryset = self.service.filter_localization(
-                self.queryset, latitude, longitude, radius
+                self.queryset, latitude, longitude, radius, user_relation
             )
 
     def filter_league(self) -> None:

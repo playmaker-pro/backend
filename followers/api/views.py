@@ -1,8 +1,7 @@
 import uuid
 
-from django.contrib.auth.models import AnonymousUser
-from rest_framework import exceptions, status
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -28,6 +27,7 @@ from followers.models import GenericFollow
 from followers.services import FollowServices
 from profiles.api.errors import PermissionDeniedHTTPException
 from profiles.api.mixins import ProfileRetrieveMixin
+from profiles.api.serializers import SuggestedProfileSerializer
 from profiles.errors import CatalogDoesNotExist, CatalogNotFoundServiceException
 from profiles.models import Catalog
 from profiles.services import ProfileService
@@ -39,17 +39,34 @@ team_service = TeamHistoryCreationService()
 
 
 class FollowAPIView(EndpointView, ProfileRetrieveMixin):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticated]
 
     def list_followed_objects(self, request: Request) -> Response:
         """
         List all objects followed by the current user.
         """
-        if isinstance(request.user, AnonymousUser):
-            raise exceptions.NotAuthenticated
         existing_follows = GenericFollow.objects.with_existing_objects(request.user)
         serializer = FollowSerializers(
             existing_follows, many=True, context={"request": request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def list_my_followers(self, request: Request) -> Response:
+        """
+        List all followers of the current user.
+        """
+        if profile := request.user.profile:
+            qs = [
+                obj.user.profile
+                for obj in profile.who_follows_me.filter(
+                    content_type__app_label="profiles"
+                )
+                if obj.user and obj.user.profile
+            ]
+        else:
+            qs = []
+        serializer = SuggestedProfileSerializer(
+            qs, many=True, context={"request": request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 

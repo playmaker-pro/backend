@@ -40,10 +40,6 @@ class UserSerializer(serializers.ModelSerializer):
 class UserSocialStatsSerializer(serializers.Serializer):
     """User social stats serializer for player profile view"""
 
-    # followers = serializers.IntegerField(source="profile.who_follows_me.count")
-    # following = serializers.IntegerField(source="following.count")
-    # views = serializers.IntegerField(source="profile.visitation.count_who_visited_me")
-
     def to_representation(self, instance):
         """
         Convert the instance to a dictionary representation.
@@ -57,9 +53,7 @@ class UserSocialStatsSerializer(serializers.Serializer):
         else:
             if instance.profile:
                 representation["followers"] = instance.profile.who_follows_me.count()
-                representation["views"] = (
-                    instance.profile.visitation.count_who_visited_me
-                )
+                representation["views"] = instance.profile.meta.count_who_visited_me
             else:
                 representation["followers"] = 0
                 representation["views"] = 0

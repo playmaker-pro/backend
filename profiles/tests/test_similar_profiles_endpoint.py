@@ -4,45 +4,14 @@ from unittest.mock import patch
 import pytest
 from django.urls import reverse
 from django.utils import timezone
-from rest_framework.test import APIClient
 
 from profiles.models import CoachProfile
 from utils import factories
-from utils.factories import CityFactory
 
 url_suggested_profiles = "api:profiles:get_suggested_profiles"
 url_profiles_near_me = "api:profiles:get_profiles_near_me"
 time_now = timezone.now()
 pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture()
-def city_wwa():
-    return CityFactory.create_with_coordinates(
-        name="Warsaw",
-        coordinates=(21.0122, 52.2297),
-    )
-
-
-@pytest.fixture
-def city_prsk():
-    return CityFactory.create_with_coordinates(
-        name="Pruszków",
-        coordinates=(20.8072, 52.1684),
-    )
-
-
-@pytest.fixture
-def city_rdm():
-    return CityFactory.create_with_coordinates(
-        name="Radom", coordinates=(21.1572, 51.4025)
-    )
-
-
-@pytest.fixture
-def api_client():
-    client: APIClient = APIClient()
-    return client
 
 
 class TestSimilarProfilesAPI:

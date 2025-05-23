@@ -6,6 +6,7 @@ from django.urls import reverse
 from parameterized import parameterized
 from rest_framework.test import APITestCase
 
+from followers.services import FollowServices
 from labels.services import LabelService
 from utils.factories import (
     CatalogFactory,
@@ -17,6 +18,7 @@ from utils.factories.followers_factories import GenericFollowFactory
 from utils.test.test_utils import UserManager
 
 label_service = LabelService()
+follow_service = FollowServices()
 
 
 class TestFollowAPI(APITestCase):
@@ -29,6 +31,18 @@ class TestFollowAPI(APITestCase):
         self.team = TeamFactory.create()
         self.club = ClubFactory.create()
         self.catalog = CatalogFactory.create()
+
+    def test_list_my_followers(self) -> None:
+        """Test listing all followers of a user."""
+        for _ in range(5):
+            follow_service.follow_profile(
+                self.superuser.profile.uuid, PlayerProfileFactory().user
+            )
+
+        response = self.client.get(reverse("api:followers:get_followers"))
+        data = response.json()
+        self.assertEqual(len(data), 5)
+        self.assertEqual(response.status_code, 200)
 
     @parameterized.expand([
         ("profile", "profile_uuid", lambda self: self.profile.uuid),

@@ -274,4 +274,11 @@ urlpatterns = [
         }),
         name="get_profiles_near_me",
     ),
+    path(
+        r"popular/",
+        views.PopularProfilesAPIView.as_view({
+            "get": "get_popular_profiles",
+        }),
+        name="get_popular_profiles",
+    ),
 ]

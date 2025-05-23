@@ -112,3 +112,19 @@ class TeamObjectsDisplayMixin:
     @utils.supress_exception
     def get_team_permalink(self):
         return self.get_team_object.get_permalink()
+
+
+class VisitationMixin:
+    """Mixin for ProfileVisitation model."""
+
+    @property
+    def count_who_visited_me(self) -> int:
+        return self.who_visited_me.count()
+
+    @property
+    def who_visited_me(self):
+        return self.visited_objects.all()
+
+    @property
+    def who_i_visited(self):
+        return self.visited_by_me.all()

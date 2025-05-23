@@ -4,6 +4,8 @@ from django.urls import reverse
 from notifications.models import Notification
 from notifications.services import NotificationService
 
+pytestmark = pytest.mark.django_db
+
 
 @pytest.fixture
 def profile_with_notifications(coach_profile):

@@ -32,8 +32,9 @@ from utils.test.test_utils import TEST_EMAIL
 
 User = get_user_model()
 
+pytestmark = pytest.mark.django_db
 
-@pytest.mark.django_db
+
 class TestUserService(TestCase):
     def setUp(self) -> None:
         self.user_service = UserService()

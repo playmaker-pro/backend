@@ -39,4 +39,4 @@ class GenericFollow(models.Model):
         return ModelClass.objects.filter(pk=self.object_id).exists()
 
     def __str__(self):
-        return f"{self.user} -- follows -- {self.content_object.user}"
+        return f"{self.user} -- follows -- {self.content_object}"

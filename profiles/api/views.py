@@ -9,7 +9,14 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.db.models import Case, IntegerField, ObjectDoesNotExist, QuerySet, When
+from django.db.models import (
+    Case,
+    Count,
+    IntegerField,
+    ObjectDoesNotExist,
+    QuerySet,
+    When,
+)
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -19,10 +26,11 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import PermissionDenied
 
+from api import utils as api_utils
 from api.base_view import EndpointViewWithFilter
 from api.consts import ChoicesTuple
 from api.errors import NotOwnerOfAnObject
-from api.pagination import TransferRequestCataloguePagePagination
+from api.pagination import PagePagination, TransferRequestCataloguePagePagination
 from api.serializers import ProfileEnumChoicesSerializer
 from api.views import EndpointView
 from clubs.services import LeagueService
@@ -42,7 +50,7 @@ from profiles.api.filters import TransferRequestCatalogueFilter
 from profiles.api.managers import SerializersManager
 from profiles.api.mixins import ProfileRetrieveMixin
 from profiles.filters import ProfileListAPIFilter
-from profiles.models import ProfileMeta, ProfileTransferRequest
+from profiles.models import PROFILE_MODEL_MAP, ProfileMeta, ProfileTransferRequest
 from profiles.serializers_detailed.base_serializers import (
     MainUserDataSerializer,
     ProfileTransferRequestSerializer,
@@ -314,6 +322,58 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
             serializer.save()
 
         return Response(serializer.data)
+
+
+class PopularProfilesAPIView(ProfileListAPIFilter, EndpointView):
+    pagination_class = PagePagination
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    PARAMS_PARSERS = {
+        "latitude": api_utils.convert_float,
+        "longitude": api_utils.convert_float,
+        "radius": api_utils.convert_int,
+        "min_age": api_utils.convert_int,
+        "max_age": api_utils.convert_int,
+        "role": api_utils.convert_str_list,
+    }
+
+    def get_queryset(self) -> QuerySet:
+        self.queryset = ProfileMeta.objects.annotate(
+            visitors_count=Count("visited_objects")
+        ).order_by("-visitors_count")
+        self.filter_queryset()
+        return self.queryset.distinct()
+
+    def filter_multiple_roles(self):
+        """Filter queryset by multiple roles"""
+        if roles := self.query_params.get("role", []):
+            try:
+                roles = [PROFILE_MODEL_MAP[role].__name__ for role in roles]
+            except KeyError:
+                raise api_errors.InvalidProfileRole
+            self.queryset = self.queryset.filter(_profile_class__in=roles)
+
+    def filter_queryset(self) -> QuerySet:
+        self.define_query_params()
+        self.filter_multiple_roles()
+        self.filter_localization()
+        self.filter_age()
+        return self.queryset
+
+    @method_decorator(cache_page(settings.DEFAULT_CACHE_LIFESPAN))
+    def get_popular_profiles(self, request: Request) -> Response:
+        """
+        Retrieve popular profiles based on the specified filter criteria.
+
+        This method processes a GET request containing various filter parameters
+        and returns a list of popular profiles that match these filters.
+        """
+        qs = self.get_queryset()
+        qs = self.paginate_queryset(qs)
+        qs = [obj.profile for obj in qs]
+        serializer = serializers.SuggestedProfileSerializer(
+            qs, many=True, source="user__profile"
+        )
+        return self.get_paginated_response(serializer.data)
 
 
 class SuggestedProfilesAPIView(EndpointView):
@@ -1266,7 +1326,5 @@ class VisitationView(EndpointView):
                 "Available only for premium users", status=status.HTTP_204_NO_CONTENT
             )
 
-        serializer = serializers.ProfileVisitSummarySerializer(
-            profile.visitation.who_visited_me,
-        )
+        serializer = serializers.ProfileVisitSummarySerializer(profile)
         return Response(serializer.data, status=status.HTTP_200_OK)

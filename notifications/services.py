@@ -173,7 +173,7 @@ class NotificationService:
         Send notifications for users with new visit summaries.
         """
         for meta in cls.get_queryset():
-            if meta.profile.visitation.count_who_visited_me > 0:
+            if meta.count_who_visited_me > 0:
                 cls(meta).notify_visits_summary()
 
     def notify_visits_summary(self) -> None:
@@ -182,7 +182,7 @@ class NotificationService:
         """
         body = self.parse_body(
             NotificationTemplate.VISITS_SUMMARY,
-            visited_by_count=self._meta.profile.visitation.count_who_visited_me,
+            visited_by_count=self._meta.profile.meta.count_who_visited_me,
         )
         self.create_notification(body)
 

@@ -573,7 +573,9 @@ class ProfileFilterService:
     ) -> django_base_models.QuerySet:
         """Filter profile queryset with minimum user age"""
         min_birth_date = utils.get_past_date(years=age)
-        return queryset.filter(user__userpreferences__birth_date__lte=min_birth_date)
+        return queryset.exclude(user__userpreferences__birth_date__isnull=True).filter(
+            user__userpreferences__birth_date__lte=min_birth_date
+        )
 
     @staticmethod
     def filter_max_age(
@@ -581,7 +583,9 @@ class ProfileFilterService:
     ) -> django_base_models.QuerySet:
         """Filter profile queryset with maximum user age"""
         max_birth_date = utils.get_past_date(years=age + 1)
-        return queryset.filter(user__userpreferences__birth_date__gte=max_birth_date)
+        return queryset.exclude(user__userpreferences__birth_date__isnull=True).filter(
+            user__userpreferences__birth_date__gte=max_birth_date
+        )
 
     @staticmethod
     def filter_player_position(
@@ -659,6 +663,7 @@ class ProfileFilterService:
         latitude: float,
         longitude: float,
         radius: int,
+        user_relation: str = "user",
     ) -> django_base_models.QuerySet:
         """
         Filter queryset with objects within radius based on
@@ -675,19 +680,19 @@ class ProfileFilterService:
                 django_base_functions.Cos(django_base_functions.Radians(latitude))
                 * django_base_functions.Cos(
                     django_base_functions.Radians(
-                        "user__userpreferences__localization__latitude"
+                        f"{user_relation}__userpreferences__localization__latitude"
                     )
                 )
                 * django_base_functions.Cos(
                     django_base_functions.Radians(
-                        "user__userpreferences__localization__longitude"
+                        f"{user_relation}__userpreferences__localization__longitude"
                     )
                     - django_base_functions.Radians(longitude)
                 )
                 + django_base_functions.Sin(django_base_functions.Radians(latitude))
                 * django_base_functions.Sin(
                     django_base_functions.Radians(
-                        "user__userpreferences__localization__latitude"
+                        f"{user_relation}__userpreferences__localization__latitude"
                     )
                 )
             )
