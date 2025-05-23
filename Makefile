@@ -64,3 +64,8 @@ start-celery-beat:
 .PHONY: stop-celery-beat
 stop-celery-beat:
 	kill -9 `cat .celerybeat.pid`
+
+
+.PHONY: shell
+shell:
+	poetry run python manage.py shell
