@@ -81,8 +81,14 @@ class Command(BaseCommand):
         parser.add_argument(
             "--href",
             type=str,
-            default="/",
+            default="",
             help="Link associated with the notification",
+        )
+        parser.add_argument(
+            "--icon",
+            type=str,
+            default="",
+            help="Icon name associated with the notification",
         )
         parser.add_argument(
             "--players",
