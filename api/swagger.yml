@@ -1168,7 +1168,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SuggestedProfile'
+                  oneOf:
+                    - $ref: '#/components/schemas/PlayerProfileView'
+                    - $ref: '#/components/schemas/CoachProfile'
+                    - $ref: '#/components/schemas/ScoutProfile'
+                    - $ref: '#/components/schemas/ClubProfileView'
+                    - $ref: '#/components/schemas/ManagerProfile'
+                    - $ref: '#/components/schemas/GuestProfile'
         '401':
           description: "Unauthorized"
 

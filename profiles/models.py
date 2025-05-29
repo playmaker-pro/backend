@@ -30,6 +30,7 @@ from adapters.player_adapter import (
 )
 from external_links.models import ExternalLinks
 from external_links.utils import create_or_update_profile_external_links
+from followers.models import GenericFollow
 from mapper.models import Mapper
 from premium.models import (
     PremiumProduct,
@@ -377,13 +378,23 @@ class BaseProfile(models.Model, EventLogMixin):
             return None
 
     @property
-    def who_follows_me(self) -> models.QuerySet:
+    def who_follows_me(self) -> models.QuerySet[GenericFollow]:
         """Get all users who follows me"""
         content_type = ContentType.objects.get_for_model(self.__class__)
         return self.follows.filter(
             content_type=content_type,
             object_id=self.pk,
         )
+
+    @property
+    def who_i_follow(self) -> models.QuerySet[GenericFollow]:
+        """Get all users who I follow"""
+        return self.what_i_follow.filter(content_type__model__icontains="profile")
+
+    @property
+    def what_i_follow(self) -> models.QuerySet[GenericFollow]:
+        """Get all followed objects by user"""
+        return GenericFollow.objects.filter(user=self.user)
 
     @property
     def specific_role_field_name(self) -> str:

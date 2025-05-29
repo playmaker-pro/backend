@@ -1,8 +1,10 @@
 import datetime
+from unittest.mock import patch
 
 import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
+from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
 from api.consts import ChoicesTuple
 from profiles import models
@@ -23,9 +25,14 @@ from roles.definitions import TRANSFER_STATUS_CHOICES_WITH_UNDEFINED
 from utils import testutils as utils
 from utils.factories import (
     SEASON_NAMES,
+    ClubProfileFactory,
+    CoachProfileFactory,
+    GuestProfileFactory,
     LeagueFactory,
+    ManagerProfileFactory,
     PlayerProfileFactory,
     PositionFactory,
+    ScoutProfileFactory,
     SeasonFactory,
     TeamContributorFactory,
     TeamFactory,
@@ -34,6 +41,8 @@ from utils.factories import (
 
 team_contributor_service = TeamContributorService()
 utils.silence_explamation_mark()
+
+pytestmark = pytest.mark.django_db
 
 
 class VerificationServiceTest(TestCase):
@@ -92,12 +101,10 @@ class PlayerPositionServiceTest(TestCase):
             self.position_service.manage_positions(self.profile, self.positions_data)
 
     def test_update_positions_raises_error_for_more_than_two_non_main_positions(self):
-        self.positions_data.extend(
-            [
-                PositionData(player_position=4, is_main=False),
-                PositionData(player_position=5, is_main=False),
-            ]
-        )
+        self.positions_data.extend([
+            PositionData(player_position=4, is_main=False),
+            PositionData(player_position=5, is_main=False),
+        ])
         with self.assertRaises(TooManyAlternatePositionsError):
             self.position_service.manage_positions(self.profile, self.positions_data)
 
@@ -360,3 +367,58 @@ class TestTransferStatusService:
             for transfer in TRANSFER_STATUS_CHOICES_WITH_UNDEFINED
         ]
         assert obj == expected
+
+
+@pytest.mark.parametrize(
+    "factory",
+    [
+        PlayerProfileFactory,
+        CoachProfileFactory,
+        ScoutProfileFactory,
+        ClubProfileFactory,
+        GuestProfileFactory,
+        ManagerProfileFactory,
+    ],
+)
+def test_new_profile_has_scheduled_tasks(factory):
+    """Test if a profile has scheduled tasks."""
+    with patch("django.utils.timezone.now") as mock_now:
+        mock_now.return_value = datetime.datetime(2025, 1, 1, 12, 0, 0)
+        profile = factory.create()
+
+        assert PeriodicTask.objects.filter(
+            name=f"Run one hour after profile creation [ {profile.pk} -- {profile.__class__.__name__} ]",
+            task="app.celery.tasks.check_profile_one_hour_after",
+            args=[profile.pk, profile.__class__.__name__],
+            one_off=True,
+            clocked=ClockedSchedule.objects.get(
+                clocked_time=mock_now.return_value + datetime.timedelta(hours=1)
+            ),
+        ).exists()
+        assert PeriodicTask.objects.filter(
+            name=f"Run one day after profile creation [ {profile.pk} -- {profile.__class__.__name__} ]",
+            task="app.celery.tasks.check_profile_one_day_after",
+            args=[profile.pk, profile.__class__.__name__],
+            one_off=True,
+            clocked=ClockedSchedule.objects.get(
+                clocked_time=mock_now.return_value + datetime.timedelta(days=1)
+            ),
+        ).exists()
+        assert PeriodicTask.objects.filter(
+            name=f"Run two days after profile creation [ {profile.pk} -- {profile.__class__.__name__} ]",
+            task="app.celery.tasks.check_profile_two_days_after",
+            args=[profile.pk, profile.__class__.__name__],
+            one_off=True,
+            clocked=ClockedSchedule.objects.get(
+                clocked_time=mock_now.return_value + datetime.timedelta(days=2)
+            ),
+        ).exists()
+        assert PeriodicTask.objects.filter(
+            name=f"Run four days after profile creation [ {profile.pk} -- {profile.__class__.__name__} ]",
+            task="app.celery.tasks.check_profile_four_days_after",
+            args=[profile.pk, profile.__class__.__name__],
+            one_off=True,
+            clocked=ClockedSchedule.objects.get(
+                clocked_time=mock_now.return_value + datetime.timedelta(days=4)
+            ),
+        ).exists()

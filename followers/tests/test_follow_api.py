@@ -6,7 +6,7 @@ from django.urls import reverse
 from parameterized import parameterized
 from rest_framework.test import APITestCase
 
-from followers.services import FollowServices
+from followers.services import FollowService
 from labels.services import LabelService
 from utils.factories import (
     CatalogFactory,
@@ -18,7 +18,7 @@ from utils.factories.followers_factories import GenericFollowFactory
 from utils.test.test_utils import UserManager
 
 label_service = LabelService()
-follow_service = FollowServices()
+follow_service = FollowService()
 
 
 class TestFollowAPI(APITestCase):

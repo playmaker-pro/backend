@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
 from features.models import Feature
-from followers.services import FollowServices
+from followers.services import FollowService
 from payments.models import Transaction
 from premium.models import Product
 from profiles.models import GuestProfile, ProfileVisitation
@@ -1290,7 +1290,7 @@ class TestGetMyProfileEndpoint:
         self, api_client: APIClient, coach_profile, guest_profile
     ) -> None:
         """Test if response is OK"""
-        follow_service = FollowServices()
+        follow_service = FollowService()
         profile = PlayerProfileFactory(user__userpreferences__gender="M")
         api_client.force_authenticate(user=profile.user)
         follow_service.follow_profile(

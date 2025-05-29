@@ -6,7 +6,9 @@ from django.utils import timezone
 
 from mailing.deprecated import mail_role_change_request
 from notifications.services import NotificationService
-from profiles.tasks import post_create_profile_tasks
+from profiles.tasks import (
+    post_create_profile_tasks,
+)
 from users.models import User
 
 from . import models

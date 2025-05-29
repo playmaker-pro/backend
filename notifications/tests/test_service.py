@@ -3,11 +3,13 @@ from unittest.mock import patch
 import pytest
 from django.utils import timezone
 
+from followers.services import FollowService
+from inquiries.models import InquiryRequest
 from notifications.models import Notification
 from notifications.services import NotificationService
 from premium.models import PremiumType
 from profiles.models import ProfileVisitation
-from utils.factories.external_links_factories import ExternalLinksEntityFactory
+from utils import factories
 
 pytestmark = pytest.mark.django_db
 
@@ -19,7 +21,17 @@ def mock_timezone_now():
 
 
 class TestNotifications:
-    def test_notify_check_trial(self, player_profile, coach_profile) -> None:
+    def assert_notification(self, template, meta):
+        notification = Notification.objects.filter(
+            title=template["title"],
+            description=template["description"],
+            href=template["href"],
+            icon=template.get("icon"),
+            target=meta,
+        )
+        assert notification.exists()
+
+    def test_notify_check_trial(self, player_profile, coach_profile):
         """
         Test the notify_check_trial function.
         """
@@ -29,9 +41,15 @@ class TestNotifications:
 
         NotificationService.bulk_notify_check_trial()
 
-        assert Notification.objects.filter(
-            target=player_profile.meta, title="Skorzystaj z wersji próbnej Premium"
-        ).exists()
+        self.assert_notification(
+            {
+                "title": "Skorzystaj z wersji próbnej Premium",
+                "description": "Wypróbuj 3 dni premium za darmo!",
+                "href": "/premium",
+                "icon": "premium",
+            },
+            player_profile.meta,
+        )
         assert not Notification.objects.filter(
             target=coach_profile.meta, title="Skorzystaj z wersji próbnej Premium"
         ).exists()
@@ -42,10 +60,15 @@ class TestNotifications:
         """
         coach_profile.setup_premium_profile(PremiumType.MONTH)
         NotificationService.bulk_notify_go_premium()
-
-        assert Notification.objects.filter(
-            target=player_profile.meta, title="Przejdź na Premium"
-        ).exists()
+        self.assert_notification(
+            {
+                "title": "Przejdź na Premium",
+                "description": "Sprawdź wszystkie możliwości i zyskaj przewagę!",
+                "href": "/premium",
+                "icon": "premium",
+            },
+            player_profile.meta,
+        )
         assert not Notification.objects.filter(
             target=coach_profile.meta, title="Przejdź na Premium"
         ).exists()
@@ -54,15 +77,22 @@ class TestNotifications:
         """
         Test the notify_verify_profile function.
         """
-        ExternalLinksEntityFactory.create(target=player_profile.external_links)
+        factories.ExternalLinksEntityFactory.create(
+            target=player_profile.external_links
+        )
         NotificationService.bulk_notify_verify_profile()
-
         assert not Notification.objects.filter(
             target=player_profile.meta, title="Zweryfikuj swój profil"
         ).exists()
-        assert Notification.objects.filter(
-            target=coach_profile.meta, title="Zweryfikuj swój profil"
-        ).exists()
+        self.assert_notification(
+            {
+                "title": "Zweryfikuj swój profil",
+                "description": "Dodaj linki do profili piłkarskich i zweryfikuj swój profil.",
+                "href": "/ustawienia",
+                "icon": "links",
+            },
+            coach_profile.meta,
+        )
 
     def test_notify_profile_hidden(self, player_profile, coach_profile) -> None:
         """
@@ -71,15 +101,20 @@ class TestNotifications:
         player_profile.user.display_status = "Niewyświetlany"
         player_profile.user.save()
         NotificationService.bulk_notify_profile_hidden()
-
-        assert Notification.objects.filter(
-            target=player_profile.meta, title="Profil tymczasowo ukryty"
-        ).exists()
+        self.assert_notification(
+            {
+                "title": "Profil tymczasowo ukryty",
+                "description": "Popraw informacje w profilu (imię, nazwisko, zdjęcie), aby przywrócić widoczność.",
+                "href": "/profil",
+                "icon": "hidden",
+            },
+            player_profile.meta,
+        )
         assert not Notification.objects.filter(
             target=coach_profile.meta, title="Profil tymczasowo ukryty"
         ).exists()
 
-    def test_notyfy_premium_just_expired(
+    def test_notify_premium_just_expired(
         self, coach_profile, mock_timezone_now
     ) -> None:
         """
@@ -103,13 +138,24 @@ class TestNotifications:
         Test the notify_pm_rank function.
         """
         NotificationService.bulk_notify_pm_rank()
-
-        assert Notification.objects.filter(
-            target=player_profile.meta, title="Ranking PM"
-        ).exists()
-        assert Notification.objects.filter(
-            target=coach_profile.meta, title="Ranking PM"
-        ).exists()
+        self.assert_notification(
+            {
+                "title": "Ranking PM",
+                "description": "Sprawdź, kto ma najwyższy PM Score w tym miesiacu",
+                "href": "/premium",
+                "icon": "pm-rank",
+            },
+            player_profile.meta,
+        )
+        self.assert_notification(
+            {
+                "title": "Ranking PM",
+                "description": "Sprawdź, kto ma najwyższy PM Score w tym miesiacu",
+                "href": "/premium",
+                "icon": "pm-rank",
+            },
+            coach_profile.meta,
+        )
 
     def test_notify_visits_summary(
         self, player_profile, coach_profile, guest_profile, scout_profile
@@ -124,10 +170,13 @@ class TestNotifications:
         ProfileVisitation.upsert(guest_profile, scout_profile)
         ProfileVisitation.upsert(scout_profile, player_profile)
         NotificationService.bulk_notify_visits_summary()
-
+        # dynamic title for visits_summary
         assert Notification.objects.filter(
             target=player_profile.meta,
             title="Już 2 osób wyświetliło Twój profil!",
+            description="Kliknij tutaj, aby zobaczyc kto to.",
+            href="/wyswietlenia",
+            icon="eye",
         ).exists()
         assert not Notification.objects.filter(
             target=coach_profile.meta,
@@ -136,8 +185,311 @@ class TestNotifications:
         assert Notification.objects.filter(
             target=guest_profile.meta,
             title="Już 3 osób wyświetliło Twój profil!",
+            description="Kliknij tutaj, aby zobaczyc kto to.",
+            href="/wyswietlenia",
+            icon="eye",
         ).exists()
         assert Notification.objects.filter(
             target=scout_profile.meta,
             title="Już 1 osób wyświetliło Twój profil!",
+            description="Kliknij tutaj, aby zobaczyc kto to.",
+            href="/wyswietlenia",
+            icon="eye",
+        ).exists()
+
+    def test_notify_welcome(self, player_profile):
+        """
+        Test the notify_welcome function.
+        """
+        assert Notification.objects.filter(
+            target=player_profile.meta,
+            title="Witaj w PlayMaker!",
+            description="Dziękujemy za dołączenie do społeczności, Twoja podróż zaczyna się tutaj! Sprawdź, co daje Ci PlayMaker!",
+            href="/profil?modal=welcome",
+            icon="playmaker",
+        ).exists()
+
+    def test_notify_new_follower(self, player_profile, coach_profile):
+        """
+        Test the notify_new_follower function.
+        """
+        FollowService().follow_profile(player_profile.uuid, coach_profile.user)
+
+        assert Notification.objects.filter(
+            target=player_profile.meta,
+            title="Ktoś Cię obserwuje",
+            description="Zobacz kto zaobserwował Twój profil.",
+            href="/obserowani",
+            icon="star",
+        ).exists()
+
+    def test_notify_inquiry_accepted(self, player_profile, coach_profile):
+        """
+        Test the notify_inquiry_accepted function.
+        """
+        inquiry = InquiryRequest.objects.create(
+            sender=coach_profile.user, recipient=player_profile.user
+        )
+        inquiry.accept()
+        inquiry.save()
+
+        assert Notification.objects.filter(
+            target=coach_profile.meta,
+            title__icontains="zaakceptował twoje zaproszenie",
+            description="Kliknij, aby sprawdzic odpowiedz.",
+            href="/kontakty?tab=kontakty",
+            icon="inquiry-accepted",
+        ).exists()
+
+    def test_notify_inquiry_rejected(self, player_profile, coach_profile):
+        """
+        Test the notify_inquiry_rejected function.
+        """
+        inquiry = InquiryRequest.objects.create(
+            sender=coach_profile.user, recipient=player_profile.user
+        )
+        inquiry.reject()
+        inquiry.save()
+
+        assert Notification.objects.filter(
+            target=coach_profile.meta,
+            title__icontains="odrzucił twoje zaproszenie",
+            description="Kliknij, aby sprawdzic odpowiedz.",
+            href="/kontakty?tab=zapytania&subtab=wyslane",
+            icon="inquiry-rejected",
+        ).exists()
+
+    def test_notify_inquiry_read(self, player_profile, coach_profile):
+        """
+        Test the notify_inquiry_read function.
+        """
+        inquiry = InquiryRequest.objects.create(
+            sender=coach_profile.user, recipient=player_profile.user
+        )
+        inquiry.read()
+        inquiry.save()
+
+        assert Notification.objects.filter(
+            target=coach_profile.meta,
+            title__icontains="odczytał twoje zaproszenie",
+            description="Kliknij, aby sprawdzic odpowiedz.",
+            href="/kontakty?tab=zapytania&subtab=wyslane",
+            icon="inquiry",
+        ).exists()
+
+    def test_notify_profile_visited(self, player_profile, coach_profile):
+        """
+        Test the notify_profile_visited function.
+        """
+        ProfileVisitation.upsert(player_profile, coach_profile)
+
+        notiification = Notification.objects.filter(
+            title="Wyświetlono twój profil",
+            description="Kliknij tutaj, aby zobaczyc kto to.",
+            href="/wyswietlenia",
+            icon="eye",
+        )
+        assert not notiification.filter(target=player_profile.meta).exists()
+        assert notiification.filter(target=coach_profile.meta).exists()
+
+    def test_notify_set_transfer_requests(
+        self, player_profile, coach_profile, scout_profile, guest_profile, club_profile
+    ):
+        """
+        Test the notify_set_transfer_requests function.
+        """
+        NotificationService.bulk_notify_set_transfer_requests()
+        notification = Notification.objects.filter(
+            title="Ustaw zapotrzebowanie transferowe!",
+            description="Kliknij tutaj, aby ustawic swoje zapotrzebowanie.",
+            href="/profil",
+            icon="transfer",
+        )
+
+        assert not notification.filter(target=player_profile.meta).exists()
+        assert notification.filter(target=coach_profile.meta).exists()
+        assert not notification.filter(target=scout_profile.meta).exists()
+        assert not notification.filter(target=guest_profile.meta).exists()
+        assert notification.filter(target=club_profile.meta).exists()
+
+    def test_notify_set_status(
+        self, player_profile, coach_profile, scout_profile, guest_profile, club_profile
+    ):
+        """
+        Test the notify_set_status function.
+        """
+        NotificationService.bulk_notify_set_status()
+        notification = Notification.objects.filter(
+            title="Ustaw status transferowy",
+            description="Kliknij tutaj, aby ustawic swój status.",
+            href="/profil",
+            icon="transfer",
+        )
+
+        assert notification.filter(target=player_profile.meta).exists()
+        assert not notification.filter(target=coach_profile.meta).exists()
+        assert not notification.filter(target=scout_profile.meta).exists()
+        assert not notification.filter(target=guest_profile.meta).exists()
+        assert not notification.filter(target=club_profile.meta).exists()
+
+    def test_notify_invite_friends(self, player_profile):
+        """
+        Test the notify_invite_friends function.
+        """
+        NotificationService(player_profile.meta).notify_invite_friends()
+        assert Notification.objects.filter(
+            target=player_profile.meta,
+            title="Zaproś znajomych",
+            description="Zapraszaj i wygrywaj nagrody!",
+            href="/moje-konto/zapros",
+            icon="send",
+        ).exists()
+
+    @pytest.mark.parametrize(
+        "fixture_name,has_links",
+        (
+            ("player_profile", True),
+            ("coach_profile", True),
+            ("scout_profile", False),
+            ("club_profile", True),
+            ("guest_profile", False),
+        ),
+    )
+    def test_notify_add_links(self, fixture_name, request, has_links):
+        """
+        Test the notify_add_links function.
+        """
+        profile = request.getfixturevalue(fixture_name)
+        if has_links:
+            profile.external_links.links.create(url="https://example.com")
+        else:
+            profile.external_links.links.all().delete()
+
+        NotificationService.bulk_notify_add_links()
+        assert (
+            Notification.objects.filter(
+                target=profile.meta,
+                title="Dodaj linki",
+                description="Kliknij tutaj, aby przejść do profilu.",
+                href="/profil",
+                icon="links",
+            ).exists()
+            is not has_links
+        )
+
+    @pytest.mark.parametrize(
+        "fixture_name, has_video",
+        (
+            ("player_profile", True),
+            ("coach_profile", False),
+            ("scout_profile", False),
+            ("club_profile", True),
+            ("guest_profile", False),
+        ),
+    )
+    def test_notify_add_video(self, fixture_name, request, has_video):
+        """
+        Test the notify_add_video function.
+        """
+        player_profile = request.getfixturevalue(fixture_name)
+        if has_video:
+            player_profile.user.user_video.create(url="https://example.com/video.mp4")
+        else:
+            player_profile.user.user_video.all().delete()  # Ensure no videos exist
+
+        NotificationService(player_profile.meta).bulk_notify_add_video()
+        assert (
+            Notification.objects.filter(
+                target=player_profile.meta,
+                title="Dodaj video",
+                description="Kliknij tutaj, aby przejść do profilu.",
+                href="/profil",
+                icon="video",
+            ).exists()
+            is not has_video
+        )
+
+    @pytest.mark.parametrize(
+        "fixture_name,has_team_history",
+        (
+            ("player_profile", True),
+            ("coach_profile", False),
+            ("scout_profile", False),
+            ("club_profile", False),
+            ("guest_profile", False),
+        ),
+    )
+    def test_notify_assign_club(self, fixture_name, request, has_team_history):
+        """
+        Test the notify_assign_club function.
+        """
+        profile = request.getfixturevalue(fixture_name)
+        profile.team_history_object = (
+            factories.TeamHistoryFactory.create() if has_team_history else None
+        )
+        profile.save()
+
+        NotificationService(profile.meta).bulk_notify_assign_club()
+        assert (
+            Notification.objects.filter(
+                target=profile.meta,
+                title="Dodaj aktualną drużynę",
+                description="Kliknij tutaj, aby przejść do profilu.",
+                href="/profil",
+                icon="club",
+            ).exists()
+            is not has_team_history
+        )
+
+    def test_notify_new_inquiry(self, player_profile, coach_profile):
+        """
+        Test the notify_new_inquiry function.
+        """
+        InquiryRequest.objects.create(
+            sender=coach_profile.user, recipient=player_profile.user
+        )
+
+        assert Notification.objects.filter(
+            target=player_profile.meta,
+            title__icontains="Otrzymałeś/aś nowe zapytanie",
+            description__icontains="wysłał Ci zapytanie o kontakt.",
+            href="/kontakty?tab=zapytania",
+            icon="inquiry",
+        ).exists()
+
+    def test_notify_profile_verified(self, player_profile):
+        """
+        Test the notify_profile_verified function.
+        """
+        NotificationService(player_profile.meta).notify_profile_verified()
+        assert Notification.objects.filter(
+            target=player_profile.meta,
+            title="Twój profil został zweryfikowany!",
+            description="Potwierdziliśmy Twoją tożsamość. Korzystaj z PLAYMAKER.pro bez ograniczeń!",
+            href="/profil",
+            icon="success",
+        ).exists()
+
+    def test_profile_verified_after_setting_the_links(self, player_profile):
+        """
+        Test that profile verification notification is sent after setting links.
+        """
+        assert not Notification.objects.filter(
+            target=player_profile.meta,
+            title="Twój profil został zweryfikowany!",
+            description="Potwierdziliśmy Twoją tożsamość. Korzystaj z PLAYMAKER.pro bez ograniczeń!",
+            href="/profil",
+            icon="success",
+        ).exists()
+
+        player_profile.external_links.links.create(
+            url="https://example.com", target=player_profile.external_links
+        )
+
+        assert Notification.objects.filter(
+            target=player_profile.meta,
+            title="Twój profil został zweryfikowany!",
+            description="Potwierdziliśmy Twoją tożsamość. Korzystaj z PLAYMAKER.pro bez ograniczeń!",
+            href="/profil",
+            icon="success",
         ).exists()

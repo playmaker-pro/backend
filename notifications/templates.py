@@ -87,7 +87,7 @@ class NotificationTemplate(Enum):
     WELCOME = {
         "title": "Witaj w PlayMaker!",
         "description": "Dziękujemy za dołączenie do społeczności, Twoja podróż zaczyna się tutaj! Sprawdź, co daje Ci PlayMaker!",
-        "href": "/profil",
+        "href": "/profil?modal=welcome",
         "icon": "playmaker",
     }
     NEW_FOLLOWER = {
@@ -105,13 +105,13 @@ class NotificationTemplate(Enum):
     INQUIRY_REJECTED = {
         "title": "{profile} odrzucił twoje zaproszenie.",
         "description": "Kliknij, aby sprawdzic odpowiedz.",
-        "href": "/kontakty?tab=zapytania",
+        "href": "/kontakty?tab=zapytania&subtab=wyslane",
         "icon": "inquiry-rejected",
     }
     INQUIRY_READ = {
         "title": "{profile} odczytał twoje zaproszenie.",
         "description": "Kliknij, aby sprawdzic odpowiedz.",
-        "href": "/kontakty",
+        "href": "/kontakty?tab=zapytania&subtab=wyslane",
         "icon": "inquiry",
     }
     PROFILE_VISITED = {
@@ -161,6 +161,12 @@ class NotificationTemplate(Enum):
         "description": "{profile} wysłał Ci zapytanie o kontakt.",
         "href": "/kontakty?tab=zapytania",
         "icon": "inquiry",
+    }
+    PROFILE_VERIFIED = {
+        "title": "Twój profil został zweryfikowany!",
+        "description": "Potwierdziliśmy Twoją tożsamość. Korzystaj z PLAYMAKER.pro bez ograniczeń!",
+        "href": "/profil",
+        "icon": "success",
     }
 
     TEST = {

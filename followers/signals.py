@@ -8,5 +8,5 @@ from notifications.services import NotificationService
 @receiver(post_save, sender=models.GenericFollow)
 def post_follow(sender, instance, created, **kwargs) -> None:
     if created:
-        instance.user.profile.refresh_from_db()
-        NotificationService(instance.user.profile.meta).notify_new_follower()
+        if instance.content_type.model.endswith("profile"):
+            NotificationService(instance.content_object.meta).notify_new_follower()

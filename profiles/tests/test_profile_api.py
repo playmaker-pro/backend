@@ -10,7 +10,7 @@ from django.utils import timezone
 from parameterized import parameterized
 from rest_framework.test import APIClient, APITestCase
 
-from followers.services import FollowServices
+from followers.services import FollowService
 from labels.models import Label
 from labels.services import LabelService
 from profiles.models import ProfileVisitation, ProfileVisitHistory, TeamContributor
@@ -113,7 +113,7 @@ class TestGetProfileAPI(APITestCase):
     def _profile_for_social_stats(self):
         """Create a profile for testing social stats"""
         profile = factories.PlayerProfileFactory.create()
-        follow_service = FollowServices()
+        follow_service = FollowService()
         player_profile = PlayerProfileFactory()
         guest_profile = GuestProfileFactory()
         coach_profile = CoachProfileFactory()

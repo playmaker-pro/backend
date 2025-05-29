@@ -248,9 +248,11 @@ class NotificationService:
         """
         Send notifications for setting transfer requests.
         """
-        for meta in cls.get_queryset():
+        for meta in cls.get_queryset().filter(
+            _profile_class__in=["CoachProfile", "ClubProfile", "ManagerProfile"]
+        ):
             if meta.profile.transfer_requests.count() == 0:
-                cls(meta).notify_set_transfer_requests
+                cls(meta).notify_set_transfer_requests()
 
     def notify_set_transfer_requests(self) -> None:
         """
@@ -266,7 +268,7 @@ class NotificationService:
         """
         Send notifications for setting status.
         """
-        for meta in cls.get_queryset():
+        for meta in cls.get_queryset().filter(_profile_class="PlayerProfile"):
             if meta.profile.transfer_status_related.count() == 0:
                 cls(meta).notify_set_status()
 
@@ -372,6 +374,15 @@ class NotificationService:
         body = self.parse_body(
             NotificationTemplate.NEW_INQUIRY,
             profile=who,
+        )
+        self.create_notification(body)
+
+    def notify_profile_verified(self) -> None:
+        """
+        Send notifications for verified profiles.
+        """
+        body = self.parse_body(
+            NotificationTemplate.PROFILE_VERIFIED,
         )
         self.create_notification(body)
 
