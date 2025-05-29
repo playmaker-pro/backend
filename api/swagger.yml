@@ -1383,7 +1383,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SuggestedProfile'
+                  oneOf:
+                    - $ref: '#/components/schemas/PlayerProfileView'
+                    - $ref: '#/components/schemas/CoachProfile'
+                    - $ref: '#/components/schemas/ScoutProfile'
+                    - $ref: '#/components/schemas/ClubProfileView'
+                    - $ref: '#/components/schemas/ManagerProfile'
+                    - $ref: '#/components/schemas/GuestProfile'
   /profiles/:
     post:
       operationId: profiles_create
@@ -2028,7 +2034,14 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SuggestedProfile'
+                  oneOf:
+                    - $ref: '#/components/schemas/PlayerProfileView'
+                    - $ref: '#/components/schemas/CoachProfile'
+                    - $ref: '#/components/schemas/ScoutProfile'
+                    - $ref: '#/components/schemas/ClubProfileView'
+                    - $ref: '#/components/schemas/ManagerProfile'
+                    - $ref: '#/components/schemas/GuestProfile'
+
                 description: "List of profiles near me."
         "204":
           description: "No suggested profiles available."

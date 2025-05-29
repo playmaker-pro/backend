@@ -66,7 +66,7 @@ def post_create_profile_tasks(class_name: str, profile_id: int) -> None:
     profile.ensure_visitation_exist(commit=False)
     profile.ensure_meta_exist(commit=False)
     profile.save()
-    create_post_create_profile__periodic_tasks.delay(class_name, profile_id)
+    create_post_create_profile__periodic_tasks(class_name, profile_id)
     NotificationService(profile.meta).notify_welcome()
 
 

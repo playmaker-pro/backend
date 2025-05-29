@@ -11,10 +11,9 @@ def post_external_link_create(sender, instance, created, **kwargs):
     Signal to handle the creation of external links.
     """
     if created:
-        # breakpoint()
-
         if (
             instance.target.links.count() == 1
             and instance.target.owner.__class__.__name__.endswith("Profile")
         ):
-            NotificationService(instance.target.owner.meta).notify_profile_verified()
+            if meta := instance.target.owner.meta:
+                NotificationService(meta).notify_profile_verified()

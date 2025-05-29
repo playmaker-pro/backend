@@ -1443,3 +1443,16 @@ class ProfileVisitSummarySerializer(serializers.Serializer):
 
     def get_this_year_count(self, profile: models.PROFILE_TYPE) -> int:
         return profile.visitation.visitors_count_this_year
+
+
+class GenericProfileSerializer(serializers.Serializer):
+    def to_representation(self, instance: models.PROFILE_TYPE) -> dict:
+        from profiles.api.managers import SerializersManager
+
+        serializer = SerializersManager().get_serializer(type(instance).__name__)
+        if serializer:
+            return serializer(instance, context=self.context).data
+        else:
+            raise serializers.ValidationError(
+                f"No serializer found for {type(instance).__name__}"
+            )

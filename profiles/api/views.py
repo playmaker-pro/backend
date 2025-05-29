@@ -370,9 +370,7 @@ class PopularProfilesAPIView(ProfileListAPIFilter, EndpointView):
         qs = self.get_queryset()
         qs = self.paginate_queryset(qs)
         qs = [obj.profile for obj in qs]
-        serializer = serializers.SuggestedProfileSerializer(
-            qs, many=True, source="user__profile"
-        )
+        serializer = serializers.GenericProfileSerializer(qs, many=True)
         return self.get_paginated_response(serializer.data)
 
 
@@ -468,7 +466,7 @@ class SuggestedProfilesAPIView(EndpointView):
             .exclude(user__display_status=User.DisplayStatus.NOT_SHOWN)
             .order_by("city_order", "-user__last_activity")[:10]
         )
-        data = [serializers.SuggestedProfileSerializer(obj.profile).data for obj in qs]
+        data = [serializers.GenericProfileSerializer(obj.profile).data for obj in qs]
         cache.set(cache_key, data, timeout=settings.DEFAULT_CACHE_LIFESPAN)
         return Response(data, status=status.HTTP_200_OK)
 
