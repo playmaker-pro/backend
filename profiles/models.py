@@ -564,7 +564,7 @@ class BaseProfile(models.Model, EventLogMixin):
     def ensure_meta_exist(self, commit: bool = True) -> None:
         if self.meta is None:
             self.meta = ProfileMeta.objects.create(
-                _profile_class=self.__class__.__name__,
+                _profile_class=self.__class__.__name__.lower(),
                 user=self.user,
             )
             if commit:

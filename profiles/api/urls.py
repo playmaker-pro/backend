@@ -269,7 +269,7 @@ urlpatterns = [
     ),
     path(
         r"near-me/",
-        views.SuggestedProfilesAPIView.as_view({
+        views.ProfilesNearbyAPIView.as_view({
             "get": "get_profiles_nearby",
         }),
         name="get_profiles_near_me",

@@ -1449,6 +1449,9 @@ class GenericProfileSerializer(serializers.Serializer):
     def to_representation(self, instance: models.PROFILE_TYPE) -> dict:
         from profiles.api.managers import SerializersManager
 
+        if isinstance(instance, models.ProfileMeta):
+            instance = instance.profile
+
         serializer = SerializersManager().get_serializer(type(instance).__name__)
         if serializer:
             return serializer(instance, context=self.context).data

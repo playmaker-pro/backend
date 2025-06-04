@@ -324,9 +324,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         return Response(serializer.data)
 
 
-class PopularProfilesAPIView(ProfileListAPIFilter, EndpointView):
-    pagination_class = PagePagination
-    permission_classes = [IsAuthenticatedOrReadOnly]
+class MixinProfilesFilter(ProfileListAPIFilter):
     PARAMS_PARSERS = {
         "latitude": api_utils.convert_float,
         "longitude": api_utils.convert_float,
@@ -334,20 +332,14 @@ class PopularProfilesAPIView(ProfileListAPIFilter, EndpointView):
         "min_age": api_utils.convert_int,
         "max_age": api_utils.convert_int,
         "role": api_utils.convert_str_list,
+        "gender": api_utils.convert_str_list,
     }
-
-    def get_queryset(self) -> QuerySet:
-        self.queryset = ProfileMeta.objects.annotate(
-            visitors_count=Count("visited_objects")
-        ).order_by("-visitors_count")
-        self.filter_queryset()
-        return self.queryset.distinct()
 
     def filter_multiple_roles(self):
         """Filter queryset by multiple roles"""
         if roles := self.query_params.get("role", []):
             try:
-                roles = [PROFILE_MODEL_MAP[role].__name__ for role in roles]
+                roles = [PROFILE_MODEL_MAP[role].__name__.lower() for role in roles]
             except KeyError:
                 raise api_errors.InvalidProfileRole
             self.queryset = self.queryset.filter(_profile_class__in=roles)
@@ -357,7 +349,20 @@ class PopularProfilesAPIView(ProfileListAPIFilter, EndpointView):
         self.filter_multiple_roles()
         self.filter_localization()
         self.filter_age()
+        self.filter_gender()
         return self.queryset
+
+
+class PopularProfilesAPIView(MixinProfilesFilter, EndpointView):
+    pagination_class = PagePagination
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self) -> QuerySet:
+        self.queryset = ProfileMeta.objects.annotate(
+            visitors_count=Count("visited_objects")
+        ).order_by("-visitors_count")
+        self.filter_queryset()
+        return self.queryset.distinct()
 
     @method_decorator(cache_page(settings.DEFAULT_CACHE_LIFESPAN))
     def get_popular_profiles(self, request: Request) -> Response:
@@ -434,41 +439,51 @@ class SuggestedProfilesAPIView(EndpointView):
         serializer = serializers.SuggestedProfileSerializer(qs[:10], many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
+    pagination_class = PagePagination
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def filter_localization(self, *args, **kwargs) -> None: ...
+
     def get_profiles_nearby(self, request: Request) -> Response:
         """Retrieve profiles from the closest area"""
         user = request.user
         if not user.is_authenticated or not user.userpreferences.localization:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        cache_key = f"user:{user.id}:get_profiles_nearby"
-        cached_response = cache.get(cache_key)
+        cache_key = f"user:{user.id}:get_profiles_nearby{str(request)}"
+        data = cache.get(cache_key)
 
-        if cached_response:
-            return Response(cached_response, status=status.HTTP_200_OK)
-
-        cities_nearby = profile_service.get_cities_nearby(
-            user.userpreferences.localization
-        )
-        city_id_order = list(cities_nearby.values_list("id", flat=True))
-        ordering = Case(
-            *[
-                When(user__userpreferences__localization__pk=cid, then=pos)
-                for pos, cid in enumerate(city_id_order)
-            ],
-            output_field=IntegerField(),
-        )
-        qs = (
-            ProfileMeta.objects.filter(
-                user__userpreferences__localization__in=cities_nearby,
+        if not data:
+            cities_nearby = profile_service.get_cities_nearby(
+                user.userpreferences.localization
             )
-            .annotate(city_order=ordering)
-            .exclude(user__pk=user.pk)
-            .exclude(user__display_status=User.DisplayStatus.NOT_SHOWN)
-            .order_by("city_order", "-user__last_activity")[:10]
-        )
-        data = [serializers.GenericProfileSerializer(obj.profile).data for obj in qs]
+            city_id_order = list(cities_nearby.values_list("id", flat=True))
+            ordering = Case(
+                *[
+                    When(user__userpreferences__localization__pk=cid, then=pos)
+                    for pos, cid in enumerate(city_id_order)
+                ],
+                output_field=IntegerField(),
+            )
+            self.queryset = (
+                ProfileMeta.objects.filter(
+                    user__userpreferences__localization__in=cities_nearby,
+                )
+                .annotate(city_order=ordering)
+                .exclude(user__pk=user.pk)
+                .exclude(user__display_status=User.DisplayStatus.NOT_SHOWN)
+                .order_by("city_order", "-user__last_activity")
+            )
+            qs = self.filter_queryset()
+            qs = self.paginate_queryset(qs)
+            data = serializers.GenericProfileSerializer(
+                qs, source="profile", many=True
+            ).data
+
         cache.set(cache_key, data, timeout=settings.DEFAULT_CACHE_LIFESPAN)
-        return Response(data, status=status.HTTP_200_OK)
+        return self.get_paginated_response(data)
 
 
 class ProfileSearchView(EndpointView):

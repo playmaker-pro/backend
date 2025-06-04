@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from profiles.models import CoachProfile
 from utils import factories
+from utils.factories.profiles_factories import GuestProfileFactory, PlayerProfileFactory
 
 url_suggested_profiles = "api:profiles:get_suggested_profiles"
 url_profiles_near_me = "api:profiles:get_profiles_near_me"
@@ -226,8 +227,85 @@ class TestSimilarProfilesAPI:
             url_profiles_near_me,
         )
         response = api_client.get(url)
-        data = response.data
+        data = response.data["results"]
         assert response.status_code == 200
-        assert len(data) == 2
+        assert response.data["count"] == 2
         assert data[0]["uuid"] == str(choices[0].uuid)
         assert data[1]["uuid"] == str(choices[1].uuid)
+
+    @pytest.mark.parametrize("roles", (["T", "S"], ["P"], ["P", "T", "S"]))
+    def test_get_profiles_nearby_filter_role(
+        self, player_profile, coach_profile, scout_profile, api_client, roles, city_wwa
+    ):
+        for profile in [player_profile, coach_profile, scout_profile]:
+            profile.user.userpreferences.localization = city_wwa
+            profile.user.userpreferences.save()
+        user = factories.PlayerProfileFactory(
+            user__userpreferences__localization=city_wwa
+        ).user
+        api_client.force_authenticate(user)
+        url = reverse(
+            url_profiles_near_me,
+        )
+        response = api_client.get(url, {"role": roles})
+
+        assert response.status_code == 200
+        assert response.data["count"] == len(roles)
+
+    @pytest.mark.parametrize("gender", (["M"], ["K"], ["M", "K"]))
+    def test_get_profiles_nearby_filter_gender(self, api_client, gender, city_wwa):
+        profile = PlayerProfileFactory.create(
+            user__userpreferences__localization=city_wwa,
+        )
+        GuestProfileFactory.create(
+            user__userpreferences__localization=city_wwa,
+            user__userpreferences__gender="M",
+        )
+        GuestProfileFactory.create(
+            user__userpreferences__localization=city_wwa,
+            user__userpreferences__gender="K",
+        )
+        api_client.force_authenticate(profile.user)
+        url = reverse(
+            url_profiles_near_me,
+        )
+        response = api_client.get(url, {"gender": gender, "role": "G"})
+
+        assert response.status_code == 200
+        assert response.data["count"] == len(gender)
+
+    def test_get_profiles_nearby_filter_age(self, api_client, city_wwa):
+        g1 = GuestProfileFactory.create(
+            user__userpreferences__localization=city_wwa,
+            user__userpreferences__birth_date=timezone.now()
+            - timedelta(days=365 * 20),  # 20 years old
+        )
+        g2 = GuestProfileFactory.create(
+            user__userpreferences__localization=city_wwa,
+            user__userpreferences__birth_date=timezone.now()
+            - timedelta(days=365 * 30),  # 30 years old
+        )
+        profile = PlayerProfileFactory.create(
+            user__userpreferences__localization=city_wwa,
+        )
+        api_client.force_authenticate(profile.user)
+        url = reverse(
+            url_profiles_near_me,
+        )
+
+        response = api_client.get(url, {"min_age": 18, "max_age": 25})
+
+        assert response.status_code == 200
+        assert response.data["count"] == 1
+        assert response.data["results"][0]["uuid"] == str(g1.uuid)
+
+        response = api_client.get(url, {"min_age": 18, "max_age": 32})
+
+        assert response.status_code == 200
+        assert response.data["count"] == 2
+
+        response = api_client.get(url, {"min_age": 22, "max_age": 32})
+
+        assert response.status_code == 200
+        assert response.data["count"] == 1
+        assert response.data["results"][0]["uuid"] == str(g2.uuid)

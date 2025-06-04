@@ -249,7 +249,7 @@ class NotificationService:
         Send notifications for setting transfer requests.
         """
         for meta in cls.get_queryset().filter(
-            _profile_class__in=["CoachProfile", "ClubProfile", "ManagerProfile"]
+            _profile_class__in=["coachprofile", "clubprofile", "managerprofile"]
         ):
             if meta.profile.transfer_requests.count() == 0:
                 cls(meta).notify_set_transfer_requests()
@@ -268,7 +268,7 @@ class NotificationService:
         """
         Send notifications for setting status.
         """
-        for meta in cls.get_queryset().filter(_profile_class="PlayerProfile"):
+        for meta in cls.get_queryset().filter(_profile_class="playerprofile"):
             if meta.profile.transfer_status_related.count() == 0:
                 cls(meta).notify_set_status()
 

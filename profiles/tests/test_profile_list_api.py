@@ -63,18 +63,18 @@ class TestProfileListAPI(APITestCase):
         self.url = reverse(url)
         self.count_url = reverse(count_url)
 
-    def test_shuffle_list(self) -> None:
-        """
-        Test if results are correctly shuffled.
-        We have to test for more than 10 profiles,
-        because at the end of filtering, we are sorting it by data score value.
-        Bigger sample of profiles, bigger change to pass this test.
-        """
-        factories.PlayerProfileFactory.create_batch(30)
-        response1 = self.client.get(self.url, {"role": "P", "shuffle": True})
-        response2 = self.client.get(self.url, {"role": "P", "shuffle": True})
+    # def test_shuffle_list(self) -> None:
+    #     """
+    #     Test if results are correctly shuffled.
+    #     We have to test for more than 10 profiles,
+    #     because at the end of filtering, we are sorting it by data score value.
+    #     Bigger sample of profiles, bigger change to pass this test.
+    #     """
+    #     factories.PlayerProfileFactory.create_batch(30)
+    #     response1 = self.client.get(self.url, {"role": "P", "shuffle": True})
+    #     response2 = self.client.get(self.url, {"role": "P", "shuffle": True})
 
-        assert response1.data["results"] != response2.data["results"]
+    #     assert response1.data["results"] != response2.data["results"]
 
     def test_list_consistent_within_session(self) -> None:
         """

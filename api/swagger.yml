@@ -1371,6 +1371,11 @@ paths:
           schema:
             type: integer
           description: "Count of objects by page"
+        - in: query
+          name: gender
+          schema:
+            type: string
+            enum: [ 'M', 'K' ]
       tags:
         - profiles
       security:
@@ -1381,15 +1386,28 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  oneOf:
-                    - $ref: '#/components/schemas/PlayerProfileView'
-                    - $ref: '#/components/schemas/CoachProfile'
-                    - $ref: '#/components/schemas/ScoutProfile'
-                    - $ref: '#/components/schemas/ClubProfileView'
-                    - $ref: '#/components/schemas/ManagerProfile'
-                    - $ref: '#/components/schemas/GuestProfile'
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: 'Total count of matched profiles'
+                  next:
+                    type: string
+                    description: "Next paginated request url"
+                  previous:
+                    type: string
+                    description: "Previous paginated request url"
+                  results:
+                    type: array
+                    items:
+                      oneOf:
+                        - $ref: '#/components/schemas/PlayerProfileView'
+                        - $ref: '#/components/schemas/CoachProfile'
+                        - $ref: '#/components/schemas/ScoutProfile'
+                        - $ref: '#/components/schemas/ClubProfileView'
+                        - $ref: '#/components/schemas/ManagerProfile'
+                        - $ref: '#/components/schemas/GuestProfile'
+
   /profiles/:
     post:
       operationId: profiles_create
@@ -2026,21 +2044,66 @@ paths:
       summary: "Get profiles near me"
       tags:
         - profiles
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: array
+            items:
+              type: string
+          description: 'Profile role shortcut {P, C, T, G, S, ...}'
+        - in: query
+          name: min_age
+          schema:
+            type: integer
+          description: "Age minimum"
+        - in: query
+          name: max_age
+          schema:
+            type: integer
+          description: "Age maximum"
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: "Page number"
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+          description: "Count of objects by page"
+        - in: query
+          name: gender
+          schema:
+            type: string
+            enum: [ 'M', 'K' ]
       responses:
         '200':
           description: 'List of profiles near me retrieved successfully.'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  oneOf:
-                    - $ref: '#/components/schemas/PlayerProfileView'
-                    - $ref: '#/components/schemas/CoachProfile'
-                    - $ref: '#/components/schemas/ScoutProfile'
-                    - $ref: '#/components/schemas/ClubProfileView'
-                    - $ref: '#/components/schemas/ManagerProfile'
-                    - $ref: '#/components/schemas/GuestProfile'
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: 'Total count of matched profiles'
+                  next:
+                    type: string
+                    description: "Next paginated request url"
+                  previous:
+                    type: string
+                    description: "Previous paginated request url"
+                  results:
+                    type: array
+                    items:
+                      oneOf:
+                        - $ref: '#/components/schemas/PlayerProfileView'
+                        - $ref: '#/components/schemas/CoachProfile'
+                        - $ref: '#/components/schemas/ScoutProfile'
+                        - $ref: '#/components/schemas/ClubProfileView'
+                        - $ref: '#/components/schemas/ManagerProfile'
+                        - $ref: '#/components/schemas/GuestProfile'
 
                 description: "List of profiles near me."
         "204":
