@@ -450,12 +450,12 @@ class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
         """Retrieve profiles from the closest area"""
         user = request.user
         if not user.is_authenticated or not user.userpreferences.localization:
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(data=[], status=status.HTTP_204_NO_CONTENT)
 
         cache_key = f"user:{user.id}:get_profiles_nearby{str(request)}"
-        data = cache.get(cache_key)
+        cached_response = cache.get(cache_key)
 
-        if not data:
+        if not cached_response:
             cities_nearby = profile_service.get_cities_nearby(
                 user.userpreferences.localization
             )
@@ -477,13 +477,20 @@ class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
                 .order_by("city_order", "-user__last_activity")
             )
             qs = self.filter_queryset()
-            qs = self.paginate_queryset(qs)
+            paginated_qs = self.paginate_queryset(qs)
             data = serializers.GenericProfileSerializer(
-                qs, source="profile", many=True
+                paginated_qs, source="profile", many=True
             ).data
 
-        cache.set(cache_key, data, timeout=settings.DEFAULT_CACHE_LIFESPAN)
-        return self.get_paginated_response(data)
+            # Cache the entire response data
+            cached_response = self.get_paginated_response(data)
+            cache.set(
+                cache_key, cached_response.data, timeout=settings.DEFAULT_CACHE_LIFESPAN
+            )
+            return cached_response
+
+        # Return cached response directly
+        return Response(cached_response)
 
 
 class ProfileSearchView(EndpointView):
