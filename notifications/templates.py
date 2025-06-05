@@ -63,7 +63,7 @@ class NotificationTemplate(Enum):
     PROFILE_HIDDEN = {
         "title": "Profil tymczasowo ukryty",
         "description": "Popraw informacje w profilu (imię, nazwisko, zdjęcie), aby przywrócić widoczność.",
-        "href": "/profil",
+        "href": "/profil?modal=profile-hidden",
         "icon": "hidden",
     }
     PREMIUM_EXPIRED = {
