@@ -43,7 +43,6 @@ from profiles.models import (
     Catalog,
     LicenceType,
     PlayerPosition,
-    ProfileTransferStatus,
 )
 from roles.definitions import (
     CLUB_ROLES,
@@ -57,6 +56,7 @@ from roles.definitions import (
     PlayerPositionShortcutsEN,
     PlayerPositionShortcutsPL,
 )
+from transfers.models import ProfileTransferStatus
 from utils import get_current_season
 
 logger = logging.getLogger(__name__)

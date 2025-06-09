@@ -79,6 +79,7 @@ class LabelService:
             label_definition__label_name__in=label_names,
         ).delete()
 
+    @staticmethod
     def assign_youngster_label(self, profile_uuid: uuid.UUID) -> None:
         """
         Assigns or updates the 'Młodzieżowiec' label for a player profile.
@@ -151,6 +152,7 @@ class LabelService:
                 visible_on_main_page=False,
             )
 
+    @staticmethod
     def assign_goalkeeper_height_label(self, player_profile_uuid: uuid.UUID) -> None:
         """
         Assigns or updates the 'HIGH_KEEPER' label for a player profile

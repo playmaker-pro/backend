@@ -50,14 +50,10 @@ from profiles.api.filters import TransferRequestCatalogueFilter
 from profiles.api.managers import SerializersManager
 from profiles.api.mixins import ProfileRetrieveMixin
 from profiles.filters import ProfileListAPIFilter
-from profiles.models import PROFILE_MODEL_MAP, ProfileMeta, ProfileTransferRequest
+from profiles.models import PROFILE_MODEL_MAP, ProfileMeta
 from profiles.serializers_detailed.base_serializers import (
-    MainUserDataSerializer,
     ProfileTransferRequestSerializer,
-    ProfileTransferStatusSerializer,
     TeamContributorSerializer,
-    UpdateOrCreateProfileTransferSerializer,
-    UserPreferencesUpdateSerializer,
 )
 from profiles.serializers_detailed.catalogue_serializers import (
     TransferRequestCatalogueSerializer,
@@ -79,6 +75,7 @@ from roles.definitions import (
     TRANSFER_STATUS_CHOICES_WITH_UNDEFINED,
     TRANSFER_TRAININGS_CHOICES,
 )
+from transfers.models import ProfileTransferRequest
 from users.api.serializers import UserMainRoleSerializer
 from users.errors import UserPreferencesDoesNotExistHTTPException
 

@@ -3,13 +3,12 @@ import typing
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from api.serializers import ProfileEnumChoicesSerializer
+from api.serializers import PhoneNumberField, ProfileEnumChoicesSerializer
 from clubs.api.serializers import TeamHistoryBaseProfileSerializer
 from inquiries import models as _models
 from profiles.api.serializers import (
     PlayerProfilePositionSerializer as _PlayerProfilePositionSerializer,
 )
-from profiles.serializers_detailed.base_serializers import PhoneNumberField
 from profiles.serializers_detailed.player_profile_serializers import (
     PlayerMetricsSerializer,
 )
