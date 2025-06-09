@@ -364,7 +364,6 @@ class PopularProfilesAPIView(MixinProfilesFilter, EndpointView):
         self.filter_queryset()
         return self.queryset.distinct()
 
-    @method_decorator(cache_page(settings.DEFAULT_CACHE_LIFESPAN))
     def get_popular_profiles(self, request: Request) -> Response:
         """
         Retrieve popular profiles based on the specified filter criteria.
@@ -372,11 +371,29 @@ class PopularProfilesAPIView(MixinProfilesFilter, EndpointView):
         This method processes a GET request containing various filter parameters
         and returns a list of popular profiles that match these filters.
         """
+        user = request.user
+        if (
+            request.query_params.get("page")
+            and not user.is_authenticated
+            or (hasattr(user, "profile") and not user.profile.is_premium)
+        ):
+            return Response(data=[], status=status.HTTP_204_NO_CONTENT)
+
+        cache_key = f"popular_profiles:{hash(str(request.GET))}"
+        cached_response = cache.get(cache_key)
+
+        if cached_response:
+            return Response(cached_response)
+
         qs = self.get_queryset()
         qs = self.paginate_queryset(qs)
         qs = [obj.profile for obj in qs]
         serializer = serializers.GenericProfileSerializer(qs, many=True)
-        return self.get_paginated_response(serializer.data)
+        response_data = self.get_paginated_response(serializer.data).data
+
+        cache.set(cache_key, response_data, timeout=settings.DEFAULT_CACHE_LIFESPAN)
+
+        return Response(response_data)
 
 
 class SuggestedProfilesAPIView(EndpointView):
@@ -450,6 +467,13 @@ class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
         """Retrieve profiles from the closest area"""
         user = request.user
         if not user.is_authenticated or not user.userpreferences.localization:
+            return Response(data=[], status=status.HTTP_204_NO_CONTENT)
+
+        if (
+            request.query_params.get("page")
+            and not user.is_authenticated
+            or (hasattr(user, "profile") and not user.profile.is_premium)
+        ):
             return Response(data=[], status=status.HTTP_204_NO_CONTENT)
 
         cache_key = f"user:{user.id}:get_profiles_nearby{str(request)}"
