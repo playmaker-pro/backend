@@ -63,7 +63,7 @@ class NotificationTemplate(Enum):
     PROFILE_HIDDEN = {
         "title": "Profil tymczasowo ukryty",
         "description": "Popraw informacje w profilu (imię, nazwisko, zdjęcie), aby przywrócić widoczność.",
-        "href": "/profil?modal=profile-hidden",
+        "href": "?modal=profile-hidden",
         "icon": "hidden",
     }
     PREMIUM_EXPIRED = {
@@ -87,7 +87,7 @@ class NotificationTemplate(Enum):
     WELCOME = {
         "title": "Witaj w PlayMaker!",
         "description": "Dziękujemy za dołączenie do społeczności, Twoja podróż zaczyna się tutaj! Sprawdź, co daje Ci PlayMaker!",
-        "href": "/profil?modal=welcome",
+        "href": "?modal=welcome",
         "icon": "playmaker",
     }
     NEW_FOLLOWER = {
