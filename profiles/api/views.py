@@ -377,7 +377,7 @@ class PopularProfilesAPIView(MixinProfilesFilter, EndpointView):
             and not user.is_authenticated
             or (hasattr(user, "profile") and not user.profile.is_premium)
         ):
-            return Response(data=[], status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
         cache_key = f"popular_profiles:{hash(str(request.GET))}"
         cached_response = cache.get(cache_key)
@@ -467,14 +467,14 @@ class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
         """Retrieve profiles from the closest area"""
         user = request.user
         if not user.is_authenticated or not user.userpreferences.localization:
-            return Response(data=[], status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
         if (
             request.query_params.get("page")
             and not user.is_authenticated
             or (hasattr(user, "profile") and not user.profile.is_premium)
         ):
-            return Response(data=[], status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
         cache_key = f"user:{user.id}:get_profiles_nearby{str(request)}"
         cached_response = cache.get(cache_key)

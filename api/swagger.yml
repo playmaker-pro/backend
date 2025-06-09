@@ -1407,7 +1407,8 @@ paths:
                         - $ref: '#/components/schemas/ClubProfileView'
                         - $ref: '#/components/schemas/ManagerProfile'
                         - $ref: '#/components/schemas/GuestProfile'
-
+        '204':
+          description: "No premium profile to find more popular profiles"
   /profiles/:
     post:
       operationId: profiles_create
@@ -2107,7 +2108,7 @@ paths:
 
                 description: "List of profiles near me."
         "204":
-          description: "No suggested profiles available."
+          description: "No localization provided for profile or not authenticated user."
   /profiles/{profile_uuid}/labels:
     get:
       operationId: profiles_retrieve_labels
