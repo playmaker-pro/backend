@@ -93,7 +93,7 @@ class NotificationTemplate(Enum):
     NEW_FOLLOWER = {
         "title": "Ktoś Cię obserwuje",
         "description": "Zobacz kto zaobserwował Twój profil.",
-        "href": "/obserowani",
+        "href": "/obserwowani?tab=obserwatorzy",
         "icon": "star",
     }
     INQUIRY_ACCEPTED = {
