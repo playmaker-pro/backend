@@ -216,9 +216,9 @@ def refresh_periodic_tasks() -> None:
     """
     Refresh periodic tasks in the database.
     """
-    if to_delete := PeriodicTask.objects.exclude(
-        task__in=[n["task"] for n in NOTIFICATIONS]
-    ).exclude(task="celery.backend_cleanup"):
+    if to_delete := PeriodicTask.objects.filter(
+        description="GENERIC_PERIODIC_TASK"
+    ).exclude(task__in=[n["task"] for n in NOTIFICATIONS]):
         logger.info(
             f"Deleting {to_delete.count()} periodic tasks: {to_delete.values_list('name', flat=True)}"
         )
@@ -231,6 +231,7 @@ def refresh_periodic_tasks() -> None:
             defaults={
                 "crontab": notification["schedule"][0],
                 "enabled": notification["enabled"],
+                "description": "GENERIC_PERIODIC_TASK",
             },
         )
         if created:
