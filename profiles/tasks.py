@@ -1,55 +1,11 @@
+import json
+
 from celery import shared_task
 from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
 from notifications.services import NotificationService
 from profiles import models
-
-
-@shared_task
-def create_post_create_profile__periodic_tasks(
-    model_name: str, profile_id: int
-) -> None:
-    """
-    Create a profile for the user if it doesn't exist.
-    """
-    instance = getattr(models, model_name).objects.get(pk=profile_id)
-    PeriodicTask.objects.create(
-        name=f"Run one hour after profile creation [ {instance.pk} -- {instance.__class__.__name__} ]",
-        task="app.celery.tasks.check_profile_one_hour_after",
-        args=[instance.pk, instance.__class__.__name__],
-        one_off=True,
-        clocked=ClockedSchedule.objects.create(
-            clocked_time=timezone.now() + timezone.timedelta(hours=1)
-        ),
-    )
-    PeriodicTask.objects.create(
-        name=f"Run one day after profile creation [ {instance.pk} -- {instance.__class__.__name__} ]",
-        task="app.celery.tasks.check_profile_one_day_after",
-        args=[instance.pk, instance.__class__.__name__],
-        one_off=True,
-        clocked=ClockedSchedule.objects.create(
-            clocked_time=timezone.now() + timezone.timedelta(days=1)
-        ),
-    )
-    PeriodicTask.objects.create(
-        name=f"Run two days after profile creation [ {instance.pk} -- {instance.__class__.__name__} ]",
-        task="app.celery.tasks.check_profile_two_days_after",
-        args=[instance.pk, instance.__class__.__name__],
-        one_off=True,
-        clocked=ClockedSchedule.objects.create(
-            clocked_time=timezone.now() + timezone.timedelta(days=2)
-        ),
-    )
-    PeriodicTask.objects.create(
-        name=f"Run four days after profile creation [ {instance.pk} -- {instance.__class__.__name__} ]",
-        task="app.celery.tasks.check_profile_four_days_after",
-        args=[instance.pk, instance.__class__.__name__],
-        one_off=True,
-        clocked=ClockedSchedule.objects.create(
-            clocked_time=timezone.now() + timezone.timedelta(days=4)
-        ),
-    )
 
 
 @shared_task
@@ -156,3 +112,50 @@ def check_profile_four_days_after(profile_id: int, model_name: str) -> None:
     if profile:
         if not profile.is_premium:
             service.notify_go_premium()
+
+
+@shared_task
+def create_post_create_profile__periodic_tasks(
+    model_name: str, profile_id: int
+) -> None:
+    """
+    Create a profile for the user if it doesn't exist.
+    """
+    task_args = json.dumps([profile_id, model_name])
+
+    PeriodicTask.objects.create(
+        name=f"Run one hour after profile creation [ {profile_id} -- {model_name} ]",
+        task="profiles.tasks.check_profile_one_hour_after",
+        args=task_args,
+        one_off=True,
+        clocked=ClockedSchedule.objects.create(
+            clocked_time=timezone.now() + timezone.timedelta(hours=1)
+        ),
+    )
+    PeriodicTask.objects.create(
+        name=f"Run one day after profile creation [ {profile_id} -- {model_name} ]",
+        task="profiles.tasks.check_profile_one_day_after",
+        args=task_args,
+        one_off=True,
+        clocked=ClockedSchedule.objects.create(
+            clocked_time=timezone.now() + timezone.timedelta(days=1)
+        ),
+    )
+    PeriodicTask.objects.create(
+        name=f"Run two days after profile creation [ {profile_id} -- {model_name} ]",
+        task="profiles.tasks.check_profile_two_days_after",
+        args=task_args,
+        one_off=True,
+        clocked=ClockedSchedule.objects.create(
+            clocked_time=timezone.now() + timezone.timedelta(days=2)
+        ),
+    )
+    PeriodicTask.objects.create(
+        name=f"Run four days after profile creation [ {profile_id} -- {model_name} ]",
+        task="profiles.tasks.check_profile_four_days_after",
+        args=task_args,
+        one_off=True,
+        clocked=ClockedSchedule.objects.create(
+            clocked_time=timezone.now() + timezone.timedelta(days=4)
+        ),
+    )
