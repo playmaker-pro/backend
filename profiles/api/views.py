@@ -354,7 +354,10 @@ class MixinProfilesFilter(ProfileListAPIFilter):
 
 
 class PopularProfilesAPIView(MixinProfilesFilter, EndpointView):
-    pagination_class = PagePagination
+    class Pagination(PagePagination):
+        max_page_size = 10
+
+    pagination_class = Pagination
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self) -> QuerySet:
@@ -372,14 +375,14 @@ class PopularProfilesAPIView(MixinProfilesFilter, EndpointView):
         and returns a list of popular profiles that match these filters.
         """
         user = request.user
-        if (
-            request.query_params.get("page")
-            and not user.is_authenticated
+
+        if int(request.query_params.get("page", 1)) > 1 and (
+            not user.is_authenticated
             or (hasattr(user, "profile") and not user.profile.is_premium)
         ):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        cache_key = f"popular_profiles:{hash(str(request.GET))}"
+        cache_key = f"popular_profiles:{request.get_full_path()}"
         cached_response = cache.get(cache_key)
 
         if cached_response:
@@ -458,7 +461,10 @@ class SuggestedProfilesAPIView(EndpointView):
 
 
 class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
-    pagination_class = PagePagination
+    class Pagination(PagePagination):
+        max_page_size = 10
+
+    pagination_class = Pagination
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def filter_localization(self, *args, **kwargs) -> None: ...
@@ -469,14 +475,13 @@ class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
         if not user.is_authenticated or not user.userpreferences.localization:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        if (
-            request.query_params.get("page")
-            and not user.is_authenticated
+        if int(request.query_params.get("page", 1)) > 1 and (
+            not user.is_authenticated
             or (hasattr(user, "profile") and not user.profile.is_premium)
         ):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        cache_key = f"user:{user.id}:get_profiles_nearby{str(request)}"
+        cache_key = f"user:{user.id}:get_profiles_nearby{request.get_full_path()}"
         cached_response = cache.get(cache_key)
 
         if not cached_response:
