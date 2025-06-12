@@ -147,7 +147,7 @@ class NotificationTemplate(Enum):
     ADD_VIDEO = {
         "title": "Dodaj video",
         "description": "Kliknij tutaj, aby przejść do profilu.",
-        "href": "/profil",
+        "href": "/profil#sekcja-video-z-gry",
         "icon": "video",
     }
     ASSIGN_CLUB = {
