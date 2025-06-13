@@ -104,7 +104,9 @@ class ProfileListAPIFilter(APIFilter):
 
     def get_queryset(self) -> typing.Union[QuerySet, typing.List]:
         """Get queryset based on role, apply filters, and handle shuffle parameter."""
-        self.queryset = self.model.objects.to_list_by_api()
+        self.queryset = self.model.objects.to_list_by_api(
+            role=self.request.query_params.get("role")
+        )
         self.filter_queryset(self.queryset)
         self.sort_queryset()
 
