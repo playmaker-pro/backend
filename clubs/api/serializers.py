@@ -263,15 +263,6 @@ class ClubTeamSerializer(serializers.ModelSerializer):
         ).data
 
 
-class TeamHistorySerializer(serializers.ModelSerializer):
-    team = TeamSerializer(required=False)
-    league_history = LeagueHistorySerializer(required=False)
-
-    class Meta:
-        model = models.Team
-        exclude = ("data_mapper_id", "autocreated")
-
-
 class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
     """
     Serializer for the Team model focused on providing base profile information.
@@ -342,11 +333,11 @@ class TeamHistoryBaseProfileSerializer(serializers.ModelSerializer):
         Team object.
         """
         profile_uuid: typing.Optional[uuid.UUID] = self.context.get("profile_uuid")
-        primary_contributor: typing.Optional[
-            TeamContributor
-        ] = obj.teamcontributor_set.filter(
-            is_primary=True, profile_uuid=profile_uuid
-        ).first()
+        primary_contributor: typing.Optional[TeamContributor] = (
+            obj.teamcontributor_set.filter(
+                is_primary=True, profile_uuid=profile_uuid
+            ).first()
+        )
 
         return primary_contributor.id if primary_contributor else None
 

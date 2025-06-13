@@ -99,3 +99,4 @@ custom_script_*.py
 /static
 
 *.http
+.python-version

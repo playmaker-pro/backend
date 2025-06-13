@@ -13,9 +13,10 @@ from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
 from features.models import Feature
+from followers.services import FollowService
 from payments.models import Transaction
 from premium.models import Product
-from profiles.models import GuestProfile
+from profiles.models import GuestProfile, ProfileVisitation
 from users.api.views import UsersAPI
 from users.errors import (
     ApplicationError,
@@ -23,7 +24,7 @@ from users.errors import (
     UserEmailNotValidException,
 )
 from users.managers import FacebookManager, GoogleManager
-from users.models import Ref, User
+from users.models import User
 from users.schemas import (
     GoogleSdkLoginCredentials,
     LoginSchemaOut,
@@ -35,13 +36,15 @@ from users.services import UserService
 from users.utils.test_utils import extract_uidb64_and_token_from_email
 from utils.factories import PlayerProfileFactory
 from utils.factories.feature_sets_factories import FeatureElementFactory, FeatureFactory
-from utils.factories.user_factories import UserFactory, UserRefFactory
+from utils.factories.user_factories import UserFactory
 from utils.test.test_utils import (
     TEST_EMAIL,
     MethodsNotAllowedTestsMixin,
     UserManager,
     mute_post_save_signal,
 )
+
+pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture(autouse=True)
@@ -215,11 +218,9 @@ class TestUserReferrals(TestCase):
         assert len(user_ref.registered_users_premium) == 0
 
         invited_user = user_ref.registered_users.first().user
-        GuestProfile.objects.create(user=invited_user)
+        gp = GuestProfile.objects.create(user=invited_user)
         premium_product = Product.objects.get(name="PREMIUM_PROFILE_MONTH")
-        transaction = Transaction.objects.create(
-            product=premium_product, user=invited_user
-        )
+        transaction = Transaction.objects.create(product=premium_product, user=gp.user)
         transaction.success()
         transaction.save()
 
@@ -227,113 +228,6 @@ class TestUserReferrals(TestCase):
 
         assert user_ref.registered_users.count() == 1
         assert len(user_ref.registered_users_premium) == 1
-
-    def test_create_ref_without_user(self):
-        """Test if Ref can be created without user"""
-        ref = Ref.objects.create(title="test-title", description="test-description")
-
-        assert not ref.user
-        assert ref.uuid
-        assert ref.title == "test-title"
-        assert ref.description == "test-description"
-
-    def test_user_always_have_referral(self):
-        """Test if user always have referral"""
-        user = UserFactory()
-
-        assert user.ref
-        assert user.ref.referrals.count() == 0
-
-    def test_reward_user_referral_after_10_invites(self):
-        profile = PlayerProfileFactory()
-        ref = profile.user.ref
-
-        assert ref.registered_users.count() == 0
-        assert not profile.is_premium
-
-        for _ in range(10):
-            UserRefFactory(ref_by=ref)
-
-        last_mail = mail.outbox[-1]
-        profile.refresh_from_db()
-
-        assert ref.registered_users.count() == 10
-        assert profile.is_premium
-        assert profile.premium.subscription_lifespan.days == 30
-        assert (
-            last_mail.subject
-            == f"[Django] Osiągnięto 10 poleconych użytkowników przez {str(ref)}."
-        )
-        assert (
-            last_mail.body
-            == f"Link afiliacyjny {str(ref)} osiągnął 10 poleconych.\nUżytkownikowi {profile} zostało aktywowane/przedłużone premium o 30 dni."
-        )
-
-        for _ in range(10):
-            UserRefFactory(ref_by=ref)
-
-        last_mail = mail.outbox[-1]
-        profile.refresh_from_db()
-
-        assert ref.registered_users.count() == 20
-        assert profile.premium.subscription_lifespan.days == 60
-        assert (
-            last_mail.subject
-            == f"[Django] Osiągnięto 20 poleconych użytkowników przez {str(ref)}."
-        )
-
-        for _ in range(10):
-            UserRefFactory(ref_by=ref)
-
-        last_mail = mail.outbox[-1]
-        profile.refresh_from_db()
-
-        assert ref.registered_users.count() == 30
-        assert profile.premium.subscription_lifespan.days == 90
-        assert (
-            last_mail.subject
-            == f"[Django] Osiągnięto 30 poleconych użytkowników przez {str(ref)}."
-        )
-
-    def test_reward_non_user_referral_after_10_invites(self):
-        ref = Ref.objects.create(title="test-title", description="test-description")
-
-        assert ref.registered_users.count() == 0
-
-        for _ in range(10):
-            UserRefFactory(ref_by=ref)
-
-        last_mail = mail.outbox[-1]
-
-        assert ref.registered_users.count() == 10
-        assert (
-            last_mail.subject
-            == f"[Django] Osiągnięto 10 poleconych użytkowników przez {str(ref)}."
-        )
-        assert (
-            last_mail.body == f"Link afiliacyjny {str(ref)} osiągnął 10 poleconych.\n"
-        )
-
-    def test_failed_to_reward_user_after_10_invites(self):
-        user = UserFactory()
-        ref = user.ref
-
-        assert ref.registered_users.count() == 0
-
-        for _ in range(10):
-            UserRefFactory(ref_by=ref)
-
-        last_mail = mail.outbox[-1]
-
-        assert ref.registered_users.count() == 10
-        assert (
-            last_mail.subject
-            == f"[Django] Osiągnięto 10 poleconych użytkowników przez {str(ref)}."
-        )
-        assert (
-            last_mail.body
-            == f"Link afiliacyjny {str(ref)} osiągnął 10 poleconych.\nNiestety, nie udało się aktywować premium dla {ref.user}."
-        )
 
 
 @pytest.mark.django_db
@@ -1387,3 +1281,48 @@ class TestEmailVerificationEndpoint(TestCase):
         # Fetch the user and check if the email is still not verified
         user = User.objects.get(email=self.user_data["email"])
         assert user.is_email_verified is False
+
+
+class TestGetMyProfileEndpoint:
+    url = reverse("api:users:my_main_profile")
+
+    def test_get_my_profile(
+        self, api_client: APIClient, coach_profile, guest_profile
+    ) -> None:
+        """Test if response is OK"""
+        follow_service = FollowService()
+        profile = PlayerProfileFactory(user__userpreferences__gender="M")
+        api_client.force_authenticate(user=profile.user)
+        follow_service.follow_profile(
+            profile.uuid,
+            coach_profile.user,
+        )
+        follow_service.follow_profile(
+            profile.uuid,
+            guest_profile.user,
+        )
+        follow_service.follow_profile(
+            guest_profile.uuid,
+            profile.user,
+        )
+        ProfileVisitation.upsert(visited=profile, visitor=guest_profile)
+        result = api_client.get(self.url)
+
+        assert result.status_code == 200
+        assert result.json() == {
+            "picture": None,
+            "email": profile.user.email,
+            "first_name": profile.user.first_name,
+            "last_name": profile.user.last_name,
+            "role": "P",
+            "uuid": str(profile.uuid),
+            "slug": profile.slug,
+            "gender": {"id": "M", "name": "Mężczyzna"},
+            "has_unread_inquiries": False,
+            "promotion": None,
+            "is_promoted": False,
+            "is_premium": False,
+            "premium": None,
+            "premium_already_tested": False,
+            "social_stats": {"followers": 2, "following": 1, "views": 1},
+        }

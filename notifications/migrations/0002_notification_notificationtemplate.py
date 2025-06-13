@@ -4,31 +4,29 @@ import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
 
-from notifications.models import Notification as _Notification
 
+# def create_notification_templates(apps, schema_editor) -> None:
+#     NotificationTemplate = apps.get_model("notifications", "NotificationTemplate")
 
-def create_notification_templates(apps, schema_editor) -> None:
-    NotificationTemplate = apps.get_model("notifications", "NotificationTemplate")
-
-    templates = [
-        {
-            "event_type": _Notification.EventType.ACCEPT_INQUIRY,
-            "notification_type": _Notification.NotificationType.CONTACTS,
-            "content_template": "{recipient_name} #zaakceptował|zaakceptowała# zapytanie o kontakt.",
-        },
-        {
-            "event_type": _Notification.EventType.REJECT_INQUIRY,
-            "notification_type": _Notification.NotificationType.CONTACTS,
-            "content_template": "{recipient_name} #odrzucił|odrzuciła# zapytanie o kontakt.",
-        },
-        {
-            "event_type": _Notification.EventType.RECEIVE_INQUIRY,
-            "notification_type": _Notification.NotificationType.CONTACTS,
-            "content_template": "{sender_name} #wysłał|wysłała# zapytanie o kontakt.",
-        },
-    ]
-    for template_data in templates:
-        NotificationTemplate.objects.create(**template_data)
+#     templates = [
+#         {
+#             "event_type": _Notification.EventType.ACCEPT_INQUIRY,
+#             "notification_type": _Notification.NotificationType.CONTACTS,
+#             "content_template": "{recipient_name} #zaakceptował|zaakceptowała# zapytanie o kontakt.",
+#         },
+#         {
+#             "event_type": _Notification.EventType.REJECT_INQUIRY,
+#             "notification_type": _Notification.NotificationType.CONTACTS,
+#             "content_template": "{recipient_name} #odrzucił|odrzuciła# zapytanie o kontakt.",
+#         },
+#         {
+#             "event_type": _Notification.EventType.RECEIVE_INQUIRY,
+#             "notification_type": _Notification.NotificationType.CONTACTS,
+#             "content_template": "{sender_name} #wysłał|wysłała# zapytanie o kontakt.",
+#         },
+#     ]
+#     for template_data in templates:
+#         NotificationTemplate.objects.create(**template_data)
 
 
 class Migration(migrations.Migration):
@@ -110,5 +108,5 @@ class Migration(migrations.Migration):
                 ),
             ],
         ),
-        migrations.RunPython(create_notification_templates),
+        # migrations.RunPython(create_notification_templates),
     ]

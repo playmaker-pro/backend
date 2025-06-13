@@ -1,408 +1,404 @@
-import typing
-import uuid
-from datetime import timedelta
+"""
+Service for sending notifications to users.
+"""
 
-from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Exists, OuterRef, Q, QuerySet
-from django.utils import timezone
+from notifications.tasks import create_notification
+from notifications.templates import NotificationBody, NotificationTemplate
+from profiles.models import PROFILE_MODELS, ProfileMeta
 
-from external_links.models import ExternalLinksEntity, LinkSource
-from inquiries.models import InquiryRequest
-from notifications.models import Notification, NotificationTemplate
-from profiles.models import (
-    PROFILE_MODELS,
-    CoachProfile,
-    GuestProfile,
-    ManagerProfile,
-    PlayerProfile,
-    ProfileVideo,
-)
-from profiles.services import ProfileService
-from users.services import UserPreferencesService
-
-User = get_user_model()
-profile_service = ProfileService()
-user_references_service = UserPreferencesService()
+GENDER_BASED_ROLES = {
+    "P": ("Piłkarz", "Piłkarka"),
+    "T": ("Trener", "Trenerka"),
+    "C": ("Działacz klubowy", "Działaczka klubowa"),
+    "G": ("Kibic", "Kibic"),
+    "M": ("Manager", "Manager"),
+    "R": ("Sędzia", "Sędzia"),
+    "S": ("Skaut", "Skaut"),
+    None: ("", ""),
+}
 
 
 class NotificationService:
-    @staticmethod
-    def mark_related_notification_as_read(
-        user: User, inquiry_id: int
-    ) -> typing.Optional[Notification]:
-        """
-        Marks a notification as read based on event type, user, and inquiry ID.
-        """
-        # Filter notifications based on criteria
-        notification = Notification.objects.filter(
-            user=user,
-            details__inquiry_id=inquiry_id,
-            is_read=False,
-        ).first()
+    """
+    Service responsible for sending notifications to users.
+    It uses the NotificationTemplate class to create notifications.
+    """
 
-        # If a notification is found, mark it as read
-        if notification:
-            notification.is_read = True
-            notification.save()
-            return notification
+    def __init__(self, meta: "profiles.models.ProfileMeta") -> None:  # type: ignore
+        if meta is None:
+            raise ValueError("Meta cannot be None")
 
-        return None
+        self._meta = meta
 
     @staticmethod
-    def create_profile_associated_notification(
-        user: User,
-        event_type: str,
-        profile_uuid: uuid.UUID,
-        notification_type: str,
-        extra_details: typing.Optional[dict] = None,
-    ) -> typing.Optional[Notification]:
+    def get_queryset() -> "QuerySet[ProfileMeta]":
         """
-        Creates a notification linked to a specific profile.
+        Get the queryset of ProfileMeta objects.
         """
-        details: dict = extra_details or {}
+        return ProfileMeta.objects.filter(user__isnull=False)
 
-        try:
-            # Fetch the template based on event_type
-            template = NotificationTemplate.objects.get(event_type=event_type)
-        except NotificationTemplate.DoesNotExist:
-            # Handle the case where the template does not exist
-            content: str = "You have a new notification"
-        else:
-            # Use the template to format the content
-            content: str = template.render_content(user, details)
-
-        try:
-            profile_instance = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist:
-            return
-
-        # Create the notification
-        notification = Notification.objects.create(
-            user=user,
-            event_type=event_type,
-            notification_type=notification_type,
-            content=content,
-            object_id=user.pk,
-            content_type=ContentType.objects.get_for_model(profile_instance.__class__)
-            if profile_instance
-            else None,
-            details=details,
-        )
-        return notification
-
-    @staticmethod
-    def create_user_associated_notification(
-        user: User,
-        event_type: str,
-        notification_type: str,
-        extra_details: typing.Optional[dict] = None,
-    ) -> Notification:
-        """
-        Directly create a Notification associated with a user.
-        """
-        details = extra_details or {}
-
-        try:
-            # Fetch the template based on event_type
-            template = NotificationTemplate.objects.get(event_type=event_type)
-        except NotificationTemplate.DoesNotExist:
-            content = "You have a new notification"
-        else:
-            # Use the template to format the content
-            content = template.render_content(user, details)
-
-        # Create the notification
-        notification = Notification.objects.create(
-            user=user,
-            event_type=event_type,
-            notification_type=notification_type,
-            content=content,
-            object_id=user.pk,
-            details=details,
-        )
-        return notification
-
-    @staticmethod
-    def get_combined_notifications(
-        user: User, profile_uuid: uuid.UUID, latest_only: bool = False
-    ) -> typing.Tuple[QuerySet, int]:
-        """
-        Retrieves a combined list of notifications for a user, both general
-        and profile-specific.
-        """
-        profile_instance = profile_service.get_profile_by_uuid(profile_uuid)
-        # Fetch notifications for the given user
-        user_notifications_query = Notification.objects.filter(
-            user=user, content_type=None
-        ).order_by("-created_at")
-
-        # Fetch profile-specific notifications
-        profile_notifications_query = Notification.objects.filter(
-            user=user,
-            content_type=ContentType.objects.get_for_model(profile_instance.__class__),
-        ).order_by("-created_at")
-
-        # Combine both user and profile-specific querysets
-        combined_notifications = user_notifications_query | profile_notifications_query
-
-        # Remove duplicates if any
-        combined_notifications = combined_notifications.distinct()
-
-        # Calculate unread count before slicing
-        unread_count = combined_notifications.filter(is_read=False).count()
-
-        # Limit to last 5 notifications if 'latest' parameter is provided
-        if latest_only:
-            combined_notifications = combined_notifications[:5]
-
-        return combined_notifications, unread_count
-
-    @staticmethod
-    def send_inquiry_notification(
-        inquiry_request: InquiryRequest, profile_uuid: typing.Optional[uuid.UUID]
+    def create_notification(
+        self,
+        body: NotificationBody,
     ) -> None:
         """
-        Handle the notification logic when an inquiry is sent.
+        Create notification based on the provided body.
+        Notification is created using the create_notification async task.
         """
-        # Create notification for the recipient about the new inquiry
-        NotificationService.create_profile_associated_notification(
-            user=inquiry_request.recipient,
-            event_type=Notification.EventType.RECEIVE_INQUIRY,
-            profile_uuid=profile_uuid,
-            notification_type=Notification.NotificationType.CONTACTS,
-            extra_details={
-                "inquiry_id": inquiry_request.id,
-                "sender_name": inquiry_request.sender.display_full_name,
-            },
-        )
+        create_notification.delay(profile_meta_id=self._meta.id, **body.to_dict())
 
     @staticmethod
-    def accept_inquiry_notification(inquiry_request: InquiryRequest) -> None:
+    def parse_body(
+        template: NotificationTemplate,
+        **kwargs,
+    ) -> NotificationBody:
         """
-        Handle the notification logic when an inquiry is accepted.
+        Parse body of the notification.
         """
-        # Create notification for the sender about the inquiry acceptance
-        NotificationService.create_user_associated_notification(
-            user=inquiry_request.sender,
-            event_type=Notification.EventType.ACCEPT_INQUIRY,
-            notification_type=Notification.NotificationType.CONTACTS,
-            extra_details={
-                "inquiry_id": inquiry_request.id,
-                "recipient_name": inquiry_request.recipient.display_full_name,
-            },
+        if profile := kwargs.pop("profile", None):
+            try:
+                role_short = profile.user.declared_role
+                gender_index = int(profile.user.userpreferences.gender == "K")
+                subject = GENDER_BASED_ROLES[role_short][gender_index]
+                kwargs["profile"] = f"{subject} {profile.user.get_full_name()}"
+            except (KeyError, IndexError):
+                kwargs["profile"] = profile.user.get_full_name()
+
+            kwargs["picture"] = profile.user.picture.name
+            kwargs["picture_profile_role"] = role_short
+
+        return NotificationBody(**template.value, kwargs=kwargs)
+
+    @classmethod
+    def bulk_notify_check_trial(cls) -> None:
+        """
+        Send notifications for users who haven't tested the trial.
+        """
+        for meta in cls.get_queryset():
+            if meta.profile.products and not meta.profile.products.trial_tested:
+                cls(meta).notify_check_trial()
+
+    def notify_check_trial(self) -> None:
+        """
+        Send notifications for users who haven't tested the trial.
+        """
+        body = self.parse_body(
+            NotificationTemplate.CHECK_TRIAL,
         )
+        self.create_notification(body)
 
-    @staticmethod
-    def reject_inquiry_notification(inquiry_request: InquiryRequest) -> None:
+    @classmethod
+    def bulk_notify_go_premium(cls) -> None:
         """
-        Handle the notification logic when an inquiry is rejected.
+        Send notifications for non-premium users.
         """
-        # Create notification for the sender about the inquiry rejection
-        NotificationService.create_user_associated_notification(
-            user=inquiry_request.sender,
-            event_type=Notification.EventType.REJECT_INQUIRY,
-            notification_type=Notification.NotificationType.CONTACTS,
-            extra_details={
-                "inquiry_id": inquiry_request.id,
-                "recipient_name": inquiry_request.recipient.display_full_name,
-            },
+        for meta in cls.get_queryset():
+            if not meta.profile.is_premium:
+                cls(meta).notify_go_premium()
+
+    def notify_go_premium(self) -> None:
+        """
+        Send notifications for non-premium users.
+        """
+        body = self.parse_body(
+            NotificationTemplate.GO_PREMIUM,
         )
+        self.create_notification(body)
 
-
-class ProfileCompletionNotificationService:
-    notification_service = NotificationService()
-
-    @staticmethod
-    def can_send_notification(
-        user: User, event_type: str, profile_instance=None
-    ) -> bool:
+    @classmethod
+    def bulk_notify_verify_profile(cls) -> None:
         """
-        Determine if a notification can be sent based on the rules.
+        Send notifications for unverified profiles.
         """
-        now = timezone.now()
-        one_month_ago = now - timedelta(days=30)
+        for meta in cls.get_queryset():
+            if not meta.profile.external_links.links.exists():
+                cls(meta).notify_verify_profile()
 
-        # Determine the content type for the profile instance, if provided
-        content_type = (
-            ContentType.objects.get_for_model(profile_instance.__class__)
-            if profile_instance
-            else None
+    def notify_verify_profile(self) -> None:
+        """
+        Send notifications for unverified profiles.
+        """
+        body = self.parse_body(
+            NotificationTemplate.VERIFY_PROFILE,
         )
+        self.create_notification(body)
 
-        notifications = Notification.objects.filter(
-            user=user,
-            event_type=event_type,
-            content_type=content_type if profile_instance else None,
-        ).order_by("created_at")
-        # Check if there are any notifications
-        if not notifications.exists():
-            return True
-
-        # Check the read status of the latest notification
-        latest_notification = notifications.last()
-        if not latest_notification.is_read:
-            return False
-
-        # Check the time since the first notification
-        first_notification = notifications.first()
-        if first_notification.created_at > one_month_ago:
-            return False
-
-        return True
-
-    def notify_profiles(self, profiles: list, event_type: str) -> None:
+    @classmethod
+    def bulk_notify_profile_hidden(cls) -> None:
         """
-        Helper method to send notifications to a list of profiles.
+        Send notifications for hidden profiles.
         """
-        for profile in profiles:
-            if self.can_send_notification(profile.user, event_type, profile):
-                self.notification_service.create_profile_associated_notification(
-                    profile.user,
-                    event_type,
-                    profile.uuid,
-                    Notification.NotificationType.BUILT_IN,
-                )
-                print(f"Notification '{event_type}' created for {profile}")
+        for meta in cls.get_queryset():
+            if meta.user.display_status == "Niewyświetlany":
+                cls(meta).notify_profile_hidden()
 
-    def notify_users(self, users: list, event_type: str) -> None:
+    def notify_profile_hidden(self) -> None:
         """
-        Helper method to send notifications to a list of users.
+        Send notifications for hidden profiles.
         """
-        for user in users:
-            if self.can_send_notification(user, event_type):
-                self.notification_service.create_user_associated_notification(
-                    user, event_type, Notification.NotificationType.BUILT_IN
-                )
-                # Optionally log or print a message about the notification sent
-                print(f"Notification '{event_type}' created for user {user.username}")
-
-    def check_and_notify_for_missing_location(self) -> None:
-        """
-        Check and notify users who have not specified their location in
-        their user preferences.
-        This method iterates over users with missing location data and
-        sends a notification if the conditions defined in can_send_notification
-        are met.
-        """
-        users_to_notify = user_references_service.get_users_with_missing_location()
-        self.notify_users(
-            users=users_to_notify, event_type=Notification.EventType.MISSING_LOCATION
+        body = self.parse_body(
+            NotificationTemplate.PROFILE_HIDDEN,
         )
+        self.create_notification(body)
 
-    def check_and_notify_for_missing_alternative_position(self) -> None:
+    def notify_premium_just_expired(self) -> None:
         """
-        Check and notify player profiles that have a main position but
-        are missing alternative positions.
-        This method iterates over player profiles and sends a notification for those
-        needing to specify alternative playing positions.
+        Send notifications for users whose premium has expired.
         """
-        player_profiles_to_notify = PlayerProfile.objects.filter(
-            player_positions__is_main=True
-        ).exclude(player_positions__is_main=False)
-
-        self.notify_profiles(
-            list(player_profiles_to_notify), Notification.EventType.MISSING_ALT_POSITION
+        body = self.parse_body(
+            NotificationTemplate.PREMIUM_EXPIRED,
         )
+        self.create_notification(body)
 
-    def check_and_notify_for_missing_favorite_formation(self) -> None:
+    @classmethod
+    def bulk_notify_pm_rank(cls) -> None:
         """
-        Check and notify coach profiles that have not specified their
-        favorite formation.
-        This method iterates over coach profiles and sends a notification to those
-        with missing favorite formation information.
+        Send notifications for new PM rankings.
         """
-        coach_profiles_to_notify = CoachProfile.objects.filter(formation__isnull=True)
+        for meta in cls.get_queryset():
+            cls(meta).notify_pm_rank()
 
-        self.notify_profiles(
-            list(coach_profiles_to_notify), Notification.EventType.MISSING_FAV_FORMATION
+    def notify_pm_rank(self) -> None:
+        """
+        Send notifications for new PM rankings.
+        """
+        body = self.parse_body(
+            NotificationTemplate.PM_RANK,
         )
+        self.create_notification(body)
 
-    def check_and_notify_for_incomplete_agency_data(self) -> None:
+    @classmethod
+    def bulk_notify_visits_summary(cls) -> None:
         """
-        Check and notify manager profiles that have incomplete agency data.
-        This method iterates over manager profiles and sends a notification to those
-        with missing agency email or Transfermarkt URL.
+        Send notifications for users with new visit summaries.
         """
-        manager_profiles_to_notify = ManagerProfile.objects.filter(
-            Q(agency_email__isnull=True) | Q(agency_transfermarkt_url__isnull=True)
+        for meta in cls.get_queryset():
+            if meta.count_who_visited_me > 0:
+                cls(meta).notify_visits_summary()
+
+    def notify_visits_summary(self) -> None:
+        """
+        Send notifications for users with new visit summaries.
+        """
+        body = self.parse_body(
+            NotificationTemplate.VISITS_SUMMARY,
+            visited_by_count=self._meta.profile.meta.count_who_visited_me,
         )
+        self.create_notification(body)
 
-        self.notify_profiles(
-            list(manager_profiles_to_notify),
-            Notification.EventType.INCOMPLETE_AGENCY_DATA,
+    def notify_welcome(self) -> None:
+        """
+        Send welcome notifications to new users.
+        """
+        body = self.parse_body(
+            NotificationTemplate.WELCOME,
         )
+        self.create_notification(body)
 
-    def check_and_notify_for_missing_external_links(self) -> None:
+    def notify_new_follower(self) -> None:
         """
-        Check and notify profiles missing external links, excluding those
-        with a specific source link.
-        This method iterates over various profile models, excluding GuestProfile,
-        and sends notifications to profiles missing external links and not having a link
-        from the 'laczynaspilka' source.
+        Send notifications for new followers.
         """
-        lnp_source_name = "laczynaspilka"
-        lnp_source = LinkSource.objects.filter(name=lnp_source_name).first()
-
-        profiles_missing_links = [
-            profile
-            for profile_model in PROFILE_MODELS
-            if profile_model is not GuestProfile
-            for profile in profile_model.objects.annotate(
-                has_lnp_link=Exists(
-                    ExternalLinksEntity.objects.filter(
-                        target__id=OuterRef("external_links__id"),
-                        source=lnp_source,
-                    )
-                )
-            ).filter(has_lnp_link=False)
-        ]
-
-        self.notify_profiles(
-            profiles_missing_links, Notification.EventType.MISSING_EXT_LINKS
+        body = self.parse_body(
+            NotificationTemplate.NEW_FOLLOWER,
         )
+        self.create_notification(body)
 
-    def check_and_notify_for_missing_video(self) -> None:
+    def notify_inquiry_accepted(self, who: PROFILE_MODELS) -> None:
         """
-        Check and notify profiles that do not have an associated video.
-        This method iterates over various profile models, excluding GuestProfile,
-        and sends notifications to profiles that are missing videos.
+        Send notifications for accepted inquiries.
         """
-        profiles_missing_video = [
-            profile
-            for profile_model in PROFILE_MODELS
-            if profile_model is not GuestProfile
-            for profile in profile_model.objects.annotate(
-                has_video=Exists(ProfileVideo.objects.filter(user=OuterRef("user")))
-            ).filter(has_video=False)
-        ]
-
-        self.notify_profiles(
-            profiles_missing_video, Notification.EventType.MISSING_VIDEO
+        body = self.parse_body(
+            NotificationTemplate.INQUIRY_ACCEPTED,
+            profile=who,
         )
+        self.create_notification(body)
 
-    def check_and_notify_for_missing_photo(self) -> None:
+    def notify_inquiry_rejected(self, who: PROFILE_MODELS) -> None:
         """
-        Check and notify users who have not uploaded a profile picture.
-        This method iterates over users with missing profile pictures
-        and sends a notification if the conditions defined
-        in can_send_notification are met.
+        Send notifications for rejected inquiries.
         """
-        users_to_notify = User.objects.filter(picture="")
-        self.notify_users(
-            users=users_to_notify, event_type=Notification.EventType.MISSING_PHOTO
+        body = self.parse_body(
+            NotificationTemplate.INQUIRY_REJECTED,
+            profile=who,
         )
+        self.create_notification(body)
 
-    def check_and_notify_for_missing_certificate_course(self) -> None:
+    def notify_inquiry_read(self, who: PROFILE_MODELS) -> None:
         """
-        Check and notify users who have not provided information about
-        their courses or certificates.
-        This method iterates over users with missing course or certificate
-        information and sends a notification if the conditions defined
-        in can_send_notification are met.
+        Send notifications for read inquiries.
         """
-        users_to_notify = User.objects.filter(courses__isnull=True)
-        self.notify_users(
-            users=users_to_notify, event_type=Notification.EventType.MISSING_COURSE
+        body = self.parse_body(
+            NotificationTemplate.INQUIRY_READ,
+            profile=who,
         )
+        self.create_notification(body)
+
+    def notify_profile_visited(self) -> None:
+        """
+        Send notifications for profile visits.
+        """
+        body = self.parse_body(
+            NotificationTemplate.PROFILE_VISITED,
+        )
+        self.create_notification(body)
+
+    @classmethod
+    def bulk_notify_set_transfer_requests(cls) -> None:
+        """
+        Send notifications for setting transfer requests.
+        """
+        for meta in cls.get_queryset().filter(
+            _profile_class__in=["coachprofile", "clubprofile", "managerprofile"]
+        ):
+            if meta.profile.transfer_requests.count() == 0:
+                cls(meta).notify_set_transfer_requests()
+
+    def notify_set_transfer_requests(self) -> None:
+        """
+        Send notifications for setting transfer requests.
+        """
+        body = self.parse_body(
+            NotificationTemplate.SET_TRANSFER_REQUESTS,
+        )
+        self.create_notification(body)
+
+    @classmethod
+    def bulk_notify_set_status(cls) -> None:
+        """
+        Send notifications for setting status.
+        """
+        for meta in cls.get_queryset().filter(_profile_class="playerprofile"):
+            if meta.profile.transfer_status_related.count() == 0:
+                cls(meta).notify_set_status()
+
+    def notify_set_status(self) -> None:
+        """
+        Send notifications for setting status.
+        """
+        body = self.parse_body(
+            NotificationTemplate.SET_STATUS,
+        )
+        self.create_notification(body)
+
+    @classmethod
+    def bulk_notify_invite_friends(cls) -> None:
+        """
+        Send notifications for inviting friends.
+        """
+        for meta in cls.get_queryset():
+            cls(meta).notify_invite_friends()
+
+    def notify_invite_friends(self) -> None:
+        """
+        Send notifications for inviting friends.
+        """
+        body = self.parse_body(
+            NotificationTemplate.INVITE_FRIENDS,
+        )
+        self.create_notification(body)
+
+    @classmethod
+    def bulk_notify_add_links(cls) -> None:
+        """
+        Send notifications for adding links.
+        """
+        for meta in cls.get_queryset():
+            if meta.profile.external_links.links.count() == 0:
+                cls(meta).notify_add_links()
+
+    def notify_add_links(self) -> None:
+        """
+        Send notifications for adding links.
+        """
+        body = self.parse_body(
+            NotificationTemplate.ADD_LINKS,
+        )
+        self.create_notification(body)
+
+    @classmethod
+    def bulk_notify_add_video(cls) -> None:
+        """
+        Send notifications for adding videos.
+        """
+        for meta in cls.get_queryset():
+            if meta.user.user_video.count() == 0:
+                cls(meta).notify_add_video()
+
+    def notify_add_video(self) -> None:
+        """
+        Send notifications for adding videos.
+        """
+        body = self.parse_body(
+            NotificationTemplate.ADD_VIDEO,
+        )
+        self.create_notification(body)
+
+    def notify_test(self) -> None:
+        """
+        Test notification.
+        """
+        body = self.parse_body(
+            NotificationTemplate.TEST,
+        )
+        self.create_notification(body)
+
+    @classmethod
+    def bulk_notify_test(cls) -> None:
+        """
+        Test notification.
+        """
+        for meta in cls.get_queryset().filter(user__is_staff=True):
+            cls(meta).notify_test()
+
+    @classmethod
+    def bulk_notify_assign_club(cls) -> None:
+        """
+        Send notifications for assigning clubs.
+        """
+        for meta in cls.get_queryset():
+            if not meta.profile.team_history_object:
+                cls(meta).notify_assign_club()
+
+    def notify_assign_club(self) -> None:
+        """
+        Send notifications for assigning clubs.
+        """
+        body = self.parse_body(NotificationTemplate.ASSIGN_CLUB)
+        self.create_notification(body)
+
+    def notify_new_inquiry(self, who: PROFILE_MODELS) -> None:
+        """
+        Send notifications for new inquiries.
+        """
+        body = self.parse_body(
+            NotificationTemplate.NEW_INQUIRY,
+            profile=who,
+        )
+        self.create_notification(body)
+
+    def notify_profile_verified(self) -> None:
+        """
+        Send notifications for verified profiles.
+        """
+        body = self.parse_body(
+            NotificationTemplate.PROFILE_VERIFIED,
+        )
+        self.create_notification(body)
+
+    def bind_all_reccurrent_notifications(self) -> None:
+        """
+        Bind all notifications to the user.
+        """
+        self.notify_add_links()
+        self.notify_add_video()
+        self.notify_set_transfer_requests()
+        self.notify_set_status()
+        self.notify_invite_friends()
+        self.notify_assign_club()
+        self.notify_profile_hidden()
+        self.notify_go_premium()
+        self.notify_verify_profile()
+        self.notify_check_trial()
+        self.notify_pm_rank()
+        self.notify_visits_summary()

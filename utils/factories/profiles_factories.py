@@ -55,11 +55,6 @@ class ProfileFactory(CustomObjectFactory):
     class Meta:
         abstract = True
 
-    @classmethod
-    def create(cls, **kwargs) -> models.PROFILE_TYPE:
-        """Override just for typing purposes"""
-        return super().create(**kwargs)
-
 
 class PlayerMetricsFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -106,9 +101,9 @@ class PlayerProfileFactory(ProfileFactory):
     practice_distance = factory.LazyAttribute(lambda _: utils.get_random_int(30, 100))
     voivodeship_obj = factory.LazyAttribute(lambda _: utils.get_random_voivo())
     address = factory.LazyAttribute(lambda _: utils.get_random_address())
-    player_positions = factory.RelatedFactory(
-        PlayerProfilePositionFactory, "player_profile"
-    )
+    # player_positions = factory.RelatedFactory(
+    #     PlayerProfilePositionFactory, "player_profile"
+    # )
     verification_stage = factory.SubFactory(VerificationStageFactory)
 
     @classmethod
@@ -116,11 +111,11 @@ class PlayerProfileFactory(ProfileFactory):
         """Overwrite fields with subfactories"""
         cls.team_history_object = factory.SubFactory(clubs_factories.TeamHistoryFactory)
 
-    @factory.post_generation
-    def set_team(self, *args, **kwargs) -> None:
-        """Set team_object based on team_history_object"""
-        if self.team_history_object:
-            self.team_object = self.team_history_object.team
+    # @factory.post_generation
+    # def set_team(self, *args, **kwargs) -> None:
+    #     """Set team_object based on team_history_object"""
+    #     if self.team_history_object:
+    #         self.team_object = self.team_history_object.team
 
     @classmethod
     def create_with_language(
@@ -182,11 +177,11 @@ class CoachProfileFactory(ProfileFactory):
         """Overwrite fields with subfactories"""
         cls.team_history_object = factory.SubFactory(clubs_factories.TeamHistoryFactory)
 
-    @factory.post_generation
-    def set_team(self, *args, **kwargs) -> None:
-        """Set team_object based on team_history_object"""
-        if self.team_history_object:
-            self.team_object = self.team_history_object.team
+    # @factory.post_generation
+    # def set_team(self, *args, **kwargs) -> None:
+    #     """Set team_object based on team_history_object"""
+    #     if self.team_history_object:
+    #         self.team_object = self.team_history_object.team
 
 
 class ClubProfileFactory(ProfileFactory):
@@ -221,7 +216,7 @@ class ManagerProfileFactory(ProfileFactory):
     facebook_url = factory.Faker("url")
     other_url = factory.Faker("url")
     agency_phone = factory.Sequence(lambda n: f"+4812345{n:04d}")
-    dial_code = factory.Sequence(lambda n: f"+{n%99:02d}")
+    dial_code = factory.Sequence(lambda n: f"+{n % 99:02d}")
     agency_email = factory.Faker("email")
     agency_transfermarkt_url = factory.Faker("url")
     agency_website_url = factory.Faker("url")
@@ -326,22 +321,17 @@ class TransferStatusFactory(factory.django.DjangoModelFactory):
         model = models.ProfileTransferStatus
 
     status = 1
-    additional_info = factory.List(
-        [
-            factory.Iterator(
-                [
-                    info[0]
-                    for info in definitions.TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES
-                ]
-            )
-        ]
-    )
-    number_of_trainings = factory.Iterator(
-        [training[0] for training in definitions.TRANSFER_TRAININGS_CHOICES]
-    )
-    salary = factory.Iterator(
-        [salary[0] for salary in definitions.TRANSFER_SALARY_CHOICES]
-    )
+    additional_info = factory.List([
+        factory.Iterator([
+            info[0] for info in definitions.TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES
+        ])
+    ])
+    number_of_trainings = factory.Iterator([
+        training[0] for training in definitions.TRANSFER_TRAININGS_CHOICES
+    ])
+    salary = factory.Iterator([
+        salary[0] for salary in definitions.TRANSFER_SALARY_CHOICES
+    ])
 
     class Params:
         profile = None

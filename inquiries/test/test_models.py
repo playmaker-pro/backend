@@ -14,11 +14,10 @@ from inquiries.models import (
 )
 from premium.models import PremiumType
 from roles import definitions
-from users.models import User
 from utils import testutils as utils
 from utils.factories import CoachProfileFactory, PlayerProfileFactory
 from utils.factories.inquiry_factories import InquiryRequestFactory
-from utils.factories.user_factories import UserFactory
+from utils.factories.profiles_factories import GuestProfileFactory
 
 utils.silence_explamation_mark()
 
@@ -50,7 +49,7 @@ class TestModels(TestCase):
         assert self.player.user.userinquiry.limit == 2
         assert self.player.user.userinquiry.plan.type_ref == "BASIC"
 
-        premium = self.player.premium_products.setup_premium_profile()
+        premium = self.player.setup_premium_profile()
 
         assert self.player.has_premium_inquiries
         assert self.player.user.userinquiry.counter == 0
@@ -86,7 +85,8 @@ class TestModels(TestCase):
         assert self.player.user.userinquiry.limit == 2
         assert not self.player.has_premium_inquiries
 
-        self.player.premium_products.setup_premium_profile(PremiumType.YEAR)
+        self.player.setup_premium_profile(PremiumType.YEAR)
+        self.player.refresh_from_db()
 
         assert self.player.has_premium_inquiries
         assert self.player.user.userinquiry.counter == 0
@@ -119,12 +119,8 @@ class TestModels(TestCase):
 
 class ModelMethodsRequest(TestCase):
     def setUp(self):
-        self.player = User.objects.create(
-            email="username-player", declared_role=definitions.PLAYER_SHORT
-        )
-        self.coach = User.objects.create(
-            email="username-coach", declared_role=definitions.COACH_SHORT
-        )
+        self.player = PlayerProfileFactory.create().user
+        self.coach = CoachProfileFactory.create().user
         self.request = InquiryRequest(sender=self.coach, recipient=self.player)
 
     def test__send_status_differs_from_role(self):
@@ -138,8 +134,8 @@ class ModelMethodsRequest(TestCase):
 @pytest.mark.usefixtures("silence_mails")
 class RewardOutdatedInquiryRequest(TestCase):
     def setUp(self) -> None:
-        sender = UserFactory(userpreferences__gender="M")
-        recipient = UserFactory(userpreferences__gender="K")
+        sender = GuestProfileFactory(user__userpreferences__gender="M").user
+        recipient = GuestProfileFactory(user__userpreferences__gender="K").user
         self.inquiry_request = InquiryRequestFactory(sender=sender, recipient=recipient)
         sender.save()
         recipient.save()

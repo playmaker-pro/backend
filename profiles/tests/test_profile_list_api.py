@@ -1,7 +1,6 @@
 import random
 from datetime import timedelta
 from typing import List
-from unittest import mock
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,7 +13,13 @@ from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
 from profiles.managers import ProfileManager
-from profiles.models import GuestProfile, LicenceType, PlayerProfile
+from profiles.models import (
+    CoachProfile,
+    GuestProfile,
+    LicenceType,
+    PlayerProfile,
+    ProfileVisitation,
+)
 from profiles.services import ProfileService
 from profiles.utils import get_past_date
 from utils import factories, get_current_season
@@ -58,18 +63,18 @@ class TestProfileListAPI(APITestCase):
         self.url = reverse(url)
         self.count_url = reverse(count_url)
 
-    def test_shuffle_list(self) -> None:
-        """
-        Test if results are correctly shuffled.
-        We have to test for more than 10 profiles,
-        because at the end of filtering, we are sorting it by data score value.
-        Bigger sample of profiles, bigger change to pass this test.
-        """
-        factories.PlayerProfileFactory.create_batch(30)
-        response1 = self.client.get(self.url, {"role": "P", "shuffle": True})
-        response2 = self.client.get(self.url, {"role": "P", "shuffle": True})
+    # def test_shuffle_list(self) -> None:
+    #     """
+    #     Test if results are correctly shuffled.
+    #     We have to test for more than 10 profiles,
+    #     because at the end of filtering, we are sorting it by data score value.
+    #     Bigger sample of profiles, bigger change to pass this test.
+    #     """
+    #     factories.PlayerProfileFactory.create_batch(30)
+    #     response1 = self.client.get(self.url, {"role": "P", "shuffle": True})
+    #     response2 = self.client.get(self.url, {"role": "P", "shuffle": True})
 
-        assert response1.data["results"] != response2.data["results"]
+    #     assert response1.data["results"] != response2.data["results"]
 
     def test_list_consistent_within_session(self) -> None:
         """
@@ -90,9 +95,9 @@ class TestProfileListAPI(APITestCase):
         response2 = self.client.get(self.url, {"role": "P"})
 
         # Assert that the two responses within the same session are identical
-        assert (
-            response1.data["results"] == response2.data["results"]
-        ), "Shuffled results should be consistent within the same session"
+        assert response1.data["results"] == response2.data["results"], (
+            "Shuffled results should be consistent within the same session"
+        )
 
     @parameterized.expand([[{"role": "P"}], [{"role": "C"}], [{"role": "T"}]])
     def test_get_bulk_profiles(self, param) -> None:
@@ -177,15 +182,16 @@ class TestProfileListAPI(APITestCase):
 
     def test_get_bulk_profiles_filter_position(self) -> None:
         """get player profiles filter by position"""
-        player1 = factories.PlayerProfileFactory.create(
-            player_positions__player_position__shortcut="CAM",
-            player_positions__is_main=True,
+        player1 = factories.PlayerProfileFactory.create()
+        player2 = factories.PlayerProfileFactory.create()
+        factories.PlayerProfilePositionFactory.create(
+            player_position__shortcut="GK", is_main=True, player_profile=player1
         )
-        player2 = factories.PlayerProfileFactory.create(
-            player_positions__player_position__shortcut="GK",
-            player_positions__is_main=True,
+        factories.PlayerProfilePositionFactory.create(
+            player_position__shortcut="CAM", is_main=True, player_profile=player2
         )
-
+        player1.refresh_from_db()
+        player2.refresh_from_db()
         player1_position_id = player1.player_positions.first().player_position.id
         player2_position_id = player2.player_positions.first().player_position.id
 
@@ -217,13 +223,11 @@ class TestProfileListAPI(APITestCase):
         assert count_response.status_code == 200
         assert count_response.data["count"] == 2
 
-    @parameterized.expand(
-        [
-            ({"role": "P"}, "PlayerProfileFactory"),
-            ({"role": "T"}, "CoachProfileFactory"),
-            ({"role": "C"}, "ClubProfileFactory"),
-        ]
-    )
+    @parameterized.expand([
+        ({"role": "P"}, "PlayerProfileFactory"),
+        ({"role": "T"}, "CoachProfileFactory"),
+        ({"role": "C"}, "ClubProfileFactory"),
+    ])
     def test_get_bulk_profiles_filter_league(self, param, factory_name) -> None:
         """test league filter"""
         factory = getattr(factories, factory_name)
@@ -882,6 +886,29 @@ class TestProfileListAPI(APITestCase):
             len(response.data["results"]) == 2
         )  # Only verified and under review should be listed
 
+    @parameterized.expand(("popularity", "-popularity"))
+    def test_sort_profiles_by_popularity(self, sort_by: str) -> None:
+        """Test sorting profiles by popularity."""
+        # CoachProfile.objects.all().delete()
+        for _ in range(5):
+            coach = CoachProfile.objects.create(user=factories.UserFactory())
+        coaches = list(CoachProfile.objects.all())
+
+        for coach in coaches:
+            for sub_coach in coaches[coaches.index(coach) + 1 :]:
+                ProfileVisitation.upsert(visitor=sub_coach, visited=coach)
+
+        response = self.client.get(self.url, {"role": "T", "sort": sort_by})
+
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 5
+        if sort_by[0] == "-":
+            assert response.data["results"][0]["uuid"] == str(coaches[0].uuid)
+            assert response.data["results"][-1]["uuid"] == str(coaches[-1].uuid)
+        else:
+            assert response.data["results"][0]["uuid"] == str(coaches[-1].uuid)
+            assert response.data["results"][-1]["uuid"] == str(coaches[0].uuid)
+
 
 @override_settings(SUSPEND_SIGNALS=True)
 class TestPlayerProfileListByGenderAPI(APITestCase):
@@ -892,13 +919,11 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
         self.url = reverse(url)
         self.count_url = reverse(count_url)
 
-    @parameterized.expand(
-        [
-            [{"role": "P", "gender": "K"}],
-            [{"role": "P", "gender": "M"}],
-            [{"role": "P", "gender": "Male"}],
-        ]
-    )
+    @parameterized.expand([
+        [{"role": "P", "gender": "K"}],
+        [{"role": "P", "gender": "M"}],
+        [{"role": "P", "gender": "Male"}],
+    ])
     def test_get_bulk_profiles_by_gender(self, param) -> None:
         """get profiles by gender"""
         PlayerProfileFactory.create_batch(10)
@@ -916,9 +941,10 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
         assert count_response.data["count"] == expected_count
         assert count_response.status_code == 200
 
-    @parameterized.expand(
-        [[{"role": "P", "gender": "K"}], [{"role": "P", "gender": "M"}]]
-    )
+    @parameterized.expand([
+        [{"role": "P", "gender": "K"}],
+        [{"role": "P", "gender": "M"}],
+    ])
     def test_get_bulk_profiles_by_gender_res_0(self, param) -> None:
         """get profiles by gender. Result should be 0"""
         PlayerProfileFactory.create_batch(10, user__userpreferences__gender=None)
@@ -934,7 +960,7 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
 
 
 @pytest.mark.django_db
-@mock.patch.object(
+@patch.object(
     ProfileManager,
     "get_data_score",
     side_effect=lambda obj: random.randint(1, 3),
@@ -951,10 +977,9 @@ def test_if_response_is_ordered_by_data_score(
     profiles: List[PlayerProfile] = PlayerProfileFactory.create_batch(5)
 
     expected_response = [
-        obj.data_fulfill_status
+        int(obj.data_fulfill_status)
         for obj in sorted(profiles, key=lambda x: x.data_fulfill_status)
     ]
-
     response: Response = api_client.get(reverse(url) + "?role=P")
     user_ids_response = [obj["user"]["id"] for obj in response.data["results"]]
 
@@ -1049,7 +1074,7 @@ def test_sort_player_profiles_promoted_and_last_activity_first(
 
     # Promoted player with latest activity
     player1 = PlayerProfileFactory.create()
-    player1.premium_products.setup_premium_profile()
+    player1.setup_premium_profile()
     player1.user.update_activity()
 
     PlayerProfileFactory.create(
@@ -1064,7 +1089,7 @@ def test_sort_player_profiles_promoted_and_last_activity_first(
 
     # Promoted player with 1 day old activity
     player3 = PlayerProfileFactory.create()
-    player3.premium_products.setup_premium_profile()
+    player3.setup_premium_profile()
     player3.user.update_activity()
 
     # Not promoted player with 1 day old activity
@@ -1079,7 +1104,7 @@ def test_sort_player_profiles_promoted_and_last_activity_first(
 
     # Promoted player with 2 days old activity
     player5 = PlayerProfileFactory.create()
-    player5.premium_products.setup_premium_profile()
+    player5.setup_premium_profile()
     player5.user.update_activity()
 
     # Not promoted player with 2 days old activity

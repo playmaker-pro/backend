@@ -84,10 +84,10 @@ class RedisConfig(BaseConfig):
 
 
 class Environment(Enum):
-    PRODUCTION: str = "production"
-    STAGING: str = "staging"
-    DEV: str = "development"
-    TEST: str = "test"
+    PRODUCTION = "production"
+    STAGING = "staging"
+    DEV = "development"
+    TEST = "test"
 
 
 class DatabaseConfig(BaseConfig):

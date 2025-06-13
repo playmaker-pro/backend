@@ -11,6 +11,13 @@ class Command(RunServerCommand):
         parser.add_argument("--celery", action="store_true", help="Start Celery worker")
         super().add_arguments(parser)
 
+    @property
+    def celery_alive(self) -> bool:
+        """
+        Check if Celery worker is alive.
+        """
+        return celery_app.control.inspect().active() is not None
+
     def inner_run(self, *args, **options):
         """
         Override inner_run method to start Celery worker if it's not running.
@@ -20,7 +27,7 @@ class Command(RunServerCommand):
         - Note2: you won't see Celery logs in console if you start Celery worker this way.
                  You may want to run celery command directly: 'python manage.py celery'.
         """
-        if celery_app.control.inspect().active() is None:
+        if not self.celery_alive:
             if options["celery"]:
                 subprocess.Popen(
                     ["python", "manage.py", "celery"],

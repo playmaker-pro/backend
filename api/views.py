@@ -167,8 +167,8 @@ class SwaggerView(EndpointView):
         if settings.DEBUG is False:
             raise exceptions.PermissionDenied
 
-        with open(settings.SWAGGER_PATH, 'r', encoding="utf-8") as file:
-
+        with open(settings.SWAGGER_PATH, "r", encoding="utf-8") as file:
             content = yaml.safe_load(file)
-            return Response(content, status=status.HTTP_200_OK, content_type='application/yaml')
-        
+            return Response(
+                content, status=status.HTTP_200_OK, content_type="application/yaml"
+            )

@@ -20,6 +20,7 @@ class ScoutProfileViewSerializer(BaseProfileSerializer):
             "is_promoted",
             "is_premium",
             "promotion",
+            "social_stats",
         )
 
 

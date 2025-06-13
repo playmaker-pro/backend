@@ -1,7 +1,6 @@
 from datetime import date
 from typing import Dict, Optional
 
-from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -24,17 +23,40 @@ from profiles.api.serializers import (
 from profiles.services import ProfileService
 from roles.definitions import PROFILE_TYPE_SHORT_MAP
 from users.errors import UserRegisterException
-from users.models import Ref, UserPreferences
+from users.models import Ref, User, UserPreferences
 from users.schemas import LoginSchemaOut
 from users.utils.api_utils import modify2custom_exception
-
-User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "username"]
+
+
+class UserSocialStatsSerializer(serializers.Serializer):
+    """User social stats serializer for player profile view"""
+
+    def to_representation(self, instance):
+        """
+        Convert the instance to a dictionary representation.
+        """
+        representation = super().to_representation(instance)
+
+        if self.context.get("hide_values", False):
+            representation["followers"] = None
+            representation["following"] = None
+            representation["views"] = None
+        else:
+            if instance.profile:
+                representation["followers"] = instance.profile.who_follows_me.count()
+                representation["views"] = instance.profile.meta.count_who_visited_me
+            else:
+                representation["followers"] = 0
+                representation["views"] = 0
+            representation["following"] = instance.following.count()
+
+        return representation
 
 
 class MainProfileDataSerializer(serializers.ModelSerializer):
@@ -55,6 +77,7 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
         read_only=True, source="profile.premium_already_tested"
     )
     premium = PremiumProfileProductSerializer(read_only=True, source="profile.premium")
+    social_stats = UserSocialStatsSerializer(read_only=True, source="*")
 
     class Meta:
         model = User
@@ -73,6 +96,7 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
             "is_premium",
             "premium",
             "premium_already_tested",
+            "social_stats",
         )
 
     def my_profile_uuid(self, instance: User) -> Optional[str]:
@@ -192,9 +216,11 @@ class UserDataSerializer(BaseUserDataSerializer):
 class UserMainRoleSerializer(serializers.ModelSerializer):
     """Serializer for user main role"""
 
+    display_status = serializers.CharField(default=User.DisplayStatus.VERIFIED)
+
     class Meta:
         model = User
-        fields = ("declared_role",)
+        fields = ("declared_role", "display_status")
 
     def validate_declared_role(self, value: str) -> str:
         """Check if declared role is in available roles and user has given profile"""

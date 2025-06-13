@@ -12,6 +12,16 @@ urlpatterns = [
         name="get_user_follows",
     ),
     path(
+        "",
+        views.FollowAPIView.as_view({"get": "list_my_followers"}),
+        name="get_followers",
+    ),
+    path(
+        "my-follows/",
+        views.FollowAPIView.as_view({"get": "list_followed_objects"}),
+        name="get_user_follows",
+    ),
+    path(
         "profile/<uuid:profile_uuid>/follow/",
         views.FollowAPIView.as_view({"post": "follow_profile"}),
         name="follow_profile",

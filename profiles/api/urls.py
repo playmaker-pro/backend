@@ -9,21 +9,17 @@ router.register("", views.ProfileAPI, basename="profiles")
 urlpatterns = [
     path(
         r"",
-        views.ProfileAPI.as_view(
-            {
-                "post": "create_profile",
-                "get": "get_bulk_profiles",
-            }
-        ),
+        views.ProfileAPI.as_view({
+            "post": "create_profile",
+            "get": "get_bulk_profiles",
+        }),
         name="create_or_list_profiles",
     ),
     path(
         "count/",
-        views.ProfileAPI.as_view(
-            {
-                "get": "get_filtered_profile_count",
-            }
-        ),
+        views.ProfileAPI.as_view({
+            "get": "get_filtered_profile_count",
+        }),
         name="filtered_profile_count",
     ),
     path(
@@ -33,54 +29,45 @@ urlpatterns = [
     ),
     path(
         r"owned/",
-        views.ProfileAPI.as_view(
-            {
-                "get": "get_owned_profiles",
-            }
-        ),
+        views.ProfileAPI.as_view({
+            "get": "get_owned_profiles",
+        }),
         name="get_owned_profiles",
     ),
     path(
         r"<uuid:profile_uuid>/",
-        views.ProfileAPI.as_view(
-            {
-                "get": "get_profile_by_uuid",
-                "patch": "update_profile",
-            }
-        ),
+        views.ProfileAPI.as_view({
+            "get": "get_profile_by_uuid",
+            "patch": "update_profile",
+        }),
         name="get_or_update_profile",
     ),
     path(
         r"<uuid:profile_uuid>/contact/",
-        views.ProfileAPI.as_view(
-            {
-                "patch": "update_profile_contact",
-            }
-        ),
+        views.ProfileAPI.as_view({
+            "patch": "update_profile_contact",
+        }),
     ),
     path(
         r"<uuid:profile_uuid>/main-data/",
-        views.ProfileAPI.as_view(
-            {"get": "get_main_user_data", "patch": "update_main_user_data"}
-        ),
+        views.ProfileAPI.as_view({
+            "get": "get_main_user_data",
+            "patch": "update_main_user_data",
+        }),
         name="get_or_update_main_data",
     ),
     path(
         r"slug/<slug:profile_slug>/",
-        views.ProfileAPI.as_view(
-            {
-                "get": "get_profile_by_slug",
-            }
-        ),
+        views.ProfileAPI.as_view({
+            "get": "get_profile_by_slug",
+        }),
         name="get_profile_by_slug",
     ),
     path(
         r"suggested-profiles/",
-        views.SuggestedProfilesAPIView.as_view(
-            {
-                "get": "get_suggested_profiles",
-            }
-        ),
+        views.SuggestedProfilesAPIView.as_view({
+            "get": "get_suggested_profiles",
+        }),
         name="get_suggested_profiles",
     ),
     path(
@@ -115,19 +102,18 @@ urlpatterns = [
     ),
     path(
         r"coach-licence/",
-        views.CoachLicencesAPIView.as_view(
-            {
-                "get": "list_coach_licences",
-                "post": "add_licence_for_coach",
-            }
-        ),
+        views.CoachLicencesAPIView.as_view({
+            "get": "list_coach_licences",
+            "post": "add_licence_for_coach",
+        }),
         name="coach_licences",
     ),
     path(
         r"coach-licence/<int:licence_id>/",
-        views.CoachLicencesAPIView.as_view(
-            {"patch": "modify_licence_for_coach", "delete": "delete_licence_for_coach"}
-        ),
+        views.CoachLicencesAPIView.as_view({
+            "patch": "modify_licence_for_coach",
+            "delete": "delete_licence_for_coach",
+        }),
         name="coach_licences_modify",
     ),
     path(
@@ -142,21 +128,17 @@ urlpatterns = [
     ),
     path(
         r"profile-video/",
-        views.ProfileVideoAPI.as_view(
-            {
-                "post": "create_profile_video",
-            }
-        ),
+        views.ProfileVideoAPI.as_view({
+            "post": "create_profile_video",
+        }),
         name="create_profile_video",
     ),
     path(
         r"profile-video/<int:video_id>/",
-        views.ProfileVideoAPI.as_view(
-            {
-                "delete": "delete_profile_video",
-                "patch": "update_profile_video",
-            }
-        ),
+        views.ProfileVideoAPI.as_view({
+            "delete": "delete_profile_video",
+            "patch": "update_profile_video",
+        }),
         name="modify_profile_video",
     ),
     path(
@@ -181,12 +163,10 @@ urlpatterns = [
     ),
     path(
         r"<uuid:profile_uuid>/teams/<int:team_contributor_id>/",
-        views.ProfileTeamsApi.as_view(
-            {
-                "patch": "update_profile_team_contributor",
-                "delete": "delete_profile_team_contributor",
-            }
-        ),
+        views.ProfileTeamsApi.as_view({
+            "patch": "update_profile_team_contributor",
+            "delete": "delete_profile_team_contributor",
+        }),
         name="update_or_delete_team_contributor",
     ),
     path(
@@ -196,119 +176,109 @@ urlpatterns = [
     ),
     path(
         r"<uuid:profile_uuid>/external-links/",
-        views.ExternalLinksAPI.as_view(
-            {
-                "get": "get_profile_external_links",
-                "post": "set_or_update_external_links",
-                "patch": "set_or_update_external_links",
-            }
-        ),
+        views.ExternalLinksAPI.as_view({
+            "get": "get_profile_external_links",
+            "post": "set_or_update_external_links",
+            "patch": "set_or_update_external_links",
+        }),
         name="profile_external_links",
     ),
     path(
         r"<uuid:profile_uuid>/transfer-status/",
-        views.TransferStatusAPIView.as_view(
-            {
-                "get": "get_profile_transfer_status",
-                "patch": "update_profile_transfer_status",
-                "post": "create_profile_transfer_status",
-                "delete": "delete_profile_transfer_status",
-            }
-        ),
+        views.TransferStatusAPIView.as_view({
+            "get": "get_profile_transfer_status",
+            "patch": "update_profile_transfer_status",
+            "post": "create_profile_transfer_status",
+            "delete": "delete_profile_transfer_status",
+        }),
         name="profile_transfer_status",
     ),
     path(
         r"list-transfer-status/",
-        views.TransferStatusAPIView.as_view(
-            {
-                "get": "list_transfer_status",
-            }
-        ),
+        views.TransferStatusAPIView.as_view({
+            "get": "list_transfer_status",
+        }),
         name="list_transfer_status",
     ),
     path(
         r"transfer-status/additional-info/",
-        views.TransferStatusAPIView.as_view(
-            {
-                "get": "get_transfer_status_additional_info",
-            }
-        ),
+        views.TransferStatusAPIView.as_view({
+            "get": "get_transfer_status_additional_info",
+        }),
         name="list_transfer_status_additional_choices",
     ),
     path(
         r"<uuid:profile_uuid>/transfer-request/",
-        views.TransferRequestAPIView.as_view(
-            {
-                "get": "get_profile_transfer_request",
-                "post": "create_transfer_request",
-                "patch": "update_transfer_request",
-                "delete": "delete_profile_transfer_request",
-            }
-        ),
+        views.TransferRequestAPIView.as_view({
+            "get": "get_profile_transfer_request",
+            "post": "create_transfer_request",
+            "patch": "update_transfer_request",
+            "delete": "delete_profile_transfer_request",
+        }),
         name="profile_transfer_request",
     ),
     path(
         r"transfer-request/status/",
-        views.TransferRequestAPIView.as_view(
-            {
-                "get": "list_transfer_request_status",
-            }
-        ),
+        views.TransferRequestAPIView.as_view({
+            "get": "list_transfer_request_status",
+        }),
         name="list_transfer_request_status",
     ),
     path(
         r"transfer-request/number-of-trainings/",
-        views.TransferRequestAPIView.as_view(
-            {
-                "get": "list_transfer_request_number_of_trainings",
-            }
-        ),
+        views.TransferRequestAPIView.as_view({
+            "get": "list_transfer_request_number_of_trainings",
+        }),
         name="list_transfer_request_number_of_trainings",
     ),
     path(
         r"transfer-request/benefits/",
-        views.TransferRequestAPIView.as_view(
-            {
-                "get": "list_transfer_request_benefits",
-            }
-        ),
+        views.TransferRequestAPIView.as_view({
+            "get": "list_transfer_request_benefits",
+        }),
         name="list_transfer_request_benefits",
     ),
     path(
         r"transfer-request/salary/",
-        views.TransferRequestAPIView.as_view(
-            {
-                "get": "list_transfer_request_salary",
-            }
-        ),
+        views.TransferRequestAPIView.as_view({
+            "get": "list_transfer_request_salary",
+        }),
         name="list_transfer_request_salary",
     ),
     path(
         r"<uuid:profile_uuid>/transfer-request/teams/",
-        views.TransferRequestAPIView.as_view(
-            {
-                "get": "get_profile_actual_teams",
-            }
-        ),
+        views.TransferRequestAPIView.as_view({
+            "get": "get_profile_actual_teams",
+        }),
         name="list_transfer_request_actual_teams",
     ),
     #  Catalogues
     path(
         r"catalogue/transfer-request/",
-        views.TransferRequestCatalogueAPIView.as_view(
-            {
-                "get": "list_transfer_requests",
-            }
-        ),
+        views.TransferRequestCatalogueAPIView.as_view({
+            "get": "list_transfer_requests",
+        }),
         name="list_transfer_request",
     ),
     path(
         r"who-visited-my-profile/",
-        views.VisitationView.as_view(
-            {
-                "get": "list_my_visitors",
-            }
-        ),
+        views.VisitationView.as_view({
+            "get": "list_my_visitors",
+        }),
         name="list_my_visitors",
+    ),
+    path(
+        r"near-me/",
+        views.ProfilesNearbyAPIView.as_view({
+            "get": "get_profiles_nearby",
+        }),
+        name="get_profiles_near_me",
+    ),
+    path(
+        r"popular/",
+        views.PopularProfilesAPIView.as_view({
+            "get": "get_popular_profiles",
+        }),
+        name="get_popular_profiles",
     ),
 ]

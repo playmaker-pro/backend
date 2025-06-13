@@ -6,6 +6,7 @@ import uuid
 from dataclasses import dataclass, field
 from decimal import Decimal
 
+from cities_light.models import City
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -14,6 +15,7 @@ from django.db import IntegrityError, connection
 from django.db import models as django_base_models
 from django.db.models import (
     Case,
+    F,
     IntegerField,
     Model,
     ObjectDoesNotExist,
@@ -518,6 +520,39 @@ class ProfileService:
         transfer_request: ProfileTransferStatus = profile.transfer_requests.first()
         return transfer_request or None
 
+    @staticmethod
+    def get_cities_nearby(city: City, radius: int = 60) -> QuerySet:
+        """
+        Get cities nearby the given city.
+        This method filters cities based on their geographical location.
+        """
+
+        latitude = city.latitude
+        longitude = city.longitude
+        earth_radius = 6371  # km
+
+        return (
+            City.objects.annotate(
+                distance=earth_radius
+                * django_base_functions.ACos(
+                    django_base_functions.Cos(django_base_functions.Radians(latitude))
+                    * django_base_functions.Cos(
+                        django_base_functions.Radians(F("latitude"))
+                    )
+                    * django_base_functions.Cos(
+                        django_base_functions.Radians(F("longitude"))
+                        - django_base_functions.Radians(longitude)
+                    )
+                    + django_base_functions.Sin(django_base_functions.Radians(latitude))
+                    * django_base_functions.Sin(
+                        django_base_functions.Radians(F("latitude"))
+                    )
+                )
+            )
+            .filter(distance__lt=radius)
+            .order_by("distance")
+        )
+
 
 class ProfileFilterService:
     profile_service = ProfileService
@@ -538,7 +573,9 @@ class ProfileFilterService:
     ) -> django_base_models.QuerySet:
         """Filter profile queryset with minimum user age"""
         min_birth_date = utils.get_past_date(years=age)
-        return queryset.filter(user__userpreferences__birth_date__lte=min_birth_date)
+        return queryset.exclude(user__userpreferences__birth_date__isnull=True).filter(
+            user__userpreferences__birth_date__lte=min_birth_date
+        )
 
     @staticmethod
     def filter_max_age(
@@ -546,7 +583,9 @@ class ProfileFilterService:
     ) -> django_base_models.QuerySet:
         """Filter profile queryset with maximum user age"""
         max_birth_date = utils.get_past_date(years=age + 1)
-        return queryset.filter(user__userpreferences__birth_date__gte=max_birth_date)
+        return queryset.exclude(user__userpreferences__birth_date__isnull=True).filter(
+            user__userpreferences__birth_date__gte=max_birth_date
+        )
 
     @staticmethod
     def filter_player_position(
@@ -624,6 +663,7 @@ class ProfileFilterService:
         latitude: float,
         longitude: float,
         radius: int,
+        user_relation: str = "user",
     ) -> django_base_models.QuerySet:
         """
         Filter queryset with objects within radius based on
@@ -640,19 +680,19 @@ class ProfileFilterService:
                 django_base_functions.Cos(django_base_functions.Radians(latitude))
                 * django_base_functions.Cos(
                     django_base_functions.Radians(
-                        "user__userpreferences__localization__latitude"
+                        f"{user_relation}__userpreferences__localization__latitude"
                     )
                 )
                 * django_base_functions.Cos(
                     django_base_functions.Radians(
-                        "user__userpreferences__localization__longitude"
+                        f"{user_relation}__userpreferences__localization__longitude"
                     )
                     - django_base_functions.Radians(longitude)
                 )
                 + django_base_functions.Sin(django_base_functions.Radians(latitude))
                 * django_base_functions.Sin(
                     django_base_functions.Radians(
-                        "user__userpreferences__localization__latitude"
+                        f"{user_relation}__userpreferences__localization__latitude"
                     )
                 )
             )
@@ -868,9 +908,9 @@ class PlayerProfilePositionService:
         are found.
         """
         main_positions_count = len([data for data in positions_data if data.is_main])
-        non_main_positions_count = len(
-            [data for data in positions_data if not data.is_main]
-        )
+        non_main_positions_count = len([
+            data for data in positions_data if not data.is_main
+        ])
 
         if main_positions_count > 1:
             raise api_errors.MultipleMainPositionError
@@ -931,9 +971,10 @@ class PlayerProfilePositionService:
                     )
                 elif current_positions[player_position_id].is_main != is_main:
                     # If main position has changed, prepare to update it
-                    positions_to_update.append(
-                        (current_positions[player_position_id], is_main)
-                    )
+                    positions_to_update.append((
+                        current_positions[player_position_id],
+                        is_main,
+                    ))
 
             # Handle non-main positions
             else:
@@ -948,9 +989,10 @@ class PlayerProfilePositionService:
                     )
                 elif current_positions[player_position_id].is_main != is_main:
                     # If non-main position has changed, prepare to update it
-                    positions_to_update.append(
-                        (current_positions[player_position_id], is_main)
-                    )
+                    positions_to_update.append((
+                        current_positions[player_position_id],
+                        is_main,
+                    ))
 
             position_ids_to_keep.add(player_position_id)
 
