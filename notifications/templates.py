@@ -141,7 +141,7 @@ class NotificationTemplate(Enum):
     ADD_LINKS = {
         "title": "Dodaj linki",
         "description": "Kliknij tutaj, aby przejść do profilu.",
-        "href": "/profil",
+        "href": "/profil#sekcja-linki",
         "icon": "links",
     }
     ADD_VIDEO = {
@@ -153,7 +153,7 @@ class NotificationTemplate(Enum):
     ASSIGN_CLUB = {
         "title": "Dodaj aktualną drużynę",
         "description": "Kliknij tutaj, aby przejść do profilu.",
-        "href": "/profil",
+        "href": "/profil#sekcja-kariera",
         "icon": "club",
     }
     NEW_INQUIRY = {
