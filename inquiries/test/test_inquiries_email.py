@@ -10,19 +10,19 @@ from django.utils import timezone
 from inquiries.errors import ForbiddenLogAction
 from inquiries.models import InquiryLogMessage, UserInquiry
 from mailing.models import EmailTemplate as _EmailTemplate
-from utils.factories import UserFactory
 from utils.factories.inquiry_factories import InquiryRequestFactory
 from utils.factories.mailing_factories import (
     UserEmailOutboxFactory as _UserEmailOutboxFactory,
 )
+from utils.factories.profiles_factories import GuestProfileFactory, PlayerProfileFactory
 
 User = get_user_model()
 
 
 class TestSendEmails(TestCase):
     def setUp(self):
-        self.user1 = UserFactory.create()
-        self.user2 = UserFactory.create()
+        self.user1 = PlayerProfileFactory.create().user
+        self.user2 = GuestProfileFactory.create().user
         self.inquiry_request = InquiryRequestFactory(
             sender=self.user1, recipient=self.user2
         )

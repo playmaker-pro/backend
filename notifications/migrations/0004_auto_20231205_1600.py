@@ -2,57 +2,58 @@
 
 from django.db import migrations
 
-from notifications.models import Notification
+# from notifications.models import Notification
 
 
 def add_notification_templates(apps, schema_editor) -> None:
-    NotificationTemplate = apps.get_model("notifications", "NotificationTemplate")
+    ...
+    # NotificationTemplate = apps.get_model("notifications", "NotificationTemplate")
 
-    templates = [
-        {
-            "event_type": Notification.EventType.MISSING_LOCATION,
-            "notification_type": Notification.NotificationType.BUILT_IN,
-            "content_template": "Przypomnienie: możesz podać swoją lokalizację",
-        },
-        {
-            "event_type": Notification.EventType.MISSING_ALT_POSITION,
-            "notification_type": "BI",
-            "content_template": "Przypomnienie: możesz wskazać pozycje alternatywne",
-        },
-        {
-            "event_type": Notification.EventType.MISSING_FAV_FORMATION,
-            "notification_type": Notification.NotificationType.BUILT_IN,
-            "content_template": "Przypomnienie: możesz wskazać ulubioną formację",
-        },
-        {
-            "event_type": Notification.EventType.INCOMPLETE_AGENCY_DATA,
-            "notification_type": Notification.NotificationType.BUILT_IN,
-            "content_template": "Przypomnienie: możesz uzupełnić dane o agencji",
-        },
-        {
-            "event_type": Notification.EventType.MISSING_EXT_LINKS,
-            "notification_type": Notification.NotificationType.BUILT_IN,
-            "content_template": "Przypomnienie: możesz dodać adresy URL wzmianek o swojej osobie w sieci",
-        },
-        {
-            "event_type": Notification.EventType.MISSING_VIDEO,
-            "notification_type": Notification.NotificationType.BUILT_IN,
-            "content_template": "Dodaj wideo ze swoje gry",
-        },
-        {
-            "event_type": Notification.EventType.MISSING_PHOTO,
-            "notification_type": Notification.NotificationType.BUILT_IN,
-            "content_template": "Dodaj swoje zdjęcie",
-        },
-        {
-            "event_type": Notification.EventType.MISSING_COURSE,
-            "notification_type": Notification.NotificationType.BUILT_IN,
-            "content_template": "Dodaj informacje o swoich kursach i certyfikatach",
-        },
-    ]
+    # templates = [
+    # {
+    #     "event_type": Notification.EventType.MISSING_LOCATION,
+    #     "notification_type": Notification.NotificationType.BUILT_IN,
+    #     "content_template": "Przypomnienie: możesz podać swoją lokalizację",
+    # },
+    # {
+    #     "event_type": Notification.EventType.MISSING_ALT_POSITION,
+    #     "notification_type": "BI",
+    #     "content_template": "Przypomnienie: możesz wskazać pozycje alternatywne",
+    # },
+    # {
+    #     "event_type": Notification.EventType.MISSING_FAV_FORMATION,
+    #     "notification_type": Notification.NotificationType.BUILT_IN,
+    #     "content_template": "Przypomnienie: możesz wskazać ulubioną formację",
+    # },
+    # {
+    #     "event_type": Notification.EventType.INCOMPLETE_AGENCY_DATA,
+    #     "notification_type": Notification.NotificationType.BUILT_IN,
+    #     "content_template": "Przypomnienie: możesz uzupełnić dane o agencji",
+    # },
+    # {
+    #     "event_type": Notification.EventType.MISSING_EXT_LINKS,
+    #     "notification_type": Notification.NotificationType.BUILT_IN,
+    #     "content_template": "Przypomnienie: możesz dodać adresy URL wzmianek o swojej osobie w sieci",
+    # },
+    # {
+    #     "event_type": Notification.EventType.MISSING_VIDEO,
+    #     "notification_type": Notification.NotificationType.BUILT_IN,
+    #     "content_template": "Dodaj wideo ze swoje gry",
+    # },
+    # {
+    #     "event_type": Notification.EventType.MISSING_PHOTO,
+    #     "notification_type": Notification.NotificationType.BUILT_IN,
+    #     "content_template": "Dodaj swoje zdjęcie",
+    # },
+    # {
+    #     "event_type": Notification.EventType.MISSING_COURSE,
+    #     "notification_type": Notification.NotificationType.BUILT_IN,
+    #     "content_template": "Dodaj informacje o swoich kursach i certyfikatach",
+    # },
+    # ]
 
-    for template_data in templates:
-        NotificationTemplate.objects.get_or_create(**template_data)
+    # for template_data in templates:
+    #     NotificationTemplate.objects.get_or_create(**template_data)
 
 
 class Migration(migrations.Migration):

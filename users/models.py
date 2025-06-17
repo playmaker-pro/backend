@@ -15,10 +15,11 @@ from django_fsm import FSMField, transition
 from pydantic import typing
 
 from inquiries.models import InquiryRequest
-from notifications.mail import (
-    mail_user_waiting_for_verification,
-    verification_notification,
-)
+
+# from notifications.mail import (
+#     mail_user_waiting_for_verification,
+#     verification_notification,
+# )
 from roles import definitions
 from users.managers import CustomUserManager
 from utils import calculate_age, generate_fe_url_path
@@ -135,8 +136,8 @@ class User(AbstractUser, UserRoleMixin):
         example:
             extra['reason'] = 'User removed field1'
         """
-        if not silent:
-            verification_notification(self)
+        # if not silent:
+        #     verification_notification(self)
 
     @transition(
         field=state, source="*", target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION_DATA
@@ -165,7 +166,7 @@ class User(AbstractUser, UserRoleMixin):
             reason = extra.get("reason")
         else:
             reason = None
-        mail_user_waiting_for_verification(self, extra_body=reason)
+        # mail_user_waiting_for_verification(self, extra_body=reason)
 
     @transition(field=state, source="*", target=STATE_ACCOUNT_WAITING_FOR_VERIFICATION)
     def unverify(self, silent: bool = False, extra: dict = None):
@@ -181,7 +182,7 @@ class User(AbstractUser, UserRoleMixin):
             reason = extra.get("reason")
         else:
             reason = None
-        mail_user_waiting_for_verification(self, extra_body=reason)
+        # mail_user_waiting_for_verification(self, extra_body=reason)
 
     @property
     def email_username(self):
@@ -501,6 +502,10 @@ class Ref(models.Model):
     @property
     def url(self) -> str:
         return generate_fe_url_path("?ref_code=" + str(self.uuid))
+
+    @property
+    def is_user(self) -> bool:
+        return self.user is not None
 
     class Meta:
         verbose_name = "Afiliacja"

@@ -39,7 +39,8 @@ class CustomObjectFactory(factory.django.DjangoModelFactory):
         Overwrite crate() method to log if something went wrong with saving new objects
         """
         try:
-            return super().create(**kwargs)
+            obj = super().create(**kwargs)
+            return cls._meta.model.objects.get(pk=obj.pk)
         except Exception as e:
             logger.error(e)
             raise e

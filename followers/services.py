@@ -24,7 +24,7 @@ User = get_user_model()
 profile_service = ProfileService()
 
 
-class FollowServices:
+class FollowService:
     def _get_or_create_follow_instance(
         self, user: User, entity: models.Model, content_type: ContentType
     ) -> GenericFollow:

@@ -14,8 +14,8 @@ from rest_framework.relations import PrimaryKeyRelatedField
 from api.consts import ChoicesTuple
 from api.serializers import CitySerializer, CountrySerializer
 from clubs.api.serializers import TeamHistoryBaseProfileSerializer
-from clubs.errors import ClubDoesNotExist, InvalidGender, TeamDoesNotExist
-from clubs.models import Club, League, Team
+from clubs.errors import InvalidGender
+from clubs.models import Club, League
 from clubs.services import ClubService, LeagueService
 from external_links.serializers import ExternalLinksSerializer
 from labels.services import LabelService
@@ -64,12 +64,12 @@ from profiles.services import (
     TransferStatusService,
 )
 from roles.definitions import (
-    PROFILE_TYPE_SHORT_MAP,
     TRANSFER_BENEFITS_CHOICES,
     TRANSFER_SALARY_CHOICES,
     TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES,
     TRANSFER_TRAININGS_CHOICES,
 )
+from users.api.serializers import UserSocialStatsSerializer
 from users.models import User, UserPreferences
 
 logger = logging.getLogger(__name__)
@@ -129,9 +129,9 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
 
     def validate_citizenship(self, citizenship: List[str]) -> List[str]:
         """Validate citizenship field"""
-        if not isinstance(citizenship, list) or not all(
-            [isinstance(el, str) for el in citizenship]
-        ):
+        if not isinstance(citizenship, list) or not all([
+            isinstance(el, str) for el in citizenship
+        ]):
             raise InvalidCitizenshipListException(
                 details="Citizenship must be a list of countries codes"
             )
@@ -190,9 +190,9 @@ class UserPreferencesSerializerDetailed(serializers.ModelSerializer):
         if spoken_languages := validated_data.pop(  # noqa: 5999
             "spoken_languages", None
         ):
-            instance.spoken_languages.set(
-                [language.pk for language in spoken_languages]
-            )
+            instance.spoken_languages.set([
+                language.pk for language in spoken_languages
+            ])
         instance = super().update(instance, validated_data)
         if profile_type == "PlayerProfile":
             if "birth_date" in validated_data or citizenship_updated:
@@ -341,22 +341,6 @@ class LeagueSerializer(serializers.ModelSerializer):
     class Meta:
         model = League
         fields = ("id", "name")
-
-
-class TeamSerializer(serializers.ModelSerializer):
-    """Player profile team serializer"""
-
-    club = ClubSerializer(required=False)
-    league = LeagueSerializer(required=False)
-
-    class Meta:
-        model = Team
-        fields = (
-            "id",
-            "name",
-            "club",
-            "league",
-        )
 
 
 class PhoneNumberField(serializers.Field):
@@ -553,6 +537,8 @@ class ProfileTransferStatusSerializer(
 class TeamContributorSerializer(serializers.ModelSerializer):
     """Team contributor serializer for user profile view"""
 
+    from clubs.api.serializers import TeamHistoryBaseProfileSerializer
+
     team = serializers.SerializerMethodField()
 
     class Meta:
@@ -737,6 +723,24 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     visits = serializers.SerializerMethodField()
     data_fulfill_status = serializers.CharField(required=True)
     promotion = PromoteProfileProductSerializer(read_only=True)
+    social_stats = serializers.SerializerMethodField()
+
+    def get_social_stats(self, obj: BaseProfile) -> dict:
+        """Get social stats for the profile."""
+        request = self.context.get("request")
+        if request and request.user and request.user.is_authenticated:
+            if obj.user == request.user:
+                hide_values = False
+            else:
+                hide_values = not self.context.get("premium_viewer", False)
+        else:
+            hide_values = True
+
+        return UserSocialStatsSerializer(
+            instance=obj.user,
+            read_only=True,
+            context={"hide_values": hide_values},
+        ).data
 
     def get_visits(self, obj: BaseProfile) -> int:
         """Get profile visits from last month."""

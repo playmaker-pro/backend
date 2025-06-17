@@ -7,8 +7,16 @@ from typing import TYPE_CHECKING
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.db.models import ObjectDoesNotExist, QuerySet
+from django.db.models import (
+    Case,
+    Count,
+    IntegerField,
+    ObjectDoesNotExist,
+    QuerySet,
+    When,
+)
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -18,10 +26,11 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import PermissionDenied
 
+from api import utils as api_utils
 from api.base_view import EndpointViewWithFilter
 from api.consts import ChoicesTuple
 from api.errors import NotOwnerOfAnObject
-from api.pagination import TransferRequestCataloguePagePagination
+from api.pagination import PagePagination, TransferRequestCataloguePagePagination
 from api.serializers import ProfileEnumChoicesSerializer
 from api.views import EndpointView
 from clubs.services import LeagueService
@@ -41,7 +50,7 @@ from profiles.api.filters import TransferRequestCatalogueFilter
 from profiles.api.managers import SerializersManager
 from profiles.api.mixins import ProfileRetrieveMixin
 from profiles.filters import ProfileListAPIFilter
-from profiles.models import ProfileTransferRequest
+from profiles.models import PROFILE_MODEL_MAP, ProfileMeta, ProfileTransferRequest
 from profiles.serializers_detailed.base_serializers import (
     MainUserDataSerializer,
     ProfileTransferRequestSerializer,
@@ -160,9 +169,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         (?role={P, C, S, G, ...})
         Full list of choices can be found in roles/definitions.py
         """
-
         qs: QuerySet = self.get_queryset()
-
         serializer_class = self.get_serializer_class(
             model_name=request.query_params.get("role")
         )
@@ -176,6 +183,8 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
                 "requestor": request.user,
                 "request": request,
                 "label_context": "base",
+                "premium_viewer": request.user.is_authenticated
+                and request.user.profile.is_premium,
             },
             many=True,
         )
@@ -317,6 +326,81 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
         return Response(serializer.data)
 
 
+class MixinProfilesFilter(ProfileListAPIFilter):
+    PARAMS_PARSERS = {
+        "latitude": api_utils.convert_float,
+        "longitude": api_utils.convert_float,
+        "radius": api_utils.convert_int,
+        "min_age": api_utils.convert_int,
+        "max_age": api_utils.convert_int,
+        "role": api_utils.convert_str_list,
+        "gender": api_utils.convert_str_list,
+    }
+
+    def filter_multiple_roles(self):
+        """Filter queryset by multiple roles"""
+        if roles := self.query_params.get("role", []):
+            try:
+                roles = [PROFILE_MODEL_MAP[role].__name__.lower() for role in roles]
+            except KeyError:
+                raise api_errors.InvalidProfileRole
+            self.queryset = self.queryset.filter(_profile_class__in=roles)
+
+    def filter_queryset(self) -> QuerySet:
+        self.define_query_params()
+        self.filter_multiple_roles()
+        self.filter_localization()
+        self.filter_age()
+        self.filter_gender()
+        return self.queryset
+
+
+class PopularProfilesAPIView(MixinProfilesFilter, EndpointView):
+    class Pagination(PagePagination):
+        max_page_size = 10
+
+    pagination_class = Pagination
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self) -> QuerySet:
+        self.queryset = ProfileMeta.objects.annotate(
+            visitors_count=Count("visited_objects")
+        ).order_by("-visitors_count")
+        self.filter_queryset()
+        return self.queryset.distinct()
+
+    def get_popular_profiles(self, request: Request) -> Response:
+        """
+        Retrieve popular profiles based on the specified filter criteria.
+
+        This method processes a GET request containing various filter parameters
+        and returns a list of popular profiles that match these filters.
+        """
+        user = request.user
+
+        if int(request.query_params.get("page", 1)) > 1 and (
+            not user.is_authenticated
+            or (hasattr(user, "profile") and not user.profile.is_premium)
+        ):
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        cache_key = f"popular_profiles:{request.get_full_path()}"
+        cached_response = cache.get(cache_key)
+
+        if cached_response:
+            return Response(cached_response)
+
+        qs = self.get_queryset()
+        qs = self.paginate_queryset(qs)
+        qs = [obj.profile for obj in qs]
+        serializer = serializers.GenericProfileSerializer(qs, many=True)
+        response_data = self.get_paginated_response(serializer.data).data
+
+        cache.set(cache_key, response_data, timeout=settings.DEFAULT_CACHE_LIFESPAN)
+
+        return Response(response_data)
+
+
 class SuggestedProfilesAPIView(EndpointView):
     """
     API view for retrieving profiles similar to a specified profile based
@@ -337,41 +421,107 @@ class SuggestedProfilesAPIView(EndpointView):
         """
         Retrieves profiles suggested to the target profile specified by the UUID.
         """
-        if not request.user.is_authenticated:
+        user = request.user
+        if not user.is_authenticated:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        loc_params = None
+        profile = user.profile
+        params = {"user__last_activity__gte": timezone.now() - timedelta(days=30)}
 
-        profile = request.user.profile
-        user_localization = profile.user.userpreferences.localization
-
-        if user_localization:
-            longitude, latitude = (
-                float(user_localization.longitude),
-                float(user_localization.latitude),
+        if loc := user.userpreferences.localization:
+            cities_nearby = profile_service.get_cities_nearby(loc)
+            params["user__userpreferences__localization__in"] = cities_nearby
+            city_id_order = list(cities_nearby.values_list("id", flat=True))
+            ordering = Case(
+                *[
+                    When(user__userpreferences__localization__pk=cid, then=pos)
+                    for pos, cid in enumerate(city_id_order)
+                ],
+                output_field=IntegerField(),
             )
-            loc_params = {"longitude": longitude, "latitude": latitude, "radius": 50}
 
         if profile.__class__ is models.PlayerProfile:
-            qs_model = random.choice(
-                [models.CoachProfile, models.ClubProfile, models.ScoutProfile]
-            )
+            qs_model = random.choice([
+                models.CoachProfile,
+                models.ClubProfile,
+                models.ScoutProfile,
+            ])
         else:
             qs_model = models.PlayerProfile
 
-        qs = qs_model.objects.filter(
-            user__last_activity__gte=timezone.now() - timedelta(days=30)
+        qs = (
+            qs_model.objects.to_list_by_api(
+                **params,
+            )
+            .annotate(city_order=ordering)
+            .exclude(user__pk=user.pk)
+            .order_by("city_order", "-user__last_activity")[:10]
         )
-
-        if loc_params:
-            qs = ProfileFilterService.filter_localization(
-                queryset=qs, **loc_params
-            ).order_by("distance", "-user__last_activity")
-        else:
-            qs = qs.order_by("-user__last_activity")
 
         serializer = serializers.SuggestedProfileSerializer(qs[:10], many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
+    class Pagination(PagePagination):
+        max_page_size = 10
+
+    pagination_class = Pagination
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def filter_localization(self, *args, **kwargs) -> None: ...
+
+    def get_profiles_nearby(self, request: Request) -> Response:
+        """Retrieve profiles from the closest area"""
+        user = request.user
+        if not user.is_authenticated or not user.userpreferences.localization:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        if int(request.query_params.get("page", 1)) > 1 and (
+            not user.is_authenticated
+            or (hasattr(user, "profile") and not user.profile.is_premium)
+        ):
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        cache_key = f"user:{user.id}:get_profiles_nearby{request.get_full_path()}"
+        cached_response = cache.get(cache_key)
+
+        if not cached_response:
+            cities_nearby = profile_service.get_cities_nearby(
+                user.userpreferences.localization
+            )
+            city_id_order = list(cities_nearby.values_list("id", flat=True))
+            ordering = Case(
+                *[
+                    When(user__userpreferences__localization__pk=cid, then=pos)
+                    for pos, cid in enumerate(city_id_order)
+                ],
+                output_field=IntegerField(),
+            )
+            self.queryset = (
+                ProfileMeta.objects.filter(
+                    user__userpreferences__localization__in=cities_nearby,
+                )
+                .annotate(city_order=ordering)
+                .exclude(user__pk=user.pk)
+                .exclude(user__display_status=User.DisplayStatus.NOT_SHOWN)
+                .order_by("city_order", "-user__last_activity")
+            )
+            qs = self.filter_queryset()
+            paginated_qs = self.paginate_queryset(qs)
+            data = serializers.GenericProfileSerializer(
+                paginated_qs, source="profile", many=True
+            ).data
+
+            # Cache the entire response data
+            cached_response = self.get_paginated_response(data)
+            cache.set(
+                cache_key, cached_response.data, timeout=settings.DEFAULT_CACHE_LIFESPAN
+            )
+            return cached_response
+
+        # Return cached response directly
+        return Response(cached_response)
 
 
 class ProfileSearchView(EndpointView):
@@ -1227,7 +1377,5 @@ class VisitationView(EndpointView):
                 "Available only for premium users", status=status.HTTP_204_NO_CONTENT
             )
 
-        serializer = serializers.ProfileVisitSummarySerializer(
-            profile.visitation.who_visited_me,
-        )
+        serializer = serializers.ProfileVisitSummarySerializer(profile)
         return Response(serializer.data, status=status.HTTP_200_OK)

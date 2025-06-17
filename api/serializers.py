@@ -118,7 +118,7 @@ class ProfileEnumChoicesSerializer(_serializers.CharField, _serializers.Serializ
         ] = None,
         raise_exception: bool = True,
         *args,
-        **kwargs
+        **kwargs,
     ):
         self.raise_exception = raise_exception
         self.model: typing.Type[Model] = model

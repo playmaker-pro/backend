@@ -9,7 +9,6 @@ Main purpose of functions is to skip marked tests when running with specific fla
 """  # noqa: E501
 
 from typing import Callable, Optional
-from unittest.mock import patch
 
 import pytest
 from django.conf import settings
@@ -25,6 +24,12 @@ from django.db.models.signals import (
 from rest_framework.test import APIClient
 
 from utils.factories import UserFactory
+from utils.factories.cities_factories import CityFactory
+from utils.fixtures import *
+
+pytestmark = pytest.mark.django_db
+
+User = get_user_model()
 
 pytestmark = pytest.mark.django_db
 
@@ -53,11 +58,17 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(skip_slow)
 
 
-@pytest.fixture(autouse=True)
-def system_user(db):
-    """Create system user before running tests."""
-    with patch("mailing.models.EmailTemplate.send_email"):
-        User.objects.get_or_create(email=settings.SYSTEM_USER_EMAIL)
+@pytest.fixture(scope="session", autouse=True)
+def create_system_user(django_db_setup, django_db_blocker):
+    """Ensure system user exists for all tests and is not deleted."""
+    with django_db_blocker.unblock():
+        return User.objects.get_or_create(email=settings.SYSTEM_USER_EMAIL)
+
+
+@pytest.fixture
+def system_user():
+    """Ensure system user exists for all tests and is not deleted."""
+    return User.objects.get(email=settings.SYSTEM_USER_EMAIL)
 
 
 @pytest.fixture()
@@ -108,3 +119,26 @@ def mute_signals(request):
 
     # Called after a test has finished.
     request.addfinalizer(restore_signals)
+
+
+@pytest.fixture
+def city_wwa():
+    return CityFactory.create_with_coordinates(
+        name="Warsaw",
+        coordinates=(21.0122, 52.2297),
+    )
+
+
+@pytest.fixture
+def city_prsk():
+    return CityFactory.create_with_coordinates(
+        name="Pruszków",
+        coordinates=(20.8072, 52.1684),
+    )
+
+
+@pytest.fixture
+def city_rdm():
+    return CityFactory.create_with_coordinates(
+        name="Radom", coordinates=(21.1572, 51.4025)
+    )

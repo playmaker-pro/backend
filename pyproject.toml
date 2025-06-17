@@ -5,14 +5,18 @@ exclude = "*/migrations/*, requirements.txt, requirements.dev.txt, swagger.yml"
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+ignore_init_module_imports = true
+
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "backend.settings.test"
 addopts = "-p no:warnings"
-# -- recommended but optional:
+env = [{ ENVIRONMENT = "test" }]
+pytest_plugins = "utils.fixtures"
+
+
 python_files = "tests/* test/*"
 norecursedirs = "__IGNORE/*"
-
 [tool.black]
 include = '\.py$'
 line-length = 88
@@ -58,6 +62,7 @@ celery = "^5.4.0"
 redis = "^5.2.1"
 djangorestframework-yaml = "^2.0.0"
 django-redis = "^5.4.0"
+django-celery-beat = "^2.8.0"
 
 [tool.poetry.group.dev.dependencies]
 django-debug-toolbar = "2.2"
@@ -89,8 +94,13 @@ indent-width = 4
 [tool.ruff.lint]
 extend-select = ["I", "E4", "E7", "E9", "F"]
 ignore = ["E731", "E741", "F821", "B904", "E722", "F405", "F403"]
+ignore-init-module-imports = true
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402"]
+"**/{tests,docs,tools}/*" = ["E402"]

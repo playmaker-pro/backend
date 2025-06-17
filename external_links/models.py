@@ -24,6 +24,7 @@ class ExternalLinks(models.Model):
                 if hasattr(self, name):
                     self.target_name = name
                     self.save()
+                    return getattr(self, name)
             else:
                 return None
 

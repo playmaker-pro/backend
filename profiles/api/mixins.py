@@ -38,7 +38,13 @@ class ProfileRetrieveMixin:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         serializer = serializer_class(
-            profile_object, context={"request": request, "label_context": "profile"}
+            profile_object,
+            context={
+                "request": request,
+                "label_context": "profile",
+                "premium_viewer": request.user.is_authenticated
+                and request.user.profile.is_premium,
+            },
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 

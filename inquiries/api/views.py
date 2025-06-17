@@ -13,10 +13,7 @@ from api.errors import NotOwnerOfAnObject
 from inquiries.api.serializers import InquiryRequestSerializer, UserInquirySerializer
 from inquiries.models import InquiryRequest
 from inquiries.services import InquireService
-from notifications.services import NotificationService
 from profiles.services import ProfileService
-
-notification_service = NotificationService()
 
 
 class InquiresAPIView(EndpointView):

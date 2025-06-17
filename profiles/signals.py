@@ -4,7 +4,11 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
-from notifications.mail import mail_role_change_request
+from mailing.deprecated import mail_role_change_request
+from notifications.services import NotificationService
+from profiles.tasks import (
+    post_create_profile_tasks,
+)
 from users.models import User
 
 from . import models
@@ -63,3 +67,26 @@ def update_calculate_pm_score_product(sender, instance, **kwargs):
     pp = instance.player.premium_products
     if pp and hasattr(pp, "calculate_pm_score"):
         pp.calculate_pm_score.approve(User.get_system_user(), instance.pm_score)
+
+
+@receiver(post_save, sender=models.PlayerProfile)
+@receiver(post_save, sender=models.CoachProfile)
+@receiver(post_save, sender=models.ClubProfile)
+@receiver(post_save, sender=models.ManagerProfile)
+@receiver(post_save, sender=models.ScoutProfile)
+@receiver(post_save, sender=models.GuestProfile)
+def post_create_profile(sender, instance, created, **kwargs):
+    """
+    Create a profile for the user if it doesn't exist.
+    """
+    if created:
+        post_create_profile_tasks.delay(instance.__class__.__name__, instance.pk)
+
+
+@receiver(post_save, sender=models.ProfileVisitation)
+def post_profile_visitation(sender, instance, created, **kwargs):
+    """
+    Create a profile visitation for the user if it doesn't exist.
+    """
+    if created:
+        NotificationService(instance.visited.profile.meta).notify_profile_visited()
