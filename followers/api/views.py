@@ -45,7 +45,7 @@ class FollowAPIView(EndpointView, ProfileRetrieveMixin):
         """
         if profile := request.user.profile:
             data = FollowedListSerializer(
-                profile.who_i_follow,
+                profile.who_i_follow.order_by("-created_at"),
                 many=True,
                 context={
                     "request": request,
@@ -62,7 +62,7 @@ class FollowAPIView(EndpointView, ProfileRetrieveMixin):
         """
         if profile := request.user.profile:
             data = FollowingListSerializer(
-                profile.who_follows_me,
+                profile.who_follows_me.order_by("-created_at"),
                 many=True,
                 context={
                     "request": request,

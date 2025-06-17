@@ -551,7 +551,7 @@ class InquiryRequest(models.Model):
         from notifications.services import NotificationService
 
         NotificationService(self.recipient.profile.meta).notify_new_inquiry(
-            self.recipient.profile
+            self.sender.profile
         )
 
     @transition(field=status, source=[STATUS_SENT], target=STATUS_RECEIVED)
