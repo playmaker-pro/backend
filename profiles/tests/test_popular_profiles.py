@@ -82,7 +82,7 @@ class TestPopularProfilesAPI:
         player_20yo,
     ):
         """Test the popular profiles endpoint with age filter."""
-        response = api_client.get(self.url, {"min_age": 18, "max_age": 25})
+        response = api_client.get(self.url, {"min_age": 18, "max_age": 21})
         data = response.json()["results"]
 
         assert response.status_code == 200

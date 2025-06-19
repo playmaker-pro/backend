@@ -184,6 +184,7 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
                 "request": request,
                 "label_context": "base",
                 "premium_viewer": request.user.is_authenticated
+                and request.user.profile
                 and request.user.profile.is_premium,
             },
             many=True,

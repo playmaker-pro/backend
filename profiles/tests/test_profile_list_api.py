@@ -24,6 +24,7 @@ from profiles.services import ProfileService
 from profiles.utils import get_past_date
 from utils import factories, get_current_season
 from utils.factories import (
+    CoachProfileFactory,
     GuestProfileFactory,
     LabelDefinitionFactory,
     LabelFactory,
@@ -1120,7 +1121,7 @@ def test_sort_player_profiles_promoted_and_last_activity_first(
         player6.uuid,
     ]
 
-    user = UserFactory.create(password="test1234")
+    user = GuestProfileFactory.create(user=UserFactory.create(password="test1234")).user
     user_manager = UserManager(api_client)
     headers = user_manager.custom_user_headers(email=user.email, password="test1234")
     url_to_hit: str = reverse(url)
@@ -1144,7 +1145,7 @@ def test_filter_last_activity(api_client):
     GuestProfileFactory.create(user__last_activity=now - timedelta(days=1, weeks=24))
     GuestProfileFactory.create(user__last_activity=now - timedelta(days=1, weeks=52))
 
-    user = UserFactory.create(password="test1234")
+    user = CoachProfileFactory.create(user=UserFactory.create(password="test1234")).user
     user_manager = UserManager(api_client)
     headers = user_manager.custom_user_headers(email=user.email, password="test1234")
     url_to_hit: str = reverse(url)

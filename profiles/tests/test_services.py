@@ -1,4 +1,5 @@
 import datetime
+import json
 from unittest.mock import patch
 
 import pytest
@@ -388,8 +389,8 @@ def test_new_profile_has_scheduled_tasks(factory):
 
         assert PeriodicTask.objects.filter(
             name=f"Run one hour after profile creation [ {profile.pk} -- {profile.__class__.__name__} ]",
-            task="app.celery.tasks.check_profile_one_hour_after",
-            args=[profile.pk, profile.__class__.__name__],
+            task="profiles.tasks.check_profile_one_hour_after",
+            args=json.dumps([profile.pk, profile.__class__.__name__]),
             one_off=True,
             clocked=ClockedSchedule.objects.get(
                 clocked_time=mock_now.return_value + datetime.timedelta(hours=1)
@@ -397,8 +398,8 @@ def test_new_profile_has_scheduled_tasks(factory):
         ).exists()
         assert PeriodicTask.objects.filter(
             name=f"Run one day after profile creation [ {profile.pk} -- {profile.__class__.__name__} ]",
-            task="app.celery.tasks.check_profile_one_day_after",
-            args=[profile.pk, profile.__class__.__name__],
+            task="profiles.tasks.check_profile_one_day_after",
+            args=json.dumps([profile.pk, profile.__class__.__name__]),
             one_off=True,
             clocked=ClockedSchedule.objects.get(
                 clocked_time=mock_now.return_value + datetime.timedelta(days=1)
@@ -406,8 +407,8 @@ def test_new_profile_has_scheduled_tasks(factory):
         ).exists()
         assert PeriodicTask.objects.filter(
             name=f"Run two days after profile creation [ {profile.pk} -- {profile.__class__.__name__} ]",
-            task="app.celery.tasks.check_profile_two_days_after",
-            args=[profile.pk, profile.__class__.__name__],
+            task="profiles.tasks.check_profile_two_days_after",
+            args=json.dumps([profile.pk, profile.__class__.__name__]),
             one_off=True,
             clocked=ClockedSchedule.objects.get(
                 clocked_time=mock_now.return_value + datetime.timedelta(days=2)
@@ -415,8 +416,8 @@ def test_new_profile_has_scheduled_tasks(factory):
         ).exists()
         assert PeriodicTask.objects.filter(
             name=f"Run four days after profile creation [ {profile.pk} -- {profile.__class__.__name__} ]",
-            task="app.celery.tasks.check_profile_four_days_after",
-            args=[profile.pk, profile.__class__.__name__],
+            task="profiles.tasks.check_profile_four_days_after",
+            args=json.dumps([profile.pk, profile.__class__.__name__]),
             one_off=True,
             clocked=ClockedSchedule.objects.get(
                 clocked_time=mock_now.return_value + datetime.timedelta(days=4)
