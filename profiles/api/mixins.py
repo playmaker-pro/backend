@@ -74,5 +74,8 @@ class ProfileRetrieveMixin:
             history = visit_history_service.create(user=profile_object.user)
             visit_history_service.increment(instance=history, requestor=requestor)
 
-        if not isinstance(requestor, AnonymousUser):
+        if (
+            not isinstance(requestor, AnonymousUser)
+            and requestor.user is not profile_object.user
+        ):
             models.ProfileVisitation.upsert(visitor=requestor, visited=profile_object)
