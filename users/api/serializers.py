@@ -35,7 +35,7 @@ from profiles.models import Language
 from profiles.services import LanguageService, ProfileService
 from roles.definitions import PROFILE_TYPE_SHORT_MAP
 from users.errors import UserRegisterException
-from users.models import Ref, UserPreferences
+from users.models import Ref, User, UserPreferences
 from users.schemas import LoginSchemaOut
 from users.utils.api_utils import modify2custom_exception
 
@@ -208,9 +208,11 @@ class BaseUserDataSerializer(serializers.ModelSerializer):
 class UserMainRoleSerializer(serializers.ModelSerializer):
     """Serializer for user main role"""
 
+    display_status = serializers.CharField(default=User.DisplayStatus.VERIFIED)
+
     class Meta:
         model = User
-        fields = ("declared_role",)
+        fields = ("declared_role", "display_status")
 
     def validate_declared_role(self, value: str) -> str:
         """Check if declared role is in available roles and user has given profile"""

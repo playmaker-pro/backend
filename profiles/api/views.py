@@ -180,6 +180,9 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
                 "requestor": request.user,
                 "request": request,
                 "label_context": "base",
+                "premium_viewer": request.user.is_authenticated
+                and request.user.profile
+                and request.user.profile.is_premium,
             },
             many=True,
         )
@@ -351,7 +354,10 @@ class MixinProfilesFilter(ProfileListAPIFilter):
 
 
 class PopularProfilesAPIView(MixinProfilesFilter, EndpointView):
-    pagination_class = PagePagination
+    class Pagination(PagePagination):
+        max_page_size = 10
+
+    pagination_class = Pagination
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self) -> QuerySet:
@@ -361,7 +367,6 @@ class PopularProfilesAPIView(MixinProfilesFilter, EndpointView):
         self.filter_queryset()
         return self.queryset.distinct()
 
-    @method_decorator(cache_page(settings.DEFAULT_CACHE_LIFESPAN))
     def get_popular_profiles(self, request: Request) -> Response:
         """
         Retrieve popular profiles based on the specified filter criteria.
@@ -369,11 +374,29 @@ class PopularProfilesAPIView(MixinProfilesFilter, EndpointView):
         This method processes a GET request containing various filter parameters
         and returns a list of popular profiles that match these filters.
         """
+        user = request.user
+
+        if int(request.query_params.get("page", 1)) > 1 and (
+            not user.is_authenticated
+            or (hasattr(user, "profile") and not user.profile.is_premium)
+        ):
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        cache_key = f"popular_profiles:{request.get_full_path()}"
+        cached_response = cache.get(cache_key)
+
+        if cached_response:
+            return Response(cached_response)
+
         qs = self.get_queryset()
         qs = self.paginate_queryset(qs)
         qs = [obj.profile for obj in qs]
         serializer = serializers.GenericProfileSerializer(qs, many=True)
-        return self.get_paginated_response(serializer.data)
+        response_data = self.get_paginated_response(serializer.data).data
+
+        cache.set(cache_key, response_data, timeout=settings.DEFAULT_CACHE_LIFESPAN)
+
+        return Response(response_data)
 
 
 class SuggestedProfilesAPIView(EndpointView):
@@ -438,7 +461,10 @@ class SuggestedProfilesAPIView(EndpointView):
 
 
 class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
-    pagination_class = PagePagination
+    class Pagination(PagePagination):
+        max_page_size = 10
+
+    pagination_class = Pagination
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def filter_localization(self, *args, **kwargs) -> None: ...
@@ -447,9 +473,15 @@ class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
         """Retrieve profiles from the closest area"""
         user = request.user
         if not user.is_authenticated or not user.userpreferences.localization:
-            return Response(data=[], status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
-        cache_key = f"user:{user.id}:get_profiles_nearby{str(request)}"
+        if int(request.query_params.get("page", 1)) > 1 and (
+            not user.is_authenticated
+            or (hasattr(user, "profile") and not user.profile.is_premium)
+        ):
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        cache_key = f"user:{user.id}:get_profiles_nearby{request.get_full_path()}"
         cached_response = cache.get(cache_key)
 
         if not cached_response:

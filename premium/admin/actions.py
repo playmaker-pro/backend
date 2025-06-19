@@ -18,22 +18,22 @@ def update_pm_score(modeladmin, request, queryset):
 @admin.action(description="Activate 1 MONTH premium")
 def activate_1_month_premium(modeladmin, request, queryset):
     for pp in queryset:
-        pp.setup_premium_profile(PremiumType.MONTH)
+        pp.profile.setup_premium_profile(PremiumType.MONTH)
 
 
 @admin.action(description="Activate 1 DAY premium")
 def activate_1_day_premium(modeladmin, request, queryset):
     for pp in queryset:
-        pp.setup_premium_profile(PremiumType.CUSTOM, 1)
+        pp.profile.setup_premium_profile(PremiumType.CUSTOM, 1)
 
 
 @admin.action(description="Activate 10 DAYS premium")
 def activate_10_days_premium(modeladmin, request, queryset):
     for pp in queryset:
-        pp.setup_premium_profile(PremiumType.CUSTOM, 10)
+        pp.profile.setup_premium_profile(PremiumType.CUSTOM, 10)
 
 
 @admin.action(description="Activate 1 YEAR premium")
 def activate_1_year_premium(modeladmin, request, queryset):
     for pp in queryset:
-        pp.setup_premium_profile(PremiumType.YEAR)
+        pp.profile.setup_premium_profile(PremiumType.YEAR)

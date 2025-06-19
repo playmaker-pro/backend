@@ -177,6 +177,18 @@ class TestGetProfileAPI(APITestCase):
             "views": 2,
         }
 
+    def test_will_not_create_visitation_for_myself(self):
+        """Test that visitation is not created for the profile owner"""
+        profile = factories.PlayerProfileFactory.create(user_id=self.user_obj.pk)
+        self.client.force_authenticate(user=profile.user)
+
+        response = self.client.get(self.url(profile_uuid=profile.uuid))
+
+        assert response.status_code == 200
+        assert not ProfileVisitation.objects.filter(
+            visited=profile.meta, visitor=profile.meta
+        ).exists()
+
 
 class TestCreateProfileAPI(APITestCase):
     def setUp(self) -> None:

@@ -105,7 +105,7 @@ class TestNotifications:
             {
                 "title": "Profil tymczasowo ukryty",
                 "description": "Popraw informacje w profilu (imię, nazwisko, zdjęcie), aby przywrócić widoczność.",
-                "href": "/profil",
+                "href": "?modal=profile-hidden",
                 "icon": "hidden",
             },
             player_profile.meta,
@@ -205,7 +205,7 @@ class TestNotifications:
             target=player_profile.meta,
             title="Witaj w PlayMaker!",
             description="Dziękujemy za dołączenie do społeczności, Twoja podróż zaczyna się tutaj! Sprawdź, co daje Ci PlayMaker!",
-            href="/profil?modal=welcome",
+            href="?modal=welcome",
             icon="playmaker",
         ).exists()
 
@@ -219,7 +219,7 @@ class TestNotifications:
             target=player_profile.meta,
             title="Ktoś Cię obserwuje",
             description="Zobacz kto zaobserwował Twój profil.",
-            href="/obserowani",
+            href="/obserwowani?tab=obserwatorzy",
             icon="star",
         ).exists()
 
@@ -371,7 +371,7 @@ class TestNotifications:
                 target=profile.meta,
                 title="Dodaj linki",
                 description="Kliknij tutaj, aby przejść do profilu.",
-                href="/profil",
+                href="/profil#sekcja-linki",
                 icon="links",
             ).exists()
             is not has_links
@@ -403,7 +403,7 @@ class TestNotifications:
                 target=player_profile.meta,
                 title="Dodaj video",
                 description="Kliknij tutaj, aby przejść do profilu.",
-                href="/profil",
+                href="/profil#sekcja-video-z-gry",
                 icon="video",
             ).exists()
             is not has_video
@@ -435,7 +435,7 @@ class TestNotifications:
                 target=profile.meta,
                 title="Dodaj aktualną drużynę",
                 description="Kliknij tutaj, aby przejść do profilu.",
-                href="/profil",
+                href="/profil#sekcja-kariera",
                 icon="club",
             ).exists()
             is not has_team_history

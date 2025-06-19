@@ -640,14 +640,17 @@ class BaseProfile(models.Model, EventLogMixin):
         return [getattr(obj, field) for field in self.VERIFICATION_FIELDS]
 
     class ProfileManager(models.Manager):
-        def to_list_by_api(self, **kwargs) -> models.QuerySet:
+        def to_list_by_api(self, role: str = None, **kwargs) -> models.QuerySet:
             """Filter profiles which should be listed by api"""
-            return (
+            qs = (
                 self.filter(**kwargs)
                 .exclude(user__first_name__isnull=True, user__last_name__isnull=True)
                 .exclude(user__first_name=models.F("user__last_name"))
                 .exclude(user__display_status=User.DisplayStatus.NOT_SHOWN)
             )
+            if role:
+                qs = qs.filter(user__declared_role=role)
+            return qs
 
     objects = ProfileManager()
 

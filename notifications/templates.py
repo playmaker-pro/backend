@@ -63,7 +63,7 @@ class NotificationTemplate(Enum):
     PROFILE_HIDDEN = {
         "title": "Profil tymczasowo ukryty",
         "description": "Popraw informacje w profilu (imię, nazwisko, zdjęcie), aby przywrócić widoczność.",
-        "href": "/profil?modal=profile-hidden",
+        "href": "?modal=profile-hidden",
         "icon": "hidden",
     }
     PREMIUM_EXPIRED = {
@@ -87,13 +87,13 @@ class NotificationTemplate(Enum):
     WELCOME = {
         "title": "Witaj w PlayMaker!",
         "description": "Dziękujemy za dołączenie do społeczności, Twoja podróż zaczyna się tutaj! Sprawdź, co daje Ci PlayMaker!",
-        "href": "/profil?modal=welcome",
+        "href": "?modal=welcome",
         "icon": "playmaker",
     }
     NEW_FOLLOWER = {
         "title": "Ktoś Cię obserwuje",
         "description": "Zobacz kto zaobserwował Twój profil.",
-        "href": "/obserowani",
+        "href": "/obserwowani?tab=obserwatorzy",
         "icon": "star",
     }
     INQUIRY_ACCEPTED = {
@@ -141,19 +141,19 @@ class NotificationTemplate(Enum):
     ADD_LINKS = {
         "title": "Dodaj linki",
         "description": "Kliknij tutaj, aby przejść do profilu.",
-        "href": "/profil",
+        "href": "/profil#sekcja-linki",
         "icon": "links",
     }
     ADD_VIDEO = {
         "title": "Dodaj video",
         "description": "Kliknij tutaj, aby przejść do profilu.",
-        "href": "/profil",
+        "href": "/profil#sekcja-video-z-gry",
         "icon": "video",
     }
     ASSIGN_CLUB = {
         "title": "Dodaj aktualną drużynę",
         "description": "Kliknij tutaj, aby przejść do profilu.",
-        "href": "/profil",
+        "href": "/profil#sekcja-kariera",
         "icon": "club",
     }
     NEW_INQUIRY = {
