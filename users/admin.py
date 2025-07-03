@@ -10,6 +10,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from utils import linkify
+from users.mongo_login_service import MongoLoginService
 
 from . import models
 
@@ -164,6 +165,10 @@ class HasDataMapperIdFilter(SimpleListFilter):
 
 @admin.register(models.User)
 class UserAdminPanel(UserAdmin):
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.mongo_service = MongoLoginService()
     fieldsets = (
         (None, {"fields": ("password",)}),  # 'username',
         (
@@ -225,7 +230,6 @@ class UserAdminPanel(UserAdmin):
         "state",
         "display_status",
         "is_active",
-        "last_login",
         "date_joined",
         "get_profile_permalink",
         linkify("profile"),
@@ -234,6 +238,9 @@ class UserAdminPanel(UserAdmin):
         "get_team_object",
         "get_team_club_league_voivodeship_ver",
         "last_activity",
+        "get_today_login_count",
+        "get_login_streak",
+        "get_mongo_last_login",
     )
     list_filter = ("state", "declared_role", HasDataMapperIdFilter)
     search_fields = ("first_name", "last_name", "declared_role")
@@ -292,6 +299,48 @@ class UserAdminPanel(UserAdmin):
             return "missing profile"
 
     get_profile.short_description = "Profile Type"
+    
+    # MongoDB login tracking methods
+    def get_today_login_count(self, obj):
+        """Get today's login count from MongoDB."""
+        try:
+            return self.mongo_service.get_user_login_count(obj.id)
+        except Exception:
+            return 0
+    get_today_login_count.short_description = "Today Logins"
+    
+    def get_login_streak(self, obj):
+        """Get login streak from MongoDB."""
+        try:
+            return self.mongo_service.get_user_login_streak(obj.id)
+        except Exception:
+            return 0
+    get_login_streak.short_description = "Login Streak"
+    
+    def get_mongo_last_login(self, obj):
+        """Get last login timestamp from MongoDB with link to full history."""
+        try:
+            last_login = self.mongo_service.get_user_last_login(obj.id)
+            if last_login:
+                last_login_str = last_login.strftime('%Y-%m-%d %H:%M')
+                history_url = f"/users/admin/user/{obj.id}/login-history/"
+                return format_html(
+                    '<a href="{}" title="View full login history">{}</a>',
+                    history_url,
+                    last_login_str
+                )
+            return "-"
+        except Exception:
+            return "-"
+
+    get_mongo_last_login.short_description = "Last Login"
+    
+    def changelist_view(self, request, extra_context=None):
+        """Override changelist view to add bulk export link."""
+        extra_context = extra_context or {}
+        extra_context['bulk_export_url'] = '/users/admin/bulk-login-export/'
+        return super().changelist_view(request, extra_context=extra_context)
+
 
 
 @admin.register(models.UserPreferences)

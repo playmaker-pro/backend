@@ -4,6 +4,7 @@ import typing
 
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.conf import settings
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
@@ -44,6 +45,7 @@ from users.schemas import (
     UserGoogleDetailPydantic,
 )
 from users.services import PasswordResetService, UserService
+from users.tasks import track_user_login_task
 
 user_service: UserService = UserService()
 password_reset_service: PasswordResetService = PasswordResetService()
@@ -105,6 +107,7 @@ class UserRegisterEndpointView(EndpointView):
             "first_name": user.first_name,
             "last_name": user.last_name,
         }
+
         return Response(response)
 
 
@@ -220,6 +223,9 @@ class UsersAPI(EndpointView):
             "first_name": user.first_name,
             "last_name": user.last_name,
         }
+        if not getattr(settings, "DISABLE_EXTERNAL_TASKS", False):
+            track_user_login_task.delay(user.pk)
+
         return response
 
     def google_auth(self, request):

@@ -7,6 +7,12 @@ from profiles.errors import ProfileVisitHistoryDoesNotExistException
 from profiles.services import ProfileVisitHistoryService
 from users.models import Ref, User, UserPreferences
 from users.services import UserService
+from users.mongo_login_service import MongoLoginService
+import logging
+
+
+logger = logging.getLogger('celery')
+
 
 
 def _get_user(user_id: int) -> User:
@@ -60,3 +66,17 @@ def update_visit_history_for_actual_date(*args, **kwargs):
             user_visit_history.save()
         except ProfileVisitHistoryDoesNotExistException:
             visit_history_service.create(user=user, user_logged_in=True)
+
+
+@shared_task
+def track_user_login_task(user_id: int) -> None:
+    """Celery task to track user login activity using MongoDB."""
+    try:
+        mongo_login_service = MongoLoginService()
+        success = mongo_login_service.track_user_login(user_id)
+        
+        if not success:
+            logger.warning(f"MongoDB login tracking returned False for user {user_id}")
+            
+    except Exception as e:
+        logger.error(f"Failed to track login for user {user_id}: {str(e)}")
