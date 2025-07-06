@@ -1143,6 +1143,15 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     class Meta:
         verbose_name = "Player Profile"
         verbose_name_plural = "Player Profiles"
+        indexes = [
+            models.Index(fields=['user', 'team_object']),
+            models.Index(fields=['user', 'verification']),
+            models.Index(fields=['team_object', 'position_raw']),
+            models.Index(fields=['user', 'playermetrics']),
+            models.Index(fields=['voivodeship_obj', 'team_object']),
+            models.Index(fields=['data_mapper_id']),
+            models.Index(fields=['uuid']),
+        ]
 
 
 class PlayerMetrics(models.Model):

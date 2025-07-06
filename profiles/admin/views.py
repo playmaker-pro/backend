@@ -240,6 +240,71 @@ class PlayerProfileAdmin(ProfileAdminBase):
         linkify("verification"),
         linkify("external_links"),
     )
+    
+    # Add list filters for better navigation
+    list_filter = (
+        "user__declared_role",
+        "user__display_status", 
+        "playermetrics__pm_score_state",
+        "team_object__club__voivodeship_obj",
+        "verification__status",
+    )
+    
+    # Optimize database queries
+    def get_queryset(self, request):
+        """Optimize database queries with select_related and prefetch_related"""
+        queryset = super().get_queryset(request)
+        return queryset.select_related(
+            'user',
+            'user__userpreferences',
+            'team_object',
+            'team_object__club',
+            'team_object__club__voivodeship_obj',
+            'team_object__league',
+            'team_history_object',
+            'team_object_alt',
+            'playermetrics',
+            'verification',
+            'external_links',
+            'mapper',
+            'premium_products',
+            'visitation',
+            'verification_stage',
+            'voivodeship_obj',
+            'meta'
+        ).prefetch_related(
+            'player_positions__player_position',
+            'labels',
+            'follows',
+            'transfer_status_related',
+            'transfer_requests'
+        )
+    
+    # Optimized display methods that use pre-fetched data
+    def get_pm_score(self, obj):
+        """Get PM Score without additional queries"""
+        try:
+            return obj.playermetrics.pm_score or '-'
+        except AttributeError:
+            return '-'
+    get_pm_score.short_description = 'PM Score'
+    get_pm_score.admin_order_field = 'playermetrics__pm_score'
+    
+    def get_team_name(self, obj):
+        """Get team name without additional queries"""
+        if obj.team_object:
+            return obj.team_object.name
+        return '-'
+    get_team_name.short_description = 'Team'
+    get_team_name.admin_order_field = 'team_object__name'
+    
+    def get_club_name(self, obj):
+        """Get club name without additional queries"""
+        if obj.team_object and obj.team_object.club:
+            return obj.team_object.club.name
+        return '-'
+    get_club_name.short_description = 'Club'
+    get_club_name.admin_order_field = 'team_object__club__name'
 
     def team_object_linkify(self, obj=None):
         if obj.team_object:
@@ -271,7 +336,6 @@ class PlayerProfileAdmin(ProfileAdminBase):
         "team_object",
         "team_history_object",
         "team_object_alt",
-        "user",
         "voivodeship_obj",
         "address",
     )
@@ -298,6 +362,10 @@ class PlayerProfileAdmin(ProfileAdminBase):
         "verification_stage",
     )
     search_fields = ("uuid", "user__email", "user__first_name", "user__last_name")
+    
+    # Add pagination for better performance
+    list_per_page = 50
+    list_max_show_all = 200
 
 
 @admin.register(models.CoachProfile)
