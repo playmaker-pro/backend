@@ -126,6 +126,7 @@ class EmailTemplate(models.Model):
 
     subject = models.CharField(max_length=255)
     body = models.TextField(help_text=EMAIL_PATTERN)
+    html_body = models.TextField(blank=True, null=True, help_text="HTML version of email body")
     email_type = models.CharField(max_length=255, choices=EmailType.choices)
     is_default = models.BooleanField(
         _("Is default email template for selected type?"), default=True
@@ -148,8 +149,9 @@ class EmailTemplate(models.Model):
         parser = self._content_parser(user, **extra_kwargs)
         subject = parser.parse_email_title(self.subject)
         body = parser.parse_email_body(self.body)
+        html_body = parser.parse_email_body(self.html_body)
         return _EmailSchema(
-            subject=subject, body=body, recipients=[user.email], type=self.email_type
+            subject=subject, body=body, html_body=html_body, recipients=[user.email], type=self.email_type
         )
 
     @classmethod

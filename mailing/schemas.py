@@ -11,6 +11,7 @@ class EmailSchema(_BaseModel):
 
     subject: str
     body: str
+    html_body: _Optional[str] = None
     recipients: _List[str]
 
     @property

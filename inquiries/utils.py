@@ -61,6 +61,16 @@ class InquiryMessageContentParser(_MessageContentParser):
         return self.text
 
     @property
+    def parse_email_html_body(self) -> str:
+        self.text = self._log.message.email_body_html
+        self._put_correct_form()
+        self._put_recipient_full_name()
+        self._put_related_user_with_role()
+        self._put_related_user_with_role_in_objective_case()
+        self._put_url()
+        return self.text
+
+    @property
     def parse_email_title(self) -> str:
         """
         Set text as email title.

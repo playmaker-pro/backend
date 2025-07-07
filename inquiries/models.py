@@ -20,6 +20,7 @@ from utils.constants import (
     INQUIRY_LIMIT_INCREASE_URL,
     TRANSFER_MARKET_URL,
 )
+from utils.utils import render_email_template
 
 logger = logging.getLogger("inquiries")
 
@@ -58,6 +59,11 @@ class InquiryLogMessage(models.Model):
     )
     email_body = models.TextField(
         help_text=EMAIL_PATTERN,
+        blank=True,
+        null=True,
+    )
+    email_body_html = models.TextField(
+        help_text=_("HTML version of the email body. Supports HTML tags like <strong>, <a>, etc."),
         blank=True,
         null=True,
     )
@@ -116,6 +122,7 @@ class UserInquiryLog(models.Model):
         """Create email schema based on log message and related user."""
         return _EmailSchema(
             body=self.email_body,
+            html_body=self.email_html_body,
             subject=self.email_title,
             recipients=[self.log_owner.user.contact_email],
             type=self.message.log_type,
@@ -140,6 +147,10 @@ class UserInquiryLog(models.Model):
     def email_body(self) -> str:
         """Parse email body to include user related with log"""
         return _ContentParser(self, url=self.ulr_to_profile).parse_email_body
+
+    @property
+    def email_html_body(self) -> str:
+        return _ContentParser(self, url=self.ulr_to_profile).parse_email_html_body
 
     @property
     def ulr_to_profile(self) -> str:
@@ -356,9 +367,14 @@ class UserInquiry(models.Model):
             or force_send
         ):
             template = _EmailTemplate.objects.inquiry_limit_reached_template()
-            email_body = template.body.replace("#url#", INQUIRY_LIMIT_INCREASE_URL)
+            context = {
+                "url": INQUIRY_LIMIT_INCREASE_URL,
+            }
+            html_body, plain_text = render_email_template("mailing/mails/INQUIRY_LIMIT.html", context)
+
             schema = _EmailSchema(
-                body=email_body,
+                body=plain_text,
+                html_body=html_body,
                 subject=template.subject,
                 recipients=[self.user.contact_email],
                 type=_EmailTemplate.EmailType.INQUIRY_LIMIT,

@@ -39,6 +39,7 @@ class MailingService:
             message=self._body,
             from_email=self._sender,
             recipient_list=self._recipients,
+            html_message=self._schema.html_body or None,
             log=self._schema.log,
         )
 

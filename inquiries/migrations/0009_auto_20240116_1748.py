@@ -2,7 +2,6 @@
 
 from django.db import migrations
 
-from inquiries.models import InquiryLogMessage
 from utils.constants import INQUIRY_CONTACT_URL
 
 
@@ -13,13 +12,14 @@ def update_email_urls(apps, schema_editor) -> None:
     This function fetches InquiryLogMessage instances with specified log types and
     updates their email_body field to replace the old URL with the new one.
     """
+    # Get the historical model                                                                                                                                                                              │ │
+    InquiryLogMessage = apps.get_model("inquiries", "InquiryLogMessage")
     # Define the new URL
     new_url = INQUIRY_CONTACT_URL
 
     # List of log types to update
     log_types_to_update = [
-        InquiryLogMessage.MessageType.ACCEPTED,
-        InquiryLogMessage.MessageType.NEW,
+        "ACCEPTED_INQUIRY", "NEW_INQUIRY",
     ]
 
     # Fetch and update messages for each log type
