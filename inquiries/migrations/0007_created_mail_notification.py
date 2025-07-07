@@ -2,17 +2,13 @@
 
 from django.db import migrations, models
 
-from inquiries.models import InquiryLogMessage as _InquiryLogMessage
-
 
 def create_initial_email_messages(apps, *_):
     """Create initial email messages with valid formating."""
-    InquiryLogMessage: _InquiryLogMessage = apps.get_model(
-        "inquiries", "InquiryLogMessage"
-    )
+    _InquiryLogMessage = apps.get_model("inquiries", "InquiryLogMessage")
 
-    accepted_inquiry = InquiryLogMessage.objects.get(
-        log_type=_InquiryLogMessage.MessageType.ACCEPTED
+    accepted_inquiry = _InquiryLogMessage.objects.get(
+        log_type='ACCEPTED_INQUIRY'
     )
     accepted_inquiry.email_title = (
         "#r# #zaakceptował|zaakceptowała# Twoje zapytanie o piłkarski kontakt!"
@@ -31,8 +27,8 @@ Wiadomość została wygenerowa automatycznie. Prosimy na nią nie odpowiadać."
     accepted_inquiry.send_mail = True
     accepted_inquiry.save()
 
-    rejected_inquiry = InquiryLogMessage.objects.get(
-        log_type=_InquiryLogMessage.MessageType.REJECTED
+    rejected_inquiry = _InquiryLogMessage.objects.get(
+        log_type='REJECTED_INQUIRY'
     )
     rejected_inquiry.email_title = (
         "#r# #odrzucił|odrzuciła# Twoje zapytanie o piłkarski kontakt!"
@@ -48,8 +44,8 @@ Wiadomość została wygenerowana automatycznie. Prosimy na nią nie odpowiadać
     rejected_inquiry.send_mail = True
     rejected_inquiry.save()
 
-    new_inquiry = InquiryLogMessage.objects.get(
-        log_type=_InquiryLogMessage.MessageType.NEW
+    new_inquiry = _InquiryLogMessage.objects.get(
+        log_type='NEW_INQUIRY'
     )
     new_inquiry.email_title = "Masz nowe zapytanie o piłkarski kontakt!"
     new_inquiry.email_body = """Witaj, 

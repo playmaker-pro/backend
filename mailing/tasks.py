@@ -13,13 +13,13 @@ def notify_admins(subject, message):
 
 
 @shared_task
-def send(log: str, **kwargs):
+def send(**kwargs):
     """
     Send an email to the specified recipients.
     """
     try:
         send_mail(**kwargs)
     except Exception as e:
-        logger.error(f"[ERROR]\n{log}\n{e}\n{traceback.format_exc()}")
+        logger.error(f"[ERROR]\n{e}\n{traceback.format_exc()}")
     else:
-        logger.info(f"[SUCCESS]\n{log}")
+        logger.info(f"[SUCCESS]\n")

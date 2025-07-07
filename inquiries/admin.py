@@ -52,10 +52,6 @@ class InquiryRequestAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(models.InquiryLogMessage)
-class InquiryLogMessageAdmin(admin.ModelAdmin): ...
-
-
 @admin.register(models.UserInquiryLog)
 class UserInquiryLogAdmin(admin.ModelAdmin):
     search_fields = ("log_owner__user__email",)

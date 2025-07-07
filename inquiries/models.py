@@ -12,9 +12,8 @@ from inquiries.errors import ForbiddenLogAction
 from inquiries.schemas import InquiryPlanTypeRef as _InquiryPlanTypeRef
 from inquiries.signals import inquiry_pool_exhausted
 from inquiries.tasks import send_inquiry_email
-from inquiries.utils import InquiryMessageContentParser as _ContentParser
-from mailing.models import EmailTemplate as _EmailTemplate
-from mailing.schemas import EmailSchema as _EmailSchema
+from inquiries.constants import InquiryLogType, EMAIL_ENABLED_LOG_TYPES
+from mailing.services import TransactionalEmailService
 from utils.constants import (
     INQUIRY_CONTACT_URL,
     INQUIRY_LIMIT_INCREASE_URL,
@@ -22,59 +21,6 @@ from utils.constants import (
 )
 
 logger = logging.getLogger("inquiries")
-
-
-class InquiryLogMessage(models.Model):
-    EMAIL_PATTERN = _(
-        "Type '#male_form|female_form#' - to mark something that should be determined "
-        "by gender (e.g. #Otrzymałeś|Otrzymałaś#).\n"
-        "<> - to include user related with log.\n"
-        "'#r#' to include user related with log with role.\n"
-        "'#rb#' to include user related with log with role in objective case (biernik)."
-        "\n"
-        "#url# - to include additional url."
-    )
-
-    class MessageType(models.TextChoices):
-        ACCEPTED = "ACCEPTED_INQUIRY", _("Accepted inquiry")
-        REJECTED = "REJECTED_INQUIRY", _("Rejected inquiry")
-        NEW = "NEW_INQUIRY", _("New inquiry")
-        OUTDATED = "OUTDATED_INQUIRY", _("Outdated inquiry")
-        UNDEFINED = "UNDEFINED_INQUIRY", _("Undefined inquiry")
-        OUTDATED_REMINDER = "OUTDATED_REMINDER", _("Reminder about outdated inquiry")
-
-    log_body = models.TextField(
-        help_text=_(
-            "Message should include '<>' as placeholder for user related with log."
-        ),
-        blank=True,
-        null=True,
-    )
-
-    email_title = models.TextField(
-        help_text=EMAIL_PATTERN,
-        blank=True,
-        null=True,
-    )
-    email_body = models.TextField(
-        help_text=EMAIL_PATTERN,
-        blank=True,
-        null=True,
-    )
-    send_mail = models.BooleanField(
-        default=False,
-        help_text=_("Should email be sent automatically when log is created?"),
-    )
-
-    log_type = models.CharField(
-        max_length=20,
-        choices=MessageType.choices,
-        default=MessageType.UNDEFINED,
-        unique=True,
-    )
-
-    def __str__(self) -> str:
-        return f"{self.log_type}: {self.log_body}"
 
 
 class UserInquiryLog(models.Model):
@@ -94,10 +40,10 @@ class UserInquiryLog(models.Model):
         "InquiryRequest", on_delete=models.CASCADE, related_name="logs"
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    message = models.ForeignKey(
-        InquiryLogMessage,
-        on_delete=models.PROTECT,
-        related_name="logs",
+    log_type = models.CharField(
+        max_length=20,
+        choices=InquiryLogType.choices,
+        default=InquiryLogType.UNDEFINED,
     )
 
     def __str__(self) -> str:
@@ -112,41 +58,17 @@ class UserInquiryLog(models.Model):
         """Get created_at in readable format."""
         return self.created_at.strftime("%H:%M, %d.%m.%Y")
 
-    def create_email_schema(self) -> _EmailSchema:
-        """Create email schema based on log message and related user."""
-        return _EmailSchema(
-            body=self.email_body,
-            subject=self.email_title,
-            recipients=[self.log_owner.user.contact_email],
-            type=self.message.log_type,
-        )
-
-    def send_email_to_user(self) -> None:
-        """Send email to user with new inquiry request state"""
-        schema = self.create_email_schema()
-        _EmailTemplate.send_email(schema)
-
     @property
-    def log_message_body(self) -> str:
-        """Parse message body to include user related with log"""
-        return _ContentParser(self).parse_log_body
-
-    @property
-    def email_title(self) -> str:
-        """Parse email title to include user related with log"""
-        return _ContentParser(self).parse_email_title
-
-    @property
-    def email_body(self) -> str:
-        """Parse email body to include user related with log"""
-        return _ContentParser(self, url=self.ulr_to_profile).parse_email_body
+    def send_mail(self) -> bool:
+        """Determine if email should be sent for this log type."""
+        return self.log_type in EMAIL_ENABLED_LOG_TYPES
 
     @property
     def ulr_to_profile(self) -> str:
         """Get url to profile based on log type"""
-        if self.message.log_type == InquiryLogMessage.MessageType.OUTDATED:
+        if self.log_type == InquiryLogType.OUTDATED:
             return TRANSFER_MARKET_URL
-        elif self.message.log_type == InquiryLogMessage.MessageType.OUTDATED_REMINDER:
+        elif self.log_type == InquiryLogType.OUTDATED_REMINDER:
             return INQUIRY_CONTACT_URL
         return ""
 
@@ -154,8 +76,10 @@ class UserInquiryLog(models.Model):
         new_object = self.pk is None
         super().save(*args, **kwargs)
 
-        if self.message.send_mail and new_object:
-            send_inquiry_email.delay(log_id=self.pk)
+        if self.send_mail and new_object:
+            from inquiries.services import InquireService
+            InquireService().send_inquiry_log_email(self)
+
         logger.info(f"New UserInquiryLog (ID: {self.pk}) created: {self}")
 
 
@@ -346,24 +270,9 @@ class UserInquiry(models.Model):
 
     def notify_about_limit(self, force: bool = False) -> None:
         """Notify user about reaching the limit"""
-        self.mail_about_limit(force_send=force)
+        from inquiries.services import InquireService
+        InquireService().send_inquiry_limit_reached_email(self.user, force_send=force)
         self.notification_about_limit(force_send=force)
-
-    def mail_about_limit(self, force_send: bool = False) -> None:
-        """Send email notification about reaching the limit"""
-        if (
-            _EmailTemplate.objects.can_sent_inquiry_limit_reached_email(self.user)
-            or force_send
-        ):
-            template = _EmailTemplate.objects.inquiry_limit_reached_template()
-            email_body = template.body.replace("#url#", INQUIRY_LIMIT_INCREASE_URL)
-            schema = _EmailSchema(
-                body=email_body,
-                subject=template.subject,
-                recipients=[self.user.contact_email],
-                type=_EmailTemplate.EmailType.INQUIRY_LIMIT,
-            )
-            _EmailTemplate.send_email(schema)
 
     def notification_about_limit(self, force_send: bool = False) -> None:
         """Create notification about reaching the limit"""
@@ -431,7 +340,7 @@ class InquiryRequestManager(models.Manager):
     def to_notify_sender_about_outdated(self) -> models.QuerySet:
         """Filter outdated InquiryRequest have not been logged yet."""
         return self.outdated_for_sender().exclude(
-            logs__message__log_type=InquiryLogMessage.MessageType.OUTDATED
+            logs__log_type=InquiryLogType.OUTDATED
         )
 
     def to_remind_recipient_about_outdated(self) -> models.QuerySet:
@@ -450,7 +359,7 @@ class InquiryRequestManager(models.Manager):
         _3_days_qs = self.filter(
             status=InquiryRequest.STATUS_SENT, created_at__lte=_3_days
         ).exclude(
-            logs__message__log_type=InquiryLogMessage.MessageType.OUTDATED_REMINDER
+            logs__log_type=InquiryLogType.OUTDATED_REMINDER
         )
 
         # older than 6 days and only 1 reminder log created
@@ -460,7 +369,7 @@ class InquiryRequestManager(models.Manager):
                 reminder_count=models.Count(
                     models.Case(
                         models.When(
-                            logs__message__log_type=InquiryLogMessage.MessageType.OUTDATED_REMINDER,  # noqa: E501
+                            logs__log_type=InquiryLogType.OUTDATED_REMINDER,  # noqa: E501
                             then=1,
                         ),
                         output_field=models.IntegerField(),
@@ -515,23 +424,21 @@ class InquiryRequest(models.Model):
 
     anonymous_recipient = models.BooleanField(default=False)
 
-    def create_log_for_sender(self, log_type: InquiryLogMessage.MessageType) -> None:
+    def create_log_for_sender(self, log_type: InquiryLogType) -> None:
         """Create log for sender"""
-        message = InquiryLogMessage.objects.get(log_type=log_type)
         UserInquiryLog.objects.create(
             log_owner=self.sender.userinquiry,
             related_with=self.recipient.userinquiry,
-            message=message,
+            log_type=log_type,
             ref=self,
         )
 
-    def create_log_for_recipient(self, log_type: InquiryLogMessage.MessageType) -> None:
+    def create_log_for_recipient(self, log_type: InquiryLogType) -> None:
         """Create log for recipient"""
-        message = InquiryLogMessage.objects.get(log_type=log_type)
         UserInquiryLog.objects.create(
             log_owner=self.recipient.userinquiry,
             related_with=self.sender.userinquiry,
-            message=message,
+            log_type=log_type,
             ref=self,
         )
 
@@ -582,7 +489,7 @@ class InquiryRequest(models.Model):
         logger.debug(
             f"#{self.pk} reuqest accepted creating sender and recipient contanct body"
         )
-        self.create_log_for_sender(InquiryLogMessage.MessageType.ACCEPTED)
+        self.create_log_for_sender(InquiryLogType.ACCEPTED)
         logger.info(
             f"{self.recipient} accepted request from {self.sender}. -- "
             f"InquiryRequestID: {self.pk}"
@@ -602,7 +509,7 @@ class InquiryRequest(models.Model):
         """Should be appeared when message was rejected by recipient"""
         from notifications.services import NotificationService
 
-        self.create_log_for_sender(InquiryLogMessage.MessageType.REJECTED)
+        self.create_log_for_sender(InquiryLogType.REJECTED)
         logger.info(
             f"{self.recipient} rejected request from {self.sender}. -- "
             f"InquiryRequestID: {self.pk}"
@@ -625,7 +532,7 @@ class InquiryRequest(models.Model):
         if adding:
             self.sender.userinquiry.increment()  # type: ignore
             self.create_log_for_recipient(
-                InquiryLogMessage.MessageType.NEW,
+                InquiryLogType.NEW,
             )
             logger.info(
                 f"{self.sender} sent request to {self.recipient}. -- "
@@ -638,7 +545,7 @@ class InquiryRequest(models.Model):
             raise ForbiddenLogAction("Cannot reward sender anymore.")
 
         self.sender.userinquiry.decrement()
-        self.create_log_for_sender(InquiryLogMessage.MessageType.OUTDATED)
+        self.create_log_for_sender(InquiryLogType.OUTDATED)
 
     def notify_recipient_about_outdated(self) -> None:
         """
@@ -647,7 +554,7 @@ class InquiryRequest(models.Model):
         """
         if not self.can_be_reminded:
             raise ForbiddenLogAction("Cannot create more than 2 reminders.")
-        self.create_log_for_recipient(InquiryLogMessage.MessageType.OUTDATED_REMINDER)
+        self.create_log_for_recipient(InquiryLogType.OUTDATED_REMINDER)
 
     @property
     def can_be_reminded(self) -> bool:

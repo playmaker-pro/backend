@@ -8,8 +8,10 @@ from django.test import TestCase
 from django.utils import timezone
 
 from inquiries.errors import ForbiddenLogAction
-from inquiries.models import InquiryLogMessage, UserInquiry
-from mailing.models import EmailTemplate as _EmailTemplate
+from inquiries.models import UserInquiry
+from inquiries.constants import InquiryLogType
+from inquiries.services import InquireService
+from mailing.constants import EmailTypes
 from utils.factories.inquiry_factories import InquiryRequestFactory
 from utils.factories.mailing_factories import (
     UserEmailOutboxFactory as _UserEmailOutboxFactory,
@@ -60,9 +62,8 @@ class TestSendEmails(TestCase):
         _3days_back = self.inquiry_request.created_at - timedelta(days=4, hours=1)
         _6days_back = self.inquiry_request.created_at - timedelta(days=6, hours=1)
         _any_other_time = self.inquiry_request.created_at - timedelta(days=100)
-
         assert not self.inquiry_request.logs.filter(
-            message__log_type=InquiryLogMessage.MessageType.OUTDATED_REMINDER
+            log_type=InquiryLogType.OUTDATED_REMINDER
         ).exists()
 
         self.inquiry_request.created_at = _3days_back
@@ -82,7 +83,7 @@ class TestSendEmails(TestCase):
         )
         assert (
             self.inquiry_request.logs.filter(
-                message__log_type=InquiryLogMessage.MessageType.OUTDATED_REMINDER
+                log_type=InquiryLogType.OUTDATED_REMINDER
             ).count()
             == 1
         )
@@ -108,7 +109,7 @@ class TestSendEmails(TestCase):
         assert mail.outbox[1].to == [self.user2.contact_email]
         assert (
             self.inquiry_request.logs.filter(
-                message__log_type=InquiryLogMessage.MessageType.OUTDATED_REMINDER
+                log_type=InquiryLogType.OUTDATED_REMINDER
             ).count()
             == 2
         )
@@ -178,8 +179,8 @@ def test_multiple_cases_for_mailing_about_reaching_limit(
     """
     if last_user_outbox_sent_email_date:
         ueo = _UserEmailOutboxFactory.create(
-            recipient=user_inquiry_on_limit.user.email,
-            email_type=_EmailTemplate.EmailType.INQUIRY_LIMIT,
+            recipient=user_inquiry_on_limit.user.contact_email,
+            email_type=EmailTypes.INQUIRY_LIMIT,
         )
         ueo.sent_date = last_user_outbox_sent_email_date
         ueo.save()
@@ -188,7 +189,7 @@ def test_multiple_cases_for_mailing_about_reaching_limit(
         mock_datetime_now.return_value = current_date
 
         assert (
-            _EmailTemplate.objects.can_sent_inquiry_limit_reached_email(
+            InquireService.can_sent_inquiry_limit_reached_email(
                 user_inquiry_on_limit.user
             )
             is expected
