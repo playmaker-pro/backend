@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -40,6 +42,17 @@ class TransferBaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    is_anonymous = models.BooleanField(
+        default=False,
+        help_text=_("If true, the transfer object will be anonymous."),
+    )
+    anonymous_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
+    @property
+    def anonymous_slug(self) -> str:
+        """Returns the slug for anonymous transfer."""
+        return f"anonymous-{self.anonymous_uuid}"
+
     class Meta:
         abstract = True
 
@@ -47,7 +60,7 @@ class TransferBaseModel(models.Model):
 class ProfileTransferStatus(TransferBaseModel):
     """Keeps track on profile transfer status"""
 
-    meta = models.ForeignKey(
+    meta = models.OneToOneField(
         "profiles.ProfileMeta",
         on_delete=models.CASCADE,
         related_name="transfer_status",
@@ -86,10 +99,10 @@ class ProfileTransferRequest(TransferBaseModel):
     (coaches or club representatives) to request players for team participation.
     """
 
-    meta = models.ForeignKey(
+    meta = models.OneToOneField(
         "profiles.ProfileMeta",
         on_delete=models.CASCADE,
-        related_name="transfer_requests",
+        related_name="transfer_request",
         help_text="The profile meta that this transfer request belongs to.",
     )
 

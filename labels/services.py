@@ -79,8 +79,8 @@ class LabelService:
             label_definition__label_name__in=label_names,
         ).delete()
 
-    @staticmethod
-    def assign_youngster_label(self, profile_uuid: uuid.UUID) -> None:
+    @classmethod
+    def assign_youngster_label(cls, profile_uuid: uuid.UUID) -> None:
         """
         Assigns or updates the 'Młodzieżowiec' label for a player profile.
         """
@@ -92,18 +92,18 @@ class LabelService:
         if not check_if_youngster(
             user_preferences.birth_date, user_preferences.citizenship
         ):
-            self.remove_labels(
+            cls.remove_labels(
                 player_profile.user.pk,
                 [LabelDefinition.LabelNames.YOUTH],
                 ContentType.objects.get_for_model(PlayerProfile),
             )
             return
 
-        label_def: LabelDefinition = self.get_label_definition(
+        label_def: LabelDefinition = cls.get_label_definition(
             LabelDefinition.LabelNames.YOUTH,
         )
         end_date = date(user_preferences.birth_date.year + 21, 6, 30)
-        self.update_label(
+        cls.update_label(
             player_profile.user.pk,
             label_def,
             end_date,
@@ -111,7 +111,8 @@ class LabelService:
             visible_on_main_page=True,
         )
 
-    def assign_coach_age_labels(self, coach_profile_uuid: uuid.UUID) -> None:
+    @classmethod
+    def assign_coach_age_labels(cls, coach_profile_uuid: uuid.UUID) -> None:
         """
         Assigns or updates age-related labels for a coach profile.
         """
@@ -124,7 +125,7 @@ class LabelService:
         if birth_date is None:
             return
 
-        self.remove_labels(
+        cls.remove_labels(
             coach_profile.user.pk,
             [
                 LabelDefinition.LabelNames.COACH_AGE_30,
@@ -143,8 +144,8 @@ class LabelService:
 
         if label_name:
             end_date = get_label_end_date(birth_date, age)
-            label_def = self.get_label_definition(label_name)
-            self.update_label(
+            label_def = cls.get_label_definition(label_name)
+            cls.update_label(
                 coach_profile.user.pk,
                 label_def,
                 end_date,
@@ -152,8 +153,8 @@ class LabelService:
                 visible_on_main_page=False,
             )
 
-    @staticmethod
-    def assign_goalkeeper_height_label(self, player_profile_uuid: uuid.UUID) -> None:
+    @classmethod
+    def assign_goalkeeper_height_label(cls, player_profile_uuid: uuid.UUID) -> None:
         """
         Assigns or updates the 'HIGH_KEEPER' label for a player profile
         based on height criteria.
@@ -166,14 +167,14 @@ class LabelService:
         player_profile = PlayerProfile.objects.get(uuid=player_profile_uuid)
 
         label_name = LabelDefinition.LabelNames.HIGH_KEEPER
-        label_def = self.get_label_definition(label_name)
+        label_def = cls.get_label_definition(label_name)
 
         # Determine if label should be present
         should_have_label = check_if_tall_goalkeeper(player_profile)
 
         if should_have_label:
             # Assign or update label
-            self.update_label(
+            cls.update_label(
                 player_profile.user.pk,
                 label_def,
                 None,  # No end date for this label
@@ -182,13 +183,14 @@ class LabelService:
             )
         else:
             # Remove label if it exists but criteria are no longer met
-            self.remove_labels(
+            cls.remove_labels(
                 player_profile.user.pk,
                 [label_name],
                 ContentType.objects.get_for_model(PlayerProfile),
             )
 
-    def assign_licence_labels(self, user_id: int) -> None:
+    @classmethod
+    def assign_licence_labels(cls, user_id: int) -> None:
         """
         Assigns or updates UEFA license labels ('LICENCE_PRO', 'LICENCE_A')
         for a user based on their active licenses.
@@ -200,12 +202,12 @@ class LabelService:
         user = User.objects.get(pk=user_id)
         licence_label = determine_licence_label(user)
         if licence_label:
-            label_def = self.get_label_definition(
+            label_def = cls.get_label_definition(
                 licence_label,
             )
             # Assign the label with the expiry date of the licence as the end date
             expiry_date = get_licence_expiry_date(user, licence_label)
-            self.update_label(
+            cls.update_label(
                 user_id,
                 label_def,
                 expiry_date,
@@ -218,12 +220,12 @@ class LabelService:
                 if licence_label == LabelDefinition.LabelNames.LICENCE_PRO
                 else LabelDefinition.LabelNames.LICENCE_PRO
             )
-            self.remove_labels(
+            cls.remove_labels(
                 user_id, [opposite_label], ContentType.objects.get_for_model(User)
             )
         else:
             # Remove both labels if they exist
-            self.remove_labels(
+            cls.remove_labels(
                 user_id,
                 [
                     LabelDefinition.LabelNames.LICENCE_PRO,

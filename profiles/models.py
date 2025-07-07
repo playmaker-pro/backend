@@ -297,12 +297,7 @@ class BaseProfile(models.Model, EventLogMixin):
 
     labels = GenericRelation("labels.Label")
     follows = GenericRelation("followers.GenericFollow")
-    transfer_status_related = GenericRelation(
-        "ProfileTransferStatus", related_query_name="transfer_status_related"
-    )
-    transfer_requests = GenericRelation(
-        "ProfileTransferRequest", related_query_name="transfer_requests"
-    )
+
     visitation = models.OneToOneField(
         "Visitation", on_delete=models.PROTECT, null=True, blank=True
     )
@@ -564,6 +559,8 @@ class BaseProfile(models.Model, EventLogMixin):
         if self.meta is None:
             self.meta = ProfileMeta.objects.create(
                 _profile_class=self.__class__.__name__.lower(),
+                _uuid=self.uuid,
+                _slug=self.slug,
                 user=self.user,
             )
             if commit:
@@ -956,14 +953,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         blank=True,
     )
-    # TODO: lremkowicz: deprecated due to https://playmakerpro.atlassian.net/browse/PM20-628  # noqa: E501
-    #  Transfer status moved to new model and this field have to be removed in future
-    transfer_status = models.IntegerField(
-        _("Status transferowy"),
-        choices=profile_utils.make_choices(TRANSFER_STATUS_CHOICES),
-        null=True,
-        blank=True,
-    )
     card = models.IntegerField(
         _("Karta na ręku"),
         choices=profile_utils.make_choices(CARD_CHOICES),
@@ -985,23 +974,12 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     external_links = models.OneToOneField(
         ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
     )
-    # laczynaspilka_url, min90_url, transfermarket_url data will be migrated
-    # into PlayerMapper and then those fields will be deleted
     laczynaspilka_url = models.URLField(_("LNP"), max_length=500, blank=True, null=True)
     min90_url = models.URLField(
         _("90min portal"), max_length=500, blank=True, null=True
     )
     transfermarket_url = models.URLField(_("TrasferMarket"), blank=True, null=True)
 
-    # TODO Based on task PM-363. After migration on production, field can be deleted
-    voivodeship = models.CharField(
-        _("Województwo zamieszkania"),
-        help_text="Wybierz województwo. Stare pole przygotowane do migracji.",
-        max_length=68,
-        blank=True,
-        null=True,
-        choices=settings.VOIVODESHIP_CHOICES,
-    )
     voivodeship_obj = models.ForeignKey(
         Voivodeships,
         verbose_name=_("Województwo zamieszkania"),
@@ -2685,6 +2663,8 @@ class Catalog(models.Model):
 
 class ProfileMeta(models.Model, VisitationMixin):
     _profile_class = models.CharField(max_length=20)
+    _uuid = models.UUIDField(unique=True, null=False, blank=False)
+    _slug = models.CharField(max_length=255, null=False, blank=False, unique=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -2699,6 +2679,19 @@ class ProfileMeta(models.Model, VisitationMixin):
         Returns the profile object associated with this meta instance.
         """
         return getattr(self, self._profile_class.lower())
+
+    @property
+    def transfer_object(
+        self,
+    ) -> typing.Union[models.Model, None]:
+        """
+        Returns the transfer object associated with this meta instance.
+        """
+        if hasattr(self, "transfer_request"):
+            return self.transfer_request
+        if hasattr(self, "transfer_status"):
+            return self.transfer_status
+        return None
 
     def __str__(self) -> None:
         return f"Meta of {self.profile}"

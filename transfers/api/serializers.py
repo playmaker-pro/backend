@@ -16,7 +16,6 @@ from profiles.api.errors import (
 )
 from profiles.api.serializers import PlayerPositionSerializer
 from profiles.models import BaseProfile, PlayerPosition, TeamContributor
-from profiles.services import ProfileService, TransferStatusService
 from roles.definitions import (
     TRANSFER_BENEFITS_CHOICES,
     TRANSFER_SALARY_CHOICES,
@@ -185,6 +184,7 @@ class ProfileTransferRequestSerializer(
             "phone_number",
             "profile_uuid",
             "club_voivodeship",
+            "is_anonymous",
         )
 
     contact_email = serializers.EmailField(required=False, allow_null=True)
@@ -254,6 +254,15 @@ class ProfileTransferRequestSerializer(
             )
         if user_preferences.contact_email:
             data["contact_email"] = user_preferences.contact_email
+
+        if instance.is_anonymous:
+            data["requesting_team"]["id"] = 0
+            data["requesting_team"]["team"]["team_name"] = "Anonimowa drużyna"
+            data["requesting_team"]["team"]["id"] = 0
+            data["requesting_team"]["team"]["team_contributor_id"] = 0
+            data["requesting_team"]["team"]["picture_url"] = None
+            data["contact_email"] = None
+            data["phone_number"] = {"dial_code": None, "number": None}
         return data
 
     def validate_requesting_team(
@@ -272,13 +281,10 @@ class ProfileTransferRequestSerializer(
     def create(self, validated_data: dict):
         """Create transfer request"""
         profile = self.context.get("profile")
-        transfer_request = ProfileService().get_profile_transfer_request(profile)
+        validated_data["meta"] = profile.meta
+        transfer_request = profile.meta.transfer_object
         if transfer_request:
             raise TransferRequestAlreadyExistsHTTPException
-
-        validated_data: dict = TransferStatusService.prepare_generic_type_content(
-            validated_data, profile
-        )
         phone_number = validated_data.pop("phone_number", None)
         dial_code = validated_data.pop("dial_code", None)
         if phone_number or dial_code:
@@ -340,6 +346,7 @@ class ProfileTransferStatusSerializer(
             "benefits",
             "salary",
             "number_of_trainings",
+            "is_anonymous",
         )
 
     contact_email = serializers.EmailField(required=False, allow_null=True)
@@ -351,16 +358,23 @@ class ProfileTransferStatusSerializer(
     phone_number = PhoneNumberField(source="*", required=False)
     benefits = serializers.ListField(required=False, allow_null=True)
 
+    def validate_is_anonymous(self, val: bool) -> bool:
+        """Validate is_anonymous field"""
+        profile = self.context.get("profile")
+        if val and not profile.is_premium:
+            raise serializers.ValidationError(
+                "This option [is_anonymous=True] is only available for premium profiles."
+            )
+        return val
+
     def create(self, validated_data: dict):
         """Create transfer status"""
         profile = self.context.get("profile")
-        transfer_status = ProfileService().get_profile_transfer_status(profile)
+        transfer_status = profile.meta.transfer_object
         if transfer_status:
             raise TransferStatusAlreadyExistsHTTPException
 
-        validated_data: dict = TransferStatusService.prepare_generic_type_content(
-            validated_data, profile
-        )
+        validated_data["meta"] = profile.meta
         phone_number = validated_data.pop("phone_number", None)
         dial_code = validated_data.pop("dial_code", None)
         if phone_number or dial_code:
@@ -383,6 +397,7 @@ class ProfileTransferStatusSerializer(
         Overrides to_representation method to return additional info
         as a list of strings.
         """
+        request = self.context["request"]
         data = super().to_representation(instance)
         data["league"] = LeagueSerializer(instance=instance.league, many=True).data
         if instance.additional_info:
@@ -424,6 +439,7 @@ class ProfileTransferStatusSerializer(
             )
         if user_preferences.contact_email:
             data["contact_email"] = user_preferences.contact_email
+
         return data
 
     def to_internal_value(self, data):
@@ -450,3 +466,19 @@ class ProfileTransferStatusSerializer(
             )
 
         return super().update(instance, validated_data)
+
+
+class AnonymousProfileTransferRequestSerializer(ProfileTransferRequestSerializer):
+    """Anonymous transfer status serializer for user profile view"""
+
+    profile_uuid = serializers.UUIDField(source="anonymous_uuid", read_only=True)
+
+    def to_representation(self, instance):
+        result = super().to_representation(instance)
+        result["requesting_team"]["id"] = 0
+        result["requesting_team"]["team"]["team_name"] = "Anonimowa drużyna"
+        result["requesting_team"]["team"]["id"] = 0
+        result["requesting_team"]["team"]["team_contributor_id"] = 0
+        result["requesting_team"]["team"]["picture_url"] = None
+        result["contact_email"] = None
+        result["phone_number"] = {"dial_code": None, "number": None}

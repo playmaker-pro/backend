@@ -22,14 +22,12 @@ class TestProfileVideoLabels(APITestCase):
         self.client: APIClient = APIClient()
         self.url = reverse("api:profiles:profile_video_labels")
 
-    @parameterized.expand(
-        [
-            ["P", ProfileVideo.PlayerLabels.choices],
-            ["T", ProfileVideo.CoachLabels.choices],
-            ["C", ProfileVideo.ClubLabels.choices],
-            [None, ProfileVideo.LABELS],
-        ]
-    )
+    @parameterized.expand([
+        ["P", ProfileVideo.PlayerLabels.choices],
+        ["T", ProfileVideo.CoachLabels.choices],
+        ["C", ProfileVideo.ClubLabels.choices],
+        [None, ProfileVideo.LABELS],
+    ])
     def test_get_labels(self, param, labels) -> None:
         """Test get video labels with param or without"""
         response = self.client.get(self.url, {"role": param} if param else {})
@@ -49,9 +47,7 @@ class TestProfileVideoAPI(APITestCase):
             "api:profiles:modify_profile_video", kwargs={"video_id": video_id}
         )
 
-    def create_dummy_video(
-        self, user: User = None, **kwargs
-    ) -> factories.models.ProfileVideo:
+    def create_dummy_video(self, user: User = None, **kwargs) -> ProfileVideo:
         """
         Create and return dummy video of given user (more like for his PlayerProfile).
         If user is None, video will be created for new user - usefull for testing ownership.

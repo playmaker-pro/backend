@@ -14,7 +14,8 @@ def migrate_data(apps, schema_editor):
     ProfileTransferStatusOld = apps.get_model("profiles", "ProfileTransferStatus")
     ProfileTransferRequest = apps.get_model("transfers", "ProfileTransferRequest")
     ProfileTransferStatus = apps.get_model("transfers", "ProfileTransferStatus")
-
+    transfer_requests_count_old = ProfileTransferRequestOld.objects.count()
+    transfer_status_count_old = ProfileTransferStatusOld.objects.count()
     for obj in ProfileTransferRequestOld.objects.all():
         if hasattr(obj, "content_object") and obj.content_object:
             content_object = obj.content_object
@@ -59,6 +60,9 @@ def migrate_data(apps, schema_editor):
         )
         for league in obj.league.all():
             last.league.add(league)
+
+    assert transfer_requests_count_old == ProfileTransferRequest.objects.count()
+    assert transfer_status_count_old == ProfileTransferStatus.objects.count()
 
 
 class Migration(migrations.Migration):

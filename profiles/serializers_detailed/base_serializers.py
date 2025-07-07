@@ -34,7 +34,10 @@ from profiles.services import (
     ProfileVisitHistoryService,
 )
 from roles.definitions import PROFILE_TYPE_SHORT_MAP
-from transfers.api.serializers import ProfileTransferRequestSerializer
+from transfers.api.serializers import (
+    ProfileTransferRequestSerializer,
+    ProfileTransferStatusSerializer,
+)
 from users.api.serializers import UserDataSerializer, UserSocialStatsSerializer
 
 logger = logging.getLogger(__name__)
@@ -172,11 +175,11 @@ class BaseProfileSerializer(serializers.ModelSerializer):
 
     def get_transfer_status(self, obj: BaseProfile) -> Optional[dict]:
         """Get transfer status by player profile."""
-        result: list = obj.transfer_status_related.first()
-        if result:
-            serializer = ProfileTransferStatusSerializer(result, required=False)
+        if result := obj.meta.transfer_object:
+            serializer = ProfileTransferStatusSerializer(
+                result, required=False, context=self.context
+            )
             return serializer.data
-        return None
 
     def get_labels(self, obj: BaseProfile):
         """Override labels field to return both profile and user related labels"""

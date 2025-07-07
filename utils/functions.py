@@ -1,6 +1,7 @@
 import collections
 import json
 import typing
+import uuid
 from datetime import datetime
 
 import django.db.utils
@@ -145,3 +146,7 @@ def generate_fe_url_path(path: str) -> str:
     Generates a full URL by concatenating the front-end base URL with a given path.
     """
     return cfg.webapp.parse_url(path)
+
+
+def generate_uuid():
+    return uuid.uuid4()

@@ -1,18 +1,15 @@
 import random
 
-from factory import Factory, post_generation
+import factory
 
 from profiles.models import PlayerPosition
 from roles import definitions
 from transfers import models
+from utils.factories.base import CustomObjectFactory
 from utils.factories.profiles_factories import TeamContributorFactory
 
-# from . import PlayerProfileFactory
 
-factory = Factory()
-
-
-class TransferStatusFactory(factory.django.DjangoModelFactory):
+class TransferStatusFactory(CustomObjectFactory):
     """Transfer status factory"""
 
     class Meta:
@@ -30,10 +27,11 @@ class TransferStatusFactory(factory.django.DjangoModelFactory):
     salary = factory.Iterator([
         salary[0] for salary in definitions.TRANSFER_SALARY_CHOICES
     ])
+    meta = factory.SubFactory("utils.factories.profiles_factories.ProfileMetaFactory")
 
     class Params:
         profile = None
-        leagues = factory.List([])
+        league = factory.List([])
 
     # @classmethod
     # def create(cls, **kwargs) -> models.PROFILE_TYPE:
@@ -56,7 +54,7 @@ class TransferStatusFactory(factory.django.DjangoModelFactory):
     #     return transfer_status_instance
 
 
-class TransferRequestFactory(factory.django.DjangoModelFactory):
+class TransferRequestFactory(CustomObjectFactory):
     """Transfer status factory"""
 
     class Meta:
@@ -68,6 +66,7 @@ class TransferRequestFactory(factory.django.DjangoModelFactory):
     gender = "M"
     number_of_trainings = "1"
     salary = "1"
+    meta = factory.SubFactory("utils.factories.profiles_factories.ProfileMetaFactory")
 
     class Params:
         profile = None
@@ -82,7 +81,7 @@ class TransferRequestFactory(factory.django.DjangoModelFactory):
     #     kwargs = TransferStatusService.prepare_generic_type_content(kwargs, profile)
     #     return super().create(**kwargs)
 
-    @post_generation
+    @factory.post_generation
     def position(self, create, extracted, **kwargs):  # noqa
         if not create:
             return

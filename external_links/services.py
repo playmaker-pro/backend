@@ -76,16 +76,14 @@ class ExternalLinksService:
                 links_to_delete.append(link_source.id)
                 continue
 
-            links_to_create_or_update.append(
-                {
-                    "target": external_links_instance,
-                    "source": link_source,
-                    "related_type": related_type,
-                    "creator_type": "user",
-                    "link_type": "statistics",
-                    "url": url,
-                }
-            )
+            links_to_create_or_update.append({
+                "target": external_links_instance,
+                "source": link_source,
+                "related_type": related_type,
+                "creator_type": "user",
+                "link_type": "statistics",
+                "url": url,
+            })
 
         return links_to_delete, links_to_create_or_update
 

@@ -44,6 +44,16 @@ class VerificationStageFactory(CustomObjectFactory):
     done = factory.LazyAttribute(lambda _: Faker().boolean())
 
 
+class ProfileMetaFactory(CustomObjectFactory):
+    # _profile_class = factory.LazyAttribute(lambda _: "some_class")
+    # _uuid = factory.LazyAttribute(lambda _: uuid.uuid4())
+    # _slug = factory.LazyAttribute(lambda _: "some-slug")
+    # user = factory.SubFactory(user_factories.UserFactory)
+
+    class Meta:
+        model = models.ProfileMeta
+
+
 class ProfileFactory(CustomObjectFactory):
     user = factory.SubFactory(user_factories.UserFactory)
     bio = factory.Faker("paragraph", nb_sentences=3)
@@ -81,9 +91,6 @@ class PlayerProfileFactory(ProfileFactory):
     )
     prefered_leg = factory.LazyAttribute(
         lambda _: random.choice(models.PlayerProfile.LEG_CHOICES)[0]
-    )
-    transfer_status = factory.LazyAttribute(
-        lambda _: random.choice(models.PlayerProfile.TRANSFER_STATUS_CHOICES)[0]
     )
     card = factory.LazyAttribute(
         lambda _: random.choice(models.PlayerProfile.CARD_CHOICES)[0]

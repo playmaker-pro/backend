@@ -1,4 +1,5 @@
 import uuid
+from multiprocessing import context
 
 from django.db.models import ObjectDoesNotExist, QuerySet
 from django_fsm import TransitionNotAllowed
@@ -51,8 +52,15 @@ class InquiresAPIView(EndpointView):
     ) -> Response:
         """Create inquiry request"""
         sender = request.user
+        is_anonymous = "is_anonymous" in request.data
         try:
-            recipient = ProfileService.get_user_by_uuid(recipient_profile_uuid)
+            if is_anonymous:
+                recipient = ProfileService.get_anonymous_profile_by_uuid(
+                    recipient_profile_uuid
+                )
+            else:
+                recipient = ProfileService.get_user_by_uuid(recipient_profile_uuid)
+
         except ObjectDoesNotExist:
             raise NotFound("Recipient does not exist")
         if sender == recipient:
@@ -63,7 +71,9 @@ class InquiresAPIView(EndpointView):
             "recipient": recipient.pk,
             "recipient_profile_uuid": recipient_profile_uuid,
         }
-        serializer = InquiryRequestSerializer(data=body)
+        serializer = InquiryRequestSerializer(
+            data=body, context={"is_anonymous": is_anonymous}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 

@@ -3,23 +3,25 @@
 from django.db import migrations
 
 
-def delete_old_transfer_status(apps, schema_editor):
-    """
-    Deletes old transfer status entries that are no longer needed.
-    """
-    ProfileTransferStatus = apps.get_model("profiles", "ProfileTransferStatus")
-    ProfileTransferRequest = apps.get_model("profiles", "ProfileTransferRequest")
-    ProfileTransferStatus.objects.all().delete()
-    ProfileTransferRequest.objects.all().delete()
-
-
 class Migration(migrations.Migration):
     dependencies = [
         ("profiles", "0174_auto_20250608_0316"),
+        ("transfers", "0001_initial"),
     ]
 
     operations = [
-        migrations.RunPython(
-            delete_old_transfer_status, reverse_code=migrations.RunPython.noop
+        migrations.RemoveField(
+            model_name="profiletransferstatus",
+            name="content_type",
+        ),
+        migrations.RemoveField(
+            model_name="profiletransferstatus",
+            name="league",
+        ),
+        migrations.DeleteModel(
+            name="ProfileTransferRequest",
+        ),
+        migrations.DeleteModel(
+            name="ProfileTransferStatus",
         ),
     ]
