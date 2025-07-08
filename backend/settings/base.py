@@ -215,7 +215,9 @@ CITIES_LIGHT_CITY_SOURCES = [
     "http://download.geonames.org/export/dump/cities15000.zip",  # all cities with a population > 15000  # noqa
     "http://download.geonames.org/export/dump/cities5000.zip",  # all cities with a population > 5000  # noqa
     "http://download.geonames.org/export/dump/cities1000.zip",  # all cities with a population > 1000  # noqa
+    "http://download.geonames.org/export/dump/cities500.zip",  # all cities with a population > 500  # noqa
 ]  # more here: https://download.geonames.org/export/dump/readme.txt
+# changes here require to run `python manage.py cities_light` command to import data
 
 TIME_ZONE = "Europe/Warsaw"
 
