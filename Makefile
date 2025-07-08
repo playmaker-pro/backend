@@ -69,8 +69,3 @@ stop-celery-beat:
 .PHONY: shell
 shell:
 	poetry run python manage.py shell
-
-
-.PHONY: migrate
-migrate:
-	poetry run python manage.py migrate
