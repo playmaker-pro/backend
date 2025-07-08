@@ -86,6 +86,7 @@ class TestPopularProfilesAPI:
         data = response.json()["results"]
 
         assert response.status_code == 200
+        breakpoint()
         assert response.json()["count"] == 1
         assert data[0]["uuid"] == str(player_20yo.uuid)
 

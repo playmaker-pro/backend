@@ -6332,7 +6332,6 @@ components:
             "verification_id": null,
             "user_id": 1,
             "history_id": 1,
-            "data_mapper_id": null,
             "slug": "guest",
             "bio": null,
             "event_log": null,

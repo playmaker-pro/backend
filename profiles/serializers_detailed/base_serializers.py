@@ -721,7 +721,6 @@ class BaseProfileSerializer(serializers.ModelSerializer):
     transfer_status = serializers.SerializerMethodField()
     transfer_requests = ProfileTransferRequestSerializer(many=True, read_only=True)
     visits = serializers.SerializerMethodField()
-    data_fulfill_status = serializers.CharField(required=True)
     promotion = PromoteProfileProductSerializer(read_only=True)
     social_stats = serializers.SerializerMethodField()
 

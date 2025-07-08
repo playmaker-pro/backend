@@ -67,22 +67,10 @@ class VerificationFilter(ChoicesFieldListFilter):
             ),
         )
 
-        # if self.value() in ['9', '10', '11', '12']:
-        #     query = Q(declared_role__in=['C'])
-        #     # queryset = queryset.filter(declared_role__in=['T', 'P'])
-        # else:
-        #     # queryset = queryset.filter(declared_role__in=['C'])
-        #     query = Q(declared_role__in=['T', 'P'])
-
         if self.value() in ["1", "3", "6", "8"]:
             query = Q(mapper_id__isnull=False)
         else:
             query = Q(mapper_id__isnull=False)
-            # queryset = queryset.filter(data_mapper_id__isnull=False)
-
-        # if self.value() in ['3', '4', '5', '6', '7', '8', '10', '11', '12']:
-        #     query &= Q(team_club_league_voivodeship_ver__isnull=False)
-        # queryset = queryset.filter(team_club_league_voivodeship_ver__isnull=False)
 
         return queryset.filter(query)
 

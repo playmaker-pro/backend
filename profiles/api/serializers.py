@@ -831,7 +831,6 @@ class ProfileSerializer(serializers.Serializer):
     exclude_fields: tuple = (
         "event_log",
         "verification_id",
-        "data_mapper_id",
         "team_club_league_voivodeship_ver",
         "external_links_id",
         "verification_stage_id",
@@ -1149,7 +1148,6 @@ class UpdateProfileSerializer(ProfileSerializer):
         "history_id",
         "mapper_id",
         "verification_id",
-        "data_mapper_id",
         "external_links_id",
         "address_id",
     )  # read-only fields, should not be able to update

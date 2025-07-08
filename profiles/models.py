@@ -264,27 +264,8 @@ class BaseProfile(models.Model, EventLogMixin):
     OPTIONAL_FIELDS = []  # this is definition of profile fields which will be threaded optional
 
     data_mapper_changed = None
-    verification = models.OneToOneField(
-        "ProfileVerificationStatus", on_delete=models.SET_NULL, null=True, blank=True
-    )
-    data_fulfill_status = models.CharField(
-        choices=definitions.DATA_FULFILL_STATUS,
-        max_length=255,
-        null=True,
-        blank=True,
-        editable=False,
-    )
-
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True
-    )
-    data_mapper_id = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        help_text=(  # noqa: E501
-            "ID of object placed in data_ database. It should alwayes reflect scheme"
-            " which represents."
-        ),
     )
     slug = models.CharField(max_length=255, blank=True, editable=False)
     bio = models.CharField(
@@ -576,9 +557,6 @@ class BaseProfile(models.Model, EventLogMixin):
                 self.PROFILE_TYPE
             ]
             self.user.save(update_fields=["declared_role"])
-        # When profile changes, update data score level
-        profile_manager: ProfileManager = ProfileManager()
-        self.data_fulfill_status: str = profile_manager.get_data_score(self)
 
         # Use Polish profile type for slug
         polish_profile_type = profile_utils.profile_type_english_to_polish.get(
@@ -589,11 +567,6 @@ class BaseProfile(models.Model, EventLogMixin):
 
         profile_utils.unique_slugify(self, slug_str)
 
-        # If there is no verification object set we need to create initial for that
-        if self.verification is None and self.user.is_need_verfication_role:
-            self.verification = ProfileVerificationStatus.create_initial(self.user)
-
-        # Queen of the show
         super().save(*args, **kwargs)
 
     def get_verification_data_from_profile(self, owner: User = None) -> dict:
@@ -2286,100 +2259,6 @@ class OtherProfile(BaseProfile):
     class Meta:
         verbose_name = "Other Profile"
         verbose_name_plural = "Other Profiles"
-
-
-class ProfileVerificationStatus(models.Model):
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="verifications",
-    )
-    set_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="set_by",
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=255, null=True, blank=True)
-    team = models.ForeignKey(
-        "clubs.Team",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="team",
-    )
-    team_history = models.ForeignKey(
-        "clubs.TeamHistory",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="team_history",
-    )
-    club = models.ForeignKey(
-        "clubs.Club",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="club",
-    )
-    has_team = models.BooleanField(null=True, blank=True)
-    team_not_found = models.BooleanField(null=True, blank=True)
-    text = models.CharField(max_length=355, null=True, blank=True)
-
-    previous = models.OneToOneField(
-        "self", on_delete=models.SET_NULL, blank=True, null=True, related_name="next"
-    )
-
-    # objects = managers.VerificationObjectManager()
-
-    # @classmethod
-    # def create(
-    # cls,
-    # owner: User = owner,
-    # text: str = text,
-    # previous=previous,
-    # set_by: User = set_by,
-    # status: str = status,
-    # has_team: bool = has_team,
-    # team_not_found: bool = team_not_found,
-    # club = None, team = None,
-    # ):
-    #     return cls.objects.create(
-    #         owner=owner,
-    #         text=text,
-    #         has_team=has_team,
-    #         team_not_found=team_not_found,
-    #         club=club,
-    #         team=team,
-    #         status=status,
-    #         set_by=set_by,
-    #         previous=previous
-    #     )
-
-    @classmethod
-    def create_initial(cls, owner: User):
-        """Creates initial verifcation object for a profile based on current data."""
-        defaults = owner.profile.get_verification_data_from_profile()
-        defaults["set_by"] = User.get_system_user()
-        defaults["previous"] = None
-        return cls.objects.create(**defaults)
-
-    def update_with_profile_data(self, requestor: User = None):
-        defaults = self.owner.profile.get_verification_data_from_profile()
-        self.set_by = requestor or User.get_system_user()
-        self.status = defaults.get("status")
-        self.text = defaults.get("text")
-        self.has_team = defaults.get("has_team")
-        self.team_not_found = defaults.get("team_not_found")
-        self.club = defaults.get("club")
-        self.team = defaults.get("team")
-        self.team_history = defaults.get("team_history")
-        self.save()
 
 
 class PlayerProfilePosition(models.Model):
