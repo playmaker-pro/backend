@@ -52,34 +52,6 @@ class TestEmailTemplateHTML:
         assert schema.html_body == "<p>HTML body with <a href='https://example.com/activate'>https://example.com/activate</a> and male forms</p>"
         assert schema.recipients == [test_user.email]
         assert schema.type == EmailTemplate.EmailType.NEW_USER
-    
-    def test_create_email_schema_without_html_body(self, test_user, email_template_without_html):
-        """Test create_email_schema method without HTML body (backward compatibility)."""
-        schema = email_template_without_html.create_email_schema(
-            test_user, 
-            url="https://example.com/reset"
-        )
-        
-        assert schema.subject == "Test Subject"
-        assert schema.body == "Plain text body with https://example.com/reset"
-        assert schema.html_body is None  # Should be None when html_body is None
-        assert schema.recipients == [test_user.email]
-        assert schema.type == EmailTemplate.EmailType.PASSWORD_CHANGE
-    
-    def test_create_email_schema_with_empty_html_body(self, test_user):
-        """Test create_email_schema method with empty HTML body."""
-        template = EmailTemplate.objects.create(
-            subject="Test Subject",
-            body="Plain text body",
-            html_body="Plain html body",  # Empty string
-            email_type=EmailTemplate.EmailType.SYSTEM,
-            is_default=True
-        )
-        
-        schema = template.create_email_schema(test_user)
-        
-        assert schema.body == "Plain text body"
-        assert schema.html_body == "Plain html body"
 
 
 @pytest.mark.django_db

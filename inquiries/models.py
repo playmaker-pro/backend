@@ -150,6 +150,7 @@ class UserInquiryLog(models.Model):
 
     @property
     def email_html_body(self) -> str:
+        """Parse email html body to include user related with log"""
         return _ContentParser(self, url=self.ulr_to_profile).parse_email_html_body
 
     @property

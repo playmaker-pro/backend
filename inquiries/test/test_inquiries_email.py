@@ -15,7 +15,6 @@ from utils.factories.mailing_factories import (
     UserEmailOutboxFactory as _UserEmailOutboxFactory,
 )
 from utils.factories.profiles_factories import GuestProfileFactory, PlayerProfileFactory
-from utils.factories.user_factories import UserFactory, UserPreferencesFactory
 
 User = get_user_model()
 

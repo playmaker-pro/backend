@@ -62,6 +62,10 @@ class InquiryMessageContentParser(_MessageContentParser):
 
     @property
     def parse_email_html_body(self) -> str:
+        """
+        Set text as email body.
+        Transform text and return correct form of email_body.
+        """
         self.text = self._log.message.email_body_html
         self._put_correct_form()
         self._put_recipient_full_name()
