@@ -42,9 +42,9 @@ class GetCurrentSeasonTest(TestCase):
         )
         for date_settings, result in tdatas:
             date = timezone.datetime(*date_settings)
-            assert (
-                Season.define_current_season(date) == result
-            ), f"Input data:{date_settings} date={date}"
+            assert Season.define_current_season(date) == result, (
+                f"Input data:{date_settings} date={date}"
+            )
 
 
 @contextmanager
@@ -110,7 +110,7 @@ class UserManager:
         return headers
 
     def login(self, user: User):
-        self.client.login(username=user.username, password=user.password)
+        self.client.login(email=user.email, password=user.password)
 
     def custom_user_access_token(self, email: str, password: str) -> str:
         """Get the authentication access token for the created superuser."""
@@ -122,9 +122,9 @@ class UserManager:
     def custom_user_headers(self, email: str, password: str) -> dict:
         """Get the headers containing the authentication token for API requests."""
         headers = self.headers
-        headers[
-            "HTTP_AUTHORIZATION"
-        ] = f"Bearer {self.custom_user_access_token(email, password)}"
+        headers["HTTP_AUTHORIZATION"] = (
+            f"Bearer {self.custom_user_access_token(email, password)}"
+        )
         return headers
 
 
@@ -143,41 +143,41 @@ class MethodsNotAllowedTestsMixin:
     def get_not_allowed(self) -> None:
         """Test if GET method is not allowed"""
         res: Response = self.client.get(self.url, **self.headers)  # noqa
-        assert (
-            res.status_code == 405
-        ), f"Actual response status code is: {res.status_code}, method: GET"
+        assert res.status_code == 405, (
+            f"Actual response status code is: {res.status_code}, method: GET"
+        )
 
     def post_not_allowed(self) -> None:
         """Test if POST method is not allowed"""
 
         res: Response = self.client.post(self.url, **self.headers)  # noqa
-        assert (
-            res.status_code == 405
-        ), f"Actual response status code is: {res.status_code}, method: POST"
+        assert res.status_code == 405, (
+            f"Actual response status code is: {res.status_code}, method: POST"
+        )
 
     def put_not_allowed(self) -> None:
         """Test if PUT method is not allowed"""
 
         res: Response = self.client.put(self.url, **self.headers)  # noqa
-        assert (
-            res.status_code == 405
-        ), f"Actual response status code is: {res.status_code}, method: PUT"
+        assert res.status_code == 405, (
+            f"Actual response status code is: {res.status_code}, method: PUT"
+        )
 
     def patch_not_allowed(self) -> None:
         """Test if PATCH method is not allowed"""
 
         res: Response = self.client.patch(self.url, **self.headers)  # noqa
-        assert (
-            res.status_code == 405
-        ), f"Actual response status code is: {res.status_code}, method: PATCH"
+        assert res.status_code == 405, (
+            f"Actual response status code is: {res.status_code}, method: PATCH"
+        )
 
     def delete_not_allowed(self) -> None:
         """Test if DELETE method is not allowed"""
 
         res: Response = self.client.delete(self.url, **self.headers)  # noqa
-        assert (
-            res.status_code == 405
-        ), f"Actual response status code is: {res.status_code}, method: DELETE"
+        assert res.status_code == 405, (
+            f"Actual response status code is: {res.status_code}, method: DELETE"
+        )
 
 
 class SocketAccessError(Exception):

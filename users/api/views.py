@@ -23,7 +23,6 @@ from users.api.serializers import (
     ResetPasswordSerializer,
     UserProfilePictureSerializer,
     UserRegisterSerializer,
-    UserSerializer,
 )
 from users.errors import (
     ApplicationError,
@@ -111,7 +110,6 @@ class UserRegisterEndpointView(EndpointView):
 
 class UsersAPI(EndpointView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = UserSerializer
     allowed_methods = ("list", "post", "put", "update")
 
     def get_permissions(self) -> typing.Sequence:
@@ -128,13 +126,6 @@ class UsersAPI(EndpointView):
             return [permission() for permission in retrieve_permission_list]
         else:
             return super().get_permissions()
-
-    def list(self, request):
-        return Response(
-            self.serializer_class(User.objects.all(), many=True).data,
-        )
-
-    def get_queryset(self): ...
 
     def my_main_profile(self, request: Request) -> Response:
         """

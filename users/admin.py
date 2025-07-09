@@ -210,7 +210,6 @@ class UserAdminPanel(UserAdmin):
             {
                 "classes": ("wide",),
                 "fields": (
-                    "username",
                     "password1",
                     "password2",
                     "userpreferences",
@@ -238,7 +237,7 @@ class UserAdminPanel(UserAdmin):
         "last_activity",
     )
     list_filter = ("state", "declared_role", HasDataMapperIdFilter)
-    search_fields = ("username", "first_name", "last_name", "declared_role")
+    search_fields = ("first_name", "last_name", "declared_role")
     readonly_fields = ("userpreferences", "profile")
     actions = [verify_one]
 
@@ -337,9 +336,7 @@ class UserPreferencesAdminPanel(admin.ModelAdmin):
         )
 
         # Custom search logic
-        user_query = Q(user__username__icontains=search_term) | Q(
-            user__email__icontains=search_term
-        )
+        user_query = Q(user__email__icontains=search_term)
         queryset |= self.model.objects.filter(user_query)
 
         return queryset, use_distinct
