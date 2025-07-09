@@ -1,8 +1,10 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.admin import ChoicesFieldListFilter, SimpleListFilter
 from django.contrib.auth.admin import UserAdmin  # as BaseUserAdmin
 from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import Case, F, Q, QuerySet, When
+from django.forms import TypedMultipleChoiceField
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -10,7 +12,6 @@ from django.utils.translation import gettext_lazy as _
 from utils import linkify
 
 from . import models
-from .forms import UserPreferencesForm
 
 
 def verify_one(modeladmin, request, queryset):
@@ -241,6 +242,10 @@ class UserAdminPanel(UserAdmin):
     readonly_fields = ("userpreferences", "profile")
     actions = [verify_one]
 
+    def has_delete_permission(self, request, obj=None):
+        """Disable delete permission for users."""
+        return False
+
     def get_team_object(self, obj):
         if obj.is_club:
             if obj.profile and obj.profile.club_object:
@@ -304,6 +309,13 @@ class UserAdminPanel(UserAdmin):
 
 @admin.register(models.UserPreferences)
 class UserPreferencesAdminPanel(admin.ModelAdmin):
+    class UserPreferencesForm(forms.ModelForm):
+        citizenship = TypedMultipleChoiceField(choices=models.UserPreferences.COUNTRIES)
+
+        class Meta:
+            model = models.UserPreferences
+            fields = "__all__"
+
     list_display = ("user", "localization", "display_languages", "citizenship")
     search_fields = ("user__last_name", "user__email")
     form = UserPreferencesForm

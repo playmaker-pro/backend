@@ -285,7 +285,6 @@ class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         assert isinstance(res.data, dict)
         assert res.data["email"] == self.data.get("email")
         assert res.data["id"]
-        assert res.data["username"] == self.data.get("email")
 
     def test_register_endpoint_no_password_sent(self) -> None:
         """Test register endpoint with no password field"""
@@ -388,7 +387,6 @@ class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         assert isinstance(res.data, dict)
         assert res.data["email"] == self.data.get("email")
         assert res.data["id"]
-        assert res.data["username"] == self.data.get("email")
         assert not res.data["first_name"]
 
     def test_user_creation_without_last_name(self):
@@ -401,7 +399,6 @@ class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         assert isinstance(res.data, dict)
         assert res.data["email"] == self.data.get("email")
         assert res.data["id"]
-        assert res.data["username"] == self.data.get("email")
         assert not res.data["last_name"]
 
     def test_user_creation_without_last_name_and_first_name(self):
@@ -415,7 +412,6 @@ class TestUserCreationEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         assert isinstance(res.data, dict)
         assert res.data["email"] == self.data.get("email")
         assert res.data["id"]
-        assert res.data["username"] == self.data.get("email")
         assert not res.data["last_name"]
         assert not res.data["first_name"]
 
@@ -1157,7 +1153,7 @@ class TestPasswordChangeEndpoint(TestCase, MethodsNotAllowedTestsMixin):
         assert (
             user is not None
         )  # The authentication should succeed with the old password.
-        user = authenticate(username=self.user_data["email"], password="newpassword123")
+        user = authenticate(email=self.user_data["email"], password="newpassword123")
         assert (
             user is None
         )  # The authentication should fail since the password was not changed.

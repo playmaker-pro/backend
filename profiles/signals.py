@@ -4,7 +4,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
-from mailing.deprecated import mail_role_change_request
 from notifications.services import NotificationService
 from profiles.tasks import (
     post_create_profile_tasks,
@@ -14,29 +13,6 @@ from users.models import User
 from . import models
 
 logger = logging.getLogger(__name__)
-
-
-@receiver(post_save, sender=models.RoleChangeRequest)
-def change_profile_approved_handler(sender, instance, created, **kwargs):
-    """users.User.declared_role is central point to navigate with role changes.
-    admin can alter somees role just changing User.declared_role
-    """
-    # we assume that when object is created RoleChangedRequest only admin
-    # should receive notification.
-    if created:
-        mail_role_change_request(instance)
-        return
-
-    if instance.approved:
-        user = instance.user
-        user.declared_role = instance.new
-        user.unverify(silent=True)
-        user.save()  # this should invoke create_profile_handler signal
-        # set_and_create_user_profile(user)
-        logger.info(
-            f"User {user} profile changed to {instance.new} "
-            f"sucessfully due to: accepted RoleChangeRequest"
-        )
 
 
 @receiver(post_save, sender=models.ProfileVisitation)

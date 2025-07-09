@@ -37,7 +37,7 @@ def guest_profile() -> GuestProfile:
     return GuestProfileFactory.create()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def setup_visits(
     player_20yo,
     coach_from_wwa,
@@ -64,7 +64,7 @@ class TestPopularProfilesAPI:
     url = reverse("api:profiles:get_popular_profiles")
 
     def test_popular_profiles(
-        self, api_client, player_20yo, coach_from_wwa, guest_profile
+        self, api_client, player_20yo, coach_from_wwa, guest_profile, setup_visits
     ):
         """Test the popular profiles endpoint."""
         response = api_client.get(self.url)
@@ -79,16 +79,18 @@ class TestPopularProfilesAPI:
     def test_popular_profiles_filter_age(
         self,
         api_client,
-        player_20yo,
     ):
         """Test the popular profiles endpoint with age filter."""
+        assert PlayerProfile.objects.count() == 0
+        profile = PlayerProfileFactory.create(
+            user__userpreferences__birth_date=timezone.now() - timedelta(days=20 * 365)
+        )
         response = api_client.get(self.url, {"min_age": 18, "max_age": 21})
         data = response.json()["results"]
 
         assert response.status_code == 200
-        breakpoint()
         assert response.json()["count"] == 1
-        assert data[0]["uuid"] == str(player_20yo.uuid)
+        assert data[0]["uuid"] == str(profile.uuid)
 
     def test_popular_profiles_filter_localization(
         self,
@@ -116,10 +118,7 @@ class TestPopularProfilesAPI:
         [(("P", "T"), 10), (("S",), 0), (("G",), 2), (("P", "T", "G"), 12)],
     )
     def test_popular_profiles_filter_roles(
-        self,
-        api_client,
-        roles,
-        expected_count,
+        self, api_client, roles, expected_count, setup_visits
     ):
         """Test the popular profiles endpoint with roles filter."""
         response = api_client.get(self.url, {"role": roles})

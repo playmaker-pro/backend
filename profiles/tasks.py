@@ -25,6 +25,9 @@ def post_create_profile_tasks(class_name: str, profile_id: int) -> None:
     create_post_create_profile__periodic_tasks(class_name, profile_id)
     NotificationService(profile.meta).notify_welcome()
 
+    if profile.user.display_status == models.User.DisplayStatus.NOT_SHOWN:
+        NotificationService(profile.meta).notify_profile_hidden()
+
 
 @shared_task
 def check_profile_one_hour_after(profile_id: int, model_name: str) -> None:

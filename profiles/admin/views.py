@@ -134,6 +134,10 @@ class ProfileAdminBase(admin.ModelAdmin):
         )
         return queryset
 
+    def has_delete_permission(self, request, obj=None):
+        """Disable delete permission for profiles."""
+        return False
+
     def active(self, obj):
         """Display active status as boolean."""
         return obj.is_active
@@ -266,52 +270,6 @@ class CoachProfileAdmin(ProfileWithAddressAdminBase):
                 if old_mapper is not None:
                     return old_mapper.mapper_id
         return None
-
-
-@admin.register(models.RoleChangeRequest)
-class RoleChangeRequestAdmin(admin.ModelAdmin):
-    readonly_fields = ("current", "approver", "request_date", "accepted_date")
-    list_display = (
-        "pk",
-        "user",
-        "approved",
-        "current",
-        "new",
-        "request_date",
-        "accepted_date",
-        "get_user_display",
-    )
-    list_filter = ("approved", "new", "request_date")
-    search_fields = ("user__email", "user__first_name", "user__last_name")
-    actions = ["approve_requests"]
-    date_hierarchy = "request_date"
-
-    def get_queryset(self, request):
-        """Optimize queryset with select_related."""
-        return super().get_queryset(request).select_related("user", "approver")
-
-    def get_user_display(self, obj):
-        """Get user display name."""
-        if obj.user:
-            return f"{obj.user.first_name} {obj.user.last_name}"
-        return "-"
-
-    def approve_requests(self, request, queryset):
-        """Approve selected requests."""
-        updated = queryset.update(approved=True, approver=request.user)
-        self.message_user(
-            request,
-            f"Successfully approved {updated} request(s).",
-        )
-
-    def save_model(self, request, obj, form, change):
-        """Set approver when saving."""
-        if not obj.approver:
-            obj.approver = request.user
-        super().save_model(request, obj, form, change)
-
-    get_user_display.short_description = "User Name"
-    approve_requests.short_description = "Approve selected requests"
 
 
 @admin.register(models.ProfileVideo)
