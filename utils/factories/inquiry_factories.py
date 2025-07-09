@@ -31,3 +31,29 @@ class UserInquiryFactory(factory.django.DjangoModelFactory):
 
     user = factory.SubFactory(_UserFactory)
     plan = factory.SubFactory(InquiryPlanFactory)
+
+
+class InquiryLogMessageFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = _models.InquiryLogMessage
+
+    log_body = "Hello <>!"
+    email_title = "Test Email Title with #r#"
+    email_body = "Plain email content for <>"
+    email_body_html = "<strong>HTML content for #rb#</strong>"
+    send_mail = False
+    log_type = _models.InquiryLogMessage.MessageType.ACCEPTED
+
+
+class UserInquiryLogFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = _models.UserInquiryLog
+
+    log_owner = factory.SubFactory(UserInquiryFactory)
+    related_with = factory.LazyAttribute(lambda o: UserInquiryFactory(user=o.ref.sender))
+    ref = factory.SubFactory(InquiryRequestFactory)
+    message = factory.SubFactory(InquiryLogMessageFactory)
+
+    @factory.lazy_attribute
+    def related_with(self):
+        return UserInquiryFactory(user=self.ref.sender)

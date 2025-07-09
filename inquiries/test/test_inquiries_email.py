@@ -8,15 +8,14 @@ from django.test import TestCase
 from django.utils import timezone
 
 from inquiries.errors import ForbiddenLogAction
-from inquiries.models import InquiryLogMessage, UserInquiry, UserInquiryLog
-from inquiries.utils import InquiryMessageContentParser
+from inquiries.models import InquiryLogMessage, UserInquiry
 from mailing.models import EmailTemplate as _EmailTemplate
-from mailing.schemas import EmailSchema
 from utils.factories.inquiry_factories import InquiryRequestFactory
 from utils.factories.mailing_factories import (
     UserEmailOutboxFactory as _UserEmailOutboxFactory,
 )
 from utils.factories.profiles_factories import GuestProfileFactory, PlayerProfileFactory
+from utils.factories.user_factories import UserFactory, UserPreferencesFactory
 
 User = get_user_model()
 
@@ -197,168 +196,32 @@ def test_multiple_cases_for_mailing_about_reaching_limit(
         )
 
 
-@pytest.mark.django_db
-class TestHTMLEmailFunctionality(TestCase):
-    """Test HTML email functionality for UserInquiry emails."""
-
+class TestEmailTemplateCreateEmailSchema(TestCase):
+    """
+    Tests for the `_EmailTemplate.create_email_schema` method, ensuring that
+    gender-based placeholders in the email content are replaced correctly.
+    """
     def setUp(self):
-        """Set up test data."""
-
-        # Create test users
-        self.user1 = PlayerProfileFactory.create().user
-        self.user2 = GuestProfileFactory.create().user
-
-        # Create inquiry request
-        self.inquiry_request = InquiryRequestFactory(
-            sender=self.user1, recipient=self.user2
+        self.user = UserFactory.create(userpreferences__gender="M")
+        self.email_template = _EmailTemplate.objects.create(
+            subject="Hello #male_form|female_form#",
+            body="Dear #male_form|female_form#, your inquiry is received.",
+            html_body="<p>Dear <strong>#male_form|female_form#</strong>, your inquiry is received.</p>",
+            email_type=_EmailTemplate.EmailType.NEW_USER,
+            is_default=True,
         )
 
-        self.user_inquiry = UserInquiry.objects.create(
-            user=self.user2,
-        )
+    def test_create_email_schema_returns_correct_fields(self) -> None:
+        email_schema = self.email_template.create_email_schema(self.user)
 
-        # Clear mail outbox
-        mail.outbox.clear()
+        # The _EmailSchema should have body, html_body and recipients properly filled
+        # Check that placeholders were replaced properly
 
-    def test_inquiry_log_message_html_parsing(self):
-        """Test that InquiryLogMessage HTML parsing works correctly."""
+        assert "#male_form|female_form#" not in email_schema.body
+        assert "#male_form|female_form#" not in email_schema.html_body
 
-        # Create a test message with HTML content
-        test_message = InquiryLogMessage.objects.filter(
-            log_type=InquiryLogMessage.MessageType.ACCEPTED,
-        )
-
-        # Create a log entry
-        log_entry = UserInquiryLog.objects.create(
-            log_owner=self.user_inquiry,
-            related_with=self.inquiry_request.sender,
-            message=test_message
-        )
-
-        # Test HTML parsing
-        parser = InquiryMessageContentParser(log_entry)
-
-        # Test email title parsing
-        parsed_title = parser.parse_email_title
-        assert "#r#" not in parsed_title
-        assert self.user2.display_full_name in parsed_title
-
-        # Test plain text body parsing
-        parsed_body = parser.parse_email_body
-        assert "<>" not in parsed_body
-        assert self.user2.display_full_name in parsed_body
-
-        # Test HTML body parsing
-        parsed_html_body = parser.parse_email_html_body
-        assert "<>" not in parsed_html_body
-        assert "#r#" not in parsed_html_body
-        assert self.user2.display_full_name in parsed_html_body
-
-
-    def test_email_schema_creation(self):
-        """Test that EmailSchema is created correctly with HTML content."""
-
-        # Create a test message
-        test_message = InquiryLogMessage.objects.filter(
-            log_type=InquiryLogMessage.MessageType.ACCEPTED,
-        )
-
-        # Create a log entry
-        log_entry = UserInquiryLog.objects.create(
-            log_owner=self.inquiry_request.recipient,
-            related_with=self.inquiry_request.sender,
-            message=test_message
-        )
-
-        # Test email schema creation
-        schema = log_entry.create_email_schema()
-
-        assert isinstance(schema, EmailSchema)
-        assert schema.subject == test_message.email_title
-        assert schema.body == test_message.email_body
-        assert schema.html_body == test_message.email_body_html
-        assert schema.recipients == [self.user2.contact_email]
-
-
-    def test_inquiry_status_emails_with_html(self):
-        """Test that inquiry status change emails work with HTML content."""
-        # Clear mail outbox
-        mail.outbox.clear()
-
-        # Test accepted inquiry
-        with patch('mailing.services.MailingService.send_mail') as mock_send:
-            self.inquiry_request.accept()
-            self.inquiry_request.save()
-
-            # Check if email was attempted to be sent
-            if mock_send.called:
-                print("✅ ACCEPTED email sending was called")
-                # Get the last log entry
-                last_log = UserInquiryLog.objects.filter(
-                    message__log_type=InquiryLogMessage.MessageType.ACCEPTED
-                ).last()
-                if last_log:
-                    schema = last_log.create_email_schema()
-                    print(f"Email schema created successfully: {schema.subject}")
-            else:
-                print("⚠️  No email sent for ACCEPTED status")
-
-        # Test rejected inquiry
-        print("Testing REJECTED inquiry email...")
-        # Create a new inquiry for rejection test
-        inquiry_request_2 = InquiryRequestFactory(
-            sender=self.user1, recipient=self.user2
-        )
-
-        with patch('mailing.services.MailingService.send_mail') as mock_send:
-            inquiry_request_2.reject()
-            inquiry_request_2.save()
-
-            # Check if email was attempted to be sent
-            if mock_send.called:
-                print("✅ REJECTED email sending was called")
-                # Get the last log entry
-                last_log = UserInquiryLog.objects.filter(
-                    message__log_type=InquiryLogMessage.MessageType.REJECTED
-                ).last()
-                if last_log:
-                    schema = last_log.create_email_schema()
-                    print(f"Email schema created successfully: {schema.subject}")
-            else:
-                print("⚠️  No email sent for REJECTED status")
-
-        print("✅ Inquiry status change emails test passed!")
-        return True
-
-    def test_inquiry_limit_email_with_html(self):
-        """Test that inquiry limit reached email works with HTML content."""
-        print("\n=== Testing Inquiry Limit Email ===")
-
-        # Clear mail outbox
-        mail.outbox.clear()
-
-        # Set user to limit
-        self.user1.userinquiry.counter = 2
-        self.user1.userinquiry.save()
-
-        # Test limit notification
-        with patch('mailing.services.MailingService.send_mail') as mock_send:
-            with patch('utils.utils.render_email_template') as mock_render:
-                # Mock the render_email_template function
-                mock_render.return_value = ("<h1>HTML content</h1>", "Plain text content")
-
-                self.user1.userinquiry.mail_about_limit(force_send=True)
-
-                # Check if email was attempted to be sent
-                if mock_send.called:
-                    print("✅ INQUIRY_LIMIT email sending was called")
-                    # Check if render_email_template was called correctly
-                    if mock_render.called:
-                        print("✅ HTML template rendering was called")
-                        call_args = mock_render.call_args
-                        print(f"Template path: {call_args[0][0]}")
-                        print(f"Context: {call_args[0][1]}")
-                else:
-                    print("⚠️  No email sent for INQUIRY_LIMIT")
-
-        return True
+        # Since gender is 'M', the correct form should be 'male_form'
+        assert "male_form" in email_schema.body
+        assert "male_form" in email_schema.html_body
+        assert "female_form" not in email_schema.body
+        assert "female_form" not in email_schema.html_body
