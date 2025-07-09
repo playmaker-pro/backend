@@ -210,7 +210,7 @@ class TransferRequestDoesNotExistHTTPException(CoreAPIException):
     """
 
     status_code = status.HTTP_404_NOT_FOUND
-    default_detail = "Given player does not have transfer request."
+    default_detail = "Given profile does not have transfer request."
 
 
 class NotAOwnerOfTheTeamContributorHTTPException(CoreAPIException):
