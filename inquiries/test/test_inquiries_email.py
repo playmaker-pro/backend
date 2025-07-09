@@ -194,34 +194,3 @@ def test_multiple_cases_for_mailing_about_reaching_limit(
             )
             is expected
         )
-
-
-class TestEmailTemplateCreateEmailSchema(TestCase):
-    """
-    Tests for the `_EmailTemplate.create_email_schema` method, ensuring that
-    gender-based placeholders in the email content are replaced correctly.
-    """
-    def setUp(self):
-        self.user = UserFactory.create(userpreferences__gender="M")
-        self.email_template = _EmailTemplate.objects.create(
-            subject="Hello #male_form|female_form#",
-            body="Dear #male_form|female_form#, your inquiry is received.",
-            html_body="<p>Dear <strong>#male_form|female_form#</strong>, your inquiry is received.</p>",
-            email_type=_EmailTemplate.EmailType.NEW_USER,
-            is_default=True,
-        )
-
-    def test_create_email_schema_returns_correct_fields(self) -> None:
-        email_schema = self.email_template.create_email_schema(self.user)
-
-        # The _EmailSchema should have body, html_body and recipients properly filled
-        # Check that placeholders were replaced properly
-
-        assert "#male_form|female_form#" not in email_schema.body
-        assert "#male_form|female_form#" not in email_schema.html_body
-
-        # Since gender is 'M', the correct form should be 'male_form'
-        assert "male_form" in email_schema.body
-        assert "male_form" in email_schema.html_body
-        assert "female_form" not in email_schema.body
-        assert "female_form" not in email_schema.html_body

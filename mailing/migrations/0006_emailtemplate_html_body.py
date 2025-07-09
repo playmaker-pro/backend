@@ -4,7 +4,10 @@ from django.db import migrations, models, transaction
 from django.template.loader import render_to_string
 
 
-def populate_email_html_body(apps, schema_editor):
+def populate_email_html_body(apps, schema_editor) -> None:
+    """
+    Populate the `html_body` field for all EmailTemplate instances by rendering their corresponding HTML templates.
+    """
     EmailTemplate = apps.get_model('mailing', 'EmailTemplate')
 
     with transaction.atomic():
@@ -18,7 +21,8 @@ def populate_email_html_body(apps, schema_editor):
                 raise Exception(f"Failed to render template for email {email.pk}: {e}")
 
 
-def clear_email_html_body(apps, schema_editor):
+def clear_email_html_body(apps, schema_editor) -> None:
+    """Clear the `html_body` field for all EmailTemplate instances by setting it to None."""
     EmailTemplate = apps.get_model('mailing', 'EmailTemplate')
     EmailTemplate.objects.all().update(html_body=None)
 
@@ -26,7 +30,7 @@ def clear_email_html_body(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('mailing', '0005_auto_20250110_1612'),  # Update to your actual last migration
+        ('mailing', '0005_auto_20250110_1612'),
     ]
 
     operations = [

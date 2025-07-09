@@ -4,12 +4,22 @@ from django.db import migrations, models, transaction
 
 from django.template.loader import render_to_string
 
-def clear_email_body_html(apps, schema_editor):
+def clear_email_body_html(apps, schema_editor) -> None:
+    """
+    Set the `email_body_html` field to None for all InquiryLogMessage records.
+    This is typically used in a reverse migration to clear previously rendered HTML email content.
+    """
     InquiryLogMessage = apps.get_model('inquiries', 'InquiryLogMessage')
     InquiryLogMessage.objects.update(email_body_html=None)
 
 
-def populate_email_body_html(apps, schema_editor):
+def populate_email_body_html(apps, schema_editor) -> None:
+    """
+    Populate the `email_body_html` field for all InquiryLogMessage records by rendering
+    the corresponding HTML templates based on their `log_type`.
+
+    Each log's HTML is rendered using a template located at: 'inquiries/emails/{log_type}.html'.
+    """
     InquiryLogMessage = apps.get_model('inquiries', 'InquiryLogMessage')
 
     with transaction.atomic():

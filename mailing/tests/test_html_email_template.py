@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 
 from mailing.models import EmailTemplate
 from mailing.services import MessageContentParser
+from utils.factories import user_factories
 
 User = get_user_model()
 
@@ -10,16 +11,8 @@ User = get_user_model()
 @pytest.fixture
 def test_user():
     """Create a test user for email template testing."""
-    user = User.objects.create_user(
-        email="test@example.com",
-        password="testpass123"
-    )
-    # Mock gender field if it exists
-    if hasattr(user, 'userpreferences') and hasattr(user.userpreferences, 'gender'):
-        user.userpreferences.gender = "M"  # Male
-        user.userpreferences.save()
+    user = user_factories.UserFactory.create(userpreferences__gender="M")
     return user
-
 
 @pytest.fixture
 def email_template_with_html():
@@ -32,7 +25,6 @@ def email_template_with_html():
         is_default=True
     )
 
-
 @pytest.fixture
 def email_template_without_html():
     """Create an email template without HTML content."""
@@ -43,7 +35,6 @@ def email_template_without_html():
         email_type=EmailTemplate.EmailType.PASSWORD_CHANGE,
         is_default=True
     )
-
 
 @pytest.mark.django_db
 class TestEmailTemplateHTML:
@@ -144,35 +135,3 @@ class TestMessageContentParserHTML:
         assert "<a href='https://example.com/test'>here</a>" in parsed
         assert "<div class=\"footer\">" in parsed
         assert "Dziękujemy za rejestrację" in parsed
-
-#
-# @pytest.mark.django_db
-# class TestBackwardCompatibility:
-#     """Test backward compatibility of changes."""
-#
-#     def test_existing_templates_still_work(self, test_user):
-#         """Test that existing templates without html_body still work."""
-#         # Create template like the old system (without html_body)
-#         template = EmailTemplate.objects.create(
-#             subject="Old Template",
-#             body="Old style body with #url#",
-#             email_type=EmailTemplate.EmailType.NEW_USER,
-#             is_default=True
-#         )
-#
-#         schema = template.create_email_schema(test_user, url="https://example.com")
-#
-#         assert schema.subject == "Old Template"
-#         assert schema.body == "Old style body with https://example.com"
-#         assert schema.html_body is None
-#         assert len(schema.recipients) == 1
-#
-#     def test_html_body_field_exists(self):
-#         """Test that html_body field was added to model."""
-#         template = EmailTemplate()
-#         assert hasattr(template, 'html_body')
-#
-#         # Test field properties
-#         field = EmailTemplate._meta.get_field('html_body')
-#         assert field.blank is True
-#         assert field.null is True
