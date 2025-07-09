@@ -240,6 +240,7 @@ class UserAdminPanel(UserAdmin):
     search_fields = ("first_name", "last_name", "declared_role")
     readonly_fields = ("userpreferences", "profile")
     actions = [verify_one]
+    ordering = ("-date_joined",)
 
     def has_delete_permission(self, request, obj=None):
         """Disable delete permission for users."""
