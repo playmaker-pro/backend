@@ -85,7 +85,6 @@ class UserService:
 
         user.declared_role = None
         user.state = User.STATE_NEW
-        user.username = user.email
         user.set_password(user_schema.password)
 
         user.save()

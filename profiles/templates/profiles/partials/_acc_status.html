@@ -1,9 +1,0 @@
-{% load i18n %}
-
-{% if editable and user.is_pending_role_change %} 
-    {% include 'profiles/partials/_acc_status_role_change.html' %}
-{% else %}
-    {% if editable %}
-         {% include 'profiles/partials/_acc_status_progress_bar.html' %}
-    {% endif %}
-{% endif %}

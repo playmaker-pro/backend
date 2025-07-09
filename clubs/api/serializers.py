@@ -117,7 +117,6 @@ class ClubSerializer(serializers.ModelSerializer):
         exclude = (
             "name",
             "scrapper_autocreated",
-            "data_mapper_id",
             "autocreated",
         )
 
@@ -148,7 +147,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Team
-        exclude = ("name", "autocreated", "data_mapper_id", "scrapper_autocreated")
+        exclude = ("name", "autocreated", "scrapper_autocreated")
 
     def get_current_team_league_history(self, obj: models.Team) -> dict:
         """Get current, serialized league history of team"""

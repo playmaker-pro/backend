@@ -4338,7 +4338,6 @@ paths:
                     email: example_email@playmaker.com
                     first_name: first_name
                     last_name: last_name
-                    username: username
                   summary: example1
           description: ''
         '400':
@@ -4804,15 +4803,8 @@ components:
         id:
           type: integer
           readOnly: true
-        username:
-          type: string
-          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
-            only.
-          pattern: ^[\w.@+-]+$
-          maxLength: 150
       required:
         - id
-        - username
     UserRegisterResponse:
       type: object
       description: Serializer for user registration response.
@@ -4831,16 +4823,9 @@ components:
         last_name:
           type: string
           maxLength: 150
-        username:
-          type: string
-          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
-            only.
-          pattern: ^[\w.@+-]+$
-          maxLength: 150
       required:
         - email
         - id
-        - username
         - last_name
         - first_name
 
@@ -6332,7 +6317,6 @@ components:
             "verification_id": null,
             "user_id": 1,
             "history_id": 1,
-            "data_mapper_id": null,
             "slug": "guest",
             "bio": null,
             "event_log": null,

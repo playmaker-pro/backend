@@ -69,3 +69,7 @@ stop-celery-beat:
 .PHONY: shell
 shell:
 	poetry run python manage.py shell
+
+.PHONY: server
+server:
+	poetry run python manage.py runserver --celery

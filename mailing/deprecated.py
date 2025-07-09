@@ -17,12 +17,10 @@ def mail_admins_about_new_user(instance, extra_body=None):
         extra_body = ""
 
     # f'Link do profilu: {build_absolute_url(instance.profile.get_permalink())} \n\n' \
-    subject = (
-        f"[Nowa rejestracja] Użytkownik {instance.username} właśnie się zarejestrował"
-    )
+    subject = f"[Nowa rejestracja] Użytkownik  właśnie się zarejestrował"
 
     message = (
-        f"Użytkownik {instance.username} {instance.first_name} ({instance.declared_role}) własnie się zarejestrował. \n\n "
+        f"Użytkownik {instance.first_name} ({instance.declared_role}) własnie się zarejestrował. \n\n "
         f"Link do admina: {build_absolute_url(instance.get_admin_url())}. \n"
         f"{extra_body}"
     )

@@ -5,6 +5,7 @@ Service for sending notifications to users.
 from notifications.tasks import create_notification
 from notifications.templates import NotificationBody, NotificationTemplate
 from profiles.models import PROFILE_MODELS, ProfileMeta
+from users.models import User
 
 GENDER_BASED_ROLES = {
     "P": ("Piłkarz", "Piłkarka"),
@@ -133,9 +134,10 @@ class NotificationService:
         """
         Send notifications for hidden profiles.
         """
-        for meta in cls.get_queryset():
-            if meta.user.display_status == "Niewyświetlany":
-                cls(meta).notify_profile_hidden()
+        for meta in cls.get_queryset().filter(
+            user__display_status=User.DisplayStatus.NOT_SHOWN
+        ):
+            cls(meta).notify_profile_hidden()
 
     def notify_profile_hidden(self) -> None:
         """

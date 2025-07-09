@@ -43,12 +43,6 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["id", "username"]
-
-
 class UserSocialStatsSerializer(serializers.Serializer):
     """User social stats serializer for player profile view"""
 
@@ -233,10 +227,9 @@ class UserMainRoleSerializer(serializers.ModelSerializer):
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "email", "first_name", "last_name", "password", "username"]
+        fields = ["id", "email", "first_name", "last_name", "password"]
         extra_kwargs = {
             "id": {"read_only": True, "required": False},
-            "username": {"read_only": True, "required": False},
             "first_name": {"required": False},
             "last_name": {"required": False},
             "email": {"required": True},

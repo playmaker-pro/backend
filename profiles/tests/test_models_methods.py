@@ -1,100 +1,10 @@
 from django.test import TestCase
 
-from profiles import models
-from roles import definitions
 from users.models import User
 from utils import testutils as utils
 from utils.factories import CoachProfileFactory, PlayerProfileFactory
 
 utils.silence_explamation_mark()
-
-
-class ChangeRoleTests(TestCase):
-    def setUp(self):
-        self.user = PlayerProfileFactory.create(user__email="username").user
-        self.user.profile.VERIFICATION_FIELDS = ["bio"]
-        self.user.profile.COMPLETE_FIELDS = ["team"]  # , 'club_raw']
-        self.user.profile.bio = "Lubie Herbate"
-
-        self.user.profile.save()
-        self.user.verify(silent=True)
-        assert self.user.is_verified is True
-        print(f"----> setUp {self.user.state}")
-
-    def test__1__changing_role_to_coach_from_player_cause_user_sate_to_missing_verification_data(  # noqa: E501
-        self,
-    ):
-        assert self.user.is_verified is True
-        print(f"----> before  {self.user.state}")
-
-        change = models.RoleChangeRequest.objects.create(
-            user=self.user, new=definitions.COACH_SHORT
-        )
-
-        assert self.user.is_verified is True
-
-        change.approved = True
-        change.save()
-        self.user.refresh_from_db()
-        print(f"----> after {self.user.state}")
-        assert self.user.is_verified is False
-        assert self.user.is_missing_verification_data is False
-
-    def test_changing_role_to_geust_from_player_cause_user_to_be_still_verified(
-        self,
-    ):  # noqa: E501
-        assert self.user.is_verified is True
-        change = models.RoleChangeRequest.objects.create(
-            user=self.user, new=definitions.GUEST_SHORT
-        )
-        assert self.user.is_verified is True
-        change.approved = True
-        change.save()
-        self.user.refresh_from_db()
-        print(f"---->  {self.user.state}")
-        assert self.user.is_verified is True
-
-    def test_changing_role_to_scout_from_unverifed_player_cause_user_to_be_auto_verified(  # noqa: E501
-        self,
-    ):
-        assert self.user.is_verified is True
-        self.user.profile.bio = None
-        self.user.profile.save()
-        assert self.user.is_verified is True
-        print(f"---->  before {self.user.state}")
-        change = models.RoleChangeRequest.objects.create(
-            user=self.user, new=definitions.SCOUT_SHORT
-        )
-        change.approved = True
-        change.save()
-        self.user.refresh_from_db()
-
-        print(f"---->  after {self.user.state}")
-        assert self.user.is_verified is True
-        assert self.user.is_missing_verification_data is False
-
-    def test_changing_role_to_guest_from_unverifed_player_cause_user_to_be_auto_verified(  # noqa: E501
-        self,
-    ):
-        assert self.user.is_verified is True
-        self.user.profile.bio = None
-        self.user.profile.save()
-        assert self.user.is_verified is True
-        print(f"---->  before {self.user.state}")
-        change = models.RoleChangeRequest.objects.create(
-            user=self.user, new=definitions.GUEST_SHORT
-        )
-
-        # statuses should remain
-        assert self.user.is_verified is True
-
-        change.approved = True
-        change.save()
-        self.user.refresh_from_db()
-
-        print(f"---->  after {self.user.state}")
-        assert self.user.is_verified is True
-        assert self.user.is_missing_verification_data is False
 
 
 class TestProfilePercentageTests(TestCase):

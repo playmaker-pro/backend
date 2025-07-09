@@ -85,7 +85,6 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
             "verification_stage",
             "team_history_object",
             "visits",
-            "data_fulfill_status",
             "is_promoted",
             "is_premium",
             "promotion",

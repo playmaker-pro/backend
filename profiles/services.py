@@ -98,111 +98,6 @@ class ProfileVerificationService:
         elif self.user.is_club:
             self._verify_club()
 
-    def update_verification_data(
-        self, data: dict, requestor: User = None
-    ) -> models.ProfileVerificationStatus:
-        """using dict-like data we can create new verification object"""
-        logger.debug("New verification recieved for %s", self.user)
-        team: typing.Optional[clubs_models.Team] = None
-        team_history: typing.Optional[clubs_models.TeamHistory] = None
-        club: typing.Optional[clubs_models.Club] = None
-        text: typing.Optional[str] = None
-
-        if team_club_league_voivodeship_ver := data.get(  # noqa: E999
-            "team_club_league_voivodeship_ver"
-        ):
-            text = team_club_league_voivodeship_ver
-        if has_team := data.get("has_team"):
-            if has_team == "tak mam klub":
-                has_team = True
-            else:
-                has_team = False
-
-        team_not_found = data.get("team_not_found")
-
-        if data.get("team") and team_not_found is False:
-            if self.user.is_club:
-                club = data.get("team")
-            else:
-                team_history = data.get("team")
-                team = team_history.team
-        else:
-            if self.user.is_club:
-                club = data.get("team")
-            else:
-                team = None
-                team_history = None
-
-        if has_team is True:
-            if team_not_found:
-                team = None
-                team_history = None
-                club = None
-            else:
-                text = None
-
-        if has_team is False:
-            team = None
-            team_history = None
-            club = None
-
-        set_by: User = requestor or User.get_system_user()
-        new: models.ProfileVerificationStatus = (
-            models.ProfileVerificationStatus.objects.create(
-                owner=self.user,
-                previous=self.profile.verification,
-                has_team=has_team,
-                team_not_found=team_not_found,
-                club=club,
-                team=team,
-                team_history=team_history,
-                text=text,
-                set_by=set_by,
-            )
-        )
-        self.profile.verification = new
-        self.profile.save()
-        return new
-
-    def update_verification_status(
-        self, status: str, verification: models.ProfileVerificationStatus = None
-    ) -> None:
-        verification: models.ProfileVerificationStatus = (
-            self.profile.verification or verification
-        )
-        verification.status = status
-        verification.save()
-
-    def _verify_user(self) -> None:
-        self.user.verify()
-        self.user.save()
-
-    def _verify_player(self) -> None:
-        profile: models.BaseProfile = self.profile
-
-        if profile.verification.has_team and profile.verification.team:
-            profile.team_object = profile.verification.team
-            profile.team_club_league_voivodeship_ver = None
-            self._verify_user()
-
-        elif (
-            profile.verification.has_team is True
-            and profile.verification.team_not_found is True
-            and profile.verification.text
-        ):
-            profile.team_object = None
-            profile.team_club_league_voivodeship_ver = profile.verification.text
-            self._verify_user()
-
-        elif profile.verification.has_team is False and not profile.verification.text:
-            profile.team_object = None
-            profile.team_club_league_voivodeship_ver = None
-            self._verify_user()
-        elif profile.verification.has_team is False and profile.verification.text:
-            profile.team_club_league_voivodeship_ver = profile.verification.text
-            profile.team_object = None
-        profile.save()
-
     def _verify_coach(self) -> None:
         profile: models.BaseProfile = self.profile
 
@@ -321,15 +216,6 @@ class ProfileVerificationService:
 
 
 class ProfileService:
-    @staticmethod
-    def set_initial_verification(profile: models.PROFILE_TYPE) -> None:
-        """set initial verification status object if not present"""
-        if profile.verification is None:
-            profile.verification = models.ProfileVerificationStatus.create_initial(
-                profile.user
-            )
-            profile.save()
-
     @staticmethod
     def set_and_create_user_profile(user: User) -> models.PROFILE_TYPE:
         """get type of profile and create profile"""
@@ -2020,18 +1906,3 @@ class RandomizationService:
         seed_input = f"{identifier}:{current_date}"
         seed = int(hashlib.sha256(seed_input.encode()).hexdigest(), 16) % (10**8)
         return seed
-
-    def apply_seeded_randomization(self, queryset: QuerySet, user: User) -> QuerySet:
-        """
-        Applies a seeded randomization to a queryset based on a daily unique seed.
-
-        The randomization ensures that the order of items in the queryset is consistently
-        randomized across requests for a given user and changes daily. This method is
-        particularly useful for providing each user with a unique perspective of dataset
-        listings that refresh daily.
-        """
-        seed = RandomizationService.get_daily_user_seed(user)
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT setseed(%s)", [seed / float(10**8)])
-        queryset = queryset.order_by("data_fulfill_status", "?")
-        return queryset
