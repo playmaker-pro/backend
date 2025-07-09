@@ -1,9 +1,0 @@
-<span class="pull-left text-muted"><strong></strong>
-{% if show_user.is_verified %} 
-    <i class="text-success icofont-verification-check"></i> zweryfikowane
-{% elif show_user.is_waiting_for_verification %}
-    <i class="text-warning icofont-ui-clock"></i> oczekuje na weryfikacje 
-{% else %} 
-    <i class="text-danger icofont-adjust"></i> brakuje danych do weryfikacji konta
-{% endif %}  
-</span> 
