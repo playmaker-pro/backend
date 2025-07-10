@@ -107,3 +107,16 @@ class TestMessageContentParserHTML:
         assert "<a href='https://example.com/test'>here</a>" in parsed
         assert "<div class=\"footer\">" in parsed
         assert "Dziękujemy za rejestrację" in parsed
+
+    def test_create_email_schema_without_html_body(self, test_user, email_template_without_html):
+        """Test create_email_schema method when html_body is None (backward compatibility)."""
+        schema = email_template_without_html.create_email_schema(
+            test_user,
+            url="https://example.com/reset"
+        )
+
+        assert schema.subject == "Test Subject"
+        assert schema.body == "Plain text body with https://example.com/reset"
+        assert schema.html_body is None
+        assert schema.recipients == [test_user.email]
+        assert schema.type == EmailTemplate.EmailType.PASSWORD_CHANGE

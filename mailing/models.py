@@ -149,7 +149,7 @@ class EmailTemplate(models.Model):
         parser = self._content_parser(user, **extra_kwargs)
         subject = parser.parse_email_title(self.subject)
         body = parser.parse_email_body(self.body)
-        html_body = parser.parse_email_body(self.html_body)
+        html_body = parser.parse_email_body(self.html_body) if self.html_body else None
         return _EmailSchema(
             subject=subject, body=body, html_body=html_body, recipients=[user.email], type=self.email_type
         )
