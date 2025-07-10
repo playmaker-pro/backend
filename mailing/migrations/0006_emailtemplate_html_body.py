@@ -34,7 +34,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # Step 1: Add field as nullable
         migrations.AddField(
             model_name='emailtemplate',
             name='html_body',
@@ -43,15 +42,6 @@ class Migration(migrations.Migration):
                 help_text="Rendered HTML version of the email template"
             ),
         ),
-        # Step 2: Populate data
         migrations.RunPython(populate_email_html_body, reverse_code=clear_email_html_body),
-        # Step 3: Enforce NOT NULL
-        migrations.AlterField(
-            model_name='emailtemplate',
-            name='html_body',
-            field=models.TextField(
-                blank=False, null=False,
-                help_text="Rendered HTML version of the email template"
-            ),
-        ),
     ]
+

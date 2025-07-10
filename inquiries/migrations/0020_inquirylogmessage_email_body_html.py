@@ -43,7 +43,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # 1. Add nullable field first
         migrations.AddField(
             model_name='inquirylogmessage',
             name='email_body_html',
@@ -53,16 +52,5 @@ class Migration(migrations.Migration):
                 help_text='HTML version of the email body. Supports HTML tags like <strong>, <a>, etc.'
             ),
         ),
-        # 2. Populate the field with a reversible RunPython
         migrations.RunPython(populate_email_body_html, clear_email_body_html),
-        # 3. Make the field non-nullable after data is populated
-        migrations.AlterField(
-            model_name='inquirylogmessage',
-            name='email_body_html',
-            field=models.TextField(
-                blank=False,
-                null=False,
-                help_text='HTML version of the email body. Supports HTML tags like <strong>, <a>, etc.'
-            ),
-        ),
     ]
