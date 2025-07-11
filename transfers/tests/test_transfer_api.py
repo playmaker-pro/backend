@@ -54,10 +54,12 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
         user = UserFactory(password="test_password")
         self.profile: BaseProfile = PlayerProfileFactory.create(user=user)
         self.url = reverse(
-            "api:transfers:profile_transfer_status",
-            kwargs={"profile_uuid": self.profile.uuid},
+            "api:transfers:manage_transfer_status",
         )
-
+        self.get_url = lambda profile_uuid: reverse(
+            "api:transfers:profile_transfer_status",
+            kwargs={"profile_uuid": str(profile_uuid)},
+        )
         self.user_manager = UserManager(self.client)
         self.headers = self.user_manager.custom_user_headers(
             email=user.email, password="test_password"
@@ -78,7 +80,8 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
 
     def test_get_profile_no_transfer_status(self):
         """Test get profile transfer status. Expected status code 404."""
-        response: Response = self.client.get(self.url, **self.headers)
+        player = PlayerProfileFactory.create()
+        response: Response = self.client.get(self.get_url(player.uuid), **self.headers)
         assert response.status_code == 404
         assert isinstance(response.json(), dict)
         assert (
@@ -91,7 +94,9 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
         transfer_status_obj: ProfileTransferStatus = TransferStatusFactory.create(
             meta=self.profile.meta
         )
-        response: Response = self.client.get(self.url, **self.headers)
+        response: Response = self.client.get(
+            self.get_url(transfer_status_obj.meta.profile.uuid), **self.headers
+        )
 
         assert response.status_code == 200
         assert isinstance(response.json(), dict)
@@ -125,15 +130,6 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
 
         transfer_status_obj.refresh_from_db()
         assert transfer_status_obj.status == new_status["id"]
-
-    def test_update_profile_transfer_status_permission_denied(self):
-        """Test update profile transfer status without permission."""
-        user = UserFactory.create(password="test_password")
-        self.headers = self.user_manager.custom_user_headers(
-            email=user.email, password="test_password"
-        )
-        response: Response = self.client.patch(self.url, {"status": 2}, **self.headers)
-        assert response.status_code == 403
 
     def test_update_profile_transfer_status_not_found(self):
         """
@@ -190,17 +186,6 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
             == transfer_status_service.get_list_transfer_statutes(id=1)[0]
         )
 
-    def test_create_profile_transfer_status_permission_denied(self):
-        """Test create profile transfer status without permission."""
-        user = UserFactory.create(password="test_password")
-        self.headers = self.user_manager.custom_user_headers(
-            email=user.email, password="test_password"
-        )
-        response: Response = self.client.post(
-            self.url, json.dumps({"status": 2}), **self.headers
-        )
-        assert response.status_code == 403
-
     def test_transfer_status_with_extra_fields(self):
         """
         Test create profile transfer status with extra fields.
@@ -233,10 +218,12 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         user = UserFactory(password="test_password")
         self.profile: BaseProfile = PlayerProfileFactory.create(user=user)
         self.url = reverse(
-            "api:transfers:profile_transfer_request",
-            kwargs={"profile_uuid": self.profile.uuid},
+            "api:transfers:manage_transfer_request",
         )
-
+        self.get_url = lambda profile_uuid: reverse(
+            "api:transfers:profile_transfer_request",
+            kwargs={"profile_uuid": profile_uuid},
+        )
         self.user_manager = UserManager(self.client)
         self.headers = self.user_manager.custom_user_headers(
             email=user.email, password="test_password"
@@ -319,7 +306,9 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         Test get profile transfer request. Expected status code 404,
         because profile has no transfer request.
         """
-        response: Response = self.client.get(self.url, **self.headers)
+        response: Response = self.client.get(
+            self.get_url(self.profile.uuid), **self.headers
+        )
         assert response.status_code == 404
         assert isinstance(response.json(), dict)
         assert (
@@ -332,11 +321,13 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         Test GET profile transfer request and check if response data is correct.
         Expected status code 200.
         """
-        tc = TeamContributorFactory.create(profile_uuid=self.profile.uuid)
+        TeamContributorFactory.create(profile_uuid=self.profile.uuid)
         transfer_request_obj: ProfileTransferRequest = TransferRequestFactory.create(
             meta=self.profile.meta
         )
-        response: Response = self.client.get(self.url, **self.headers)
+        response: Response = self.client.get(
+            self.get_url(self.profile.uuid), **self.headers
+        )
 
         assert response.status_code == 200
         assert isinstance(response.json(), dict)
@@ -443,15 +434,6 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
         transfer_status_obj.refresh_from_db()
         assert transfer_status_obj.status == new_status["id"]
 
-    def test_update_profile_transfer_request_permission_denied(self):
-        """Test update profile transfer status without permission."""
-        user = UserFactory.create(password="test_password")
-        self.headers = self.user_manager.custom_user_headers(
-            email=user.email, password="test_password"
-        )
-        response: Response = self.client.patch(self.url, {"status": 2}, **self.headers)
-        assert response.status_code == 403
-
     def test_update_profile_transfer_request_not_found(self):
         """
         Test update profile transfer status with no resource in DB.
@@ -509,17 +491,6 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
             transfer_status_id=1
         )
         assert response.json().get("status") == expected_status
-
-    def test_create_profile_transfer_status_permission_denied(self):
-        """Test create profile transfer status without permission."""
-        user = UserFactory.create(password="test_password")
-        self.headers = self.user_manager.custom_user_headers(
-            email=user.email, password="test_password"
-        )
-        response: Response = self.client.post(
-            self.url, json.dumps({"status": 2}), **self.headers
-        )
-        assert response.status_code == 403
 
     def test_delete_profile_transfer_request(self):
         """Test delete profile transfer status. Expected status code 204."""
@@ -669,7 +640,7 @@ class TestTransferRequestCatalogue:
 
 
 class TestAnonymousTransferStatus:
-    url_path = "api:transfers:profile_transfer_status"
+    url_path = "api:transfers:manage_transfer_status"
 
     @pytest.fixture
     def profile(self, player_profile: BaseProfile) -> BaseProfile:
@@ -695,7 +666,7 @@ class TestAnonymousTransferStatus:
         profile.setup_premium_profile()
         api_client.force_authenticate(profile.user)
         response: Response = api_client.post(
-            reverse(self.url_path, kwargs={"profile_uuid": profile.uuid}),
+            reverse(self.url_path),
             payload,
             format="json",
         )
@@ -761,7 +732,7 @@ class TestAnonymousTransferStatus:
         assert not ProfileTransferStatus.objects.filter().exists()
         api_client.force_authenticate(profile.user)
         response: Response = api_client.post(
-            reverse(self.url_path, kwargs={"profile_uuid": profile.uuid}),
+            reverse(self.url_path),
             payload,
             format="json",
         )
@@ -771,7 +742,7 @@ class TestAnonymousTransferStatus:
 
 
 class TestAnonymousTransferRequest:
-    url_path = "api:transfers:profile_transfer_request"
+    url_path = "api:transfers:manage_transfer_request"
 
     @pytest.fixture
     def payload(self) -> dict:
@@ -801,7 +772,7 @@ class TestAnonymousTransferRequest:
             profile_uuid=coach_profile.uuid
         ).pk
         response = api_client.post(
-            reverse(self.url_path, kwargs={"profile_uuid": coach_profile.uuid}),
+            reverse(self.url_path),
             payload,
             format="json",
         )
