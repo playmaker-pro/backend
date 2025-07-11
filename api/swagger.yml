@@ -6939,6 +6939,9 @@ components:
               type: integer
             number:
               type: string
+        is_anonymous:
+          type: boolean
+          description: "If true, the transfer request will be anonymous and not linked to a specific team contributor."
       required: [ "requesting_team", "status", "player_position" ]
 
     TransferRequestGetTeamContributor:
