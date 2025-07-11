@@ -236,13 +236,3 @@ def refresh_periodic_tasks() -> None:
         )
         if created:
             logger.info(f"Created new periodic task: {notification['name']}")
-
-
-def bind_all(profile_meta_id: int) -> None:
-    """
-    Bind all notifications to the given profile meta ID.
-    """
-    from notifications.models import ProfileMeta
-
-    meta = ProfileMeta.objects.get(pk=profile_meta_id)
-    NotificationService(meta).bind_all()

@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import MultipleObjectsReturned
-from django.db import IntegrityError, connection
+from django.db import IntegrityError
 from django.db import models as django_base_models
 from django.db.models import (
     Case,
@@ -43,7 +43,7 @@ from profiles.models import (
     Catalog,
     LicenceType,
     PlayerPosition,
-    ProfileTransferStatus,
+    ProfileMeta,
 )
 from roles.definitions import (
     CLUB_ROLES,
@@ -266,29 +266,37 @@ class ProfileService:
         Iterated object (PROFILE_MODEL_MAP) has to include each subclass of BaseProfile
         Raise ProfileDoesNotExist if no any profile with given uuid exist
         """
-        for profile_type in models.PROFILE_MODEL_MAP.values():
-            try:
-                return profile_type.objects.get(uuid=profile_uuid)
-            except profile_type.DoesNotExist:
-                continue
-        else:
+        return ProfileMeta.objects.get(_uuid=profile_uuid).profile
+
+    @classmethod
+    def get_anonymous_profile_by_uuid(
+        cls,
+        profile_uuid: typing.Union[uuid.UUID, str],
+    ) -> models.PROFILE_TYPE:
+        """
+        Get anonymous profile object using uuid.
+        Iterate through each profile type.
+        Iterated object (PROFILE_MODEL_MAP) should include each subclass of BaseProfile.
+        Raise ProfileDoesNotExist if no anonymous profile with the given uuid exists.
+        """
+        transfer_obj = ProfileMeta.objects.filter(
+            Q(transfer_status__anonymous_uuid=profile_uuid)
+            | Q(transfer_request__anonymous_uuid=profile_uuid)
+        )
+        if not transfer_obj.exists():
             raise ObjectDoesNotExist
 
-    @staticmethod
-    def get_profile_by_slug(slug: str) -> models.PROFILE_TYPE:
+        return transfer_obj.first().profile
+
+    @classmethod
+    def get_profile_by_slug(cls, slug: str) -> models.PROFILE_TYPE:
         """
         Get profile object using slug.
         Iterate through each profile type.
         Iterated object (PROFILE_MODEL_MAP) should include each subclass of BaseProfile.
         Raise ProfileDoesNotExist if no profile with the given slug exists.
         """
-        for profile_type in models.PROFILE_MODEL_MAP.values():
-            try:
-                return profile_type.objects.get(slug=slug)
-            except profile_type.DoesNotExist:
-                continue
-        else:
-            raise ObjectDoesNotExist
+        return ProfileMeta.objects.get(_slug=slug).profile
 
     @staticmethod
     def is_valid_uuid(value: str) -> bool:
@@ -316,11 +324,7 @@ class ProfileService:
     @staticmethod
     def get_user_profiles(user: User) -> typing.List[models.PROFILE_TYPE]:
         """Find all profiles for given user"""
-        profiles: list = []
-        for profile_type in models.PROFILE_MODELS:
-            if profile := profile_type.objects.filter(user=user).first():
-                profiles.append(profile)
-        return profiles
+        return [meta.profile for meta in ProfileMeta.objects.filter(user=user)]
 
     @classmethod
     def get_user_by_uuid(cls, profile_uuid: uuid.UUID) -> User:
@@ -381,14 +385,6 @@ class ProfileService:
 
         return related_type
 
-    @staticmethod
-    def get_profile_transfer_status(
-        profile: models.BaseProfile,
-    ) -> typing.Optional[ProfileTransferStatus]:
-        """Get the transfer status of a given profile."""
-        transfer_status: ProfileTransferStatus = profile.transfer_status_related.first()
-        return transfer_status or None
-
     def get_catalog_by_slug(self, catalog_slug: str) -> Catalog:
         """
         Retrieve a catalog based on its slug.
@@ -397,14 +393,6 @@ class ProfileService:
             return Catalog.objects.get(slug=catalog_slug)
         except Catalog.DoesNotExist:
             raise errors.CatalogNotFoundServiceException
-
-    @staticmethod
-    def get_profile_transfer_request(
-        profile: models.BaseProfile,
-    ) -> typing.Optional[ProfileTransferStatus]:
-        """Get the transfer status of a given profile."""
-        transfer_request: ProfileTransferStatus = profile.transfer_requests.first()
-        return transfer_request or None
 
     @staticmethod
     def get_cities_nearby(city: City, radius: int = 60) -> QuerySet:
@@ -662,9 +650,9 @@ class ProfileFilterService:
         condition = Q()
         for status in statuses:
             if status == "5":
-                condition |= Q(transfer_status_related__isnull=True)
+                condition |= Q(meta__transfer_status__isnull=True)
             else:
-                condition |= Q(transfer_status_related__status=status)
+                condition |= Q(meta__transfer_status__status=status)
 
         return queryset.filter(condition)
 
@@ -675,7 +663,7 @@ class ProfileFilterService:
         """
         Filter the queryset based on the league IDs associated with the profile's transfer status.
         """
-        return queryset.filter(transfer_status_related__league__id__in=league_ids)
+        return queryset.filter(meta__transfer_status__league__id__in=league_ids)
 
     @staticmethod
     def filter_by_additional_info(
@@ -684,28 +672,28 @@ class ProfileFilterService:
         """
         Filter the queryset based on additional information associated with the profile's transfer status.
         """
-        return queryset.filter(transfer_status_related__additional_info__overlap=info)
+        return queryset.filter(meta__transfer_status__additional_info__overlap=info)
 
     @staticmethod
     def filter_by_number_of_trainings(queryset: QuerySet, trainings: str) -> QuerySet:
         """
         Filter the queryset based on the number of trainings specified in the profile's transfer status.
         """
-        return queryset.filter(transfer_status_related__number_of_trainings=trainings)
+        return queryset.filter(meta__transfer_status__number_of_trainings=trainings)
 
     @staticmethod
     def filter_by_benefits(queryset: QuerySet, benefits: typing.List[str]) -> QuerySet:
         """
         Filter the queryset based on benefits associated with the profile's transfer status.
         """
-        return queryset.filter(transfer_status_related__benefits__overlap=benefits)
+        return queryset.filter(meta__transfer_status__benefits__overlap=benefits)
 
     @staticmethod
     def filter_by_salary(queryset: QuerySet, salary: str) -> QuerySet:
         """
         Filter the queryset based on the salary specified in the profile's transfer status.
         """
-        return queryset.filter(transfer_status_related__salary=salary)
+        return queryset.filter(meta__transfer_status__salary=salary)
 
     @staticmethod
     def filter_min_pm_score(queryset: QuerySet, min_score: int) -> QuerySet:

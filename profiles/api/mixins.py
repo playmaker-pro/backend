@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 class ProfileRetrieveMixin:
     def retrieve_profile_and_respond(
-        self, request, profile_object: models.PROFILE_MODELS
+        self, request, profile_object: models.PROFILE_MODELS, is_anonymous: bool = False
     ) -> Response:
         """Shared logic for retrieving a profile and responding with serialized data."""
         # Profile visit counter logic
@@ -43,7 +43,9 @@ class ProfileRetrieveMixin:
                 "request": request,
                 "label_context": "profile",
                 "premium_viewer": request.user.is_authenticated
+                and request.user.profile
                 and request.user.profile.is_premium,
+                "is_anonymous": is_anonymous,
             },
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
