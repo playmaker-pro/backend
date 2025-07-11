@@ -1,7 +1,5 @@
 import typing
 
-from django.contrib.auth import get_user_model
-from django.db.models import QuerySet
 from rest_framework import serializers
 
 from api.serializers import PhoneNumberField, ProfileEnumChoicesSerializer
@@ -14,9 +12,7 @@ from profiles.serializers_detailed.player_profile_serializers import (
     PlayerMetricsSerializer,
 )
 from users.api.serializers import BaseUserDataSerializer as _BaseUserDataSerializer
-from users.models import UserPreferences
-
-User = get_user_model()
+from users.models import User, UserPreferences
 
 
 class InquiryContactSerializer(serializers.ModelSerializer):
@@ -119,17 +115,30 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         model = _models.InquiryRequest
         fields = "__all__"
 
-    def get_recipient_object(self, obj: _models.InquiryRequest) -> dict:
-        """
-        Custom method to handle recipient object serialization.
-        Checks if the recipient is anonymous and serializes accordingly.
-        """
-        return InquiryUserDataSerializer(
-            obj.recipient,
-            context={
-                "is_anonymous": obj.anonymous_recipient,
-            },
-        ).data
+    def to_representation(self, instance: _models.InquiryRequest) -> None:
+        """Custom representation for InquiryRequest, handling recipient data."""
+        data = super().to_representation(instance)
+        if (
+            instance.anonymous_recipient
+            and instance.status != _models.InquiryRequest.STATUS_ACCEPTED
+        ):
+            recipient = data.get("recipient_object", {})
+            transfer_object = instance.recipient.profile.meta.transfer_object
+            recipient["slug"] = transfer_object.anonymous_slug
+            recipient["uuid"] = transfer_object.anonymous_uuid
+            recipient["id"] = 0
+            recipient["first_name"] = "Anonimowy"
+            recipient["last_name"] = "profil"
+            recipient["picture"] = None
+            recipient["team_history_object"] = None
+            recipient["contact"] = {
+                "email": None,
+                "phone_number": {"dial_code": None, "number": None},
+            }
+            data["recipient_object"] = recipient
+            data["recipient_profile_uuid"] = transfer_object.anonymous_uuid
+
+        return data
 
     def validate(self, attrs: dict) -> dict:
         """Validate if user can make request"""
@@ -198,33 +207,10 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         """
         recipient_profile_uuid = validated_data.pop("recipient_profile_uuid", None)
         inquiry_request = _models.InquiryRequest(**validated_data)
-        inquiry_request.anonymous_recipient = self.context.get("is_anonymous", False)
         inquiry_request.is_read_by_sender = True
         inquiry_request.is_read_by_recipient = False
         inquiry_request.save(recipient_profile_uuid=recipient_profile_uuid)
         return inquiry_request
-
-    def to_representation(self, instance):
-        """Get data, but remove contact information if request is not accepted yet"""
-        data = super().to_representation(instance)
-        if (
-            not isinstance(instance, QuerySet)
-            and data.get("status") != _models.InquiryRequest.STATUS_ACCEPTED
-        ):
-            recipient = data["recipient_object"]
-            recipient["contact"] = {}
-            if instance.anonymous_recipient:
-                transfer_obj = instance.recipient.profile.meta.transfer_object
-                if transfer_obj and transfer_obj.is_anonymous:
-                    recipient["slug"] = transfer_obj.anonymous_slug
-                    recipient["uuid"] = transfer_obj.anonymous_uuid
-                    recipient["id"] = 0
-                    recipient["first_name"] = "Anonimowy"
-                    recipient["last_name"] = "profil"
-                    recipient["picture"] = None
-                    recipient["team_history_object"] = None
-            data["recipient"] = 0
-        return data
 
 
 class InquiryPlanSerializer(serializers.ModelSerializer):

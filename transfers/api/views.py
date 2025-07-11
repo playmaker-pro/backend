@@ -82,18 +82,10 @@ class TransferStatusAPIView(EndpointView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update_profile_transfer_status(  # noqa
-        self, request: Request, profile_uuid: uuid.UUID
+        self, request: Request
     ) -> Response:
         """Update transfer status for the user."""
-
-        try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist from exc
-
-        if profile.user != request.user:
-            raise PermissionDeniedHTTPException
-
+        profile = request.user.profile
         transfer_status = profile.meta.transfer_object
 
         if not transfer_status:
@@ -113,18 +105,10 @@ class TransferStatusAPIView(EndpointView):
     def create_profile_transfer_status(
         self,
         request: Request,
-        profile_uuid: uuid.UUID,  # noqa
     ) -> Response:
         # views.py
         """Create transfer status for the profile."""
-        try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist from exc
-
-        if profile.user != request.user:
-            raise PermissionDeniedHTTPException
-
+        profile = request.user.profile
         serializer = ProfileTransferStatusSerializer(
             data=request.data, context={"profile": profile, "request": request}
         )
@@ -136,17 +120,9 @@ class TransferStatusAPIView(EndpointView):
     def delete_profile_transfer_status(
         self,
         request: Request,
-        profile_uuid: uuid.UUID,  # noqa
     ) -> Response:
         """Delete transfer status for the profile."""
-        try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist from exc
-
-        if profile.user != request.user:
-            raise PermissionDeniedHTTPException
-
+        profile = request.user.profile
         transfer_status = profile.meta.transfer_object
 
         if not transfer_status:
@@ -248,19 +224,9 @@ class TransferRequestAPIView(EndpointView):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def create_transfer_request(
-        self, request: Request, profile_uuid: uuid.UUID
-    ) -> Response:
+    def create_transfer_request(self, request: Request) -> Response:
         """Create transfer request for the profile."""
-
-        try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist() from exc
-
-        if profile.user != request.user:
-            raise PermissionDeniedHTTPException
-
+        profile = request.user.profile
         serializer = UpdateOrCreateProfileTransferSerializer(
             data=request.data, context={"profile": profile}
         )
@@ -290,18 +256,9 @@ class TransferRequestAPIView(EndpointView):
     def update_transfer_request(
         self,
         request: Request,
-        profile_uuid: uuid.UUID,  # noqa
     ) -> Response:
         """Update transfer request for the user."""
-
-        try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist() from exc
-
-        if profile.user != request.user:
-            raise PermissionDeniedHTTPException
-
+        profile = request.user.profile
         transfer_request = profile.meta.transfer_object
 
         if not transfer_request:
@@ -318,18 +275,9 @@ class TransferRequestAPIView(EndpointView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def delete_profile_transfer_request(
-        self, request: Request, profile_uuid: uuid.UUID
-    ) -> Response:
+    def delete_profile_transfer_request(self, request: Request) -> Response:
         """Delete transfer request for the profile."""
-        try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist() from exc
-
-        if profile.user != request.user:
-            raise PermissionDeniedHTTPException
-
+        profile = request.user.profile
         transfer_request = profile.meta.transfer_object
 
         if not transfer_request:

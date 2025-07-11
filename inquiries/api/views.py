@@ -1,5 +1,4 @@
 import uuid
-from multiprocessing import context
 
 from django.db.models import ObjectDoesNotExist, QuerySet
 from django_fsm import TransitionNotAllowed
@@ -52,7 +51,7 @@ class InquiresAPIView(EndpointView):
     ) -> Response:
         """Create inquiry request"""
         sender = request.user
-        is_anonymous = "is_anonymous" in request.data
+        is_anonymous = "anonymous_recipient" in request.data
         try:
             if is_anonymous:
                 recipient = ProfileService.get_anonymous_profile_by_uuid(
@@ -66,18 +65,17 @@ class InquiresAPIView(EndpointView):
         if sender == recipient:
             raise ValidationError("You can't send inquiry to yourself")
         body = {
-            **request.data,
+            "anonymous_recipient": is_anonymous,
             "sender": sender.pk,
             "recipient": recipient.pk,
             "recipient_profile_uuid": recipient_profile_uuid,
         }
-        serializer = InquiryRequestSerializer(
-            data=body, context={"is_anonymous": is_anonymous}
-        )
+
+        serializer = InquiryRequestSerializer(data=body)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_201_CREATED)
 
     def accept_inquiry_request(self, request: Request, request_id: int) -> Response:
         """Accept inquiry request by id"""

@@ -12,11 +12,17 @@ urlpatterns = [
         r"<uuid:profile_uuid>/transfer-status/",
         views.TransferStatusAPIView.as_view({
             "get": "get_profile_transfer_status",
+        }),
+        name="profile_transfer_status",
+    ),
+    path(
+        r"transfer-status/",
+        views.TransferStatusAPIView.as_view({
             "patch": "update_profile_transfer_status",
             "post": "create_profile_transfer_status",
             "delete": "delete_profile_transfer_status",
         }),
-        name="profile_transfer_status",
+        name="manage_transfer_status",
     ),
     path(
         r"list-transfer-status/",
@@ -36,11 +42,17 @@ urlpatterns = [
         r"<uuid:profile_uuid>/transfer-request/",
         views.TransferRequestAPIView.as_view({
             "get": "get_profile_transfer_request",
+        }),
+        name="profile_transfer_request",
+    ),
+    path(
+        r"transfer-request/",
+        views.TransferRequestAPIView.as_view({
             "post": "create_transfer_request",
             "patch": "update_transfer_request",
             "delete": "delete_profile_transfer_request",
         }),
-        name="profile_transfer_request",
+        name="manage_transfer_request",
     ),
     path(
         r"transfer-request/status/",
