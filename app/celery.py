@@ -2,9 +2,9 @@ import os
 
 from celery import Celery
 
-from backend.settings import cfg
+from backend.settings import app_config
 
-environment = cfg.environment
+environment = app_config.environment
 
 if not environment:
     raise ValueError("Environment not set")
@@ -12,6 +12,6 @@ if not environment:
 if not os.environ.get("DJANGO_SETTINGS_MODULE"):
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", f"backend.settings.{environment}")
 
-app = Celery("playmaker", broker=cfg.redis.url)
+app = Celery("playmaker", broker=app_config.redis.url)
 app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()

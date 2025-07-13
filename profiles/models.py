@@ -2428,10 +2428,8 @@ class ProfileMeta(models.Model, VisitationMixin):
     _slug = models.CharField(max_length=255, null=False, blank=False, unique=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name="meta_profile",
-        null=True,
-        blank=True,
     )
 
     @property
@@ -2439,7 +2437,9 @@ class ProfileMeta(models.Model, VisitationMixin):
         """
         Returns the profile object associated with this meta instance.
         """
-        return getattr(self, self._profile_class.lower())
+        return None
+
+    #     return getattr(self, self._profile_class.lower())
 
     @property
     def transfer_object(

@@ -36,13 +36,23 @@ urlpatterns = [
     ),
     path(
         "google-oauth2/",
-        views.UsersAPI.as_view({"post": "google_auth"}),
+        views.SocialAuthenticationAPI.as_view({"post": "google_auth"}),
         name="google-oauth2",
     ),
     path(
         "facebook-oauth2/",
-        views.UsersAPI.as_view({"post": "facebook_auth"}),
+        views.SocialAuthenticationAPI.as_view({"post": "facebook_auth"}),
         name="facebook-auth",
+    ),
+    path(
+        "facebook/delete/",
+        views.SocialAuthenticationAPI.as_view({"post": "data_deletion_callback"}),
+        name="facebook-delete",
+    ),
+    path(
+        "facebook/delete/confirm/",
+        views.SocialAuthenticationAPI.as_view({"post": "data_deletion_confirmation"}),
+        name="facebook-delete-confirm",
     ),
     path(
         "email-verification/",

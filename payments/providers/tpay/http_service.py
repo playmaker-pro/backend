@@ -3,7 +3,7 @@ import traceback as _traceback
 import requests as _requests
 
 from app.http.http_service import HttpService as _HttpService
-from backend.settings import cfg
+from backend.settings import app_config
 from payments.logging import logger as _logger
 from payments.models import Transaction as _Transaction
 from payments.providers import errors as _errors
@@ -17,14 +17,14 @@ class TpayHttpService(_HttpService):
 
     def __init__(self) -> None:
         super().__init__(urls=_URLs)
-        self._credentials = cfg.tpay.credentials
+        self._credentials = app_config.tpay.credentials
         self._transaction = None
         self._parser = None
 
     def handle(self, transaction: _Transaction) -> _Transaction:
         """Handle transaction, ensure an authorization and return service object"""
         self._transaction = transaction
-        self._parser = _Parser(transaction, cfg.tpay)
+        self._parser = _Parser(transaction, app_config.tpay)
 
         if not self._is_authorized:
             self._authorize()

@@ -7,7 +7,8 @@ from pydantic import BaseModel as _BaseModel
 from app.http.http_service import HttpService as _HttpService
 from app.scrapper import schemas as _schemas
 from app.scrapper.urls import ScrapperURLs as _URLs
-from backend.settings import config as _config
+
+from . import config as _config
 
 
 class ScrapperHttpService(_HttpService):

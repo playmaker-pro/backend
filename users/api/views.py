@@ -1,10 +1,13 @@
 import logging
 import traceback
 import typing
+import uuid
 
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.urls import reverse
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -108,51 +111,57 @@ class UserRegisterEndpointView(EndpointView):
         return Response(response)
 
 
-class UsersAPI(EndpointView):
-    permission_classes = (IsAuthenticated,)
-    allowed_methods = ("list", "post", "put", "update")
+class SocialAuthenticationAPI(EndpointView):
+    """
+    Handles social media authentication for users.
+    This class provides methods to authenticate users via Google and Facebook,
+    and it manages the retrieval of user information from these platforms.
+    """
 
-    def get_permissions(self) -> typing.Sequence:
-        """
-        Exclude register endpoint from permission_classes.
-        Note: You can't use 'self.action' here because it's not set
-        when calling not accepted method.
-        """
-        if (
-            "google-oauth2" in self.request.path
-            or "facebook-oauth2" in self.request.path
-        ):
-            retrieve_permission_list = [AllowAny]
-            return [permission() for permission in retrieve_permission_list]
-        else:
-            return super().get_permissions()
+    permission_classes = [AllowAny]
+    authentication_classes = []
 
-    def my_main_profile(self, request: Request) -> Response:
+    def google_auth(self, request):
         """
-        Returns user's main profile data {role, uuid} based on `declared_role`.
+        post:
+        Authenticates user with Google and gets his detailed information.
+
+        Method authenticate user with Google by token_id and returns his data.
+        If user exists in our database, then login him, otherwise register.
+        As a response returns user access and refresh tokens.
         """
-        serializer = MainProfileDataSerializer(instance=request.user)
-        return Response(serializer.data)
+        request_data: dict = request.data
 
-    @staticmethod
-    def feature_sets(request) -> Response:
-        """Returns all user feature sets."""
-        data: typing.List[Feature] = user_service.get_user_features(request.user)
-        serializer = FeaturesSerializer(instance=data, many=True)
-        if not data:
-            return Response(status=status.HTTP_204_NO_CONTENT, data=serializer.data)
-        return Response(serializer.data)
+        token_id: str = request_data.get("token_id")
+        if not token_id:
+            raise NoSocialTokenSent()
+        google_manager: GoogleManager = GoogleManager(token_id)
 
-    @staticmethod
-    def feature_elements(request) -> Response:
-        """Returns all user feature elements."""
-        data: typing.List[FeatureElement] = user_service.get_user_feature_elements(
-            request.user
-        )
-        serializer = FeatureElementSerializer(instance=data, many=True)
-        if not data:
-            return Response(status=status.HTTP_204_NO_CONTENT, data=serializer.data)
-        return Response(serializer.data)
+        try:
+            response = self._social_media_auth(google_manager, "Google")
+        except UserEmailNotValidException:
+            raise NoUserCredentialFetchedException(details="User email not valid")
+        except SocialAccountInstanceNotCreatedException:
+            raise NoUserCredentialFetchedException(
+                details="No user data fetched from Google or data is not valid. Please try again."  # noqa
+            )
+
+        return Response(response, status=status.HTTP_200_OK)
+
+    def facebook_auth(self, request):
+        token_id = request.data.get("token_id")
+        if not token_id:
+            raise NoSocialTokenSent()
+        facebook_manager: FacebookManager = FacebookManager(token_id)
+
+        try:
+            response = self._social_media_auth(facebook_manager, "Facebook")
+        except UserEmailNotValidException:
+            raise NoUserCredentialFetchedException(details="User email not valid")
+        except SocialAccountInstanceNotCreatedException:
+            raise NoUserCredentialFetchedException(details="User instance not created")
+
+        return Response(response)
 
     @staticmethod
     def _social_media_auth(
@@ -212,7 +221,7 @@ class UsersAPI(EndpointView):
         if not instance:
             raise SocialAccountInstanceNotCreatedException()
 
-        response = {
+        return {
             "id": user.pk,
             "success": True,
             "redirect": redirect_path,
@@ -220,49 +229,73 @@ class UsersAPI(EndpointView):
             "first_name": user.first_name,
             "last_name": user.last_name,
         }
-        return response
 
-    def google_auth(self, request):
+    def data_deletion_callback(self, request: Request) -> Response:
         """
-        post:
-        Authenticates user with Google and gets his detailed information.
-
-        Method authenticate user with Google by token_id and returns his data.
-        If user exists in our database, then login him, otherwise register.
-        As a response returns user access and refresh tokens.
+        Handles the data deletion callback from the user.
+        This method is called when a user requests to delete their data.
         """
-        request_data: dict = request.data
-
-        token_id: str = request_data.get("token_id")
-        if not token_id:
-            raise NoSocialTokenSent()
-        google_manager: GoogleManager = GoogleManager(token_id)
+        signed_request = request.POST.get("signed_request")
+        if not signed_request:
+            return ValidationError("Missing signed_request")
 
         try:
-            response = self._social_media_auth(google_manager, "Google")
-        except UserEmailNotValidException:
-            raise NoUserCredentialFetchedException(details="User email not valid")
-        except SocialAccountInstanceNotCreatedException:
-            raise NoUserCredentialFetchedException(
-                details="No user data fetched from Google or data is not valid. Please try again."  # noqa
-            )
+            user_id = FacebookManager.verify_signed_request(signed_request)
 
-        return Response(response, status=status.HTTP_200_OK)
+        except ValueError as e:
+            raise ValidationError from e
 
-    def facebook_auth(self, request):
-        token_id = request.data.get("token_id")
-        if not token_id:
-            raise NoSocialTokenSent()
-        facebook_manager: FacebookManager = FacebookManager(token_id)
+        User.objects.get(pk=user_id).delete()
+        confirmation_code = str(uuid.uuid4())
+        status_url = reverse()
 
-        try:
-            response = self._social_media_auth(facebook_manager, "Facebook")
-        except UserEmailNotValidException:
-            raise NoUserCredentialFetchedException(details="User email not valid")
-        except SocialAccountInstanceNotCreatedException:
-            raise NoUserCredentialFetchedException(details="User instance not created")
+        return Response({
+            "url": status_url,
+            "confirmation_code": confirmation_code,
+        })
 
-        return Response(response)
+    def data_deletion_confirmation(self, request: Request):
+        confirmation_code = request.GET.get("code")
+
+        if not confirmation_code:
+            return ValidationError("Missing confirmation code.")
+
+        return Response(
+            f"Dane dla kodu {confirmation_code} zostały usunięte.",
+            status=status.HTTP_200_OK,
+        )
+
+
+class UsersAPI(EndpointView):
+    permission_classes = (IsAuthenticated,)
+    allowed_methods = ("list", "post", "put", "update")
+
+    def my_main_profile(self, request: Request) -> Response:
+        """
+        Returns user's main profile data {role, uuid} based on `declared_role`.
+        """
+        serializer = MainProfileDataSerializer(instance=request.user)
+        return Response(serializer.data)
+
+    @staticmethod
+    def feature_sets(request) -> Response:
+        """Returns all user feature sets."""
+        data: typing.List[Feature] = user_service.get_user_features(request.user)
+        serializer = FeaturesSerializer(instance=data, many=True)
+        if not data:
+            return Response(status=status.HTTP_204_NO_CONTENT, data=serializer.data)
+        return Response(serializer.data)
+
+    @staticmethod
+    def feature_elements(request) -> Response:
+        """Returns all user feature elements."""
+        data: typing.List[FeatureElement] = user_service.get_user_feature_elements(
+            request.user
+        )
+        serializer = FeatureElementSerializer(instance=data, many=True)
+        if not data:
+            return Response(status=status.HTTP_204_NO_CONTENT, data=serializer.data)
+        return Response(serializer.data)
 
 
 class UserManagementAPI(EndpointView):

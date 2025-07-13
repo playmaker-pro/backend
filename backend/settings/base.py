@@ -8,9 +8,9 @@ from django.utils.translation import gettext_lazy as _
 from sentry_sdk import set_level
 from sentry_sdk.integrations.django import DjangoIntegration
 
-from . import cfg
+from backend.settings import app_config
 
-CONFIGURATION = cfg.environment
+CONFIGURATION = app_config.environment
 
 # This flag allow us to see debug panel on each page.
 DEBUG_PANEL = False
@@ -161,11 +161,11 @@ WSGI_APPLICATION = "backend.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": cfg.postgres.db,
-        "USER": cfg.postgres.user,
-        "PASSWORD": cfg.postgres.password,
-        "HOST": cfg.postgres.host,
-        "PORT": cfg.postgres.port,
+        "NAME": app_config.postgres.db,
+        "USER": app_config.postgres.user,
+        "PASSWORD": app_config.postgres.password,
+        "HOST": app_config.postgres.host,
+        "PORT": app_config.postgres.port,
     },
 }
 
@@ -262,7 +262,7 @@ WAGTAIL_USER_EDIT_FORM = "users.forms.CustomUserEditForm"
 WAGTAIL_USER_CREATION_FORM = "users.forms.CustomUserCreationForm"
 WAGTAIL_USER_CUSTOM_FIELDS = []  # ['country',]
 
-CORS_ORIGIN_ALLOW_ALL = True  # to be replaces  with CORS_ORIGIN_WHITELIST
+# CORS_ORIGIN_ALLOW_ALL = True  # to be replaces  with CORS_ORIGIN_WHITELIST
 
 # easy-thumbnail
 THUMBNAIL_EXTENSION = "png"  # Or any extn for your thumbnails
@@ -689,7 +689,7 @@ SWAGGER_PATH = os.path.join(BASE_DIR, "api", "swagger.yml")
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": cfg.redis.url,
+        "LOCATION": app_config.redis.url,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },

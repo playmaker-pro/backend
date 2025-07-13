@@ -1,10 +1,10 @@
 from urllib.parse import urljoin as _urljoin
 
-from backend.settings import cfg
+from backend.settings import app_config
 
 
 class TpayURLs:
-    _BASE_URL = cfg.tpay.base_url
+    _BASE_URL = app_config.tpay.base_url
 
     TRANSACTION_URL = "/transactions"
     AUTH_URL = "/oauth/auth"

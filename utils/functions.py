@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.html import format_html
 
-from backend.settings import cfg
+from backend.settings import app_config
 from backend.settings.config import Environment
 
 
@@ -145,7 +145,7 @@ def generate_fe_url_path(path: str) -> str:
     """
     Generates a full URL by concatenating the front-end base URL with a given path.
     """
-    return cfg.webapp.parse_url(path)
+    return app_config.webapp.parse_url(path)
 
 
 def generate_uuid():

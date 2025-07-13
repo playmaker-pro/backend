@@ -1,3 +1,6 @@
-from .config import Config
+# ruff: noqa: F401
+from .config import app_config  # noqa: F401
 
-cfg = Config()  # noqa
+__all__ = [
+    "app_config",
+]

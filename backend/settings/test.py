@@ -1,6 +1,7 @@
 import tempfile
 
-from .config import Environment
+from backend.settings.config import Environment
+
 from .development import *  # type: ignore
 
 MEDIA_ROOT = tempfile.mkdtemp()

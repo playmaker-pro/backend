@@ -1,13 +1,13 @@
 import json as _json
 
-from backend.settings import cfg
+from backend.settings import app_config
 from payments.models import Transaction as _Transaction
 from payments.providers.tpay import schemas as _schemas
 from premium.models import Product
 
 
 class TpayTransactionParser:
-    def __init__(self, transaction: _Transaction, config: cfg.tpay) -> None:
+    def __init__(self, transaction: _Transaction, config: app_config.tpay) -> None:
         self._transaction = transaction
         self._config = config
 

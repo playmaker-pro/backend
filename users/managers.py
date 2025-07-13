@@ -1,3 +1,7 @@
+import base64
+import hashlib
+import hmac
+import json
 import logging
 import traceback
 from datetime import datetime as dt
@@ -16,7 +20,7 @@ from django.utils.translation import gettext_lazy as _
 from pydantic import ValidationError
 from requests import Response
 
-from backend.settings import cfg
+from backend.settings import app_config
 from users.schemas import (
     GoogleSdkLoginCredentials,
     SocialAppPydantic,
@@ -238,6 +242,33 @@ class FacebookManager(SocialAuthMixin):
             logger.error(str(traceback.format_exc()) + f"\n{e}")
             raise ValueError(e)
 
+    @classmethod
+    def verify_signed_request(cls, signed_request: str) -> int:
+        def base64_url_decode(input_str):
+            padding = "=" * (-len(input_str) % 4)
+            return base64.urlsafe_b64decode(input_str + padding)
+
+        encoded_sig, payload = signed_request.split(".", 1)
+
+        encoded_sig, payload = signed_request.split(".", 1)
+        sig = base64_url_decode(encoded_sig)
+        data = json.loads(base64_url_decode(payload))
+
+        expected_sig = hmac.new(
+            app_config.social.facebook.app_secret.encode(),
+            msg=payload.encode(),
+            digestmod=hashlib.sha256,
+        ).digest()
+
+        if sig != expected_sig:
+            return ValueError("Invalid signature")
+
+        user_id = data.get("user_id")
+        if not user_id:
+            return ValueError("Missing user_id in payload")
+
+        return user_id
+
 
 class UserTokenManager:
     """
@@ -267,7 +298,7 @@ class UserTokenManager:
         token: str = default_token_generator.make_token(user)
 
         # The frontend base URL and the new password reset path
-        base_url = cfg.webapp.url
+        base_url = app_config.webapp.url
         password_reset_path = "nowe-haslo"
 
         # Construct the full URL with query parameters
@@ -290,7 +321,7 @@ class UserTokenManager:
         token = default_token_generator.make_token(user)
 
         # The frontend base URL and the new password reset path
-        base_url = cfg.webapp.url
+        base_url = app_config.webapp.url
         email_verify_path = "zweryfikuj-email"
 
         # Construct verification URL

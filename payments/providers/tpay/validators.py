@@ -2,7 +2,7 @@ import hashlib as _hashlib
 import typing as _typing
 from uuid import UUID as _UUID
 
-from backend.settings import cfg
+from backend.settings import app_config
 from payments.models import Transaction as _Transaction
 from payments.providers.tpay import schemas as _schemas
 from payments.services import TransactionService as _TransactionService
@@ -31,9 +31,9 @@ class TpayResponseValidator:
 
     def _validate_md5_checksum(self) -> None:
         """Validate md5 checksum of tpay response"""
-        to_hash = self._schema.prepare_to_hash(secret=cfg.tpay.security_code).encode(
-            "utf-8"
-        )
+        to_hash = self._schema.prepare_to_hash(
+            secret=app_config.tpay.security_code
+        ).encode("utf-8")
 
         md5_hash = _hashlib.md5()
         md5_hash.update(to_hash)
@@ -59,7 +59,7 @@ class TpayResponseValidator:
             self._errors.append(_schemas.DataAssertingErrors.DESCRIPTION.parse_full)
 
     def _check_test_mode(self):
-        if self._schema.test_mode.is_test and not cfg.tpay.test_mode:
+        if self._schema.test_mode.is_test and not app_config.tpay.test_mode:
             self._errors.append(
                 _schemas.TpayValidationErrors.TEST_MODE_NOT_ALLOWED.value
             )

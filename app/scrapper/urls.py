@@ -1,13 +1,13 @@
 from typing import Callable as _Callable
 
 from app.http.urls import URLs
-from backend.settings import cfg
+from backend.settings import app_config
 
 
 class ScrapperURLs(URLs):
     """Urls for scrapper service"""
 
-    _BASE_URL = cfg.scrapper.scrapper_api_url
+    _BASE_URL = app_config.scrapper.scrapper_api_url
     CLUBS_URL: str = "clubs/all/"
     LEAGUES_URL: str = "leagues/all/"
     TEAM_PLAYS: str = "teams/{team_id}/plays/"
