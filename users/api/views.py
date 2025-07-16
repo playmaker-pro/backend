@@ -241,7 +241,6 @@ class SocialAuthenticationAPI(EndpointView):
 
         try:
             user_id = FacebookManager.verify_signed_request(signed_request)
-
         except ValueError as e:
             raise ValidationError from e
 

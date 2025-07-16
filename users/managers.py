@@ -249,11 +249,8 @@ class FacebookManager(SocialAuthMixin):
             return base64.urlsafe_b64decode(input_str + padding)
 
         encoded_sig, payload = signed_request.split(".", 1)
-
-        encoded_sig, payload = signed_request.split(".", 1)
         sig = base64_url_decode(encoded_sig)
         data = json.loads(base64_url_decode(payload))
-
         expected_sig = hmac.new(
             app_config.social.facebook.app_secret.encode(),
             msg=payload.encode(),
@@ -261,11 +258,11 @@ class FacebookManager(SocialAuthMixin):
         ).digest()
 
         if sig != expected_sig:
-            return ValueError("Invalid signature")
+            raise ValueError("Invalid signature")
 
         user_id = data.get("user_id")
         if not user_id:
-            return ValueError("Missing user_id in payload")
+            raise ValueError("Missing user_id in payload")
 
         return user_id
 
