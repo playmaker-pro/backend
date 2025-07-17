@@ -50,7 +50,6 @@ class UserInquiryLog(models.Model):
         return (
             f"{self.log_owner.user} -- "
             f"{self.created_at_readable} -- "
-            f"{self.log_message_body}"
         )
 
     @property

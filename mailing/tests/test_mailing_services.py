@@ -268,7 +268,7 @@ class TestTransactionalEmailService:
     @pytest.fixture
     def test_user(self):
         user, _ = User.objects.get_or_create(
-            email="test_user@example.com", username="test_user"
+            email="test_user@example.com"
         )
         return user
 
