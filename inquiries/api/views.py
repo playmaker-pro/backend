@@ -51,23 +51,31 @@ class InquiresAPIView(EndpointView):
     ) -> Response:
         """Create inquiry request"""
         sender = request.user
+        is_anonymous = "anonymous_recipient" in request.data
         try:
-            recipient = ProfileService.get_user_by_uuid(recipient_profile_uuid)
+            if is_anonymous:
+                recipient = ProfileService.get_anonymous_profile_by_uuid(
+                    recipient_profile_uuid
+                )
+            else:
+                recipient = ProfileService.get_user_by_uuid(recipient_profile_uuid)
+
         except ObjectDoesNotExist:
             raise NotFound("Recipient does not exist")
         if sender == recipient:
             raise ValidationError("You can't send inquiry to yourself")
         body = {
-            **request.data,
+            "anonymous_recipient": is_anonymous,
             "sender": sender.pk,
             "recipient": recipient.pk,
             "recipient_profile_uuid": recipient_profile_uuid,
         }
+
         serializer = InquiryRequestSerializer(data=body)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_201_CREATED)
 
     def accept_inquiry_request(self, request: Request, request_id: int) -> Response:
         """Accept inquiry request by id"""

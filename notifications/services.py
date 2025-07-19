@@ -5,6 +5,7 @@ Service for sending notifications to users.
 from notifications.tasks import create_notification
 from notifications.templates import NotificationBody, NotificationTemplate
 from profiles.models import PROFILE_MODELS, ProfileMeta
+from users.models import User
 
 GENDER_BASED_ROLES = {
     "P": ("Piłkarz", "Piłkarka"),
@@ -56,16 +57,21 @@ class NotificationService:
         Parse body of the notification.
         """
         if profile := kwargs.pop("profile", None):
-            try:
-                role_short = profile.user.declared_role
-                gender_index = int(profile.user.userpreferences.gender == "K")
-                subject = GENDER_BASED_ROLES[role_short][gender_index]
-                kwargs["profile"] = f"{subject} {profile.user.get_full_name()}"
-            except (KeyError, IndexError):
-                kwargs["profile"] = profile.user.get_full_name()
+            hide_profile = kwargs.pop("hide_profile", False)
+            full_name = profile.user.get_full_name()
 
-            kwargs["picture"] = profile.user.picture.name
-            kwargs["picture_profile_role"] = role_short
+            try:
+                if hide_profile:
+                    kwargs["profile"] = "Anonimowy profil"
+                else:
+                    role_short = profile.user.declared_role
+                    gender_index = int(profile.user.userpreferences.gender == "K")
+                    subject = GENDER_BASED_ROLES[role_short][gender_index]
+                    kwargs["profile"] = f"{subject} {full_name}"
+                    kwargs["picture"] = profile.user.picture.name
+                    kwargs["picture_profile_role"] = role_short
+            except (KeyError, IndexError):
+                kwargs["profile"] = full_name
 
         return NotificationBody(**template.value, kwargs=kwargs)
 
@@ -128,9 +134,10 @@ class NotificationService:
         """
         Send notifications for hidden profiles.
         """
-        for meta in cls.get_queryset():
-            if meta.user.display_status == "Niewyświetlany":
-                cls(meta).notify_profile_hidden()
+        for meta in cls.get_queryset().filter(
+            user__display_status=User.DisplayStatus.NOT_SHOWN
+        ):
+            cls(meta).notify_profile_hidden()
 
     def notify_profile_hidden(self) -> None:
         """
@@ -214,23 +221,29 @@ class NotificationService:
         )
         self.create_notification(body)
 
-    def notify_inquiry_rejected(self, who: PROFILE_MODELS) -> None:
+    def notify_inquiry_rejected(
+        self, who: PROFILE_MODELS, hide_profile: bool = False
+    ) -> None:
         """
         Send notifications for rejected inquiries.
         """
         body = self.parse_body(
             NotificationTemplate.INQUIRY_REJECTED,
             profile=who,
+            hide_profile=hide_profile,
         )
         self.create_notification(body)
 
-    def notify_inquiry_read(self, who: PROFILE_MODELS) -> None:
+    def notify_inquiry_read(
+        self, who: PROFILE_MODELS, hide_profile: bool = False
+    ) -> None:
         """
         Send notifications for read inquiries.
         """
         body = self.parse_body(
             NotificationTemplate.INQUIRY_READ,
             profile=who,
+            hide_profile=hide_profile,
         )
         self.create_notification(body)
 
@@ -251,7 +264,7 @@ class NotificationService:
         for meta in cls.get_queryset().filter(
             _profile_class__in=["coachprofile", "clubprofile", "managerprofile"]
         ):
-            if meta.profile.transfer_requests.count() == 0:
+            if not hasattr(meta, "transfer_request"):
                 cls(meta).notify_set_transfer_requests()
 
     def notify_set_transfer_requests(self) -> None:
@@ -269,7 +282,7 @@ class NotificationService:
         Send notifications for setting status.
         """
         for meta in cls.get_queryset().filter(_profile_class="playerprofile"):
-            if meta.profile.transfer_status_related.count() == 0:
+            if not hasattr(meta, "transfer_status"):
                 cls(meta).notify_set_status()
 
     def notify_set_status(self) -> None:

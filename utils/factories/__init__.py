@@ -9,6 +9,8 @@ from .payment_factories import *
 from .premium_factories import *
 from .profiles_factories import *
 from .user_factories import *
+from .transfers_factories import *
+
 
 NAME_TO_FACTORY_MAPPER = {
     "User": UserFactory,

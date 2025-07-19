@@ -206,6 +206,16 @@ paths:
             type: string
             format: uuid
           required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                anonymous_recipient:
+                  type: boolean
+                  default: false
+                  description: Is recipient anonymous?
       tags:
         - inquiries
       security:
@@ -1054,7 +1064,7 @@ paths:
                   }
                 ]
 
-  /profiles/catalogue/transfer-request/:
+  /transfers/catalogue/transfer-request/:
     get:
       operationId: transfer_request_catalogue
       description: Return paginated list of transfer requests.
@@ -3044,7 +3054,7 @@ paths:
         '400':
           description: 'Invalid search term provided'
 
-  /profiles/list-transfer-status/:
+  /transfers/list-transfer-status/:
     get:
       operationId: transfer_status_listing
       description: "Returns list of transfer statuses."
@@ -3088,7 +3098,7 @@ paths:
                     }
                   ]
 
-  /profiles/transfer-status/additional-info/:
+  /transfers/transfer-status/additional-info/:
     get:
       operationId: transfer_status_additional_info_listing
       description: "Returns list of transfer status additional information."
@@ -3140,7 +3150,7 @@ paths:
                     }
                   ]
 
-  /profiles/{profile_uuid}/transfer-status/:
+  /transfers/{profile_uuid}/transfer-status/:
     get:
       operationId: profile_transfer_status
       description: "Returns profile transfer status object"
@@ -3175,16 +3185,10 @@ paths:
                   detail:
                     type: string
                     description: "Failure detail message"
+  /transfers/transfer-status/:
     patch:
       operationId: update_profile_transfer_status
       description: "Updates profile transfer status"
-      parameters:
-        - in: path
-          name: profile_uuid
-          schema:
-            type: string
-            format: uuid
-          required: true
       tags:
         - transfer status
       security:
@@ -3209,23 +3213,23 @@ paths:
                       description: "Profile phone number"
                 status:
                   type: integer
-                  description: "Id of transfer status object. Check avaiable objects at /profiles/list-transfer-status/"
+                  description: "Id of transfer status object. Check avaiable objects at /transfers/list-transfer-status/"
                 additional_info:
                   type: array
                   items:
                     type: integer
-                    description: "Id of an object from: /profiles/transfer-status/additional-info/"
+                    description: "Id of an object from: /transfers/transfer-status/additional-info/"
                 benefits:
                   type: array
                   items:
                     type: integer
-                    description: "Id of an object from: /profiles/transfer-request/benefits"
+                    description: "Id of an object from: /transfers/transfer-request/benefits"
                 salary:
                   type: integer
-                  description: "Id of an object from: /profiles/transfer-request/salary"
+                  description: "Id of an object from: /transfers/transfer-request/salary"
                 number_of_trainings:
                   type: integer
-                  description: "Id of an object from: /profiles/transfer-request/number-of-trainings/"
+                  description: "Id of an object from: /transfers/transfer-request/number-of-trainings/"
                 league:
                   type: array
                   items:
@@ -3282,13 +3286,6 @@ paths:
         - jwtAuth: [ ]
       tags:
         - transfer status
-      parameters:
-        - in: path
-          name: profile_uuid
-          schema:
-            type: string
-            format: uuid
-          required: true
       requestBody:
         required: true
         content:
@@ -3310,23 +3307,23 @@ paths:
                       description: "Profile phone number"
                 status:
                   type: integer
-                  description: "Id of transfer status object. Check avaiable objects at /profiles/list-transfer-status/"
+                  description: "Id of transfer status object. Check avaiable objects at /transfers/list-transfer-status/"
                 additional_info:
                   type: array
                   items:
                     type: integer
-                    description: "Id of an object from: /profiles/transfer-status/additional-info/"
+                    description: "Id of an object from: /transfers/transfer-status/additional-info/"
                 benefits:
                   type: array
                   items:
                     type: integer
-                    description: "Id of an object from: /profiles/transfer-requests/benefits/"
+                    description: "Id of an object from: /transfers/transfer-requests/benefits/"
                 salary:
                   type: integer
-                  description: "Id of transfer status object. Check avaiable objects at /profiles/transfer-request/salary/"
+                  description: "Id of transfer status object. Check avaiable objects at /transfers/transfer-request/salary/"
                 number_of_trainings:
                   type: integer
-                  description: "Id of transfer status object. Check avaiable objects at /profiles/transfer-request/number-of-trainings/"
+                  description: "Id of transfer status object. Check avaiable objects at /transfers/transfer-request/number-of-trainings/"
                 league:
                   type: array
                   items:
@@ -3357,13 +3354,6 @@ paths:
     delete:
       operationId: delete_profile_transfer_status
       description: "Deletes profile transfer status"
-      parameters:
-        - in: path
-          name: profile_uuid
-          schema:
-            type: string
-            format: uuid
-          required: true
       tags:
         - transfer status
       security:
@@ -3398,7 +3388,7 @@ paths:
                     type: string
                     description: "Failure detail message"
 
-  /profiles/transfer-request/status:
+  /transfers/transfer-request/status/:
     get:
       operationId: profile_transfer_request_status_listing
       description: "Returns profile transfer request status objects"
@@ -3439,7 +3429,7 @@ paths:
                   }
                 ]
 
-  /profiles/transfer-request/position:
+  /transfers/transfer-request/position/:
     get:
       operationId: profile_transfer_request_position_listing
       description: "Returns profile transfer request position objects"
@@ -3512,7 +3502,7 @@ paths:
                   }
                 ]
 
-  /profiles/transfer-request/number-of-trainings:
+  /transfers/transfer-request/number-of-trainings/:
     get:
       operationId: profile_transfer_request_number-of-trainings_listing
       description: "Returns profile transfer request number of trainings objects"
@@ -3553,7 +3543,7 @@ paths:
                   }
                 ]
 
-  /profiles/transfer-request/benefits:
+  /transfers/transfer-request/benefits/:
     get:
       operationId: profile_transfer_request_additional-info_listing
       description: "Returns profile transfer request benefit objects"
@@ -3618,7 +3608,7 @@ paths:
                   }
                 ]
 
-  /profiles/transfer-request/salary:
+  /transfers/transfer-request/salary/:
     get:
       operationId: profile_transfer_request_salary_listing
       description: "Returns profile transfer request salary objects"
@@ -3667,7 +3657,7 @@ paths:
                   }
                 ]
 
-  /profiles/{profile_uuid}/transfer-request/teams:
+  /transfers/{profile_uuid}/transfer-request/teams:
     get:
       operationId: profile_actual_teams
       description: "Returns profile actual teams objects"
@@ -3710,7 +3700,7 @@ paths:
                 ]
 
 
-  /profiles/{profile_uuid}/transfer-request/:
+  /transfers/{profile_uuid}/transfer-request/:
     get:
       operationId: profile_transfer_request
       description: "Returns profile transfer request object"
@@ -3745,16 +3735,10 @@ paths:
                   detail:
                     type: string
                     description: "Failure detail message"
+  /transfers/transfer-request/:
     patch:
       operationId: update_profile_transfer_request
       description: "Updates profile transfer request"
-      parameters:
-        - in: path
-          name: profile_uuid
-          schema:
-            type: string
-            format: uuid
-          required: true
       tags:
         - transfer requests
       security:
@@ -3804,13 +3788,6 @@ paths:
         - jwtAuth: [ ]
       tags:
         - transfer requests
-      parameters:
-        - in: path
-          name: profile_uuid
-          schema:
-            type: string
-            format: uuid
-          required: true
       requestBody:
         required: true
         content:
@@ -3841,13 +3818,6 @@ paths:
     delete:
       operationId: delete_profile_transfer_request
       description: "Deletes profile transfer request"
-      parameters:
-        - in: path
-          name: profile_uuid
-          schema:
-            type: string
-            format: uuid
-          required: true
       tags:
         - transfer requests
       security:
@@ -4338,7 +4308,6 @@ paths:
                     email: example_email@playmaker.com
                     first_name: first_name
                     last_name: last_name
-                    username: username
                   summary: example1
           description: ''
         '400':
@@ -4804,15 +4773,8 @@ components:
         id:
           type: integer
           readOnly: true
-        username:
-          type: string
-          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
-            only.
-          pattern: ^[\w.@+-]+$
-          maxLength: 150
       required:
         - id
-        - username
     UserRegisterResponse:
       type: object
       description: Serializer for user registration response.
@@ -4831,16 +4793,9 @@ components:
         last_name:
           type: string
           maxLength: 150
-        username:
-          type: string
-          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
-            only.
-          pattern: ^[\w.@+-]+$
-          maxLength: 150
       required:
         - email
         - id
-        - username
         - last_name
         - first_name
 
@@ -6332,7 +6287,6 @@ components:
             "verification_id": null,
             "user_id": 1,
             "history_id": 1,
-            "data_mapper_id": null,
             "slug": "guest",
             "bio": null,
             "event_log": null,
@@ -6985,6 +6939,9 @@ components:
               type: integer
             number:
               type: string
+        is_anonymous:
+          type: boolean
+          description: "If true, the transfer request will be anonymous and not linked to a specific team contributor."
       required: [ "requesting_team", "status", "player_position" ]
 
     TransferRequestGetTeamContributor:

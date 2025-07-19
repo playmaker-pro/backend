@@ -16,8 +16,8 @@ User = get_user_model()
 
 @receiver(pre_save, sender=User)
 def pre_save_user(sender, instance, **kwargs):
-    # This is mechanism to overwrite username for each account. s
-    instance.username = instance.email
+    if instance.first_name == instance.last_name:
+        instance.display_status = User.DisplayStatus.NOT_SHOWN
 
 
 @receiver(post_save, sender=User)

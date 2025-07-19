@@ -70,9 +70,7 @@ class TestInquiriesAPI(APITestCase):
 
         assert send_response.status_code == 201
 
-        obj: InquiryRequest = InquiryRequest.objects.get(
-            pk=send_response.data.get("id")
-        )
+        obj: InquiryRequest = self.recipient_obj.inquiry_request_recipient.first()
         assert obj.status == InquiryRequest.STATUS_SENT
         assert obj.sender == self.sender_obj
         assert obj.recipient == self.recipient_obj
@@ -146,9 +144,8 @@ class TestInquiriesAPI(APITestCase):
         assert sender_metadata_response.status_code == 200
         assert sender_metadata_response.data.get("counter") == 1
 
-        obj: InquiryRequest = InquiryRequest.objects.get(
-            pk=send_response.data.get("id")
-        )
+        obj: InquiryRequest = self.recipient_obj.inquiry_request_recipient.first()
+
         assert obj.status == InquiryRequest.STATUS_SENT
         assert obj.sender == self.sender_obj
         assert obj.recipient == self.recipient_obj
@@ -266,8 +263,7 @@ class TestInquiriesAPI(APITestCase):
         )
         assert send_response.status_code == 201
 
-        obj_id = send_response.data["id"]
-        obj = InquiryRequest.objects.get(pk=obj_id)
+        obj = self.recipient_obj.inquiry_request_recipient.first()
 
         assert obj.status == InquiryRequest.STATUS_SENT
 
@@ -296,8 +292,7 @@ class TestInquiriesAPI(APITestCase):
         )
         assert send_response.status_code == 201
 
-        inquiry_id = send_response.data["id"]
-        inquiry = InquiryRequest.objects.get(pk=inquiry_id)
+        inquiry: InquiryRequest = self.recipient_obj.inquiry_request_recipient.first()
 
         # Initially, the inquiry should be unread by the recipient and read by the
         # sender (since sending doesn't count as unread)
@@ -317,7 +312,7 @@ class TestInquiriesAPI(APITestCase):
 
         # Recipient accepts the inquiry, marking it as unread for the sender
         accept_response = self.client.post(
-            URL_ACCEPT(inquiry_id), **self.recipient_headers
+            URL_ACCEPT(inquiry.pk), **self.recipient_headers
         )
         assert accept_response.status_code == 200
 

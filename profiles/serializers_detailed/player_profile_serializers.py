@@ -85,7 +85,6 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
             "verification_stage",
             "team_history_object",
             "visits",
-            "data_fulfill_status",
             "is_promoted",
             "is_premium",
             "promotion",
@@ -109,6 +108,33 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
         """
         licenses = CoachLicenceSerializer(many=True, required=False, data=obj)
         return licenses.data if licenses.is_valid() else None
+
+    def to_representation(self, instance):
+        """Factory method to return appropriate serializer"""
+        data = super().to_representation(instance)
+        if (
+            self.context.get("transfer_status")
+            and instance.meta
+            and instance.meta.transfer_object
+            and instance.meta.transfer_status.is_anonymous
+        ) or self.context.get("is_anonymous", False):
+            uuid = instance.meta.transfer_status.anonymous_uuid
+            data["slug"] = f"anonymous-{uuid}"
+            data["uuid"] = uuid
+            data["user"]["id"] = 0
+            data["user"]["first_name"] = "Anonimowy"
+            data["user"]["last_name"] = "profil"
+            data["user"]["picture"] = None
+            data["external_links"]["links"] = []
+            data["profile_video"] = []
+            data["transfer_status"]["contact_email"] = None
+            data["transfer_status"]["phone_number"] = {
+                "dial_code": None,
+                "number": None,
+            }
+            data["team_history_object"] = None
+
+        return data
 
 
 class PlayerProfileUpdateSerializer(PlayerProfileViewSerializer):

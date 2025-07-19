@@ -72,13 +72,6 @@ CLUB_ROLES = (
 )
 
 
-DATA_FULFILL_STATUS = (
-    (1, "Uzupełnione"),
-    (2, "Częściowo uzupełnione"),
-    (3, "Nie uzupełnione"),
-)
-
-
 class RoleShortcut(str, Enum):
     PLAYER: str = PLAYER_SHORT
     COACH: str = COACH_SHORT
@@ -288,13 +281,13 @@ TRANSFER_REQUEST_STATUS_CHOICES = (
 class PmScoreState:
     """Enum for PlayMaker Score state."""
 
-    NOT_CALCULATED: str = 'Not Calculated'
-    IN_PROGRESS: str = 'In Progress'
-    CALCULATED: str = 'Calculated'
+    NOT_CALCULATED: str = "Not Calculated"
+    IN_PROGRESS: str = "In Progress"
+    CALCULATED: str = "Calculated"
 
 
 PM_SCORE_STATE_CHOICES = (
-    ('not_calculated', PmScoreState.NOT_CALCULATED),
-    ('in_progress', PmScoreState.IN_PROGRESS),
-    ('calculated', PmScoreState.CALCULATED),
+    ("not_calculated", PmScoreState.NOT_CALCULATED),
+    ("in_progress", PmScoreState.IN_PROGRESS),
+    ("calculated", PmScoreState.CALCULATED),
 )

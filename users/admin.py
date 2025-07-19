@@ -1,8 +1,10 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.admin import ChoicesFieldListFilter, SimpleListFilter
 from django.contrib.auth.admin import UserAdmin  # as BaseUserAdmin
 from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import Case, F, Q, QuerySet, When
+from django.forms import TypedMultipleChoiceField
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -10,7 +12,6 @@ from django.utils.translation import gettext_lazy as _
 from utils import linkify
 
 from . import models
-from .forms import UserPreferencesForm
 
 
 def verify_one(modeladmin, request, queryset):
@@ -67,22 +68,10 @@ class VerificationFilter(ChoicesFieldListFilter):
             ),
         )
 
-        # if self.value() in ['9', '10', '11', '12']:
-        #     query = Q(declared_role__in=['C'])
-        #     # queryset = queryset.filter(declared_role__in=['T', 'P'])
-        # else:
-        #     # queryset = queryset.filter(declared_role__in=['C'])
-        #     query = Q(declared_role__in=['T', 'P'])
-
         if self.value() in ["1", "3", "6", "8"]:
             query = Q(mapper_id__isnull=False)
         else:
             query = Q(mapper_id__isnull=False)
-            # queryset = queryset.filter(data_mapper_id__isnull=False)
-
-        # if self.value() in ['3', '4', '5', '6', '7', '8', '10', '11', '12']:
-        #     query &= Q(team_club_league_voivodeship_ver__isnull=False)
-        # queryset = queryset.filter(team_club_league_voivodeship_ver__isnull=False)
 
         return queryset.filter(query)
 
@@ -221,7 +210,6 @@ class UserAdminPanel(UserAdmin):
             {
                 "classes": ("wide",),
                 "fields": (
-                    "username",
                     "password1",
                     "password2",
                     "userpreferences",
@@ -249,9 +237,14 @@ class UserAdminPanel(UserAdmin):
         "last_activity",
     )
     list_filter = ("state", "declared_role", HasDataMapperIdFilter)
-    search_fields = ("username", "first_name", "last_name", "declared_role")
+    search_fields = ("first_name", "last_name", "declared_role")
     readonly_fields = ("userpreferences", "profile")
     actions = [verify_one]
+    ordering = ("-date_joined",)
+
+    def has_delete_permission(self, request, obj=None):
+        """Disable delete permission for users."""
+        return False
 
     def get_team_object(self, obj):
         if obj.is_club:
@@ -316,6 +309,13 @@ class UserAdminPanel(UserAdmin):
 
 @admin.register(models.UserPreferences)
 class UserPreferencesAdminPanel(admin.ModelAdmin):
+    class UserPreferencesForm(forms.ModelForm):
+        citizenship = TypedMultipleChoiceField(choices=models.UserPreferences.COUNTRIES)
+
+        class Meta:
+            model = models.UserPreferences
+            fields = "__all__"
+
     list_display = ("user", "localization", "display_languages", "citizenship")
     search_fields = ("user__last_name", "user__email")
     form = UserPreferencesForm
@@ -337,9 +337,7 @@ class UserPreferencesAdminPanel(admin.ModelAdmin):
         )
 
         # Custom search logic
-        user_query = Q(user__username__icontains=search_term) | Q(
-            user__email__icontains=search_term
-        )
+        user_query = Q(user__email__icontains=search_term)
         queryset |= self.model.objects.filter(user_query)
 
         return queryset, use_distinct

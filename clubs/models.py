@@ -203,12 +203,6 @@ class Club(models.Model, MappingMixin):
         _("Herb klubu"), upload_to=get_file_path, null=True, blank=True
     )
 
-    data_mapper_id = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",  # noqa: E501
-    )
-
     scrapper_autocreated = models.BooleanField(
         default=False, help_text="Autocreated from new scrapper"
     )
@@ -747,12 +741,6 @@ class Team(models.Model, MappingMixin):
         on_delete=models.SET_NULL,
     )
 
-    data_mapper_id = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        help_text="ID of object placed in data_ database. It should always reflect scheme which represents.",  # noqa: E501
-    )
-
     scrapper_autocreated = models.BooleanField(
         default=False, help_text="Auto-created from new scrapper"
     )
@@ -1044,12 +1032,6 @@ class TeamHistory(models.Model):
         blank=True,
         related_name="coached_team_histories",
         help_text="The coach who led the team during this season.",
-    )
-
-    data_mapper_id = models.PositiveIntegerField(
-        help_text="ID of object placed in data_ database. It should alwayes reflect scheme which represents.",  # noqa: E501
-        blank=True,
-        null=True,
     )
 
     team_name_raw = models.CharField(

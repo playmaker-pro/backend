@@ -6,11 +6,13 @@ from django.db.models import Model
 from django.utils import translation
 from django_countries import CountryTuple
 from rest_framework import serializers as _serializers
+from rest_framework.fields import empty
 
 from api.consts import ChoicesTuple
 from api.errors import (
     ChoiceFieldValueErrorException,
     ChoiceFieldValueErrorHTTPException,
+    PhoneNumberMustBeADictionaryHTTPException,
 )
 from api.services import LocaleDataService
 from app.utils import cities
@@ -154,3 +156,65 @@ class ProfileEnumChoicesSerializer(_serializers.CharField, _serializers.Serializ
 
         value = choices[_id]
         return ChoicesTuple(_id, value)
+
+
+class PhoneNumberField(_serializers.Field):
+    """
+    A custom field for handling phone numbers in the ManagerProfile serializer.
+
+    This field is responsible for serializing and deserializing the phone number
+    information (which includes 'dial_code' and 'agency_phone'). It handles the logic
+    of combining these two separate fields into a single nested object for API
+    representation, and it also processes incoming data for these fields
+    in API requests.
+    """
+
+    def __init__(self, phone_field_name="phone_number", *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.phone_field_name = (
+            phone_field_name  # This can be 'phone_number' or 'agency_phone'
+        )
+
+    def run_validation(self, data=...):
+        """Validate phone number field before creating object."""
+
+        if data is not empty and not isinstance(data, dict):
+            raise PhoneNumberMustBeADictionaryHTTPException
+        return super().run_validation(data)
+
+    def to_representation(
+        self, obj: typing.Any
+    ) -> typing.Optional[typing.Dict[str, str]]:
+        """
+        Converts the object's phone number information into a nested
+        JSON object for API output.
+        """
+        dial_code = getattr(obj, "dial_code", None)
+        phone_number = getattr(obj, self.phone_field_name, None)
+
+        if dial_code is None and phone_number is None:
+            return None
+
+        return {
+            "dial_code": f"+{dial_code}" if dial_code is not None else None,
+            "number": phone_number,
+        }
+
+    def to_internal_value(self, data: dict) -> dict:
+        """
+        Processes the incoming data for the phone number field.
+        """
+        internal_value = {}
+        dial_code = data.get("dial_code")
+        phone_number = (
+            data.get("number")
+            if self.phone_field_name == "phone_number"
+            else data.get("agency_phone")
+        )
+
+        if dial_code is not None:
+            internal_value["dial_code"] = dial_code
+        if phone_number is not None:
+            internal_value[self.phone_field_name] = phone_number
+
+        return internal_value

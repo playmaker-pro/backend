@@ -9,9 +9,8 @@ from address.models import AddressField
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.db import models
 from django.db.models import QuerySet
@@ -40,7 +39,6 @@ from premium.models import (
 )
 from premium.tasks import setup_premium_profile
 from profiles.errors import VerificationCompletionFieldsWrongSetup
-from profiles.managers import ProfileManager
 from profiles.mixins import TeamObjectsDisplayMixin, VisitationMixin
 from profiles.mixins import utils as profile_utils
 from roles import definitions
@@ -155,69 +153,6 @@ class Course(models.Model):
         return f"{self.owner} - {self.name} ({self.release_year})"
 
 
-class RoleChangeRequest(models.Model):
-    """Keeps track on requested changes made by users."""
-
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="changerolerequestor",
-        help_text="User who requested change",
-    )
-
-    approver = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        null=True,
-        help_text="Admin who verified.",
-    )
-
-    approved = models.BooleanField(
-        default=False, help_text="Defines if admin approved change"
-    )
-
-    request_date = models.DateTimeField(auto_now_add=True)
-
-    accepted_date = models.DateTimeField(auto_now=True)
-
-    new = models.CharField(max_length=100, choices=definitions.ACCOUNT_ROLES)
-
-    class Meta:
-        unique_together = ("user", "request_date")
-
-    def approve(self):
-        self.approved = True
-        self.save()
-
-    @property
-    def current(self):
-        return self.user.get_declared_role_display()
-
-    @property
-    def current_pretty(self):
-        return self.user.get_declared_role_display()
-
-    @property
-    def new_pretty(self):
-        return self.get_new_display()
-
-    def __str__(self):
-        return (
-            f"{self.user}'s request to change profile from {self.current} to {self.new}"
-        )
-
-    def save(self, *args, **kwargs):
-        if self.approved:
-            self.accepted_date = datetime.now()
-        super().save(*args, **kwargs)
-
-    def get_admin_url(self):
-        return reverse(
-            f"admin:{self._meta.app_label}_{self._meta.model_name}_change",
-            args=(self.id,),
-        )
-
-
 class EventLogMixin:
     EVENT_LOG_HISTORY = 35
 
@@ -264,27 +199,8 @@ class BaseProfile(models.Model, EventLogMixin):
     OPTIONAL_FIELDS = []  # this is definition of profile fields which will be threaded optional
 
     data_mapper_changed = None
-    verification = models.OneToOneField(
-        "ProfileVerificationStatus", on_delete=models.SET_NULL, null=True, blank=True
-    )
-    data_fulfill_status = models.CharField(
-        choices=definitions.DATA_FULFILL_STATUS,
-        max_length=255,
-        null=True,
-        blank=True,
-        editable=False,
-    )
-
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True
-    )
-    data_mapper_id = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        help_text=(  # noqa: E501
-            "ID of object placed in data_ database. It should alwayes reflect scheme"
-            " which represents."
-        ),
     )
     slug = models.CharField(max_length=255, blank=True, editable=False)
     bio = models.CharField(
@@ -298,12 +214,7 @@ class BaseProfile(models.Model, EventLogMixin):
 
     labels = GenericRelation("labels.Label")
     follows = GenericRelation("followers.GenericFollow")
-    transfer_status_related = GenericRelation(
-        "ProfileTransferStatus", related_query_name="transfer_status_related"
-    )
-    transfer_requests = GenericRelation(
-        "ProfileTransferRequest", related_query_name="transfer_requests"
-    )
+
     visitation = models.OneToOneField(
         "Visitation", on_delete=models.PROTECT, null=True, blank=True
     )
@@ -565,6 +476,8 @@ class BaseProfile(models.Model, EventLogMixin):
         if self.meta is None:
             self.meta = ProfileMeta.objects.create(
                 _profile_class=self.__class__.__name__.lower(),
+                _uuid=self.uuid,
+                _slug=self.slug,
                 user=self.user,
             )
             if commit:
@@ -576,9 +489,6 @@ class BaseProfile(models.Model, EventLogMixin):
                 self.PROFILE_TYPE
             ]
             self.user.save(update_fields=["declared_role"])
-        # When profile changes, update data score level
-        profile_manager: ProfileManager = ProfileManager()
-        self.data_fulfill_status: str = profile_manager.get_data_score(self)
 
         # Use Polish profile type for slug
         polish_profile_type = profile_utils.profile_type_english_to_polish.get(
@@ -589,11 +499,6 @@ class BaseProfile(models.Model, EventLogMixin):
 
         profile_utils.unique_slugify(self, slug_str)
 
-        # If there is no verification object set we need to create initial for that
-        if self.verification is None and self.user.is_need_verfication_role:
-            self.verification = ProfileVerificationStatus.create_initial(self.user)
-
-        # Queen of the show
         super().save(*args, **kwargs)
 
     def get_verification_data_from_profile(self, owner: User = None) -> dict:
@@ -643,11 +548,8 @@ class BaseProfile(models.Model, EventLogMixin):
     class ProfileManager(models.Manager):
         def to_list_by_api(self, role: str = None, **kwargs) -> models.QuerySet:
             """Filter profiles which should be listed by api"""
-            qs = (
-                self.filter(**kwargs)
-                .exclude(user__first_name__isnull=True, user__last_name__isnull=True)
-                .exclude(user__first_name=models.F("user__last_name"))
-                .exclude(user__display_status=User.DisplayStatus.NOT_SHOWN)
+            qs = self.filter(**kwargs).exclude(
+                user__display_status=User.DisplayStatus.NOT_SHOWN
             )
             if role:
                 qs = qs.filter(user__declared_role=role)
@@ -957,14 +859,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         blank=True,
     )
-    # TODO: lremkowicz: deprecated due to https://playmakerpro.atlassian.net/browse/PM20-628  # noqa: E501
-    #  Transfer status moved to new model and this field have to be removed in future
-    transfer_status = models.IntegerField(
-        _("Status transferowy"),
-        choices=profile_utils.make_choices(TRANSFER_STATUS_CHOICES),
-        null=True,
-        blank=True,
-    )
     card = models.IntegerField(
         _("Karta na ręku"),
         choices=profile_utils.make_choices(CARD_CHOICES),
@@ -986,23 +880,12 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     external_links = models.OneToOneField(
         ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
     )
-    # laczynaspilka_url, min90_url, transfermarket_url data will be migrated
-    # into PlayerMapper and then those fields will be deleted
     laczynaspilka_url = models.URLField(_("LNP"), max_length=500, blank=True, null=True)
     min90_url = models.URLField(
         _("90min portal"), max_length=500, blank=True, null=True
     )
     transfermarket_url = models.URLField(_("TrasferMarket"), blank=True, null=True)
 
-    # TODO Based on task PM-363. After migration on production, field can be deleted
-    voivodeship = models.CharField(
-        _("Województwo zamieszkania"),
-        help_text="Wybierz województwo. Stare pole przygotowane do migracji.",
-        max_length=68,
-        blank=True,
-        null=True,
-        choices=settings.VOIVODESHIP_CHOICES,
-    )
     voivodeship_obj = models.ForeignKey(
         Voivodeships,
         verbose_name=_("Województwo zamieszkania"),
@@ -1812,57 +1695,6 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
         if data:
             return data.get("total")
 
-    def calculate_metrics(
-        self, seasons_behind: int = 1, season_name: str = None, requestor: User = None
-    ):
-        """
-        :param seasons_behind: if present it defines how many season we want to calucalte in past.
-                               value 1 means that we will calcuate for current season
-        :season_name: name of season to update
-
-        Celem jest możliwość pokazania:
-        kariera [sezon, team, rozgrywki, wygrane mecze,
-        remisy, porażki, śr. pkt na mecz,  bramki strzelone vs. bramki stracone (klubu, który prowadził)]
-        mecze [data, rozgrywki, gospodarz, gość, wynik]
-
-        Za wygrany mecz 3 pkt, za remis 1 pkt, za porażkę 0 pkt.
-
-        """  # noqa: E501
-        from metrics.coach import CoachCarrierAdapterPercentage, CoachGamesAdapter
-
-        if not self.has_data_id:
-            return
-        _id = int(
-            self.mapper.get_entity(
-                related_type="coach", database_source="s38"
-            ).mapper_id
-        )
-        season_name = season_name or utilites.get_current_season()
-
-        def _calculate(season_name):
-            # set default value for data attribute
-            if self.data is None:
-                self.data = {}
-
-            if not self.data.get(season_name):
-                self.data[season_name] = {}
-
-            games = CoachGamesAdapter().get(int(_id), season_name=season_name)
-            self.data[season_name][self.DATA_KEY_GAMES] = games
-
-            season_stats = CoachCarrierAdapterPercentage().get(
-                int(_id), season_name=season_name
-            )
-            self.data[season_name][self.DATA_KET_CARRIER] = season_stats
-
-        for _ in range(seasons_behind):  # noqa: F402
-            print(f"Calculating data for {self} for season {season_name}")
-            _calculate(season_name)
-            season_name = utilites.calculate_prev_season(season_name)
-        msg = "Coach stats updated."
-        self.add_event_log_message(msg, commit=False)
-        self.save()
-
     def create_mapper_obj(self):
         self.mapper = Mapper.objects.create()
 
@@ -2288,100 +2120,6 @@ class OtherProfile(BaseProfile):
         verbose_name_plural = "Other Profiles"
 
 
-class ProfileVerificationStatus(models.Model):
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="verifications",
-    )
-    set_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="set_by",
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=255, null=True, blank=True)
-    team = models.ForeignKey(
-        "clubs.Team",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="team",
-    )
-    team_history = models.ForeignKey(
-        "clubs.TeamHistory",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="team_history",
-    )
-    club = models.ForeignKey(
-        "clubs.Club",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="club",
-    )
-    has_team = models.BooleanField(null=True, blank=True)
-    team_not_found = models.BooleanField(null=True, blank=True)
-    text = models.CharField(max_length=355, null=True, blank=True)
-
-    previous = models.OneToOneField(
-        "self", on_delete=models.SET_NULL, blank=True, null=True, related_name="next"
-    )
-
-    # objects = managers.VerificationObjectManager()
-
-    # @classmethod
-    # def create(
-    # cls,
-    # owner: User = owner,
-    # text: str = text,
-    # previous=previous,
-    # set_by: User = set_by,
-    # status: str = status,
-    # has_team: bool = has_team,
-    # team_not_found: bool = team_not_found,
-    # club = None, team = None,
-    # ):
-    #     return cls.objects.create(
-    #         owner=owner,
-    #         text=text,
-    #         has_team=has_team,
-    #         team_not_found=team_not_found,
-    #         club=club,
-    #         team=team,
-    #         status=status,
-    #         set_by=set_by,
-    #         previous=previous
-    #     )
-
-    @classmethod
-    def create_initial(cls, owner: User):
-        """Creates initial verifcation object for a profile based on current data."""
-        defaults = owner.profile.get_verification_data_from_profile()
-        defaults["set_by"] = User.get_system_user()
-        defaults["previous"] = None
-        return cls.objects.create(**defaults)
-
-    def update_with_profile_data(self, requestor: User = None):
-        defaults = self.owner.profile.get_verification_data_from_profile()
-        self.set_by = requestor or User.get_system_user()
-        self.status = defaults.get("status")
-        self.text = defaults.get("text")
-        self.has_team = defaults.get("has_team")
-        self.team_not_found = defaults.get("team_not_found")
-        self.club = defaults.get("club")
-        self.team = defaults.get("team")
-        self.team_history = defaults.get("team_history")
-        self.save()
-
-
 class PlayerProfilePosition(models.Model):
     player_position = models.ForeignKey(PlayerPosition, on_delete=models.CASCADE)
     player_profile = models.ForeignKey(
@@ -2674,147 +2412,6 @@ class ProfileVisitHistory(models.Model):
         ]
 
 
-class TransferBaseModel(models.Model):
-    """Transfer base model."""
-
-    salary = models.CharField(
-        max_length=10,
-        default=None,
-        null=True,
-        blank=True,
-        choices=definitions.TRANSFER_SALARY_CHOICES,
-        help_text="Define salary",
-    )
-    benefits = ArrayField(
-        models.CharField(
-            max_length=255,
-            null=True,
-            blank=True,
-            choices=definitions.TRANSFER_BENEFITS_CHOICES,
-            help_text="Additional information about the transfer.",
-        ),
-        null=True,
-        blank=True,
-        help_text=_("Benefits defines as integers with comma. Example: 1,2"),
-    )
-    number_of_trainings = models.CharField(
-        max_length=10,
-        default=None,
-        null=True,
-        blank=True,
-        choices=definitions.TRANSFER_TRAININGS_CHOICES,
-        help_text="Define number of trainings per week",
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
-
-
-class ProfileTransferStatus(TransferBaseModel):
-    """Keeps track on profile transfer status"""
-
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey("content_type", "object_id")
-    status = models.CharField(
-        max_length=255,
-        choices=definitions.TRANSFER_STATUS_CHOICES,
-        help_text="Defines a status of the transfer for the profile.",
-    )
-    league = models.ManyToManyField(
-        "clubs.League",
-        related_name="transfer_status",
-    )
-    additional_info = ArrayField(
-        models.CharField(
-            max_length=10,
-            choices=definitions.TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES,
-            help_text="Additional information about the transfer.",
-        ),
-        null=True,
-    )
-
-    @property
-    def profile(self) -> BaseProfile:
-        """Returns the user profile."""
-        return self.content_object
-
-
-class ProfileTransferRequest(TransferBaseModel):
-    """
-    Represents a profile transfer request in the context of profile needs
-    (for example soccer clubs and coaches).
-
-    This model tracks transfer requests initiated by profiles
-    (coaches or club representatives) to request players for team participation.
-    """
-
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey("content_type", "object_id")
-
-    requesting_team = models.ForeignKey(
-        TeamContributor,
-        on_delete=models.CASCADE,
-        related_name="transfer_requests",
-        help_text="The team that is requesting the transfer.",
-    )
-    gender = models.CharField(
-        max_length=10, choices=(("M", "M"), ("F", "F")), help_text="Define team gender"
-    )
-
-    status = models.CharField(
-        max_length=255,
-        null=True,
-        blank=True,
-        choices=definitions.TRANSFER_REQUEST_STATUS_CHOICES,
-        help_text="Defines a status of the transfer for the profile.",
-    )
-    position = models.ManyToManyField(
-        PlayerPosition,
-        related_name="transfer_requests",
-        help_text="The position that the team is requesting.",
-    )
-    league = models.CharField(
-        max_length=128,
-        null=True,
-        blank=True,
-        help_text=_("League name filled automatically from team.club.voivodeship_obj"),
-    )
-    voivodeship = models.CharField(
-        max_length=128,
-        null=True,
-        blank=True,
-        help_text=_(
-            "Voivodeship name filled automatically from team.club.voivodeship_obj"
-        ),
-    )
-
-    def save(self, *args, **kwargs):
-        """
-        Override save method to fill league and voivodeship fields. Fields are needed
-        for filtering transfer requests in the transfer request search.
-        """
-        if self.team and self.team.league:
-            self.league = self.team.league.name
-        club = self.team.club if self.team else None
-        if club and club.voivodeship_obj:
-            self.voivodeship = club.voivodeship_obj.name
-        return super().save(*args, **kwargs)
-
-    @property
-    def profile(self) -> BaseProfile:
-        """Returns the user profile."""
-        return self.content_object
-
-    @property
-    def team(self):
-        """Returns the requesting team."""
-        return self.requesting_team.team_history.first()
-
-
 class Catalog(models.Model):
     name = models.CharField(max_length=255, unique=True, blank=True, null=True)
     slug = models.CharField(max_length=255, blank=False, null=False, editable=False)
@@ -2827,6 +2424,8 @@ class Catalog(models.Model):
 
 class ProfileMeta(models.Model, VisitationMixin):
     _profile_class = models.CharField(max_length=20)
+    _uuid = models.UUIDField(unique=True, null=False, blank=False)
+    _slug = models.CharField(max_length=255, null=False, blank=False, unique=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -2841,6 +2440,19 @@ class ProfileMeta(models.Model, VisitationMixin):
         Returns the profile object associated with this meta instance.
         """
         return getattr(self, self._profile_class.lower())
+
+    @property
+    def transfer_object(
+        self,
+    ) -> typing.Union[models.Model, None]:
+        """
+        Returns the transfer object associated with this meta instance.
+        """
+        if hasattr(self, "transfer_request"):
+            return self.transfer_request
+        if hasattr(self, "transfer_status"):
+            return self.transfer_status
+        return None
 
     def __str__(self) -> None:
         return f"Meta of {self.profile}"

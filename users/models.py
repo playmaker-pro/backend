@@ -15,11 +15,6 @@ from django_fsm import FSMField, transition
 from pydantic import typing
 
 from inquiries.models import InquiryRequest
-
-# from notifications.mail import (
-#     mail_user_waiting_for_verification,
-#     verification_notification,
-# )
 from roles import definitions
 from users.managers import CustomUserManager
 from utils import calculate_age, generate_fe_url_path
@@ -90,7 +85,7 @@ class User(AbstractUser, UserRoleMixin):
         STATE_MIGRATED_VERIFIED,
         STATE_MIGRATED_NEW,
     )
-
+    username = None
     STATES = list(zip(STATES, STATES))
     # Verfied means - user is who he declar
 

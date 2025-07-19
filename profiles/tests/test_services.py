@@ -57,25 +57,6 @@ class VerificationServiceTest(TestCase):
         self.user.verify(silent=True)
         assert self.user.is_verified is True
 
-    def test__1__changing_role_to_coach_from_player_cause_user_sate_to_missing_verification_data(  # noqa: 501
-        self,
-    ):
-        assert self.user.is_verified is True
-        print(f"----> before  {self.user.state}")
-
-        change = models.RoleChangeRequest.objects.create(
-            user=self.user, new=definitions.COACH_SHORT
-        )
-
-        assert self.user.is_verified is True
-
-        change.approved = True
-        change.save()
-        self.user.refresh_from_db()
-        print(f"----> after {self.user.state}")
-        assert self.user.is_verified is False
-        assert self.user.is_waiting_for_verification is True
-
 
 class PlayerPositionServiceTest(TestCase):
     def setUp(self):

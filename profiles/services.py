@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import MultipleObjectsReturned
-from django.db import IntegrityError, connection
+from django.db import IntegrityError
 from django.db import models as django_base_models
 from django.db.models import (
     Case,
@@ -43,7 +43,7 @@ from profiles.models import (
     Catalog,
     LicenceType,
     PlayerPosition,
-    ProfileTransferStatus,
+    ProfileMeta,
 )
 from roles.definitions import (
     CLUB_ROLES,
@@ -97,111 +97,6 @@ class ProfileVerificationService:
             self._verify_coach()
         elif self.user.is_club:
             self._verify_club()
-
-    def update_verification_data(
-        self, data: dict, requestor: User = None
-    ) -> models.ProfileVerificationStatus:
-        """using dict-like data we can create new verification object"""
-        logger.debug("New verification recieved for %s", self.user)
-        team: typing.Optional[clubs_models.Team] = None
-        team_history: typing.Optional[clubs_models.TeamHistory] = None
-        club: typing.Optional[clubs_models.Club] = None
-        text: typing.Optional[str] = None
-
-        if team_club_league_voivodeship_ver := data.get(  # noqa: E999
-            "team_club_league_voivodeship_ver"
-        ):
-            text = team_club_league_voivodeship_ver
-        if has_team := data.get("has_team"):
-            if has_team == "tak mam klub":
-                has_team = True
-            else:
-                has_team = False
-
-        team_not_found = data.get("team_not_found")
-
-        if data.get("team") and team_not_found is False:
-            if self.user.is_club:
-                club = data.get("team")
-            else:
-                team_history = data.get("team")
-                team = team_history.team
-        else:
-            if self.user.is_club:
-                club = data.get("team")
-            else:
-                team = None
-                team_history = None
-
-        if has_team is True:
-            if team_not_found:
-                team = None
-                team_history = None
-                club = None
-            else:
-                text = None
-
-        if has_team is False:
-            team = None
-            team_history = None
-            club = None
-
-        set_by: User = requestor or User.get_system_user()
-        new: models.ProfileVerificationStatus = (
-            models.ProfileVerificationStatus.objects.create(
-                owner=self.user,
-                previous=self.profile.verification,
-                has_team=has_team,
-                team_not_found=team_not_found,
-                club=club,
-                team=team,
-                team_history=team_history,
-                text=text,
-                set_by=set_by,
-            )
-        )
-        self.profile.verification = new
-        self.profile.save()
-        return new
-
-    def update_verification_status(
-        self, status: str, verification: models.ProfileVerificationStatus = None
-    ) -> None:
-        verification: models.ProfileVerificationStatus = (
-            self.profile.verification or verification
-        )
-        verification.status = status
-        verification.save()
-
-    def _verify_user(self) -> None:
-        self.user.verify()
-        self.user.save()
-
-    def _verify_player(self) -> None:
-        profile: models.BaseProfile = self.profile
-
-        if profile.verification.has_team and profile.verification.team:
-            profile.team_object = profile.verification.team
-            profile.team_club_league_voivodeship_ver = None
-            self._verify_user()
-
-        elif (
-            profile.verification.has_team is True
-            and profile.verification.team_not_found is True
-            and profile.verification.text
-        ):
-            profile.team_object = None
-            profile.team_club_league_voivodeship_ver = profile.verification.text
-            self._verify_user()
-
-        elif profile.verification.has_team is False and not profile.verification.text:
-            profile.team_object = None
-            profile.team_club_league_voivodeship_ver = None
-            self._verify_user()
-        elif profile.verification.has_team is False and profile.verification.text:
-            profile.team_club_league_voivodeship_ver = profile.verification.text
-            profile.team_object = None
-        profile.save()
 
     def _verify_coach(self) -> None:
         profile: models.BaseProfile = self.profile
@@ -322,15 +217,6 @@ class ProfileVerificationService:
 
 class ProfileService:
     @staticmethod
-    def set_initial_verification(profile: models.PROFILE_TYPE) -> None:
-        """set initial verification status object if not present"""
-        if profile.verification is None:
-            profile.verification = models.ProfileVerificationStatus.create_initial(
-                profile.user
-            )
-            profile.save()
-
-    @staticmethod
     def set_and_create_user_profile(user: User) -> models.PROFILE_TYPE:
         """get type of profile and create profile"""
         profile_model = models.PROFILE_MODEL_MAP.get(user.role, models.GuestProfile)
@@ -380,29 +266,37 @@ class ProfileService:
         Iterated object (PROFILE_MODEL_MAP) has to include each subclass of BaseProfile
         Raise ProfileDoesNotExist if no any profile with given uuid exist
         """
-        for profile_type in models.PROFILE_MODEL_MAP.values():
-            try:
-                return profile_type.objects.get(uuid=profile_uuid)
-            except profile_type.DoesNotExist:
-                continue
-        else:
+        return ProfileMeta.objects.get(_uuid=profile_uuid).profile
+
+    @classmethod
+    def get_anonymous_profile_by_uuid(
+        cls,
+        profile_uuid: typing.Union[uuid.UUID, str],
+    ) -> models.PROFILE_TYPE:
+        """
+        Get anonymous profile object using uuid.
+        Iterate through each profile type.
+        Iterated object (PROFILE_MODEL_MAP) should include each subclass of BaseProfile.
+        Raise ProfileDoesNotExist if no anonymous profile with the given uuid exists.
+        """
+        transfer_obj = ProfileMeta.objects.filter(
+            Q(transfer_status__anonymous_uuid=profile_uuid)
+            | Q(transfer_request__anonymous_uuid=profile_uuid)
+        )
+        if not transfer_obj.exists():
             raise ObjectDoesNotExist
 
-    @staticmethod
-    def get_profile_by_slug(slug: str) -> models.PROFILE_TYPE:
+        return transfer_obj.first().profile
+
+    @classmethod
+    def get_profile_by_slug(cls, slug: str) -> models.PROFILE_TYPE:
         """
         Get profile object using slug.
         Iterate through each profile type.
         Iterated object (PROFILE_MODEL_MAP) should include each subclass of BaseProfile.
         Raise ProfileDoesNotExist if no profile with the given slug exists.
         """
-        for profile_type in models.PROFILE_MODEL_MAP.values():
-            try:
-                return profile_type.objects.get(slug=slug)
-            except profile_type.DoesNotExist:
-                continue
-        else:
-            raise ObjectDoesNotExist
+        return ProfileMeta.objects.get(_slug=slug).profile
 
     @staticmethod
     def is_valid_uuid(value: str) -> bool:
@@ -430,11 +324,7 @@ class ProfileService:
     @staticmethod
     def get_user_profiles(user: User) -> typing.List[models.PROFILE_TYPE]:
         """Find all profiles for given user"""
-        profiles: list = []
-        for profile_type in models.PROFILE_MODELS:
-            if profile := profile_type.objects.filter(user=user).first():
-                profiles.append(profile)
-        return profiles
+        return [meta.profile for meta in ProfileMeta.objects.filter(user=user)]
 
     @classmethod
     def get_user_by_uuid(cls, profile_uuid: uuid.UUID) -> User:
@@ -495,14 +385,6 @@ class ProfileService:
 
         return related_type
 
-    @staticmethod
-    def get_profile_transfer_status(
-        profile: models.BaseProfile,
-    ) -> typing.Optional[ProfileTransferStatus]:
-        """Get the transfer status of a given profile."""
-        transfer_status: ProfileTransferStatus = profile.transfer_status_related.first()
-        return transfer_status or None
-
     def get_catalog_by_slug(self, catalog_slug: str) -> Catalog:
         """
         Retrieve a catalog based on its slug.
@@ -511,14 +393,6 @@ class ProfileService:
             return Catalog.objects.get(slug=catalog_slug)
         except Catalog.DoesNotExist:
             raise errors.CatalogNotFoundServiceException
-
-    @staticmethod
-    def get_profile_transfer_request(
-        profile: models.BaseProfile,
-    ) -> typing.Optional[ProfileTransferStatus]:
-        """Get the transfer status of a given profile."""
-        transfer_request: ProfileTransferStatus = profile.transfer_requests.first()
-        return transfer_request or None
 
     @staticmethod
     def get_cities_nearby(city: City, radius: int = 60) -> QuerySet:
@@ -776,9 +650,9 @@ class ProfileFilterService:
         condition = Q()
         for status in statuses:
             if status == "5":
-                condition |= Q(transfer_status_related__isnull=True)
+                condition |= Q(meta__transfer_status__isnull=True)
             else:
-                condition |= Q(transfer_status_related__status=status)
+                condition |= Q(meta__transfer_status__status=status)
 
         return queryset.filter(condition)
 
@@ -789,7 +663,7 @@ class ProfileFilterService:
         """
         Filter the queryset based on the league IDs associated with the profile's transfer status.
         """
-        return queryset.filter(transfer_status_related__league__id__in=league_ids)
+        return queryset.filter(meta__transfer_status__league__id__in=league_ids)
 
     @staticmethod
     def filter_by_additional_info(
@@ -798,28 +672,28 @@ class ProfileFilterService:
         """
         Filter the queryset based on additional information associated with the profile's transfer status.
         """
-        return queryset.filter(transfer_status_related__additional_info__overlap=info)
+        return queryset.filter(meta__transfer_status__additional_info__overlap=info)
 
     @staticmethod
     def filter_by_number_of_trainings(queryset: QuerySet, trainings: str) -> QuerySet:
         """
         Filter the queryset based on the number of trainings specified in the profile's transfer status.
         """
-        return queryset.filter(transfer_status_related__number_of_trainings=trainings)
+        return queryset.filter(meta__transfer_status__number_of_trainings=trainings)
 
     @staticmethod
     def filter_by_benefits(queryset: QuerySet, benefits: typing.List[str]) -> QuerySet:
         """
         Filter the queryset based on benefits associated with the profile's transfer status.
         """
-        return queryset.filter(transfer_status_related__benefits__overlap=benefits)
+        return queryset.filter(meta__transfer_status__benefits__overlap=benefits)
 
     @staticmethod
     def filter_by_salary(queryset: QuerySet, salary: str) -> QuerySet:
         """
         Filter the queryset based on the salary specified in the profile's transfer status.
         """
-        return queryset.filter(transfer_status_related__salary=salary)
+        return queryset.filter(meta__transfer_status__salary=salary)
 
     @staticmethod
     def filter_min_pm_score(queryset: QuerySet, min_score: int) -> QuerySet:
@@ -2032,18 +1906,3 @@ class RandomizationService:
         seed_input = f"{identifier}:{current_date}"
         seed = int(hashlib.sha256(seed_input.encode()).hexdigest(), 16) % (10**8)
         return seed
-
-    def apply_seeded_randomization(self, queryset: QuerySet, user: User) -> QuerySet:
-        """
-        Applies a seeded randomization to a queryset based on a daily unique seed.
-
-        The randomization ensures that the order of items in the queryset is consistently
-        randomized across requests for a given user and changes daily. This method is
-        particularly useful for providing each user with a unique perspective of dataset
-        listings that refresh daily.
-        """
-        seed = RandomizationService.get_daily_user_seed(user)
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT setseed(%s)", [seed / float(10**8)])
-        queryset = queryset.order_by("data_fulfill_status", "?")
-        return queryset

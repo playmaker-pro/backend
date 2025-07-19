@@ -25,6 +25,9 @@ def post_create_profile_tasks(class_name: str, profile_id: int) -> None:
     create_post_create_profile__periodic_tasks(class_name, profile_id)
     NotificationService(profile.meta).notify_welcome()
 
+    if profile.user.display_status == models.User.DisplayStatus.NOT_SHOWN:
+        NotificationService(profile.meta).notify_profile_hidden()
+
 
 @shared_task
 def check_profile_one_hour_after(profile_id: int, model_name: str) -> None:
@@ -63,15 +66,12 @@ def check_profile_one_day_after(profile_id: int, model_name: str) -> None:
     service = NotificationService(profile.meta)
 
     if profile:
-        if (
-            model_name == "PlayerProfile"
-            and not profile.transfer_status_related.exists()
-        ):
+        if model_name == "PlayerProfile" and not profile.meta.transfer_status:
             service.notify_set_status()
 
         if (
             model_name in ["CoachProfile", "ClubProfile", "ManagerProfile"]
-            and not profile.transfer_requests.exists()
+            and not profile.meta.transfer_requests
         ):
             service.notify_set_transfer_requests()
 
