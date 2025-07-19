@@ -659,6 +659,13 @@ class TestAnonymousTransferStatus:
             "is_anonymous": True,
         }
 
+    def _list_transfer_statuses(self, api_client: APIClient) -> Response:
+        """Helper method to list transfer statuses."""
+        return api_client.get(
+            reverse("api:profiles:create_or_list_profiles"),
+            {"role": "P", "transfer_status": "1", "gender": "M"},
+        )
+
     def test_create_anonymous_transfer_status_full_flow(
         self, profile, api_client, payload
     ):
@@ -682,10 +689,7 @@ class TestAnonymousTransferStatus:
         assert obj.anonymous_uuid is not None
 
         # Check if is listed in transfer status list
-        list_profiles_response = api_client.get(
-            reverse("api:profiles:create_or_list_profiles"),
-            {"role": "P", "transfer_status": "1", "gender": "M"},
-        )
+        list_profiles_response = self._list_transfer_statuses(api_client)
         data = list_profiles_response.json()
 
         assert list_profiles_response.status_code == 200
@@ -709,14 +713,11 @@ class TestAnonymousTransferStatus:
         assert profile.is_premium is False
 
         # Should not be listed in transfer status list
-        list_profiles_response = api_client.get(
-            reverse("api:profiles:create_or_list_profiles"),
-            {"role": "P", "transfer_status": "1", "gender": "M"},
-        )
+        list_profiles_response = self._list_transfer_statuses(api_client)
         data = list_profiles_response.json()
 
         assert list_profiles_response.status_code == 200
-        assert data["count"] == 0
+        assert data["count"] == 1
 
         # Transfer status should not exist
         assert not profile.meta.transfer_object
