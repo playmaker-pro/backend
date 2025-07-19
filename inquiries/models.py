@@ -20,7 +20,7 @@ from utils.constants import (
     INQUIRY_LIMIT_INCREASE_URL,
     TRANSFER_MARKET_URL,
 )
-from utils.utils import render_email_template
+from utils.functions import render_email_template
 
 logger = logging.getLogger("inquiries")
 
@@ -63,7 +63,9 @@ class InquiryLogMessage(models.Model):
         null=True,
     )
     email_body_html = models.TextField(
-        help_text=_("HTML version of the email body. Supports HTML tags like <strong>, <a>, etc."),
+        help_text=_(
+            "HTML version of the email body. Supports HTML tags like <strong>, <a>, etc."
+        ),
         blank=True,
         null=True,
     )
@@ -371,7 +373,9 @@ class UserInquiry(models.Model):
             context = {
                 "url": INQUIRY_LIMIT_INCREASE_URL,
             }
-            html_body, plain_text = render_email_template("mailing/mails/INQUIRY_LIMIT.html", context)
+            html_body, plain_text = render_email_template(
+                "mailing/mails/INQUIRY_LIMIT.html", context
+            )
 
             schema = _EmailSchema(
                 body=plain_text,

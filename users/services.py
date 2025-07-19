@@ -31,7 +31,7 @@ from users.schemas import (
     UserFacebookDetailPydantic,
     UserGoogleDetailPydantic,
 )
-from utils.utils import render_email_template
+from utils.functions import render_email_template
 
 if TYPE_CHECKING:
     from profiles.models import PROFILE_TYPE
@@ -297,12 +297,10 @@ class ReferralRewardService:
         Reward the user for their first referral.
         """
         referrer_html, _ = render_email_template(
-            'mailing/mails/1_referral_reward_referrer.html',
-            {}
+            "mailing/mails/1_referral_reward_referrer.html", {}
         )
         referred_html, _ = render_email_template(
-            'mailing/mails/referral_reward_referred.html',
-            {}
+            "mailing/mails/referral_reward_referred.html", {}
         )
         email_referral_schema = EmailSchema(
             subject="Gratulacje! Otrzymujesz nagrodę za polecenie nowego użytkownika",
@@ -327,8 +325,7 @@ class ReferralRewardService:
             premium_type=PremiumType.CUSTOM, period=14
         )
         referrer_html, _ = render_email_template(
-            'mailing/mails/3_referral_reward_referrer.html',
-            {}
+            "mailing/mails/3_referral_reward_referrer.html", {}
         )
         schema = EmailSchema(
             subject="Gratulacje! Nagroda za 3 skuteczne polecenia PlayMaker.pro",
@@ -344,8 +341,7 @@ class ReferralRewardService:
         """
         self._user.profile.setup_premium_profile(premium_type=PremiumType.MONTH)
         referrer_html, _ = render_email_template(
-            'mailing/mails/5_referral_reward_referrer.html',
-            {}
+            "mailing/mails/5_referral_reward_referrer.html", {}
         )
         schema = EmailSchema(
             subject="Gratulacje! Otrzymujesz miesiąc Premium i treningi za 5 poleceń PlayMaker.pro",
@@ -363,8 +359,7 @@ class ReferralRewardService:
             premium_type=PremiumType.CUSTOM, period=180
         )
         referrer_html, _ = render_email_template(
-            'mailing/mails/15_referral_reward_referrer.html',
-            {}
+            "mailing/mails/15_referral_reward_referrer.html", {}
         )
         schema = EmailSchema(
             subject="Gratulacje! 6 miesięcy Premium za 15 poleceń PlayMaker.pro",
