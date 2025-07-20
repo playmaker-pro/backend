@@ -14,6 +14,7 @@ from api.consts import ChoicesTuple
 from api.pagination import TransferRequestCataloguePagePagination
 from api.serializers import ProfileEnumChoicesSerializer
 from api.views import EndpointView
+from backend.settings import cfg
 from clubs.services import LeagueService
 from profiles.api import errors as api_errors
 from profiles.api.errors import (
@@ -44,6 +45,7 @@ from transfers.api.serializers import (
     UpdateOrCreateProfileTransferSerializer,
 )
 from transfers.models import ProfileTransferRequest
+from utils.cache import CachedResponse
 
 profile_service = ProfileService()
 team_contributor_service = TeamContributorService()
@@ -297,13 +299,21 @@ class TransferRequestCatalogueAPIView(EndpointViewWithFilter):
     queryset = ProfileTransferRequest.objects.all().order_by("-created_at")
     filterset_class = TransferRequestCatalogueFilter
 
-    # @method_decorator(cache_page(settings.DEFAULT_CACHE_LIFESPAN))
     def list_transfer_requests(self, request: Request) -> Response:
         """Retrieve and display transfer requests."""
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
-        paginated = self.get_paginated_queryset(queryset)
-        serializer = self.serializer_class(
-            paginated, many=True, context={"request": request}
-        )
-        return self.get_paginated_response(serializer.data)
+        with CachedResponse(
+            cache_key=f"{cfg.redis.key_prefix.transfer_requests}:{request.get_full_path()}",
+            request=request,
+        ) as cache:
+            if cached_data := cache.data:
+                return Response(cached_data)
+
+            queryset = self.get_queryset()
+            queryset = self.filter_queryset(queryset)
+            paginated = self.get_paginated_queryset(queryset)
+            serializer = self.serializer_class(
+                paginated, many=True, context={"request": request}
+            )
+            paginated_response = self.get_paginated_response(serializer.data)
+            cache.data = paginated_response.data
+            return paginated_response
