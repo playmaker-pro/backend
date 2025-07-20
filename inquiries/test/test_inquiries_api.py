@@ -3,7 +3,8 @@ from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
-from inquiries.models import InquiryLogMessage, InquiryRequest, UserInquiryLog
+from inquiries.models import InquiryRequest, UserInquiryLog
+from inquiries.constants import InquiryLogType
 from utils.factories import GuestProfileFactory
 from utils.test.test_utils import UserManager
 
@@ -120,11 +121,11 @@ class TestInquiriesAPI(APITestCase):
         assert (
             UserInquiryLog.objects.filter(
                 log_owner=self.sender_obj.userinquiry,
-                message__log_type=InquiryLogMessage.MessageType.ACCEPTED,
+                log_type=InquiryLogType.ACCEPTED,
             ).exists()
             and UserInquiryLog.objects.filter(
                 log_owner=self.recipient_obj.userinquiry,
-                message__log_type=InquiryLogMessage.MessageType.NEW,
+                log_type=InquiryLogType.NEW,
             ).exists()
         )
 
@@ -169,11 +170,11 @@ class TestInquiriesAPI(APITestCase):
         assert (
             UserInquiryLog.objects.filter(
                 log_owner=self.sender_obj.userinquiry,
-                message__log_type=InquiryLogMessage.MessageType.REJECTED,
+                log_type=InquiryLogType.REJECTED,
             ).exists()
             and UserInquiryLog.objects.filter(
                 log_owner=self.recipient_obj.userinquiry,
-                message__log_type=InquiryLogMessage.MessageType.NEW,
+                log_type=InquiryLogType.NEW,
             ).exists()
         )
 

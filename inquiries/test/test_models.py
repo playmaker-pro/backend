@@ -7,11 +7,11 @@ from django.test import TestCase
 from django.utils import timezone
 
 from inquiries.models import (
-    InquiryLogMessage,
     InquiryPlan,
     InquiryRequest,
     UserInquiryLog,
 )
+from inquiries.constants import InquiryLogType
 from premium.models import PremiumType
 from roles import definitions
 from utils import testutils as utils
@@ -164,6 +164,6 @@ class RewardOutdatedInquiryRequest(TestCase):
             UserInquiryLog.objects.get(
                 log_owner=self.inquiry_request.sender.userinquiry,
                 ref=self.inquiry_request,
-            ).message.log_type
-            == InquiryLogMessage.MessageType.OUTDATED
+            ).log_type
+            == InquiryLogType.OUTDATED
         )

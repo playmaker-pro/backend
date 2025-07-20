@@ -3,7 +3,6 @@
 from django.db import migrations, models
 
 from mailing.default_templates import NEW_ACCOUNT_EMAIL_BODY, PASSWORD_CHANGE_EMAIL_BODY
-from mailing.models import EmailTemplate as _EmailTemplate
 
 
 def create_initial_email_templates(apps, *_) -> None:
@@ -13,12 +12,12 @@ def create_initial_email_templates(apps, *_) -> None:
     EmailTemplate.objects.create(
         subject="Witaj na PlayMaker.pro. Potwierdź rejestrację konta.",
         body=NEW_ACCOUNT_EMAIL_BODY,
-        email_type=_EmailTemplate.EmailType.NEW_USER,
+        email_type="NEW_USER",
     )
     EmailTemplate.objects.create(
         subject="Zmiana hasła do Twojego konta.",
         body=PASSWORD_CHANGE_EMAIL_BODY,
-        email_type=_EmailTemplate.EmailType.PASSWORD_CHANGE,
+        email_type="PASSWORD_CHANGE",
     )
 
 

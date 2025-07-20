@@ -2,8 +2,8 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.core import mail
 
-from mailing.models import EmailTemplate as _EmailTemplate
 from mailing.models import UserEmailOutbox as _UserEmailOutbox
+from mailing.constants import EmailTypes
 from users.managers import UserTokenManager
 from users.services import PasswordResetService
 
@@ -24,7 +24,7 @@ class TestSendMailForNewUser:
         assert len(mail.outbox) == 1
         assert mail.outbox[-1].to == [new_user.email]
         assert last_outbox.recipient == new_user.email, (
-            last_outbox.email_type == _EmailTemplate.EmailType.NEW_USER
+            last_outbox.email_type == EmailTypes.NEW_USER
         )
 
     def test_send_email_to_reset_password(self, new_user) -> None:
@@ -38,7 +38,7 @@ class TestSendMailForNewUser:
 
         last_outbox = _UserEmailOutbox.objects.last()
         assert last_outbox.recipient == new_user.email, (
-            last_outbox.email_type == _EmailTemplate.EmailType.PASSWORD_CHANGE
+            last_outbox.email_type == EmailTypes.PASSWORD_CHANGE
         )
 
     def test_send_email_on_inquiry_limit_reached(self, new_user) -> None:
@@ -53,5 +53,5 @@ class TestSendMailForNewUser:
 
         last_outbox = _UserEmailOutbox.objects.last()
         assert last_outbox.recipient == new_user.email, (
-            last_outbox.email_type == _EmailTemplate.EmailType.INQUIRY_LIMIT
+            last_outbox.email_type == EmailTypes.INQUIRY_LIMIT
         )

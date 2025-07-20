@@ -8,10 +8,12 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
-from mailing.models import EmailTemplate
 from payments.models import Transaction
 from premium.tasks import premium_expired, setup_premium_profile
 from premium.utils import get_date_days_after
+from mailing.services import TransactionalEmailService
+from mailing.constants import EmailTypes, EmailTemplates
+
 
 
 class PremiumType(Enum):
@@ -62,11 +64,8 @@ class PremiumProfile(models.Model):
         return self.valid_until.date() - self.valid_since.date()
 
     def sent_email_that_premium_expired(self) -> None:
-        template = EmailTemplate.objects.get(
-            email_type=EmailTemplate.EmailType.PREMIUM_EXPIRED
-        )
-        schema = template.create_email_schema(self.product.profile.user)
-        EmailTemplate.send_email(schema)
+        parser = TransactionalEmailService(self.product.profile.user)
+        parser.send(EmailTemplates.PREMIUM_EXPIRED, EmailTypes.PREMIUM_EXPIRED, [self.product.profile.user.email])
 
     def _fresh_init(self) -> None:
         """Initialize the premium profile."""

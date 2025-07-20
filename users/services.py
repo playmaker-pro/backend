@@ -12,16 +12,8 @@ from django.utils.http import urlsafe_base64_decode
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from features.models import AccessPermission, Feature, FeatureElement
-from mailing.default_templates import (
-    GIFT_FOR_1_REFERRAL_REFERRED,
-    GIFT_FOR_1_REFERRAL_REFERRER,
-    GIFT_FOR_3_REFERRALS,
-    GIFT_FOR_5_REFERRALS,
-    GIFT_FOR_15_REFERRALS,
-)
-from mailing.models import EmailTemplate as _EmailTemplate
-from mailing.schemas import EmailSchema
-from mailing.services import MailingService
+from mailing.constants import EmailTemplates, EmailTypes
+from mailing.services import TransactionalEmailService
 from premium.models import PremiumType
 from users.errors import CityDoesNotExistException, InvalidUIDServiceException
 from users.managers import UserTokenManager
@@ -31,7 +23,6 @@ from users.schemas import (
     UserFacebookDetailPydantic,
     UserGoogleDetailPydantic,
 )
-from utils.functions import render_email_template
 
 if TYPE_CHECKING:
     from profiles.models import PROFILE_TYPE
@@ -201,10 +192,12 @@ class UserService:
     @staticmethod
     def send_email_to_confirm_new_user(user: User) -> None:
         """Sends an email to a newly registered user to confirm their email address."""
-        email_template = _EmailTemplate.objects.new_user_template()
         verification_url = UserTokenManager.create_email_verification_url(user)
-        schema = email_template.create_email_schema(user=user, url=verification_url)
-        email_template.send_email(schema)
+
+        # Actual email sending logic
+        TransactionalEmailService(user, context={"url": verification_url}).send(
+            EmailTemplates.NEW_USER, EmailTypes.NEW_USER
+        )
 
     @staticmethod
     def change_email_verify_flag(user: User) -> None:
@@ -228,8 +221,6 @@ class UserService:
 
 
 class PasswordResetService:
-    PASSWORD_RESET_EMAIL_TXT_TEMPLATE = "account/email/password_reset_key_message.txt"
-
     @staticmethod
     def get_user_by_email(email: str) -> Optional[User]:
         """
@@ -257,9 +248,10 @@ class PasswordResetService:
         )
 
         # Actual email sending logic
-        email_template = _EmailTemplate.objects.password_reset_template()
-        schema = email_template.create_email_schema(user=user, url=reset_url)
-        email_template.send_email(schema)
+        verification_url = UserTokenManager.create_email_verification_url(user)
+        TransactionalEmailService(user, context={"url": verification_url}).send(
+            EmailTemplates.PASSWORD_CHANGE, EmailTypes.PASSWORD_CHANGE, [user.email]
+        )
 
     @staticmethod
     def reset_user_password(user: User, new_password: str) -> None:
@@ -296,26 +288,23 @@ class ReferralRewardService:
         """
         Reward the user for their first referral.
         """
-        referrer_html, _ = render_email_template(
-            "mailing/mails/1_referral_reward_referrer.html", {}
+        # Send email to referrer
+        TransactionalEmailService(
+            user=self._user,
+        ).send(
+            EmailTemplates.REFERRAL_REWARD_REFERRER_1,
+            EmailTypes.REFERRAL_REWARD,
+            [self._user.email],
         )
-        referred_html, _ = render_email_template(
-            "mailing/mails/referral_reward_referred.html", {}
+
+        # Send welcome gift email to referred user
+        TransactionalEmailService(
+            user=referred,
+        ).send(
+            EmailTemplates.REFERRAL_REWARD_REFERRED,
+            EmailTypes.REFERRAL_REWARD,
+            [referred.email],
         )
-        email_referral_schema = EmailSchema(
-            subject="Gratulacje! Otrzymujesz nagrodę za polecenie nowego użytkownika",
-            body=GIFT_FOR_1_REFERRAL_REFERRER,
-            html_body=referrer_html,
-            recipients=[self._user.email],
-        )
-        email_referred_schema = EmailSchema(
-            subject="Witaj w PlayMaker.pro! Odbierz swój prezent powitalny",
-            body=GIFT_FOR_1_REFERRAL_REFERRED,
-            html_body=referred_html,
-            recipients=[referred.email],
-        )
-        MailingService(email_referral_schema).send_mail()
-        MailingService(email_referred_schema).send_mail()
 
     def reward_3_referrals(self) -> None:
         """
@@ -324,32 +313,26 @@ class ReferralRewardService:
         self._user.profile.setup_premium_profile(
             premium_type=PremiumType.CUSTOM, period=14
         )
-        referrer_html, _ = render_email_template(
-            "mailing/mails/3_referral_reward_referrer.html", {}
+        TransactionalEmailService(
+            user=self._user,
+        ).send(
+            EmailTemplates.REFERRAL_REWARD_REFERRER_3,
+            EmailTypes.REFERRAL_REWARD,
+            [self._user.email],
         )
-        schema = EmailSchema(
-            subject="Gratulacje! Nagroda za 3 skuteczne polecenia PlayMaker.pro",
-            body=GIFT_FOR_3_REFERRALS,
-            html_body=referrer_html,
-            recipients=[self._user.email],
-        )
-        MailingService(schema).send_mail()
 
     def reward_5_referrals(self) -> None:
         """
         Reward the user for their fifth referral.
         """
         self._user.profile.setup_premium_profile(premium_type=PremiumType.MONTH)
-        referrer_html, _ = render_email_template(
-            "mailing/mails/5_referral_reward_referrer.html", {}
+        TransactionalEmailService(
+            user=self._user,
+        ).send(
+            EmailTemplates.REFERRAL_REWARD_REFERRER_5,
+            EmailTypes.REFERRAL_REWARD,
+            [self._user.email],
         )
-        schema = EmailSchema(
-            subject="Gratulacje! Otrzymujesz miesiąc Premium i treningi za 5 poleceń PlayMaker.pro",
-            body=GIFT_FOR_5_REFERRALS,
-            html_body=referrer_html,
-            recipients=[self._user.email],
-        )
-        MailingService(schema).send_mail()
 
     def reward_15_referrals(self) -> None:
         """
@@ -358,16 +341,13 @@ class ReferralRewardService:
         self._user.profile.setup_premium_profile(
             premium_type=PremiumType.CUSTOM, period=180
         )
-        referrer_html, _ = render_email_template(
-            "mailing/mails/15_referral_reward_referrer.html", {}
+        TransactionalEmailService(
+            user=self._user,
+        ).send(
+            EmailTemplates.REFERRAL_REWARD_REFERRER_15,
+            EmailTypes.REFERRAL_REWARD,
+            [self._user.email],
         )
-        schema = EmailSchema(
-            subject="Gratulacje! 6 miesięcy Premium za 15 poleceń PlayMaker.pro",
-            body=GIFT_FOR_15_REFERRALS,
-            html_body=referrer_html,
-            recipients=[self._user.email],
-        )
-        MailingService(schema).send_mail()
 
     def check_and_reward(self) -> None:
         """

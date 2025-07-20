@@ -3,29 +3,28 @@
 import django.db.models.deletion
 from django.db import migrations, models
 
-from inquiries.models import InquiryLogMessage as _InquiryLogMessage
 
 
 def create_initial_messages(apps, *_) -> None:
     """Create initial messages for logs"""
-    InquiryLogMessage: _InquiryLogMessage = apps.get_model(
+    _InquiryLogMessage = apps.get_model(
         "inquiries", "InquiryLogMessage"
     )
-    InquiryLogMessage.objects.get_or_create(
+    _InquiryLogMessage.objects.get_or_create(
         body="<> zaakceptował twoje zapytanie.",
-        message_type=_InquiryLogMessage.MessageType.ACCEPTED,
+        message_type="ACCEPTED_INQUIRY",
     )
-    InquiryLogMessage.objects.get_or_create(
+    _InquiryLogMessage.objects.get_or_create(
         body="<> odrzucił twoje zapytanie.",
-        message_type=_InquiryLogMessage.MessageType.REJECTED,
+        message_type="REJECTED_INQUIRY",
     )
-    InquiryLogMessage.objects.get_or_create(
+    _InquiryLogMessage.objects.get_or_create(
         body="<> nie odpowiedział na twoje zapytanie. W zamian dodajemy Ci 1 nowe zapytanie, abyś mógł dalej odkrywać rynek transferowy.",
-        message_type=_InquiryLogMessage.MessageType.OUTDATED,
+        message_type="OUTDATED_INQUIRY",
     )
-    InquiryLogMessage.objects.get_or_create(
+    _InquiryLogMessage.objects.get_or_create(
         body="<> wysłał Ci nowe zapytanie.",
-        message_type=_InquiryLogMessage.MessageType.NEW,
+        message_type="NEW_INQUIRY",
     )
 
 

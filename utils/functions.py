@@ -15,7 +15,6 @@ from django.utils.html import format_html, strip_tags
 from backend.settings import cfg
 from backend.settings.config import Environment
 
-
 def translate_league_name(code, name):
     return settings.LEAGUES_CODES_MAP.get(code, name)
 

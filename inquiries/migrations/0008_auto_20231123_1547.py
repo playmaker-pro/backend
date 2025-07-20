@@ -2,15 +2,13 @@
 
 from django.db import migrations, models
 
-from inquiries.models import InquiryLogMessage as _InquiryLogMessage
-
 
 def create_mail_template_for_outdated_inquiry(apps, schema_editor):
     """Add email template for outdated inquiry."""
-    InquiryLogMessage = apps.get_model("inquiries", "InquiryLogMessage")
+    _InquiryLogMessage = apps.get_model("inquiries", "InquiryLogMessage")
 
-    outdated_inquiry: _InquiryLogMessage = InquiryLogMessage.objects.get(
-        log_type=_InquiryLogMessage.MessageType.OUTDATED
+    outdated_inquiry: _InquiryLogMessage = _InquiryLogMessage.objects.get(
+        log_type="OUTDATED_INQUIRY"
     )
     outdated_inquiry.email_title = "Zwiększamy Twoją pulę zapytań o piłkarski kontakt!"
     outdated_inquiry.email_body = """Witaj!
@@ -37,12 +35,12 @@ def create_reminder_inquiry_log(apps, schema_editor) -> None:
     Create new type of InquiryLogMessage - OUTDATED_REMINDER.
     For users that didn't respond to inquiry.
     """
-    InquiryLogMessage: _InquiryLogMessage = apps.get_model(
+    _InquiryLogMessage = apps.get_model(
         "inquiries", "InquiryLogMessage"
     )
 
-    InquiryLogMessage.objects.create(
-        log_type=_InquiryLogMessage.MessageType.OUTDATED_REMINDER,
+    _InquiryLogMessage.objects.create(
+        log_type="OUTDATED_REMINDER",
         log_body="Zapytanie o kontakt od <> czeka na Twoją odpowiedź.",
         email_title="Masz zapytanie o piłkarski kontakt czekające na decyzję.",
         email_body="""Witaj!
