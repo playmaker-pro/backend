@@ -2,14 +2,33 @@ import os as _os
 from enum import Enum
 
 from pm_core.config import APIAuthorization, ServiceSettings
-from pydantic import BaseModel, BaseSettings, Field
+from pydantic import BaseSettings, Field
 
 
-class ScrapperConfig(BaseModel):
+class BaseConfig(BaseSettings):
+    """Base settings for webapp"""
+
+    class Config:
+        env_file = _os.path.join(
+            _os.path.dirname(
+                _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+            ),
+            ".env",
+        )
+        env_file_encoding = "utf-8"
+        env_nested_delimiter = "__"
+        extra = "allow"
+        use_enum_values = True
+
+
+class ScrapperConfig(BaseConfig):
     """Settings for scrapper"""
 
     auth: APIAuthorization
     base_url: str = "http://localhost:8080"
+
+    class Config(BaseConfig.Config):
+        env_prefix = "SCRAPPER__"
 
     @property
     def scrapper_api_url(self) -> str:
@@ -20,24 +39,28 @@ class ScrapperConfig(BaseModel):
         return ServiceSettings(address=self.scrapper_api_url, name="scrapper_service")
 
 
-class TpayConfig(BaseModel):
+class TpayConfig(BaseConfig):
     """Settings for tpay"""
 
-    class TpayCredentials(BaseModel):
+    class TpayCredentials(BaseConfig):
         client_id: str
         client_secret: str
         scope: str
 
-    class CallbackConfig(BaseModel):
-        class Redirect(BaseModel):
-            success: str  # url to redirect user on success (FE url)
-            error: str  # url to redirect user on error (FE url)
+    class CallbackConfig(BaseConfig):
+        class Redirect(BaseConfig):
+            success: str = Field(
+                env="TPAY__CALLBACKS__REDIRECT__SUCCESS"
+            )  # url to redirect user on success (FE url)
+            error: str = Field(
+                env="TPAY__CALLBACKS__REDIRECT__SUCCESS"
+            )  # url to redirect user on error (FE url)
 
-        class Notification(BaseModel):
+        class Notification(BaseConfig):
             email: str  # email address for payment notification
             url: str  # url to which tpay will send payment notification
 
-        payerUrls: Redirect = Field(alias="redirect")
+        payerUrls: Redirect = Field(env="TPAY__CALLBACKS__REDIRECT")
         notification: Notification
 
     credentials: TpayCredentials
@@ -47,19 +70,12 @@ class TpayConfig(BaseModel):
     test_mode: bool
 
 
-class RedisConfig(BaseModel):
-    class _KeyPrefix:
-        transfer_requests: str = "transfer_requests"
-        list_profiles: str = "list_profiles"
-        popular_profiles: str = "popular_profiles"
-        profiles_nearby: str = "profiles_nearby"
-
+class RedisConfig(BaseConfig):
     host: str
     port: int
     db: int
     password: str
     username: str
-    key_prefix: _KeyPrefix = _KeyPrefix
 
     @property
     def url(self) -> str:
@@ -74,15 +90,15 @@ class Environment(Enum):
     TEST = "test"
 
 
-class DatabaseConfig(BaseModel):
+class DatabaseConfig(BaseConfig):
     host: str
     port: int
     db: str
-    user: str = ""
+    username: str = ""
     password: str = ""
 
 
-class WebappConfig(BaseModel):
+class WebappConfig(BaseConfig):
     """Settings for webapp"""
 
     url: str = "https://playmaker.pro/"
@@ -91,7 +107,7 @@ class WebappConfig(BaseModel):
         return f"{self.url}{path.lstrip('/')}"
 
 
-class Config(BaseSettings):
+class Config(BaseConfig):
     """General settings for webapp"""
 
     scrapper: ScrapperConfig
@@ -100,16 +116,4 @@ class Config(BaseSettings):
     redis: RedisConfig
     postgres: DatabaseConfig
     webapp: WebappConfig
-
     # add the rest of settings that should fit here
-    class Config:
-        env_file = _os.path.join(
-            _os.path.dirname(
-                _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
-            ),
-            ".env",
-        )
-        env_file_encoding = "utf-8"
-        env_nested_delimiter = "__"
-        use_enum_values = True
-        allow_population_by_field_name = True
