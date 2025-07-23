@@ -1,4 +1,4 @@
-from utils.functions import generate_fe_url_path
+from utils.utils import generate_fe_url_path
 
 # Static paths
 INQUIRY_CONTACT_PATH = "/kontakty"

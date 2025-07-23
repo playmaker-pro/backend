@@ -1,7 +1,7 @@
-from api.serializers import PhoneNumberField
 from profiles.models import ManagerProfile
 from profiles.serializers_detailed.base_serializers import (
     BaseProfileSerializer,
+    PhoneNumberField,
 )
 
 

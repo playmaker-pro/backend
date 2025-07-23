@@ -513,8 +513,6 @@ class InquiryRequest(models.Model):
     is_read_by_sender = models.BooleanField(default=False)
     is_read_by_recipient = models.BooleanField(default=False)
 
-    anonymous_recipient = models.BooleanField(default=False)
-
     def create_log_for_sender(self, log_type: InquiryLogMessage.MessageType) -> None:
         """Create log for sender"""
         message = InquiryLogMessage.objects.get(log_type=log_type)
@@ -562,7 +560,7 @@ class InquiryRequest(models.Model):
         from notifications.services import NotificationService
 
         NotificationService(self.sender.profile.meta).notify_inquiry_read(
-            self.recipient.profile, hide_profile=self.anonymous_recipient
+            self.recipient.profile
         )
         logger.info(
             f"{self.recipient} read request from {self.sender}. -- "
@@ -609,7 +607,7 @@ class InquiryRequest(models.Model):
         )
         self.is_read_by_sender = False
         NotificationService(self.sender.profile.meta).notify_inquiry_rejected(
-            self.recipient.profile, hide_profile=self.anonymous_recipient
+            self.recipient.profile
         )
 
     def save(self, *args, **kwargs):

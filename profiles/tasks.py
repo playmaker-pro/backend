@@ -66,12 +66,15 @@ def check_profile_one_day_after(profile_id: int, model_name: str) -> None:
     service = NotificationService(profile.meta)
 
     if profile:
-        if model_name == "PlayerProfile" and not profile.meta.transfer_status:
+        if (
+            model_name == "PlayerProfile"
+            and not profile.transfer_status_related.exists()
+        ):
             service.notify_set_status()
 
         if (
             model_name in ["CoachProfile", "ClubProfile", "ManagerProfile"]
-            and not profile.meta.transfer_requests
+            and not profile.transfer_requests.exists()
         ):
             service.notify_set_transfer_requests()
 

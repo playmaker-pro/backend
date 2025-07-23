@@ -136,12 +136,3 @@ class ChoiceFieldValueErrorException(Exception):
 class InvalidDateFormat(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "Invalid date format, expected YYYY-MM-DD."
-
-
-class PhoneNumberMustBeADictionaryHTTPException(CoreAPIException):
-    """
-    API HTTP exception raised when a phone number is not a dictionary.
-    """
-
-    status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = "Phone number must be a dictionary."

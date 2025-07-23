@@ -13,6 +13,7 @@ def setup_premium_profile(
 
     premium_type = PremiumType(premium_type)
     pp_object = profile.premium_products
+
     premium, _ = PremiumProfile.objects.get_or_create(product=pp_object)
 
     if pp_object.trial_tested and premium_type == PremiumType.TRIAL:
@@ -42,13 +43,6 @@ def premium_expired(premium_products_id: int):
         pp_object = PremiumProduct.objects.get(pk=premium_products_id)
     except PremiumProduct.DoesNotExist:
         return
-
-    if (
-        pp_object.profile
-        and pp_object.profile.meta.transfer_object
-        and pp_object.profile.meta.transfer_object.is_anonymous
-    ):
-        pp_object.profile.meta.transfer_object.delete()
 
     pp_object.premium.sent_email_that_premium_expired()
     NotificationService(pp_object.profile.meta).notify_premium_just_expired()
