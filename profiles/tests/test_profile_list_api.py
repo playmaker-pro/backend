@@ -242,6 +242,7 @@ class TestProfileListAPI(APITestCase):
         league1_id = team1.league_history.league.id
         league2_id = team2.league_history.league.id
 
+        # Test for valid league_id
         response = self.client.get(self.url, {**param, "league": [league1_id]})
         assert response.status_code == 200
         assert len(response.data["results"]) == 1
@@ -654,11 +655,12 @@ class TestProfileListAPI(APITestCase):
         status "5" which represents profiles without an associated transfer
         status object.
         """
-        p1 = PlayerProfileFactory.create()
-        TransferStatusFactory.create(status="1", meta=p1.meta)
+        # Create profiles with various transfer statuses
+        player_with_status_1 = PlayerProfileFactory.create()
+        TransferStatusFactory.create(profile=player_with_status_1, status="1")
 
-        p2 = PlayerProfileFactory.create()
-        TransferStatusFactory.create(status="2", meta=p2.meta)
+        player_with_status_2 = PlayerProfileFactory.create()
+        TransferStatusFactory.create(profile=player_with_status_2, status="2")
 
         PlayerProfileFactory.create()
 
@@ -722,14 +724,17 @@ class TestProfileListAPI(APITestCase):
         league2 = LeagueFactory.create()
 
         # Create profiles with transfer statuses linked to different leagues
-        p1 = PlayerProfileFactory.create()
-        ts = TransferStatusFactory.create(meta=p1.meta)
-        ts.league.add(league1)
+        player_in_league1 = PlayerProfileFactory.create()
+        TransferStatusFactory.create(
+            profile=player_in_league1, leagues=[league1]
+        )  # Pass league instance
 
-        p2 = PlayerProfileFactory.create()
-        ts = TransferStatusFactory.create(meta=p2.meta)
-        ts.league.add(league2)
+        player_in_league2 = PlayerProfileFactory.create()
+        TransferStatusFactory.create(
+            profile=player_in_league2, leagues=[league2]
+        )  # Pass league instance
 
+        # Perform API request to filter by league1
         response = self.client.get(
             self.url,
             {"role": "P", "transfer_status_league": league1.id},
@@ -750,12 +755,12 @@ class TestProfileListAPI(APITestCase):
         """
         player_with_additional_info = PlayerProfileFactory.create()
         TransferStatusFactory.create(
-            meta=player_with_additional_info.meta, additional_info=["1", "2"]
+            profile=player_with_additional_info, additional_info=["1", "2"]
         )
 
         player_without_additional_info = PlayerProfileFactory.create()
         TransferStatusFactory.create(
-            meta=player_without_additional_info.meta, additional_info=[]
+            profile=player_without_additional_info, additional_info=[]
         )
 
         # Filter for profiles with specific additional info
@@ -776,7 +781,7 @@ class TestProfileListAPI(APITestCase):
         """
         player_with_trainings = PlayerProfileFactory.create()
         TransferStatusFactory.create(
-            meta=player_with_trainings.meta, number_of_trainings="1"
+            profile=player_with_trainings, number_of_trainings="1"
         )
 
         # Filter for profiles with specific number of trainings
@@ -796,9 +801,7 @@ class TestProfileListAPI(APITestCase):
         the API accurately filters profiles based on these benefits.
         """
         player_with_benefits = PlayerProfileFactory.create()
-        TransferStatusFactory.create(
-            meta=player_with_benefits.meta, benefits=["1", "2"]
-        )
+        TransferStatusFactory.create(profile=player_with_benefits, benefits=["1", "2"])
 
         # Filter for profiles with specific benefits
         response = self.client.get(
@@ -817,7 +820,7 @@ class TestProfileListAPI(APITestCase):
         the specified salary criteria are returned in the response.
         """
         player_with_salary = PlayerProfileFactory.create()
-        TransferStatusFactory.create(meta=player_with_salary.meta, salary="1")
+        TransferStatusFactory.create(profile=player_with_salary, salary="1")
 
         # Filter for profiles with specific salary
         response = self.client.get(

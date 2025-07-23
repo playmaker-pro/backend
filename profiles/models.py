@@ -9,8 +9,9 @@ from address.models import AddressField
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
-from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.db import models
 from django.db.models import QuerySet
@@ -214,7 +215,12 @@ class BaseProfile(models.Model, EventLogMixin):
 
     labels = GenericRelation("labels.Label")
     follows = GenericRelation("followers.GenericFollow")
-
+    transfer_status_related = GenericRelation(
+        "ProfileTransferStatus", related_query_name="transfer_status_related"
+    )
+    transfer_requests = GenericRelation(
+        "ProfileTransferRequest", related_query_name="transfer_requests"
+    )
     visitation = models.OneToOneField(
         "Visitation", on_delete=models.PROTECT, null=True, blank=True
     )
@@ -476,8 +482,6 @@ class BaseProfile(models.Model, EventLogMixin):
         if self.meta is None:
             self.meta = ProfileMeta.objects.create(
                 _profile_class=self.__class__.__name__.lower(),
-                _uuid=self.uuid,
-                _slug=self.slug,
                 user=self.user,
             )
             if commit:
@@ -859,6 +863,14 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
         null=True,
         blank=True,
     )
+    # TODO: lremkowicz: deprecated due to https://playmakerpro.atlassian.net/browse/PM20-628  # noqa: E501
+    #  Transfer status moved to new model and this field have to be removed in future
+    transfer_status = models.IntegerField(
+        _("Status transferowy"),
+        choices=profile_utils.make_choices(TRANSFER_STATUS_CHOICES),
+        null=True,
+        blank=True,
+    )
     card = models.IntegerField(
         _("Karta na ręku"),
         choices=profile_utils.make_choices(CARD_CHOICES),
@@ -880,12 +892,23 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     external_links = models.OneToOneField(
         ExternalLinks, on_delete=models.SET_NULL, blank=True, null=True
     )
+    # laczynaspilka_url, min90_url, transfermarket_url data will be migrated
+    # into PlayerMapper and then those fields will be deleted
     laczynaspilka_url = models.URLField(_("LNP"), max_length=500, blank=True, null=True)
     min90_url = models.URLField(
         _("90min portal"), max_length=500, blank=True, null=True
     )
     transfermarket_url = models.URLField(_("TrasferMarket"), blank=True, null=True)
 
+    # TODO Based on task PM-363. After migration on production, field can be deleted
+    voivodeship = models.CharField(
+        _("Województwo zamieszkania"),
+        help_text="Wybierz województwo. Stare pole przygotowane do migracji.",
+        max_length=68,
+        blank=True,
+        null=True,
+        choices=settings.VOIVODESHIP_CHOICES,
+    )
     voivodeship_obj = models.ForeignKey(
         Voivodeships,
         verbose_name=_("Województwo zamieszkania"),
@@ -2412,6 +2435,147 @@ class ProfileVisitHistory(models.Model):
         ]
 
 
+class TransferBaseModel(models.Model):
+    """Transfer base model."""
+
+    salary = models.CharField(
+        max_length=10,
+        default=None,
+        null=True,
+        blank=True,
+        choices=definitions.TRANSFER_SALARY_CHOICES,
+        help_text="Define salary",
+    )
+    benefits = ArrayField(
+        models.CharField(
+            max_length=255,
+            null=True,
+            blank=True,
+            choices=definitions.TRANSFER_BENEFITS_CHOICES,
+            help_text="Additional information about the transfer.",
+        ),
+        null=True,
+        blank=True,
+        help_text=_("Benefits defines as integers with comma. Example: 1,2"),
+    )
+    number_of_trainings = models.CharField(
+        max_length=10,
+        default=None,
+        null=True,
+        blank=True,
+        choices=definitions.TRANSFER_TRAININGS_CHOICES,
+        help_text="Define number of trainings per week",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class ProfileTransferStatus(TransferBaseModel):
+    """Keeps track on profile transfer status"""
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey("content_type", "object_id")
+    status = models.CharField(
+        max_length=255,
+        choices=definitions.TRANSFER_STATUS_CHOICES,
+        help_text="Defines a status of the transfer for the profile.",
+    )
+    league = models.ManyToManyField(
+        "clubs.League",
+        related_name="transfer_status",
+    )
+    additional_info = ArrayField(
+        models.CharField(
+            max_length=10,
+            choices=definitions.TRANSFER_STATUS_ADDITIONAL_INFO_CHOICES,
+            help_text="Additional information about the transfer.",
+        ),
+        null=True,
+    )
+
+    @property
+    def profile(self) -> BaseProfile:
+        """Returns the user profile."""
+        return self.content_object
+
+
+class ProfileTransferRequest(TransferBaseModel):
+    """
+    Represents a profile transfer request in the context of profile needs
+    (for example soccer clubs and coaches).
+
+    This model tracks transfer requests initiated by profiles
+    (coaches or club representatives) to request players for team participation.
+    """
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey("content_type", "object_id")
+
+    requesting_team = models.ForeignKey(
+        TeamContributor,
+        on_delete=models.CASCADE,
+        related_name="transfer_requests",
+        help_text="The team that is requesting the transfer.",
+    )
+    gender = models.CharField(
+        max_length=10, choices=(("M", "M"), ("F", "F")), help_text="Define team gender"
+    )
+
+    status = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        choices=definitions.TRANSFER_REQUEST_STATUS_CHOICES,
+        help_text="Defines a status of the transfer for the profile.",
+    )
+    position = models.ManyToManyField(
+        PlayerPosition,
+        related_name="transfer_requests",
+        help_text="The position that the team is requesting.",
+    )
+    league = models.CharField(
+        max_length=128,
+        null=True,
+        blank=True,
+        help_text=_("League name filled automatically from team.club.voivodeship_obj"),
+    )
+    voivodeship = models.CharField(
+        max_length=128,
+        null=True,
+        blank=True,
+        help_text=_(
+            "Voivodeship name filled automatically from team.club.voivodeship_obj"
+        ),
+    )
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to fill league and voivodeship fields. Fields are needed
+        for filtering transfer requests in the transfer request search.
+        """
+        if self.team and self.team.league:
+            self.league = self.team.league.name
+        club = self.team.club if self.team else None
+        if club and club.voivodeship_obj:
+            self.voivodeship = club.voivodeship_obj.name
+        return super().save(*args, **kwargs)
+
+    @property
+    def profile(self) -> BaseProfile:
+        """Returns the user profile."""
+        return self.content_object
+
+    @property
+    def team(self):
+        """Returns the requesting team."""
+        return self.requesting_team.team_history.first()
+
+
 class Catalog(models.Model):
     name = models.CharField(max_length=255, unique=True, blank=True, null=True)
     slug = models.CharField(max_length=255, blank=False, null=False, editable=False)
@@ -2424,8 +2588,6 @@ class Catalog(models.Model):
 
 class ProfileMeta(models.Model, VisitationMixin):
     _profile_class = models.CharField(max_length=20)
-    _uuid = models.UUIDField(unique=True, null=False, blank=False)
-    _slug = models.CharField(max_length=255, null=False, blank=False, unique=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -2440,19 +2602,6 @@ class ProfileMeta(models.Model, VisitationMixin):
         Returns the profile object associated with this meta instance.
         """
         return getattr(self, self._profile_class.lower())
-
-    @property
-    def transfer_object(
-        self,
-    ) -> typing.Union[models.Model, None]:
-        """
-        Returns the transfer object associated with this meta instance.
-        """
-        if hasattr(self, "transfer_request"):
-            return self.transfer_request
-        if hasattr(self, "transfer_status"):
-            return self.transfer_status
-        return None
 
     def __str__(self) -> None:
         return f"Meta of {self.profile}"

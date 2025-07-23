@@ -8,8 +8,7 @@ from django_filters import rest_framework as filters
 
 from api.filters import MultipleFilter, NumberInFilter
 from clubs.models import League
-from profiles.models import CoachProfile, PlayerProfile
-from transfers.models import ProfileTransferRequest
+from profiles.models import CoachProfile, PlayerProfile, ProfileTransferRequest
 
 
 class TransferRequestCatalogueFilter(filters.FilterSet):

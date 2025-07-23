@@ -57,21 +57,16 @@ class NotificationService:
         Parse body of the notification.
         """
         if profile := kwargs.pop("profile", None):
-            hide_profile = kwargs.pop("hide_profile", False)
-            full_name = profile.user.get_full_name()
-
             try:
-                if hide_profile:
-                    kwargs["profile"] = "Anonimowy profil"
-                else:
-                    role_short = profile.user.declared_role
-                    gender_index = int(profile.user.userpreferences.gender == "K")
-                    subject = GENDER_BASED_ROLES[role_short][gender_index]
-                    kwargs["profile"] = f"{subject} {full_name}"
-                    kwargs["picture"] = profile.user.picture.name
-                    kwargs["picture_profile_role"] = role_short
+                role_short = profile.user.declared_role
+                gender_index = int(profile.user.userpreferences.gender == "K")
+                subject = GENDER_BASED_ROLES[role_short][gender_index]
+                kwargs["profile"] = f"{subject} {profile.user.get_full_name()}"
             except (KeyError, IndexError):
-                kwargs["profile"] = full_name
+                kwargs["profile"] = profile.user.get_full_name()
+
+            kwargs["picture"] = profile.user.picture.name
+            kwargs["picture_profile_role"] = role_short
 
         return NotificationBody(**template.value, kwargs=kwargs)
 
@@ -221,29 +216,23 @@ class NotificationService:
         )
         self.create_notification(body)
 
-    def notify_inquiry_rejected(
-        self, who: PROFILE_MODELS, hide_profile: bool = False
-    ) -> None:
+    def notify_inquiry_rejected(self, who: PROFILE_MODELS) -> None:
         """
         Send notifications for rejected inquiries.
         """
         body = self.parse_body(
             NotificationTemplate.INQUIRY_REJECTED,
             profile=who,
-            hide_profile=hide_profile,
         )
         self.create_notification(body)
 
-    def notify_inquiry_read(
-        self, who: PROFILE_MODELS, hide_profile: bool = False
-    ) -> None:
+    def notify_inquiry_read(self, who: PROFILE_MODELS) -> None:
         """
         Send notifications for read inquiries.
         """
         body = self.parse_body(
             NotificationTemplate.INQUIRY_READ,
             profile=who,
-            hide_profile=hide_profile,
         )
         self.create_notification(body)
 
@@ -264,7 +253,7 @@ class NotificationService:
         for meta in cls.get_queryset().filter(
             _profile_class__in=["coachprofile", "clubprofile", "managerprofile"]
         ):
-            if not hasattr(meta, "transfer_request"):
+            if meta.profile.transfer_requests.count() == 0:
                 cls(meta).notify_set_transfer_requests()
 
     def notify_set_transfer_requests(self) -> None:
@@ -282,7 +271,7 @@ class NotificationService:
         Send notifications for setting status.
         """
         for meta in cls.get_queryset().filter(_profile_class="playerprofile"):
-            if not hasattr(meta, "transfer_status"):
+            if meta.profile.transfer_status_related.count() == 0:
                 cls(meta).notify_set_status()
 
     def notify_set_status(self) -> None:

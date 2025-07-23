@@ -1,18 +1,22 @@
 import typing
 
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from api.serializers import PhoneNumberField, ProfileEnumChoicesSerializer
+from api.serializers import ProfileEnumChoicesSerializer
 from clubs.api.serializers import TeamHistoryBaseProfileSerializer
 from inquiries import models as _models
 from profiles.api.serializers import (
     PlayerProfilePositionSerializer as _PlayerProfilePositionSerializer,
 )
+from profiles.serializers_detailed.base_serializers import PhoneNumberField
 from profiles.serializers_detailed.player_profile_serializers import (
     PlayerMetricsSerializer,
 )
 from users.api.serializers import BaseUserDataSerializer as _BaseUserDataSerializer
-from users.models import User, UserPreferences
+from users.models import UserPreferences
+
+User = get_user_model()
 
 
 class InquiryContactSerializer(serializers.ModelSerializer):
@@ -115,31 +119,6 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         model = _models.InquiryRequest
         fields = "__all__"
 
-    def to_representation(self, instance: _models.InquiryRequest) -> None:
-        """Custom representation for InquiryRequest, handling recipient data."""
-        data = super().to_representation(instance)
-        if (
-            instance.anonymous_recipient
-            and instance.status != _models.InquiryRequest.STATUS_ACCEPTED
-        ):
-            recipient = data.get("recipient_object", {})
-            transfer_object = instance.recipient.profile.meta.transfer_object
-            recipient["slug"] = transfer_object.anonymous_slug
-            recipient["uuid"] = transfer_object.anonymous_uuid
-            recipient["id"] = 0
-            recipient["first_name"] = "Anonimowy"
-            recipient["last_name"] = "profil"
-            recipient["picture"] = None
-            recipient["team_history_object"] = None
-            recipient["contact"] = {
-                "email": None,
-                "phone_number": {"dial_code": None, "number": None},
-            }
-            data["recipient_object"] = recipient
-            data["recipient_profile_uuid"] = transfer_object.anonymous_uuid
-
-        return data
-
     def validate(self, attrs: dict) -> dict:
         """Validate if user can make request"""
         if not self.instance:
@@ -212,6 +191,14 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         inquiry_request.save(recipient_profile_uuid=recipient_profile_uuid)
         return inquiry_request
 
+    @property
+    def data(self) -> dict:
+        """Get data, but remove contact information if request is not accepted yet"""
+        data = super().data
+        if data.get("status") != _models.InquiryRequest.STATUS_ACCEPTED:
+            data["recipient_object"]["contact"] = {}
+        return data
+
 
 class InquiryPlanSerializer(serializers.ModelSerializer):
     class Meta:
@@ -259,7 +246,7 @@ class UserInquirySerializer(serializers.ModelSerializer):
     days_until_expiry = serializers.IntegerField(
         read_only=True, source="get_days_until_next_reference"
     )
-    # logs = UserInquiryLogSerializer(many=True, read_only=True)
+    logs = UserInquiryLogSerializer(many=True, read_only=True)
     unlimited = serializers.BooleanField(
         read_only=True, source="has_unlimited_inquiries"
     )

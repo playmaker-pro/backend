@@ -1,6 +1,10 @@
 import logging
+from typing import Type, Union
 
+from django import forms
+from django.apps import apps
 from django.contrib import admin
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Field, QuerySet
 from django.forms.models import ModelChoiceField
 from django.http import HttpRequest
@@ -13,6 +17,7 @@ from clubs.models import League
 from profiles import models
 from profiles.admin.actions import *
 from profiles.admin.mixins import RemoveM2MDuplicatesMixin
+from profiles.models import PROFILE_TYPES_AS_STRING, BaseProfile
 from profiles.services import ProfileService
 from utils import linkify
 
@@ -458,65 +463,129 @@ class CourseAdmin(admin.ModelAdmin):
     get_owner_display.short_description = "Owner Name"
 
 
-# class ContentTypeMixin:
-#     def get_content_type(
-#         self, obj: Union[models.ProfileTransferStatus, models.ProfileTransferRequest]
-#     ) -> str:
-#         """
-#         Retrieves the content type of the given ProfileTransferStatus object and returns
-#         a formatted HTML string.
+class TransferStatusForm(forms.ModelForm):
+    class Meta:
+        model = models.ProfileTransferStatus
+        exclude = []
 
-#         This method gets the model associated with the content type of the
-#         ProfileTransferStatus object, retrieves the corresponding profile,
-#         and generates a URL to the admin page for that profile. It then returns a
-#         formatted HTML string that contains a hyperlink to the admin page.
-#         """
+    def __init__(self, *args, **kwargs):
+        """
+        Override the formfield for the 'content_type'
+        foreign key to only include profiles.
+        """
+        super().__init__(*args, **kwargs)
+        self.fields["content_type"].queryset = ContentType.objects.filter(
+            app_label="profiles",
+            model__in=[
+                obj[0].lower() for obj in PROFILE_TYPES_AS_STRING
+            ],  # Include the model names you want
+        )
 
-#         Model: Type[BaseProfile] = apps.get_model(  # noqa
-#             "profiles", obj.content_type.model
-#         )
-#         profile = Model.objects.get(pk=obj.object_id)
-#         view_name = (
-#             f"admin:{profile._meta.app_label}_"  # noqa
-#             f"{profile.__class__.__name__.lower()}_change"
-#         )
-#         link_url = reverse(view_name, args=[profile.pk])
-#         return format_html(f'<a href="{link_url}">{profile}</a>')
 
-#     get_content_type.short_description = "Profile"
+class ContentTypeMixin:
+    """Mixin for admin classes that work with ProfileTransferStatus and ProfileTransferRequest."""
 
-#     def profile_type(
-#         self, obj: Union[models.ProfileTransferStatus, models.ProfileTransferRequest]
-#     ) -> str:
-#         """Return profile type."""
+    def _get_profile_from_obj(
+        self, obj: Union[models.ProfileTransferStatus, models.ProfileTransferRequest]
+    ) -> BaseProfile:
+        """Get profile instance from transfer object."""
+        Model: Type[BaseProfile] = apps.get_model("profiles", obj.content_type.model)
+        return Model.objects.get(pk=obj.object_id)
 
-#         Model: Type[BaseProfile] = apps.get_model(  # noqa
-#             "profiles", obj.content_type.model
-#         )
-#         profile = Model.objects.get(pk=obj.object_id)
-#         return profile.__class__.__name__
+    def _get_profile_admin_url(self, profile: BaseProfile) -> str:
+        """Get admin URL for profile."""
+        view_name = f"admin:{profile._meta.app_label}_{profile.__class__.__name__.lower()}_change"
+        return reverse(view_name, args=[profile.pk])
 
-#     profile_type.short_description = "Profile type"
+    def get_content_type(
+        self, obj: Union[models.ProfileTransferStatus, models.ProfileTransferRequest]
+    ) -> str:
+        """
+        Retrieves the content type of the given ProfileTransferStatus object and returns
+        a formatted HTML string with link to profile admin.
+        """
+        try:
+            profile = self._get_profile_from_obj(obj)
+            link_url = self._get_profile_admin_url(profile)
+            return format_html(f'<a href="{link_url}">{profile}</a>')
+        except Exception as e:
+            logger.error(f"Error getting content type for {obj}: {e}")
+            return f"Error: {str(e)}"
 
-#     def get_user_email(
-#         self, obj: Union[models.ProfileTransferStatus, models.ProfileTransferRequest]
-#     ) -> str:
-#         """Return user email."""
-#         return mark_safe(f'<a href="{obj.pk}">{obj}</a>')
+    def profile_type(
+        self, obj: Union[models.ProfileTransferStatus, models.ProfileTransferRequest]
+    ) -> str:
+        """Return profile type."""
+        try:
+            profile = self._get_profile_from_obj(obj)
+            return profile.__class__.__name__
+        except Exception as e:
+            logger.error(f"Error getting profile type for {obj}: {e}")
+            return "Error"
 
-#     get_user_email.short_description = "Transfer object"
+    def get_user_email(
+        self, obj: Union[models.ProfileTransferStatus, models.ProfileTransferRequest]
+    ) -> str:
+        """Return user email."""
+        return mark_safe(f'<a href="{obj.pk}">{obj}</a>')
 
-#     def get_profile_uuid(
-#         self, obj: Union[models.ProfileTransferStatus, models.ProfileTransferRequest]
-#     ) -> str:
-#         """Return profile uuid."""
-#         Model: Type[BaseProfile] = apps.get_model(  # noqa
-#             "profiles", obj.content_type.model
-#         )
-#         profile = Model.objects.get(pk=obj.object_id)
-#         return profile.uuid
+    def get_profile_uuid(
+        self, obj: Union[models.ProfileTransferStatus, models.ProfileTransferRequest]
+    ) -> str:
+        """Return profile uuid."""
+        try:
+            profile = self._get_profile_from_obj(obj)
+            return profile.uuid
+        except Exception as e:
+            logger.error(f"Error getting profile UUID for {obj}: {e}")
+            return "Error"
 
-#     get_profile_uuid.short_description = "Profile uuid"
+    # Set short descriptions
+    get_content_type.short_description = "Profile"
+    profile_type.short_description = "Profile type"
+    get_user_email.short_description = "Transfer object"
+    get_profile_uuid.short_description = "Profile uuid"
+
+
+@admin.register(models.ProfileTransferStatus)
+class ProfileTransferStatusAdmin(admin.ModelAdmin, ContentTypeMixin):
+    """Admin for ProfileTransferStatus model."""
+
+    form = TransferStatusForm
+    list_display = (
+        "pk",
+        "get_user_email",
+        "get_content_type",
+        "get_profile_uuid",
+        "profile_type",
+        "created_at",
+        "updated_at",
+    )
+    list_filter = ("content_type", "created_at", "updated_at")
+    search_fields = ("object_id",)
+    readonly_fields = ("created_at", "updated_at")
+    date_hierarchy = "created_at"
+
+
+@admin.register(models.ProfileTransferRequest)
+class ProfileTransferRequestAdmin(admin.ModelAdmin, ContentTypeMixin):
+    """Admin for ProfileTransferRequest model."""
+
+    form = TransferStatusForm
+    list_display = (
+        "pk",
+        "get_user_email",
+        "get_content_type",
+        "get_profile_uuid",
+        "profile_type",
+        "created_at",
+        "updated_at",
+        "voivodeship",
+    )
+    list_filter = ("content_type", "voivodeship", "created_at", "updated_at")
+    search_fields = ("object_id",)
+    readonly_fields = ("created_at", "updated_at")
+    date_hierarchy = "created_at"
 
 
 @admin.register(models.Catalog)

@@ -4,8 +4,8 @@ from parameterized import parameterized
 from clubs import errors as club_errors
 from profiles import errors as errors
 from profiles.api import errors as api_errors
+from profiles.models import ProfileTransferRequest
 from profiles.utils import map_service_exception
-from transfers.models import ProfileTransferRequest
 
 
 class MapServiceExceptionTest(TestCase):
@@ -39,9 +39,9 @@ class MapServiceExceptionTest(TestCase):
     ):
         # Test valid service exceptions and see if they are correctly mapped.
         mapped_exception = map_service_exception(service_exception)
-        assert mapped_exception == expected_api_exception, (
-            f"Failed to map {type(service_exception)} to {expected_api_exception}"
-        )
+        assert (
+            mapped_exception == expected_api_exception
+        ), f"Failed to map {type(service_exception)} to {expected_api_exception}"
 
     def test_unmapped_exception_returns_none(self):
         # Test that an exception not in the mapping returns None.
