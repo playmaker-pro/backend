@@ -398,6 +398,12 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "filename": join(LOGFILE_ROOT, "profiles.log"),
                 "formatter": "verbose",
             },
+            "outbox_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": join(LOGFILE_ROOT, "outbox.log"),
+                "formatter": "verbose",
+            },
             "data_log_file": {
                 "level": "DEBUG",
                 "class": "logging.FileHandler",

@@ -7,6 +7,7 @@ class AsyncAdminEmailHandler(AdminEmailHandler):
     """Custom AdminEmailHandler that sends emails via Celery."""
 
     def emit(self, record):
+        breakpoint()
         try:
             subject = self.format(record)
             message = str(record.__dict__)

@@ -1,6 +1,5 @@
-from django.utils.html import strip_tags
+from django.conf import settings
 
-from mailing.models import UserEmailOutbox
 from mailing.schemas import EmailTemplateRegistry, MailContent
 from mailing.tasks import send
 from mailing.utils import build_email_context
@@ -9,63 +8,25 @@ from mailing.utils import build_email_context
 class MailingService:
     """Handles sending templated emails and optionally logging them in the outbox."""
 
-    def __init__(
-        self,
-        context: dict,
-        recipients: list,
-        mail_content: MailContent,
-        sender: str = None,
-        email_type: str = None,
-    ) -> None:
+    def __init__(self, schema: MailContent) -> None:
         """
         Initialize the mailing service.
 
         Args:
-            context (dict): Context passed to the template renderer.
-            recipients (list): List of recipient email addresses.
-            mail_content (MailContent): Email template content.
-            sender (str, optional): Email sender address.
-            email_type (str, optional): Optional identifier for tracking/logging.
+            schema (MailContent): The email template schema to use.
         """
-        self.context = context
-        self.recipients = recipients
-        self.sender = sender
-        self.mail_content = mail_content
-        self.email_type = email_type
+        self._schema = schema
 
-    def send_mail(self) -> None:
+    def send_mail(self, recipient: settings.AUTH_USER_MODEL) -> None:
         """
-        Send the email using the provided content, context, and recipients.
-        Adds an outbox record if email_type is provided.
+        Send the email using the provided schema and recipient.
         """
-        if not self.mail_content:
-            raise ValueError("mail_content must be provided")
-
-        subject = self.mail_content.parse_subject(context=self.context)
-        body_html = self.mail_content.parse_template(context=self.context)
-        body_text = strip_tags(body_html)  # fallback plain text
-
-        if self.email_type:
-            self.add_outbox_record()
+        recipient_list = [recipient.email]
 
         send.delay(
-            subject=self._subject,
-            message=self._body,
-            from_email=self._sender,
-            recipient_list=self._recipients,
-            html_message=self._schema.html_body or None,
-            log=self._schema.log,
+            recipient_list=recipient_list,
+            **self._schema.data,
         )
-
-    def add_outbox_record(self) -> None:
-        """
-        Add an outbox tracking record for each recipient.
-        Only called if email_type is specified.
-        """
-        for recipient in self.recipients:
-            UserEmailOutbox.objects.create(
-                recipient=recipient, email_type=self.email_type
-            )
 
 
 class TransactionalEmailService:
@@ -93,7 +54,7 @@ class TransactionalEmailService:
         mail_content = EmailTemplateRegistry.get(template_key)
         MailingService(
             context=self.context,
-            recipients=recipients or [self.user.contact_email],
+            recipients=recipients or [self.user.email],
             email_type=email_type,
             mail_content=mail_content,
         ).send_mail()

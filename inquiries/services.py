@@ -1,13 +1,13 @@
 import datetime
 import logging
-from django.utils import timezone
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
-from mailing.services import TransactionalEmailService
-from mailing.models import UserEmailOutbox
-from mailing.constants import EmailTypes, EmailTemplates
-from inquiries.models import INQUIRY_LIMIT_INCREASE_URL
+
+from mailing.schemas import EmailTemplateRegistry
+from mailing.services import MailingService
+from utils.constants import INQUIRY_LIMIT_INCREASE_URL
 
 from .models import InquiryPlan, InquiryRequest, UserInquiry
 
@@ -114,73 +114,14 @@ class InquireService:
             is_read_by_sender=True
         )
 
-    def send_inquiry_limit_reached_email(self, user: settings.AUTH_USER_MODEL, force_send: bool = False) -> None:
-        """Send email notification about reaching the limit"""
-        if (
-            self.can_sent_inquiry_limit_reached_email(user)
-            or force_send
-        ):
-            parser = TransactionalEmailService(user=user, context={'url': INQUIRY_LIMIT_INCREASE_URL})
-            parser.send(EmailTemplates.INQUIRY_LIMIT, EmailTypes.INQUIRY_LIMIT)
-
-    def send_inquiry_log_email(self, log) -> None:
-        """Send email to user with new inquiry request state"""
-        url = log.ulr_to_profile
-        sender = getattr(log.ref, "sender", None)
-        TransactionalEmailService(log.log_owner.user, log=log, context={'url': url, 'sender': sender}).send(log.log_type, "inquiry_log")
-
     @staticmethod
-    def can_sent_inquiry_limit_reached_email(
-            user: settings.AUTH_USER_MODEL
-    ) -> bool:
-        """
-        Return True if user can receive inquiry limit reached email.
-
-        Send email once per round. So:
-        - if last email was sent in april current year, we can sent next email after june current year.
-        - if last email was sent in july current year, we can sent next email after december current year.
-        - if last email was sent in december last year, we can sent next email after june current year.
-        """
-        curr_date = timezone.now()
-        if not (
-                last_sent_mail := (
-                        UserEmailOutbox.objects.filter(
-                            recipient=user.contact_email,
-                            email_type=EmailTypes.INQUIRY_LIMIT,
-                        ).last()
+    def send_inquiry_limit_reached_email(
+        user: settings.AUTH_USER_MODEL, force_send: bool = False
+    ) -> None:
+        """Send email notification about reaching the limit"""
+        if user.userinquiry.can_remind_about_limit or force_send:
+            MailingService(
+                EmailTemplateRegistry.INQUIRY_LIMIT(
+                    context={"url": INQUIRY_LIMIT_INCREASE_URL}
                 )
-        ):
-            return True
-        last_sent_mail = last_sent_mail.sent_date
-        if last_sent_mail.month < 6:
-            # last_sent | current_date | result
-            # 2023-04-01 | 2023-06-01 | True
-            # 2023-04-01 | 2023-05-01 | False
-            # 2023-04-01 | 2025-04-01 | True
-            return (
-                True
-                if (curr_date.month >= 6 and curr_date.year >= last_sent_mail.year)
-                   or curr_date.year > last_sent_mail.year + 1
-                else False
-            )
-        elif last_sent_mail.month == 12:
-            # last_sent | current_date | result
-            # 2022-12-03 | 2023-06-01 | True
-            # 2022-12-03 | 2024-04-01 | True
-            # 2022-12-03 | 2023-04-01 | False
-            return (
-                True
-                if (curr_date.month >= 6 and curr_date.year > last_sent_mail.year)
-                   or curr_date.year > last_sent_mail.year + 1
-                else False
-            )
-        elif last_sent_mail.month >= 6:
-            # last_sent | current_date | result
-            # 2023-06-01 | 2023-12-01 | True
-            # 2023-07-01 | 2023-11-01 | False
-            # 2023-07-01 | 2025-11-01 | True
-            return (
-                True
-                if curr_date.month == 12 or curr_date.year > last_sent_mail.year
-                else False
-            )
+            ).send_mail(user)

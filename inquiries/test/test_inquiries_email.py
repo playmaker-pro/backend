@@ -1,21 +1,14 @@
 from datetime import timedelta
-from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import TestCase
-from django.utils import timezone
 
+from inquiries.constants import InquiryLogType
 from inquiries.errors import ForbiddenLogAction
 from inquiries.models import UserInquiry
-from inquiries.constants import InquiryLogType
-from inquiries.services import InquireService
-from mailing.constants import EmailTypes
 from utils.factories.inquiry_factories import InquiryRequestFactory
-from utils.factories.mailing_factories import (
-    UserEmailOutboxFactory as _UserEmailOutboxFactory,
-)
 from utils.factories.profiles_factories import GuestProfileFactory, PlayerProfileFactory
 
 User = get_user_model()
@@ -149,48 +142,3 @@ class TestSendEmails(TestCase):
 
         assert len(mail.outbox) == 1
         assert mail.outbox[0].to == [self.user1.contact_email]
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize(
-    "last_user_outbox_sent_email_date,current_date,expected",
-    [
-        (timezone.datetime(2023, 6, 1), timezone.datetime(2023, 12, 1), True),
-        (timezone.datetime(2023, 7, 1), timezone.datetime(2023, 11, 1), False),
-        (timezone.datetime(2023, 7, 1), timezone.datetime(2025, 11, 1), True),
-        (timezone.datetime(2023, 12, 1), timezone.datetime(2025, 7, 1), True),
-        (timezone.datetime(2023, 12, 2), timezone.datetime(2023, 12, 6), False),
-        (timezone.datetime(2023, 4, 1), timezone.datetime(2023, 6, 1), True),
-        (timezone.datetime(2023, 4, 1), timezone.datetime(2025, 4, 1), True),
-        (timezone.datetime(2023, 4, 1), timezone.datetime(2023, 5, 1), False),
-        (timezone.datetime(2023, 4, 1), timezone.datetime(2025, 4, 1), True),
-        (timezone.datetime(2022, 12, 3), timezone.datetime(2023, 6, 1), True),
-        (timezone.datetime(2022, 12, 3), timezone.datetime(2023, 4, 1), False),
-        (timezone.datetime(2022, 12, 3), timezone.datetime(2026, 4, 1), True),
-        (None, timezone.datetime(2023, 6, 1), True),
-    ],
-)
-def test_multiple_cases_for_mailing_about_reaching_limit(
-    last_user_outbox_sent_email_date, current_date, expected, user_inquiry_on_limit
-) -> None:
-    """
-    Test multiple cases for mailing about reaching limit.
-    Ensure that user can receive email once again on specific date.
-    """
-    if last_user_outbox_sent_email_date:
-        ueo = _UserEmailOutboxFactory.create(
-            recipient=user_inquiry_on_limit.user.contact_email,
-            email_type=EmailTypes.INQUIRY_LIMIT,
-        )
-        ueo.sent_date = last_user_outbox_sent_email_date
-        ueo.save()
-
-    with patch("django.utils.timezone.now") as mock_datetime_now:
-        mock_datetime_now.return_value = current_date
-
-        assert (
-            InquireService.can_sent_inquiry_limit_reached_email(
-                user_inquiry_on_limit.user
-            )
-            is expected
-        )

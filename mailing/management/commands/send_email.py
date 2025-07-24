@@ -1,9 +1,11 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set
 
 from django.core.management.base import BaseCommand
-from django.db.models import QuerySet
+from django.template.loader import render_to_string
 
+from mailing.tasks import send_many
+from mailing.utils import extract_text_from_html
 from profiles.models import ProfileMeta
 
 
@@ -36,31 +38,21 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self._set_args(options)
-        recipients = self._get_recipients()
-        success = failed = 0
+        recipients: Set[str] = self._get_recipients()
 
-        # for meta in queryset:
-        #     try:
-        #         NotificationService(meta).create_notification(self.args.body)
-        #     except Exception as e:
-        #         self.stdout.write(
-        #             self.style.ERROR(
-        #                 f"Failed to send notification to {meta.profile}: {str(e)}"
-        #             )
-        #         )
-        #         failed += 1
-        #         continue
+        if not recipients:
+            self.stdout.write(self.style.WARNING("No recipients found."))
+            return
 
-        #     self.stdout.write(
-        #         self.style.SUCCESS(
-        #             f"Notifications sent successfully to {meta.profile}."
-        #         )
-        #     )
-        #     success += 1
+        html_content = render_to_string("emails/welcome.html")
+        txt_content = extract_text_from_html(html_content)
 
-        # self.stdout.write(
-        #     f"SUCCESS: {success}, FAILED: {failed}, TOTAL: {success + failed}"
-        # )
+        send_many.delay(
+            recipients=list(recipients),
+            subject=self.args.title,
+            message=txt_content,
+            html_message=html_content,
+        )
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -90,16 +82,16 @@ class Command(BaseCommand):
             "--others", help="Additional email recipients", type=str, default=""
         )
 
-    def _parse_others_recipients(self) -> List[str]:
+    def _parse_others_recipients(self) -> Set[str]:
         """
         Parse the `--others` argument to get a list of additional email addresses.
         """
         if not self.args.others:
-            return []
+            return set()
 
-        return [email.strip() for email in self.args.others.split(";") if email.strip()]
+        return {email.strip() for email in self.args.others.split(";") if email.strip()}
 
-    def _get_recipients(self) -> List[QuerySet]:
+    def _get_recipients(self) -> List[str]:
         """
         Get recipients based on command arguments.
         If `--all` is provided, return all profiles.

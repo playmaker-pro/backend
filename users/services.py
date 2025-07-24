@@ -12,8 +12,8 @@ from django.utils.http import urlsafe_base64_decode
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from features.models import AccessPermission, Feature, FeatureElement
-from mailing.constants import EmailTemplates, EmailTypes
-from mailing.services import TransactionalEmailService
+from mailing.schemas import EmailTemplateRegistry
+from mailing.services import MailingService
 from premium.models import PremiumType
 from users.errors import CityDoesNotExistException, InvalidUIDServiceException
 from users.managers import UserTokenManager
@@ -193,11 +193,9 @@ class UserService:
     def send_email_to_confirm_new_user(user: User) -> None:
         """Sends an email to a newly registered user to confirm their email address."""
         verification_url = UserTokenManager.create_email_verification_url(user)
-
-        # Actual email sending logic
-        TransactionalEmailService(user, context={"url": verification_url}).send(
-            EmailTemplates.NEW_USER, EmailTypes.NEW_USER
-        )
+        MailingService(
+            EmailTemplateRegistry.NEW_USER(context={"url": verification_url})
+        ).send_mail(user)
 
     @staticmethod
     def change_email_verify_flag(user: User) -> None:
@@ -249,9 +247,9 @@ class PasswordResetService:
 
         # Actual email sending logic
         verification_url = UserTokenManager.create_email_verification_url(user)
-        TransactionalEmailService(user, context={"url": verification_url}).send(
-            EmailTemplates.PASSWORD_CHANGE, EmailTypes.PASSWORD_CHANGE, [user.email]
-        )
+        MailingService(
+            EmailTemplateRegistry.PASSWORD_CHANGE(context={"url": verification_url})
+        ).send_mail(user)
 
     @staticmethod
     def reset_user_password(user: User, new_password: str) -> None:
@@ -289,22 +287,18 @@ class ReferralRewardService:
         Reward the user for their first referral.
         """
         # Send email to referrer
-        TransactionalEmailService(
-            user=self._user,
-        ).send(
-            EmailTemplates.REFERRAL_REWARD_REFERRER_1,
-            EmailTypes.REFERRAL_REWARD,
-            [self._user.email],
-        )
+        MailingService(
+            EmailTemplateRegistry.REFERRAL_REWARD_REFERRER_1(
+                context={"referred": referred}
+            )
+        ).send_mail(self._user)
 
         # Send welcome gift email to referred user
-        TransactionalEmailService(
-            user=referred,
-        ).send(
-            EmailTemplates.REFERRAL_REWARD_REFERRED,
-            EmailTypes.REFERRAL_REWARD,
-            [referred.email],
-        )
+        MailingService(
+            EmailTemplateRegistry.REFERRAL_REWARD_REFERRED(
+                context={"referrer": self._user}
+            )
+        ).send_mail(referred)
 
     def reward_3_referrals(self) -> None:
         """
@@ -313,26 +307,22 @@ class ReferralRewardService:
         self._user.profile.setup_premium_profile(
             premium_type=PremiumType.CUSTOM, period=14
         )
-        TransactionalEmailService(
-            user=self._user,
-        ).send(
-            EmailTemplates.REFERRAL_REWARD_REFERRER_3,
-            EmailTypes.REFERRAL_REWARD,
-            [self._user.email],
-        )
+        MailingService(
+            EmailTemplateRegistry.REFERRAL_REWARD_REFERRER_3(
+                context={"referrer": self._user}
+            )
+        ).send_mail(self._user)
 
     def reward_5_referrals(self) -> None:
         """
         Reward the user for their fifth referral.
         """
         self._user.profile.setup_premium_profile(premium_type=PremiumType.MONTH)
-        TransactionalEmailService(
-            user=self._user,
-        ).send(
-            EmailTemplates.REFERRAL_REWARD_REFERRER_5,
-            EmailTypes.REFERRAL_REWARD,
-            [self._user.email],
-        )
+        MailingService(
+            EmailTemplateRegistry.REFERRAL_REWARD_REFERRER_5(
+                context={"referrer": self._user}
+            )
+        ).send_mail(self._user)
 
     def reward_15_referrals(self) -> None:
         """
@@ -341,13 +331,11 @@ class ReferralRewardService:
         self._user.profile.setup_premium_profile(
             premium_type=PremiumType.CUSTOM, period=180
         )
-        TransactionalEmailService(
-            user=self._user,
-        ).send(
-            EmailTemplates.REFERRAL_REWARD_REFERRER_15,
-            EmailTypes.REFERRAL_REWARD,
-            [self._user.email],
-        )
+        MailingService(
+            EmailTemplateRegistry.REFERRAL_REWARD_REFERRER_15(
+                context={"referrer": self._user}
+            )
+        ).send_mail(self._user)
 
     def check_and_reward(self) -> None:
         """
