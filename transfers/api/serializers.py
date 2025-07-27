@@ -397,7 +397,6 @@ class ProfileTransferStatusSerializer(
         Overrides to_representation method to return additional info
         as a list of strings.
         """
-        request = self.context["request"]
         data = super().to_representation(instance)
         data["league"] = LeagueSerializer(instance=instance.league, many=True).data
         if instance.additional_info:

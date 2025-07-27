@@ -239,7 +239,7 @@ class ClubTeamSerializer(serializers.ModelSerializer):
         season = self.context.get("season")
         gender = self.context.get("gender")
 
-        filters = {"club": obj, "visible": True}
+        filters = {"club": obj, "visible": True, "league_history__isnull": False}
 
         # Filtering by gender
         if gender:
