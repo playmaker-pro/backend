@@ -583,6 +583,10 @@ class MainUserDataSerializer(serializers.ModelSerializer):
         instance.display_status = User.DisplayStatus.UNDER_REVIEW
         instance.save()
 
+        # Explicitly save the profile to trigger slug regeneration
+        if hasattr(instance, 'profile') and instance.profile:
+            instance.profile.save()
+
         return instance
 
     def validate_gender(self, value: str) -> str:
