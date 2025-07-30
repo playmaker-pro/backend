@@ -16,18 +16,6 @@ User = get_user_model()
 
 
 class InquireService:
-    def create_default_basic_plan_for_coach_if_not_present(self):
-        args = settings.INQUIRIES_INITAL_PLAN_COACH
-        try:
-            plan = InquiryPlan.objects.get(name=args["name"])
-
-        except InquiryPlan.DoesNotExist:
-            logger.info(
-                "Initial InquiryPlan for coaches does not exists. Creating new one."
-            )
-            plan = InquiryPlan.objects.create(**args)
-        return plan
-
     @staticmethod
     def create_basic_inquiry_plan(user) -> None:
         """Create basic inquiry plan and contact instance for user"""
@@ -72,7 +60,7 @@ class InquireService:
     @staticmethod
     def get_user_contacts(user: User) -> QuerySet:
         """Get all inquiries contacts by user"""
-        return user.inquiries_contacts.order_by("-updated_at")
+        return InquiryRequest.objects.contacts(user).order_by("-updated_at")
 
     @classmethod
     def get_user_received_inquiries(cls, user: User) -> QuerySet:

@@ -1,8 +1,10 @@
-import os as _os
+import os
 from enum import Enum
 
 from pm_core.config import APIAuthorization, ServiceSettings
-from pydantic import BaseModel, BaseSettings, Field
+from pydantic import BaseModel, BaseSettings, Field, SecretStr
+
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class ScrapperConfig(BaseModel):
@@ -13,7 +15,7 @@ class ScrapperConfig(BaseModel):
 
     @property
     def scrapper_api_url(self) -> str:
-        return _os.path.join(self.base_url, "api/")
+        return os.path.join(self.base_url, "api/")
 
     @property
     def scrapper_service(self) -> ServiceSettings:
@@ -91,6 +93,18 @@ class WebappConfig(BaseModel):
         return f"{self.url}{path.lstrip('/')}"
 
 
+class MailingConfig(BaseModel):
+    """Settings for mailing"""
+
+    templates_dir: str = os.path.join(ROOT_DIR, "mailing", "templates")
+
+    host: str
+    port: int
+    outgoing_address: str
+    password: SecretStr
+    use_tls: bool = True
+
+
 class Config(BaseSettings):
     """General settings for webapp"""
 
@@ -100,15 +114,11 @@ class Config(BaseSettings):
     redis: RedisConfig
     postgres: DatabaseConfig
     webapp: WebappConfig
+    mail: MailingConfig
 
     # add the rest of settings that should fit here
     class Config:
-        env_file = _os.path.join(
-            _os.path.dirname(
-                _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
-            ),
-            ".env",
-        )
+        env_file = os.path.join(ROOT_DIR, ".env")
         env_file_encoding = "utf-8"
         env_nested_delimiter = "__"
         use_enum_values = True

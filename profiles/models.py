@@ -7,7 +7,6 @@ from typing import Optional
 
 from address.models import AddressField
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -37,18 +36,14 @@ from premium.models import (
     PremiumType,
     PromoteProfileProduct,
 )
-from premium.tasks import setup_premium_profile
+from profiles import utils as profile_utils
 from profiles.errors import VerificationCompletionFieldsWrongSetup
 from profiles.mixins import TeamObjectsDisplayMixin, VisitationMixin
-from profiles.mixins import utils as profile_utils
 from roles import definitions
+from users.models import User
 from voivodeships.models import Voivodeships
 
-User = get_user_model()
-
-
 logger = logging.getLogger(__name__)
-
 
 GLOBAL_TRAINING_READY_CHOCIES = (
     (1, "1-2 treningi"),
@@ -455,6 +450,8 @@ class BaseProfile(models.Model, EventLogMixin):
         self, premium_type: PremiumType = PremiumType.TRIAL, period: int = None
     ) -> None:
         """Setup premium profile"""
+        from profiles.tasks import setup_premium_profile
+
         return setup_premium_profile.delay(
             self.pk, self.__class__.__name__, premium_type.value, period
         )

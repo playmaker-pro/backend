@@ -6,17 +6,7 @@ from notifications.tasks import create_notification
 from notifications.templates import NotificationBody, NotificationTemplate
 from profiles.models import PROFILE_MODELS, ProfileMeta
 from users.models import User
-
-GENDER_BASED_ROLES = {
-    "P": ("Piłkarz", "Piłkarka"),
-    "T": ("Trener", "Trenerka"),
-    "C": ("Działacz klubowy", "Działaczka klubowa"),
-    "G": ("Kibic", "Kibic"),
-    "M": ("Manager", "Manager"),
-    "R": ("Sędzia", "Sędzia"),
-    "S": ("Skaut", "Skaut"),
-    None: ("", ""),
-}
+from utils import GENDER_BASED_ROLES
 
 
 class NotificationService:

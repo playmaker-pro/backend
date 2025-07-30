@@ -11,7 +11,7 @@ from django_fsm import FSMField, transition
 from inquiries.constants import EMAIL_ENABLED_LOG_TYPES, InquiryLogType
 from inquiries.errors import ForbiddenLogAction
 from inquiries.schemas import InquiryPlanTypeRef as _InquiryPlanTypeRef
-from notifications.services import NotificationService
+from profiles.services import NotificationService
 from utils.constants import (
     INQUIRY_CONTACT_URL,
     TRANSFER_MARKET_URL,

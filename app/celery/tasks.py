@@ -3,7 +3,7 @@ from logging import getLogger
 from celery import shared_task
 from django_celery_beat.models import CrontabSchedule, PeriodicTask
 
-from notifications.services import NotificationService
+from profiles.services import NotificationService
 
 logger = getLogger("celery")
 

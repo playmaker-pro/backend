@@ -22,7 +22,7 @@ BASE_URL = "http://localhost:8000"
 VERSION = "2.3.3"
 
 
-SYSTEM_USER_EMAIL = "rafal.kesik@gmail.com"
+SYSTEM_USER_EMAIL = "rafal.kesik@gmail.com"  # TODO: change soon
 ADMIN_EMAIL = "biuro.playmaker.pro@gmail.com"
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -32,6 +32,8 @@ BASE_DIR = os.path.dirname(PROJECT_DIR)
 
 ADMINS = MANAGERS = [
     ("Biuro", "biuro@playmaker.pro"),
+    ("Jakub", "jakub@playmaker.pro"),
+    ("Bartosz", "bartosz@playmaker.pro"),
 ]
 
 DEFAULT_CACHE_LIFESPAN = 60 * 15  # in seconds (60 * 5 = 5min)
@@ -81,8 +83,6 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "django.contrib.humanize",
     "rest_framework",
-    # TODO authtoken deprecated. Changed to jwt
-    "rest_framework.authtoken",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "allauth",
@@ -308,28 +308,6 @@ ANNOUNCEMENT_DEFAULT_PLANS = [
 ANNOUNCEMENT_INITAL_PLAN = ANNOUNCEMENT_DEFAULT_PLANS[0]
 
 SEASON_DEFINITION = {"middle": 7}
-
-# Inquiries app
-INQUIRIES_INITAL_PLANS = [
-    {
-        "default": True,
-        "limit": 3,
-        "name": "Basic Inital",
-        "description": "Default inital plan, need to be created if we wont "
-        "to add to each user UserInquery. In future can be alterd",
-    },
-    {
-        "default": False,
-        "limit": 5,
-        "name": "Basic Inital for coaches",
-        "description": "Default inital plan, need to be created if we wont "
-        "to add to each user UserInquery. In future can be alterd",
-    },
-]
-
-INQUIRIES_INITAL_PLAN = INQUIRIES_INITAL_PLANS[0]
-
-INQUIRIES_INITAL_PLAN_COACH = INQUIRIES_INITAL_PLANS[1]
 
 
 # messages
@@ -588,49 +566,11 @@ JQUERY_URL = False
 
 COUNTRIES_FIRST = ["PL", "GER", "CZ", "UA", "GB"]
 
-from django.urls import path  # noqa
-from django.views.generic import RedirectView  # noqa
-
-CONSTANTS_DIR = os.path.join(BASE_DIR, "constants")
-
-
-REDIRECTS_FILE_PATH = os.path.join(CONSTANTS_DIR, "redirects.yaml")
-
-
-def load_redirects_file():
-    import yaml
-
-    try:
-        with open(REDIRECTS_FILE_PATH) as f:
-            data = yaml.load(f, Loader=yaml.FullLoader)
-    except Exception as e:
-        print(
-            f"Loading redirects.yaml: No {REDIRECTS_FILE_PATH} file failed due to {e}"
-        )
-    return data
-
-
-def build_redirections(redirects):
-    return [
-        path(f"{old}", RedirectView.as_view(url=new, permanent=True))
-        for old, new in redirects.items()
-    ]
-
-
-REDIRECTS_LISTS = build_redirections(load_redirects_file())
-
-# To force and replace season on whole system
-# @todo(rkesik): not all elements supports that yet...
-FORCED_SEASON_NAME = None
 
 # User agents settings
 USER_AGENTS_CACHE = "default"
 
 SCRAPPER = True
-
-
-if FORCED_SEASON_NAME is not None:
-    print(f"Force to use season for dispaly metrics: {FORCED_SEASON_NAME}")
 
 
 DEFAULT_CLUB_PICTURE_URL = "/media/default_club.png"
@@ -701,6 +641,12 @@ CACHES = {
         },
     }
 }
+
+EMAIL_USE_TLS = cfg.mail.use_tls
+EMAIL_HOST = cfg.mail.host
+EMAIL_PORT = cfg.mail.port
+EMAIL_HOST_USER = DEFAULT_FROM_EMAIL = SERVER_EMAIL = cfg.mail.outgoing_address
+EMAIL_HOST_PASSWORD = cfg.mail.password.get_secret_value()
 
 
 try:

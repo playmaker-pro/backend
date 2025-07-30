@@ -1,6 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
-from inquiries.utils import GENDER_BASED_ROLES, OBJECTIVE_GENDER_BASED_ROLES
+from utils import GENDER_BASED_ROLES, OBJECTIVE_GENDER_BASED_ROLES
 
 
 def build_email_context(user, log=None, context=None, **kwargs) -> dict:

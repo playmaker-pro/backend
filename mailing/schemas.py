@@ -75,71 +75,71 @@ class Envelope(BaseModel):
 class EmailTemplateRegistry:
     INQUIRY_LIMIT = MailContent(
         subject="Rozbuduj swoje transferowe możliwości – Rozszerz limit zapytań!",
-        template_path="mailing/mails/inquiry_limit.html",
+        template_path="inquiry_limit.html",
         email_type=EmailType.INQUIRY_LIMIT,
     )
     NEW_USER = MailContent(
         subject="Witaj na PlayMaker.pro. Potwierdź rejestrację konta.",
-        template_path="mailing/mails/new_user.html",
+        template_path="new_user.html",
         email_type=EmailType.NEW_USER,
     )
     PASSWORD_CHANGE = MailContent(
         subject="Zmiana hasła do Twojego konta.",
-        template_path="mailing/mails/password_change.html",
+        template_path="password_change.html",
         email_type=EmailType.PASSWORD_CHANGE,
     )
     PREMIUM_EXPIRED = MailContent(
         subject="⚠️ Twoje Premium wygasło – odnów je teraz!",
-        template_path="mailing/mails/premium_expired.html",
+        template_path="premium_expired.html",
         email_type=EmailType.PREMIUM_EXPIRED,
     )
     REFERRAL_REWARD_REFERRED = MailContent(
         subject="Witaj w PlayMaker.pro! Odbierz swój prezent powitalny",
-        template_path="mailing/mails/referral_reward_referred.html",
+        template_path="referral_reward_referred.html",
         email_type=EmailType.REFERRAL_REWARD,
     )
     REFERRAL_REWARD_REFERRER_1 = MailContent(
         subject="Gratulacje! Otrzymujesz nagrodę za polecenie nowego użytkownika",
-        template_path="mailing/mails/1_referral_reward_referrer.html",
+        template_path="1_referral_reward_referrer.html",
         email_type=EmailType.REFERRAL_REWARD,
     )
     REFERRAL_REWARD_REFERRER_3 = MailContent(
         subject="Gratulacje! Nagroda za 3 skuteczne polecenia PlayMaker.pro",
-        template_path="mailing/mails/3_referral_reward_referrer.html",
+        template_path="3_referral_reward_referrer.html",
         email_type=EmailType.REFERRAL_REWARD,
     )
     REFERRAL_REWARD_REFERRER_5 = MailContent(
         subject="Gratulacje! Otrzymujesz miesiąc Premium i treningi za 5 poleceń PlayMaker.pro",
-        template_path="mailing/mails/5_referral_reward_referrer.html",
+        template_path="5_referral_reward_referrer.html",
         email_type=EmailType.REFERRAL_REWARD,
     )
     REFERRAL_REWARD_REFERRER_15 = MailContent(
         subject="Gratulacje! 6 miesięcy Premium za 15 poleceń PlayMaker.pro",
-        template_path="mailing/mails/15_referral_reward_referrer.html",
+        template_path="15_referral_reward_referrer.html",
         email_type=EmailType.REFERRAL_REWARD,
     )
     ACCEPTED_INQUIRY = MailContent(
         subject="{who} {verb} Twoje zapytanie o piłkarski kontakt!",
-        template_path="mailing/mails/inquiries/accepted_inquiry.html",
+        template_path="inquiries/accepted_inquiry.html",
         email_type=EmailType.INQUIRY_ACTION,
     )
     REJECTED_INQUIRY = MailContent(
         subject="{who} {verb} Twoje zapytanie o piłkarski kontakt!",
-        template_path="mailing/mails/inquiries/rejected_inquiry.html",
+        template_path="inquiries/rejected_inquiry.html",
         email_type=EmailType.INQUIRY_ACTION,
     )
     NEW_INQUIRY = MailContent(
         subject="Masz nowe zapytanie o piłkarski kontakt!",
-        template_path="mailing/mails/inquiries/new_inquiry.html",
+        template_path="inquiries/new_inquiry.html",
         email_type=EmailType.INQUIRY_ACTION,
     )
     OUTDATED_INQUIRY = MailContent(
         subject="Zwiększamy Twoją pulę zapytań o piłkarski kontakt!",
-        template_path="mailing/mails/inquiries/outdated_inquiry.html",
+        template_path="inquiries/outdated_inquiry.html",
         email_type=EmailType.INQUIRY_ACTION,
     )
     OUTDATED_REMINDER = MailContent(
         subject="Masz zapytanie o piłkarski kontakt czekające na decyzję.",
-        template_path="mailing/mails/inquiries/outdated_reminder.html",
+        template_path="inquiries/outdated_reminder.html",
         email_type=EmailType.INQUIRY_ACTION,
     )

@@ -6,9 +6,9 @@ from django.utils import timezone
 from followers.services import FollowService
 from inquiries.models import InquiryRequest
 from notifications.models import Notification
-from notifications.services import NotificationService
 from premium.models import PremiumType
 from profiles.models import ProfileVisitation
+from profiles.services import NotificationService
 from utils import factories
 
 pytestmark = pytest.mark.django_db

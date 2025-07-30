@@ -15,6 +15,7 @@ from api.serializers import (
 )
 from clubs.errors import InvalidGender
 from features.models import AccessPermission, Feature, FeatureElement
+from inquiries.models import InquiryRequest
 from labels.services import LabelService
 from premium.api.serializers import (
     PremiumProfileProductSerializer,
@@ -138,7 +139,16 @@ class MainProfileDataSerializer(serializers.ModelSerializer):
         """
         Determines if there are any unread inquiries associated with the user.
         """
-        return obj.has_unread_inquiries
+        unread_sent = InquiryRequest.objects.filter(
+            sender=self, is_read_by_sender=False
+        ).exists()
+
+        # Check for any received inquiries that have not been read by the recipient
+        unread_received = InquiryRequest.objects.filter(
+            recipient=self, is_read_by_recipient=False
+        ).exists()
+
+        return unread_sent or unread_received
 
 
 class UserPreferencesSerializer(serializers.ModelSerializer):

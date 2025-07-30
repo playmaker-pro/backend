@@ -180,8 +180,6 @@ class ProfileTransferRequestSerializer(
             "number_of_trainings",
             "benefits",
             "salary",
-            "contact_email",
-            "phone_number",
             "profile_uuid",
             "club_voivodeship",
             "is_anonymous",
@@ -338,8 +336,6 @@ class ProfileTransferStatusSerializer(
     class Meta:
         model = ProfileTransferStatus
         fields = (
-            "contact_email",
-            "phone_number",
             "status",
             "additional_info",
             "league",

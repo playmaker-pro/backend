@@ -3,29 +3,27 @@
 import django.db.models.deletion
 from django.db import migrations, models
 
-
-
-def create_initial_messages(apps, *_) -> None:
-    """Create initial messages for logs"""
-    _InquiryLogMessage = apps.get_model(
-        "inquiries", "InquiryLogMessage"
-    )
-    _InquiryLogMessage.objects.get_or_create(
-        body="<> zaakceptował twoje zapytanie.",
-        message_type="ACCEPTED_INQUIRY",
-    )
-    _InquiryLogMessage.objects.get_or_create(
-        body="<> odrzucił twoje zapytanie.",
-        message_type="REJECTED_INQUIRY",
-    )
-    _InquiryLogMessage.objects.get_or_create(
-        body="<> nie odpowiedział na twoje zapytanie. W zamian dodajemy Ci 1 nowe zapytanie, abyś mógł dalej odkrywać rynek transferowy.",
-        message_type="OUTDATED_INQUIRY",
-    )
-    _InquiryLogMessage.objects.get_or_create(
-        body="<> wysłał Ci nowe zapytanie.",
-        message_type="NEW_INQUIRY",
-    )
+# def create_initial_messages(apps, *_) -> None:
+#     """Create initial messages for logs"""
+#     _InquiryLogMessage = apps.get_model(
+#         "inquiries", "InquiryLogMessage"
+#     )
+#     _InquiryLogMessage.objects.get_or_create(
+#         body="<> zaakceptował twoje zapytanie.",
+#         message_type="ACCEPTED_INQUIRY",
+#     )
+#     _InquiryLogMessage.objects.get_or_create(
+#         body="<> odrzucił twoje zapytanie.",
+#         message_type="REJECTED_INQUIRY",
+#     )
+#     _InquiryLogMessage.objects.get_or_create(
+#         body="<> nie odpowiedział na twoje zapytanie. W zamian dodajemy Ci 1 nowe zapytanie, abyś mógł dalej odkrywać rynek transferowy.",
+#         message_type="OUTDATED_INQUIRY",
+#     )
+#     _InquiryLogMessage.objects.get_or_create(
+#         body="<> wysłał Ci nowe zapytanie.",
+#         message_type="NEW_INQUIRY",
+#     )
 
 
 class Migration(migrations.Migration):
@@ -115,5 +113,5 @@ class Migration(migrations.Migration):
                 ),
             ],
         ),
-        migrations.RunPython(create_initial_messages),
+        # migrations.RunPython(create_initial_messages),
     ]

@@ -1,2 +1,0 @@
-{% load gender_filter %}
-{{ related_full_name }} {{ "zaakceptował|zaakceptowała"|gender_format:related_user.userpreferences.gender }} Twoje zapytanie o piłkarski kontakt!

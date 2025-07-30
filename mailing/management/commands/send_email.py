@@ -15,14 +15,14 @@ class Args:
     Dataclass to hold command arguments.
     """
 
-    players: bool = False
-    coaches: bool = False
-    scouts: bool = False
-    clubs: bool = False
-    guests: bool = False
-    managers: bool = False
-    all: bool = False
-    others: str = ""  # Comma-separated list of additional email addresses
+    players: bool
+    coaches: bool
+    scouts: bool
+    clubs: bool
+    guests: bool
+    managers: bool
+    all: bool
+    others: str  # Comma-separated list of additional email addresses
 
 
 class Command(BaseCommand):

@@ -1,4 +1,4 @@
-from notifications.services import NotificationService
+from profiles.services import NotificationService
 
 
 def trigger_refresh_data_player_stats(modeladmin, request, queryset):

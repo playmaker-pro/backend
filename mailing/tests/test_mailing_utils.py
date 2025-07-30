@@ -1,6 +1,7 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
 from django.contrib.auth import get_user_model
-from unittest.mock import MagicMock, patch
 
 from mailing.utils import build_email_context
 
@@ -9,9 +10,7 @@ User = get_user_model()
 
 @pytest.fixture
 def test_user():
-    user, _ = User.objects.get_or_create(
-        email="test_user@example.com"
-    )
+    user, _ = User.objects.get_or_create(email="test_user@example.com")
     return user
 
 
@@ -41,11 +40,12 @@ class TestEmailContextBuilder:
         assert context["extra_data"] == "some_value"
 
     def test_build_email_context_with_log_and_gendered_data(self, test_user, mock_log):
-        with patch(
-            "mailing.utils.GENDER_BASED_ROLES", {"player": ["Gracz", "Graczka"]}
-        ), patch(
-            "mailing.utils.OBJECTIVE_GENDER_BASED_ROLES",
-            {"player": ["Gracza", "Graczki"]},
+        with (
+            patch("mailing.utils.GENDER_BASED_ROLES", {"player": ["Gracz", "Graczka"]}),
+            patch(
+                "mailing.utils.OBJECTIVE_GENDER_BASED_ROLES",
+                {"player": ["Gracza", "Graczki"]},
+            ),
         ):
             context = build_email_context(test_user, log=mock_log)
 
@@ -63,11 +63,12 @@ class TestEmailContextBuilder:
         self, test_user, mock_log
     ):
         mock_log.related_with.user.userpreferences.gender = "K"
-        with patch(
-            "mailing.utils.GENDER_BASED_ROLES", {"player": ["Gracz", "Graczka"]}
-        ), patch(
-            "mailing.utils.OBJECTIVE_GENDER_BASED_ROLES",
-            {"player": ["Gracza", "Graczki"]},
+        with (
+            patch("mailing.utils.GENDER_BASED_ROLES", {"player": ["Gracz", "Graczka"]}),
+            patch(
+                "mailing.utils.OBJECTIVE_GENDER_BASED_ROLES",
+                {"player": ["Gracza", "Graczki"]},
+            ),
         ):
             context = build_email_context(test_user, log=mock_log)
 

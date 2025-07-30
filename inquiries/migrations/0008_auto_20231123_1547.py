@@ -2,61 +2,60 @@
 
 from django.db import migrations, models
 
+# def create_mail_template_for_outdated_inquiry(apps, schema_editor):
+#     """Add email template for outdated inquiry."""
+#     # _InquiryLogMessage = apps.get_model("inquiries", "InquiryLogMessage")
 
-def create_mail_template_for_outdated_inquiry(apps, schema_editor):
-    """Add email template for outdated inquiry."""
-    _InquiryLogMessage = apps.get_model("inquiries", "InquiryLogMessage")
+#     outdated_inquiry: _InquiryLogMessage = _InquiryLogMessage.objects.get(
+#         log_type="OUTDATED_INQUIRY"
+#     )
+#     outdated_inquiry.email_title = "Zwiększamy Twoją pulę zapytań o piłkarski kontakt!"
+#     outdated_inquiry.email_body = """Witaj!
 
-    outdated_inquiry: _InquiryLogMessage = _InquiryLogMessage.objects.get(
-        log_type="OUTDATED_INQUIRY"
-    )
-    outdated_inquiry.email_title = "Zwiększamy Twoją pulę zapytań o piłkarski kontakt!"
-    outdated_inquiry.email_body = """Witaj!
+# Wygląda na to, że część Twoich zapytań o kontakt nie została odczytana przez odbiorców.
+# W związku z tym zwiększamy Twoją pulę zapytań dostępnych do wykorzystania do końca najbliższego okna transferowego.
 
-Wygląda na to, że część Twoich zapytań o kontakt nie została odczytana przez odbiorców.
-W związku z tym zwiększamy Twoją pulę zapytań dostępnych do wykorzystania do końca najbliższego okna transferowego.
+# Odwiedź swój profil na PlayMaker.pro lub kliknij w poniższy link i odkrywaj rynek transferowy:
+# #url#
 
-Odwiedź swój profil na PlayMaker.pro lub kliknij w poniższy link i odkrywaj rynek transferowy:
-#url#
+# Jeżeli po kliknięciu link się nie otworzy, skopiuj go, wklej w pole adresu przeglądarki i przejdź do wskazanej strony.
 
-Jeżeli po kliknięciu link się nie otworzy, skopiuj go, wklej w pole adresu przeglądarki i przejdź do wskazanej strony.
+# Pozdrawiamy,
+# Zespół PlayMaker.pro
 
-Pozdrawiamy,
-Zespół PlayMaker.pro
-
-Wiadomość została wygenerowana automatycznie. Prosimy na nią nie odpowiadać.
-W przypadku pytań, jesteśmy dostępni pod adresem: biuro@playmaker.pro"""
-    outdated_inquiry.send_mail = True
-    outdated_inquiry.save()
+# Wiadomość została wygenerowana automatycznie. Prosimy na nią nie odpowiadać.
+# W przypadku pytań, jesteśmy dostępni pod adresem: biuro@playmaker.pro"""
+#     outdated_inquiry.send_mail = True
+#     outdated_inquiry.save()
 
 
-def create_reminder_inquiry_log(apps, schema_editor) -> None:
-    """
-    Create new type of InquiryLogMessage - OUTDATED_REMINDER.
-    For users that didn't respond to inquiry.
-    """
-    _InquiryLogMessage = apps.get_model(
-        "inquiries", "InquiryLogMessage"
-    )
+# def create_reminder_inquiry_log(apps, schema_editor) -> None:
+#     """
+#     Create new type of InquiryLogMessage - OUTDATED_REMINDER.
+#     For users that didn't respond to inquiry.
+#     """
+#     _InquiryLogMessage = apps.get_model(
+#         "inquiries", "InquiryLogMessage"
+#     )
 
-    _InquiryLogMessage.objects.create(
-        log_type="OUTDATED_REMINDER",
-        log_body="Zapytanie o kontakt od <> czeka na Twoją odpowiedź.",
-        email_title="Masz zapytanie o piłkarski kontakt czekające na decyzję.",
-        email_body="""Witaj!
+#     _InquiryLogMessage.objects.create(
+#         log_type="OUTDATED_REMINDER",
+#         log_body="Zapytanie o kontakt od <> czeka na Twoją odpowiedź.",
+#         email_title="Masz zapytanie o piłkarski kontakt czekające na decyzję.",
+#         email_body="""Witaj!
 
-Zapytanie o kontakt wysłane przez #rb# nadal czeka na Twoją odpowiedź.
-Odwiedź swój profil na PlayMaker.pro lub kliknij w poniższy link żeby podjąć decyzję o kontakcie:
-#url#
+# Zapytanie o kontakt wysłane przez #rb# nadal czeka na Twoją odpowiedź.
+# Odwiedź swój profil na PlayMaker.pro lub kliknij w poniższy link żeby podjąć decyzję o kontakcie:
+# #url#
 
-Do zobaczenia na PlayMaker.pro!
+# Do zobaczenia na PlayMaker.pro!
 
-Pozdrawiamy,
-Zespół PlayMaker.pro
+# Pozdrawiamy,
+# Zespół PlayMaker.pro
 
-Wiadomość została wygenerowana automatycznie. Prosimy na nią nie odpowiadać.""",
-        send_mail=True,
-    )
+# Wiadomość została wygenerowana automatycznie. Prosimy na nią nie odpowiadać.""",
+#         send_mail=True,
+#     )
 
 
 class Migration(migrations.Migration):
@@ -100,6 +99,6 @@ class Migration(migrations.Migration):
                 unique=True,
             ),
         ),
-        migrations.RunPython(create_reminder_inquiry_log),
-        migrations.RunPython(create_mail_template_for_outdated_inquiry),
+        # migrations.RunPython(create_reminder_inquiry_log),
+        # migrations.RunPython(create_mail_template_for_outdated_inquiry),
     ]

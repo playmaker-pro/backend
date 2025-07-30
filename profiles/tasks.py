@@ -4,8 +4,58 @@ from celery import shared_task
 from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
-from notifications.services import NotificationService
-from profiles import models
+from premium.models import PremiumProduct
+from profiles import models as profile_models
+from profiles.services import NotificationService
+
+
+@shared_task
+def setup_premium_profile(
+    profile_id: int, profile_class: str, premium_type: str, period: int = None
+) -> None:
+    from premium.models import PremiumProfile, PremiumType
+
+    model = getattr(profile_models, profile_class)
+    profile = model.objects.get(pk=profile_id)
+
+    premium_type = PremiumType(premium_type)
+    pp_object = profile.premium_products
+    premium, _ = PremiumProfile.objects.get_or_create(product=pp_object)
+
+    if pp_object.trial_tested and premium_type == PremiumType.TRIAL:
+        raise ValueError("Trial already tested or cannot be set.")
+
+    if premium_type == PremiumType.CUSTOM and period:
+        premium.setup_by_days(period)
+    elif premium_type != PremiumType.CUSTOM:
+        premium.setup(premium_type)
+    else:
+        raise ValueError("Custom period requires period value.")
+
+    if not pp_object.trial_tested:
+        pp_object.trial_tested = True
+        pp_object.save(update_fields=["trial_tested"])
+
+    if premium.is_trial and premium_type != PremiumType.TRIAL:
+        pp_object.inquiries.reset_counter(reset_plan=False)
+
+
+@shared_task
+def premium_expired(premium_products_id: int):
+    try:
+        pp_object = PremiumProduct.objects.get(pk=premium_products_id)
+    except PremiumProduct.DoesNotExist:
+        return
+
+    if (
+        pp_object.profile
+        and pp_object.profile.meta.transfer_object
+        and pp_object.profile.meta.transfer_object.is_anonymous
+    ):
+        pp_object.profile.meta.transfer_object.delete()
+
+    pp_object.premium.sent_email_that_premium_expired()
+    NotificationService(pp_object.profile.meta).notify_premium_just_expired()
 
 
 @shared_task

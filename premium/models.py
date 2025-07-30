@@ -10,7 +10,6 @@ from django.utils import timezone
 
 from mailing.services import TransactionalEmailService
 from payments.models import Transaction
-from premium.tasks import premium_expired, setup_premium_profile
 from premium.utils import get_date_days_after
 
 
@@ -90,7 +89,6 @@ class PremiumProfile(models.Model):
             self.valid_until = None
             self.save()
 
-            premium_expired.delay(self.product.pk)
             return False
         return True
 
@@ -416,9 +414,7 @@ class Product(models.Model):
                 PremiumType.YEAR if self.name.endswith("_YEAR") else PremiumType.MONTH
             )
             profile = transaction.user.profile
-            setup_premium_profile.delay(
-                profile.pk, profile.__class__.__name__, premium_type.value
-            )
+            profile.setup_premium_profile(premium_type.value)
         elif self.ref == Product.ProductReference.INQUIRIES:
             plan = self.inquiry_plan
             transaction.user.userinquiry.set_new_plan(plan)
