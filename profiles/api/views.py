@@ -103,20 +103,16 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
     def get_profile_by_slug(self, request: Request, profile_slug: str) -> Response:
         """GET single profile by slug."""
         is_anonymous = profile_slug.startswith("anonymous-")
-
-        def get_profile():
-            """Helper function to retrieve profile by slug."""
+        try:
             if is_anonymous:
                 anonymous_uuid = profile_slug.split("anonymous-")[-1]
-                return ProfileService.get_anonymous_profile_by_uuid(anonymous_uuid)
-            return profile_service.get_profile_by_slug(profile_slug)
-
-        try:
-            profile_object = get_profile()
+                profile = ProfileService.get_anonymous_profile_by_uuid(anonymous_uuid)
+            else:
+                profile = profile_service.get_profile_by_slug(profile_slug)
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExistBySlug
 
-        return self.retrieve_profile_and_respond(request, profile_object, is_anonymous)
+        return self.retrieve_profile_and_respond(request, profile, is_anonymous)
 
     def update_profile(self, request: Request, profile_uuid: uuid.UUID) -> Response:
         """PATCH request for profile (require UUID in body)"""
@@ -817,12 +813,15 @@ class ProfileTeamsApi(EndpointView):
         Retrieve a list of team contributors associated
         with a given user profile.
         """
+        is_anonymous = request.query_params.get("is_anonymous", False)
+
         # Retrieve the profile associated with the given UUID
         try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
+            profile = profile_service.get_profile_by_uuid(profile_uuid, is_anonymous)
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExist()
 
+        profile_uuid = profile.uuid
         # Get sorted list of team contributors
         sorted_contributors: list = team_contributor_service.get_teams_for_profile(
             profile_uuid
@@ -832,7 +831,9 @@ class ProfileTeamsApi(EndpointView):
             profile, "output"
         )
         serializer = serializer_class(
-            sorted_contributors, many=True, context={"request": request}
+            sorted_contributors,
+            many=True,
+            context={"request": request, "is_anonymous": is_anonymous},
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 

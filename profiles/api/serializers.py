@@ -653,6 +653,8 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
         """
         Retrieve the absolute url of the club logo.
         """
+        if self.is_anonymous:
+            return None
         request = self.context.get("request")
         team_history = obj.team_history.first()
         try:
@@ -661,8 +663,17 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
             return None
         return url
 
+    @property
+    def is_anonymous(self) -> bool:
+        """
+        Check if the requestor is anonymous.
+        """
+        return self.context.get("is_anonymous", False)
+
     def get_team_id(self, obj: models.TeamContributor) -> Optional[int]:
         """Returns team id"""
+        if self.is_anonymous:
+            return 0
         team_history = obj.team_history.first()
         return team_history.pk if team_history else None
 
@@ -670,6 +681,8 @@ class PlayerTeamContributorSerializer(serializers.ModelSerializer):
         """
         Retrieves the name of the team associated with the first team_history instance.
         """
+        if self.is_anonymous:
+            return ""
         team_history = obj.team_history.first()
         if team_history:
             return (
@@ -736,11 +749,20 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
             "end_date",
         ]
 
+    @property
+    def is_anonymous(self) -> bool:
+        """
+        Check if the requestor is anonymous.
+        """
+        return self.context.get("is_anonymous", False)
+
     def get_team_name(self, obj: models.TeamContributor) -> str:
         """
         Get the team name for a TeamContributor object by prioritizing the short name
         over the full name for each associated team history object.
         """
+        if self.is_anonymous:
+            return ""
         team_histories = obj.team_history.all()
         preferred_name = ""
         for th in team_histories:
@@ -756,6 +778,8 @@ class AggregatedTeamContributorSerializer(serializers.ModelSerializer):
         """
         Retrieve the absolute url of the club logo.
         """
+        if self.is_anonymous:
+            return None
         request = self.context.get("request")
         team_history = obj.team_history.first()
         try:

@@ -787,6 +787,4 @@ class TestAnonymousTransferRequest:
         assert data["requesting_team"]["team"]["id"] == 0
         assert data["requesting_team"]["team"]["team_contributor_id"] == 0
         assert data["requesting_team"]["team"]["picture_url"] is None
-        assert data["contact_email"] is None
-        assert data["phone_number"] == {"dial_code": None, "number": None}
         # TODO: FINISH

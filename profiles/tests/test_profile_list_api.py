@@ -945,7 +945,10 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
     ])
     def test_get_bulk_profiles_by_gender_res_0(self, param) -> None:
         """get profiles by gender. Result should be 0"""
-        PlayerProfileFactory.create_batch(10, user__userpreferences__gender=None)
+        assert PlayerProfile.objects.count() == 0
+
+        PlayerProfileFactory.create(user__userpreferences__gender=None)
+        PlayerProfileFactory.create(user__userpreferences__gender=None)
         response = self.client.get(self.url, param)
 
         assert len(response.data["results"]) == 0

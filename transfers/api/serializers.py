@@ -142,6 +142,15 @@ class PhoneNumberMixin:
 class SharedValidatorsMixin:
     """Mixing for shared methods."""
 
+    def validate_is_anonymous(self, val: bool) -> bool:
+        """Validate is_anonymous field"""
+        profile = self.context.get("profile")
+        if val and not profile.is_premium:
+            raise serializers.ValidationError(
+                "This option [is_anonymous=True] is only available for premium profiles."
+            )
+        return val
+
     def validate_phone_number(self, phone_number: dict) -> dict:  # noqa
         """Validate phone number field. Running when creating object."""
         if not isinstance(phone_number, dict):
@@ -187,7 +196,9 @@ class ProfileTransferRequestSerializer(
             "is_anonymous",
         )
 
-    contact_email = serializers.EmailField(required=False, allow_null=True)
+    contact_email = serializers.EmailField(
+        required=False, allow_null=True, write_only=True
+    )
     club_voivodeship = serializers.CharField(source="voivodeship", read_only=True)
     profile_uuid = serializers.UUIDField(source="profile.uuid", read_only=True)
     requesting_team = serializers.PrimaryKeyRelatedField(
@@ -200,7 +211,7 @@ class ProfileTransferRequestSerializer(
     number_of_trainings = serializers.IntegerField(required=False, allow_null=True)
     benefits = serializers.ListField(required=False, allow_null=True)
     salary = serializers.IntegerField(required=False, allow_null=True)
-    phone_number = PhoneNumberField(source="*", required=False)
+    phone_number = PhoneNumberField(source="*", write_only=True, required=False)
 
     def to_representation(self, instance: ProfileTransferRequest) -> dict:
         """
@@ -261,8 +272,7 @@ class ProfileTransferRequestSerializer(
             data["requesting_team"]["team"]["id"] = 0
             data["requesting_team"]["team"]["team_contributor_id"] = 0
             data["requesting_team"]["team"]["picture_url"] = None
-            data["contact_email"] = None
-            data["phone_number"] = {"dial_code": None, "number": None}
+            data["profile_uuid"] = instance.anonymous_uuid
         return data
 
     def validate_requesting_team(
@@ -349,23 +359,16 @@ class ProfileTransferStatusSerializer(
             "is_anonymous",
         )
 
-    contact_email = serializers.EmailField(required=False, allow_null=True)
+    contact_email = serializers.EmailField(
+        required=False, allow_null=True, write_only=True
+    )
     status = ProfileEnumChoicesSerializer(model=ProfileTransferStatus)
     additional_info = serializers.ListField(required=False, allow_null=True)
     league = serializers.PrimaryKeyRelatedField(
         queryset=LeagueService().get_leagues(), many=True
     )
-    phone_number = PhoneNumberField(source="*", required=False)
+    phone_number = PhoneNumberField(source="*", required=False, write_only=True)
     benefits = serializers.ListField(required=False, allow_null=True)
-
-    def validate_is_anonymous(self, val: bool) -> bool:
-        """Validate is_anonymous field"""
-        profile = self.context.get("profile")
-        if val and not profile.is_premium:
-            raise serializers.ValidationError(
-                "This option [is_anonymous=True] is only available for premium profiles."
-            )
-        return val
 
     def create(self, validated_data: dict):
         """Create transfer status"""
@@ -431,13 +434,9 @@ class ProfileTransferStatusSerializer(
             ]
             serializer = ProfileEnumChoicesSerializer(number_of_trainings, many=True)
             data["number_of_trainings"] = serializer.data
-        user_preferences = instance.profile.user.userpreferences
-        if user_preferences.phone_number:
-            data["phone_number"] = PhoneNumberField(source="*").to_representation(
-                user_preferences
-            )
-        if user_preferences.contact_email:
-            data["contact_email"] = user_preferences.contact_email
+
+        if self.context.get("is_anonymous", False):
+            data["profile_uuid"] = instance.anonymous_uuid
 
         return data
 
@@ -465,19 +464,3 @@ class ProfileTransferStatusSerializer(
             )
 
         return super().update(instance, validated_data)
-
-
-class AnonymousProfileTransferRequestSerializer(ProfileTransferRequestSerializer):
-    """Anonymous transfer status serializer for user profile view"""
-
-    profile_uuid = serializers.UUIDField(source="anonymous_uuid", read_only=True)
-
-    def to_representation(self, instance):
-        result = super().to_representation(instance)
-        result["requesting_team"]["id"] = 0
-        result["requesting_team"]["team"]["team_name"] = "Anonimowa drużyna"
-        result["requesting_team"]["team"]["id"] = 0
-        result["requesting_team"]["team"]["team_contributor_id"] = 0
-        result["requesting_team"]["team"]["picture_url"] = None
-        result["contact_email"] = None
-        result["phone_number"] = {"dial_code": None, "number": None}

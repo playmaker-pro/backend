@@ -505,7 +505,7 @@ class BaseProfile(models.Model, EventLogMixin):
         # If the slug has changed and meta exists, update meta._slug
         if self.meta and old_slug != self.slug:
             self.meta._slug = self.slug
-            self.meta.save(update_fields=['_slug'])
+            self.meta.save(update_fields=["_slug"])
 
         super().save(*args, **kwargs)
 

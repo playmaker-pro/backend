@@ -2669,6 +2669,12 @@ paths:
             format: uuid
           required: true
           description: "Profile uuid to filter team contributor history."
+        - in: query
+          name: is_anonymous
+          schema:
+            type: boolean
+            description: "Is passed uuid anonymous?"
+            default: false
       responses:
         200:
           description: "Successfully retrieved."
@@ -3161,6 +3167,12 @@ paths:
             type: string
             format: uuid
           required: true
+        - in: query
+          name: is_anonymous
+          schema:
+            type: boolean
+            description: "Is passed uuid anonymous?"
+            default: false
       tags:
         - transfer status
       security:
@@ -3173,7 +3185,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TransferStatusGet'
         "404":
-          description: "Transfer status for given profile not found."
+          description: "Transfer status for given profile not found OR profile has anonymous transfer status.."
           content:
             application/json:
               schema:
@@ -3675,6 +3687,12 @@ paths:
             type: string
             format: uuid
           required: true
+        - in: query
+          name: is_anonymous
+          schema:
+            type: boolean
+            description: "Is passed uuid anonymous?"
+            default: false
       tags:
         - transfer requests
       security:
@@ -3718,6 +3736,12 @@ paths:
             type: string
             format: uuid
           required: true
+        - in: query
+          name: is_anonymous
+          schema:
+            type: boolean
+            description: "Is passed uuid anonymous?"
+            default: false
       tags:
         - transfer requests
       security:
