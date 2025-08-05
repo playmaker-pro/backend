@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from inquiries.models import InquiryRequest, UserInquiry
+from inquiries.models import InquiryRequest
 
 
 class Command(BaseCommand):
@@ -28,7 +28,3 @@ class Command(BaseCommand):
         # CASE2
         for inquiry in InquiryRequest.objects.to_remind_recipient_about_outdated():
             inquiry.notify_recipient_about_outdated()
-
-        # CASE3
-        for userinquiry in UserInquiry.objects.limit_reached():
-            userinquiry.notify_about_limit(force=False)

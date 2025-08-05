@@ -1,34 +1,29 @@
-from enum import Enum
 from typing import List, Optional
 
+from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
-
-class EmailType(str, Enum):
-    INQUIRY_LIMIT = "inquiry_limit"
-    NEW_USER = "new_user"
-    PASSWORD_CHANGE = "password_change"
-    PREMIUM_EXPIRED = "premium_expired"
-    REFERRAL_REWARD = "referral_reward"
-    SYSTEM = "system"
-    INQUIRY_ACTION = "inquiry_action"
+from backend.settings import cfg
+from mailing.tasks import notify_admins, send
 
 
 class MailContent(BaseModel):
     subject: str
     template_path: str
-    email_type: EmailType = EmailType.SYSTEM
 
-    _html_content: str = ""
-    _text_content: str = ""
-    model_config = ConfigDict(use_enum_values=True)
+    html_content: Optional[str] = None
+    text_content: Optional[str] = None
 
-    def __call__(self, context: Optional[dict] = dict()) -> None:
+    class Config:
+        use_enum_values = True
+
+    def __call__(self, context: dict = dict()) -> "MailContent":
         self.render_content(context)
+        return self
 
-    def render_content(self, context: dict) -> dict:
+    def render_content(self, context: dict) -> None:
         """
         Renders the HTML body using the given context.
         """
@@ -37,30 +32,29 @@ class MailContent(BaseModel):
         except KeyError as e:
             raise ValueError(f"Some context keys are missing: {e}")
 
-        self._html_content = render_to_string(self.template_path, context)
-        self._text_content = strip_tags(self._html_content)
-        return self.data
+        self.html_content = render_to_string(self.template_path, context)
+        self.text_content = strip_tags(self.html_content)
+
+    @property
+    def ready(self) -> bool:
+        """
+        Checks if the content is ready to be sent.
+        """
+        return self.html_content and self.text_content
 
     @property
     def data(self) -> dict:
         """
-        Example property to demonstrate usage.
+        Gets the email data ready for sending.
         """
         if not self.ready:
             raise ValueError("Content is not ready.")
 
         return {
-            "html_message": self._html_content,
-            "message": self._text_content,
+            "html_message": self.html_content,
+            "message": self.text_content,
             "subject": self.subject,
         }
-
-    @property
-    def ready(self) -> bool:
-        """
-        Check if the content is ready to be sent.
-        """
-        return self._html_content and self._text_content
 
 
 class Envelope(BaseModel):
@@ -69,77 +63,90 @@ class Envelope(BaseModel):
     """
 
     mail: MailContent
-    recipients: List[str]
+    recipients: List[str] = []
+
+    def send(self) -> None:
+        """
+        Sends the email using the provided mail content and recipients.
+        """
+        if not self.recipients:
+            raise ValueError("Recipients list cannot be empty.")
+
+        send.delay(
+            **self.mail.data,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=list(self.recipients),
+        )
+
+    def send_to_admins(self) -> None:
+        """
+        Sends the email to admins using the provided mail content.
+        """
+        notify_admins.delay(**self.mail.data)
 
 
 class EmailTemplateRegistry:
     INQUIRY_LIMIT = MailContent(
         subject="Rozbuduj swoje transferowe możliwości – Rozszerz limit zapytań!",
-        template_path="inquiry_limit.html",
-        email_type=EmailType.INQUIRY_LIMIT,
+        template_path=cfg.mail.templates_dir + "/inquiry_limit.html",
     )
     NEW_USER = MailContent(
         subject="Witaj na PlayMaker.pro. Potwierdź rejestrację konta.",
-        template_path="new_user.html",
-        email_type=EmailType.NEW_USER,
+        template_path=cfg.mail.templates_dir + "/new_user.html",
     )
     PASSWORD_CHANGE = MailContent(
         subject="Zmiana hasła do Twojego konta.",
-        template_path="password_change.html",
-        email_type=EmailType.PASSWORD_CHANGE,
+        template_path=cfg.mail.templates_dir + "/password_change.html",
     )
     PREMIUM_EXPIRED = MailContent(
         subject="⚠️ Twoje Premium wygasło – odnów je teraz!",
-        template_path="premium_expired.html",
-        email_type=EmailType.PREMIUM_EXPIRED,
+        template_path=cfg.mail.templates_dir + "/premium_expired.html",
     )
     REFERRAL_REWARD_REFERRED = MailContent(
         subject="Witaj w PlayMaker.pro! Odbierz swój prezent powitalny",
-        template_path="referral_reward_referred.html",
-        email_type=EmailType.REFERRAL_REWARD,
+        template_path=cfg.mail.templates_dir + "/referral_reward_referred.html",
     )
     REFERRAL_REWARD_REFERRER_1 = MailContent(
         subject="Gratulacje! Otrzymujesz nagrodę za polecenie nowego użytkownika",
-        template_path="1_referral_reward_referrer.html",
-        email_type=EmailType.REFERRAL_REWARD,
+        template_path=cfg.mail.templates_dir + "/1_referral_reward_referrer.html",
     )
     REFERRAL_REWARD_REFERRER_3 = MailContent(
         subject="Gratulacje! Nagroda za 3 skuteczne polecenia PlayMaker.pro",
-        template_path="3_referral_reward_referrer.html",
-        email_type=EmailType.REFERRAL_REWARD,
+        template_path=cfg.mail.templates_dir + "/3_referral_reward_referrer.html",
     )
     REFERRAL_REWARD_REFERRER_5 = MailContent(
         subject="Gratulacje! Otrzymujesz miesiąc Premium i treningi za 5 poleceń PlayMaker.pro",
-        template_path="5_referral_reward_referrer.html",
-        email_type=EmailType.REFERRAL_REWARD,
+        template_path=cfg.mail.templates_dir + "/5_referral_reward_referrer.html",
     )
     REFERRAL_REWARD_REFERRER_15 = MailContent(
         subject="Gratulacje! 6 miesięcy Premium za 15 poleceń PlayMaker.pro",
-        template_path="15_referral_reward_referrer.html",
-        email_type=EmailType.REFERRAL_REWARD,
+        template_path=cfg.mail.templates_dir + "/15_referral_reward_referrer.html",
     )
     ACCEPTED_INQUIRY = MailContent(
-        subject="{who} {verb} Twoje zapytanie o piłkarski kontakt!",
-        template_path="inquiries/accepted_inquiry.html",
-        email_type=EmailType.INQUIRY_ACTION,
+        subject="{related_role} {related_full_name} {verb} Twoje zapytanie o piłkarski kontakt!",
+        template_path=cfg.mail.templates_dir + "/inquiries/accepted_inquiry.html",
     )
     REJECTED_INQUIRY = MailContent(
-        subject="{who} {verb} Twoje zapytanie o piłkarski kontakt!",
-        template_path="inquiries/rejected_inquiry.html",
-        email_type=EmailType.INQUIRY_ACTION,
+        subject="{related_role} {related_full_name} {verb} Twoje zapytanie o piłkarski kontakt!",
+        template_path=cfg.mail.templates_dir + "/inquiries/rejected_inquiry.html",
     )
     NEW_INQUIRY = MailContent(
         subject="Masz nowe zapytanie o piłkarski kontakt!",
-        template_path="inquiries/new_inquiry.html",
-        email_type=EmailType.INQUIRY_ACTION,
+        template_path=cfg.mail.templates_dir + "/inquiries/new_inquiry.html",
     )
     OUTDATED_INQUIRY = MailContent(
         subject="Zwiększamy Twoją pulę zapytań o piłkarski kontakt!",
-        template_path="inquiries/outdated_inquiry.html",
-        email_type=EmailType.INQUIRY_ACTION,
+        template_path=cfg.mail.templates_dir + "/inquiries/outdated_inquiry.html",
     )
     OUTDATED_REMINDER = MailContent(
         subject="Masz zapytanie o piłkarski kontakt czekające na decyzję.",
-        template_path="inquiries/outdated_reminder.html",
-        email_type=EmailType.INQUIRY_ACTION,
+        template_path=cfg.mail.templates_dir + "/inquiries/outdated_reminder.html",
+    )
+    SYSTEM_ERROR = MailContent(
+        subject="{subject}",
+        template_path=cfg.mail.templates_dir + "/system_error.html",
+    )
+    TEST = MailContent(
+        subject="Testowy email",
+        template_path=cfg.mail.templates_dir + "/test.html",
     )

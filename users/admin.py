@@ -229,7 +229,6 @@ class UserAdminPanel(UserAdmin):
         "date_joined",
         "get_profile_permalink",
         linkify("profile"),
-        "get_profile_percentage",
         "declared_role",
         "get_mapper",
         "get_team_object",
@@ -278,18 +277,6 @@ class UserAdminPanel(UserAdmin):
                 if old_mapper is not None:
                     return old_mapper.mapper_id
         return None
-
-    def get_profile_percentage(self, obj):
-        if obj.profile:
-            percentage = obj.profile.percentage_completion
-            return format_html(
-                f"""
-                <progress value="{percentage}" max="100"></progress>
-                <span style="font-weight:bold">{percentage}%</span>
-                """
-            )
-
-    get_profile_percentage.short_description = "Profile %"
 
     def get_profile_permalink(self, obj):
         if obj.profile:

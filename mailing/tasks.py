@@ -3,44 +3,27 @@ import logging
 from celery import shared_task
 from django.core.mail import mail_admins, send_mail
 
-from mailing.schemas import Envelope
-
 logger: logging.Logger = logging.getLogger("mailing")
 
 
 @shared_task
-def notify_admins(subject, message):
-    mail_admins(subject, message)
+def notify_admins(**data):
+    mail_admins(**data)
 
 
 @shared_task
-def send(
-    data: dict,  # Envelope.model_dump()
-):
+def send(**data):
     """
     Send an email to the specified recipients.
     """
-    envelope = Envelope.model_validate(data)
     try:
         send_mail(
-            **envelope.mail.data,
-            recipient_list=envelope.recipients,
+            **data,
         )
     except Exception as err:
+        print(err)
         logger.error(
-            f"subject={envelope.mail.subject}, recipients={envelope.recipients}, error={str(err)}"
+            f"subject={data['subject']}, recipients={data['recipient_list']}, error={str(err)}"
         )
     else:
-        logger.info(
-            f"subject={envelope.mail.subject}, recipients={envelope.recipients}"
-        )
-
-
-@shared_task
-def send_many(recipients: list, data: dict):
-    """
-    Send an email to multiple recipients.
-    """
-    for recipient in recipients:
-        envelope = Envelope.model_validate(mail=data, recipients=[recipient])
-        send.delay(envelope.model_dump())
+        logger.info(f"subject={data['subject']}, recipients={data['recipient_list']}")

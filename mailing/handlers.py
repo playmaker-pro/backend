@@ -1,13 +1,12 @@
 from django.utils.log import AdminEmailHandler
 
-from mailing.tasks import notify_admins
-
 
 class AsyncAdminEmailHandler(AdminEmailHandler):
     """Custom AdminEmailHandler that sends emails via Celery."""
 
     def emit(self, record):
-        breakpoint()
+        from mailing.tasks import notify_admins
+
         try:
             subject = self.format(record)
             message = str(record.__dict__)

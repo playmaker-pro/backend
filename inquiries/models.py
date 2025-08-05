@@ -65,17 +65,6 @@ class UserInquiryLog(models.Model):
             return INQUIRY_CONTACT_URL
         return ""
 
-    def save(self, *args, **kwargs):
-        new_object = self.pk is None
-        super().save(*args, **kwargs)
-
-        if self.send_mail and new_object:
-            from inquiries.services import InquireService
-
-            InquireService().send_inquiry_log_email(self)
-
-        logger.info(f"New UserInquiryLog (ID: {self.pk}) created: {self}")
-
 
 class InquiryPlan(models.Model):
     """Holds information about user's inquiry plans."""
@@ -262,55 +251,6 @@ class UserInquiry(models.Model):
             ):
                 self.premium_inquiries.increment_counter()
 
-        self.check_limit_to_notify()
-
-    @property
-    def can_remind_about_limit(self) -> bool:
-        """
-        Return True if user can receive inquiry limit reached email.
-
-        Send email once per round. So:
-        - if last email was sent in april current year, we can sent next email after june current year.
-        - if last email was sent in july current year, we can sent next email after december current year.
-        - if last email was sent in december last year, we can sent next email after june current year.
-        """
-        curr_date = timezone.now()
-        if not (last_sent_mail := self._last_limit_notification):
-            return True
-        last_sent_mail = last_sent_mail.sent_date
-        if last_sent_mail.month < 6:
-            # last_sent | current_date | result
-            # 2023-04-01 | 2023-06-01 | True
-            # 2023-04-01 | 2023-05-01 | False
-            # 2023-04-01 | 2025-04-01 | True
-            return (
-                True
-                if (curr_date.month >= 6 and curr_date.year >= last_sent_mail.year)
-                or curr_date.year > last_sent_mail.year + 1
-                else False
-            )
-        elif last_sent_mail.month == 12:
-            # last_sent | current_date | result
-            # 2022-12-03 | 2023-06-01 | True
-            # 2022-12-03 | 2024-04-01 | True
-            # 2022-12-03 | 2023-04-01 | False
-            return (
-                True
-                if (curr_date.month >= 6 and curr_date.year > last_sent_mail.year)
-                or curr_date.year > last_sent_mail.year + 1
-                else False
-            )
-        elif last_sent_mail.month >= 6:
-            # last_sent | current_date | result
-            # 2023-06-01 | 2023-12-01 | True
-            # 2023-07-01 | 2023-11-01 | False
-            # 2023-07-01 | 2025-11-01 | True
-            return (
-                True
-                if curr_date.month == 12 or curr_date.year > last_sent_mail.year
-                else False
-            )
-
     def decrement(self):
         """Decrease by one counter"""
         if self.counter > 0:
@@ -348,6 +288,52 @@ class UserInquiry(models.Model):
         self.plan = plan
         self.limit_raw += plan.limit
         self.save(update_fields=["plan", "limit_raw"])
+
+    def can_sent_inquiry_limit_reached_email(self) -> bool:
+        """
+        Return True if user can receive inquiry limit reached email.
+
+        Send email once per round. So:
+        - if last email was sent in april current year, we can sent next email after june current year.
+        - if last email was sent in july current year, we can sent next email after december current year.
+        - if last email was sent in december last year, we can sent next email after june current year.
+        """
+        curr_date = timezone.now()
+        last_sent_mail = self._last_limit_notification
+        if not (last_sent_mail):
+            return True
+        if last_sent_mail.month < 6:
+            # last_sent | current_date | result
+            # 2023-04-01 | 2023-06-01 | True
+            # 2023-04-01 | 2023-05-01 | False
+            # 2023-04-01 | 2025-04-01 | True
+            return (
+                True
+                if (curr_date.month >= 6 and curr_date.year >= last_sent_mail.year)
+                or curr_date.year > last_sent_mail.year + 1
+                else False
+            )
+        elif last_sent_mail.month == 12:
+            # last_sent | current_date | result
+            # 2022-12-03 | 2023-06-01 | True
+            # 2022-12-03 | 2024-04-01 | True
+            # 2022-12-03 | 2023-04-01 | False
+            return (
+                True
+                if (curr_date.month >= 6 and curr_date.year > last_sent_mail.year)
+                or curr_date.year > last_sent_mail.year + 1
+                else False
+            )
+        elif last_sent_mail.month >= 6:
+            # last_sent | current_date | result
+            # 2023-06-01 | 2023-12-01 | True
+            # 2023-07-01 | 2023-11-01 | False
+            # 2023-07-01 | 2025-11-01 | True
+            return (
+                True
+                if curr_date.month == 12 or curr_date.year > last_sent_mail.year
+                else False
+            )
 
     def __str__(self):
         return f"{self.user}: {self.counter}/{self.limit}"
@@ -453,6 +439,24 @@ class InquiryRequest(models.Model):
 
     anonymous_recipient = models.BooleanField(default=False)
 
+    def create_log_for_sender(self, log_type: InquiryLogType) -> None:
+        """Create log for sender"""
+        UserInquiryLog.objects.create(
+            log_owner=self.sender.userinquiry,
+            related_with=self.recipient.userinquiry,
+            log_type=log_type,
+            ref=self,
+        )
+
+    def create_log_for_recipient(self, log_type: InquiryLogType) -> None:
+        """Create log for recipient"""
+        UserInquiryLog.objects.create(
+            log_owner=self.recipient.userinquiry,
+            related_with=self.sender.userinquiry,
+            log_type=log_type,
+            ref=self,
+        )
+
     def is_active(self):
         return self.status in self.ACTIVE_STATES
 
@@ -503,6 +507,7 @@ class InquiryRequest(models.Model):
         NotificationService(self.sender.profile.meta).notify_inquiry_accepted(
             self.recipient.profile
         )
+        self.create_log_for_sender(InquiryLogType.ACCEPTED)
 
     @transition(
         field=status,
@@ -520,23 +525,16 @@ class InquiryRequest(models.Model):
         NotificationService(self.sender.profile.meta).notify_inquiry_rejected(
             self.recipient.profile, hide_profile=self.anonymous_recipient
         )
+        self.create_log_for_sender(InquiryLogType.REJECTED)
 
     def save(self, *args, **kwargs):
         recipient_profile_uuid = kwargs.pop("recipient_profile_uuid", None)
         self._recipient_profile_uuid = recipient_profile_uuid
-        adding = self._state.adding
 
         if self.status == self.STATUS_NEW:
             self.send()
 
         super().save(*args, **kwargs)
-
-        if adding:
-            self.sender.userinquiry.increment()  # type: ignore
-            logger.info(
-                f"{self.sender} sent request to {self.recipient}. -- "
-                f"InquiryRequestID: {self.pk}"
-            )
 
     def reward_sender(self) -> None:
         """Reward sender if request is outdated. Create log for sender."""

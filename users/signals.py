@@ -16,7 +16,6 @@ User = get_user_model()
 
 @receiver(user_logged_in)
 def log_user_login(sender, request, user, **kwargs):
-    breakpoint()
     logger.info(f"User '{user.username}' logged in ")
 
 
@@ -47,7 +46,7 @@ def referral_rewards(sender, instance, created, **kwargs) -> None:
             message = (
                 f"Link afiliacyjny {referral} osiągnął {invited_users} poleconych."
             )
-            notify_admins.delay(subject, message)
+            notify_admins.delay(subject=subject, message=message)
 
         if referral.is_user:
             ReferralRewardService(referral.user).check_and_reward()

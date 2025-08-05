@@ -21,9 +21,7 @@ BASE_URL = "http://localhost:8000"
 
 VERSION = "2.3.3"
 
-
-SYSTEM_USER_EMAIL = "rafal.kesik@gmail.com"  # TODO: change soon
-ADMIN_EMAIL = "biuro.playmaker.pro@gmail.com"
+SYSTEM_USER_EMAIL = "biuro@playmaker.pro"  # TODO: change soon
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -465,11 +463,11 @@ def get_logging_structure(LOGFILE_ROOT: str = LOGGING_ROOTDIR):
                 "level": "ERROR",
             },
             "adapters": {
-                "handlers": ["adapters"],
+                "handlers": ["adapters", "console"],
                 "level": "ERROR",
             },
             "project": {
-                "handlers": ["proj_log_file"],
+                "handlers": ["proj_log_file", "console"],
                 "level": "DEBUG",
             },
             "route_updater": {

@@ -1,11 +1,9 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, Set
 
 from django.core.management.base import BaseCommand
-from django.template.loader import render_to_string
 
-from mailing.tasks import send_many
-from mailing.utils import extract_text_from_html
+from mailing.schemas import Envelope, MailContent
 from profiles.models import ProfileMeta
 
 
@@ -15,6 +13,8 @@ class Args:
     Dataclass to hold command arguments.
     """
 
+    title: str
+    template_path: str
     players: bool
     coaches: bool
     scouts: bool
@@ -43,15 +43,21 @@ class Command(BaseCommand):
         if not recipients:
             self.stdout.write(self.style.WARNING("No recipients found."))
             return
-
-        html_content = render_to_string("emails/welcome.html")
-        txt_content = extract_text_from_html(html_content)
-
-        send_many.delay(
-            recipients=list(recipients),
+        content = MailContent(
             subject=self.args.title,
-            message=txt_content,
-            html_message=html_content,
+            template_path=self.args.template_path,
+        )({})
+        envelope = Envelope(mail=content, recipients=list(recipients))
+
+        for recipient in recipients:
+            envelope = Envelope(mail=content, recipients=[recipient])
+            envelope.send()
+            self.stdout.write(self.style.SUCCESS(f"Email sent to {recipient}"))
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Successfully queued emails for {len(recipients)} recipients"
+            )
         )
 
     def add_arguments(self, parser):
@@ -91,7 +97,7 @@ class Command(BaseCommand):
 
         return {email.strip() for email in self.args.others.split(";") if email.strip()}
 
-    def _get_recipients(self) -> List[str]:
+    def _get_recipients(self) -> Set[str]:
         """
         Get recipients based on command arguments.
         If `--all` is provided, return all profiles.
@@ -102,6 +108,7 @@ class Command(BaseCommand):
             recipients.update(
                 set(ProfileMeta.objects.all().values_list("user__email", flat=True))
             )
+            return recipients
 
         args_mapper = {
             "playerprofile": self.args.players,
@@ -123,11 +130,15 @@ class Command(BaseCommand):
         )
         recipients.update(self._parse_others_recipients())
 
+        return recipients
+
     def _set_args(self, arguments: Dict[str, Any]) -> None:
         """
         Set the command arguments.
         """
         self.args = Args(
+            title=arguments["title"],
+            template_path=arguments["template_path"],
             players=arguments["players"],
             coaches=arguments["coaches"],
             scouts=arguments["scouts"],

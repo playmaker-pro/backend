@@ -13,6 +13,7 @@ from typing import Callable, Optional
 import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models.signals import (
     m2m_changed,
@@ -29,11 +30,15 @@ from utils.fixtures import *
 
 pytestmark = pytest.mark.django_db
 
-User = get_user_model()
-
-pytestmark = pytest.mark.django_db
 
 User = get_user_model()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_system_user(django_db_setup, django_db_blocker):
+    """Create system user once per test session."""
+    with django_db_blocker.unblock():
+        User.objects.get_or_create(email=settings.SYSTEM_USER_EMAIL)
 
 
 def pytest_addoption(parser):
@@ -58,16 +63,9 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(skip_slow)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def create_system_user(django_db_setup, django_db_blocker):
-    """Ensure system user exists for all tests and is not deleted."""
-    with django_db_blocker.unblock():
-        return User.objects.get_or_create(email=settings.SYSTEM_USER_EMAIL)
-
-
 @pytest.fixture
-def system_user():
-    """Ensure system user exists for all tests and is not deleted."""
+def system_user(setup_system_user):
+    """Get the system user that was created during setup."""
     return User.objects.get(email=settings.SYSTEM_USER_EMAIL)
 
 
@@ -142,3 +140,9 @@ def city_rdm():
     return CityFactory.create_with_coordinates(
         name="Radom", coordinates=(21.1572, 51.4025)
     )
+
+
+@pytest.fixture
+def outbox():
+    """Fixture to access the mail outbox."""
+    return mail.outbox

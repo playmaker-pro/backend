@@ -183,9 +183,13 @@ class ProfileTransferRequestSerializer(
             "profile_uuid",
             "club_voivodeship",
             "is_anonymous",
+            "contact_email",
+            "phone_number",
         )
 
-    contact_email = serializers.EmailField(required=False, allow_null=True)
+    contact_email = serializers.EmailField(
+        required=False, allow_null=True, write_only=True
+    )
     club_voivodeship = serializers.CharField(source="voivodeship", read_only=True)
     profile_uuid = serializers.UUIDField(source="profile.uuid", read_only=True)
     requesting_team = serializers.PrimaryKeyRelatedField(
@@ -198,7 +202,7 @@ class ProfileTransferRequestSerializer(
     number_of_trainings = serializers.IntegerField(required=False, allow_null=True)
     benefits = serializers.ListField(required=False, allow_null=True)
     salary = serializers.IntegerField(required=False, allow_null=True)
-    phone_number = PhoneNumberField(source="*", required=False)
+    phone_number = PhoneNumberField(source="*", required=False, write_only=True)
 
     def to_representation(self, instance: ProfileTransferRequest) -> dict:
         """
@@ -343,15 +347,19 @@ class ProfileTransferStatusSerializer(
             "salary",
             "number_of_trainings",
             "is_anonymous",
+            "contact_email",
+            "phone_number",
         )
 
-    contact_email = serializers.EmailField(required=False, allow_null=True)
+    contact_email = serializers.EmailField(
+        required=False, allow_null=True, write_only=True
+    )
     status = ProfileEnumChoicesSerializer(model=ProfileTransferStatus)
     additional_info = serializers.ListField(required=False, allow_null=True)
     league = serializers.PrimaryKeyRelatedField(
         queryset=LeagueService().get_leagues(), many=True
     )
-    phone_number = PhoneNumberField(source="*", required=False)
+    phone_number = PhoneNumberField(source="*", required=False, write_only=True)
     benefits = serializers.ListField(required=False, allow_null=True)
 
     def validate_is_anonymous(self, val: bool) -> bool:

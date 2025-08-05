@@ -1,9 +1,6 @@
 import logging as _logging
 
-from django.conf import settings as _settings
-
-from mailing.schemas import EmailType, MailContent
-from mailing.services import MailingService
+from mailing.schemas import EmailTemplateRegistry, Envelope
 
 
 class EmailOnErrorHandler(_logging.Handler):
@@ -13,21 +10,14 @@ class EmailOnErrorHandler(_logging.Handler):
     def emit(self, record):
         if record.levelno >= _logging.ERROR:
             try:
-                context = {"body": self.format(record)}
+                context = {
+                    "body": self.format(record),
+                    "subject": "[SYSTEM] Payment Error",
+                }
 
-                mail_content = MailContent(
-                    subject="[SYSTEM] Payment error",
-                    template_path="mailing/mails/system_error.html",
-                )
-
-                mailing_service = MailingService(
-                    context=context,
-                    recipients=[_settings.ADMIN_EMAIL],
-                    mail_content=mail_content,
-                    email_type=EmailType.SYSTEM,
-                    sender=None,
-                )
-                mailing_service.send_mail()
+                mail_content = EmailTemplateRegistry.SYSTEM_ERROR(context)
+                envelope = Envelope(mail=mail_content)
+                envelope.send_to_admins()
 
             except Exception as e:
                 print(f"Failed to send error email: {e}")

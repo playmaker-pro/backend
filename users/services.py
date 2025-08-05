@@ -248,7 +248,9 @@ class PasswordResetService:
         # Actual email sending logic
         verification_url = UserTokenManager.create_email_verification_url(user)
         MailingService(
-            EmailTemplateRegistry.PASSWORD_CHANGE(context={"url": verification_url})
+            EmailTemplateRegistry.PASSWORD_CHANGE(
+                context={"url": verification_url, "user": user}
+            )
         ).send_mail(user)
 
     @staticmethod

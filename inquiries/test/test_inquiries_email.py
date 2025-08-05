@@ -2,143 +2,194 @@ from datetime import timedelta
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.core import mail
-from django.test import TestCase
 
 from inquiries.constants import InquiryLogType
 from inquiries.errors import ForbiddenLogAction
-from inquiries.models import UserInquiry
-from utils.factories.inquiry_factories import InquiryRequestFactory
-from utils.factories.profiles_factories import GuestProfileFactory, PlayerProfileFactory
+from inquiries.models import InquiryRequest, UserInquiry
 
 User = get_user_model()
 
+pytestmark = pytest.mark.django_db
 
-class TestSendEmails(TestCase):
-    def setUp(self):
-        self.user1 = PlayerProfileFactory.create().user
-        self.user2 = GuestProfileFactory.create().user
-        self.inquiry_request = InquiryRequestFactory(
-            sender=self.user1, recipient=self.user2
+
+class TestSendEmails:
+    @pytest.fixture
+    def coach_profile(self, coach_profile):
+        """Create a coach profile for testing"""
+        coach_profile.user.userpreferences.gender = "K"
+        coach_profile.user.userpreferences.save()
+        coach_profile.user.first_name = "Karolina"
+        coach_profile.user.last_name = "Nowak"
+        coach_profile.user.save()
+        return coach_profile
+
+    @pytest.fixture
+    def player_profile(self, player_profile):
+        """Create a player profile for testing"""
+        player_profile.user.userpreferences.gender = "M"
+        player_profile.user.userpreferences.save()
+        player_profile.user.first_name = "Jan"
+        player_profile.user.last_name = "Kowalski"
+        player_profile.user.save()
+        return player_profile
+
+    def test_send_email_on_send_request(
+        self, player_profile, coach_profile, outbox
+    ) -> None:
+        """Send email to recipient on new request"""
+        InquiryRequest.objects.create(
+            sender=player_profile.user, recipient=coach_profile.user
         )
 
-    def _purge_outbox(self) -> None:
-        """Delete all mails from outbox to have empty playground for tests."""
-        mail.outbox.clear()
+        assert len(outbox) == 1
+        assert outbox[0].to == [coach_profile.user.email]
+        assert outbox[0].subject == "Masz nowe zapytanie o piłkarski kontakt!"
 
-    def test_send_email_on_send_request(self) -> None:
-        """Send email to recipient on new request"""
-        assert len(mail.outbox) == 1
-        assert mail.outbox[0].to == [self.user2.contact_email]
-
-    def test_send_email_on_accepted_request(self) -> None:
+    def test_send_email_on_accepted_request(
+        self, player_profile, coach_profile, outbox
+    ) -> None:
         """Send email to sender on accept request"""
-        self._purge_outbox()
-        self.inquiry_request.accept()
-        self.inquiry_request.save()
-        assert len(mail.outbox) == 1
-        assert mail.outbox[0].to == [self.user1.contact_email]
+        inquiry_request = InquiryRequest.objects.create(
+            sender=coach_profile.user, recipient=player_profile.user
+        )
+        inquiry_request.accept()
+        inquiry_request.save()
 
-    def test_send_email_on_reject_request(self) -> None:
+        assert outbox[-1].to == [coach_profile.user.email]
+        assert (
+            outbox[-1].subject
+            == "Piłkarz Jan Kowalski zaakceptował Twoje zapytanie o piłkarski kontakt!"
+        )
+
+    def test_send_email_on_reject_request(
+        self, player_profile, coach_profile, outbox
+    ) -> None:
         """Send email to sender on reject request"""
-        self._purge_outbox()
-        self.inquiry_request.reject()
-        self.inquiry_request.save()
-        assert len(mail.outbox) == 1
-        assert mail.outbox[0].to == [self.user1.contact_email]
+        inquiry_request = InquiryRequest.objects.create(
+            sender=player_profile.user, recipient=coach_profile.user
+        )
+        inquiry_request.reject()
+        inquiry_request.save()
 
-    def test_send_email_on_outdated_request_to_sender(self) -> None:
+        assert outbox[-1].to == [player_profile.user.email]
+        assert (
+            outbox[-1].subject
+            == "Trenerka Karolina Nowak odrzuciła Twoje zapytanie o piłkarski kontakt!"
+        )
+
+    def test_send_email_on_outdated_request_to_sender(
+        self, player_profile, coach_profile, outbox
+    ) -> None:
         """Send email to sender on outdated request"""
-        self._purge_outbox()
-        assert len(mail.outbox) == 0
+        inquiry_request = InquiryRequest.objects.create(
+            sender=player_profile.user, recipient=coach_profile.user
+        )
 
-        _3days_back = self.inquiry_request.created_at - timedelta(days=4, hours=1)
-        _6days_back = self.inquiry_request.created_at - timedelta(days=6, hours=1)
-        _any_other_time = self.inquiry_request.created_at - timedelta(days=100)
-        assert not self.inquiry_request.logs.filter(
+        _3days_back = inquiry_request.created_at - timedelta(days=4, hours=1)
+        _6days_back = inquiry_request.created_at - timedelta(days=6, hours=1)
+        _any_other_time = inquiry_request.created_at - timedelta(days=100)
+        assert not inquiry_request.logs.filter(
             log_type=InquiryLogType.OUTDATED_REMINDER
         ).exists()
 
-        self.inquiry_request.created_at = _3days_back
-        self.inquiry_request.save()
-        self.inquiry_request.refresh_from_db()
+        inquiry_request.created_at = _3days_back
+        inquiry_request.save()
+        inquiry_request.refresh_from_db()
         assert (
-            self.inquiry_request.__class__.objects.to_remind_recipient_about_outdated().count()  # noqa
+            inquiry_request.__class__.objects.to_remind_recipient_about_outdated().count()  # noqa
             == 1
         )
 
-        self.inquiry_request.notify_recipient_about_outdated()
-        self.inquiry_request.refresh_from_db()
+        inquiry_request.notify_recipient_about_outdated()
+        inquiry_request.refresh_from_db()
 
         assert (
-            self.inquiry_request.__class__.objects.to_remind_recipient_about_outdated().count()  # noqa
+            inquiry_request.__class__.objects.to_remind_recipient_about_outdated().count()  # noqa
             == 0
         )
         assert (
-            self.inquiry_request.logs.filter(
+            inquiry_request.logs.filter(
                 log_type=InquiryLogType.OUTDATED_REMINDER
             ).count()
             == 1
         )
-        assert len(mail.outbox) == 1
-        assert mail.outbox[0].to == [self.user2.contact_email]
+
+        assert outbox[-1].to == [inquiry_request.recipient.email]
+        assert (
+            outbox[-1].subject
+            == "Masz zapytanie o piłkarski kontakt czekające na decyzję."
+        )
 
         # second time should not be sent without changing date
         with pytest.raises(ForbiddenLogAction):
-            self.inquiry_request.notify_recipient_about_outdated()
+            inquiry_request.notify_recipient_about_outdated()
 
-        self.inquiry_request.created_at = _6days_back
-        self.inquiry_request.save()
+        inquiry_request.created_at = _6days_back
+        inquiry_request.save()
 
         assert (
-            self.inquiry_request.__class__.objects.to_remind_recipient_about_outdated().count()  # noqa
+            inquiry_request.__class__.objects.to_remind_recipient_about_outdated().count()  # noqa
             == 1
         )
 
-        self.inquiry_request.notify_recipient_about_outdated()
-        self.inquiry_request.refresh_from_db()
+        inquiry_request.notify_recipient_about_outdated()
+        inquiry_request.refresh_from_db()
 
-        assert len(mail.outbox) == 2
-        assert mail.outbox[1].to == [self.user2.contact_email]
+        assert outbox[-1].to == [inquiry_request.recipient.email]
         assert (
-            self.inquiry_request.logs.filter(
+            outbox[-1].subject
+            == "Masz zapytanie o piłkarski kontakt czekające na decyzję."
+        )
+        assert (
+            inquiry_request.logs.filter(
                 log_type=InquiryLogType.OUTDATED_REMINDER
             ).count()
             == 2
         )
 
-        self.inquiry_request.created_at = _any_other_time
-        self.inquiry_request.save()
+        inquiry_request.created_at = _any_other_time
+        inquiry_request.save()
 
         # recipient should not be notified anymore
         with pytest.raises(ForbiddenLogAction):
-            self.inquiry_request.notify_recipient_about_outdated()
+            inquiry_request.notify_recipient_about_outdated()
 
-    def test_send_email_on_reward_sender(self) -> None:
+    def test_send_email_on_reward_sender(
+        self, player_profile, coach_profile, outbox
+    ) -> None:
         """Send email to sender on reward sender"""
-        self._purge_outbox()
-        _7days_back = self.inquiry_request.created_at - timedelta(days=7, hours=1)
-        self.inquiry_request.created_at = _7days_back
-        self.inquiry_request.save()
-        self.inquiry_request.reward_sender()
+        inquiry_request = InquiryRequest.objects.create(
+            sender=player_profile.user, recipient=coach_profile.user
+        )
 
-        assert len(mail.outbox) == 1
-        assert mail.outbox[0].to == [self.user1.contact_email]
+        _7days_back = inquiry_request.created_at - timedelta(days=7, hours=1)
+        inquiry_request.created_at = _7days_back
+        inquiry_request.save()
+        inquiry_request.reward_sender()
+
+        assert outbox[-1].to == [inquiry_request.sender.email]
+        assert (
+            outbox[-1].subject == "Zwiększamy Twoją pulę zapytań o piłkarski kontakt!"
+        )
 
         # Assert we can't reward sender twice
         with pytest.raises(ForbiddenLogAction):
-            self.inquiry_request.reward_sender()
+            inquiry_request.reward_sender()
 
-    def test_send_email_on_limit_reached(self) -> None:
+    def test_send_email_on_limit_reached(
+        self, player_profile, coach_profile, outbox
+    ) -> None:
         """Send email to user if he reached inquiry requests limit"""
-        self._purge_outbox()
-        self.user1.userinquiry.counter = 2
-        self.user1.userinquiry.save()
+        player_profile.user.userinquiry.counter = 2
+        player_profile.user.userinquiry.save()
 
         limit_reached = UserInquiry.objects.limit_reached()
-        assert limit_reached.count() == 1, limit_reached.first().user == self.user1
+        assert limit_reached.count() == 1, (
+            limit_reached.first().user == player_profile.user
+        )
 
-        self.user1.userinquiry.notify_about_limit(force=True)
-
-        assert len(mail.outbox) == 1
-        assert mail.outbox[0].to == [self.user1.contact_email]
+        assert outbox[-1].to == [player_profile.user.email]
+        assert (
+            outbox[-1].subject
+            == "Rozbuduj swoje transferowe możliwości – Rozszerz limit zapytań!"
+        )

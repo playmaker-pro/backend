@@ -1,17 +1,20 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from inquiries.tasks import notify_limit_reached
 from premium import models
-from profiles.tasks import premium_expired
 
 
-@receiver(post_save, sender=models.PremiumProfile)
-def post_save_premium_profile(sender, instance, created, **kwargs):
+@receiver(post_save, sender=models.PremiumInquiriesProduct)
+def post_save_premium_inquiries_product(sender, instance, created, **kwargs):
     """
-    Signal to handle actions after a premium profile is saved.
+    Signal to handle actions after a premium inquiries product is saved.
     """
     if not created:
-        old_object = models.PremiumProfile.objects.get(pk=instance.pk)
+        old_instance = models.PremiumInquiriesProduct.objects.get(pk=instance.pk)
 
-        if old_object.valid_until is not None and instance.valid_until is None:
-            premium_expired.delay(instance.premium_products.pk)
+        if (
+            old_instance.current_counter < instance.current_counter
+            and instance.current_counter == models.PremiumInquiriesProduct.INQUIRY_LIMIT
+        ):
+            notify_limit_reached.delay(instance.user_inquiry.pk)
