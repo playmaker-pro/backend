@@ -378,36 +378,36 @@ class TestNotifications:
         )
 
     @pytest.mark.parametrize(
-        "fixture_name, has_video",
+        "fixture_name, should_receive_notification, has_video",
         (
-            ("player_profile", True),
-            ("coach_profile", False),
-            ("scout_profile", False),
-            ("club_profile", True),
-            ("guest_profile", False),
+            ("player_profile", True, False),   # PlayerProfile without video should get notification
+            ("player_profile", False, True),   # PlayerProfile with video should NOT get notification
+            ("coach_profile", False, False),   # CoachProfile should never get notification
+            ("scout_profile", False, False),   # ScoutProfile should never get notification
+            ("club_profile", False, False),    # ClubProfile should never get notification
+            ("guest_profile", False, False),   # GuestProfile should never get notification
         ),
     )
-    def test_notify_add_video(self, fixture_name, request, has_video):
+    def test_notify_add_video(self, fixture_name, request, should_receive_notification, has_video):
         """
-        Test the notify_add_video function.
+        Test the notify_add_video function - should only notify PlayerProfile users without videos.
         """
-        player_profile = request.getfixturevalue(fixture_name)
+        profile = request.getfixturevalue(fixture_name)
         if has_video:
-            player_profile.user.user_video.create(url="https://example.com/video.mp4")
+            profile.user.user_video.create(url="https://example.com/video.mp4")
         else:
-            player_profile.user.user_video.all().delete()  # Ensure no videos exist
+            profile.user.user_video.all().delete()  # Ensure no videos exist
 
-        NotificationService(player_profile.meta).bulk_notify_add_video()
-        assert (
-            Notification.objects.filter(
-                target=player_profile.meta,
-                title="Dodaj video",
-                description="Kliknij tutaj, aby przejść do profilu.",
-                href="/profil#sekcja-video-z-gry",
-                icon="video",
-            ).exists()
-            is not has_video
-        )
+        NotificationService.bulk_notify_add_video()
+        notification_exists = Notification.objects.filter(
+            target=profile.meta,
+            title="Dodaj video",
+            description="Kliknij tutaj, aby przejść do profilu.",
+            href="/profil#sekcja-video-z-gry",
+            icon="video",
+        ).exists()
+        
+        assert notification_exists == should_receive_notification
 
     @pytest.mark.parametrize(
         "fixture_name,has_team_history",
