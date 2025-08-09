@@ -71,14 +71,29 @@ class TransferStatusAPIView(EndpointView):
     ) -> Response:
         """Retrieve and display transfer status for the user."""
         is_anonymous = request.query_params.get("is_anonymous", False)
+        transfer_status = None
         try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid, is_anonymous)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist from exc
+            transfer_object = request.user.profile.meta.transfer_object
+            if (
+                profile_uuid == transfer_object.anonymous_uuid
+                or profile_uuid == request.user.profile.uuid
+            ):
+                transfer_status = transfer_object
+        except AttributeError:
+            pass
+        if transfer_status is None:
+            try:
+                profile = profile_service.get_profile_by_uuid(
+                    profile_uuid, is_anonymous
+                )
+            except ObjectDoesNotExist as exc:
+                raise api_errors.ProfileDoesNotExist from exc
 
-        transfer_status = profile.meta.transfer_object
-        if not transfer_status or (transfer_status.is_anonymous and not is_anonymous):
-            raise TransferStatusDoesNotExistHTTPException
+            transfer_status = profile.meta.transfer_object
+            if not transfer_status or (
+                transfer_status.is_anonymous and not is_anonymous
+            ):
+                raise TransferStatusDoesNotExistHTTPException
 
         serializer = ProfileTransferStatusSerializer(
             transfer_status, context={"request": request, "is_anonymous": is_anonymous}
@@ -246,14 +261,30 @@ class TransferRequestAPIView(EndpointView):
     ) -> Response:
         """Retrieve and display transfer request for the user."""
         is_anonymous = request.query_params.get("is_anonymous", False)
+        transfer_request = None
         try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid, is_anonymous)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist() from exc
-        transfer_request = profile.meta.transfer_object
+            transfer_object = request.user.profile.meta.transfer_object
+            if (
+                profile_uuid == transfer_object.anonymous_uuid
+                or profile_uuid == request.user.profile.uuid
+            ):
+                transfer_request = transfer_object
+        except AttributeError:
+            pass
 
-        if not transfer_request or (transfer_request.is_anonymous and not is_anonymous):
-            raise TransferRequestDoesNotExistHTTPException
+        if transfer_request is None:
+            try:
+                profile = profile_service.get_profile_by_uuid(
+                    profile_uuid, is_anonymous
+                )
+            except ObjectDoesNotExist as exc:
+                raise api_errors.ProfileDoesNotExist from exc
+
+            transfer_request = profile.meta.transfer_object
+            if not transfer_request or (
+                transfer_request.is_anonymous and not is_anonymous
+            ):
+                raise TransferRequestDoesNotExistHTTPException
 
         serializer = ProfileTransferRequestSerializer(
             transfer_request, context={"request": request}
