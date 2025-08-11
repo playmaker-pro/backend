@@ -10,11 +10,13 @@ from mailing.tasks import notify_admins, send
 
 
 class MailContent(BaseModel):
-    subject: str
-    template_path: str
+    subject: str = ""
 
     html_content: Optional[str] = None
     text_content: Optional[str] = None
+
+    subject_format: str
+    template_path: str
 
     class Config:
         use_enum_values = True
@@ -28,7 +30,7 @@ class MailContent(BaseModel):
         Renders the HTML body using the given context.
         """
         try:
-            self.subject = self.subject.format(**context)
+            self.subject = self.subject_format.format(**context)
         except KeyError as e:
             raise ValueError(f"Some context keys are missing: {e}")
 
@@ -40,7 +42,7 @@ class MailContent(BaseModel):
         """
         Checks if the content is ready to be sent.
         """
-        return self.html_content and self.text_content
+        return self.html_content and self.text_content and self.subject
 
     @property
     def data(self) -> dict:
@@ -65,7 +67,7 @@ class Envelope(BaseModel):
     mail: MailContent
     recipients: List[str] = []
 
-    def send(self) -> None:
+    def send(self, separate: bool = False) -> None:
         """
         Sends the email using the provided mail content and recipients.
         """
@@ -76,6 +78,7 @@ class Envelope(BaseModel):
             **self.mail.data,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=list(self.recipients),
+            separate=separate,
         )
 
     def send_to_admins(self) -> None:
@@ -87,66 +90,66 @@ class Envelope(BaseModel):
 
 class EmailTemplateRegistry:
     INQUIRY_LIMIT = MailContent(
-        subject="Rozbuduj swoje transferowe możliwości – Rozszerz limit zapytań!",
+        subject_format="Rozbuduj swoje transferowe możliwości – Rozszerz limit zapytań!",
         template_path=cfg.mail.templates_dir + "/inquiry_limit.html",
     )
     NEW_USER = MailContent(
-        subject="Witaj na PlayMaker.pro. Potwierdź rejestrację konta.",
+        subject_format="Witaj na PlayMaker.pro. Potwierdź rejestrację konta.",
         template_path=cfg.mail.templates_dir + "/new_user.html",
     )
     PASSWORD_CHANGE = MailContent(
-        subject="Zmiana hasła do Twojego konta.",
+        subject_format="Zmiana hasła do Twojego konta.",
         template_path=cfg.mail.templates_dir + "/password_change.html",
     )
     PREMIUM_EXPIRED = MailContent(
-        subject="⚠️ Twoje Premium wygasło – odnów je teraz!",
+        subject_format="⚠️ Twoje Premium wygasło – odnów je teraz!",
         template_path=cfg.mail.templates_dir + "/premium_expired.html",
     )
     REFERRAL_REWARD_REFERRED = MailContent(
-        subject="Witaj w PlayMaker.pro! Odbierz swój prezent powitalny",
+        subject_format="Witaj w PlayMaker.pro! Odbierz swój prezent powitalny",
         template_path=cfg.mail.templates_dir + "/referral_reward_referred.html",
     )
     REFERRAL_REWARD_REFERRER_1 = MailContent(
-        subject="Gratulacje! Otrzymujesz nagrodę za polecenie nowego użytkownika",
+        subject_format="Gratulacje! Otrzymujesz nagrodę za polecenie nowego użytkownika",
         template_path=cfg.mail.templates_dir + "/1_referral_reward_referrer.html",
     )
     REFERRAL_REWARD_REFERRER_3 = MailContent(
-        subject="Gratulacje! Nagroda za 3 skuteczne polecenia PlayMaker.pro",
+        subject_format="Gratulacje! Nagroda za 3 skuteczne polecenia PlayMaker.pro",
         template_path=cfg.mail.templates_dir + "/3_referral_reward_referrer.html",
     )
     REFERRAL_REWARD_REFERRER_5 = MailContent(
-        subject="Gratulacje! Otrzymujesz miesiąc Premium i treningi za 5 poleceń PlayMaker.pro",
+        subject_format="Gratulacje! Otrzymujesz miesiąc Premium i treningi za 5 poleceń PlayMaker.pro",
         template_path=cfg.mail.templates_dir + "/5_referral_reward_referrer.html",
     )
     REFERRAL_REWARD_REFERRER_15 = MailContent(
-        subject="Gratulacje! 6 miesięcy Premium za 15 poleceń PlayMaker.pro",
+        subject_format="Gratulacje! 6 miesięcy Premium za 15 poleceń PlayMaker.pro",
         template_path=cfg.mail.templates_dir + "/15_referral_reward_referrer.html",
     )
     ACCEPTED_INQUIRY = MailContent(
-        subject="{related_role} {related_full_name} {verb} Twoje zapytanie o piłkarski kontakt!",
+        subject_format="{related_role} {related_full_name} {verb} Twoje zapytanie o piłkarski kontakt!",
         template_path=cfg.mail.templates_dir + "/inquiries/accepted_inquiry.html",
     )
     REJECTED_INQUIRY = MailContent(
-        subject="{related_role} {related_full_name} {verb} Twoje zapytanie o piłkarski kontakt!",
+        subject_format="{related_role} {related_full_name} {verb} Twoje zapytanie o piłkarski kontakt!",
         template_path=cfg.mail.templates_dir + "/inquiries/rejected_inquiry.html",
     )
     NEW_INQUIRY = MailContent(
-        subject="Masz nowe zapytanie o piłkarski kontakt!",
+        subject_format="Masz nowe zapytanie o piłkarski kontakt!",
         template_path=cfg.mail.templates_dir + "/inquiries/new_inquiry.html",
     )
     OUTDATED_INQUIRY = MailContent(
-        subject="Zwiększamy Twoją pulę zapytań o piłkarski kontakt!",
+        subject_format="Zwiększamy Twoją pulę zapytań o piłkarski kontakt!",
         template_path=cfg.mail.templates_dir + "/inquiries/outdated_inquiry.html",
     )
     OUTDATED_REMINDER = MailContent(
-        subject="Masz zapytanie o piłkarski kontakt czekające na decyzję.",
+        subject_format="Masz zapytanie o piłkarski kontakt czekające na decyzję.",
         template_path=cfg.mail.templates_dir + "/inquiries/outdated_reminder.html",
     )
     SYSTEM_ERROR = MailContent(
-        subject="{subject}",
+        subject_format="{subject}",
         template_path=cfg.mail.templates_dir + "/system_error.html",
     )
     TEST = MailContent(
-        subject="Testowy email",
+        subject_format="Testowy email",
         template_path=cfg.mail.templates_dir + "/test.html",
     )

@@ -13,4 +13,4 @@ def clear_mail_outbox():
 @pytest.fixture
 def test_template() -> MailContent:
     """Fixture to provide an email template for the command."""
-    return EmailTemplateRegistry.TEST
+    return EmailTemplateRegistry.TEST()

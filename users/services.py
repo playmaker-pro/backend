@@ -193,6 +193,7 @@ class UserService:
     def send_email_to_confirm_new_user(user: User) -> None:
         """Sends an email to a newly registered user to confirm their email address."""
         verification_url = UserTokenManager.create_email_verification_url(user)
+
         MailingService(
             EmailTemplateRegistry.NEW_USER(context={"url": verification_url})
         ).send_mail(user)

@@ -43,16 +43,13 @@ class Command(BaseCommand):
         if not recipients:
             self.stdout.write(self.style.WARNING("No recipients found."))
             return
-        content = MailContent(
-            subject=self.args.title,
-            template_path=self.args.template_path,
-        )({})
-        envelope = Envelope(mail=content, recipients=list(recipients))
 
-        for recipient in recipients:
-            envelope = Envelope(mail=content, recipients=[recipient])
-            envelope.send()
-            self.stdout.write(self.style.SUCCESS(f"Email sent to {recipient}"))
+        content = MailContent(
+            subject_format=self.args.title,
+            template_path=self.args.template_path,
+        )
+        envelope = Envelope(mail=content(), recipients=list(recipients))
+        envelope.send(separate=True)
 
         self.stdout.write(
             self.style.SUCCESS(
