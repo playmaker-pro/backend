@@ -2669,6 +2669,12 @@ paths:
             format: uuid
           required: true
           description: "Profile uuid to filter team contributor history."
+        - in: query
+          name: is_anonymous
+          schema:
+            type: boolean
+            description: "Is passed uuid anonymous?"
+            default: false
       responses:
         200:
           description: "Successfully retrieved."
@@ -3161,6 +3167,12 @@ paths:
             type: string
             format: uuid
           required: true
+        - in: query
+          name: is_anonymous
+          schema:
+            type: boolean
+            description: "Is passed uuid anonymous?"
+            default: false
       tags:
         - transfer status
       security:
@@ -3173,7 +3185,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TransferStatusGet'
         "404":
-          description: "Transfer status for given profile not found."
+          description: "Transfer status for given profile not found OR profile has anonymous transfer status.."
           content:
             application/json:
               schema:
@@ -3235,6 +3247,9 @@ paths:
                   items:
                     type: integer
                     description: "Id of an highest parent league taken from: /clubs/leagues/highest-parents/"
+                is_anonymous:
+                  type: boolean
+                  description: "If true, the transfer status will be anonymous and not linked to a specific team contributor."
             example:
               {
                 "benefits": [ 1,2 ],
@@ -3244,7 +3259,8 @@ paths:
                 "contact_email": "email@email.com",
                 "phone_number": { "dial_code": 1, "number": 123 },
                 "additional_info": [ 1, 2 ],
-                "number_of_trainings": 1
+                "number_of_trainings": 1,
+                "is_anonymous": True,
               }
       responses:
         "200":
@@ -3329,6 +3345,9 @@ paths:
                   items:
                     type: integer
                     description: "Id of an highest parent league taken from: /clubs/leagues/highest-parents/"
+                is_anonymous:
+                  type: boolean
+                  description: "If true, the transfer status will be anonymous and not linked to a specific team contributor."
               required: [ "status", "additional_info", "league" ]
       responses:
         "201":
@@ -3668,6 +3687,12 @@ paths:
             type: string
             format: uuid
           required: true
+        - in: query
+          name: is_anonymous
+          schema:
+            type: boolean
+            description: "Is passed uuid anonymous?"
+            default: false
       tags:
         - transfer requests
       security:
@@ -3711,6 +3736,12 @@ paths:
             type: string
             format: uuid
           required: true
+        - in: query
+          name: is_anonymous
+          schema:
+            type: boolean
+            description: "Is passed uuid anonymous?"
+            default: false
       tags:
         - transfer requests
       security:
@@ -6815,6 +6846,9 @@ components:
                 type: string
                 description: "Object name"
             required: [ "id", "name" ]
+        is_anonymous:
+          type: boolean
+          description: "If true, the transfer status will be anonymous and not linked to a specific team contributor."
       required: [ "contact_email", "phone_number", "status", "additional_info", "league", "benefits", "salary", "number_of_trainings" ]
       example:
         {
@@ -6862,8 +6896,8 @@ components:
             {
               "id": "1",
               "name": "1-2 treningi tygodniowo"
-            }
-          ]
+            }],
+          "is_anonymous": True,
         }
 
     TransferRequestUpdate:
@@ -6902,6 +6936,9 @@ components:
               type: integer
             number:
               type: string
+        is_anonymous:
+          type: boolean
+          description: "If true, the transfer request will be anonymous and not linked to a specific team contributor."
 
     TransferRequestCreate:
       type: object
@@ -7054,6 +7091,8 @@ components:
           type: string
         club_voivodeship:
           type: string
+        is_anonymous:
+          type: boolean
       required: [ "requesting_team", "gender", "status", "position", "number_of_trainings", "salary", "contact_email", "phone_number", "benefits", "profile_uuid", "club_voivodeship" ]
 
       example:
@@ -7113,7 +7152,8 @@ components:
           "phone_number": {
             "dial_code": "+1",
             "number": "123"
-          }
+          },
+          "is_anonymous": True,
         }
 
     VerificationStageUpdate:

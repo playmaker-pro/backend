@@ -4,10 +4,8 @@ import uuid
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
-from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db.models import (
     Case,
@@ -30,6 +28,7 @@ from api.errors import NotOwnerOfAnObject
 from api.pagination import PagePagination
 from api.serializers import ProfileEnumChoicesSerializer
 from api.views import EndpointView
+from backend.settings import cfg
 from external_links import serializers as external_links_serializers
 from external_links.errors import LinkSourceNotFound, LinkSourceNotFoundServiceException
 from external_links.services import ExternalLinksService
@@ -50,8 +49,13 @@ from profiles.services import (
     TeamContributorService,
 )
 from profiles.utils import map_service_exception
-from users.api.serializers import MainUserDataSerializer, UserMainRoleSerializer
+from users.api.serializers import (
+    MainUserDataSerializer,
+    UserMainRoleSerializer,
+    UserPreferencesUpdateSerializer,
+)
 from users.errors import UserPreferencesDoesNotExistHTTPException
+from utils.cache import CachedResponse
 
 if TYPE_CHECKING:
     pass
@@ -99,20 +103,16 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
     def get_profile_by_slug(self, request: Request, profile_slug: str) -> Response:
         """GET single profile by slug."""
         is_anonymous = profile_slug.startswith("anonymous-")
-
-        def get_profile():
-            """Helper function to retrieve profile by slug."""
+        try:
             if is_anonymous:
                 anonymous_uuid = profile_slug.split("anonymous-")[-1]
-                return ProfileService.get_anonymous_profile_by_uuid(anonymous_uuid)
-            return profile_service.get_profile_by_slug(profile_slug)
-
-        try:
-            profile_object = get_profile()
+                profile = ProfileService.get_anonymous_profile_by_uuid(anonymous_uuid)
+            else:
+                profile = profile_service.get_profile_by_slug(profile_slug)
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExistBySlug
 
-        return self.retrieve_profile_and_respond(request, profile_object, is_anonymous)
+        return self.retrieve_profile_and_respond(request, profile, is_anonymous)
 
     def update_profile(self, request: Request, profile_uuid: uuid.UUID) -> Response:
         """PATCH request for profile (require UUID in body)"""
@@ -142,35 +142,43 @@ class ProfileAPI(ProfileListAPIFilter, EndpointView, ProfileRetrieveMixin):
 
         return Response(serializer.data)
 
-    # @method_decorator(cache_page(settings.DEFAULT_CACHE_LIFESPAN))
     def get_bulk_profiles(self, request: Request) -> Response:
         """
         Get list of profile for role delivered as param
         (?role={P, C, S, G, ...})
         Full list of choices can be found in roles/definitions.py
         """
-        qs: QuerySet = self.get_queryset()
-        serializer_class = self.get_serializer_class(
-            model_name=request.query_params.get("role")
-        )
-        if not serializer_class:
-            serializer_class = serializers.ProfileSerializer
+        with CachedResponse(
+            f"{cfg.redis.key_prefix.list_profiles}:{request.get_full_path()}", request
+        ) as cache:
+            if cached_data := cache.data:
+                return Response(cached_data)
 
-        paginated_query = self.paginate_queryset(qs)
-        serializer = serializer_class(
-            paginated_query,
-            context={
-                "requestor": request.user,
-                "request": request,
-                "label_context": "base",
-                "premium_viewer": request.user.is_authenticated
-                and request.user.profile
-                and request.user.profile.is_premium,
-                "transfer_status": "1" in self.query_params.get("transfer_status", []),
-            },
-            many=True,
-        )
-        return self.get_paginated_response(serializer.data)
+            qs: QuerySet = self.get_queryset()
+            serializer_class = self.get_serializer_class(
+                model_name=request.query_params.get("role")
+            )
+            if not serializer_class:
+                serializer_class = serializers.ProfileSerializer
+
+            paginated_query = self.paginate_queryset(qs)
+            serializer = serializer_class(
+                paginated_query,
+                context={
+                    "requestor": request.user,
+                    "request": request,
+                    "label_context": "base",
+                    "premium_viewer": request.user.is_authenticated
+                    and request.user.profile
+                    and request.user.profile.is_premium,
+                    "transfer_status": "1"
+                    in self.query_params.get("transfer_status", []),
+                },
+                many=True,
+            )
+            paginated_response = self.get_paginated_response(serializer.data)
+            cache.data = paginated_response.data
+            return paginated_response
 
     def get_profile_labels(self, request: Request, profile_uuid: uuid.UUID) -> Response:
         try:
@@ -366,21 +374,20 @@ class PopularProfilesAPIView(MixinProfilesFilter, EndpointView):
         ):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        cache_key = f"popular_profiles:{request.get_full_path()}"
-        cached_response = cache.get(cache_key)
+        with CachedResponse(
+            cache_key=f"{cfg.redis.key_prefix.popular_profiles}:{request.get_full_path()}",
+            request=request,
+        ) as cache:
+            if cached_data := cache.data:
+                return Response(cached_data)
 
-        if cached_response:
-            return Response(cached_response)
-
-        qs = self.get_queryset()
-        qs = self.paginate_queryset(qs)
-        qs = [obj.profile for obj in qs]
-        serializer = serializers.GenericProfileSerializer(qs, many=True)
-        response_data = self.get_paginated_response(serializer.data).data
-
-        cache.set(cache_key, response_data, timeout=settings.DEFAULT_CACHE_LIFESPAN)
-
-        return Response(response_data)
+            qs = self.get_queryset()
+            qs = self.paginate_queryset(qs)
+            qs = [obj.profile for obj in qs]
+            serializer = serializers.GenericProfileSerializer(qs, many=True)
+            paginated_response = self.get_paginated_response(serializer.data)
+            cache.data = paginated_response.data
+            return paginated_response
 
 
 class SuggestedProfilesAPIView(EndpointView):
@@ -464,11 +471,13 @@ class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
             or (hasattr(user, "profile") and not user.profile.is_premium)
         ):
             return Response(status=status.HTTP_204_NO_CONTENT)
+        with CachedResponse(
+            cache_key=f"user:{user.id}:{cfg.redis.key_prefix.profiles_nearby}:{request.get_full_path()}",
+            request=request,
+        ) as cache:
+            if cached_data := cache.data:
+                return Response(cached_data)
 
-        cache_key = f"user:{user.id}:get_profiles_nearby{request.get_full_path()}"
-        cached_response = cache.get(cache_key)
-
-        if not cached_response:
             cities_nearby = profile_service.get_cities_nearby(
                 user.userpreferences.localization
             )
@@ -494,16 +503,9 @@ class ProfilesNearbyAPIView(MixinProfilesFilter, EndpointView):
             data = serializers.GenericProfileSerializer(
                 paginated_qs, source="profile", many=True
             ).data
-
-            # Cache the entire response data
-            cached_response = self.get_paginated_response(data)
-            cache.set(
-                cache_key, cached_response.data, timeout=settings.DEFAULT_CACHE_LIFESPAN
-            )
-            return cached_response
-
-        # Return cached response directly
-        return Response(cached_response)
+            paginated_response = self.get_paginated_response(data)
+            cache.data = paginated_response.data
+            return paginated_response
 
 
 class ProfileSearchView(EndpointView):
@@ -811,12 +813,15 @@ class ProfileTeamsApi(EndpointView):
         Retrieve a list of team contributors associated
         with a given user profile.
         """
+        is_anonymous = request.query_params.get("is_anonymous", False)
+
         # Retrieve the profile associated with the given UUID
         try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
+            profile = profile_service.get_profile_by_uuid(profile_uuid, is_anonymous)
         except ObjectDoesNotExist:
             raise api_errors.ProfileDoesNotExist()
 
+        profile_uuid = profile.uuid
         # Get sorted list of team contributors
         sorted_contributors: list = team_contributor_service.get_teams_for_profile(
             profile_uuid
@@ -826,7 +831,9 @@ class ProfileTeamsApi(EndpointView):
             profile, "output"
         )
         serializer = serializer_class(
-            sorted_contributors, many=True, context={"request": request}
+            sorted_contributors,
+            many=True,
+            context={"request": request, "is_anonymous": is_anonymous},
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 

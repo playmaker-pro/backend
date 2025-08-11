@@ -14,6 +14,7 @@ from api.consts import ChoicesTuple
 from api.pagination import TransferRequestCataloguePagePagination
 from api.serializers import ProfileEnumChoicesSerializer
 from api.views import EndpointView
+from backend.settings import cfg
 from clubs.services import LeagueService
 from profiles.api import errors as api_errors
 from profiles.api.errors import (
@@ -44,6 +45,7 @@ from transfers.api.serializers import (
     UpdateOrCreateProfileTransferSerializer,
 )
 from transfers.models import ProfileTransferRequest
+from utils.cache import CachedResponse
 
 profile_service = ProfileService()
 team_contributor_service = TeamContributorService()
@@ -68,16 +70,33 @@ class TransferStatusAPIView(EndpointView):
         profile_uuid: uuid.UUID,  # noqa
     ) -> Response:
         """Retrieve and display transfer status for the user."""
+        is_anonymous = request.query_params.get("is_anonymous", False)
+        transfer_status = None
         try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist from exc
-        transfer_status = profile.meta.transfer_object
-        if not transfer_status:
-            raise TransferStatusDoesNotExistHTTPException
+            transfer_object = request.user.profile.meta.transfer_object
+            if (
+                profile_uuid == transfer_object.anonymous_uuid
+                or profile_uuid == request.user.profile.uuid
+            ):
+                transfer_status = transfer_object
+        except AttributeError:
+            pass
+        if transfer_status is None:
+            try:
+                profile = profile_service.get_profile_by_uuid(
+                    profile_uuid, is_anonymous
+                )
+            except ObjectDoesNotExist as exc:
+                raise api_errors.ProfileDoesNotExist from exc
+
+            transfer_status = profile.meta.transfer_object
+            if not transfer_status or (
+                transfer_status.is_anonymous and not is_anonymous
+            ):
+                raise TransferStatusDoesNotExistHTTPException
 
         serializer = ProfileTransferStatusSerializer(
-            transfer_status, context={"request": request}
+            transfer_status, context={"request": request, "is_anonymous": is_anonymous}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -208,14 +227,15 @@ class TransferRequestAPIView(EndpointView):
         with a given user profile and are actual ones. This endpoint is just
         for transfer request, so should be only visible for specific profile.
         """
+        is_anonymous = request.query_params.get("is_anonymous", False)
         try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
+            profile = profile_service.get_profile_by_uuid(profile_uuid, is_anonymous)
         except ObjectDoesNotExist as exc:
             raise api_errors.ProfileDoesNotExist() from exc
 
         if profile.user != request.user:
             raise PermissionDeniedHTTPException
-
+        profile_uuid = profile.uuid
         queryset: QuerySet = team_contributor_service.get_profile_actual_teams(
             profile_uuid
         ).prefetch_related("team_history", "team_history__league_history__league")
@@ -228,7 +248,7 @@ class TransferRequestAPIView(EndpointView):
         """Create transfer request for the profile."""
         profile = request.user.profile
         serializer = UpdateOrCreateProfileTransferSerializer(
-            data=request.data, context={"profile": profile}
+            data=request.data, context={"profile": profile, "request": request}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -240,13 +260,31 @@ class TransferRequestAPIView(EndpointView):
         profile_uuid: uuid.UUID,  # noqa
     ) -> Response:
         """Retrieve and display transfer request for the user."""
+        is_anonymous = request.query_params.get("is_anonymous", False)
+        transfer_request = None
         try:
-            profile = profile_service.get_profile_by_uuid(profile_uuid)
-        except ObjectDoesNotExist as exc:
-            raise api_errors.ProfileDoesNotExist() from exc
-        transfer_request = profile.meta.transfer_object
-        if not transfer_request:
-            raise TransferRequestDoesNotExistHTTPException
+            transfer_object = request.user.profile.meta.transfer_object
+            if (
+                profile_uuid == transfer_object.anonymous_uuid
+                or profile_uuid == request.user.profile.uuid
+            ):
+                transfer_request = transfer_object
+        except AttributeError:
+            pass
+
+        if transfer_request is None:
+            try:
+                profile = profile_service.get_profile_by_uuid(
+                    profile_uuid, is_anonymous
+                )
+            except ObjectDoesNotExist as exc:
+                raise api_errors.ProfileDoesNotExist from exc
+
+            transfer_request = profile.meta.transfer_object
+            if not transfer_request or (
+                transfer_request.is_anonymous and not is_anonymous
+            ):
+                raise TransferRequestDoesNotExistHTTPException
 
         serializer = ProfileTransferRequestSerializer(
             transfer_request, context={"request": request}
@@ -268,7 +306,7 @@ class TransferRequestAPIView(EndpointView):
             instance=transfer_request,
             data=request.data,
             partial=True,
-            context={"profile": profile},
+            context={"profile": profile, "request": request},
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -297,13 +335,21 @@ class TransferRequestCatalogueAPIView(EndpointViewWithFilter):
     queryset = ProfileTransferRequest.objects.all().order_by("-created_at")
     filterset_class = TransferRequestCatalogueFilter
 
-    # @method_decorator(cache_page(settings.DEFAULT_CACHE_LIFESPAN))
     def list_transfer_requests(self, request: Request) -> Response:
         """Retrieve and display transfer requests."""
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
-        paginated = self.get_paginated_queryset(queryset)
-        serializer = self.serializer_class(
-            paginated, many=True, context={"request": request}
-        )
-        return self.get_paginated_response(serializer.data)
+        with CachedResponse(
+            cache_key=f"{cfg.redis.key_prefix.transfer_requests}:{request.get_full_path()}",
+            request=request,
+        ) as cache:
+            if cached_data := cache.data:
+                return Response(cached_data)
+
+            queryset = self.get_queryset()
+            queryset = self.filter_queryset(queryset)
+            paginated = self.get_paginated_queryset(queryset)
+            serializer = self.serializer_class(
+                paginated, many=True, context={"request": request}
+            )
+            paginated_response = self.get_paginated_response(serializer.data)
+            cache.data = paginated_response.data
+            return paginated_response

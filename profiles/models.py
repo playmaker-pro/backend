@@ -490,6 +490,9 @@ class BaseProfile(models.Model, EventLogMixin):
             ]
             self.user.save(update_fields=["declared_role"])
 
+        # Store old slug before updating
+        old_slug = self.slug
+
         # Use Polish profile type for slug
         polish_profile_type = profile_utils.profile_type_english_to_polish.get(
             self.PROFILE_TYPE, self.PROFILE_TYPE
@@ -498,6 +501,11 @@ class BaseProfile(models.Model, EventLogMixin):
         slug_str = f"{polish_profile_type} {self.user.first_name} {self.user.last_name}"
 
         profile_utils.unique_slugify(self, slug_str)
+
+        # If the slug has changed and meta exists, update meta._slug
+        if self.meta and old_slug != self.slug:
+            self.meta._slug = self.slug
+            self.meta.save(update_fields=["_slug"])
 
         super().save(*args, **kwargs)
 

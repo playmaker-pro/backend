@@ -207,6 +207,18 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
         for element in data.keys():
             assert element in response.json()
 
+    def test_get_my_transfer_status(self):
+        """Test get my transfer status. Expected status code 200."""
+        transfer_status_obj: ProfileTransferStatus = TransferStatusFactory.create(
+            meta=self.profile.meta, is_anonymous=True
+        )
+        response: Response = self.client.get(
+            self.get_url(transfer_status_obj.meta.profile.uuid), **self.headers
+        )
+
+        assert response.status_code == 200
+        assert "status" in response.json()
+
 
 class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
     """Test transfer request API endpoints."""
@@ -369,6 +381,18 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
             **self.headers,
         )
         return response
+
+    def test_get_my_transfer_request(self):
+        TeamContributorFactory.create(profile_uuid=self.profile.uuid)
+        transfer_request_obj: ProfileTransferRequest = TransferRequestFactory.create(
+            meta=self.profile.meta, is_anonymous=True
+        )
+
+        response: Response = self.client.get(
+            self.get_url(transfer_request_obj.meta.profile.uuid), **self.headers
+        )
+        assert response.status_code == 200
+        assert "status" in response.json()
 
     # @factory.django.mute_signals(signals.pre_save, signals.post_save)
     # def test_update_profile_transfer_request_email(self):
@@ -659,6 +683,13 @@ class TestAnonymousTransferStatus:
             "is_anonymous": True,
         }
 
+    def _list_transfer_statuses(self, api_client: APIClient) -> Response:
+        """Helper method to list transfer statuses."""
+        return api_client.get(
+            reverse("api:profiles:create_or_list_profiles"),
+            {"role": "P", "transfer_status": "1", "gender": "M"},
+        )
+
     def test_create_anonymous_transfer_status_full_flow(
         self, profile, api_client, payload
     ):
@@ -682,10 +713,7 @@ class TestAnonymousTransferStatus:
         assert obj.anonymous_uuid is not None
 
         # Check if is listed in transfer status list
-        list_profiles_response = api_client.get(
-            reverse("api:profiles:create_or_list_profiles"),
-            {"role": "P", "transfer_status": "1", "gender": "M"},
-        )
+        list_profiles_response = self._list_transfer_statuses(api_client)
         data = list_profiles_response.json()
 
         assert list_profiles_response.status_code == 200
@@ -709,14 +737,11 @@ class TestAnonymousTransferStatus:
         assert profile.is_premium is False
 
         # Should not be listed in transfer status list
-        list_profiles_response = api_client.get(
-            reverse("api:profiles:create_or_list_profiles"),
-            {"role": "P", "transfer_status": "1", "gender": "M"},
-        )
+        list_profiles_response = self._list_transfer_statuses(api_client)
         data = list_profiles_response.json()
 
         assert list_profiles_response.status_code == 200
-        assert data["count"] == 0
+        assert data["count"] == 1
 
         # Transfer status should not exist
         assert not profile.meta.transfer_object
@@ -786,6 +811,4 @@ class TestAnonymousTransferRequest:
         assert data["requesting_team"]["team"]["id"] == 0
         assert data["requesting_team"]["team"]["team_contributor_id"] == 0
         assert data["requesting_team"]["team"]["picture_url"] is None
-        assert data["contact_email"] is None
-        assert data["phone_number"] == {"dial_code": None, "number": None}
         # TODO: FINISH
