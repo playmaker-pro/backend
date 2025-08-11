@@ -93,7 +93,7 @@ class WebappConfig(BaseModel):
         return f"{self.url}{path.lstrip('/')}"
 
 
-class MailingConfig(BaseModel, arbitrary_types_allowed=True):
+class MailingConfig(BaseModel):
     """Settings for mailing"""
 
     templates_dir: str = os.path.join(ROOT_DIR, "mailing", "templates")
@@ -103,6 +103,9 @@ class MailingConfig(BaseModel, arbitrary_types_allowed=True):
     outgoing_address: str
     password: SecretStr
     use_tls: bool = True
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class Config(BaseSettings):
