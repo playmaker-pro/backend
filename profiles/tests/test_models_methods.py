@@ -2,68 +2,9 @@ from django.test import TestCase
 
 from users.models import User
 from utils import testutils as utils
-from utils.factories import CoachProfileFactory, PlayerProfileFactory
+from utils.factories import CoachProfileFactory
 
 utils.silence_explamation_mark()
-
-
-class TestProfilePercentageTests(TestCase):
-    def setUp(self):
-        user = PlayerProfileFactory.create(user__email="username", bio=None).user
-        user.profile.VERIFICATION_FIELDS = ["bio"]
-        user.profile.COMPLETE_FIELDS = ["team"]  # , 'club_raw']
-        self.profile = user.profile
-
-    def test_initialy_percentages(self):
-        assert len(self.profile.VERIFICATION_FIELDS) == 1
-        assert self.profile.percentage_completion == 0
-        assert self.profile.percentage_left_verified == 50
-
-    def test_initialy_no_verification_fields_and_complete_fields(self):
-        self.profile.VERIFICATION_FIELDS = []
-        self.profile.COMPLETE_FIELDS = []
-        assert self.profile.percentage_completion == 100
-        assert self.profile.percentage_left_verified == 0
-
-    def test_initialy_only_complete_fields(self):
-        self.profile.VERIFICATION_FIELDS = []
-        assert self.profile.percentage_completion == 0
-        assert self.profile.percentage_left_verified == 0
-
-    def test_initialy_only_verification_fields(self):
-        """This scenario cannot occure. Only by overwriting base code of profile model."""  # noqa: E501
-        self.profile.COMPLETE_FIELDS = []
-        assert self.profile.percentage_completion == 0  # here
-        # with pytest.raises(models.VerificationCompletionFieldsWrongSetup):
-        assert self.profile.percentage_left_verified == 100
-
-    def test_fill_field_for_ver_and_complete(self):
-        self.profile.bio = "Hello World"
-        self.profile.save()
-        assert self.profile.percentage_completion == 50
-        assert self.profile.percentage_left_verified == 0
-
-    def test_fill_only_complete_field(self):
-        self.profile.team = "Team Hello"
-        self.profile.save()
-        assert self.profile.percentage_completion == 50
-        assert self.profile.percentage_left_verified == 50
-
-    def test_all_filed(self):
-        self.profile.team = "Team Hello"
-        self.profile.bio = "My aweseome bio"
-        self.profile.save()
-        assert self.profile.percentage_completion == 100
-        assert self.profile.percentage_left_verified == 0
-
-    def test_summary_of_left_verify_and_completion_need_to_give_100(self):
-        self.profile.team = "Team Hello"  # complete 50%
-        # left ver 50%
-        self.profile.save()
-        assert (
-            self.profile.percentage_completion + self.profile.percentage_left_verified
-            == 100
-        )
 
 
 class InitialBaseProfileCreationTests(TestCase):
@@ -142,16 +83,3 @@ class ProfileUserIsVerifiedAndModifiesVerificationFields(TestCase):
 
         assert self.user.is_verified is True
         # assert self.user.profile.is_ready_for_verification() is True
-
-
-class ProfileCompletnesTests(TestCase):
-    def test_profile_is_complete(self):
-        user = CoachProfileFactory.create(user__email="username", bio=None).user
-        user.profile.COMPLETE_FIELDS = ["bio"]
-        user.profile.VERIFICATION_FIELDS = []
-        assert user.profile.is_complete is False
-        assert user.profile.percentage_completion == 0
-        user.profile.bio = "bbbbbbb"
-        user.profile.save()
-        assert user.profile.is_complete is True
-        assert user.profile.percentage_completion == 100

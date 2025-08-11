@@ -1,7 +1,5 @@
-import random
 from datetime import timedelta
-from typing import List
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -12,7 +10,6 @@ from parameterized import parameterized
 from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
-from profiles.managers import ProfileManager
 from profiles.models import (
     CoachProfile,
     GuestProfile,
@@ -23,6 +20,7 @@ from profiles.models import (
 from profiles.services import ProfileService
 from profiles.utils import get_past_date
 from utils import factories, get_current_season
+from utils.cache import clear_all_cache
 from utils.factories import (
     CoachProfileFactory,
     GuestProfileFactory,
@@ -945,10 +943,9 @@ class TestPlayerProfileListByGenderAPI(APITestCase):
     ])
     def test_get_bulk_profiles_by_gender_res_0(self, param) -> None:
         """get profiles by gender. Result should be 0"""
-        assert PlayerProfile.objects.count() == 0
-
-        PlayerProfileFactory.create(user__userpreferences__gender=None)
-        PlayerProfileFactory.create(user__userpreferences__gender=None)
+        clear_all_cache()
+        for _ in range(10):
+            PlayerProfileFactory.create(user__userpreferences__gender=None)
         response = self.client.get(self.url, param)
 
         assert len(response.data["results"]) == 0

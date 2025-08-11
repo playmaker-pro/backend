@@ -1,6 +1,5 @@
 import pytest
 from django.contrib.auth import get_user_model
-from unittest.mock import MagicMock, patch
 
 from mailing.utils import build_email_context
 
@@ -8,74 +7,75 @@ User = get_user_model()
 
 
 @pytest.fixture
-def test_user():
-    user, _ = User.objects.get_or_create(
-        email="test_user@example.com"
-    )
-    return user
+def coach_profile(coach_profile):
+    """Create a coach profile for testing"""
+    coach_profile.user.userpreferences.gender = "K"
+    coach_profile.user.userpreferences.save()
+    coach_profile.user.first_name = "Karolina"
+    coach_profile.user.last_name = "Nowak"
+    coach_profile.user.save()
+    return coach_profile
 
 
 @pytest.fixture
-def mock_log(test_user):
-    log = MagicMock()
-    log.log_owner.user = test_user
-    log.related_with.user.display_full_name = "Related User Full Name"
-    log.related_with.user.userpreferences.gender = "M"
-    log.related_with.user.declared_role = "player"
-    return log
+def player_profile(player_profile):
+    """Create a player profile for testing"""
+    player_profile.user.userpreferences.gender = "M"
+    player_profile.user.userpreferences.save()
+    player_profile.user.first_name = "Jan"
+    player_profile.user.last_name = "Kowalski"
+    player_profile.user.save()
+    return player_profile
 
 
 @pytest.mark.django_db
 class TestEmailContextBuilder:
-    def test_build_email_context_with_user_only(self, test_user):
-        context = build_email_context(test_user)
+    def test_build_email_context_with_user_only(self, player_profile, coach_profile):
+        context = build_email_context(player_profile.user, coach_profile.user)
         assert "user" in context
-        assert context["user"] == test_user
-        assert "log" not in context
+        assert context["user"] == player_profile.user
 
-    def test_build_email_context_with_extra_kwargs(self, test_user):
-        context = build_email_context(test_user, extra_data="some_value")
+    def test_build_email_context_with_extra_kwargs(self, player_profile, coach_profile):
+        context = build_email_context(
+            player_profile.user, coach_profile.user, extra_data="some_value"
+        )
         assert "user" in context
-        assert context["user"] == test_user
+        assert context["user"] == player_profile.user
+        assert context["user2"] == coach_profile.user
         assert "extra_data" in context
         assert context["extra_data"] == "some_value"
 
-    def test_build_email_context_with_log_and_gendered_data(self, test_user, mock_log):
-        with patch(
-            "mailing.utils.GENDER_BASED_ROLES", {"player": ["Gracz", "Graczka"]}
-        ), patch(
-            "mailing.utils.OBJECTIVE_GENDER_BASED_ROLES",
-            {"player": ["Gracza", "Graczki"]},
-        ):
-            context = build_email_context(test_user, log=mock_log)
+    def test_build_email_context_with_log_and_gendered_data(
+        self,
+        player_profile,
+        coach_profile,
+    ):
+        context = build_email_context(player_profile.user, coach_profile.user)
 
-            assert "user" in context
-            assert context["user"] == test_user
-            assert "log" in context
-            assert context["log"] == mock_log
-            assert context["recipient_full_name"] == test_user.display_full_name
-            assert context["related_full_name"] == "Related User Full Name"
-            assert context["related_user"] == mock_log.related_with.user
-            assert context["related_role"] == "Gracz"
-            assert context["related_role_biernik"] == "Gracza"
+        assert "user" in context
+        assert context["user"] == player_profile.user
+        assert context["recipient_full_name"] == "Jan Kowalski"
+        assert context["related_full_name"] == "Karolina Nowak"
+        assert context["related_user"] == coach_profile.user
+        assert context["related_role"] == "Trenerka"
+        assert context["related_role_biernik"] == "trenerkę"
 
     def test_build_email_context_with_log_and_female_gendered_data(
-        self, test_user, mock_log
+        self,
+        player_profile,
+        coach_profile,
     ):
-        mock_log.related_with.user.userpreferences.gender = "K"
-        with patch(
-            "mailing.utils.GENDER_BASED_ROLES", {"player": ["Gracz", "Graczka"]}
-        ), patch(
-            "mailing.utils.OBJECTIVE_GENDER_BASED_ROLES",
-            {"player": ["Gracza", "Graczki"]},
-        ):
-            context = build_email_context(test_user, log=mock_log)
+        context = build_email_context(player_profile.user, coach_profile.user)
 
-            assert context["related_role"] == "Graczka"
-            assert context["related_role_biernik"] == "Graczki"
+        assert context["related_role"] == "Trenerka"
+        assert context["related_role_biernik"] == "trenerkę"
 
-    def test_build_email_context_with_custom_context(self, test_user):
+    def test_build_email_context_with_custom_context(
+        self, player_profile, coach_profile
+    ):
         custom_context = {"custom_key": "custom_value"}
-        context = build_email_context(test_user, context=custom_context)
+        context = build_email_context(
+            player_profile.user, coach_profile.user, context=custom_context
+        )
         assert "user" in context
         assert context["custom_key"] == "custom_value"

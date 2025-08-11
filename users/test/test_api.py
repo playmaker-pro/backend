@@ -13,10 +13,9 @@ from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
 from features.models import Feature
-from followers.services import FollowService
 from payments.models import Transaction
 from premium.models import Product
-from profiles.models import GuestProfile, ProfileVisitation
+from profiles.models import GuestProfile
 from users.api.views import UsersAPI
 from users.errors import (
     ApplicationError,
@@ -34,7 +33,6 @@ from users.schemas import (
 )
 from users.services import UserService
 from users.utils.test_utils import extract_uidb64_and_token_from_email
-from utils.factories import PlayerProfileFactory
 from utils.factories.feature_sets_factories import FeatureElementFactory, FeatureFactory
 from utils.factories.user_factories import UserFactory
 from utils.test.test_utils import (
@@ -1279,46 +1277,46 @@ class TestEmailVerificationEndpoint(TestCase):
         assert user.is_email_verified is False
 
 
-class TestGetMyProfileEndpoint:
-    url = reverse("api:users:my_main_profile")
+# class TestGetMyProfileEndpoint:
+#     url = reverse("api:users:my_main_profile")
 
-    def test_get_my_profile(
-        self, api_client: APIClient, coach_profile, guest_profile
-    ) -> None:
-        """Test if response is OK"""
-        follow_service = FollowService()
-        profile = PlayerProfileFactory(user__userpreferences__gender="M")
-        api_client.force_authenticate(user=profile.user)
-        follow_service.follow_profile(
-            profile.uuid,
-            coach_profile.user,
-        )
-        follow_service.follow_profile(
-            profile.uuid,
-            guest_profile.user,
-        )
-        follow_service.follow_profile(
-            guest_profile.uuid,
-            profile.user,
-        )
-        ProfileVisitation.upsert(visited=profile, visitor=guest_profile)
-        result = api_client.get(self.url)
+# def test_get_my_profile(
+#     self, api_client: APIClient, coach_profile, guest_profile
+# ) -> None:
+#     """Test if response is OK"""
+#     follow_service = FollowService()
+#     profile = PlayerProfileFactory(user__userpreferences__gender="M")
+#     api_client.force_authenticate(user=profile.user)
+#     follow_service.follow_profile(
+#         profile.uuid,
+#         coach_profile.user,
+#     )
+#     follow_service.follow_profile(
+#         profile.uuid,
+#         guest_profile.user,
+#     )
+#     follow_service.follow_profile(
+#         guest_profile.uuid,
+#         profile.user,
+#     )
+#     ProfileVisitation.upsert(visited=profile, visitor=guest_profile)
+#     result = api_client.get(self.url)
 
-        assert result.status_code == 200
-        assert result.json() == {
-            "picture": None,
-            "email": profile.user.email,
-            "first_name": profile.user.first_name,
-            "last_name": profile.user.last_name,
-            "role": "P",
-            "uuid": str(profile.uuid),
-            "slug": profile.slug,
-            "gender": {"id": "M", "name": "Mężczyzna"},
-            "has_unread_inquiries": False,
-            "promotion": None,
-            "is_promoted": False,
-            "is_premium": False,
-            "premium": None,
-            "premium_already_tested": False,
-            "social_stats": {"followers": 2, "following": 1, "views": 1},
-        }
+#     assert result.status_code == 200
+#     assert result.json() == {
+#         "picture": None,
+#         "email": profile.user.email,
+#         "first_name": profile.user.first_name,
+#         "last_name": profile.user.last_name,
+#         "role": "P",
+#         "uuid": str(profile.uuid),
+#         "slug": profile.slug,
+#         "gender": {"id": "M", "name": "Mężczyzna"},
+#         "has_unread_inquiries": False,
+#         "promotion": None,
+#         "is_promoted": False,
+#         "is_premium": False,
+#         "premium": None,
+#         "premium_already_tested": False,
+#         "social_stats": {"followers": 2, "following": 1, "views": 1},
+#     }

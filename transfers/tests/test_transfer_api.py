@@ -687,7 +687,7 @@ class TestAnonymousTransferStatus:
         """Helper method to list transfer statuses."""
         return api_client.get(
             reverse("api:profiles:create_or_list_profiles"),
-            {"role": "P", "transfer_status": "1", "gender": "M"},
+            {"role": "P", "transfer_status": "1"},
         )
 
     def test_create_anonymous_transfer_status_full_flow(

@@ -8,15 +8,12 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_fsm import FSMField, transition
 
+from inquiries.constants import EMAIL_ENABLED_LOG_TYPES, InquiryLogType
 from inquiries.errors import ForbiddenLogAction
 from inquiries.schemas import InquiryPlanTypeRef as _InquiryPlanTypeRef
-from inquiries.signals import inquiry_pool_exhausted
-from inquiries.tasks import send_inquiry_email
-from inquiries.constants import InquiryLogType, EMAIL_ENABLED_LOG_TYPES
-from mailing.services import TransactionalEmailService
+from profiles.services import NotificationService
 from utils.constants import (
     INQUIRY_CONTACT_URL,
-    INQUIRY_LIMIT_INCREASE_URL,
     TRANSFER_MARKET_URL,
 )
 
@@ -47,10 +44,7 @@ class UserInquiryLog(models.Model):
     )
 
     def __str__(self) -> str:
-        return (
-            f"{self.log_owner.user} -- "
-            f"{self.created_at_readable} -- "
-        )
+        return f"{self.log_owner.user} -- {self.created_at_readable} -- "
 
     @property
     def created_at_readable(self) -> str:
@@ -63,23 +57,13 @@ class UserInquiryLog(models.Model):
         return self.log_type in EMAIL_ENABLED_LOG_TYPES
 
     @property
-    def ulr_to_profile(self) -> str:
+    def url_to_profile(self) -> str:
         """Get url to profile based on log type"""
         if self.log_type == InquiryLogType.OUTDATED:
             return TRANSFER_MARKET_URL
         elif self.log_type == InquiryLogType.OUTDATED_REMINDER:
             return INQUIRY_CONTACT_URL
         return ""
-
-    def save(self, *args, **kwargs):
-        new_object = self.pk is None
-        super().save(*args, **kwargs)
-
-        if self.send_mail and new_object:
-            from inquiries.services import InquireService
-            InquireService().send_inquiry_log_email(self)
-
-        logger.info(f"New UserInquiryLog (ID: {self.pk}) created: {self}")
 
 
 class InquiryPlan(models.Model):
@@ -153,18 +137,20 @@ class UserInquiry(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True
     )
-
     plan = models.ForeignKey(
         InquiryPlan, on_delete=models.SET_NULL, null=True, blank=True
     )
-
     counter_raw = models.PositiveIntegerField(
         _("Obecna ilość zapytań"),
         default=0,
         help_text=_("Current number of used inquiries."),
     )
-
     limit_raw = models.PositiveIntegerField(default=_default_limit)
+    _last_limit_notification = models.DateTimeField(
+        null=True,
+        blank=True,
+        default=None,
+    )
 
     @property
     def limit(self):
@@ -201,6 +187,11 @@ class UserInquiry(models.Model):
     @property
     def left_to_show(self):
         return self.limit - self.counter
+
+    def update_last_limit_notification(self):
+        """Update last limit notification date"""
+        self._last_limit_notification = timezone.now()
+        self.save(update_fields=["_last_limit_notification"])
 
     def reset(self):
         """Reset current counter"""
@@ -260,25 +251,6 @@ class UserInquiry(models.Model):
             ):
                 self.premium_inquiries.increment_counter()
 
-        self.check_limit_to_notify()
-
-    def check_limit_to_notify(self) -> None:
-        """Decide user should be notified about reaching the limit"""
-        if self.counter == self.limit:
-            self.notify_about_limit(force=True)
-
-    def notify_about_limit(self, force: bool = False) -> None:
-        """Notify user about reaching the limit"""
-        from inquiries.services import InquireService
-        InquireService().send_inquiry_limit_reached_email(self.user, force_send=force)
-        self.notification_about_limit(force_send=force)
-
-    def notification_about_limit(self, force_send: bool = False) -> None:
-        """Create notification about reaching the limit"""
-        inquiry_pool_exhausted.send(
-            sender=self.__class__, user=self.user, force=force_send
-        )
-
     def decrement(self):
         """Decrease by one counter"""
         if self.counter > 0:
@@ -316,6 +288,52 @@ class UserInquiry(models.Model):
         self.plan = plan
         self.limit_raw += plan.limit
         self.save(update_fields=["plan", "limit_raw"])
+
+    def can_sent_inquiry_limit_reached_email(self) -> bool:
+        """
+        Return True if user can receive inquiry limit reached email.
+
+        Send email once per round. So:
+        - if last email was sent in april current year, we can sent next email after june current year.
+        - if last email was sent in july current year, we can sent next email after december current year.
+        - if last email was sent in december last year, we can sent next email after june current year.
+        """
+        curr_date = timezone.now()
+        last_sent_mail = self._last_limit_notification
+        if not (last_sent_mail):
+            return True
+        if last_sent_mail.month < 6:
+            # last_sent | current_date | result
+            # 2023-04-01 | 2023-06-01 | True
+            # 2023-04-01 | 2023-05-01 | False
+            # 2023-04-01 | 2025-04-01 | True
+            return (
+                True
+                if (curr_date.month >= 6 and curr_date.year >= last_sent_mail.year)
+                or curr_date.year > last_sent_mail.year + 1
+                else False
+            )
+        elif last_sent_mail.month == 12:
+            # last_sent | current_date | result
+            # 2022-12-03 | 2023-06-01 | True
+            # 2022-12-03 | 2024-04-01 | True
+            # 2022-12-03 | 2023-04-01 | False
+            return (
+                True
+                if (curr_date.month >= 6 and curr_date.year > last_sent_mail.year)
+                or curr_date.year > last_sent_mail.year + 1
+                else False
+            )
+        elif last_sent_mail.month >= 6:
+            # last_sent | current_date | result
+            # 2023-06-01 | 2023-12-01 | True
+            # 2023-07-01 | 2023-11-01 | False
+            # 2023-07-01 | 2025-11-01 | True
+            return (
+                True
+                if curr_date.month == 12 or curr_date.year > last_sent_mail.year
+                else False
+            )
 
     def __str__(self):
         return f"{self.user}: {self.counter}/{self.limit}"
@@ -357,9 +375,7 @@ class InquiryRequestManager(models.Manager):
         # older than 3 days and no reminder logs created
         _3_days_qs = self.filter(
             status=InquiryRequest.STATUS_SENT, created_at__lte=_3_days
-        ).exclude(
-            logs__log_type=InquiryLogType.OUTDATED_REMINDER
-        )
+        ).exclude(logs__log_type=InquiryLogType.OUTDATED_REMINDER)
 
         # older than 6 days and only 1 reminder log created
         _6_days_qs = (
@@ -456,7 +472,6 @@ class InquiryRequest(models.Model):
     @transition(field=status, source=[STATUS_NEW], target=STATUS_SENT)
     def send(self):
         """Should be appeared when message was distributed to recipient"""
-        from notifications.services import NotificationService
 
         NotificationService(self.recipient.profile.meta).notify_new_inquiry(
             self.sender.profile
@@ -465,7 +480,6 @@ class InquiryRequest(models.Model):
     @transition(field=status, source=[STATUS_SENT], target=STATUS_RECEIVED)
     def read(self):
         """Should be appeared when message readed/seen by recipient"""
-        from notifications.services import NotificationService
 
         NotificationService(self.sender.profile.meta).notify_inquiry_read(
             self.recipient.profile, hide_profile=self.anonymous_recipient
@@ -483,12 +497,7 @@ class InquiryRequest(models.Model):
     )
     def accept(self) -> None:
         """Should be appeared when message was accepted by recipient"""
-        from notifications.services import NotificationService
 
-        logger.debug(
-            f"#{self.pk} reuqest accepted creating sender and recipient contanct body"
-        )
-        self.create_log_for_sender(InquiryLogType.ACCEPTED)
         logger.info(
             f"{self.recipient} accepted request from {self.sender}. -- "
             f"InquiryRequestID: {self.pk}"
@@ -498,6 +507,7 @@ class InquiryRequest(models.Model):
         NotificationService(self.sender.profile.meta).notify_inquiry_accepted(
             self.recipient.profile
         )
+        self.create_log_for_sender(InquiryLogType.ACCEPTED)
 
     @transition(
         field=status,
@@ -506,9 +516,7 @@ class InquiryRequest(models.Model):
     )
     def reject(self) -> None:
         """Should be appeared when message was rejected by recipient"""
-        from notifications.services import NotificationService
 
-        self.create_log_for_sender(InquiryLogType.REJECTED)
         logger.info(
             f"{self.recipient} rejected request from {self.sender}. -- "
             f"InquiryRequestID: {self.pk}"
@@ -517,26 +525,16 @@ class InquiryRequest(models.Model):
         NotificationService(self.sender.profile.meta).notify_inquiry_rejected(
             self.recipient.profile, hide_profile=self.anonymous_recipient
         )
+        self.create_log_for_sender(InquiryLogType.REJECTED)
 
     def save(self, *args, **kwargs):
         recipient_profile_uuid = kwargs.pop("recipient_profile_uuid", None)
         self._recipient_profile_uuid = recipient_profile_uuid
-        adding = self._state.adding
 
         if self.status == self.STATUS_NEW:
             self.send()
 
         super().save(*args, **kwargs)
-
-        if adding:
-            self.sender.userinquiry.increment()  # type: ignore
-            self.create_log_for_recipient(
-                InquiryLogType.NEW,
-            )
-            logger.info(
-                f"{self.sender} sent request to {self.recipient}. -- "
-                f"InquiryRequestID: {self.pk}"
-            )
 
     def reward_sender(self) -> None:
         """Reward sender if request is outdated. Create log for sender."""

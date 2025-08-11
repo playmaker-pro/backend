@@ -1,7 +1,7 @@
 import logging
 
 from celery import chain
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, user_logged_in
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
@@ -12,6 +12,11 @@ from users.tasks import prepare_new_user, send_email_to_confirm_new_user
 
 logger = logging.getLogger("project")
 User = get_user_model()
+
+
+@receiver(user_logged_in)
+def log_user_login(sender, request, user, **kwargs):
+    logger.info(f"User '{user.username}' logged in ")
 
 
 @receiver(pre_save, sender=User)
@@ -41,7 +46,7 @@ def referral_rewards(sender, instance, created, **kwargs) -> None:
             message = (
                 f"Link afiliacyjny {referral} osiągnął {invited_users} poleconych."
             )
-            notify_admins.delay(subject, message)
+            notify_admins.delay(subject=subject, message=message)
 
         if referral.is_user:
             ReferralRewardService(referral.user).check_and_reward()

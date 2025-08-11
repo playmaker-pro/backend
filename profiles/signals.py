@@ -4,7 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
-from notifications.services import NotificationService
+from profiles.services import NotificationService
 from profiles.tasks import (
     post_create_profile_tasks,
 )

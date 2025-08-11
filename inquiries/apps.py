@@ -5,5 +5,4 @@ class InquiriesConfig(AppConfig):
     name = "inquiries"
 
     def ready(self):
-        import inquiries.signals.handlers  # noqa
-
+        from inquiries import signals

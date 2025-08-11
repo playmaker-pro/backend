@@ -2,10 +2,12 @@
 import os
 import sys
 
-from backend.settings import cfg
+from dotenv import load_dotenv
+
+load_dotenv(override=False)
 
 if __name__ == "__main__":
-    environment = cfg.environment
+    environment = os.getenv("ENVIRONMENT")
 
     if not environment:
         raise ValueError("Environment not set")

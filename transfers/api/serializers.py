@@ -189,13 +189,16 @@ class ProfileTransferRequestSerializer(
             "number_of_trainings",
             "benefits",
             "salary",
-            "contact_email",
-            "phone_number",
             "profile_uuid",
             "club_voivodeship",
             "is_anonymous",
+            "contact_email",
+            "phone_number",
         )
 
+    contact_email = serializers.EmailField(
+        required=False, allow_null=True, write_only=True
+    )
     contact_email = serializers.EmailField(
         required=False, allow_null=True, write_only=True
     )
@@ -211,7 +214,7 @@ class ProfileTransferRequestSerializer(
     number_of_trainings = serializers.IntegerField(required=False, allow_null=True)
     benefits = serializers.ListField(required=False, allow_null=True)
     salary = serializers.IntegerField(required=False, allow_null=True)
-    phone_number = PhoneNumberField(source="*", write_only=True, required=False)
+    phone_number = PhoneNumberField(source="*", required=False, write_only=True)
 
     def to_representation(self, instance: ProfileTransferRequest) -> dict:
         """
@@ -348,8 +351,6 @@ class ProfileTransferStatusSerializer(
     class Meta:
         model = ProfileTransferStatus
         fields = (
-            "contact_email",
-            "phone_number",
             "status",
             "additional_info",
             "league",
@@ -357,8 +358,13 @@ class ProfileTransferStatusSerializer(
             "salary",
             "number_of_trainings",
             "is_anonymous",
+            "contact_email",
+            "phone_number",
         )
 
+    contact_email = serializers.EmailField(
+        required=False, allow_null=True, write_only=True
+    )
     contact_email = serializers.EmailField(
         required=False, allow_null=True, write_only=True
     )
@@ -367,6 +373,7 @@ class ProfileTransferStatusSerializer(
     league = serializers.PrimaryKeyRelatedField(
         queryset=LeagueService().get_leagues(), many=True
     )
+    phone_number = PhoneNumberField(source="*", required=False, write_only=True)
     phone_number = PhoneNumberField(source="*", required=False, write_only=True)
     benefits = serializers.ListField(required=False, allow_null=True)
 

@@ -1,13 +1,11 @@
 import logging
 import typing
 import uuid
-from collections import Counter
 from datetime import datetime
 from typing import Optional
 
 from address.models import AddressField
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -37,18 +35,13 @@ from premium.models import (
     PremiumType,
     PromoteProfileProduct,
 )
-from premium.tasks import setup_premium_profile
-from profiles.errors import VerificationCompletionFieldsWrongSetup
+from profiles import utils as profile_utils
 from profiles.mixins import TeamObjectsDisplayMixin, VisitationMixin
-from profiles.mixins import utils as profile_utils
 from roles import definitions
+from users.models import User
 from voivodeships.models import Voivodeships
 
-User = get_user_model()
-
-
 logger = logging.getLogger(__name__)
-
 
 GLOBAL_TRAINING_READY_CHOCIES = (
     (1, "1-2 treningi"),
@@ -351,54 +344,6 @@ class BaseProfile(models.Model, EventLogMixin):
     def is_not_complete(self):
         return not self.is_complete
 
-    @property
-    def percentage_completion(self):
-        total = len(self.COMPLETE_FIELDS + self.VERIFICATION_FIELDS)
-        if total == 0:
-            return int(100)
-        field_values = [
-            getattr(self, field_name)
-            for field_name in self.COMPLETE_FIELDS + self.VERIFICATION_FIELDS
-        ]
-        part = total - Counter(field_values).get(None, 0)
-        completion_percentage = 100 * float(part) / float(total)
-        return int(completion_percentage)
-
-    @property
-    def percentage_left_verified(self):
-        total = len(self.COMPLETE_FIELDS + self.VERIFICATION_FIELDS)
-        total_fields_to_verify = len(self.VERIFICATION_FIELDS)
-        if total_fields_to_verify == 0:
-            return int(0)
-        field_values = [
-            getattr(self, field_name) for field_name in self.VERIFICATION_FIELDS
-        ]
-        to_verify_count = len(list(filter(None, field_values)))
-
-        left_fields_counter = total_fields_to_verify - to_verify_count
-        try:
-            left_verify_percentage = 100 * float(left_fields_counter) / float(total)
-        except ZeroDivisionError:
-            raise VerificationCompletionFieldsWrongSetup(
-                "Wrongly setuped COMPLETE_FIELDS and VERIFICATION_FIELDS"
-            )
-        # print('a', field_values, to_verify_count, left_verify_percentage)
-        return int(left_verify_percentage)
-
-    def _get_verification_object_verification_fields(self, obj=None):
-        object_exists = False
-        try:
-            obj = obj or type(self).objects.get(pk=self.pk) if self.pk else None
-            if obj:
-                fields_values = self._get_verification_field_values(obj)
-                object_exists = True
-            else:
-                fields_values = None
-        except type(self).DoesNotExist:
-            # it means first creation of object.
-            fields_values = None
-        return fields_values, object_exists
-
     def ensure_verification_stage_exist(self, commit: bool = True) -> None:
         """Create VerificationStage for profile if it doesn't exist"""
         if not self.verification_stage:
@@ -455,8 +400,10 @@ class BaseProfile(models.Model, EventLogMixin):
         self, premium_type: PremiumType = PremiumType.TRIAL, period: int = None
     ) -> None:
         """Setup premium profile"""
+        from profiles.tasks import setup_premium_profile
+
         return setup_premium_profile.delay(
-            self.pk, self.__class__.__name__, premium_type.value, period
+            self.pk, self.__class__.__name__, PremiumType(premium_type).value, period
         )
 
     def ensure_premium_products_exist(self, commit: bool = True) -> None:
@@ -735,11 +682,6 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     @property
     def has_videos(self):
         return ProfileVideo.objects.filter(player=self).count() > 0
-
-    @property
-    def attached(self):
-        """proxy method to pass if profile has id"""
-        return self.has_data_id()
 
     @property
     def get_main_position(self) -> "PlayerProfilePosition":

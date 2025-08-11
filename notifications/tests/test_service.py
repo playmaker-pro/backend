@@ -6,9 +6,9 @@ from django.utils import timezone
 from followers.services import FollowService
 from inquiries.models import InquiryRequest
 from notifications.models import Notification
-from notifications.services import NotificationService
 from premium.models import PremiumType
 from profiles.models import ProfileVisitation
+from profiles.services import NotificationService
 from utils import factories
 
 pytestmark = pytest.mark.django_db
@@ -380,15 +380,37 @@ class TestNotifications:
     @pytest.mark.parametrize(
         "fixture_name, should_receive_notification, has_video",
         (
-            ("player_profile", True, False),   # PlayerProfile without video should get notification
-            ("player_profile", False, True),   # PlayerProfile with video should NOT get notification
-            ("coach_profile", False, False),   # CoachProfile should never get notification
-            ("scout_profile", False, False),   # ScoutProfile should never get notification
-            ("club_profile", False, False),    # ClubProfile should never get notification
-            ("guest_profile", False, False),   # GuestProfile should never get notification
+            (
+                "player_profile",
+                True,
+                False,
+            ),  # PlayerProfile without video should get notification
+            (
+                "player_profile",
+                False,
+                True,
+            ),  # PlayerProfile with video should NOT get notification
+            (
+                "coach_profile",
+                False,
+                False,
+            ),  # CoachProfile should never get notification
+            (
+                "scout_profile",
+                False,
+                False,
+            ),  # ScoutProfile should never get notification
+            ("club_profile", False, False),  # ClubProfile should never get notification
+            (
+                "guest_profile",
+                False,
+                False,
+            ),  # GuestProfile should never get notification
         ),
     )
-    def test_notify_add_video(self, fixture_name, request, should_receive_notification, has_video):
+    def test_notify_add_video(
+        self, fixture_name, request, should_receive_notification, has_video
+    ):
         """
         Test the notify_add_video function - should only notify PlayerProfile users without videos.
         """
@@ -406,7 +428,7 @@ class TestNotifications:
             href="/profil#sekcja-video-z-gry",
             icon="video",
         ).exists()
-        
+
         assert notification_exists == should_receive_notification
 
     @pytest.mark.parametrize(

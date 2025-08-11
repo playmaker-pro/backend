@@ -4,8 +4,37 @@ from celery import shared_task
 from django.utils import timezone
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
-from notifications.services import NotificationService
-from profiles import models
+from profiles import models as profile_models
+from profiles.services import NotificationService
+
+
+@shared_task
+def setup_premium_profile(
+    profile_id: int, profile_class: str, premium_type: str, period: int = None
+) -> None:
+    model = getattr(profile_models, profile_class)
+    profile = model.objects.get(pk=profile_id)
+
+    premium_type = profile_models.PremiumType(premium_type)
+    pp_object = profile.premium_products
+    premium, _ = profile_models.PremiumProfile.objects.get_or_create(product=pp_object)
+
+    if pp_object.trial_tested and premium_type == profile_models.PremiumType.TRIAL:
+        raise ValueError("Trial already tested or cannot be set.")
+
+    if premium_type == profile_models.PremiumType.CUSTOM and period:
+        premium.setup_by_days(period)
+    elif premium_type != profile_models.PremiumType.CUSTOM:
+        premium.setup(premium_type)
+    else:
+        raise ValueError("Custom period requires period value.")
+
+    if not pp_object.trial_tested:
+        pp_object.trial_tested = True
+        pp_object.save(update_fields=["trial_tested"])
+
+    if premium.is_trial and premium_type != profile_models.PremiumType.TRIAL:
+        pp_object.inquiries.reset_counter(reset_plan=False)
 
 
 @shared_task
@@ -14,8 +43,8 @@ def post_create_profile_tasks(class_name: str, profile_id: int) -> None:
     Create a profile for the user if it doesn't exist.
     """
 
-    model = getattr(models, class_name)
-    profile: models.BaseProfile = model.objects.get(pk=profile_id)
+    model = getattr(profile_models, class_name)
+    profile: profile_models.BaseProfile = model.objects.get(pk=profile_id)
 
     profile.ensure_verification_stage_exist(commit=False)
     profile.ensure_premium_products_exist(commit=False)
@@ -25,7 +54,7 @@ def post_create_profile_tasks(class_name: str, profile_id: int) -> None:
     create_post_create_profile__periodic_tasks(class_name, profile_id)
     NotificationService(profile.meta).notify_welcome()
 
-    if profile.user.display_status == models.User.DisplayStatus.NOT_SHOWN:
+    if profile.user.display_status == profile_models.User.DisplayStatus.NOT_SHOWN:
         NotificationService(profile.meta).notify_profile_hidden()
 
 
@@ -34,7 +63,7 @@ def check_profile_one_hour_after(profile_id: int, model_name: str) -> None:
     """
     Check if the profile is verified and notify the user.
     """
-    model = getattr(models, model_name)
+    model = getattr(profile_models, model_name)
     try:
         profile = model.objects.get(pk=profile_id)
     except model.DoesNotExist:
@@ -57,7 +86,7 @@ def check_profile_one_day_after(profile_id: int, model_name: str) -> None:
     """
     Check if the profile is verified and notify the user.
     """
-    model = getattr(models, model_name)
+    model = getattr(profile_models, model_name)
     try:
         profile = model.objects.get(pk=profile_id)
     except model.DoesNotExist:
@@ -84,7 +113,7 @@ def check_profile_two_days_after(profile_id: int, model_name: str) -> None:
     """
     Check if the profile is verified and notify the user.
     """
-    model = getattr(models, model_name)
+    model = getattr(profile_models, model_name)
     try:
         profile = model.objects.get(pk=profile_id)
     except model.DoesNotExist:
@@ -101,7 +130,7 @@ def check_profile_four_days_after(profile_id: int, model_name: str) -> None:
     """
     Check if the profile is verified and notify the user.
     """
-    model = getattr(models, model_name)
+    model = getattr(profile_models, model_name)
     try:
         profile = model.objects.get(pk=profile_id)
     except model.DoesNotExist:
