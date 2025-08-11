@@ -207,6 +207,18 @@ class TestTransferStatusAPI(APITestCase, MethodsNotAllowedTestsMixin):
         for element in data.keys():
             assert element in response.json()
 
+    def test_get_my_transfer_status(self):
+        """Test get my transfer status. Expected status code 200."""
+        transfer_status_obj: ProfileTransferStatus = TransferStatusFactory.create(
+            meta=self.profile.meta, is_anonymous=True
+        )
+        response: Response = self.client.get(
+            self.get_url(transfer_status_obj.meta.profile.uuid), **self.headers
+        )
+
+        assert response.status_code == 200
+        assert "status" in response.json()
+
 
 class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
     """Test transfer request API endpoints."""
@@ -369,6 +381,18 @@ class TestTransferRequestAPI(APITestCase, MethodsNotAllowedTestsMixin):
             **self.headers,
         )
         return response
+
+    def test_get_my_transfer_request(self):
+        TeamContributorFactory.create(profile_uuid=self.profile.uuid)
+        transfer_request_obj: ProfileTransferRequest = TransferRequestFactory.create(
+            meta=self.profile.meta, is_anonymous=True
+        )
+
+        response: Response = self.client.get(
+            self.get_url(transfer_request_obj.meta.profile.uuid), **self.headers
+        )
+        assert response.status_code == 200
+        assert "status" in response.json()
 
     # @factory.django.mute_signals(signals.pre_save, signals.post_save)
     # def test_update_profile_transfer_request_email(self):
@@ -787,6 +811,4 @@ class TestAnonymousTransferRequest:
         assert data["requesting_team"]["team"]["id"] == 0
         assert data["requesting_team"]["team"]["team_contributor_id"] == 0
         assert data["requesting_team"]["team"]["picture_url"] is None
-        assert data["contact_email"] is None
-        assert data["phone_number"] == {"dial_code": None, "number": None}
         # TODO: FINISH

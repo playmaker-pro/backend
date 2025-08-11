@@ -324,7 +324,7 @@ class NotificationService:
         """
         Send notifications for adding videos.
         """
-        for meta in cls.get_queryset():
+        for meta in cls.get_queryset().filter(_profile_class="playerprofile"):
             if meta.user.user_video.count() == 0:
                 cls(meta).notify_add_video()
 

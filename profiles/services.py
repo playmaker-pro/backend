@@ -653,23 +653,25 @@ class ProfileService:
         """Get and return role shortcut based on profile type"""
         return models.REVERSED_MODEL_MAP[model]
 
-    @staticmethod
+    @classmethod
     def get_profile_by_uuid(
-        profile_uuid: typing.Union[uuid.UUID, str],
-    ) -> models.PROFILE_TYPE:
+        cls, profile_uuid: typing.Union[uuid.UUID, str], is_anonymous: bool = False
+    ) -> models.BaseProfile:
         """
         Get profile object using uuid
         Need to iterate through each profile type
         Iterated object (PROFILE_MODEL_MAP) has to include each subclass of BaseProfile
         Raise ProfileDoesNotExist if no any profile with given uuid exist
         """
+        if is_anonymous:
+            return cls.get_anonymous_profile_by_uuid(profile_uuid)
         return ProfileMeta.objects.get(_uuid=profile_uuid).profile
 
     @classmethod
     def get_anonymous_profile_by_uuid(
         cls,
         profile_uuid: typing.Union[uuid.UUID, str],
-    ) -> models.PROFILE_TYPE:
+    ) -> models.BaseProfile:
         """
         Get anonymous profile object using uuid.
         Iterate through each profile type.
@@ -686,7 +688,7 @@ class ProfileService:
         return transfer_obj.first().profile
 
     @classmethod
-    def get_profile_by_slug(cls, slug: str) -> models.PROFILE_TYPE:
+    def get_profile_by_slug(cls, slug: str) -> models.BaseProfile:
         """
         Get profile object using slug.
         Iterate through each profile type.
