@@ -1828,6 +1828,12 @@ paths:
             type: string
             format: uuid
           required: true
+        - in: query
+          name: is_anonymous
+          schema:
+            type: boolean
+            description: "Is passed uuid anonymous?"
+            default: false
       tags:
         - profiles
       security:
