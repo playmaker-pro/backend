@@ -12,7 +12,7 @@ class NotificationBody:
     title: str
     description: str
     href: str
-    template_name: str = None
+    template_name: Optional[str] = None
     icon: Optional[str] = None
     picture: Optional[str] = None
     picture_profile_role: Optional[str] = None

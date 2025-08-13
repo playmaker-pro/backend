@@ -228,16 +228,6 @@ class ManagerProfileFactory(ProfileFactory):
     agency_facebook_url = factory.Faker("url")
     agency_other_url = factory.Faker("url")
 
-    @factory.post_generation
-    def post_create(self, create, extracted, **kwargs):
-        """
-        This method is called after a new instance is created with the factory.
-        It is used to perform additional actions or setup that is not covered by
-        the default factory creation process.
-        """
-        if not create:
-            return
-
 
 class GuestProfileFactory(ProfileFactory):
     class Meta:

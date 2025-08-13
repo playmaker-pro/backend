@@ -2,6 +2,8 @@
 Module containing Celery tasks for notifications in PlayMaker.
 """
 
+import os
+
 from celery import shared_task
 from django.conf import settings
 from django.core.files import File
@@ -20,17 +22,26 @@ def create_notification(
     """
 
     if picture_path := kwargs.get("picture", None):
-        full_path = settings.MEDIA_ROOT / picture_path
-        if full_path.exists():
+        full_path = os.path.join(settings.MEDIA_URL, picture_path).split(
+            settings.BASE_DIR
+        )[-1]
+        try:
             with open(full_path, "rb") as file:
                 picture = File(file)
                 kwargs["picture"] = picture
+        except FileNotFoundError:
+            pass
+
+    profile_meta_id = kwargs.pop("profile_meta_id")
+    title = kwargs.pop("title")
+    description = kwargs.pop("description")
+    href = kwargs.pop("href")
 
     notification, created = Notification.objects.get_or_create(
-        target_id=kwargs.pop("profile_meta_id"),
-        title=kwargs.pop("title"),
-        description=kwargs.pop("description"),
-        href=kwargs.pop("href"),
+        target_id=profile_meta_id,
+        title=title,
+        description=description,
+        href=href,
         defaults=kwargs,
     )
 
