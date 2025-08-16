@@ -51,9 +51,9 @@ logger = logging.getLogger(__name__)
 
 
 GLOBAL_TRAINING_READY_CHOCIES = (
-    (1, "1-2 treningi"),
-    (2, "3-4 treningi"),
-    (3, "5-6 treningi"),
+    (1, _("1-2 treningi")),
+    (2, _("3-4 treningi")),
+    (3, _("5-6 treningi")),
 )
 
 FORMATION_CHOICES = (
@@ -76,30 +76,30 @@ class ProfileVideo(models.Model):
     class PlayerLabels(models.TextChoices):
         """Labels specific for PlayerProfile"""
 
-        SHORT = "player_short", "Skrót meczu"
-        FULL = "player_full", "Cały mecz"
-        GOAL = "player_goal", "Bramka"
+        SHORT = "player_short", _("Skrót meczu")
+        FULL = "player_full", _("Cały mecz")
+        GOAL = "player_goal", _("Bramka")
 
     class CoachLabels(models.TextChoices):
         """Labels specific for CoachProfile"""
 
-        SHORT = "coach_short", "Skrót meczu"
-        FULL = "coach_full", "Cały mecz"
-        ANALYSIS = "coach_analysis", "Analiza"
+        SHORT = "coach_short", _("Skrót meczu")
+        FULL = "coach_full", _("Cały mecz")
+        ANALYSIS = "coach_analysis", _("Analiza")
 
     class ClubLabels(models.TextChoices):
         """Labels specific for ClubProfile"""
 
-        SHORT = "club_short", "Skrót meczu"
-        FULL = "club_full", "Cały mecz"
-        ANALYSIS = "club_analysis", "Analiza"
+        SHORT = "club_short", _("Skrót meczu")
+        FULL = "club_full", _("Cały mecz")
+        ANALYSIS = "club_analysis", _("Analiza")
 
     class ScoutLabels(models.TextChoices):
         """Labels specific for ScoutProfile"""
 
-        PLAYER = "scout_player_analysis", "Piłkarz"
-        TACTICS = "scout_tactics", "Taktyka"
-        FRAGMENT = "scout_fragment", "Stałe fragmenty"
+        PLAYER = "scout_player_analysis", _("Piłkarz")
+        TACTICS = "scout_tactics", _("Taktyka")
+        FRAGMENT = "scout_fragment", _("Stałe fragmenty")
 
     LABELS = (
         *PlayerLabels.choices,
@@ -657,15 +657,15 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     ]
 
     POSITION_CHOICES = [
-        (1, "Bramkarz"),
-        (2, "Obrońca Lewy"),
-        (3, "Obrońca Prawy"),
-        (4, "Obrońca Środkowy"),
-        (5, "Pomocnik defensywny (6)"),
-        (6, "Pomocnik środkowy (8)"),
-        (7, "Pomocnik ofensywny (10)"),
-        (8, "Skrzydłowy"),
-        (9, "Napastnik"),
+        (1, _("Bramkarz")),
+        (2, _("Obrońca Lewy")),
+        (3, _("Obrońca Prawy")),
+        (4, _("Obrońca Środkowy")),
+        (5, _("Pomocnik defensywny (6)")),
+        (6, _("Pomocnik środkowy (8)")),
+        (7, _("Pomocnik ofensywny (10)")),
+        (8, _("Skrzydłowy")),
+        (9, _("Napastnik")),
     ]
 
     FANTASY_GOAL_KEEPER = "bramkarz"
@@ -686,32 +686,32 @@ class PlayerProfile(BaseProfile, TeamObjectsDisplayMixin):
     }
 
     LEG_CHOICES = (
-        (1, "Lewa"),
-        (2, "Prawa"),
+        (1, _("Lewa")),
+        (2, _("Prawa")),
     )
 
     TRANSFER_STATUS_CHOICES = (
-        (1, "Szukam klubu"),
-        (2, "Rozważę wszelkie oferty"),
-        (3, "Nie szukam klubu"),
+        (1, _("Szukam klubu")),
+        (2, _("Rozważę wszelkie oferty")),
+        (3, _("Nie szukam klubu")),
     )
 
     CARD_CHOICES = (
-        (1, "Mam kartę na ręku"),
-        (2, "Nie wiem czy mam kartę na ręku"),
-        (3, "Nie mam karty na ręku"),
+        (1, _("Mam kartę na ręku")),
+        (2, _("Nie wiem czy mam kartę na ręku")),
+        (3, _("Nie mam karty na ręku")),
     )
 
     GOAL_CHOICES = (
-        (1, "Poziom profesjonalny"),
-        (2, "Poziom półprofesjonalny"),
-        (3, "Poziom regionalny"),
+        (1, _("Poziom profesjonalny")),
+        (2, _("Poziom półprofesjonalny")),
+        (3, _("Poziom regionalny")),
     )
 
     AGENT_STATUS_CHOICES = (
-        (1, "Mam agenta"),
-        (2, "Szukam agenta"),
-        (3, "Nie szukam agenta"),
+        (1, _("Mam agenta")),
+        (2, _("Szukam agenta")),
+        (3, _("Nie szukam agenta")),
     )
 
     TRAINING_READY_CHOCIES = GLOBAL_TRAINING_READY_CHOCIES
@@ -1491,12 +1491,12 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     ]
 
     CLUB_ROLE = (
-        (1, "Trener"),
-        (2, "Prezes"),
-        (3, "Kierownik"),
-        (4, "Członek zarządu"),
-        (5, "Sztab szkoleniowy"),
-        (6, "Inne"),
+        (1, _("Trener")),
+        (2, _("Prezes")),
+        (3, _("Kierownik")),
+        (4, _("Członek zarządu")),
+        (5, _("Sztab szkoleniowy")),
+        (6, _("Inne")),
     )
 
     VERIFICATION_FIELDS = [
@@ -1508,33 +1508,33 @@ class CoachProfile(BaseProfile, TeamObjectsDisplayMixin):
     OPTIONAL_FIELDS = ["licence"]
 
     GOAL_CHOICES = (
-        (1, "Profesjonalna kariera"),
-        (2, "Kariera regionalna"),
-        (3, "Trenerka jako hobby"),
+        (1, _("Profesjonalna kariera")),
+        (2, _("Kariera regionalna")),
+        (3, _("Trenerka jako hobby")),
     )
 
     LICENCE_CHOICES = (
-        (1, "UEFA PRO"),
-        (2, "UEFA A"),
-        (3, "UEFA EY A"),
-        (4, "UEFA B"),
-        (5, "UEFA C"),
-        (6, "GRASS C"),
-        (7, "GRASS D"),
-        (8, "UEFA Futsal B"),
-        (9, "PZPN A"),
-        (10, "PZPN B"),
-        (11, "W trakcie kursu"),
+        (1, _("UEFA PRO")),
+        (2, _("UEFA A")),
+        (3, _("UEFA EY A")),
+        (4, _("UEFA B")),
+        (5, _("UEFA C")),
+        (6, _("GRASS C")),
+        (7, _("GRASS D")),
+        (8, _("UEFA Futsal B")),
+        (9, _("PZPN A")),
+        (10, _("PZPN B")),
+        (11, _("W trakcie kursu")),
     )
 
     COACH_ROLE_CHOICES = (
-        ("IC", "Pierwszy trener"),
-        ("IIC", "Drugi trener"),
-        ("GKC", "Trener bramkarzy"),
-        ("FIC", "Trener motoryki"),
-        ("MEC", "Trener mentalny"),
-        ("ANC", "Analityk"),
-        ("OTC", "Inne"),
+        ("IC", _("Pierwszy trener")),
+        ("IIC", _("Drugi trener")),
+        ("GKC", _("Trener bramkarzy")),
+        ("FIC", _("Trener motoryki")),
+        ("MEC", _("Trener mentalny")),
+        ("ANC", _("Analityk")),
+        ("OTC", _("Inne")),
     )
 
     DATA_KEYS = ("metrics",)
@@ -1945,9 +1945,9 @@ class ScoutProfile(BaseProfile):
     ]
 
     GOAL_CHOICES = (
-        (1, "Profesjonalna kariera"),
-        (2, "Kariera regionalna"),
-        (3, "Skauting jako hobby"),
+        (1, _("Profesjonalna kariera")),
+        (2, _("Kariera regionalna")),
+        (3, _("Skauting jako hobby")),
     )
 
     soccer_goal = models.IntegerField(
@@ -2075,8 +2075,8 @@ class RefereeProfile(BaseProfile):
 
 class RefereeLevel(models.Model):
     REFEREE_ROLE_CHOICES = (
-        ("Referee", "Sędzia główny"),
-        ("AssistantReferee", "Asystent"),
+        ("Referee", _("Sędzia główny")),
+        ("AssistantReferee", _("Asystent")),
     )
 
     level = models.ForeignKey(

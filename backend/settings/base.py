@@ -198,7 +198,9 @@ LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)
 
 LANGUAGES = (
     ("pl", _("Polski")),
-    ("en-us", _("Angielski")),
+    ("en", _("English")),
+    ("de", _("Deutsch")),
+    ("uk", _("Українська")),
 )
 
 # Configuration for django-cities-light library.
@@ -263,6 +265,20 @@ WAGTAIL_USER_CREATION_FORM = "users.forms.CustomUserCreationForm"
 WAGTAIL_USER_CUSTOM_FIELDS = []  # ['country',]
 
 CORS_ORIGIN_ALLOW_ALL = True  # to be replaces  with CORS_ORIGIN_WHITELIST
+
+# Allow custom headers for CORS
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'x-language',
+]
 
 # easy-thumbnail
 THUMBNAIL_EXTENSION = "png"  # Or any extn for your thumbnails

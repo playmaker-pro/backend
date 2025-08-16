@@ -1,5 +1,6 @@
 import typing
 
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from api.serializers import PhoneNumberField, ProfileEnumChoicesSerializer
@@ -115,9 +116,24 @@ class InquiryRequestSerializer(serializers.ModelSerializer):
         model = _models.InquiryRequest
         fields = "__all__"
 
+    def get_translated_status(self, status: str) -> str:
+        """Translate inquiry status to current language."""
+        status_translations = {
+            _models.InquiryRequest.STATUS_NEW: _("NOWE"),
+            _models.InquiryRequest.STATUS_SENT: _("WYSŁANO"),
+            _models.InquiryRequest.STATUS_RECEIVED: _("PRZECZYTANE"),
+            _models.InquiryRequest.STATUS_ACCEPTED: _("ZAAKCEPTOWANE"),
+            _models.InquiryRequest.STATUS_REJECTED: _("ODRZUCONE"),
+        }
+        return status_translations.get(status, status)
+
     def to_representation(self, instance: _models.InquiryRequest) -> None:
-        """Custom representation for InquiryRequest, handling recipient data."""
+        """Custom representation for InquiryRequest, handling recipient data and status translation."""
         data = super().to_representation(instance)
+
+        # Translate status
+        data["status"] = self.get_translated_status(instance.status)
+
         if (
             instance.anonymous_recipient
             and instance.status != _models.InquiryRequest.STATUS_ACCEPTED
@@ -217,6 +233,20 @@ class InquiryPlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = _models.InquiryPlan
         exclude = ("sort",)
+
+    def to_representation(self, instance: _models.InquiryPlan) -> dict:
+        """Override to provide dynamic translation of plan fields."""
+        data = super().to_representation(instance)
+
+        # Translate plan name and description dynamically
+        # These are stored in the database and need runtime translation
+        if instance.name:
+            data["name"] = _(instance.name)
+
+        if instance.description:
+            data["description"] = _(instance.description)
+
+        return data
 
 
 class UserInquiryLogSerializer(serializers.ModelSerializer):

@@ -14,6 +14,7 @@ from api.errors import (
     ChoiceFieldValueErrorHTTPException,
     PhoneNumberMustBeADictionaryHTTPException,
 )
+from api.i18n import I18nSerializerMixin
 from api.services import LocaleDataService
 from app.utils import cities
 from users.errors import CityDoesNotExistException, CityDoesNotExistHTTPException
@@ -110,8 +111,8 @@ class CitySerializer(_serializers.ModelSerializer):
         return data
 
 
-class ProfileEnumChoicesSerializer(_serializers.CharField, _serializers.Serializer):
-    """Serializer for Profile Enums"""
+class ProfileEnumChoicesSerializer(I18nSerializerMixin, _serializers.CharField, _serializers.Serializer):
+    """Serializer for Profile Enums with translation support"""
 
     def __init__(
         self,
@@ -129,20 +130,32 @@ class ProfileEnumChoicesSerializer(_serializers.CharField, _serializers.Serializ
     def parse_dict(
         self, data: (typing.Union[int, str], typing.Union[int, str])
     ) -> dict:
-        """Create dictionary from tuple choices"""
-        return {str(val[0]): val[1] for val in data}
+        """Create dictionary from tuple choices with translation support"""
+        from django.utils.translation import gettext as _
+        
+        # Ensure language is activated for translation
+        self._activate_context_language()
+        return {str(val[0]): _(str(val[1])) for val in data}  # Explicitly translate each value
 
     def to_representation(self, obj: typing.Union[ChoicesTuple, str]) -> dict:
-        """Parse output"""
+        """Parse output with translation support"""
+        from django.utils.translation import gettext as _
+        
+        # Activate language context before representation
+        self._activate_context_language()
+        
         parsed_obj = obj
         if not obj:
             return {}
         if not isinstance(obj, ChoicesTuple):
             parsed_obj = self.parse(obj)
-        return {"id": parsed_obj.id, "name": parsed_obj.name}
+        
+        # Explicitly translate the name using Django's translation system
+        translated_name = _(str(parsed_obj.name)) if parsed_obj.name else ""
+        return {"id": parsed_obj.id, "name": translated_name}
 
     def parse(self, _id) -> ChoicesTuple:
-        """Get choices by model field and parse output"""
+        """Get choices by model field and parse output with translation"""
         _id = str(_id)
         choices = self.parse_dict(
             getattr(self.model, self.source).__dict__["field"].choices

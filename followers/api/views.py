@@ -44,13 +44,14 @@ class FollowAPIView(EndpointView, ProfileRetrieveMixin):
         List all objects followed by the current user.
         """
         if profile := request.user.profile:
+            context = self.get_serializer_context()
+            context.update({
+                "premium_viewer": request.user.profile.is_premium,
+            })
             data = FollowedListSerializer(
                 profile.who_i_follow.order_by("-created_at"),
                 many=True,
-                context={
-                    "request": request,
-                    "premium_viewer": request.user.profile.is_premium,
-                },
+                context=context,
             ).data
         else:
             data = []
@@ -61,13 +62,14 @@ class FollowAPIView(EndpointView, ProfileRetrieveMixin):
         List all followers of the current user.
         """
         if profile := request.user.profile:
+            context = self.get_serializer_context()
+            context.update({
+                "premium_viewer": request.user.profile.is_premium,
+            })
             data = FollowingListSerializer(
                 profile.who_follows_me.order_by("-created_at"),
                 many=True,
-                context={
-                    "request": request,
-                    "premium_viewer": request.user.profile.is_premium,
-                },
+                context=context,
             ).data
         else:
             data = []

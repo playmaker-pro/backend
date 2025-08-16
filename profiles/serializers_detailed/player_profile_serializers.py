@@ -1,8 +1,11 @@
 import typing
 
 from rest_framework import serializers
+from django.utils import translation
+from django.utils.translation import gettext as _
 
 from api.consts import ChoicesTuple
+from api.i18n import I18nSerializerMixin
 from profiles.api.serializers import (
     CoachLicenceSerializer,
     PlayerProfilePositionSerializer,
@@ -12,12 +15,38 @@ from profiles.models import PlayerMetrics, PlayerPosition, PlayerProfile
 from profiles.serializers_detailed.base_serializers import BaseProfileSerializer
 
 
-class ProfileViePlayerPositionSerializer(serializers.ModelSerializer):
-    """Player position serializer for user profile view"""
+class ProfileViePlayerPositionSerializer(I18nSerializerMixin, serializers.ModelSerializer):
+    """Player position serializer for user profile view with translation support"""
 
     class Meta:
         model = PlayerPosition
-        fields = ("id", "name", "shortcut")
+        fields = ("id", "name", "shortcut", "shortcut_pl")
+        
+    def to_representation(self, instance):
+        """Override to return translated position names and appropriate shortcuts"""
+        
+        self._activate_context_language()
+        
+        # Get the current language from context
+        current_language = self.context.get('language', 'pl')
+        
+        # Activate translation before calling parent to ensure model field translations work
+        with translation.override(current_language):
+            data = super().to_representation(instance)
+            
+            # The database contains Polish position names, so we translate them directly
+            # This will use our existing translations from the .po files
+            data['name'] = str(_(instance.name))
+            
+        # Return appropriate shortcut based on language
+        if current_language == 'pl':
+            data['shortcut'] = instance.shortcut_pl or instance.shortcut
+        else:
+            data['shortcut'] = instance.shortcut
+            # Remove the Polish shortcut field for non-Polish languages
+            data.pop('shortcut_pl', None)
+            
+        return data
 
 
 class ProfileVIewPlayerProfilePositionSerializer(PlayerProfilePositionSerializer):
@@ -27,15 +56,12 @@ class ProfileVIewPlayerProfilePositionSerializer(PlayerProfilePositionSerializer
 
 
 class PlayerProfileViewProfileEnumChoicesSerializer(ProfileEnumChoicesSerializer):
-    """Profile enum choices serializer for player profile view"""
+    """Profile enum choices serializer for player profile view with translation support"""
 
     def to_representation(self, obj: typing.Union[ChoicesTuple, str]) -> dict:
-        parsed_obj = obj
-        if not obj:
-            return {}
-        if not isinstance(obj, ChoicesTuple):
-            parsed_obj = self.parse(obj)
-        return {"id": parsed_obj.id}
+        """Parse output with translation support - keep both id and translated name"""
+        # Use parent class method which includes translation
+        return super().to_representation(obj)
 
     def parse(self, _id) -> ChoicesTuple:
         """Get choices by model field and parse output"""
@@ -95,6 +121,10 @@ class PlayerProfileViewSerializer(BaseProfileSerializer):
         many=True, required=False
     )
     training_ready = ProfileEnumChoicesSerializer(
+        required=False,
+        model=PlayerProfile,
+    )
+    prefered_leg = ProfileEnumChoicesSerializer(
         required=False,
         model=PlayerProfile,
     )

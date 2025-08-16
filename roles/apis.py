@@ -17,8 +17,5 @@ class RolesAPI(EndpointView):
         """
         Return a dictionary of available roles.
         """
-        roles = {
-            role[0]: role[1]
-            for role in definitions.ACCOUNT_ROLES
-        }
+        roles = {role[0]: str(role[1]) for role in definitions.ACCOUNT_ROLES}
         return Response(roles)

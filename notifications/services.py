@@ -2,19 +2,20 @@
 Service for sending notifications to users.
 """
 
+from django.utils.translation import gettext as _
 from notifications.tasks import create_notification
 from notifications.templates import NotificationBody, NotificationTemplate
 from profiles.models import PROFILE_MODELS, ProfileMeta
 from users.models import User
 
 GENDER_BASED_ROLES = {
-    "P": ("Piłkarz", "Piłkarka"),
-    "T": ("Trener", "Trenerka"),
-    "C": ("Działacz klubowy", "Działaczka klubowa"),
-    "G": ("Kibic", "Kibic"),
-    "M": ("Manager", "Manager"),
-    "R": ("Sędzia", "Sędzia"),
-    "S": ("Skaut", "Skaut"),
+    "P": (_("Piłkarz"), _("Piłkarka")),
+    "T": (_("Trener"), _("Trenerka")),
+    "C": (_("Działacz klubowy"), _("Działaczka klubowa")),
+    "G": (_("Kibic"), _("Kibic")),
+    "M": (_("Manager"), _("Manager")),
+    "R": (_("Sędzia"), _("Sędzia")),
+    "S": (_("Skaut"), _("Skaut")),
     None: ("", ""),
 }
 
@@ -62,7 +63,7 @@ class NotificationService:
 
             try:
                 if hide_profile:
-                    kwargs["profile"] = "Anonimowy profil"
+                    kwargs["profile"] = _("Anonimowy profil")
                 else:
                     role_short = profile.user.declared_role
                     gender_index = int(profile.user.userpreferences.gender == "K")
@@ -73,7 +74,9 @@ class NotificationService:
             except (KeyError, IndexError):
                 kwargs["profile"] = full_name
 
-        return NotificationBody(**template.value, kwargs=kwargs)
+        return NotificationBody(
+            **template.value, template_name=template.name, kwargs=kwargs
+        )
 
     @classmethod
     def bulk_notify_check_trial(cls) -> None:
